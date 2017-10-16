@@ -144,7 +144,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       {:eex, "new.html.eex",        Path.join([web_prefix, "templates", web_path, schema.singular, "new.html.eex"])},
       {:eex, "show.html.eex",       Path.join([web_prefix, "templates", web_path, schema.singular, "show.html.eex"])},
       {:eex, "view.ex",             Path.join([web_prefix, "views", web_path, "#{schema.singular}_view.ex"])},
-      {:eex, "controller_test.exs", Path.join([test_prefix,"controllers", web_path, "#{schema.singular}_controller_test.exs"])},
+      {:eex, "controller_test.exs", Path.join([test_prefix, "controllers", web_path, "#{schema.singular}_controller_test.exs"])},
     ]
   end
 

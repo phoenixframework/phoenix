@@ -149,7 +149,7 @@ defmodule Phoenix.Digester do
   defp map_digested_file(file_path, output_path) do
     {:ok, stats} = File.stat(file_path)
     digested_filename = Path.basename(file_path)
-    [digest,_] = Regex.run(@digested_file_regex, digested_filename)
+    [digest, _] = Regex.run(@digested_file_regex, digested_filename)
     digest = String.trim_leading(digest, "-")
 
     %{absolute_path: file_path,
