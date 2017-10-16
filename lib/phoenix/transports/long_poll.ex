@@ -124,7 +124,7 @@ defmodule Phoenix.Transports.LongPoll do
   defp decode({:ok, body, conn}, serializer) do
     assign(conn, :message, serializer.decode!(body, []))
   rescue
-    Phoenix.Socket.InvalidMessageError -> raise Plug.Parsers.ParseError
+    Phoenix.Socket.InvalidMessageError -> reraise Plug.Parsers.ParseError
   end
   defp decode(_bad_request, _serializr), do: raise Plug.BadRequestError
 
