@@ -60,7 +60,7 @@ defmodule HelloWeb.PageView do
 end
 ```
 
-Now if you fire up the server with `mix phx.server` and visit `http://locahost:4000`, you should see the following text below your layout header instead of the main template page:
+Now if you fire up the server with `mix phx.server` and visit `http://localhost:4000`, you should see the following text below your layout header instead of the main template page:
 ```
 rendering with assigns [:conn, :view_module, :view_template]
 ```
