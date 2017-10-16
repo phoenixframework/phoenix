@@ -66,7 +66,7 @@ defmodule Phoenix.Mixfile do
 
       # Docs dependencies
       {:ex_doc, ">= 0.18.1", only: :docs},
-      {:ex_doc_makeup, "~> 0.1", only: :docs},
+      {:ex_doc_makeup, "~> 0.1.2", only: :docs},
       {:inch_ex, "~> 0.2", only: :docs},
 
       # Test dependencies

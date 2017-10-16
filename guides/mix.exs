@@ -30,7 +30,7 @@ defmodule PhoenixGuides.Mixfile do
 
   defp deps do
     [{:ex_doc, ">= 0.18.1", only: :docs},
-     {:ex_doc_makeup, "~> 0.1", only: :docs},
+     {:ex_doc_makeup, "~> 0.1.2", only: :docs},
      {:fs, "~> 0.9.1", only: :docs}]
   end
 
