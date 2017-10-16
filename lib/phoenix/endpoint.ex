@@ -148,6 +148,14 @@ defmodule Phoenix.Endpoint do
       to `:port`, when given a tuple like `{:system, "HOST"}`, the host
       will be referenced from `System.get_env("HOST")` at runtime.
 
+      The `:scheme` option accepts `"http"` and `"https"` values. Default value
+      is infered from top level `:http` or `:https` option. It is useful
+      when hosting Phoenix behind a load balancer or reverse proxy and
+      terminating SSL there.
+
+      The `:path` option can be used to override root path. Useful when hosting
+      Phoenix behind a reverse proxy with URL rewrite rules.
+
     * `:static_url` - configuration for generating URLs for static files.
       It will fallback to `url` if no option is provided. Accepts the same
       options as `url`.
@@ -833,4 +841,3 @@ defmodule Phoenix.Endpoint do
     raise ArgumentError, "expected a local path but was #{inspect path}"
   end
 end
-
