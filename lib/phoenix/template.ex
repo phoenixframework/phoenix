@@ -353,7 +353,8 @@ defmodule Phoenix.Template do
   """
   @spec hash(root, pattern :: String.t) :: binary
   def hash(root, pattern \\ @default_pattern) do
-    find_all(root, pattern)
+    root
+    |> find_all(pattern)
     |> Enum.sort()
     |> :erlang.md5()
   end
@@ -373,7 +374,7 @@ defmodule Phoenix.Template do
   defp compile(path, root) do
     name   = template_path_to_name(path, root)
     defp   = String.to_atom(name)
-    ext    = Path.extname(path) |> String.trim_leading(".") |> String.to_atom
+    ext    = path |> Path.extname() |> String.trim_leading(".") |> String.to_atom
     engine = Map.fetch!(engines(), ext)
     quoted = engine.compile(path, name)
 

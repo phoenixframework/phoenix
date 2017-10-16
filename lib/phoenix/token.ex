@@ -108,7 +108,7 @@ defmodule Phoenix.Token do
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
     {signed_at_seconds, key_opts} = Keyword.pop(opts, :signed_at)
     signed_at_ms = if signed_at_seconds, do: trunc(signed_at_seconds * 1000), else: now_ms()
-    secret = get_key_base(context) |> get_secret(salt, key_opts)
+    secret = context |> get_key_base() |> get_secret(salt, key_opts)
 
     %{data: data, signed: signed_at_ms}
     |> :erlang.term_to_binary()

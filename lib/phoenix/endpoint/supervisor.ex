@@ -26,7 +26,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   # dependent on the module name, so we should consider enabling this
   # once we move to Firenest.
   def init({otp_app, mod}) do
-    id = :crypto.strong_rand_bytes(16) |> Base.encode64
+    id = 16 |> :crypto.strong_rand_bytes() |> Base.encode64
 
     conf =
       case mod.init(:supervisor, [endpoint_id: id] ++ config(otp_app, mod)) do
@@ -159,7 +159,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   the Phoenix.Config layer knows how to cache it.
   """
   def url(endpoint) do
-    {:cache, build_url(endpoint, endpoint.config(:url)) |> String.Chars.URI.to_string()}
+    {:cache, endpoint |> build_url(endpoint.config(:url)) |> String.Chars.URI.to_string()}
   end
 
   @doc """
@@ -191,7 +191,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   """
   def static_url(endpoint) do
     url = endpoint.config(:static_url) || endpoint.config(:url)
-    {:cache, build_url(endpoint, url) |> String.Chars.URI.to_string()}
+    {:cache, endpoint |> build_url(url) |> String.Chars.URI.to_string()}
   end
 
   @doc """

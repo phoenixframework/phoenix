@@ -79,7 +79,7 @@ defmodule Phoenix.Transports.LongPoll do
   # Responds to pre-flight CORS requests with Allow-Origin-* headers.
   # We allow cross-origin requests as we always validate the Origin header.
   defp dispatch(%{method: "OPTIONS"} = conn, _, _, _, _) do
-    headers = get_req_header(conn, "access-control-request-headers") |> Enum.join(", ")
+    headers = conn |> get_req_header("access-control-request-headers") |> Enum.join(", ")
 
     conn
     |> put_resp_header("access-control-allow-headers", headers)

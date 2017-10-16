@@ -783,7 +783,7 @@ defmodule Phoenix.Endpoint do
 
   """
   defmacro instrument(endpoint_or_conn_or_socket, event, runtime \\ Macro.escape(%{}), fun) do
-    compile = Phoenix.Endpoint.Instrument.strip_caller(__CALLER__) |> Macro.escape()
+    compile = __CALLER__ |> Phoenix.Endpoint.Instrument.strip_caller() |> Macro.escape()
 
     quote do
       case Phoenix.Endpoint.Instrument.extract_endpoint(unquote(endpoint_or_conn_or_socket)) do

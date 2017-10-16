@@ -136,7 +136,8 @@ defmodule Phoenix.ConnTest do
   """
   @spec build_conn(atom | binary, binary, binary | list | map) :: Conn.t
   def build_conn(method, path, params_or_body \\ nil) do
-    Plug.Adapters.Test.Conn.conn(%Conn{}, method, path, params_or_body)
+    %Conn{}
+    |> Plug.Adapters.Test.Conn.conn(method, path, params_or_body)
     |> Conn.put_private(:plug_skip_csrf_protection, true)
     |> Conn.put_private(:phoenix_recycled, true)
   end
@@ -441,7 +442,7 @@ defmodule Phoenix.ConnTest do
   end
 
   def redirected_to(%Conn{status: status} = conn, status) do
-    location = Conn.get_resp_header(conn, "location") |> List.first
+    location = conn |> Conn.get_resp_header("location") |> List.first
     location || raise "no location header was set on redirected_to"
   end
 
