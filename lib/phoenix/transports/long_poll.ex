@@ -10,7 +10,7 @@ defmodule Phoenix.Transports.LongPoll do
         window_ms: 10_000,
         pubsub_timeout_ms: 2_000,
         transport_log: false,
-        crypto: [max_age: 1209600]
+        crypto: [max_age: 1_209_600]
 
     * `:window_ms` - how long the client can wait for new messages
       in its poll request
@@ -44,7 +44,7 @@ defmodule Phoenix.Transports.LongPoll do
      serializer: [{Phoenix.Transports.LongPollSerializer, "~> 1.0.0"},
                   {Phoenix.Transports.V2.LongPollSerializer, "~> 2.0.0"}],
      transport_log: false,
-     crypto: [max_age: 1209600]]
+     crypto: [max_age: 1_209_600]]
   end
 
   ## Plug callbacks
