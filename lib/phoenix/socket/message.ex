@@ -30,7 +30,8 @@ defmodule Phoenix.Socket.Message do
       }
     rescue
       err in [KeyError] ->
-        reraise Phoenix.Socket.InvalidMessageError, message: "missing key #{inspect err.key}"
+        stacktrace = System.stacktrace
+        reraise Phoenix.Socket.InvalidMessageError, [message: "missing key #{inspect err.key}"], stacktrace
     end
   end
 end
