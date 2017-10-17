@@ -152,13 +152,13 @@ resources "/comments", CommentController, except: [:delete]
 Running `$ mix phx.routes` now shows that we have all the routes except the DELETE request to the delete action.
 
 ```elixir
-comment_path  GET     /comments HelloWeb.CommentController :index
-comment_path  GET     /comments/:id/edit HelloWeb.CommentController :edit
-comment_path  GET     /comments/new HelloWeb.CommentController :new
-comment_path  GET     /comments/:id HelloWeb.CommentController :show
-comment_path  POST    /comments HelloWeb.CommentController :create
-comment_path  PATCH   /comments/:id HelloWeb.CommentController :update
-              PUT     /comments/:id HelloWeb.CommentController :update
+comment_path  GET    /comments           HelloWeb.CommentController :index
+comment_path  GET    /comments/:id/edit  HelloWeb.CommentController :edit
+comment_path  GET    /comments/new       HelloWeb.CommentController :new
+comment_path  GET    /comments/:id       HelloWeb.CommentController :show
+comment_path  POST   /comments           HelloWeb.CommentController :create
+comment_path  PATCH  /comments/:id       HelloWeb.CommentController :update
+              PUT    /comments/:id       HelloWeb.CommentController :update
 ```
 
 The `Phoenix.Router.resources/4` function describes additional options for customizing resource routes.
