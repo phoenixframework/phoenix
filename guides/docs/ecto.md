@@ -10,13 +10,13 @@ Ecto currently has adapters for the following databases:
 * SQLite3
 * MongoDB
 
-Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default. (you can pass the `--no-ecto` flag to exclude this)
+Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default (you can pass the `--no-ecto` flag to exclude this).
 
 For a thorough, general guide for Ecto, check out the [Ecto getting started guide](https://hexdocs.pm/ecto/getting-started.html). For an overview of all Ecto specific mix tasks for Phoenix, see the [mix tasks guide](phoenix_mix_tasks.html#ecto-specific-mix-tasks).
 
 This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. For instructions on switching to MySQL, please see the [Using MySQL Guide](using_mysql.html).
 
-The default Postgres configuration has a superuser account with username 'postgres' and the password 'postgres'. If you take a look at the file ```config/dev.exs```, you'll see that Phoenix works off this assumption. If you don't have this account already setup on your machine, you can connect to your postgres instance by typing ```psql``` and then entering the following commands:
+The default Postgres configuration has a superuser account with username 'postgres' and the password 'postgres'. If you take a look at the file `config/dev.exs`, you'll see that Phoenix works off this assumption. If you don't have this account already setup on your machine, you can connect to your postgres instance by typing `psql` and then entering the following commands:
 
 ```
 CREATE USER postgres;
@@ -40,7 +40,7 @@ Remember to update your repository by running migrations:
 
 A couple of files were generated with this task. First, we have a `user.ex` file, containing our Ecto schema with our schema definition of the fields we passed to the task. Next, a migration file was generated inside `priv/repo/migrations` which will create our database table that our schema maps to.
 
-With our files in place, let's follow the instructions and run our migration. If the repo hasn't been created yet, run the mix ecto.create task. Next we can run:
+With our files in place, let's follow the instructions and run our migration. If the repo hasn't been created yet, run the `mix ecto.create` task. Next we can run:
 
 ```console
 $ mix ecto.migrate
@@ -157,7 +157,7 @@ We also have similar configuration in `config/test.exs` and `config/prod.secret.
 
 ## The Schema
 
-Ecto schemas are responsible for mapping Elixir values to external data sources, as well as mapping external data back into Elixir data-structures. We can also define relationships to other schemas in our applications. For example, our `User` schema might have many `Post`'s, and each `Post` would belong to a `User`. Ecto also handles data validation and type casting with changesets, which will discuss in a moment.
+Ecto schemas are responsible for mapping Elixir values to external data sources, as well as mapping external data back into Elixir data-structures. We can also define relationships to other schemas in our applications. For example, our `User` schema might have many `Post`'s, and each `Post` would belong to a `User`. Ecto also handles data validation and type casting with changesets, which we'll discuss in a moment.
 
 Here's the `User` schema that Phoenix generated for us.
 
@@ -186,7 +186,7 @@ defmodule Hello.User do
 end
 ```
 
-Ecto schemas at their core are simply Elixir structs. Our `schema` block is what tells Ecto how to cast our `%User{}` struct fields to and from the external `"users`" table. Often, the ability to simply cast data to and from the database isn't enough and extra data validation is required. This is where Ecto Changesets come in. Let's dive in!
+Ecto schemas at their core are simply Elixir structs. Our `schema` block is what tells Ecto how to cast our `%User{}` struct fields to and from the external `users` table. Often, the ability to simply cast data to and from the database isn't enough and extra data validation is required. This is where Ecto Changesets come in. Let's dive in!
 
 ## Changesets and Validations
 
