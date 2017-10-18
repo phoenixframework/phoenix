@@ -317,14 +317,14 @@ When we run `$ mix phx.routes` now, in addition to the routes we saw for `users`
 
 ```elixir
 . . .
-user_post_path  GET     users/:user_id/posts HelloWeb.PostController :index
-user_post_path  GET     users/:user_id/posts/:id/edit HelloWeb.PostController :edit
-user_post_path  GET     users/:user_id/posts/new HelloWeb.PostController :new
-user_post_path  GET     users/:user_id/posts/:id HelloWeb.PostController :show
-user_post_path  POST    users/:user_id/posts HelloWeb.PostController :create
-user_post_path  PATCH   users/:user_id/posts/:id HelloWeb.PostController :update
-                PUT     users/:user_id/posts/:id HelloWeb.PostController :update
-user_post_path  DELETE  users/:user_id/posts/:id HelloWeb.PostController :delete
+user_post_path  GET     /users/:user_id/posts           HelloWeb.PostController :index
+user_post_path  GET     /users/:user_id/posts/:id/edit  HelloWeb.PostController :edit
+user_post_path  GET     /users/:user_id/posts/new       HelloWeb.PostController :new
+user_post_path  GET     /users/:user_id/posts/:id       HelloWeb.PostController :show
+user_post_path  POST    /users/:user_id/posts           HelloWeb.PostController :create
+user_post_path  PATCH   /users/:user_id/posts/:id       HelloWeb.PostController :update
+                PUT     /users/:user_id/posts/:id       HelloWeb.PostController :update
+user_post_path  DELETE  /users/:user_id/posts/:id       HelloWeb.PostController :delete
 ```
 
 We see that each of these routes scopes the posts to a user ID. For the first one, we will invoke the `PostController` `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
@@ -382,14 +382,14 @@ Running `$ mix phx.routes` again, in addition to the previous set of routes we g
 
 ```elixir
 . . .
-review_path  GET     /admin/reviews HelloWeb.Admin.ReviewController :index
-review_path  GET     /admin/reviews/:id/edit HelloWeb.Admin.ReviewController :edit
-review_path  GET     /admin/reviews/new HelloWeb.Admin.ReviewController :new
-review_path  GET     /admin/reviews/:id HelloWeb.Admin.ReviewController :show
-review_path  POST    /admin/reviews HelloWeb.Admin.ReviewController :create
-review_path  PATCH   /admin/reviews/:id HelloWeb.Admin.ReviewController :update
-             PUT     /admin/reviews/:id HelloWeb.Admin.ReviewController :update
-review_path  DELETE  /admin/reviews/:id HelloWeb.Admin.ReviewController :delete
+review_path  GET     /admin/reviews           HelloWeb.Admin.ReviewController :index
+review_path  GET     /admin/reviews/:id/edit  HelloWeb.Admin.ReviewController :edit
+review_path  GET     /admin/reviews/new       HelloWeb.Admin.ReviewController :new
+review_path  GET     /admin/reviews/:id       HelloWeb.Admin.ReviewController :show
+review_path  POST    /admin/reviews           HelloWeb.Admin.ReviewController :create
+review_path  PATCH   /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+             PUT     /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+review_path  DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
 ```
 
 This looks good, but there is a problem here. Remember that we wanted both user facing reviews routes `/reviews` as well as the admin ones `/admin/reviews`. If we now include the user facing reviews in our router like this:
@@ -411,23 +411,23 @@ and we run `$ mix phx.routes`, we get this output:
 
 ```elixir
 . . .
-review_path  GET     /reviews HelloWeb.ReviewController :index
-review_path  GET     /reviews/:id/edit HelloWeb.ReviewController :edit
-review_path  GET     /reviews/new HelloWeb.ReviewController :new
-review_path  GET     /reviews/:id HelloWeb.ReviewController :show
-review_path  POST    /reviews HelloWeb.ReviewController :create
-review_path  PATCH   /reviews/:id HelloWeb.ReviewController :update
-             PUT     /reviews/:id HelloWeb.ReviewController :update
-review_path  DELETE  /reviews/:id HelloWeb.ReviewController :delete
+review_path  GET     /reviews                 HelloWeb.ReviewController :index
+review_path  GET     /reviews/:id/edit        HelloWeb.ReviewController :edit
+review_path  GET     /reviews/new             HelloWeb.ReviewController :new
+review_path  GET     /reviews/:id             HelloWeb.ReviewController :show
+review_path  POST    /reviews                 HelloWeb.ReviewController :create
+review_path  PATCH   /reviews/:id             HelloWeb.ReviewController :update
+             PUT     /reviews/:id             HelloWeb.ReviewController :update
+review_path  DELETE  /reviews/:id             HelloWeb.ReviewController :delete
 . . .
-review_path  GET     /admin/reviews HelloWeb.Admin.ReviewController :index
-review_path  GET     /admin/reviews/:id/edit HelloWeb.Admin.ReviewController :edit
-review_path  GET     /admin/reviews/new HelloWeb.Admin.ReviewController :new
-review_path  GET     /admin/reviews/:id HelloWeb.Admin.ReviewController :show
-review_path  POST    /admin/reviews HelloWeb.Admin.ReviewController :create
-review_path  PATCH   /admin/reviews/:id HelloWeb.Admin.ReviewController :update
-             PUT     /admin/reviews/:id HelloWeb.Admin.ReviewController :update
-review_path  DELETE  /admin/reviews/:id HelloWeb.Admin.ReviewController :delete
+review_path  GET     /admin/reviews           HelloWeb.Admin.ReviewController :index
+review_path  GET     /admin/reviews/:id/edit  HelloWeb.Admin.ReviewController :edit
+review_path  GET     /admin/reviews/new       HelloWeb.Admin.ReviewController :new
+review_path  GET     /admin/reviews/:id       HelloWeb.Admin.ReviewController :show
+review_path  POST    /admin/reviews           HelloWeb.Admin.ReviewController :create
+review_path  PATCH   /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+             PUT     /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+review_path  DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
 ```
 
 The actual routes we get all look right, except for the path helper `review_path` at the beginning of each line. We are getting the same helper for both the user facing review routes and the admin ones, which is not correct. We can fix this problem by adding an `as: :admin` option to our admin scope.
@@ -449,23 +449,23 @@ end
 
 ```elixir
 . . .
-      review_path  GET     /reviews HelloWeb.ReviewController :index
-      review_path  GET     /reviews/:id/edit HelloWeb.ReviewController :edit
-      review_path  GET     /reviews/new HelloWeb.ReviewController :new
-      review_path  GET     /reviews/:id HelloWeb.ReviewController :show
-      review_path  POST    /reviews HelloWeb.ReviewController :create
-      review_path  PATCH   /reviews/:id HelloWeb.ReviewController :update
-                   PUT     /reviews/:id HelloWeb.ReviewController :update
-      review_path  DELETE  /reviews/:id HelloWeb.ReviewController :delete
+      review_path  GET     /reviews                        HelloWeb.ReviewController :index
+      review_path  GET     /reviews/:id/edit               HelloWeb.ReviewController :edit
+      review_path  GET     /reviews/new                    HelloWeb.ReviewController :new
+      review_path  GET     /reviews/:id                    HelloWeb.ReviewController :show
+      review_path  POST    /reviews                        HelloWeb.ReviewController :create
+      review_path  PATCH   /reviews/:id                    HelloWeb.ReviewController :update
+                   PUT     /reviews/:id                    HelloWeb.ReviewController :update
+      review_path  DELETE  /reviews/:id                    HelloWeb.ReviewController :delete
 . . .
-admin_review_path  GET     /admin/reviews HelloWeb.Admin.ReviewController :index
-admin_review_path  GET     /admin/reviews/:id/edit HelloWeb.Admin.ReviewController :edit
-admin_review_path  GET     /admin/reviews/new HelloWeb.Admin.ReviewController :new
-admin_review_path  GET     /admin/reviews/:id HelloWeb.Admin.ReviewController :show
-admin_review_path  POST    /admin/reviews HelloWeb.Admin.ReviewController :create
-admin_review_path  PATCH   /admin/reviews/:id HelloWeb.Admin.ReviewController :update
-                   PUT     /admin/reviews/:id HelloWeb.Admin.ReviewController :update
-admin_review_path  DELETE  /admin/reviews/:id HelloWeb.Admin.ReviewController :delete
+admin_review_path  GET     /admin/reviews                  HelloWeb.Admin.ReviewController :index
+admin_review_path  GET     /admin/reviews/:id/edit         HelloWeb.Admin.ReviewController :edit
+admin_review_path  GET     /admin/reviews/new              HelloWeb.Admin.ReviewController :new
+admin_review_path  GET     /admin/reviews/:id              HelloWeb.Admin.ReviewController :show
+admin_review_path  POST    /admin/reviews                  HelloWeb.Admin.ReviewController :create
+admin_review_path  PATCH   /admin/reviews/:id              HelloWeb.Admin.ReviewController :update
+                   PUT     /admin/reviews/:id              HelloWeb.Admin.ReviewController :update
+admin_review_path  DELETE  /admin/reviews/:id              HelloWeb.Admin.ReviewController :delete
 ```
 
 The path helpers now return what we want them to as well. Run `$ iex -S mix` and give it a try yourself.
@@ -494,30 +494,30 @@ Here's what `$ mix phx.routes` tells us:
 
 ```elixir
 . . .
- admin_image_path  GET     /admin/images HelloWeb.Admin.ImageController :index
- admin_image_path  GET     /admin/images/:id/edit HelloWeb.Admin.ImageController :edit
- admin_image_path  GET     /admin/images/new HelloWeb.Admin.ImageController :new
- admin_image_path  GET     /admin/images/:id HelloWeb.Admin.ImageController :show
- admin_image_path  POST    /admin/images HelloWeb.Admin.ImageController :create
- admin_image_path  PATCH   /admin/images/:id HelloWeb.Admin.ImageController :update
-                   PUT     /admin/images/:id HelloWeb.Admin.ImageController :update
- admin_image_path  DELETE  /admin/images/:id HelloWeb.Admin.ImageController :delete
-admin_review_path  GET     /admin/reviews HelloWeb.Admin.ReviewController :index
-admin_review_path  GET     /admin/reviews/:id/edit HelloWeb.Admin.ReviewController :edit
-admin_review_path  GET     /admin/reviews/new HelloWeb.Admin.ReviewController :new
-admin_review_path  GET     /admin/reviews/:id HelloWeb.Admin.ReviewController :show
-admin_review_path  POST    /admin/reviews HelloWeb.Admin.ReviewController :create
-admin_review_path  PATCH   /admin/reviews/:id HelloWeb.Admin.ReviewController :update
-                   PUT     /admin/reviews/:id HelloWeb.Admin.ReviewController :update
-admin_review_path  DELETE  /admin/reviews/:id HelloWeb.Admin.ReviewController :delete
-  admin_user_path  GET     /admin/users HelloWeb.Admin.UserController :index
-  admin_user_path  GET     /admin/users/:id/edit HelloWeb.Admin.UserController :edit
-  admin_user_path  GET     /admin/users/new HelloWeb.Admin.UserController :new
-  admin_user_path  GET     /admin/users/:id HelloWeb.Admin.UserController :show
-  admin_user_path  POST    /admin/users HelloWeb.Admin.UserController :create
-  admin_user_path  PATCH   /admin/users/:id HelloWeb.Admin.UserController :update
-                   PUT     /admin/users/:id HelloWeb.Admin.UserController :update
-  admin_user_path  DELETE  /admin/users/:id HelloWeb.Admin.UserController :delete
+ admin_image_path  GET     /admin/images            HelloWeb.Admin.ImageController :index
+ admin_image_path  GET     /admin/images/:id/edit   HelloWeb.Admin.ImageController :edit
+ admin_image_path  GET     /admin/images/new        HelloWeb.Admin.ImageController :new
+ admin_image_path  GET     /admin/images/:id        HelloWeb.Admin.ImageController :show
+ admin_image_path  POST    /admin/images            HelloWeb.Admin.ImageController :create
+ admin_image_path  PATCH   /admin/images/:id        HelloWeb.Admin.ImageController :update
+                   PUT     /admin/images/:id        HelloWeb.Admin.ImageController :update
+ admin_image_path  DELETE  /admin/images/:id        HelloWeb.Admin.ImageController :delete
+admin_review_path  GET     /admin/reviews           HelloWeb.Admin.ReviewController :index
+admin_review_path  GET     /admin/reviews/:id/edit  HelloWeb.Admin.ReviewController :edit
+admin_review_path  GET     /admin/reviews/new       HelloWeb.Admin.ReviewController :new
+admin_review_path  GET     /admin/reviews/:id       HelloWeb.Admin.ReviewController :show
+admin_review_path  POST    /admin/reviews           HelloWeb.Admin.ReviewController :create
+admin_review_path  PATCH   /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+                   PUT     /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+admin_review_path  DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
+  admin_user_path  GET     /admin/users             HelloWeb.Admin.UserController :index
+  admin_user_path  GET     /admin/users/:id/edit    HelloWeb.Admin.UserController :edit
+  admin_user_path  GET     /admin/users/new         HelloWeb.Admin.UserController :new
+  admin_user_path  GET     /admin/users/:id         HelloWeb.Admin.UserController :show
+  admin_user_path  POST    /admin/users             HelloWeb.Admin.UserController :create
+  admin_user_path  PATCH   /admin/users/:id         HelloWeb.Admin.UserController :update
+                   PUT     /admin/users/:id         HelloWeb.Admin.UserController :update
+  admin_user_path  DELETE  /admin/users/:id         HelloWeb.Admin.UserController :delete
 ```
 
 This is great, exactly what we want, but we can make it even better. Notice that for each resource, we needed to fully qualify the controller name by prefixing it with `HelloWeb.Admin`. That's tedious and error prone. Assuming that the name of each controller begins with `HelloWeb.Admin`, then we can add a `HelloWeb.Admin` option to our scope declaration just after the scope path, and all of our routes will have the correct, fully qualified controller name.
@@ -555,23 +555,23 @@ end
 Again `$ mix phx.routes` tells us that all of our controllers now have the correct, fully-qualified names.
 
 ```elixir
-image_path   GET     /images HelloWeb.ImageController :index
-review_path  GET     /reviews HelloWeb.ReviewController :index
-review_path  GET     /reviews/:id/edit HelloWeb.ReviewController :edit
-review_path  GET     /reviews/new HelloWeb.ReviewController :new
-review_path  GET     /reviews/:id HelloWeb.ReviewController :show
-review_path  POST    /reviews HelloWeb.ReviewController :create
-review_path  PATCH   /reviews/:id HelloWeb.ReviewController :update
-             PUT     /reviews/:id HelloWeb.ReviewController :update
-review_path  DELETE  /reviews/:id HelloWeb.ReviewController :delete
-  user_path  GET     /users HelloWeb.UserController :index
-  user_path  GET     /users/:id/edit HelloWeb.UserController :edit
-  user_path  GET     /users/new HelloWeb.UserController :new
-  user_path  GET     /users/:id HelloWeb.UserController :show
-  user_path  POST    /users HelloWeb.UserController :create
-  user_path  PATCH   /users/:id HelloWeb.UserController :update
-             PUT     /users/:id HelloWeb.UserController :update
-  user_path  DELETE  /users/:id HelloWeb.UserController :delete
+ image_path  GET     /images            HelloWeb.ImageController :index
+review_path  GET     /reviews           HelloWeb.ReviewController :index
+review_path  GET     /reviews/:id/edit  HelloWeb.ReviewController :edit
+review_path  GET     /reviews/new       HelloWeb.ReviewController :new
+review_path  GET     /reviews/:id       HelloWeb.ReviewController :show
+review_path  POST    /reviews           HelloWeb.ReviewController :create
+review_path  PATCH   /reviews/:id       HelloWeb.ReviewController :update
+             PUT     /reviews/:id       HelloWeb.ReviewController :update
+review_path  DELETE  /reviews/:id       HelloWeb.ReviewController :delete
+  user_path  GET     /users             HelloWeb.UserController :index
+  user_path  GET     /users/:id/edit    HelloWeb.UserController :edit
+  user_path  GET     /users/new         HelloWeb.UserController :new
+  user_path  GET     /users/:id         HelloWeb.UserController :show
+  user_path  POST    /users             HelloWeb.UserController :create
+  user_path  PATCH   /users/:id         HelloWeb.UserController :update
+             PUT     /users/:id         HelloWeb.UserController :update
+  user_path  DELETE  /users/:id         HelloWeb.UserController :delete
 ```
 
 Although technically scopes can also be nested (just like resources), the use of nested scopes is generally discouraged because it can sometimes make our code confusing and less clear. With that said, suppose that we had a versioned API with resources defined for images, reviews and users. Then technically we could  setup routes for the versioned API like this:
@@ -591,30 +591,30 @@ end
 `$ mix phx.routes` tells us that we have the routes we're looking for.
 
 ```elixir
- api_v1_image_path  GET     /api/v1/images HelloWeb.Api.V1.ImageController :index
- api_v1_image_path  GET     /api/v1/images/:id/edit HelloWeb.Api.V1.ImageController :edit
- api_v1_image_path  GET     /api/v1/images/new HelloWeb.Api.V1.ImageController :new
- api_v1_image_path  GET     /api/v1/images/:id HelloWeb.Api.V1.ImageController :show
- api_v1_image_path  POST    /api/v1/images HelloWeb.Api.V1.ImageController :create
- api_v1_image_path  PATCH   /api/v1/images/:id HelloWeb.Api.V1.ImageController :update
-                    PUT     /api/v1/images/:id HelloWeb.Api.V1.ImageController :update
- api_v1_image_path  DELETE  /api/v1/images/:id HelloWeb.Api.V1.ImageController :delete
-api_v1_review_path  GET     /api/v1/reviews HelloWeb.Api.V1.ReviewController :index
-api_v1_review_path  GET     /api/v1/reviews/:id/edit HelloWeb.Api.V1.ReviewController :edit
-api_v1_review_path  GET     /api/v1/reviews/new HelloWeb.Api.V1.ReviewController :new
-api_v1_review_path  GET     /api/v1/reviews/:id HelloWeb.Api.V1.ReviewController :show
-api_v1_review_path  POST    /api/v1/reviews HelloWeb.Api.V1.ReviewController :create
-api_v1_review_path  PATCH   /api/v1/reviews/:id HelloWeb.Api.V1.ReviewController :update
-                    PUT     /api/v1/reviews/:id HelloWeb.Api.V1.ReviewController :update
-api_v1_review_path  DELETE  /api/v1/reviews/:id HelloWeb.Api.V1.ReviewController :delete
-  api_v1_user_path  GET     /api/v1/users HelloWeb.Api.V1.UserController :index
-  api_v1_user_path  GET     /api/v1/users/:id/edit HelloWeb.Api.V1.UserController :edit
-  api_v1_user_path  GET     /api/v1/users/new HelloWeb.Api.V1.UserController :new
-  api_v1_user_path  GET     /api/v1/users/:id HelloWeb.Api.V1.UserController :show
-  api_v1_user_path  POST    /api/v1/users HelloWeb.Api.V1.UserController :create
-  api_v1_user_path  PATCH   /api/v1/users/:id HelloWeb.Api.V1.UserController :update
-                    PUT     /api/v1/users/:id HelloWeb.Api.V1.UserController :update
-  api_v1_user_path  DELETE  /api/v1/users/:id HelloWeb.Api.V1.UserController :delete
+ api_v1_image_path  GET     /api/v1/images            HelloWeb.Api.V1.ImageController :index
+ api_v1_image_path  GET     /api/v1/images/:id/edit   HelloWeb.Api.V1.ImageController :edit
+ api_v1_image_path  GET     /api/v1/images/new        HelloWeb.Api.V1.ImageController :new
+ api_v1_image_path  GET     /api/v1/images/:id        HelloWeb.Api.V1.ImageController :show
+ api_v1_image_path  POST    /api/v1/images            HelloWeb.Api.V1.ImageController :create
+ api_v1_image_path  PATCH   /api/v1/images/:id        HelloWeb.Api.V1.ImageController :update
+                    PUT     /api/v1/images/:id        HelloWeb.Api.V1.ImageController :update
+ api_v1_image_path  DELETE  /api/v1/images/:id        HelloWeb.Api.V1.ImageController :delete
+api_v1_review_path  GET     /api/v1/reviews           HelloWeb.Api.V1.ReviewController :index
+api_v1_review_path  GET     /api/v1/reviews/:id/edit  HelloWeb.Api.V1.ReviewController :edit
+api_v1_review_path  GET     /api/v1/reviews/new       HelloWeb.Api.V1.ReviewController :new
+api_v1_review_path  GET     /api/v1/reviews/:id       HelloWeb.Api.V1.ReviewController :show
+api_v1_review_path  POST    /api/v1/reviews           HelloWeb.Api.V1.ReviewController :create
+api_v1_review_path  PATCH   /api/v1/reviews/:id       HelloWeb.Api.V1.ReviewController :update
+                    PUT     /api/v1/reviews/:id       HelloWeb.Api.V1.ReviewController :update
+api_v1_review_path  DELETE  /api/v1/reviews/:id       HelloWeb.Api.V1.ReviewController :delete
+  api_v1_user_path  GET     /api/v1/users             HelloWeb.Api.V1.UserController :index
+  api_v1_user_path  GET     /api/v1/users/:id/edit    HelloWeb.Api.V1.UserController :edit
+  api_v1_user_path  GET     /api/v1/users/new         HelloWeb.Api.V1.UserController :new
+  api_v1_user_path  GET     /api/v1/users/:id         HelloWeb.Api.V1.UserController :show
+  api_v1_user_path  POST    /api/v1/users             HelloWeb.Api.V1.UserController :create
+  api_v1_user_path  PATCH   /api/v1/users/:id         HelloWeb.Api.V1.UserController :update
+                    PUT     /api/v1/users/:id         HelloWeb.Api.V1.UserController :update
+  api_v1_user_path  DELETE  /api/v1/users/:id         HelloWeb.Api.V1.UserController :delete
 ```
 Interestingly, we can use multiple scopes with the same path as long as we are careful not to duplicate routes. If we do duplicate a route, we'll get this familiar warning.
 
