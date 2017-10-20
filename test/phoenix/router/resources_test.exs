@@ -266,4 +266,13 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.resp_body == "show users"
     assert conn.params["id"] == "2"
   end
+
+  test "singleton resources declaring an :index route throws an ArgumentError" do
+    assert_raise ArgumentError, ~r"cannot have an :index route", fn ->
+      defmodule SingletonRouter.Router do
+        use Phoenix.Router
+        resources "/", UserController, singleton: true, only: [:index]
+      end
+    end
+  end
 end
