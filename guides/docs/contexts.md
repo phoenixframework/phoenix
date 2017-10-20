@@ -308,7 +308,7 @@ Generated hello app
 [info]  == Migrated in 0.0s
 ```
 
-Before we integrate credentials in the web layer, we need to let our context know how to associate users and credentials. First, open up `lib/accounts/user.ex` and add the following association:
+Before we integrate credentials in the web layer, we need to let our context know how to associate users and credentials. First, open up `lib/hello/accounts/user.ex` and add the following association:
 
 
 ```elixir
