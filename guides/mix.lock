@@ -1,3 +1,7 @@
 %{"earmark": {:hex, :earmark, "1.2.3", "206eb2e2ac1a794aa5256f3982de7a76bf4579ff91cb28d0e17ea2c9491e46a4", [:mix], [], "hexpm"},
-  "ex_doc": {:hex, :ex_doc, "0.16.3", "cd2a4cfe5d26e37502d3ec776702c72efa1adfa24ed9ce723bb565f4c30bd31a", [:mix], [{:earmark, "~> 1.1", [hex: :earmark, repo: "hexpm", optional: false]}], "hexpm"},
-  "fs": {:hex, :fs, "0.9.2", "ed17036c26c3f70ac49781ed9220a50c36775c6ca2cf8182d123b6566e49ec59", [:rebar], []}}
+  "ex_doc": {:hex, :ex_doc, "0.18.1", "37c69d2ef62f24928c1f4fdc7c724ea04aecfdf500c4329185f8e3649c915baf", [:mix], [{:earmark, "~> 1.1", [hex: :earmark, repo: "hexpm", optional: false]}], "hexpm"},
+  "ex_doc_makeup": {:hex, :ex_doc_makeup, "0.1.2", "88d9a9c4be29a8486c3aa410927706c2da0c4e22fcc135e49dceb15f17510de0", [:mix], [{:ex_doc, ">= 0.18.1", [hex: :ex_doc, repo: "hexpm", optional: false]}, {:makeup_elixir, ">= 0.3.1", [hex: :makeup_elixir, repo: "hexpm", optional: false]}], "hexpm"},
+  "ex_spirit": {:hex, :ex_spirit, "0.3.4", "cf21c0fa0349445da40091df1fb8141d0e802f83b83659132713012bbe7fb398", [:mix], [], "hexpm"},
+  "fs": {:hex, :fs, "0.9.2", "ed17036c26c3f70ac49781ed9220a50c36775c6ca2cf8182d123b6566e49ec59", [:rebar], []},
+  "makeup": {:hex, :makeup, "0.3.0", "c8223bdbddf4d6f09902a483e5ba1dec694b3747700e4d4ed00f13c08250c21d", [:mix], [{:ex_spirit, "~> 0.3.4", [hex: :ex_spirit, repo: "hexpm", optional: false]}], "hexpm"},
+  "makeup_elixir": {:hex, :makeup_elixir, "0.3.1", "46a43920d74999b33f866de14448ab8ade50b691f18f4520b769129af8c54e4b", [:mix], [{:makeup, "0.3.0", [hex: :makeup, repo: "hexpm", optional: false]}], "hexpm"}}

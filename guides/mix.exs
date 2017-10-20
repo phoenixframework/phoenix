@@ -16,6 +16,7 @@ defmodule PhoenixGuides.Mixfile do
             assets: "docs/assets",
             extra_section: "GUIDES",
             formatters: ["epub", "html"],
+            markdown_processor: ExDocMakeup,
             extras: extras(),
             homepage_url: "http://www.phoenixframework.org",
             description: """
@@ -28,7 +29,8 @@ defmodule PhoenixGuides.Mixfile do
   end
 
   defp deps do
-    [{:ex_doc, "~> 0.14", only: :docs},
+    [{:ex_doc, ">= 0.18.1", only: :docs},
+     {:ex_doc_makeup, "~> 0.1.2", only: :docs},
      {:fs, "~> 0.9.1", only: :docs}]
   end
 
