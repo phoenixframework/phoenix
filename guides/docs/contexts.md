@@ -910,7 +910,8 @@ Next, we added an `:authorized_page` plug that makes use of plug's guard clause 
 With our new plugs in place, we can now modify our `create`, `edit`, `update`, and `delete` actions to make use of the new values in the connection assigns:
 
 ```elixir
-  def edit(conn, _) do
+- def edit(conn, %{"id" => id}) do
++ def edit(conn, _) do
 -   page = CMS.get_page!(id)
 -   changeset = CMS.change_page(page)
 +   changeset = CMS.change_page(conn.assigns.page)
