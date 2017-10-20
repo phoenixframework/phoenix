@@ -234,6 +234,7 @@ defmodule Phoenix.Router do
 
         if resource.singleton do
           Enum.each resource.actions, fn
+            :index   -> raise ArgumentError, "singleton resources cannot have an :index route"
             :show    -> get    path,            ctrl, :show, opts
             :new     -> get    path <> "/new",  ctrl, :new, opts
             :edit    -> get    path <> "/edit", ctrl, :edit, opts
