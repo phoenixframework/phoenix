@@ -219,7 +219,6 @@ const TRANSPORTS = {
  * @param {number} timeout - The push timeout in milliseconds
  */
 class Push {
-
   constructor(channel, event, payload, timeout){
     this.channel      = channel
     this.event        = event
@@ -446,6 +445,7 @@ export class Channel {
    *
    * @param {string} event
    * @param {Function} callback
+   * @returns {integer} ref
    */
   on(event, callback){
     let ref = this.bindingRef++
@@ -455,7 +455,7 @@ export class Channel {
 
   /**
    * @param {string} event
-   * @param {Function} callback
+   * @param {integer} ref
    */
   off(event, ref){
     this.bindings = this.bindings.filter((bind) => {
@@ -471,6 +471,7 @@ export class Channel {
   /**
    * @param {string} event
    * @param {Object} payload
+   * @param {number} [timeout]
    * @returns {Push}
    */
   push(event, payload, timeout = this.timeout){
@@ -529,6 +530,7 @@ export class Channel {
    * @param {string} event
    * @param {Object} payload
    * @param {integer} ref
+   * @returns {Object}
    */
   onMessage(event, payload, ref){ return payload }
 
@@ -633,11 +635,11 @@ const Serializer = {
  * @param {string} endPoint - The string WebSocket endpoint, ie, `"ws://example.com/socket"`,
  *                                               `"wss://example.com"`
  *                                               `"/socket"` (inherited host & protocol)
- * @param {Object} opts - Optional configuration
- * @param {string} opts.transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
+ * @param {Object} [opts] - Optional configuration
+ * @param {string} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
  *
  * Defaults to WebSocket with automatic LongPoll fallback.
- * @param {Function} opts.encode - The function to encode outgoing messages.
+ * @param {Function} [opts.encode] - The function to encode outgoing messages.
  *
  * Defaults to JSON:
  *
@@ -645,7 +647,7 @@ const Serializer = {
  * (payload, callback) => callback(JSON.stringify(payload))
  * ```
  *
- * @param {Function} opts.decode - The function to decode incoming messages.
+ * @param {Function} [opts.decode] - The function to decode incoming messages.
  *
  * Defaults to JSON:
  *
@@ -653,11 +655,11 @@ const Serializer = {
  * (payload, callback) => callback(JSON.parse(payload))
  * ```
  *
- * @param {number} opts.timeout - The default timeout in milliseconds to trigger push timeouts.
+ * @param {number} [opts.timeout] - The default timeout in milliseconds to trigger push timeouts.
  *
  * Defaults `DEFAULT_TIMEOUT`
- * @param {number} opts.heartbeatIntervalMs - The millisec interval to send a heartbeat message
- * @param {number} opts.reconnectAfterMs - The optional function that returns the millsec reconnect interval.
+ * @param {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
+ * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millsec reconnect interval.
  *
  * Defaults to stepped backoff of:
  *
@@ -666,23 +668,22 @@ const Serializer = {
  *   return [1000, 5000, 10000][tries - 1] || 10000
  * }
  * ```
- * @param {Function} opts.logger - The optional function for specialized logging, ie:
+ * @param {Function} [opts.logger] - The optional function for specialized logging, ie:
  * ```javascript
  * function(kind, msg, data) {
  *   console.log(`${kind}: ${msg}`, data)
  * }
  * ```
  *
- * @param {number}  opts.longpollerTimeout - The maximum timeout of a long poll AJAX request.
+ * @param {number} [opts.longpollerTimeout] - The maximum timeout of a long poll AJAX request.
  *
  * Defaults to 20s (double the server long poll timer).
  *
- * @param {Object}  opts.params - The optional params to pass when connecting
+ * @param {Object} [opts.params] - The optional params to pass when connecting
  *
  *
 */
 export class Socket {
-
   constructor(endPoint, opts = {}){
     this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
     this.channels             = []
