@@ -333,7 +333,7 @@ Then, pass the basename of the new layout into `put_layout/2` in our `index` act
 def index(conn, params) do
   conn
   |> put_layout("admin.html")
-  |> render "index.html"
+  |> render("index.html")
 end
 ```
 When we load the page, we should be rendering the admin layout without a logo.
