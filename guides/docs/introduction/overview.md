@@ -35,7 +35,7 @@ Phoenix is made up of a number of distinct parts, each with its own purpose and 
     - act as a presentation layer
     - define helper functions, available in templates, to decorate data for presentation
  - [Templates](templates.html)
-    - files that will eventually be served in a response
+    - files containing the contents that will be served in a response
     - provide the basic structure for a response, and allow dynamic data to be substituted in
     - are precompiled and fast
  - [Channels](channels.html)
