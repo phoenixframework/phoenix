@@ -279,7 +279,7 @@ The `Phoenix.Controller` module provides the `put_layout/2` function for us to s
 In a freshly generated Phoenix app, edit the `index` action of the `PageController` module `lib/hello_web/controllers/page_controller.ex` to look like this.
 
 ```elixir
-def index(conn, params) do
+def index(conn, _params) do
   conn
   |> put_layout(false)
   |> render("index.html")
@@ -304,7 +304,7 @@ where your argument replaces `conn` as the first argument, one of the first thin
 This is fine.
 
 ```elixir
-def index(conn, params) do
+def index(conn, _params) do
   conn
   |> put_layout(false)
   |> render("index.html")
@@ -314,7 +314,7 @@ end
 Whereas this won't work.
 
 ```elixir
-def index(conn, params) do
+def index(conn, _params) do
   conn
   |> put_layout false
   |> render "index.html"
@@ -330,7 +330,7 @@ Now let's actually create another layout and render the index template into it. 
 Then, pass the basename of the new layout into `put_layout/2` in our `index` action in `lib/hello_web/controllers/page_controller.ex`.
 
 ```elixir
-def index(conn, params) do
+def index(conn, _params) do
   conn
   |> put_layout("admin.html")
   |> render("index.html")
