@@ -102,6 +102,7 @@ defmodule Phoenix.Mixfile do
       "guides/docs/views.md",
       "guides/docs/templates.md",
       "guides/docs/channels.md",
+      "guides/docs/presence.md",
       "guides/docs/ecto.md",
       "guides/docs/contexts.md",
       "guides/docs/phoenix_mix_tasks.md",
