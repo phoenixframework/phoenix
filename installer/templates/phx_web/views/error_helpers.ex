@@ -18,19 +18,23 @@ defmodule <%= web_namespace %>.ErrorHelpers do
   Translates an error message using gettext.
   """
   def translate_error({msg, opts}) do
-    # Because error messages were defined within Ecto, we must
-    # call the Gettext module passing our Gettext backend. We
-    # also use the "errors" domain as translations are placed
-    # in the errors.po file.
-    # Ecto will pass the :count keyword if the error message is
-    # meant to be pluralized.
-    # On your own code and templates, depending on whether you
-    # need the message to be pluralized or not, this could be
-    # written simply as:
+    # When using gettext, we typically pass the strings we want
+    # to translate as a static argument:
     #
-    #     dngettext "errors", "1 file", "%{count} files", count
+    #     # Translate "is invalid" in the "errors" domain
     #     dgettext "errors", "is invalid"
     #
+    #     # Translate the number of files with plural rules
+    #     dngettext "errors", "1 file", "%{count} files", count
+    #
+    # Because the error messages we show in our forms and APIs
+    # are defined inside Ecto, we need to translate them dynamically.
+    # This requires us to call the Gettext module passing our gettext
+    # backend as first argument.
+    #
+    # Note we use the "errors" domain, which means translations
+    # should be written to the errors.po file. The :count option is
+    # set by Ecto and indicates we should also apply plural rules.
     if count = opts[:count] do
       Gettext.dngettext(<%= web_namespace %>.Gettext, "errors", msg, msg, count, opts)
     else
