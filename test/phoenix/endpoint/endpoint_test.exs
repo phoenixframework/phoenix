@@ -179,7 +179,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
       Endpoint.static_path("/\\unsafe_path")
     end
 
-    assert_raise ArgumentError, ~r/expected a local path/, fn ->
+    assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
       Endpoint.static_path("//invalid_path")
     end
   end
