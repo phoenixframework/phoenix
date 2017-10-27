@@ -1,3 +1,5 @@
+# Presence
+
 Phoenix Presence is a feature which allows you to register process information on a topic and replicate it transparently across a cluster. It's a combination of both a server-side and client-side library which makes it simple to implement. A simple use-case would be showing which users are currently online in an application.
 
 Phoenix Presence is special for a number of reasons. It has no single point of failure, no single source of truth, relies entirely on the standard library with no operational dependencies and self heals. This is all handled with a conflict-free replicated data type (CRDT) protocol.
