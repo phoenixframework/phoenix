@@ -75,7 +75,7 @@ The `phx.new` task will also ask us if we want to install our dependencies. (Ple
 
 ```console
 Fetch and install dependencies? [Yn] y
-* running npm install && node node_modules/brunch/bin/brunch build
+* running npm install && npm run brunch
 * running mix deps.get
 ```
 
