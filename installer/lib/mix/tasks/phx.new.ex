@@ -176,7 +176,7 @@ defmodule Mix.Tasks.Phx.New do
     assets_path = Path.join(project.web_path || project.project_path, "assets")
     brunch_config = Path.join(assets_path, "brunch-config.js")
 
-    maybe_cmd "cd #{relative_app_path(assets_path)} && npm install && node node_modules/brunch/bin/brunch build",
+    maybe_cmd "cd #{relative_app_path(assets_path)} && npm install && npm run brunch",
               File.exists?(brunch_config), install? && System.find_executable("npm")
   end
 

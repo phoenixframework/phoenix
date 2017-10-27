@@ -37,7 +37,7 @@ Phoenix generates the directory structure and all the files we will need for our
 Fetch and install dependencies? [Yn] Y
 * running mix deps.get
 * running mix deps.compile
-* running cd assets && npm install && node node_modules/brunch/bin/brunch build
+* running cd assets && npm install && npm run brunch
 
 We are all set! Go into your application by running:
 
@@ -90,7 +90,7 @@ We are almost there! The following steps are missing:
 
     $ cd hello
     $ mix deps.get
-    $ cd assets && npm install && node node_modules/brunch/bin/brunch build
+    $ cd assets && npm install && npm run brunch
 
 Then configure your database in config/dev.exs and run:
 
