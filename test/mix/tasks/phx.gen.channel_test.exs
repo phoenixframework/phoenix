@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
   end
 
   test "in an umbrella with a context_app, generates the files" do
-    in_tmp_umbrella_project "generates presences", fn ->
+    in_tmp_umbrella_project "generates channels", fn ->
       Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
       Gen.Channel.run ["room"]
       assert_file "lib/phoenix/channels/room_channel.ex", fn file ->
