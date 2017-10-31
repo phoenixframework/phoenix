@@ -31,7 +31,7 @@ Note that there are still other tasks under the full phoenix name:
 ➜  mix help | grep -i phoenix
 mix local.phoenix      # Updates Phoenix locally
 mix phoenix.gen.html   # Generates controller, model and views for an HTML based resource
-mix phoenix.new        # Creates a new Phoenix v1.2.1 application
+mix phoenix.new        # Creates a new Phoenix v1.3.0 application
 mix phoenix.server     # Starts applications and their servers
 ```
 
