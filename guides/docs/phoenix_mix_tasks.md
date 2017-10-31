@@ -25,16 +25,6 @@ mix phx.routes         # Prints all routes
 mix phx.server         # Starts applications and their servers
 ```
 
-Note that there are still other tasks under the full phoenix name:
-
-```console
-➜  mix help | grep -i phoenix
-mix local.phoenix      # Updates Phoenix locally
-mix phoenix.gen.html   # Generates controller, model and views for an HTML based resource
-mix phoenix.new        # Creates a new Phoenix v1.3.0 application
-mix phoenix.server     # Starts applications and their servers
-```
-
 We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea. And here we are.
 
 #### `mix phx.new`
