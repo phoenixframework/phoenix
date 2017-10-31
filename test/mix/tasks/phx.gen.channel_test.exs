@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
 
   test "generates channel" do
     in_tmp_project "generates channel", fn ->
-      Gen.Channel.run ["room"]
+      Gen.Channel.run ["Room"]
 
       assert_file "lib/phoenix_web/channels/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule PhoenixWeb.RoomChannel do|
