@@ -420,7 +420,7 @@ We used Ecto's `belongs_to` and `has_one` associations to wire-up how our data i
 
 - alias Hello.Accounts.Credential
 ```
-We updated the functions to pipe our user changeset into `Ecto.Changeset.cast_assoc/2`. Ecto's `cast_assoc/2` allows us to tell the changeset how to cast user input to a schema relation. We also used the `:with` option to tell Ecto to use our `Credential.changeset/2` function to cast the data. This way, any validations we perform in `Credential.changeset/2` will be applied when saving the `User` changeset.
+We updated the functions to pipe our user changeset into `Ecto.Changeset.cast_assoc/3`. Ecto's `cast_assoc/3` allows us to tell the changeset how to cast user input to a schema relation. We also used the `:with` option to tell Ecto to use our `Credential.changeset/2` function to cast the data. This way, any validations we perform in `Credential.changeset/2` will be applied when saving the `User` changeset.
 
 Finally, if you visit `http://localhost:4000/users/new` and attempt to save an empty email address, you'll see the proper validation error message. If you enter valid information, the data will be casted and persisted properly.
 
