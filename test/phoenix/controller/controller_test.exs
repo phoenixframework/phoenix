@@ -41,6 +41,11 @@ defmodule Phoenix.Controller.ControllerTest do
     assert view_template(%Conn{}) == nil
   end
 
+  test "status_message_from_template/1" do
+    assert status_message_from_template("404.html") == "Not Found"
+    assert status_message_from_template("whatever.html") == "Internal Server Error"
+  end
+
   test "put_layout_formats/2 and layout_formats/1" do
     conn = conn(:get, "/")
     assert layout_formats(conn) == ~w(html)

@@ -1249,6 +1249,27 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
+  Generates a status message from the template name.
+
+  ## Examples
+
+      iex> status_message_from_template("404.html")
+      "Not Found"
+      iex> status_message_from_template("whatever.html")
+      "Internal Server Error"
+
+  """
+  def status_message_from_template(template) do
+    template
+    |> String.split(".")
+    |> hd()
+    |> String.to_integer()
+    |> Plug.Conn.Status.reason_phrase()
+  rescue
+    _ -> "Internal Server Error"
+  end
+
+  @doc """
   Clears all flash messages.
   """
   def clear_flash(conn) do
