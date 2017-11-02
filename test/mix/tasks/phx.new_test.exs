@@ -73,7 +73,7 @@ defmodule Mix.Tasks.Phx.NewTest do
             capture_io(:user, fn ->
               Mix.Task.run("test", ["--no-start", "--no-compile"])
             end)
-          end) =~ ~r"4 tests, 0 failures"
+          end) =~ ~r"3 tests, 0 failures"
         end
       after
         Code.delete_path Path.join(project_path, "_build/test/consolidated")

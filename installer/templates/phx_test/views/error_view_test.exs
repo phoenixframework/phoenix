@@ -6,29 +6,19 @@ defmodule <%= web_namespace %>.ErrorViewTest do
 
   <%= if html do %>test "renders 404.html" do
     assert render_to_string(<%= web_namespace %>.ErrorView, "404.html", []) ==
-           "Page not found"
+           "Not Found"
   end
 
-  test "render 500.html" do
+  test "renders 500.html" do
     assert render_to_string(<%= web_namespace %>.ErrorView, "500.html", []) ==
-           "Internal server error"
-  end
-
-  test "render any other" do
-    assert render_to_string(<%= web_namespace %>.ErrorView, "505.html", []) ==
-           "Internal server error"
+           "Internal Server Error"
   end<% else %>test "renders 404.json" do
     assert render(<%= web_namespace %>.ErrorView, "404.json", []) ==
-           %{errors: %{detail: "Page not found"}}
+           %{errors: %{detail: "Not Found"}}
   end
 
-  test "render 500.json" do
+  test "renders 500.json" do
     assert render(<%= web_namespace %>.ErrorView, "500.json", []) ==
-           %{errors: %{detail: "Internal server error"}}
-  end
-
-  test "render any other" do
-    assert render(<%= web_namespace %>.ErrorView, "505.json", []) ==
-           %{errors: %{detail: "Internal server error"}}
+           %{errors: %{detail: "Internal Server Error"}}
   end<% end %>
 end
