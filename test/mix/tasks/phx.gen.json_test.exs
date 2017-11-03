@@ -36,7 +36,11 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
   test "generates json resource", config do
     in_tmp_project config.test, fn ->
-      Gen.Json.run(["Blog", "Post", "posts", "title:string"])
+     Gen.Json.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
+                     tags:array:text popular:boolean drafted_at:datetime
+                     published_at:utc_datetime deleted_at:naive_datetime
+                     secret:uuid announcement_date:date alarm:time
+                     weight:float user_id:references:users))
 
       assert_file "lib/phoenix/blog/post.ex"
       assert_file "lib/phoenix/blog/blog.ex"
@@ -47,6 +51,23 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
       assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
         assert file =~ "defmodule PhoenixWeb.PostControllerTest"
+        assert file =~ """
+              assert json_response(conn, 200)["data"] == %{
+                "id" => id,
+                "alarm" => "14:00:00.000000",
+                "announcement_date" => "2010-04-17",
+                "cost" => "120.5",
+                "deleted_at" => "2010-04-17T14:00:00.000000",
+                "drafted_at" => "2010-04-17T14:00:00.000000",
+                "popular" => true,
+                "published_at" => "2010-04-17 14:00:00.000000Z",
+                "secret" => "7488a646-e31f-11e4-aace-600308960662",
+                "slug" => "some slug",
+                "tags" => [],
+                "title" => "some title",
+                "votes" => 42,
+                "weight" => 120.5}
+        """
       end
 
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
