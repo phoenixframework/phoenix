@@ -8,7 +8,7 @@ When preparing an application for deployment, there are three main steps:
   * Compiling your application assets
   * Starting your server in production
 
-How those are exactly handled depends on your deployment infrastructure. We have included a guide specific to [Heroku](heroku.html), and for anyone not using Heroku, we recommend using  [Distillery](https://github.com/bitwalker/distillery).
+How those are exactly handled depends on your deployment infrastructure. We have included a guide specific to [Heroku](heroku.html), and for anyone not using Heroku, we recommend using [Distillery](https://github.com/bitwalker/distillery) ([guide for using Distillery with Phoenix](https://hexdocs.pm/distillery/use-with-phoenix.html)).
 
 In any case, this chapter provides a general overview of the deployment steps, which will be useful regardless of your infrastructure or if you want to run in production locally.
 
