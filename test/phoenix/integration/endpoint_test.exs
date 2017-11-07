@@ -9,12 +9,20 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.AdapterTest.DevEndpoint
   alias Phoenix.Integration.AdapterTest.ProdInet6Endpoint
 
+  handler =
+    case Application.spec(:cowboy, :vsn) do
+      [?2 | _] -> Phoenix.Endpoint.Cowboy2Handler
+      _ -> Phoenix.Endpoint.CowboyHandler
+    end
+
   Application.put_env(:endpoint_int, ProdEndpoint,
-      http: [port: "4807"], url: [host: "example.com"], server: true, render_errors: [accepts: ~w(html json)])
+    http: [port: "4807"], url: [host: "example.com"], server: true,
+    handler: handler, render_errors: [accepts: ~w(html json)])
   Application.put_env(:endpoint_int, DevEndpoint,
-      http: [port: "4808"], debug_errors: true)
+      http: [port: "4808"], handler: handler, debug_errors: true)
   Application.put_env(:endpoint_int, ProdInet6Endpoint,
-      http: [{:port, "4809"}, :inet6], url: [host: "example.com"], server: true)
+    http: [{:port, "4809"}, :inet6], handler: handler,
+    url: [host: "example.com"], server: true)
 
   defmodule Router do
     @moduledoc """

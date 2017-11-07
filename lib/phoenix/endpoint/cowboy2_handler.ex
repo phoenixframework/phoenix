@@ -47,6 +47,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
   It is also important to specify your handlers first, otherwise
   Phoenix will intercept the requests before they get to your handler.
   """
+
   @behaviour Phoenix.Endpoint.Handler
   require Logger
 
@@ -73,12 +74,20 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
     # Use put_new to allow custom dispatches
     config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
 
-    {ref, mfa, type, timeout, kind, modules} =
-      Plug.Adapters.Cowboy2.child_spec(scheme, endpoint, [], config)
+    cowboy_supervisor =
+      Plug.Adapters.Cowboy2.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
 
-    # Rewrite MFA for proper error reporting
-    mfa = {__MODULE__, :start_link, [scheme, endpoint, mfa]}
-    {ref, mfa, type, timeout, kind, modules}
+    %{
+      start: start,
+      id: id,
+      type: type,
+      shutdown: shutdown,
+      restart: restart,
+      modules: modules,
+    } = cowboy_supervisor
+
+    start = {__MODULE__, :start_link, [scheme, endpoint, start]}
+    {id, start, restart, shutdown, type, modules}
   end
 
   defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy2.Handler
