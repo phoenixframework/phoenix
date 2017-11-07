@@ -465,6 +465,7 @@ defmodule Phoenix.ConnTest do
   @spec recycle(Conn.t) :: Conn.t
   def recycle(conn) do
     build_conn()
+    |> Map.put(:host, conn.host)
     |> Plug.Test.recycle_cookies(conn)
     |> copy_headers(conn.req_headers, ~w(accept))
   end
