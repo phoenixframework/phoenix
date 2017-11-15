@@ -24,8 +24,9 @@ making it easier for developers to [contribute to Phoenix](#pull-requests).
 
 ## Bug reports
 
-A bug is a _demonstrable problem_ that is caused by the code in the repository.
-Good bug reports are extremely helpful - thank you!
+A bug is either a _demonstrable problem_ that is caused by the code in the repository,
+or indicate missing, unclear, or misleading documentation. Good bug reports are extremely 
+helpful - thank you!
 
 Guidelines for bug reports:
 
