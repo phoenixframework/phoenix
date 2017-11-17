@@ -211,7 +211,7 @@ const TRANSPORTS = {
   websocket: "websocket"
 }
 const log = (...args) => {
-  console && console.log('[phoenix.js]', ...args);
+  console && console.log('[phoenix.js]', ...args); // eslint-disable-line no-console
 }
 
 /**
@@ -286,7 +286,7 @@ class Push {
   /**
    * @private
    */
-  matchReceive({status, response, ref}){
+  matchReceive({status, response, _ref}){
     this.recHooks.filter( h => h.status === status )
                  .forEach( h => h.callback(response) )
   }
@@ -535,7 +535,7 @@ export class Channel {
    * @param {integer} ref
    * @returns {Object}
    */
-  onMessage(event, payload, ref){ return payload }
+  onMessage(event, payload, _ref){ return payload }
 
   /**
    * @private
@@ -970,7 +970,7 @@ export class LongPoll {
     return(endPoint
       .replace("ws://", "http://")
       .replace("wss://", "https://")
-      .replace(new RegExp("(.*)\/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll))
+      .replace(new RegExp("(.*)/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll))
   }
 
   endpointURL(){
@@ -992,10 +992,10 @@ export class LongPoll {
 
     Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), (resp) => {
       if(resp){
-        var {status, token, messages} = resp
+        var {status, token, messages} = resp // eslint-disable-line no-redeclare
         this.token = token
       } else{
-        var status = 0
+        var status = 0 // eslint-disable-line no-redeclare
       }
 
       switch(status){
@@ -1030,7 +1030,7 @@ export class LongPoll {
     })
   }
 
-  close(code, reason){
+  close(_code, _reason){
     this.readyState = SOCKET_STATES.closed
     this.onclose()
   }

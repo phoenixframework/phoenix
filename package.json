@@ -13,6 +13,7 @@
     "babel-brunch": "~6.0.0",
     "brunch": "~2.6.5",
     "documentation": "^4.0.0-rc.1",
+    "eslint": "^4.11.0",
     "jsdom": "9.8.3",
     "jsdom-global": "2.1.0",
     "mocha": "~2.4.4",
@@ -28,6 +29,7 @@
     "assets/js/phoenix.js"
   ],
   "scripts": {
+    "lint": "eslint assets/**/*.js",
     "test": "./node_modules/.bin/mocha ./assets/test/**/*.js --compilers js:babel-register -r jsdom-global/register",
     "docs": "documentation build assets/js/phoenix.js -f html -o doc/js",
     "watch": "brunch watch",

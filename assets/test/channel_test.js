@@ -1,9 +1,7 @@
 import assert from "assert"
 
-import jsdom from "jsdom"
+import "jsdom"
 import sinon from "sinon"
-import {WebSocket, Server as WebSocketServer} from "mock-socket"
-import {encode, decode} from "./serializer"
 import {Channel, Socket} from "../js/phoenix"
 
 let channel, socket
@@ -159,7 +157,6 @@ describe("join", () => {
       clock.tick(10000)
       assert.equal(spy.callCount, ++callCount)
 
-      console.log("test: joinPush.trigger ok")
       joinPush.trigger("ok", {})
       assert.equal(channel.state, "joined")
 
@@ -201,7 +198,7 @@ describe("join", () => {
     })
 
     it("with socket delay only", () => {
-      const spy = sinon.stub(socket, "push")
+      sinon.stub(socket, "push")
       const clock = sinon.useFakeTimers()
       const joinPush = channel.joinPush
 
@@ -774,13 +771,13 @@ describe("off", () => {
     const spy2 = sinon.spy()
     
     const ref1 = channel.on("event", spy1)
-    const ref2 = channel.on("event", spy2)
+    channel.on("event", spy2)
 
     channel.off("event", ref1)
     channel.trigger("event", {}, defaultRef)
 
     assert.ok(!spy1.called)
-    assert.ok(spy2.called)    
+    assert.ok(spy2.called)
   })
 })
 
@@ -893,7 +890,7 @@ describe("push", () => {
 })
 
 describe("leave", () => {
-  let clock, joinPush
+  let clock
   let socketSpy
 
   beforeEach(() => {
