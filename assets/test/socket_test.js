@@ -3,7 +3,7 @@ import assert from "assert"
 import jsdom from "jsdom"
 import sinon from "sinon"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
-import {encode, decode} from "./serializer"
+import {encode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
 
 let socket

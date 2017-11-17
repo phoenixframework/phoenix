@@ -133,7 +133,7 @@ describe("list", () => {
       {id: 1, phx_ref: "1.second"}]
     }}
 
-    let listBy = (key, {metas: [first, ...rest]}) => {
+    let listBy = (key, {metas: [first]}) => {
       return first
     }
 
