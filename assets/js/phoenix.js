@@ -210,6 +210,9 @@ const TRANSPORTS = {
   longpoll: "longpoll",
   websocket: "websocket"
 }
+const log = (...args) => {
+  console && console.log('[phoenix.js]', ...args);
+}
 
 /**
  * Initializes the Push
@@ -756,7 +759,7 @@ export class Socket {
    */
   connect(params){
     if(params){
-      console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
+      log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
       this.params = params
     }
     if(this.conn){ return }
@@ -1084,7 +1087,7 @@ export class Ajax {
     try {
       return JSON.parse(resp)
     } catch(e) {
-      console && console.log("failed to parse JSON response", resp)
+      log("failed to parse JSON response", resp)
       return null
     }
   }
