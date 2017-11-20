@@ -887,13 +887,13 @@ Topics are just string identifiers. The form we are using here is a convention w
 Phoenix abstracts the socket transport layer and includes two transport mechanisms out of the box - WebSockets and Long-Polling. If we wanted to make sure that our channel is handled by only one type of transport, we could specify that using the `via` option, like this.
 
 ```elixir
-channel "rooms:*", HelloWeb.RoomChannel, via: [Phoenix.TransportsWebSocket]
+channel "rooms:*", HelloWeb.RoomChannel, via: [Phoenix.Transports.WebSocket]
 ```
 
 Each socket can handle requests for multiple channels.
 
 ```elixir
-channel "rooms:*", HelloWeb.RoomChannel, via: [Phoenix.TransportsWebSocket]
+channel "rooms:*", HelloWeb.RoomChannel, via: [Phoenix.Transports.WebSocket]
 channel "foods:*", HelloWeb.FoodChannel
 ```
 
