@@ -100,7 +100,7 @@ end
 
 Faults in the different parts of the supervision tree, such as the Ecto Repo, will not immediately impact the main application. The supervisor is therefore able to restart those processes separately after unexpected faults. It is also possible for an application to have multiple endpoints, each with its own supervision tree.
 
-There are many functions defined in the endpoint module for path helpers, channel subscriptions and broadcasts, instrumentation, and endpoint configuration. These are all covered in the [Endpoint API of the `Phoenix.Endpoint` docs](Phoenix.Endpoint.html#module-endpoints-api).
+There are many functions defined in the endpoint module for path helpers, channel subscriptions and broadcasts, instrumentation, and endpoint configuration. These are all covered in the [Endpoint API docs](Phoenix.Endpoint.html#module-endpoint-api) for `Phoenix.Endpoint`.
 
 
 ## Using SSL
