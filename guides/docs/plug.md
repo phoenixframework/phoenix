@@ -82,7 +82,6 @@ defmodule HelloWeb.MessageController do
     end
   end
 
-  defp find_message(id), do: ...
   defp find_message(conn, _) do
     case find_message(conn.params["id"]) do
       nil ->
