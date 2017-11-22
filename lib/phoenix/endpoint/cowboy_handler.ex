@@ -23,29 +23,38 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   You will need the following rules:
 
     * Per websocket transport:
-
+      
           {"/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
             {Phoenix.Transports.WebSocket,
-              {MyApp.Endpoint, MyApp.UserSocket, :websocket}}}
+              {MyApp.Web.Endpoint, MyApp.Web.UserSocket, :websocket}}}
 
     * Per longpoll transport:
-
+      
           {"/socket/long_poll", Plug.Adapters.Cowboy.Handler,
             {Phoenix.Transports.LongPoll,
-              {MyApp.Endpoint, MyApp.UserSocket, :longpoll}}}
+              {MyApp.Web.Endpoint, MyApp.Web.UserSocket, :longpoll}}}
+              
+    * For the live-reload websocket:
+      
+          {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket, 
+            {Phoenix.Transports.WebSocket,
+              {MyApp.Web.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}}
 
     * For the endpoint:
-
-          {:_, Plug.Adapters.Cowboy.Handler, {MyApp.Endpoint, []}}
+      
+          {:_, Plug.Adapters.Cowboy.Handler, {MyApp.Web.Endpoint, []}}
 
   For example:
 
-      config :myapp, MyApp.Endpoint,
+      config :myapp, MyApp.Web.Endpoint,
         http: [dispatch: [
                 {:_, [
-                    {"/foo", MyApp.CustomHandler, []},
-                    {"/bar", MyApp.AnotherHandler, []},
-                    {:_, Plug.Adapters.Cowboy.Handler, {MyApp.Endpoint, []}}
+                    {"/foo", MyApp.Web.CustomHandler, []},
+                    {"/bar", MyApp.Web.AnotherHandler, []},
+                    {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket, 
+                      {Phoenix.Transports.WebSocket, 
+                        {MyApp.Web.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}},
+                    {:_, Plug.Adapters.Cowboy.Handler, {MyApp.Web.Endpoint, []}}
                   ]}]]
 
   It is also important to specify your handlers first, otherwise
