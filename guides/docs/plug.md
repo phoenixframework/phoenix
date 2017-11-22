@@ -66,7 +66,7 @@ defmodule HelloWeb.MessageController do
   use HelloWeb, :controller
 
   plug :authenticate
-  plug :find_message
+  plug :fetch_message
   plug :authorize_message
 
   def show(conn, params) do
@@ -82,7 +82,7 @@ defmodule HelloWeb.MessageController do
     end
   end
 
-  defp find_message(conn, _) do
+  defp fetch_message(conn, _) do
     case find_message(conn.params["id"]) do
       nil ->
         conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/") |> halt()
