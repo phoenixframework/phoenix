@@ -50,7 +50,7 @@ defmodule Phoenix.Mixfile do
         format_encoders: [],
         filter_parameters: ["password"],
         serve_endpoints: false,
-        gzippable_exts: ~w(.js .css .txt .text .html .json .svg)
+        gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf)
       ]
     ]
   end
