@@ -6,10 +6,10 @@ defmodule <%= app_module %>.Repo do
   DATABASE_URL environment variable.
   """
   def init(_, opts) do
-	  if url = System.get_env("DATABASE_URL") do
-	    {:ok, Keyword.put(opts, :url, url)}
-	  else
-	    {:ok, opts}
-	  end
+    if url = System.get_env("DATABASE_URL") do
+      {:ok, Keyword.put(opts, :url, url)}
+    else
+      {:ok, opts}
+    end
   end
 end
