@@ -1305,8 +1305,11 @@ defmodule Phoenix.Controller do
       iex> current_path(conn, %{})
       "/users/123"
   """
-  def current_path(%Plug.Conn{query_params: params} = conn) do
-    current_path(conn, params)
+  def current_path(%Plug.Conn{query_string: ""} = conn) do
+    conn.request_path
+  end
+  def current_path(%Plug.Conn{query_string: query_string} = conn) do
+    conn.request_path <> "?" <> query_string
   end
   def current_path(%Plug.Conn{} = conn, params) when params == %{} do
     conn.request_path
