@@ -622,7 +622,7 @@ Consider a `HelloWeb.PostFinder` plug. On call, if we find a post related to a g
 ```elixir
 defmodule HelloWeb.PostFinder do
   use Plug
-  import Plog.Conn
+  import Plug.Conn
 
   alias Hello.Blog
 
