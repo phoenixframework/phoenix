@@ -320,7 +320,7 @@ defmodule HelloWeb.PageView do
 end
 ```
 
-In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. In our controller `show/2` function, `render conn, "show.json", page: page` will pattern match on the matching name and extension in the view `render/3` functions. In other words, `render conn, "index.json", pages: pages` will call `render("index.json", %{pages: pages})` The `render_many/3` function takes the data we want to respond with (`pages`), a `View`, and a string to pattern match on the `render/3` function defined on `View`. It will map over each item in `pages`, and pass the item to the `render/3` function in `View` matching the file string. `render_one/3` follows, the same signature, ultimately using the `render/3` matching `page.json` to specify what each `page` looks like. The `render/3` matching `"index.json"` will respond with JSON as you would expect:
+In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. In our controller `show/2` function, `render conn, "show.json", page: page` will pattern match on the matching name and extension in the view's `render/2` functions. In other words, `render conn, "index.json", pages: pages` will call `render("index.json", %{pages: pages})`. The `render_many/3` function takes the data we want to respond with (`pages`), a `View`, and a string to pattern match on the `render/2` function defined on `View`. It will map over each item in `pages`, and pass the item to the `render/2` function in `View` matching the file string. `render_one/3` follows, the same signature, ultimately using the `render/2` matching `page.json` to specify what each `page` looks like. The `render/2` matching `"index.json"` will respond with JSON as you would expect:
 
 ```javascript
   {
@@ -335,7 +335,7 @@ In the view we see our `render/2` function pattern matching on `"index.json"`, `
   }
 ```
 
-And the `render/3` matching `"show.json"`:
+And the `render/2` matching `"show.json"`:
 
 ```javascript
   {
@@ -345,7 +345,7 @@ And the `render/3` matching `"show.json"`:
   }
 ```
 
-It's useful to build our views like this so they can be composable. Imagine a situation where our `Page` has a `has_many` relationship with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new `render/3`:
+It's useful to build our views like this so they can be composable. Imagine a situation where our `Page` has a `has_many` relationship with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new `render/2`:
 
 
 ```elixir
