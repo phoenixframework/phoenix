@@ -919,8 +919,7 @@ With our new plugs in place, we can now modify our `create`, `edit`, `update`, a
 +   render(conn, "edit.html", changeset: changeset)
   end
 
-- def create(conn, %{"id" => id, "page" => page_params}) do
-+ def create(conn, %{"page" => page_params}) do
+  def create(conn, %{"page" => page_params}) do
 -   case CMS.create_page(page_params) do
 +   case CMS.create_page(conn.assigns.current_author, page_params) do
       {:ok, page} ->
