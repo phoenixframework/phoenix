@@ -4,7 +4,7 @@ defmodule <%= app_module %>.Mixfile do
   def project do
     [
       app: :<%= app_name %>,
-      version: "0.0.1",<%= if in_umbrella do %>
+      version: "0.1.0",<%= if in_umbrella do %>
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
