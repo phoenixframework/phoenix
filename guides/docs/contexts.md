@@ -122,7 +122,7 @@ If we follow the "Back" link, we get a list of all users, which should contain t
 
 That little `phx.gen.html` command packed a surprising punch. We got a lot of functionality out-of-the-box for creating, updating, and deleting users. This is far from a full-featured app, but remember, generators are first and foremost learning tools and a starting point for you to begin building real features. Code generation can't solve all your problems, but it will teach you the ins and outs of Phoenix and nudge you towards the proper mind-set when designing your application.
 
-Let's first checkout the `UserController` that was generated in `lib/hello_web/controllers/user_controller.ex`:
+Let's first check out the `UserController` that was generated in `lib/hello_web/controllers/user_controller.ex`:
 
 
 ```elixir
@@ -160,7 +160,7 @@ We've seen how controllers work in our [controller guide](controllers.html), so 
 
 In the case of our `create` action, when we successfully create a user, we use `Phoenix.Controller.put_flash/2` to show a success message, and then we redirect to the `user_path`'s show page. Conversely, if `Accounts.create_user/1` fails, we render our `"new.html"` template and pass along the Ecto changeset for the template to lift error messages from.
 
-Next, let's dig deeper and checkout our `Accounts` context in `lib/hello/accounts/accounts.ex`:
+Next, let's dig deeper and check out our `Accounts` context in `lib/hello/accounts/accounts.ex`:
 
 ```elixir
 defmodule Hello.Accounts do
