@@ -678,8 +678,6 @@ Endpoints organize all the plugs common to every request, and apply them before 
 
 - [Plug.Static](https://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes before the logger, serving of static assets is not logged
 
-- [Plug.RequestId](https://hexdocs.pm/plug/Plug.RequestId.html) - generates a unique request id for each request.
-
 - [Plug.Logger](https://hexdocs.pm/plug/Plug.Logger.html) - logs incoming requests
 
 - [Phoenix.CodeReloader](https://hexdocs.pm/phoenix/Phoenix.CodeReloader.html) - a plug that enables code reloading for all entries in the web directory. It is configured directly in the Phoenix application
