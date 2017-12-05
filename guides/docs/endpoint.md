@@ -61,10 +61,9 @@ If code reloading is enabled, a socket will be used to communicate to the browse
   end
 ```
 
-[Plug.RequestId](https://hexdocs.pm/plug/Plug.RequestId.html) generates a unique id for each request and [Plug.Logger](https://hexdocs.pm/plug/Plug.Logger.html) logs the request path, status code and request time by default.
+[Plug.Logger](https://hexdocs.pm/plug/Plug.Logger.html) logs the request path, status code and request time by default.
 
 ```elixir
-  plug Plug.RequestId
   plug Plug.Logger
 ```
 
