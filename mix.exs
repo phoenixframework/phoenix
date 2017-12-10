@@ -10,6 +10,7 @@ defmodule Phoenix.Mixfile do
       elixir: "~> 1.4",
       deps: deps(),
       package: package(),
+      lockfile: lockfile(),
       preferred_cli_env: [docs: :docs],
 
       # Because we define protocols on the fly to test
@@ -57,8 +58,8 @@ defmodule Phoenix.Mixfile do
 
   defp deps do
     [
-      {:cowboy, "~> 1.0", optional: true},
-      {:plug, "~> 1.3.3 or ~> 1.4"},
+      cowboy_dep(System.get_env("COWBOY_VERSION")),
+      {:plug, "~> 1.5.0-rc.0", override: true},
       {:phoenix_pubsub, "~> 1.0"},
       {:poison, "~> 2.2 or ~> 3.0"},
       {:gettext, "~> 0.8", only: :test},
@@ -71,6 +72,16 @@ defmodule Phoenix.Mixfile do
       {:phoenix_html, "~> 2.10", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
     ]
+  end
+
+  defp cowboy_dep("1" <> _), do: {:cowboy, "~> 1.0", optional: true}
+  defp cowboy_dep(_), do: {:cowboy, "~> 2.1", optional: true}
+
+  defp lockfile() do
+    case System.get_env("COWBOY_VERSION") do
+      "1" <> _ -> "mix-cowboy1.lock"
+      _ -> "mix.lock"
+    end
   end
 
   defp package do

@@ -70,7 +70,10 @@ defmodule Phoenix.Transports.WebSocket do
   alias Phoenix.Socket.Transport
 
   @doc false
-  def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport}) do
+  def init(conn, {endpoint, handler, transport}) do
+    init(conn, {endpoint, handler, transport, self()})
+  end
+  def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport, pid}) do
     {_, opts} = handler.__transport__(transport)
 
     conn =
@@ -86,7 +89,7 @@ defmodule Phoenix.Transports.WebSocket do
         params     = conn.params
         serializer = Keyword.fetch!(opts, :serializer)
 
-        case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params) do
+        case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params, pid) do
           {:ok, socket} ->
             {:ok, conn, {__MODULE__, {socket, opts}}}
           :error ->

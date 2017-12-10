@@ -13,12 +13,19 @@ defmodule Phoenix.Integration.WebSocketTest do
   @moduletag :capture_log
   @port 5807
 
+  handler =
+    case Application.spec(:cowboy, :vsn) do
+      [?2 | _] -> Phoenix.Endpoint.Cowboy2Handler
+      _ -> Phoenix.Endpoint.CowboyHandler
+    end
+
   Application.put_env(:phoenix, Endpoint, [
     https: false,
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
     debug_errors: false,
     server: true,
+    handler: handler,
     pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__]
   ])
 
@@ -261,8 +268,11 @@ defmodule Phoenix.Integration.WebSocketTest do
         Endpoint.broadcast("user_sockets:1001", "disconnect", %{})
 
         assert_receive {:DOWN, _, :process, ^sock, :normal}
-        assert_receive {:DOWN, _, :process, ^chan1, :shutdown}
-        assert_receive {:DOWN, _, :process, ^chan2, :shutdown}
+        assert_receive {:DOWN, _, :process, ^chan1, shutdown}
+        #shutdown for cowboy, {:shutdown, :closed} for cowboy 2
+        assert shutdown in [:shutdown, {:shutdown, :closed}]
+        assert_receive {:DOWN, _, :process, ^chan2, shutdown}
+        assert shutdown in [:shutdown, {:shutdown, :closed}]
       end
 
       test "duplicate join event closes existing channel" do

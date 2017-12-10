@@ -144,12 +144,12 @@ defmodule Phoenix.Socket.Transport do
   If the connection was successful, generates `Phoenix.PubSub`
   topic from the `id/1` callback.
   """
-  def connect(endpoint, handler, transport_name, transport, serializer_config, params) do
+  def connect(endpoint, handler, transport_name, transport, serializer_config, params, pid \\ self()) do
     vsn = params["vsn"] || "1.0.0"
 
     case serializer_for_vsn(vsn, serializer_config) do
       {:ok, serializer} ->
-        do_connect(vsn, endpoint, handler, transport_name, transport, serializer, params)
+        do_connect(vsn, endpoint, handler, transport_name, transport, serializer, params, pid)
       {:error, reason} ->
         Logger.error(reason)
         :error
@@ -178,10 +178,10 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp do_connect(vsn, endpoint, handler, transport_name, transport, serializer, params) do
+  defp do_connect(vsn, endpoint, handler, transport_name, transport, serializer, params, pid) do
     socket = %Socket{endpoint: endpoint,
                      transport: transport,
-                     transport_pid: self(),
+                     transport_pid: pid,
                      transport_name: transport_name,
                      handler: handler,
                      vsn: vsn,
