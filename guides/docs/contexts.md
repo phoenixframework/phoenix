@@ -818,7 +818,7 @@ Next, let's add the association in the other direction in `lib/hello/cms/author.
 
 We added the `has_many` association for author pages, and then introduced our data dependency on the `Accounts` context by wiring up the `belongs_to` association to our `Accounts.User` schema.
 
-With our associations in place, let's update our `CMS` context to require an author when creating or updating a page. We'll start off with data fetching changes. Open up your `CMS` context in `lib/hello/cms/cms.ex` and replace the `list_pages/0`, and `get_page!/1` functions with the following definitions:
+With our associations in place, let's update our `CMS` context to require an author when creating or updating a page. We'll start off with data fetching changes. Open up your `CMS` context in `lib/hello/cms/cms.ex` and replace the `list_pages/0`, `get_page!/1`, and `get_author!/1` functions with the following definitions:
 
 ```elixir
   alias Hello.CMS.{Page, Author}
