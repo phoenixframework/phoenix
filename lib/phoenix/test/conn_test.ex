@@ -112,7 +112,7 @@ defmodule Phoenix.ConnTest do
   """
   @spec build_conn() :: Conn.t
   def build_conn() do
-    build_conn(:get, "/", nil)
+    build_conn(:get, "/", [])
   end
 
   @doc """
@@ -135,7 +135,7 @@ defmodule Phoenix.ConnTest do
   for testing a plug or a particular function.
   """
   @spec build_conn(atom | binary, binary, binary | list | map) :: Conn.t
-  def build_conn(method, path, params_or_body \\ nil) do
+  def build_conn(method, path, params_or_body \\ []) do
     Plug.Adapters.Test.Conn.conn(%Conn{}, method, path, params_or_body)
     |> Conn.put_private(:plug_skip_csrf_protection, true)
     |> Conn.put_private(:phoenix_recycled, true)
