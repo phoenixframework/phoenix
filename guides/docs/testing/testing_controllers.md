@@ -17,7 +17,7 @@ However, *don't* actually run this command. Instead, we're going to explore test
 If you haven't already done so, first create a blank project by running:
 
 ```console
-$ mix phx.new hello -y
+$ mix phx.new hello
 ```
 
 Change into the newly-created `hello` directory, configure your database in `config/dev.exs` and then run:
