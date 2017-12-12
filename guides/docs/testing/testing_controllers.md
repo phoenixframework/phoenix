@@ -410,7 +410,7 @@ Our controller action needs to handle the error thrown by Ecto. We have two choi
 
 ```elixir
 @doc """
-Gets a single `%User{}` from the data store  where the primary key matches the
+Gets a single `%User{}` from the data store where the primary key matches the
 given id.
 
 Returns `nil` if no result was found.
