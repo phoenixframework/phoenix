@@ -435,7 +435,7 @@ def show(conn, %{"id" => id}) do
     nil ->
       conn
       |> put_status(:not_found)
-      |> json(%{error: "User not found"})
+      |> json(%{errors: "User not found."})
     user ->
       render(conn, "show.json", user: user)
   end
