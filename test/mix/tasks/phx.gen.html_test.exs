@@ -108,6 +108,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ ~s(<%= text_input f, :title, class: "form-control" %>)
         assert file =~ ~s(<%= number_input f, :votes, class: "form-control" %>)
         assert file =~ ~s(<%= number_input f, :cost, step: "any", class: "form-control" %>)
+        assert file =~ ~s(<%= multiple_select f, :tags, ["Option 1": "option1", "Option 2": "option2"], class: "form-control" %>)
         assert file =~ ~s(<%= checkbox f, :popular, class: "checkbox" %>)
         assert file =~ ~s(<%= datetime_select f, :drafted_at, class: "form-control" %>)
         assert file =~ ~s(<%= datetime_select f, :published_at, class: "form-control" %>)
@@ -119,6 +120,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ ~s(<%= label f, :title, class: "control-label" %>)
         assert file =~ ~s(<%= label f, :votes, class: "control-label" %>)
         assert file =~ ~s(<%= label f, :cost, class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :tags, class: "control-label" %>)
         assert file =~ ~s(<%= label f, :popular, class: "control-label" %>)
         assert file =~ ~s(<%= label f, :drafted_at, class: "control-label" %>)
         assert file =~ ~s(<%= label f, :published_at, class: "control-label" %>)
@@ -127,7 +129,6 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ ~s(<%= label f, :alarm, class: "control-label" %>)
         assert file =~ ~s(<%= label f, :secret, class: "control-label" %>)
 
-        refute file =~ ":tags"
         refute file =~ ~s(<%= label f, :user_id)
         refute file =~ ~s(<%= number_input f, :user_id)
       end

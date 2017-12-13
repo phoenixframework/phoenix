@@ -182,8 +182,6 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   defp inputs(%Schema{} = schema) do
     Enum.map(schema.attrs, fn
-      {_, {:array, _}} ->
-        {nil, nil, nil}
       {_, {:references, _}} ->
         {nil, nil, nil}
       {key, :integer} ->
@@ -204,6 +202,10 @@ defmodule Mix.Tasks.Phx.Gen.Html do
         {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
       {key, :naive_datetime} ->
         {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
+      {key, {:array, :integer}} ->
+        {label(key), ~s(<%= multiple_select f, #{inspect(key)}, ["1": 1, "2": 2], class: "form-control" %>), error(key)}
+      {key, {:array, _}} ->
+        {label(key), ~s(<%= multiple_select f, #{inspect(key)}, ["Option 1": "option1", "Option 2": "option2"], class: "form-control" %>), error(key)}
       {key, _}  ->
         {label(key), ~s(<%= text_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
     end)
