@@ -134,9 +134,10 @@ defmodule HelloWeb.UserControllerTest do
     # create users local to this database connection and test
     [{:ok, user1},{:ok, user2}] = Enum.map(users, &Accounts.create_user(&1))
 
-    response = conn
-    |> get(user_path(conn, :index))
-    |> json_response(200)
+    response =
+      conn
+      |> get(user_path(conn, :index))
+      |> json_response(200)
 
     expected = %{
       "data" => [
@@ -264,11 +265,12 @@ Our first `show/2` test result is, as expected, not implemented. Let's build a t
 test "Responds with user info if the user is found", %{conn: conn} do
   {:ok, user} = Accounts.create_user(%{name: "John", email: "john@example.com", password: "john pass"})
 
-  response = conn
-  |> get(user_path(conn, :show, user.id))
-  |> json_response(200)
+  response =
+    conn
+    |> get(user_path(conn, :show, user.id))
+    |> json_response(200)
 
-  expected = %{ "data" => %{"email" => user.email, "name" => user.name} }
+  expected = %{"data" => %{"email" => user.email, "name" => user.name}}
 
   assert response == expected
 end
@@ -298,11 +300,12 @@ describe "show/2" do
   setup [:create_user]
   test "Responds with user info if the user is found", %{conn: conn, user: user} do
 
-    response = conn
-    |> get(user_path(conn, :show, user.id))
-    |> json_response(200)
+    response =
+      conn
+      |> get(user_path(conn, :show, user.id))
+      |> json_response(200)
 
-    expected = %{ "data" => %{"email" => user.email, "name" => user.name} }
+    expected = %{"data" => %{"email" => user.email, "name" => user.name}}
 
     assert response == expected
   end
@@ -319,11 +322,12 @@ Finally, let's change our `index/2` test to also use the new `create_user` funct
     setup [:create_user]
     test "index/2 responds with all Users", %{conn: conn, user: user} do
 
-      response = conn
-      |> get(user_path(conn, :index))
-      |> json_response(200)
+      response =
+        conn
+        |> get(user_path(conn, :index))
+        |> json_response(200)
 
-      expected = %{ "data" => [%{ "name" => user.name, "email" => user.email }] }
+      expected = %{"data" => [%{"name" => user.name, "email" => user.email}]}
 
       assert response == expected
     end
@@ -394,7 +398,7 @@ test "Responds with a message indicating user not found", %{conn:  conn} do
     |> get(user_path(conn, :show, -1 ))
     |> json_response(404)
 
-  expected = %{ "errors" => "User not found." }
+  expected = %{"errors" => "User not found."}
 
   assert response == expected
 end
@@ -406,7 +410,7 @@ Our controller action needs to handle the error thrown by Ecto. We have two choi
 
 ```elixir
 @doc """
-Gets a single `%User{}` from the data store  where the primary key matches the
+Gets a single `%User{}` from the data store where the primary key matches the
 given id.
 
 Returns `nil` if no result was found.
@@ -431,7 +435,7 @@ def show(conn, %{"id" => id}) do
     nil ->
       conn
       |> put_status(:not_found)
-      |> json(%{error: "User not found"})
+      |> json(%{errors: "User not found."})
     user ->
       render(conn, "show.json", user: user)
   end
