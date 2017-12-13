@@ -270,7 +270,7 @@ test "Responds with user info if the user is found", %{conn: conn} do
     |> get(user_path(conn, :show, user.id))
     |> json_response(200)
 
-  expected = %{ "data" => %{"email" => user.email, "name" => user.name} }
+  expected = %{"data" => %{"email" => user.email, "name" => user.name}}
 
   assert response == expected
 end
@@ -305,7 +305,7 @@ describe "show/2" do
       |> get(user_path(conn, :show, user.id))
       |> json_response(200)
 
-    expected = %{ "data" => %{"email" => user.email, "name" => user.name} }
+    expected = %{"data" => %{"email" => user.email, "name" => user.name}}
 
     assert response == expected
   end
@@ -327,7 +327,7 @@ Finally, let's change our `index/2` test to also use the new `create_user` funct
         |> get(user_path(conn, :index))
         |> json_response(200)
 
-      expected = %{ "data" => [%{ "name" => user.name, "email" => user.email }] }
+      expected = %{"data" => [%{"name" => user.name, "email" => user.email}]}
 
       assert response == expected
     end
@@ -398,7 +398,7 @@ test "Responds with a message indicating user not found", %{conn:  conn} do
     |> get(user_path(conn, :show, -1 ))
     |> json_response(404)
 
-  expected = %{ "errors" => "User not found." }
+  expected = %{"errors" => "User not found."}
 
   assert response == expected
 end
