@@ -494,10 +494,12 @@ defmodule Phoenix.ConnTest do
 
   Useful for unit testing Plugs where Endpoint and/or
   router pipeline plugs are required for proper setup.
-  
-  Note the use of `get("/")` following `bypass_through` in the examples below. 
-  For session and flash related dependencies you will need to invoke a request. 
-  If you ommit the request you may find that your tests return 
+
+  Note the use of `get("/")` following `bypass_through` in the examples below.
+  To execute the plug pipelines, you must issue a request against the router.
+  Most often, you can simpy send a GET request against the root path, but you
+  may also specify a different method or path which your pipelines may operate
+  against. If you ommit the request you may find that your tests return
   a `flash not fetched, call fetch_flash/2` or simular error.
 
   ## Examples
