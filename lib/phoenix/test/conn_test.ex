@@ -494,6 +494,11 @@ defmodule Phoenix.ConnTest do
 
   Useful for unit testing Plugs where Endpoint and/or
   router pipeline plugs are required for proper setup.
+  
+  Note the use of `get("/")` following `bypass_through` in the examples below. 
+  For session and flash related dependencies you will need to invoke a request. 
+  If you ommit the request you may find that your tests return 
+  a `flash not fetched, call fetch_flash/2` or simular error.
 
   Note the use of `get("/")` following `bypass_through` in the examples below.
   To execute the plug pipelines, you must issue a request against the router.
@@ -505,9 +510,7 @@ defmodule Phoenix.ConnTest do
   ## Examples
 
   For example, imagine you are testing an authentication
-  plug in isolation, but you need to invoke the Endpoint plugs
-  and `:browser` pipeline of your Router for session and flash
-  related dependencies:
+  plug in isolation:
 
       conn =
         conn
