@@ -40,6 +40,31 @@ describe("constructor", () => {
   })
 })
 
+describe("updateJoinParams", () => {
+  beforeEach(() => {
+    socket = { timeout: 1234 }
+  })
+
+  it("can update the join params", () => {
+    channel = new Channel("topic", { one: "two" }, socket)
+    const joinPush = channel.joinPush
+
+    assert.deepEqual(joinPush.channel, channel)
+    assert.deepEqual(joinPush.payload, { one: "two" })
+    assert.equal(joinPush.event, "phx_join")
+    assert.equal(joinPush.timeout, 1234)
+
+    channel.updateJoinParams({ three: "four" })
+
+    assert.deepEqual(joinPush.channel, channel)
+    assert.deepEqual(joinPush.payload, { three: "four" })
+    assert.deepEqual(channel.params, { three: "four" })
+    assert.equal(joinPush.event, "phx_join")
+    assert.equal(joinPush.timeout, 1234)
+
+  });
+});
+
 describe("join", () => {
   beforeEach(() => {
     socket = new Socket("/socket", { timeout: defaultTimeout })

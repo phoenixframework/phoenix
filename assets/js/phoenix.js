@@ -270,6 +270,16 @@ class Push {
   }
 
   /**
+   * Updates the Push payload for subsequent resends
+   *
+   * @param {Object} payload
+   * @returns {Push}
+   */
+  updatePayload(payload) {
+    this.payload = payload;
+  }
+
+  /**
    * @private
    */
   reset(){
@@ -412,6 +422,17 @@ export class Channel {
       this.rejoin(timeout)
       return this.joinPush
     }
+  }
+
+  /**
+   * Updates the params passed as the second argument to `new Channel("topic", params, socket)`
+   * Any subsequent reconnects on the channel will send the updated params to the `join` callback on the sever
+   *
+   * @param {Object} params
+   */
+  updateJoinParams(params = {}) {
+    this.params = params;
+    this.joinPush.updatePayload(params);
   }
 
   /**
