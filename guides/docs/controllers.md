@@ -549,6 +549,7 @@ Let's say we have a `show` action which uses `with` to fetch a blog post and the
 defmodule HelloWeb.MyController do
   use Phoenix.Controller
   alias Hello.{Authorizer, Blog}
+  alias HelloWeb.ErrorView
 
   def show(conn, %{"id" => id}, current_user) do
     with {:ok, post} <- Blog.fetch_post(id),
