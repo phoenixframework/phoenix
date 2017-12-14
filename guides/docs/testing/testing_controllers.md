@@ -253,10 +253,10 @@ Our show tests currently look like this:
   end
 ```
 
-Run this test only by running the following command: (if your show tests don't start on line 40, change the line number accordingly)
+Run this test only by running the following command: (if your show tests don't start on line 34, change the line number accordingly)
 
 ```console
-$ mix test test/hello_web/controllers/user_controller_test.exs:40
+$ mix test test/hello_web/controllers/user_controller_test.exs:34
 ```
 
 Our first `show/2` test result is, as expected, not implemented. Let's build a test around what we think a successful `show/2` should look like.
@@ -393,18 +393,13 @@ Walking through our TDD steps, we add a test that supplies a non-existent user i
 
 ```elixir
 test "Responds with a message indicating user not found", %{conn:  conn} do
-  response =
-    conn
-    |> get(user_path(conn, :show, -1 ))
-    |> json_response(404)
+  conn = get(conn, user_path(conn, :show, -1))
 
-  expected = %{"errors" => "User not found."}
-
-  assert response == expected
+  assert text_response(conn, 404) =~ "User not found"
 end
 ```
 
-We want a HTTP code of 404 to notify the requester that this resource was not found, as well as an accompanying error message. You can run this test now to see what happens. You should see that an `Ecto.NoResultsError` is thrown, because there is no such user in the database.
+We want a HTTP status code of 404 to notify the requester that this resource was not found, as well as an accompanying error message. Notice that we use [`text_response/2`](https://hexdocs.pm/phoenix/Phoenix.ConnTest.html#text_response/2) instead of [`json_response/2`](https://hexdocs.pm/phoenix/Phoenix.ConnTest.html#json_response/2) to assert that the status code is 404 and the response body matches the accompanying error message. You can run this test now to see what happens. You should see that an `Ecto.NoResultsError` is thrown, because there is no such user in the database.
 
 Our controller action needs to handle the error thrown by Ecto. We have two choices here. By default, this will be handled by the [phoenix_ecto](https://github.com/phoenixframework/phoenix_ecto) library, returning a 404. However if we want to show a custom error message, we can create a new `get_user/1` function that does not throw an Ecto error. For this example, we'll take the second path and implement a new `get_user/1` function in the file `lib/hello/accounts/accounts.ex`, just before the `get_user!/1` function:
 
@@ -435,16 +430,17 @@ def show(conn, %{"id" => id}) do
     nil ->
       conn
       |> put_status(:not_found)
-      |> json(%{errors: "User not found."})
+      |> text("User not found")
+
     user ->
       render(conn, "show.json", user: user)
   end
 end
 ```
 
-The second branch of the case statement handles the "happy path" we've already covered.
+The first branch of the case statement handles the `nil` result case. First, we use the [`put_status/2`](https://hexdocs.pm/plug/Plug.Conn.html#put_status/2) function from `Plug.Conn` to set the desired error status. The complete list of allowed codes can be found in the [Plug.Conn.Status documentation](https://hexdocs.pm/plug/Plug.Conn.Status.html), where we can see that `:not_found` corresponds to our desired "404" status. We then return a text response using [`text/2`](https://hexdocs.pm/phoenix/Phoenix.Controller.html#text/2).
 
-The first branch of the case statement handles the `nil` result case. First, we use the [`put_status/2`](https://hexdocs.pm/plug/Plug.Conn.html#put_status/2) function from `Plug.Conn` to set the desired error status. The complete list of allowed codes can be found in the [Plug.Conn.Status documentation](https://hexdocs.pm/plug/Plug.Conn.Status.html), where we can see that `:not_found` corresponds to our desired "404" status. We then return a JSON error.
+The second branch of the case statement handles the "happy path" we've already covered.
 
 With those implemented, our tests pass.
 
