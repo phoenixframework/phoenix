@@ -37,16 +37,16 @@ defmodule Phoenix.Endpoint.CowboyHandler do
         {Phoenix.Transports.LongPoll,
           {MyAppWeb.Endpoint, MyAppWeb.UserSocket, :longpoll}}}
       ```
-              
+
     * For the live-reload websocket:
 
       ```
-      {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket, 
+      {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
         {Phoenix.Transports.WebSocket,
           {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}}
       ```
 
-      If you decide to include the live-reload websocket, you should 
+      If you decide to include the live-reload websocket, you should
       disable it when building for production.
 
     * For the endpoint:
@@ -62,14 +62,14 @@ defmodule Phoenix.Endpoint.CowboyHandler do
                 {:_, [
                     {"/foo", MyAppWeb.CustomHandler, []},
                     {"/bar", MyAppWeb.AnotherHandler, []},
-                    {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket, 
-                      {Phoenix.Transports.WebSocket, 
+                    {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
+                      {Phoenix.Transports.WebSocket,
                         {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}},
                     {:_, Plug.Adapters.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
                   ]}]]
-  
-  Note that if you reconfigure HTTP options in `MyAppWeb.Endpoint.init/1`, 
-  you'll probably overwrite the dispatch option.
+
+  Note: if you reconfigure HTTP options in `MyAppWeb.Endpoint.init/1`,
+  your dispatch options set in mix config will be overwritten.
 
   It is also important to specify your handlers first, otherwise
   Phoenix will intercept the requests before they get to your handler.
