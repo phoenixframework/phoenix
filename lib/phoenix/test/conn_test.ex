@@ -505,7 +505,9 @@ defmodule Phoenix.ConnTest do
   ## Examples
 
   For example, imagine you are testing an authentication
-  plug in isolation:
+  plug in isolation, but you need to invoke the Endpoint plugs
+  and `:browser` pipeline of your Router for session and flash
+  related dependencies:
 
       conn =
         conn
