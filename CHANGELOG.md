@@ -7,6 +7,10 @@
   * [Logger] Add whitelist support to `filter_parameters` logger configuration, via new `:keep` tuple format
   * [Router] Raise on duplicate plugs in pipe_through scopes
 
+
+* JavaScript client enhancements
+  * Add `updateJoinParams` to channel for explicit param updates between rejoins
+
 * Deprecations
   * [Controller] Passing a view in `render/3` and `render/4` is deprecated in favor of `put_view/2`
 
