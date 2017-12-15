@@ -618,7 +618,7 @@ end
 
 As we mentioned - Controllers are plugs.... specifically plugs which are called toward the end of the plug pipeline.  At any step of the pipeline we might have cause to stop processing - typically because we've redirected or rendered a response. `Plug.Conn.t` has a `:halted` key - setting it to true will cause downstream plugs to be skipped. We can do that easily using `Plug.Conn.halt/1`.
 
-Consider a `HelloWeb.PostFinder` plug. On call, if we find a post related to a given id then we add it to `assigns`; and if we don't find the post we respond with a 404 page.
+Consider a `HelloWeb.PostFinder` plug. On call, if we find a post related to a given id then we add it to `conn.assigns`; and if we don't find the post we respond with a 404 page.
 
 ```elixir
 defmodule HelloWeb.PostFinder do
