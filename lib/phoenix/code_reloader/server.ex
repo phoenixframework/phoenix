@@ -25,17 +25,19 @@ defmodule Phoenix.CodeReloader.Server do
 
   def handle_call(:check_symlinks, _from, checked?) do
     if not checked? and Code.ensure_loaded?(Mix.Project) do
-      build_path = Mix.Project.build_path()
-      symlink = Path.join(Path.dirname(build_path), "__phoenix__")
-
-      case File.ln_s(build_path, symlink) do
-        :ok ->
-          File.rm(symlink)
-        {:error, :eexist} ->
-          File.rm(symlink)
+      priv_path = "#{Mix.Project.app_path}/priv"
+      case File.read_link(priv_path) do
+        {:ok, _} -> nil
         {:error, _} ->
-          Logger.warn "Phoenix is unable to create symlinks. Phoenix' code reloader will run " <>
-                      "considerably faster if symlinks are allowed." <> os_symlink(:os.type)
+          if can_symlink() == :ok do
+            File.rm_rf(priv_path)
+            Mix.Project.build_structure
+          else
+            Logger.warn "Phoenix is unable to create symlinks: " <> priv_path <> " . " <>
+                        "As a patch, Phoenix will copied the files needed to the path above, " <>
+                        "but phoenix may acquire them before copy completed (issue#67). " <>
+                        "In addition, it works slower than use symlinks." <> os_symlink(:os.type)
+          end
       end
     end
 
@@ -81,6 +83,22 @@ defmodule Phoenix.CodeReloader.Server do
     do: " On Windows, such can be done by starting the shell with \"Run as Administrator\"."
   defp os_symlink(_),
     do: ""
+
+  defp can_symlink() do
+    build_path = Mix.Project.build_path()
+    symlink = Path.join(Path.dirname(build_path), "__phoenix__")
+
+    case File.ln_s(build_path, symlink) do
+      :ok ->
+        File.rm_rf(symlink)
+        :ok
+      {:error, :eexist} ->
+        File.rm_rf(symlink)
+        :ok
+      {:error, _} ->
+        :error
+    end
+  end
 
   defp load_backup(mod) do
     mod
