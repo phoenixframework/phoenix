@@ -80,7 +80,8 @@ defmodule Phoenix.CodeReloader.Server do
   end
 
   defp os_symlink({:win32, _}),
-    do: " On Windows, such can be done by starting the shell with \"Run as Administrator\"."
+    do: " On Windows, you can started the shell with \"Run as Administrator\" at least once time, " <> 
+        "to allow phoenix create symlinks and resolve this problem."
   defp os_symlink(_),
     do: ""
 
