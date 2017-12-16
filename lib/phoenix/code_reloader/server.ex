@@ -25,17 +25,20 @@ defmodule Phoenix.CodeReloader.Server do
 
   def handle_call(:check_symlinks, _from, checked?) do
     if not checked? and Code.ensure_loaded?(Mix.Project) do
-      build_path = Mix.Project.build_path()
-      symlink = Path.join(Path.dirname(build_path), "__phoenix__")
+      priv_path = "#{Mix.Project.app_path}/priv"
 
-      case File.ln_s(build_path, symlink) do
-        :ok ->
-          File.rm(symlink)
-        {:error, :eexist} ->
-          File.rm(symlink)
+      case :file.read_link(priv_path) do
+        {:ok, _} ->
+          :ok
+
         {:error, _} ->
-          Logger.warn "Phoenix is unable to create symlinks. Phoenix' code reloader will run " <>
-                      "considerably faster if symlinks are allowed." <> os_symlink(:os.type)
+          if can_symlink?() do
+            File.rm_rf(priv_path)
+            Mix.Project.build_structure
+          else
+            Logger.warn "Phoenix is unable to create symlinks. Phoenix' code reloader will run " <>
+                        "considerably faster if symlinks are allowed." <> os_symlink(:os.type)
+          end
       end
     end
 
@@ -78,9 +81,29 @@ defmodule Phoenix.CodeReloader.Server do
   end
 
   defp os_symlink({:win32, _}),
-    do: " On Windows, such can be done by starting the shell with \"Run as Administrator\"."
+    do: " On Windows, the lack of symlinks may even cause empty assets to be served. " <>
+        "Luckily, you can address this issue by starting your Windows terminal at least " <>
+        "once with \"Run as Administrator\" and then running your Phoenix application."
   defp os_symlink(_),
     do: ""
+
+  defp can_symlink?() do
+    build_path = Mix.Project.build_path()
+    symlink = Path.join(Path.dirname(build_path), "__phoenix__")
+
+    case File.ln_s(build_path, symlink) do
+      :ok ->
+        File.rm_rf(symlink)
+        true
+
+      {:error, :eexist} ->
+        File.rm_rf(symlink)
+        true
+
+      {:error, _} ->
+        false
+    end
+  end
 
   defp load_backup(mod) do
     mod
