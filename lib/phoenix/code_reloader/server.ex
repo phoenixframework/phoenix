@@ -26,17 +26,17 @@ defmodule Phoenix.CodeReloader.Server do
   def handle_call(:check_symlinks, _from, checked?) do
     if not checked? and Code.ensure_loaded?(Mix.Project) do
       priv_path = "#{Mix.Project.app_path}/priv"
+
       case File.read_link(priv_path) do
-        {:ok, _} -> nil
+        {:ok, _} ->
+          :ok
         {:error, _} ->
-          if can_symlink() == :ok do
+          if can_symlink?() do
             File.rm_rf(priv_path)
             Mix.Project.build_structure
           else
-            Logger.warn "Phoenix is unable to create symlinks: " <> priv_path <> " . " <>
-                        "As a patch, Phoenix will copied the files needed to the path above, " <>
-                        "but phoenix may acquire them before copy completed (issue#67). " <>
-                        "In addition, it works slower than use symlinks." <> os_symlink(:os.type)
+            Logger.warn "Phoenix is unable to create symlinks. Phoenix' code reloader will run " <>
+                        "considerably faster if symlinks are allowed." <> os_symlink(:os.type)
           end
       end
     end
@@ -80,24 +80,27 @@ defmodule Phoenix.CodeReloader.Server do
   end
 
   defp os_symlink({:win32, _}),
-    do: " On Windows, you can started the shell with \"Run as Administrator\" at least once time, " <> 
-        "to allow phoenix create symlinks and resolve this problem."
+    do: " On Windows, the lack of symlinks may even cause empty assets to be served. " <>
+        "Luckily, you can address this issue by starting your Windows terminal at least " <>
+        "once with \"Run as Administrator\" and then running your Phoenix application."
   defp os_symlink(_),
     do: ""
 
-  defp can_symlink() do
+  defp can_symlink?() do
     build_path = Mix.Project.build_path()
     symlink = Path.join(Path.dirname(build_path), "__phoenix__")
 
     case File.ln_s(build_path, symlink) do
       :ok ->
         File.rm_rf(symlink)
-        :ok
+        true
+
       {:error, :eexist} ->
         File.rm_rf(symlink)
-        :ok
+        true
+
       {:error, _} ->
-        :error
+        false
     end
   end
 
