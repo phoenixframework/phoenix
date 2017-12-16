@@ -27,9 +27,10 @@ defmodule Phoenix.CodeReloader.Server do
     if not checked? and Code.ensure_loaded?(Mix.Project) do
       priv_path = "#{Mix.Project.app_path}/priv"
 
-      case File.read_link(priv_path) do
+      case :file.read_link(priv_path) do
         {:ok, _} ->
           :ok
+
         {:error, _} ->
           if can_symlink?() do
             File.rm_rf(priv_path)
