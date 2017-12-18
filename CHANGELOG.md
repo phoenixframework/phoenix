@@ -7,6 +7,8 @@
   * [Logger] Add whitelist support to `filter_parameters` logger configuration, via new `:keep` tuple format
   * [Router] Raise on duplicate plugs in pipe_through scopes
 
+* Bug Fixes
+  * [Channel] Fix issue with WebSocket transport sending wrong ContentLength header with 403 response
 
 * JavaScript client enhancements
   * Add `updateJoinParams` to channel for explicit param updates between rejoins
