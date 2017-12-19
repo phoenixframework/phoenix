@@ -76,7 +76,7 @@ defmodule Phoenix.Endpoint.Handler do
     in the :handler configuration of your Phoenix endpoint #{inspect endpoint} \
     but your mix.exs has fetched Cowboy v2.x.
 
-    If you wish to use Cowboy 1.x, please update mix.exs to point to the \
+    If you wish to use Cowboy 1, please update mix.exs to point to the \
     correct Cowboy version:
     
         {:cowboy, "~> 1.0"}
