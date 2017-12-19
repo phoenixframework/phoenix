@@ -16,6 +16,8 @@ defmodule Phoenix.Endpoint.Handler do
   """
   @callback child_spec(scheme :: atom, endpoint :: module, config :: Keyword.t) :: Supervisor.Spec.spec
 
+  alias Phoenix.Endpoint.{CowboyHandler, Cowboy2Handler}
+
   use Supervisor
   require Logger
 
@@ -26,7 +28,11 @@ defmodule Phoenix.Endpoint.Handler do
 
   @doc false
   def init({otp_app, endpoint}) do
-    handler  = endpoint.config(:handler)
+    user_handler = endpoint.config(:handler)
+    autodetected_handler = cowboy_version_handler()
+    warn_on_different_handler_version(user_handler, autodetected_handler, endpoint)
+    handler = user_handler || autodetected_handler
+
     children =
       for {scheme, port} <- [http: 4000, https: 4040],
           config = endpoint.config(scheme) do
@@ -56,4 +62,33 @@ defmodule Phoenix.Endpoint.Handler do
   defp to_port(binary)  when is_binary(binary), do: String.to_integer(binary)
   defp to_port(integer) when is_integer(integer), do: integer
   defp to_port({:system, env_var}), do: to_port(System.get_env(env_var))
+
+  defp cowboy_version_handler() do
+    case Application.spec(:cowboy, :vsn) do
+      [?1 | _] -> CowboyHandler
+      _ -> Cowboy2Handler
+    end
+  end
+
+  defp warn_on_different_handler_version(CowboyHandler, Cowboy2Handler, endpoint) do
+    Logger.warn("""
+    You have specified #{inspect CowboyHandler} for Cowboy v1.x \
+    in the :handler configuration of your Phoenix endpoint #{inspect endpoint} \
+    but your mix.exs has fetched Cowboy v2.x.
+
+    If you wish to use Cowboy 1, please update mix.exs to point to the \
+    correct Cowboy version:
+
+        {:cowboy, "~> 1.0"}
+
+    If you want to use Cowboy 2, then please remove the :handler option \
+    in your config.exs file or set it to:
+
+        handler: Phoenix.Endpoint.Cowboy2Handler
+
+    """)
+
+    raise "aborting due to handler mismatch"
+  end
+  defp warn_on_different_handler_version(_user, _autodetected, _endpoint), do: nil
 end

@@ -114,7 +114,6 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp defaults(otp_app, module) do
     [otp_app: otp_app,
-     handler: Phoenix.Endpoint.CowboyHandler,
 
      # Compile-time config
      code_reloader: false,
