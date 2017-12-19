@@ -28,7 +28,7 @@ defmodule Phoenix.Endpoint.Handler do
 
   @doc false
   def init({otp_app, endpoint}) do
-    user_handler  = endpoint.config(:handler)
+    user_handler = endpoint.config(:handler)
     autodetected_handler = cowboy_version_handler()
     warn_on_different_handler_version(user_handler, autodetected_handler, endpoint)
     handler = user_handler || autodetected_handler
@@ -72,16 +72,20 @@ defmodule Phoenix.Endpoint.Handler do
 
   defp warn_on_different_handler_version(CowboyHandler, Cowboy2Handler, endpoint) do
     Logger.warn("""
-    You have specified #{inspect CowboyHandler} for cowboy v1.x
-    in the :handler configuration of your Phoenix endpoint #{inspect endpoint}
-    but your mix.exs has fetched cowboy v2.x.
+    You have specified #{inspect CowboyHandler} for Cowboy v1.x \
+    in the :handler configuration of your Phoenix endpoint #{inspect endpoint} \
+    but your mix.exs has fetched Cowboy v2.x.
 
-    If you wish to use Cowboy 1.x, please update mix.exs to point to the
-    correct Cowboy version. If you want to use Cowboy 2, then please set:
+    If you wish to use Cowboy 1.x, please update mix.exs to point to the \
+    correct Cowboy version:
+    
+        {:cowboy, "~> 1.0"}
+    
+    If you want to use Cowboy 2, then please remove the :handler option \
+    in your config.exs file or set it to:
 
-        handler: Phoenix.Endpoint.Cowboy2Handler,
+        handler: Phoenix.Endpoint.Cowboy2Handler
 
-    In your config.exs file.
     """)
   end
   defp warn_on_different_handler_version(_user, _autodetected, _endpoint), do: nil
