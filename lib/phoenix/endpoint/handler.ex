@@ -78,15 +78,17 @@ defmodule Phoenix.Endpoint.Handler do
 
     If you wish to use Cowboy 1, please update mix.exs to point to the \
     correct Cowboy version:
-    
+
         {:cowboy, "~> 1.0"}
-    
+
     If you want to use Cowboy 2, then please remove the :handler option \
     in your config.exs file or set it to:
 
         handler: Phoenix.Endpoint.Cowboy2Handler
 
     """)
+
+    raise "aborting due to handler mismatch"
   end
   defp warn_on_different_handler_version(_user, _autodetected, _endpoint), do: nil
 end

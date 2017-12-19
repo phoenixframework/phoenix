@@ -183,21 +183,6 @@ defmodule Phoenix.Integration.EndpointTest do
     end
   end
 
-  if List.starts_with?(Application.spec(:cowboy, :vsn), '2.') do
-    test "adapters warns if the handler doesn't match the cowboy version" do
-      log =
-        capture_log fn ->
-          # Has server: true
-          {:ok, _} = InvalidHandlerEndpoint.start_link()
-
-          Supervisor.stop(InvalidHandlerEndpoint)
-        end
-
-      assert log =~ "You have specified Phoenix.Endpoint.CowboyHandler for cowboy v1.x"
-      assert log =~ "endpoint Phoenix.Integration.AdapterTest.InvalidHandlerEndpoint"
-    end
-  end
-
   defp serve_endpoints(bool) do
     Application.put_env(:phoenix, :serve_endpoints, bool)
   end
