@@ -272,7 +272,7 @@ Now we can use the `render/2` function we saw above when we were experimenting w
 
 ```diff
 - def render("404.html", _assigns) do
--  render("not_found.html", %{})
+-   "Page not found"
 - end
 ```
 
