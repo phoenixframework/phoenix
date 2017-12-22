@@ -204,6 +204,8 @@ There are a couple of interesting things to notice about what we just did. We di
 
 which is what renders our template into the layout before the HTML is sent off to the browser.
 
+A note on hot code reloading, some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the dicussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
+
 ## Another New Page
 
 Let's add just a little complexity to our application. We're going to add a new page that will recognize a piece of the URL, label it as a "messenger" and pass it through the controller into the template so our messenger can say hello.

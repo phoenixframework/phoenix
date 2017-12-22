@@ -23,7 +23,7 @@ At the top of this guide, we mentioned that views are a place to put functions f
 Let's open up our application layout template, `lib/hello_web/templates/layout/app.html.eex`, and change this line,
 
 ```html
-<title>Hello Phoenix!</title>
+<title>Hello Hello!</title>
 ```
 
 to call a `title/0` function, like this.
@@ -268,11 +268,11 @@ Great, so we have a `render/2` function that takes a template and an `assigns` m
 </html>
 ```
 
-Now we can use the `render/2` function we saw above when we were experimenting with rendering in the `iex` session. Since we know that Phoenix will precompile the `404.html.eex` template as a `render("index.html.eex", assigns)` function clause, we can delete the clause from our ErrorView.
+Now we can use the `render/2` function we saw above when we were experimenting with rendering in the `iex` session. Since we know that Phoenix will precompile the `404.html.eex` template as a `render("404.html.eex", assigns)` function clause, we can delete the clause from our ErrorView.
 
 ```diff
 - def render("404.html", _assigns) do
--  render("not_found.html", %{})
+-   "Page not found"
 - end
 ```
 
