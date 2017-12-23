@@ -969,6 +969,12 @@ defmodule Phoenix.Controller do
         script and style tags to be sent with proper content type
       * x-xss-protection - set to "1; mode=block" to improve XSS
         protection on both Chrome and IE
+      * x-download-options - set to noopen to instruct the browser
+        not to open a download directly in the browser, to avoid
+        HTML files rendering inline and accessing the security
+        context of the application (like critical domain cookies)
+      * x-permitted-cross-domain-policies - set to none to restrict
+        Adobe Flash Player’s access to data
 
   A custom headers map may also be given to be merged with defaults.
   """
@@ -985,7 +991,9 @@ defmodule Phoenix.Controller do
     merge_resp_headers(conn, [
       {"x-frame-options", "SAMEORIGIN"},
       {"x-xss-protection", "1; mode=block"},
-      {"x-content-type-options", "nosniff"}
+      {"x-content-type-options", "nosniff"},
+      {"x-download-options", "noopen"},
+      {"x-permitted-cross-domain-policies", "none"}
     ])
   end
 

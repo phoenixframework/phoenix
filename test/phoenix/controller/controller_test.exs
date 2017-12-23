@@ -525,11 +525,15 @@ defmodule Phoenix.Controller.ControllerTest do
     assert get_resp_header(conn, "x-frame-options") == ["SAMEORIGIN"]
     assert get_resp_header(conn, "x-xss-protection") == ["1; mode=block"]
     assert get_resp_header(conn, "x-content-type-options") == ["nosniff"]
+    assert get_resp_header(conn, "x-download-options") == ["noopen"]
+    assert get_resp_header(conn, "x-permitted-cross-domain-policies") == ["none"]
 
     custom_headers = %{"x-frame-options" => "custom", "foo" => "bar"}
     conn = conn(:get, "/") |> put_secure_browser_headers(custom_headers)
     assert get_resp_header(conn, "x-frame-options") == ["custom"]
     assert get_resp_header(conn, "x-xss-protection") == ["1; mode=block"]
+    assert get_resp_header(conn, "x-download-options") == ["noopen"]
+    assert get_resp_header(conn, "x-permitted-cross-domain-policies") == ["none"]
     assert get_resp_header(conn, "foo") == ["bar"]
   end
 
