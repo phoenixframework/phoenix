@@ -4,6 +4,7 @@
 
 * Enhancements
   * [Controller] Support partial file downloads with `:offset` and `:length` options to `send_download/3`
+  * [Controller] Add additional security headers to `put_secure_browser_headers` (`x-content-type-options`, `x-download-options`, and `x-permitted-cross-domain-policies`)
   * [Logger] Add whitelist support to `filter_parameters` logger configuration, via new `:keep` tuple format
   * [Router] Raise on duplicate plugs in pipe_through scopes
 
