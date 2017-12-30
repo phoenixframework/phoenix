@@ -19,25 +19,25 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "index" do
     test "lists all <%= schema.plural %>", %{conn: conn} do
-      conn = get conn, <%= schema.route_helper %>_path(conn, :index)
-      assert json_response(conn, 200)["data"] == []
+      list = get conn, <%= schema.route_helper %>_path(conn, :index)
+      assert json_response(list, 200)["data"] == []
     end
   end
 
   describe "create <%= schema.singular %>" do
     test "renders <%= schema.singular %> when data is valid", %{conn: conn} do
-      conn = post conn, <%= schema.route_helper %>_path(conn, :create), <%= schema.singular %>: @create_attrs
-      assert %{"id" => id} = json_response(conn, 201)["data"]
+      create_result = post conn, <%= schema.route_helper %>_path(conn, :create), <%= schema.singular %>: @create_attrs
+      assert %{"id" => id} = json_response(create_result, 201)["data"]
 
-      conn = get conn, <%= schema.route_helper %>_path(conn, :show, id)
-      assert json_response(conn, 200)["data"] == %{
+      get_result = get conn, <%= schema.route_helper %>_path(conn, :show, id)
+      assert json_response(get_result, 200)["data"] == %{
         "id" => id<%= for {key, val} <- schema.params.create do %>,
         "<%= key %>" => <%= inspect val %><% end %>}
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post conn, <%= schema.route_helper %>_path(conn, :create), <%= schema.singular %>: @invalid_attrs
-      assert json_response(conn, 422)["errors"] != %{}
+      expected_error = post conn, <%= schema.route_helper %>_path(conn, :create), <%= schema.singular %>: @invalid_attrs
+      assert json_response(expected_error, 422)["errors"] != %{}
     end
   end
 
@@ -45,18 +45,18 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     setup [:create_<%= schema.singular %>]
 
     test "renders <%= schema.singular %> when data is valid", %{conn: conn, <%= schema.singular %>: %<%= inspect schema.alias %>{id: id} = <%= schema.singular %>} do
-      conn = put conn, <%= schema.route_helper %>_path(conn, :update, <%= schema.singular %>), <%= schema.singular %>: @update_attrs
-      assert %{"id" => ^id} = json_response(conn, 200)["data"]
+      update_result = put conn, <%= schema.route_helper %>_path(conn, :update, <%= schema.singular %>), <%= schema.singular %>: @update_attrs
+      assert %{"id" => ^id} = json_response(update_result, 200)["data"]
 
-      conn = get conn, <%= schema.route_helper %>_path(conn, :show, id)
-      assert json_response(conn, 200)["data"] == %{
+      get_result = get conn, <%= schema.route_helper %>_path(conn, :show, id)
+      assert json_response(get_result, 200)["data"] == %{
         "id" => id<%= for {key, val} <- schema.params.update do %>,
         "<%= key %>" => <%= inspect val %><% end %>}
     end
 
     test "renders errors when data is invalid", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      conn = put conn, <%= schema.route_helper %>_path(conn, :update, <%= schema.singular %>), <%= schema.singular %>: @invalid_attrs
-      assert json_response(conn, 422)["errors"] != %{}
+      expected_error = put conn, <%= schema.route_helper %>_path(conn, :update, <%= schema.singular %>), <%= schema.singular %>: @invalid_attrs
+      assert json_response(expected_error, 422)["errors"] != %{}
     end
   end
 
@@ -64,8 +64,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     setup [:create_<%= schema.singular %>]
 
     test "deletes chosen <%= schema.singular %>", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      conn = delete conn, <%= schema.route_helper %>_path(conn, :delete, <%= schema.singular %>)
-      assert response(conn, 204)
+      delete_result = delete conn, <%= schema.route_helper %>_path(conn, :delete, <%= schema.singular %>)
+      assert response(delete_result, 204)
       assert_error_sent 404, fn ->
         get conn, <%= schema.route_helper %>_path(conn, :show, <%= schema.singular %>)
       end
