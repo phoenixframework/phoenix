@@ -161,11 +161,18 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     assert conn.resp_body == "Got 500 from exit with GET"
   end
 
-  test "exception page with params _format" do
-    conn = render(conn(:get, "/", [_format: "text"]), [accepts: ["text", "html"]], fn ->
+  test "exception page ignores params _format" do
+    conn = render(conn(:get, "/", _format: "text"), [accepts: ["html", "text"]], fn ->
       throw :hello
     end)
 
+    assert conn.status == 500
+    assert conn.resp_body == "500 in TEXT"
+  end
+
+  test "exception page uses stored _format" do
+    conn = conn(:get, "/") |> put_private(:phoenix_format, "text")
+    conn = render(conn, [accepts: ["html", "text"]], fn -> throw :hello end)
     assert conn.status == 500
     assert conn.resp_body == "500 in TEXT"
   end
