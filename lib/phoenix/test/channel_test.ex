@@ -436,7 +436,8 @@ defmodule Phoenix.ChannelTest do
   In the assertion above, we don't particularly care about
   the data being sent, as long as something was sent.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :assert_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
 
   **NOTE:** Because event and payload are patterns, they will be matched.  This
   means that if you wish to assert that the received payload is equivalent to
@@ -455,7 +456,7 @@ defmodule Phoenix.ChannelTest do
       # The code above does not assert the payload matches the described map.
 
   """
-  defmacro assert_push(event, payload, timeout \\ 100) do
+  defmacro assert_push(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
     quote do
       assert_receive %Phoenix.Socket.Message{
                         event: unquote(event),
@@ -469,12 +470,13 @@ defmodule Phoenix.ChannelTest do
 
   Like `assert_push`, the event and payload are patterns.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :refute_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
   Keep in mind this macro will block the test by the
   timeout value, so use it only when necessary as overuse
   will certainly slow down your test suite.
   """
-  defmacro refute_push(event, payload, timeout \\ 100) do
+  defmacro refute_push(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)) do
     quote do
       refute_receive %Phoenix.Socket.Message{
                         event: unquote(event),
@@ -494,9 +496,10 @@ defmodule Phoenix.ChannelTest do
   In the assertion above, we don't particularly care about
   the data being sent, as long as something was replied.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :assert_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
   """
-  defmacro assert_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
+  defmacro assert_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
     quote do
       ref = unquote(ref)
       assert_receive %Phoenix.Socket.Reply{
@@ -512,12 +515,13 @@ defmodule Phoenix.ChannelTest do
 
   Like `assert_reply`, the event and payload are patterns.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :refute_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
   Keep in mind this macro will block the test by the
   timeout value, so use it only when necessary as overuse
   will certainly slow down your test suite.
   """
-  defmacro refute_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
+  defmacro refute_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)) do
     quote do
       ref = unquote(ref)
       refute_receive %Phoenix.Socket.Reply{
@@ -542,9 +546,10 @@ defmodule Phoenix.ChannelTest do
   In the assertion above, we don't particularly care about
   the data being sent, as long as something was sent.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :assert_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
   """
-  defmacro assert_broadcast(event, payload, timeout \\ 100) do
+  defmacro assert_broadcast(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
     quote do
       assert_receive %Phoenix.Socket.Broadcast{event: unquote(event),
                                                payload: unquote(payload)}, unquote(timeout)
@@ -556,12 +561,13 @@ defmodule Phoenix.ChannelTest do
 
   Like `assert_broadcast`, the event and payload are patterns.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :refute_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
   Keep in mind this macro will block the test by the
   timeout value, so use it only when necessary as overuse
   will certainly slow down your test suite.
   """
-  defmacro refute_broadcast(event, payload, timeout \\ 100) do
+  defmacro refute_broadcast(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)) do
     quote do
       refute_receive %Phoenix.Socket.Broadcast{event: unquote(event),
                                                payload: unquote(payload)}, unquote(timeout)
