@@ -473,6 +473,9 @@ defmodule Phoenix.Channel do
 
   """
   @spec reply(socket_ref, reply) :: :ok
+  def reply(socket_ref, status) when is_atom(status) do
+    reply(socket_ref, {status, %{}})
+  end
   def reply({transport_pid, serializer, topic, ref, join_ref}, {status, payload}) do
     Server.reply(transport_pid, join_ref, ref, topic, {status, payload}, serializer)
   end
