@@ -7,6 +7,7 @@
   * [Controller] Add additional security headers to `put_secure_browser_headers` (`x-content-type-options`, `x-download-options`, and `x-permitted-cross-domain-policies`)
   * [Logger] Add whitelist support to `filter_parameters` logger configuration, via new `:keep` tuple format
   * [Router] Raise on duplicate plugs in pipe_through scopes
+  * [ChannelTest] Respect user's configured ExUnit `:assert_receive_timeout` for macro assertions
 
 * Bug Fixes
   * [Channel] Fix issue with WebSocket transport sending wrong ContentLength header with 403 response
