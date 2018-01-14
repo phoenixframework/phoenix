@@ -248,7 +248,7 @@ def handle_out("user_joined", msg, socket) do
 end
 ```
 
-That's all there is to our basic chat app. Fire up multiple browser tabs and you should see your messages being pushed and broadcasted to all windows!
+That's all there is to our basic chat app. Restart the server then fire up multiple browser tabs and you should see your messages being pushed and broadcasted to all windows!
 
 #### Socket Assigns
 
