@@ -365,4 +365,4 @@ Phoenix ships with a way of handling online users that is built on top of Phoeni
 #### Example Application
 To see an example of the application we just built, checkout the project [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
 
-You can also see a live demo at http://phoenixchat.herokuapp.com/.
+You can also see a live demo at <http://phoenixchat.herokuapp.com/>.
