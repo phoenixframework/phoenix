@@ -292,7 +292,10 @@ Now our `conn.assigns` contains the `current_user` and `user_token`.
 Next we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.eex`, as follows:
 
 ```html
-<script>window.userToken = "<%= assigns[:user_token] %>";</script>
+<head>
+  ...
+  <script>window.userToken = "<%= assigns[:user_token] %>";</script>
+</head>
 ```
 
 **Step 3 - Pass the Token to the Socket Constructor and Verify**
