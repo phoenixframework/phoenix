@@ -34,7 +34,7 @@ Each Channel will implement one or more clauses of each of these four callback f
 
 The Phoenix PubSub layer consists of the `Phoenix.PubSub` module and a variety of modules for different adapters and their `GenServer`s. These modules contain functions which are the nuts and bolts of organizing Channel communication - subscribing to topics, unsubscribing from topics, and broadcasting messages on a topic.
 
-It is worth noting that these modules are intended for Phoenix's internal use. Channels use them under the hood to do much of their work. As end users, we shouldn't have any need to use them directly in our applications.		
+It is worth noting that these modules are intended for Phoenix's internal use. Channels use them under the hood to do much of their work. As end users, we shouldn't have any need to use them directly in our applications.
 
 If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](http://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
 
@@ -289,10 +289,11 @@ Now our `conn.assigns` contains the `current_user` and `user_token`.
 
 **Step 2 - Pass the Token to the JavaScript**
 
-Next we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.eex`, as follows:
+Next we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.eex` right above the app.js script, as follows:
 
 ```html
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
+<script src="<%= static_path(@conn, "/js/app.js") %>"></script>
 ```
 
 **Step 3 - Pass the Token to the Socket Constructor and Verify**
@@ -365,4 +366,4 @@ Phoenix ships with a way of handling online users that is built on top of Phoeni
 #### Example Application
 To see an example of the application we just built, checkout the project [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
 
-You can also see a live demo at http://phoenixchat.herokuapp.com/.
+You can also see a live demo at <http://phoenixchat.herokuapp.com/>.
