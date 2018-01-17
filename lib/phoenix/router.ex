@@ -264,13 +264,14 @@ defmodule Phoenix.Router do
   end
 
   @doc false
-  def __call__({%Plug.Conn{private: %{phoenix_router: router, phoenix_bypass: {router, pipes}}} = conn, _pipeline, _dispatch}) do
+  def __call__({%Plug.Conn{private: %{phoenix_router: router, phoenix_bypass: {router, pipes}}} = conn, _pipeline, _dispatch, _defined_path}) do
     Enum.reduce(pipes, conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
   end
-  def __call__({%Plug.Conn{private: %{phoenix_bypass: :all}} = conn, _pipeline, _dispatch}) do
+  def __call__({%Plug.Conn{private: %{phoenix_bypass: :all}} = conn, _pipeline, _dispatch, _defined_path}) do
     conn
   end
-  def __call__({conn, pipeline, dispatch}) do
+  def __call__({conn, pipeline, dispatch, defined_path}) do
+    conn = Plug.Conn.put_private(conn, :phoenix_defined_path, defined_path)
     case pipeline.(conn) do
       %Plug.Conn{halted: true} = halted_conn ->
         halted_conn
@@ -350,8 +351,9 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp build_match({_route, exprs}) do
+  defp build_match({route, exprs}) do
     {conn_block, pipelines, dispatch} = exprs.route_match
+    defined_path = route.path
 
     quote do
       @doc false
@@ -359,7 +361,7 @@ defmodule Phoenix.Router do
                  unquote(exprs.host)) do
 
         unquote(conn_block)
-        {var!(conn), unquote(pipelines), unquote(dispatch)}
+        {var!(conn), unquote(pipelines), unquote(dispatch), unquote(defined_path)}
       end
     end
   end

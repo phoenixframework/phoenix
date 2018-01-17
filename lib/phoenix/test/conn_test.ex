@@ -566,7 +566,7 @@ defmodule Phoenix.ConnTest do
     %URI{path: path, host: host} = conn |> redirected_to() |> URI.parse()
     path_info = split_path(path)
 
-    {conn, _pipes, _dispatch} = router.__match_route__(conn, "GET", path_info, host || conn.host)
+    {conn, _pipes, _dispatch, _defined_path} = router.__match_route__(conn, "GET", path_info, host || conn.host)
     Enum.into(conn.path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
   end
   defp split_path(path) do
