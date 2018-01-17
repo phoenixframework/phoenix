@@ -287,7 +287,7 @@ defmodule Phoenix.Channel do
               {:noreply, Socket.t} |
               {:stop, reason :: term, Socket.t}
 
-  @callback terminate(msg :: map, Socket.t) ::
+  @callback terminate(reason :: {:shutdown, :left | :closed}, Socket.t) ::
               {:shutdown, :left | :closed} |
               term
 
