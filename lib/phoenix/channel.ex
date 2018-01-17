@@ -267,7 +267,6 @@ defmodule Phoenix.Channel do
   @type socket_ref :: {transport_pid :: Pid, serializer :: module,
                        topic :: binary, ref :: binary, join_ref :: binary}
 
-
   @callback code_change(old_vsn, Socket.t, extra :: term) ::
               {:ok, Socket.t} |
               {:error, reason :: term} when old_vsn: term | {:down, term}
@@ -287,8 +286,7 @@ defmodule Phoenix.Channel do
               {:noreply, Socket.t} |
               {:stop, reason :: term, Socket.t}
 
-  @callback terminate(msg :: map, Socket.t) ::
-              {:shutdown, :left | :closed} |
+  @callback terminate(reason :: :normal | :shutdown | {:shutdown, :left | :closed | term}, Socket.t) ::
               term
 
   defmacro __using__(opts \\ []) do
