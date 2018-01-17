@@ -49,26 +49,89 @@ defmodule Phoenix.CodeReloader do
   API used by Plug to invoke the code reloader on every request.
   """
   def call(conn, opts) do
-    case opts[:reloader].(conn.private.phoenix_endpoint) do
-      :ok ->
+    {conn, res, output} = call_reloader(conn, opts[:reloader])
+
+    case {res, feedback_started?(conn)} do
+      {:ok, true} ->
+        Plug.Conn.chunk(conn, "Done!<br />\n")
+        Plug.Conn.chunk(conn, ~s(<meta http-equiv="refresh" content="0">\n))
+        halt(conn)
+      {:ok, false} ->
         conn
-      {:error, output} ->
+      {:error, true} ->
+        halt(conn)
+      {:error, false} ->
         conn
         |> put_resp_content_type("text/html")
-        |> send_resp(500, template(output))
+        |> send_resp(500, error_template(output))
         |> halt()
     end
   end
 
-  defp template(output) do
-    {error, headline} = get_error_details(output)
+  defp call_reloader(conn, reloader) do
+    if send_feedback?(conn) do
+      task = Task.async(fn -> forward_output(conn) end)
+      Phoenix.CodeReloader.Server.forward_output_to(task.pid)
+      {res, output} = reloader.(conn.private.phoenix_endpoint)
+      conn = Task.await(task)
+      {conn, res, output}
+    else
+      {res, output} = reloader.(conn.private.phoenix_endpoint)
+      {conn, res, output}
+    end
+  end
 
+  defp forward_output(conn) do
+    receive do
+      {:done, _output} ->
+        conn
+      {:chars, _channel, chars} ->
+        conn = start_progress_output(conn)
+        html = Phoenix.CodeReloader.Colors.to_html(chars)
+        {:ok, conn} = Plug.Conn.chunk(conn, html)
+        forward_output(conn)
+    end
+  end
+
+  defp start_progress_output(conn) do
+    if !feedback_started?(conn) do
+      {:ok, conn} =
+        conn
+        |> put_resp_content_type("text/html")
+        |> send_chunked(200)
+        |> Plug.Conn.chunk(compile_template())
+      conn
+    else
+      conn
+    end
+  end
+
+  defp feedback_started?(conn),
+    do: conn.state == :chunked
+
+  defp is_unix?,
+    do: match?({:unix, _}, :os.type())
+
+  defp accepts_html?(conn) do
+    conn
+    |> get_req_header("accept")
+    |> Enum.any?(&String.contains?(&1, "html"))
+  end
+
+  defp is_ajax?(conn) do
+    "XMLHttpRequest" in get_req_header(conn, "x-requested-with")
+  end
+
+  defp send_feedback?(conn),
+    do: accepts_html?(conn) and not is_ajax?(conn) and is_unix?()
+
+  defp header_template(title) do
     """
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="utf-8">
-        <title>CompileError</title>
+        <title>#{title}</title>
         <meta name="viewport" content="width=device-width">
         <style>/*! normalize.css v4.2.0 | MIT License | github.com/necolas/normalize.css */html{font-family:sans-serif;line-height:1.15;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,main,menu,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block}audio:not([controls]){display:none;height:0}progress{vertical-align:baseline}template,[hidden]{display:none}a{background-color:transparent;-webkit-text-decoration-skip:objects}a:active,a:hover{outline-width:0}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:inherit}b,strong{font-weight:bolder}dfn{font-style:italic}h1{font-size:2em;margin:0.67em 0}mark{background-color:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-0.25em}sup{top:-0.5em}img{border-style:none}svg:not(:root){overflow:hidden}code,kbd,pre,samp{font-family:monospace, monospace;font-size:1em}figure{margin:1em 40px}hr{box-sizing:content-box;height:0;overflow:visible}button,input,optgroup,select,textarea{font:inherit;margin:0}optgroup{font-weight:bold}button,input{overflow:visible}button,select{text-transform:none}button,html [type="button"],[type="reset"],[type="submit"]{-webkit-appearance:button}button::-moz-focus-inner,[type="button"]::-moz-focus-inner,[type="reset"]::-moz-focus-inner,[type="submit"]::-moz-focus-inner{border-style:none;padding:0}button:-moz-focusring,[type="button"]:-moz-focusring,[type="reset"]:-moz-focusring,[type="submit"]:-moz-focusring{outline:1px dotted ButtonText}fieldset{border:1px solid #c0c0c0;margin:0 2px;padding:0.35em 0.625em 0.75em}legend{box-sizing:border-box;color:inherit;display:table;max-width:100%;padding:0;white-space:normal}textarea{overflow:auto}[type="checkbox"],[type="radio"]{box-sizing:border-box;padding:0}[type="number"]::-webkit-inner-spin-button,[type="number"]::-webkit-outer-spin-button{height:auto}[type="search"]{-webkit-appearance:textfield;outline-offset:-2px}[type="search"]::-webkit-search-cancel-button,[type="search"]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-input-placeholder{color:inherit;opacity:0.54}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}</style>
         <style>
@@ -234,6 +297,41 @@ defmodule Phoenix.CodeReloader do
         </style>
     </head>
     <body>
+    """
+  end
+
+  defp format_output(output) do
+    output
+    |> String.trim
+    |> Phoenix.CodeReloader.Colors.to_html
+  end
+
+  defp get_error_details(output) do
+    case Regex.run(~r/(?:\n|^)\*\* \(([^ ]+)\) (.*)(?:\n|$)/, output) do
+      [_, error, headline] -> {error, format_output(headline)}
+      _ -> {"CompileError", "Compilation error"}
+    end
+  end
+
+  defp compile_template do
+    header_template("Compilation Output") <>
+    """
+        <div class="heading-block">
+            <aside class="exception-logo"></aside>
+            <header class="exception-info">
+                <h1 class="title">Console Output</h1>
+            </header>
+        </div>
+        <div class="output-block">
+            <pre class="code code-block">
+    """
+  end
+
+  defp error_template(output) do
+    {error, headline} = get_error_details(output)
+
+    header_template("CompileError") <>
+    """
         <div class="heading-block">
             <aside class="exception-logo"></aside>
             <header class="exception-info">
@@ -248,18 +346,5 @@ defmodule Phoenix.CodeReloader do
     </body>
     </html>
     """
-  end
-
-  defp format_output(output) do
-    output
-    |> String.trim
-    |> Plug.HTML.html_escape
-  end
-
-  defp get_error_details(output) do
-    case Regex.run(~r/(?:\n|^)\*\* \(([^ ]+)\) (.*)(?:\n|$)/, output) do
-      [_, error, headline] -> {error, format_output(headline)}
-      _ -> {"CompileError", "Compilation error"}
-    end
   end
 end
