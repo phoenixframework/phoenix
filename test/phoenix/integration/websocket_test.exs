@@ -37,7 +37,7 @@ defmodule Phoenix.Integration.WebSocketTest do
     def join(topic, message, socket) do
       Process.register(self(), String.to_atom(topic))
       send(self(), {:after_join, message})
-      {:ok, socket}
+      {:ok, %{host: socket.assigns[:host]}, socket}
     end
 
     def handle_info({:after_join, message}, socket) do
@@ -88,6 +88,28 @@ defmodule Phoenix.Integration.WebSocketTest do
     end
   end
 
+  defmodule InetSocket do
+    use Phoenix.Socket
+
+    channel "room:*", RoomChannel
+
+    transport :websocket, Phoenix.Transports.WebSocket, timeout: 200
+
+    def connect(_params, socket), do: {:ok, assign(socket, :host, "inet")}
+    def id(_), do: nil
+  end
+
+  defmodule LocalhostSocket do
+    use Phoenix.Socket
+
+    channel "room:*", RoomChannel
+
+    transport :websocket, Phoenix.Transports.WebSocket, timeout: 200
+
+    def connect(_params, socket), do: {:ok, assign(socket, :host, "localhost")}
+    def id(_), do: nil
+  end
+
   defmodule LoggingSocket do
     use Phoenix.Socket
 
@@ -109,12 +131,16 @@ defmodule Phoenix.Integration.WebSocketTest do
     end
   end
 
+  @inet_hostname to_string(elem(:inet.gethostname(), 1))
+
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
     socket "/ws", UserSocket
     socket "/ws/admin", UserSocket
     socket "/ws/logging", LoggingSocket
+    socket "/host-socket", LocalhostSocket, host: "localhost"
+    socket "/host-socket", InetSocket, host: to_string(elem(:inet.gethostname(), 1))
   end
 
   setup_all do
@@ -122,14 +148,45 @@ defmodule Phoenix.Integration.WebSocketTest do
     :ok
   end
 
-  for {serializer, vsn, join_ref} <- [{WebSocketSerializer, "1.0.0", nil}, {V2.WebSocketSerializer, "2.0.0", "1"}] do
+  defp start_ws(host, path, serializer, query, opts \\ []) do
+    url = Path.join([
+      "ws://#{host}:#{@port}",
+      path,
+      "websocket?#{URI.encode_query(query)}"
+    ])
+
+    WebsocketClient.start_link(self(), url, serializer, opts)
+  end
+
+  for {serializer, vsn, join_ref} <- [{WebSocketSerializer, "1.0.0", nil},
+                                      {V2.WebSocketSerializer, "2.0.0", "1"}] do
     @serializer serializer
     @vsn vsn
     @join_ref join_ref
 
     describe "with #{vsn} serializer #{inspect serializer}" do
+      test "routes socket based on host and path" do
+        {:ok, sock} = start_ws("localhost", "/host-socket", @serializer, vsn: @vsn)
+
+        WebsocketClient.join(sock, "room:admin-lobby1", %{})
+        assert_receive %Message{event: "phx_reply",
+                                payload: %{"response" => %{"host" => "localhost"}, "status" => "ok"},
+                                join_ref: @join_ref,
+                                ref: "1", topic: "room:admin-lobby1"}
+      end
+
+      test "allows same socket path with different hosts" do
+        {:ok, sock} = start_ws(@inet_hostname, "/host-socket", @serializer, vsn: @vsn)
+
+        WebsocketClient.join(sock, "room:admin-lobby1", %{})
+        assert_receive %Message{event: "phx_reply",
+                                payload: %{"response" => %{"host" => "inet"}, "status" => "ok"},
+                                join_ref: @join_ref,
+                                ref: "1", topic: "room:admin-lobby1"}
+      end
+
       test "endpoint handles multiple mount segments" do
-        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/admin/websocket?vsn=#{@vsn}", @serializer)
+        {:ok, sock} = start_ws("127.0.0.1", "/ws/admin", @serializer, vsn: @vsn)
         WebsocketClient.join(sock, "room:admin-lobby1", %{})
         assert_receive %Message{event: "phx_reply",
                                 payload: %{"response" => %{}, "status" => "ok"},
@@ -138,7 +195,7 @@ defmodule Phoenix.Integration.WebSocketTest do
       end
 
       test "join, leave, and event messages" do
-        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}", @serializer)
+        {:ok, sock} = start_ws("127.0.0.1", "/ws", @serializer, vsn: @vsn)
         WebsocketClient.join(sock, "room:lobby1", %{})
 
         assert_receive %Message{event: "phx_reply",
@@ -175,7 +232,7 @@ defmodule Phoenix.Integration.WebSocketTest do
 
       test "logs and filter params on join and handle_in" do
         topic = "room:admin-lobby2"
-        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/logging/websocket?vsn=#{@vsn}", @serializer)
+        {:ok, sock} = start_ws("127.0.0.1", "/ws/logging", @serializer, vsn: @vsn)
         log = capture_log fn ->
           WebsocketClient.join(sock, topic, %{"join" => "yes", "password" => "no"})
           assert_receive %Message{event: "phx_reply",
@@ -193,7 +250,7 @@ defmodule Phoenix.Integration.WebSocketTest do
       end
 
       test "sends phx_error if a channel server abnormally exits" do
-        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}", @serializer)
+        {:ok, sock} = start_ws("127.0.0.1", "/ws", @serializer, vsn: @vsn)
 
         WebsocketClient.join(sock, "room:lobby", %{})
         assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
@@ -207,7 +264,7 @@ defmodule Phoenix.Integration.WebSocketTest do
       end
 
       test "channels are terminated if transport normally exits" do
-        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}", @serializer)
+        {:ok, sock} = start_ws("127.0.0.1", "/ws", @serializer, vsn: @vsn)
 
         WebsocketClient.join(sock, "room:lobby2", %{})
         assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
@@ -221,7 +278,7 @@ defmodule Phoenix.Integration.WebSocketTest do
       end
 
       test "refuses websocket events that haven't joined" do
-        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}", @serializer)
+        {:ok, sock} = start_ws("127.0.0.1", "/ws", @serializer, vsn: @vsn)
 
         WebsocketClient.send_event(sock, "room:lobby", "new_msg", %{body: "hi!"})
         refute_receive %Message{event: "new_msg"}
@@ -234,21 +291,20 @@ defmodule Phoenix.Integration.WebSocketTest do
       test "refuses unallowed origins" do
         capture_log fn ->
           assert {:ok, _} =
-            WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}", @serializer,
-                                              [{"origin", "https://example.com"}])
+            start_ws("127.0.0.1", "/ws", @serializer, [vsn: @vsn], [{"origin", "https://example.com"}])
+
           assert {:error, {403, _}} =
-            WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}", @serializer,
-                                            [{"origin", "http://notallowed.com"}])
+            start_ws("127.0.0.1", "/ws", @serializer, [vsn: @vsn], [{"origin", "http://notallowed.com"}])
         end
       end
 
       test "refuses connects that error with 403 response" do
-        assert WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}&reject=true", @serializer) ==
-              {:error, {403, "Forbidden"}}
+        assert start_ws("127.0.0.1", "/ws", @serializer, vsn: @vsn, reject: true) ==
+          {:error, {403, "Forbidden"}}
       end
 
       test "shuts down when receiving disconnect broadcasts on socket's id" do
-        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}&user_id=1001", @serializer)
+        {:ok, sock} = start_ws("127.0.0.1", "/ws", @serializer, vsn: @vsn, user_id: 1001)
 
         WebsocketClient.join(sock, "room:wsdisconnect1", %{})
         assert_receive %Message{topic: "room:wsdisconnect1", event: "phx_reply",
@@ -276,7 +332,7 @@ defmodule Phoenix.Integration.WebSocketTest do
       end
 
       test "duplicate join event closes existing channel" do
-        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}&user_id=1001", @serializer)
+        {:ok, sock} = start_ws("127.0.0.1", "/ws", @serializer, vsn: @vsn, user_id: 1001)
         WebsocketClient.join(sock, "room:joiner", %{})
         assert_receive %Message{topic: "room:joiner", event: "phx_reply",
                                 ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
@@ -291,15 +347,14 @@ defmodule Phoenix.Integration.WebSocketTest do
 
       test "returns 403 when versions to not match" do
         log = capture_log fn ->
-          url = "ws://127.0.0.1:#{@port}/ws/websocket?vsn=123.1.1"
-          assert WebsocketClient.start_link(self(), url,  @serializer) ==
+          assert start_ws("127.0.0.1", "/ws", @serializer, vsn: "123.1.1")
                 {:error, {403, "Forbidden"}}
         end
         assert log =~ "The client's requested channel transport version \"123.1.1\" does not match server's version"
       end
 
       test "shuts down if client goes quiet" do
-        {:ok, socket} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}", @serializer)
+        {:ok, socket} = start_ws("127.0.0.1", "/ws", @serializer, vsn: @vsn)
         Process.monitor(socket)
         WebsocketClient.send_heartbeat(socket)
         assert_receive %Message{event: "phx_reply",

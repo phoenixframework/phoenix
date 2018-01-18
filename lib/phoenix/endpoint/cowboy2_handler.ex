@@ -82,20 +82,9 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
       Application.ensure_all_started(:ssl)
     end
 
-    dispatches =
-      for {path, socket} <- endpoint.__sockets__,
-          {transport, {module, config}} <- socket.__transports__,
-          # Allow handlers to be configured at the transport level
-          handler = config[:cowboy] || default_for(module),
-          do: {Path.join(path, Atom.to_string(transport)),
-               handler,
-               {module, {endpoint, socket, transport}}}
-
-    dispatches =
-      dispatches ++ [{:_, Plug.Adapters.Cowboy2.Handler, {endpoint, []}}]
-
     # Use put_new to allow custom dispatches
-    config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
+    dispatches = build_dispatches(endpoint, __MODULE__, Plug.Adapters.Cowboy2.Handler)
+    config = Keyword.put_new(config, :dispatch, dispatches)
 
     cowboy_supervisor =
       Plug.Adapters.Cowboy2.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
@@ -113,9 +102,43 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
     {id, start, restart, shutdown, type, modules}
   end
 
-  defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy2.Handler
-  defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.Cowboy2WebSocket
-  defp default_for(_), do: nil
+  @doc false
+  def build_dispatches(endpoint, cowboy_handler, plug_handler) do
+    socket_dispatches =
+      for {path, socket, opts} <- endpoint.__sockets__,
+          {transport, {module, config}} <- socket.__transports__,
+          # Allow handlers to be configured at the transport level
+          handler = config[:cowboy] || default_for(cowboy_handler, module),
+          do: {opts[:host] || :_, [{Path.join(path, Atom.to_string(transport)),
+               handler,
+               {module, {endpoint, socket, transport}}}]}
+
+    socket_dispatches
+    |> Kernel.++([{:_, [{:_, plug_handler, {endpoint, []}}]}])
+    |> Enum.reduce(%{}, fn {host, dispatch}, acc ->
+      Map.update(acc, host, dispatch, &(&1 ++ dispatch))
+    end)
+    |> move_catch_all_to_end()
+  end
+  defp move_catch_all_to_end(dispatches) do
+    dispatches
+    |> Map.delete(:_)
+    |> Enum.into([])
+    |> Kernel.++([{:_, dispatches[:_]}])
+  end
+
+  defp default_for(__MODULE__, Phoenix.Transports.LongPoll),
+    do: Plug.Adapters.Cowboy2.Handler
+  defp default_for(__MODULE__, Phoenix.Transports.WebSocket),
+    do: Phoenix.Endpoint.Cowboy2WebSocket
+  defp default_for(Phoenix.Endpoint.CowboyHandler, Phoenix.Transports.LongPoll),
+    do: Plug.Adapters.Cowboy.Handler
+  defp default_for(Phoenix.Endpoint.CowboyHandler, Phoenix.Transports.WebSocket),
+    do: Phoenix.Endpoint.CowboyWebSocket
+  defp default_for(__MODULE__, _),
+    do: nil
+  defp default_for(Phoenix.Endpoint.CowboyHandler, _),
+    do: nil
 
   @doc """
   Callback to start the Cowboy2 endpoint.

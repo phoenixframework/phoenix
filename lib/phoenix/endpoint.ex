@@ -730,7 +730,7 @@ defmodule Phoenix.Endpoint do
       @doc """
       Returns all sockets configured in this endpoint.
       """
-      def __sockets__, do: unquote(sockets)
+      def __sockets__, do: unquote(Macro.escape(sockets))
 
       unquote(instrumentation)
     end
@@ -743,15 +743,16 @@ defmodule Phoenix.Endpoint do
 
   ## Examples
 
-      socket "/ws", MyApp.UserSocket
-      socket "/ws/admin", MyApp.AdminUserSocket
+      socket "/ws", MyAppWeb.UserSocket
+      socket "/ws/admin", MyAppWeb.AdminUserSocket
+      socket "/socket", MyAppWeb.UserSocket, host: "connect."
 
   By default, the given path is a websocket upgrade endpoint,
   with long-polling fallback. The transports can be configured
   within the Socket handler. See `Phoenix.Socket` for more information
   on defining socket handlers.
   """
-  defmacro socket(path, module) do
+  defmacro socket(path, module, opts \\ []) do
     # Tear the alias to simply store the root in the AST.
     # This will make Elixir unable to track the dependency
     # between endpoint <-> socket and avoid recompiling the
@@ -760,7 +761,7 @@ defmodule Phoenix.Endpoint do
     module = tear_alias(module)
 
     quote do
-      @phoenix_sockets {unquote(path), unquote(module)}
+      @phoenix_sockets {unquote(path), unquote(module), unquote(opts)}
     end
   end
 
