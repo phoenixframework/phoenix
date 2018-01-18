@@ -102,6 +102,7 @@ defmodule Phx.New.Generator do
       end
 
     binding = [
+      elixir_version: elixir_version(),
       app_name: project.app,
       app_module: inspect(project.app_mod),
       root_app_name: project.root_app,
@@ -127,10 +128,30 @@ defmodule Phx.New.Generator do
       adapter_module: adapter_module,
       adapter_config: adapter_config,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
-      namespaced?: namespaced?(project)]
+      namespaced?: namespaced?(project),
+    ]
 
     %Project{project | binding: binding}
   end
+
+  def stub_elixir_version(vsn, func) do
+    if configured_version() do
+      raise RuntimeError, "race condition detected when trying to stub elixir version"
+    end
+
+    try do
+      Application.put_env(:phoenix, :installer_elixir_vsn, vsn)
+      func.()
+    after
+      Application.delete_env(:phoenix, :installer_elixir_vsn)
+    end
+  end
+
+  defp elixir_version do
+    configured_version() || System.version()
+  end
+
+  defp configured_version, do: Application.get_env(:phoenix, :installer_elixir_vsn)
 
   defp namespaced?(project) do
     Macro.camelize(project.app) != inspect(project.app_mod)

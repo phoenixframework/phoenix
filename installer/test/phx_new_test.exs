@@ -1,7 +1,7 @@
 Code.require_file "mix_helper.exs", __DIR__
 
 defmodule Mix.Tasks.Phx.NewTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   import MixHelper
   import ExUnit.CaptureIO
 
@@ -17,6 +17,42 @@ defmodule Mix.Tasks.Phx.NewTest do
   test "returns the version" do
     Mix.Tasks.Phx.New.run(["-v"])
     assert_received {:mix_shell, :info, ["Phoenix v" <> _]}
+  end
+
+  test "new with elixir >= 1.5 child_spec", config do
+    in_tmp to_string(config.test), fn ->
+      Phx.New.Generator.stub_elixir_version("1.5.0", fn ->
+        Mix.Tasks.Phx.New.run([@app_name])
+
+        assert_file "phx_blog/lib/phx_blog/application.ex", fn file ->
+          assert file =~ """
+              children = [
+                # Start the Ecto repository
+                PhxBlog.Repo,
+                # Start the endpoint when the application starts
+                PhxBlogWeb.Endpoint,
+          """
+        end
+      end)
+    end
+  end
+
+  test "new with elixir < 1.5 child_spec", config do
+    in_tmp to_string(config.test), fn ->
+      Phx.New.Generator.stub_elixir_version("1.3.0", fn ->
+        Mix.Tasks.Phx.New.run([@app_name])
+
+        assert_file "phx_blog/lib/phx_blog/application.ex", fn file ->
+          assert file =~ """
+              children = [
+                # Start the Ecto repository
+                supervisor(PhxBlog.Repo, []),
+                # Start the endpoint when the application starts
+                supervisor(PhxBlogWeb.Endpoint, []),
+          """
+        end
+      end)
+    end
   end
 
   test "new with defaults" do

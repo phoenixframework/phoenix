@@ -1,7 +1,7 @@
 Code.require_file "mix_helper.exs", __DIR__
 
 defmodule Mix.Tasks.Phx.New.UmbrellaTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   import MixHelper
 
   @app "phx_umb"
@@ -27,6 +27,104 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
   defp web_path(app, path) do
     Path.join(["#{app}_umbrella/apps/#{app}_web", path])
+  end
+
+  describe "new umbrella with elixir >= 1.5 child_spec" do
+    test "with defaults", config do
+      in_tmp to_string(config.test), fn ->
+        Phx.New.Generator.stub_elixir_version("1.5.0", fn ->
+          Mix.Tasks.Phx.New.run([@app, "--umbrella"])
+
+          assert_file app_path(@app, "lib/#{@app}/application.ex"), fn file ->
+            assert file =~ """
+              def start(_type, _args) do
+                Supervisor.start_link([
+                  PhxUmb.Repo,
+                ], strategy: :one_for_one, name: PhxUmb.Supervisor)
+              end
+            """
+          end
+
+          assert_file web_path(@app, "lib/#{@app}_web/application.ex"), fn file ->
+            assert file =~ """
+                children = [
+                  # Start the endpoint when the application starts
+                  PhxUmbWeb.Endpoint,
+                  # Starts a worker by calling: PhxUmbWeb.Worker.start_link(arg)
+                  # {PhxUmbWeb.Worker, arg},
+                ]
+            """
+          end
+        end)
+      end
+    end
+
+    test "without ecto", config do
+      in_tmp to_string(config.test), fn ->
+        Phx.New.Generator.stub_elixir_version("1.5.0", fn ->
+          Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-ecto"])
+
+          assert_file app_path(@app, "lib/#{@app}/application.ex"), fn file ->
+            refute file =~ "children ="
+            assert file =~ """
+              def start(_type, _args) do
+                Supervisor.start_link([], strategy: :one_for_one, name: PhxUmb.Supervisor)
+              end
+            """
+          end
+        end)
+      end
+    end
+  end
+
+  describe "new umbrella with elixir < 1.5" do
+    test "with defaults", config do
+      in_tmp to_string(config.test), fn ->
+        Phx.New.Generator.stub_elixir_version("1.3.0", fn ->
+          Mix.Tasks.Phx.New.run([@app, "--umbrella"])
+
+          assert_file app_path(@app, "lib/#{@app}/application.ex"), fn file ->
+            assert file =~ """
+              def start(_type, _args) do
+                import Supervisor.Spec
+
+                Supervisor.start_link([
+                  supervisor(PhxUmb.Repo, []),
+                ], strategy: :one_for_one, name: PhxUmb.Supervisor)
+              end
+            """
+          end
+
+          assert_file web_path(@app, "lib/#{@app}_web/application.ex"), fn file ->
+            assert file =~ """
+                children = [
+                  # Start the endpoint when the application starts
+                  supervisor(PhxUmbWeb.Endpoint, []),
+                  # Start your own worker by calling: PhxUmbWeb.Worker.start_link(arg1, arg2, arg3)
+                  # worker(PhxUmbWeb.Worker, [arg1, arg2, arg3]),
+                ]
+            """
+          end
+        end)
+      end
+    end
+
+    test "without ecto", config do
+      in_tmp to_string(config.test), fn ->
+        Phx.New.Generator.stub_elixir_version("1.3.0", fn ->
+          Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-ecto"])
+
+          assert_file app_path(@app, "lib/#{@app}/application.ex"), fn file ->
+            refute file =~ "children ="
+            assert file =~ """
+              def start(_type, _args) do
+                Supervisor.start_link([], strategy: :one_for_one, name: PhxUmb.Supervisor)
+              end
+            """
+          end
+        end)
+      end
+    end
   end
 
   test "new with umbrella and defaults" do
@@ -73,7 +171,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/defmodule PhxUmb.Application do/
-      assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/supervisor\(PhxUmb.Repo, \[\]\)/
+      assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/PhxUmb.Repo/
       assert_file app_path(@app, "lib/#{@app}.ex"), ~r/defmodule PhxUmb do/
       assert_file app_path(@app, "mix.exs"), ~r/mod: {PhxUmb.Application, \[\]}/
       assert_file app_path(@app, "test/test_helper.exs")
