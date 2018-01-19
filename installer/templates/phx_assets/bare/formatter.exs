@@ -1,0 +1,3 @@
+[
+  import_deps: [:ecto]
+]
