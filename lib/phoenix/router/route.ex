@@ -10,6 +10,7 @@ defmodule Phoenix.Router.Route do
   The `Phoenix.Router.Route` struct. It stores:
 
     * :verb - the HTTP verb as an upcased string
+    * :line - the line the route was defined
     * :kind - the kind of route, one of `:match`, `:forward`
     * :path - the normalized path as string
     * :host - the request host or host prefix
@@ -22,7 +23,7 @@ defmodule Phoenix.Router.Route do
 
   """
 
-  defstruct [:verb, :kind, :path, :host, :plug, :opts,
+  defstruct [:verb, :line, :kind, :path, :host, :plug, :opts,
              :helper, :private, :pipe_through, :assigns]
 
   @type t :: %Route{}
@@ -31,8 +32,8 @@ defmodule Phoenix.Router.Route do
   Receives the verb, path, plug, options and helper
   and returns a `Phoenix.Router.Route` struct.
   """
-  @spec build(:match | :forward, String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}, %{}) :: t
-  def build(kind, verb, path, host, plug, opts, helper, pipe_through, private, assigns)
+  @spec build(non_neg_integer, :match | :forward, String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}, %{}) :: t
+  def build(line, kind, verb, path, host, plug, opts, helper, pipe_through, private, assigns)
       when is_atom(verb) and (is_binary(host) or is_nil(host)) and
            is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
            is_list(pipe_through) and is_map(private) and is_map(assigns)
@@ -40,7 +41,7 @@ defmodule Phoenix.Router.Route do
 
     %Route{kind: kind, verb: verb, path: path, host: host, private: private,
            plug: plug, opts: opts, helper: helper,
-           pipe_through: pipe_through, assigns: assigns}
+           pipe_through: pipe_through, assigns: assigns, line: line}
   end
 
   @doc """

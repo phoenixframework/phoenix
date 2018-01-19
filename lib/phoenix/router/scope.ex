@@ -18,7 +18,7 @@ defmodule Phoenix.Router.Scope do
   @doc """
   Builds a route based on the top of the stack.
   """
-  def route(module, kind, verb, path, plug, plug_opts, opts) do
+  def route(line, module, kind, verb, path, plug, plug_opts, opts) do
     path    = validate_path(path)
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
@@ -26,7 +26,7 @@ defmodule Phoenix.Router.Scope do
 
     {path, host, alias, as, pipes, private, assigns} =
       join(module, path, plug, as, private, assigns)
-    Phoenix.Router.Route.build(kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns)
+    Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns)
   end
 
   @doc """
