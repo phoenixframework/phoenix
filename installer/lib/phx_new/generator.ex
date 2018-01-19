@@ -102,6 +102,8 @@ defmodule Phx.New.Generator do
       end
 
     binding = [
+      elixir_version: elixir_version(),
+      min_elixir_version: min_elixir_version(),
       app_name: project.app,
       app_module: inspect(project.app_mod),
       root_app_name: project.root_app,
@@ -127,9 +129,22 @@ defmodule Phx.New.Generator do
       adapter_module: adapter_module,
       adapter_config: adapter_config,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
-      namespaced?: namespaced?(project)]
+      namespaced?: namespaced?(project),
+    ]
 
     %Project{project | binding: binding}
+  end
+
+  defp elixir_version do
+    Application.get_env(:phx_new, :elixir_vsn) || System.version()
+  end
+
+  defp min_elixir_version do
+    if Version.match?(elixir_version(), ">= 1.5.0") do
+      "~> 1.5"
+    else
+      "~> 1.4"
+    end
   end
 
   defp namespaced?(project) do
