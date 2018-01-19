@@ -12,6 +12,19 @@ defmodule MixHelper do
   import ExUnit.Assertions
   import ExUnit.CaptureIO
 
+  def stub_elixir_version(vsn, func) do
+    if Application.get_env(:phx_new, :elixir_vsn) do
+      raise RuntimeError, "race condition detected when trying to stub elixir version"
+    end
+
+    try do
+      Application.put_env(:phx_new, :elixir_vsn, vsn)
+      func.()
+    after
+      Application.delete_env(:phx_new, :elixir_vsn)
+    end
+  end
+
   def tmp_path do
     Path.expand("../../tmp", __DIR__)
   end

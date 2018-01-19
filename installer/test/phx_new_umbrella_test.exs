@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   describe "new umbrella with elixir >= 1.5 child_spec" do
     test "with defaults", config do
       in_tmp to_string(config.test), fn ->
-        Phx.New.Generator.stub_elixir_version("1.5.0", fn ->
+        stub_elixir_version("1.5.0", fn ->
           Mix.Tasks.Phx.New.run([@app, "--umbrella"])
 
           assert_file app_path(@app, "lib/#{@app}/application.ex"), fn file ->
@@ -61,7 +61,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
     test "without ecto", config do
       in_tmp to_string(config.test), fn ->
-        Phx.New.Generator.stub_elixir_version("1.5.0", fn ->
+        stub_elixir_version("1.5.0", fn ->
           Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-ecto"])
 
           assert_file app_path(@app, "lib/#{@app}/application.ex"), fn file ->
@@ -80,7 +80,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   describe "new umbrella with elixir < 1.5" do
     test "with defaults", config do
       in_tmp to_string(config.test), fn ->
-        Phx.New.Generator.stub_elixir_version("1.3.0", fn ->
+        stub_elixir_version("1.3.0", fn ->
           Mix.Tasks.Phx.New.run([@app, "--umbrella"])
 
           assert_file app_path(@app, "lib/#{@app}/application.ex"), fn file ->
@@ -111,7 +111,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
     test "without ecto", config do
       in_tmp to_string(config.test), fn ->
-        Phx.New.Generator.stub_elixir_version("1.3.0", fn ->
+        stub_elixir_version("1.3.0", fn ->
           Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-ecto"])
 
           assert_file app_path(@app, "lib/#{@app}/application.ex"), fn file ->
