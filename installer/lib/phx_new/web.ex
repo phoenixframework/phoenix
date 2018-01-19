@@ -60,6 +60,7 @@ defmodule Phx.New.Web do
 
   template :bare, [
     {:text, "phx_assets/bare/gitignore", :web, ".gitignore"},
+    {:text, "phx_assets/bare/formatter.exs", :web, ".formatter.exs"},
   ]
 
   template :static, [

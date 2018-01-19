@@ -66,6 +66,7 @@ defmodule Phx.New.Single do
 
   template :bare, [
     {:text, "phx_assets/bare/gitignore", :project, ".gitignore"},
+    {:text, "phx_assets/bare/formatter.exs", :project, ".formatter.exs"},
   ]
 
   template :static, [
