@@ -314,6 +314,14 @@ defmodule Phoenix.Endpoint do
 
     * `:phoenix_controller_call` - it's the whole controller pipeline.
       The `%Plug.Conn{}` is passed as runtime metadata.
+
+      **NOTE:** `%Plug.Conn{}` will be passed as runtime metadata to the
+        corresponding `phoenix_controller_call/3` in the "after" event callback
+        from the "before" event callback.
+
+        This means that some `%Plug.Conn{}` values might be not populated, for
+        example `%Plug.Conn{}.status` will not be updated even if the whole
+        controller pipeline will be executed.
     * `:phoenix_controller_render` - the rendering of a view from a
       controller. The map of runtime metadata passed to instrumentation
       callbacks has the `:view` key - for the name of the view, e.g. `HexWeb.ErrorView`,
