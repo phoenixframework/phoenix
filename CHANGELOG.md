@@ -8,6 +8,7 @@
   * [Logger] Add whitelist support to `filter_parameters` logger configuration, via new `:keep` tuple format
   * [Router] Raise on duplicate plugs in pipe_through scopes
   * [ChannelTest] Respect user's configured ExUnit `:assert_receive_timeout` for macro assertions
+  * [phx.new] Generate new Elixir 1.5+ child spec
 
 * Bug Fixes
   * [Channel] Fix issue with WebSocket transport sending wrong ContentLength header with 403 response
