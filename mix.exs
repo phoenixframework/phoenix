@@ -75,7 +75,7 @@ defmodule Phoenix.Mixfile do
   end
 
   defp cowboy_dep("1" <> _), do: {:cowboy, "~> 1.0", optional: true}
-  defp cowboy_dep(_), do: {:cowboy, "~> 2.2.1 or ~> 2.3", optional: true}
+  defp cowboy_dep(_), do: {:cowboy, "~> 2.2.2 or ~> 2.3", optional: true}
 
   defp lockfile() do
     case System.get_env("COWBOY_VERSION") do
