@@ -104,4 +104,26 @@ defmodule Phoenix.Router.ResourceTest do
     conn = call(Router, :get, "session")
     assert conn.status == 200
   end
+
+  test "raises when :only option contains an invalid action" do
+    assert_raise ArgumentError, fn ->
+      defmodule BadRouter do
+        use Phoenix.Router
+        resources "/account", Api.GenericController, alias: Api, singleton: true do
+          resources "/session", GenericController, only: [:post], singleton: true
+        end
+      end
+    end
+  end
+
+  test "raises when :except option contains an invalid action" do
+    assert_raise ArgumentError, fn ->
+      defmodule BadRouter do
+        use Phoenix.Router
+        resources "/account", Api.GenericController, alias: Api, singleton: true do
+          resources "/session", GenericController, only: [:post], singleton: true
+        end
+      end
+    end
+  end
 end
