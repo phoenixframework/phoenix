@@ -71,7 +71,7 @@ defmodule Phoenix.Router.Resource do
     unless actions -- supported_actions == [], do: raise ArgumentError, """
     invalid :#{type} action(s) passed to resources.
 
-    supported#{if singleton, do: " singleton", else: ""} actions: #{inspect(default_actions(singleton))}
+    supported#{if singleton, do: " singleton", else: ""} actions: #{inspect(supported_actions)}
 
     got: #{inspect(actions)}
     """

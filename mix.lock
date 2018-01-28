@@ -1,5 +1,5 @@
 %{
-  "cowboy": {:hex, :cowboy, "2.2.1", "43e9f86a22922a7512a7ca50b61e9f9f90519cc042b3c060861a6aee7f323cc9", [:rebar3], [{:cowlib, "~> 2.1.0", [hex: :cowlib, repo: "hexpm", optional: false]}, {:ranch, "~> 1.4.0", [hex: :ranch, repo: "hexpm", optional: false]}], "hexpm"},
+  "cowboy": {:hex, :cowboy, "2.2.2", "6cde634da1da8b1d17dd2b20f5f6f91ab8ac7fa1b5106d13dad63c905ab76004", [:rebar3], [{:cowlib, "~> 2.1.0", [hex: :cowlib, repo: "hexpm", optional: false]}, {:ranch, "~> 1.4.0", [hex: :ranch, repo: "hexpm", optional: false]}], "hexpm"},
   "cowlib": {:hex, :cowlib, "2.1.0", "f73658b93dd043af40400c3e4fd997068ebd0c617f8c8f4cd003a1a78ebf94f5", [:rebar3], [], "hexpm"},
   "earmark": {:hex, :earmark, "1.2.3", "206eb2e2ac1a794aa5256f3982de7a76bf4579ff91cb28d0e17ea2c9491e46a4", [:mix], []},
   "ex_doc": {:hex, :ex_doc, "0.18.1", "37c69d2ef62f24928c1f4fdc7c724ea04aecfdf500c4329185f8e3649c915baf", [:mix], [{:earmark, "~> 1.1", [hex: :earmark, optional: false]}]},

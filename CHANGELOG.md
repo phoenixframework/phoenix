@@ -9,6 +9,7 @@
   * [Router] Raise on duplicate plugs in pipe_through scopes
   * [ChannelTest] Respect user's configured ExUnit `:assert_receive_timeout` for macro assertions
   * [phx.new] Generate new Elixir 1.5+ child spec
+  * [Router] raise on unknown `:only` and `:except` options to resources
 
 * Bug Fixes
   * [Channel] Fix issue with WebSocket transport sending wrong ContentLength header with 403 response
