@@ -2,7 +2,10 @@ defmodule Phoenix.Endpoint.Cowboy2WebSocket do
   # Implementation of the WebSocket transport for Cowboy.
   @moduledoc false
 
-  @behaviour :cowboy_websocket
+  if Code.ensure_loaded?(:cowboy_websocket) do
+    @behaviour :cowboy_websocket
+  end
+
   @connection Plug.Adapters.Cowboy2.Conn
   @already_sent {:plug_conn, :sent}
 

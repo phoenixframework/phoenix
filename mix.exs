@@ -12,12 +12,8 @@ defmodule Phoenix.Mixfile do
       package: package(),
       lockfile: lockfile(),
       preferred_cli_env: [docs: :docs],
-
-      # Because we define protocols on the fly to test
-      # Phoenix.Param, we need to disable consolidation
-      # for the test environment for Elixir v1.2 onward.
       consolidate_protocols: Mix.env != :test,
-      xref: [exclude: [Ecto.Type, {:cowboy_req, :compact, 1}]],
+      xref: [exclude: [Ecto.Type, :ranch, {:cowboy_req, :compact, 1}]],
 
       name: "Phoenix",
       docs: [
