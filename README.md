@@ -59,7 +59,7 @@ $ MIX_ENV=docs mix docs
 * [#elixir-lang][1] on [Freenode][2] IRC
 * [elixir-lang slack channel][3]
 * [Issue tracker][4]
-* [phoenix-talk Mailing list (questions)][5]
+* [Phoenix Forum (questions)][5]
 * [phoenix-core Mailing list (development)][6]
 * Visit Phoenix's sponsor, DockYard, for expert [phoenix consulting](https://dockyard.com/phoenix-consulting)
 * Privately disclose security vulnerabilities to phoenix-security@googlegroups.com
@@ -68,7 +68,7 @@ $ MIX_ENV=docs mix docs
   [2]: http://www.freenode.net/
   [3]: https://elixir-slackin.herokuapp.com/
   [4]: https://github.com/phoenixframework/phoenix/issues
-  [5]: http://groups.google.com/group/phoenix-talk
+  [5]: https://elixirforum.com/c/phoenix-forum
   [6]: http://groups.google.com/group/phoenix-core
 
 ## Copyright and License
