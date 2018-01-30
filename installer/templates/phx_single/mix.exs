@@ -44,6 +44,7 @@ defmodule <%= app_module %>.Mixfile do
       {:phoenix_html, "~> 2.10"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
       {:gettext, "~> 0.11"},
+      {:jason, "~> 1.0"},
       {:cowboy, "~> 1.0"}
     ]
   end<%= if ecto do %>

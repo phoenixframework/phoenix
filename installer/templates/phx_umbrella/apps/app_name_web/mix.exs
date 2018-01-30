@@ -44,6 +44,7 @@ defmodule <%= web_namespace %>.Mixfile do
       {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
       {:gettext, "~> 0.11"},<%= if app_name != web_app_name do %>
       {:<%= app_name %>, in_umbrella: true},<% end %>
+      {:jason, "~> 1.0"},
       {:cowboy, "~> 1.0"}
     ]
   end

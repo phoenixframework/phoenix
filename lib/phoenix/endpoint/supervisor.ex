@@ -318,8 +318,8 @@ defmodule Phoenix.Endpoint.Supervisor do
       if File.exists?(outer) do
         manifest =
           outer
-          |> File.read!
-          |> Poison.decode!
+          |> File.read!()
+          |> Phoenix.json().decode!()
 
         manifest["latest"]
       else

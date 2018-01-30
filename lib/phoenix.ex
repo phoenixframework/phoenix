@@ -53,4 +53,11 @@ defmodule Phoenix do
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Phoenix.Supervisor)
   end
+
+  @doc false
+  def json do
+    :phoenix
+    |> Application.fetch_env!(:format_encoders)
+    |> Keyword.get(:json, Jason)
+  end
 end

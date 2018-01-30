@@ -5,10 +5,10 @@ defmodule Phoenix.Tranports.WebSocketSerializerTest do
   alias Phoenix.Socket.{Broadcast, Message, Reply}
 
   # v1 responses must not contain join_ref
-  @v1_msg_json [123, [[34, ["topic"], 34], 58, [34, ["t"], 34], 44, [34, ["ref"], 34], 58, "null", 44, [34, ["payload"], 34], 58, [34, ["m"], 34], 44, [34, ["event"], 34], 58, [34, ["e"], 34]], 125]
-  @v1_reply_json [123, [[34, ["topic"], 34], 58, [34, ["t"], 34], 44, [34, ["ref"], 34], 58, [34, ["null"], 34], 44, [34, ["payload"], 34], 58, [123, [[34, ["status"], 34], 58, "null", 44, [34, ["response"], 34], 58, "null"], 125], 44, [34, ["event"], 34], 58, [34, ["phx_reply"], 34]], 125]
-  @v1_fastlane_json [123, [[34, ["topic"], 34], 58, [34, ["t"], 34], 44, [34, ["ref"], 34], 58, "null", 44, [34, ["payload"], 34], 58, [34, ["m"], 34], 44, [34, ["event"], 34], 58, [34, ["e"], 34]], 125]
-  @v2_msg_json [91, ["null", 44, "null", 44, [34, ["t"], 34], 44, [34, ["e"], 34], 44, [34, ["m"], 34]], 93]
+  @v1_msg_json ["{\"", [[], "event"], "\":", [34, [], "e", 34], ",\"", [[], "payload"], "\":", [34, [], "m", 34], ",\"", [[], "ref"], "\":", "null", ",\"", [[], "topic"], "\":", [34, [], "t", 34], 125]
+  @v1_reply_json ["{\"", [[], "event"], "\":", [34, [], "phx_reply", 34], ",\"", [[], "payload"], "\":", ["{\"", [[], "response"], "\":", "null", ",\"", [[], "status"], "\":", "null", 125], ",\"", [[], "ref"], "\":", [34, [], "null", 34], ",\"", [[], "topic"], "\":", [34, [], "t", 34], 125]
+  @v1_fastlane_json ["{\"", [[], "event"], "\":", [34, [], "e", 34], ",\"", [[], "payload"], "\":", [34, [], "m", 34], ",\"", [[], "ref"], "\":", "null", ",\"", [[], "topic"], "\":", [34, [], "t", 34], 125]
+  @v2_msg_json [91, "null", 44, "null", 44, [34, [], "t", 34], 44, [34, [], "e", 34], 44, [34, [], "m", 34], 93]
 
   describe "version 1.0.0" do
     test "encode!/1 encodes `Phoenix.Socket.Message` as JSON" do

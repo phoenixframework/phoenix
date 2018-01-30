@@ -94,7 +94,7 @@ defmodule Phoenix.Template do
 
       config :phoenix, :format_encoders,
         html: Phoenix.Template.HTML,
-        json: Poison
+        json: Jason
 
   """
 
@@ -104,7 +104,7 @@ defmodule Phoenix.Template do
 
   alias Phoenix.Template
 
-  @encoders [html: Phoenix.Template.HTML, json: Poison, js: Phoenix.Template.HTML]
+  @encoders [html: Phoenix.Template.HTML, json: Jason, js: Phoenix.Template.HTML]
   @engines  [eex: Phoenix.Template.EExEngine, exs: Phoenix.Template.ExsEngine]
   @default_pattern "*"
 

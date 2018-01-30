@@ -107,7 +107,7 @@ defmodule Phoenix.Test.ConnTest do
       build_conn()
       |> put_req_header("content-type", "application/json")
       |> post(:hello, "[1, 2, 3]")
-      |> Plug.Parsers.call(Plug.Parsers.init(parsers: [:json], json_decoder: Poison))
+      |> Plug.Parsers.call(Plug.Parsers.init(parsers: [:json], json_decoder: Jason))
 
     assert conn.method == "POST"
     assert conn.path_info == []
@@ -254,13 +254,13 @@ defmodule Phoenix.Test.ConnTest do
       build_conn(:get, "/") |> resp(200, "ok") |> json_response(200)
     end
 
-    assert_raise RuntimeError,
-                 "could not decode JSON body, invalid token \"o\" in body:\n\nok", fn ->
+    assert_raise Jason.DecodeError,
+                 "unexpected byte at position 0: 0x6F ('o')", fn ->
       build_conn(:get, "/") |> put_resp_content_type("application/json")
                       |> resp(200, "ok") |> json_response(200)
     end
 
-    assert_raise RuntimeError, "could not decode JSON body, body is empty", fn ->
+    assert_raise Jason.DecodeError, ~r/unexpected end of input at position 0/, fn ->
       build_conn(:get, "/")
       |> put_resp_content_type("application/json")
       |> resp(200, "")

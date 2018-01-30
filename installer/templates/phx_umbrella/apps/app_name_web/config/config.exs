@@ -19,6 +19,9 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
   pubsub: [name: <%= web_namespace %>.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
+# Use Jason for JSON parsing in Phoenix
+config :phoenix, :format_encoders, json: Jason
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"
