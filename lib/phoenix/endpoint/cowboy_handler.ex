@@ -88,7 +88,10 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     end
 
     dispatches =
-      Cowboy2Handler.build_dispatches(endpoint, __MODULE__, Plug.Adapters.Cowboy.Handler)
+      Cowboy2Handler.build_dispatches(endpoint, Plug.Adapters.Cowboy.Handler, %{
+        Phoenix.Transports.LongPoll => Plug.Adapters.Cowboy.Handler,
+        Phoenix.Transports.WebSocket => Phoenix.Endpoint.CowboyWebSocket
+      })
 
     # Use put_new to allow custom dispatches
     config = Keyword.put_new(config, :dispatch, dispatches)
