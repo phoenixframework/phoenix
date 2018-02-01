@@ -47,6 +47,8 @@ defmodule Phoenix do
     import Supervisor.Spec
 
     children = [
+      # Ensure format encoders are loaded before starting
+      worker(Task, [fn -> ensure_format_encoders() end], restart: :transient),
       # Code reloading must be serial across all Phoenix apps
       worker(Phoenix.CodeReloader.Server, [])
     ]
@@ -59,5 +61,19 @@ defmodule Phoenix do
     :phoenix
     |> Application.fetch_env!(:format_encoders)
     |> Keyword.get(:json, Jason)
+  end
+
+  defp ensure_format_encoders do
+    for {format, mod} <- Application.fetch_env!(:phoenix, :format_encoders) do
+      Code.ensure_loaded?(mod) || raise """
+      failed to load #{inspect(mod)} for Phoenix :#{format} encoder
+      (module #{inspect(mod)} is not available)
+
+      Ensure #{inspect(mod)} is loaded from your deps in mix.exs, or
+      configure an existing encoder in your mix config using:
+
+          config :phoenix, :format_encoders, #{format}: MyEncoder
+      """
+    end
   end
 end
