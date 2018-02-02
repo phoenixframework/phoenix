@@ -53,6 +53,18 @@ defmodule Phx.New.Single do
     {:keep, "phx_assets/vendor",                  :project, "assets/vendor"},
   ]
 
+  template :npm, [
+    {:text, "phx_assets/npm/gitignore",       :project, ".gitignore"},
+    {:text,  "phx_assets/npm/babelrc",         :project, "assets/.babelrc"},
+    {:text, "phx_assets/app.css",             :project, "assets/css/app.css"},
+    {:text, "phx_assets/phoenix.css",         :project, "assets/css/phoenix.css"},
+    {:eex,  "phx_assets/npm/app.js",          :project, "assets/js/app.js"},
+    {:eex,  "phx_assets/npm/socket.js",       :project, "assets/js/socket.js"},
+    {:eex,  "phx_assets/npm/package.json",    :project, "assets/package.json"},
+    {:text, "phx_assets/robots.txt",          :project, "assets/static/robots.txt"},
+    {:keep, "phx_assets/vendor",              :project, "assets/vendor"},
+  ]
+
   template :html, [
     {:eex, "phx_web/controllers/page_controller.ex",         :project, "lib/:lib_web_name/controllers/page_controller.ex"},
     {:eex, "phx_web/templates/layout/app.html.eex",          :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
@@ -110,10 +122,11 @@ defmodule Phx.New.Single do
     if Project.ecto?(project), do: gen_ecto(project)
     if Project.html?(project), do: gen_html(project)
 
-    case {Project.brunch?(project), Project.html?(project)} do
-      {true, _}      -> gen_brunch(project)
-      {false, true}  -> gen_static(project)
-      {false, false} -> gen_bare(project)
+    case {Project.brunch?(project), Project.npm?(project), Project.html?(project)} do
+      {true, false, _}      -> gen_brunch(project)
+      {false, true, _}      -> gen_npm(project)
+      {false, false, true}  -> gen_static(project)
+      {false, false, false} -> gen_bare(project)
     end
 
     project
@@ -137,6 +150,12 @@ defmodule Phx.New.Single do
 
   defp gen_brunch(%Project{web_path: web_path} = project) do
     copy_from project, __MODULE__, :brunch
+    create_file Path.join(web_path, "assets/static/images/phoenix.png"), phoenix_png_text()
+    create_file Path.join(web_path, "assets/static/favicon.ico"), phoenix_favicon_text()
+  end
+
+  defp gen_npm(%Project{web_path: web_path} = project) do
+    copy_from project, __MODULE__, :npm
     create_file Path.join(web_path, "assets/static/images/phoenix.png"), phoenix_png_text()
     create_file Path.join(web_path, "assets/static/favicon.ico"), phoenix_favicon_text()
   end

@@ -30,7 +30,12 @@ defmodule Mix.Tasks.Phx.New do
       Please check the driver docs, between parentheses, for more information
       and requirements. Defaults to "postgres".
 
-    * `--no-brunch` - do not generate brunch files
+    * `--no-npm` - do not generate npm files
+      for static asset building. When choosing this
+      option, you will need to manually handle
+      JavaScript dependencies if building HTML apps
+
+    * `--brunch` - generate brunch files instead of npm
       for static asset building. When choosing this
       option, you will need to manually handle
       JavaScript dependencies if building HTML apps
@@ -85,7 +90,7 @@ defmodule Mix.Tasks.Phx.New do
   @version Mix.Project.config[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application"
 
-  @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
+  @switches [dev: :boolean, brunch: :boolean, npm: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
              umbrella: :boolean]
@@ -142,6 +147,7 @@ defmodule Mix.Tasks.Phx.New do
           _  -> Task.async(fn -> :ok end)
         end
 
+      npm_pending = install_npm(install?, project)
       brunch_pending = install_brunch(install?, project)
       Task.await(compile, :infinity)
 
@@ -149,7 +155,11 @@ defmodule Mix.Tasks.Phx.New do
         print_brunch_info(project, generator)
       end
 
-      pending = mix_pending ++ (brunch_pending || [])
+      if Project.npm?(project) and !System.find_executable("npm") do
+        print_npm_info(project, generator)
+      end
+
+      pending = mix_pending ++ (brunch_pending || npm_pending || [])
       print_missing_commands(pending, project.project_path)
 
       if Project.ecto?(project) do
@@ -180,6 +190,14 @@ defmodule Mix.Tasks.Phx.New do
               File.exists?(brunch_config), install? && System.find_executable("npm")
   end
 
+  defp install_npm(install?, project) do
+    assets_path = Path.join(project.web_path || project.project_path, "assets")
+    babel_config = Path.join(assets_path, ".babelrc")
+
+    maybe_cmd "cd #{relative_app_path(assets_path)} && npm install && npm run build",
+              File.exists?(babel_config), install? && System.find_executable("npm")
+  end
+
   defp install_mix(install?) do
     maybe_cmd "mix deps.get", true, install? && hex_available?()
   end
@@ -201,6 +219,18 @@ defmodule Mix.Tasks.Phx.New do
     The command listed next expect that you have npm available.
     If you don't want brunch.io, you can re-run this generator
     with the --no-brunch option.
+    """
+  end
+
+  defp print_npm_info(_project, _gen) do
+    Mix.shell.info """
+    Phoenix uses an optional assets build setup that requires
+    node.js and npm. Installation instructions for node.js,
+    which includes npm, can be found at http://nodejs.org.
+
+    The command listed next expect that you have npm available.
+    If you don't want to build assests, you can re-run this generator
+    with the --no-npm option.
     """
   end
 

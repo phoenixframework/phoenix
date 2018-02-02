@@ -140,12 +140,12 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex",
                   "<title>Hello PhxBlog!</title>"
 
-      # Brunch
+      # npm
       assert_file "phx_blog/.gitignore", "/node_modules"
       assert_file "phx_blog/.gitignore", ~r/\n$/
-      assert_file "phx_blog/assets/brunch-config.js", ~s("js/app.js": ["js/app"])
+      assert_file "phx_blog/assets/.babelrc", ~s("last 2 versions"])
       assert_file "phx_blog/config/dev.exs", fn file ->
-        assert file =~ "watchers: [node:"
+        assert file =~ "watchers: [npm:"
         assert file =~ "lib/phx_blog_web/views/.*(ex)"
         assert file =~ "lib/phx_blog_web/templates/.*(eex)"
       end
@@ -210,14 +210,14 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-brunch", "--no-ecto"])
+      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-npm", "--no-ecto"])
 
-      # No Brunch
+      # No npm
       refute File.read!("phx_blog/.gitignore") |> String.contains?("/node_modules")
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/config/dev.exs", ~r/watchers: \[\]/
 
-      # No Brunch & No Html
+      # No npm & No Html
       refute_file "phx_blog/priv/static/css/app.css"
       refute_file "phx_blog/priv/static/favicon.ico"
       refute_file "phx_blog/priv/static/images/phoenix.png"
@@ -266,9 +266,9 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
-  test "new with no_brunch" do
-    in_tmp "new with no_brunch", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--no-brunch"])
+  test "new with no_npm" do
+    in_tmp "new with no_npm", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--no-npm"])
 
       assert_file "phx_blog/.gitignore"
       assert_file "phx_blog/.gitignore", ~r/\n$/
