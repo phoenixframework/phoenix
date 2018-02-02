@@ -1,0 +1,36 @@
+{
+  "repository": {},
+  "license": "MIT",
+  "scripts": {
+    "build:prepare": "mkdir -p ../priv/static/js ../priv/static/css",
+    "build:css": "cat css/phoenix.css css/app.css | postcss --use autoprefixer | cleancss > ../priv/static/css/app.css",
+    "build:css:dev": "cat css/phoenix.css css/app.css | postcss --use autoprefixer > ../priv/static/css/app.css",
+    "build:js": "browserify js/app.js -t [ babelify ] > ../priv/static/js/app.js",
+    "build:js:dev": "browserify js/app.js -t [ babelify ] --debug | exorcist ../priv/static/js/app.map.js > ../priv/static/js/app.js",
+    "build:copy": "cp -R static/* ../priv/static/",
+    "build": "yarn build:prepare && yarn build:js:dev && yarn build:css:dev && yarn build:copy",
+    "deploy": "yarn build:prepare && yarn build:js && yarn build:css && yarn build:copy",
+    "watch:js": "watchify js/app.js -t [ babelify ] --debug -o 'exorcist ../priv/static/js/app.map.js > ../priv/static/js/app.js'",
+    "watch": "parallelshell \"yarn watch:js\" \"watch 'yarn build:css:dev' css\"",
+    "clean": "rm -fr node_modules ../priv/static/*"
+  },
+  "dependencies": {
+    "phoenix": "file:<%= phoenix_npm_path %>"<%= if html do %>,
+    "phoenix_html": "file:<%= phoenix_html_npm_path %>"<% end %>
+  },
+  "devDependencies": {
+    "autoprefixer": "latest",
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6",
+    "babelify": "^8.0.0",
+    "browserify": "latest",
+    "clean-css": "^4.1.9",
+    "exorcist": "^1.0.0",
+    "parallelshell": "^3.0.2",
+    "postcss-cli": "^4.1.1",
+    "watch": "^1.0.2",
+    "watchify": "^3.10.0",
+    "yarn": "^1.3.2"
+  }
+}
