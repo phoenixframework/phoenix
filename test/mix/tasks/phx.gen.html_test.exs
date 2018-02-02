@@ -309,17 +309,17 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert_file "another_app/lib/another_app/accounts/user.ex"
 
         assert_file "lib/phoenix/controllers/user_controller.ex", fn file ->
-          assert file =~ "defmodule PhoenixWeb.UserController"
-          assert file =~ "use PhoenixWeb, :controller"
+          assert file =~ "defmodule Phoenix.UserController"
+          assert file =~ "use Phoenix, :controller"
         end
 
         assert_file "lib/phoenix/templates/user/form.html.eex"
         assert_file "lib/phoenix/views/user_view.ex", fn file ->
-          assert file =~ "defmodule PhoenixWeb.UserView"
+          assert file =~ "defmodule Phoenix.UserView"
         end
 
         assert_file "test/phoenix/controllers/user_controller_test.exs", fn file ->
-          assert file =~ "defmodule PhoenixWeb.UserControllerTest"
+          assert file =~ "defmodule Phoenix.UserControllerTest"
         end
       end
     end
