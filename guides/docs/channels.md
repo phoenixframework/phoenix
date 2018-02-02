@@ -12,9 +12,42 @@ Phoenix ships with a JavaScript client that is available when generating a new P
 
 ## The Moving Parts
 
+### Overview
+
+To start communicating, a client connects to a socket using a transport (eg, Websockets or long polling) and joins one or more channels using that single network connection.
+One channel server process is created per client, per topic.
+The appropriate socket handler initializes a `%Phoenix.Socket` for the channel server (possibly after authenticating the client).
+The channel server then hold onto the `%Phoenix.Socket{}` and can maintain any state it needs within its `socket.assigns`.
+
+Once the connection is established, incoming messages from a client are routed to the correct channel server.
+If it broadcasts a message, that message goes first to the local PubSub, which sends it out to any clients connected to the same server and subscribed to that topic.
+The local PubSub also forwards the message to remote PubSubs on the other nodes in the cluster, which send it out to their own subscribers.
+
+The message flow looks something like this:
+
+                                                                                           ┏━━━━━━━━━━━━━━━━━━━━━━━┓
+                                                                                           ┃Browser Client, Topic 1┃            ┏━━━━━━━━━━━━━━━━━━━┓
+                                                                                        ┏━▶┃    Channel.Server     ┃━Transport━▶┃  Browser Client   ┃
+                                                                                        ┃  ┗━━━━━━━━━━━━━━━━━━━━━━━┛            ┗━━━━━━━━━━━━━━━━━━━┛
+                                                                                        ┃
+                                       ┏━━━━━━━━━━━━━━━━━┓    ┏━━━━━━━━┓    ┏━━━━━━━━┓  ┃  ┏━━━━━━━━━━━━━━━━━━━━━━━┓
+                                       ┃Client 1, Topic 1┃    ┃ Local  ┃    ┃ Remote ┃  ┃  ┃ Phone Client, Topic 1 ┃            ┏━━━━━━━━━━━━━━━━━━━┓
+                           ┏━━━━━━━━━━▶┃ Channel.Server  ┃━━━▶┃ PubSub ┃━┳━▶┃ PubSub ┃━━┻━▶┃    Channel.Server     ┃━Transport━▶┃   Phone Client    ┃
+    ┏━━━━━━━━━━┓           ┃           ┗━━━━━━━━━━━━━━━━━┛    ┗━━━━━━━━┛ ┃  ┗━━━━━━━━┛     ┗━━━━━━━━━━━━━━━━━━━━━━━┛            ┗━━━━━━━━━━━━━━━━━━━┛
+    ┃ Client 1 ┃━Transport━┛  Channel                              ┃     ┃
+    ┗━━━━━━━━━━┛           │   routes  ┌─ ── ── ── ── ── ┐         ┃     ┃
+                                        Client 1, Topic 2│         ┃     ┃
+                           └ ─ ─ ─ ─ ─▶│ Channel.Server            ┃     ┃
+                                       └ ── ── ── ── ── ─┘         ┃     ┃
+                                                                   ┃     ┃
+                                       ┏━━━━━━━━━━━━━━━━━┓         ┃     ┃  ┏━━━━━━━━┓      ┏━━━━━━━━━━━━━━━━━━━━━━┓
+    ┏━━━━━━━━━━┓                       ┃Client 2, Topic 1┃         ┃     ┃  ┃ Remote ┃      ┃ IoT Client, Topic 1  ┃            ┏━━━━━━━━━━━━━━━━━━━┓
+    ┃ Client 2 ┃◀━━━━━Transport━━━━━━━━┃ Channel.Server  ┃◀━━━━━━━━┛     ┗━▶┃ PubSub ┃━━━━━▶┃    Channel.Server    ┃━Transport━▶┃    IoT Client     ┃
+    ┗━━━━━━━━━━┛                       ┗━━━━━━━━━━━━━━━━━┛                  ┗━━━━━━━━┛      ┗━━━━━━━━━━━━━━━━━━━━━━┛            ┗━━━━━━━━━━━━━━━━━━━┛
+
 ### Socket Handlers
 
-Phoenix holds a single connection to the server and multiplexes your channel sockets over that one connection. Socket handlers, such as `lib/hello_web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
+Phoenix holds a single connection to each client and multiplexes its channel sockets over that one connection. Socket handlers, such as `lib/hello_web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
 
 ### Channel Routes
 
