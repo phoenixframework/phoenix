@@ -83,19 +83,13 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
     end
 
     dispatches =
-      for {path, socket} <- endpoint.__sockets__,
-          {transport, {module, config}} <- socket.__transports__,
-          # Allow handlers to be configured at the transport level
-          handler = config[:cowboy] || default_for(module),
-          do: {Path.join(path, Atom.to_string(transport)),
-               handler,
-               {module, {endpoint, socket, transport}}}
-
-    dispatches =
-      dispatches ++ [{:_, Plug.Adapters.Cowboy2.Handler, {endpoint, []}}]
+      build_dispatches(endpoint, Plug.Adapters.Cowboy2.Handler, %{
+        Phoenix.Transports.LongPoll => Plug.Adapters.Cowboy2.Handler,
+        Phoenix.Transports.WebSocket => Phoenix.Endpoint.Cowboy2WebSocket
+      })
 
     # Use put_new to allow custom dispatches
-    config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
+    config = Keyword.put_new(config, :dispatch, dispatches)
 
     cowboy_supervisor =
       Plug.Adapters.Cowboy2.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
@@ -112,10 +106,6 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
     start = {__MODULE__, :start_link, [scheme, endpoint, start]}
     {id, start, restart, shutdown, type, modules}
   end
-
-  defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy2.Handler
-  defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.Cowboy2WebSocket
-  defp default_for(_), do: nil
 
   @doc """
   Callback to start the Cowboy2 endpoint.
@@ -135,6 +125,37 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
       {:error, _} = error ->
         error
     end
+  end
+
+  @doc false
+  def build_dispatches(endpoint, plug_handler, default_handlers) do
+    socket_dispatches =
+      for {path, socket, opts} <- endpoint.__sockets__,
+          {transport, {module, config}} <- socket.__transports__,
+          # Allow handlers to be configured at the transport level
+          handler = config[:cowboy] || Map.fetch!(default_handlers, module),
+          do: {opts[:host] || :_, [{Path.join(path, Atom.to_string(transport)),
+               handler,
+               {module, {endpoint, socket, transport}}}]}
+
+    socket_dispatches
+    |> append_catchall(endpoint, plug_handler)
+    |> group_by_host()
+    |> move_catch_all_to_end()
+  end
+  defp append_catchall(dispatches, endpoint, plug_handler) do
+    dispatches ++ [{:_, [{:_, plug_handler, {endpoint, []}}]}]
+  end
+  defp group_by_host(dispatches) do
+    Enum.reduce(dispatches, %{}, fn {host, dispatch}, acc ->
+      Map.update(acc, host, dispatch, &(&1 ++ dispatch))
+    end)
+  end
+  defp move_catch_all_to_end(dispatches) do
+    dispatches
+    |> Map.delete(:_)
+    |> Enum.into([])
+    |> Kernel.++([{:_, dispatches[:_]}])
   end
 
   defp info(scheme, endpoint, ref) do

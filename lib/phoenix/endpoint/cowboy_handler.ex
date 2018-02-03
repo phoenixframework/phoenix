@@ -77,6 +77,8 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   @behaviour Phoenix.Endpoint.Handler
   require Logger
 
+  alias Phoenix.Endpoint.Cowboy2Handler
+
   @doc """
   Generates a childspec to be used in the supervision tree.
   """
@@ -86,19 +88,13 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     end
 
     dispatches =
-      for {path, socket} <- endpoint.__sockets__,
-          {transport, {module, config}} <- socket.__transports__,
-          # Allow handlers to be configured at the transport level
-          handler = config[:cowboy] || default_for(module),
-          do: {Path.join(path, Atom.to_string(transport)),
-               handler,
-               {module, {endpoint, socket, transport}}}
-
-    dispatches =
-      dispatches ++ [{:_, Plug.Adapters.Cowboy.Handler, {endpoint, []}}]
+      Cowboy2Handler.build_dispatches(endpoint, Plug.Adapters.Cowboy.Handler, %{
+        Phoenix.Transports.LongPoll => Plug.Adapters.Cowboy.Handler,
+        Phoenix.Transports.WebSocket => Phoenix.Endpoint.CowboyWebSocket
+      })
 
     # Use put_new to allow custom dispatches
-    config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
+    config = Keyword.put_new(config, :dispatch, dispatches)
 
     {ref, mfa, type, timeout, kind, modules} =
       Plug.Adapters.Cowboy.child_spec(scheme, endpoint, [], config)
@@ -107,10 +103,6 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     mfa = {__MODULE__, :start_link, [scheme, endpoint, mfa]}
     {ref, mfa, type, timeout, kind, modules}
   end
-
-  defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy.Handler
-  defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.CowboyWebSocket
-  defp default_for(_), do: nil
 
   @doc """
   Callback to start the Cowboy endpoint.
