@@ -54,7 +54,7 @@ defmodule Phoenix.Mixfile do
 
   defp deps do
     [
-      cowboy_dep(System.get_env("COWBOY_VERSION")),
+      {:cowboy, "~> 1.0 or ~> 2.2.2 or ~> 2.3", optional: true},
       {:plug, "~> 1.5.0-rc.0", override: true},
       {:phoenix_pubsub, "~> 1.0"},
       {:poison, "~> 2.2 or ~> 3.0"},
@@ -70,12 +70,9 @@ defmodule Phoenix.Mixfile do
     ]
   end
 
-  defp cowboy_dep("1" <> _), do: {:cowboy, "~> 1.0", optional: true}
-  defp cowboy_dep(_), do: {:cowboy, "~> 2.2.2 or ~> 2.3", optional: true}
-
   defp lockfile() do
     case System.get_env("COWBOY_VERSION") do
-      "1" <> _ -> "mix-cowboy1.lock"
+      "2" <> _ -> "mix-cowboy2.lock"
       _ -> "mix.lock"
     end
   end
