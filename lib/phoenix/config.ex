@@ -6,6 +6,7 @@ defmodule Phoenix.Config do
   # at runtime using the `config/2` function.
   @moduledoc false
 
+  require Logger
   use GenServer
 
   @doc """
@@ -76,8 +77,8 @@ defmodule Phoenix.Config do
     case Application.fetch_env(otp_app, module) do
       {:ok, conf} -> conf
       :error ->
-        IO.puts :stderr, "warning: no configuration found for otp_app " <>
-                         "#{inspect otp_app} and module #{inspect module}"
+        Logger.warn "no configuration found for otp_app " <>
+                    "#{inspect otp_app} and module #{inspect module}"
         []
     end
   end

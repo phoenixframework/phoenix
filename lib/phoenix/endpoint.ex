@@ -346,6 +346,8 @@ defmodule Phoenix.Endpoint do
   @type event :: String.t
   @type msg :: map
 
+  require Logger
+
   # Configuration
 
   @doc """
@@ -698,8 +700,8 @@ defmodule Phoenix.Endpoint do
       host = force_ssl[:host] || config[:url][:host] || "localhost"
 
       if host == "localhost" do
-        IO.puts :stderr, """
-        warning: you have enabled :force_ssl but your host is currently set to localhost.
+        Logger.warn """
+        you have enabled :force_ssl but your host is currently set to localhost.
         Please configure your endpoint url host properly:
 
             config #{inspect module}, url: [host: "YOURHOST.com"]

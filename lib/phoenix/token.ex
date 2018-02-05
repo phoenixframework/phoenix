@@ -175,6 +175,7 @@ defmodule Phoenix.Token do
       if max_age_secs = opts[:max_age] do
         trunc(max_age_secs * 1000)
       else
+        # TODO: Default to 86400 on future releases.
         Logger.warn ":max_age was not set on Phoenix.Token.verify/4. " <>
                     "A max_age is recommended otherwise tokens are forever valid. " <>
                     "Please set it to the amount of seconds the token is valid, such as 86400 (1 day)"

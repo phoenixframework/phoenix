@@ -338,8 +338,8 @@ defmodule Phoenix.Socket do
     end)
   end
   defp warn_serializer_deprecation(name, transport_mod, serializer) do
-    IO.puts :stderr, """
-    [warning] passing a serializer module to the transport macro is deprecated.
+    IO.warn """
+    passing a serializer module to the transport macro is deprecated.
     Use a list with version requirements instead. For example:
 
         transport :#{name}, #{inspect transport_mod},

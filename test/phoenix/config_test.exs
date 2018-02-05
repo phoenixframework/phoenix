@@ -13,7 +13,7 @@ defmodule Phoenix.ConfigTest do
     assert config[:custom]  == true
     assert config[:static]  == true
 
-    assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
+    assert ExUnit.CaptureLog.capture_log(fn ->
       assert from_env(:unknown_app, meta.test, [static: true]) ==
             [static: true]
     end) =~ "no configuration"
