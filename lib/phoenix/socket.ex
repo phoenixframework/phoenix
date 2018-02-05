@@ -264,7 +264,7 @@ defmodule Phoenix.Socket do
     # Tear the alias to simply store the root in the AST.
     # This will make Elixir unable to track the dependency
     # between endpoint <-> socket and avoid recompiling the
-    # endpoint (alongside the whole project ) whenever the
+    # endpoint (alongside the whole project) whenever the
     # socket changes.
     module = tear_alias(module)
 
