@@ -1139,6 +1139,8 @@ Ajax.states = {complete: 4}
 export var Presence = {
 
   syncState(currentState, newState, onJoin, onLeave){
+    this.testCurrentState(currentState)
+
     let state = this.clone(currentState)
     let joins = {}
     let leaves = {}
@@ -1171,6 +1173,8 @@ export var Presence = {
   },
 
   syncDiff(currentState, {joins, leaves}, onJoin, onLeave){
+    this.testCurrentState(currentState)
+
     let state = this.clone(currentState)
     if(!onJoin){ onJoin = function(){} }
     if(!onLeave){ onLeave = function(){} }
@@ -1214,7 +1218,13 @@ export var Presence = {
     return Object.getOwnPropertyNames(obj).map(key => func(key, obj[key]))
   },
 
-  clone(obj){ return JSON.parse(JSON.stringify(obj)) }
+  clone(obj){ return JSON.parse(JSON.stringify(obj)) },
+
+  testCurrentState(currentState) {
+    if (Array.isArray(currentState)) {
+      throw new Error("Current state can't be an array")
+    }
+  }
 }
 
 

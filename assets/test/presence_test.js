@@ -78,6 +78,10 @@ describe("syncState", () => {
     })
     assert.deepEqual(left, {})
   })
+
+  it("should throw an error if state is an array", () => {
+    assert.throws(() => Presence.syncState([], {}))
+  })
 })
 
 describe("syncDiff", () => {
@@ -113,6 +117,10 @@ describe("syncDiff", () => {
     assert.deepEqual(state, {
       u1: {metas: [{id: 1, phx_ref: "1.2"}]},
     })
+  })
+
+  it("should throw an error if state is an array", () => {
+    assert.throws(() => Presence.syncState([], {}))
   })
 })
 
