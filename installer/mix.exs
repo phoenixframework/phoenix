@@ -6,7 +6,7 @@ defmodule Phx.New.Mixfile do
       app: :phx_new,
       start_permanent: Mix.env == :prod,
       version: "1.3.0",
-      elixir: "~> 1.3 or ~> 1.4"
+      elixir: "~> 1.5"
     ]
   end
 

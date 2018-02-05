@@ -9,7 +9,7 @@ defmodule <%= app_module %>.Mixfile do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",<% end %>
-      elixir: "<%= min_elixir_version %>",
+      elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env),
       compilers: [:phoenix, :gettext] ++ Mix.compilers,
       start_permanent: Mix.env == :prod,<%= if ecto do %>

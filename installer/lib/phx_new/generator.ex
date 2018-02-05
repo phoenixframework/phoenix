@@ -103,7 +103,6 @@ defmodule Phx.New.Generator do
 
     binding = [
       elixir_version: elixir_version(),
-      min_elixir_version: min_elixir_version(),
       app_name: project.app,
       app_module: inspect(project.app_mod),
       root_app_name: project.root_app,
@@ -136,15 +135,7 @@ defmodule Phx.New.Generator do
   end
 
   defp elixir_version do
-    Application.get_env(:phx_new, :elixir_vsn) || System.version()
-  end
-
-  defp min_elixir_version do
-    if Version.match?(elixir_version(), ">= 1.5.0") do
-      "~> 1.5"
-    else
-      "~> 1.4"
-    end
+    System.version()
   end
 
   defp namespaced?(project) do

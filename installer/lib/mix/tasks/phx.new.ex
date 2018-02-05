@@ -336,8 +336,8 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    unless Version.match?(System.version, "~> 1.4") do
-      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.4.\n " <>
+    unless Version.match?(System.version, "~> 1.5") do
+      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.5.\n " <>
                 "You have #{System.version()}. Please update accordingly"
     end
   end
