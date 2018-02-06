@@ -49,7 +49,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
 
         children = [
           ...
-          supervisor(#{binding[:module]}, []),
+          #{binding[:module]}
         ]
 
     You're all set! See the Phoenix.Presence docs for more details:
