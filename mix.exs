@@ -7,7 +7,7 @@ defmodule Phoenix.Mixfile do
     [
       app: :phoenix,
       version: @version,
-      elixir: "~> 1.4",
+      elixir: "~> 1.5",
       deps: deps(),
       package: package(),
       lockfile: lockfile(),

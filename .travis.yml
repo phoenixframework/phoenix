@@ -1,34 +1,6 @@
 language: elixir
 matrix:
   include:
-    - otp_release: 18.3
-      elixir: 1.4
-      env:
-       - COWBOY_VERSION=1.0 ELIXIR_ASSERT_TIMEOUT=2000
-    - otp_release: 19.3
-      elixir: 1.4
-      env:
-       - COWBOY_VERSION=1.0 ELIXIR_ASSERT_TIMEOUT=2000
-    - otp_release: 19.3
-      elixir: 1.4
-      env:
-       - COWBOY_VERSION=2.0 ELIXIR_ASSERT_TIMEOUT=2000
-    - otp_release: 20.0
-      elixir: 1.4
-      env:
-       - COWBOY_VERSION=1.0 ELIXIR_ASSERT_TIMEOUT=2000
-    - otp_release: 20.0
-      elixir: 1.4
-      env:
-       - COWBOY_VERSION=2.0 ELIXIR_ASSERT_TIMEOUT=2000
-    - otp_release: 20.1
-      elixir: 1.4
-      env:
-       - COWBOY_VERSION=1.0 ELIXIR_ASSERT_TIMEOUT=2000
-    - otp_release: 20.1
-      elixir: 1.4
-      env:
-       - COWBOY_VERSION=2.0 ELIXIR_ASSERT_TIMEOUT=2000
     - otp_release: 19.3
       elixir: 1.5
       env:
