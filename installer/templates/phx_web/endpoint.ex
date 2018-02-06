@@ -2,7 +2,7 @@ defmodule <%= endpoint_module %> do
   use Phoenix.Endpoint, otp_app: :<%= web_app_name %>
 
   socket "/socket", <%= web_namespace %>.UserSocket
-
+<%= if html or brunch do %>
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phoenix.digest
@@ -10,7 +10,7 @@ defmodule <%= endpoint_module %> do
   plug Plug.Static,
     at: "/", from: :<%= web_app_name %>, gzip: false,
     only: ~w(css fonts images js favicon.ico robots.txt)
-
+<% end %>
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do<%= if html do %>

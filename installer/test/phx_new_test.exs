@@ -49,6 +49,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "use Phoenix.View, root: \"lib/phx_blog_web/templates\""
       end
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r/defmodule PhxBlogWeb.Endpoint do/
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r/plug Plug.Static/
 
       assert_file "phx_blog/test/phx_blog_web/controllers/page_controller_test.exs"
       assert_file "phx_blog/test/phx_blog_web/views/page_view_test.exs"
@@ -151,6 +152,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file "phx_blog/priv/static/images/phoenix.png"
       refute_file "phx_blog/priv/static/js/phoenix.js"
       refute_file "phx_blog/priv/static/js/app.js"
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
+        refute file =~ "plug Plug.Static"
+      end
 
       # No Ecto
       config = ~r/config :phx_blog, PhxBlog.Repo,/
