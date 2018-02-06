@@ -96,7 +96,7 @@ defmodule HelloWeb.ErrorViewTest do
 end
 ```
 
-`HelloWeb.ErrorViewTest` sets `async: true` which means that each individual test will run in parallel, greatly speeding up the test run. This works because none of the tests access any resources which share state, such as a database. If we set `async: true` for a test case which does access a database, different test processes might modify the same data, corrupting the test results.
+`HelloWeb.ErrorViewTest` sets `async: true` which means that this test case will be run in parallel with other test cases. While individual tests within the case still run serially, this can greatly increase overall test speeds. This works because none of the tests access any resources which share state, such as a database. If we set `async: true` for a test case which does access a database, different test processes might modify the same data, corrupting the test results.
 
 It also imports `Phoenix.View` in order to use the `render_to_string/3` function. With that, all the assertions can be simple string equality tests.
 
