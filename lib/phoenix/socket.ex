@@ -286,13 +286,8 @@ defmodule Phoenix.Socket do
 
   ## Examples
 
-      # customize default `:websocket` transport options
       transport :websocket, Phoenix.Transports.WebSocket,
         timeout: 10_000
-
-      # define separate transport, using websocket handler
-      transport :websocket_slow_clients, Phoenix.Transports.WebSocket,
-        timeout: 60_000
 
   """
   defmacro transport(name, module, config \\ []) do
@@ -305,6 +300,13 @@ defmodule Phoenix.Socket do
   @doc false
   def __transport__(transports, name, module, user_conf) do
     defaults = module.default_config()
+
+    unless name in [:websocket, :longpoll] do
+      IO.warn "The transport/3 macro accepts only websocket and longpoll for transport names. " <>
+              "Other names are deprecated. If you want multiple websocket/longpoll endpoints, " <>
+              "define multiple sockets instead"
+    end
+
     conf =
       user_conf
       |> normalize_serializer_conf(name, module, defaults[:serializer])
