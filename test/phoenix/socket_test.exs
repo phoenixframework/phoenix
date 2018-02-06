@@ -65,15 +65,20 @@ defmodule Phoenix.SocketTest do
   test "transport config is exposted and merged with prior registrations" do
     {Phoenix.Transports.WebSocket, opts} = UserSocket.__transport__(:websocket)
     assert Enum.sort(opts) ==
-      [serializer: [{Phoenix.Transports.WebSocketSerializer, "~> 1.0.0"},
-                    {Phoenix.Transports.V2.WebSocketSerializer, "~> 2.0.0"}],
+      [serializer: [{Phoenix.Transports.WebSocketSerializer, parse_requirement!("~> 1.0.0")},
+                    {Phoenix.Transports.V2.WebSocketSerializer, parse_requirement!("~> 2.0.0")}],
        timeout: 1234, transport_log: false]
 
     {Phoenix.Transports.LongPoll, opts} = UserSocket.__transport__(:longpoll)
     assert Enum.sort(opts) ==
       [crypto: [max_age: 1209600], pubsub_timeout_ms: 2000,
-       serializer: [{Phoenix.Transports.LongPollSerializer, "~> 1.0.0"},
-                    {Phoenix.Transports.V2.LongPollSerializer, "~> 2.0.0"}],
+       serializer: [{Phoenix.Transports.LongPollSerializer, parse_requirement!("~> 1.0.0")},
+                    {Phoenix.Transports.V2.LongPollSerializer, parse_requirement!("~> 2.0.0")}],
        transport_log: false, window_ms: 10000]
+  end
+
+  defp parse_requirement!(requirement) do
+    {:ok, req} = Version.parse_requirement(requirement)
+    req
   end
 end
