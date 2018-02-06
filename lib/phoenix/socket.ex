@@ -174,7 +174,7 @@ defmodule Phoenix.Socket do
       for {name, {mod, conf}} <- transports do
         quote do
           def __transport__(unquote(name)) do
-            {unquote(mod), unquote(conf)}
+            {unquote(mod), unquote(Macro.escape(conf))}
           end
         end
       end
@@ -305,9 +305,10 @@ defmodule Phoenix.Socket do
   @doc false
   def __transport__(transports, name, module, user_conf) do
     defaults = module.default_config()
+
     conf =
       user_conf
-      |> normalize_serializer_conf(name, module, defaults[:serializer])
+      |> normalize_serializer_conf(name, module, defaults[:serializer] || [])
       |> merge_defaults(defaults)
 
     Map.update(transports, name, {module, conf}, fn {dup_module, _} ->
@@ -319,24 +320,26 @@ defmodule Phoenix.Socket do
 
   defp normalize_serializer_conf(conf, name, transport_mod, default) do
     update_in(conf, [:serializer], fn
-      nil -> default
+      nil ->
+        precompile_serializers(default)
 
       Phoenix.Transports.LongPollSerializer = serializer ->
         warn_serializer_deprecation(name, transport_mod, serializer)
-        default
-
+        precompile_serializers(default)
 
       Phoenix.Transports.WebSocketSerializer = serializer ->
         warn_serializer_deprecation(name, transport_mod, serializer)
-        default
+        precompile_serializers(default)
 
-      [_ | _] = serializer -> serializer
+      [_ | _] = serializer ->
+        precompile_serializers(serializer)
 
       serializer when is_atom(serializer) ->
         warn_serializer_deprecation(name, transport_mod, serializer)
-        [{serializer, "~> 1.0.0"}]
+        precompile_serializers([{serializer, "~> 1.0.0"}])
     end)
   end
+
   defp warn_serializer_deprecation(name, transport_mod, serializer) do
     IO.warn """
     passing a serializer module to the transport macro is deprecated.
@@ -345,5 +348,14 @@ defmodule Phoenix.Socket do
         transport :#{name}, #{inspect transport_mod},
           serializer: [{#{inspect serializer}, "~> 1.0.0"}]
     """
+  end
+
+  defp precompile_serializers(serializers) do
+    for {module, requirement} <- serializers do
+      case Version.parse_requirement(requirement) do
+        {:ok, requirement} -> {module, requirement}
+        :error -> Version.match?("1.0.0", requirement)
+      end
+    end
   end
 end
