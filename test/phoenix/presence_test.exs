@@ -28,6 +28,14 @@ defmodule Phoenix.PresenceTest do
     {:ok, topic: to_string(config.test)}
   end
 
+  test "defines child_spec/1" do
+    assert DefaultPresence.child_spec([]) == %{
+      id: DefaultPresence,
+      start: {DefaultPresence, :start_link, [[]]},
+      type: :supervisor
+    }
+  end
+
   test "default fetch/2 returns pass-through data", config do
     presences = %{"u1" => %{metas: [%{name: "u1", phx_ref: "ref"}]}}
     assert DefaultPresence.fetch(config.topic, presences) == presences
