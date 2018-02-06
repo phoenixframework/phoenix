@@ -28,7 +28,7 @@ defmodule Phoenix.Presence do
 
       children = [
         ...
-        supervisor(MyApp.Presence, []),
+        MyApp.Presence,
       ]
 
   Once added, presences can be tracked in your channel after joining:
@@ -126,6 +126,15 @@ defmodule Phoenix.Presence do
       @behaviour unquote(__MODULE__)
       @task_supervisor Module.concat(__MODULE__, TaskSupervisor)
 
+      @doc false
+      def child_spec(opts) do
+        %{
+          id: __MODULE__,
+          start: {__MODULE__, :start_link, [opts]},
+          type: :supervisor
+        }
+      end
+
       def start_link(opts \\ []) do
         opts = Keyword.merge(@opts, opts)
         Phoenix.Presence.start_link(__MODULE__, @otp_app, @task_supervisor, opts)
@@ -173,7 +182,7 @@ defmodule Phoenix.Presence do
         {:ok, state}
       end
 
-      defoverridable fetch: 2
+      defoverridable fetch: 2, child_spec: 1
     end
   end
 
