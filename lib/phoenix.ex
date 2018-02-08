@@ -35,8 +35,9 @@ defmodule Phoenix do
   @doc false
   def start(_type, _args) do
     # Warm up caches
-    _ = Phoenix.Template.engines
+    _ = Phoenix.Template.engines()
     _ = Phoenix.Template.format_encoder("index.html")
+    warn_on_missing_format_encoders()
 
     # Configure proper system flags from Phoenix only
     if stacktrace_depth = Application.get_env(:phoenix, :stacktrace_depth) do
@@ -47,8 +48,6 @@ defmodule Phoenix do
     import Supervisor.Spec
 
     children = [
-      # Ensure format encoders are loaded before starting
-      worker(Task, [fn -> ensure_format_encoders() end], restart: :transient),
       # Code reloading must be serial across all Phoenix apps
       worker(Phoenix.CodeReloader.Server, [])
     ]
@@ -57,15 +56,16 @@ defmodule Phoenix do
   end
 
   @doc false
+  # TODO remove Poison default in 2.0
   def json do
     :phoenix
     |> Application.fetch_env!(:format_encoders)
-    |> Keyword.get(:json, Jason)
+    |> Keyword.get(:json, Poison)
   end
 
-  defp ensure_format_encoders do
+  defp warn_on_missing_format_encoders do
     for {format, mod} <- Application.fetch_env!(:phoenix, :format_encoders) do
-      Code.ensure_loaded?(mod) || raise """
+      Code.ensure_loaded?(mod) || IO.write :sterr, """
       failed to load #{inspect(mod)} for Phoenix :#{format} encoder
       (module #{inspect(mod)} is not available)
 

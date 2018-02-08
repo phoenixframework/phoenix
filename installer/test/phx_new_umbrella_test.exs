@@ -58,6 +58,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
       assert_file app_path(@app, "config/config.exs"), fn file ->
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
+        assert file =~ "config :ecto, :json_library, Jason"
         refute file =~ "namespace"
         refute file =~ "config :phx_blog_web, :generators"
       end
@@ -214,6 +215,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file app_path(@app, "config/config.exs"), fn file ->
         refute file =~ "config :phx_blog_web, :generators"
         refute file =~ "ecto_repos:"
+        refute file =~ "config :ecto, :json_library, Jason"
       end
       assert_file web_path(@app, "config/config.exs"), fn file ->
         refute file =~ "config :phx_blog_web, :generators"
