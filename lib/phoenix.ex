@@ -12,8 +12,8 @@ defmodule Phoenix do
 
     * [Phoenix.js](js) - Phoenix Channels JavaScript client
 
-    * [Phoenix Pubsub](https://hexdocs.pm/phoenix_pubsub) - a distributed
-      pubsub system with presence support
+    * [Phoenix PubSub](https://hexdocs.pm/phoenix_pubsub) - a distributed
+      pub/sub system with presence support
 
     * [Phoenix HTML](https://hexdocs.pm/phoenix_html) - conveniences for
       working with HTML in Phoenix
@@ -22,12 +22,12 @@ defmodule Phoenix do
       for composable modules in between web applications
 
     * [Gettext](https://hexdocs.pm/gettext) - Internationalization and
-      localization through gettext
+      localization through [`gettext`](https://www.gnu.org/software/gettext/)
 
   There are also optional packages depending on your configuration:
 
     * [Phoenix PubSub Redis](https://hexdocs.pm/phoenix_pubsub_redis) - use
-      Redis to power Phoenix PubSub system
+      Redis to power the Phoenix PubSub system
 
   """
   use Application
