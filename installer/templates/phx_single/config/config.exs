@@ -25,8 +25,7 @@ config :logger, :console,
   metadata: [:request_id]
 
 # Use Jason for JSON parsing in Phoenix<%= if ecto do %> and Ecto<% end %>
-config :phoenix, :format_encoders, json: Jason
-<%= if ecto do %>
+config :phoenix, :json_library, Jason<%= if ecto do %>
 config :ecto, :json_library, Jason
 <% end %>
 # Import environment specific config. This must remain at the bottom

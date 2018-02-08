@@ -54,7 +54,7 @@ defmodule Phoenix.Transports.LongPollSerializer do
   """
   def decode!(message, _opts) do
     message
-    |> Phoenix.json().decode!()
+    |> Phoenix.json_library().decode!()
     |> Phoenix.Socket.Message.from_map!()
   end
 end

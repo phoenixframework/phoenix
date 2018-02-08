@@ -319,7 +319,7 @@ defmodule Phoenix.Endpoint.Supervisor do
         manifest =
           outer
           |> File.read!()
-          |> Phoenix.json().decode!()
+          |> Phoenix.json_library().decode!()
 
         manifest["latest"]
       else

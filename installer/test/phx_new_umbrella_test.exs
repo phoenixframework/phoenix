@@ -66,7 +66,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmbWeb.Endpoint"
         assert file =~ "generators: [context_app: :phx_umb]\n"
-        assert file =~ "config :phoenix, :format_encoders, json: Jason"
+        assert file =~ "config :phoenix, :json_library, Jason"
       end
 
       assert_file web_path(@app, "config/prod.exs"), fn file ->

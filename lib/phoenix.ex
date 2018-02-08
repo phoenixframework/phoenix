@@ -55,12 +55,21 @@ defmodule Phoenix do
     Supervisor.start_link(children, strategy: :one_for_one, name: Phoenix.Supervisor)
   end
 
-  @doc false
-  # TODO remove Poison default in 2.0
-  def json do
-    :phoenix
-    |> Application.fetch_env!(:format_encoders)
-    |> Keyword.get(:json, Poison)
+  # TODO: swap Poison default with Jason in 2.0
+  # from there we can ditch explicit config for new projects
+  @doc """
+  Returns the configured JSON encoding library for Phoenix.
+
+  To customize the JSON library, including the following
+  in your `config/config.exs`:
+
+      config :phoenix, :json_library, Jason
+  """
+  def json_library do
+    case Application.fetch_env(:phoenix, :json_library) do
+      {:ok, module} -> module
+      :error -> Poison
+    end
   end
 
   defp warn_on_missing_format_encoders do

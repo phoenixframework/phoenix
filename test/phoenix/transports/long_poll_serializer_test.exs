@@ -35,13 +35,13 @@ defmodule Phoenix.Tranports.LongPollSerializerTest do
     test "fastlane!/1 translates `Phoenix.Socket.Broadcast` into 'Phoenix.Socket.Message'" do
       broadcast = %Broadcast{topic: "t", event: "e", payload: "m"}
       assert V2.LongPollSerializer.fastlane!(broadcast) ==
-        {:socket_push, :text, Phoenix.json().encode_to_iodata!([nil, nil, "t", "e", "m"])}
+        {:socket_push, :text, Phoenix.json_library().encode_to_iodata!([nil, nil, "t", "e", "m"])}
     end
 
     test "encode!/1 encodes `Phoenix.Socket.Message` as JSON" do
       reply = %Reply{join_ref: "join", topic: "t", payload: "m", ref: "foo", status: "bar"}
       assert V2.LongPollSerializer.encode!(reply) ==
-        {:socket_push, :text, Phoenix.json().encode_to_iodata!(["join", "foo", "t", "phx_reply", %{response: "m", status: "bar"}])}
+        {:socket_push, :text, Phoenix.json_library().encode_to_iodata!(["join", "foo", "t", "phx_reply", %{response: "m", status: "bar"}])}
     end
 
     test "decode!/2 decodes `Phoenix.Socket.Message` from JSON" do

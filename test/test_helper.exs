@@ -3,10 +3,6 @@ Code.require_file("support/router_helper.exs", __DIR__)
 # Starts web server applications
 Application.ensure_all_started(:cowboy)
 
-# Clear format encoder cache from startup and inject Jason
-Application.delete_env(:phoenix, :compiled_format_encoders)
-Application.put_env(:phoenix, :format_encoders, json: Jason)
-
 # Used whenever a router fails. We default to simply
 # rendering a short string.
 defmodule Phoenix.ErrorView do

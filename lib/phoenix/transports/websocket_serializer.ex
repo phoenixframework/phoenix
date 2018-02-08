@@ -38,13 +38,13 @@ defmodule Phoenix.Transports.WebSocketSerializer do
   """
   def decode!(message, _opts) do
     message
-    |> Phoenix.json().decode!()
+    |> Phoenix.json_library().decode!()
     |> Phoenix.Socket.Message.from_map!()
   end
 
   defp encode_v1_fields_only(%Message{} = msg) do
     msg
     |> Map.take([:topic, :event, :payload, :ref])
-    |> Phoenix.json().encode_to_iodata!()
+    |> Phoenix.json_library().encode_to_iodata!()
   end
 end

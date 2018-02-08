@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/config/config.exs", fn file ->
         assert file =~ "ecto_repos: [PhxBlog.Repo]"
-        assert file =~ "config :phoenix, :format_encoders, json: Jason"
+        assert file =~ "config :phoenix, :json_library, Jason"
         assert file =~ "config :ecto, :json_library, Jason"
         refute file =~ "namespace: PhxBlog"
         refute file =~ "config :phx_blog, :generators"
