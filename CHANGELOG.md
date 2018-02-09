@@ -3,6 +3,7 @@
 ## 1.4.0-dev
 
 * Enhancements
+  * [Endpoint] Add `Cowboy2Handler` for HTTP2 support with cowboy2.
   * [Phoenix] Add `Phoenix.json_library/0` and replace `Poison` with `Jason` for JSON encoding in new projects.
   * [Controller] Support partial file downloads with `:offset` and `:length` options to `send_download/3`
   * [Controller] Add additional security headers to `put_secure_browser_headers` (`x-content-type-options`, `x-download-options`, and `x-permitted-cross-domain-policies`)
