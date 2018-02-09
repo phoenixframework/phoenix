@@ -78,7 +78,7 @@ defmodule Phoenix do
     Ensure #{inspect(module)} is loaded from your deps in mix.exs, or
     configure an existing encoder in your mix config using:
 
-    config :phoenix, :json_library, MyJSONLibrary
+        config :phoenix, :json_library, MyJSONLibrary
     """
   end
 end
