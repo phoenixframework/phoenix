@@ -37,7 +37,7 @@ defmodule Phoenix do
     # Warm up caches
     _ = Phoenix.Template.engines()
     _ = Phoenix.Template.format_encoder("index.html")
-    warn_on_missing_format_encoders()
+    warn_on_missing_json_library()
 
     # Configure proper system flags from Phoenix only
     if stacktrace_depth = Application.get_env(:phoenix, :stacktrace_depth) do
@@ -66,23 +66,19 @@ defmodule Phoenix do
       config :phoenix, :json_library, Jason
   """
   def json_library do
-    case Application.fetch_env(:phoenix, :json_library) do
-      {:ok, module} -> module
-      :error -> Poison
-    end
+    Application.get_env(:phoenix, :json_library, Poison)
   end
 
-  defp warn_on_missing_format_encoders do
-    for {format, mod} <- Application.fetch_env!(:phoenix, :format_encoders) do
-      Code.ensure_loaded?(mod) || IO.write :sterr, """
-      failed to load #{inspect(mod)} for Phoenix :#{format} encoder
-      (module #{inspect(mod)} is not available)
+  defp warn_on_missing_json_library do
+    module = json_library()
+    Code.ensure_loaded?(module) || IO.write :sterr, """
+    failed to load #{inspect(module)} for Phoenix JSON encoding.
+    (module #{inspect(module)} is not available)
 
-      Ensure #{inspect(mod)} is loaded from your deps in mix.exs, or
-      configure an existing encoder in your mix config using:
+    Ensure #{inspect(module)} is loaded from your deps in mix.exs, or
+    configure an existing encoder in your mix config using:
 
-          config :phoenix, :format_encoders, #{format}: MyEncoder
-      """
-    end
+    config :phoenix, :json_library, MyJSONLibrary
+    """
   end
 end
