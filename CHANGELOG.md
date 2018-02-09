@@ -1,8 +1,9 @@
 # Changelog
 
-## 1.3.1-dev
+## 1.4.0-dev
 
 * Enhancements
+  * [Phoenix] Add `Phoenix.json_library/0` and replace `Poison` with `Jason` for JSON encoding in new projects.
   * [Controller] Support partial file downloads with `:offset` and `:length` options to `send_download/3`
   * [Controller] Add additional security headers to `put_secure_browser_headers` (`x-content-type-options`, `x-download-options`, and `x-permitted-cross-domain-policies`)
   * [Logger] Add whitelist support to `filter_parameters` logger configuration, via new `:keep` tuple format
