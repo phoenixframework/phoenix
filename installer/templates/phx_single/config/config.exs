@@ -24,6 +24,10 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+# Use Jason for JSON parsing in Phoenix<%= if ecto do %> and Ecto<% end %>
+config :phoenix, :json_library, Jason<%= if ecto do %>
+config :ecto, :json_library, Jason
+<% end %>
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"

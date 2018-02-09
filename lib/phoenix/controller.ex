@@ -263,15 +263,10 @@ defmodule Phoenix.Controller do
     conn.private[:phoenix_template]
   end
 
-  defp get_json_encoder do
-    Application.get_env(:phoenix, :format_encoders)
-    |> Keyword.get(:json, Poison)
-  end
-
   @doc """
   Sends JSON response.
 
-  It uses the configured `:format_encoders` under the `:phoenix`
+  It uses the configured `:json_library` under the `:phoenix`
   application for `:json` to pick up the encoder module.
 
   ## Examples
@@ -281,9 +276,8 @@ defmodule Phoenix.Controller do
   """
   @spec json(Plug.Conn.t, term) :: Plug.Conn.t
   def json(conn, data) do
-    encoder = get_json_encoder()
-
-    send_resp(conn, conn.status || 200, "application/json", encoder.encode_to_iodata!(data))
+    response = Phoenix.json_library().encode_to_iodata!(data)
+    send_resp(conn, conn.status || 200, "application/json", response)
   end
 
   @doc """

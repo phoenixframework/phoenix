@@ -35,8 +35,9 @@ defmodule Phoenix do
   @doc false
   def start(_type, _args) do
     # Warm up caches
-    _ = Phoenix.Template.engines
+    _ = Phoenix.Template.engines()
     _ = Phoenix.Template.format_encoder("index.html")
+    warn_on_missing_format_encoders()
 
     # Configure proper system flags from Phoenix only
     if stacktrace_depth = Application.get_env(:phoenix, :stacktrace_depth) do
@@ -52,5 +53,36 @@ defmodule Phoenix do
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Phoenix.Supervisor)
+  end
+
+  # TODO: swap Poison default with Jason in 2.0
+  # from there we can ditch explicit config for new projects
+  @doc """
+  Returns the configured JSON encoding library for Phoenix.
+
+  To customize the JSON library, including the following
+  in your `config/config.exs`:
+
+      config :phoenix, :json_library, Jason
+  """
+  def json_library do
+    case Application.fetch_env(:phoenix, :json_library) do
+      {:ok, module} -> module
+      :error -> Poison
+    end
+  end
+
+  defp warn_on_missing_format_encoders do
+    for {format, mod} <- Application.fetch_env!(:phoenix, :format_encoders) do
+      Code.ensure_loaded?(mod) || IO.write :sterr, """
+      failed to load #{inspect(mod)} for Phoenix :#{format} encoder
+      (module #{inspect(mod)} is not available)
+
+      Ensure #{inspect(mod)} is loaded from your deps in mix.exs, or
+      configure an existing encoder in your mix config using:
+
+          config :phoenix, :format_encoders, #{format}: MyEncoder
+      """
+    end
   end
 end

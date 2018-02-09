@@ -57,7 +57,7 @@ defmodule Phoenix.Mixfile do
       {:cowboy, "~> 1.0 or ~> 2.2.2 or ~> 2.3", optional: true},
       {:plug, "~> 1.5.0-rc.0", override: true},
       {:phoenix_pubsub, "~> 1.0"},
-      {:poison, "~> 2.2 or ~> 3.0"},
+      {:jason, "~> 1.0", optional: true},
       {:gettext, "~> 0.8", only: :test},
 
       # Docs dependencies

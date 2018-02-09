@@ -64,8 +64,8 @@ defmodule Phoenix.Digester do
 
     if File.exists?(manifest_path) do
       manifest_path
-      |> File.read!
-      |> Poison.decode!
+      |> File.read!()
+      |> Phoenix.json_library().decode!()
       |> migrate_manifest(output_path)
     else
       @empty_manifest
@@ -105,7 +105,7 @@ defmodule Phoenix.Digester do
   end
 
   defp save_manifest(%{"latest" => _, "version" => _, "digests" => _} = manifest, output_path) do
-    manifest_content = Poison.encode!(manifest)
+    manifest_content = Phoenix.json_library().encode!(manifest)
     File.write!(Path.join(output_path, "cache_manifest.json"), manifest_content)
   end
 

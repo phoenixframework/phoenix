@@ -131,7 +131,7 @@ end
 ```
 Assuming we had a route for `get "/our_path/:id"` mapped to this `show` action, going to `/our_path/15` in your browser should display `Showing id 15` as plain text without any HTML.
 
-A step beyond this is rendering pure JSON with the `json/2` function. We need to pass it something that the [Poison library](https://github.com/devinus/poison) can parse into JSON, such as a map. (Poison is one of Phoenix's dependencies.)
+A step beyond this is rendering pure JSON with the `json/2` function. We need to pass it something that the [Jason library](https://github.com/michalmuskala/jason) can decode into JSON, such as a map. (Jason is one of Phoenix's dependencies.)
 
 ```elixir
 def show(conn, %{"id" => id}) do
@@ -678,4 +678,3 @@ It's also important to note that halting will only stop the plug pipeline from c
   . . .
   end
 ```
-

@@ -32,6 +32,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/config/config.exs", fn file ->
         assert file =~ "ecto_repos: [PhxBlog.Repo]"
+        assert file =~ "config :phoenix, :json_library, Jason"
+        assert file =~ "config :ecto, :json_library, Jason"
         refute file =~ "namespace: PhxBlog"
         refute file =~ "config :phx_blog, :generators"
       end
@@ -43,7 +45,10 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/lib/phx_blog/application.ex", ~r/defmodule PhxBlog.Application do/
       assert_file "phx_blog/lib/phx_blog.ex", ~r/defmodule PhxBlog do/
-      assert_file "phx_blog/mix.exs", ~r/mod: {PhxBlog.Application, \[\]}/
+      assert_file "phx_blog/mix.exs", fn file ->
+        assert file =~ "mod: {PhxBlog.Application, []}"
+        assert file =~ "{:jason, \"~> 1.0\"}"
+      end
       assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb do"
         assert file =~ "use Phoenix.View, root: \"lib/phx_blog_web/templates\""
@@ -161,6 +166,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/config.exs", fn file ->
         refute file =~ "config :phx_blog, :generators"
         refute file =~ "ecto_repos:"
+        refute file =~ "config :ecto, :json_library, Jason"
       end
 
       assert_file "phx_blog/config/dev.exs", &refute(&1 =~ config)

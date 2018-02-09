@@ -12,7 +12,7 @@ defmodule Phoenix.Transports.V2.LongPollSerializer do
     encoded =
       %Message{topic: msg.topic, event: msg.event, payload: msg.payload}
       |> to_list()
-      |> Poison.encode!()
+      |> Phoenix.json_library().encode_to_iodata!()
 
     {:socket_push, :text, encoded}
   end
@@ -23,7 +23,7 @@ defmodule Phoenix.Transports.V2.LongPollSerializer do
   Encoding is handled downstream in the LongPoll controller.
   """
   def encode!(msg) do
-    {:socket_push, :text, msg |> to_list() |> Poison.encode!()}
+    {:socket_push, :text, msg |> to_list() |> Phoenix.json_library().encode_to_iodata!()}
   end
   defp to_list(%Reply{} = reply) do
     [reply.join_ref, reply.ref, reply.topic, "phx_reply",
@@ -37,7 +37,7 @@ defmodule Phoenix.Transports.V2.LongPollSerializer do
   Decodes JSON String into `Phoenix.Socket.Message` struct.
   """
   def decode!(raw_message, _opts) do
-    [join_ref, ref, topic, event, payload | _] = Poison.decode!(raw_message)
+    [join_ref, ref, topic, event, payload | _] = Phoenix.json_library().decode!(raw_message)
 
     %Phoenix.Socket.Message{
       topic: topic,

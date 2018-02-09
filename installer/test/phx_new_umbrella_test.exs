@@ -58,6 +58,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
       assert_file app_path(@app, "config/config.exs"), fn file ->
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
+        assert file =~ "config :ecto, :json_library, Jason"
         refute file =~ "namespace"
         refute file =~ "config :phx_blog_web, :generators"
       end
@@ -65,6 +66,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmbWeb.Endpoint"
         assert file =~ "generators: [context_app: :phx_umb]\n"
+        assert file =~ "config :phoenix, :json_library, Jason"
       end
 
       assert_file web_path(@app, "config/prod.exs"), fn file ->
@@ -79,7 +81,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file app_path(@app, "test/test_helper.exs")
 
       assert_file web_path(@app, "lib/#{@app}_web/application.ex"), ~r/defmodule PhxUmbWeb.Application do/
-      assert_file web_path(@app, "mix.exs"), ~r/mod: {PhxUmbWeb.Application, \[\]}/
+      assert_file web_path(@app, "mix.exs"), fn file ->
+        assert file =~ "mod: {PhxUmbWeb.Application, []}"
+        assert file =~ "{:jason, \"~> 1.0\"}"
+      end
       assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
         assert file =~ "defmodule PhxUmbWeb do"
         assert file =~ "use Phoenix.View, root: \"lib/phx_umb_web/templates\""
@@ -210,6 +215,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file app_path(@app, "config/config.exs"), fn file ->
         refute file =~ "config :phx_blog_web, :generators"
         refute file =~ "ecto_repos:"
+        refute file =~ "config :ecto, :json_library, Jason"
       end
       assert_file web_path(@app, "config/config.exs"), fn file ->
         refute file =~ "config :phx_blog_web, :generators"

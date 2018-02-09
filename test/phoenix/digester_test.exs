@@ -35,7 +35,7 @@ defmodule Phoenix.DigesterTest do
       json =
         Path.join(@output_path, "cache_manifest.json")
         |> File.read!()
-        |> Poison.decode!()
+        |> Phoenix.json_library().decode!()
 
       assert json["latest"]["phoenix.png"] =~ ~r"phoenix-#{@hash_regex}.png"
       assert json["version"] == 1
@@ -56,7 +56,7 @@ defmodule Phoenix.DigesterTest do
       json =
         Path.join(@output_path, "cache_manifest.json")
         |> File.read!()
-        |> Poison.decode!()
+        |> Phoenix.json_library().decode!()
 
       # Keep old entries
       assert json["digests"]["foo-d978852bea6530fcd197b5445ed008fd.css"]["logical_path"] == "foo.css"
@@ -87,7 +87,7 @@ defmodule Phoenix.DigesterTest do
       json =
         Path.join(@output_path, "cache_manifest.json")
         |> File.read!()
-        |> Poison.decode!()
+        |> Phoenix.json_library().decode!()
 
       assert json["digests"]["foo-d978852bea6530fcd197b5445ed008fd.css"]["mtime"] == 32132171
       assert_in_delta json["digests"]["foo-1198fd3c7ecf0e8f4a33a6e4fc5ae168.css"]["mtime"], now(), 2
@@ -104,7 +104,7 @@ defmodule Phoenix.DigesterTest do
       json =
         Path.join(input_path, "cache_manifest.json")
         |> File.read!()
-        |> Poison.decode!()
+        |> Phoenix.json_library().decode!()
 
       assert json["digests"] == %{}
     end
@@ -124,7 +124,7 @@ defmodule Phoenix.DigesterTest do
       json =
         Path.join(@output_path, "cache_manifest.json")
         |> File.read!()
-        |> Poison.decode!()
+        |> Phoenix.json_library().decode!()
       assert json["latest"]["static/phoenix.png"] =~ ~r"static/phoenix-#{@hash_regex}\.png"
     end
 
@@ -145,7 +145,7 @@ defmodule Phoenix.DigesterTest do
       json =
         Path.join(@output_path, "cache_manifest.json")
         |> File.read!()
-        |> Poison.decode!()
+        |> Phoenix.json_library().decode!()
 
       assert Enum.count(json["digests"]) == 2
     end
@@ -356,7 +356,7 @@ defmodule Phoenix.DigesterTest do
       json =
         Path.join(@output_path, "cache_manifest.json")
         |> File.read!()
-        |> Poison.decode!()
+        |> Phoenix.json_library().decode!()
 
       refute json["digests"]["app-1.css"]
     end

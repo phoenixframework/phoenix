@@ -93,8 +93,7 @@ defmodule Phoenix.Template do
   New encoders can be added via the format encoder option:
 
       config :phoenix, :format_encoders,
-        html: Phoenix.Template.HTML,
-        json: Poison
+        html: Phoenix.Template.HTML
 
   """
 
@@ -104,7 +103,6 @@ defmodule Phoenix.Template do
 
   alias Phoenix.Template
 
-  @encoders [html: Phoenix.Template.HTML, json: Poison, js: Phoenix.Template.HTML]
   @engines  [eex: Phoenix.Template.EExEngine, exs: Phoenix.Template.ExsEngine]
   @default_pattern "*"
 
@@ -242,13 +240,17 @@ defmodule Phoenix.Template do
         encoders
       :error ->
         encoders =
-          @encoders
+          default_encoders()
           |> Keyword.merge(raw_config(:format_encoders))
           |> Enum.filter(fn {_, v} -> v end)
           |> Enum.into(%{}, fn {k, v} -> {".#{k}", v} end)
         Application.put_env(:phoenix, :compiled_format_encoders, encoders)
         encoders
     end
+  end
+
+  defp default_encoders do
+    [html: Phoenix.Template.HTML, json: Phoenix.json_library(), js: Phoenix.Template.HTML]
   end
 
   @doc """
