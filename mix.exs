@@ -55,7 +55,8 @@ defmodule Phoenix.Mixfile do
   defp deps do
     [
       {:cowboy, "~> 1.0 or ~> 2.2.2 or ~> 2.3", optional: true},
-      {:plug, "~> 1.5.0-rc.0", override: true},
+      # TODO: bump to 1.5.0 stable when it goes out with `init_mode` support
+      {:plug, github: "elixir-plug/plug", branch: "master", override: true},
       {:phoenix_pubsub, "~> 1.0"},
       {:jason, "~> 1.0", optional: true},
       {:gettext, "~> 0.8", only: :test},

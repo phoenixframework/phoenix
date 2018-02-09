@@ -10,6 +10,13 @@ defmodule Phoenix.Config do
   use GenServer
 
   @doc """
+  Returns the `:init_mode` to pass to `Plug.Builder.compile/3`.
+  """
+  def plug_init_mode do
+    Application.get_env(:phoenix, :plug_init_mode, :compile)
+  end
+
+  @doc """
   Starts a Phoenix configuration handler.
   """
   def start_link(module, config, defaults, opts \\ []) do

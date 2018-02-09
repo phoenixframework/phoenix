@@ -169,7 +169,10 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ "config :ecto, :json_library, Jason"
       end
 
-      assert_file "phx_blog/config/dev.exs", &refute(&1 =~ config)
+      assert_file "phx_blog/config/dev.exs", fn file ->
+        refute file =~ config
+        assert file =~ "config :phoenix, :plug_init_mode, :runtime"
+      end
       assert_file "phx_blog/config/test.exs", &refute(&1 =~ config)
       assert_file "phx_blog/config/prod.secret.exs", &refute(&1 =~ config)
       assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
