@@ -276,6 +276,9 @@ defmodule Mix.Phoenix do
         via cli option:
 
             mix phx.gen.[task] --context-app some_app
+
+        Note: cli option only works when `context_app` is not set to `false`
+        in the config.
         """
       {app, _path} ->
         {:ok, app}

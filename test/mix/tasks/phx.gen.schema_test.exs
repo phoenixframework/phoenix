@@ -268,4 +268,38 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       end
     end
   end
+
+  describe "inside umbrella" do
+    test "raises with false context_app", config do
+      in_tmp_umbrella_project config.test, fn ->
+        Application.put_env(:phoenix, :generators, context_app: false)
+
+        assert_raise Mix.Error, ~r/no context_app configured/, fn ->
+          Gen.Schema.run(~w(Blog.Post blog_posts title:string))
+        end
+      end
+    end
+
+    test "with context_app set to nil", config do
+      in_tmp_umbrella_project config.test, fn ->
+        Application.put_env(:phoenix, :generators, context_app: nil)
+
+        Gen.Schema.run(~w(Blog.Post blog_posts title:string))
+
+        assert_file "lib/phoenix/blog/post.ex"
+        assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_posts.exs")
+      end
+    end
+
+    test "with context_app", config do
+      in_tmp_umbrella_project config.test, fn ->
+        Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
+
+        Gen.Schema.run(~w(Blog.Post blog_posts title:string))
+
+        assert_file "another_app/lib/another_app/blog/post.ex"
+        assert [_] = Path.wildcard("another_app/priv/repo/migrations/*_create_blog_posts.exs")
+      end
+    end
+  end
 end
