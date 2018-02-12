@@ -74,7 +74,7 @@ end
 #### The Setup Block
 
 Now that we know that Phoenix provides with a custom Test Case just for channels and what it
-provides, we can move on to understanding the rest of `test/hello_web/channelsj/room_channel_test.exs`.
+provides, we can move on to understanding the rest of `test/hello_web/channels/room_channel_test.exs`.
 
 First off, is the setup block:
 
