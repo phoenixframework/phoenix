@@ -53,6 +53,11 @@ defmodule Phoenix.TokenTest do
     assert Token.verify(conn(), "id", token, max_age: 0.1) == {:error, :expired}
   end
 
+  test "supports :infinity for max age" do
+    token = Token.sign(conn(), "id", 1)
+    assert Token.verify(conn(), "id", token, max_age: :infinity) == {:ok, 1}
+  end
+
   test "supports signed_at in seconds" do
     seconds_in_day = 24*60*60
     day_ago_seconds = System.system_time(:seconds) - seconds_in_day
