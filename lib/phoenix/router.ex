@@ -440,7 +440,7 @@ defmodule Phoenix.Router do
       quote unquote: false do
         Scope.pipeline(__MODULE__, plug)
         {conn, body} = Plug.Builder.compile(__ENV__, @phoenix_pipeline,
-          init_mode: Phoenix.Config.plug_init_mode())
+          init_mode: Phoenix.plug_init_mode())
 
         def unquote(plug)(unquote(conn), _) do
           try do

@@ -144,7 +144,7 @@ defmodule Phoenix.Router.Route do
     plugs = pipe_through |> Enum.reverse |> Enum.map(&{&1, [], true})
 
     {conn, body} = Plug.Builder.compile(__ENV__, plugs,
-      init_mode: Phoenix.Config.plug_init_mode())
+      init_mode: Phoenix.plug_init_mode())
 
     quote do
       fn unquote(conn) ->

@@ -72,6 +72,12 @@ defmodule Phoenix do
     end
   end
 
+  @doc false
+  # Returns the `:init_mode` to pass to `Plug.Builder.compile/3`.
+  def plug_init_mode do
+    Application.get_env(:phoenix, :plug_init_mode, :compile)
+  end
+
   defp warn_on_missing_format_encoders do
     for {format, mod} <- Application.fetch_env!(:phoenix, :format_encoders) do
       Code.ensure_loaded?(mod) || IO.write :sterr, """
