@@ -221,7 +221,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         refute file =~ "config :phx_blog_web, :generators"
       end
 
-      assert_file web_path(@app, "config/dev.exs"), &refute(&1 =~ config)
+      assert_file web_path(@app, "config/dev.exs"), fn file ->
+        refute file =~ config
+        assert file =~ "config :phoenix, :plug_init_mode, :runtime"
+      end
       assert_file web_path(@app, "config/test.exs"), &refute(&1 =~ config)
       assert_file web_path(@app, "config/prod.secret.exs"), &refute(&1 =~ config)
 

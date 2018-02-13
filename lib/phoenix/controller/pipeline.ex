@@ -75,7 +75,10 @@ defmodule Phoenix.Controller.Pipeline do
   defmacro __before_compile__(env) do
     action = {:action, [], true}
     plugs  = [action|Module.get_attribute(env.module, :plugs)]
-    {conn, body} = Plug.Builder.compile(env, plugs, log_on_halt: :debug)
+    {conn, body} = Plug.Builder.compile(env, plugs,
+      log_on_halt: :debug,
+      init_mode: Phoenix.plug_init_mode())
+
     fallback_ast =
       env.module
       |> Module.get_attribute(:phoenix_fallback)

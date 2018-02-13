@@ -69,6 +69,12 @@ defmodule Phoenix do
     Application.get_env(:phoenix, :json_library, Poison)
   end
 
+  @doc false
+  # Returns the `:init_mode` to pass to `Plug.Builder.compile/3`.
+  def plug_init_mode do
+    Application.get_env(:phoenix, :plug_init_mode, :compile)
+  end
+
   defp warn_on_missing_json_library do
     module = json_library()
     Code.ensure_loaded?(module) || IO.write :sterr, """

@@ -42,3 +42,6 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
   ]
 
 <% end %>
+
+# Initialize plugs at runtime for faster development compilation
+config :phoenix, :plug_init_mode, :runtime
