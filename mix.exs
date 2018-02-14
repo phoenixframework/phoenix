@@ -59,13 +59,13 @@ defmodule Phoenix.Mixfile do
       {:plug, "~> 1.5.0-rc2", override: true},
       {:phoenix_pubsub, "~> 1.0"},
       {:jason, "~> 1.0", optional: true},
-      {:gettext, "~> 0.8", only: :test},
 
       # Docs dependencies
       {:ex_doc, "~> 0.18", only: :docs},
       {:inch_ex, "~> 0.2", only: :docs},
 
       # Test dependencies
+      {:gettext, "~> 0.8", only: :test},
       # TODO: before phoenix 1.4 release bump to next stable release with relaxed plug dep
       {:phoenix_html, "~> 2.10", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
