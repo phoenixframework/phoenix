@@ -61,9 +61,9 @@ defmodule Mix.Tasks.Phx.New do
 
       mix phx.new hello_world --module HelloWorld
 
-  Or without the html bits (useful for APIs):
+  Or without the HTML and JS bits (useful for APIs):
 
-      mix phx.new ~/Workspace/hello_world --no-html
+      mix phx.new ~/Workspace/hello_world --no-html --no-brunch
 
   As an umbrella:
 
