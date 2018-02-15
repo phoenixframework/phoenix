@@ -13,11 +13,11 @@ defmodule Phoenix.Controller do
 
   For example, the route:
 
-      get "/users/:id", MyApp.UserController, :show
+      get "/users/:id", MyAppWeb.UserController, :show
 
-  will invoke the `show/2` action in the `MyApp.UserController`:
+  will invoke the `show/2` action in the `MyAppWeb.UserController`:
 
-      defmodule MyApp.UserController do
+      defmodule MyAppWeb.UserController do
         use MyAppWeb, :controller
 
         def show(conn, %{"id" => id}) do
@@ -63,7 +63,7 @@ defmodule Phoenix.Controller do
   As with routers, controllers also have their own plug pipeline.
   However, different from routers, controllers have a single pipeline:
 
-      defmodule MyApp.UserController do
+      defmodule MyAppWeb.UserController do
         use MyAppWeb, :controller
 
         plug :authenticate, usernames: ["jose", "eric", "sonny"]
@@ -602,7 +602,7 @@ defmodule Phoenix.Controller do
 
   ## Examples
 
-      defmodule MyApp.UserController do
+      defmodule MyAppWeb.UserController do
         use Phoenix.Controller
 
         def show(conn, _params) do
@@ -610,7 +610,7 @@ defmodule Phoenix.Controller do
         end
       end
 
-  The example above renders a template "show.html" from the `MyApp.UserView`
+  The example above renders a template "show.html" from the `MyAppWeb.UserView`
   and sets the response content type to "text/html".
 
   In many cases, you may want the template format to be set dynamically based
@@ -630,22 +630,22 @@ defmodule Phoenix.Controller do
   ## Views
 
   By default, Controllers render templates in a view with a similar name to the
-  controller. For example, `MyApp.UserController` will render templates inside
-  the `MyApp.UserView`. This information can be changed any time by using the
+  controller. For example, `MyAppWeb.UserController` will render templates inside
+  the `MyAppWeb.UserView`. This information can be changed any time by using the
   `put_view/2` function:
 
       def show(conn, _params) do
         conn
-        |> put_view(MyApp.SpecialView)
+        |> put_view(MyAppWeb.SpecialView)
         |> render(:show, message: "Hello")
       end
 
   `put_view/2` can also be used as a plug:
 
-      defmodule MyApp.UserController do
+      defmodule MyAppWeb.UserController do
         use Phoenix.Controller
 
-        plug :put_view, MyApp.SpecialView
+        plug :put_view, MyAppWeb.SpecialView
 
         def show(conn, _params) do
           render conn, :show, message: "Hello"
@@ -657,7 +657,7 @@ defmodule Phoenix.Controller do
   Templates are often rendered inside layouts. By default, Phoenix
   will render layouts for html requests. For example:
 
-      defmodule MyApp.UserController do
+      defmodule MyAppWeb.UserController do
         use Phoenix.Controller
 
         def show(conn, _params) do
@@ -666,7 +666,7 @@ defmodule Phoenix.Controller do
       end
 
   will render the  "show.html" template inside an "app.html"
-  template specified in `MyApp.LayoutView`. `put_layout/2` can be used
+  template specified in `MyAppWeb.LayoutView`. `put_layout/2` can be used
   to change the layout, similar to how `put_view/2` can be used to change
   the view.
 
@@ -783,6 +783,35 @@ defmodule Phoenix.Controller do
       content_type = content_type <> "; charset=utf-8"
       %Plug.Conn{conn | resp_headers: [{"content-type", content_type}|resp_headers]}
     end
+  end
+
+  @doc """
+  Puts the URL or `%URI{}` to be used for route generation.
+
+  This function overrides the default URL generation pulled
+  from the `%Plug.Conn{}`'s endpoint configuration.
+
+  ## Examples
+
+  Imagine your application is configured to run on "example.com"
+  but after the user signs in, you want all links to use
+  "some_user.example.com". You can do so by setting the proper
+  router url configuration:
+
+      def put_router_url_by_user(conn) do
+        put_router_url(conn, get_user_from_conn(conn).account_name <> ".example.com")
+      end
+
+  Now when you call `Routes.some_route_url(conn, ...)`, it will use
+  the router url set above. Keep in mind that, if you want to generate
+  routes to the current domain, it is preferred to use `Routes.some_route_path`
+  helpers, as those are always relative.
+  """
+  def put_router_url(conn, %URI{} = uri) do
+    put_private(conn, :phoenix_router_url, uri)
+  end
+  def put_router_url(conn, url) when is_binary(url) do
+    put_private(conn, :phoenix_router_url, url)
   end
 
   @doc """
@@ -1323,8 +1352,14 @@ defmodule Phoenix.Controller do
   @doc ~S"""
   Returns the current request URL, with and without query params.
 
-  The connection's endpoint will be used for URL generation.
-  See `current_path/1` for details on how the request path is generated.
+  The path will be retrieved from the currently requested path via
+  `current_path/1`. The scheme, host and others will be received from
+  the URL configuration in your Phoenix endpoint. The reason we don't
+  use the host and scheme information in the request is because most
+  applications are behind proxies and the host and scheme may not
+  actually reflect the host and scheme accessed by the client. If you
+  want to access the url precisely as requested by the client, see
+  `Plug.Conn.request_url/1`.
 
   ## Examples
 
@@ -1339,37 +1374,29 @@ defmodule Phoenix.Controller do
 
   ## Custom URL Generation
 
-  In some cases, you'll need to generate a request's URL, but
-  using a different scheme, different host, etc. This can be
-  accomplished by concatentating the request path with a
-  custom built URL from your Router helpers, another Endpoint, mix
-  config, or a hand-built string.
+  In some cases, you'll need to generate a request's URL, but using a
+  different scheme, different host, etc. This can be accomplished in
+  two ways.
 
-  For example, you may way to generate an https URL from an http request.
-  You could define a function like the following:
+  If you want to do so in a case-by-case basis, you can define a custom
+  function that gets the endpoint URI configuration and changes it accordingly.
+  For example, to get the current URL always in HTTPS format:
 
       def current_secure_url(conn, params \\ %{}) do
-        cur_uri  = Phoenix.Controller.endpoint_module(conn).struct_url()
+        cur_uri  = MyAppWeb.Endpoint.struct_url()
         cur_path = Phoenix.Controller.current_path(conn, params)
 
         MyAppWeb.Router.Helpers.url(%URI{cur_uri | scheme: "https}) <> cur_path
       end
 
-  Or maybe you have a subdomain based URL for different organizations:
-
-      def organization_url(conn, org, params \\ %{}) do
-        cur_uri  = Phoenix.Controller.endpoint_module(conn).struct_url()
-        cur_path = Phoenix.Controller.current_path(conn, params)
-        org_host = "#{org.slug}.#{cur_uri.host}"
-
-        MyAppWeb.Router.Helpers.url(%URI{cur_uri | host: org_host}) <> cur_path
-      end
+  However, if you want all generated URLs to always have a certain schema,
+  host, etc, you may invoke `put_router_url/2`.
   """
   def current_url(%Plug.Conn{} = conn) do
-    endpoint_module(conn).url() <> current_path(conn)
+    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn)
   end
   def current_url(%Plug.Conn{} = conn, %{} = params) do
-    endpoint_module(conn).url() <> current_path(conn, params)
+    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn, params)
   end
 
   @doc false

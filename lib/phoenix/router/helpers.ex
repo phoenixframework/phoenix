@@ -9,12 +9,16 @@ defmodule Phoenix.Router.Helpers do
   @doc """
   Callback invoked by url generated in each helper module.
   """
-  def url(_router, %Conn{private: private}) do
-    private.phoenix_endpoint.url
+  def url(router, %Conn{private: private}) do
+    case private do
+      %{phoenix_router_url: %URI{} = uri} -> url(router, uri)
+      %{phoenix_router_url: url} when is_binary(url) -> url
+      %{phoenix_endpoint: endpoint} -> endpoint.url()
+    end
   end
 
   def url(_router, %Socket{endpoint: endpoint}) do
-    endpoint.url
+    endpoint.url()
   end
 
   def url(_router, %URI{} = uri) do
@@ -22,7 +26,7 @@ defmodule Phoenix.Router.Helpers do
   end
 
   def url(_router, endpoint) when is_atom(endpoint) do
-    endpoint.url
+    endpoint.url()
   end
 
   def url(router, other) do
