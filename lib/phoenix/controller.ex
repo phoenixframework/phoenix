@@ -13,11 +13,11 @@ defmodule Phoenix.Controller do
 
   For example, the route:
 
-      get "/users/:id", MyApp.UserController, :show
+      get "/users/:id", MyAppWeb.UserController, :show
 
-  will invoke the `show/2` action in the `MyApp.UserController`:
+  will invoke the `show/2` action in the `MyAppWeb.UserController`:
 
-      defmodule MyApp.UserController do
+      defmodule MyAppWeb.UserController do
         use MyAppWeb, :controller
 
         def show(conn, %{"id" => id}) do
@@ -63,7 +63,7 @@ defmodule Phoenix.Controller do
   As with routers, controllers also have their own plug pipeline.
   However, different from routers, controllers have a single pipeline:
 
-      defmodule MyApp.UserController do
+      defmodule MyAppWeb.UserController do
         use MyAppWeb, :controller
 
         plug :authenticate, usernames: ["jose", "eric", "sonny"]
@@ -602,7 +602,7 @@ defmodule Phoenix.Controller do
 
   ## Examples
 
-      defmodule MyApp.UserController do
+      defmodule MyAppWeb.UserController do
         use Phoenix.Controller
 
         def show(conn, _params) do
@@ -610,7 +610,7 @@ defmodule Phoenix.Controller do
         end
       end
 
-  The example above renders a template "show.html" from the `MyApp.UserView`
+  The example above renders a template "show.html" from the `MyAppWeb.UserView`
   and sets the response content type to "text/html".
 
   In many cases, you may want the template format to be set dynamically based
@@ -630,22 +630,22 @@ defmodule Phoenix.Controller do
   ## Views
 
   By default, Controllers render templates in a view with a similar name to the
-  controller. For example, `MyApp.UserController` will render templates inside
-  the `MyApp.UserView`. This information can be changed any time by using the
+  controller. For example, `MyAppWeb.UserController` will render templates inside
+  the `MyAppWeb.UserView`. This information can be changed any time by using the
   `put_view/2` function:
 
       def show(conn, _params) do
         conn
-        |> put_view(MyApp.SpecialView)
+        |> put_view(MyAppWeb.SpecialView)
         |> render(:show, message: "Hello")
       end
 
   `put_view/2` can also be used as a plug:
 
-      defmodule MyApp.UserController do
+      defmodule MyAppWeb.UserController do
         use Phoenix.Controller
 
-        plug :put_view, MyApp.SpecialView
+        plug :put_view, MyAppWeb.SpecialView
 
         def show(conn, _params) do
           render conn, :show, message: "Hello"
@@ -657,7 +657,7 @@ defmodule Phoenix.Controller do
   Templates are often rendered inside layouts. By default, Phoenix
   will render layouts for html requests. For example:
 
-      defmodule MyApp.UserController do
+      defmodule MyAppWeb.UserController do
         use Phoenix.Controller
 
         def show(conn, _params) do
@@ -666,7 +666,7 @@ defmodule Phoenix.Controller do
       end
 
   will render the  "show.html" template inside an "app.html"
-  template specified in `MyApp.LayoutView`. `put_layout/2` can be used
+  template specified in `MyAppWeb.LayoutView`. `put_layout/2` can be used
   to change the layout, similar to how `put_view/2` can be used to change
   the view.
 
@@ -1377,13 +1377,13 @@ defmodule Phoenix.Controller do
   In some cases, you'll need to generate a request's URL, but using a
   different scheme, different host, etc. This can be accomplished in
   two ways.
-  
+
   If you want to do so in a case-by-case basis, you can define a custom
   function that gets the endpoint URI configuration and changes it accordingly.
   For example, to get the current URL always in HTTPS format:
 
       def current_secure_url(conn, params \\ %{}) do
-        cur_uri  = MyApp.Endpoint.struct_url()
+        cur_uri  = MyAppWeb.Endpoint.struct_url()
         cur_path = Phoenix.Controller.current_path(conn, params)
 
         MyAppWeb.Router.Helpers.url(%URI{cur_uri | scheme: "https}) <> cur_path
