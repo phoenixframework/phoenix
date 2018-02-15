@@ -564,6 +564,7 @@ defmodule Phoenix.Controller.ControllerTest do
       conn(:get, path)
       |> fetch_query_params()
       |> put_private(:phoenix_endpoint, __MODULE__)
+      |> put_private(:phoenix_router, __MODULE__)
     end
 
     test "current_path/1 uses the conn's query params" do

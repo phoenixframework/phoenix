@@ -786,6 +786,27 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
+  Puts the URL or `%URI{}` to be used for route generation.
+
+  This function overrides the default URL generation pulled
+  from the `%Plug.Conn{}`'s endpoint configuration.
+
+  ## Examples
+
+      iex> put_router_url(conn, "https://example.com")
+      %Plug.Conn{...}
+
+      iex> put_router_url(conn, %URI{host: "example.com"})
+      %Plug.Conn{...}
+  """
+  def put_router_url(conn, %URI{} = uri) do
+    put_private(conn, :phoenix_router_url, uri)
+  end
+  def put_router_url(conn, url) when is_binary(url) do
+    put_private(conn, :phoenix_router_url, url)
+  end
+
+  @doc """
   Puts the format in the connection.
 
   See `get_format/1` for retrieval.
@@ -1366,10 +1387,10 @@ defmodule Phoenix.Controller do
       end
   """
   def current_url(%Plug.Conn{} = conn) do
-    endpoint_module(conn).url() <> current_path(conn)
+    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn)
   end
   def current_url(%Plug.Conn{} = conn, %{} = params) do
-    endpoint_module(conn).url() <> current_path(conn, params)
+    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn, params)
   end
 
   @doc false
