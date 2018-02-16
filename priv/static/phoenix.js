@@ -301,6 +301,19 @@ var Push = function () {
     }
 
     /**
+     * Updates the Push payload for subsequent resends
+     *
+     * @param {Object} payload
+     * @returns {Push}
+     */
+
+  }, {
+    key: "updatePayload",
+    value: function updatePayload(payload) {
+      this.payload = payload;
+    }
+
+    /**
      * @private
      */
 
@@ -507,6 +520,22 @@ var Channel = exports.Channel = function () {
     }
 
     /**
+     * Updates the params passed as the second argument to `new Channel("topic", params, socket)`
+     * Any subsequent reconnects on the channel will send the updated params to the `join` callback on the sever
+     *
+     * @param {Object} params
+     */
+
+  }, {
+    key: "updateJoinParams",
+    value: function updateJoinParams() {
+      var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+      this.params = params;
+      this.joinPush.updatePayload(params);
+    }
+
+    /**
      * Hook into channel close
      * @param {Function} callback
      */
@@ -545,6 +574,7 @@ var Channel = exports.Channel = function () {
      *
      * @param {string} event
      * @param {Function} callback
+     * @returns {integer} ref
      */
 
   }, {
@@ -557,7 +587,7 @@ var Channel = exports.Channel = function () {
 
     /**
      * @param {string} event
-     * @param {Function} callback
+     * @param {integer} ref
      */
 
   }, {
@@ -581,6 +611,7 @@ var Channel = exports.Channel = function () {
     /**
      * @param {string} event
      * @param {Object} payload
+     * @param {number} [timeout]
      * @returns {Push}
      */
 
@@ -656,6 +687,7 @@ var Channel = exports.Channel = function () {
      * @param {string} event
      * @param {Object} payload
      * @param {integer} ref
+     * @returns {Object}
      */
 
   }, {
@@ -830,11 +862,11 @@ var Serializer = {
  * @param {string} endPoint - The string WebSocket endpoint, ie, `"ws://example.com/socket"`,
  *                                               `"wss://example.com"`
  *                                               `"/socket"` (inherited host & protocol)
- * @param {Object} opts - Optional configuration
- * @param {string} opts.transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
+ * @param {Object} [opts] - Optional configuration
+ * @param {string} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
  *
  * Defaults to WebSocket with automatic LongPoll fallback.
- * @param {Function} opts.encode - The function to encode outgoing messages.
+ * @param {Function} [opts.encode] - The function to encode outgoing messages.
  *
  * Defaults to JSON:
  *
@@ -842,7 +874,7 @@ var Serializer = {
  * (payload, callback) => callback(JSON.stringify(payload))
  * ```
  *
- * @param {Function} opts.decode - The function to decode incoming messages.
+ * @param {Function} [opts.decode] - The function to decode incoming messages.
  *
  * Defaults to JSON:
  *
@@ -850,11 +882,11 @@ var Serializer = {
  * (payload, callback) => callback(JSON.parse(payload))
  * ```
  *
- * @param {number} opts.timeout - The default timeout in milliseconds to trigger push timeouts.
+ * @param {number} [opts.timeout] - The default timeout in milliseconds to trigger push timeouts.
  *
  * Defaults `DEFAULT_TIMEOUT`
- * @param {number} opts.heartbeatIntervalMs - The millisec interval to send a heartbeat message
- * @param {number} opts.reconnectAfterMs - The optional function that returns the millsec reconnect interval.
+ * @param {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
+ * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millsec reconnect interval.
  *
  * Defaults to stepped backoff of:
  *
@@ -863,18 +895,18 @@ var Serializer = {
  *   return [1000, 5000, 10000][tries - 1] || 10000
  * }
  * ```
- * @param {Function} opts.logger - The optional function for specialized logging, ie:
+ * @param {Function} [opts.logger] - The optional function for specialized logging, ie:
  * ```javascript
  * function(kind, msg, data) {
  *   console.log(`${kind}: ${msg}`, data)
  * }
  * ```
  *
- * @param {number}  opts.longpollerTimeout - The maximum timeout of a long poll AJAX request.
+ * @param {number} [opts.longpollerTimeout] - The maximum timeout of a long poll AJAX request.
  *
  * Defaults to 20s (double the server long poll timer).
  *
- * @param {Object}  opts.params - The optional params to pass when connecting
+ * @param {Object} [opts.params] - The optional params to pass when connecting
  *
  *
 */
@@ -1517,16 +1549,19 @@ var Presence = exports.Presence = {
     var _this14 = this;
 
     var state = this.clone(currentState);
+    state.presences = state.presences || {};
+    state.synced = true;
+    var pendingDiffs = state.pendingDiffs || [];
     var joins = {};
     var leaves = {};
 
-    this.map(state, function (key, presence) {
+    this.map(state.presences, function (key, presence) {
       if (!newState[key]) {
         leaves[key] = presence;
       }
     });
     this.map(newState, function (key, newPresence) {
-      var currentPresence = state[key];
+      var currentPresence = state.presences[key];
       if (currentPresence) {
         var newRefs = newPresence.metas.map(function (m) {
           return m.phx_ref;
@@ -1552,13 +1587,29 @@ var Presence = exports.Presence = {
         joins[key] = newPresence;
       }
     });
-    return this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
+
+    state = this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
+
+    pendingDiffs.forEach(function (diff) {
+      state = _this14.syncDiff(state, { joins: diff.joins, leaves: diff.leaves }, diff.onJoin, diff.onLeave);
+    });
+    state.pendingDiffs = [];
+
+    return state;
   },
   syncDiff: function syncDiff(currentState, _ref2, onJoin, onLeave) {
     var joins = _ref2.joins,
         leaves = _ref2.leaves;
 
     var state = this.clone(currentState);
+    state.presences = state.presences || {};
+    state.pendingDiffs = state.pendingDiffs || [];
+
+    if (!state.synced) {
+      state.pendingDiffs.push({ joins: joins, leaves: leaves, onJoin: onJoin, onLeave: onLeave });
+      return state;
+    }
+
     if (!onJoin) {
       onJoin = function onJoin() {};
     }
@@ -1567,23 +1618,23 @@ var Presence = exports.Presence = {
     }
 
     this.map(joins, function (key, newPresence) {
-      var currentPresence = state[key];
-      state[key] = newPresence;
+      var currentPresence = state.presences[key];
+      state.presences[key] = newPresence;
       if (currentPresence) {
-        var _state$key$metas;
+        var _state$presences$key$;
 
-        var joinedRefs = state[key].metas.map(function (m) {
+        var joinedRefs = state.presences[key].metas.map(function (m) {
           return m.phx_ref;
         });
         var curMetas = currentPresence.metas.filter(function (m) {
           return joinedRefs.indexOf(m.phx_ref) < 0;
         });
-        (_state$key$metas = state[key].metas).unshift.apply(_state$key$metas, _toConsumableArray(curMetas));
+        (_state$presences$key$ = state.presences[key].metas).unshift.apply(_state$presences$key$, _toConsumableArray(curMetas));
       }
       onJoin(key, currentPresence, newPresence);
     });
     this.map(leaves, function (key, leftPresence) {
-      var currentPresence = state[key];
+      var currentPresence = state.presences[key];
       if (!currentPresence) {
         return;
       }
@@ -1595,12 +1646,13 @@ var Presence = exports.Presence = {
       });
       onLeave(key, currentPresence, leftPresence);
       if (currentPresence.metas.length === 0) {
-        delete state[key];
+        delete state.presences[key];
       }
     });
     return state;
   },
-  list: function list(presences, chooser) {
+  list: function list(state, chooser) {
+    var presences = state.presences || {};
     if (!chooser) {
       chooser = function chooser(key, pres) {
         return pres;
