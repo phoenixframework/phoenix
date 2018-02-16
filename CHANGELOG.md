@@ -20,6 +20,9 @@
 * JavaScript client enhancements
   * Add `updateJoinParams` to channel for explicit param updates between rejoins
 
+* JavaScript client bug fixes
+  * Fix race condition when presence diff arrives before state
+
 * Deprecations
   * [Controller] Passing a view in `render/3` and `render/4` is deprecated in favor of `put_view/2`
 
