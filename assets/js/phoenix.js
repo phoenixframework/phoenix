@@ -1134,11 +1134,6 @@ export class Ajax {
 
 Ajax.states = {complete: 4}
 
-// let presences = new Presence(myChannel, onJoin, onLeave)
-
-// presences.onSync(() => {
-//   this.setState({users: presences.list(listBy)})
-// })
 
 export class Presence {
 
