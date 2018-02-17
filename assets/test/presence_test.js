@@ -20,6 +20,23 @@ let fixtures = {
   }
 }
 
+let channelStub = {
+  ref: 1,
+  events: {},
+
+  on(event, callback){ this.events[event] = callback },
+
+  trigger(event, data){ this.events[event](data) },
+
+  joinRef(){ return `${this.ref}` },
+
+  simulateDisconnectAndReconnect(){
+    this.ref++
+  }
+}
+
+let listByFirst = (id, {metas: [first, ...rest]}) => first
+
 describe("syncState", () => {
   it("syncs empty state", () => {
     let newState = {u1: {metas: [{id: 1, phx_ref: "1"}]}}
@@ -29,13 +46,12 @@ describe("syncState", () => {
     assert.deepEqual(state, stateBefore)
 
     state = Presence.syncState(state, newState)
-    assert.deepEqual(state.presences, newState)
+    assert.deepEqual(state, newState)
   })
 
   it("onJoins new presences and onLeave's left presences", () => {
     let newState = fixtures.state()
-    let state = {}
-    state = Presence.syncState(state, {u4: {metas: [{id: 4, phx_ref: "4"}]}})
+    let state = {u4: {metas: [{id: 4, phx_ref: "4"}]}}
     let joined = {}
     let left = {}
     let onJoin = (key, current, newPres) => {
@@ -44,9 +60,12 @@ describe("syncState", () => {
     let onLeave = (key, current, leftPres) => {
       left[key] = {current: current, leftPres: leftPres}
     }
+    let stateBefore = clone(state)
+    Presence.syncState(state, newState, onJoin, onLeave)
+    assert.deepEqual(state, stateBefore)
 
     state = Presence.syncState(state, newState, onJoin, onLeave)
-    assert.deepEqual(state.presences, newState)
+    assert.deepEqual(state, newState)
     assert.deepEqual(joined, {
       u1: {current: null, newPres: {metas: [{id: 1, phx_ref: "1"}]}},
       u2: {current: null, newPres: {metas: [{id: 2, phx_ref: "2"}]}},
@@ -59,7 +78,7 @@ describe("syncState", () => {
 
   it("onJoins only newly added metas", () => {
     let newState = {u3: {metas: [{id: 3, phx_ref: "3"}, {id: 3, phx_ref: "3.new"}]}}
-    let state = {presences: {u3: {metas: [{id: 3, phx_ref: "3"}]}}}
+    let state = {u3: {metas: [{id: 3, phx_ref: "3"}]}}
     let joined = {}
     let left = {}
     let onJoin = (key, current, newPres) => {
@@ -69,7 +88,7 @@ describe("syncState", () => {
       left[key] = {current: current, leftPres: leftPres}
     }
     state = Presence.syncState(state, newState, onJoin, onLeave)
-    assert.deepEqual(state.presences, newState)
+    assert.deepEqual(state, newState)
     assert.deepEqual(joined, {
       u3: {current: {metas: [{id: 3, phx_ref: "3"}]},
            newPres: {metas: [{id: 3, phx_ref: "3"}, {id: 3, phx_ref: "3.new"}]}}
@@ -82,62 +101,34 @@ describe("syncDiff", () => {
   it("syncs empty state", () => {
     let joins = {u1: {metas: [{id: 1, phx_ref: "1"}]}}
     let state = {}
-    state = Presence.syncState(state, {})
     Presence.syncDiff(state, {joins: joins, leaves: {}})
-    assert.deepEqual(state, {synced: true, presences: {}, pendingDiffs: []})
+    assert.deepEqual(state, {})
 
     state = Presence.syncDiff(state, {
       joins: joins,
       leaves: {}
     })
-    assert.deepEqual(state.presences, joins)
-  })
-
-  it("applies pending diff if state is not yet synced", () => {
-    let newState = {u1: {metas: [{id: 1, phx_ref: "1"}]},
-                    u2: {metas: [{id: 2, phx_ref: "2"}]}}
-    let leaves = {u2: {metas: [{id: 2, phx_ref: "2"}]}}
-    let state = {}
-    state = Presence.syncDiff(state, {joins: {}, leaves: leaves})
-    assert.deepEqual(state, {
-      presences: {},
-      pendingDiffs: [{
-        joins: {}, leaves: leaves, onJoin: undefined, onLeave: undefined
-      }]
-    })
-
-    state = Presence.syncState(state, newState)
-    assert.deepEqual(state, {
-      synced: true,
-      pendingDiffs: [],
-      presences: {u1: {metas: [{id: 1, phx_ref: "1"}]}}
-    })
+    assert.deepEqual(state, joins)
   })
 
   it("removes presence when meta is empty and adds additional meta", () => {
-    let state = {}
-    state = Presence.syncState(state, fixtures.state())
+    let state = fixtures.state()
     state = Presence.syncDiff(state, {joins: fixtures.joins(), leaves: fixtures.leaves()})
 
     assert.deepEqual(state, {
-      pendingDiffs: [],
-      synced: true,
-      presences: {
-        u1: {metas: [{id: 1, phx_ref: "1"}, {id: 1, phx_ref: "1.2"}]},
-        u3: {metas: [{id: 3, phx_ref: "3"}]}
-      }
+      u1: {metas: [{id: 1, phx_ref: "1"}, {id: 1, phx_ref: "1.2"}]},
+      u3: {metas: [{id: 3, phx_ref: "3"}]}
     })
   })
 
   it("removes meta while leaving key if other metas exist", () => {
-    let state = {}
-    state = Presence.syncState(state, {u1: {metas: [{id: 1, phx_ref: "1"}, {id: 1, phx_ref: "1.2"}]}})
+    let state = {
+      u1: {metas: [{id: 1, phx_ref: "1"}, {id: 1, phx_ref: "1.2"}]}
+    }
     state = Presence.syncDiff(state, {joins: {}, leaves: {u1: {metas: [{id: 1, phx_ref: "1"}]}}})
 
     assert.deepEqual(state, {
-      pendingDiffs: [],
-      synced: true,
-      presences: {u1: {metas: [{id: 1, phx_ref: "1.2"}]}},
+      u1: {metas: [{id: 1, phx_ref: "1.2"}]},
     })
   })
 })
@@ -145,9 +136,7 @@ describe("syncDiff", () => {
 
 describe("list", () => {
   it("lists full presence by default", () => {
-    let state = {}
-    state = Presence.syncState(state, fixtures.state())
-
+    let state = fixtures.state()
     assert.deepEqual(Presence.list(state), [
       {metas: [{id: 1, phx_ref: "1"}]},
       {metas: [{id: 2, phx_ref: "2"}]},
@@ -156,16 +145,10 @@ describe("list", () => {
   })
 
   it("lists with custom function", () => {
-    let state = {
-      presences: {
-        u1: {
-          metas: [
-            {id: 1, phx_ref: "1.first"},
-            {id: 1, phx_ref: "1.second"}
-          ]
-        }
-      }
-    }
+    let state = {u1: {metas: [
+      {id: 1, phx_ref: "1.first"},
+      {id: 1, phx_ref: "1.second"}]
+    }}
 
     let listBy = (key, {metas: [first, ...rest]}) => {
       return first
@@ -174,5 +157,54 @@ describe("list", () => {
     assert.deepEqual(Presence.list(state, listBy), [
       {id: 1, phx_ref: "1.first"}
     ])
+  })
+})
+
+describe("instance", () => {
+  it("syncs state and diffs", () => {
+    let presence = new Presence(channelStub)
+    let user1 = {metas: [{id: 1, phx_ref: "1"}]}
+    let user2 = {metas: [{id: 2, phx_ref: "2"}]}
+    let newState = {u1: user1, u2: user2}
+
+    channelStub.trigger("presence_state", newState)
+    assert.deepEqual(presence.list(listByFirst), [{id: 1, phx_ref: 1},
+                                                  {id: 2, phx_ref: 2}])
+
+    channelStub.trigger("presence_diff", {joins: {}, leaves: {u1: user1}})
+    assert.deepEqual(presence.list(listByFirst), [{id: 2, phx_ref: 2}])
+  })
+
+
+  it("applies pending diff if state is not yet synced", () => {
+    let presence = new Presence(channelStub)
+
+    // new connection
+    let user1 = {metas: [{id: 1, phx_ref: "1"}]}
+    let user2 = {metas: [{id: 2, phx_ref: "2"}]}
+    let user3 = {metas: [{id: 3, phx_ref: "3"}]}
+    let newState = {u1: user1, u2: user2}
+    let leaves = {u2: user2}
+
+    channelStub.trigger("presence_diff", {joins: {}, leaves: leaves})
+
+    assert.deepEqual(presence.list(listByFirst), [])
+    assert.deepEqual(presence.pendingDiffs, [{joins: {}, leaves: leaves}])
+
+    channelStub.trigger("presence_state", newState)
+
+    assert.deepEqual(presence.list(listByFirst), [{id: 1, phx_ref: "1"}])
+    assert.deepEqual(presence.pendingDiffs, [])
+
+    // disconnect and reconnect
+    assert.equal(presence.inPendingSyncState(), false)
+    channelStub.simulateDisconnectAndReconnect()
+    assert.equal(presence.inPendingSyncState(), true)
+
+    channelStub.trigger("presence_diff", {joins: {}, leaves: {u1: user1}})
+    assert.deepEqual(presence.list(listByFirst), [{id: 1, phx_ref: "1"}])
+
+    channelStub.trigger("presence_state", {u1: user1, u3: user3})
+    assert.deepEqual(presence.list(listByFirst), [{id: 3, phx_ref: "3"}])
   })
 })

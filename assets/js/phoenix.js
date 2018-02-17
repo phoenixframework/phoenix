@@ -1134,25 +1134,73 @@ export class Ajax {
 
 Ajax.states = {complete: 4}
 
+// let presences = new Presence(myChannel, onJoin, onLeave)
 
+// presences.onSync(() => {
+//   this.setState({users: presences.list(listBy)})
+// })
 
-export var Presence = {
+export class Presence {
 
-  syncState(currentState, newState, onJoin, onLeave){
+  constructor(channel){
+    this.state = {}
+    this.pendingDiffs = []
+    this.caller = {
+      onJoin: function(){},
+      onLeave: function(){},
+      onSync: function(){}
+    }
+    this.channel = channel
+    this.joinRef = null
+
+    this.channel.on("presence_state", state => {
+      this.joinRef = this.channel.joinRef()
+      this.state = Presence.syncState(this.state, state,
+        this.caller.onJoin, this.caller.onLeave)
+
+      this.pendingDiffs.forEach(diff => {
+        this.state = Presence.syncDiff(state, diff, this.caller.onJoin, this.caller.onLeave)
+      })
+      this.pendingDiffs = []
+      this.caller.onSync()
+    })
+
+    this.channel.on("presence_diff", diff => {
+      if(this.inPendingSyncState()){
+        this.pendingDiffs.push(diff)
+      } else {
+        this.state = Presence.syncDiff(this.state, diff, this.caller.onJoin, this.caller.onLeave)
+        this.caller.onSync()
+      }
+    })
+  }
+
+  onJoin(callback){ this.caller.onJoin = callback }
+
+  onLeave(callback){ this.caller.onLeave = callback }
+
+  onSync(callback){ this.caller.onSync = callback }
+
+  list(by){ return Presence.list(this.state, by) }
+
+  inPendingSyncState(){
+    return !this.joinRef || (this.joinRef !== this.channel.joinRef())
+  }
+
+  // lower-level public static API
+
+  static syncState(currentState, newState, onJoin, onLeave){
     let state = this.clone(currentState)
-    state.presences = state.presences || {}
-    state.synced = true
-    let pendingDiffs = state.pendingDiffs || []
     let joins = {}
     let leaves = {}
 
-    this.map(state.presences, (key, presence) => {
+    this.map(state, (key, presence) => {
       if(!newState[key]){
         leaves[key] = presence
       }
     })
     this.map(newState, (key, newPresence) => {
-      let currentPresence = state.presences[key]
+      let currentPresence = state[key]
       if(currentPresence){
         let newRefs = newPresence.metas.map(m => m.phx_ref)
         let curRefs = currentPresence.metas.map(m => m.phx_ref)
@@ -1170,44 +1218,26 @@ export var Presence = {
         joins[key] = newPresence
       }
     })
+    return this.syncDiff(state, {joins: joins, leaves: leaves}, onJoin, onLeave)
+  }
 
-    state = this.syncDiff(state, {joins: joins, leaves: leaves}, onJoin, onLeave)
-
-    pendingDiffs.forEach(diff => {
-      state = this.syncDiff(state, {joins: diff.joins, leaves: diff.leaves},
-        diff.onJoin,
-        diff.onLeave)
-    })
-    state.pendingDiffs = []
-
-    return state
-  },
-
-  syncDiff(currentState, {joins, leaves}, onJoin, onLeave){
+  static syncDiff(currentState, {joins, leaves}, onJoin, onLeave){
     let state = this.clone(currentState)
-    state.presences = state.presences || {}
-    state.pendingDiffs = state.pendingDiffs || []
-
-    if(!state.synced){
-      state.pendingDiffs.push({joins, leaves, onJoin, onLeave})
-      return state
-    }
-
     if(!onJoin){ onJoin = function(){} }
     if(!onLeave){ onLeave = function(){} }
 
     this.map(joins, (key, newPresence) => {
-      let currentPresence = state.presences[key]
-      state.presences[key] = newPresence
+      let currentPresence = state[key]
+      state[key] = newPresence
       if(currentPresence){
-        let joinedRefs = state.presences[key].metas.map(m => m.phx_ref)
+        let joinedRefs = state[key].metas.map(m => m.phx_ref)
         let curMetas = currentPresence.metas.filter(m => joinedRefs.indexOf(m.phx_ref) < 0)
-        state.presences[key].metas.unshift(...curMetas);
+        state[key].metas.unshift(...curMetas);
       }
       onJoin(key, currentPresence, newPresence)
     })
     this.map(leaves, (key, leftPresence) => {
-      let currentPresence = state.presences[key]
+      let currentPresence = state[key]
       if(!currentPresence){ return }
       let refsToRemove = leftPresence.metas.map(m => m.phx_ref)
       currentPresence.metas = currentPresence.metas.filter(p => {
@@ -1215,28 +1245,27 @@ export var Presence = {
       })
       onLeave(key, currentPresence, leftPresence)
       if(currentPresence.metas.length === 0){
-        delete state.presences[key]
+        delete state[key]
       }
     })
     return state
-  },
+  }
 
-  list(state, chooser){
-    let presences = state.presences || {}
+  static list(presences, chooser){
     if(!chooser){ chooser = function(key, pres){ return pres } }
 
     return this.map(presences, (key, presence) => {
       return chooser(key, presence)
     })
-  },
+  }
 
   // private
 
-  map(obj, func){
+  static map(obj, func){
     return Object.getOwnPropertyNames(obj).map(key => func(key, obj[key]))
-  },
+  }
 
-  clone(obj){ return JSON.parse(JSON.stringify(obj)) }
+  static clone(obj){ return JSON.parse(JSON.stringify(obj)) }
 }
 
 
