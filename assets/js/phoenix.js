@@ -1140,32 +1140,35 @@ export class Presence {
   constructor(channel){
     this.state = {}
     this.pendingDiffs = []
+    this.channel = channel
+    this.joinRef = null
     this.caller = {
       onJoin: function(){},
       onLeave: function(){},
       onSync: function(){}
     }
-    this.channel = channel
-    this.joinRef = null
 
-    this.channel.on("presence_state", state => {
+    this.channel.on("presence_state", newState => {
+      let {onJoin, onLeave, onSync} = this.caller
+
       this.joinRef = this.channel.joinRef()
-      this.state = Presence.syncState(this.state, state,
-        this.caller.onJoin, this.caller.onLeave)
+      this.state = Presence.syncState(this.state, newState, onJoin, onLeave)
 
       this.pendingDiffs.forEach(diff => {
-        this.state = Presence.syncDiff(state, diff, this.caller.onJoin, this.caller.onLeave)
+        this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave)
       })
       this.pendingDiffs = []
-      this.caller.onSync()
+      onSync()
     })
 
     this.channel.on("presence_diff", diff => {
+      let {onJoin, onLeave, onSync} = this.caller
+
       if(this.inPendingSyncState()){
         this.pendingDiffs.push(diff)
       } else {
-        this.state = Presence.syncDiff(this.state, diff, this.caller.onJoin, this.caller.onLeave)
-        this.caller.onSync()
+        this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave)
+        onSync()
       }
     })
   }

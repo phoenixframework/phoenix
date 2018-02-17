@@ -1544,138 +1544,206 @@ var Ajax = exports.Ajax = function () {
 
 Ajax.states = { complete: 4 };
 
-var Presence = exports.Presence = {
-  syncState: function syncState(currentState, newState, onJoin, onLeave) {
+var Presence = exports.Presence = function () {
+  function Presence(channel) {
     var _this14 = this;
 
-    var state = this.clone(currentState);
-    state.presences = state.presences || {};
-    state.synced = true;
-    var pendingDiffs = state.pendingDiffs || [];
-    var joins = {};
-    var leaves = {};
+    _classCallCheck(this, Presence);
 
-    this.map(state.presences, function (key, presence) {
-      if (!newState[key]) {
-        leaves[key] = presence;
-      }
+    this.state = {};
+    this.pendingDiffs = [];
+    this.channel = channel;
+    this.joinRef = null;
+    this.caller = {
+      onJoin: function onJoin() {},
+      onLeave: function onLeave() {},
+      onSync: function onSync() {}
+    };
+
+    this.channel.on("presence_state", function (newState) {
+      var _caller = _this14.caller,
+          onJoin = _caller.onJoin,
+          onLeave = _caller.onLeave,
+          onSync = _caller.onSync;
+
+
+      _this14.joinRef = _this14.channel.joinRef();
+      _this14.state = Presence.syncState(_this14.state, newState, onJoin, onLeave);
+
+      _this14.pendingDiffs.forEach(function (diff) {
+        _this14.state = Presence.syncDiff(_this14.state, diff, onJoin, onLeave);
+      });
+      _this14.pendingDiffs = [];
+      onSync();
     });
-    this.map(newState, function (key, newPresence) {
-      var currentPresence = state.presences[key];
-      if (currentPresence) {
-        var newRefs = newPresence.metas.map(function (m) {
-          return m.phx_ref;
-        });
-        var curRefs = currentPresence.metas.map(function (m) {
-          return m.phx_ref;
-        });
-        var joinedMetas = newPresence.metas.filter(function (m) {
-          return curRefs.indexOf(m.phx_ref) < 0;
-        });
-        var leftMetas = currentPresence.metas.filter(function (m) {
-          return newRefs.indexOf(m.phx_ref) < 0;
-        });
-        if (joinedMetas.length > 0) {
-          joins[key] = newPresence;
-          joins[key].metas = joinedMetas;
-        }
-        if (leftMetas.length > 0) {
-          leaves[key] = _this14.clone(currentPresence);
-          leaves[key].metas = leftMetas;
-        }
+
+    this.channel.on("presence_diff", function (diff) {
+      var _caller2 = _this14.caller,
+          onJoin = _caller2.onJoin,
+          onLeave = _caller2.onLeave,
+          onSync = _caller2.onSync;
+
+
+      if (_this14.inPendingSyncState()) {
+        _this14.pendingDiffs.push(diff);
       } else {
-        joins[key] = newPresence;
+        _this14.state = Presence.syncDiff(_this14.state, diff, onJoin, onLeave);
+        onSync();
       }
     });
+  }
 
-    state = this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
+  _createClass(Presence, [{
+    key: "onJoin",
+    value: function onJoin(callback) {
+      this.caller.onJoin = callback;
+    }
+  }, {
+    key: "onLeave",
+    value: function onLeave(callback) {
+      this.caller.onLeave = callback;
+    }
+  }, {
+    key: "onSync",
+    value: function onSync(callback) {
+      this.caller.onSync = callback;
+    }
+  }, {
+    key: "list",
+    value: function list(by) {
+      return Presence.list(this.state, by);
+    }
+  }, {
+    key: "inPendingSyncState",
+    value: function inPendingSyncState() {
+      return !this.joinRef || this.joinRef !== this.channel.joinRef();
+    }
 
-    pendingDiffs.forEach(function (diff) {
-      state = _this14.syncDiff(state, { joins: diff.joins, leaves: diff.leaves }, diff.onJoin, diff.onLeave);
-    });
-    state.pendingDiffs = [];
+    // lower-level public static API
 
-    return state;
-  },
-  syncDiff: function syncDiff(currentState, _ref2, onJoin, onLeave) {
-    var joins = _ref2.joins,
-        leaves = _ref2.leaves;
+  }], [{
+    key: "syncState",
+    value: function syncState(currentState, newState, onJoin, onLeave) {
+      var _this15 = this;
 
-    var state = this.clone(currentState);
-    state.presences = state.presences || {};
-    state.pendingDiffs = state.pendingDiffs || [];
+      var state = this.clone(currentState);
+      var joins = {};
+      var leaves = {};
 
-    if (!state.synced) {
-      state.pendingDiffs.push({ joins: joins, leaves: leaves, onJoin: onJoin, onLeave: onLeave });
+      this.map(state, function (key, presence) {
+        if (!newState[key]) {
+          leaves[key] = presence;
+        }
+      });
+      this.map(newState, function (key, newPresence) {
+        var currentPresence = state[key];
+        if (currentPresence) {
+          var newRefs = newPresence.metas.map(function (m) {
+            return m.phx_ref;
+          });
+          var curRefs = currentPresence.metas.map(function (m) {
+            return m.phx_ref;
+          });
+          var joinedMetas = newPresence.metas.filter(function (m) {
+            return curRefs.indexOf(m.phx_ref) < 0;
+          });
+          var leftMetas = currentPresence.metas.filter(function (m) {
+            return newRefs.indexOf(m.phx_ref) < 0;
+          });
+          if (joinedMetas.length > 0) {
+            joins[key] = newPresence;
+            joins[key].metas = joinedMetas;
+          }
+          if (leftMetas.length > 0) {
+            leaves[key] = _this15.clone(currentPresence);
+            leaves[key].metas = leftMetas;
+          }
+        } else {
+          joins[key] = newPresence;
+        }
+      });
+      return this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
+    }
+  }, {
+    key: "syncDiff",
+    value: function syncDiff(currentState, _ref2, onJoin, onLeave) {
+      var joins = _ref2.joins,
+          leaves = _ref2.leaves;
+
+      var state = this.clone(currentState);
+      if (!onJoin) {
+        onJoin = function onJoin() {};
+      }
+      if (!onLeave) {
+        onLeave = function onLeave() {};
+      }
+
+      this.map(joins, function (key, newPresence) {
+        var currentPresence = state[key];
+        state[key] = newPresence;
+        if (currentPresence) {
+          var _state$key$metas;
+
+          var joinedRefs = state[key].metas.map(function (m) {
+            return m.phx_ref;
+          });
+          var curMetas = currentPresence.metas.filter(function (m) {
+            return joinedRefs.indexOf(m.phx_ref) < 0;
+          });
+          (_state$key$metas = state[key].metas).unshift.apply(_state$key$metas, _toConsumableArray(curMetas));
+        }
+        onJoin(key, currentPresence, newPresence);
+      });
+      this.map(leaves, function (key, leftPresence) {
+        var currentPresence = state[key];
+        if (!currentPresence) {
+          return;
+        }
+        var refsToRemove = leftPresence.metas.map(function (m) {
+          return m.phx_ref;
+        });
+        currentPresence.metas = currentPresence.metas.filter(function (p) {
+          return refsToRemove.indexOf(p.phx_ref) < 0;
+        });
+        onLeave(key, currentPresence, leftPresence);
+        if (currentPresence.metas.length === 0) {
+          delete state[key];
+        }
+      });
       return state;
     }
-
-    if (!onJoin) {
-      onJoin = function onJoin() {};
-    }
-    if (!onLeave) {
-      onLeave = function onLeave() {};
-    }
-
-    this.map(joins, function (key, newPresence) {
-      var currentPresence = state.presences[key];
-      state.presences[key] = newPresence;
-      if (currentPresence) {
-        var _state$presences$key$;
-
-        var joinedRefs = state.presences[key].metas.map(function (m) {
-          return m.phx_ref;
-        });
-        var curMetas = currentPresence.metas.filter(function (m) {
-          return joinedRefs.indexOf(m.phx_ref) < 0;
-        });
-        (_state$presences$key$ = state.presences[key].metas).unshift.apply(_state$presences$key$, _toConsumableArray(curMetas));
+  }, {
+    key: "list",
+    value: function list(presences, chooser) {
+      if (!chooser) {
+        chooser = function chooser(key, pres) {
+          return pres;
+        };
       }
-      onJoin(key, currentPresence, newPresence);
-    });
-    this.map(leaves, function (key, leftPresence) {
-      var currentPresence = state.presences[key];
-      if (!currentPresence) {
-        return;
-      }
-      var refsToRemove = leftPresence.metas.map(function (m) {
-        return m.phx_ref;
+
+      return this.map(presences, function (key, presence) {
+        return chooser(key, presence);
       });
-      currentPresence.metas = currentPresence.metas.filter(function (p) {
-        return refsToRemove.indexOf(p.phx_ref) < 0;
-      });
-      onLeave(key, currentPresence, leftPresence);
-      if (currentPresence.metas.length === 0) {
-        delete state.presences[key];
-      }
-    });
-    return state;
-  },
-  list: function list(state, chooser) {
-    var presences = state.presences || {};
-    if (!chooser) {
-      chooser = function chooser(key, pres) {
-        return pres;
-      };
     }
 
-    return this.map(presences, function (key, presence) {
-      return chooser(key, presence);
-    });
-  },
+    // private
 
+  }, {
+    key: "map",
+    value: function map(obj, func) {
+      return Object.getOwnPropertyNames(obj).map(function (key) {
+        return func(key, obj[key]);
+      });
+    }
+  }, {
+    key: "clone",
+    value: function clone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+  }]);
 
-  // private
-
-  map: function map(obj, func) {
-    return Object.getOwnPropertyNames(obj).map(function (key) {
-      return func(key, obj[key]);
-    });
-  },
-  clone: function clone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }
-};
+  return Presence;
+}();
 
 /**
  *
@@ -1694,6 +1762,7 @@ var Presence = exports.Presence = {
  * @param {Function} callback
  * @param {Function} timerCalc
  */
+
 
 var Timer = function () {
   function Timer(callback, timerCalc) {
@@ -1719,13 +1788,13 @@ var Timer = function () {
   }, {
     key: "scheduleTimeout",
     value: function scheduleTimeout() {
-      var _this15 = this;
+      var _this16 = this;
 
       clearTimeout(this.timer);
 
       this.timer = setTimeout(function () {
-        _this15.tries = _this15.tries + 1;
-        _this15.callback();
+        _this16.tries = _this16.tries + 1;
+        _this16.callback();
       }, this.timerCalc(this.tries + 1));
     }
   }]);
