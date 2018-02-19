@@ -59,7 +59,7 @@ To do that, we need to import the `action_name/1` and `controller_module/1` func
                         namespace: HelloWeb
 
       # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 2, view_module: 1,
+      import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1,
                                         action_name: 1, controller_module: 1]
 
       ...
