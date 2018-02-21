@@ -42,7 +42,7 @@ defmodule Phx.New.Single do
   ]
 
   template :brunch, [
-    {:text, "phx_assets/brunch/gitignore",        :project, ".gitignore"},
+    {:eex,  "phx_assets/brunch/gitignore",        :project, ".gitignore"},
     {:eex,  "phx_assets/brunch/brunch-config.js", :project, "assets/brunch-config.js"},
     {:text, "phx_assets/app.css",                 :project, "assets/css/app.css"},
     {:text, "phx_assets/phoenix.css",             :project, "assets/css/phoenix.css"},
@@ -65,11 +65,11 @@ defmodule Phx.New.Single do
   ]
 
   template :bare, [
-    {:text, "phx_assets/bare/gitignore", :project, ".gitignore"},
+    {:eex, "phx_assets/bare/gitignore", :project, ".gitignore"},
   ]
 
   template :static, [
-    {:text,   "phx_assets/bare/gitignore", :project, ".gitignore"},
+    {:eex,    "phx_assets/bare/gitignore", :project, ".gitignore"},
     {:text,   "phx_assets/app.css",        :project, "priv/static/css/app.css"},
     {:append, "phx_assets/phoenix.css",    :project, "priv/static/css/app.css"},
     {:text,   "phx_assets/bare/app.js",    :project, "priv/static/js/app.js"},
