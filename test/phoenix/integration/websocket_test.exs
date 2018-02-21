@@ -72,7 +72,7 @@ defmodule Phoenix.Integration.WebSocketTest do
     channel "room:*", RoomChannel
 
     transport :websocket, Phoenix.Transports.WebSocket,
-      check_origin: ["//example.com"], timeout: 200
+      check_origin: ["//example.com"], timeout: 200, conn_fields: [:req_headers]
 
     def connect(%{"reject" => "true"}, _socket) do
       :error
@@ -80,7 +80,11 @@ defmodule Phoenix.Integration.WebSocketTest do
 
     def connect(params, socket) do
       Logger.disable(self())
-      {:ok, assign(socket, :user_id, params["user_id"])}
+      socket = 
+        socket
+        |> assign(:user_id, params["user_id"])
+        |> assign(:req_headers, Enum.into(params[:req_headers], %{}))
+      {:ok, socket}
     end
 
     def id(socket) do
@@ -307,6 +311,20 @@ defmodule Phoenix.Integration.WebSocketTest do
                                 ref: "1", topic: "phoenix"}
 
         assert_receive {:DOWN, _, :process, ^socket, :normal}, 400
+      end
+
+      test "receive extra conn fields from socket connect" do
+        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}", @serializer)
+        WebsocketClient.join(sock, "room:headers", %{})
+
+        assert_receive %Message{event: "phx_reply",
+                                join_ref: @join_ref,
+                                payload: %{"response" => %{}, "status" => "ok"},
+                                ref: "1", topic: "room:headers"}
+
+        assert_receive %Message{event: "joined",
+                                payload: %{"req_headers" => %{"host" => "127.0.0.1"}}}
+        
       end
     end
   end
