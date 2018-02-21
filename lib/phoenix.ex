@@ -55,8 +55,8 @@ defmodule Phoenix do
     Supervisor.start_link(children, strategy: :one_for_one, name: Phoenix.Supervisor)
   end
 
-  # TODO: swap Poison default with Jason in 2.0
-  # from there we can ditch explicit config for new projects
+  # TODO v2: swap Poison default with Jason
+  # From there we can ditch explicit config for new projects
   @doc """
   Returns the configured JSON encoding library for Phoenix.
 

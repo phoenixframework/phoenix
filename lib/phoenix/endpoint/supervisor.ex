@@ -21,10 +21,6 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   @doc false
-  # TODO: Ideally every process would be named based on a `name` option
-  # instead of using the module. However, __phoenix_pubsub__ is highly
-  # dependent on the module name, so we should consider enabling this
-  # once we move to Firenest.
   def init({otp_app, mod}) do
     id = :crypto.strong_rand_bytes(16) |> Base.encode64
 
@@ -65,8 +61,8 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  # TODO: Handlers -> Phoenix.Server
-  # TODO: Each transport should have its own tree
+  # TODO v1.4: Handlers -> Phoenix.Server
+  # TODO v1.4: Each transport should have its own tree
   defp server_children(mod, conf, server?) do
     if server? do
       server = Module.concat(mod, "Server")

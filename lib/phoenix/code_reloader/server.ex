@@ -129,9 +129,6 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  # TODO: Remove the function_exported call after 1.3 support is removed
-  # and just use loaded. apply/3 is used to prevent a compilation
-  # warning.
   defp mix_compile({:module, Mix.Task}, compilers) do
     if Mix.Project.umbrella? do
       Enum.each Mix.Dep.Umbrella.cached, fn dep ->

@@ -223,10 +223,11 @@ defmodule Phoenix.Token do
   defp expired?(_signed, :infinity), do: false
 
   defp expired?(_signed, nil) do
-    # TODO: Default to 86400 on future releases.
+    # TODO v2: Default to 86400 on future releases.
     Logger.warn ":max_age was not set on Phoenix.Token.verify/4. " <>
                 "A max_age is recommended otherwise tokens are forever valid. " <>
-                "Please set it to the amount of seconds the token is valid, such as 86400 (1 day)"
+                "Please set it to the amount of seconds the token is valid, " <>
+                "such as 86400 (1 day), or :infinity if you really want this token to be valid forever"
     false
   end
 
