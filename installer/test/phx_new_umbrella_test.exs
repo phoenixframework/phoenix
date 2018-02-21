@@ -39,6 +39,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file app_path(@app, "README.md")
       assert_file app_path(@app, ".gitignore")
+      assert_file app_path(@app, ".gitignore"), "#{@app}-*.tar"
       assert_file( app_path(@app, ".gitignore"), ~r/\n$/)
       assert_file web_path(@app, "README.md")
       assert_file root_path(@app, "mix.exs"), fn file ->
@@ -112,6 +113,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # Brunch
       assert_file web_path(@app, ".gitignore"), "/node_modules/"
+      assert_file web_path(@app, ".gitignore"), "#{@app}_web-*.tar"
       assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
       assert_file web_path(@app, "assets/brunch-config.js"), ~s("js/app.js": ["js/app"])
       assert_file web_path(@app, "config/dev.exs"), fn file ->
