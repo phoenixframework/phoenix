@@ -20,7 +20,7 @@ The first line below the module definition invokes the `__using__/1` macro of th
 
 The `PageController` gives us the `index` action to display the Phoenix welcome page associated with the default route Phoenix defines in the router.
 
-### Actions
+## Actions
 Controller actions are just functions. We can name them anything we like as long as they follow Elixir's naming rules. The only requirement we must fulfill is that the action name matches a route defined in the router.
 
 For example, in `lib/hello_web/router.ex` we could change the action name in the default route that Phoenix gives us in a new app from index:
@@ -83,7 +83,7 @@ Of course, there are many other data access options. [Ets](http://www.erlang.org
 
 The data world is your oyster, but we won't be covering these options in these guides.
 
-### Flash Messages
+## Flash Messages
 
 There are times when we need to communicate with users during the course of an action. Maybe there was an error updating a schema. Maybe we just want to welcome them back to the application. For this, we have flash messages.
 
@@ -118,7 +118,7 @@ When we reload the [Welcome Page](http://localhost:4000/), our messages should a
 
 Besides `put_flash/3` and `get_flash/2`, the `Phoenix.Controller` module has another useful function worth knowing about. `clear_flash/1` takes only `conn` and removes any flash messages which might be stored in the session.
 
-### Rendering
+## Rendering
 
 Controllers have several ways of rendering content. The simplest is to render some plain text using the `text/2` function which Phoenix provides.
 
@@ -457,7 +457,7 @@ def index(conn, _params) do
 end
 ```
 
-### Redirection
+## Redirection
 
 Often, we need to redirect to a new url in the middle of a request. A successful `create` action, for instance, will usually redirect to the `show` action for the schema we just created. Alternately, it could redirect to the `index` action to show all the things of that same type. There are plenty of other cases where redirection is useful as well.
 
@@ -539,7 +539,7 @@ def index(conn, _params) do
 end
 ```
 
-### Action Fallback
+## Action Fallback
 
 Action Fallback allows us to centralize error handling code in plugs which are called when a controller action fails to return a `Plug.Conn.t`. These plugs receive both the conn which was originally passed to the controller action along with the return value of the action.
 
@@ -614,7 +614,7 @@ defmodule HelloWeb.MyController do
 end
 ```
 
-### Halting the Plug Pipeline
+## Halting the Plug Pipeline
 
 As we mentioned - Controllers are plugs.... specifically plugs which are called toward the end of the plug pipeline.  At any step of the pipeline we might have cause to stop processing - typically because we've redirected or rendered a response. `Plug.Conn.t` has a `:halted` key - setting it to true will cause downstream plugs to be skipped. We can do that easily using `Plug.Conn.halt/1`.
 

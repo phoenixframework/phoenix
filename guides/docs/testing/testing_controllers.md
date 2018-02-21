@@ -440,9 +440,9 @@ end
 
 The first branch of the case statement handles the `nil` result case. First, we use the [`put_status/2`](https://hexdocs.pm/plug/Plug.Conn.html#put_status/2) function from `Plug.Conn` to set the desired error status. The complete list of allowed codes can be found in the [Plug.Conn.Status documentation](https://hexdocs.pm/plug/Plug.Conn.Status.html), where we can see that `:not_found` corresponds to our desired "404" status. We then return a text response using [`text/2`](https://hexdocs.pm/phoenix/Phoenix.Controller.html#text/2).
 
-The second branch of the case statement handles the "happy path" we've already covered.
+The second branch of the case statement handles the "happy path" we've already covered. Phoenix also allows us to only implement the "happy path" in our action and use `Phoenix.Controller.action_fallback/1`. This is useful for centralizing your error handling code. You may wish to refactor the show action to use action_fallback as covered in the "Action Fallback" section of the [controllers guide](controllers.html#action-fallback).
 
-With those implemented, our tests pass.
+With those implemented, our tests pass. 
 
 The rest of the controller is left for you to implement as practice. If you are not sure where to begin, it is worth using the Phoenix JSON generator and seeing what tests are automatically generated for you.
 
