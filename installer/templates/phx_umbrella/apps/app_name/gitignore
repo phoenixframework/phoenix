@@ -22,8 +22,9 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 <%= app_name %>-*.tar
 
-# Database data
-/db/
+# Ignore the SQLite 3 database files.
+/db/*.sqlite3
+/db/*.sqlite3-journal
 
 # Files matching config/*.secret.exs pattern contain sensitive
 # data and you should not commit them into version control.

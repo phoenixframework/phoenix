@@ -28,8 +28,6 @@ npm-debug.log
 # The directory NPM downloads your dependencies sources to.
 /node_modules/
 <% end %>
-# Database data
-/db/
 
 # Since we are building assets from web/static,
 # we ignore priv/static. You may want to comment
