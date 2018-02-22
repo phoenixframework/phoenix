@@ -112,7 +112,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
                   "defmodule PhxUmbWeb.PageViewTest"
 
       # Brunch
-      assert_file web_path(@app, ".gitignore"), "/node_modules/"
+      assert_file web_path(@app, ".gitignore"), "/assets/node_modules/"
       assert_file web_path(@app, ".gitignore"), "#{@app}_web-*.tar"
       assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
       assert_file web_path(@app, "assets/brunch-config.js"), ~s("js/app.js": ["js/app"])
@@ -197,7 +197,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-html", "--no-brunch", "--no-ecto"])
 
       # No Brunch
-      refute File.read!(web_path(@app, ".gitignore")) |> String.contains?("/node_modules/")
+      refute File.read!(web_path(@app, ".gitignore")) |> String.contains?("/assets/node_modules/")
       assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
       assert_file web_path(@app, "config/dev.exs"), ~r/watchers: \[\]/
 
@@ -491,7 +491,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
                     "<title>Hello Another!</title>"
 
         # Brunch
-        assert_file "another/.gitignore", "/node_modules"
+        assert_file "another/.gitignore", "/assets/node_modules"
         assert_file "another/.gitignore",  ~r/\n$/
         assert_file "another/assets/brunch-config.js", ~s("js/app.js": ["js/app"])
         assert_file "another/config/dev.exs", "watchers: [node:"

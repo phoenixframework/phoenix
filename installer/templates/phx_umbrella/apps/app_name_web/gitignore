@@ -26,7 +26,7 @@ erl_crash.dump
 npm-debug.log
 
 # The directory NPM downloads your dependencies sources to.
-/node_modules/
+/assets/node_modules/
 <% end %>
 
 # Since we are building assets from web/static,
