@@ -24,7 +24,7 @@ defmodule Phoenix.CodeReloader.Server do
   end
 
   def handle_call(:check_symlinks, _from, checked?) do
-    if not checked? and Code.ensure_loaded?(Mix.Project) do
+    if not checked? and Code.ensure_loaded?(Mix.Project) and not Mix.Project.umbrella? do
       priv_path = "#{Mix.Project.app_path}/priv"
 
       case :file.read_link(priv_path) do
