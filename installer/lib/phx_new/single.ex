@@ -20,6 +20,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_single/lib/app_name_web.ex",           :project, "lib/:lib_web_name.ex"},
     {:eex,  "phx_single/mix.exs",                       :project, "mix.exs"},
     {:eex,  "phx_single/README.md",                     :project, "README.md"},
+    {:eex,  "phx_single/gitignore",                     :project, ".gitignore"},
     {:eex,  "phx_test/support/channel_case.ex",         :project, "test/support/channel_case.ex"},
     {:eex,  "phx_test/support/conn_case.ex",            :project, "test/support/conn_case.ex"},
     {:eex,  "phx_single/test/test_helper.exs",          :project, "test/test_helper.exs"},
@@ -42,7 +43,6 @@ defmodule Phx.New.Single do
   ]
 
   template :brunch, [
-    {:text, "phx_assets/brunch/gitignore",        :project, ".gitignore"},
     {:eex,  "phx_assets/brunch/brunch-config.js", :project, "assets/brunch-config.js"},
     {:text, "phx_assets/app.css",                 :project, "assets/css/app.css"},
     {:text, "phx_assets/phoenix.css",             :project, "assets/css/phoenix.css"},
@@ -64,12 +64,9 @@ defmodule Phx.New.Single do
     {:eex, "phx_test/views/page_view_test.exs",              :project, "test/:lib_web_name/views/page_view_test.exs"},
   ]
 
-  template :bare, [
-    {:text, "phx_assets/bare/gitignore", :project, ".gitignore"},
-  ]
+  template :bare, []
 
   template :static, [
-    {:text,   "phx_assets/bare/gitignore", :project, ".gitignore"},
     {:text,   "phx_assets/app.css",        :project, "priv/static/css/app.css"},
     {:append, "phx_assets/phoenix.css",    :project, "priv/static/css/app.css"},
     {:text,   "phx_assets/bare/app.js",    :project, "priv/static/js/app.js"},

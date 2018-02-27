@@ -74,7 +74,8 @@ defmodule Mix.Tasks.Phx.NewTest do
                   "<title>Hello PhxBlog!</title>"
 
       # Brunch
-      assert_file "phx_blog/.gitignore", "/node_modules"
+      assert_file "phx_blog/.gitignore", "/assets/node_modules/"
+      assert_file "phx_blog/.gitignore", "phx_blog-*.tar"
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/assets/brunch-config.js", ~s("js/app.js": ["js/app"])
       assert_file "phx_blog/config/dev.exs", fn file ->
@@ -146,7 +147,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-brunch", "--no-ecto"])
 
       # No Brunch
-      refute File.read!("phx_blog/.gitignore") |> String.contains?("/node_modules")
+      refute File.read!("phx_blog/.gitignore") |> String.contains?("/assets/node_modules/")
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/config/dev.exs", ~r/watchers: \[\]/
 

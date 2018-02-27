@@ -16,7 +16,7 @@ defmodule Phx.New.Ecto do
     {:eex,  "#{@pre}/test/test_helper.exs",        :app, "test/test_helper.exs"},
     {:eex,  "#{@pre}/README.md",                   :app, "README.md"},
     {:eex,  "#{@pre}/mix.exs",                     :app, "mix.exs"},
-    {:text, "phx_assets/bare/gitignore",           :app, ".gitignore"},
+    {:eex,  "#{@pre}/gitignore",                   :app, ".gitignore"},
   ]
 
   template :ecto, [
