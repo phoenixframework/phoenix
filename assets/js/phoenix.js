@@ -1137,7 +1137,8 @@ Ajax.states = {complete: 4}
 
 export class Presence {
 
-  constructor(channel){
+  constructor(channel, opts = {}){
+    let events = opts.events || {state: "presence_state", diff: "presence_diff"}
     this.state = {}
     this.pendingDiffs = []
     this.channel = channel
@@ -1148,7 +1149,7 @@ export class Presence {
       onSync: function(){}
     }
 
-    this.channel.on("presence_state", newState => {
+    this.channel.on(events.state, newState => {
       let {onJoin, onLeave, onSync} = this.caller
 
       this.joinRef = this.channel.joinRef()
@@ -1161,7 +1162,7 @@ export class Presence {
       onSync()
     })
 
-    this.channel.on("presence_diff", diff => {
+    this.channel.on(events.diff, diff => {
       let {onJoin, onLeave, onSync} = this.caller
 
       if(this.inPendingSyncState()){
