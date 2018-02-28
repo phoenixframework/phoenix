@@ -111,8 +111,8 @@
  *
  * ### Syncing state from the server
  *
- * To sync presence state from the channel, first instantiate an object,
- * passing your channel in to track lifecycle events:
+ * To sync presence state from the server, first instantiate an object and
+ * pass your channel in to track lifecycle events:
  *
  * ```javascript
  * let channel = new socket.channel("some:topic")
