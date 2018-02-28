@@ -130,21 +130,29 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * The `Presence` object provides features for syncing presence information
  * from the server with the client and handling presences joining and leaving.
  *
- * ### Syncing initial state from the server
+ * ### Syncing state from the server
  *
- * `Presence.syncState` is used to sync the list of presences on the server
- * with the client's state. An optional `onJoin` and `onLeave` callback can
- * be provided to react to changes in the client's local presences across
- * disconnects and reconnects with the server.
+ * To sync presence state from the server, first instantiate an object and
+ * pass your channel in to track lifecycle events:
  *
- * `Presence.syncDiff` is used to sync a diff of presence join and leave
- * events from the server, as they happen. Like `syncState`, `syncDiff`
- * accepts optional `onJoin` and `onLeave` callbacks to react to a user
- * joining or leaving from a device.
+ * ```javascript
+ * let channel = new socket.channel("some:topic")
+ * let presence = new Presence(channel)
+ * ```
+ *
+ * Next, use the `presence.onSync` callback to react to state changes
+ * from the server. For example, to render the list of users every time
+ * the list changes, you could write:
+ *
+ * ```javascript
+ * presence.onSync(() => {
+ *   myRenderUsersFunction(presence.list())
+ * })
+ * ```
  *
  * ### Listing Presences
  *
- * `Presence.list` is used to return a list of presence information
+ * `presence.list` is used to return a list of presence information
  * based on the local state of metadata. By default, all presence
  * metadata is returned, but a `listBy` function can be supplied to
  * allow the client to select which metadata to use for a given presence.
@@ -157,45 +165,42 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * they came online from:
  *
  * ```javascript
- * let state = {}
- * state = Presence.syncState(state, stateFromServer)
  * let listBy = (id, {metas: [first, ...rest]}) => {
  *   first.count = rest.length + 1 // count of this user's presences
  *   first.id = id
  *   return first
  * }
- * let onlineUsers = Presence.list(state, listBy)
+ * let onlineUsers = presence.list(listBy)
  * ```
  *
+ * ### Handling individual presence join and leave events
  *
- * ### Example Usage
+ * The `presence.onJoin` and `presence.onLeave` callbacks can be used to
+ * react to individual presences joining and leaving the app. For example:
+ *
  * ```javascript
+ * let presence = new Presence(channel)
+ *
  * // detect if user has joined for the 1st time or from another tab/device
- * let onJoin = (id, current, newPres) => {
+ * presence.onJoin((id, current, newPres) => {
  *   if(!current){
  *     console.log("user has entered for the first time", newPres)
  *   } else {
  *     console.log("user additional presence", newPres)
  *   }
- * }
+ * })
+ *
  * // detect if user has left from all tabs/devices, or is still present
- * let onLeave = (id, current, leftPres) => {
+ * presence.onLeave((id, current, leftPres) => {
  *   if(current.metas.length === 0){
  *     console.log("user has left from all devices", leftPres)
  *   } else {
  *     console.log("user left from a device", leftPres)
  *   }
- * }
- * let presences = {} // client's initial empty presence state
- * // receive initial presence data from server, sent after join
- * myChannel.on("presence_state", state => {
- *   presences = Presence.syncState(presences, state, onJoin, onLeave)
- *   displayUsers(Presence.list(presences))
  * })
- * // receive "presence_diff" from server, containing join/leave events
- * myChannel.on("presence_diff", diff => {
- *   presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
- *   this.setState({users: Presence.list(room.presences, listBy)})
+ * // receive presence data from server
+ * presence.onSync(() => {
+ *   displayUsers(presence.list())
  * })
  * ```
  * @module phoenix
@@ -1544,138 +1549,246 @@ var Ajax = exports.Ajax = function () {
 
 Ajax.states = { complete: 4 };
 
-var Presence = exports.Presence = {
-  syncState: function syncState(currentState, newState, onJoin, onLeave) {
+/**
+ * Initializes the Presence
+ * @param {Channel} channel - The Channel
+ * @param {Object} opts - The options,
+ *        for example `{events: {state: "state", diff: "diff"}}`
+ */
+
+var Presence = exports.Presence = function () {
+  function Presence(channel) {
     var _this14 = this;
 
-    var state = this.clone(currentState);
-    state.presences = state.presences || {};
-    state.synced = true;
-    var pendingDiffs = state.pendingDiffs || [];
-    var joins = {};
-    var leaves = {};
+    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    this.map(state.presences, function (key, presence) {
-      if (!newState[key]) {
-        leaves[key] = presence;
-      }
+    _classCallCheck(this, Presence);
+
+    var events = opts.events || { state: "presence_state", diff: "presence_diff" };
+    this.state = {};
+    this.pendingDiffs = [];
+    this.channel = channel;
+    this.joinRef = null;
+    this.caller = {
+      onJoin: function onJoin() {},
+      onLeave: function onLeave() {},
+      onSync: function onSync() {}
+    };
+
+    this.channel.on(events.state, function (newState) {
+      var _caller = _this14.caller,
+          onJoin = _caller.onJoin,
+          onLeave = _caller.onLeave,
+          onSync = _caller.onSync;
+
+
+      _this14.joinRef = _this14.channel.joinRef();
+      _this14.state = Presence.syncState(_this14.state, newState, onJoin, onLeave);
+
+      _this14.pendingDiffs.forEach(function (diff) {
+        _this14.state = Presence.syncDiff(_this14.state, diff, onJoin, onLeave);
+      });
+      _this14.pendingDiffs = [];
+      onSync();
     });
-    this.map(newState, function (key, newPresence) {
-      var currentPresence = state.presences[key];
-      if (currentPresence) {
-        var newRefs = newPresence.metas.map(function (m) {
-          return m.phx_ref;
-        });
-        var curRefs = currentPresence.metas.map(function (m) {
-          return m.phx_ref;
-        });
-        var joinedMetas = newPresence.metas.filter(function (m) {
-          return curRefs.indexOf(m.phx_ref) < 0;
-        });
-        var leftMetas = currentPresence.metas.filter(function (m) {
-          return newRefs.indexOf(m.phx_ref) < 0;
-        });
-        if (joinedMetas.length > 0) {
-          joins[key] = newPresence;
-          joins[key].metas = joinedMetas;
-        }
-        if (leftMetas.length > 0) {
-          leaves[key] = _this14.clone(currentPresence);
-          leaves[key].metas = leftMetas;
-        }
+
+    this.channel.on(events.diff, function (diff) {
+      var _caller2 = _this14.caller,
+          onJoin = _caller2.onJoin,
+          onLeave = _caller2.onLeave,
+          onSync = _caller2.onSync;
+
+
+      if (_this14.inPendingSyncState()) {
+        _this14.pendingDiffs.push(diff);
       } else {
-        joins[key] = newPresence;
+        _this14.state = Presence.syncDiff(_this14.state, diff, onJoin, onLeave);
+        onSync();
       }
     });
+  }
 
-    state = this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
+  _createClass(Presence, [{
+    key: "onJoin",
+    value: function onJoin(callback) {
+      this.caller.onJoin = callback;
+    }
+  }, {
+    key: "onLeave",
+    value: function onLeave(callback) {
+      this.caller.onLeave = callback;
+    }
+  }, {
+    key: "onSync",
+    value: function onSync(callback) {
+      this.caller.onSync = callback;
+    }
+  }, {
+    key: "list",
+    value: function list(by) {
+      return Presence.list(this.state, by);
+    }
+  }, {
+    key: "inPendingSyncState",
+    value: function inPendingSyncState() {
+      return !this.joinRef || this.joinRef !== this.channel.joinRef();
+    }
 
-    pendingDiffs.forEach(function (diff) {
-      state = _this14.syncDiff(state, { joins: diff.joins, leaves: diff.leaves }, diff.onJoin, diff.onLeave);
-    });
-    state.pendingDiffs = [];
+    // lower-level public static API
 
-    return state;
-  },
-  syncDiff: function syncDiff(currentState, _ref2, onJoin, onLeave) {
-    var joins = _ref2.joins,
-        leaves = _ref2.leaves;
+    /**
+     * Used to sync the list of presences on the server
+     * with the client's state. An optional `onJoin` and `onLeave` callback can
+     * be provided to react to changes in the client's local presences across
+     * disconnects and reconnects with the server.
+     *
+     * @returns {Presence}
+     */
 
-    var state = this.clone(currentState);
-    state.presences = state.presences || {};
-    state.pendingDiffs = state.pendingDiffs || [];
+  }], [{
+    key: "syncState",
+    value: function syncState(currentState, newState, onJoin, onLeave) {
+      var _this15 = this;
 
-    if (!state.synced) {
-      state.pendingDiffs.push({ joins: joins, leaves: leaves, onJoin: onJoin, onLeave: onLeave });
+      var state = this.clone(currentState);
+      var joins = {};
+      var leaves = {};
+
+      this.map(state, function (key, presence) {
+        if (!newState[key]) {
+          leaves[key] = presence;
+        }
+      });
+      this.map(newState, function (key, newPresence) {
+        var currentPresence = state[key];
+        if (currentPresence) {
+          var newRefs = newPresence.metas.map(function (m) {
+            return m.phx_ref;
+          });
+          var curRefs = currentPresence.metas.map(function (m) {
+            return m.phx_ref;
+          });
+          var joinedMetas = newPresence.metas.filter(function (m) {
+            return curRefs.indexOf(m.phx_ref) < 0;
+          });
+          var leftMetas = currentPresence.metas.filter(function (m) {
+            return newRefs.indexOf(m.phx_ref) < 0;
+          });
+          if (joinedMetas.length > 0) {
+            joins[key] = newPresence;
+            joins[key].metas = joinedMetas;
+          }
+          if (leftMetas.length > 0) {
+            leaves[key] = _this15.clone(currentPresence);
+            leaves[key].metas = leftMetas;
+          }
+        } else {
+          joins[key] = newPresence;
+        }
+      });
+      return this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
+    }
+
+    /**
+     *
+     * Used to sync a diff of presence join and leave
+     * events from the server, as they happen. Like `syncState`, `syncDiff`
+     * accepts optional `onJoin` and `onLeave` callbacks to react to a user
+     * joining or leaving from a device.
+     *
+     * @returns {Presence}
+     */
+
+  }, {
+    key: "syncDiff",
+    value: function syncDiff(currentState, _ref2, onJoin, onLeave) {
+      var joins = _ref2.joins,
+          leaves = _ref2.leaves;
+
+      var state = this.clone(currentState);
+      if (!onJoin) {
+        onJoin = function onJoin() {};
+      }
+      if (!onLeave) {
+        onLeave = function onLeave() {};
+      }
+
+      this.map(joins, function (key, newPresence) {
+        var currentPresence = state[key];
+        state[key] = newPresence;
+        if (currentPresence) {
+          var _state$key$metas;
+
+          var joinedRefs = state[key].metas.map(function (m) {
+            return m.phx_ref;
+          });
+          var curMetas = currentPresence.metas.filter(function (m) {
+            return joinedRefs.indexOf(m.phx_ref) < 0;
+          });
+          (_state$key$metas = state[key].metas).unshift.apply(_state$key$metas, _toConsumableArray(curMetas));
+        }
+        onJoin(key, currentPresence, newPresence);
+      });
+      this.map(leaves, function (key, leftPresence) {
+        var currentPresence = state[key];
+        if (!currentPresence) {
+          return;
+        }
+        var refsToRemove = leftPresence.metas.map(function (m) {
+          return m.phx_ref;
+        });
+        currentPresence.metas = currentPresence.metas.filter(function (p) {
+          return refsToRemove.indexOf(p.phx_ref) < 0;
+        });
+        onLeave(key, currentPresence, leftPresence);
+        if (currentPresence.metas.length === 0) {
+          delete state[key];
+        }
+      });
       return state;
     }
 
-    if (!onJoin) {
-      onJoin = function onJoin() {};
-    }
-    if (!onLeave) {
-      onLeave = function onLeave() {};
-    }
+    /**
+     * Returns the array of presences, with selected metadata.
+     *
+     * @param {Object} presences
+     * @param {Function} chooser
+     *
+     * @returns {Presence}
+     */
 
-    this.map(joins, function (key, newPresence) {
-      var currentPresence = state.presences[key];
-      state.presences[key] = newPresence;
-      if (currentPresence) {
-        var _state$presences$key$;
+  }, {
+    key: "list",
+    value: function list(presences, chooser) {
+      if (!chooser) {
+        chooser = function chooser(key, pres) {
+          return pres;
+        };
+      }
 
-        var joinedRefs = state.presences[key].metas.map(function (m) {
-          return m.phx_ref;
-        });
-        var curMetas = currentPresence.metas.filter(function (m) {
-          return joinedRefs.indexOf(m.phx_ref) < 0;
-        });
-        (_state$presences$key$ = state.presences[key].metas).unshift.apply(_state$presences$key$, _toConsumableArray(curMetas));
-      }
-      onJoin(key, currentPresence, newPresence);
-    });
-    this.map(leaves, function (key, leftPresence) {
-      var currentPresence = state.presences[key];
-      if (!currentPresence) {
-        return;
-      }
-      var refsToRemove = leftPresence.metas.map(function (m) {
-        return m.phx_ref;
+      return this.map(presences, function (key, presence) {
+        return chooser(key, presence);
       });
-      currentPresence.metas = currentPresence.metas.filter(function (p) {
-        return refsToRemove.indexOf(p.phx_ref) < 0;
-      });
-      onLeave(key, currentPresence, leftPresence);
-      if (currentPresence.metas.length === 0) {
-        delete state.presences[key];
-      }
-    });
-    return state;
-  },
-  list: function list(state, chooser) {
-    var presences = state.presences || {};
-    if (!chooser) {
-      chooser = function chooser(key, pres) {
-        return pres;
-      };
     }
 
-    return this.map(presences, function (key, presence) {
-      return chooser(key, presence);
-    });
-  },
+    // private
 
+  }, {
+    key: "map",
+    value: function map(obj, func) {
+      return Object.getOwnPropertyNames(obj).map(function (key) {
+        return func(key, obj[key]);
+      });
+    }
+  }, {
+    key: "clone",
+    value: function clone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+  }]);
 
-  // private
-
-  map: function map(obj, func) {
-    return Object.getOwnPropertyNames(obj).map(function (key) {
-      return func(key, obj[key]);
-    });
-  },
-  clone: function clone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }
-};
+  return Presence;
+}();
 
 /**
  *
@@ -1694,6 +1807,7 @@ var Presence = exports.Presence = {
  * @param {Function} callback
  * @param {Function} timerCalc
  */
+
 
 var Timer = function () {
   function Timer(callback, timerCalc) {
@@ -1719,13 +1833,13 @@ var Timer = function () {
   }, {
     key: "scheduleTimeout",
     value: function scheduleTimeout() {
-      var _this15 = this;
+      var _this16 = this;
 
       clearTimeout(this.timer);
 
       this.timer = setTimeout(function () {
-        _this15.tries = _this15.tries + 1;
-        _this15.callback();
+        _this16.tries = _this16.tries + 1;
+        _this16.callback();
       }, this.timerCalc(this.tries + 1));
     }
   }]);

@@ -109,21 +109,29 @@
  * The `Presence` object provides features for syncing presence information
  * from the server with the client and handling presences joining and leaving.
  *
- * ### Syncing initial state from the server
+ * ### Syncing state from the server
  *
- * `Presence.syncState` is used to sync the list of presences on the server
- * with the client's state. An optional `onJoin` and `onLeave` callback can
- * be provided to react to changes in the client's local presences across
- * disconnects and reconnects with the server.
+ * To sync presence state from the server, first instantiate an object and
+ * pass your channel in to track lifecycle events:
  *
- * `Presence.syncDiff` is used to sync a diff of presence join and leave
- * events from the server, as they happen. Like `syncState`, `syncDiff`
- * accepts optional `onJoin` and `onLeave` callbacks to react to a user
- * joining or leaving from a device.
+ * ```javascript
+ * let channel = new socket.channel("some:topic")
+ * let presence = new Presence(channel)
+ * ```
+ *
+ * Next, use the `presence.onSync` callback to react to state changes
+ * from the server. For example, to render the list of users every time
+ * the list changes, you could write:
+ *
+ * ```javascript
+ * presence.onSync(() => {
+ *   myRenderUsersFunction(presence.list())
+ * })
+ * ```
  *
  * ### Listing Presences
  *
- * `Presence.list` is used to return a list of presence information
+ * `presence.list` is used to return a list of presence information
  * based on the local state of metadata. By default, all presence
  * metadata is returned, but a `listBy` function can be supplied to
  * allow the client to select which metadata to use for a given presence.
@@ -136,45 +144,42 @@
  * they came online from:
  *
  * ```javascript
- * let state = {}
- * state = Presence.syncState(state, stateFromServer)
  * let listBy = (id, {metas: [first, ...rest]}) => {
  *   first.count = rest.length + 1 // count of this user's presences
  *   first.id = id
  *   return first
  * }
- * let onlineUsers = Presence.list(state, listBy)
+ * let onlineUsers = presence.list(listBy)
  * ```
  *
+ * ### Handling individual presence join and leave events
  *
- * ### Example Usage
+ * The `presence.onJoin` and `presence.onLeave` callbacks can be used to
+ * react to individual presences joining and leaving the app. For example:
+ *
  * ```javascript
+ * let presence = new Presence(channel)
+ *
  * // detect if user has joined for the 1st time or from another tab/device
- * let onJoin = (id, current, newPres) => {
+ * presence.onJoin((id, current, newPres) => {
  *   if(!current){
  *     console.log("user has entered for the first time", newPres)
  *   } else {
  *     console.log("user additional presence", newPres)
  *   }
- * }
+ * })
+ *
  * // detect if user has left from all tabs/devices, or is still present
- * let onLeave = (id, current, leftPres) => {
+ * presence.onLeave((id, current, leftPres) => {
  *   if(current.metas.length === 0){
  *     console.log("user has left from all devices", leftPres)
  *   } else {
  *     console.log("user left from a device", leftPres)
  *   }
- * }
- * let presences = {} // client's initial empty presence state
- * // receive initial presence data from server, sent after join
- * myChannel.on("presence_state", state => {
- *   presences = Presence.syncState(presences, state, onJoin, onLeave)
- *   displayUsers(Presence.list(presences))
  * })
- * // receive "presence_diff" from server, containing join/leave events
- * myChannel.on("presence_diff", diff => {
- *   presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
- *   this.setState({users: Presence.list(room.presences, listBy)})
+ * // receive presence data from server
+ * presence.onSync(() => {
+ *   displayUsers(presence.list())
  * })
  * ```
  * @module phoenix
@@ -1134,25 +1139,85 @@ export class Ajax {
 
 Ajax.states = {complete: 4}
 
+/**
+ * Initializes the Presence
+ * @param {Channel} channel - The Channel
+ * @param {Object} opts - The options,
+ *        for example `{events: {state: "state", diff: "diff"}}`
+ */
+export class Presence {
 
+  constructor(channel, opts = {}){
+    let events = opts.events || {state: "presence_state", diff: "presence_diff"}
+    this.state = {}
+    this.pendingDiffs = []
+    this.channel = channel
+    this.joinRef = null
+    this.caller = {
+      onJoin: function(){},
+      onLeave: function(){},
+      onSync: function(){}
+    }
 
-export var Presence = {
+    this.channel.on(events.state, newState => {
+      let {onJoin, onLeave, onSync} = this.caller
 
-  syncState(currentState, newState, onJoin, onLeave){
+      this.joinRef = this.channel.joinRef()
+      this.state = Presence.syncState(this.state, newState, onJoin, onLeave)
+
+      this.pendingDiffs.forEach(diff => {
+        this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave)
+      })
+      this.pendingDiffs = []
+      onSync()
+    })
+
+    this.channel.on(events.diff, diff => {
+      let {onJoin, onLeave, onSync} = this.caller
+
+      if(this.inPendingSyncState()){
+        this.pendingDiffs.push(diff)
+      } else {
+        this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave)
+        onSync()
+      }
+    })
+  }
+
+  onJoin(callback){ this.caller.onJoin = callback }
+
+  onLeave(callback){ this.caller.onLeave = callback }
+
+  onSync(callback){ this.caller.onSync = callback }
+
+  list(by){ return Presence.list(this.state, by) }
+
+  inPendingSyncState(){
+    return !this.joinRef || (this.joinRef !== this.channel.joinRef())
+  }
+
+  // lower-level public static API
+
+  /**
+   * Used to sync the list of presences on the server
+   * with the client's state. An optional `onJoin` and `onLeave` callback can
+   * be provided to react to changes in the client's local presences across
+   * disconnects and reconnects with the server.
+   *
+   * @returns {Presence}
+   */
+  static syncState(currentState, newState, onJoin, onLeave){
     let state = this.clone(currentState)
-    state.presences = state.presences || {}
-    state.synced = true
-    let pendingDiffs = state.pendingDiffs || []
     let joins = {}
     let leaves = {}
 
-    this.map(state.presences, (key, presence) => {
+    this.map(state, (key, presence) => {
       if(!newState[key]){
         leaves[key] = presence
       }
     })
     this.map(newState, (key, newPresence) => {
-      let currentPresence = state.presences[key]
+      let currentPresence = state[key]
       if(currentPresence){
         let newRefs = newPresence.metas.map(m => m.phx_ref)
         let curRefs = currentPresence.metas.map(m => m.phx_ref)
@@ -1170,44 +1235,35 @@ export var Presence = {
         joins[key] = newPresence
       }
     })
+    return this.syncDiff(state, {joins: joins, leaves: leaves}, onJoin, onLeave)
+  }
 
-    state = this.syncDiff(state, {joins: joins, leaves: leaves}, onJoin, onLeave)
-
-    pendingDiffs.forEach(diff => {
-      state = this.syncDiff(state, {joins: diff.joins, leaves: diff.leaves},
-        diff.onJoin,
-        diff.onLeave)
-    })
-    state.pendingDiffs = []
-
-    return state
-  },
-
-  syncDiff(currentState, {joins, leaves}, onJoin, onLeave){
+  /**
+   *
+   * Used to sync a diff of presence join and leave
+   * events from the server, as they happen. Like `syncState`, `syncDiff`
+   * accepts optional `onJoin` and `onLeave` callbacks to react to a user
+   * joining or leaving from a device.
+   *
+   * @returns {Presence}
+   */
+  static syncDiff(currentState, {joins, leaves}, onJoin, onLeave){
     let state = this.clone(currentState)
-    state.presences = state.presences || {}
-    state.pendingDiffs = state.pendingDiffs || []
-
-    if(!state.synced){
-      state.pendingDiffs.push({joins, leaves, onJoin, onLeave})
-      return state
-    }
-
     if(!onJoin){ onJoin = function(){} }
     if(!onLeave){ onLeave = function(){} }
 
     this.map(joins, (key, newPresence) => {
-      let currentPresence = state.presences[key]
-      state.presences[key] = newPresence
+      let currentPresence = state[key]
+      state[key] = newPresence
       if(currentPresence){
-        let joinedRefs = state.presences[key].metas.map(m => m.phx_ref)
+        let joinedRefs = state[key].metas.map(m => m.phx_ref)
         let curMetas = currentPresence.metas.filter(m => joinedRefs.indexOf(m.phx_ref) < 0)
-        state.presences[key].metas.unshift(...curMetas);
+        state[key].metas.unshift(...curMetas);
       }
       onJoin(key, currentPresence, newPresence)
     })
     this.map(leaves, (key, leftPresence) => {
-      let currentPresence = state.presences[key]
+      let currentPresence = state[key]
       if(!currentPresence){ return }
       let refsToRemove = leftPresence.metas.map(m => m.phx_ref)
       currentPresence.metas = currentPresence.metas.filter(p => {
@@ -1215,28 +1271,35 @@ export var Presence = {
       })
       onLeave(key, currentPresence, leftPresence)
       if(currentPresence.metas.length === 0){
-        delete state.presences[key]
+        delete state[key]
       }
     })
     return state
-  },
+  }
 
-  list(state, chooser){
-    let presences = state.presences || {}
+  /**
+   * Returns the array of presences, with selected metadata.
+   *
+   * @param {Object} presences
+   * @param {Function} chooser
+   *
+   * @returns {Presence}
+   */
+  static list(presences, chooser){
     if(!chooser){ chooser = function(key, pres){ return pres } }
 
     return this.map(presences, (key, presence) => {
       return chooser(key, presence)
     })
-  },
+  }
 
   // private
 
-  map(obj, func){
+  static map(obj, func){
     return Object.getOwnPropertyNames(obj).map(key => func(key, obj[key]))
-  },
+  }
 
-  clone(obj){ return JSON.parse(JSON.stringify(obj)) }
+  static clone(obj){ return JSON.parse(JSON.stringify(obj)) }
 }
 
 
