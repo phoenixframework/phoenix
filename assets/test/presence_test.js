@@ -178,6 +178,15 @@ describe("instance", () => {
 
   it("applies pending diff if state is not yet synced", () => {
     let presence = new Presence(channelStub)
+    let onJoins = []
+    let onLeaves = []
+
+    presence.onJoin((id, current, newPres) => {
+      onJoins.push({id, current, newPres})
+    })
+    presence.onLeave((id, current, leftPres) => {
+      onLeaves.push({id, current, leftPres})
+    })
 
     // new connection
     let user1 = {metas: [{id: 1, phx_ref: "1"}]}
@@ -192,9 +201,16 @@ describe("instance", () => {
     assert.deepEqual(presence.pendingDiffs, [{joins: {}, leaves: leaves}])
 
     channelStub.trigger("presence_state", newState)
+    assert.deepEqual(onLeaves, [
+      {id: "u2", current: {metas: []}, leftPres: {metas: [{id: 2, phx_ref: "2"}]}}
+    ])
 
     assert.deepEqual(presence.list(listByFirst), [{id: 1, phx_ref: "1"}])
     assert.deepEqual(presence.pendingDiffs, [])
+    assert.deepEqual(onJoins, [
+      {id: "u1", current: undefined, newPres: {metas: [{id: 1, phx_ref: "1"}]}},
+      {id: "u2", current: undefined, newPres: {metas: [{id: 2, phx_ref: "2"}]}}
+    ])
 
     // disconnect and reconnect
     assert.equal(presence.inPendingSyncState(), false)
@@ -206,5 +222,18 @@ describe("instance", () => {
 
     channelStub.trigger("presence_state", {u1: user1, u3: user3})
     assert.deepEqual(presence.list(listByFirst), [{id: 3, phx_ref: "3"}])
+  })
+
+  it("allows custom channel events", () => {
+    let presence = new Presence(channelStub, {events: {
+      state: "the_state",
+      diff: "the_diff"
+    }})
+
+    let user1 = {metas: [{id: 1, phx_ref: "1"}]}
+    channelStub.trigger("the_state", {user1: user1})
+    assert.deepEqual(presence.list(listByFirst), [{id: 1, phx_ref: "1"}])
+    channelStub.trigger("the_diff", {joins: {}, leaves: {user1: user1}})
+    assert.deepEqual(presence.list(listByFirst), [])
   })
 })
