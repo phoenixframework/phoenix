@@ -18,6 +18,7 @@
   * [Channel] Fix issue with WebSocket transport sending wrong ContentLength header with 403 response
 
 * JavaScript client enhancements
+  * Add new instance-based Presence API with simplified synchronization callbacks
   * Add `updateJoinParams` to channel for explicit param updates between rejoins
 
 * JavaScript client bug fixes
