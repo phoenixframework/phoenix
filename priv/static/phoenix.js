@@ -130,21 +130,29 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * The `Presence` object provides features for syncing presence information
  * from the server with the client and handling presences joining and leaving.
  *
- * ### Syncing initial state from the server
+ * ### Syncing state from the server
  *
- * `Presence.syncState` is used to sync the list of presences on the server
- * with the client's state. An optional `onJoin` and `onLeave` callback can
- * be provided to react to changes in the client's local presences across
- * disconnects and reconnects with the server.
+ * To sync presence state from the channel, first instantiate an object,
+ * passing your channel in to track lifecycle events:
  *
- * `Presence.syncDiff` is used to sync a diff of presence join and leave
- * events from the server, as they happen. Like `syncState`, `syncDiff`
- * accepts optional `onJoin` and `onLeave` callbacks to react to a user
- * joining or leaving from a device.
+ * ```javascript
+ * let channel = new socket.channel("some:topic")
+ * let presence = new Presence(channel)
+ * ```
+ *
+ * Next, use the `presence.onSync` callback to react to state changes
+ * from the server. For example, to render the list of users every time
+ * the list changes, you could write:
+ *
+ * ```javascript
+ * presence.onSync(() => {
+ *   myRenderUsersFunction(presence.list())
+ * })
+ * ```
  *
  * ### Listing Presences
  *
- * `Presence.list` is used to return a list of presence information
+ * `presence.list` is used to return a list of presence information
  * based on the local state of metadata. By default, all presence
  * metadata is returned, but a `listBy` function can be supplied to
  * allow the client to select which metadata to use for a given presence.
@@ -157,45 +165,42 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * they came online from:
  *
  * ```javascript
- * let state = {}
- * state = Presence.syncState(state, stateFromServer)
  * let listBy = (id, {metas: [first, ...rest]}) => {
  *   first.count = rest.length + 1 // count of this user's presences
  *   first.id = id
  *   return first
  * }
- * let onlineUsers = Presence.list(state, listBy)
+ * let onlineUsers = presence.list(listBy)
  * ```
  *
+ * ### Handling individual presence join and leave events
  *
- * ### Example Usage
+ * The `presence.onJoin` and `presence.onLeave` callbacks can be used to
+ * react to individual presences joining and leaving the app. For example:
+ *
  * ```javascript
+ * let presence = new Presence(channel)
+ *
  * // detect if user has joined for the 1st time or from another tab/device
- * let onJoin = (id, current, newPres) => {
+ * presence.onJoin((id, current, newPres) => {
  *   if(!current){
  *     console.log("user has entered for the first time", newPres)
  *   } else {
  *     console.log("user additional presence", newPres)
  *   }
- * }
+ * })
+ *
  * // detect if user has left from all tabs/devices, or is still present
- * let onLeave = (id, current, leftPres) => {
+ * presence.onLeave((id, current, leftPres) => {
  *   if(current.metas.length === 0){
  *     console.log("user has left from all devices", leftPres)
  *   } else {
  *     console.log("user left from a device", leftPres)
  *   }
- * }
- * let presences = {} // client's initial empty presence state
- * // receive initial presence data from server, sent after join
- * myChannel.on("presence_state", state => {
- *   presences = Presence.syncState(presences, state, onJoin, onLeave)
- *   displayUsers(Presence.list(presences))
  * })
- * // receive "presence_diff" from server, containing join/leave events
- * myChannel.on("presence_diff", diff => {
- *   presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
- *   this.setState({users: Presence.list(room.presences, listBy)})
+ * // receive presence data from server
+ * presence.onSync(() => {
+ *   displayUsers(presence.list())
  * })
  * ```
  * @module phoenix
@@ -1544,12 +1549,22 @@ var Ajax = exports.Ajax = function () {
 
 Ajax.states = { complete: 4 };
 
+/**
+ * Initializes the Presence
+ * @param {Channel} channel - The Channel
+ * @param {Object} opts - The options,
+ *        for example `{events: {state: "state", diff: "diff"}}`
+ */
+
 var Presence = exports.Presence = function () {
   function Presence(channel) {
     var _this14 = this;
 
+    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     _classCallCheck(this, Presence);
 
+    var events = opts.events || { state: "presence_state", diff: "presence_diff" };
     this.state = {};
     this.pendingDiffs = [];
     this.channel = channel;
@@ -1560,7 +1575,7 @@ var Presence = exports.Presence = function () {
       onSync: function onSync() {}
     };
 
-    this.channel.on("presence_state", function (newState) {
+    this.channel.on(events.state, function (newState) {
       var _caller = _this14.caller,
           onJoin = _caller.onJoin,
           onLeave = _caller.onLeave,
@@ -1577,7 +1592,7 @@ var Presence = exports.Presence = function () {
       onSync();
     });
 
-    this.channel.on("presence_diff", function (diff) {
+    this.channel.on(events.diff, function (diff) {
       var _caller2 = _this14.caller,
           onJoin = _caller2.onJoin,
           onLeave = _caller2.onLeave,
@@ -1620,6 +1635,15 @@ var Presence = exports.Presence = function () {
     }
 
     // lower-level public static API
+
+    /**
+     * Used to sync the list of presences on the server
+     * with the client's state. An optional `onJoin` and `onLeave` callback can
+     * be provided to react to changes in the client's local presences across
+     * disconnects and reconnects with the server.
+     *
+     * @returns {Presence}
+     */
 
   }], [{
     key: "syncState",
@@ -1664,6 +1688,17 @@ var Presence = exports.Presence = function () {
       });
       return this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
     }
+
+    /**
+     *
+     * Used to sync a diff of presence join and leave
+     * events from the server, as they happen. Like `syncState`, `syncDiff`
+     * accepts optional `onJoin` and `onLeave` callbacks to react to a user
+     * joining or leaving from a device.
+     *
+     * @returns {Presence}
+     */
+
   }, {
     key: "syncDiff",
     value: function syncDiff(currentState, _ref2, onJoin, onLeave) {
@@ -1712,6 +1747,16 @@ var Presence = exports.Presence = function () {
       });
       return state;
     }
+
+    /**
+     * Returns the array of presences, with selected metadata.
+     *
+     * @param {Object} presences
+     * @param {Function} chooser
+     *
+     * @returns {Presence}
+     */
+
   }, {
     key: "list",
     value: function list(presences, chooser) {
