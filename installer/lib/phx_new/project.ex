@@ -39,8 +39,8 @@ defmodule Phx.New.Project do
     Keyword.fetch!(binding, :html)
   end
 
-  def brunch?(%Project{binding: binding}) do
-    Keyword.fetch!(binding, :brunch)
+  def webpack?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :webpack)
   end
 
   def join_path(%Project{} = project, location, path)

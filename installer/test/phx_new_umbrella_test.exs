@@ -111,11 +111,12 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "test/#{@app}_web/views/page_view_test.exs"),
                   "defmodule PhxUmbWeb.PageViewTest"
 
-      # Brunch
+      # webpack
       assert_file web_path(@app, ".gitignore"), "/assets/node_modules/"
       assert_file web_path(@app, ".gitignore"), "#{@app}_web-*.tar"
       assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
-      assert_file web_path(@app, "assets/brunch-config.js"), ~s("js/app.js": ["js/app"])
+      assert_file web_path(@app, "assets/webpack.config.js"), "js/app.js"
+      assert_file web_path(@app, "assets/.babelrc"), "env"
       assert_file web_path(@app, "config/dev.exs"), fn file ->
         assert file =~ "watchers: [node:"
         assert file =~ "lib/#{@app}_web/views/.*(ex)"
@@ -194,14 +195,14 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-html", "--no-brunch", "--no-ecto"])
+      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-html", "--no-webpack", "--no-ecto"])
 
-      # No Brunch
+      # No webpack
       refute File.read!(web_path(@app, ".gitignore")) |> String.contains?("/assets/node_modules/")
       assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
       assert_file web_path(@app, "config/dev.exs"), ~r/watchers: \[\]/
 
-      # No Brunch & No Html
+      # No webpack & No HTML
       refute_file web_path(@app, "priv/static/css/app.css")
       refute_file web_path(@app, "priv/static/favicon.ico")
       refute_file web_path(@app, "priv/static/images/phoenix.png")
@@ -256,9 +257,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
-  test "new with no_brunch" do
-    in_tmp "new with no_brunch", fn ->
-      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-brunch"])
+  test "new with no_webpack" do
+    in_tmp "new with no_webpack", fn ->
+      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-webpack"])
 
       assert_file web_path(@app, ".gitignore")
       assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
@@ -490,10 +491,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/lib/another/templates/layout/app.html.eex",
                     "<title>Hello Another!</title>"
 
-        # Brunch
+        # webpack
         assert_file "another/.gitignore", "/assets/node_modules"
         assert_file "another/.gitignore",  ~r/\n$/
-        assert_file "another/assets/brunch-config.js", ~s("js/app.js": ["js/app"])
+        assert_file "another/assets/webpack.config.js", "js/app.js"
+        assert_file "another/assets/.babelrc", "env"
         assert_file "another/config/dev.exs", "watchers: [node:"
         assert_file "another/assets/static/favicon.ico"
         assert_file "another/assets/static/images/phoenix.png"

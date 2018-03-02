@@ -30,7 +30,7 @@ defmodule Mix.Tasks.Phx.New do
       Please check the driver docs, between parentheses, for more information
       and requirements. Defaults to "postgres".
 
-    * `--no-brunch` - do not generate brunch files
+    * `--no-webpack` - do not generate webpack files
       for static asset building. When choosing this
       option, you will need to manually handle
       JavaScript dependencies if building HTML apps
@@ -63,7 +63,7 @@ defmodule Mix.Tasks.Phx.New do
 
   Or without the HTML and JS bits (useful for APIs):
 
-      mix phx.new ~/Workspace/hello_world --no-html --no-brunch
+      mix phx.new ~/Workspace/hello_world --no-html --no-webpack
 
   As an umbrella:
 
@@ -85,7 +85,7 @@ defmodule Mix.Tasks.Phx.New do
   @version Mix.Project.config[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application"
 
-  @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
+  @switches [dev: :boolean, webpack: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
              umbrella: :boolean]
@@ -142,14 +142,14 @@ defmodule Mix.Tasks.Phx.New do
           _  -> Task.async(fn -> :ok end)
         end
 
-      brunch_pending = install_brunch(install?, project)
+      webpack_pending = install_webpack(install?, project)
       Task.await(compile, :infinity)
 
-      if Project.brunch?(project) and !System.find_executable("npm") do
-        print_brunch_info(project, generator)
+      if Project.webpack?(project) and !System.find_executable("npm") do
+        print_webpack_info(project, generator)
       end
 
-      pending = mix_pending ++ (brunch_pending || [])
+      pending = mix_pending ++ (webpack_pending || [])
       print_missing_commands(pending, project.project_path)
 
       if Project.ecto?(project) do
@@ -172,12 +172,12 @@ defmodule Mix.Tasks.Phx.New do
   defp switch_to_string({name, nil}), do: name
   defp switch_to_string({name, val}), do: name <> "=" <> val
 
-  defp install_brunch(install?, project) do
+  defp install_webpack(install?, project) do
     assets_path = Path.join(project.web_path || project.project_path, "assets")
-    brunch_config = Path.join(assets_path, "brunch-config.js")
+    webpack_config = Path.join(assets_path, "webpack.config.js")
 
-    maybe_cmd "cd #{relative_app_path(assets_path)} && npm install && node node_modules/brunch/bin/brunch build",
-              File.exists?(brunch_config), install? && System.find_executable("npm")
+    maybe_cmd "cd #{relative_app_path(assets_path)} && npm install && node node_modules/webpack/bin/webpack.js --mode development",
+              File.exists?(webpack_config), install? && System.find_executable("npm")
   end
 
   defp install_mix(install?) do
@@ -192,15 +192,15 @@ defmodule Mix.Tasks.Phx.New do
     Mix.Rebar.rebar_cmd(:rebar) && Mix.Rebar.rebar_cmd(:rebar3)
   end
 
-  defp print_brunch_info(_project, _gen) do
+  defp print_webpack_info(_project, _gen) do
     Mix.shell.info """
-    Phoenix uses an optional assets build tool called brunch.io
+    Phoenix uses an optional assets build tool called webpack
     that requires node.js and npm. Installation instructions for
     node.js, which includes npm, can be found at http://nodejs.org.
 
     The command listed next expect that you have npm available.
-    If you don't want brunch.io, you can re-run this generator
-    with the --no-brunch option.
+    If you don't want webpack, you can re-run this generator
+    with the --no-webpack option.
     """
   end
 

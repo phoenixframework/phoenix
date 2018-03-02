@@ -21,7 +21,7 @@ erl_crash.dump
 
 # Ignore package tarball (built via "mix hex.build").
 <%= app_name %>-*.tar
-<%= if brunch do %>
+<%= if webpack do %>
 # If NPM crashes, it generates a log, let's ignore it too.
 npm-debug.log
 

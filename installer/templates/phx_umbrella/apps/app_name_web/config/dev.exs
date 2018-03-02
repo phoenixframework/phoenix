@@ -5,14 +5,14 @@ use Mix.Config
 #
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
-# with brunch.io to recompile .js and .css sources.
-config :<%= web_app_name %>, <%= endpoint_module %>,
+# with webpack to recompile .js and .css sources.
+config :<%= app_name %>, <%= endpoint_module %>,
   http: [port: 4000],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  watchers: <%= if brunch do %>[node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
-                    cd: Path.expand("../assets", __DIR__)]]<% else %>[]<% end %>
+  watchers: <%= if webpack do %>[node: ["node_modules/webpack/bin/webpack.js", "--mode", "development", "--watch",
+                                        cd: Path.expand("../assets", __DIR__)]]<% else %>[]<% end %>
 
 # ## SSL Support
 #
