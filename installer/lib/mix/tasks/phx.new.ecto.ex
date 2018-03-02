@@ -57,6 +57,6 @@ defmodule Mix.Tasks.Phx.New.Ecto do
       Mix.raise "The ecto task can only be run within an umbrella's apps directory"
     end
 
-    Mix.Tasks.Phx.New.run(args ++ ["--no-brunch", "--ecto"], Phx.New.Ecto)
+    Mix.Tasks.Phx.New.run(args ++ ["--no-webpack", "--ecto"], Phx.New.Ecto)
   end
 end

@@ -82,7 +82,7 @@ defmodule Phx.New.Generator do
     db           = Keyword.get(opts, :database, "postgres")
     ecto         = Keyword.get(opts, :ecto, true)
     html         = Keyword.get(opts, :html, true)
-    brunch       = Keyword.get(opts, :brunch, true)
+    webpack      = Keyword.get(opts, :webpack, true)
     dev          = Keyword.get(opts, :dev, false)
     phoenix_path = phoenix_path(project, dev)
 
@@ -113,15 +113,15 @@ defmodule Phx.New.Generator do
       web_namespace: inspect(project.web_namespace),
       phoenix_dep: phoenix_dep(phoenix_path),
       phoenix_path: phoenix_path,
-      phoenix_brunch_path: phoenix_brunch_path(project, dev),
-      phoenix_html_brunch_path: phoenix_html_brunch_path(project),
+      phoenix_webpack_path: phoenix_webpack_path(project, dev),
+      phoenix_html_webpack_path: phoenix_html_webpack_path(project),
       phoenix_static_path: phoenix_static_path(phoenix_path),
       pubsub_server: pubsub_server,
       secret_key_base: random_string(64),
       prod_secret_key_base: random_string(64),
       signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
-      brunch: brunch,
+      webpack: webpack,
       ecto: ecto,
       html: html,
       adapter_app: adapter_app,
@@ -234,18 +234,18 @@ defmodule Phx.New.Generator do
   defp phoenix_path_prefix(%Project{in_umbrella?: true}), do: "../../../"
   defp phoenix_path_prefix(%Project{in_umbrella?: false}), do: ".."
 
-  defp phoenix_brunch_path(%Project{in_umbrella?: true}, true = _dev),
+  defp phoenix_webpack_path(%Project{in_umbrella?: true}, true = _dev),
     do: "../../../../../"
-  defp phoenix_brunch_path(%Project{in_umbrella?: true}, false = _dev),
+  defp phoenix_webpack_path(%Project{in_umbrella?: true}, false = _dev),
     do: "../../../deps/phoenix"
-  defp phoenix_brunch_path(%Project{in_umbrella?: false}, true = _dev),
+  defp phoenix_webpack_path(%Project{in_umbrella?: false}, true = _dev),
     do: "../../../"
-  defp phoenix_brunch_path(%Project{in_umbrella?: false}, false = _dev),
+  defp phoenix_webpack_path(%Project{in_umbrella?: false}, false = _dev),
     do: "../deps/phoenix"
 
-  defp phoenix_html_brunch_path(%Project{in_umbrella?: true}),
+  defp phoenix_html_webpack_path(%Project{in_umbrella?: true}),
     do: "../../../deps/phoenix_html"
-  defp phoenix_html_brunch_path(%Project{in_umbrella?: false}),
+  defp phoenix_html_webpack_path(%Project{in_umbrella?: false}),
     do: "../deps/phoenix_html"
 
   defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.3.0"}]

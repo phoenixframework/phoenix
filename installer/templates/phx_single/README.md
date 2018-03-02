@@ -3,7 +3,7 @@
 To start your Phoenix server:
 
   * Install dependencies with `mix deps.get`<%= if ecto do %>
-  * Create and migrate your database with `mix ecto.create && mix ecto.migrate`<% end %><%= if brunch do %>
+  * Create and migrate your database with `mix ecto.create && mix ecto.migrate`<% end %><%= if webpack do %>
   * Install Node.js dependencies with `cd assets && npm install`<% end %>
   * Start Phoenix endpoint with `mix phx.server`
 
