@@ -68,7 +68,8 @@ defmodule Phoenix.Mixfile do
       {:gettext, "~> 0.8", only: :test},
       # TODO v1.4: release bump to next stable release with relaxed plug dep
       {:phoenix_html, "~> 2.10", only: :test},
-      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
+      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
+      {:ecto, "~> 2.2.0-rc.1"}
     ]
   end
 
