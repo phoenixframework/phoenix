@@ -1443,14 +1443,18 @@ defmodule Phoenix.Controller do
         case elem do
           {field, {type, :required}} ->
             {defaults, Map.put(types, field, type), [field | required]}
-          {field, {type, default}} ->
-            {
-              Map.put(defaults, field, default),
-              Map.put(types, field, type),
-              [field | required]
-            }
-          {field, type} ->
-            {defaults, Map.put(types, field, type), required}
+          {field, type_or_type_with_default} ->
+            if Ecto.Type.primitive?(type_or_type_with_default) do
+              type = type_or_type_with_default
+              {defaults, Map.put(types, field, type), required}
+            else
+              {type, default} = type_or_type_with_default
+              {
+                Map.put(defaults, field, default),
+                Map.put(types, field, type),
+                [field | required]
+              }
+            end
         end
       end)
 

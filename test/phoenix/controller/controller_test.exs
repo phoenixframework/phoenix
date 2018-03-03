@@ -630,7 +630,13 @@ defmodule Phoenix.Controller.ControllerTest do
     assert {:error, _changeset} = validate_params(schema, %{}, transformer)
     assert {:error, _changeset} = validate_params(schema, %{"quarter" => "5"}, transformer)
 
-    schema = %{ids: {{:array, :integer}, :required}}
+    schema = %{ids: {:array, :integer}}
     assert validate_params(schema, %{"ids" => ["1", "2"]}) == {:ok, %{ids: [1, 2]}}
+
+    schema = %{ids: {{:array, :integer}, [1, 2]}}
+    assert validate_params(schema, %{}) == {:ok, %{ids: [1, 2]}}
+
+    schema = %{ids: {{:array, :integer}, :required}}
+    assert {:error, _changeset} = validate_params(schema, %{})
   end
 end
