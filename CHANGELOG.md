@@ -27,7 +27,7 @@
 * Deprecations
   * [Controller] Passing a view in `render/3` and `render/4` is deprecated in favor of `put_view/2`
 
-## 1.3.1 (2018-04-02)
+## 1.3.1 (2018-03-02)
 
 * Enhancements
   * [Router] Raise on unknown `:only` and `:except` in `resources`.
