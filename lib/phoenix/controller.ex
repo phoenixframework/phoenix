@@ -1399,6 +1399,76 @@ defmodule Phoenix.Controller do
     Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn, params)
   end
 
+  @doc """
+  Validates params according to the given `schema`.
+  Schema is a map where key is an atom and corresponds
+  to outside param key. Value is one of the three possibilities:
+
+  1. `type`
+  2. `{type, :required}`
+  3. `{type, default_value}`
+
+  Where type is a castable Ecto type.
+  When `params` are missing a key which was marked `:required` in `schema`,
+  result will be an error tuple.
+  A `changeset_fun` can be passed as optional last argument,
+  which will be applied to the resulting changeset.
+
+  ## Examples
+      iex> schema = %{id: {:integer, :required}}
+      iex> validate_params(schema, %{"id" => "1"})
+      {:ok, %{id: 1}}
+
+      iex> schema = %{year: {:integer, Date.utc_today.year}}
+      iex> validate_params(schema, %{})
+      {:ok, %{year: 2018}}
+
+      iex> schema = %{quarter: {:integer, :required}}
+      iex> transformer = &Ecto.Changeset.validate_inclusion(&1, :quarter, 1..4)
+      iex> validate_params(schema, %{"quarter" => "5"}, transformer)
+      {:error, changeset}
+
+  The return value is either successful map of params which can be safely
+  passed to other functions or error with invalid changeset which can
+  be presented to users so they can fix the request.
+  """
+  @spec validate_params(map, map, (Ecto.Changeset.t -> Ecto.Changeset.t)) ::
+          {:ok, map} |
+          {:error, Ecto.Changeset.t}
+  def validate_params(schema, params, changeset_fun \\ & &1) do
+    import Ecto.Changeset
+
+    {defaults, types, required} =
+      Enum.reduce(schema, {%{}, %{}, []}, fn elem, {defaults, types, required} ->
+        case elem do
+          {field, {type, :required}} ->
+            {defaults, Map.put(types, field, type), [field | required]}
+          {field, type_or_type_with_default} ->
+            if Ecto.Type.primitive?(type_or_type_with_default) do
+              type = type_or_type_with_default
+              {defaults, Map.put(types, field, type), required}
+            else
+              {type, default} = type_or_type_with_default
+              {
+                Map.put(defaults, field, default),
+                Map.put(types, field, type),
+                [field | required]
+              }
+            end
+        end
+      end)
+
+    changeset =
+      {defaults, types}
+      |> cast(params, Map.keys(types))
+      |> validate_required(required)
+      |> changeset_fun.()
+
+    if changeset.valid?,
+      do: {:ok, apply_changes(changeset)},
+      else: {:error, changeset}
+  end
+
   @doc false
   def __view__(controller_module) do
     controller_module

@@ -615,4 +615,28 @@ defmodule Phoenix.Controller.ControllerTest do
       assert current_url(conn, %{three: 3}) == "https://www.example.com/foo?three=3"
     end
   end
+
+  test "validate_params/3" do
+    schema = %{id: {:integer, :required}}
+    assert validate_params(schema, %{"id" => "1"}) == {:ok, %{id: 1}}
+
+    schema = %{year: {:integer, 2018}}
+    assert validate_params(schema, %{}) == {:ok, %{year: 2018}}
+    assert {:error, changeset} = validate_params(schema, %{"year" => "foo"})
+
+    schema = %{quarter: {:integer, :required}}
+    transformer = &Ecto.Changeset.validate_inclusion(&1, :quarter, 1..4)
+    assert validate_params(schema, %{"quarter" => "1"}, transformer) == {:ok, %{quarter: 1}}
+    assert {:error, _changeset} = validate_params(schema, %{}, transformer)
+    assert {:error, _changeset} = validate_params(schema, %{"quarter" => "5"}, transformer)
+
+    schema = %{ids: {:array, :integer}}
+    assert validate_params(schema, %{"ids" => ["1", "2"]}) == {:ok, %{ids: [1, 2]}}
+
+    schema = %{ids: {{:array, :integer}, [1, 2]}}
+    assert validate_params(schema, %{}) == {:ok, %{ids: [1, 2]}}
+
+    schema = %{ids: {{:array, :integer}, :required}}
+    assert {:error, _changeset} = validate_params(schema, %{})
+  end
 end
