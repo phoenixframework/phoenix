@@ -12,7 +12,7 @@
   * [Router] Raise on duplicate plugs in pipe_through scopes
   * [ChannelTest] Respect user's configured ExUnit `:assert_receive_timeout` for macro assertions
   * [phx.new] Generate new Elixir 1.5+ child spec
-  * [Router] raise on unknown `:only` and `:except` options to resources
+  * [phx.new] Use webpack for asset bundling
 
 * Bug Fixes
   * [Channel] Fix issue with WebSocket transport sending wrong ContentLength header with 403 response
@@ -26,6 +26,18 @@
 
 * Deprecations
   * [Controller] Passing a view in `render/3` and `render/4` is deprecated in favor of `put_view/2`
+
+## 1.3.1 (2018-04-02)
+
+* Enhancements
+  * [Router] Raise on unknown `:only` and `:except` in `resources`.
+  * [Router] Include line numbers in generated routes for better reporting
+  * [Logger] Add parameter keep strategy to filter all parameters by default and selectively keep parameters
+  * [Token] Support `:infinity` for token max age
+  * [Presence] Generate `child_spec` for Elixir 1.5+ support
+
+* Bug Fixes
+  * [Transports.WebSocketSerializer] Do not encode `:join_ref` in v1 messages
 
 ## 1.3.0 (2017-07-28)
 
