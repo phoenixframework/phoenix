@@ -3,9 +3,9 @@
 // its own CSS file.
 import css from '../css/app.css';
 
-// webpack automatically concatenates all files in your
-// watched paths. Those paths can be configured as
-// endpoints in "webpack.config.js".
+// webpack automatically bundles all modules in your
+// entry points. Those entry points can be configured
+// in "webpack.config.js".
 //
 // Import dependencies
 //
