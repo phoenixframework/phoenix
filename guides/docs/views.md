@@ -23,7 +23,7 @@ At the top of this guide, we mentioned that views are a place to put functions f
 Let's open up our application layout template, `lib/hello_web/templates/layout/app.html.eex`, and change this line,
 
 ```html
-<title>Hello Hello!</title>
+<title>Hello · Phoenix Framework</title>
 ```
 
 to call a `title/0` function, like this.
