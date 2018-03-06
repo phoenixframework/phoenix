@@ -3,23 +3,23 @@
   <head>
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=yes"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, shrink-to-fit=no, user-scalable=no"/>
     <title><%= app_module %> · Phoenix Framework</title>
     <link rel="stylesheet" href="<%%= Routes.static_path(@conn, "/css/app.css") %>"/>
   </head>
   <body>
     <header>
-      <div class="container flex">
+      <div class="container phx-flex">
         <nav role="navigation">
           <ul>
-            <li><a href="http://www.phoenixframework.org/docs"><button>Get Started</button></a></li>
+            <li><a href="http://www.phoenixframework.org/docs">Get Started</a></li>
           </ul>
         </nav>
-        <a href="http://phoenixframework.org/" class="logo">
+        <a href="http://phoenixframework.org/" class="phx-logo">
           <img src="/images/phoenix.png" alt="Phoenix Framework Logo"/>
         </a>
-      </header>
-    </div>
+      </div>
+    </header>
     <main role="main">
       <div class="container">
         <p class="alert alert-info" role="alert"><%%= get_flash(@conn, :info) %></p>

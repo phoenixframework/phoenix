@@ -11,5 +11,5 @@
     <%= error %>
   </div>
 <% end %>
-  <%%= submit "Submit" %>
+  <%%= submit "Save" %>
 <%% end %>

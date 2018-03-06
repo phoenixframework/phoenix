@@ -1,8 +1,9 @@
-<section class="hero">
+<section class="phx-hero">
   <h2><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
   <p>A productive web framework that<br/>does not compromise speed and maintainability.</p>
 </section>
-<section class="marketing flex">
+
+<section class="phx-flex phx-marketing">
   <article>
     <h4>Resources</h4>
     <ul>
