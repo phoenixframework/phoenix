@@ -74,7 +74,7 @@ defmodule Phoenix.Mixfile do
 
   defp lockfile() do
     case System.get_env("COWBOY_VERSION") do
-      "2" <> _ -> "mix-cowboy2.lock"
+      "1" <> _ -> "mix-cowboy1.lock"
       _ -> "mix.lock"
     end
   end
