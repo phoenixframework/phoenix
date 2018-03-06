@@ -8,21 +8,19 @@ a {
 }
 main {
   margin: 0;
-  max-width: none;
   padding: 1em;
+  max-width: none;
 }
 .container {
   margin: 0 auto;
-}
-main .container {
   max-width: 922px;
 }
 .phx-flex {
   display: flex;
-  width: 100%;
   justify-content: space-between;
   flex: 1 auto auto;
   align-items: center;
+  width: 100%;
 }
 /* Bootstrap-Style 3.x alerts/flash messages */
 .alert,
@@ -207,9 +205,6 @@ header {
   background: #fdfdfd;
   border-bottom: 1px solid #eaeaea;
 }
-header .container {
-  max-width: 922px;
-}
 header .phx-flex {
   align-items: center;
   flex-direction: column;
@@ -223,9 +218,11 @@ header .phx-flex :last-child {
 header .phx-logo {
   min-width: 300px;
   margin: 1rem;
+  display: block;
 }
 header .phx-logo img {
   width: auto;
+  display: block;
 }
 header nav ul,
 header nav li {
@@ -268,8 +265,6 @@ header nav a {
   font-size: 120%;
 }
 .phx-marketing {
-  margin: 0 auto;
-  max-width: 922px;
   align-items: flex-start;
 }
 .phx-marketing ul,
