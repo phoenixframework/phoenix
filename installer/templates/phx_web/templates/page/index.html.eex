@@ -3,7 +3,7 @@
   <p>A productive web framework that<br/>does not compromise speed and maintainability.</p>
 </section>
 
-<section class="phx-flex phx-marketing">
+<section class="container phx-flex phx-marketing">
   <article>
     <h4>Resources</h4>
     <ul>
