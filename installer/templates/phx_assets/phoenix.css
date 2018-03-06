@@ -266,12 +266,17 @@ dl ~ a:hover {
 .marketing {
   margin: 0 auto;
   max-width: 768px;
+  align-items: flex-start;
 }
 .marketing ul,
 .marketing li {
   margin: 0;
   padding: 0;
-  display: block;
+  list-style: none;
+}
+.marketing li {
+  text-indent: -1.33em;
+  margin-left: 1.33em;
 }
 .marketing li:before {
   content: '|>';
