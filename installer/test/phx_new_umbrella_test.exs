@@ -106,7 +106,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(@app, "lib/#{@app}_web/router.ex"), "defmodule PhxUmbWeb.Router"
       assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.eex"),
-                  "<title>Hello PhxUmb!</title>"
+                  "<title>PhxUmb · Phoenix Framework</title>"
 
       assert_file web_path(@app, "test/#{@app}_web/views/page_view_test.exs"),
                   "defmodule PhxUmbWeb.PageViewTest"
