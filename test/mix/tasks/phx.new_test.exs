@@ -35,7 +35,7 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp "bootstrap", fn ->
       project_path = Path.join(File.cwd!(), "phx_blog")
       try do
-        Mix.Tasks.Phx.New.run(["phx_blog", "--no-brunch", "--no-ecto"])
+        Mix.Tasks.Phx.New.run(["phx_blog", "--no-webpack", "--no-ecto"])
 
         # Copy artifacts from Phoenix so we can compile and run tests
         File.cp_r "_build",   "bootstrap/phx_blog/_build"
