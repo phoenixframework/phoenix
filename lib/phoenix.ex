@@ -77,7 +77,7 @@ defmodule Phoenix do
 
   defp warn_on_missing_json_library do
     module = json_library()
-    Code.ensure_loaded?(module) || IO.write :sterr, """
+    Code.ensure_loaded?(module) || IO.write :stderr, """
     failed to load #{inspect(module)} for Phoenix JSON encoding.
     (module #{inspect(module)} is not available)
 
