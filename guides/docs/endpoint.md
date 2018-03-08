@@ -134,7 +134,7 @@ Without the `otp_app:` key, we need to provide absolute paths to the files where
 Path.expand("../../../some/path/to/ssl/key.pem", __DIR__)
 ```
 
-If you require further customization to the TLS versions or cyphers used you can include additional `https:` configuration. For example to disable older versions of TLS which are now considered insecure you could add `versions: [:'tlsv1.2']`. More information on the available settings is available in the (Erlang SSL docs)[http://erlang.org/doc/man/ssl.html}] (see "SSL OPTION DESCRIPTIONS - SERVER SIDE").
+If you require further customization to the TLS versions or ciphers used you can include additional `https:` configuration. For example to disable older versions of TLS which are now considered insecure you could add `versions: [:'tlsv1.2']`. More information on the available settings is available in the (Erlang SSL docs)[http://erlang.org/doc/man/ssl.html}] (see "SSL OPTION DESCRIPTIONS - SERVER SIDE").
 
 ### Force SSL
 
@@ -154,13 +154,13 @@ config :my_app, MyApp.Endpoint,
 
 ### HSTS
 
-HSTS or "strict-transport-security" is a mechanism that allows a website to declare itself as only accessable via a secure connection (HTTPS). It was introduced as a mechanism to in
+HSTS or "strict-transport-security" is a mechanism that allows a website to declare itself as only accessible via a secure connection (HTTPS). It was introduced to prevent man-in-the-middle attacks that strip SSL/TLS. It causes web browers to redirect from HTTP to HTTPS and refuse to connect unless the connection uses SSL/TLS.
 
 With `force_ssl: :hsts` set the `Strict-Transport-Security` header is set with a max age that defines the length of time the policy is valid for. Modern web browsers will respond to this by redirecting from HTTP to HTTPS for the standard case but it does have other consequenses. [RFC6797](https://tools.ietf.org/html/rfc6797) which defines HSTS also specifies **that the browser should keep track of the policy of a host and apply it until it expires.** It also specifies that **traffic on any port other than 80 is assumed to be encrypted** as per the policy.
 
 This can result in unexpected behaviour if you access your application on localhost, for example `https://localhost:4000`, as from that point forward and traffic coming from localhost will be expected to be encrypted, except port 80 which will be redirected to port 443. This has the potential to disrupt traffic to any other local servers or proxies that you may be running on your computer. Other applications or proxies on localhost will refuse to work unless the traffic is encrypted.
 
-If you do invertenlty turn on HSTS for localhost you may need to rest the cache on your browser before it will accept any HTTP traffic from localhost. For Chrome you need to `Empty Cache and Hard Reload` which is available from the reload menu that appears when you click and hold the reload icon from the Developer Tools Panel. For Safari you will need to clear your cache, remove the entry from `~/Library/Cookies/HSTS.plist` (or delete that file entirely) and restart Safari. Alternately you can set the `:expires` option on `force_ssl` to `0` which should expired the entry to turn off HSTS. More information on the options for HSTS are available at [Plug.SSL](https://hexdocs.pm/plug/Plug.SSL.html).
+If you do inadvertently turn on HSTS for localhost you may need to reset the cache on your browser before it will accept any HTTP traffic from localhost. For Chrome you need to `Empty Cache and Hard Reload` which is available from the reload menu that appears when you click and hold the reload icon from the Developer Tools Panel. For Safari you will need to clear your cache, remove the entry from `~/Library/Cookies/HSTS.plist` (or delete that file entirely) and restart Safari. Alternately you can set the `:expires` option on `force_ssl` to `0` which should expired the entry to turn off HSTS. More information on the options for HSTS are available at [Plug.SSL](https://hexdocs.pm/plug/Plug.SSL.html).
 
 ### Releasing with Exrm
 
