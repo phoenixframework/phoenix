@@ -1,6 +1,11 @@
 # Changelog
 
-## 1.3.1 (2018-04-02)
+## 1.3.2 (2018-03-08)
+
+* Bug Fixes
+  * [CodeReloader] Fix error when running `phx.server` from umbrella root
+
+## 1.3.1 (2018-03-02)
 
 * Enhancements
   * [Router] Raise on unknown `:only` and `:except` in `resources`.

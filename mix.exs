@@ -1,7 +1,7 @@
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
-  @version "1.3.1"
+  @version "1.3.2"
 
   # TODO v1.4: Update to elixir 1.4 + new application inference
 
