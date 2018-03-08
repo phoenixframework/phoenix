@@ -11,7 +11,7 @@ Some possible use cases include:
 
 Conceptually, Channels are pretty simple.
 Clients connect and subscribe to one or more topics, whether that's `public_chat` or `updates:user1`.
-Any message sent on a topic, whether from the server or from a client, is sent to all clients subscribed to that topic, like this:
+Any message sent on a topic, whether from the server or from a client, is sent to all clients subscribed to that topic (including the sender, if it's subscribed), like this:
 
 <pre>
 <code>
@@ -118,10 +118,10 @@ Within the handler, you can authenticate and identify a socket connection and se
 Channel routes are defined in socket handlers, such as `HelloWeb.UserSocket` in the example above.
 They match on the topic string and dispatch matching requests to the given Channel module.
 
-The star character `*` acts as a wildcard matcher, so in the following example route, requests for `elixir:ecto` and `elixir:phoenix` would both be dispatched to the `ElixirTopicChannel`.
+The star character `*` acts as a wildcard matcher, so in the following example route, requests for `room:lobby` and `room:123` would both be dispatched to the `RoomChannel`.
 
 ```elixir
-channel "elixir:*", HelloWeb.ElixirTopicChannel
+channel "room:*", HelloWeb.RoomChannel
 ```
 
 ### Channels
