@@ -9,12 +9,16 @@ defmodule Phoenix.Router.Helpers do
   @doc """
   Callback invoked by url generated in each helper module.
   """
-  def url(_router, %Conn{private: private}) do
-    private.phoenix_endpoint.url
+  def url(router, %Conn{private: private}) do
+    case private do
+      %{phoenix_router_url: %URI{} = uri} -> url(router, uri)
+      %{phoenix_router_url: url} when is_binary(url) -> url
+      %{phoenix_endpoint: endpoint} -> endpoint.url()
+    end
   end
 
   def url(_router, %Socket{endpoint: endpoint}) do
-    endpoint.url
+    endpoint.url()
   end
 
   def url(_router, %URI{} = uri) do
@@ -22,7 +26,13 @@ defmodule Phoenix.Router.Helpers do
   end
 
   def url(_router, endpoint) when is_atom(endpoint) do
-    endpoint.url
+    endpoint.url()
+  end
+
+  def url(router, other) do
+    raise ArgumentError,
+      "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{} or a Phoenix.Endpoint " <>
+      "when building url for #{inspect router}, got: #{inspect other}"
   end
 
   @doc """
@@ -45,6 +55,12 @@ defmodule Phoenix.Router.Helpers do
 
   def path(_router, endpoint, path) when is_atom(endpoint) do
     endpoint.path(path)
+  end
+
+  def path(router, other, _path) do
+    raise ArgumentError,
+      "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{} or a Phoenix.Endpoint " <>
+      "when building path for #{inspect router}, got: #{inspect other}"
   end
 
   ## Helpers
@@ -221,55 +237,75 @@ defmodule Phoenix.Router.Helpers do
   end
 
   def defhelper_catch_all({helper, routes_and_exprs}) do
-    valid_routes = Enum.map(routes_and_exprs, fn {routes, _exrs} -> routes.opts end)
-    route_vars =
+    routes =
       routes_and_exprs
-      |> Enum.map(fn {_routes, exprs} -> :lists.unzip(exprs.binding) end)
-      |> Enum.uniq
+      |> Enum.map(fn {routes, exprs} -> {routes.opts, Enum.map(exprs.binding, &elem(&1, 0))} end)
+      |> Enum.sort
 
-    for {_, binds} <- route_vars, vars = Enum.map(binds, fn (_) -> {:_, [], nil} end) do
-      arity = Enum.count(vars) + 2
+    bindings =
+      routes
+      |> Enum.map(fn {_, bindings} -> Enum.map(bindings, fn _ -> {:_, [], nil} end) end)
+      |> Enum.uniq()
 
-      # We are using @anno to avoid warnings in case a path has already been defined.
-      quote @anno do
-        def unquote(:"#{helper}_path")(_conn_or_endpoint, action, unquote_splicing(vars)) do
-          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_path", unquote(arity), action, unquote(valid_routes))
-        end
+    catch_alls =
+      for binding <- bindings do
+        arity = length(binding) + 2
 
-        def unquote(:"#{helper}_path")(_conn_or_endpoint, action, unquote_splicing(vars), params) do
-          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_path", unquote(arity) + 1, action, unquote(valid_routes))
-        end
+        # We are using @anno to avoid warnings in case a path has already been defined.
+        quote @anno do
+          def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding)) do
+            path(conn_or_endpoint, "/")
+            raise_route_error(unquote(helper), :path, unquote(arity), action)
+          end
 
-        def unquote(:"#{helper}_url")(_conn_or_endpoint, action, unquote_splicing(vars)) do
-          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_url", unquote(arity), action, unquote(valid_routes))
-        end
+          def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding), params) do
+            path(conn_or_endpoint, "/")
+            raise_route_error(unquote(helper), :path, unquote(arity + 1), action)
+          end
 
-        def unquote(:"#{helper}_url")(_conn_or_endpoint, action, unquote_splicing(vars), params) do
-          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_url", unquote(arity) + 1, action, unquote(valid_routes))
+          def unquote(:"#{helper}_url")(conn_or_endpoint, action, unquote_splicing(binding)) do
+            url(conn_or_endpoint)
+            raise_route_error(unquote(helper), :url, unquote(arity), action)
+          end
+
+          def unquote(:"#{helper}_url")(conn_or_endpoint, action, unquote_splicing(binding), params) do
+            url(conn_or_endpoint)
+            raise_route_error(unquote(helper), :url, unquote(arity + 1), action)
+          end
         end
       end
-    end
+
+    [quote @anno do
+      defp raise_route_error(unquote(helper), suffix, arity, action) do
+        Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_#{suffix}",
+                                                 arity, action, unquote(routes))
+      end
+    end | catch_alls]
   end
 
-  @doc false
-  def raise_route_error(mod, fun, arity, action, valid_routes) do
-    valid_actions = valid_routes |> Enum.sort |> Enum.map(&("\n  * :#{&1}")) |> Enum.join("")
-    message = case action in valid_routes do
-      true ->
-        "No helper clause for #{inspect mod}.#{fun} defined for action :#{action} with arity #{arity}.\n" <>
-        "Please check that the function, arity and action are correct.\n" <>
-        "The following #{fun} actions are defined under your router:\n" <>
-        valid_actions
-      _ ->
-        "No helper clause for #{inspect mod}.#{fun}/#{arity} defined for action :#{action}.\n" <>
-        "The following #{fun} actions are defined under your router:\n" <>
-        valid_actions
-    end
+  @doc """
+  Callback for generate router catch alls.
+  """
+  def raise_route_error(mod, fun, arity, action, routes) do
+    prelude =
+      if Keyword.has_key?(routes, action) do
+        "No action #{inspect action} for helper #{inspect mod}.#{fun}/#{arity}"
+      else
+        "No function clause for #{inspect mod}.#{fun}/#{arity} and action #{inspect action}"
+      end
 
-    raise ArgumentError, message: String.strip(message)
+    suggestions =
+      for {action, bindings} <- routes do
+        bindings = Enum.join(bindings, ", ")
+        "\n    #{fun}(conn_or_endpoint, #{inspect action}, #{bindings}, opts \\\\ [])"
+      end
+
+    raise ArgumentError, "#{prelude}. The following actions/clauses are supported:\n#{suggestions}"
   end
 
-  @doc false
+  @doc """
+  Callback for properly encoding parameters in routes.
+  """
   def encode_param(str), do: URI.encode(str, &URI.char_unreserved?/1)
 
   defp expand_segments([]), do: "/"

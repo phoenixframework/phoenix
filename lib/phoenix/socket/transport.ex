@@ -17,14 +17,10 @@ defmodule Phoenix.Socket.Transport do
 
   ## The transport behaviour
 
-  The transport requires two functions:
+  The transport requires one function:
 
     * `default_config/0` - returns the default transport configuration
       to be merged when the transport is declared in the socket module
-
-    * `handlers/0` - returns a map of handlers. For example, if the
-      transport is implemented via Cowboy, it just need to specify the
-      appropriate Cowboy handler
 
   ## Socket connections
 
@@ -62,18 +58,23 @@ defmodule Phoenix.Socket.Transport do
   serializer that abides to the behaviour described in
   `Phoenix.Transports.Serializer`.
 
-  ## Managing channels
+  ## Managing channel exits
 
   Because channels are spawned from the transport process, transports
   must trap exits and correctly handle the `{:EXIT, _, _}` messages
   arriving from channels, relaying the proper response to the client.
 
-  The following events are sent by the transport when a channel exits:
+  The `"phx_error"` event is sent by the transport when a channel exits,
+  and represents the channel terminating against its will. The
+  `on_exit_message/3` function aids in constructing the `"phx_error"` message.
 
-    * `"phx_close"` - The channel has exited gracefully
-    * `"phx_error"` - The channel has crashed
+  For graceful exits, the channel will notify the transort it is
+  gracefully terminating via the following message:
 
-  The `on_exit_message/3` function aids in constructing these messages.
+      {:graceful_exit, channel_pid, %Phoenix.Socket.Message{}}
+
+  The `%Phoenix.Socket.Message{}` is the leave message for the transport
+  to relay to the client.
 
   ## Duplicate Join Subscriptions
 
@@ -122,8 +123,7 @@ defmodule Phoenix.Socket.Transport do
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
 
-  @protocol_version "1.0.0"
-  @client_vsn_requirements "~> 1.0"
+  @protocol_version "2.0.0"
 
   @doc """
   Provides a keyword list of default configuration for socket transports.
@@ -144,23 +144,47 @@ defmodule Phoenix.Socket.Transport do
   If the connection was successful, generates `Phoenix.PubSub`
   topic from the `id/1` callback.
   """
-  def connect(endpoint, handler, transport_name, transport, serializer, params) do
+  def connect(endpoint, handler, transport_name, transport, serializer_config, params, pid \\ self()) do
     vsn = params["vsn"] || "1.0.0"
 
-    if Version.match?(vsn, @client_vsn_requirements) do
-      connect_vsn(endpoint, handler, transport_name, transport, serializer, params)
-    else
-      Logger.error "The client's requested channel transport version \"#{vsn}\" " <>
-                   "does not match server's version requirements of \"#{@client_vsn_requirements}\""
-      :error
+    case serializer_for_vsn(vsn, serializer_config) do
+      {:ok, serializer} ->
+        do_connect(vsn, endpoint, handler, transport_name, transport, serializer, params, pid)
+      {:error, reason} ->
+        Logger.error(reason)
+        :error
     end
   end
-  defp connect_vsn(endpoint, handler, transport_name, transport, serializer, params) do
+  defp serializer_for_vsn(vsn, serializer) when is_atom(serializer) do
+    if Version.match?(vsn, "~> 1.0.0") do
+      {:ok, serializer}
+    else
+      {:error, "The client's requested channel transport version \"#{vsn}\" " <>
+               "does not match server's version requirements of \"~> 1.0.0\""}
+    end
+  rescue
+    Version.InvalidVersionError ->
+      {:error, "The client's requested channel transport version \"#{inspect vsn}\" " <>
+               "is invalid"}
+  end
+  defp serializer_for_vsn(vsn, serializers) when is_list(serializers) do
+    serializers
+    |> Enum.find(fn {_serializer, vsn_req} -> Version.match?(vsn, vsn_req) end)
+    |> case do
+      {serializer, _vsn_req} -> {:ok, serializer}
+      nil ->
+        {:error, "The client's requested channel transport version \"#{vsn}\" " <>
+                 "does not match server's version requirements of #{inspect serializers}"}
+    end
+  end
+
+  defp do_connect(vsn, endpoint, handler, transport_name, transport, serializer, params, pid) do
     socket = %Socket{endpoint: endpoint,
                      transport: transport,
-                     transport_pid: self(),
+                     transport_pid: pid,
                      transport_name: transport_name,
                      handler: handler,
+                     vsn: vsn,
                      pubsub_server: endpoint.__pubsub_server__,
                      serializer: serializer}
 
@@ -217,8 +241,8 @@ defmodule Phoenix.Socket.Transport do
   """
   def dispatch(msg, channels, socket)
 
-  def dispatch(%{ref: ref, topic: "phoenix", event: "heartbeat"}, _channels, _socket) do
-    {:reply, %Reply{ref: ref, topic: "phoenix", status: :ok, payload: %{}}}
+  def dispatch(%{ref: ref, topic: "phoenix", event: "heartbeat"}, _channels, socket) do
+    {:reply, %Reply{join_ref: socket.join_ref, ref: ref, topic: "phoenix", status: :ok, payload: %{}}}
   end
 
   def dispatch(%Message{} = msg, channels, socket) do
@@ -227,21 +251,32 @@ defmodule Phoenix.Socket.Transport do
     |> do_dispatch(msg, socket)
   end
 
-  defp do_dispatch(nil, %{event: "phx_join", topic: topic} = msg, socket) do
-    if channel = socket.handler.__channel__(topic, socket.transport_name) do
-      socket = %Socket{socket | topic: topic, channel: channel}
+  @doc false
+  def build_channel_socket(%Socket{} = socket, channel, topic, join_ref, opts) do
+    %Socket{socket |
+            topic: topic,
+            channel: channel,
+            join_ref: join_ref,
+            assigns: Map.merge(socket.assigns, opts[:assigns] || %{}),
+            private: channel.__socket__(:private)}
+  end
 
-      case Phoenix.Channel.Server.join(socket, msg.payload) do
-        {:ok, response, pid} ->
-          log_info topic, fn -> "Replied #{topic} :ok" end
-          {:joined, pid, %Reply{ref: msg.ref, topic: topic, status: :ok, payload: response}}
+  defp do_dispatch(nil, %{event: "phx_join", topic: topic} = msg, base_socket) do
+    case base_socket.handler.__channel__(topic, base_socket.transport_name) do
+      {channel, opts} ->
+        socket = build_channel_socket(base_socket, channel, topic, msg.ref, opts)
 
-        {:error, reason} ->
-          log_info topic, fn -> "Replied #{topic} :error" end
-          {:error, reason, %Reply{ref: msg.ref, topic: topic, status: :error, payload: reason}}
-      end
-    else
-      reply_ignore(msg, socket)
+        case Phoenix.Channel.Server.join(socket, msg.payload) do
+          {:ok, response, pid} ->
+            log socket, topic, fn -> "Replied #{topic} :ok" end
+            {:joined, pid, %Reply{join_ref: socket.join_ref, ref: msg.ref, topic: topic, status: :ok, payload: response}}
+
+          {:error, reason} ->
+            log socket, topic, fn -> "Replied #{topic} :error" end
+            {:error, reason, %Reply{join_ref: socket.join_ref, ref: msg.ref, topic: topic, status: :error, payload: reason}}
+        end
+
+      nil -> reply_ignore(msg, base_socket)
     end
   end
 
@@ -261,30 +296,34 @@ defmodule Phoenix.Socket.Transport do
     :noreply
   end
 
-  defp log_info("phoenix" <> _, _func), do: :noop
-  defp log_info(_topic, func), do: Logger.info(func)
+  defp log(_, "phoenix" <> _, _func), do: :noop
+  defp log(%{private: %{log_join: false}}, _topic, _func), do: :noop
+  defp log(%{private: %{log_join: level}}, _topic, func), do: Logger.log(level, func)
 
   defp reply_ignore(msg, socket) do
     Logger.warn fn -> "Ignoring unmatched topic \"#{msg.topic}\" in #{inspect(socket.handler)}" end
-    {:error, :unmatched_topic, %Reply{ref: msg.ref, topic: msg.topic, status: :error,
+    {:error, :unmatched_topic, %Reply{join_ref: socket.join_ref, ref: msg.ref, topic: msg.topic, status: :error,
                                       payload: %{reason: "unmatched topic"}}}
   end
 
   @doc """
   Returns the message to be relayed when a channel exits.
   """
-  # TODO remove 2-arity on next major release
+  def on_exit_message(topic, join_ref, _reason) do
+    %Message{join_ref: join_ref, ref: join_ref, topic: topic, event: "phx_error", payload: %{}}
+  end
+
+  # TODO v2: Remove 2-arity
+  @doc false
   def on_exit_message(topic, reason) do
-    IO.write :stderr, "Phoenix.Transport.on_exit_message/2 is deprecated. Use on_exit_message/3 instead."
+    IO.warn "Phoenix.Transport.on_exit_message/2 is deprecated. Use on_exit_message/3 instead."
     on_exit_message(topic, nil, reason)
   end
-  def on_exit_message(topic, join_ref, reason) do
-    case reason do
-      :normal        -> %Message{ref: join_ref, topic: topic, event: "phx_close", payload: %{}}
-      :shutdown      -> %Message{ref: join_ref, topic: topic, event: "phx_close", payload: %{}}
-      {:shutdown, _} -> %Message{ref: join_ref, topic: topic, event: "phx_close", payload: %{}}
-      _              -> %Message{ref: join_ref, topic: topic, event: "phx_error", payload: %{}}
-    end
+
+  @doc false
+  def notify_graceful_exit(%Socket{topic: topic, join_ref: ref} = socket) do
+    close_msg = %Message{join_ref: ref, ref: ref, topic: topic, event: "phx_close", payload: %{}}
+    send(socket.transport_pid, {:graceful_exit, self(), close_msg})
   end
 
   @doc """
@@ -310,7 +349,7 @@ defmodule Phoenix.Socket.Transport do
       opts =
         if force_ssl = Keyword.get(opts, :force_ssl, endpoint.config(:force_ssl)) do
           force_ssl
-          |> Keyword.put_new(:host, host_to_binary(endpoint.config(:url)[:host]) || "localhost")
+          |> Keyword.put_new(:host, {endpoint, :host, []})
           |> Plug.SSL.init()
         end
       {:cache, opts}
@@ -399,7 +438,9 @@ defmodule Phoenix.Socket.Transport do
     case URI.parse(origin) do
       %{host: nil} ->
         raise ArgumentError,
-          "invalid check_origin: #{inspect origin} (expected an origin with a host)"
+          "invalid check_origin: #{inspect origin}. " <>
+          "Expected an origin with a host that is parsable by URI.parse/1. For example: " <>
+          "[\"https://example.com\", \"//another.com:888\", \"//other.com\"]"
       %{scheme: scheme, port: port, host: host} ->
         {scheme, host, port}
     end
@@ -433,6 +474,7 @@ defmodule Phoenix.Socket.Transport do
   defp compare_host?(request_host, allowed_host),
     do: request_host == allowed_host
 
+  # TODO v1.4: Deprecate {:system, env_var}
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 end

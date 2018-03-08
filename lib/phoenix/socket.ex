@@ -62,6 +62,7 @@ defmodule Phoenix.Socket do
     * `handler` - The socket module where this socket originated, for example: `MyApp.UserSocket`
     * `joined` - If the socket has effectively joined the channel
     * `pubsub_server` - The registered name of the socket's pubsub server
+    * `join_ref` - The ref sent by the client when joining
     * `ref` - The latest ref sent by the client
     * `topic` - The string topic, for example `"room:123"`
     * `transport` - The socket's transport, for example: `Phoenix.Transports.WebSocket`
@@ -69,6 +70,7 @@ defmodule Phoenix.Socket do
     * `transport_name` - The socket's transport, for example: `:websocket`
     * `serializer` - The serializer for socket messages,
       for example: `Phoenix.Transports.WebSocketSerializer`
+    * `vsn` - The protocol version of the client, for example: "2.0.0"
 
   ## Custom transports
 
@@ -121,7 +123,7 @@ defmodule Phoenix.Socket do
   end
 
   @type t :: %Socket{id: nil,
-                     assigns: %{},
+                     assigns: map,
                      channel: atom,
                      channel_pid: pid,
                      endpoint: atom,
@@ -133,7 +135,8 @@ defmodule Phoenix.Socket do
                      transport: atom,
                      transport_name: atom,
                      serializer: atom,
-                     transport_pid: pid}
+                     transport_pid: pid,
+                     private: %{}}
 
   defstruct id: nil,
             assigns: %{},
@@ -144,11 +147,14 @@ defmodule Phoenix.Socket do
             joined: false,
             pubsub_server: nil,
             ref: nil,
+            join_ref: nil,
             topic: nil,
             transport: nil,
             transport_pid: nil,
             transport_name: nil,
-            serializer: nil
+            serializer: nil,
+            private: %{},
+            vsn: nil
 
   defmacro __using__(_) do
     quote do
@@ -168,7 +174,7 @@ defmodule Phoenix.Socket do
       for {name, {mod, conf}} <- transports do
         quote do
           def __transport__(unquote(name)) do
-            {unquote(mod), unquote(conf)}
+            {unquote(mod), unquote(Macro.escape(conf))}
           end
         end
       end
@@ -176,8 +182,8 @@ defmodule Phoenix.Socket do
     channel_defs =
       for {topic_pattern, module, opts} <- channels do
         topic_pattern
-        |> to_topic_match
-        |> defchannel(module, opts[:via])
+        |> to_topic_match()
+        |> defchannel(module, opts[:via], opts)
       end
 
     quote do
@@ -196,16 +202,16 @@ defmodule Phoenix.Socket do
     end
   end
 
-  defp defchannel(topic_match, channel_module, nil) do
+  defp defchannel(topic_match, channel_module, nil = _transports, opts) do
     quote do
-      def __channel__(unquote(topic_match), _transport), do: unquote(channel_module)
+      def __channel__(unquote(topic_match), _transport), do: unquote({channel_module, opts})
     end
   end
 
-  defp defchannel(topic_match, channel_module, transports) do
+  defp defchannel(topic_match, channel_module, transports, opts) do
     quote do
       def __channel__(unquote(topic_match), transport)
-          when transport in unquote(List.wrap(transports)), do: unquote(channel_module)
+          when transport in unquote(List.wrap(transports)), do: unquote({channel_module, opts})
     end
   end
 
@@ -236,6 +242,7 @@ defmodule Phoenix.Socket do
 
     * `:via` - the transport adapters to accept on this channel.
       Defaults `[:websocket, :longpoll]`
+    * `:assigns` - the map of socket assigns to merge into the socket on join.
 
   ## Examples
 
@@ -257,12 +264,12 @@ defmodule Phoenix.Socket do
     # Tear the alias to simply store the root in the AST.
     # This will make Elixir unable to track the dependency
     # between endpoint <-> socket and avoid recompiling the
-    # endpoint (alongside the whole project ) whenever the
+    # endpoint (alongside the whole project) whenever the
     # socket changes.
     module = tear_alias(module)
 
     quote do
-      @phoenix_channels {unquote(topic_pattern), unquote(module), unquote(opts)}
+      @phoenix_channels {unquote(topic_pattern), unquote(module), unquote(Macro.escape(opts))}
     end
   end
 
@@ -296,12 +303,59 @@ defmodule Phoenix.Socket do
   end
 
   @doc false
-  def __transport__(transports, name, module, config) do
-    config = Keyword.merge(module.default_config() , config)
+  def __transport__(transports, name, module, user_conf) do
+    defaults = module.default_config()
 
-    Map.update(transports, name, {module, config}, fn {dup_module, _} ->
+    conf =
+      user_conf
+      |> normalize_serializer_conf(name, module, defaults[:serializer] || [])
+      |> merge_defaults(defaults)
+
+    Map.update(transports, name, {module, conf}, fn {dup_module, _} ->
       raise ArgumentError,
         "duplicate transports (#{inspect dup_module} and #{inspect module}) defined for #{inspect name}."
     end)
+  end
+  defp merge_defaults(conf, defaults), do: Keyword.merge(defaults, conf)
+
+  defp normalize_serializer_conf(conf, name, transport_mod, default) do
+    update_in(conf, [:serializer], fn
+      nil ->
+        precompile_serializers(default)
+
+      Phoenix.Transports.LongPollSerializer = serializer ->
+        warn_serializer_deprecation(name, transport_mod, serializer)
+        precompile_serializers(default)
+
+      Phoenix.Transports.WebSocketSerializer = serializer ->
+        warn_serializer_deprecation(name, transport_mod, serializer)
+        precompile_serializers(default)
+
+      [_ | _] = serializer ->
+        precompile_serializers(serializer)
+
+      serializer when is_atom(serializer) ->
+        warn_serializer_deprecation(name, transport_mod, serializer)
+        precompile_serializers([{serializer, "~> 1.0.0"}])
+    end)
+  end
+
+  defp warn_serializer_deprecation(name, transport_mod, serializer) do
+    IO.warn """
+    passing a serializer module to the transport macro is deprecated.
+    Use a list with version requirements instead. For example:
+
+        transport :#{name}, #{inspect transport_mod},
+          serializer: [{#{inspect serializer}, "~> 1.0.0"}]
+    """
+  end
+
+  defp precompile_serializers(serializers) do
+    for {module, requirement} <- serializers do
+      case Version.parse_requirement(requirement) do
+        {:ok, requirement} -> {module, requirement}
+        :error -> Version.match?("1.0.0", requirement)
+      end
+    end
   end
 end

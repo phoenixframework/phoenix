@@ -1,6 +1,6 @@
 {
   "name": "phoenix",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "The official JavaScript client for the Phoenix web framework.",
   "license": "MIT",
   "main": "./priv/static/phoenix.js",
@@ -10,13 +10,32 @@
   },
   "author": "Chris McCord <chris@chrismccord.com> (http://www.phoenixframework.org)",
   "devDependencies": {
-    "brunch": "~2.6.5",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.3",
+    "babel-preset-env": "^1.6.1",
+    "webpack": "4.0.0",
+    "webpack-cli": "^2.0.10",
+    "documentation": "^4.0.0-rc.1",
+    "jsdom": "9.8.3",
+    "jsdom-global": "2.1.0",
     "mocha": "~2.4.4",
-    "babel-brunch": "~6.0.0",
-    "uglify-js-brunch": "~2.0.1"
+    "mock-socket": "^6.0.1",
+    "sinon": "^1.17.6"
   },
-  "files": ["README.md", "LICENSE.md", "package.json", "priv/static/phoenix.js", "web/static/js/phoenix.js"],
+  "files": [
+    "README.md",
+    "LICENSE.md",
+    "package.json",
+    "priv/static/phoenix.js",
+    "assets/js/phoenix.js"
+  ],
   "scripts": {
-    "test": "./node_modules/.bin/mocha ./web/test/**/*.js --compilers js:babel-register"
+    "test": "mocha ./assets/test/**/*.js --compilers js:babel-register -r jsdom-global/register",
+    "docs": "documentation build assets/js/phoenix.js -f html -o doc/js",
+    "build": "webpack --mode production",
+    "watch": "webpack --mode development --watch"
+  },
+  "dependencies": {
+    "expose-loader": "^0.7.4"
   }
 }

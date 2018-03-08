@@ -1,23 +1,17 @@
 defmodule Phoenix.Digester do
   @digested_file_regex ~r/(-[a-fA-F\d]{32})/
   @manifest_version 1
+  @empty_manifest %{
+    "version" => 1,
+    "digests" => %{},
+    "latest" => %{}
+  }
 
   defp now() do
     :calendar.datetime_to_gregorian_seconds(:calendar.universal_time)
   end
 
-  @moduledoc """
-  Digests and compresses static files.
-
-  For each file under the given input path, Phoenix will generate a digest
-  and also compress in `.gz` format. The filename and its digest will be
-  used to generate the manifest file. It also avoids duplication, checking
-  for already digested files.
-
-  For stylesheet files found under the given path, Phoenix will replace
-  asset references with the digested paths, as long as the asset exists
-  in the generated manifest.
-  """
+  @moduledoc false
 
   @doc """
   Digests and compresses the static files and saves them in the given output path.
@@ -61,25 +55,33 @@ defmodule Phoenix.Digester do
   end
 
   defp load_compile_digests(output_path) do
-    manifest_path = Path.join(output_path, "manifest.json")
+    manifest = load_manifest(output_path)
+    manifest["digests"]
+  end
+
+  defp load_manifest(output_path) do
+    manifest_path = Path.join(output_path, "cache_manifest.json")
+
     if File.exists?(manifest_path) do
       manifest_path
-      |> File.read!
-      |> Poison.decode!
-      |> get_digest(output_path)
+      |> File.read!()
+      |> Phoenix.json_library().decode!()
+      |> migrate_manifest(output_path)
     else
-      %{}
+      @empty_manifest
     end
   end
 
-  defp get_digest(manifest = %{version: 1}, _output_path) do
-    Access.get(manifest, "digests")
-  end
+  defp migrate_manifest(%{"version" => 1} = manifest, _output_path), do: manifest
+  defp migrate_manifest(latest, output_path) do
+    digests =
+      output_path
+      |> filter_digested_files
+      |> generate_new_digests
 
-  defp get_digest(_manifest, output_path) do
-    output_path
-    |> filter_digested_files
-    |> generate_new_digests
+    @empty_manifest
+    |> Map.put("digests", digests)
+    |> Map.put("latest", latest)
   end
 
   defp generate_manifest(files, old_digests, output_path) do
@@ -88,15 +90,23 @@ defmodule Phoenix.Digester do
        manifest_join(&1.relative_path, &1.digested_filename)
     }))
 
-    digests =
-      files
-      |> generate_new_digests
-      |> Map.merge(old_digests)
+    old_digests_that_still_exist =
+      old_digests
+      |> Enum.filter(fn {file, _} -> File.exists?(Path.join(output_path, file)) end)
+      |> Map.new
 
-    manifest_content = Poison.encode!(%{latest: latest, version: @manifest_version, digests: digests}, [])
-    File.write!(Path.join(output_path, "manifest.json"), manifest_content)
+    new_digests = generate_new_digests(files)
+
+    digests = Map.merge(old_digests_that_still_exist, new_digests)
+
+    save_manifest(%{"latest" => latest, "version" => @manifest_version, "digests" => digests}, output_path)
 
     latest
+  end
+
+  defp save_manifest(%{"latest" => _, "version" => _, "digests" => _} = manifest, output_path) do
+    manifest_content = Phoenix.json_library().encode!(manifest)
+    File.write!(Path.join(output_path, "cache_manifest.json"), manifest_content)
   end
 
   defp generate_new_digests(files) do
@@ -119,7 +129,7 @@ defmodule Phoenix.Digester do
   defp compiled_file?(file_path) do
     Regex.match?(@digested_file_regex, Path.basename(file_path)) ||
       Path.extname(file_path) == ".gz" ||
-      Path.basename(file_path) == "manifest.json"
+      Path.basename(file_path) == "cache_manifest.json"
   end
 
   defp uncompressed_digested_file?(file_path) do
@@ -139,7 +149,7 @@ defmodule Phoenix.Digester do
   defp map_digested_file(file_path, output_path) do
     {:ok, stats} = File.stat(file_path)
     digested_filename = Path.basename(file_path)
-    [digest,_] = Regex.run(@digested_file_regex, digested_filename)
+    [digest, _] = Regex.run(@digested_file_regex, digested_filename)
     digest = String.trim_leading(digest, "-")
 
     %{absolute_path: file_path,
@@ -266,59 +276,65 @@ defmodule Phoenix.Digester do
   end
 
   @doc """
-  Digests and compresses the static files and saves them in the given output path.
+  Delete compiled/compressed asset files that are no longer in use based on
+  specified criteria.
 
     * `output_path` - The path where the compiled/compressed files will be saved
-    * `age` - The max age of assets to keep
+    * `age` - The max age of assets to keep in seconds
     * `keep` - The number of old versions to keep
   """
   @spec clean(String.t, integer, integer, integer) :: :ok | {:error, :invalid_path}
   def clean(output_path, age, keep, now \\ now()) do
     if File.exists?(output_path) do
-      digests = load_clean_digests(output_path) || %{}
-      clean_files(output_path, digests, now - age, keep)
+      manifest = load_manifest(output_path)
+      files = files_to_clean(manifest, now - age, keep)
+      remove_files(files, output_path)
+      remove_files_from_manifest(manifest, files, output_path)
       :ok
     else
       {:error, :invalid_path}
     end
   end
 
-  defp load_clean_digests(path) do
-    manifest_path = Path.join(path, "manifest.json")
-    if File.exists?(manifest_path) do
-      manifest_path
-      |> File.read!
-      |> Poison.decode!
-      |> Access.get("digests")
-    end
+  defp files_to_clean(manifest, max_age, keep) do
+    latest = Map.values(manifest["latest"])
+    digests = Map.drop(manifest["digests"], latest)
+
+    for {_, versions} <- group_by_logical_path(digests),
+      file <- versions_to_clean(versions, max_age, keep),
+      do: file
   end
 
-  defp clean_files(output_path, digests, max_age, keep) do
-    for {_, versions} <- group_by_logical_path(digests) do
-      versions
-      |> Enum.map(fn {path, attrs} -> Map.put(attrs, "path", path) end)
-      |> Enum.sort(&(&1["mtime"] > &2["mtime"]))
-      |> Enum.with_index
-      |> Enum.filter(fn {version, index} ->
+  defp versions_to_clean(versions, max_age, keep) do
+    versions
+    |> Enum.map(fn {path, attrs} -> Map.put(attrs, "path", path) end)
+    |> Enum.sort_by(&(&1["mtime"]), &>/2)
+    |> Enum.with_index(1)
+    |> Enum.filter(fn {version, index} ->
         max_age > version["mtime"] || index > keep
       end)
-      |> remove_versions(output_path)
-    end
+    |> Enum.map(fn {version, _index} -> version["path"] end)
   end
 
   defp group_by_logical_path(digests) do
     Enum.group_by(digests, fn {_, attrs} -> attrs["logical_path"] end)
   end
 
-  defp remove_versions(versions, output_path) do
-    for {version, _index} <- versions do
+  defp remove_files(files, output_path) do
+    for file <- files do
       output_path
-      |> Path.join(version["path"])
+      |> Path.join(file)
       |> File.rm
 
       output_path
-      |> Path.join("#{version["path"]}.gz")
+      |> Path.join("#{file}.gz")
       |> File.rm
     end
+  end
+
+  defp remove_files_from_manifest(manifest, files, output_path) do
+    manifest
+    |> Map.update!("digests", &Map.drop(&1, files))
+    |> save_manifest(output_path)
   end
 end

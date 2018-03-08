@@ -2,18 +2,10 @@ defmodule Phoenix.CodeReloaderTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  Application.put_env(:phoenix, __MODULE__.Endpoint,
-    root: File.cwd!,
-    code_reloader: true,
-    live_reload: [url: "ws://localhost:4000", patterns: [~r/some\/path/]])
-
   defmodule Endpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
-  end
-
-  setup_all do
-    Endpoint.start_link()
-    :ok
+    def config(:reloadable_compilers) do
+      [:gettext, :phoenix, :elixir]
+    end
   end
 
   def reload!(_) do
@@ -25,9 +17,7 @@ defmodule Phoenix.CodeReloaderTest do
   end
 
   test "reloads on every request" do
-    children = Supervisor.which_children(Endpoint)
-    assert {Phoenix.CodeReloader.Server, pid, _, _} =
-           List.keyfind(children, Phoenix.CodeReloader.Server, 0)
+    pid = Process.whereis(Phoenix.CodeReloader.Server)
     :erlang.trace(pid, true, [:receive])
 
     opts = Phoenix.CodeReloader.init([])
@@ -36,7 +26,7 @@ defmodule Phoenix.CodeReloaderTest do
            |> Phoenix.CodeReloader.call(opts)
     assert conn.state == :unset
 
-    assert_receive {:trace, ^pid, :receive, {_, _, :reload!}}
+    assert_receive {:trace, ^pid, :receive, {_, _, {:reload!, Endpoint}}}
   end
 
   test "renders compilation error on failure" do

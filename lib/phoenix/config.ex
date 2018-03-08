@@ -6,13 +6,14 @@ defmodule Phoenix.Config do
   # at runtime using the `config/2` function.
   @moduledoc false
 
+  require Logger
   use GenServer
 
   @doc """
   Starts a Phoenix configuration handler.
   """
-  def start_link(otp_app, module, defaults, opts \\ []) do
-    GenServer.start_link(__MODULE__, {otp_app, module, defaults}, opts)
+  def start_link(module, config, defaults, opts \\ []) do
+    GenServer.start_link(__MODULE__, {module, config, defaults}, opts)
   end
 
   @doc """
@@ -76,8 +77,8 @@ defmodule Phoenix.Config do
     case Application.fetch_env(otp_app, module) do
       {:ok, conf} -> conf
       :error ->
-        IO.puts :stderr, "warning: no endpoint configuration found for otp_app " <>
-                         "#{inspect otp_app} and module #{inspect module}"
+        Logger.warn "no configuration found for otp_app " <>
+                    "#{inspect otp_app} and module #{inspect module}"
         []
     end
   end
@@ -97,10 +98,10 @@ defmodule Phoenix.Config do
 
   # Callbacks
 
-  def init({otp_app, module, defaults}) do
+  def init({module, config, defaults}) do
     :ets.new(module, [:named_table, :public, read_concurrency: true])
     :ets.insert(module, [__config__: self()])
-    update(module, from_env(otp_app, module, defaults))
+    update(module, config)
     {:ok, {module, defaults}}
   end
 

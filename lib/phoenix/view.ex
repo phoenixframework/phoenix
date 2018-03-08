@@ -10,12 +10,12 @@ defmodule Phoenix.View do
 
   ## Examples
 
-  Phoenix defines the view template at `web/web.ex`:
+  Phoenix defines the view template at `lib/web/web.ex`:
 
-      defmodule YourApp.Web do
+      defmodule YourAppWeb do
         def view do
           quote do
-            use Phoenix.View, root: "web/templates"
+            use Phoenix.View, root: "lib/web/templates"
 
             # Import common functionality
             import YourApp.Router.Helpers
@@ -31,10 +31,10 @@ defmodule Phoenix.View do
   We can use the definition above to define any view in your application:
 
       defmodule YourApp.UserView do
-        use YourApp.Web, :view
+        use YourAppWeb, :view
       end
 
-  Because we have defined the template root to be "web/templates", `Phoenix.View`
+  Because we have defined the template root to be "lib/web/templates", `Phoenix.View`
   will automatically load all templates at "web/templates/user" and include them
   in the `YourApp.UserView`. For example, imagine we have the template:
 
@@ -279,8 +279,8 @@ defmodule Phoenix.View do
   """
   def render_many(collection, view, template, assigns \\ %{}) do
     assigns = to_map(assigns)
-    Enum.map(collection, fn model ->
-      render view, template, assign_model(assigns, view, model)
+    Enum.map(collection, fn resource ->
+      render view, template, assign_resource(assigns, view, resource)
     end)
   end
 
@@ -310,19 +310,19 @@ defmodule Phoenix.View do
       end
 
   """
-  def render_one(model, view, template, assigns \\ %{}) do
-    if model != nil do
-      assigns = to_map(assigns)
-      render view, template, assign_model(assigns, view, model)
-    end
+  def render_one(resource, view, template, assigns \\ %{})
+  def render_one(nil, _view, _template, _assigns), do: nil
+  def render_one(resource, view, template, assigns) do
+    assigns = to_map(assigns)
+    render view, template, assign_resource(assigns, view, resource)
   end
 
   defp to_map(assigns) when is_map(assigns), do: assigns
   defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
 
-  defp assign_model(assigns, view, model) do
+  defp assign_resource(assigns, view, resource) do
     as = Map.get(assigns, :as) || view.__resource__
-    Map.put(assigns, as, model)
+    Map.put(assigns, as, resource)
   end
 
   @doc """

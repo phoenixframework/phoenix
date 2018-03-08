@@ -77,11 +77,12 @@ defmodule Phoenix.Channel do
         changeset = Post.changeset(%Post{}, attrs)
 
         if changeset.valid? do
-          Repo.insert!(changeset)
-          {:reply, {:ok, changeset}, socket}
+          post = Repo.insert!(changeset)
+          response = MyApp.PostView.render("show.json", %{post: post})
+          {:reply, {:ok, response}, socket}
         else
-          {:reply,{:error, MyApp.ChangesetView.render("errors.json",
-            %{changeset: changeset}), socket}
+          response = MyApp.ChangesetView.render("errors.json", %{changeset: changeset})
+          {:reply, {:error, response}, socket}
         end
       end
 
@@ -247,14 +248,24 @@ defmodule Phoenix.Channel do
         push socket, ev, payload
         {:noreply, socket}
       end
+
+  ## Logging
+
+  By default, channel `"join"` and `"handle_in"` events are logged, using
+  the level `:info` and `:debug`, respectively. Logs can be customized per
+  event type or disabled by setting the `:log_join` and `:log_handle_in`
+  options when using `Phoenix.Channel`. For example, the following
+  configuration logs join events as `:info`, but disables logging for
+  incoming events:
+
+      use Phoenix.Channel, log_join: :info, log_handle_in: false
   """
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
 
   @type reply :: status :: atom | {status :: atom, response :: map}
   @type socket_ref :: {transport_pid :: Pid, serializer :: module,
-                       topic :: binary, ref :: binary}
-
+                       topic :: binary, ref :: binary, join_ref :: binary}
 
   @callback code_change(old_vsn, Socket.t, extra :: term) ::
               {:ok, Socket.t} |
@@ -275,19 +286,26 @@ defmodule Phoenix.Channel do
               {:noreply, Socket.t} |
               {:stop, reason :: term, Socket.t}
 
-  @callback terminate(msg :: map, Socket.t) ::
-              {:shutdown, :left | :closed} |
+  @callback terminate(reason :: :normal | :shutdown | {:shutdown, :left | :closed | term}, Socket.t) ::
               term
 
-  defmacro __using__(_) do
+  defmacro __using__(opts \\ []) do
     quote do
+      opts = unquote(opts)
       @behaviour unquote(__MODULE__)
       @on_definition unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
       @phoenix_intercepts []
+      @phoenix_log_join Keyword.get(opts, :log_join, :info)
+      @phoenix_log_handle_in Keyword.get(opts, :log_handle_in, :debug)
 
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
+
+      def __socket__(:private) do
+        %{log_join: @phoenix_log_join,
+          log_handle_in: @phoenix_log_handle_in}
+      end
 
       def code_change(_old, socket, _extra), do: {:ok, socket}
 
@@ -295,7 +313,9 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-      def handle_info(_message, socket), do: {:noreply, socket}
+      def handle_info(message, state) do
+        Phoenix.Channel.Server.unhandled_handle_info(message, state)
+      end
 
       def terminate(_reason, _socket), do: :ok
 
@@ -451,8 +471,11 @@ defmodule Phoenix.Channel do
 
   """
   @spec reply(socket_ref, reply) :: :ok
-  def reply({transport_pid, serializer, topic, ref}, {status, payload}) do
-    Server.reply(transport_pid, ref, topic, {status, payload}, serializer)
+  def reply(socket_ref, status) when is_atom(status) do
+    reply(socket_ref, {status, %{}})
+  end
+  def reply({transport_pid, serializer, topic, ref, join_ref}, {status, payload}) do
+    Server.reply(transport_pid, join_ref, ref, topic, {status, payload}, serializer)
   end
 
   @doc """
@@ -462,7 +485,7 @@ defmodule Phoenix.Channel do
   """
   @spec socket_ref(Socket.t) :: socket_ref
   def socket_ref(%Socket{joined: true, ref: ref} = socket) when not is_nil(ref) do
-    {socket.transport_pid, socket.serializer, socket.topic, ref}
+    {socket.transport_pid, socket.serializer, socket.topic, ref, socket.join_ref}
   end
   def socket_ref(_socket) do
     raise ArgumentError, """

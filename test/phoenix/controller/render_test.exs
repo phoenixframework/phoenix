@@ -130,28 +130,30 @@ defmodule Phoenix.Controller.RenderTest do
     assert conn.resp_body == "Hello"
   end
 
-  test "render/3 renders with View and Template with atom for template" do
+  test "render/2 renders with View and Template with atom for template" do
     conn = put_format(conn(), "json")
     conn = put_in conn.private[:phoenix_action], :show
-    conn = put_view(conn, nil)
-    conn = render(conn, MyApp.UserView, :show)
+    conn = put_view(conn, MyApp.UserView)
+    conn = render(conn, :show)
     assert conn.resp_body == ~s({"foo":"bar"})
   end
 
-  test "render/3 renders with View and Template" do
+  test "render/2 renders with View and Template" do
     conn = put_format(conn(), "json")
     conn = put_in conn.private[:phoenix_action], :show
-    conn = put_view(conn, nil)
-    conn = render(conn, MyApp.UserView, "show.json")
+    conn = put_view(conn, MyApp.UserView)
+    conn = render(conn, "show.json")
     assert conn.resp_body == ~s({"foo":"bar"})
   end
 
   test "render/4 renders with View and Template" do
-    conn = put_format(conn(), "html")
-    conn = put_in conn.private[:phoenix_action], :index
-    conn = put_view(conn, nil)
-    conn = render(conn, MyApp.UserView, "index.html", title: "Hello")
-    assert conn.resp_body == "Hello"
+    assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
+      conn = put_format(conn(), "html")
+      conn = put_in conn.private[:phoenix_action], :index
+      conn = put_view(conn, nil)
+      conn = render(conn, MyApp.UserView, "index.html", title: "Hello")
+      assert conn.resp_body == "Hello"
+    end) =~ "render/4 with a view is deprecated"
   end
 
   test "errors when rendering without format" do

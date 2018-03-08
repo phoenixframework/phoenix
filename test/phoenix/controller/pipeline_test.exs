@@ -15,6 +15,10 @@ defmodule Phoenix.Controller.PipelineTest do
       prepend(conn, :action)
     end
 
+    def no_fallback(_conn, _) do
+      :not_a_conn
+    end
+
     def create(conn, _) do
       prepend(conn, :action)
     end
@@ -40,8 +44,31 @@ defmodule Phoenix.Controller.PipelineTest do
     end
   end
 
+  defmodule FallbackFunctionController do
+    use Phoenix.Controller
+
+    action_fallback :function_plug
+
+    plug :put_assign
+
+    def fallback(_conn, _), do: :not_a_conn
+
+    def bad_fallback(_conn, _), do: :bad_fallback
+
+    defp function_plug(%Plug.Conn{} = conn, :not_a_conn) do
+      Plug.Conn.send_resp(conn, 200, "function fallback")
+    end
+    defp function_plug(%Plug.Conn{}, :bad_fallback), do: :bad_function_fallback
+
+    defp put_assign(conn, _), do: assign(conn, :value_before_action, :a_value)
+  end
+
   defmodule ActionController do
     use Phoenix.Controller
+
+    action_fallback Phoenix.Controller.PipelineTest
+
+    plug :put_assign
 
     def action(conn, _) do
       apply(__MODULE__, conn.private.phoenix_action, [conn, conn.body_params,
@@ -53,8 +80,20 @@ defmodule Phoenix.Controller.PipelineTest do
     def no_match(_conn, _, %{"no" => "match"}) do
       raise "Shouldn't have matched"
     end
-  end
 
+    def fallback(_conn, _, _) do
+      :not_a_conn
+    end
+
+    def bad_fallback(_conn, _, _) do
+      :bad_fallback
+    end
+
+    defp put_assign(conn, _), do: assign(conn, :value_before_action, :a_value)
+  end
+  def init(opts), do: opts
+  def call(conn, :not_a_conn), do: Plug.Conn.send_resp(conn, 200, "fallback")
+  def call(_conn, :bad_fallback), do: :bad_fallback
 
   setup do
     Logger.disable(self())
@@ -94,8 +133,8 @@ defmodule Phoenix.Controller.PipelineTest do
     end
   end
 
-  test "does not transform function clause errors lower in action stack" do
-    assert_raise FunctionClauseError, fn ->
+  test "wraps function clause errors lower in action stack in Plug.Conn.WrapperError" do
+    assert_raise Plug.Conn.WrapperError, fn ->
       MyController.call(stack_conn(), :non_top_level_function_clause_error)
     end
   end
@@ -107,6 +146,59 @@ defmodule Phoenix.Controller.PipelineTest do
 
     assert_raise Phoenix.ActionClauseError, fn ->
       ActionController.call(stack_conn(), :no_match)
+    end
+  end
+
+  describe "action_fallback" do
+    test "module fallback delegates to plug for bad return values when not configured" do
+      assert_raise RuntimeError, ~r/expected action\/2 to return a Plug.Conn/, fn ->
+        MyController.call(stack_conn(), :no_fallback)
+      end
+    end
+
+    test "module fallback invokes module plug when configured" do
+      conn = ActionController.call(stack_conn(), :fallback)
+      assert conn.status == 200
+      assert conn.assigns.value_before_action == :a_value
+      assert conn.resp_body == "fallback"
+    end
+
+    test "module fallback with bad return delegates to plug" do
+      assert_raise RuntimeError, ~r/expected action\/2 to return a Plug.Conn/, fn ->
+        ActionController.call(stack_conn(), :bad_fallback)
+      end
+    end
+
+    test "function fallback invokes module plug when configured" do
+      conn = FallbackFunctionController.call(stack_conn(), :fallback)
+      assert conn.status == 200
+      assert conn.assigns.value_before_action == :a_value
+      assert conn.resp_body == "function fallback"
+    end
+
+    test "function fallback with bad return delegates to plug" do
+      assert_raise RuntimeError, ~r/expected action\/2 to return a Plug.Conn/, fn ->
+        FallbackFunctionController.call(stack_conn(), :bad_fallback)
+      end
+    end
+
+    test "raises when calling from import instead of use", config do
+      assert_raise RuntimeError, ~r/can only be called when using Phoenix.Controller/, fn ->
+        defmodule config.test do
+          import Phoenix.Controller
+          action_fallback Boom
+        end
+      end
+    end
+
+    test "raises when calling more than once", config do
+      assert_raise RuntimeError, ~r/can only be called a single time/, fn ->
+        defmodule config.test do
+          use Phoenix.Controller
+          action_fallback Ok
+          action_fallback Boom
+        end
+      end
     end
   end
 

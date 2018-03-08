@@ -256,7 +256,7 @@ defmodule Phoenix.Router.ResourcesTest do
            "/admin/bar/comments/the_key"
   end
 
-  test "resources with :only sets propper match order for :show and :new" do
+  test "resources with :only sets proper match order for :show and :new" do
     conn = call(Router, :get, "members/new")
     assert conn.status == 200
     assert conn.resp_body == "new users"
@@ -265,5 +265,32 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.status == 200
     assert conn.resp_body == "show users"
     assert conn.params["id"] == "2"
+  end
+
+  test "singleton resources declaring an :index route throws an ArgumentError" do
+    assert_raise ArgumentError, ~r/supported singleton actions: \[:edit, :new, :show, :create, :update, :delete\]/, fn ->
+      defmodule SingletonRouter.Router do
+        use Phoenix.Router
+        resources "/", UserController, singleton: true, only: [:index]
+      end
+    end
+  end
+
+  test "resources validates :only actions" do
+    assert_raise ArgumentError, ~r/supported actions: \[:index, :edit, :new, :show, :create, :update, :delete\]/, fn ->
+      defmodule SingletonRouter.Router do
+        use Phoenix.Router
+        resources "/", UserController, only: [:bad_index]
+      end
+    end
+  end
+
+  test "resources validates :except actions" do
+    assert_raise ArgumentError, ~r/supported actions: \[:index, :edit, :new, :show, :create, :update, :delete\]/, fn ->
+      defmodule SingletonRouter.Router do
+        use Phoenix.Router
+        resources "/", UserController, except: [:bad_index]
+      end
+    end
   end
 end

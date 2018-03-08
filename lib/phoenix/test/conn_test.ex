@@ -134,7 +134,7 @@ defmodule Phoenix.ConnTest do
   This is useful when a specific connection is required
   for testing a plug or a particular function.
   """
-  @spec build_conn(atom | binary, binary, binary | list | map) :: Conn.t
+  @spec build_conn(atom | binary, binary, binary | list | map | nil) :: Conn.t
   def build_conn(method, path, params_or_body \\ nil) do
     Plug.Adapters.Test.Conn.conn(%Conn{}, method, path, params_or_body)
     |> Conn.put_private(:plug_skip_csrf_protection, true)
@@ -144,7 +144,7 @@ defmodule Phoenix.ConnTest do
   @doc """
   Deprecated version of conn/3. Use build_conn/3 instead
   """
-  @spec conn(atom | binary, binary, binary | list | map) :: Conn.t
+  @spec conn(atom | binary, binary, binary | list | map | nil) :: Conn.t
   def conn(method, path, params_or_body \\ nil) do
     IO.write :stderr, """
     warning: using conn/3 to build a connection is deprecated. Use build_conn/3 instead.
@@ -407,12 +407,8 @@ defmodule Phoenix.ConnTest do
   def json_response(conn, status) do
     body = response(conn, status)
     _    = response_content_type(conn, :json)
-    case Poison.decode(body) do
-      {:ok, body} ->
-        body
-      {:error, {:invalid, token}} ->
-        raise "could not decode JSON body, invalid token #{inspect token} in body:\n\n#{body}"
-    end
+
+    Phoenix.json_library().decode!(body)
   end
 
   @doc """
@@ -432,6 +428,10 @@ defmodule Phoenix.ConnTest do
 
   def redirected_to(%Conn{state: :unset}, _status) do
     raise "expected connection to have redirected but no response was set/sent"
+  end
+
+  def redirected_to(conn, status) when is_atom(status) do
+    redirected_to(conn, Plug.Conn.Status.code(status))
   end
 
   def redirected_to(%Conn{status: status} = conn, status) do
@@ -459,8 +459,9 @@ defmodule Phoenix.ConnTest do
   @spec recycle(Conn.t) :: Conn.t
   def recycle(conn) do
     build_conn()
+    |> Map.put(:host, conn.host)
     |> Plug.Test.recycle_cookies(conn)
-    |> copy_headers(conn.req_headers, ~w(accept))
+    |> copy_headers(conn.req_headers, ~w(accept authorization))
   end
 
   defp copy_headers(conn, headers, copy) do
@@ -486,7 +487,14 @@ defmodule Phoenix.ConnTest do
   Calls the Endpoint and bypasses Router match.
 
   Useful for unit testing Plugs where Endpoint and/or
-  router pipline plugs are required for proper setup.
+  router pipeline plugs are required for proper setup.
+
+  Note the use of `get("/")` following `bypass_through` in the examples below.
+  To execute the plug pipelines, you must issue a request against the router.
+  Most often, you can simpy send a GET request against the root path, but you
+  may also specify a different method or path which your pipelines may operate
+  against. If you ommit the request you may find that your tests return
+  a `flash not fetched, call fetch_flash/2` or simular error.
 
   ## Examples
 
@@ -497,7 +505,7 @@ defmodule Phoenix.ConnTest do
 
       conn =
         conn
-        |> bypass_through(MyApp.Router, [:browser])
+        |> bypass_through(MyAppWeb.Router, [:browser])
         |> get("/")
         |> MyApp.RequireAuthentication.call([])
       assert conn.halted
@@ -506,7 +514,7 @@ defmodule Phoenix.ConnTest do
 
       conn =
         conn
-        |> bypass_through(MyApp.Router, [])
+        |> bypass_through(MyAppWeb.Router, [])
         |> get("/")
         |> MyApp.RequireAuthentication.call([])
       assert conn.halted
@@ -533,6 +541,30 @@ defmodule Phoenix.ConnTest do
   @spec bypass_through(Conn.t, module, :atom | list) :: Conn.t
   def bypass_through(conn, router, pipelines \\ []) do
     Plug.Conn.put_private(conn, :phoenix_bypass, {router, List.wrap(pipelines)})
+  end
+
+  @doc """
+  Returns the matched params from the URL the connection was redirected to.
+
+  Uses the provided `%Plug.Conn{}`s router matched in the previous request.
+  Raises if the response's location header is not set.
+
+  ## Examples
+
+      assert redirected_to(conn) =~ "/posts/123"
+      assert %{id: "123"} = redirected_params(conn)
+  """
+  @spec redirected_params(Conn.t) :: map
+  def redirected_params(%Plug.Conn{} = conn) do
+    router = Phoenix.Controller.router_module(conn)
+    %URI{path: path, host: host} = conn |> redirected_to() |> URI.parse()
+    path_info = split_path(path)
+
+    {conn, _pipes, _dispatch} = router.__match_route__(conn, "GET", path_info, host || conn.host)
+    Enum.into(conn.path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
+  end
+  defp split_path(path) do
+    for segment <- String.split(path, "/"), segment != "", do: segment
   end
 
   @doc """

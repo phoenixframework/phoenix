@@ -8,13 +8,19 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.AdapterTest.ProdEndpoint
   alias Phoenix.Integration.AdapterTest.DevEndpoint
   alias Phoenix.Integration.AdapterTest.ProdInet6Endpoint
+  alias Phoenix.Integration.AdapterTest.InvalidHandlerEndpoint
 
   Application.put_env(:endpoint_int, ProdEndpoint,
-      http: [port: "4807"], url: [host: "example.com"], server: true, render_errors: [accepts: ~w(html json)])
+    http: [port: "4807"], url: [host: "example.com"], server: true,
+    render_errors: [accepts: ~w(html json)])
   Application.put_env(:endpoint_int, DevEndpoint,
       http: [port: "4808"], debug_errors: true)
   Application.put_env(:endpoint_int, ProdInet6Endpoint,
-      http: [{:port, "4809"}, :inet6], url: [host: "example.com"], server: true)
+    http: [{:port, "4809"}, :inet6],
+    url: [host: "example.com"], server: true)
+  Application.put_env(:endpoint_int, InvalidHandlerEndpoint,
+    http: [{:port, "4810"}, :inet6], handler: Phoenix.Endpoint.CowboyHandler,
+    url: [host: "example.com"], server: true)
 
   defmodule Router do
     @moduledoc """
@@ -72,7 +78,7 @@ defmodule Phoenix.Integration.EndpointTest do
     end
   end
 
-  for mod <- [ProdEndpoint, DevEndpoint, ProdInet6Endpoint] do
+  for mod <- [ProdEndpoint, DevEndpoint, ProdInet6Endpoint, InvalidHandlerEndpoint] do
     defmodule mod do
       use Phoenix.Endpoint, otp_app: :endpoint_int
       @before_compile Wrapper
@@ -93,9 +99,8 @@ defmodule Phoenix.Integration.EndpointTest do
     end
   end
 
-  @prod       4807
-  @dev        4808
-  @prod_inet6 4809
+  @prod 4807
+  @dev  4808
 
   alias Phoenix.Integration.HTTPClient
 
@@ -115,7 +120,7 @@ defmodule Phoenix.Integration.EndpointTest do
 
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown?_format=json", %{})
       assert resp.status == 404
-      assert resp.body |> Poison.decode!() == %{"error" => "Got 404 from error with GET"}
+      assert resp.body |> Phoenix.json_library().decode!() == %{"error" => "Got 404 from error with GET"}
 
       assert capture_log(fn ->
         {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})

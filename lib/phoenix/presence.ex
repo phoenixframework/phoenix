@@ -28,17 +28,17 @@ defmodule Phoenix.Presence do
 
       children = [
         ...
-        supervisor(MyApp.Presence, []),
+        MyApp.Presence,
       ]
 
   Once added, presences can be tracked in your channel after joining:
 
       defmodule MyApp.MyChannel do
-        use MyApp.Web, :channel
+        use MyAppWeb, :channel
         alias MyApp.Presence
 
         def join("some:topic", _params, socket) do
-          send(self, :after_join)
+          send(self(), :after_join)
           {:ok, assign(socket, :user_id, ...)}
         end
 
@@ -51,10 +51,11 @@ defmodule Phoenix.Presence do
         end
       end
 
-  In the example above, `Presence.track` is used to register this
-  channel's process as a presence for the socket's user ID, with
-  a map of metadata. Next, the current presence information for
+  In the example above, the current presence information for
   the socket's topic is pushed to the client as a `"presence_state"` event.
+  Next, `Presence.track` is used to register this
+  channel's process as a presence for the socket's user ID, with
+  a map of metadata.
 
   Finally, a diff of presence join and leave events will be sent to the
   client as they happen in real-time with the "presence_diff" event.
@@ -64,7 +65,7 @@ defmodule Phoenix.Presence do
         leaves: %{"456" => %{metas: [%{status: "online", phx_ref: ...}]},
 
   See `Phoenix.Presence.list/2` for more information on the presence
-  datastructure.
+  data structure.
 
   ## Fetching Presence Information
 
@@ -77,7 +78,7 @@ defmodule Phoenix.Presence do
   before broadcasting the information to all channel subscribers.
   This prevents N query problems and gives you a single place to group
   isolated data fetching to extend presence metadata. The function must
-  return a map of data matching the outlined Presence datastructure,
+  return a map of data matching the outlined Presence data structure,
   including the `:metas` key, but can extend the map of information
   to include any additional information. For example:
 
@@ -102,18 +103,18 @@ defmodule Phoenix.Presence do
   """
   alias Phoenix.Socket.Broadcast
 
-  @type presences :: %{ String.t => %{metas: [map()]}}
+  @type presences :: %{String.t => %{metas: [map()]}}
   @type presence :: %{key: String.t, meta: map()}
   @type topic :: String.t
 
   @callback start_link(Keyword.t) :: {:ok, pid()} | {:error, reason :: term()} :: :ignore
-  @callback init(Keyword.t) :: {:ok, pid()} | {:error, reason :: term}
+  @callback init(Keyword.t) :: {:ok, state :: term} | {:error, reason :: term}
   @callback track(Phoenix.Socket.t, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
   @callback track(pid, topic, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
   @callback untrack(Phoenix.Socket.t, key :: String.t) :: :ok
   @callback untrack(pid, topic, key :: String.t) :: :ok
-  @callback update(Phoenix.Socket.t, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
-  @callback update(pid, topic, key :: String.t, meta ::map()) :: {:ok, binary()} | {:error, reason :: term()}
+  @callback update(Phoenix.Socket.t, key :: String.t, meta :: map() | (map() -> map())) :: {:ok, binary()} | {:error, reason :: term()}
+  @callback update(pid, topic, key :: String.t, meta :: map() | (map() -> map())) :: {:ok, binary()} | {:error, reason :: term()}
   @callback fetch(topic, presences) :: presences
   @callback list(topic) :: presences
   @callback handle_diff(%{topic => {joins :: presences, leaves :: presences}}, state :: term) :: {:ok, state :: term}
@@ -124,6 +125,15 @@ defmodule Phoenix.Presence do
       @otp_app @opts[:otp_app] || raise "presence expects :otp_app to be given"
       @behaviour unquote(__MODULE__)
       @task_supervisor Module.concat(__MODULE__, TaskSupervisor)
+
+      @doc false
+      def child_spec(opts) do
+        %{
+          id: __MODULE__,
+          start: {__MODULE__, :start_link, [opts]},
+          type: :supervisor
+        }
+      end
 
       def start_link(opts \\ []) do
         opts = Keyword.merge(@opts, opts)
@@ -172,7 +182,7 @@ defmodule Phoenix.Presence do
         {:ok, state}
       end
 
-      defoverridable fetch: 2
+      defoverridable fetch: 2, child_spec: 1
     end
   end
 
@@ -207,7 +217,7 @@ defmodule Phoenix.Presence do
   @doc """
   Returns presences for a topic.
 
-  ## Presence datastructure
+  ## Presence data structure
 
   The presence information is returned as a map with presences grouped
   by key, cast as a string, and accumulated metadata, with the following form:

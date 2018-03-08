@@ -11,26 +11,26 @@ defmodule Phoenix.Transports.WebSocketSerializer do
   Translates a `Phoenix.Socket.Broadcast` into a `Phoenix.Socket.Message`.
   """
   def fastlane!(%Broadcast{} = msg) do
-    {:socket_push, :text, Poison.encode_to_iodata!(%Message{
-      topic: msg.topic,
-      event: msg.event,
-      payload: msg.payload
-    })}
+    msg = %Message{topic: msg.topic, event: msg.event, payload: msg.payload}
+
+    {:socket_push, :text, encode_v1_fields_only(msg)}
   end
 
   @doc """
   Encodes a `Phoenix.Socket.Message` struct to JSON string.
   """
   def encode!(%Reply{} = reply) do
-    {:socket_push, :text, Poison.encode_to_iodata!(%Message{
+    msg = %Message{
       topic: reply.topic,
       event: "phx_reply",
       ref: reply.ref,
       payload: %{status: reply.status, response: reply.payload}
-    })}
+    }
+
+    {:socket_push, :text, encode_v1_fields_only(msg)}
   end
   def encode!(%Message{} = msg) do
-    {:socket_push, :text, Poison.encode_to_iodata!(msg)}
+    {:socket_push, :text, encode_v1_fields_only(msg)}
   end
 
   @doc """
@@ -38,7 +38,13 @@ defmodule Phoenix.Transports.WebSocketSerializer do
   """
   def decode!(message, _opts) do
     message
-    |> Poison.decode!()
+    |> Phoenix.json_library().decode!()
     |> Phoenix.Socket.Message.from_map!()
+  end
+
+  defp encode_v1_fields_only(%Message{} = msg) do
+    msg
+    |> Map.take([:topic, :event, :payload, :ref])
+    |> Phoenix.json_library().encode_to_iodata!()
   end
 end

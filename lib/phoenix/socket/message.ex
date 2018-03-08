@@ -12,7 +12,7 @@ defmodule Phoenix.Socket.Message do
   """
 
   @type t :: %Phoenix.Socket.Message{}
-  defstruct topic: nil, event: nil, payload: nil, ref: nil
+  defstruct topic: nil, event: nil, payload: nil, ref: nil, join_ref: nil
 
   @doc """
   Converts a map with string keys into a message struct.
@@ -25,11 +25,12 @@ defmodule Phoenix.Socket.Message do
         topic: Map.fetch!(map, "topic"),
         event: Map.fetch!(map, "event"),
         payload: Map.fetch!(map, "payload"),
-        ref: Map.fetch!(map, "ref")
+        ref: Map.fetch!(map, "ref"),
+        join_ref: Map.get(map, "join_ref"),
       }
     rescue
       err in [KeyError] ->
-        raise Phoenix.Socket.InvalidMessageError, message: "missing key #{inspect err.key}"
+        raise Phoenix.Socket.InvalidMessageError, "missing key #{inspect err.key}"
     end
   end
 end
@@ -48,7 +49,7 @@ defmodule Phoenix.Socket.Reply do
   """
 
   @type t :: %Phoenix.Socket.Reply{}
-  defstruct topic: nil, status: nil, payload: nil, ref: nil
+  defstruct topic: nil, status: nil, payload: nil, ref: nil, join_ref: nil
 end
 
 defmodule Phoenix.Socket.Broadcast do

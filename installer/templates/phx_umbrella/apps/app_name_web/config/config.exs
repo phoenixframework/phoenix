@@ -5,10 +5,11 @@
 # is restricted to this project.
 use Mix.Config
 
-<%= if namespaced? or ecto do %># General application configuration
+<%= if namespaced? || ecto || generators do %># General application configuration
 config :<%= web_app_name %><%= if namespaced? do %>,
   namespace: <%= web_namespace %><% end %><%= if ecto do %>,
-  ecto_repos: []<% end %>
+  ecto_repos: [<%= app_module %>.Repo]<% end %><%= if generators do %>,
+  generators: <%= inspect generators %><% end %>
 
 <% end %># Configures the endpoint
 config :<%= web_app_name %>, <%= endpoint_module %>,
@@ -18,10 +19,8 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
   pubsub: [name: <%= web_namespace %>.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
-# Configures Elixir's Logger
-config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
+# Use Jason for JSON parsing in Phoenix
+config :phoenix, :json_library, Jason
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

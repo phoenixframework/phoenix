@@ -8,7 +8,7 @@ defmodule Phoenix.Transports.WebSocket do
 
       transport :websocket, Phoenix.Transports.WebSocket,
         timeout: :infinity,
-        serializer: Phoenix.Transports.WebSocketSerializer,
+        serializer: [{Phoenix.Transports.WebSocketSerializer, "~> 2.0.0"}],
         transport_log: false
 
     * `:timeout` - the timeout for keeping websocket connections
@@ -22,7 +22,13 @@ defmodule Phoenix.Transports.WebSocket do
       origin header is present. It defaults to true and, in such cases,
       it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
       It may be set to `false` (not recommended) or to a list of explicitly
-      allowed origins
+      allowed origins.
+
+      check_origin: ["https://example.com",
+                     "//another.com:888", "//other.com"]
+
+      Note: To connect from a native app be sure to either have the native app
+      set an origin or allow any origin via `check_origin: false`
 
     * `:code_reloader` - optionally override the default `:code_reloader` value
       from the socket's endpoint
@@ -50,7 +56,8 @@ defmodule Phoenix.Transports.WebSocket do
   @behaviour Phoenix.Socket.Transport
 
   def default_config() do
-    [serializer: Phoenix.Transports.WebSocketSerializer,
+    [serializer: [{Phoenix.Transports.WebSocketSerializer, "~> 1.0.0"},
+                  {Phoenix.Transports.V2.WebSocketSerializer, "~> 2.0.0"}],
      timeout: 60_000,
      transport_log: false]
   end
@@ -63,7 +70,10 @@ defmodule Phoenix.Transports.WebSocket do
   alias Phoenix.Socket.Transport
 
   @doc false
-  def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport}) do
+  def init(conn, {endpoint, handler, transport}) do
+    init(conn, {endpoint, handler, transport, self()})
+  end
+  def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport, pid}) do
     {_, opts} = handler.__transport__(transport)
 
     conn =
@@ -79,11 +89,11 @@ defmodule Phoenix.Transports.WebSocket do
         params     = conn.params
         serializer = Keyword.fetch!(opts, :serializer)
 
-        case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params) do
+        case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params, pid) do
           {:ok, socket} ->
             {:ok, conn, {__MODULE__, {socket, opts}}}
           :error ->
-            send_resp(conn, 403, "")
+            conn = send_resp(conn, 403, "")
             {:error, conn}
         end
       %{halted: true} = conn ->
@@ -92,22 +102,21 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   def init(conn, _) do
-    send_resp(conn, :bad_request, "")
+    conn = send_resp(conn, :bad_request, "")
     {:error, conn}
   end
 
   @doc false
   def ws_init({socket, config}) do
     Process.flag(:trap_exit, true)
-    serializer = Keyword.fetch!(config, :serializer)
-    timeout    = Keyword.fetch!(config, :timeout)
+    timeout = Keyword.fetch!(config, :timeout)
 
     if socket.id, do: socket.endpoint.subscribe(socket.id, link: true)
 
     {:ok, %{socket: socket,
             channels: %{},
             channels_inverse: %{},
-            serializer: serializer}, timeout}
+            serializer: socket.serializer}, timeout}
   end
 
   @doc false
@@ -132,8 +141,13 @@ defmodule Phoenix.Transports.WebSocket do
       nil   -> {:ok, state}
       {topic, join_ref} ->
         new_state = delete(state, topic, channel_pid)
-        encode_reply Transport.on_exit_message(topic, join_ref, reason), new_state
+        encode_reply(Transport.on_exit_message(topic, join_ref, reason), new_state)
     end
+  end
+
+  def ws_info({:graceful_exit, channel_pid, %Phoenix.Socket.Message{} = msg}, state) do
+    new_state = delete(state, msg.topic, channel_pid)
+    encode_reply(msg, new_state)
   end
 
   @doc false

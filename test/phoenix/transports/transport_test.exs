@@ -1,4 +1,4 @@
-System.put_env("ENDPOINT_TEST_HOST", "host.com")
+System.put_env("TRANSPORT_TEST_HOST", "host.com")
 
 defmodule Phoenix.Transports.TransportTest do
   use ExUnit.Case, async: true
@@ -7,9 +7,9 @@ defmodule Phoenix.Transports.TransportTest do
   alias Phoenix.Socket.Transport
   alias Phoenix.Socket.Message
 
-  Application.put_env :phoenix, __MODULE__.Endpoint, 
+  Application.put_env :phoenix, __MODULE__.Endpoint,
     force_ssl: [],
-    url: [host: {:system, "ENDPOINT_TEST_HOST"}],
+    url: [host: {:system, "TRANSPORT_TEST_HOST"}],
     check_origin: ["//endpoint.com"]
 
   defmodule Endpoint do
@@ -28,14 +28,8 @@ defmodule Phoenix.Transports.TransportTest do
   ## on_exit_message
 
   test "on_exit_message/3" do
-    assert Transport.on_exit_message("foo", "1", :normal) ==
-           %Message{ref: "1", event: "phx_close", payload: %{}, topic: "foo"}
-    assert Transport.on_exit_message("foo", "1", :shutdown) ==
-           %Message{ref: "1", event: "phx_close", payload: %{}, topic: "foo"}
-    assert Transport.on_exit_message("foo", "1", {:shutdown, :whatever}) ==
-           %Message{ref: "1", event: "phx_close", payload: %{}, topic: "foo"}
     assert Transport.on_exit_message("foo", "1", :oops) ==
-           %Message{ref: "1", event: "phx_error", payload: %{}, topic: "foo"}
+           %Message{ref: "1", event: "phx_error", payload: %{}, topic: "foo", join_ref: "1"}
   end
 
   ## Check origin
@@ -157,6 +151,6 @@ defmodule Phoenix.Transports.TransportTest do
   end
 
   test "provides the protocol version" do
-    assert Version.match?(Transport.protocol_version(), "~> 1.0")
+    assert Version.match?(Transport.protocol_version(), "~> 2.0")
   end
 end

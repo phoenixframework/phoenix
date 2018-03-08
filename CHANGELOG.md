@@ -1,5 +1,89 @@
 # Changelog
 
+## 1.4.0-dev
+
+* Enhancements
+  * [Endpoint] Add `Cowboy2Handler` for HTTP2 support with cowboy2.
+  * [Phoenix] Add `Phoenix.json_library/0` and replace `Poison` with `Jason` for JSON encoding in new projects.
+  * [Controller] Support partial file downloads with `:offset` and `:length` options to `send_download/3`
+  * [Controller] Add additional security headers to `put_secure_browser_headers` (`x-content-type-options`, `x-download-options`, and `x-permitted-cross-domain-policies`)
+  * [Controller] Add `put_router_url/2` to override the default URL generation pulled from endpoint configuration
+  * [Logger] Add whitelist support to `filter_parameters` logger configuration, via new `:keep` tuple format
+  * [Router] Raise on duplicate plugs in pipe_through scopes
+  * [ChannelTest] Respect user's configured ExUnit `:assert_receive_timeout` for macro assertions
+  * [phx.new] Generate new Elixir 1.5+ child spec
+  * [phx.new] Use webpack for asset bundling
+
+* Bug Fixes
+  * [Channel] Fix issue with WebSocket transport sending wrong ContentLength header with 403 response
+
+* JavaScript client enhancements
+  * Add new instance-based Presence API with simplified synchronization callbacks
+  * Add `updateJoinParams` to channel for explicit param updates between rejoins
+
+* JavaScript client bug fixes
+  * Fix race condition when presence diff arrives before state
+
+* Deprecations
+  * [Controller] Passing a view in `render/3` and `render/4` is deprecated in favor of `put_view/2`
+
+## 1.3.1 (2018-03-02)
+
+* Enhancements
+  * [Router] Raise on unknown `:only` and `:except` in `resources`.
+  * [Router] Include line numbers in generated routes for better reporting
+  * [Logger] Add parameter keep strategy to filter all parameters by default and selectively keep parameters
+  * [Token] Support `:infinity` for token max age
+  * [Presence] Generate `child_spec` for Elixir 1.5+ support
+
+* Bug Fixes
+  * [Transports.WebSocketSerializer] Do not encode `:join_ref` in v1 messages
+
+## 1.3.0 (2017-07-28)
+
+See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chrismccord/71ab10d433c98b714b75c886eff17357) to bring your existing apps up to speed.
+
+* Enhancements
+  * [Generator] Add new `phx.new`, `phx.new.web`, `phx.new.ecto` project generators with improved application structure and support for umbrella applications
+  * [Generator] Add new `phx.gen.html` and `phx.gen.json` resource generators with improved isolation of API boundaries
+  * [Controller] Add `current_path` and `current_url` to generate a connection's path and url
+  * [Controller] Introduce `action_fallback` to registers a plug to call as a fallback to the controller action
+  * [Controller] Wrap exceptions at controller to maintain connection state
+  * [Channel] Add ability to configure channel event logging with `:log_join` and `:log_handle_in` options
+  * [Channel] Warn on unhandled `handle_info/2` messages
+  * [Channel] Channels now distinguish from graceful exits and application restarts, allowing clients to enter error mode and reconnected after cold deploys.
+  * [Channel] Add V2 of wire channel wire protocol with resolved race conditions and compacted payloads
+  * [ChannelTest] Subscribe `connect` to `UserSocket.id` to support testing forceful disconnects
+  * [Socket] Support static `:assigns` when defining channel routes
+  * [Router] Document `match` support for matching on any HTTP method with the special `:*` argument
+  * [Router] Populate `conn.path_params` with path parameters for the route
+  * [ConnTest] Add `redirected_params/1` to return the named params matched in the router for the redirected URL
+  * [Digester] Add `mix phx.digest.clean` to remove old versions of compiled assets
+  * [phx.new] Add Erlang 20 support in `phx.new` installer archive
+  * [phx.new] Use new `lib/my_app` and `lib/my_app_web` directory structure
+  * [phx.new] Use new `MyAppWeb` alias convention for web modules
+
+* Bug Fixes
+  * [Controller] Harden local redirect against arbitrary URL redirection
+  * [Controller] Fix issue causing flash session to remain when using `clear_flash/1`
+
+* Deprecations
+  * [Generator] All `phoenix.*` mix tasks have been deprecated in favor of new `phx.*` tasks
+
+* JavaScript client enhancements
+  * Use V2 channel wire protocol support
+  * Add ability to pass `encode` and `decode` functions to socket constructor for custom encoding and decoding of outgoing and incoming messages.
+  * Detect heartbeat timeouts on client to handle ungraceful connection loss for faster socket error detection
+  * Add support for AMD/RequireJS
+
+* JavaScript client bug fixes
+  * Resolve race conditions when join timeouts occur on client, while server channel successfully joins
+
+## 1.2.2 (2017-3-14)
+
+* Big Fixes
+  * [Controller] Harden local redirect against arbitrary URL redirection
+
 ## 1.2.1 (2016-8-11)
 
 * Enhancements

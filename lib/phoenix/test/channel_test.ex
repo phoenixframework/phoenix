@@ -240,13 +240,26 @@ defmodule Phoenix.ChannelTest do
   defmacro connect(handler, params) do
     if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
       quote do
-        Transport.connect(unquote(endpoint), unquote(handler), :channel_test,
-                          unquote(__MODULE__), NoopSerializer, Phoenix.ChannelTest.__stringify__(unquote(params)))
+        unquote(__MODULE__).__connect__(unquote(endpoint), unquote(handler), unquote(params))
       end
     else
       raise "module attribute @endpoint not set for socket/2"
     end
   end
+
+  @doc false
+  def __connect__(endpoint, handler, params) do
+    endpoint
+    |> Transport.connect(handler, :channel_test, __MODULE__, NoopSerializer, __stringify__(params))
+    |> subscribe_to_socket_id(endpoint, handler)
+  end
+  defp subscribe_to_socket_id({:ok, socket}, endpoint, handler) do
+    if topic = handler.id(socket) do
+      :ok = endpoint.subscribe(topic)
+    end
+    {:ok, socket}
+  end
+  defp subscribe_to_socket_id(error, _endpoint, _handler), do: error
 
   @doc "See `subscribe_and_join!/4`."
   def subscribe_and_join!(%Socket{} = socket, topic) when is_binary(topic) do
@@ -255,8 +268,12 @@ defmodule Phoenix.ChannelTest do
   @doc "See `subscribe_and_join!/4`."
   def subscribe_and_join!(%Socket{} = socket, topic, payload)
       when is_binary(topic) and is_map(payload) do
-    channel = match_topic_to_channel!(socket, topic)
-    subscribe_and_join!(socket, channel, topic, payload)
+
+    {channel, opts} = match_topic_to_channel!(socket, topic)
+
+    socket
+    |> with_opts(opts)
+    |> subscribe_and_join!(channel, topic, payload)
   end
   @doc """
   Same as `subscribe_and_join/4`, but returns either the socket
@@ -280,8 +297,12 @@ defmodule Phoenix.ChannelTest do
   @doc "See `subscribe_and_join/4`."
   def subscribe_and_join(%Socket{} = socket, topic, payload)
       when is_binary(topic) and is_map(payload) do
-    channel = match_topic_to_channel!(socket, topic)
-    subscribe_and_join(socket, channel, topic, payload)
+
+    {channel, opts} = match_topic_to_channel!(socket, topic)
+
+    socket
+    |> with_opts(opts)
+    |> subscribe_and_join(channel, topic, payload)
   end
   @doc """
   Subscribes to the given topic and joins the channel
@@ -312,9 +333,14 @@ defmodule Phoenix.ChannelTest do
   @doc "See `join/4`."
   def join(%Socket{} = socket, topic, payload)
       when is_binary(topic) and is_map(payload) do
-    channel = match_topic_to_channel!(socket, topic)
-    join(socket, channel, topic, payload)
+
+    {channel, opts} = match_topic_to_channel!(socket, topic)
+
+    socket
+    |> with_opts(opts)
+    |> join(channel, topic, payload)
   end
+
   @doc """
   Joins the channel under the given topic and payload.
 
@@ -325,7 +351,9 @@ defmodule Phoenix.ChannelTest do
   """
   def join(%Socket{} = socket, channel, topic, payload \\ %{})
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
-    socket = %Socket{socket | topic: topic, channel: channel}
+
+    ref = System.unique_integer([:positive])
+    socket = Transport.build_channel_socket(socket, channel, topic, ref, [])
 
     case Server.join(socket, payload) do
       {:ok, reply, pid} ->
@@ -408,7 +436,8 @@ defmodule Phoenix.ChannelTest do
   In the assertion above, we don't particularly care about
   the data being sent, as long as something was sent.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :assert_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
 
   **NOTE:** Because event and payload are patterns, they will be matched.  This
   means that if you wish to assert that the received payload is equivalent to
@@ -427,7 +456,7 @@ defmodule Phoenix.ChannelTest do
       # The code above does not assert the payload matches the described map.
 
   """
-  defmacro assert_push(event, payload, timeout \\ 100) do
+  defmacro assert_push(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
     quote do
       assert_receive %Phoenix.Socket.Message{
                         event: unquote(event),
@@ -441,12 +470,13 @@ defmodule Phoenix.ChannelTest do
 
   Like `assert_push`, the event and payload are patterns.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :refute_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
   Keep in mind this macro will block the test by the
   timeout value, so use it only when necessary as overuse
   will certainly slow down your test suite.
   """
-  defmacro refute_push(event, payload, timeout \\ 100) do
+  defmacro refute_push(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)) do
     quote do
       refute_receive %Phoenix.Socket.Message{
                         event: unquote(event),
@@ -466,9 +496,10 @@ defmodule Phoenix.ChannelTest do
   In the assertion above, we don't particularly care about
   the data being sent, as long as something was replied.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :assert_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
   """
-  defmacro assert_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
+  defmacro assert_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
     quote do
       ref = unquote(ref)
       assert_receive %Phoenix.Socket.Reply{
@@ -484,12 +515,13 @@ defmodule Phoenix.ChannelTest do
 
   Like `assert_reply`, the event and payload are patterns.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :refute_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
   Keep in mind this macro will block the test by the
   timeout value, so use it only when necessary as overuse
   will certainly slow down your test suite.
   """
-  defmacro refute_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
+  defmacro refute_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)) do
     quote do
       ref = unquote(ref)
       refute_receive %Phoenix.Socket.Reply{
@@ -514,9 +546,10 @@ defmodule Phoenix.ChannelTest do
   In the assertion above, we don't particularly care about
   the data being sent, as long as something was sent.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :assert_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
   """
-  defmacro assert_broadcast(event, payload, timeout \\ 100) do
+  defmacro assert_broadcast(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
     quote do
       assert_receive %Phoenix.Socket.Broadcast{event: unquote(event),
                                                payload: unquote(payload)}, unquote(timeout)
@@ -528,12 +561,13 @@ defmodule Phoenix.ChannelTest do
 
   Like `assert_broadcast`, the event and payload are patterns.
 
-  The timeout is in milliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to the :refute_receive_timeout
+  set on the :ex_unit application (which defaults to 100ms).
   Keep in mind this macro will block the test by the
   timeout value, so use it only when necessary as overuse
   will certainly slow down your test suite.
   """
-  defmacro refute_broadcast(event, payload, timeout \\ 100) do
+  defmacro refute_broadcast(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)) do
     quote do
       refute_receive %Phoenix.Socket.Broadcast{event: unquote(event),
                                                payload: unquote(payload)}, unquote(timeout)
@@ -552,12 +586,14 @@ defmodule Phoenix.ChannelTest do
     end
 
     case socket.handler.__channel__(topic, socket.transport_name) do
-      channel when is_atom(channel) -> channel
+      {channel, opts} when is_atom(channel) -> {channel, opts}
       _ -> raise "no channel found for topic #{inspect topic} in #{inspect socket.handler}"
     end
   end
 
   @doc false
+  def __stringify__(%{__struct__: _} = struct),
+    do: struct
   def __stringify__(%{} = params),
     do: Enum.into(params, %{}, &stringify_kv/1)
   def __stringify__(other),
@@ -565,4 +601,8 @@ defmodule Phoenix.ChannelTest do
 
   defp stringify_kv({k, v}),
     do: {to_string(k), __stringify__(v)}
+
+  defp with_opts(%Socket{} = socket, opts) do
+    %Socket{socket | assigns: Map.merge(socket.assigns, opts[:assigns] || %{})}
+  end
 end

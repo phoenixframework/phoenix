@@ -24,29 +24,52 @@ defmodule Phoenix.Endpoint.CowboyHandler do
 
     * Per websocket transport:
 
-          {"/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
-            {Phoenix.Transports.WebSocket,
-              {MyApp.Endpoint, MyApp.UserSocket, :websocket}}}
+      ```
+      {"/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
+        {Phoenix.Transports.WebSocket,
+          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, :websocket}}}
+      ```
 
     * Per longpoll transport:
 
-          {"/socket/long_poll", Plug.Adapters.Cowboy.Handler,
-            {Phoenix.Transports.LongPoll,
-              {MyApp.Endpoint, MyApp.UserSocket, :longpoll}}}
+      ```
+      {"/socket/long_poll", Plug.Adapters.Cowboy.Handler,
+        {Phoenix.Transports.LongPoll,
+          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, :longpoll}}}
+      ```
+
+    * For the live-reload websocket:
+
+      ```
+      {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
+        {Phoenix.Transports.WebSocket,
+          {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}}
+      ```
+
+      If you decide to include the live-reload websocket, you should
+      disable it when building for production.
 
     * For the endpoint:
 
-          {:_, Plug.Adapters.Cowboy.Handler, {MyApp.Endpoint, []}}
+      ```
+      {:_, Plug.Adapters.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
+      ```
 
   For example:
 
-      config :myapp, MyApp.Endpoint,
+      config :myapp, MyAppWeb.Endpoint,
         http: [dispatch: [
                 {:_, [
-                    {"/foo", MyApp.CustomHandler, []},
-                    {"/bar", MyApp.AnotherHandler, []},
-                    {:_, Plug.Adapters.Cowboy.Handler, {MyApp.Endpoint, []}}
+                    {"/foo", MyAppWeb.CustomHandler, []},
+                    {"/bar", MyAppWeb.AnotherHandler, []},
+                    {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
+                      {Phoenix.Transports.WebSocket,
+                        {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}},
+                    {:_, Plug.Adapters.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
                   ]}]]
+
+  Note: if you reconfigure HTTP options in `MyAppWeb.Endpoint.init/1`,
+  your dispatch options set in mix config will be overwritten.
 
   It is also important to specify your handlers first, otherwise
   Phoenix will intercept the requests before they get to your handler.
@@ -110,7 +133,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   end
 
   defp info(scheme, endpoint, ref) do
-    {addr,port} = :ranch.get_addr(ref)
+    {addr, port} = :ranch.get_addr(ref)
     addr_str = :inet.ntoa(addr)
     "Running #{inspect endpoint} with Cowboy using #{scheme}://#{addr_str}:#{port}"
   end

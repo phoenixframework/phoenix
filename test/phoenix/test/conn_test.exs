@@ -4,6 +4,14 @@ defmodule Phoenix.Test.ConnTest.CatchAll do
   def call(conn, _opts), do: Plug.Conn.assign(conn, :catch_all, true)
 end
 
+defmodule Phoenix.Test.ConnTest.RedirRouter do
+  use Phoenix.Router
+  alias Phoenix.Test.ConnTest.CatchAll
+
+  get "/", CatchAll, :foo
+  get "/posts/:id", SomeController, :some_action
+end
+
 defmodule Phoenix.Test.ConnTest.Router do
   use Phoenix.Router
   alias Phoenix.Test.ConnTest.CatchAll
@@ -16,8 +24,11 @@ defmodule Phoenix.Test.ConnTest.Router do
     plug :put_bypass, :api
   end
 
-  get "/stat", CatchAll, :stat
-  forward "/", CatchAll
+  scope "/" do
+    pipe_through :browser
+    get "/stat", CatchAll, :stat
+    forward "/", CatchAll
+  end
 
   def put_bypass(conn, pipeline) do
     bypassed = (conn.assigns[:bypassed] || []) ++ [pipeline]
@@ -28,7 +39,7 @@ end
 defmodule Phoenix.Test.ConnTest do
   use ExUnit.Case, async: true
   use Phoenix.ConnTest
-  alias Phoenix.Test.ConnTest.Router
+  alias Phoenix.Test.ConnTest.{Router, RedirRouter}
 
   defmodule ConnError do
     defexception [message: nil, plug_status: 500]
@@ -96,7 +107,7 @@ defmodule Phoenix.Test.ConnTest do
       build_conn()
       |> put_req_header("content-type", "application/json")
       |> post(:hello, "[1, 2, 3]")
-      |> Plug.Parsers.call(Plug.Parsers.init(parsers: [:json], json_decoder: Poison))
+      |> Plug.Parsers.call(Plug.Parsers.init(parsers: [:json], json_decoder: Phoenix.json_library()))
 
     assert conn.method == "POST"
     assert conn.path_info == []
@@ -132,23 +143,44 @@ defmodule Phoenix.Test.ConnTest do
     refute conn.private.phoenix_recycled
   end
 
-  test "recycle/1" do
-    conn =
-      build_conn()
-      |> get("/")
-      |> put_req_header("hello", "world")
-      |> put_req_cookie("req_cookie", "req_cookie")
-      |> put_req_cookie("del_cookie", "del_cookie")
-      |> put_req_cookie("over_cookie", "pre_cookie")
-      |> put_resp_cookie("over_cookie", "pos_cookie")
-      |> put_resp_cookie("resp_cookie", "resp_cookie")
-      |> delete_resp_cookie("del_cookie")
+  describe "recycle/1" do
+    test "relevant request headers are persisted" do
+      conn =
+        build_conn()
+        |> get("/")
+        |> put_req_header("accept", "text/html")
+        |> put_req_header("authorization", "Bearer mytoken")
+        |> put_req_header("hello", "world")
 
-    conn = conn |> recycle() |> fetch_cookies()
-    assert get_req_header(conn, "hello") == []
-    assert conn.cookies == %{"req_cookie"  => "req_cookie",
-                             "over_cookie" => "pos_cookie",
-                             "resp_cookie" => "resp_cookie"}
+      conn = conn |> recycle()
+      assert get_req_header(conn, "accept") == ["text/html"]
+      assert get_req_header(conn, "authorization") == ["Bearer mytoken"]
+      assert get_req_header(conn, "hello") == []
+    end
+
+    test "host is persisted" do
+      conn =
+        build_conn(:get, "http://localhost/", nil)
+        |> recycle()
+      assert conn.host == "localhost"
+    end
+
+    test "cookies are persisted" do
+      conn =
+        build_conn()
+        |> get("/")
+        |> put_req_cookie("req_cookie", "req_cookie")
+        |> put_req_cookie("del_cookie", "del_cookie")
+        |> put_req_cookie("over_cookie", "pre_cookie")
+        |> put_resp_cookie("over_cookie", "pos_cookie")
+        |> put_resp_cookie("resp_cookie", "resp_cookie")
+        |> delete_resp_cookie("del_cookie")
+
+      conn = conn |> recycle() |> fetch_cookies()
+      assert conn.cookies == %{"req_cookie"  => "req_cookie",
+                               "over_cookie" => "pos_cookie",
+                               "resp_cookie" => "resp_cookie"}
+    end
   end
 
   test "ensure_recycled/1" do
@@ -238,10 +270,17 @@ defmodule Phoenix.Test.ConnTest do
       build_conn(:get, "/") |> resp(200, "ok") |> json_response(200)
     end
 
-    assert_raise RuntimeError,
-                 "could not decode JSON body, invalid token \"o\" in body:\n\nok", fn ->
+    assert_raise Jason.DecodeError,
+                 "unexpected byte at position 0: 0x6F ('o')", fn ->
       build_conn(:get, "/") |> put_resp_content_type("application/json")
                       |> resp(200, "ok") |> json_response(200)
+    end
+
+    assert_raise Jason.DecodeError, ~r/unexpected end of input at position 0/, fn ->
+      build_conn(:get, "/")
+      |> put_resp_content_type("application/json")
+      |> resp(200, "")
+      |> json_response(200)
     end
 
     assert_raise RuntimeError, ~s(expected response with status 200, got: 400, with body:\n{"error": "oh oh"}), fn ->
@@ -303,6 +342,15 @@ defmodule Phoenix.Test.ConnTest do
     end
   end
 
+  test "redirected_to/2 with status atom" do
+    conn =
+      build_conn(:get, "/")
+      |> put_resp_header("location", "new location")
+      |> send_resp(301, "foo")
+
+    assert redirected_to(conn, :moved_permanently) == "new location"
+  end
+
   test "redirected_to/2 without header" do
     assert_raise RuntimeError,
                  "no location header was set on redirected_to", fn ->
@@ -327,6 +375,41 @@ defmodule Phoenix.Test.ConnTest do
                  ~r"expected connection to have redirected but no response was set/sent", fn ->
       build_conn(:get, "/")
       |> redirected_to()
+    end
+  end
+
+  describe "redirected_params/1" do
+    test "with matching route" do
+      conn =
+        build_conn(:get, "/")
+        |> RedirRouter.call(RedirRouter.init([]))
+        |> put_resp_header("location", "/posts/123")
+        |> send_resp(302, "foo")
+
+      assert redirected_params(conn) == %{id: "123"}
+    end
+
+    test "raises Phoenix.Router.NoRouteError for unmatched location" do
+      conn =
+        build_conn(:get, "/")
+        |> RedirRouter.call(RedirRouter.init([]))
+        |> put_resp_header("location", "/unmatched")
+        |> send_resp(302, "foo")
+
+      assert_raise Phoenix.Router.NoRouteError, fn ->
+        redirected_params(conn)
+      end
+    end
+
+    test "without redirection" do
+      assert_raise RuntimeError,
+                  "expected redirection with status 302, got: 200", fn ->
+        build_conn(:get, "/")
+        |> RedirRouter.call(RedirRouter.init([]))
+        |> put_resp_header("location", "new location")
+        |> send_resp(200, "ok")
+        |> redirected_params()
+      end
     end
   end
 

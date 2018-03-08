@@ -13,6 +13,7 @@ defmodule Phoenix.Router.RoutingTest do
     def not_found(conn, _params), do: text(put_status(conn, :not_found), "not found")
     def image(conn, _params), do: text(conn, conn.params["path"] || "show files")
     def move(conn, _params), do: text(conn, "users move")
+    def any(conn, _params), do: text(conn, "users any")
   end
 
   defmodule Router do
@@ -32,6 +33,7 @@ defmodule Phoenix.Router.RoutingTest do
     options "/options", UserController, :options
     connect "/connect", UserController, :connect
     match :move, "/move", UserController, :move
+    match :*, "/any", UserController, :any
 
     get "/users/:user_id/files/:id", UserController, :image
     get "/*path", UserController, :not_found
@@ -53,12 +55,15 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.status == 200
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "75f6306d-a090-46f9-8b80-80fd57ec9a41"
+    assert conn.path_params["id"] == "75f6306d-a090-46f9-8b80-80fd57ec9a41"
 
     conn = call(Router, :get, "users/75f6306d-a0/files/34-95")
     assert conn.status == 200
     assert conn.resp_body == "show files"
     assert conn.params["user_id"] == "75f6306d-a0"
+    assert conn.path_params["user_id"] == "75f6306d-a0"
     assert conn.params["id"] == "34-95"
+    assert conn.path_params["id"] == "34-95"
   end
 
   test "get with named param" do
@@ -66,6 +71,7 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.status == 200
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "1"
+    assert conn.path_params["id"] == "1"
   end
 
   test "parameters are url decoded" do
@@ -146,5 +152,17 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.method == "MOVE"
     assert conn.status == 200
     assert conn.resp_body == "users move"
+  end
+
+  test "any verb matches" do
+    conn = call(Router, :get, "/any")
+    assert conn.method == "GET"
+    assert conn.status == 200
+    assert conn.resp_body == "users any"
+
+    conn = call(Router, :put, "/any")
+    assert conn.method == "PUT"
+    assert conn.status == 200
+    assert conn.resp_body == "users any"
   end
 end

@@ -18,7 +18,7 @@ defmodule Phoenix.Router.Scope do
   @doc """
   Builds a route based on the top of the stack.
   """
-  def route(module, kind, verb, path, plug, plug_opts, opts) do
+  def route(line, module, kind, verb, path, plug, plug_opts, opts) do
     path    = validate_path(path)
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
@@ -26,7 +26,7 @@ defmodule Phoenix.Router.Scope do
 
     {path, host, alias, as, pipes, private, assigns} =
       join(module, path, plug, as, private, assigns)
-    Phoenix.Router.Route.build(kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns)
+    Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns)
   end
 
   @doc """
@@ -56,13 +56,27 @@ defmodule Phoenix.Router.Scope do
   @doc """
   Appends the given pipes to the current scope pipe through.
   """
-  def pipe_through(module, pipes) do
-    pipes = List.wrap(pipes)
+  def pipe_through(module, new_pipes) do
+    new_pipes = List.wrap(new_pipes)
+    stack_pipes =
+      module
+      |> get_stack()
+      |> Enum.flat_map(fn scope -> scope.pipes end)
 
-    update_stack(module, fn [scope|stack] ->
-      scope = put_in scope.pipes, scope.pipes ++ pipes
-      [scope|stack]
+    update_stack(module, fn [scope | stack] ->
+      pipes = collect_pipes(new_pipes, stack_pipes, scope.pipes)
+      [put_in(scope.pipes, pipes) | stack]
     end)
+  end
+  defp collect_pipes([] = _new_pipes, _stack_pipes, acc), do: acc
+  defp collect_pipes([pipe | new_pipes], stack_pipes, acc) do
+    if pipe in new_pipes or pipe in stack_pipes do
+      raise ArgumentError, """
+      duplicate pipe_through for #{inspect pipe}.
+      A plug may only be used once inside a scoped pipe_through
+      """
+    end
+    collect_pipes(new_pipes, stack_pipes, acc ++ [pipe])
   end
 
   @doc """

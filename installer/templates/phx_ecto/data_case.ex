@@ -1,10 +1,10 @@
 defmodule <%= app_module %>.DataCase do
   @moduledoc """
-  This module defines the test case to be used by
-  model tests.
+  This module defines the setup for tests requiring
+  access to the application's data layer.
 
   You may define functions here to be used as helpers in
-  your model tests. See `errors_on/2`'s definition as reference.
+  your tests.
 
   Finally, if the test case interacts with the database,
   it cannot be async. For this reason, every test runs
@@ -36,30 +36,18 @@ defmodule <%= app_module %>.DataCase do
   end
 
   @doc """
-  Helper for returning list of errors in a struct when given certain data.
+  A helper that transform changeset errors to a map of messages.
 
-  ## Examples
+      assert {:error, changeset} = Accounts.create_user(%{password: "short"})
+      assert "password is too short" in errors_on(changeset).password
+      assert %{password: ["password is too short"]} = errors_on(changeset)
 
-  Given a User schema that lists `:name` as a required field and validates
-  `:password` to be safe, it would return:
-
-      iex> errors_on(%User{}, %{password: "password"})
-      [password: "is unsafe", name: "is blank"]
-
-  You could then write your assertion like:
-
-      assert {:password, "is unsafe"} in errors_on(%User{}, %{password: "password"})
-
-  You can also create the changeset manually and retrieve the errors
-  field directly:
-
-      iex> changeset = User.changeset(%User{}, password: "password")
-      iex> {:password, "is unsafe"} in changeset.errors
-      true
   """
-  def errors_on(struct, data) do
-    struct.__struct__.changeset(struct, data)
-    |> Ecto.Changeset.traverse_errors(&<%= app_module %>.Web.ErrorHelpers.translate_error/1)
-    |> Enum.flat_map(fn {key, errors} -> for msg <- errors, do: {key, msg} end)
+  def errors_on(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {message, opts} ->
+      Enum.reduce(opts, message, fn {key, value}, acc ->
+        String.replace(acc, "%{#{key}}", to_string(value))
+      end)
+    end)
   end
 end
