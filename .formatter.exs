@@ -5,9 +5,27 @@ locals_without_parens = [
   # Phoenix.Router
   connect: 3,
   connect: 4,
+  delete: 3,
+  delete: 4,
+  forward: 2,
+  forward: 3,
+  forward: 4,
+  get: 3,
+  get: 4,
   head: 3,
   head: 4,
+  match: 4,
+  match: 5,
+  options: 3,
+  options: 4,
+  patch: 3,
+  patch: 4,
+  pipeline: 2,
   pipe_through: 1,
+  post: 3,
+  post: 4,
+  put: 3,
+  put: 4,
   resources: 2,
   resources: 3,
   resources: 4,
@@ -17,6 +35,8 @@ locals_without_parens = [
   action_fallback: 1,
 
   # Phoenix.Endpoint
+  plug: 1,
+  plug: 2,
   socket: 2,
 
   # Phoenix.Socket
