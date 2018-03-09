@@ -36,6 +36,6 @@
     "watch": "webpack --mode development --watch"
   },
   "dependencies": {
-    "expose-loader": "^0.7.4"
+    "expose-loader": "^0.7.5"
   }
 }
