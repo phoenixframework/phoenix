@@ -415,6 +415,12 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.static_path(socket_with_endpoint(), "/images/foo.png") == "/images/foo.png"
   end
 
+  test "helpers module generates a static_push helper" do
+    conn = conn_with_endpoint()
+    assert Helpers.static_push(conn, "/images/foo.png") == "/images/foo.png"
+    assert {"/images/foo.png", [{"accept", "image/png"}]} in sent_pushes(conn)
+  end
+
   test "helpers module generates a static_url helper" do
     url = "https://static.example.com/images/foo.png"
     assert Helpers.static_url(__MODULE__, "/images/foo.png") == url
