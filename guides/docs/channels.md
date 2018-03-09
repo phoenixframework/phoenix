@@ -1,60 +1,127 @@
 # Channels
 
-Channels are a really exciting and powerful part of Phoenix that allow us to easily add soft-realtime features to our applications. Channels are based on a simple idea - sending and receiving messages. Senders broadcast messages about topics. Receivers subscribe to topics so that they can get those messages. Senders and receivers can switch roles on the same topic at any time.
+Channels are an exciting part of Phoenix that enable soft real-time communication with and between millions of connected clients.
+Some possible use cases include:
 
-Since Elixir is based on message passing, you may wonder why we need this extra mechanism to send and receive messages. With Channels, neither senders nor receivers have to be Elixir processes. They can be anything that we can teach to communicate over a Channel - a JavaScript client, an iOS app, another Phoenix application, our watch. Also, messages broadcast over a Channel may have many receivers. Elixir processes communicate one to one.
+- Chat rooms
+- Breaking news, like "a goal was scored" or "an earthquake is coming"
+- Events in multiplayer games
+- Monitoring sensors and controlling lights
+- Notifying a browser that a page's CSS or JavaScript has changed (this is handy in development)
 
-The word "Channel" is really shorthand for a layered system with a number of components. Let's take a quick look at them now so we can see the big picture a little better.
+Conceptually, Channels are pretty simple.
+Clients connect and subscribe to one or more topics, whether that's `public_chat` or `updates:user1`.
+Any message sent on a topic, whether from the server or from a client, is sent to all clients subscribed to that topic (including the sender, if it's subscribed), like this:
 
-## JS Documentation
+<pre>
+<code>
 
-Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/)
+                                                                  +----------------+
+                                                     +--Topic X-->| Mobile Client  |
+                                                     |            +----------------+
+                              +-------------------+  |
++----------------+            |                   |  |            +----------------+
+| Browser Client |--Topic X-->| Phoenix Server(s) |--+--Topic X-->| Desktop Client |
++----------------+            |                   |  |            +----------------+
+                              +-------------------+  |
+                                                     |            +----------------+
+                                                     +--Topic X-->|   IoT Client   |
+                                                                  +----------------+
+</code>
+</pre>
+
+Channels can support any kind of client: a browser, native app, smart watch, embedded device, or anything else that can connect to a network.
+All the client needs is a suitable library; see the [Client Libraries](#client-libraries) section below.
+Each client library communicates using one of the "transports" that Channels understand.
+Currently, that's either Websockets or long polling, but other transports may be added in the future.
+
+Unlike stateless HTTP connections, Channels support long-lived connections, each backed by a lightweight BEAM process, working in parallel and maintaining its own state.
+
+This architecture scales well; Phoenix Channels [can support millions of subscribers with reasonable latency on a single box](http://phoenixframework.org/blog/the-road-to-2-million-websocket-connections), passing hundreds of thousands of messages per second.
+And that capacity can be multiplied by adding more nodes to the cluster.
 
 ## The Moving Parts
 
+Although Channels are simple to use from a client perspective, there are a number of components involved in routing messages to clients across a cluster of servers.
+Let's take a look at them.
+
 ### Overview
 
-To start communicating, a client connects to a socket using a transport (eg, Websockets or long polling) and joins one or more channels using that single network connection.
+To start communicating, a client connects to a node (a Phoenix server) using a transport (eg, Websockets or long polling) and joins one or more channels using that single network connection.
 One channel server process is created per client, per topic.
 The appropriate socket handler initializes a `%Phoenix.Socket` for the channel server (possibly after authenticating the client).
 The channel server then hold onto the `%Phoenix.Socket{}` and can maintain any state it needs within its `socket.assigns`.
 
-Once the connection is established, incoming messages from a client are routed to the correct channel server.
-If it broadcasts a message, that message goes first to the local PubSub, which sends it out to any clients connected to the same server and subscribed to that topic.
-The local PubSub also forwards the message to remote PubSubs on the other nodes in the cluster, which send it out to their own subscribers.
+Once the connection is established, each incoming message from a client is routed, based on its topic, to the correct channel server.
+If the channel server asks to broadcast a message, that message is sent to the local PubSub, which sends it out to any clients connected to the same server and subscribed to that topic.
+
+If there are other nodes in the cluster, the local PubSub also forwards the message to their PubSubs, which send it out to their own subscribers.
+Because only one message has to be sent per additional node, the performance cost of adding nodes in negligible, while each new node supports many more subscribers.
 
 The message flow looks something like this:
 
-                                                                                           ┏━━━━━━━━━━━━━━━━━━━━━━━┓
-                                                                                           ┃Browser Client, Topic 1┃            ┏━━━━━━━━━━━━━━━━━━━┓
-                                                                                        ┏━▶┃    Channel.Server     ┃━Transport━▶┃  Browser Client   ┃
-                                                                                        ┃  ┗━━━━━━━━━━━━━━━━━━━━━━━┛            ┗━━━━━━━━━━━━━━━━━━━┛
-                                                                                        ┃
-                                       ┏━━━━━━━━━━━━━━━━━┓    ┏━━━━━━━━┓    ┏━━━━━━━━┓  ┃  ┏━━━━━━━━━━━━━━━━━━━━━━━┓
-                                       ┃Client 1, Topic 1┃    ┃ Local  ┃    ┃ Remote ┃  ┃  ┃ Phone Client, Topic 1 ┃            ┏━━━━━━━━━━━━━━━━━━━┓
-                           ┏━━━━━━━━━━▶┃ Channel.Server  ┃━━━▶┃ PubSub ┃━┳━▶┃ PubSub ┃━━┻━▶┃    Channel.Server     ┃━Transport━▶┃   Phone Client    ┃
-    ┏━━━━━━━━━━┓           ┃           ┗━━━━━━━━━━━━━━━━━┛    ┗━━━━━━━━┛ ┃  ┗━━━━━━━━┛     ┗━━━━━━━━━━━━━━━━━━━━━━━┛            ┗━━━━━━━━━━━━━━━━━━━┛
-    ┃ Client 1 ┃━Transport━┛  Channel                              ┃     ┃
-    ┗━━━━━━━━━━┛           │   routes  ┌─ ── ── ── ── ── ┐         ┃     ┃
-                                        Client 1, Topic 2│         ┃     ┃
-                           └ ─ ─ ─ ─ ─▶│ Channel.Server            ┃     ┃
-                                       └ ── ── ── ── ── ─┘         ┃     ┃
-                                                                   ┃     ┃
-                                       ┏━━━━━━━━━━━━━━━━━┓         ┃     ┃  ┏━━━━━━━━┓      ┏━━━━━━━━━━━━━━━━━━━━━━┓
-    ┏━━━━━━━━━━┓                       ┃Client 2, Topic 1┃         ┃     ┃  ┃ Remote ┃      ┃ IoT Client, Topic 1  ┃            ┏━━━━━━━━━━━━━━━━━━━┓
-    ┃ Client 2 ┃◀━━━━━Transport━━━━━━━━┃ Channel.Server  ┃◀━━━━━━━━┛     ┗━▶┃ PubSub ┃━━━━━▶┃    Channel.Server    ┃━Transport━▶┃    IoT Client     ┃
-    ┗━━━━━━━━━━┛                       ┗━━━━━━━━━━━━━━━━━┛                  ┗━━━━━━━━┛      ┗━━━━━━━━━━━━━━━━━━━━━━┛            ┗━━━━━━━━━━━━━━━━━━━┛
+<pre>
+<code>
+                                 Channel   +-------------------------+      +--------+
+                                  route    | Sending Client, Topic 1 |      | Local  |
+                              +----------->|     Channel.Server      |----->| PubSub |--+
++----------------+            |            +-------------------------+      +--------+  |
+| Sending Client |-Transport--+                                                  |      |
++----------------+                         +-------------------------+           |      |
+                                           | Sending Client, Topic 2 |           |      |
+                                           |     Channel.Server      |           |      |
+                                           +-------------------------+           |      |
+                                                                                 |      |
+                                           +-------------------------+           |      |
++----------------+                         | Browser Client, Topic 1 |           |      |
+| Browser Client |<-------Transport--------|     Channel.Server      |<----------+      |
++----------------+                         +-------------------------+                  |
+                                                                                        |
+                                                                                        |
+                                                                                        |
+                                           +-------------------------+                  |
++----------------+                         |  Phone Client, Topic 1  |                  |
+|  Phone Client  |<-------Transport--------|     Channel.Server      |<-+               |
++----------------+                         +-------------------------+  |   +--------+  |
+                                                                        |   | Remote |  |
+                                           +-------------------------+  +---| PubSub |<-+
++----------------+                         |  Watch Client, Topic 1  |  |   +--------+  |
+|  Watch Client  |<-------Transport--------|     Channel.Server      |<-+               |
++----------------+                         +-------------------------+                  |
+                                                                                        |
+                                                                                        |
+                                           +-------------------------+      +--------+  |
++----------------+                         |   IoT Client, Topic 1   |      | Remote |  |
+|   IoT Client   |<-------Transport--------|     Channel.Server      |<-----| PubSub |<-+
++----------------+                         +-------------------------+      +--------+
+</code>
+</pre>
+
+### Endpoint
+
+In your Phoenix app's `Endpoint` module, a `socket` declaration specifies which socket handler will receive connections on a given URL.
+
+```elixir
+socket "/socket", HelloWeb.UserSocket
+```
 
 ### Socket Handlers
 
-Phoenix holds a single connection to each client and multiplexes its channel sockets over that one connection. Socket handlers, such as `lib/hello_web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
+Socket handlers, such as `HelloWeb.UserSocket` in the example above, are called when Phoenix is setting up a channel connection.
+Connections to a given URL will all use the same socket handler, based on your endpoint configuration.
+But that handler can be used for setting up connections on any number of topics.
+
+Within the handler, you can authenticate and identify a socket connection and set default socket assigns.
 
 ### Channel Routes
 
-These are defined in Socket handlers, such as `lib/hello_web/channels/user_socket.ex`, which makes them distinct from other routes. They match on the topic string and dispatch matching requests to the given Channel module. The star character `*` acts as a wildcard matcher, so in the following example route, requests for `sample_topic:pizza` and `sample_topic:oranges` would both be dispatched to the `SampleTopicChannel`.
+Channel routes are defined in socket handlers, such as `HelloWeb.UserSocket` in the example above.
+They match on the topic string and dispatch matching requests to the given Channel module.
+
+The star character `*` acts as a wildcard matcher, so in the following example route, requests for `room:lobby` and `room:123` would both be dispatched to the `RoomChannel`.
 
 ```elixir
-channel "sample_topic:*", HelloWeb.SampleTopicChannel
+channel "room:*", HelloWeb.RoomChannel
 ```
 
 ### Channels
@@ -63,40 +130,65 @@ Channels handle events from clients, so they are similar to Controllers, but the
 
 Each Channel will implement one or more clauses of each of these four callback functions - `join/3`, `terminate/2`, `handle_in/3`, and `handle_out/3`.
 
-### PubSub
+### Topics
 
-The Phoenix PubSub layer consists of the `Phoenix.PubSub` module and a variety of modules for different adapters and their `GenServer`s. These modules contain functions which are the nuts and bolts of organizing Channel communication - subscribing to topics, unsubscribing from topics, and broadcasting messages on a topic.
-
-It is worth noting that these modules are intended for Phoenix's internal use. Channels use them under the hood to do much of their work. As end users, we shouldn't have any need to use them directly in our applications.
-
-If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](http://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
+Topics are string identifiers - names that the various layers use in order to make sure messages end up in the right place. As we saw above, topics can use wildcards. This allows for a useful `"topic:subtopic"` convention. Often, you'll compose topics using record IDs from your application layer, such as `"users:123"`.
 
 ### Messages
 
 The `Phoenix.Socket.Message` module defines a struct with the following keys which denotes a valid message. From the [Phoenix.Socket.Message docs](https://hexdocs.pm/phoenix/Phoenix.Socket.Message.html).
-- `topic` - The string topic or topic:subtopic pair namespace, for example “messages”, “messages:123”
-- `event` - The string event name, for example “phx_join”
+- `topic` - The string topic or `"topic:subtopic"` pair namespace, such as `"messages"` or `"messages:123"`
+- `event` - The string event name, for example `"phx_join"`
 - `payload` - The message payload
 - `ref` - The unique string ref
 
-### Topics
-
-Topics are string identifiers - names that the various layers use in order to make sure messages end up in the right place. As we saw above, topics can use wildcards. This allows for a useful "topic:subtopic" convention. Often, you'll compose topics using record IDs from your application layer, such as `"users:123"`.
-
 ### Transports
 
-The transport layer is where the rubber meets the road. The `Phoenix.Channel.Transport` module handles all the message dispatching into and out of a Channel.
+The transport layer is involved in the "last mile" - actually getting messages to and from clients.
+The `Phoenix.Channel.Transport` module handles all the message dispatching into and out of a Channel.
 
 ### Transport Adapters
 
-The default transport mechanism is via WebSockets which will fall back to LongPolling if WebSockets are not available. Other transport adapters are possible, and we can write our own if we follow the adapter contract. Please see `Phoenix.TransportsWebSocket` for an example.
+Within a given socket handler, we can configure which transport adapter to use.
+This determines the protocol(s) by which clients may connect.
+
+For example, in the socket handler module of a freshly-generated Phoenix app, you'll find:
+
+```elixir
+transport :websocket, Phoenix.Transports.WebSocket # transport adapter
+```
+
+If clients of your application don't support WebSockets, you can use the long polling adapter instead:
+
+```elixir
+transport :longpoll, Phoenix.Transports.LongPoll
+```
+
+Other transport adapters are possible, and we can write our own if we follow the adapter contract.
+Please see `Phoenix.TransportsWebSocket` for an example.
+
+### PubSub
+
+Typically, we don't directly use the Phoenix PubSub layer when developing Phoenix applications.
+Rather, it's used internally by Phoenix itself.
+But we may need to configure it.
+
+PubSub consists of the `Phoenix.PubSub` module and a variety of modules for different adapters and their `GenServer`s.
+These modules contain functions which are the nuts and bolts of organizing Channel communication - subscribing to topics, unsubscribing from topics, and broadcasting messages on a topic.
+
+The PubSub system also takes care of getting messages from one node to another, so that it can be sent to all subscribers across the cluster.
+By default, this is done using [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), which uses native BEAM messaging.
+
+If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](http://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
 
 ### Client Libraries
 
+Any networked device can connect to Phoenix Channels as long as it has a client library.
+The following libraries exist today, and new ones are always welcome.
+
 #### Official
 
-+ JavaScript
-  - [phoenix.js](https://github.com/phoenixframework/phoenix/blob/v1.3/assets/js/phoenix.js)
+Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [phoenix.js](https://github.com/phoenixframework/phoenix/blob/v1.3/assets/js/phoenix.js).
 
 #### 3rd Party
 
@@ -150,7 +242,10 @@ defmodule HelloWeb.RoomChannel do
 end
 ```
 
-For our chat app, we'll allow anyone to join the `"room:lobby"` topic, but any other room will be considered private and special authorization, say from a database, will be required. We won't worry about private chat room for this exercise, but feel free to explore after we finish. To authorize the socket to join a topic, we return `{:ok, socket}` or `{:ok, reply, socket}`. To deny access, we return `{:error, reply}`. More information about authorization with tokens can be found in the [`Phoenix.Token` documentation](https://hexdocs.pm/phoenix/Phoenix.Token.html).
+For our chat app, we'll allow anyone to join the `"room:lobby"` topic, but any other room will be considered private and special authorization, say from a database, will be required.
+(We won't worry about private chat rooms for this exercise, but feel free to explore after we finish.)
+
+To authorize the socket to join a topic, we return `{:ok, socket}` or `{:ok, reply, socket}`. To deny access, we return `{:error, reply}`. More information about authorization with tokens can be found in the [`Phoenix.Token` documentation](https://hexdocs.pm/phoenix/Phoenix.Token.html).
 
 With our channel in place, let's get the client and server talking.
 
@@ -158,7 +253,7 @@ Phoenix projects come with [Brunch](http://www.phoenixframework.org/docs/static-
 
 If you are using brunch, there's some code in `assets/js/socket.js` that defines a simple client based on the socket implementation that ships with Phoenix.
 
-We can use that library to connect to our socket and join our channel, we just need to set our room name to "room:lobby" in that file.
+We can use that library to connect to our socket and join our channel, we just need to set our room name to `"room:lobby"` in that file.
 
 ```javascript
 // assets/js/socket.js
@@ -212,7 +307,7 @@ channel.join()
 export default socket
 ```
 
-All we had to do is detect that enter was pressed and then `push` an event over the channel with the message body. We named the event "new_msg". With this in place, let's handle the other piece of a chat application where we listen for new messages and append them to our messages container.
+All we had to do is detect that enter was pressed and then `push` an event over the channel with the message body. We named the event `"new_msg"`. With this in place, let's handle the other piece of a chat application where we listen for new messages and append them to our messages container.
 
 ```javascript
 ...
