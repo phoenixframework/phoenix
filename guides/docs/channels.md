@@ -32,7 +32,7 @@ Any message sent on a topic, whether from the server or from a client, is sent t
 
 Channels can support any kind of client: a browser, native app, smart watch, embedded device, or anything else that can connect to a network.
 All the client needs is a suitable library; see the [Client Libraries](#client-libraries) section below.
-Each client library communicates using one of the "transports" that Channels understands.
+Each client library communicates using one of the "transports" that Channels understand.
 Currently, that's either Websockets or long polling, but other transports may be added in the future.
 
 Unlike stateless HTTP connections, Channels support long-lived connections, each backed by a lightweight BEAM process, working in parallel and maintaining its own state.
