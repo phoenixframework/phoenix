@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Phx.Test do
   use ExUnit.Case
 
-  test "provide a list of available ecto mix tasks" do
+  test "provide a list of available phx mix tasks" do
     Mix.Tasks.Phx.run []
     assert_received {:mix_shell, :info, ["mix phx.digest" <> _]}
     assert_received {:mix_shell, :info, ["mix phx.digest.clean" <> _]}
