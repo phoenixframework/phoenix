@@ -3,8 +3,9 @@
 Channels are an exciting part of Phoenix that enable soft real-time communication with and between millions of connected clients.
 Some possible use cases include:
 
-- Chat rooms
+- Chat rooms and APIs for messaging apps
 - Breaking news, like "a goal was scored" or "an earthquake is coming"
+- Tracking trains, trucks, or race participants on a map
 - Events in multiplayer games
 - Monitoring sensors and controlling lights
 - Notifying a browser that a page's CSS or JavaScript has changed (this is handy in development)
