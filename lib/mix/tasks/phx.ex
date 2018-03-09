@@ -12,12 +12,9 @@ defmodule Mix.Tasks.Phx do
 
   @doc false
   def run(args) do
-    {_opts, args, _} = OptionParser.parse(args, switches: [])
-
     case args do
       [] -> general()
-      _ ->
-        Mix.raise "Invalid arguments, expected: mix phx"
+      _ -> Mix.raise "Invalid arguments, expected: mix phx"
     end
   end
 
