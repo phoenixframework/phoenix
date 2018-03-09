@@ -153,7 +153,7 @@ defmodule Phoenix.Router.Helpers do
       end
 
       @doc """
-      Perform a server push and return the path to a static asset given its file path.
+      Performs a server push and returns the path to a static asset given its file path.
 
       The server push will only happen if using HTTP/2 with a supported plug adapter.
       If not supported, this function will simply return the path to the static
