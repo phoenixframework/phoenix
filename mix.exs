@@ -55,8 +55,7 @@ defmodule Phoenix.Mixfile do
   defp deps do
     [
       {:cowboy, "~> 1.0 or ~> 2.2.2 or ~> 2.3", optional: true},
-      # TODO v1.4: release bump to 1.5.0 stable when it goes out with `init_mode` support
-      {:plug, "~> 1.5.0-rc2", override: true},
+      {:plug, "~> 1.5"},
       {:phoenix_pubsub, "~> 1.0"},
       {:jason, "~> 1.0", optional: true},
 
@@ -66,8 +65,7 @@ defmodule Phoenix.Mixfile do
 
       # Test dependencies
       {:gettext, "~> 0.8", only: :test},
-      # TODO v1.4: release bump to next stable release with relaxed plug dep
-      {:phoenix_html, "~> 2.10", only: :test},
+      {:phoenix_html, "~> 2.11", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
     ]
   end

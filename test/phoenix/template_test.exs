@@ -73,11 +73,10 @@ defmodule Phoenix.TemplateTest do
 
   test "render eex templates sanitizes against xss by default" do
     assert View.render("show.html", message: "") ==
-           {:safe, [[["" | "<div>Show! "] | ""] | "</div>\n"]}
+           {:safe, [[["" | "<div>Show! "]] | "</div>\n"]}
 
     assert View.render("show.html", message: "<script>alert('xss');</script>") ==
-           {:safe, [[["" | "<div>Show! "] | "&lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;"]
-                    | "</div>\n"]}
+           {:safe, [[["" | "<div>Show! "], [[[[[[] | "&lt;"], "script" | "&gt;"], "alert(" | "&#39;"], "xss" | "&#39;"], ");" | "&lt;"], "/script" | "&gt;"] | "</div>\n"]}
   end
 
   test "render eex templates allows raw data to be injected" do

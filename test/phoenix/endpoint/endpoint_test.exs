@@ -58,13 +58,14 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   test "sets script name when using path" do
-    conn = conn(:get, "/")
+    conn = conn(:get, "https://example.com/")
     assert Endpoint.call(conn, []).script_name == ~w"api"
 
     conn = put_in conn.script_name, ~w(foo)
     assert Endpoint.call(conn, []).script_name == ~w"api"
   end
 
+  @tag :capture_log
   test "redirects http requests to https on force_ssl" do
     conn = Endpoint.call(conn(:get, "/"), [])
     assert get_resp_header(conn, "location") == ["https://example.com/"]
