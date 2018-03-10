@@ -1,35 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <title>Hello <%= app_module %>!</title>
-    <link rel="stylesheet" href="<%%= Routes.static_path(@conn, "/css/app.css") %>">
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, shrink-to-fit=no, user-scalable=no"/>
+    <title><%= app_module %> · Phoenix Framework</title>
+    <link rel="stylesheet" href="<%%= Routes.static_path(@conn, "/css/app.css") %>"/>
   </head>
-
   <body>
-    <div class="container">
-      <header class="header">
+    <header>
+      <div class="container phx-flex">
         <nav role="navigation">
-          <ul class="nav nav-pills pull-right">
-            <li><a href="https://hexdocs.pm/phoenix">Get Started</a></li>
+          <ul>
+            <li><a href="http://www.phoenixframework.org/docs">Get Started</a></li>
           </ul>
         </nav>
-        <span class="logo"></span>
-      </header>
-
-      <p class="alert alert-info" role="alert"><%%= get_flash(@conn, :info) %></p>
-      <p class="alert alert-danger" role="alert"><%%= get_flash(@conn, :error) %></p>
-
-      <main role="main">
+        <a href="http://phoenixframework.org/" class="phx-logo">
+          <img src="/images/phoenix.png" alt="Phoenix Framework Logo"/>
+        </a>
+      </div>
+    </header>
+    <main role="main">
+      <div class="container">
+        <p class="alert alert-info" role="alert"><%%= get_flash(@conn, :info) %></p>
+        <p class="alert alert-danger" role="alert"><%%= get_flash(@conn, :error) %></p>
         <%%= render @view_module, @view_template, assigns %>
-      </main>
-
-    </div> <!-- /container -->
-    <script src="<%%= Routes.static_path(@conn, "/js/app.js") %>"></script>
+      </div>
+    </main>
+    <script type="text/javascript" src="<%%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>

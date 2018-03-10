@@ -1,33 +1,32 @@
-<div class="jumbotron">
+<section class="phx-hero">
   <h2><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
-  <p class="lead">A productive web framework that<br />does not compromise speed and maintainability.</p>
-</div>
+  <p>A productive web framework that<br/>does not compromise speed and maintainability.</p>
+</section>
 
-<div class="row marketing">
-  <div class="col-lg-6">
+<section class="container phx-flex phx-marketing">
+  <article>
     <h4>Resources</h4>
     <ul>
       <li>
-        <a href="https://hexdocs.pm/phoenix/overview.html">Guides and Docs</a>
+        <a href="https://hexdocs.pm/phoenix/overview.html">Guides &amp; Docs</a>
       </li>
       <li>
         <a href="https://github.com/phoenixframework/phoenix">Source</a>
       </li>
     </ul>
-  </div>
-
-  <div class="col-lg-6">
+  </article>
+  <article>
     <h4>Help</h4>
     <ul>
       <li>
         <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
       </li>
       <li>
-        <a href="http://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on freenode IRC</a>
+        <a href="https://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on Freenode IRC</a>
       </li>
       <li>
-        <a href="https://twitter.com/elixirphoenix">@elixirphoenix</a>
+        <a href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>
       </li>
     </ul>
-  </div>
-</div>
+  </article>
+</section>

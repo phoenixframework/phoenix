@@ -71,7 +71,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web/router.ex", "defmodule PhxBlogWeb.Router"
       assert_file "phx_blog/lib/phx_blog_web.ex", "defmodule PhxBlogWeb"
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex",
-                  "<title>Hello PhxBlog!</title>"
+                  "<title>PhxBlog · Phoenix Framework</title>"
 
       # webpack
       assert_file "phx_blog/.gitignore", "/assets/node_modules/"

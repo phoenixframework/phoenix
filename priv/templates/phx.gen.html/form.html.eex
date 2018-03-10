@@ -11,7 +11,5 @@
     <%= error %>
   </div>
 <% end %>
-  <div class="form-group">
-    <%%= submit "Submit", class: "btn btn-primary" %>
-  </div>
+  <%%= submit "Save" %>
 <%% end %>

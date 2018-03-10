@@ -64,8 +64,8 @@ defmodule Phoenix.View do
   template is safe and that we don't need to escape its contents because
   all data has already been encoded. Let's try to inject custom code:
 
-      Phoenix.View.render(YourApp.UserView, "index.html", name: "John<br />Doe")
-      #=> {:safe, "Hello John&lt;br /&gt;Doe"}
+      Phoenix.View.render(YourApp.UserView, "index.html", name: "John<br/>Doe")
+      #=> {:safe, "Hello John&lt;br/&gt;Doe"}
 
   This inner representation allows us to render and compose templates easily.
   For example, if you want to render JSON data, we could do so by adding a
