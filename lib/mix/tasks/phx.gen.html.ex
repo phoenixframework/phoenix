@@ -185,34 +185,34 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       {_, {:references, _}} ->
         {nil, nil, nil}
       {key, :integer} ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= number_input f, #{inspect(key)} %>), error(key)}
       {key, :float} ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any" %>), error(key)}
       {key, :decimal} ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any" %>), error(key)}
       {key, :boolean} ->
-        {label(key), ~s(<%= checkbox f, #{inspect(key)}, class: "checkbox" %>), error(key)}
+        {label(key), ~s(<%= checkbox f, #{inspect(key)} %>), error(key)}
       {key, :text} ->
-        {label(key), ~s(<%= textarea f, #{inspect(key)}, class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= textarea f, #{inspect(key)} %>), error(key)}
       {key, :date} ->
-        {label(key), ~s(<%= date_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= date_select f, #{inspect(key)} %>), error(key)}
       {key, :time} ->
-        {label(key), ~s(<%= time_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= time_select f, #{inspect(key)} %>), error(key)}
       {key, :utc_datetime} ->
-        {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= datetime_select f, #{inspect(key)} %>), error(key)}
       {key, :naive_datetime} ->
-        {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= datetime_select f, #{inspect(key)} %>), error(key)}
       {key, {:array, :integer}} ->
-        {label(key), ~s(<%= multiple_select f, #{inspect(key)}, ["1": 1, "2": 2], class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= multiple_select f, #{inspect(key)}, ["1": 1, "2": 2] %>), error(key)}
       {key, {:array, _}} ->
-        {label(key), ~s(<%= multiple_select f, #{inspect(key)}, ["Option 1": "option1", "Option 2": "option2"], class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= multiple_select f, #{inspect(key)}, ["Option 1": "option1", "Option 2": "option2"] %>), error(key)}
       {key, _}  ->
-        {label(key), ~s(<%= text_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= text_input f, #{inspect(key)} %>), error(key)}
     end)
   end
 
   defp label(key) do
-    ~s(<%= label f, #{inspect(key)}, class: "control-label" %>)
+    ~s(<%= label f, #{inspect(key)} %>)
   end
 
   defp error(field) do

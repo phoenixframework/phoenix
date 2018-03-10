@@ -9,23 +9,21 @@
   </head>
   <body>
     <header>
-      <div class="container phx-flex">
+      <section class="container">
         <nav role="navigation">
           <ul>
             <li><a href="http://www.phoenixframework.org/docs">Get Started</a></li>
           </ul>
         </nav>
         <a href="http://phoenixframework.org/" class="phx-logo">
-          <img src="/images/phoenix.png" alt="Phoenix Framework Logo"/>
+          <img src="<%%= Routes.static_path(@conn, "/images/phoenix.png") %>" alt="Phoenix Framework Logo"/>
         </a>
       </div>
     </header>
-    <main role="main">
-      <div class="container">
-        <p class="alert alert-info" role="alert"><%%= get_flash(@conn, :info) %></p>
-        <p class="alert alert-danger" role="alert"><%%= get_flash(@conn, :error) %></p>
-        <%%= render @view_module, @view_template, assigns %>
-      </div>
+    <main role="main" class="container">
+      <p class="alert alert-info" role="alert"><%%= get_flash(@conn, :info) %></p>
+      <p class="alert alert-danger" role="alert"><%%= get_flash(@conn, :error) %></p>
+      <%%= render @view_module, @view_template, assigns %>
     </main>
     <script type="text/javascript" src="<%%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>

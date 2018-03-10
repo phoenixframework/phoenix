@@ -3,8 +3,8 @@
   <p>A productive web framework that<br/>does not compromise speed and maintainability.</p>
 </section>
 
-<section class="container phx-flex phx-marketing">
-  <article>
+<section class="row">
+  <article class="column">
     <h4>Resources</h4>
     <ul>
       <li>
@@ -15,7 +15,7 @@
       </li>
     </ul>
   </article>
-  <article>
+  <article class="column">
     <h4>Help</h4>
     <ul>
       <li>

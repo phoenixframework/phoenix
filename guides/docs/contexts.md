@@ -369,15 +369,13 @@ Next, let's expose our new feature to the web by adding the credentials input to
   ...
 + <div class="form-group">
 +   <%= inputs_for f, :credential, fn cf -> %>
-+     <%= label cf, :email, class: "control-label" %>
-+     <%= text_input cf, :email, class: "form-control" %>
++     <%= label cf, :email %>
++     <%= text_input cf, :email %>
 +     <%= error_tag cf, :email %>
 +   <% end %>
 + </div>
 
-  <div class="form-group">
-    <%= submit "Submit", class: "btn btn-primary" %>
-  </div>
+  <%= submit "Submit" %>
 ```
 
 We used `Phoenix.HTML`'s `inputs_for` function to add an associations nested fields within the parent form. Within the nested inputs, we rendered our credential's email field and included the `label` and `error_tag` helpers just like our other inputs.
@@ -623,11 +621,9 @@ Remember to update your repository by running migrations:
 The `views` attribute on the pages will not be updated directly by the user, so let's remove it from the generated form. Open `lib/hello_web/templates/cms/page/form.html.eex` and remove this part:
 
 ```eex
--  <div class="form-group">
--    <%= label f, :views, class: "control-label" %>
--    <%= number_input f, :views, class: "form-control" %>
--    <%= error_tag f, :views %>
--  </div>
+-  <%= label f, :views %>
+-  <%= number_input f, :views %>
+-  <%= error_tag f, :views %>
 ```
 
 Also, change `lib/hello/cms/page.ex` to remove `:views` from the permitted params:

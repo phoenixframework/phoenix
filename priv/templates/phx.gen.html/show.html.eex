@@ -1,13 +1,13 @@
 <h2>Show <%= schema.human_singular %></h2>
 
-<dl>
+<ul>
 <%= for {k, _} <- schema.attrs do %>
-  <dt><%= Phoenix.Naming.humanize(Atom.to_string(k)) %></dt>
-  <dd><%%= @<%= schema.singular %>.<%= k %> %></dd>
+  <li>
+    <strong><%= Phoenix.Naming.humanize(Atom.to_string(k)) %>:</strong>
+    <%%= @<%= schema.singular %>.<%= k %> %>
+  </li>
 <% end %>
-</dl>
+</ul>
 
-<div class="phx-flex">
-<%%= link "Edit", to: Routes.<%= schema.route_helper %>_path(@conn, :edit, @<%= schema.singular %>) %>
-<%%= link "Back", to: Routes.<%= schema.route_helper %>_path(@conn, :index) %>
-</div>
+<span><%%= link "Edit", to: Routes.<%= schema.route_helper %>_path(@conn, :edit, @<%= schema.singular %>) %></span>
+<span><%%= link "Back", to: Routes.<%= schema.route_helper %>_path(@conn, :index) %></span>
