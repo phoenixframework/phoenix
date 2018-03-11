@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Phx.New.Ecto do
   @moduledoc """
   Creates a new Ecto project within an umbrella project.
 
-  This task is inteded to create a bare Ecto project without
+  This task is intended to create a bare Ecto project without
   web integration, which serves as a core application of your
   domain for web applications and your greater umbrella
   platform to integrate with.

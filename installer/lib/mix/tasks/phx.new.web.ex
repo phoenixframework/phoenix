@@ -9,7 +9,7 @@ defmodule Mix.Tasks.Phx.New.Web do
       $ cd my_umbrella/apps
       $ mix phx.new.web APP [--module MODULE] [--app APP]
 
-  This task is inteded to create a bare Phoenix project without
+  This task is intended to create a bare Phoenix project without
   database integration, which interfaces with your greater
   umbrella application(s).
 
