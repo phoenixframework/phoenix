@@ -16,6 +16,7 @@
 
 * Bug Fixes
   * [Channel] Fix issue with WebSocket transport sending wrong ContentLength header with 403 response
+  * [Router] Fix forward aliases failing to expand within scope block
 
 * JavaScript client enhancements
   * Add new instance-based Presence API with simplified synchronization callbacks
