@@ -1,3 +1,8 @@
+defmodule Phoenix.Test.HealthController do
+  use Phoenix.Controller
+  def health(conn, _params), do: text(conn, "health")
+end
+
 defmodule Phoenix.Router.ForwardTest do
   use ExUnit.Case, async: true
   use RouterHelper
@@ -19,6 +24,10 @@ defmodule Phoenix.Router.ForwardTest do
 
     get "/", Controller, :api_root
     get "/users", Controller, :api_users
+
+    scope "/health", Phoenix.Test do
+      forward "/", HealthController, :health
+    end
   end
 
   defmodule AdminDashboard do
@@ -126,5 +135,11 @@ defmodule Phoenix.Router.ForwardTest do
 
   test "forward can handle plugs with non-literal init returns" do
     assert call(Router, :get, "init").assigns.opts == %{non: :literal}
+  end
+
+  test "forward with scoped alias" do
+    conn = call(ApiRouter, :get, "health")
+    assert conn.resp_body == "health"
+    assert conn.private[ApiRouter] == {[], %{Phoenix.Test.HealthController => []}}
   end
 end

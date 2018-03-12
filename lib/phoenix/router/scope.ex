@@ -117,6 +117,19 @@ defmodule Phoenix.Router.Scope do
   """
   def inside_scope?(module), do: length(get_stack(module)) > 1
 
+  @doc """
+  Expands alias within scoped block.
+  """
+  def expand_alias(module, alias) do
+    if inside_scope?(module) do
+      module
+      |> get_stack()
+      |> join_alias(alias)
+    else
+      alias
+    end
+  end
+
   defp join(module, path, alias, as, private, assigns) do
     stack = get_stack(module)
     {join_path(stack, path), find_host(stack), join_alias(stack, alias),
