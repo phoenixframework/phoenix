@@ -164,16 +164,18 @@ defmodule Phoenix.Endpoint do
       expects a list of tuples containing the executable and its arguments.
       Watchers are guaranteed to run in the application directory, but only
       when the server is enabled. For example, the watcher below will run
-      the "watch" mode of the brunch build tool when the server starts.
+      the "watch" mode of the webpack build tool when the server starts.
       You can configure it to whatever build tool or command you want:
 
-          [node: ["node_modules/brunch/bin/brunch", "watch"]]
+          [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development",
+              "--watch-stdin"]]
 
-      The `:cd` option can be used on a watcher to override the folder from 
+      The `:cd` option can be used on a watcher to override the folder from
       which the watcher will run. By default this will be the project's root:
       `File.cwd!()`
 
-          [node: ["node_Modules/brunch/bin/brunch", "watch", cd: "my_frontend"]]
+          [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development",
+              "--watch-stdin"], cd: "my_frontend"]
 
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of
