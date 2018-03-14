@@ -55,7 +55,7 @@ All of our application's static assets like js, css, and image files live in `as
 │   └── vendor
 ```
 
-There are also non web-related files we should know about. Our application file (which starts our Elixir application and its supervision tree) is at `lib/hello/application.ex`. We also have our Ecto Repo in `lib/hello/repo.ex` for interacting with the database. We'll touch on Ecto in an upcoming guide.
+There are also non web-related files we should know about. Our application file (which starts our Elixir application and its supervision tree) is at `lib/hello/application.ex`. We also have our Ecto Repo in `lib/hello/repo.ex` for interacting with the database. You can learn more in the [guide for Ecto](https://hexdocs.pm/phoenix/ecto.html).
 
 ```console
 lib
