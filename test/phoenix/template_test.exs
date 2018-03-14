@@ -55,69 +55,66 @@ defmodule Phoenix.TemplateTest do
   defmodule View do
     use Phoenix.Template, root: Path.join(__DIR__, "../fixtures/templates")
 
-    def render("user.json", %{name: name}) do
-      %{id: 123, name: name}
-    end
-  end
-
-  test "render regular function definitions" do
-    assert View.render("user.json", name: "eric") ==
-           %{id: 123, name: "eric"}
-  end
-
-  test "forces template name to be a string" do
-    assert_raise ArgumentError, "render/2 expects template to be a string, got: 'user.json'", fn ->
-      View.render('user.json', name: "eric")
+    def render(template, assigns) do
+      render_template(template, assigns)
     end
   end
 
   test "render eex templates sanitizes against xss by default" do
-    assert View.render("show.html", message: "") ==
+    assert View.render("show.html", %{message: ""}) ==
            {:safe, [[["" | "<div>Show! "]] | "</div>\n"]}
 
-    assert View.render("show.html", message: "<script>alert('xss');</script>") ==
+    assert View.render("show.html", %{message: "<script>alert('xss');</script>"}) ==
            {:safe, [[["" | "<div>Show! "], [[[[[[] | "&lt;"], "script" | "&gt;"], "alert(" | "&#39;"], "xss" | "&#39;"], ");" | "&lt;"], "/script" | "&gt;"] | "</div>\n"]}
   end
 
   test "render eex templates allows raw data to be injected" do
-    assert View.render("safe.html", message: "<script>alert('xss');</script>") ==
+    assert View.render("safe.html", %{message: "<script>alert('xss');</script>"}) ==
            {:safe, [[["" | "Raw "] | "<script>alert('xss');</script>"] | "\n"]}
   end
 
   test "compiles templates from path" do
-    assert View.render("show.html", message: "hello!") ==
+    assert View.render("show.html", %{message: "hello!"}) ==
            {:safe, [[["" | "<div>Show! "] | "hello!"] | "</div>\n"]}
   end
 
-  test "compiler adds catch-all render/2 that raises UndefinedError" do
+  test "adds catch-all render_template/2 that raises UndefinedError" do
     assert_raise Phoenix.Template.UndefinedError, ~r/Could not render "not-exists.html".*/, fn ->
-      View.render("not-exists.html")
+      View.render("not-exists.html", %{})
     end
   end
 
-  test "compiler ignores missing template path" do
+  test "ignores missing template path" do
     defmodule OtherViews do
       use Phoenix.Template, root: Path.join(__DIR__, "not-exists")
+
+      def render(template, assigns) do
+        render_template(template, assigns)
+      end
 
       def template_not_found(template, _assigns) do
         "Not found: #{template}"
       end
     end
 
-    assert OtherViews.render("foo") == "Not found: foo"
+    assert OtherViews.render("foo", %{}) == "Not found: foo"
   end
 
   test "template_not_found detects and short circuits infinite call-stacks" do
     defmodule InfiniteView do
       use Phoenix.Template, root: Path.join(__DIR__, "not-exists")
 
+      def render(template, assigns) do
+        render_template(template, assigns)
+      end
+
       def template_not_found(_template, assigns) do
-        render "this-does-not-exist.html", assigns
+        render_template("this-does-not-exist.html", assigns)
       end
     end
 
     assert_raise Phoenix.Template.UndefinedError, ~r/Could not render "this-does-not-exist.html".*/, fn ->
-      InfiniteView.render("this-does-not-exist.html")
+      InfiniteView.render("this-does-not-exist.html", %{})
     end
   end
 

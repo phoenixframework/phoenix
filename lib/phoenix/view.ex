@@ -127,11 +127,51 @@ defmodule Phoenix.View do
   defmacro __using__(opts) do
     quote do
       import Phoenix.View
+
       use Phoenix.Template, Phoenix.View.__template_options__(__MODULE__, unquote(opts))
+
+      @before_compile Phoenix.View
       @view_resource String.to_atom(Phoenix.Naming.resource_name(__MODULE__, "View"))
+
+      @doc """
+      Renders the given template locally.
+      """
+      def render(template, assigns \\ %{})
+
+      def render(module, template) when is_atom(module) do
+        Phoenix.View.render(module, template, %{})
+      end
+
+      def render(template, _assigns) when not is_binary(template) do
+        raise ArgumentError, "render/2 expects template to be a string, got: #{inspect template}"
+      end
+
+      def render(template, assigns) when not is_map(assigns) do
+        render(template, Enum.into(assigns, %{}))
+      end
 
       @doc "The resource name, as an atom, for this view"
       def __resource__, do: @view_resource
+    end
+  end
+
+
+  @anno (if :erlang.system_info(:otp_release) >= '19' do
+    [generated: true]
+  else
+    [line: -1]
+  end)
+
+  @doc false
+  defmacro __before_compile__(_env) do
+    # We are using @anno because we don't want warnings coming from
+    # render/2 to be reported in case the user has defined a catch all
+    # render/2 clause.
+    quote @anno do
+      # Catch-all clause for rendering.
+      def render(template, assigns) do
+        render_template(template, assigns)
+      end
     end
   end
 
@@ -247,7 +287,7 @@ defmodule Phoenix.View do
 
   """
   def render_existing(module, template, assigns \\ []) do
-    render(module, template, put_in(assigns[:render_existing], {module, template}))
+    render(module, template, put_in(assigns[:__phx_render_existing__], {module, template}))
   end
 
   @doc """
