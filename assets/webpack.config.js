@@ -1,10 +1,10 @@
 const path = require('path')
 
 module.exports = {
-  entry: './assets/js/phoenix.js',
+  entry: './js/phoenix.js',
   output: {
     filename: 'phoenix.js',
-    path: path.resolve(__dirname, './priv/static'),
+    path: path.resolve(__dirname, '../priv/static'),
     library: 'Phoenix',
     libraryTarget: 'umd'
   },
@@ -18,7 +18,7 @@ module.exports = {
         }
       },
       {
-        test: path.resolve(__dirname, './assets/js/phoenix.js'),
+        test: path.resolve(__dirname, './js/phoenix.js'),
         use: [{
           loader: 'expose-loader',
           options: 'Phoenix'

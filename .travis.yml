@@ -25,7 +25,7 @@ before_script:
 script:
   - mix test
   - cd installer && elixir -e "Version.match?(System.version, ~s(~> 1.5)) || System.halt(0)" -S mix test
-  - cd ../ && npm install && npm test
+  - cd ../assets && npm install && npm test
 after_script:
   - cd $TRAVIS_BUILD_DIR
   - MIX_ENV=docs mix inch.report

@@ -187,6 +187,6 @@ defmodule Phoenix.Mixfile do
 
   def generate_js_docs(_) do
     Mix.Task.run "app.start"
-    System.cmd("npm", ["run", "docs"])
+    System.cmd("npm", ["run", "docs"], cd: "assets")
   end
 end
