@@ -31,9 +31,9 @@ We have seen all of these at one point or another in the guides, but having all 
 
 This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](up_and_running.html).
 
-Before we begin, we should note that Phoenix uses [Ecto](https://github.com/elixir-lang/ecto) for database access and [Brunch.io](http://brunch.io/) for asset management by default. We can pass `--no-ecto` to opt out of Ecto and  `--no-brunch` to opt out of Brunch.io.
+Before we begin, we should note that Phoenix uses [Ecto](https://github.com/elixir-lang/ecto) for database access and [webpack](https://webpack.js.org/) for asset management by default. We can pass `--no-ecto` to opt out of Ecto and  `--no-webpack` to opt out of webpack.
 
-> Note: If we do use Brunch.io, we need to install its dependencies before we start our application. `phx.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
+> Note: If we do use webpack, we need to install its dependencies before we start our application. `phx.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
 
 We need to pass `phx.new` a name for our application. Conventionally, we use all lower-case letters with underscores.
 
@@ -61,11 +61,11 @@ $ mix phx.new /Users/me/work/task_tester
 . . .
 ```
 
-The `phx.new` task will also ask us if we want to install our dependencies. (Please see the note above about Brunch.io dependencies.)
+The `phx.new` task will also ask us if we want to install our dependencies. (Please see the note above about webpack dependencies.)
 
 ```console
 Fetch and install dependencies? [Yn] y
-* running npm install && node node_modules/brunch/bin/brunch build
+* cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
 * running mix deps.get
 ```
 

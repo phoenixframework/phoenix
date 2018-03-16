@@ -250,9 +250,9 @@ To authorize the socket to join a topic, we return `{:ok, socket}` or `{:ok, rep
 
 With our channel in place, let's get the client and server talking.
 
-Phoenix projects come with [Brunch](http://www.phoenixframework.org/docs/static-assets) built in, unless disabled with the `--no-brunch` option when you run `mix phx.new`.
+Phoenix projects come with [webpack](https://wehpack.js.org) by default, unless disabled with the `--no-webpack` option when you run `mix phx.new`.
 
-If you are using brunch, there's some code in `assets/js/socket.js` that defines a simple client based on the socket implementation that ships with Phoenix.
+The `assets/js/socket.js` defines a simple client based on the socket implementation that ships with Phoenix.
 
 We can use that library to connect to our socket and join our channel, we just need to set our room name to `"room:lobby"` in that file.
 

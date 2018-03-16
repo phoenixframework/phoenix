@@ -42,7 +42,7 @@ Most of our work in this guide will be in the `lib/hello_web` directory, which h
 
 All of the files which are currently in the `controllers`, `templates`, and `views` directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly. When running in development, code changes will be automatically recompiled on new web requests.
 
-All of our application's static assets like js, css, and image files live in `assets`, which are built into `priv/static` by brunch or other front-end build tools. We won't be making any changes here for now, but it is good to know where to look for future reference.
+All of our application's static assets like js, css, and image files live in `assets`, which are built into `priv/static` by webpack or other front-end build tools. We won't be making any changes here for now, but it is good to know where to look for future reference.
 
 ```console
 ├── assets

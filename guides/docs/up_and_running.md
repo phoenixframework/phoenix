@@ -14,9 +14,9 @@ We can run `mix phx.new` from any directory in order to bootstrap our Phoenix ap
 $ mix phx.new hello
 ```
 
-> A note about [Brunch.io](http://brunch.io/) before we begin: Phoenix will use Brunch.io for asset management by default. Brunch.io's dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `mix phx.new` task. If we say "no" at that point, and if we don't install those dependencies later with `npm install`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use Brunch.io at all, we can simply pass `--no-brunch` to `mix phx.new`.
+> A note about [webpack](https://webpack.js.org/) before we begin: Phoenix will use webpack for asset management by default. Webpacks' dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `mix phx.new` task. If we say "no" at that point, and if we don't install those dependencies later with `npm install`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use webpack at all, we can simply pass `--no-webpack` to `mix phx.new`.
 
-> A note about [Ecto](https://hexdocs.pm/phoenix/ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL or MongoDB. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to the `mix phx.new`. This flag may also be combined with `--no-brunch` to create a skeleton application.
+> A note about [Ecto](https://hexdocs.pm/phoenix/ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL or MongoDB. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to the `mix phx.new`. This flag may also be combined with `--no-webpack` to create a skeleton application.
 
 
 ```console
@@ -37,7 +37,7 @@ Phoenix generates the directory structure and all the files we will need for our
 Fetch and install dependencies? [Yn] Y
 * running mix deps.get
 * running mix deps.compile
-* running cd assets && npm install && node node_modules/brunch/bin/brunch build
+* running cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
 
 We are all set! Go into your application by running:
 
@@ -90,7 +90,7 @@ We are almost there! The following steps are missing:
 
     $ cd hello
     $ mix deps.get
-    $ cd assets && npm install && node node_modules/brunch/bin/brunch build
+    $ cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
 
 Then configure your database in config/dev.exs and run:
 

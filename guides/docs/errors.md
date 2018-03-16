@@ -36,7 +36,8 @@ config :hello, HelloWeb.Endpoint,
   debug_errors: false,
   code_reloader: true,
   cache_static_lookup: false,
-  watchers: [node: ["node_modules/brunch/bin/brunch", "watch"]]
+  watchers: [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development", "--watch-stdin",
+                    cd: Path.expand("../assets", __DIR__)]]
 ```
 
 To learn more about custom error pages, please see [The Error View](views.html#the-errorview) section of the View Guide.

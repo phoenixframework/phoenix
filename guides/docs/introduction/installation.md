@@ -55,9 +55,9 @@ These are either Elixir or Erlang projects which are part of Phoenix application
 
 ### node.js (>= 5.0.0)
 
-Node is an optional dependency. Phoenix will use [brunch.io](http://brunch.io/) to compile static assets (JavaScript, CSS, etc), by default. Brunch.io uses the node package manager (npm) to install its dependencies, and npm requires node.js.
+Node is an optional dependency. Phoenix will use [webpack](https://webpack.js.org/) to compile static assets (JavaScript, CSS, etc), by default. Webpack uses the node package manager (npm) to install its dependencies, and npm requires node.js.
 
-If we don't have any static assets, or we want to use another build tool, we can pass the `--no-brunch` flag when creating a new application and node won't be required at all.
+If we don't have any static assets, or we want to use another build tool, we can pass the `--no-webpack` flag when creating a new application and node won't be required at all.
 
 We can get node.js from the [download page](https://nodejs.org/en/download/). When selecting a package to download, it's important to note that Phoenix requires version 5.0.0 or greater.
 

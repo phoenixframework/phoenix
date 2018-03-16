@@ -63,12 +63,12 @@ $ MIX_ENV=prod mix compile
 
 ## Compiling your application assets
 
-This step is required only if you have static assets like images, JavaScript, stylesheets and more in your Phoenix applications. By default, Phoenix uses brunch, and that's what we are going to explore.
+This step is required only if you have static assets like images, JavaScript, stylesheets and more in your Phoenix applications. By default, Phoenix uses webpack, and that's what we are going to explore.
 
 Compilation of static assets happens in two steps:
 
 ```console
-$ brunch build --production
+$ cd assets && webpack --mode production
 
 $ mix phx.digest
 
@@ -125,7 +125,7 @@ $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 
 # Compile assets
-$ brunch build --production
+$ cd assets && webpack --mode production && cd ..
 
 $ mix phx.digest
 
