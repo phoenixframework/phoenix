@@ -99,5 +99,5 @@ Linux users need to install this dependency. Please consult the [inotify-tools w
 
 ### Our First Phoenix Application
 
-Now that we have everything installed, let's create our first Phoenix application and get [up and running](up_and_running.html)
+Now that we have everything installed, let's create our first Phoenix application and get [up and running](up_and_running.html).
 
