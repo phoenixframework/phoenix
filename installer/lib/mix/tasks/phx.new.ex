@@ -145,7 +145,8 @@ defmodule Mix.Tasks.Phx.New do
       webpack_pending = install_webpack(install?, project)
       Task.await(compile, :infinity)
 
-      if Project.webpack?(project) and !elem(node_package_manager(), 0) do
+      {pkm_available?, _} = node_package_manager()
+      if Project.webpack?(project) and !pkm_available? do
         print_webpack_info(project, generator)
       end
 
