@@ -49,7 +49,14 @@ defmodule <%= endpoint_module %> do
   def init(_key, config) do
     if config[:load_from_system_env] do
       port = System.get_env("PORT") || raise "expected the PORT environment variable to be set"
-      {:ok, Keyword.put(config, :http, [:inet6, port: port])}
+
+      http_config = if Keyword.get(config, :http) do
+        config |> Keyword.get(:http) |> Keyword.put(:port, port)
+      else
+        [:inet6, port: port]
+      end
+
+      {:ok, Keyword.put(config, :http, http_config)}
     else
       {:ok, config}
     end
