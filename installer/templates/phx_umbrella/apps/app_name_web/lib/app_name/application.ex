@@ -2,6 +2,7 @@ defmodule <%= web_namespace %>.Application do
   @moduledoc false
   use Application
 
+  @impl Application
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
