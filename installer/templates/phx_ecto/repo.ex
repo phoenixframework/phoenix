@@ -5,6 +5,7 @@ defmodule <%= app_module %>.Repo do
   Dynamically loads the repository url from the
   DATABASE_URL environment variable.
   """
+  @impl true
   def init(_, opts) do
     if url = System.get_env("DATABASE_URL") do
       {:ok, Keyword.put(opts, :url, url)}
