@@ -69,13 +69,18 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
     "Running #{inspect endpoint} with #{server} at #{uri(scheme, ref)}"
   end
   defp uri(scheme, ref) do
-    {addr, port} = :ranch.get_addr(ref)
-    host =
-      case to_string(:inet.ntoa(addr)) do
-        "0.0.0.0" -> "localhost"
-        host -> host
-      end
+    case :ranch.get_addr(ref) do
+      {:local, unix_path} ->
+        %URI{host: URI.encode_www_form(unix_path), scheme: "#{scheme}+unix"}
 
-    %URI{host: host, port: port, scheme: to_string(scheme)}
+      {addr, port} ->
+        host =
+          case to_string(:inet.ntoa(addr)) do
+            "0.0.0.0" -> "localhost"
+            host -> host
+          end
+
+        %URI{host: host, port: port, scheme: to_string(scheme)}
+    end
   end
 end
