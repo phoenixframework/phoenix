@@ -19,7 +19,7 @@
         <a href="http://phoenixframework.org/" class="phx-logo">
           <img src="<%%= Routes.static_path(@conn, "/images/phoenix.png") %>" alt="Phoenix Framework Logo"/>
         </a>
-      </div>
+      </section>
     </header>
     <main role="main" class="container">
       <p class="alert alert-info" role="alert"><%%= get_flash(@conn, :info) %></p>
