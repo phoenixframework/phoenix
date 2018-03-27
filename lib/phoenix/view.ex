@@ -391,7 +391,7 @@ defmodule Phoenix.View do
   def __template_options__(module, opts) do
     root = opts[:root] || raise(ArgumentError, "expected :root to be given as an option")
     path = opts[:path]
-    pattern = opts[:pattern]
+
     namespace =
       if given = opts[:namespace] do
         given
@@ -403,11 +403,6 @@ defmodule Phoenix.View do
       end
 
     root_path = Path.join(root, path || Template.module_to_template_root(module, namespace, "View"))
-
-    if pattern do
-      [root: root_path, pattern: pattern]
-    else
-      [root: root_path]
-    end
+    [root: root_path] ++ Keyword.take(opts, [:pattern, :template_engines])
   end
 end

@@ -37,6 +37,8 @@ defmodule Phoenix.Template do
     * `:root` - the root template path to find templates
     * `:pattern` - the wildcard pattern to apply to the root
       when finding templates. Default `"*"`
+    * `:template_engines` - a map of template engines extensions
+      to template engine handlers
 
   ## Terminology
 
@@ -67,6 +69,13 @@ defmodule Phoenix.Template do
       config :phoenix, :template_engines,
         eex: Phoenix.Template.EExEngine,
         exs: Phoenix.Template.ExsEngine
+
+  If you want to support a given engine only on a certain template,
+  you can pass it as an option on `use Phoenix.Template`:
+
+      use Phoenix.Template, template_engines: %{
+        foo: Phoenix.Template.FooEngine
+      }
 
   ## Format encoders
 
@@ -123,6 +132,7 @@ defmodule Phoenix.Template do
       root = Keyword.fetch!(options, :root)
       @phoenix_root Path.relative_to_cwd(root)
       @phoenix_pattern Keyword.get(options, :pattern, unquote(@default_pattern))
+      @phoenix_template_engines Keyword.get(options, :template_engines, %{})
       @before_compile unquote(__MODULE__)
 
       @doc """
@@ -143,9 +153,11 @@ defmodule Phoenix.Template do
   defmacro __before_compile__(env) do
     root    = Module.get_attribute(env.module, :phoenix_root)
     pattern = Module.get_attribute(env.module, :phoenix_pattern)
+    engines = Module.get_attribute(env.module, :phoenix_template_engines)
+    engines = Enum.into(engines, engines())
 
     pairs = for path <- find_all(root, pattern) do
-      compile(path, root)
+      compile(path, root, engines)
     end
 
     names = Enum.map(pairs, &elem(&1, 0))
@@ -329,11 +341,11 @@ defmodule Phoenix.Template do
       module: view_module
   end
 
-  defp compile(path, root) do
+  defp compile(path, root, engines) do
     name   = template_path_to_name(path, root)
     defp   = String.to_atom(name)
     ext    = Path.extname(path) |> String.trim_leading(".") |> String.to_atom
-    engine = Map.fetch!(engines(), ext)
+    engine = Map.fetch!(engines, ext)
     quoted = engine.compile(path, name)
 
     {name, quote do
