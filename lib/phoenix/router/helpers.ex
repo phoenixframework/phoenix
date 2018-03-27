@@ -195,7 +195,7 @@ defmodule Phoenix.Router.Helpers do
 
       defp segments(segments, query, reserved) do
         dict = for {k, v} <- query,
-               not (k = to_string(k)) in reserved,
+               not ((k = to_string(k)) in reserved),
                do: {k, v}
 
         case Conn.Query.encode dict, &to_param/1 do
