@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   @shortdoc "Generates controller, views, and context for a JSON resource"
 
   @moduledoc """
-  Generates controller, views, and context for an JSON resource.
+  Generates controller, views, and context for a JSON resource.
 
       mix phx.gen.json Accounts User users name:string age:integer
 
