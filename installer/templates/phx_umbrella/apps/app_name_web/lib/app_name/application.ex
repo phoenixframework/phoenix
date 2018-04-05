@@ -5,6 +5,7 @@ defmodule <%= web_namespace %>.Application do
 
   use Application
 
+  @impl true
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
