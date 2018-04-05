@@ -146,6 +146,12 @@ url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
 force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
 
+... finally, if you would like to use a custom domain that has already been added to the Heroku app settings, replace the host with your custom domain and update the port to use Heroku's `PORT` environment variable:
+
+```elixir
+url: [scheme: "https", host: "mywebsite.com", port: System.get_env("PORT")],
+```
+
 Since our configuration is now handled using Heroku's environment variables, we don't need to import the `config/prod.secret.exs` file in `/config/prod.exs` any longer, so we can delete the following line:
 
 ```elixir
