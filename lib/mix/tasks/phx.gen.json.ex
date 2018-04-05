@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   @shortdoc "Generates controller, views, and context for a JSON resource"
 
   @moduledoc """
-  Generates controller, views, and context for an JSON resource.
+  Generates controller, views, and context for a JSON resource.
 
       mix phx.gen.json Accounts User users name:string age:integer
 
@@ -12,8 +12,10 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   The context is an Elixir module that serves as an API boundary for
   the given resource. A context often holds many related resources.
   Therefore, if the context already exists, it will be augmented with
-  functions for the given resource. Note a resource may also be split
-  over distinct contexts (such as Accounts.User and Payments.User).
+  functions for the given resource. 
+
+  > Note: A resource may also be split
+  > over distinct contexts (such as Accounts.User and Payments.User).
 
   The schema is responsible for mapping the database fields into an
   Elixir struct.
