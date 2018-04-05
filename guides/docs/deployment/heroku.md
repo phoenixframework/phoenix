@@ -21,8 +21,8 @@ Heroku is a great platform and Elixir performs well on it. However, you may run 
 - In-memory state such as those in [Agents](https://elixir-lang.org/getting-started/mix-otp/agent.html), [GenServers](https://elixir-lang.org/getting-started/mix-otp/genserver.html), and [ETS](https://elixir-lang.org/getting-started/mix-otp/ets.html) will be lost every 24 hours.
     - Heroku [restarts dynos](https://devcenter.heroku.com/articles/dynos#restarting) every 24 hours regardless of whether the node is healthy.
 
-- [the built-in Observer](https://elixir-lang.org/getting-started/debugging.html#observer) can't be used with heroku.
-    - Heroku does allow for connection into your Dyno, but you won't be able to use the observer to watch the state of your dyno.
+- [the built-in Observer](https://elixir-lang.org/getting-started/debugging.html#observer) can't be used with Heroku.
+    - Heroku does allow for connection into your dyno, but you won't be able to use the observer to watch the state of your dyno.
 
 If you are just getting started or you don't expect to use the features above, Heroku should be enough for your needs. For instance, if you are migrating an existing application running on Heroku to Phoenix, keeping a similar set of features, Elixir will perform just as well or even better than your current stack.
 
@@ -353,9 +353,9 @@ And that's it!
 
 ## Connecting to your dyno
 
-Heroku gives the ability to connect to your dyno with an iex shell if you need to make database queries for example.
+Heroku gives you the ability to connect to your dyno with an iex shell which allows running Elixir code such as database queries.
 
-- Connect to your dyno with `heroku ps:exec`
+- Connect to the dyno with `heroku ps:exec`
 note that if you have several applications on the same repository you will need to specify the app name or the remote name with `--app APP_NAME` or `--remote REMOTE_NAME`
 - Launch an iex session with `iex --sname console --remsh server@${HOSTNAME}`
 
