@@ -54,7 +54,7 @@ defmodule Phoenix.Mixfile do
 
   defp deps do
     [
-      {:cowboy, "~> 1.0 or ~> 2.2.2 or ~> 2.3", optional: true},
+      {:cowboy, "~> 1.0 or ~> 2.3", optional: true},
       {:plug, "~> 1.5"},
       {:phoenix_pubsub, "~> 1.0"},
       {:jason, "~> 1.0", optional: true},
