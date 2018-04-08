@@ -110,10 +110,7 @@ next you'll need to add a config file named `phoenix_static_buildpack.config`
 with the following
 ```
 compile="compile"
-node_version=8.11.1
 ```
-(use node's [latest lts version](https://nodejs.org/en/))
-
 and a file named `compile` with the following
 ```
 npm run deploy
@@ -122,6 +119,8 @@ mix phx.digest
 ```
 both these files should be in the root of your project
 
+This phoenix static buildpack pack can be configured to change the node version and compile options. Please refer to this configuration section for details.
+(For example, by default the buildpack doesn't use node's latest LTS version, you might want to customize that)
 ## Making our Project ready for Heroku
 
 Every new Phoenix project ships with a config file `config/prod.secret.exs` which stores configuration that should not be committed along with our source code. By default Phoenix adds it to our `.gitignore` file.
