@@ -210,7 +210,7 @@ There is a fourth `router_opts` argument that can be passed. These options are o
 
 Although it is possible to forward to any module plug, it is not advised to forward to another endpoint. This is because plugs defined by your app and the forwarded endpoint would be invoked twice, which may lead to errors.
 
-Writing an actual background job worker is beyond the scope of this guide. However for convenience and to allow you to test the code above, here is the implementation of `BackgroundJob.Plug` that you can copy into your application:
+Writing an actual background job worker is beyond the scope of this guide. However for convenience and to allow you to test the code above, here is the implementation of `BackgroundJob.Plug` that you can copy into your application inside `lib/plugs/background_job_plug.ex`:
 
 
 ```elixir
