@@ -36,8 +36,8 @@
 
     test "update_<%= schema.singular %>/2 with valid data updates the <%= schema.singular %>" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
-      assert {:ok, <%= schema.singular %>} = <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, @update_attrs)
-      assert %<%= inspect schema.alias %>{} = <%= schema.singular %><%= for {field, value} <- schema.params.update do %>
+      assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, @update_attrs)
+      <%= for {field, value} <- schema.params.update do %>
       assert <%= schema.singular %>.<%= field %> == <%= Mix.Phoenix.Schema.value(schema, field, value) %><% end %>
     end
 
