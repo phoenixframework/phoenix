@@ -19,6 +19,15 @@ Phoenix.js documentation is available at [https://hexdocs.pm/phoenix/js](https:/
 
 We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs [in the issue tracker][4].
 
+### Generating a Phoenix project from released/stable version
+
+It's possible to create a new project with `phx.new` generator using the latest released/stable Phoenix version.
+
+For that you need to install `phx.new` task from Phoenix `archives` repo, following 2-step instructions:
+
+1. `mix archive.uninstall phx_new` or simply delete `phx_new*` directory from `.mix/archives` directory to remove any previously installed version of phx_new generator,
+2. `mix archive.install https://github.com/phoenixframework/archives/raw/master/phx_new.ez` to install the latest stable version of phx_new.
+
 ### Generating a Phoenix project from unreleased versions
 
 You can create a new project using the latest Phoenix source installer (the `phx.new` Mix task) with the following steps:

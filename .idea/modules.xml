@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/installer/templates/phx_umbrella/apps/app_name/app_name.iml" filepath="$PROJECT_DIR$/installer/templates/phx_umbrella/apps/app_name/app_name.iml" />
+      <module fileurl="file://$PROJECT_DIR$/installer/templates/phx_umbrella/apps/app_name_web/app_name_web.iml" filepath="$PROJECT_DIR$/installer/templates/phx_umbrella/apps/app_name_web/app_name_web.iml" />
+      <module fileurl="file://$PROJECT_DIR$/phoenix.iml" filepath="$PROJECT_DIR$/phoenix.iml" />
+      <module fileurl="file://$PROJECT_DIR$/guides/phoenix_guides.iml" filepath="$PROJECT_DIR$/guides/phoenix_guides.iml" />
+      <module fileurl="file://$PROJECT_DIR$/installer/phx_new.iml" filepath="$PROJECT_DIR$/installer/phx_new.iml" />
+      <module fileurl="file://$PROJECT_DIR$/installer/templates/phx_single/phx_single.iml" filepath="$PROJECT_DIR$/installer/templates/phx_single/phx_single.iml" />
+      <module fileurl="file://$PROJECT_DIR$/installer/templates/phx_umbrella/phx_umbrella.iml" filepath="$PROJECT_DIR$/installer/templates/phx_umbrella/phx_umbrella.iml" />
+    </modules>
+  </component>
+</project>
