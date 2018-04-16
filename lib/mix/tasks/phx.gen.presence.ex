@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
       Mix.raise "mix phx.gen.presence can only be run inside an application directory"
     end
     context_app = Mix.Phoenix.context_app()
-    otp_app = Mix.Phoenix.context_app()
+    otp_app = Mix.Phoenix.otp_app()
     web_prefix = Mix.Phoenix.web_path(context_app)
     inflections = Mix.Phoenix.inflect(alias_name)
     inflections = Keyword.put(inflections, :module, "#{inflections[:web_module]}.#{inflections[:scoped]}")
