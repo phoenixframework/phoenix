@@ -21,7 +21,7 @@ defmodule Phoenix.Mixfile do
         main: "overview",
         logo: "logo.png",
         extra_section: "GUIDES",
-        assets: "guides/docs/assets",
+        assets: "guides/assets",
         formatters: ["html", "epub"],
         groups_for_modules: groups_for_modules(),
         extras: extras(),
@@ -92,42 +92,42 @@ defmodule Phoenix.Mixfile do
 
   defp extras do
     [
-      "guides/docs/introduction/overview.md",
-      "guides/docs/introduction/installation.md",
-      "guides/docs/introduction/learning.md",
-      "guides/docs/introduction/community.md",
+      "guides/introduction/overview.md",
+      "guides/introduction/installation.md",
+      "guides/introduction/learning.md",
+      "guides/introduction/community.md",
 
-      "guides/docs/up_and_running.md",
-      "guides/docs/adding_pages.md",
-      "guides/docs/routing.md",
-      "guides/docs/plug.md",
-      "guides/docs/endpoint.md",
-      "guides/docs/controllers.md",
-      "guides/docs/views.md",
-      "guides/docs/templates.md",
-      "guides/docs/channels.md",
-      "guides/docs/presence.md",
-      "guides/docs/ecto.md",
-      "guides/docs/contexts.md",
-      "guides/docs/phoenix_mix_tasks.md",
-      "guides/docs/errors.md",
+      "guides/up_and_running.md",
+      "guides/adding_pages.md",
+      "guides/routing.md",
+      "guides/plug.md",
+      "guides/endpoint.md",
+      "guides/controllers.md",
+      "guides/views.md",
+      "guides/templates.md",
+      "guides/channels.md",
+      "guides/presence.md",
+      "guides/ecto.md",
+      "guides/contexts.md",
+      "guides/phoenix_mix_tasks.md",
+      "guides/errors.md",
 
-      "guides/docs/testing/testing.md",
-      "guides/docs/testing/testing_schemas.md",
-      "guides/docs/testing/testing_controllers.md",
-      "guides/docs/testing/testing_channels.md",
+      "guides/testing/testing.md",
+      "guides/testing/testing_schemas.md",
+      "guides/testing/testing_controllers.md",
+      "guides/testing/testing_channels.md",
 
-      "guides/docs/deployment/deployment.md",
-      "guides/docs/deployment/heroku.md"
+      "guides/deployment/deployment.md",
+      "guides/deployment/heroku.md"
       ]
   end
 
   defp groups_for_extras do
     [
-      "Introduction": ~r/guides\/docs\/introduction\/.?/,
-      "Guides": ~r/guides\/docs\/[^\/]+\.md/,
-      "Testing": ~r/guides\/docs\/testing\/.?/,
-      "Deployment": ~r/guides\/docs\/deployment\/.?/
+      "Introduction": ~r/guides\/introduction\/.?/,
+      "Guides": ~r/guides\/[^\/]+\.md/,
+      "Testing": ~r/guides\/testing\/.?/,
+      "Deployment": ~r/guides\/deployment\/.?/
     ]
   end
 
