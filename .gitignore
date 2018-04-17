@@ -4,6 +4,9 @@
 /tmp
 /node_modules
 
+/.idea
+*.iml
+
 /assets/node_modules
 
 /installer/_build
