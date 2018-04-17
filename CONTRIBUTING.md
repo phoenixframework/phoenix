@@ -194,3 +194,30 @@ in order to craft an excellent pull request:
    ```
 
 Thank you for your contributions!
+
+## Guides
+
+These Guides aim to be inclusive. We use "we" and "our" instead of "you" and
+"your" to foster this sense of inclusion.
+
+Ideally there is something for everybody in each guide, from beginner to expert.
+This is hard, maybe impossible. When we need to compromise, we do so on behalf
+of beginning users because expert users have more tools at their disposal to
+help themselves.
+
+The general pattern we use for presenting information is to first introduce a
+small, discreet topic, then write a small amount of code to demonstrate the
+concept, then verify that the code worked.
+
+In this way, we build from small, easily digestible concepts into more complex
+ones. The shorter this cycle is, as long as the information is still clear and
+complete, the better.
+
+For formatting the guides:
+
+- We use the "elixir" code fence for all module code.
+- We use the "console" code fence for iex and shell commands.
+- We use the "html" code fence for html templates, even if there is elixir code
+  in the template.
+- We use backticks for filenames and directory paths.
+- We use backticks for module names, function names, and variable names.
