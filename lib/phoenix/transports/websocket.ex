@@ -59,7 +59,8 @@ defmodule Phoenix.Transports.WebSocket do
     [serializer: [{Phoenix.Transports.WebSocketSerializer, "~> 1.0.0"},
                   {Phoenix.Transports.V2.WebSocketSerializer, "~> 2.0.0"}],
      timeout: 60_000,
-     transport_log: false]
+     transport_log: false,
+     compress: false]
   end
 
   ## Callbacks
