@@ -114,7 +114,7 @@ defmodule MixHelper do
 
   def umbrella_mixfile_contents do
     """
-    defmodule Umbrella.Mixfile do
+    defmodule Umbrella.MixProject do
       use Mix.Project
 
       def project do

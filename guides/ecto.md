@@ -467,7 +467,7 @@ To switch adapters, we need to remove the Postgrex dependency and add a new one 
 Let's open up our `mix.exs` file and do that now.
 
 ```
-defmodule HelloPhoenix.Mixfile do
+defmodule HelloPhoenix.MixProject do
   use Mix.Project
 
   . . .

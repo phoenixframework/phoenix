@@ -1,4 +1,4 @@
-defmodule Phx.New.Mixfile do
+defmodule Phx.New.MixProject do
   use Mix.Project
 
   def project do

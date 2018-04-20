@@ -116,7 +116,7 @@ $  mix phx.new task_tester --app hello
 If we look in the resulting `mix.exs` file, we will see that our project app name is `hello`.
 
 ```elixir
-defmodule Hello.Mixfile do
+defmodule Hello.MixProject do
   use Mix.Project
 
   def project do
@@ -179,7 +179,7 @@ Notice that none of the files have `hello` in their names. All filenames related
 If we look at the project app name in `mix.exs`, we see that it is `task_tester`, but all the module qualifying names begin with `Hello`.
 
 ```elixir
-defmodule Hello.Mixfile do
+defmodule Hello.MixProject do
   use Mix.Project
 
   def project do

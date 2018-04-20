@@ -1,4 +1,4 @@
-defmodule Phoenix.Mixfile do
+defmodule Phoenix.MixProject do
   use Mix.Project
 
   @version "1.4.0-dev"
