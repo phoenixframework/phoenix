@@ -1,5 +1,7 @@
 defmodule Phoenix.Transports.LongPoll do
-  @moduledoc """
+  @moduledoc false
+
+  _ = """
   Socket transport for long poll clients.
 
   ## Configuration

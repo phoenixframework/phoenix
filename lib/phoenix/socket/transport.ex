@@ -262,7 +262,7 @@ defmodule Phoenix.Socket.Transport do
   end
 
   defp do_dispatch(nil, %{event: "phx_join", topic: topic} = msg, base_socket) do
-    case base_socket.handler.__channel__(topic, base_socket.transport_name) do
+    case base_socket.handler.__channel__(topic) do
       {channel, opts} ->
         socket = build_channel_socket(base_socket, channel, topic, msg.ref, opts)
 

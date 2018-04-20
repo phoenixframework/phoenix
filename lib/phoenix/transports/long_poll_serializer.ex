@@ -1,22 +1,13 @@
 defmodule Phoenix.Transports.LongPollSerializer do
   @moduledoc false
-
   @behaviour Phoenix.Transports.Serializer
 
   alias Phoenix.Socket.{Reply, Message, Broadcast}
 
-  @doc """
-  Translates a `Phoenix.Socket.Broadcast` into a `Phoenix.Socket.Message`.
-  """
   def fastlane!(%Broadcast{} = broadcast) do
     {:socket_push, :text, to_map(broadcast)}
   end
 
-  @doc """
-  Normalizes a `Phoenix.Socket.Message` struct.
-
-  Encoding is handled downstream in the LongPoll controller.
-  """
   def encode!(message) do
     {:socket_push, :text, to_map(message)}
   end
@@ -49,9 +40,6 @@ defmodule Phoenix.Transports.LongPollSerializer do
     }
   end
 
-  @doc """
-  Decodes JSON String into `Phoenix.Socket.Message` struct.
-  """
   def decode!(message, _opts) do
     message
     |> Phoenix.json_library().decode!()

@@ -1,7 +1,5 @@
 defmodule Phoenix.Transports.Serializer do
-  @moduledoc """
-  Defines a behaviour for `Phoenix.Socket.Message` serialization.
-  """
+  @moduledoc false
 
   @doc "Translates a `Phoenix.Socket.Broadcast` struct to fastlane format"
   @callback fastlane!(Phoenix.Socket.Broadcast.t) :: term

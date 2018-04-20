@@ -585,7 +585,7 @@ defmodule Phoenix.ChannelTest do
       """
     end
 
-    case socket.handler.__channel__(topic, socket.transport_name) do
+    case socket.handler.__channel__(topic) do
       {channel, opts} when is_atom(channel) -> {channel, opts}
       _ -> raise "no channel found for topic #{inspect topic} in #{inspect socket.handler}"
     end

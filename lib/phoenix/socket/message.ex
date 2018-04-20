@@ -9,6 +9,7 @@ defmodule Phoenix.Socket.Message do
     * `event`- The string event name, for example "phx_join"
     * `payload` - The message payload
     * `ref` - The unique string ref
+
   """
 
   @type t :: %Phoenix.Socket.Message{}
@@ -26,11 +27,11 @@ defmodule Phoenix.Socket.Message do
         event: Map.fetch!(map, "event"),
         payload: Map.fetch!(map, "payload"),
         ref: Map.fetch!(map, "ref"),
-        join_ref: Map.get(map, "join_ref"),
+        join_ref: Map.get(map, "join_ref")
       }
     rescue
       err in [KeyError] ->
-        raise Phoenix.Socket.InvalidMessageError, "missing key #{inspect err.key}"
+        raise Phoenix.Socket.InvalidMessageError, "missing key #{inspect(err.key)}"
     end
   end
 end

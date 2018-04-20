@@ -158,10 +158,8 @@ defmodule Phoenix.MixProject do
         Phoenix.Socket.Broadcast,
         Phoenix.Socket.Message,
         Phoenix.Socket.Reply,
-        Phoenix.Socket.Transport,
-        Phoenix.Transports.LongPoll,
-        Phoenix.Transports.Serializer,
-        Phoenix.Transports.WebSocket,
+        Phoenix.Socket.Serializer,
+        Phoenix.Socket.Transport
       ],
 
       "Templating": [

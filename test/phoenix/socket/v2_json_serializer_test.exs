@@ -4,6 +4,7 @@ defmodule Phoenix.Socket.V2.JSONSerializerTest do
 
   @serializer V2.JSONSerializer
   @v2_fastlane_json "[null,null,\"t\",\"e\",\"m\"]"
+  @v2_reply_json "[null,null,\"t\",\"phx_reply\",{\"response\":\"m\",\"status\":null}]"
   @v2_msg_json "[null,null,\"t\",\"e\",\"m\"]"
 
   def encode!(serializer, msg) do
@@ -12,7 +13,7 @@ defmodule Phoenix.Socket.V2.JSONSerializerTest do
     IO.iodata_to_binary(encoded)
   end
 
-  def decode!(serializer, msg, opts) do
+  def decode!(serializer, msg, opts \\ []) do
     serializer.decode!(msg, opts)
   end
 
@@ -27,9 +28,14 @@ defmodule Phoenix.Socket.V2.JSONSerializerTest do
     assert encode!(@serializer, msg) == @v2_msg_json
   end
 
+  test "encode!/1 encodes `Phoenix.Socket.Reply` as JSON" do
+    msg = %Reply{topic: "t", payload: "m"}
+    assert encode!(@serializer, msg) == @v2_reply_json
+  end
+
   test "decode!/2 decodes `Phoenix.Socket.Message` from JSON" do
     assert %Message{topic: "t", event: "e", payload: "m"} ==
-      decode!(@serializer, @v2_msg_json, opcode: :text)
+      decode!(@serializer, @v2_msg_json)
   end
 
   test "fastlane!/1 encodes a broadcast into a message as JSON" do

@@ -1,5 +1,7 @@
 defmodule Phoenix.Transports.WebSocket do
-  @moduledoc """
+  @moduledoc false
+
+  _ = """
   Socket transport for websocket clients.
 
   ## Configuration
@@ -102,7 +104,7 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   def init(conn, _) do
-    conn = send_resp(conn, :bad_request, "")
+    conn = send_resp(conn, 400, "")
     {:error, conn}
   end
 
