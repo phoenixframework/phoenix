@@ -6,8 +6,8 @@ defmodule Phoenix.Integration.WebSocketTest do
   import ExUnit.CaptureLog
 
   alias Phoenix.Integration.WebsocketClient
-  alias Phoenix.Socket.Message
-  alias Phoenix.Transports.{V2, WebSocketSerializer}
+  alias Phoenix.Socket.{V2, Message}
+  alias Phoenix.Transports.WebSocketSerializer
   alias __MODULE__.Endpoint
 
   @moduletag :capture_log
@@ -122,7 +122,7 @@ defmodule Phoenix.Integration.WebSocketTest do
     :ok
   end
 
-  for {serializer, vsn, join_ref} <- [{WebSocketSerializer, "1.0.0", nil}, {V2.WebSocketSerializer, "2.0.0", "1"}] do
+  for {serializer, vsn, join_ref} <- [{WebSocketSerializer, "1.0.0", nil}, {V2.JSONSerializer, "2.0.0", "1"}] do
     @serializer serializer
     @vsn vsn
     @join_ref join_ref

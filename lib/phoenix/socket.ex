@@ -319,7 +319,7 @@ defmodule Phoenix.Socket do
   defp merge_defaults(conf, defaults), do: Keyword.merge(defaults, conf)
 
   defp normalize_serializer_conf(conf, name, transport_mod, default) do
-    update_in(conf, [:serializer], fn
+    update_in(conf[:serializer], fn
       nil ->
         precompile_serializers(default)
 

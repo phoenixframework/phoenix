@@ -1,24 +1,23 @@
-defmodule Phoenix.Transports.V2.WebSocketSerializer do
+defmodule Phoenix.Socket.V2.JSONSerializer do
   @moduledoc false
-
-  @behaviour Phoenix.Transports.Serializer
+  @behaviour Phoenix.Socket.Serializer
 
   alias Phoenix.Socket.{Reply, Message, Broadcast}
 
-  @doc """
-  Translates a `Phoenix.Socket.Broadcast` into a `Phoenix.Socket.Message`.
-  """
   def fastlane!(%Broadcast{} = msg) do
     data = Phoenix.json_library().encode_to_iodata!([nil, nil, msg.topic, msg.event, msg.payload])
     {:socket_push, :text, data}
   end
 
-  @doc """
-  Encodes a `Phoenix.Socket.Message` struct to JSON string.
-  """
   def encode!(%Reply{} = reply) do
-    data = [reply.join_ref, reply.ref, reply.topic, "phx_reply",
-            %{status: reply.status, response: reply.payload}]
+    data = [
+      reply.join_ref,
+      reply.ref,
+      reply.topic,
+      "phx_reply",
+      %{status: reply.status, response: reply.payload}
+    ]
+
     {:socket_push, :text, Phoenix.json_library().encode_to_iodata!(data)}
   end
 
@@ -27,9 +26,6 @@ defmodule Phoenix.Transports.V2.WebSocketSerializer do
     {:socket_push, :text, Phoenix.json_library().encode_to_iodata!(data)}
   end
 
-  @doc """
-  Decodes JSON String into `Phoenix.Socket.Message` struct.
-  """
   def decode!(raw_message, _opts) do
     [join_ref, ref, topic, event, payload | _] = Phoenix.json_library().decode!(raw_message)
 
@@ -38,7 +34,7 @@ defmodule Phoenix.Transports.V2.WebSocketSerializer do
       event: event,
       payload: payload,
       ref: ref,
-      join_ref: join_ref,
+      join_ref: join_ref
     }
   end
 end

@@ -8,7 +8,6 @@ defmodule Phoenix.Transports.WebSocket do
 
       transport :websocket, Phoenix.Transports.WebSocket,
         timeout: :infinity,
-        serializer: [{Phoenix.Transports.WebSocketSerializer, "~> 2.0.0"}],
         transport_log: false
 
     * `:timeout` - the timeout for keeping websocket connections
@@ -57,7 +56,7 @@ defmodule Phoenix.Transports.WebSocket do
 
   def default_config() do
     [serializer: [{Phoenix.Transports.WebSocketSerializer, "~> 1.0.0"},
-                  {Phoenix.Transports.V2.WebSocketSerializer, "~> 2.0.0"}],
+                  {Phoenix.Socket.V2.JSONSerializer, "~> 2.0.0"}],
      timeout: 60_000,
      transport_log: false,
      compress: false]

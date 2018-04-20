@@ -36,13 +36,14 @@ defmodule Phoenix.Transports.LongPoll do
   ## Transport callbacks
 
   @behaviour Phoenix.Socket.Transport
-  alias Phoenix.Transports.{V2, LongPollSerializer}
+  alias Phoenix.Transports.LongPollSerializer
+  alias Phoenix.Socket.V2
 
   def default_config() do
     [window_ms: 10_000,
      pubsub_timeout_ms: 2_000,
      serializer: [{Phoenix.Transports.LongPollSerializer, "~> 1.0.0"},
-                  {Phoenix.Transports.V2.LongPollSerializer, "~> 2.0.0"}],
+                  {Phoenix.Socket.V2.JSONSerializer, "~> 2.0.0"}],
      transport_log: false,
      crypto: [max_age: 1_209_600]]
   end
@@ -129,7 +130,7 @@ defmodule Phoenix.Transports.LongPoll do
   defp decode(_bad_request, _serializr), do: raise Plug.BadRequestError
 
   defp serializer("1." <> _ = _vsn), do: LongPollSerializer
-  defp serializer("2." <> _ = _vsn), do: V2.LongPollSerializer
+  defp serializer("2." <> _ = _vsn), do: V2.JSONSerializer
   defp serializer(nil), do: LongPollSerializer
 
   defp new_session(conn, endpoint, handler, transport, opts) do

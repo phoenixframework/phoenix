@@ -6,8 +6,8 @@ defmodule Phoenix.Integration.LongPollTest do
   import ExUnit.CaptureLog
 
   alias Phoenix.Integration.HTTPClient
-  alias Phoenix.Socket.Broadcast
-  alias Phoenix.Transports.{V2, LongPollSerializer}
+  alias Phoenix.Socket.{V2, Broadcast}
+  alias Phoenix.Transports.LongPollSerializer
   alias Phoenix.PubSub.Local
   alias __MODULE__.Endpoint
 
@@ -161,7 +161,7 @@ defmodule Phoenix.Integration.LongPollTest do
       messages ->
         for msg <- messages do
           msg
-          |> V2.LongPollSerializer.decode!([])
+          |> V2.JSONSerializer.decode!([])
           |> stringify()
         end
     end)
@@ -306,7 +306,7 @@ defmodule Phoenix.Integration.LongPollTest do
   end
 
   for {serializer, vsn} <- [{LongPollSerializer, "1.0.0"},
-                            {V2.LongPollSerializer, "2.0.0"}] do
+                            {V2.JSONSerializer, "2.0.0"}] do
     @vsn vsn
     @join_ref "123"
 
