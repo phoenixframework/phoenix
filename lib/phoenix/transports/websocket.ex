@@ -70,9 +70,7 @@ defmodule Phoenix.Transports.WebSocket do
   alias Phoenix.Socket.Transport
 
   @doc false
-  def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport}) do
-    {_, opts} = handler.__transport__(transport)
-
+  def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport, opts}) do
     conn =
       conn
       |> code_reload(opts, endpoint)
@@ -88,7 +86,7 @@ defmodule Phoenix.Transports.WebSocket do
 
         case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params) do
           {:ok, state} ->
-            {:ok, conn, {__MODULE__, {handler, state, opts}}}
+            {:ok, conn, {handler, state}}
           :error ->
             conn = send_resp(conn, 403, "")
             {:error, conn}
@@ -104,15 +102,13 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   @doc false
-  def ws_init({handler, state, opts}) do
-    # TODO: Move this up in the tree.
-    timeout = Keyword.fetch!(opts, :timeout)
+  def ws_init({handler, state}) do
     {:ok, {_, socket}} = handler.init(state)
 
     {:ok, %{socket: socket,
             channels: %{},
             channels_inverse: %{},
-            serializer: socket.serializer}, timeout}
+            serializer: socket.serializer}}
   end
 
   @doc false

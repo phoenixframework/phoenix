@@ -60,9 +60,7 @@ defmodule Phoenix.Transports.LongPoll do
   def init(opts), do: opts
 
   @doc false
-  def call(conn, {endpoint, handler, transport}) do
-    {_, opts} = handler.__transport__(transport)
-
+  def call(conn, {endpoint, handler, transport, opts}) do
     conn
     |> code_reload(opts, endpoint)
     |> fetch_query_params

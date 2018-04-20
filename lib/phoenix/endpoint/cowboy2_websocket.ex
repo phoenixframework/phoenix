@@ -6,18 +6,19 @@ defmodule Phoenix.Endpoint.Cowboy2WebSocket do
     @behaviour :cowboy_websocket
   end
 
+  alias Phoenix.Transports.WebSocket
   @connection Plug.Adapters.Cowboy2.Conn
   @already_sent {:plug_conn, :sent}
 
-  def init(req, {module, opts}) do
+  def init(req, {module, {_, _, _, opts} = args}) do
     conn = @connection.conn(req)
 
     try do
-      case module.init(conn, opts) do
-        {:ok, %{adapter: {@connection, req}}, {_module, {_, _, opts} = args}} ->
+      case module.init(conn, args) do
+        {:ok, %{adapter: {@connection, req}}, args} ->
           timeout = Keyword.fetch!(opts, :timeout)
           compress = Keyword.fetch!(opts, :compress)
-          {:cowboy_websocket, req, {module, args}, %{idle_timeout: timeout, compress: compress}}
+          {:cowboy_websocket, req, args, %{idle_timeout: timeout, compress: compress}}
         {:error, %{adapter: {@connection, req}}} ->
           {:error, req}
       end
@@ -35,55 +36,54 @@ defmodule Phoenix.Endpoint.Cowboy2WebSocket do
 
   ## Websocket callbacks
 
-  def websocket_init({module, args}) do
-    {:ok, state, _timeout} = module.ws_init(args)
-    {:ok, {module, state}}
+  def websocket_init(args) do
+    WebSocket.ws_init(args)
   end
 
-  def websocket_handle({opcode = :text, payload}, {handler, state}) do
-    handle_reply handler, handler.ws_handle(opcode, payload, state)
+  def websocket_handle({opcode = :text, payload}, state) do
+    handle_reply WebSocket.ws_handle(opcode, payload, state)
   end
-  def websocket_handle({opcode = :binary, payload}, {handler, state}) do
-    handle_reply handler, handler.ws_handle(opcode, payload, state)
+  def websocket_handle({opcode = :binary, payload}, state) do
+    handle_reply WebSocket.ws_handle(opcode, payload, state)
   end
-  def websocket_handle(_other, {handler, state}) do
-    {:ok, {handler, state}}
-  end
-
-  def websocket_info(message, {handler, state}) do
-    handle_reply handler, handler.ws_info(message, state)
+  def websocket_handle(_other, state) do
+    {:ok, state}
   end
 
-  def terminate({:error, :closed}, _req, {handler, state}) do
-    handler.ws_close(state)
+  def websocket_info(message, state) do
+    handle_reply WebSocket.ws_info(message, state)
+  end
+
+  def terminate({:error, :closed}, _req, state) do
+    WebSocket.ws_close(state)
     :ok
   end
-  def terminate({:remote, :closed}, _req, {handler, state}) do
-    handler.ws_close(state)
+  def terminate({:remote, :closed}, _req, state) do
+    WebSocket.ws_close(state)
     :ok
   end
-  def terminate({:remote, code, _}, _req, {handler, state})
+  def terminate({:remote, code, _}, _req, state)
       when code in 1000..1003 or code in 1005..1011 or code == 1015 do
-    handler.ws_close(state)
+    WebSocket.ws_close(state)
     :ok
   end
-  def terminate(:remote, _req, {handler, state}) do
-    handler.ws_close(state)
+  def terminate(:remote, _req, state) do
+    WebSocket.ws_close(state)
     :ok
   end
-  def terminate(reason, _req, {handler, state}) do
-    handler.ws_close(state)
-    handler.ws_terminate(reason, state)
+  def terminate(reason, _req, state) do
+    WebSocket.ws_close(state)
+    WebSocket.ws_terminate(reason, state)
     :ok
   end
 
-  defp handle_reply(handler, {:shutdown, new_state}) do
-    {:stop, {handler, new_state}}
+  defp handle_reply({:shutdown, new_state}) do
+    {:stop, new_state}
   end
-  defp handle_reply(handler, {:ok, new_state}) do
-    {:ok, {handler, new_state}}
+  defp handle_reply({:ok, new_state}) do
+    {:ok, new_state}
   end
-  defp handle_reply(handler, {:reply, {opcode, payload}, new_state}) do
-    {:reply, {opcode, payload}, {handler, new_state}}
+  defp handle_reply({:reply, {opcode, payload}, new_state}) do
+    {:reply, {opcode, payload}, new_state}
   end
 end
