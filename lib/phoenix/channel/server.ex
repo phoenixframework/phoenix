@@ -11,6 +11,13 @@ defmodule Phoenix.Channel.Server do
   ## Transport API
 
   @doc """
+  Starts a channel server.
+  """
+  def start_link(socket, payload, pid, ref) do
+    GenServer.start_link(__MODULE__, {socket, payload, pid, ref})
+  end
+
+  @doc """
   Joins the channel in socket with authentication payload.
   """
   @spec join(Socket.t, map) :: {:ok, map, pid} | {:error, map}
@@ -19,11 +26,11 @@ defmodule Phoenix.Channel.Server do
       %{params: auth_payload, socket: socket}, fn ->
       ref = make_ref()
 
-      case GenServer.start_link(__MODULE__, {socket, auth_payload, self(), ref}) do
+      case Supervisor.start_child(socket.handler, [socket, auth_payload, self(), ref]) do
+        {:ok, :undefined} ->
+          receive do: ({^ref, reply} -> {:error, reply})
         {:ok, pid} ->
           receive do: ({^ref, reply} -> {:ok, reply, pid})
-        :ignore ->
-          receive do: ({^ref, reply} -> {:error, reply})
         {:error, reason} ->
           Logger.error fn -> Exception.format_exit(reason) end
           {:error, %{reason: "join crashed"}}
@@ -39,8 +46,7 @@ defmodule Phoenix.Channel.Server do
   """
   def close(pid, timeout \\ 5000) do
     # We need to guarantee that the channel has been closed
-    # otherwise the link in the transport will trigger it to
-    # crash.
+    # otherwise the link in the transport will trigger it to crash.
     ref = Process.monitor(pid)
     GenServer.cast(pid, :close)
     receive do
@@ -183,6 +189,7 @@ defmodule Phoenix.Channel.Server do
 
   @doc false
   def init({socket, auth_payload, parent, ref}) do
+    _ = Process.monitor(socket.transport_pid)
     socket = %{socket | channel_pid: self()}
 
     case socket.channel.join(socket.topic, auth_payload, socket) do
@@ -232,6 +239,7 @@ defmodule Phoenix.Channel.Server do
     handle_result({:stop, {:shutdown, :closed}, socket}, :handle_in)
   end
 
+  @doc false
   def handle_info(%Message{topic: topic, event: "phx_leave", ref: ref}, %{topic: topic} = socket) do
     handle_result({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)}, :handle_in)
   end
@@ -251,6 +259,10 @@ defmodule Phoenix.Channel.Server do
     event
     |> socket.channel.handle_out(payload, socket)
     |> handle_result(:handle_out)
+  end
+
+  def handle_info({:DOWN, _, _, transport_pid, reason}, %{transport_pid: transport_pid} = socket) do
+    {:stop, reason, socket}
   end
 
   def handle_info(msg, socket) do

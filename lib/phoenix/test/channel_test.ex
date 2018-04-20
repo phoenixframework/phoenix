@@ -197,12 +197,14 @@ defmodule Phoenix.ChannelTest do
   defmacro socket() do
     if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
       quote do
-        %Socket{serializer: NoopSerializer,
-                transport_pid: self(),
-                endpoint: unquote(endpoint),
-                pubsub_server: unquote(endpoint).__pubsub_server__(),
-                transport: unquote(__MODULE__),
-                transport_name: :channel_test}
+        %Socket{
+          handler: unquote(first_socket!(endpoint)),
+          endpoint: unquote(endpoint),
+          pubsub_server: unquote(endpoint).__pubsub_server__(),
+          serializer: NoopSerializer,
+          transport: :channel_test,
+          transport_pid: self()
+        }
       end
     else
       raise "module attribute @endpoint not set for socket/0"
@@ -217,17 +219,26 @@ defmodule Phoenix.ChannelTest do
   defmacro socket(id, assigns) do
     if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
       quote do
-        %Socket{serializer: NoopSerializer,
-                transport_pid: self(),
-                endpoint: unquote(endpoint),
-                pubsub_server: unquote(endpoint).__pubsub_server__(),
-                id: unquote(id),
-                assigns: Enum.into(unquote(assigns), %{}),
-                transport: unquote(__MODULE__),
-                transport_name: :channel_test}
+        %Socket{
+          assigns: Enum.into(unquote(assigns), %{}),
+          endpoint: unquote(endpoint),
+          handler: unquote(first_socket!(endpoint)),
+          id: unquote(id),
+          pubsub_server: unquote(endpoint).__pubsub_server__(),
+          serializer: NoopSerializer,
+          transport: :channel_test,
+          transport_pid: self()
+        }
       end
     else
       raise "module attribute @endpoint not set for socket/2"
+    end
+  end
+
+  defp first_socket!(endpoint) do
+    case endpoint.__sockets__ do
+      [] -> raise ArgumentError, "#{inspect endpoint} has no socket declaration"
+      [{_, socket} | _] -> socket
     end
   end
 
@@ -249,17 +260,17 @@ defmodule Phoenix.ChannelTest do
 
   @doc false
   def __connect__(endpoint, handler, params) do
-    endpoint
-    |> Transport.connect(handler, :channel_test, __MODULE__, NoopSerializer, __stringify__(params))
-    |> subscribe_to_socket_id(endpoint, handler)
+    map = %{
+      endpoint: endpoint,
+      transport: :channel_test,
+      serializer: NoopSerializer,
+      params: __stringify__(params)
+    }
+
+    with {:ok, state} <- handler.connect(map),
+         {:ok, {_, socket}} = handler.init(state),
+         do: {:ok, socket}
   end
-  defp subscribe_to_socket_id({:ok, socket}, endpoint, handler) do
-    if topic = handler.id(socket) do
-      :ok = endpoint.subscribe(topic)
-    end
-    {:ok, socket}
-  end
-  defp subscribe_to_socket_id(error, _endpoint, _handler), do: error
 
   @doc "See `subscribe_and_join!/4`."
   def subscribe_and_join!(%Socket{} = socket, topic) when is_binary(topic) do
@@ -357,6 +368,7 @@ defmodule Phoenix.ChannelTest do
 
     case Server.join(socket, payload) do
       {:ok, reply, pid} ->
+        Process.link(pid)
         {:ok, reply, Server.socket(pid)}
       {:error, _} = error ->
         error

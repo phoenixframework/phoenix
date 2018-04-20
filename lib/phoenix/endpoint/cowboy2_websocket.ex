@@ -11,10 +11,10 @@ defmodule Phoenix.Endpoint.Cowboy2WebSocket do
 
   def init(req, {module, opts}) do
     conn = @connection.conn(req)
-    opts = Tuple.append(opts, req.pid)
+
     try do
       case module.init(conn, opts) do
-        {:ok, %{adapter: {@connection, req}}, {_module, {_socket, opts} = args}} ->
+        {:ok, %{adapter: {@connection, req}}, {_module, {_, _, opts} = args}} ->
           timeout = Keyword.fetch!(opts, :timeout)
           compress = Keyword.fetch!(opts, :compress)
           {:cowboy_websocket, req, {module, args}, %{idle_timeout: timeout, compress: compress}}

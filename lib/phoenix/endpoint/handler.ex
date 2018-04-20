@@ -11,6 +11,8 @@ defmodule Phoenix.Endpoint.Handler do
   It has to return a supervisor child specification.
   """
 
+  # TODO: Migrate this to Elixir v1.5 child spec
+
   @doc """
   Provides a server child specification to be started under the endpoint.
   """

@@ -54,8 +54,6 @@ defmodule Phoenix.Transports.WebSocket do
       send socket.transport_pid, :garbage_collect
   """
 
-  @behaviour Phoenix.Socket.Transport
-
   def default_config() do
     [serializer: [{Phoenix.Transports.WebSocketSerializer, "~> 1.0.0"},
                   {Phoenix.Socket.V2.JSONSerializer, "~> 2.0.0"}],
@@ -72,10 +70,7 @@ defmodule Phoenix.Transports.WebSocket do
   alias Phoenix.Socket.Transport
 
   @doc false
-  def init(conn, {endpoint, handler, transport}) do
-    init(conn, {endpoint, handler, transport, self()})
-  end
-  def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport, pid}) do
+  def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport}) do
     {_, opts} = handler.__transport__(transport)
 
     conn =
@@ -91,9 +86,9 @@ defmodule Phoenix.Transports.WebSocket do
         params     = conn.params
         serializer = Keyword.fetch!(opts, :serializer)
 
-        case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params, pid) do
-          {:ok, socket} ->
-            {:ok, conn, {__MODULE__, {socket, opts}}}
+        case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params) do
+          {:ok, state} ->
+            {:ok, conn, {__MODULE__, {handler, state, opts}}}
           :error ->
             conn = send_resp(conn, 403, "")
             {:error, conn}
@@ -109,11 +104,10 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   @doc false
-  def ws_init({socket, config}) do
-    Process.flag(:trap_exit, true)
-    timeout = Keyword.fetch!(config, :timeout)
-
-    if socket.id, do: socket.endpoint.subscribe(socket.id, link: true)
+  def ws_init({handler, state, opts}) do
+    # TODO: Move this up in the tree.
+    timeout = Keyword.fetch!(opts, :timeout)
+    {:ok, {_, socket}} = handler.init(state)
 
     {:ok, %{socket: socket,
             channels: %{},
@@ -131,14 +125,15 @@ defmodule Phoenix.Transports.WebSocket do
       {:reply, reply_msg} ->
         encode_reply(reply_msg, state)
       {:joined, channel_pid, reply_msg} ->
-        encode_reply(reply_msg, put(state, msg.topic, msg.ref, channel_pid))
+        monitor_ref = Process.monitor(channel_pid)
+        encode_reply(reply_msg, put(state, msg.topic, msg.ref, channel_pid, monitor_ref))
       {:error, _reason, error_reply_msg} ->
         encode_reply(error_reply_msg, state)
     end
   end
 
   @doc false
-  def ws_info({:EXIT, channel_pid, reason}, state) do
+  def ws_info({:DOWN, _, _, channel_pid, reason}, state) do
     case Map.get(state.channels_inverse, channel_pid) do
       nil   -> {:ok, state}
       {topic, join_ref} ->
@@ -183,17 +178,18 @@ defmodule Phoenix.Transports.WebSocket do
     end
   end
 
-  defp put(state, topic, join_ref, channel_pid) do
-    %{state | channels: Map.put(state.channels, topic, channel_pid),
+  defp put(state, topic, join_ref, channel_pid, monitor_ref) do
+    %{state | channels: Map.put(state.channels, topic, {channel_pid, monitor_ref}),
               channels_inverse: Map.put(state.channels_inverse, channel_pid, {topic, join_ref})}
   end
 
   defp delete(state, topic, channel_pid) do
     case Map.fetch(state.channels, topic) do
-      {:ok, ^channel_pid} ->
+      {:ok, {^channel_pid, ref}} ->
+        Process.demonitor(ref, [:flush])
         %{state | channels: Map.delete(state.channels, topic),
                   channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
-      {:ok, _newer_pid} ->
+      {:ok, _newer} ->
         %{state | channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
     end
   end

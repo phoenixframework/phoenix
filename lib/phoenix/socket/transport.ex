@@ -1,5 +1,24 @@
 defmodule Phoenix.Socket.Transport do
   @moduledoc """
+  Outlines the Socket <-> Transport communication.
+
+  This module specifies a behaviour that all sockets must implement.
+  `Phoenix.Socket` is just one possible implementation of a socket
+  that multiplexes events over multiple channels. Developers can
+  implement their own sockets as long as they implement the behaviour
+  outlined here.
+
+  Developers interested in implementing custom transports must invoke
+  the socket API defined in this module. This module also provides
+  many conveniences to make it easier to build custom transports as
+  well as important guidelines.
+
+  The rest of this documentation will cover the steps for implementing
+  custom transports. If you are interested exclusively in custom socket
+  implementations, check out the callbacks and their respective documentaion.
+
+  ## OLD DOCS
+
   API for building transports.
 
   This module describes what is required to build a Phoenix transport.
@@ -118,17 +137,37 @@ defmodule Phoenix.Socket.Transport do
   implementation.
   """
 
+  @type state :: term()
+
+  @doc """
+  Connects to the socket.
+
+  The transport passes a map of metadata and the socket
+  returns `{:ok, state}` or `:error`. The state must be
+  stored by the transport and returned in all future
+  operations. The metadata map expects the following keys:
+
+    * endpoint - the application endpoint
+    * serializer - the message serializer
+    * transport - the transport name
+    * params - the connection parameters
+
+  This function is used for authorization purposes and it
+  may be invoked outside of the process that effectively
+  runs the socket.
+  """
+  @callback connect(map) :: {:ok, state} | :error
+
+  @callback child_spec(keyword) :: Supervisor.child_spec
+
+  @callback init(state) :: {:ok, state}
+
   require Logger
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
 
   @protocol_version "2.0.0"
-
-  @doc """
-  Provides a keyword list of default configuration for socket transports.
-  """
-  @callback default_config() :: Keyword.t
 
   @doc """
   Returns the Channel Transport protocol version.
@@ -144,6 +183,7 @@ defmodule Phoenix.Socket.Transport do
   If the connection was successful, generates `Phoenix.PubSub`
   topic from the `id/1` callback.
   """
+  # TODO: Deprecate me and provide a function for explicit versioning control.
   def connect(endpoint, handler, transport_name, transport, serializer_config, params, pid \\ self()) do
     vsn = params["vsn"] || "1.0.0"
 
@@ -178,35 +218,13 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp do_connect(vsn, endpoint, handler, transport_name, transport, serializer, params, pid) do
-    socket = %Socket{endpoint: endpoint,
-                     transport: transport,
-                     transport_pid: pid,
-                     transport_name: transport_name,
-                     handler: handler,
-                     vsn: vsn,
-                     pubsub_server: endpoint.__pubsub_server__,
-                     serializer: serializer}
-
-    case handler.connect(params, socket) do
-      {:ok, socket} ->
-        case handler.id(socket) do
-          nil                   -> {:ok, socket}
-          id when is_binary(id) -> {:ok, %Socket{socket | id: id}}
-          invalid               ->
-            Logger.error "#{inspect handler}.id/1 returned invalid identifier #{inspect invalid}. " <>
-                         "Expected nil or a string."
-            :error
-        end
-
-      :error ->
-        :error
-
-      invalid ->
-        Logger.error "#{inspect handler}.connect/2 returned invalid value #{inspect invalid}. " <>
-                     "Expected {:ok, socket} or :error"
-        :error
-    end
+  defp do_connect(_vsn, endpoint, handler, _transport_name, transport, serializer, params, _pid) do
+    handler.connect(%{
+      endpoint: endpoint,
+      transport: transport,
+      serializer: serializer,
+      params: params
+    })
   end
 
   @doc """
@@ -280,7 +298,7 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp do_dispatch(pid, %{event: "phx_join"} = msg, socket) when is_pid(pid) do
+  defp do_dispatch({pid, _ref}, %{event: "phx_join"} = msg, socket) when is_pid(pid) do
     Logger.debug "Duplicate channel join for topic \"#{msg.topic}\" in #{inspect(socket.handler)}. " <>
                  "Closing existing channel for new join."
     :ok = Phoenix.Channel.Server.close(pid)
@@ -291,7 +309,7 @@ defmodule Phoenix.Socket.Transport do
     reply_ignore(msg, socket)
   end
 
-  defp do_dispatch(channel_pid, msg, _socket) do
+  defp do_dispatch({channel_pid, _ref}, msg, _socket) do
     send(channel_pid, msg)
     :noreply
   end

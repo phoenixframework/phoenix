@@ -43,22 +43,21 @@ defmodule Phoenix.Transports.LongPoll.Server do
 
   def init([endpoint, handler, transport_name, transport,
             serializer, params, window_ms, priv_topic]) do
-    Process.flag(:trap_exit, true)
-
     case Transport.connect(endpoint, handler, transport_name, transport, serializer, params) do
-      {:ok, socket} ->
+      {:ok, state} ->
+        {:ok, {_, socket}} = handler.init(state)
+
         state = %{buffer: [],
                   socket: socket,
                   channels: %{},
                   channels_inverse: %{},
                   window_ms: trunc(window_ms * 1.5),
-                  pubsub_server: socket.endpoint.__pubsub_server__(),
+                  pubsub_server: endpoint.__pubsub_server__(),
                   priv_topic: priv_topic,
                   last_client_poll: now_ms(),
                   serializer: socket.serializer,
                   client_ref: nil}
 
-        if socket.id, do: PubSub.subscribe(state.pubsub_server, socket.id, link: true)
         :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
 
         schedule_inactive_shutdown(state.window_ms)
@@ -77,8 +76,9 @@ defmodule Phoenix.Transports.LongPoll.Server do
     |> Transport.dispatch(state.channels, state.socket)
     |> case do
       {:joined, channel_pid, reply_msg} ->
+        monitor_ref = Process.monitor(channel_pid)
         broadcast_from!(state, client_ref, {:dispatch, ref})
-        new_state = %{state | channels: Map.put(state.channels, msg.topic, channel_pid),
+        new_state = %{state | channels: Map.put(state.channels, msg.topic, {channel_pid, monitor_ref}),
                               channels_inverse: Map.put(state.channels_inverse, channel_pid, {msg.topic, msg.ref})}
         publish_reply(reply_msg, new_state)
 
@@ -101,14 +101,13 @@ defmodule Phoenix.Transports.LongPoll.Server do
     {:stop, {:shutdown, :disconnected}, state}
   end
 
-  def handle_info({:EXIT, channel_pid, reason}, state) do
+  def handle_info({:DOWN, _, _, channel_pid, reason}, state) do
     case Map.get(state.channels_inverse, channel_pid) do
       nil ->
-        {:stop, {:shutdown, :pubsub_server_terminated}, state}
+        {:noreply, state}
       {topic, join_ref} ->
         new_state = delete(state, topic, channel_pid)
         msg = Transport.on_exit_message(topic, join_ref, reason)
-
         publish_reply(msg, new_state)
     end
   end
@@ -180,10 +179,11 @@ defmodule Phoenix.Transports.LongPoll.Server do
 
   defp delete(state, topic, channel_pid) do
     case Map.fetch(state.channels, topic) do
-      {:ok, ^channel_pid} ->
+      {:ok, {^channel_pid, ref}} ->
+        Process.demonitor(ref, [:flush])
         %{state | channels: Map.delete(state.channels, topic),
                   channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
-      {:ok, _newer_pid} ->
+      {:ok, _newer} ->
         %{state | channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
     end
   end

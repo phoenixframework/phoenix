@@ -1,4 +1,6 @@
 defmodule Phoenix.Socket do
+  # TODO: Rewrite docs
+
   @moduledoc ~S"""
   Defines a socket and its state.
 
@@ -52,7 +54,7 @@ defmodule Phoenix.Socket do
       # Disconnect all user's socket connections and their multiplexed channels
       MyApp.Endpoint.broadcast("users_socket:" <> user.id, "disconnect", %{})
 
-  ## Socket Fields
+  ## Socket fields
 
     * `id` - The string id of the socket
     * `assigns` - The map of socket assigns, default: `%{}`
@@ -61,16 +63,13 @@ defmodule Phoenix.Socket do
     * `endpoint` - The endpoint module where this socket originated, for example: `MyApp.Endpoint`
     * `handler` - The socket module where this socket originated, for example: `MyApp.UserSocket`
     * `joined` - If the socket has effectively joined the channel
-    * `pubsub_server` - The registered name of the socket's pubsub server
     * `join_ref` - The ref sent by the client when joining
     * `ref` - The latest ref sent by the client
+    * `pubsub_server` - The registered name of the socket's pubsub server
     * `topic` - The string topic, for example `"room:123"`
-    * `transport` - The socket's transport, for example: `Phoenix.Transports.WebSocket`
+    * `transport` - An identifier for the transport, used for logging
     * `transport_pid` - The pid of the socket's transport process
-    * `transport_name` - The socket's transport, for example: `:websocket`
-    * `serializer` - The serializer for socket messages,
-      for example: `Phoenix.Transports.WebSocketSerializer`
-    * `vsn` - The protocol version of the client, for example: "2.0.0"
+    * `serializer` - The serializer for socket messages
 
   ## Custom transports
 
@@ -78,6 +77,7 @@ defmodule Phoenix.Socket do
   writing your own transports.
   """
 
+  require Logger
   alias Phoenix.Socket
 
   @doc """
@@ -122,22 +122,6 @@ defmodule Phoenix.Socket do
     defexception [:message]
   end
 
-  @type t :: %Socket{id: nil,
-                     assigns: map,
-                     channel: atom,
-                     channel_pid: pid,
-                     endpoint: atom,
-                     handler: atom,
-                     joined: boolean,
-                     pubsub_server: atom,
-                     ref: term,
-                     topic: String.t,
-                     transport: atom,
-                     transport_name: atom,
-                     serializer: atom,
-                     transport_pid: pid,
-                     private: %{}}
-
   defstruct id: nil,
             assigns: %{},
             channel: nil,
@@ -145,27 +129,126 @@ defmodule Phoenix.Socket do
             endpoint: nil,
             handler: nil,
             joined: false,
+            join_ref: nil,
+            private: %{},
             pubsub_server: nil,
             ref: nil,
-            join_ref: nil,
+            serializer: nil,
             topic: nil,
             transport: nil,
-            transport_pid: nil,
-            transport_name: nil,
-            serializer: nil,
-            private: %{},
-            vsn: nil
+            transport_pid: nil
 
-  defmacro __using__(_) do
-    quote do
+  @type t :: %Socket{
+          id: nil,
+          assigns: map,
+          channel: atom,
+          channel_pid: pid,
+          endpoint: atom,
+          handler: atom,
+          joined: boolean,
+          ref: term,
+          private: %{},
+          pubsub_server: atom,
+          serializer: atom,
+          topic: String.t,
+          transport: atom,
+          transport_pid: pid,
+        }
+
+  defmacro __using__(opts) do
+    quote bind_quoted: [opts: opts] do
+      ## User API
+
+      import Phoenix.Socket
       @behaviour Phoenix.Socket
-      import unquote(__MODULE__)
+      @before_compile Phoenix.Socket
+
       Module.register_attribute(__MODULE__, :phoenix_channels, accumulate: true)
       @phoenix_transports %{}
-      @before_compile unquote(__MODULE__)
+
+      ## Callbacks
+
+      @behaviour Phoenix.Socket.Transport
+
+      @doc false
+      def child_spec(_) do
+        Phoenix.Socket.__child_spec__(__MODULE__, unquote(Macro.escape(opts)))
+      end
+
+      @doc false
+      def connect(map) when is_map(map) do
+        Phoenix.Socket.__connect__(__MODULE__, map)
+      end
+
+      @doc false
+      def init(state) do
+        Phoenix.Socket.__init__(state)
+      end
     end
   end
 
+  ## CALLBACKS IMPLEMENTATION
+
+  def __child_spec__(handler, opts) do
+    import Supervisor.Spec
+    worker_opts = [shutdown: Keyword.get(opts, :shutdown, 5_000), restart: :temporary]
+    worker = worker(Phoenix.Channel.Server, [], worker_opts)
+    supervisor_opts = [strategy: :simple_one_for_one, name: handler]
+    supervisor(Supervisor, [[worker], supervisor_opts], id: handler)
+  end
+
+  def __connect__(handler, map) do
+    %{
+      endpoint: endpoint,
+      serializer: serializer,
+      transport: transport,
+      params: params
+    } = map
+
+    # The information in the Phoenix.Socket goes to userland and channels.
+    socket = %Socket{
+      handler: handler,
+      endpoint: endpoint,
+      pubsub_server: endpoint.__pubsub_server__,
+      serializer: serializer,
+      transport: transport
+    }
+
+    # The information in the state is kept only inside the socket process.
+    state = %{
+    }
+
+    case handler.connect(params, socket) do
+      {:ok, %Socket{} = socket} ->
+        case handler.id(socket) do
+          nil ->
+            {:ok, {state, socket}}
+
+          id when is_binary(id) ->
+            {:ok, {state, %{socket | id: id}}}
+
+          invalid ->
+            Logger.error "#{inspect handler}.id/1 returned invalid identifier #{inspect invalid}. " <>
+                         "Expected nil or a string."
+            :error
+        end
+
+      :error ->
+        :error
+
+      invalid ->
+        Logger.error "#{inspect handler}.connect/2 returned invalid value #{inspect invalid}. " <>
+                     "Expected {:ok, socket} or :error"
+        :error
+    end
+  end
+
+  def __init__({state, %{id: id, endpoint: endpoint} = socket}) do
+    _ = id && endpoint.subscribe(id, link: true)
+    {:ok, {state, %{socket | transport_pid: self()}}}
+  end
+
+  ## USER API
   defmacro __before_compile__(env) do
     transports = Module.get_attribute(env.module, :phoenix_transports)
     channels   = Module.get_attribute(env.module, :phoenix_channels)
@@ -269,6 +352,8 @@ defmodule Phoenix.Socket do
     end
   end
   defp tear_alias(other), do: other
+
+  # TODO: Deprecate custom transports
 
   @doc """
   Defines a transport with configuration.

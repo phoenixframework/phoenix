@@ -37,7 +37,6 @@ defmodule Phoenix.Transports.LongPoll do
 
   ## Transport callbacks
 
-  @behaviour Phoenix.Socket.Transport
   alias Phoenix.Transports.LongPollSerializer
   alias Phoenix.Socket.V2
 

@@ -1,21 +1,22 @@
 defmodule Phoenix.Test.ChannelTest do
   use ExUnit.Case, async: true
 
-  config = [pubsub: [adapter: Phoenix.PubSub.PG2,
-                     name: Phoenix.Test.ChannelTest.PubSub], server: false]
-  Application.put_env(:phoenix, __MODULE__.Endpoint, config)
-
   alias Phoenix.Socket
   alias Phoenix.Socket.{Broadcast, Message}
+  alias __MODULE__.Endpoint
+
+  Application.put_env(:phoenix, Endpoint, [
+    pubsub: [
+      adapter: Phoenix.PubSub.PG2,
+      name: Phoenix.Test.ChannelTest.PubSub
+    ],
+    server: false
+  ])
 
   @moduletag :capture_log
 
   defp assert_graceful_exit(pid) do
     assert_receive {:graceful_exit, ^pid, %Message{event: "phx_close"}}
-  end
-
-  defmodule Endpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
   end
 
   defmodule EmptyChannel do
@@ -161,6 +162,11 @@ defmodule Phoenix.Test.ChannelTest do
     def id(_), do: "123"
   end
 
+  defmodule Endpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+
+    socket "/socket", UserSocket
+  end
 
   @endpoint Endpoint
   use Phoenix.ChannelTest
@@ -175,9 +181,9 @@ defmodule Phoenix.Test.ChannelTest do
   test "socket/0" do
     assert socket() == %Socket{
       endpoint: @endpoint,
+      handler: UserSocket,
       pubsub_server: Phoenix.Test.ChannelTest.PubSub,
-      transport: Phoenix.ChannelTest,
-      transport_name: :channel_test,
+      transport: :channel_test,
       transport_pid: self(),
       serializer: Phoenix.ChannelTest.NoopSerializer
     }
@@ -189,10 +195,10 @@ defmodule Phoenix.Test.ChannelTest do
       assigns: %{hello: :world},
       endpoint: @endpoint,
       pubsub_server: Phoenix.Test.ChannelTest.PubSub,
-      transport: Phoenix.ChannelTest,
-      transport_name: :channel_test,
+      transport: :channel_test,
       transport_pid: self(),
-      serializer: Phoenix.ChannelTest.NoopSerializer
+      serializer: Phoenix.ChannelTest.NoopSerializer,
+      handler: UserSocket
     }
   end
 
@@ -204,7 +210,7 @@ defmodule Phoenix.Test.ChannelTest do
     assert socket.endpoint == @endpoint
     assert socket.pubsub_server == Phoenix.Test.ChannelTest.PubSub
     assert socket.topic == "foo:socket"
-    assert socket.transport == Phoenix.ChannelTest
+    assert socket.transport == :channel_test
     assert socket.transport_pid == self()
     assert socket.serializer == Phoenix.ChannelTest.NoopSerializer
     assert socket.assigns == %{hello: :world, original: :assign}
@@ -223,7 +229,6 @@ defmodule Phoenix.Test.ChannelTest do
     Process.flag(:trap_exit, true)
     Logger.disable(self())
     assert {:error, %{reason: "join crashed"}} = join(socket(), Channel, "foo:crash")
-    assert_receive {:EXIT, _, _}
   end
 
   ## handle_in

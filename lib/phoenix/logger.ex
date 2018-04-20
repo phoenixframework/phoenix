@@ -28,9 +28,6 @@ defmodule Phoenix.Logger do
   require Logger
   import Phoenix.Controller
 
-  alias Phoenix.Socket
-
-
   def phoenix_controller_call(:start, _compile, %{log_level: false}), do: :ok
   def phoenix_controller_call(:start, %{module: module}, %{log_level: level, conn: conn}) do
     Logger.log level, fn ->
@@ -104,7 +101,6 @@ defmodule Phoenix.Logger do
   defp log_receive(topic, event, socket, params) do
     channel_log(:log_handle_in, socket, fn ->
       "INCOMING #{inspect event} on #{inspect topic} to #{inspect(socket.channel)}\n" <>
-      "  Transport:  #{inspect socket.transport}\n" <>
       "  Parameters: #{inspect filter_values(params)}"
     end)
   end
@@ -113,13 +109,13 @@ defmodule Phoenix.Logger do
   defp log_join(topic, socket, params) do
     channel_log(:log_join, socket, fn ->
       "JOIN #{inspect topic} to #{inspect(socket.channel)}\n" <>
-      "  Transport:  #{inspect socket.transport} (#{socket.vsn})\n" <>
-      "  Serializer:  #{inspect socket.serializer}\n" <>
+      "  Transport:  #{inspect socket.transport}\n" <>
+      "  Serializer: #{inspect socket.serializer}\n" <>
       "  Parameters: #{inspect filter_values(params)}"
     end)
   end
 
-  defp channel_log(log_option, %Socket{private: private}, message_or_func) do
+  defp channel_log(log_option, %Phoenix.Socket{private: private}, message_or_func) do
     case Map.fetch(private, log_option) do
       {:ok, false} -> :ok
       {:ok, level} -> Logger.log(level, message_or_func)

@@ -584,7 +584,10 @@ defmodule Phoenix.Endpoint do
 
   defp server() do
     quote location: :keep, unquote: false do
-      @doc false
+      @doc """
+      Returns the child specification to start the endpoint
+      under a supervision tree.
+      """
       def child_spec(opts) do
         %{
           id: __MODULE__,
@@ -592,8 +595,6 @@ defmodule Phoenix.Endpoint do
           type: :supervisor
         }
       end
-
-      defoverridable child_spec: 1
 
       @doc """
       Starts the endpoint supervision tree.

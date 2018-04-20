@@ -38,16 +38,12 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     children =
       pubsub_children(mod, conf) ++
+      socket_children(mod, conf) ++
       config_children(mod, conf, otp_app) ++
       server_children(mod, conf, server?) ++
       watcher_children(mod, conf, server?)
 
     supervise(children, strategy: :one_for_one)
-  end
-
-  defp config_children(mod, conf, otp_app) do
-    args = [mod, conf, defaults(otp_app, mod), [name: Module.concat(mod, "Config")]]
-    [worker(Phoenix.Config, args)]
   end
 
   defp pubsub_children(mod, conf) do
@@ -59,6 +55,18 @@ defmodule Phoenix.Endpoint.Supervisor do
     else
       []
     end
+  end
+
+  defp socket_children(mod, conf) do
+    mod.__sockets__
+    |> Enum.map(&elem(&1, 1))
+    |> Enum.uniq()
+    |> Enum.map(& &1.child_spec(conf))
+  end
+
+  defp config_children(mod, conf, otp_app) do
+    args = [mod, conf, defaults(otp_app, mod), [name: Module.concat(mod, "Config")]]
+    [worker(Phoenix.Config, args)]
   end
 
   # TODO v1.4: Handlers -> Phoenix.Server
