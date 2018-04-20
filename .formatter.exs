@@ -40,6 +40,8 @@ locals_without_parens = [
   socket: 2,
 
   # Phoenix.Socket
+  transport: 2,
+  transport: 3,
   channel: 2,
   channel: 3,
 
