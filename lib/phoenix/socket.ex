@@ -204,14 +204,14 @@ defmodule Phoenix.Socket do
 
   defp defchannel(topic_match, channel_module, nil = _transports, opts) do
     quote do
-      def __channel__(unquote(topic_match), _transport), do: unquote({channel_module, opts})
+      def __channel__(unquote(topic_match), _transport), do: unquote({channel_module, Macro.escape(opts)})
     end
   end
 
   defp defchannel(topic_match, channel_module, transports, opts) do
     quote do
       def __channel__(unquote(topic_match), transport)
-          when transport in unquote(List.wrap(transports)), do: unquote({channel_module, opts})
+          when transport in unquote(List.wrap(transports)), do: unquote({channel_module, Macro.escape(opts)})
     end
   end
 
@@ -240,8 +240,6 @@ defmodule Phoenix.Socket do
 
   ## Options
 
-    * `:via` - the transport adapters to accept on this channel.
-      Defaults `[:websocket, :longpoll]`
     * `:assigns` - the map of socket assigns to merge into the socket on join.
 
   ## Examples
@@ -268,8 +266,12 @@ defmodule Phoenix.Socket do
     # socket changes.
     module = tear_alias(module)
 
-    quote do
-      @phoenix_channels {unquote(topic_pattern), unquote(module), unquote(Macro.escape(opts))}
+    quote bind_quoted: [topic_pattern: topic_pattern, module: module, opts: opts] do
+      if opts[:via] do
+        IO.warn "the :via option in the channel/3 macro is deprecated"
+      end
+
+      @phoenix_channels {topic_pattern, module, opts}
     end
   end
 
