@@ -1,4 +1,4 @@
-defmodule <%= web_namespace %>.Mixfile do
+defmodule <%= web_namespace %>.MixProject do
   use Mix.Project
 
   def project do
