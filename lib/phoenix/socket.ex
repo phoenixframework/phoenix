@@ -79,6 +79,7 @@ defmodule Phoenix.Socket do
 
   require Logger
   alias Phoenix.Socket
+  alias Phoenix.Socket.{Broadcast, Message, Reply}
 
   @doc """
   Receives the socket params and authenticates the connection.
@@ -122,12 +123,12 @@ defmodule Phoenix.Socket do
     defexception [:message]
   end
 
-  defstruct id: nil,
-            assigns: %{},
+  defstruct assigns: %{},
             channel: nil,
             channel_pid: nil,
             endpoint: nil,
             handler: nil,
+            id: nil,
             joined: false,
             join_ref: nil,
             private: %{},
@@ -139,12 +140,12 @@ defmodule Phoenix.Socket do
             transport_pid: nil
 
   @type t :: %Socket{
-          id: nil,
           assigns: map,
           channel: atom,
           channel_pid: pid,
           endpoint: atom,
           handler: atom,
+          id: nil,
           joined: boolean,
           ref: term,
           private: %{},
@@ -162,7 +163,6 @@ defmodule Phoenix.Socket do
       import Phoenix.Socket
       @behaviour Phoenix.Socket
       @before_compile Phoenix.Socket
-
       Module.register_attribute(__MODULE__, :phoenix_channels, accumulate: true)
       @phoenix_transports %{}
 
@@ -176,14 +176,19 @@ defmodule Phoenix.Socket do
       end
 
       @doc false
-      def connect(map) when is_map(map) do
-        Phoenix.Socket.__connect__(__MODULE__, map)
-      end
+      def connect(map), do: Phoenix.Socket.__connect__(__MODULE__, map)
 
       @doc false
-      def init(state) do
-        Phoenix.Socket.__init__(state)
-      end
+      def init(state), do: Phoenix.Socket.__init__(state)
+
+      @doc false
+      def handle_in(message, state), do: Phoenix.Socket.__in__(message, state)
+
+      @doc false
+      def handle_info(message, state), do: Phoenix.Socket.__info__(message, state)
+
+      @doc false
+      def terminate(reason, state), do: Phoenix.Socket.__terminate__(reason, state)
     end
   end
 
@@ -216,6 +221,8 @@ defmodule Phoenix.Socket do
 
     # The information in the state is kept only inside the socket process.
     state = %{
+      channels: %{},
+      channels_inverse: %{}
     }
 
     case handler.connect(params, socket) do
@@ -248,7 +255,153 @@ defmodule Phoenix.Socket do
     {:ok, {state, %{socket | transport_pid: self()}}}
   end
 
+  def __in__({payload, opts}, {state, socket}) do
+    %{topic: topic} = message = socket.serializer.decode!(payload, opts)
+    handle_in(Map.get(state.channels, topic), message, state, socket)
+  end
+
+  def __info__({:DOWN, ref, _, pid, reason}, {state, socket}) do
+    case state.channels_inverse do
+      %{^pid => {topic, join_ref}} ->
+        state = delete_channel(state, pid, topic, ref)
+        {:reply, encode_on_exit(socket, topic, join_ref, reason), {state, socket}}
+
+      %{} ->
+        {:ok, {state, socket}}
+    end
+  end
+
+  def __info__({:graceful_exit, pid, %Phoenix.Socket.Message{} = message}, {state, socket}) do
+    state =
+      case state.channels_inverse do
+        %{^pid => {topic, _join_ref}} ->
+          {^pid, monitor_ref} = Map.fetch!(state.channels, topic)
+          delete_channel(state, pid, topic, monitor_ref)
+
+        %{} ->
+          state
+      end
+
+    {:reply, encode_reply(socket, message), {state, socket}}
+  end
+
+  def __info__(%Broadcast{event: "disconnect"}, state) do
+    {:stop, state}
+  end
+
+  def __info__({:socket_push, opcode, payload}, state) do
+    {:reply, {opcode, payload}, state}
+  end
+
+  def __info__(:garbage_collect, state) do
+    :erlang.garbage_collect(self())
+    {:ok, state}
+  end
+
+  def __info__(_, state) do
+    {:ok, state}
+  end
+
+  def __terminate__(_reason, {%{channels_inverse: channels_inverse}, _socket}) do
+    Phoenix.Channel.Server.close(Map.keys(channels_inverse))
+    :ok
+  end
+
+  defp handle_in(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, state, socket) do
+    reply = %Reply{
+      ref: ref,
+      topic: "phoenix",
+      status: :ok,
+      payload: %{}
+    }
+
+    {:reply, encode_reply(socket, reply), {state, socket}}
+  end
+
+  defp handle_in(nil, %{event: "phx_join", topic: topic, ref: ref} = message, state, socket) do
+    case socket.handler.__channel__(topic) do
+      {channel, opts} ->
+        case Phoenix.Channel.Server.join(socket, channel, message, opts) do
+          {:ok, reply, pid} ->
+            reply = %Reply{join_ref: ref, ref: ref, topic: topic, status: :ok, payload: reply}
+            state = put_channel(state, pid, topic, ref)
+            {:reply, encode_reply(socket, reply), {state, socket}}
+
+          {:error, reply} ->
+            reply = %Reply{join_ref: ref, ref: ref, topic: topic, status: :error, payload: reply}
+            {:reply, encode_reply(socket, reply), {state, socket}}
+        end
+
+      _ ->
+        {:reply, encode_ignore(socket, message), {state, socket}}
+    end
+  end
+
+  defp handle_in({pid, ref}, %{event: "phx_join", topic: topic} = message, state, socket) do
+    Logger.debug fn ->
+      "Duplicate channel join for topic \"#{topic}\" in #{inspect(socket.handler)}. " <>
+        "Closing existing channel for new join."
+    end
+
+    :ok = Phoenix.Channel.Server.close([pid])
+    handle_in(nil, message, delete_channel(state, pid, topic, ref), socket)
+  end
+
+  defp handle_in({pid, _ref}, message, state, socket) do
+    send(pid, message)
+    {:ok, {state, socket}}
+  end
+
+  defp handle_in(nil, message, state, socket) do
+    {:reply, encode_ignore(socket, message), {state, socket}}
+  end
+
+  defp put_channel(state, pid, topic, join_ref) do
+    %{channels: channels, channels_inverse: channels_inverse} = state
+    monitor_ref = Process.monitor(pid)
+
+    %{
+      state |
+        channels: Map.put(channels, topic, {pid, monitor_ref}),
+        channels_inverse: Map.put(channels_inverse, pid, {topic, join_ref})
+    }
+  end
+
+  defp delete_channel(state, pid, topic, monitor_ref) do
+    %{channels: channels, channels_inverse: channels_inverse} = state
+    Process.demonitor(monitor_ref, [:flush])
+
+    %{
+      state |
+        channels: Map.delete(channels, topic),
+        channels_inverse: Map.delete(channels_inverse, pid)
+    }
+  end
+
+  defp encode_on_exit(socket, topic, ref, _reason) do
+    message = %Message{join_ref: ref, ref: ref, topic: topic, event: "phx_error", payload: %{}}
+    encode_reply(socket, message)
+  end
+
+  defp encode_ignore(%{handler: handler} = socket, %{ref: ref, topic: topic}) do
+    Logger.warn fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(handler)}" end
+    reply = %Reply{ref: ref, topic: topic, status: :error, payload: %{reason: "unmatched topic"}}
+    encode_reply(socket, reply)
+  end
+
+  defp encode_reply(%{serializer: serializer}, message) do
+    case serializer.encode!(message) do
+      # TODO: Deprecate or accept me
+      {:socket_push, opcode, payload} ->
+        {opcode, payload}
+
+      {_opcode, _payload} = tuple ->
+        tuple
+    end
+  end
+
   ## USER API
+
   defmacro __before_compile__(env) do
     transports = Module.get_attribute(env.module, :phoenix_transports)
     channels   = Module.get_attribute(env.module, :phoenix_channels)

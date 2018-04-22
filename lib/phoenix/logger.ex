@@ -120,6 +120,7 @@ defmodule Phoenix.Logger do
       {:ok, false} -> :ok
       {:ok, level} -> Logger.log(level, message_or_func)
     end
+
     :ok
   end
 end

@@ -152,14 +152,11 @@ defmodule Phoenix.ChannelTest do
   """
 
   alias Phoenix.Socket
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Broadcast
-  alias Phoenix.Socket.Reply
-  alias Phoenix.Socket.Transport
+  alias Phoenix.Socket.{Broadcast, Message, Reply}
   alias Phoenix.Channel.Server
 
   defmodule NoopSerializer do
-    @behaviour Phoenix.Transports.Serializer
+    @behaviour Phoenix.Socket.Serializer
     @moduledoc false
 
     def fastlane!(%Broadcast{} = msg) do
@@ -235,6 +232,7 @@ defmodule Phoenix.ChannelTest do
     end
   end
 
+  # TODO: This should not be required or use a fake socket.
   defp first_socket!(endpoint) do
     case endpoint.__sockets__ do
       [] -> raise ArgumentError, "#{inspect endpoint} has no socket declaration"
@@ -342,9 +340,7 @@ defmodule Phoenix.ChannelTest do
     join(socket, topic, %{})
   end
   @doc "See `join/4`."
-  def join(%Socket{} = socket, topic, payload)
-      when is_binary(topic) and is_map(payload) do
-
+  def join(%Socket{} = socket, topic, payload) when is_binary(topic) and is_map(payload) do
     {channel, opts} = match_topic_to_channel!(socket, topic)
 
     socket
@@ -362,11 +358,15 @@ defmodule Phoenix.ChannelTest do
   """
   def join(%Socket{} = socket, channel, topic, payload \\ %{})
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
+    message = %Message{
+      event: "phx_join",
+      payload: payload,
+      topic: topic,
+      ref: System.unique_integer([:positive])
+    }
 
-    ref = System.unique_integer([:positive])
-    socket = Transport.build_channel_socket(socket, channel, topic, ref, [])
-
-    case Server.join(socket, payload) do
+    # TODO: We need to pass the socket options here.
+    case Server.join(socket, channel, message, []) do
       {:ok, reply, pid} ->
         Process.link(pid)
         {:ok, reply, Server.socket(pid)}
@@ -403,13 +403,13 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
-  Emulates the client closing the channel.
+  Emulates the client closing the socket.
 
-  Closing channels is synchronous and has a default timeout
+  Closing socket is synchronous and has a default timeout
   of 5000 milliseconds.
   """
   def close(socket, timeout \\ 5000) do
-    Server.close(socket.channel_pid, timeout)
+    Server.close([socket.channel_pid], timeout)
   end
 
   @doc """

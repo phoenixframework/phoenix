@@ -75,7 +75,7 @@ defmodule Phoenix.Socket.Transport do
   messages are encoded in the channel into a format defined by
   the transport. That's why transports are required to pass a
   serializer that abides to the behaviour described in
-  `Phoenix.Transports.Serializer`.
+  `Phoenix.Socket.Serializer`.
 
   ## Managing channel exits
 
@@ -140,32 +140,97 @@ defmodule Phoenix.Socket.Transport do
   @type state :: term()
 
   @doc """
+  Returns a child specification for socket management.
+
+  It receives the endpoint configuration and is started when
+  the endpoint starts.
+  """
+  @callback child_spec(keyword) :: Supervisor.child_spec
+
+  @doc """
   Connects to the socket.
 
   The transport passes a map of metadata and the socket
   returns `{:ok, state}` or `:error`. The state must be
   stored by the transport and returned in all future
-  operations. The metadata map expects the following keys:
+  operations.
+
+  This function is used for authorization purposes and it
+  may be invoked outside of the process that effectively
+  runs the socket.
+
+  In the default `Phoenix.Socket` implementation, the
+  metadata expects the following keys:
 
     * endpoint - the application endpoint
     * serializer - the message serializer
     * transport - the transport name
     * params - the connection parameters
 
-  This function is used for authorization purposes and it
-  may be invoked outside of the process that effectively
-  runs the socket.
   """
   @callback connect(map) :: {:ok, state} | :error
 
-  @callback child_spec(keyword) :: Supervisor.child_spec
+  @doc """
+  Initializes the socket state.
 
+  This must be executed from the process that will effectively
+  operate the socket.
+  """
   @callback init(state) :: {:ok, state}
+
+  @doc """
+  Handles incoming socket messages.
+
+  The message is represented as `{payload, options}`. It must
+  return one of:
+
+    * `{:stop, state}` - stops the socket
+    * `{:ok, state}` - continues the socket with no reply
+    * `{:reply, reply, state}` - continues the socket with reply
+
+  In the default `Phoenix.Socket` implementation, it calls the
+  `decode!` function in serializer with the given options which
+  must return a Phoenix.Socket message. The messages are usually
+  sent to the appropriate channel except:
+
+    * "heartbeat" events in the "phoenix" topic - should just emit
+      an OK reply
+    * "phx_join" on any topic - should join the topic
+    * "phx_leave" on any topic - should leave the topic
+
+  """
+  @callback handle_in({message :: term, opts :: keyword}, state) ::
+              {:ok, state}
+              | {:stop, state}
+              | {:reply, {opcode :: atom, message :: term}, state}
+
+  @doc """
+  Handles info messages.
+
+  The message is a term. It must return one of:
+
+    * `{:stop, state}` - stops the socket
+    * `{:ok, state}` - continues the socket with no reply
+    * `{:reply, reply, state}` - continues the socket with reply
+
+  """
+  @callback handle_info(message :: term, state) ::
+              {:ok, state}
+              | {:stop, state}
+              | {:reply, {opcode :: atom, message :: term}, state}
+
+  @doc """
+  Invoked on termination.
+
+  If `reason` is `:closed`, it means the client closed the socket.
+  """
+  @callback terminate(reason :: term, state) :: :ok
+
+  # TODO: kill socket_push
 
   require Logger
   alias Phoenix.Socket
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Reply
+  alias Phoenix.Socket.{Reply, Message}
 
   @protocol_version "2.0.0"
 
@@ -269,39 +334,26 @@ defmodule Phoenix.Socket.Transport do
     |> do_dispatch(msg, socket)
   end
 
-  @doc false
-  def build_channel_socket(%Socket{} = socket, channel, topic, join_ref, opts) do
-    %Socket{socket |
-            topic: topic,
-            channel: channel,
-            join_ref: join_ref,
-            assigns: Map.merge(socket.assigns, opts[:assigns] || %{}),
-            private: channel.__socket__(:private)}
-  end
-
-  defp do_dispatch(nil, %{event: "phx_join", topic: topic} = msg, base_socket) do
-    case base_socket.handler.__channel__(topic) do
+  defp do_dispatch(nil, %{event: "phx_join", topic: topic, ref: ref} = msg, socket) do
+    case socket.handler.__channel__(topic) do
       {channel, opts} ->
-        socket = build_channel_socket(base_socket, channel, topic, msg.ref, opts)
+        case Phoenix.Channel.Server.join(socket, channel, msg, opts) do
+          {:ok, reply, pid} ->
+            {:joined, pid, %Reply{join_ref: ref, ref: ref, topic: topic, status: :ok, payload: reply}}
 
-        case Phoenix.Channel.Server.join(socket, msg.payload) do
-          {:ok, response, pid} ->
-            log socket, topic, fn -> "Replied #{topic} :ok" end
-            {:joined, pid, %Reply{join_ref: socket.join_ref, ref: msg.ref, topic: topic, status: :ok, payload: response}}
-
-          {:error, reason} ->
-            log socket, topic, fn -> "Replied #{topic} :error" end
-            {:error, reason, %Reply{join_ref: socket.join_ref, ref: msg.ref, topic: topic, status: :error, payload: reason}}
+          {:error, reply} ->
+            {:error, reply, %Reply{join_ref: ref, ref: ref, topic: topic, status: :error, payload: reply}}
         end
 
-      nil -> reply_ignore(msg, base_socket)
+      nil ->
+        reply_ignore(msg, socket)
     end
   end
 
   defp do_dispatch({pid, _ref}, %{event: "phx_join"} = msg, socket) when is_pid(pid) do
     Logger.debug "Duplicate channel join for topic \"#{msg.topic}\" in #{inspect(socket.handler)}. " <>
                  "Closing existing channel for new join."
-    :ok = Phoenix.Channel.Server.close(pid)
+    :ok = Phoenix.Channel.Server.close([pid])
     do_dispatch(nil, msg, socket)
   end
 
@@ -313,10 +365,6 @@ defmodule Phoenix.Socket.Transport do
     send(channel_pid, msg)
     :noreply
   end
-
-  defp log(_, "phoenix" <> _, _func), do: :noop
-  defp log(%{private: %{log_join: false}}, _topic, _func), do: :noop
-  defp log(%{private: %{log_join: level}}, _topic, func), do: Logger.log(level, func)
 
   defp reply_ignore(msg, socket) do
     Logger.warn fn -> "Ignoring unmatched topic \"#{msg.topic}\" in #{inspect(socket.handler)}" end

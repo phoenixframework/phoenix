@@ -20,16 +20,32 @@ defmodule Phoenix.Channel.Server do
   @doc """
   Joins the channel in socket with authentication payload.
   """
-  @spec join(Socket.t, map) :: {:ok, map, pid} | {:error, map}
-  def join(socket, auth_payload) do
-    Phoenix.Endpoint.instrument socket, :phoenix_channel_join,
-      %{params: auth_payload, socket: socket}, fn ->
+  @spec join(Socket.t, module, Message.t, keyword) :: {:ok, map, pid, Socket.t} | {:error, map}
+  def join(socket, channel, message, opts) do
+    %{topic: topic, payload: payload, ref: join_ref} = message
+    assigns = Keyword.get(opts, :assigns, %{})
+
+    socket =
+      %Socket{
+        socket
+        | topic: topic,
+          channel: channel,
+          join_ref: join_ref,
+          assigns: Map.merge(socket.assigns, assigns),
+          private: channel.__socket__(:private)
+      }
+
+    instrument = %{params: payload, socket: socket}
+
+    Phoenix.Endpoint.instrument socket, :phoenix_channel_join, instrument, fn ->
       ref = make_ref()
 
-      case Supervisor.start_child(socket.handler, [socket, auth_payload, self(), ref]) do
+      case Supervisor.start_child(socket.handler, [socket, payload, self(), ref]) do
         {:ok, :undefined} ->
+          log_join socket, topic, fn -> "Replied #{topic} :error" end
           receive do: ({^ref, reply} -> {:error, reply})
         {:ok, pid} ->
+          log_join socket, topic, fn -> "Replied #{topic} :ok" end
           receive do: ({^ref, reply} -> {:ok, reply, pid})
         {:error, reason} ->
           Logger.error fn -> Exception.format_exit(reason) end
@@ -38,33 +54,47 @@ defmodule Phoenix.Channel.Server do
     end
   end
 
-  @doc """
-  Notifies the channel the client closed.
-
-  This event is synchronous as we want to guarantee
-  proper termination of the channel.
-  """
-  def close(pid, timeout \\ 5000) do
-    # We need to guarantee that the channel has been closed
-    # otherwise the link in the transport will trigger it to crash.
-    ref = Process.monitor(pid)
-    GenServer.cast(pid, :close)
-    receive do
-      {:DOWN, ^ref, _, _, _} -> :ok
-    after
-      timeout ->
-        Process.exit(pid, :kill)
-        receive do
-          {:DOWN, ^ref, _, _, _} -> :ok
-        end
-    end
-  end
+  defp log_join(_, "phoenix" <> _, _func), do: :noop
+  defp log_join(%{private: %{log_join: false}}, _topic, _func), do: :noop
+  defp log_join(%{private: %{log_join: level}}, _topic, func), do: Logger.log(level, func)
 
   @doc """
   Gets the socket from the channel.
   """
   def socket(pid) do
     GenServer.call(pid, :socket)
+  end
+
+  @doc """
+  Notifies the channels the clients closed.
+
+  This event is synchronous as we want to guarantee
+  proper termination of the channels.
+  """
+  def close(pids, timeout \\ 5000) do
+    # We need to guarantee that the channel has been closed
+    # otherwise the link in the transport will trigger it to crash.
+    pids_and_refs =
+      for pid <- pids do
+        ref = Process.monitor(pid)
+        GenServer.cast(pid, :close)
+        {pid, ref}
+      end
+
+    for {pid, ref} <- pids_and_refs do
+      receive do
+        {:DOWN, ^ref, _, _, _} -> :ok
+      after
+        timeout ->
+          Process.exit(pid, :kill)
+
+          receive do
+            {:DOWN, ^ref, _, _, _} -> :ok
+          end
+      end
+    end
+
+    :ok
   end
 
   ## Channel API
@@ -104,7 +134,6 @@ defmodule Phoenix.Channel.Server do
   def broadcast!(_, topic, event, payload) do
     raise_invalid_message(topic, event, payload)
   end
-
 
   @doc """
   Broadcasts on the given pubsub server with the given
@@ -194,9 +223,9 @@ defmodule Phoenix.Channel.Server do
 
     case socket.channel.join(socket.topic, auth_payload, socket) do
       {:ok, socket} ->
-        join(socket, %{}, parent, ref)
+        init(socket, %{}, parent, ref)
       {:ok, reply, socket} ->
-        join(socket, reply, parent, ref)
+        init(socket, reply, parent, ref)
       {:error, reply} ->
         send(parent, {ref, reply})
         :ignore
@@ -218,7 +247,7 @@ defmodule Phoenix.Channel.Server do
     socket.channel.code_change(old, socket, extra)
   end
 
-  defp join(socket, reply, parent, ref) do
+  defp init(socket, reply, parent, ref) do
     PubSub.subscribe(socket.pubsub_server, socket.topic,
       link: true,
       fastlane: {socket.transport_pid,
