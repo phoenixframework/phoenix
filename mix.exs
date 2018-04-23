@@ -14,19 +14,8 @@ defmodule Phoenix.MixProject do
       preferred_cli_env: [docs: :docs],
       consolidate_protocols: Mix.env != :test,
       xref: [exclude: [Ecto.Type, :ranch, {:cowboy_req, :compact, 1}]],
-
       name: "Phoenix",
-      docs: [
-        source_ref: "v#{@version}",
-        main: "overview",
-        logo: "logo.png",
-        extra_section: "GUIDES",
-        assets: "guides/assets",
-        formatters: ["html", "epub"],
-        groups_for_modules: groups_for_modules(),
-        extras: extras(),
-        groups_for_extras: groups_for_extras()
-      ],
+      docs: docs(),
       aliases: aliases(),
       source_url: "https://github.com/phoenixframework/phoenix",
       homepage_url: "http://www.phoenixframework.org",
@@ -87,6 +76,20 @@ defmodule Phoenix.MixProject do
       links: %{github: "https://github.com/phoenixframework/phoenix"},
       files: ~w(assets lib priv) ++
         ~w(CHANGELOG.md LICENSE.md mix.exs package.json README.md)
+    ]
+  end
+
+  defp docs do
+    [
+      source_ref: "v#{@version}",
+      main: "overview",
+      logo: "logo.png",
+      extra_section: "GUIDES",
+      assets: "guides/assets",
+      formatters: ["html", "epub"],
+      groups_for_modules: groups_for_modules(),
+      extras: extras(),
+      groups_for_extras: groups_for_extras()
     ]
   end
 
@@ -178,7 +181,9 @@ defmodule Phoenix.MixProject do
   end
 
   defp aliases do
-    ["docs": ["docs", &generate_js_docs/1]]
+    [
+      "docs": ["docs", &generate_js_docs/1]
+    ]
   end
 
   def generate_js_docs(_) do

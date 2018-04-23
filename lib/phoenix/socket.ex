@@ -399,6 +399,8 @@ defmodule Phoenix.Socket do
   ## CALLBACKS IMPLEMENTATION
 
   def __child_spec__(handler, opts) do
+    # TODO: When we migrate to a dynamic supervisor we can consider having a pool of them.
+    # Then the socket chooses one of them on boot.
     import Supervisor.Spec
     worker_opts = [shutdown: Keyword.get(opts, :shutdown, 5_000), restart: :temporary]
     worker = worker(Phoenix.Channel.Server, [], worker_opts)
