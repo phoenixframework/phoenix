@@ -20,47 +20,36 @@ defmodule Phoenix.Transports.LongPoll.Server do
   @moduledoc false
 
   use GenServer
-
   alias Phoenix.PubSub
-  alias Phoenix.Socket.Transport
 
-  @doc """
-  Starts the Server.
-
-    * `socket` - The `Phoenix.Socket` struct returned from `connect/2`
-      of the socket handler.
-    * `window_ms` - The longpoll session timeout, in milliseconds
-
-  If the server receives no message within `window_ms`, it terminates
-  and clients are responsible for opening a new session.
-  """
   def start_link(arg) do
     GenServer.start_link(__MODULE__, arg)
   end
 
-  def init({endpoint, handler, serializers, params, window_ms, priv_topic}) do
-    vsn = params["vsn"] || "1.0.0"
+  def init({endpoint, handler, options, params, priv_topic}) do
+    config = %{endpoint: endpoint, transport: :long_polling, options: options, params: params}
+    window_ms = Keyword.fetch!(options, :window_ms)
 
-    with {:ok, serializer} <- Transport.negotiate_serializer(serializers, vsn),
-         config = %{endpoint: endpoint, transport: :long_polling, serializer: serializer, params: params},
-         {:ok, handler_state} <- handler.connect(config),
-         {:ok, handler_state} <- handler.init(handler_state) do
-      state = %{
-        buffer: [],
-        handler: {handler, handler_state},
-        window_ms: trunc(window_ms * 1.5),
-        pubsub_server: endpoint.__pubsub_server__(),
-        priv_topic: priv_topic,
-        last_client_poll: now_ms(),
-        client_ref: nil,
-        serializer: serializer # TODO: only used for backwards compatibility warning
-      }
+    case handler.connect(config) do
+      {:ok, handler_state} ->
+        {:ok, handler_state} = handler.init(handler_state)
 
-      :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
-      schedule_inactive_shutdown(state.window_ms)
-      {:ok, state}
-    else
-      :error -> :ignore
+        state = %{
+          buffer: [],
+          handler: {handler, handler_state},
+          window_ms: trunc(window_ms * 1.5),
+          pubsub_server: endpoint.__pubsub_server__(),
+          priv_topic: priv_topic,
+          last_client_poll: now_ms(),
+          client_ref: nil
+        }
+
+        :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
+        schedule_inactive_shutdown(state.window_ms)
+        {:ok, state}
+
+    :error ->
+      :ignore
     end
   end
 
@@ -140,7 +129,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
     do: send(client_ref, msg)
 
   defp publish_reply(state, reply) when is_map(reply) do
-    IO.warn "Returning a map from #{inspect state.serializer} is deprecated. " <>
+    IO.warn "Returning a map from the LongPolling serializer is deprecated. " <>
             "Please return JSON encoded data instead (see Phoenix.Socket.Serializer)"
     publish_reply(state, Phoenix.json_library().encode_to_iodata!(reply))
   end

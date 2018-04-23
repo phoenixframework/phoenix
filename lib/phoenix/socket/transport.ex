@@ -71,9 +71,11 @@ defmodule Phoenix.Socket.Transport do
   metadata expects the following keys:
 
     * endpoint - the application endpoint
-    * serializer - the message serializer
     * transport - the transport name
     * params - the connection parameters
+    * options - a set of socket options, it must include
+      a `:serializer` field with the list of serializers
+      and their requirements
 
   """
   @callback connect(map) :: {:ok, state} | :error
@@ -136,19 +138,13 @@ defmodule Phoenix.Socket.Transport do
   @doc false
   def connect(endpoint, handler, _transport_name, transport, serializers, params, _pid \\ self()) do
     IO.warn "Phoenix.Socket.Transport.connect/7 is deprecated"
-    vsn = params["vsn"] || "1.0.0"
 
-    case negotiate_serializer(serializers, vsn) do
-      {:ok, serializer} ->
-        handler.connect(%{
-          endpoint: endpoint,
-          transport: transport,
-          serializer: serializer,
-          params: params
-        })
-      :error ->
-        :error
-    end
+    handler.connect(%{
+      endpoint: endpoint,
+      transport: transport,
+      options: [serializer: serializers],
+      params: params
+    })
   end
 
   @doc false
@@ -214,30 +210,6 @@ defmodule Phoenix.Socket.Transport do
   def on_exit_message(topic, reason) do
     IO.warn "Phoenix.Transport.on_exit_message/2 is deprecated"
     on_exit_message(topic, nil, reason)
-  end
-
-  @doc """
-  Negoatiates the serializers pairs according to version.
-  """
-  def negotiate_serializer(serializers, vsn) when is_list(serializers) do
-    case Version.parse(vsn) do
-      {:ok, vsn} ->
-        serializers
-        |> Enum.find(:error, fn {_serializer, vsn_req} -> Version.match?(vsn, vsn_req) end)
-        |> case do
-          {serializer, _vsn_req} ->
-            {:ok, serializer}
-
-          :error ->
-            Logger.error "The client's requested transport version \"#{vsn}\" " <>
-                          "does not match server's version requirements of #{inspect serializers}"
-            :error
-        end
-
-      :error ->
-        Logger.error "Client sent invalid transport version \"#{vsn}\""
-        :error
-    end
   end
 
   @doc """

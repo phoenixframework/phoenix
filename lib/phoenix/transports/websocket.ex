@@ -72,26 +72,21 @@ defmodule Phoenix.Transports.WebSocket do
     |> Transport.transport_log(opts[:transport_log])
     |> Transport.force_ssl(handler, endpoint, opts)
     |> Transport.check_origin(handler, endpoint, opts)
-    |> connect_handler(endpoint, handler, opts[:serializer])
+    |> case do
+      %{halted: true} = conn ->
+        {:error, conn}
+
+      %{params: params} = conn ->
+        config = %{endpoint: endpoint, transport: :websocket, options: opts, params: params}
+
+        case handler.connect(config) do
+          {:ok, state} -> {:ok, conn, state}
+          :error -> {:error, Plug.Conn.send_resp(conn, 403, "")}
+        end
+    end
   end
 
   def connect(conn, _, _, _) do
     {:error, Plug.Conn.send_resp(conn, 400, "")}
-  end
-
-  defp connect_handler(%{halted: true} = conn, _endpoint, _handler, _opts) do
-    {:error, conn}
-  end
-
-  defp connect_handler(%{params: params} = conn, endpoint, handler, serializers) do
-    vsn = params["vsn"] || "1.0.0"
-
-    with {:ok, serializer} <- Transport.negotiate_serializer(serializers, vsn),
-         config = %{endpoint: endpoint, transport: :websocket, serializer: serializer, params: params},
-         {:ok, state} <- handler.connect(config) do
-      {:ok, conn, state}
-    else
-      :error -> {:error, Plug.Conn.send_resp(conn, 403, "")}
-    end
   end
 end

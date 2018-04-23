@@ -135,12 +135,13 @@ defmodule Phoenix.Transports.LongPoll do
       <> Base.encode64(:crypto.strong_rand_bytes(16))
       <> (System.system_time(:milliseconds) |> Integer.to_string)
 
-    arg = {endpoint, handler, opts[:serializer], conn.params, opts[:window_ms], priv_topic}
+    arg = {endpoint, handler, opts, conn.params, priv_topic}
     supervisor = Module.concat(endpoint, "LongPoll.Supervisor")
 
     case Supervisor.start_child(supervisor, [arg]) do
       {:ok, :undefined} ->
         conn |> put_status(:forbidden) |> status_json()
+
       {:ok, server_pid} ->
         data  = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
         token = sign_token(endpoint, data, opts)
