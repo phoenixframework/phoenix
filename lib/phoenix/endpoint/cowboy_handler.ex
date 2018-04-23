@@ -85,6 +85,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
       Application.ensure_all_started(:ssl)
     end
 
+    # TODO: GET RID OF THIS.
     dispatches =
       for {path, socket} <- endpoint.__sockets__,
           {transport, {module, config}} <- socket.__transports__,

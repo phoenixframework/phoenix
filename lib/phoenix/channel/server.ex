@@ -73,7 +73,13 @@ defmodule Phoenix.Channel.Server do
   This event is synchronous as we want to guarantee
   proper termination of the channels.
   """
-  def close(pids, timeout \\ 5000) do
+  def close(pids, timeout \\ 5000)
+
+  def close([], _timeout) do
+    :ok
+  end
+
+  def close(pids, timeout) do
     # We need to guarantee that the channel has been closed
     # otherwise the link in the transport will trigger it to crash.
     pids_and_refs =
@@ -83,20 +89,33 @@ defmodule Phoenix.Channel.Server do
         {pid, ref}
       end
 
-    for {pid, ref} <- pids_and_refs do
+    timeout_ref = make_ref()
+    timer_ref = Process.send_after(self(), {:timeout, timeout_ref}, timeout)
+
+    Enum.reduce(pids_and_refs, :infinity, fn {pid, ref}, timeout ->
       receive do
-        {:DOWN, ^ref, _, _, _} -> :ok
+        {:DOWN, ^ref, _, _, _} -> timeout
+        {:timeout, ^timeout_ref} -> kill(pid, ref)
       after
-        timeout ->
-          Process.exit(pid, :kill)
-
-          receive do
-            {:DOWN, ^ref, _, _, _} -> :ok
-          end
+        timeout -> kill(pid, ref)
       end
-    end
+    end)
 
-    :ok
+    Process.cancel_timer(timer_ref)
+
+    receive do
+      {:timeout, ^timeout_ref} -> :ok
+    after
+      0 -> :ok
+    end
+  end
+
+  defp kill(pid, ref) do
+    Process.exit(pid, :kill)
+
+    receive do
+      {:DOWN, ^ref, _, _, _} -> 0
+    end
   end
 
   ## Channel API
