@@ -38,15 +38,16 @@ defmodule Phoenix.Transports.LongPoll do
   @behaviour Plug
 
   import Plug.Conn
-  alias Phoenix.Socket.Transport
+  alias Phoenix.Socket.{V1, V2, Transport}
 
   def default_config() do
-    [window_ms: 10_000,
-     pubsub_timeout_ms: 2_000,
-     serializer: [{Phoenix.Socket.V1.JSONSerializer, "~> 1.0.0"},
-                  {Phoenix.Socket.V2.JSONSerializer, "~> 2.0.0"}],
-     transport_log: false,
-     crypto: [max_age: 1_209_600]]
+    [
+      window_ms: 10_000,
+      pubsub_timeout_ms: 2_000,
+      serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
+      transport_log: false,
+      crypto: [max_age: 1_209_600]
+    ]
   end
 
   def init(opts), do: opts

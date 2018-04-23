@@ -10,74 +10,31 @@ defmodule Phoenix.Socket.Transport do
 
   Developers interested in implementing custom transports must invoke
   the socket API defined in this module. This module also provides
-  many conveniences to make it easier to build custom transports as
-  well as important guidelines.
+  many conveniences to make it easier to build custom transports.
 
-  The rest of this documentation will cover the steps for implementing
-  custom transports. If you are interested exclusively in custom socket
-  implementations, check out the callbacks and their respective documentaion.
+  ## Workflow
 
-  ## OLD DOCS
+  Whenever your endpoint starts, it will automatically invoke the
+  `child_spec/1` on each listed socket and start that specification
+  under the endpoint supervisor. For this reason, custom transports
+  that are manually started in the supervision tree must be listed
+  after the endpoint.
 
-  API for building transports.
+  Whenever the transport receives a connection, it should invoke the
+  `c:connect/1` callback with a map of metadata. Different sockets may
+  require different metadatas.
 
-  This module describes what is required to build a Phoenix transport.
-  The transport sits between the socket and channels, forwarding client
-  messages to channels and vice-versa.
+  If the connection is accepted, the transport can move the connection
+  to another process, if so desires, or keep using the same process. The
+  process responsible for managing the socket should then call `c:init/1`.
 
-  A transport is responsible for:
+  For each message received from the client, the transport must call
+  `c:handle_in/2` on the socket. For each informational message the
+  transport receives, it should call `c:handle_info/2` on the socket.
 
-    * Implementing the transport behaviour
-    * Establishing the socket connection
-    * Handling of incoming messages
-    * Handling of outgoing messages
-    * Managing channels
-    * Providing secure defaults
-
-  ## The transport behaviour
-
-  The transport requires one function:
-
-    * `default_config/0` - returns the default transport configuration
-      to be merged when the transport is declared in the socket module
-
-  ## Outgoing messages
-
-  Channels can send two types of message back to a transport:
-  `Phoenix.Socket.Message` and `Phoenix.Socket.Reply`. Those
-  messages are encoded in the channel into a format defined by
-  the transport. That's why transports are required to pass a
-  serializer that abides to the behaviour described in
-  `Phoenix.Socket.Serializer`.
-
-  ## Managing channel exits
-
-  Because channels are spawned from the transport process, transports
-  must trap exits and correctly handle the `{:EXIT, _, _}` messages
-  arriving from channels, relaying the proper response to the client.
-
-  The `"phx_error"` event is sent by the transport when a channel exits,
-  and represents the channel terminating against its will. The
-  `on_exit_message/3` function aids in constructing the `"phx_error"` message.
-
-  For graceful exits, the channel will notify the transort it is
-  gracefully terminating via the following message:
-
-      {:graceful_exit, channel_pid, %Phoenix.Socket.Message{}}
-
-  The `%Phoenix.Socket.Message{}` is the leave message for the transport
-  to relay to the client.
-
-  ## Duplicate Join Subscriptions
-
-  For a given topic, the client may only establish a single channel
-  subscription. When attempting to create a duplicate subscription,
-  `dispatch/3` will close the existing channel, log a warning, and
-  spawn a new channel for the topic. When sending the `"phx_close"`
-  event from the closed channel, the message will contain the `ref` the
-  client sent when joining. This allows the client to uniquely identify
-  `"phx_close"` and `"phx_error"` messages when force-closing a channel
-  on duplicate joins.
+  On termination, `c:terminate/2` must be called. A special atom with
+  reason `:closed` can be used to specify that the client terminated
+  the connection.
 
   ## Security
 
@@ -86,28 +43,6 @@ defmodule Phoenix.Socket.Transport do
 
   The functionality provided by this module helps in performing "origin"
   header checks and ensuring only SSL connections are allowed.
-
-  ## Remote Client
-
-  Channels can reply, synchronously, to any `handle_in/3` event. To match
-  pushes with replies, clients must include a unique `ref` with every
-  message and the channel server will reply with a matching ref where
-  the client can pick up the callback for the matching reply.
-
-  Phoenix includes a JavaScript client for WebSocket and Longpolling
-  support using JSON encodings.
-
-  Clients can be implemented for other protocols and encodings by
-  abiding by the `Phoenix.Socket.Message` format.
-
-  ## Protocol Versioning
-
-  Clients are expected to send the Channel Transport protocol version that they
-  expect to be talking to. The version can be retrieved on the server from
-  `Phoenix.Channel.Transport.protocol_version/0`. If no version is provided, the
-  Transport adapters should default to assume a `"1.0.0"` version number.
-  See `web/static/js/phoenix.js` for an example transport client
-  implementation.
   """
 
   @type state :: term()
@@ -161,16 +96,6 @@ defmodule Phoenix.Socket.Transport do
     * `{:reply, status, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
 
-  In the default `Phoenix.Socket` implementation, it calls the
-  `decode!` function in serializer with the given options which
-  must return a Phoenix.Socket message. The messages are usually
-  sent to the appropriate channel except:
-
-    * "heartbeat" events in the "phoenix" topic - should just emit
-      an OK reply
-    * "phx_join" on any topic - should join the topic
-    * "phx_leave" on any topic - should leave the topic
-
   """
   @callback handle_in({message :: term, opts :: keyword}, state) ::
               {:ok, state}
@@ -200,7 +125,6 @@ defmodule Phoenix.Socket.Transport do
   @callback terminate(reason :: term, state) :: :ok
 
   require Logger
-  alias Phoenix.Socket
   alias Phoenix.Socket.{Reply, Message}
 
   @doc false

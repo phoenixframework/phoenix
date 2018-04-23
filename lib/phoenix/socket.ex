@@ -2,7 +2,7 @@ defmodule Phoenix.Socket do
   # TODO: Rewrite docs
 
   @moduledoc ~S"""
-  Defines a socket and its state.
+  A socket implementation that multiplexes messages over channels.
 
   `Phoenix.Socket` is used as a module for establishing and maintaining
   the socket state via the `Phoenix.Socket` struct.
@@ -71,10 +71,44 @@ defmodule Phoenix.Socket do
     * `transport_pid` - The pid of the socket's transport process
     * `serializer` - The serializer for socket messages
 
-  ## Custom transports
+  ## Client-server communication
+
+  The encoding of server data and the decoding of client data is done
+  according to a serializer, defined in `Phoenix.Socket.Serializer`.
+
+  The `decode!` function must return a `Phoenix.Socket.Message` which
+  is forwarded to channels except:
+
+    * "heartbeat" events in the "phoenix" topic - should just emit
+      an OK reply
+    * "phx_join" on any topic - should join the topic
+    * "phx_leave" on any topic - should leave the topic
+
+  Each message also has a `ref` field which is used to track responses.
+
+  The server may send messages or a replies back. For messages, the
+  ref uniquely identifies the message. For replies, the ref matches
+  the original message. Both data-types also include a join_ref that
+  uniquely identifes the currently joined channel.
+
+  The `Phoenix.Socket` implementation may also sent special messages
+  and replies:
+
+    * "phx_error" - in case of errors, such as a channel process
+      crashing, or when attempting to join an already joined channel
+
+    * "phx_close" - the channel was gracefully closed
+
+  Phoenix ships with a JavaScript implementation of both websocket
+  and long polling transports that interacts with Phoenix.Socket and
+  can be used as reference for those interested in implementing custom
+  clients.
+
+  ## Custom sockets and transports
 
   See the `Phoenix.Socket.Transport` documentation for more information on
-  writing your own transports.
+  writing your own socket that does not leverage channels or for writing
+  your own transports that interacts with other sockets.
   """
 
   require Logger
