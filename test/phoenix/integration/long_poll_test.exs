@@ -6,8 +6,7 @@ defmodule Phoenix.Integration.LongPollTest do
   import ExUnit.CaptureLog
 
   alias Phoenix.Integration.HTTPClient
-  alias Phoenix.Socket.{V2, Broadcast}
-  alias Phoenix.Transports.LongPollSerializer
+  alias Phoenix.Socket.{Broadcast, Message, V1, V2}
   alias Phoenix.PubSub.Local
   alias __MODULE__.Endpoint
 
@@ -140,49 +139,39 @@ defmodule Phoenix.Integration.LongPollTest do
   Returns a response with body decoded into JSON map.
   """
   def poll(method, path, vsn, params, json \\ nil, headers \\ %{}) do
+    serializer = serializer(vsn)
     headers = Map.merge(%{"content-type" => "application/json"}, headers)
-    body = encode(vsn, json)
-    query_str = params |> Map.put("vsn", vsn) |> URI.encode_query()
-    url = "http://127.0.0.1:#{@port}#{path}/longpoll?" <> query_str
-
+    body = encode(serializer, json)
+    query_string = params |> Map.put("vsn", vsn) |> URI.encode_query()
+    url = "http://127.0.0.1:#{@port}#{path}/longpoll?" <> query_string
     {:ok, resp} = HTTPClient.request(method, url, headers, body)
+    decode_body(serializer, resp)
+  end
 
-    decode_body(vsn, resp)
-  end
-  defp decode_body(_vsn, %{body: ""} = resp), do: resp
-  defp decode_body("1." <> _, %{} = resp) do
-    put_in(resp, [:body], Phoenix.json_library().decode!(resp.body))
-  end
-  defp decode_body("2." <> _, %{} = resp) do
+  defp serializer("2." <> _), do: V2.JSONSerializer
+  defp serializer(_), do: V1.JSONSerializer
+
+  defp decode_body(serializer, %{} = resp) do
     resp
     |> put_in([:body], Phoenix.json_library().decode!(resp.body))
-    |> update_in([:body, "messages"], fn
-      nil -> []
-      messages ->
-        for msg <- messages do
-          msg
-          |> V2.JSONSerializer.decode!([])
-          |> stringify()
-        end
+    |> update_in([:body, "messages"], fn messages ->
+      for msg <- messages || [] do
+        msg
+        |> Phoenix.json_library().encode!()
+        |> serializer.decode!([])
+      end
     end)
-  end
-  defp decode_body(_invalid, %{} = resp) do
-    put_in(resp, [:body], Phoenix.json_library().decode!(resp.body))
-  end
-  def stringify(struct) do
-    struct
-    |> Map.from_struct()
-    |> Phoenix.json_library().encode!()
-    |> Phoenix.json_library().decode!()
   end
 
   defp encode(_vsn, nil), do: ""
-  defp encode("1." <> _ = _vsn, map), do: Phoenix.json_library().encode!(map)
-  defp encode("2." <> _ = _vsn, map) do
+
+  defp encode(V2.JSONSerializer, map) do
     Phoenix.json_library().encode!(
-      [map["join_ref"], map["ref"], map["topic"], map["event"], map["payload"]])
+      [map["join_ref"], map["ref"], map["topic"], map["event"], map["payload"]]
+    )
   end
-  defp encode(_, map), do: encode("1.0.0", map)
+
+  defp encode(V1.JSONSerializer, map), do: Phoenix.json_library().encode!(map)
 
   @doc """
   Joins a long poll socket.
@@ -206,8 +195,8 @@ defmodule Phoenix.Integration.LongPollTest do
     resp = poll :post, path, vsn, session, %{
       "topic" => topic,
       "event" => "phx_join",
-      "ref" => "123",
-      "join_ref" => "123",
+      "ref" => "1",
+      "join_ref" => "1",
       "payload" => payload
     }
     assert resp.body["status"] == 200
@@ -236,18 +225,28 @@ defmodule Phoenix.Integration.LongPollTest do
 
       [phx_reply, user_entered, status_msg] = resp.body["messages"]
 
-      assert phx_reply ==
-        %{"event" => "phx_reply",
-          "payload" => %{"response" => %{}, "status" => "ok"},
-          "ref" => "123", "topic" => "room:lobby", "join_ref" => "123"}
-      assert status_msg ==
-        %{"event" => "joined",
-          "payload" => %{"status" => "connected", "user_id" => nil},
-          "ref" => nil, "join_ref" => nil, "topic" => "room:lobby"}
-      assert user_entered ==
-        %{"event" => "user_entered",
-          "payload" => %{"user" => nil},
-          "ref" => nil, "join_ref" => nil, "topic" => "room:lobby"}
+      assert phx_reply == %Message{
+        event: "phx_reply",
+        payload: %{"response" => %{}, "status" => "ok"},
+        ref: "1",
+        topic: "room:lobby"
+      }
+
+      assert status_msg == %Message{
+        event: "joined",
+        payload: %{"status" => "connected", "user_id" => nil},
+        ref: nil,
+        join_ref: nil,
+        topic: "room:lobby"
+      }
+
+      assert user_entered == %Message{
+        event: "user_entered",
+        payload: %{"user" => nil},
+        ref: nil,
+        join_ref: nil,
+        topic: "room:lobby"
+      }
 
       # poll without messages sends 204 no_content
       resp = poll(:get, "/ws", @vsn, session)
@@ -262,7 +261,7 @@ defmodule Phoenix.Integration.LongPollTest do
       resp = poll :post, "/ws", @vsn, session, %{
         "topic" => "room:lobby",
         "event" => "new_msg",
-        "ref" => "123",
+        "ref" => "1",
         "payload" => %{"body" => "hi!"}
       }
       assert resp.body["status"] == 200
@@ -271,12 +270,13 @@ defmodule Phoenix.Integration.LongPollTest do
       # Get published message
       resp = poll(:get, "/ws", @vsn, session)
       assert resp.body["status"] == 200
-      assert List.last(resp.body["messages"]) ==
-        %{"event" => "new_msg",
-          "payload" => %{"transport" => "Phoenix.Transports.LongPoll", "body" => "hi!"},
-          "ref" => nil,
-          "join_ref" => nil,
-          "topic" => "room:lobby"}
+      assert List.last(resp.body["messages"]) == %Message{
+        event: "new_msg",
+        payload: %{"transport" => "Phoenix.Transports.LongPoll", "body" => "hi!"},
+        ref: nil,
+        join_ref: nil,
+        topic: "room:lobby"
+      }
 
       # Publish unauthorized event
       capture_log fn ->
@@ -305,10 +305,9 @@ defmodule Phoenix.Integration.LongPollTest do
     end
   end
 
-  for {serializer, vsn} <- [{LongPollSerializer, "1.0.0"},
-                            {V2.JSONSerializer, "2.0.0"}] do
+  for {serializer, vsn, join_ref} <- [{V1.JSONSerializer, "1.0.0", nil}, {V2.JSONSerializer, "2.0.0", "1"}] do
     @vsn vsn
-    @join_ref "123"
+    @join_ref join_ref
 
     describe "with #{vsn} serializer #{inspect serializer}" do
       test "refuses connects that error with 403 response" do
@@ -345,7 +344,7 @@ defmodule Phoenix.Integration.LongPollTest do
         resp = poll :post, "/ws", @vsn, session, %{
           "topic" => "room:lobby",
           "event" => "new_msg",
-          "ref" => "123",
+          "ref" => "1",
           "payload" => %{"body" => "hi!"}
         }
         assert resp.body["status"] == 410
@@ -378,9 +377,13 @@ defmodule Phoenix.Integration.LongPollTest do
         resp = poll(:get, "/ws", @vsn, session)
         [_phx_reply, _user_entered, _joined, chan_error] = resp.body["messages"]
 
-        assert chan_error ==
-          %{"event" => "phx_error", "payload" => %{}, "topic" => topic,
-            "ref" => "123", "join_ref" => @join_ref}
+        assert chan_error == %Message{
+          event: "phx_error",
+          payload: %{},
+          topic: topic,
+          ref: "1",
+          join_ref: @join_ref
+        }
       end
 
       test "sends phx_close if a channel server normally exits" do
@@ -396,14 +399,15 @@ defmodule Phoenix.Integration.LongPollTest do
         assert resp.status == 200
 
         resp = poll(:get, "/ws", @vsn, session)
-
         [_phx_reply, _joined, _user_entered, _leave_reply, phx_close] = resp.body["messages"]
 
-        assert phx_close ==
-          %{"event" => "phx_close", "payload" => %{},
-            "ref" => "123",
-            "join_ref" => @join_ref,
-            "topic" => "room:lobby"}
+        assert phx_close == %Message{
+          event: "phx_close",
+          payload: %{},
+          ref: "1",
+          join_ref: @join_ref,
+          topic: "room:lobby"
+        }
       end
 
       test "shuts down when receiving disconnect broadcasts on socket's id" do

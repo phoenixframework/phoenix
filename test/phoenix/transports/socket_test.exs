@@ -36,14 +36,14 @@ defmodule Phoenix.Transports.SocketTest do
     {Phoenix.Transports.WebSocket, opts} = UserSocket.__transport__(:websocket)
     assert Enum.sort(opts) ==
       [compress: false,
-       serializer: [{Phoenix.Transports.WebSocketSerializer, parse_requirement!("~> 1.0.0")},
+       serializer: [{Phoenix.Socket.V1.JSONSerializer, parse_requirement!("~> 1.0.0")},
                     {Phoenix.Socket.V2.JSONSerializer, parse_requirement!("~> 2.0.0")}],
        timeout: 1234, transport_log: false]
 
     {Phoenix.Transports.LongPoll, opts} = UserSocket.__transport__(:longpoll)
     assert Enum.sort(opts) ==
       [crypto: [max_age: 1209600], pubsub_timeout_ms: 2000,
-       serializer: [{Phoenix.Transports.LongPollSerializer, parse_requirement!("~> 1.0.0")},
+       serializer: [{Phoenix.Socket.V1.JSONSerializer, parse_requirement!("~> 1.0.0")},
                     {Phoenix.Socket.V2.JSONSerializer, parse_requirement!("~> 2.0.0")}],
        transport_log: false, window_ms: 10000]
   end

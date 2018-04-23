@@ -43,7 +43,7 @@ defmodule Phoenix.Transports.LongPoll do
   def default_config() do
     [window_ms: 10_000,
      pubsub_timeout_ms: 2_000,
-     serializer: [{Phoenix.Transports.LongPollSerializer, "~> 1.0.0"},
+     serializer: [{Phoenix.Socket.V1.JSONSerializer, "~> 1.0.0"},
                   {Phoenix.Socket.V2.JSONSerializer, "~> 2.0.0"}],
      transport_log: false,
      crypto: [max_age: 1_209_600]]
@@ -60,7 +60,7 @@ defmodule Phoenix.Transports.LongPoll do
     |> Transport.code_reload(endpoint, opts)
     |> Transport.transport_log(opts[:transport_log])
     |> Transport.force_ssl(handler, endpoint, opts)
-    |> Transport.check_origin(handler, endpoint, opts, &status_json(&1, %{}))
+    |> Transport.check_origin(handler, endpoint, opts, &status_json/1)
     |> dispatch(endpoint, handler, transport, opts)
   end
 
@@ -96,7 +96,7 @@ defmodule Phoenix.Transports.LongPoll do
       {:ok, server_ref} ->
         publish(conn, server_ref, endpoint, opts)
       :error ->
-        conn |> put_status(:gone) |> status_json(%{})
+        conn |> put_status(:gone) |> status_json()
     end
   end
 
@@ -109,7 +109,7 @@ defmodule Phoenix.Transports.LongPoll do
     case read_body(conn, []) do
       {:ok, body, conn} ->
         status = transport_dispatch(endpoint, server_ref, body, opts)
-        conn |> put_status(status) |> status_json(%{})
+        conn |> put_status(status) |> status_json()
 
       _ ->
         raise Plug.BadRequestError
@@ -145,11 +145,11 @@ defmodule Phoenix.Transports.LongPoll do
 
     case Supervisor.start_child(supervisor, args) do
       {:ok, :undefined} ->
-        conn |> put_status(:forbidden) |> status_json(%{})
+        conn |> put_status(:forbidden) |> status_json()
       {:ok, server_pid} ->
         data  = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
         token = sign_token(endpoint, data, opts)
-        conn |> put_status(:gone) |> status_json(%{token: token})
+        conn |> put_status(:gone) |> status_token_messages_json(token, [])
     end
   end
 
@@ -176,7 +176,7 @@ defmodule Phoenix.Transports.LongPoll do
 
     conn
     |> put_status(status)
-    |> status_json(%{token: conn.params["token"], messages: messages})
+    |> status_token_messages_json(conn.params["token"], messages)
   end
 
   # Retrieves the serialized `Phoenix.LongPoll.Server` pid
@@ -230,12 +230,21 @@ defmodule Phoenix.Transports.LongPoll do
     Phoenix.Token.verify(endpoint, Atom.to_string(endpoint.__pubsub_server__), signed, opts[:crypto])
   end
 
-  defp status_json(conn, data) do
-    status = Plug.Conn.Status.code(conn.status || 200)
-    data = Map.put(data, :status, status)
+  defp status_json(conn) do
+    status = conn.status || 200
+    send_json(conn, "{\"status\":#{status}}")
+  end
 
+  defp status_token_messages_json(conn, token, messages) do
+    status = conn.status || 200
+    messages = [?[, Enum.intersperse(messages, ?,), ?]]
+    token = Phoenix.json_library().encode_to_iodata!(token)
+    send_json(conn, "{\"status\":#{status},\"token\":#{token},\"messages\":#{messages}}")
+  end
+
+  defp send_json(conn, json) do
     conn
-    |> put_status(200)
-    |> Phoenix.Controller.json(data)
+    |> put_resp_header("content-type", "application/json; charset=utf-8")
+    |> send_resp(200, json)
   end
 end

@@ -54,7 +54,8 @@ defmodule Phoenix.Transports.LongPoll.Server do
           pubsub_server: endpoint.__pubsub_server__(),
           priv_topic: priv_topic,
           last_client_poll: now_ms(),
-          client_ref: nil
+          client_ref: nil,
+          serializer: serializer # TODO: only used for backwards compatibility warning
         }
 
         :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
@@ -139,6 +140,12 @@ defmodule Phoenix.Transports.LongPoll.Server do
     do: PubSub.broadcast_from!(state.pubsub_server, self(), client_ref, msg)
   defp broadcast_from!(_state, client_ref, msg) when is_pid(client_ref),
     do: send(client_ref, msg)
+
+  defp publish_reply(state, reply) when is_map(reply) do
+    IO.warn "Returning a map from #{inspect state.serializer} is deprecated. " <>
+            "Please return JSON encoded data instead (see Phoenix.Socket.Serializer)"
+    publish_reply(state, Phoenix.json_library().encode_to_iodata!(reply))
+  end
 
   defp publish_reply(state, reply) do
     notify_client_now_available(state)

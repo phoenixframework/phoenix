@@ -580,9 +580,15 @@ defmodule Phoenix.Socket do
   defp precompile_serializers(serializers) do
     for {module, requirement} <- serializers do
       case Version.parse_requirement(requirement) do
-        {:ok, requirement} -> {module, requirement}
+        {:ok, requirement} -> {rewrite_serializer(module), requirement}
         :error -> Version.match?("1.0.0", requirement)
       end
     end
   end
+
+  defp rewrite_serializer(Phoenix.Transports.V2.WebSocketSerializer), do: Phoenix.Socket.V2.JSONSerializer
+  defp rewrite_serializer(Phoenix.Transports.V2.LongPollSerializer), do: Phoenix.Socket.V2.JSONSerializer
+  defp rewrite_serializer(Phoenix.Transports.WebSocketSerializer), do: Phoenix.Socket.V1.JSONSerializer
+  defp rewrite_serializer(Phoenix.Transports.LongPollSerializer), do: Phoenix.Socket.V1.JSONSerializer
+  defp rewrite_serializer(module), do: module
 end

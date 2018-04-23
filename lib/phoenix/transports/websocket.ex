@@ -55,7 +55,7 @@ defmodule Phoenix.Transports.WebSocket do
   """
 
   def default_config() do
-    [serializer: [{Phoenix.Transports.WebSocketSerializer, "~> 1.0.0"},
+    [serializer: [{Phoenix.Socket.V1.JSONSerializer, "~> 1.0.0"},
                   {Phoenix.Socket.V2.JSONSerializer, "~> 2.0.0"}],
      timeout: 60_000,
      transport_log: false,

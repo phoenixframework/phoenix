@@ -1,4 +1,4 @@
-defmodule Phoenix.Transports.WebSocketSerializer do
+defmodule Phoenix.Socket.V1.JSONSerializer do
   @moduledoc false
 
   @behaviour Phoenix.Transports.Serializer
@@ -7,35 +7,26 @@ defmodule Phoenix.Transports.WebSocketSerializer do
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Broadcast
 
-  @doc """
-  Translates a `Phoenix.Socket.Broadcast` into a `Phoenix.Socket.Message`.
-  """
   def fastlane!(%Broadcast{} = msg) do
-    msg = %Message{topic: msg.topic, event: msg.event, payload: msg.payload}
-
-    {:socket_push, :text, encode_v1_fields_only(msg)}
+    map = %Message{topic: msg.topic, event: msg.event, payload: msg.payload}
+    {:socket_push, :text, encode_v1_fields_only(map)}
   end
 
-  @doc """
-  Encodes a `Phoenix.Socket.Message` struct to JSON string.
-  """
   def encode!(%Reply{} = reply) do
-    msg = %Message{
+    map = %Message{
       topic: reply.topic,
       event: "phx_reply",
       ref: reply.ref,
       payload: %{status: reply.status, response: reply.payload}
     }
 
-    {:socket_push, :text, encode_v1_fields_only(msg)}
-  end
-  def encode!(%Message{} = msg) do
-    {:socket_push, :text, encode_v1_fields_only(msg)}
+    {:socket_push, :text, encode_v1_fields_only(map)}
   end
 
-  @doc """
-  Decodes JSON String into `Phoenix.Socket.Message` struct.
-  """
+  def encode!(%Message{} = map) do
+    {:socket_push, :text, encode_v1_fields_only(map)}
+  end
+
   def decode!(message, _opts) do
     message
     |> Phoenix.json_library().decode!()
