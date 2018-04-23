@@ -15,6 +15,7 @@ Here's a list of other resources for learning about Phoenix and some of the proj
 Phoenix author Chris McCord's videos covering the roadmap to Phoenix 1.0 and an overview of the current state of Phoenix.
 - [Phoenix Takes Flight](http://www.chrismccord.com/blog/2015/05/09/elixirconfeu-keynote-phoenix-takes-flight/), Chris McCord
 - [Phoenix - a framework for the modern web](https://vimeo.com/131633172), Chris McCord
+- [Phoenix 1.3 - Lonestar ElixirConf 2017 Keynote](https://www.youtube.com/watch?v=tMO28ar0lW8), Chris McCord
 
 ## Plug
 The Elixir middleware layer that Phoenix makes extensive use of.
