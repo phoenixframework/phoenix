@@ -23,6 +23,8 @@ defmodule Phoenix.Endpoint.Handler do
   use Supervisor
   require Logger
 
+  # TODO: The Plug API should be all that is necessary.
+
   @doc false
   def start_link(otp_app, endpoint, opts \\ []) do
     Supervisor.start_link(__MODULE__, {otp_app, endpoint}, opts)
@@ -38,9 +40,12 @@ defmodule Phoenix.Endpoint.Handler do
     children =
       for {scheme, port} <- [http: 4000, https: 4040],
           config = endpoint.config(scheme) do
+        # TODO: use Plug v1.5/Elixir v1.5 API
         handler.child_spec(scheme, endpoint, default(config, otp_app, port))
       end
-    supervise(children, strategy: :one_for_one)
+
+    # Supervisor.init(children, strategy: :one_for_one)
+    {:ok, {{:one_for_one, 3, 5}, children}}
   end
 
   defp default(config, otp_app, port) when is_list(config) do

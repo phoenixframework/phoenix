@@ -43,7 +43,8 @@ defmodule Phoenix.Endpoint.Supervisor do
       server_children(mod, conf, server?) ++
       watcher_children(mod, conf, server?)
 
-    supervise(children, strategy: :one_for_one)
+    # Supervisor.init(children, strategy: :one_for_one)
+    {:ok, {{:one_for_one, 3, 5}, children}}
   end
 
   defp pubsub_children(mod, conf) do
