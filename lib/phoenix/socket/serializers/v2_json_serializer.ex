@@ -2,7 +2,7 @@ defmodule Phoenix.Socket.V2.JSONSerializer do
   @moduledoc false
   @behaviour Phoenix.Socket.Serializer
 
-  alias Phoenix.Socket.{Reply, Message, Broadcast}
+  alias Phoenix.Socket.{Broadcast, Message, Reply}
 
   def fastlane!(%Broadcast{} = msg) do
     data = Phoenix.json_library().encode_to_iodata!([nil, nil, msg.topic, msg.event, msg.payload])

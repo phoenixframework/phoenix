@@ -1,11 +1,8 @@
 defmodule Phoenix.Socket.V1.JSONSerializer do
   @moduledoc false
+  @behaviour Phoenix.Socket.Serializer
 
-  @behaviour Phoenix.Transports.Serializer
-
-  alias Phoenix.Socket.Reply
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Broadcast
+  alias Phoenix.Socket.{Broadcast, Message, Reply}
 
   def fastlane!(%Broadcast{} = msg) do
     map = %Message{topic: msg.topic, event: msg.event, payload: msg.payload}
