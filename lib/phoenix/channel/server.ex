@@ -1,7 +1,9 @@
 defmodule Phoenix.Channel.Server do
   use GenServer
+
   require Logger
   require Phoenix.Endpoint
+
   alias Phoenix.PubSub
   alias Phoenix.Socket
   alias Phoenix.Socket.{Broadcast, Message, Reply}
@@ -449,8 +451,9 @@ defmodule Phoenix.Channel.Server do
   end
 
   defp notify_transport_of_graceful_exit(socket) do
-    Phoenix.Socket.Transport.notify_graceful_exit(socket)
-    Process.unlink(socket.transport_pid)
+    %{topic: topic, join_ref: ref, transport_pid: transport_pid} = socket
+    close_msg = %Message{join_ref: ref, ref: ref, topic: topic, event: "phx_close", payload: %{}}
+    send(transport_pid, {:graceful_exit, self(), close_msg})
     :ok
   end
 end

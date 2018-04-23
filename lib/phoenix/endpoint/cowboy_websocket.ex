@@ -11,7 +11,7 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
   @already_sent {:plug_conn, :sent}
 
   def init({transport, :http}, req, {module, args}) when transport in [:tcp, :ssl] do
-    {_, _, _, opts} = args
+    {_, _, opts} = args
     conn = @connection.conn(req, transport)
 
     try do

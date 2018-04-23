@@ -8,11 +8,11 @@ defmodule Phoenix.Endpoint.Cowboy2WebSocket do
   @connection Plug.Adapters.Cowboy2.Conn
   @already_sent {:plug_conn, :sent}
 
-  def init(req, {module, {_, handler, _, opts} = args}) do
+  def init(req, {_module, {endpoint, handler, opts}}) do
     conn = @connection.conn(req)
 
     try do
-      case module.init(conn, args) do
+      case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
         {:ok, %{adapter: {@connection, req}}, state} ->
           timeout = Keyword.fetch!(opts, :timeout)
           compress = Keyword.fetch!(opts, :compress)

@@ -134,7 +134,7 @@ defmodule Phoenix.Integration.WebSocketTest do
         assert Process.alive?(channel_pid)
 
         WebsocketClient.send_event(sock, "room:lobby1", "new_msg", %{body: "hi!"})
-        assert_receive %Message{event: "new_msg", payload: %{"transport" => "Phoenix.Transports.WebSocket", "body" => "hi!"}}
+        assert_receive %Message{event: "new_msg", payload: %{"transport" => ":websocket", "body" => "hi!"}}
 
         WebsocketClient.leave(sock, "room:lobby1", %{})
         assert_receive %Message{event: "you_left", payload: %{"message" => "bye!"}}
@@ -272,7 +272,7 @@ defmodule Phoenix.Integration.WebSocketTest do
           assert WebsocketClient.start_link(self(), url,  @serializer) ==
                 {:error, {403, "Forbidden"}}
         end
-        assert log =~ "The client's requested channel transport version \"123.1.1\" does not match server's version"
+        assert log =~ "The client's requested transport version \"123.1.1\" does not match server's version"
       end
 
       test "shuts down if client goes quiet" do

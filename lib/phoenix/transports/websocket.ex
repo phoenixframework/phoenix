@@ -54,48 +54,44 @@ defmodule Phoenix.Transports.WebSocket do
       send socket.transport_pid, :garbage_collect
   """
 
+  alias Phoenix.Socket.{V1, V2, Transport}
+
   def default_config() do
-    [serializer: [{Phoenix.Socket.V1.JSONSerializer, "~> 1.0.0"},
-                  {Phoenix.Socket.V2.JSONSerializer, "~> 2.0.0"}],
-     timeout: 60_000,
-     transport_log: false,
-     compress: false]
+    [
+      serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
+      timeout: 60_000,
+      transport_log: false,
+      compress: false
+    ]
   end
 
-  ## Callbacks
-
-  import Plug.Conn, only: [fetch_query_params: 1, send_resp: 3]
-  alias Phoenix.Socket.Transport
-
-  @doc false
-  def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport, opts}) do
-    conn =
-      conn
-      |> fetch_query_params()
-      |> Transport.code_reload(endpoint, opts)
-      |> Transport.transport_log(opts[:transport_log])
-      |> Transport.force_ssl(handler, endpoint, opts)
-      |> Transport.check_origin(handler, endpoint, opts)
-
-    case conn do
-      %{halted: false} = conn ->
-        params     = conn.params
-        serializer = Keyword.fetch!(opts, :serializer)
-
-        case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params) do
-          {:ok, state} ->
-            {:ok, conn, state}
-          :error ->
-            conn = send_resp(conn, 403, "")
-            {:error, conn}
-        end
-      %{halted: true} = conn ->
-        {:error, conn}
-    end
+  def connect(%{method: "GET"} = conn, endpoint, handler, opts) do
+    conn
+    |> Plug.Conn.fetch_query_params()
+    |> Transport.code_reload(endpoint, opts)
+    |> Transport.transport_log(opts[:transport_log])
+    |> Transport.force_ssl(handler, endpoint, opts)
+    |> Transport.check_origin(handler, endpoint, opts)
+    |> connect_handler(endpoint, handler, opts[:serializer])
   end
 
-  def init(conn, _) do
-    conn = send_resp(conn, 400, "")
+  def connect(conn, _, _, _) do
+    {:error, Plug.Conn.send_resp(conn, 400, "")}
+  end
+
+  defp connect_handler(%{halted: true} = conn, _endpoint, _handler, _opts) do
     {:error, conn}
+  end
+
+  defp connect_handler(%{params: params} = conn, endpoint, handler, serializers) do
+    vsn = params["vsn"] || "1.0.0"
+
+    with {:ok, serializer} <- Transport.negotiate_serializer(serializers, vsn),
+         config = %{endpoint: endpoint, transport: :websocket, serializer: serializer, params: params},
+         {:ok, state} <- handler.connect(config) do
+      {:ok, conn, state}
+    else
+      :error -> {:error, Plug.Conn.send_resp(conn, 403, "")}
+    end
   end
 end

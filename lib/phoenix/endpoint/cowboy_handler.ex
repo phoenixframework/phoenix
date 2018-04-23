@@ -92,7 +92,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
           handler = config[:cowboy] || default_for(module),
           do: {Path.join(path, Atom.to_string(transport)),
                handler,
-               {module, {endpoint, socket, transport, config}}}
+               {module, {endpoint, socket, config}}}
 
     dispatches =
       dispatches ++ [{:_, Plug.Adapters.Cowboy.Handler, {endpoint, []}}]

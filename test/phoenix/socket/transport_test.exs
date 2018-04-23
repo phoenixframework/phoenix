@@ -143,8 +143,4 @@ defmodule Phoenix.Socket.TransportTest do
       refute conn.halted
     end
   end
-
-  test "provides the protocol version" do
-    assert Version.match?(Transport.protocol_version(), "~> 2.0")
-  end
 end

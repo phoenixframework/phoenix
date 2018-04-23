@@ -251,7 +251,7 @@ defmodule Phoenix.Integration.LongPollTest do
       assert resp.body["status"] == 200
       assert List.last(resp.body["messages"]) == %Message{
         event: "new_msg",
-        payload: %{"transport" => "Phoenix.Transports.LongPoll", "body" => "hi!"},
+        payload: %{"transport" => ":long_polling", "body" => "hi!"},
         ref: nil,
         join_ref: nil,
         topic: "room:lobby"
@@ -423,7 +423,7 @@ defmodule Phoenix.Integration.LongPollTest do
           resp = poll(:get, "/ws", "123.1.1", %{}, nil, %{"origin" => "https://example.com"})
           assert resp.body["status"] == 403
         end
-        assert log =~ "The client's requested channel transport version \"123.1.1\" does not match server's version"
+        assert log =~ "The client's requested transport version \"123.1.1\" does not match server's version"
       end
 
       test "forces application/json content-type" do

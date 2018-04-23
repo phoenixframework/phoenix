@@ -49,11 +49,9 @@ defmodule Phoenix.Transports.LongPoll do
      crypto: [max_age: 1_209_600]]
   end
 
-  @doc false
   def init(opts), do: opts
 
-  @doc false
-  def call(conn, {endpoint, handler, transport, opts}) do
+  def call(conn, {endpoint, handler, opts}) do
     conn
     |> fetch_query_params()
     |> put_resp_header("access-control-allow-origin", "*")
@@ -61,16 +59,16 @@ defmodule Phoenix.Transports.LongPoll do
     |> Transport.transport_log(opts[:transport_log])
     |> Transport.force_ssl(handler, endpoint, opts)
     |> Transport.check_origin(handler, endpoint, opts, &status_json/1)
-    |> dispatch(endpoint, handler, transport, opts)
+    |> dispatch(endpoint, handler, opts)
   end
 
-  defp dispatch(%{halted: true} = conn, _, _, _, _) do
+  defp dispatch(%{halted: true} = conn, _, _, _) do
     conn
   end
 
   # Responds to pre-flight CORS requests with Allow-Origin-* headers.
   # We allow cross-origin requests as we always validate the Origin header.
-  defp dispatch(%{method: "OPTIONS"} = conn, _, _, _, _) do
+  defp dispatch(%{method: "OPTIONS"} = conn, _, _, _) do
     headers = get_req_header(conn, "access-control-request-headers") |> Enum.join(", ")
 
     conn
@@ -81,17 +79,17 @@ defmodule Phoenix.Transports.LongPoll do
   end
 
   # Starts a new session or listen to a message if one already exists.
-  defp dispatch(%{method: "GET"} = conn, endpoint, handler, transport, opts) do
+  defp dispatch(%{method: "GET"} = conn, endpoint, handler, opts) do
     case resume_session(conn.params, endpoint, opts) do
       {:ok, server_ref} ->
         listen(conn, server_ref, endpoint, opts)
       :error ->
-        new_session(conn, endpoint, handler, transport, opts)
+        new_session(conn, endpoint, handler, opts)
     end
   end
 
   # Publish the message encoded as a JSON body.
-  defp dispatch(%{method: "POST"} = conn, endpoint, _, _, opts) do
+  defp dispatch(%{method: "POST"} = conn, endpoint, _, opts) do
     case resume_session(conn.params, endpoint, opts) do
       {:ok, server_ref} ->
         publish(conn, server_ref, endpoint, opts)
@@ -101,7 +99,7 @@ defmodule Phoenix.Transports.LongPoll do
   end
 
   # All other requests should fail.
-  defp dispatch(conn, _, _, _, _) do
+  defp dispatch(conn, _, _, _) do
     send_resp(conn, :bad_request, "")
   end
 
@@ -130,20 +128,16 @@ defmodule Phoenix.Transports.LongPoll do
 
   ## Session handling
 
-  defp new_session(conn, endpoint, handler, transport, opts) do
-    serializer = opts[:serializer]
-
+  defp new_session(conn, endpoint, handler, opts) do
     priv_topic =
       "phx:lp:"
       <> Base.encode64(:crypto.strong_rand_bytes(16))
       <> (System.system_time(:milliseconds) |> Integer.to_string)
 
-    args = [endpoint, handler, transport, __MODULE__, serializer,
-            conn.params, opts[:window_ms], priv_topic]
-
+    arg = {endpoint, handler, opts[:serializer], conn.params, opts[:window_ms], priv_topic}
     supervisor = Module.concat(endpoint, "LongPoll.Supervisor")
 
-    case Supervisor.start_child(supervisor, args) do
+    case Supervisor.start_child(supervisor, [arg]) do
       {:ok, :undefined} ->
         conn |> put_status(:forbidden) |> status_json()
       {:ok, server_pid} ->

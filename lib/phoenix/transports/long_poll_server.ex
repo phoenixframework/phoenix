@@ -34,36 +34,33 @@ defmodule Phoenix.Transports.LongPoll.Server do
   If the server receives no message within `window_ms`, it terminates
   and clients are responsible for opening a new session.
   """
-  def start_link(endpoint, handler, transport_name, transport,
-                 serializer, params, window_ms, priv_topic) do
-    GenServer.start_link(__MODULE__, [endpoint, handler, transport_name, transport,
-                                      serializer, params, window_ms, priv_topic])
+  def start_link(arg) do
+    GenServer.start_link(__MODULE__, arg)
   end
 
-  ## Callbacks
+  def init({endpoint, handler, serializers, params, window_ms, priv_topic}) do
+    vsn = params["vsn"] || "1.0.0"
 
-  def init([endpoint, handler, transport_name, transport,
-            serializer, params, window_ms, priv_topic]) do
-    case Transport.connect(endpoint, handler, transport_name, transport, serializer, params) do
-      {:ok, state} ->
-        {:ok, state} = handler.init(state)
+    with {:ok, serializer} <- Transport.negotiate_serializer(serializers, vsn),
+         config = %{endpoint: endpoint, transport: :long_polling, serializer: serializer, params: params},
+         {:ok, handler_state} <- handler.connect(config),
+         {:ok, handler_state} <- handler.init(handler_state) do
+      state = %{
+        buffer: [],
+        handler: {handler, handler_state},
+        window_ms: trunc(window_ms * 1.5),
+        pubsub_server: endpoint.__pubsub_server__(),
+        priv_topic: priv_topic,
+        last_client_poll: now_ms(),
+        client_ref: nil,
+        serializer: serializer # TODO: only used for backwards compatibility warning
+      }
 
-        state = %{
-          buffer: [],
-          handler: {handler, state},
-          window_ms: trunc(window_ms * 1.5),
-          pubsub_server: endpoint.__pubsub_server__(),
-          priv_topic: priv_topic,
-          last_client_poll: now_ms(),
-          client_ref: nil,
-          serializer: serializer # TODO: only used for backwards compatibility warning
-        }
-
-        :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
-        schedule_inactive_shutdown(state.window_ms)
-        {:ok, state}
-      :error ->
-        :ignore
+      :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
+      schedule_inactive_shutdown(state.window_ms)
+      {:ok, state}
+    else
+      :error -> :ignore
     end
   end
 
