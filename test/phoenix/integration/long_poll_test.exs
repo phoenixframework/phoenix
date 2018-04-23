@@ -74,31 +74,9 @@ defmodule Phoenix.Integration.LongPollTest do
     def connect(%{"reject" => "true"}, _socket) do
       :error
     end
-    def connect(params, socket) do
-      Logger.disable(self())
-      {:ok, assign(socket, :user_id, params["user_id"])}
-    end
-
-    def id(socket) do
-      if id = socket.assigns.user_id, do: "user_sockets:#{id}"
-    end
-  end
-
-  defmodule LoggingSocket do
-    use Phoenix.Socket
-
-    channel "room:*", RoomChannel
-
-    transport :longpoll, Phoenix.Transports.LongPoll,
-      window_ms: 200,
-      pubsub_timeout_ms: 200,
-      check_origin: ["//example.com"]
-
-    def connect(%{"reject" => "true"}, _socket) do
-      :error
-    end
 
     def connect(params, socket) do
+      unless params["logging"] == "enabled", do: Logger.disable(self())
       {:ok, assign(socket, :user_id, params["user_id"])}
     end
 
@@ -112,7 +90,6 @@ defmodule Phoenix.Integration.LongPollTest do
 
     socket "/ws", UserSocket
     socket "/ws/admin", UserSocket
-    socket "/ws/logging", LoggingSocket
   end
 
   setup_all do
@@ -182,15 +159,15 @@ defmodule Phoenix.Integration.LongPollTest do
   process. If the mode is pubsub, the session will use the
   pubsub system.
   """
-  def join(path, topic, vsn, mode \\ :local, payload \\ %{})
+  def join(path, topic, vsn, mode \\ :local, payload \\ %{}, params \\ %{})
 
-  def join(path, topic, vsn, :local, payload) do
-    resp = poll :get, path, vsn, %{}, %{}
+  def join(path, topic, vsn, :local, payload, params) do
+    resp = poll :get, path, vsn, params, %{}
     assert resp.body["token"]
     assert resp.body["status"] == 410
     assert resp.status == 200
 
-    session = Map.take(resp.body, ["token"])
+    session = resp.body |> Map.take(["token"]) |> Map.merge(params)
 
     resp = poll :post, path, vsn, session, %{
       "topic" => topic,
@@ -199,15 +176,17 @@ defmodule Phoenix.Integration.LongPollTest do
       "join_ref" => "1",
       "payload" => payload
     }
-    assert resp.body["status"] == 200
 
+    assert resp.body["status"] == 200
     session
   end
 
-  def join(path, topic, vsn, :pubsub, payload) do
-    session = join(path, topic, vsn, :local, payload)
+  def join(path, topic, vsn, :pubsub, payload, params) do
+    session = join(path, topic, vsn, :local, payload, params)
+
     {:ok, {:v1, _id, pid, topic}} =
       Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+
     %{"token" =>
       Phoenix.Token.sign(Endpoint, Atom.to_string(__MODULE__), {:v1, "unknown", pid, topic})}
   end
@@ -353,7 +332,7 @@ defmodule Phoenix.Integration.LongPollTest do
 
       test "filter params on join" do
         log = capture_log fn ->
-          join("/ws/logging", "room:lobby", @vsn, :local, %{"foo" => "bar", "password" => "shouldnotshow"})
+          join("/ws", "room:lobby", @vsn, :local, %{"foo" => "bar", "password" => "shouldnotshow"}, %{"logging" => "enabled"})
         end
         assert log =~ "Parameters: %{\"foo\" => \"bar\", \"password\" => \"[FILTERED]\"}"
       end

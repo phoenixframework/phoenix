@@ -78,28 +78,7 @@ defmodule Phoenix.Integration.WebSocketTest do
     end
 
     def connect(params, socket) do
-      Logger.disable(self())
-      {:ok, assign(socket, :user_id, params["user_id"])}
-    end
-
-    def id(socket) do
-      if id = socket.assigns.user_id, do: "user_sockets:#{id}"
-    end
-  end
-
-  defmodule LoggingSocket do
-    use Phoenix.Socket
-
-    channel "room:*", RoomChannel
-
-    transport :websocket, Phoenix.Transports.WebSocket,
-      check_origin: ["//example.com"], timeout: 200
-
-    def connect(%{"reject" => "true"}, _socket) do
-      :error
-    end
-
-    def connect(params, socket) do
+      unless params["logging"] == "enabled", do: Logger.disable(self())
       {:ok, assign(socket, :user_id, params["user_id"])}
     end
 
@@ -113,7 +92,6 @@ defmodule Phoenix.Integration.WebSocketTest do
 
     socket "/ws", UserSocket
     socket "/ws/admin", UserSocket
-    socket "/ws/logging", LoggingSocket
   end
 
   setup_all do
@@ -174,7 +152,7 @@ defmodule Phoenix.Integration.WebSocketTest do
 
       test "logs and filter params on join and handle_in" do
         topic = "room:admin-lobby2"
-        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/logging/websocket?vsn=#{@vsn}", @serializer)
+        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}&logging=enabled", @serializer)
         log = capture_log fn ->
           WebsocketClient.join(sock, topic, %{"join" => "yes", "password" => "no"})
           assert_receive %Message{event: "phx_reply",
