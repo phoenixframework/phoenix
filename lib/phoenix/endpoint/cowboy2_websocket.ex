@@ -74,6 +74,7 @@ defmodule Phoenix.Endpoint.Cowboy2WebSocket do
   end
 
   defp handle_reply(handler, {:ok, state}), do: {:ok, {handler, state}}
-  defp handle_reply(handler, {:stop, state}), do: {:stop, {handler, state}}
-  defp handle_reply(handler, {:reply, data, state}), do: {:reply, data, {handler, state}}
+  defp handle_reply(handler, {:push, data, state}), do: {:reply, data, {handler, state}}
+  defp handle_reply(handler, {:reply, _status, data, state}), do: {:reply, data, {handler, state}}
+  defp handle_reply(handler, {:stop, _reason, state}), do: {:stop, {handler, state}}
 end

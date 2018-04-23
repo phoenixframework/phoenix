@@ -264,7 +264,7 @@ defmodule Phoenix.Socket do
     case state.channels_inverse do
       %{^pid => {topic, join_ref}} ->
         state = delete_channel(state, pid, topic, ref)
-        {:reply, encode_on_exit(socket, topic, join_ref, reason), {state, socket}}
+        {:push, encode_on_exit(socket, topic, join_ref, reason), {state, socket}}
 
       %{} ->
         {:ok, {state, socket}}
@@ -282,15 +282,15 @@ defmodule Phoenix.Socket do
           state
       end
 
-    {:reply, encode_reply(socket, message), {state, socket}}
+    {:push, encode_reply(socket, message), {state, socket}}
   end
 
   def __info__(%Broadcast{event: "disconnect"}, state) do
-    {:stop, state}
+    {:stop, {:shutdown, :disconnected}, state}
   end
 
   def __info__({:socket_push, opcode, payload}, state) do
-    {:reply, {opcode, payload}, state}
+    {:push, {opcode, payload}, state}
   end
 
   def __info__(:garbage_collect, state) do
@@ -315,7 +315,7 @@ defmodule Phoenix.Socket do
       payload: %{}
     }
 
-    {:reply, encode_reply(socket, reply), {state, socket}}
+    {:reply, :ok, encode_reply(socket, reply), {state, socket}}
   end
 
   defp handle_in(nil, %{event: "phx_join", topic: topic, ref: ref} = message, state, socket) do
@@ -325,15 +325,15 @@ defmodule Phoenix.Socket do
           {:ok, reply, pid} ->
             reply = %Reply{join_ref: ref, ref: ref, topic: topic, status: :ok, payload: reply}
             state = put_channel(state, pid, topic, ref)
-            {:reply, encode_reply(socket, reply), {state, socket}}
+            {:reply, :ok, encode_reply(socket, reply), {state, socket}}
 
           {:error, reply} ->
             reply = %Reply{join_ref: ref, ref: ref, topic: topic, status: :error, payload: reply}
-            {:reply, encode_reply(socket, reply), {state, socket}}
+            {:reply, :error, encode_reply(socket, reply), {state, socket}}
         end
 
       _ ->
-        {:reply, encode_ignore(socket, message), {state, socket}}
+        {:reply, :error, encode_ignore(socket, message), {state, socket}}
     end
   end
 
@@ -353,7 +353,7 @@ defmodule Phoenix.Socket do
   end
 
   defp handle_in(nil, message, state, socket) do
-    {:reply, encode_ignore(socket, message), {state, socket}}
+    {:reply, :error, encode_ignore(socket, message), {state, socket}}
   end
 
   defp put_channel(state, pid, topic, join_ref) do

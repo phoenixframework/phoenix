@@ -299,7 +299,7 @@ defmodule Phoenix.Integration.LongPollTest do
       assert channel
       Process.monitor(channel)
 
-      assert_receive({:DOWN, _, :process, ^channel, {:shutdown, :inactive}}, 5000)
+      assert_receive({:DOWN, _, :process, ^channel, {:shutdown, :closed}}, 5000)
       resp = poll(:post, "/ws", @vsn, session)
       assert resp.body["status"] == 410
     end
@@ -428,8 +428,8 @@ defmodule Phoenix.Integration.LongPollTest do
 
         Endpoint.broadcast("user_sockets:456", "disconnect", %{})
 
-        assert_receive {:DOWN, _, :process, ^chan1, {:shutdown, :disconnected}}
-        assert_receive {:DOWN, _, :process, ^chan2, {:shutdown, :disconnected}}
+        assert_receive {:DOWN, _, :process, ^chan1, {:shutdown, :closed}}
+        assert_receive {:DOWN, _, :process, ^chan2, {:shutdown, :closed}}
 
         poll(:get, "/ws", @vsn, session)
         assert resp.body["status"] == 410

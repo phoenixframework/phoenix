@@ -184,9 +184,9 @@ defmodule Phoenix.Socket.Transport do
   The message is represented as `{payload, options}`. It must
   return one of:
 
-    * `{:stop, state}` - stops the socket
     * `{:ok, state}` - continues the socket with no reply
-    * `{:reply, reply, state}` - continues the socket with reply
+    * `{:reply, status, reply, state}` - continues the socket with reply
+    * `{:stop, reason, state}` - stops the socket
 
   In the default `Phoenix.Socket` implementation, it calls the
   `decode!` function in serializer with the given options which
@@ -201,23 +201,23 @@ defmodule Phoenix.Socket.Transport do
   """
   @callback handle_in({message :: term, opts :: keyword}, state) ::
               {:ok, state}
-              | {:stop, state}
-              | {:reply, {opcode :: atom, message :: term}, state}
+              | {:reply, status :: atom, {opcode :: atom, message :: term}, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Handles info messages.
 
   The message is a term. It must return one of:
 
-    * `{:stop, state}` - stops the socket
     * `{:ok, state}` - continues the socket with no reply
     * `{:reply, reply, state}` - continues the socket with reply
+    * `{:stop, reason, state}` - stops the socket
 
   """
   @callback handle_info(message :: term, state) ::
               {:ok, state}
-              | {:stop, state}
-              | {:reply, {opcode :: atom, message :: term}, state}
+              | {:push, {opcode :: atom, message :: term}, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Invoked on termination.
@@ -231,6 +231,8 @@ defmodule Phoenix.Socket.Transport do
   require Logger
   alias Phoenix.Socket
   alias Phoenix.Socket.{Reply, Message}
+
+  ## TODO: DEPRECATED
 
   @protocol_version "2.0.0"
 
@@ -390,6 +392,17 @@ defmodule Phoenix.Socket.Transport do
   def notify_graceful_exit(%Socket{topic: topic, join_ref: ref} = socket) do
     close_msg = %Message{join_ref: ref, ref: ref, topic: topic, event: "phx_close", payload: %{}}
     send(socket.transport_pid, {:graceful_exit, self(), close_msg})
+  end
+
+  ## END OF DEPRECATED
+
+  @doc """
+  Runs the code reloader if enabled.
+  """
+  def code_reload(conn, endpoint, opts) do
+    reload? = Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader))
+    reload? && Phoenix.CodeReloader.reload!(endpoint)
+    conn
   end
 
   @doc """

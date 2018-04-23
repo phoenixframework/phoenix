@@ -21,7 +21,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   use GenServer
 
   alias Phoenix.PubSub
-  alias Phoenix.Socket.{Transport, Broadcast}
+  alias Phoenix.Socket.Transport
 
   @doc """
   Starts the Server.
@@ -45,76 +45,46 @@ defmodule Phoenix.Transports.LongPoll.Server do
             serializer, params, window_ms, priv_topic]) do
     case Transport.connect(endpoint, handler, transport_name, transport, serializer, params) do
       {:ok, state} ->
-        {:ok, {_, socket}} = handler.init(state)
+        {:ok, state} = handler.init(state)
 
-        state = %{buffer: [],
-                  socket: socket,
-                  channels: %{},
-                  channels_inverse: %{},
-                  window_ms: trunc(window_ms * 1.5),
-                  pubsub_server: endpoint.__pubsub_server__(),
-                  priv_topic: priv_topic,
-                  last_client_poll: now_ms(),
-                  serializer: socket.serializer,
-                  client_ref: nil}
+        state = %{
+          buffer: [],
+          handler: {handler, state},
+          window_ms: trunc(window_ms * 1.5),
+          pubsub_server: endpoint.__pubsub_server__(),
+          priv_topic: priv_topic,
+          last_client_poll: now_ms(),
+          client_ref: nil
+        }
 
         :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
-
         schedule_inactive_shutdown(state.window_ms)
-
         {:ok, state}
       :error ->
         :ignore
     end
   end
 
-  def handle_call(:stop, _from, state), do: {:stop, :shutdown, :ok, state}
+  def handle_info({:dispatch, client_ref, body, ref}, state) do
+    %{handler: {handler, handler_state}} = state
 
-  # Handle client dispatches
-  def handle_info({:dispatch, client_ref, msg, ref}, state) do
-    msg
-    |> Transport.dispatch(state.channels, state.socket)
-    |> case do
-      {:joined, channel_pid, reply_msg} ->
-        monitor_ref = Process.monitor(channel_pid)
-        broadcast_from!(state, client_ref, {:dispatch, ref})
-        new_state = %{state | channels: Map.put(state.channels, msg.topic, {channel_pid, monitor_ref}),
-                              channels_inverse: Map.put(state.channels_inverse, channel_pid, {msg.topic, msg.ref})}
-        publish_reply(reply_msg, new_state)
+    case handler.handle_in({body, []}, handler_state) do
+      {:reply, status, {_, reply}, handler_state} ->
+        state = %{state | handler: {handler, handler_state}}
+        status = if status == :ok, do: :ok, else: :error
+        broadcast_from!(state, client_ref, {status, ref})
+        publish_reply(state, reply)
 
-      {:reply, reply_msg} ->
-        broadcast_from!(state, client_ref, {:dispatch, ref})
-        publish_reply(reply_msg, state)
-
-      :noreply ->
-        broadcast_from!(state, client_ref, {:dispatch, ref})
+      {:ok, handler_state} ->
+        state = %{state | handler: {handler, handler_state}}
+        broadcast_from!(state, client_ref, {:ok, ref})
         {:noreply, state}
 
-      {:error, reason, error_reply_msg} ->
-        broadcast_from!(state, client_ref, {:error, reason, ref})
-        publish_reply(error_reply_msg, state)
+      {:stop, reason, handler_state} ->
+        state = %{state | handler: {handler, handler_state}}
+        broadcast_from!(state, client_ref, {:error, ref})
+        {:stop, reason, state}
     end
-  end
-
-  # Detects disconnect broadcasts and shuts down
-  def handle_info(%Broadcast{event: "disconnect"}, state) do
-    {:stop, {:shutdown, :disconnected}, state}
-  end
-
-  def handle_info({:DOWN, _, _, channel_pid, reason}, state) do
-    case Map.get(state.channels_inverse, channel_pid) do
-      nil ->
-        {:noreply, state}
-      {topic, join_ref} ->
-        new_state = delete(state, topic, channel_pid)
-        msg = Transport.on_exit_message(topic, join_ref, reason)
-        publish_reply(msg, new_state)
-    end
-  end
-
-  def handle_info({:graceful_exit, channel_pid, %Phoenix.Socket.Message{} = msg}, state) do
-    new_state = delete(state, msg.topic, channel_pid)
-    publish_reply(msg, new_state)
   end
 
   def handle_info({:subscribe, client_ref, ref}, state) do
@@ -141,12 +111,27 @@ defmodule Phoenix.Transports.LongPoll.Server do
     end
   end
 
-  def handle_info({:socket_push, :text, encoded}, state) do
-    notify_client_now_available(state)
-    {:noreply, %{state | buffer: [encoded | state.buffer]}}
+  def handle_info(message, state) do
+    %{handler: {handler, handler_state}} = state
+
+    case handler.handle_info(message, handler_state) do
+      {:push, {_, reply}, handler_state} ->
+        state = %{state | handler: {handler, handler_state}}
+        publish_reply(state, reply)
+
+      {:ok, handler_state} ->
+        state = %{state | handler: {handler, handler_state}}
+        {:noreply, state}
+
+      {:stop, reason, handler_state} ->
+        state = %{state | handler: {handler, handler_state}}
+        {:stop, reason, state}
+    end
   end
 
-  def terminate(_reason, _state) do
+  def terminate(reason, state) do
+    %{handler: {handler, handler_state}} = state
+    handler.terminate(reason, handler_state)
     :ok
   end
 
@@ -155,19 +140,15 @@ defmodule Phoenix.Transports.LongPoll.Server do
   defp broadcast_from!(_state, client_ref, msg) when is_pid(client_ref),
     do: send(client_ref, msg)
 
-  defp publish_reply(msg, state) do
+  defp publish_reply(state, reply) do
     notify_client_now_available(state)
-    {:socket_push, :text, encoded} = state.serializer.encode!(msg)
-
-    {:noreply, %{state | buffer: [encoded | state.buffer]}}
+    {:noreply, update_in(state.buffer, &[reply | &1])}
   end
 
   defp notify_client_now_available(state) do
     case state.client_ref do
-      {client_ref, ref} ->
-        broadcast_from!(state, client_ref, {:now_available, ref})
-      nil ->
-        :ok
+      {client_ref, ref} -> broadcast_from!(state, client_ref, {:now_available, ref})
+      nil -> :ok
     end
   end
 
@@ -175,16 +156,5 @@ defmodule Phoenix.Transports.LongPoll.Server do
 
   defp schedule_inactive_shutdown(window_ms) do
     Process.send_after(self(), :shutdown_if_inactive, window_ms)
-  end
-
-  defp delete(state, topic, channel_pid) do
-    case Map.fetch(state.channels, topic) do
-      {:ok, {^channel_pid, ref}} ->
-        Process.demonitor(ref, [:flush])
-        %{state | channels: Map.delete(state.channels, topic),
-                  channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
-      {:ok, _newer} ->
-        %{state | channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
-    end
   end
 end

@@ -71,8 +71,8 @@ defmodule Phoenix.Transports.WebSocket do
   def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport, opts}) do
     conn =
       conn
-      |> code_reload(opts, endpoint)
       |> fetch_query_params()
+      |> Transport.code_reload(endpoint, opts)
       |> Transport.transport_log(opts[:transport_log])
       |> Transport.force_ssl(handler, endpoint, opts)
       |> Transport.check_origin(handler, endpoint, opts)
@@ -97,12 +97,5 @@ defmodule Phoenix.Transports.WebSocket do
   def init(conn, _) do
     conn = send_resp(conn, 400, "")
     {:error, conn}
-  end
-
-  defp code_reload(conn, opts, endpoint) do
-    reload? = Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader))
-    if reload?, do: Phoenix.CodeReloader.reload!(endpoint)
-
-    conn
   end
 end
