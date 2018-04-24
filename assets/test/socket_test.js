@@ -632,7 +632,9 @@ describe("onConnClose", () => {
   it("schedules reconnectTimer timeout", () => {
     const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
 
-    socket.onConnClose()
+    const event = new Event("onClose", { code: 1000 })
+
+    socket.onConnClose(event)
 
     assert.ok(spy.calledOnce)
   })
