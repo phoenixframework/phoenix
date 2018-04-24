@@ -98,10 +98,10 @@ defmodule Phoenix.Integration.LongPollTest do
   end
 
   setup config do
-    supervisor = Module.concat(Endpoint, "LongPoll.Supervisor")
-    for {_, pid, _, _} <- Supervisor.which_children(supervisor) do
-      Supervisor.terminate_child(supervisor, pid)
+    for {_, pid, _, _} <- Supervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
+      Supervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
     end
+
     {:ok, topic: "room:" <> to_string(config.test)}
   end
 

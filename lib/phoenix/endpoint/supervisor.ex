@@ -71,13 +71,10 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   # TODO v1.4: Handlers -> Phoenix.Server
-  # TODO v1.4: Each transport should have its own tree
   defp server_children(mod, conf, server?) do
     if server? do
       server = Module.concat(mod, "Server")
-      long_poll = Module.concat(mod, "LongPoll.Supervisor")
-      [supervisor(Phoenix.Endpoint.Handler, [conf[:otp_app], mod, [name: server]]),
-       supervisor(Phoenix.Transports.LongPoll.Supervisor, [[name: long_poll]])]
+      [supervisor(Phoenix.Endpoint.Handler, [conf[:otp_app], mod, [name: server]])]
     else
       []
     end

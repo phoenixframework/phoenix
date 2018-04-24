@@ -136,9 +136,8 @@ defmodule Phoenix.Transports.LongPoll do
       <> (System.system_time(:milliseconds) |> Integer.to_string)
 
     arg = {endpoint, handler, opts, conn.params, priv_topic}
-    supervisor = Module.concat(endpoint, "LongPoll.Supervisor")
 
-    case Supervisor.start_child(supervisor, [arg]) do
+    case Supervisor.start_child(Phoenix.Transports.LongPoll.Supervisor, [arg]) do
       {:ok, :undefined} ->
         conn |> put_status(:forbidden) |> status_json()
 
