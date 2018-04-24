@@ -156,6 +156,11 @@ defmodule Phoenix.MixProject do
         Phoenix.Logger,
       ],
 
+      "Testing": [
+        Phoenix.ChannelTest,
+        Phoenix.ConnTest,
+      ],
+
       "Socket And Transport": [
         Phoenix.Socket,
         Phoenix.Socket.Broadcast,
@@ -171,11 +176,6 @@ defmodule Phoenix.MixProject do
         Phoenix.Template.Engine,
         Phoenix.Template.ExsEngine,
         Phoenix.Template.HTML,
-      ],
-
-      "Testing": [
-        Phoenix.ChannelTest,
-        Phoenix.ConnTest,
       ],
     ]
   end

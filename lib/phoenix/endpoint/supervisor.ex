@@ -1,7 +1,6 @@
 defmodule Phoenix.Endpoint.Supervisor do
-  # This module contains the logic used by most functions
-  # in Phoenix.Endpoint as well the supervisor for starting
-  # the adapters/handlers.
+  # This module contains the logic used by most functions in Phoenix.Endpoint
+  # as well the supervisor for sockets, adapters, watchers, etc.
   @moduledoc false
 
   require Logger
