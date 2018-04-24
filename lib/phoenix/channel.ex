@@ -259,6 +259,7 @@ defmodule Phoenix.Channel do
   incoming events:
 
       use Phoenix.Channel, log_join: :info, log_handle_in: false
+
   """
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
@@ -359,7 +360,7 @@ defmodule Phoenix.Channel do
 
   @doc false
   def __on_definition__(env, :def, :handle_out, [event, _payload, _socket], _, _)
-    when is_binary(event) do
+      when is_binary(event) do
 
     unless event in Module.get_attribute(env.module, :phoenix_intercepts) do
       IO.write "#{Path.relative_to(env.file, File.cwd!)}:#{env.line}: [warning] " <>
@@ -367,7 +368,9 @@ defmodule Phoenix.Channel do
                "Add \"#{event}\" to your list of intercepted events with intercept/1"
     end
   end
+
   def __on_definition__(_env, _kind, _name, _args, _guards, _body) do
+    :ok
   end
 
   @doc """

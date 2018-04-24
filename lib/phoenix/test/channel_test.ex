@@ -235,7 +235,7 @@ defmodule Phoenix.ChannelTest do
     build_socket(nil, id, assigns, __CALLER__)
   end
 
-  # TODO: Remove this alongside the deprecations above.
+  # TODO v2: Remove this alongside the deprecations above.
   defp first_socket!(endpoint) do
     case endpoint.__sockets__ do
       [] -> raise ArgumentError, "#{inspect endpoint} has no socket declaration"

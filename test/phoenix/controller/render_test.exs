@@ -146,16 +146,6 @@ defmodule Phoenix.Controller.RenderTest do
     assert conn.resp_body == ~s({"foo":"bar"})
   end
 
-  test "render/4 renders with View and Template" do
-    assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
-      conn = put_format(conn(), "html")
-      conn = put_in conn.private[:phoenix_action], :index
-      conn = put_view(conn, nil)
-      conn = render(conn, MyApp.UserView, "index.html", title: "Hello")
-      assert conn.resp_body == "Hello"
-    end) =~ "render/4 with a view is deprecated"
-  end
-
   test "errors when rendering without format" do
     assert_raise RuntimeError, ~r/cannot render template :index because conn.params/, fn ->
       render(conn(), :index)

@@ -206,6 +206,7 @@ defmodule Phoenix.Socket do
 
       @doc false
       def child_spec(_) do
+        # TODO: Receive socket options here, start a tree of supervisors.
         Phoenix.Socket.__child_spec__(__MODULE__, unquote(Macro.escape(opts)))
       end
 
@@ -290,8 +291,8 @@ defmodule Phoenix.Socket do
   defp tear_alias(other), do: other
 
   # TODO: Deprecate custom transports.
-  # TODO: We can remove the implementation on v1.5 but
-  # we should always keep transport/3 for backwards compatibility.
+  # TODO: We can remove the implementation on v1.5 but we should
+  # always keep transport/3 as a no-op for backwards compatibility.
 
   @doc false
   defmacro transport(name, module, config \\ []) do
@@ -312,7 +313,7 @@ defmodule Phoenix.Socket do
 
     Map.update(transports, name, {module, conf}, fn {dup_module, _} ->
       raise ArgumentError,
-        "duplicate transports (#{inspect dup_module} and #{inspect module}) defined for #{inspect name}."
+        "duplicate transports (#{inspect dup_module} and #{inspect module}) defined for #{inspect name}"
     end)
   end
   defp merge_defaults(conf, defaults), do: Keyword.merge(defaults, conf)

@@ -1,4 +1,5 @@
 defmodule Phoenix.Channel.Server do
+  @moduledoc false
   use GenServer
 
   require Logger
@@ -7,8 +8,6 @@ defmodule Phoenix.Channel.Server do
   alias Phoenix.PubSub
   alias Phoenix.Socket
   alias Phoenix.Socket.{Broadcast, Message, Reply}
-
-  @moduledoc false
 
   ## Transport API
 

@@ -120,10 +120,7 @@ defmodule Phoenix.ConnTest do
   """
   @spec conn() :: Conn.t
   def conn() do
-    IO.write :stderr, """
-    warning: using conn/0 to build a connection is deprecated. Use build_conn/0 instead.
-    #{Exception.format_stacktrace}
-    """
+    IO.warn "using conn/0 to build a connection is deprecated. Use build_conn/0 instead"
     build_conn()
   end
 
