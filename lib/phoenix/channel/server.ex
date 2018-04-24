@@ -63,6 +63,7 @@ defmodule Phoenix.Channel.Server do
   @doc """
   Gets the socket from the channel.
   """
+  @spec socket(pid) :: Socket.t
   def socket(pid) do
     GenServer.call(pid, :socket)
   end
@@ -73,6 +74,7 @@ defmodule Phoenix.Channel.Server do
   This event is synchronous as we want to guarantee
   proper termination of the channels.
   """
+  @spec close([pid], timeout) :: :ok
   def close(pids, timeout \\ 5000)
 
   def close([], _timeout) do
@@ -240,9 +242,10 @@ defmodule Phoenix.Channel.Server do
   @doc false
   def init({socket, auth_payload, parent, ref}) do
     _ = Process.monitor(socket.transport_pid)
+    %{channel: channel, topic: topic} = socket
     socket = %{socket | channel_pid: self()}
 
-    case socket.channel.join(socket.topic, auth_payload, socket) do
+    case channel.join(topic, auth_payload, socket) do
       {:ok, socket} ->
         init(socket, %{}, parent, ref)
       {:ok, reply, socket} ->
@@ -263,18 +266,9 @@ defmodule Phoenix.Channel.Server do
     end
   end
 
-  @doc false
-  def code_change(old, socket, extra) do
-    socket.channel.code_change(old, socket, extra)
-  end
-
   defp init(socket, reply, parent, ref) do
-    PubSub.subscribe(socket.pubsub_server, socket.topic,
-      link: true,
-      fastlane: {socket.transport_pid,
-                 socket.serializer,
-                 socket.channel.__intercepts__()})
-
+    fastlane = {socket.transport_pid, socket.serializer, socket.channel.__intercepts__()}
+    PubSub.subscribe(socket.pubsub_server, socket.topic, link: true, fastlane: fastlane)
     send(parent, {ref, reply})
     {:ok, %{socket | joined: true}}
   end
@@ -286,12 +280,12 @@ defmodule Phoenix.Channel.Server do
 
   @doc false
   def handle_cast(:close, socket) do
-    handle_result({:stop, {:shutdown, :closed}, socket}, :handle_in)
+    handle_result({:stop, {:shutdown, :closed}, socket}, :handle_cast)
   end
 
   @doc false
   def handle_info(%Message{topic: topic, event: "phx_leave", ref: ref}, %{topic: topic} = socket) do
-    handle_result({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)}, :handle_in)
+    handle_in({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)})
   end
 
   def handle_info(%Message{topic: topic, event: event, payload: payload, ref: ref},
@@ -300,7 +294,7 @@ defmodule Phoenix.Channel.Server do
       %{ref: ref, event: event, params: payload, socket: socket}, fn ->
       event
       |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
-      |> handle_result(:handle_in)
+      |> handle_in()
     end
   end
 
@@ -312,18 +306,43 @@ defmodule Phoenix.Channel.Server do
   end
 
   def handle_info({:DOWN, _, _, transport_pid, reason}, %{transport_pid: transport_pid} = socket) do
-    {:stop, reason, socket}
+    handle_result({:stop, reason, socket}, :handle_info)
   end
 
-  def handle_info(msg, socket) do
-    msg
-    |> socket.channel.handle_info(socket)
-    |> handle_result(:handle_info)
+  def handle_info(msg, %{channel: channel} = socket) do
+    if function_exported?(channel, :handle_info, 2) do
+      msg
+      |> socket.channel.handle_info(socket)
+      |> handle_result(:handle_info)
+    else
+      proc =
+        case Process.info(self(), :registered_name) do
+          {_, []}   -> self()
+          {_, name} -> name
+        end
+
+      :error_logger.warning_msg('~p ~p received unexpected message in handle_info/2: ~p~n',
+                                [__MODULE__, proc, msg])
+      {:noreply, socket}
+    end
   end
 
   @doc false
-  def terminate(reason, socket) do
-    socket.channel.terminate(reason, socket)
+  def code_change(old, %{channel: channel} = socket, extra) do
+    if function_exported?(channel, :code_change, 3) do
+      channel.code_change(old, socket, extra)
+    else
+      {:ok, socket}
+    end
+  end
+
+  @doc false
+  def terminate(reason, %{channel: channel} = socket) do
+    if function_exported?(channel, :terminate, 2) do
+      channel.terminate(reason, socket)
+    else
+      :ok
+    end
   end
 
   @doc false
@@ -361,30 +380,7 @@ defmodule Phoenix.Channel.Server do
     end)
   end
 
-  @doc false
-  # TODO: Revisit in future GenServer releases
-  def unhandled_handle_info(msg, state) do
-    proc =
-      case Process.info(self(), :registered_name) do
-        {_, []}   -> self()
-        {_, name} -> name
-      end
-    :error_logger.warning_msg('~p ~p received unexpected message in handle_info/2: ~p~n',
-                              [__MODULE__, proc, msg])
-    {:noreply, state}
-  end
-
   ## Handle results
-
-  defp handle_result({:reply, reply, %Socket{} = socket}, callback) do
-    handle_reply(socket, reply, callback)
-    {:noreply, put_in(socket.ref, nil)}
-  end
-
-  defp handle_result({:stop, reason, reply, socket}, callback) do
-    handle_reply(socket, reply, callback)
-    handle_result({:stop, reason, socket}, callback)
-  end
 
   defp handle_result({:stop, reason, socket}, _callback) do
     case reason do
@@ -432,20 +428,39 @@ defmodule Phoenix.Channel.Server do
     """
   end
 
-  ## Handle replies
+  defp notify_transport_of_graceful_exit(socket) do
+    %{topic: topic, join_ref: ref, transport_pid: transport_pid} = socket
+    close_msg = %Message{join_ref: ref, ref: ref, topic: topic, event: "phx_close", payload: %{}}
+    send(transport_pid, {:graceful_exit, self(), close_msg})
+    :ok
+  end
 
-  defp handle_reply(socket, {status, payload}, :handle_in)
-       when is_atom(status) and is_map(payload) do
+  ## Handle in/replies
 
+  defp handle_in({:reply, reply, %Socket{} = socket}) do
+    handle_reply(socket, reply)
+    {:noreply, put_in(socket.ref, nil)}
+  end
+
+  defp handle_in({:stop, reason, reply, socket}) do
+    handle_reply(socket, reply)
+    handle_result({:stop, reason, socket}, :handle_in)
+  end
+
+  defp handle_in(other) do
+    handle_result(other, :handle_in)
+  end
+
+  defp handle_reply(socket, {status, payload}) when is_atom(status) and is_map(payload) do
     reply(socket.transport_pid, socket.join_ref, socket.ref, socket.topic, {status, payload},
           socket.serializer)
   end
 
-  defp handle_reply(socket, status, :handle_in) when is_atom(status) do
-    handle_reply(socket, {status, %{}}, :handle_in)
+  defp handle_reply(socket, status) when is_atom(status) do
+    handle_reply(socket, {status, %{}})
   end
 
-  defp handle_reply(_socket, reply, :handle_in) do
+  defp handle_reply(_socket, reply) do
     raise """
     Channel replies from `handle_in/3` are expected to be one of:
 
@@ -460,19 +475,5 @@ defmodule Phoenix.Channel.Server do
 
     got #{inspect reply}
     """
-  end
-
-  defp handle_reply(_socket, _reply, _other) do
-    raise """
-    Channel replies can only be sent from a `handle_in/3` callback.
-    Use `push/3` to send an out-of-band message down the socket
-    """
-  end
-
-  defp notify_transport_of_graceful_exit(socket) do
-    %{topic: topic, join_ref: ref, transport_pid: transport_pid} = socket
-    close_msg = %Message{join_ref: ref, ref: ref, topic: topic, event: "phx_close", payload: %{}}
-    send(transport_pid, {:graceful_exit, self(), close_msg})
-    :ok
   end
 end
