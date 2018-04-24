@@ -151,8 +151,8 @@ defmodule Phoenix.MixProject do
       "Endpoint And Plugs": [
         Phoenix.CodeReloader,
         Phoenix.Endpoint,
-        Phoenix.Endpoint.CowboyHandler,
-        Phoenix.Endpoint.Handler,
+        Phoenix.Endpoint.CowboyAdapter,
+        Phoenix.Endpoint.Cowboy2Adapter,
         Phoenix.Logger,
       ],
 

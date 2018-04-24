@@ -14,16 +14,9 @@ defmodule Phoenix.Integration.LongPollTest do
   @port 5808
   @pool_size 1
 
-  handler =
-    case Application.spec(:cowboy, :vsn) do
-      [?2 | _] -> Phoenix.Endpoint.Cowboy2Handler
-      _ -> Phoenix.Endpoint.CowboyHandler
-    end
-
   Application.put_env(:phoenix, Endpoint, [
     https: false,
     http: [port: @port],
-    handler: handler,
     secret_key_base: String.duplicate("abcdefgh", 8),
     server: true,
     pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__, pool_size: @pool_size]

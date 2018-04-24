@@ -6,6 +6,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   require Logger
   use Supervisor
+  alias Phoenix.Endpoint.{CowboyAdapter, Cowboy2Adapter}
 
   @doc """
   Starts the endpoint supervision tree.
@@ -40,7 +41,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       pubsub_children(mod, conf) ++
       socket_children(mod, conf) ++
       config_children(mod, conf, otp_app) ++
-      server_children(mod, conf, server?) ++
+      server_children(mod, conf, otp_app, server?) ++
       watcher_children(mod, conf, server?)
 
     # Supervisor.init(children, strategy: :one_for_one)
@@ -70,15 +71,72 @@ defmodule Phoenix.Endpoint.Supervisor do
     [worker(Phoenix.Config, args)]
   end
 
-  # TODO v1.4: Handlers -> Phoenix.Server
-  defp server_children(mod, conf, server?) do
+  defp server_children(mod, config, otp_app, server?) do
     if server? do
-      server = Module.concat(mod, "Server")
-      [supervisor(Phoenix.Endpoint.Handler, [conf[:otp_app], mod, [name: server]])]
+      user_adapter = user_adapter(mod, config)
+      autodetected_adapter = cowboy_version_adapter()
+      warn_on_different_adapter_version(user_adapter, autodetected_adapter, mod)
+      adapter = user_adapter || autodetected_adapter
+
+      for {scheme, port} <- [http: 4000, https: 4040], opts = config[scheme] do
+        port = :proplists.get_value(:port, opts, port)
+
+        unless port do
+          raise "server can't start because :port in #{scheme} config is nil, " <>
+                  "please use a valid port number"
+        end
+
+        opts = [port: port_to_integer(port), otp_app: otp_app] ++ :proplists.delete(:port, opts)
+        adapter.child_spec(scheme, mod, opts)
+      end
     else
       []
     end
   end
+
+  defp user_adapter(endpoint, config) do
+    case config[:handler] do
+      nil ->
+        config[:adapter]
+
+      Phoenix.Endpoint.CowboyHandler ->
+        Logger.warn "Phoenix.Endpoint.CowboyHandler is deprecated, please use Phoenix.Endpoint.CowboyAdapter instead"
+        CowboyAdapter
+
+      other ->
+        Logger.warn "The :handler option in #{inspect endpoint} is deprecated, please use :adapter instead"
+        other
+    end
+  end
+
+  defp cowboy_version_adapter() do
+    case Application.spec(:cowboy, :vsn) do
+      [?1 | _] -> CowboyAdapter
+      _ -> Cowboy2Adapter
+    end
+  end
+
+  defp warn_on_different_adapter_version(CowboyAdapter, Cowboy2Adapter, endpoint) do
+    Logger.warn("""
+    You have specified #{inspect CowboyAdapter} for Cowboy v1.x \
+    in the :adapter configuration of your Phoenix endpoint #{inspect endpoint} \
+    but your mix.exs has fetched Cowboy v2.x.
+
+    If you wish to use Cowboy 1, please update mix.exs to point to the \
+    correct Cowboy version:
+
+        {:cowboy, "~> 1.0"}
+
+    If you want to use Cowboy 2, then please remove the :adapter option \
+    in your config.exs file or set it to:
+
+        adapter: Phoenix.Endpoint.Cowboy2Adapter
+
+    """)
+
+    raise "aborting due to adapter mismatch"
+  end
+  defp warn_on_different_adapter_version(_user, _autodetected, _endpoint), do: :ok
 
   defp watcher_children(_mod, conf, server?) do
     if server? do

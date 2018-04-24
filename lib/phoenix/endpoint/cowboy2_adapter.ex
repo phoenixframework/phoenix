@@ -1,19 +1,15 @@
-defmodule Phoenix.Endpoint.CowboyHandler do
+defmodule Phoenix.Endpoint.Cowboy2Adapter do
   @moduledoc """
-  The Cowboy adapter for Phoenix.
+  The Cowboy2 adapter for Phoenix.
 
   It implements the required `child_spec/3` function as well
-  as the handler for the WebSocket transport.
+  as WebSocket transport functionality.
 
   ## Custom dispatch options
 
-  *NOTE*: This feature depends on the internals of Cowboy 1.0 API
-  and how it integrates with Phoenix. Those may change at *any time*,
-  without backwards compatibility, specifically when Cowboy 2.0 is released.
-
   You can provide custom dispatch options in order to use Phoenix's
   builtin Cowboy server with custom handlers. For example, to handle
-  raw WebSockets [as shown in Cowboy's docs](https://github.com/ninenines/cowboy/tree/1.0.x/examples)).
+  raw WebSockets [as shown in Cowboy's docs](https://github.com/ninenines/cowboy/tree/2.0.x/examples)).
 
   The options are passed to both `:http` and `:https` keys in the
   endpoint configuration. However, once you pass your custom dispatch
@@ -25,7 +21,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     * Per websocket transport:
 
       ```
-      {"/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
+      {"/socket/websocket", Phoenix.Endpoint.Cowboy2WebSocket,
         {Phoenix.Transports.WebSocket,
           {MyAppWeb.Endpoint, MyAppWeb.UserSocket, :websocket}}}
       ```
@@ -33,7 +29,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     * Per longpoll transport:
 
       ```
-      {"/socket/long_poll", Plug.Adapters.Cowboy.Handler,
+      {"/socket/long_poll", Plug.Adapters.Cowboy2.Handler,
         {Phoenix.Transports.LongPoll,
           {MyAppWeb.Endpoint, MyAppWeb.UserSocket, :longpoll}}}
       ```
@@ -41,7 +37,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     * For the live-reload websocket:
 
       ```
-      {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
+      {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.Cowboy2WebSocket,
         {Phoenix.Transports.WebSocket,
           {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}}
       ```
@@ -52,7 +48,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     * For the endpoint:
 
       ```
-      {:_, Plug.Adapters.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
+      {:_, Plug.Adapters.Cowboy2.Handler, {MyAppWeb.Endpoint, []}}
       ```
 
   For example:
@@ -62,10 +58,10 @@ defmodule Phoenix.Endpoint.CowboyHandler do
                 {:_, [
                     {"/foo", MyAppWeb.CustomHandler, []},
                     {"/bar", MyAppWeb.AnotherHandler, []},
-                    {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
+                    {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.Cowboy2WebSocket,
                       {Phoenix.Transports.WebSocket,
                         {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}},
-                    {:_, Plug.Adapters.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
+                    {:_, Plug.Adapters.Cowboy2.Handler, {MyAppWeb.Endpoint, []}}
                   ]}]]
 
   Note: if you reconfigure HTTP options in `MyAppWeb.Endpoint.init/1`,
@@ -74,12 +70,10 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   It is also important to specify your handlers first, otherwise
   Phoenix will intercept the requests before they get to your handler.
   """
-  @behaviour Phoenix.Endpoint.Handler
+
   require Logger
 
-  @doc """
-  Generates a childspec to be used in the supervision tree.
-  """
+  @doc false
   def child_spec(scheme, endpoint, config) do
     if scheme == :https do
       Application.ensure_all_started(:ssl)
@@ -96,26 +90,18 @@ defmodule Phoenix.Endpoint.CowboyHandler do
                {module, {endpoint, socket, config}}}
 
     dispatches =
-      dispatches ++ [{:_, Plug.Adapters.Cowboy.Handler, {endpoint, []}}]
+      dispatches ++ [{:_, Plug.Adapters.Cowboy2.Handler, {endpoint, []}}]
 
-    # Use put_new to allow custom dispatches
     config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
-
-    {ref, mfa, type, timeout, kind, modules} =
-      Plug.Adapters.Cowboy.child_spec(scheme, endpoint, [], config)
-
-    # Rewrite MFA for proper error reporting
-    mfa = {__MODULE__, :start_link, [scheme, endpoint, mfa]}
-    {ref, mfa, type, timeout, kind, modules}
+    spec = Plug.Adapters.Cowboy2.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
+    update_in spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]}
   end
 
-  defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy.Handler
-  defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.CowboyWebSocket
+  defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy2.Handler
+  defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.Cowboy2WebSocket
   defp default_for(_), do: nil
 
-  @doc """
-  Callback to start the Cowboy endpoint.
-  """
+  @doc false
   def start_link(scheme, endpoint, {m, f, [ref | _] = a}) do
     # ref is used by Ranch to identify its listeners, defaulting
     # to plug.HTTP and plug.HTTPS and overridable by users.
@@ -136,6 +122,6 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   defp info(scheme, endpoint, ref) do
     {addr, port} = :ranch.get_addr(ref)
     addr_str = :inet.ntoa(addr)
-    "Running #{inspect endpoint} with Cowboy using #{scheme}://#{addr_str}:#{port}"
+    "Running #{inspect endpoint} with Cowboy2 using #{scheme}://#{addr_str}:#{port}"
   end
 end

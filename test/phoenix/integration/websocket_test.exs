@@ -12,19 +12,12 @@ defmodule Phoenix.Integration.WebSocketTest do
   @moduletag :capture_log
   @port 5807
 
-  handler =
-    case Application.spec(:cowboy, :vsn) do
-      [?2 | _] -> Phoenix.Endpoint.Cowboy2Handler
-      _ -> Phoenix.Endpoint.CowboyHandler
-    end
-
   Application.put_env(:phoenix, Endpoint, [
     https: false,
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
     debug_errors: false,
     server: true,
-    handler: handler,
     pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__]
   ])
 
