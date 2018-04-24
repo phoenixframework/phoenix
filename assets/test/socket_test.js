@@ -629,10 +629,20 @@ describe("onConnClose", () => {
     socket.connect()
   })
 
-  it("schedules reconnectTimer timeout", () => {
-    const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
+  it('does not schedules reconnectTimer timeout if normal close', () => {
+    const spy = sinon.spy(socket.reconnectTimer, 'scheduleTimeout')
 
-    const event = new Event("onClose", { code: 1000 })
+    const event = { code: 1000 }
+
+    socket.onConnClose(event)
+
+    assert.ok(spy.notCalled)
+  })
+
+  it('schedules reconnectTimer timeout if not normal close', () => {
+    const spy = sinon.spy(socket.reconnectTimer, 'scheduleTimeout')
+
+    const event = { code: 1001 }
 
     socket.onConnClose(event)
 
