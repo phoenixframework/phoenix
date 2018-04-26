@@ -98,10 +98,14 @@ defmodule Phoenix.Socket.Transport do
     * `{:reply, status, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
 
+  The `reply` is a tuple contain an `opcode` atom and a message that can
+  be any term. The built-in websocket transport supports both `:text` and
+  `:binary` opcode and the message must be always iodata. Long polling only
+  supports text opcode.
   """
   @callback handle_in({message :: term, opts :: keyword}, state) ::
               {:ok, state}
-              | {:reply, status :: atom, {opcode :: atom, message :: term}, state}
+              | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
               | {:stop, reason :: term, state}
 
   @doc """
@@ -110,9 +114,13 @@ defmodule Phoenix.Socket.Transport do
   The message is a term. It must return one of:
 
     * `{:ok, state}` - continues the socket with no reply
-    * `{:reply, reply, state}` - continues the socket with reply
+    * `{:push, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
 
+  The `reply` is a tuple contain an `opcode` atom and a message that can
+  be any term. The built-in websocket transport supports both `:text` and
+  `:binary` opcode and the message must be always iodata. Long polling only
+  supports text opcode.
   """
   @callback handle_info(message :: term, state) ::
               {:ok, state}
