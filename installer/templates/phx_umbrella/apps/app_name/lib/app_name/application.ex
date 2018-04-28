@@ -5,7 +5,6 @@ defmodule <%= app_module %>.Application do
 
   use Application
 
-  @impl true
   def start(_type, _args) do<%= if ecto do %>
     Supervisor.start_link([
       <%= app_module %>.Repo,
