@@ -125,9 +125,19 @@ defmodule Phoenix.View do
   the template to also be looked up at `Path.join(root, "user")`.
   """
   defmacro __using__(opts) do
+    %{module: module} = __CALLER__
+
+    if Module.get_attribute(module, :view_resource) do
+      raise ArgumentError,
+            "use Phoenix.View is being called twice in the module #{module}. " <>
+              "Make sure to call it only per module"
+    else
+      view_resource = String.to_atom(Phoenix.Naming.resource_name(module, "View"))
+      Module.put_attribute(module, :view_resource, view_resource)
+    end
+
     quote do
       import Phoenix.View
-
       use Phoenix.Template, Phoenix.View.__template_options__(__MODULE__, unquote(opts))
 
       @before_compile Phoenix.View
