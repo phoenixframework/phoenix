@@ -106,7 +106,7 @@ Buildpack added. Next release on mysterious-meadow-6277 will use:
 Run `git push heroku master` to create a new release using these buildpacks.
 ```
 
-This phoenix static buildpack pack can be configured to change the node version and compile options. Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details, including setting the node and npm versions. We will override the compile options here.
+This phoenix static buildpack pack can be configured to change the node version and compile options. Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. We will override the compile options here.
 
 Create a config file named `phoenix_static_buildpack.config` in the root directory for your project with the following:
 
