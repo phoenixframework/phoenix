@@ -34,6 +34,14 @@ defmodule Phoenix.Transports.WebSocket do
     * `:code_reloader` - optionally override the default `:code_reloader` value
       from the socket's endpoint
 
+    * `:conn_fields` - optionally copy extra fields from the conn to the params
+      for use in connecting the socket.
+
+      For example, if you need access to the request headers, you can set
+      
+      conn_fields: [:req_header]
+
+
   ## Serializer
 
   By default, JSON encoding is used to broker messages to and from clients.
@@ -82,6 +90,7 @@ defmodule Phoenix.Transports.WebSocket do
       conn
       |> code_reload(opts, endpoint)
       |> fetch_query_params()
+      |> copy_conn_fields(opts)
       |> Transport.transport_log(opts[:transport_log])
       |> Transport.force_ssl(handler, endpoint, opts)
       |> Transport.check_origin(handler, endpoint, opts)
@@ -211,5 +220,18 @@ defmodule Phoenix.Transports.WebSocket do
     if reload?, do: Phoenix.CodeReloader.reload!(endpoint)
 
     conn
+  end
+
+  defp copy_conn_fields(conn, opts) do
+    Keyword.get(opts, :conn_fields)
+    |> Enum.reduce(conn, fn(field, conn) -> 
+      case Map.get(conn, field) do
+        nil -> 
+          conn
+
+        value ->
+          %{conn | params: Map.put_new(conn.params, field, value)}
+      end
+    end)
   end
 end
