@@ -52,7 +52,7 @@ defmodule Phoenix.Channel do
   and broadcasting the message to all topic subscribers for this socket.
 
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
-        broadcast! socket, "new_msg", %{uid: uid, body: body}
+        broadcast!(socket, "new_msg", %{uid: uid, body: body})
         {:noreply, socket}
       end
 
@@ -60,7 +60,7 @@ defmodule Phoenix.Channel do
 
       # client asks for their current rank, push sent directly as a new event.
       def handle_in("current_rank", socket) do
-        push socket, "current_rank", %{val: Game.get_rank(socket.assigns[:user])}
+        push(socket, "current_rank", %{val: Game.get_rank(socket.assigns[:user])})
         {:noreply, socket}
       end
 
@@ -113,9 +113,9 @@ defmodule Phoenix.Channel do
       # for every socket subscribing to this topic, append an `is_editable`
       # value for client metadata.
       def handle_out("new_msg", msg, socket) do
-        push socket, "new_msg", Map.merge(msg,
+        push(socket, "new_msg", Map.merge(msg,
           %{is_editable: User.can_edit_message?(socket.assigns[:user], msg)}
-        )
+        ))
         {:noreply, socket}
       end
 
@@ -123,7 +123,7 @@ defmodule Phoenix.Channel do
       # is ignoring the user who joined.
       def handle_out("user_joined", msg, socket) do
         unless User.ignoring?(socket.assigns[:user], msg.user_id) do
-          push socket, "user_joined", msg
+          push(socket, "user_joined", msg)
         end
         {:noreply, socket}
       end
@@ -138,18 +138,18 @@ defmodule Phoenix.Channel do
       # within channel
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         ...
-        broadcast_from! socket, "new_msg", %{uid: uid, body: body}
-        MyApp.Endpoint.broadcast_from! self(), "room:superadmin",
-          "new_msg", %{uid: uid, body: body}
+        broadcast_from!(socket, "new_msg", %{uid: uid, body: body})
+        MyApp.Endpoint.broadcast_from!(self(), "room:superadmin",
+          "new_msg", %{uid: uid, body: body})
         {:noreply, socket}
       end
 
       # within controller
       def create(conn, params) do
         ...
-        MyApp.Endpoint.broadcast! "room:" <> rid, "new_msg", %{uid: uid, body: body}
-        MyApp.Endpoint.broadcast! "room:superadmin", "new_msg", %{uid: uid, body: body}
-        redirect conn, to: "/"
+        MyApp.Endpoint.broadcast!("room:" <> rid, "new_msg", %{uid: uid, body: body})
+        MyApp.Endpoint.broadcast!("room:superadmin", "new_msg", %{uid: uid, body: body})
+        redirect(conn, to: "/")
       end
 
   ## Terminate
@@ -245,7 +245,7 @@ defmodule Phoenix.Channel do
 
       alias Phoenix.Socket.Broadcast
       def handle_info(%Broadcast{topic: _, event: ev, payload: payload}, socket) do
-        push socket, ev, payload
+        push(socket, ev, payload)
         {:noreply, socket}
       end
 
@@ -346,9 +346,9 @@ defmodule Phoenix.Channel do
       intercept ["new_msg"]
 
       def handle_out("new_msg", payload, socket) do
-        push socket, "new_msg", Map.merge(payload,
+        push(socket, "new_msg", Map.merge(payload,
           is_editable: User.can_edit_message?(socket.assigns[:user], payload)
-        )
+        ))
         {:noreply, socket}
       end
 
@@ -384,7 +384,7 @@ defmodule Phoenix.Channel do
 
   ## Examples
 
-      iex> broadcast socket, "new_message", %{id: 1, content: "hello"}
+      iex> broadcast(socket, "new_message", %{id: 1, content: "hello"})
       :ok
 
   """
@@ -409,7 +409,7 @@ defmodule Phoenix.Channel do
 
   ## Examples
 
-      iex> broadcast_from socket, "new_message", %{id: 1, content: "hello"}
+      iex> broadcast_from(socket, "new_message", %{id: 1, content: "hello"})
       :ok
 
   """
@@ -433,7 +433,7 @@ defmodule Phoenix.Channel do
 
   ## Examples
 
-      iex> push socket, "new_message", %{id: 1, content: "hello"}
+      iex> push(socket, "new_message", %{id: 1, content: "hello"})
       :ok
 
   """
@@ -465,7 +465,7 @@ defmodule Phoenix.Channel do
       end
 
       def handle_info({:work_complete, result, ref}, socket) do
-        reply ref, {:ok, result}
+        reply(ref, {:ok, result})
         {:noreply, socket}
       end
 
@@ -509,7 +509,7 @@ defmodule Phoenix.Channel do
         end
 
         def handle_info(:after_join, socket) do
-          push socket, "feed", %{list: feed_items(socket)}
+          push(socket, "feed", %{list: feed_items(socket)})
           {:noreply, socket}
         end
     """

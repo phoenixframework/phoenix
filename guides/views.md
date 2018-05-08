@@ -73,7 +73,7 @@ Let's open up the `lib/hello_web/templates/page/index.html.eex` and locate this 
 
 ```html
 <div class="jumbotron">
-  <h2><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
+  <h2><%= gettext("Welcome to %{name}!", name: "Phoenix") %></h2>
   <p class="lead">A productive web framework that<br>does not compromise speed and maintainability.</p>
 </div>
 ```
@@ -82,9 +82,9 @@ Then let's add a line with a link back to the same page. (The objective is to se
 
 ```html
 <div class="jumbotron">
-  <h2><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
+  <h2><%= gettext("Welcome to %{name}!", name: "Phoenix") %></h2>
   <p class="lead">A productive web framework that<br>does not compromise speed and maintainability.</p>
-  <p><a href="<%= page_path @conn, :index %>">Link back to this page</a></p>
+  <p><a href="<%= page_path(@conn, :index) %>">Link back to this page</a></p>
 </div>
 ```
 
@@ -123,8 +123,7 @@ This is the message: <%= message() %>
 This doesn't correspond to any action in our controller, but we'll exercise it in an `iex` session. At the root of our project, we can run `iex -S mix`, and then explicitly render our template.
 
 ```console
-iex(1)> Phoenix.View.render(HelloWeb.PageView, "test.html",
-%{})
+iex(1)> Phoenix.View.render(HelloWeb.PageView, "test.html", %{})
   {:safe, [["" | "This is the message: "] | "Hello from the view!"]}
 ```
 As we can see, we're calling `render/3` with the individual view responsible for our test template, the name of our test template, and an empty map representing any data we might have wanted to pass in. The return value is a tuple beginning with the atom `:safe` and the resultant io list of the interpolated template. "Safe" here means that Phoenix has escaped the contents of our rendered template. Phoenix defines its own `Phoenix.HTML.Safe` protocol with implementations for atoms, bitstrings, lists, integers, floats, and tuples to handle this escaping for us as our templates are rendered into strings.
@@ -173,7 +172,7 @@ If we need only the rendered string, without the whole tuple, we can use the `re
 Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/templates/layout/app.html.eex`, just about in the middle of the `<body>`, we will see this.
 
 ```html
-<%= render @view_module, @view_template, assigns %>
+<%= render(@view_module, @view_template, assigns) %>
 ```
 
 This is where the view module and its template from the controller are rendered to a string and placed in the layout.
@@ -197,7 +196,7 @@ defmodule HelloWeb.ErrorView do
   # In case no render clause matches or no
   # template is found, let's render it as 500
   def template_not_found(_template, assigns) do
-    render "500.html", assigns
+    render("500.html", assigns)
   end
 end
 ```
@@ -289,13 +288,13 @@ defmodule HelloWeb.PageController do
   def show(conn, _params) do
     page = %{title: "foo"}
 
-    render conn, "show.json", page: page
+    render(conn, "show.json", page: page)
   end
 
   def index(conn, _params) do
     pages = [%{title: "foo"}, %{title: "bar"}]
 
-    render conn, "index.json", pages: pages
+    render(conn, "index.json", pages: pages)
   end
 end
 ```
@@ -320,7 +319,7 @@ defmodule HelloWeb.PageView do
 end
 ```
 
-In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. In our controller `show/2` function, `render conn, "show.json", page: page` will pattern match on the matching name and extension in the view's `render/2` functions. In other words, `render conn, "index.json", pages: pages` will call `render("index.json", %{pages: pages})`. The `render_many/3` function takes the data we want to respond with (`pages`), a `View`, and a string to pattern match on the `render/2` function defined on `View`. It will map over each item in `pages`, and pass the item to the `render/2` function in `View` matching the file string. `render_one/3` follows, the same signature, ultimately using the `render/2` matching `page.json` to specify what each `page` looks like. The `render/2` matching `"index.json"` will respond with JSON as you would expect:
+In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. In our controller `show/2` function, `render(conn, "show.json", page: page)` will pattern match on the matching name and extension in the view's `render/2` functions. In other words, `render(conn, "index.json", pages: pages)` will call `render("index.json", %{pages: pages})`. The `render_many/3` function takes the data we want to respond with (`pages`), a `View`, and a string to pattern match on the `render/2` function defined on `View`. It will map over each item in `pages`, and pass the item to the `render/2` function in `View` matching the file string. `render_one/3` follows, the same signature, ultimately using the `render/2` matching `page.json` to specify what each `page` looks like. The `render/2` matching `"index.json"` will respond with JSON as you would expect:
 
 ```javascript
   {

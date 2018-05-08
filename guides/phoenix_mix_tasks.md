@@ -772,7 +772,7 @@ def change do
   create table(:comments) do
     add :body,       :string
     add :word_count, :integer
-    timestamps
+    timestamps()
   end
 end
 . . .
@@ -886,7 +886,7 @@ defmodule Mix.Tasks.Hello.Greeting do
   """
 
   def run(_args) do
-    Mix.shell.info "Greetings from the Hello Phoenix Application!"
+    Mix.shell.info("Greetings from the Hello Phoenix Application!")
   end
 
   # We can define other functions as needed here.
@@ -939,8 +939,8 @@ If you want to make your new mix task to use your application's infrastructure, 
 ```elixir
   . . .
   def run(_args) do
-    Mix.Task.run "app.start"
-    Mix.shell.info "Now I have access to Repo and other goodies!"
+    Mix.Task.run("app.start")
+    Mix.shell.info("Now I have access to Repo and other goodies!")
   end
   . . .
 ```

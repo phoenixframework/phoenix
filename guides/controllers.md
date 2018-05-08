@@ -11,7 +11,7 @@ defmodule HelloWeb.PageController do
   use HelloWeb, :controller
 
   def index(conn, _params) do
-    render conn, "index.html"
+    render(conn, "index.html")
   end
 end
 ```
@@ -42,7 +42,7 @@ defmodule HelloWeb.PageController do
   . . .
 
   def test(conn, _params) do
-    render conn, "index.html"
+    render(conn, "index.html")
   end
 end
 ```
@@ -68,7 +68,7 @@ defmodule HelloWeb.HelloController do
   . . .
 
   def show(conn, %{"messenger" => messenger}) do
-    render conn, "show.html", messenger: messenger
+    render(conn, "show.html", messenger: messenger)
   end
 end
 ```
@@ -126,7 +126,7 @@ Let's say we have a `show` action which receives an id from the params map, and 
 
 ```elixir
 def show(conn, %{"id" => id}) do
-  text conn, "Showing id #{id}"
+  text(conn, "Showing id #{id}")
 end
 ```
 Assuming we had a route for `get "/our_path/:id"` mapped to this `show` action, going to `/our_path/15` in your browser should display `Showing id 15` as plain text without any HTML.
@@ -135,7 +135,7 @@ A step beyond this is rendering pure JSON with the `json/2` function. We need to
 
 ```elixir
 def show(conn, %{"id" => id}) do
-  json conn, %{id: id}
+  json(conn, %{id: id})
 end
 ```
 If we again visit `our_path/15` in the browser, we should see a block of JSON with the key `id` mapped to the number `15`.
@@ -147,7 +147,7 @@ Phoenix controllers can also render HTML without a template. As you may have alr
 
 ```elixir
 def show(conn, %{"id" => id}) do
-  html conn, """
+  html(conn, """
      <html>
        <head>
           <title>Passing an Id</title>
@@ -156,7 +156,7 @@ def show(conn, %{"id" => id}) do
          <p>You sent in id #{id}</p>
        </body>
      </html>
-    """
+    """)
 end
 ```
 
@@ -177,7 +177,7 @@ defmodule HelloWeb.HelloController do
   use HelloWeb, :controller
 
   def show(conn, %{"messenger" => messenger}) do
-    render conn, "show.html", messenger: messenger
+    render(conn, "show.html", messenger: messenger)
   end
 end
 ```
@@ -348,7 +348,7 @@ As an example, let's take the `PageController` index action from a newly generat
 
 ```elixir
 def index(conn, _params) do
-  render conn, "index.html"
+  render(conn, "index.html")
 end
 ```
 What it doesn't have is an alternative template for rendering text. Let's add one at `lib/hello_web/templates/page/index.text.eex`. Here is our example `index.text.eex` template.
@@ -376,7 +376,7 @@ We also need to tell the controller to render a template with the same format as
 
 ```elixir
 def index(conn, _params) do
-  render conn, :index
+  render(conn, :index)
 end
 ```
 
@@ -386,7 +386,7 @@ Of course, we can pass data into our template as well. Let's change our action t
 
 ```elixir
 def index(conn, params) do
-  render conn, "index.text", message: params["message"]
+  render(conn, "index.text", message: params["message"])
 end
 ```
 
@@ -434,7 +434,7 @@ end
 
 The status code we provide must be valid - [Cowboy](https://github.com/ninenines/cowboy), the web server Phoenix runs on, will throw an error on invalid codes. If we look at our development logs (which is to say, the iex session), or use our browser's web inspection network tool, we will see the status code being set as we reload the page.
 
-If the action sends a response - either renders or redirects - changing the code will not change the behavior of the response. If, for example, we set the status to 404 or 500 and then `render "index.html"`, we do not get an error page. Similarly, no 300 level code will actually redirect. (It wouldn't know where to redirect to, even if the code did affect behavior.)
+If the action sends a response - either renders or redirects - changing the code will not change the behavior of the response. If, for example, we set the status to 404 or 500 and then `render("index.html")`, we do not get an error page. Similarly, no 300 level code will actually redirect. (It wouldn't know where to redirect to, even if the code did affect behavior.)
 
 The following implementation of the `HelloWeb.PageController` `index` action, for example, will _not_ render the default `not_found` behavior as expected.
 
@@ -487,7 +487,7 @@ Then we'll change the `index` action to do nothing but redirect to our new route
 
 ```elixir
 def index(conn, _params) do
-  redirect conn, to: "/redirect_test"
+  redirect(conn, to: "/redirect_test")
 end
 ```
 
@@ -495,7 +495,7 @@ Finally, let's define in the same file the action we redirect to, which simply r
 
 ```elixir
 def redirect_test(conn, _params) do
-  text conn, "Redirect!"
+  text(conn, "Redirect!")
 end
 ```
 
@@ -507,7 +507,7 @@ Notice that the redirect function takes `conn` as well as a string representing 
 
 ```elixir
 def index(conn, _params) do
-  redirect conn, external: "https://elixir-lang.org/"
+  redirect(conn, external: "https://elixir-lang.org/")
 end
 ```
 
@@ -518,7 +518,7 @@ defmodule HelloWeb.PageController do
   use HelloWeb, :controller
 
   def index(conn, _params) do
-    redirect conn, to: redirect_test_path(conn, :redirect_test)
+    redirect(conn, to: redirect_test_path(conn, :redirect_test))
   end
 end
 ```
@@ -527,7 +527,7 @@ Note that we can't use the url helper here because `redirect/2` using the atom `
 
 ```elixir
 def index(conn, _params) do
-  redirect conn, to: redirect_test_url(conn, :redirect_test)
+  redirect(conn, to: redirect_test_url(conn, :redirect_test))
 end
 ```
 
@@ -535,7 +535,7 @@ If we want to use the url helper to pass a full url to `redirect/2`, we must use
 
 ```elixir
 def index(conn, _params) do
-  redirect conn, external: redirect_test_url(conn, :redirect_test)
+  redirect(conn, external: redirect_test_url(conn, :redirect_test))
 end
 ```
 

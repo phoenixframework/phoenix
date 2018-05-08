@@ -22,7 +22,7 @@ defmodule Phoenix.Controller do
 
         def show(conn, %{"id" => id}) do
           user = Repo.get(User, id)
-          render conn, "show.html", user: user
+          render(conn, "show.html", user: user)
         end
       end
 
@@ -271,7 +271,7 @@ defmodule Phoenix.Controller do
 
   ## Examples
 
-      iex> json conn, %{id: 123}
+      iex> json(conn, %{id: 123})
 
   """
   @spec json(Plug.Conn.t, term) :: Plug.Conn.t
@@ -353,9 +353,9 @@ defmodule Phoenix.Controller do
 
   ## Examples
 
-      iex> text conn, "hello"
+      iex> text(conn, "hello")
 
-      iex> text conn, :implements_to_string
+      iex> text(conn, :implements_to_string)
 
   """
   @spec text(Plug.Conn.t, String.Chars.t) :: Plug.Conn.t
@@ -368,7 +368,7 @@ defmodule Phoenix.Controller do
 
   ## Examples
 
-      iex> html conn, "<html><head>..."
+      iex> html(conn, "<html><head>...")
 
   """
   @spec html(Plug.Conn.t, iodata) :: Plug.Conn.t
@@ -384,9 +384,9 @@ defmodule Phoenix.Controller do
 
   ## Examples
 
-      iex> redirect conn, to: "/login"
+      iex> redirect(conn, to: "/login")
 
-      iex> redirect conn, external: "http://elixir-lang.org"
+      iex> redirect(conn, external: "http://elixir-lang.org")
 
   """
   def redirect(conn, opts) when is_list(opts) do
@@ -531,11 +531,11 @@ defmodule Phoenix.Controller do
 
   ## Examples
 
-      iex> layout_formats conn
+      iex> layout_formats(conn)
       ["html"]
 
-      iex> put_layout_formats conn, ["html", "mobile"]
-      iex> layout_formats conn
+      iex> put_layout_formats(conn, ["html", "mobile"])
+      iex> layout_formats(conn)
       ["html", "mobile"]
 
   Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
@@ -606,7 +606,7 @@ defmodule Phoenix.Controller do
         use Phoenix.Controller
 
         def show(conn, _params) do
-          render conn, "show.html", message: "Hello"
+          render(conn, "show.html", message: "Hello")
         end
       end
 
@@ -618,7 +618,7 @@ defmodule Phoenix.Controller do
   the extension):
 
       def show(conn, _params) do
-        render conn, :show, message: "Hello"
+        render(conn, :show, message: "Hello")
       end
 
   In order for the example above to work, we need to do content negotiation with
@@ -648,7 +648,7 @@ defmodule Phoenix.Controller do
         plug :put_view, MyAppWeb.SpecialView
 
         def show(conn, _params) do
-          render conn, :show, message: "Hello"
+          render(conn, :show, message: "Hello")
         end
       end
 
@@ -661,7 +661,7 @@ defmodule Phoenix.Controller do
         use Phoenix.Controller
 
         def show(conn, _params) do
-          render conn, "show.html", message: "Hello"
+          render(conn, "show.html", message: "Hello")
         end
       end
 

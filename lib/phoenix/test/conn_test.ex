@@ -14,10 +14,10 @@ defmodule Phoenix.ConnTest do
   the preferred way to test anything that your router dispatches
   to.
 
-      conn = get build_conn(), "/"
+      conn = get(build_conn(), "/")
       assert conn.resp_body =~ "Welcome!"
 
-      conn = post build_conn(), "/login", [username: "john", password: "doe"]
+      conn = post(build_conn(), "/login", [username: "john", password: "doe"])
       assert conn.resp_body =~ "Logged in!"
 
   As in your application, the connection is also the main abstraction
@@ -46,7 +46,7 @@ defmodule Phoenix.ConnTest do
   For such cases, just pass an atom representing the action
   to dispatch:
 
-      conn = get build_conn(), :index
+      conn = get(build_conn(), :index)
       assert conn.resp_body =~ "Welcome!"
 
   ## Views testing
@@ -56,8 +56,8 @@ defmodule Phoenix.ConnTest do
   For such cases, a connection can be created using the
   `conn/3` helper:
 
-      MyApp.UserView.render "hello.html",
-                             conn: conn(:get, "/")
+      MyApp.UserView.render("hello.html",
+                             conn: conn(:get, "/"))
 
   ## Recycling
 
@@ -79,10 +79,10 @@ defmodule Phoenix.ConnTest do
   before the next dispatch:
 
       # No recycling as the connection is fresh
-      conn = get build_conn(), "/"
+      conn = get(build_conn(), "/")
 
       # The connection is recycled, creating a new one behind the scenes
-      conn = post conn, "/login"
+      conn = post(conn, "/login")
 
       # We can also recycle manually in case we want custom headers
       conn =
@@ -91,7 +91,7 @@ defmodule Phoenix.ConnTest do
         |> put_req_header("x-special", "nice")
 
       # No recycling as we did it explicitly
-      conn = delete conn, "/logout"
+      conn = delete(conn, "/logout")
 
   Recycling also recycles the "accept" header.
   """
@@ -190,8 +190,8 @@ defmodule Phoenix.ConnTest do
   This function, as well as `get/3`, `post/3` and friends, accepts the
   request body or parameters as last argument:
 
-        get build_conn(), "/", some: "param"
-        get build_conn(), "/", "some=param&url=encoded"
+        get(build_conn(), "/", some: "param")
+        get(build_conn(), "/", "some=param&url=encoded")
 
   The allowed values are:
 
@@ -338,7 +338,7 @@ defmodule Phoenix.ConnTest do
 
   ## Examples
 
-      conn = get build_conn(), "/"
+      conn = get(build_conn(), "/")
       assert response(conn, 200) =~ "hello world"
 
   """
@@ -348,7 +348,7 @@ defmodule Phoenix.ConnTest do
     expected connection to have a response but no response was set/sent.
     Please verify that you assign to "conn" after a request:
 
-        conn = get conn, "/"
+        conn = get(conn, "/")
         assert html_response(conn) =~ "Hello"
     """
   end
@@ -584,11 +584,11 @@ defmodule Phoenix.ConnTest do
   ## Examples
 
       assert_error_sent :not_found, fn ->
-        get build_conn(), "/users/not-found"
+        get(build_conn(), "/users/not-found")
       end
 
       response = assert_error_sent 404, fn ->
-        get build_conn(), "/users/not-found"
+        get(build_conn(), "/users/not-found")
       end
       assert {404, [_h | _t], "Page not found"} = response
   """

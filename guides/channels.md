@@ -353,7 +353,7 @@ defmodule HelloWeb.RoomChannel do
   end
 
   def handle_in("new_msg", %{"body" => body}, socket) do
-    broadcast! socket, "new_msg", %{body: body}
+    broadcast!(socket, "new_msg", %{body: body})
     {:noreply, socket}
   end
 end
@@ -371,7 +371,7 @@ def handle_out("user_joined", msg, socket) do
   if Accounts.ignoring_user?(socket.assigns[:user], msg.user_id) do
     {:noreply, socket}
   else
-    push socket, "user_joined", msg
+    push(socket, "user_joined", msg)
     {:noreply, socket}
   end
 end

@@ -105,7 +105,7 @@ The first test block in our generated channel test looks like:
 
 ```elixir
 test "ping replies with status ok", %{socket: socket} do
-  ref = push socket, "ping", %{"hello" => "there"}
+  ref = push(socket, "ping", %{"hello" => "there"})
   assert_reply ref, :ok, %{"hello" => "there"}
 end
 ```
@@ -130,7 +130,7 @@ In the `test "ping replies with status ok", %{socket: socket} do` line, we see t
 map `%{socket: socket}`. This gives us access to the `socket` in the setup block.
 
 We emulate the client pushing a message to the channel with `push/3`. In the line
-`ref = push socket, "ping", %{"hello" => "there"}`, we push the event `"ping"` with the payload
+`ref = push(socket, "ping", %{"hello" => "there"})`, we push the event `"ping"` with the payload
 `%{"hello" => "there"}` to the channel. This triggers the `handle_in/3` callback we have for the
 `"ping"` event in our channel. Note that we store the `ref` since we need that on the next line for
 asserting the reply. With `assert_reply ref, :ok, %{"hello" => "there"}`, we assert that the
@@ -146,7 +146,7 @@ current topic. This common pattern is simple to express in Phoenix and is one of
 
 ```elixir
 def handle_in("shout", payload, socket) do
-  broadcast socket, "shout", payload
+  broadcast(socket, "shout", payload)
   {:noreply, socket}
 end
 ```
@@ -155,7 +155,7 @@ Its corresponding test looks like:
 
 ```elixir
 test "shout broadcasts to room:lobby", %{socket: socket} do
-  push socket, "shout", %{"hello" => "all"}
+  push(socket, "shout", %{"hello" => "all"})
   assert_broadcast "shout", %{"hello" => "all"}
 end
 ```
@@ -177,7 +177,7 @@ to the client. Unlike the previous tests discussed, we are indirectly testing th
 
 ```elixir
 def handle_out(event, payload, socket) do
-  push socket, event, payload
+  push(socket, event, payload)
   {:noreply, socket}
 end
 ```
@@ -187,7 +187,7 @@ we will need to emulate that in our test. We do that by calling `broadcast_from`
 `broadcast_from!`. Both serve the same purpose with the only difference of `broadcast_from!`
 raising an error when broadcast fails.
 
-The line `broadcast_from! socket, "broadcast", %{"some" => "data"}` will trigger our `handle_out/3`
+The line `broadcast_from!(socket, "broadcast", %{"some" => "data"})` will trigger our `handle_out/3`
 callback above which pushes the same event and payload back to the client. To test this, we do
 `assert_push "broadcast", %{"some" => "data"}`.
 

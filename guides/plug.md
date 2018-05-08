@@ -47,7 +47,7 @@ defmodule HelloWeb.MessageController do
           message ->
             case authorize_message(conn, params["id"]) do
               :ok ->
-                render conn, :show, page: find_message(params["id"])
+                render(conn, :show, page: find_message(params["id"]))
               :error ->
                 conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/")
             end
@@ -70,7 +70,7 @@ defmodule HelloWeb.MessageController do
   plug :authorize_message
 
   def show(conn, params) do
-    render conn, :show, page: find_message(params["id"])
+    render(conn, :show, page: find_message(params["id"]))
   end
 
   defp authenticate(conn, _) do
