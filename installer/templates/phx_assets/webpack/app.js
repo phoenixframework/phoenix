@@ -9,11 +9,11 @@ import css from "../css/app.css";
 //
 // Import dependencies
 //
-<%= if html do %>import "phoenix_html"<% end %>
+<%= if html do %>import "phoenix_html";<% end %>
 
 // Import local files
 //
 // Local files can be imported directly using relative
 // paths "./socket" or full ones "web/static/js/socket".
 
-// import socket from "./socket"
+// import socket from "./socket";
