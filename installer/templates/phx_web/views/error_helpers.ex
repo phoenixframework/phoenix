@@ -22,10 +22,10 @@ defmodule <%= web_namespace %>.ErrorHelpers do
     # to translate as a static argument:
     #
     #     # Translate "is invalid" in the "errors" domain
-    #     dgettext "errors", "is invalid"
+    #     dgettext("errors", "is invalid")
     #
     #     # Translate the number of files with plural rules
-    #     dngettext "errors", "1 file", "%{count} files", count
+    #     dngettext("errors", "1 file", "%{count} files", count)
     #
     # Because the error messages we show in our forms and APIs
     # are defined inside Ecto, we need to translate them dynamically.

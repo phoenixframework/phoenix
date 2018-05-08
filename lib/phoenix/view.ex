@@ -223,7 +223,7 @@ defmodule Phoenix.View do
   To render the template within the layout, simply call `render/3`
   using the `@view_module` and `@view_template` assign:
 
-      <%= render @view_module, @view_template, assigns %>
+      <%= render(@view_module, @view_template, assigns) %>
 
   """
   def render(module, template, assigns) do

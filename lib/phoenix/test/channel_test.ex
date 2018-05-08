@@ -40,13 +40,13 @@ defmodule Phoenix.ChannelTest do
   For example, we can use the `push/3` function in the test
   to push messages to the channel (it will invoke `handle_in/3`):
 
-      push socket, "my_event", %{"some" => "data"}
+      push(socket, "my_event", %{"some" => "data"})
 
   Similarly, we can broadcast messages from the test itself
   on the topic that both test and channel are subscribed to,
   triggering `handle_out/3` on the channel:
 
-      broadcast_from socket, "my_event", %{"some" => "data"}
+      broadcast_from(socket, "my_event", %{"some" => "data"})
 
   > Note only `broadcast_from/3` and `broadcast_from!/3` are
   available in tests to avoid broadcast messages to be resent
@@ -66,7 +66,7 @@ defmodule Phoenix.ChannelTest do
   a reference is returned. We can use this reference to
   assert a particular reply was sent from the server:
 
-      ref = push socket, "counter", %{}
+      ref = push(socket, "counter", %{})
       assert_reply ref, :ok, %{"counter" => 1}
 
   ## Checking side-effects
@@ -85,7 +85,7 @@ defmodule Phoenix.ChannelTest do
   Because the whole communication is asynchronous, the
   following test would be very brittle:
 
-      push socket, "publish", %{"id" => 3}
+      push(socket, "publish", %{"id" => 3})
       assert Repo.get_by(Post, id: 3, published: true)
 
   The issue is that we have no guarantees the channel has
@@ -101,7 +101,7 @@ defmodule Phoenix.ChannelTest do
 
   Then expect them in the test:
 
-      ref = push socket, "publish", %{"id" => 3}
+      ref = push(socket, "publish", %{"id" => 3})
       assert_reply ref, :ok
       assert Repo.get_by(Post, id: 3, published: true)
 
@@ -370,7 +370,7 @@ defmodule Phoenix.ChannelTest do
 
   ## Examples
 
-      iex> push socket, "new_message", %{id: 1, content: "hello"}
+      iex> push(socket, "new_message", %{id: 1, content: "hello"})
       reference
 
   """
@@ -408,7 +408,7 @@ defmodule Phoenix.ChannelTest do
 
   ## Examples
 
-      iex> broadcast_from socket, "new_message", %{id: 1, content: "hello"}
+      iex> broadcast_from(socket, "new_message", %{id: 1, content: "hello"})
       :ok
 
   """
@@ -490,7 +490,7 @@ defmodule Phoenix.ChannelTest do
 
   Notice status and payload are patterns. This means one can write:
 
-      ref = push channel, "some_event"
+      ref = push(channel, "some_event")
       assert_reply ref, :ok, %{"data" => _}
 
   In the assertion above, we don't particularly care about

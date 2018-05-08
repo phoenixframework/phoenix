@@ -152,7 +152,7 @@ defmodule HelloWeb.HelloController do
   use HelloWeb, :controller
 
   def index(conn, _params) do
-    render conn, "index.html"
+    render(conn, "index.html")
   end
 end
 ```
@@ -160,9 +160,9 @@ We'll save a discussion of `use HelloWeb, :controller` for the [Controllers Guid
 
 All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params`, and we avoid compiler warnings by adding the leading `_`.
 
-The core of this action is `render conn, "index.html"`. This tells Phoenix to find a template called `index.html.eex` and render it. Phoenix will look for the template in a directory named after our controller, so `lib/hello_web/templates/hello`.
+The core of this action is `render(conn, "index.html")`. This tells Phoenix to find a template called `index.html.eex` and render it. Phoenix will look for the template in a directory named after our controller, so `lib/hello_web/templates/hello`.
 
-> Note: Using an atom as the template name will also work here, `render conn, :index`, but the template will be chosen based off the Accept headers, e.g. `"index.html"` or `"index.json"`.
+> Note: Using an atom as the template name will also work here, `render(conn, :index)`, but the template will be chosen based off the Accept headers, e.g. `"index.html"` or `"index.json"`.
 
 The modules responsible for rendering are views, and we'll make a new one of those next.
 
@@ -200,7 +200,7 @@ Now that we've got the route, controller, view, and template, we should be able 
 
 There are a couple of interesting things to notice about what we just did. We didn't need to stop and re-start the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.eex` file consisted of only a single `div` tag, the page we get is a full HTML document. Our index template is rendered into the application layout - `lib/hello_web/templates/layout/app.html.eex`. If you open it, you'll see a line that looks like this:
 
-    <%= render @view_module, @view_template, assigns %>
+    <%= render(@view_module, @view_template, assigns) %>
 
 which is what renders our template into the layout before the HTML is sent off to the browser.
 
@@ -235,7 +235,7 @@ Requests to our new route will be handled by the `HelloWeb.HelloController` `sho
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
-  render conn, "show.html", messenger: messenger
+  render(conn, "show.html", messenger: messenger)
 end
 ```
 

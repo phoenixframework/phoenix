@@ -43,7 +43,7 @@ defmodule HelloWeb.PageController do
   ...
 
   def test(conn, _params) do
-    render conn, "test.html"
+    render(conn, "test.html")
   end
 end
 ```
@@ -74,7 +74,7 @@ defmodule HelloWeb.PageView do
   use HelloWeb, :view
 
   def handler_info(conn) do
-    "Request Handled By: #{controller_module conn}.#{action_name conn}"
+    "Request Handled By: #{controller_module(conn)}.#{action_name(conn)}"
   end
 
   def connection_keys(conn) do
@@ -89,7 +89,7 @@ We have a route. We created a new controller action. We have made modifications 
 
 ```html
 <div class="jumbotron">
-  <p><%= handler_info @conn %></p>
+  <p><%= handler_info(@conn) %></p>
 </div>
 ```
 
@@ -111,11 +111,11 @@ We can add a header and a list comprehension like this.
 
 ```html
 <div class="jumbotron">
-  <p><%= handler_info @conn %></p>
+  <p><%= handler_info(@conn) %></p>
 
   <h3>Keys for the conn Struct</h3>
 
-  <%= for key <- connection_keys @conn do %>
+  <%= for key <- connection_keys(@conn) do %>
     <p><%= key %></p>
   <% end %>
 </div>
@@ -148,12 +148,12 @@ Now that we have a template, we simply render it within our list comprehension i
 
 ```html
 <div class="jumbotron">
-  <p><%= handler_info @conn %></p>
+  <p><%= handler_info(@conn) %></p>
 
   <h3>Keys for the conn Struct</h3>
 
-  <%= for key <- connection_keys @conn do %>
-    <%= render "key.html", key: key %>
+  <%= for key <- connection_keys(@conn) do %>
+    <%= render("key.html", key: key) %>
   <% end %>
 </div>
 ```
@@ -172,8 +172,8 @@ Let's move our template into a shared view.
 <div class="jumbotron">
   ...
 
-  <%= for key <- connection_keys @conn do %>
-    <%= render HelloWeb.PageView, "key.html", key: key %>
+  <%= for key <- connection_keys(@conn) do %>
+    <%= render(HelloWeb.PageView, "key.html", key: key) %>
   <% end %>
 </div>
 ```
@@ -189,8 +189,8 @@ end
 Now we can move `key.html.eex` from the `lib/hello_web/templates/page` directory into the `lib/hello_web/templates/shared` directory. Once that happens, we can change the render call in `lib/hello_web/templates/page/test.html.eex` to use the new `HelloWeb.SharedView`.
 
 ```html
-<%= for key <- connection_keys @conn do %>
-  <%= render HelloWeb.SharedView, "key.html", key: key %>
+<%= for key <- connection_keys(@conn) do %>
+  <%= render(HelloWeb.SharedView, "key.html", key: key) %>
 <% end %>
 ```
 Going back to [localhost:4000/test](http://localhost:4000/test) again. The page should look exactly as it did before.
