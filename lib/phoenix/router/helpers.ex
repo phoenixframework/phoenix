@@ -153,19 +153,6 @@ defmodule Phoenix.Router.Helpers do
       end
 
       @doc """
-      Performs a server push and returns the path to a static asset given its file path.
-
-      The server push will only happen if using HTTP/2 with a supported plug adapter.
-      If not supported, this function will simply return the path to the static
-      asset.
-      """
-      def static_push(%Conn{} = conn, path) do
-        path = static_path(conn, path)
-        Plug.Conn.push(conn, path)
-        path
-      end
-
-      @doc """
       Generates url to a static asset given its file path.
       """
       def static_url(%Conn{private: private} = conn, path) do
