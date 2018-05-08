@@ -5,6 +5,49 @@
 
 <section class="row">
   <article class="column">
+    <h3>New in v1.4</h3>
+    <ul>
+      <li>
+        <a href="https://github.com/phoenixframework/phoenix/pull/2734">
+          Jason is now the default JSON library instead of Poison
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/phoenixframework/phoenix/pull/2734">
+          Router helpers now use <code>Routes.my_path</code> instead of <code>my_path</code>
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/phoenixframework/phoenix/pull/2766">
+          New JavaScript presence API
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/phoenixframework/phoenix/pull/2621">
+          Cowboy 2 Support (Change cowboy version to 2.4 in mix.exs to activate)
+        </a>
+        <ul>
+          <li>
+            <a href="https://github.com/phoenixframework/phoenix/pull/2801">
+              <code>Router.Helpers.static_push/2</code> function for HTTP/2 server push
+          </li>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <a href="https://github.com/phoenixframework/phoenix/pull/2779">
+          Brunch has been replaced by webpack 4
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/phoenixframework/phoenix/blob/master/CHANGELOG.md#140">Full Changelog</a>
+      </li>
+    </ul>
+  </article>
+</section>
+
+<section class="row">
+  <article class="column">
     <h4>Resources</h4>
     <ul>
       <li>
