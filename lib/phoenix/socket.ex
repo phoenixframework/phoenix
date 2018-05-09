@@ -109,6 +109,25 @@ defmodule Phoenix.Socket do
   See the `Phoenix.Socket.Transport` documentation for more information on
   writing your own socket that does not leverage channels or for writing
   your own transports that interacts with other sockets.
+
+  ## Serializer
+
+  By default, JSON encoding is used to broker messages to and from clients.
+  A custom serializer may be given as a module which implements the `encode!/1`
+  and `decode!/2` functions defined by the `Phoenix.Transports.Serializer`
+  behaviour.
+
+  The `encode!/1` function must return a tuple in the format
+  `{:socket_push, :text | :binary, String.t | binary}`.
+
+  ## Garbage collection
+
+  It's possible to force garbage collection in the transport process after
+  processing large messages.
+
+  Send `:garbage_collect` clause to the transport process:
+
+      send socket.transport_pid, :garbage_collect
   """
 
   require Logger
@@ -190,8 +209,8 @@ defmodule Phoenix.Socket do
           transport_pid: pid,
         }
 
-  defmacro __using__(opts) do
-    quote bind_quoted: [opts: opts] do
+  defmacro __using__(_opts) do
+    quote do
       ## User API
 
       import Phoenix.Socket
@@ -205,9 +224,9 @@ defmodule Phoenix.Socket do
       @behaviour Phoenix.Socket.Transport
 
       @doc false
-      def child_spec(_) do
+      def child_spec(opts) do
         # TODO: Receive socket options here, start a tree of supervisors.
-        Phoenix.Socket.__child_spec__(__MODULE__, unquote(Macro.escape(opts)))
+        Phoenix.Socket.__child_spec__(__MODULE__, opts)
       end
 
       @doc false
@@ -290,9 +309,9 @@ defmodule Phoenix.Socket do
   end
   defp tear_alias(other), do: other
 
-  # TODO: Deprecate custom transports.
-  # TODO: We can remove the implementation on v1.5 but we should
-  # always keep transport/3 as a no-op for backwards compatibility.
+  # TODO: Remove the transport/3 implementation on v1.5
+  # but we should keep the warning and always define
+  # __transports__ for backwards compatibility.
 
   @doc false
   defmacro transport(name, module, config \\ []) do
@@ -304,6 +323,27 @@ defmodule Phoenix.Socket do
 
   @doc false
   def __transport__(transports, name, module, user_conf) do
+    IO.warn """
+    transport/3 in Phoenix.Socket is deprecated.
+
+    Instead of defining transports in your socket.ex file:
+
+        transport :websocket, Phoenix.Transport.Websocket,
+          key1: value1, key2: value2, key3: value3
+
+        transport :longpoll, Phoenix.Transport.LongPoll,
+          key1: value1, key2: value2, key3: value3
+
+    You should configure websocket/longpoll in your endpoint.ex:
+
+        socket "/socket", MyApp.UserSocket,
+          websocket: [key1: value1, key2: value2, key3: value3],
+          longpoll: [key1: value1, key2: value2, key3: value3]
+
+    Note if you have explicitly upgraded to Cowboy 2, any transport
+    defined with the `transport/3` macro will be ignored.
+    """
+
     defaults = module.default_config()
 
     conf =

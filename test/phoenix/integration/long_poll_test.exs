@@ -59,11 +59,6 @@ defmodule Phoenix.Integration.LongPollTest do
 
     channel "room:*", RoomChannel
 
-    transport :longpoll, Phoenix.Transports.LongPoll,
-      window_ms: 200,
-      pubsub_timeout_ms: 200,
-      check_origin: ["//example.com"]
-
     def connect(%{"reject" => "true"}, _socket) do
       :error
     end
@@ -81,8 +76,11 @@ defmodule Phoenix.Integration.LongPollTest do
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
-    socket "/ws", UserSocket
-    socket "/ws/admin", UserSocket
+    socket "/ws", UserSocket,
+      longpoll: [window_ms: 200, pubsub_timeout_ms: 200, check_origin: ["//example.com"]]
+
+    socket "/ws/admin", UserSocket,
+      longpoll: [window_ms: 200, pubsub_timeout_ms: 200, check_origin: ["//example.com"]]
   end
 
   setup_all do

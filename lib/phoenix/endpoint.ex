@@ -717,7 +717,6 @@ defmodule Phoenix.Endpoint do
 
   @doc false
   defmacro __before_compile__(env) do
-    sockets = Module.get_attribute(env.module, :phoenix_sockets)
     otp_app = Module.get_attribute(env.module, :otp_app)
     instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, env.module)
 
@@ -741,7 +740,7 @@ defmodule Phoenix.Endpoint do
       @doc """
       Returns all sockets configured in this endpoint.
       """
-      def __sockets__, do: unquote(sockets)
+      def __sockets__, do: @phoenix_sockets
 
       unquote(instrumentation)
     end
@@ -750,19 +749,81 @@ defmodule Phoenix.Endpoint do
   ## API
 
   @doc """
-  Defines a mount-point for a Socket module to handle channel definitions.
+  Defines a websocket/longpoll mount-point for a socket.
+
+  ## Options
+
+    * `:websocket` - controls the websocket configuration.
+      Defaults to `true`. May be false or a keyword list
+      of options. see "WebSocket configuration" for more info.
+
+    * `:longpoll` - controls the longpoll configuration.
+      Defaults to `false`. May be true or a keyword list
+      of options. see "Longpoll configuration" for more info.
+
+    * `:shutdown` - the maximum shutdown time of each channel
+      when the endpoint is shutting down. Applies only to channel-
+      based sockets.
 
   ## Examples
 
       socket "/ws", MyApp.UserSocket
-      socket "/ws/admin", MyApp.AdminUserSocket
 
-  By default, the given path is a websocket upgrade endpoint,
-  with long-polling fallback. The transports can be configured
-  within the Socket handler. See `Phoenix.Socket` for more information
-  on defining socket handlers.
+      socket "/ws/admin", MyApp.AdminUserSocket,
+        longpoll: true,
+        websocket: [compress: true]
+
+  ## Websocket configuration
+
+    * `:timeout` - the timeout for keeping websocket connections
+      open after it last received data, defaults to 60_000ms
+
+    * `:transport_log` - if the transport layer itself should log and,
+      if so, the level
+
+    * `:serializer` - a list of serializers for messages. See
+      `Phoenix.Socket` for more information.
+
+    * `:check_origin` - if we should check the origin of requests when the
+      origin header is present. It defaults to true and, in such cases,
+      it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
+      It may be set to `false` (not recommended) or to a list of explicitly
+      allowed origins.
+
+          check_origin: ["https://example.com",
+                         "//another.com:888", "//other.com"]
+
+      Note: To connect from a native app be sure to either have the native app
+      set an origin or allow any origin via `check_origin: false`
+
+    * `:code_reloader` - enable or disable the code reloader. Defaults to your
+      endpoint configuration
+
+  ## Longpoll configuration
+
+    * `:window_ms` - how long the client can wait for new messages
+      in its poll request
+
+    * `:pubsub_timeout_ms` - how long a request can wait for the
+      pubsub layer to respond
+
+    * `:crypto` - options for verifying and signing the token, accepted
+      by `Phoenix.Token`. By default tokens are valid for 2 weeks
+
+    * `:transport_log` - if the transport layer itself should log and, if so,
+      the level
+
+    * `:check_origin` - if we should check the origin of requests when the
+      origin header is present. It defaults to true and, in such cases,
+      it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
+      It may be set to `false` (not recommended) or to a list of explicitly
+      allowed origins.
+
+    * `:code_reloader` - enable or disable the code reloader. Defaults to your
+      endpoint configuration
+
   """
-  defmacro socket(path, module) do
+  defmacro socket(path, module, opts \\ []) do
     # Tear the alias to simply store the root in the AST.
     # This will make Elixir unable to track the dependency
     # between endpoint <-> socket and avoid recompiling the
@@ -771,7 +832,33 @@ defmodule Phoenix.Endpoint do
     module = tear_alias(module)
 
     quote do
-      @phoenix_sockets {unquote(path), unquote(module)}
+      @phoenix_sockets Phoenix.Endpoint.__socket__(unquote(path), unquote(module), unquote(opts))
+    end
+  end
+
+  # TODO: Move default configs here once the transport is deprecated.
+  @transports [
+    {:websocket, Phoenix.Transports.WebSocket, true},
+    {:longpoll, Phoenix.Transports.LongPoll, false}
+  ]
+
+  @doc false
+  def __socket__(path, module, opts) do
+    {path, module, Enum.reduce(@transports, opts, &normalize_transports/2)}
+  end
+
+  defp normalize_transports({key, module, default}, opts) do
+    {config, opts} = Keyword.pop(opts, key, default)
+
+    case config do
+      false ->
+        opts
+
+      true ->
+        [{key, module.default_config()} | opts]
+
+      config when is_list(config) ->
+        [{key, Keyword.merge(module.default_config(), config)} | opts]
     end
   end
 

@@ -63,9 +63,6 @@ defmodule Phoenix.Integration.WebSocketTest do
 
     channel "room:*", RoomChannel
 
-    transport :websocket, Phoenix.Transports.WebSocket,
-      check_origin: ["//example.com"], timeout: 200
-
     def connect(%{"reject" => "true"}, _socket) do
       :error
     end
@@ -83,8 +80,11 @@ defmodule Phoenix.Integration.WebSocketTest do
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
-    socket "/ws", UserSocket
-    socket "/ws/admin", UserSocket
+    socket "/ws", UserSocket,
+      websocket: [check_origin: ["//example.com"], timeout: 200]
+
+    socket "/ws/admin", UserSocket,
+      websocket: [check_origin: ["//example.com"], timeout: 200]
   end
 
   setup_all do

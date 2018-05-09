@@ -50,8 +50,24 @@ defmodule Phoenix.Socket.Transport do
   @doc """
   Returns a child specification for socket management.
 
-  It receives the endpoint configuration and is started when
-  the endpoint starts.
+  This is invoked only once per socket regardless of
+  the number of transports and should be responsible
+  for setting up any process structure used exclusively
+  by the socket regardless of transports.
+
+  Each socket connection is started by the transport
+  and the process that controls the socket likely
+  belongs to the transport. However, some sockets spawn
+  new processes, such as `Phoenix.Socket` which spawns
+  channels, and this gives the ability to start a
+  supervision tree associated to the socket.
+
+  It receives the socket options from the endpoint,
+  for example:
+
+      socket "/my_app", MyApp.Socket, shutdown: 5000
+
+  means `child_spec([shutdown: 5000])` will be invoked.
   """
   @callback child_spec(keyword) :: Supervisor.child_spec
 
@@ -73,12 +89,13 @@ defmodule Phoenix.Socket.Transport do
     * endpoint - the application endpoint
     * transport - the transport name
     * params - the connection parameters
-    * options - a set of socket options, it must include
-      a `:serializer` field with the list of serializers
-      and their requirements
+    * options - a keyword list of transport options, often
+      given by developers when configuring the transport.
+      It must include a `:serializer` field with the list of
+      serializers and their requirements
 
   """
-  @callback connect(map) :: {:ok, state} | :error
+  @callback connect(transport_info :: map) :: {:ok, state} | :error
 
   @doc """
   Initializes the socket state.

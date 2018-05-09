@@ -1,40 +1,5 @@
 defmodule Phoenix.Transports.LongPoll do
   @moduledoc false
-
-  _ = """
-  Socket transport for long poll clients.
-
-  ## Configuration
-
-  The long poll is configurable in your socket:
-
-      transport :longpoll, Phoenix.Transports.LongPoll,
-        window_ms: 10_000,
-        pubsub_timeout_ms: 2_000,
-        transport_log: false,
-        crypto: [max_age: 1_209_600]
-
-    * `:window_ms` - how long the client can wait for new messages
-      in its poll request
-
-    * `:pubsub_timeout_ms` - how long a request can wait for the
-      pubsub layer to respond
-
-    * `:crypto` - options for verifying and signing the token, accepted
-      by `Phoenix.Token`. By default tokens are valid for 2 weeks
-
-    * `:transport_log` - if the transport layer itself should log and, if so, the level
-
-    * `:check_origin` - if we should check the origin of requests when the
-      origin header is present. It defaults to true and, in such cases,
-      it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
-      It may be set to `false` (not recommended) or to a list of explicitly
-      allowed origins
-
-    * `:code_reloader` - optionally override the default `:code_reloader` value
-      from the socket's endpoint
-  """
-
   @behaviour Plug
 
   import Plug.Conn

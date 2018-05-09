@@ -149,8 +149,6 @@ defmodule Phoenix.Test.ChannelTest do
 
     channel "foo:*", Channel, assigns: %{user_socket_assigns: true}
 
-    transport :websocket, Phoenix.Transports.WebSocket
-
     def connect(params, socket) do
       if params["reject"] == true do
         :error

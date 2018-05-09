@@ -27,7 +27,7 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
       ```
       {"/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
         {Phoenix.Transports.WebSocket,
-          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, :websocket}}}
+          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, websocket_config}}}
       ```
 
     * Per longpoll transport:
@@ -35,7 +35,7 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
       ```
       {"/socket/long_poll", Plug.Adapters.Cowboy.Handler,
         {Phoenix.Transports.LongPoll,
-          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, :longpoll}}}
+          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, longpoll_config}}}
       ```
 
     * For the live-reload websocket:
@@ -43,7 +43,7 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
       ```
       {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
         {Phoenix.Transports.WebSocket,
-          {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}}
+          {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, websocket_config}}}
       ```
 
       If you decide to include the live-reload websocket, you should
@@ -64,7 +64,7 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
                     {"/bar", MyAppWeb.AnotherHandler, []},
                     {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
                       {Phoenix.Transports.WebSocket,
-                        {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}},
+                        {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, websocket_config}}},
                     {:_, Plug.Adapters.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
                   ]}]]
 
@@ -83,11 +83,9 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
       Application.ensure_all_started(:ssl)
     end
 
-    # TODO: GET RID OF THIS.
     dispatches =
-      for {path, socket} <- endpoint.__sockets__,
-          {transport, {module, config}} <- socket.__transports__,
-          # Allow handlers to be configured at the transport level
+      for {path, socket, socket_opts} <- endpoint.__sockets__,
+          {transport, {module, config}} <- transports(socket, socket_opts),
           handler = config[:cowboy] || default_for(module),
           do: {Path.join(path, Atom.to_string(transport)),
                handler,
@@ -100,6 +98,20 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
     spec = Plug.Adapters.Cowboy.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
     update_in spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]}
   end
+
+  defp transports(socket, opts) do
+    case socket.__transports__ do
+      [] ->
+        for {transport, config} <- Keyword.take(opts, [:websocket, :longpoll]),
+            do: {transport, {module_for_transport(transport), config}}
+
+      transports ->
+        transports
+    end
+  end
+
+  defp module_for_transport(:longpoll), do: Phoenix.Transports.LongPoll
+  defp module_for_transport(:websocket), do: Phoenix.Transports.WebSocket
 
   defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy.Handler
   defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.CowboyWebSocket

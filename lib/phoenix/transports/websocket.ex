@@ -1,59 +1,5 @@
 defmodule Phoenix.Transports.WebSocket do
   @moduledoc false
-
-  _ = """
-  Socket transport for websocket clients.
-
-  ## Configuration
-
-  The websocket is configurable in your socket:
-
-      transport :websocket, Phoenix.Transports.WebSocket,
-        timeout: :infinity,
-        transport_log: false
-
-    * `:timeout` - the timeout for keeping websocket connections
-      open after it last received data, defaults to 60_000ms
-
-    * `:transport_log` - if the transport layer itself should log and, if so, the level
-
-    * `:serializer` - the serializer for websocket messages
-
-    * `:check_origin` - if we should check the origin of requests when the
-      origin header is present. It defaults to true and, in such cases,
-      it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
-      It may be set to `false` (not recommended) or to a list of explicitly
-      allowed origins.
-
-      check_origin: ["https://example.com",
-                     "//another.com:888", "//other.com"]
-
-      Note: To connect from a native app be sure to either have the native app
-      set an origin or allow any origin via `check_origin: false`
-
-    * `:code_reloader` - optionally override the default `:code_reloader` value
-      from the socket's endpoint
-
-  ## Serializer
-
-  By default, JSON encoding is used to broker messages to and from clients.
-  A custom serializer may be given as a module which implements the `encode!/1`
-  and `decode!/2` functions defined by the `Phoenix.Transports.Serializer`
-  behaviour.
-
-  The `encode!/1` function must return a tuple in the format
-  `{:socket_push, :text | :binary, String.t | binary}`.
-
-  ## Garbage collection
-
-  It's possible to force garbage collection in the transport process after
-  processing large messages.
-
-  Send `:garbage_collect` clause to the transport process:
-
-      send socket.transport_pid, :garbage_collect
-  """
-
   alias Phoenix.Socket.{V1, V2, Transport}
 
   def default_config() do

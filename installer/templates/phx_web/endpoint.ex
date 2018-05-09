@@ -1,7 +1,9 @@
 defmodule <%= endpoint_module %> do
   use Phoenix.Endpoint, otp_app: :<%= web_app_name %>
 
-  socket "/socket", <%= web_namespace %>.UserSocket
+  socket "/socket", <%= web_namespace %>.UserSocket,
+    websocket: true,
+    longpoll: false
 
   # Serve at "/" the static files from "priv/static" directory.
   #

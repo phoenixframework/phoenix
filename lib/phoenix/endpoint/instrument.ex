@@ -143,7 +143,7 @@ defmodule Phoenix.Endpoint.Instrument do
             unquote(inst).unquote(event)(:start, var!(compile), var!(runtime))
           catch
             kind, error ->
-              Logger.error unquote(error_prefix) <> Exception.format(kind, error)
+              Logger.error [unquote(error_prefix), Exception.format(kind, error, System.stacktrace())]
           end
       end
     end

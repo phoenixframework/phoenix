@@ -183,7 +183,7 @@ config :hello, Hello.Repo,
   ssl: true
 ```
 
-Finally, we need to decrease the timeout for the websocket transport in `lib/hello_web/channels/user_socket.ex`:
+Finally, we need to decrease the timeout for the websocket transport in `lib/hello_web/endpoint.ex`:
 
 ```elixir
 defmodule HelloWeb.UserSocket do
@@ -192,9 +192,9 @@ defmodule HelloWeb.UserSocket do
   ...
 
   ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket,
-    timeout: 45_000
-    ...
+  socket "/socket", HelloWeb.UserSocket,
+    websocket: [timeout: 45_000],
+    longpoll: false
 end
 ```
 
