@@ -716,9 +716,17 @@ defmodule Phoenix.Endpoint do
   end
 
   @doc false
-  defmacro __before_compile__(env) do
-    otp_app = Module.get_attribute(env.module, :otp_app)
-    instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, env.module)
+  defmacro __before_compile__(%{module: module}) do
+    sockets = Module.get_attribute(module, :phoenix_sockets)
+    otp_app = Module.get_attribute(module, :otp_app)
+    instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, module)
+
+    dispatches =
+      for {_, _, _, paths} <- sockets, {path, return} <- paths do
+        quote do
+          def __dispatch__(unquote(path), _opts), do: unquote(Macro.escape(return))
+        end
+      end
 
     quote do
       defoverridable [call: 2]
@@ -737,10 +745,13 @@ defmodule Phoenix.Endpoint do
         end
       end
 
-      @doc """
-      Returns all sockets configured in this endpoint.
-      """
-      def __sockets__, do: @phoenix_sockets
+      @doc false
+      def __sockets__, do: unquote(Macro.escape(sockets))
+
+      @doc false
+      def __dispatch__(path, opts)
+      unquote(dispatches)
+      def __dispatch__(_, opts), do: {:plug, __MODULE__, opts}
 
       unquote(instrumentation)
     end
@@ -750,6 +761,10 @@ defmodule Phoenix.Endpoint do
 
   @doc """
   Defines a websocket/longpoll mount-point for a socket.
+
+  Note: the `:websocket` and `:longpoll` options only have an
+  effect if the socket given as argument has no `transport`
+  declarations in it.
 
   ## Options
 
@@ -832,35 +847,43 @@ defmodule Phoenix.Endpoint do
     module = tear_alias(module)
 
     quote do
-      @phoenix_sockets Phoenix.Endpoint.__socket__(unquote(path), unquote(module), unquote(opts))
+      @phoenix_sockets Phoenix.Endpoint.__socket__(__MODULE__, unquote(path), unquote(module), unquote(opts))
     end
   end
-
-  # TODO: Move default configs here once the transport is deprecated.
-  @transports [
-    {:websocket, Phoenix.Transports.WebSocket, true},
-    {:longpoll, Phoenix.Transports.LongPoll, false}
-  ]
 
   @doc false
-  def __socket__(path, module, opts) do
-    {path, module, Enum.reduce(@transports, opts, &normalize_transports/2)}
+  # TODO: Move default configs here once the transport is deprecated
+  # TODO: Return only socket and opts once Cowboy1 transport handling is removed
+  def __socket__(endpoint, path, socket, opts) do
+    paths = []
+    {websocket, opts} = Keyword.pop(opts, :websocket, true)
+    {longpoll, opts} = Keyword.pop(opts, :longpoll, false)
+
+    paths =
+      if websocket do
+        triplet = {:websocket, socket, socket_config(websocket, Phoenix.Transports.WebSocket)}
+        [{socket_path(path, :websocket), triplet} | paths]
+      else
+        paths
+      end
+
+    paths =
+      if longpoll do
+        plug_init = {endpoint, socket, socket_config(longpoll, Phoenix.Transports.LongPoll)}
+        [{socket_path(path, :longpoll), {:plug, Phoenix.Transports.LongPoll, plug_init}} | paths]
+      else
+        paths
+      end
+
+    {path, socket, opts, paths}
   end
 
-  defp normalize_transports({key, module, default}, opts) do
-    {config, opts} = Keyword.pop(opts, key, default)
-
-    case config do
-      false ->
-        opts
-
-      true ->
-        [{key, module.default_config()} | opts]
-
-      config when is_list(config) ->
-        [{key, Keyword.merge(module.default_config(), config)} | opts]
-    end
+  defp socket_path(path, key) do
+    Plug.Router.Utils.split(path) ++ [Atom.to_string(key)]
   end
+
+  defp socket_config(true, module), do: module.default_config()
+  defp socket_config(config, module), do: Keyword.merge(module.default_config(), config)
 
   @doc """
   Instruments the given function using the instrumentation provided by

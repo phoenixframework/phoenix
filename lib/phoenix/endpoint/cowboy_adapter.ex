@@ -84,12 +84,9 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
     end
 
     dispatches =
-      for {path, socket, socket_opts} <- endpoint.__sockets__,
-          {transport, {module, config}} <- transports(socket, socket_opts),
-          handler = config[:cowboy] || default_for(module),
-          do: {Path.join(path, Atom.to_string(transport)),
-               handler,
-               {module, {endpoint, socket, config}}}
+      for {path, socket, _, transports} <- endpoint.__sockets__,
+          transport <- transports(endpoint, path, socket, transports),
+          do: transport
 
     dispatches =
       dispatches ++ [{:_, Plug.Adapters.Cowboy.Handler, {endpoint, []}}]
@@ -99,19 +96,27 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
     update_in spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]}
   end
 
-  defp transports(socket, opts) do
+  defp transports(endpoint, path, socket, socket_transports) do
     case socket.__transports__ do
-      map when map == %{} ->
-        for {transport, config} <- Keyword.take(opts, [:websocket, :longpoll]),
-            do: {transport, {module_for_transport(transport), config}}
+      transports when transports == %{} ->
+        for {path, transport} <- socket_transports,
+            {handler, init} = handler_for_transport(transport, endpoint, socket),
+            do: {"/" <> Path.join(path), handler, init}
 
       transports ->
-        transports
+        for {transport, {module, config}} <- transports,
+            handler = config[:cowboy] || default_for(module),
+            do: {Path.join(path, Atom.to_string(transport)), handler, {module, {endpoint, socket, config}}}
     end
   end
 
-  defp module_for_transport(:longpoll), do: Phoenix.Transports.LongPoll
-  defp module_for_transport(:websocket), do: Phoenix.Transports.WebSocket
+  defp handler_for_transport({:websocket, socket, config}, endpoint, socket) do
+    {Phoenix.Endpoint.CowboyWebSocket, {Phoenix.Transports.WebSocket, {endpoint, socket, config}}}
+  end
+
+  defp handler_for_transport({:plug, module, config}, _endpoint, _socket) do
+    {Plug.Adapters.Cowboy.Handler, {module, config}}
+  end
 
   defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy.Handler
   defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.CowboyWebSocket

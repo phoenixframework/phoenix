@@ -13,43 +13,10 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
 
   The options are passed to both `:http` and `:https` keys in the
   endpoint configuration. However, once you pass your custom dispatch
-  options, you will need to manually wire all Phoenix endpoints,
-  including the socket transports.
+  options, you will need to manually wire the Phoenix endpoint by
+  adding the following rule:
 
-  You will need the following rules:
-
-    * Per websocket transport:
-
-      ```
-      {"/socket/websocket", Phoenix.Endpoint.Cowboy2WebSocket,
-        {Phoenix.Transports.WebSocket,
-          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, websocket_config}}}
-      ```
-
-    * Per longpoll transport:
-
-      ```
-      {"/socket/long_poll", Plug.Adapters.Cowboy2.Handler,
-        {Phoenix.Transports.LongPoll,
-          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, longpoll_config}}}
-      ```
-
-    * For the live-reload websocket:
-
-      ```
-      {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.Cowboy2WebSocket,
-        {Phoenix.Transports.WebSocket,
-          {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, websocket_config}}}
-      ```
-
-      If you decide to include the live-reload websocket, you should
-      disable it when building for production.
-
-    * For the endpoint:
-
-      ```
-      {:_, Plug.Adapters.Cowboy2.Handler, {MyAppWeb.Endpoint, []}}
-      ```
+      {:_, Phoenix.Endpoint.Cowboy2Handler, {MyAppWeb.Endpoint, []}}
 
   For example:
 
@@ -57,15 +24,8 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
         http: [dispatch: [
                 {:_, [
                     {"/foo", MyAppWeb.CustomHandler, []},
-                    {"/bar", MyAppWeb.AnotherHandler, []},
-                    {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.Cowboy2WebSocket,
-                      {Phoenix.Transports.WebSocket,
-                        {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, websocket_config}}},
-                    {:_, Plug.Adapters.Cowboy2.Handler, {MyAppWeb.Endpoint, []}}
+                    {:_, Phoenix.Endpoint.Cowboy2Handler, {MyAppWeb.Endpoint, []}}
                   ]}]]
-
-  Note: if you reconfigure HTTP options in `MyAppWeb.Endpoint.init/1`,
-  your dispatch options set in mix config will be overwritten.
 
   It is also important to specify your handlers first, otherwise
   Phoenix will intercept the requests before they get to your handler.
@@ -79,27 +39,11 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
       Application.ensure_all_started(:ssl)
     end
 
-    # TODO: Get rid of this.
-    dispatches =
-      for {path, socket, socket_opts} <- endpoint.__sockets__,
-          {key, config} <- Keyword.take(socket_opts, [:websocket, :longpoll]),
-          do: {Path.join(path, Atom.to_string(key)),
-               handler_for_transport(key),
-               {module_for_transport(key), {endpoint, socket, config}}}
-
-    dispatches =
-      dispatches ++ [{:_, Plug.Adapters.Cowboy2.Handler, {endpoint, []}}]
-
+    dispatches = [{:_, Phoenix.Endpoint.Cowboy2Handler, {endpoint, endpoint.init([])}}]
     config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
     spec = Plug.Adapters.Cowboy2.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
     update_in spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]}
   end
-
-  defp handler_for_transport(:longpoll), do: Plug.Adapters.Cowboy2.Handler
-  defp handler_for_transport(:websocket), do: Phoenix.Endpoint.Cowboy2WebSocket
-
-  defp module_for_transport(:longpoll), do: Phoenix.Transports.LongPoll
-  defp module_for_transport(:websocket), do: Phoenix.Transports.WebSocket
 
   @doc false
   def start_link(scheme, endpoint, {m, f, [ref | _] = a}) do
