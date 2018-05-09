@@ -41,7 +41,7 @@ defmodule Phoenix.Channel.Server do
     Phoenix.Endpoint.instrument socket, :phoenix_channel_join, instrument, fn ->
       ref = make_ref()
 
-      case Supervisor.start_child(socket.handler, [socket, payload, self(), ref]) do
+      case Supervisor.start_child(hashed_supervisor(socket), [socket, payload, self(), ref]) do
         {:ok, :undefined} ->
           log_join socket, topic, fn -> "Replied #{topic} :error" end
           receive do: ({^ref, reply} -> {:error, reply})
@@ -53,6 +53,11 @@ defmodule Phoenix.Channel.Server do
           {:error, %{reason: "join crashed"}}
       end
     end
+  end
+
+  defp hashed_supervisor(%{handler: handler}) do
+    partitions = :ets.lookup_element(handler, :partitions, 2)
+    :ets.lookup_element(handler, :erlang.phash2(self(), partitions), 2)
   end
 
   defp log_join(_, "phoenix" <> _, _func), do: :noop

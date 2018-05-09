@@ -225,7 +225,6 @@ defmodule Phoenix.Socket do
 
       @doc false
       def child_spec(opts) do
-        # TODO: Receive socket options here, start a tree of supervisors.
         Phoenix.Socket.__child_spec__(__MODULE__, opts)
       end
 
@@ -440,13 +439,12 @@ defmodule Phoenix.Socket do
   ## CALLBACKS IMPLEMENTATION
 
   def __child_spec__(handler, opts) do
-    # TODO: When we migrate to a dynamic supervisor we can consider having a pool of them.
-    # Then the socket chooses one of them on boot.
     import Supervisor.Spec
+    partitions = Keyword.get(opts, :partitions) || System.schedulers_online()
+
     worker_opts = [shutdown: Keyword.get(opts, :shutdown, 5_000), restart: :temporary]
     worker = worker(Phoenix.Channel.Server, [], worker_opts)
-    supervisor_opts = [strategy: :simple_one_for_one, name: handler]
-    supervisor(Supervisor, [[worker], supervisor_opts], id: handler)
+    supervisor(Phoenix.Socket.PoolSupervisor, [{handler, partitions, worker}], id: handler)
   end
 
   def __connect__(handler, map) do
