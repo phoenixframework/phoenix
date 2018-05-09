@@ -101,7 +101,7 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
 
   defp transports(socket, opts) do
     case socket.__transports__ do
-      [] ->
+      map when map == %{} ->
         for {transport, config} <- Keyword.take(opts, [:websocket, :longpoll]),
             do: {transport, {module_for_transport(transport), config}}
 
