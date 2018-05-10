@@ -123,9 +123,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     |> update_in([:body], &Phoenix.json_library().decode!(&1))
     |> update_in([:body, "messages"], fn messages ->
       for msg <- messages || [] do
-        msg
-        |> Phoenix.json_library().encode!()
-        |> serializer.decode!([])
+        serializer.decode!(msg, opcode: :text)
       end
     end)
   end

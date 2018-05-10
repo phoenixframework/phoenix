@@ -191,23 +191,16 @@ defmodule Phoenix.Transports.LongPoll do
   end
 
   defp status_json(conn) do
-    status = conn.status || 200
-    send_json(conn, [{"status", Integer.to_string(status)}])
+    send_json(conn, %{"status" => conn.status || 200})
   end
 
   defp status_token_messages_json(conn, token, messages) do
-    status = conn.status || 200
-    messages = [?[, Enum.intersperse(messages, ?,), ?]]
-    token = Phoenix.json_library().encode_to_iodata!(token)
-    data = [{"status", Integer.to_string(status)}, {"token", token}, {"messages", messages}]
-    send_json(conn, data)
+    send_json(conn, %{"status" => conn.status || 200, "token" => token, "messages" => messages})
   end
 
-  defp send_json(conn, json) do
-    data = for {k, v} <- json, do: [?", k, ?", ?:, v]
-
+  defp send_json(conn, data) do
     conn
     |> put_resp_header("content-type", "application/json; charset=utf-8")
-    |> send_resp(200, [?{, Enum.intersperse(data, ?,), ?}])
+    |> send_resp(200, Phoenix.json_library().encode_to_iodata!(data))
   end
 end

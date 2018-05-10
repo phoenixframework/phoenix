@@ -135,7 +135,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
 
   defp publish_reply(state, reply) do
     notify_client_now_available(state)
-    {:noreply, update_in(state.buffer, &[reply | &1])}
+    {:noreply, update_in(state.buffer, &[IO.iodata_to_binary(reply) | &1])}
   end
 
   defp notify_client_now_available(state) do

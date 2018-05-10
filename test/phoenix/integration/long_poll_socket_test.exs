@@ -41,7 +41,7 @@ defmodule Phoenix.Integration.LongPollSocketTest do
 
     def handle_in({"params", opts}, {:params, params} = state) do
       :text = Keyword.fetch!(opts, :opcode)
-      {:reply, :ok, {:text, Phoenix.json_library().encode!(params)}, state}
+      {:reply, :ok, {:text, inspect(params)}, state}
     end
 
     def handle_in({"ping", opts}, state) do
@@ -51,7 +51,7 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     end
 
     def handle_info(:ping, state) do
-      {:push, {:text, Phoenix.json_library().encode!("pong")}, state}
+      {:push, {:text, "pong"}, state}
     end
 
     def terminate(_reason, {:params, _}) do
@@ -108,7 +108,7 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     assert resp.body["status"] == 200
 
     resp = poll(:get, secret, nil)
-    assert resp.body["messages"] == [%{"hello" => "world"}]
+    assert resp.body["messages"] == [~s(%{"hello" => "world"})]
   end
 
   test "returns pong from async request" do

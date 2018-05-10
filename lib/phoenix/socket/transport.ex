@@ -67,20 +67,17 @@ defmodule Phoenix.Socket.Transport do
           {:ok, state}
         end
 
-        def terminate(_reason, {:params, _}) do
+        def terminate(_reason, _state) do
           :ok
         end
       end
 
   It can be mounted in your endpoint like any other socket:
 
-      socket "/my_app", PingSocket, websocket: true
+      socket "/socket", PingSocket, websocket: true, longpoll: true
 
-  You can now interact with the socket under `/my_app/websocket`.
-  Note the socket above could also be used for long polling,
-  but remember that the long polling transport requires data
-  to be sent as JSON, so you would need to change your reply
-  accordingly.
+  You can now interact with the socket under `/socket/websocket`
+  and `/socket/longpoll`.
 
   ## Security
 
