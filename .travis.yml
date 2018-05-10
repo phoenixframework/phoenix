@@ -6,12 +6,6 @@ elixir:
 otp_release:
   - 19.3
   - 20.1
-matrix:
-  include:
-    - otp_release: 18.3
-      elixir: 1.4
-      env:
-       - COWBOY_VERSION=1.0
 sudo: false
 env:
   global:

@@ -857,7 +857,6 @@ defmodule Phoenix.Endpoint do
   end
 
   @doc false
-  # TODO: Move default configs here once the transport is deprecated
   # TODO: Return only socket and opts once Cowboy1 transport handling is removed
   def __socket__(endpoint, path, socket, opts) do
     paths = []
