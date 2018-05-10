@@ -47,9 +47,15 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     end
 
     get "/send_and_wrapped" do
-      raise Plug.Conn.WrapperError, conn: conn,
-        kind: :error, stack: System.stacktrace,
-        reason: ArgumentError.exception("oops")
+      stack =
+        try do
+          raise "oops"
+        rescue
+          _ -> System.stacktrace()
+        end
+
+      reason = ArgumentError.exception("oops")
+      raise Plug.Conn.WrapperError, conn: conn, kind: :error, stack: stack, reason: reason
     end
 
     match _ do
