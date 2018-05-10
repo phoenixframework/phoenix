@@ -200,11 +200,8 @@ defmodule Phoenix.Channel.Server do
   """
   def push(pid, topic, event, payload, serializer)
       when is_binary(topic) and is_binary(event) and is_map(payload) do
-
-    encoded_msg = serializer.encode!(%Message{topic: topic,
-                                              event: event,
-                                              payload: payload})
-    send pid, encoded_msg
+    message = %Message{topic: topic, event: event, payload: payload}
+    send pid, serializer.encode!(message)
     :ok
   end
   def push(_, topic, event, payload, _) do
@@ -216,10 +213,8 @@ defmodule Phoenix.Channel.Server do
   """
   def reply(pid, join_ref, ref, topic, {status, payload}, serializer)
       when is_binary(topic) and is_map(payload) do
-
-    send pid, serializer.encode!(
-      %Reply{topic: topic, join_ref: join_ref, ref: ref, status: status, payload: payload}
-    )
+    reply = %Reply{topic: topic, join_ref: join_ref, ref: ref, status: status, payload: payload}
+    send pid, serializer.encode!(reply)
     :ok
   end
   def reply(_, _, _, topic, {_status, payload}, _) do

@@ -1,6 +1,4 @@
 defmodule Phoenix.Socket do
-  # TODO: Rewrite docs
-
   @moduledoc ~S"""
   A socket implementation that multiplexes messages over channels.
 
@@ -12,18 +10,17 @@ defmodule Phoenix.Socket do
   It is the responsibility of the socket to tie transports and channels
   together.
 
-  By default, Phoenix supports both websockets and longpoll transports.
-  For example:
+  By default, Phoenix supports both websockets and longpoll when invoking
+  `Phoenix.Endpoint.socket/3` in your endpoint:
 
-      transport :websocket, Phoenix.Transports.WebSocket
+      socket "/socket", MyApp.Socket, websocket: true, longpoll: false
 
   The command above means incoming socket connections can be made via
-  the WebSocket transport. Events are routed by topic to channels:
+  a WebSocket connection. Events are routed by topic to channels:
 
       channel "room:lobby", MyApp.LobbyChannel
 
-  See `Phoenix.Channel` for more information on channels. Check each
-  transport module to find the options specific to each transport.
+  See `Phoenix.Channel` for more information on channels.
 
   ## Socket Behaviour
 
@@ -41,7 +38,6 @@ defmodule Phoenix.Socket do
       defmodule MyApp.UserSocket do
         use Phoenix.Socket
 
-        transport :websocket, Phoenix.Transports.WebSocket
         channel "room:*", MyApp.RoomChannel
 
         def connect(params, socket) do
@@ -75,18 +71,22 @@ defmodule Phoenix.Socket do
 
   The encoding of server data and the decoding of client data is done
   according to a serializer, defined in `Phoenix.Socket.Serializer`.
+  By default, JSON encoding is used to broker messages to and from
+  clients with `Phoenix.Socket.V2.JSONSerializer`.
 
-  The `decode!` function must return a `Phoenix.Socket.Message` which
-  is forwarded to channels except:
+  The serializer `encode!/1` and `fastlane!/1` functions must return
+  a tuple in the format `{:text | :binary, iodata}`.
 
-    * "heartbeat" events in the "phoenix" topic - should just emit
-      an OK reply
+  The serializer `decode!` function must return a `Phoenix.Socket.Message`
+  which is forwarded to channels except:
+
+    * "heartbeat" events in the "phoenix" topic - should just emit an OK reply
     * "phx_join" on any topic - should join the topic
     * "phx_leave" on any topic - should leave the topic
 
   Each message also has a `ref` field which is used to track responses.
 
-  The server may send messages or a replies back. For messages, the
+  The server may send messages or replies back. For messages, the
   ref uniquely identifies the message. For replies, the ref matches
   the original message. Both data-types also include a join_ref that
   uniquely identifes the currently joined channel.
@@ -100,9 +100,8 @@ defmodule Phoenix.Socket do
     * "phx_close" - the channel was gracefully closed
 
   Phoenix ships with a JavaScript implementation of both websocket
-  and long polling transports that interacts with Phoenix.Socket and
-  can be used as reference for those interested in implementing custom
-  clients.
+  and long polling that interacts with Phoenix.Socket and can be
+  used as reference for those interested in implementing custom clients.
 
   ## Custom sockets and transports
 
@@ -110,24 +109,13 @@ defmodule Phoenix.Socket do
   writing your own socket that does not leverage channels or for writing
   your own transports that interacts with other sockets.
 
-  ## Serializer
-
-  By default, JSON encoding is used to broker messages to and from clients.
-  A custom serializer may be given as a module which implements the `encode!/1`
-  and `decode!/2` functions defined by the `Phoenix.Transports.Serializer`
-  behaviour.
-
-  The `encode!/1` function must return a tuple in the format
-  `{:socket_push, :text | :binary, String.t | binary}`.
-
   ## Garbage collection
 
   It's possible to force garbage collection in the transport process after
-  processing large messages.
+  processing large messages. For example, to trigger such from your channels,
+  run:
 
-  Send `:garbage_collect` clause to the transport process:
-
-      send socket.transport_pid, :garbage_collect
+      send(socket.transport_pid, :garbage_collect)
   """
 
   require Logger
@@ -665,13 +653,7 @@ defmodule Phoenix.Socket do
   end
 
   defp encode_reply(%{serializer: serializer}, message) do
-    case serializer.encode!(message) do
-      # TODO: Deprecate or accept me
-      {:socket_push, opcode, payload} ->
-        {opcode, payload}
-
-      {_opcode, _payload} = tuple ->
-        tuple
-    end
+    {:socket_push, opcode, payload} = serializer.encode!(message)
+    {opcode, payload}
   end
 end
