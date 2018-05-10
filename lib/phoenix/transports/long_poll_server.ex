@@ -26,7 +26,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   end
 
   def init({endpoint, handler, options, params, priv_topic}) do
-    config = %{endpoint: endpoint, transport: :long_polling, options: options, params: params}
+    config = %{endpoint: endpoint, transport: :longpoll, options: options, params: params}
     window_ms = Keyword.fetch!(options, :window_ms)
 
     case handler.connect(config) do
@@ -55,7 +55,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   def handle_info({:dispatch, client_ref, body, ref}, state) do
     %{handler: {handler, handler_state}} = state
 
-    case handler.handle_in({body, []}, handler_state) do
+    case handler.handle_in({body, opcode: :text}, handler_state) do
       {:reply, status, {_, reply}, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
         status = if status == :ok, do: :ok, else: :error

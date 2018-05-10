@@ -1,7 +1,6 @@
 Code.require_file "../../support/http_client.exs", __DIR__
 
-defmodule Phoenix.Integration.LongPollTest do
-  # TODO: Make this test async
+defmodule Phoenix.Integration.LongPollChannelsTest do
   use ExUnit.Case
   import ExUnit.CaptureLog
 
@@ -121,7 +120,7 @@ defmodule Phoenix.Integration.LongPollTest do
 
   defp decode_body(serializer, %{} = resp) do
     resp
-    |> put_in([:body], Phoenix.json_library().decode!(resp.body))
+    |> update_in([:body], &Phoenix.json_library().decode!(&1))
     |> update_in([:body, "messages"], fn messages ->
       for msg <- messages || [] do
         msg
@@ -242,7 +241,7 @@ defmodule Phoenix.Integration.LongPollTest do
       assert resp.body["status"] == 200
       assert List.last(resp.body["messages"]) == %Message{
         event: "new_msg",
-        payload: %{"transport" => ":long_polling", "body" => "hi!"},
+        payload: %{"transport" => ":longpoll", "body" => "hi!"},
         ref: nil,
         join_ref: nil,
         topic: "room:lobby"

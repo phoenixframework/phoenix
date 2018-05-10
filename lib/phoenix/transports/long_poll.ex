@@ -54,7 +54,7 @@ defmodule Phoenix.Transports.LongPoll do
     end
   end
 
-  # Publish the message encoded as a JSON body.
+  # Publish the message.
   defp dispatch(%{method: "POST"} = conn, endpoint, _, opts) do
     case resume_session(conn.params, endpoint, opts) do
       {:ok, server_ref} ->

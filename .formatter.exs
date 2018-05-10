@@ -38,6 +38,7 @@ locals_without_parens = [
   plug: 1,
   plug: 2,
   socket: 2,
+  socket: 3,
 
   # Phoenix.Socket
   channel: 2,
