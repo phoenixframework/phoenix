@@ -327,8 +327,11 @@ defmodule Phoenix.Socket do
           websocket: [key1: value1, key2: value2, key3: value3],
           longpoll: [key1: value1, key2: value2, key3: value3]
 
-    Note if you have explicitly upgraded to Cowboy 2, any transport
-    defined with the `transport/3` macro will be ignored.
+    Note the websocket/longpoll configuration given to socket/3
+    will only apply after you remove all `transport/3` calls from
+    your socket definition. If you have explicitly upgraded to
+    Cowboy 2, any transport defined with the `transport/3` macro
+    will be ignored.
     """
 
     defaults = module.default_config()
