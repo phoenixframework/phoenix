@@ -6,6 +6,13 @@ defmodule Phoenix.Socket.PoolSupervisor do
     Supervisor.start_link(__MODULE__, triplet, name: name)
   end
 
+  def start_child(name, key, args) do
+    partitions = :ets.lookup_element(name, :partitions, 2)
+    sup = :ets.lookup_element(name, :erlang.phash2(key, partitions), 2)
+    Supervisor.start_child(sup, args)
+  end
+
+  @doc false
   def init({name, partitions, worker}) do
     import Supervisor.Spec
 
