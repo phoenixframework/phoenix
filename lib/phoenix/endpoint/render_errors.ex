@@ -33,30 +33,26 @@ defmodule Phoenix.Endpoint.RenderErrors do
       def call(conn, opts) do
         try do
           super(conn, opts)
+        rescue
+          e in Plug.Conn.WrapperError ->
+            %{conn: conn, kind: kind, reason: reason, stack: stack} = e
+            unquote(__MODULE__).__catch__(conn, kind, reason, stack, @phoenix_render_errors)
         catch
           kind, reason ->
-            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, @phoenix_render_errors)
+            stack = System.stacktrace()
+            unquote(__MODULE__).__catch__(conn, kind, reason, stack, @phoenix_render_errors)
         end
       end
     end
   end
 
   @doc false
-  def __catch__(_conn, :error, %Plug.Conn.WrapperError{} = wrapper, opts) do
-    %{conn: conn, kind: kind, reason: reason, stack: stack} = wrapper
-    __catch__(conn, kind, reason, stack, opts)
-  end
-
-  def __catch__(conn, kind, reason, opts) do
-    __catch__(conn, kind, reason, System.stacktrace, opts)
-  end
-
-  defp __catch__(_conn, :error, %Phoenix.Router.NoRouteError{} = reason, stack, opts) do
+  def __catch__(_conn, :error, %Phoenix.Router.NoRouteError{} = reason, stack, opts) do
     maybe_render(reason.conn, :error, reason, stack, opts)
     :erlang.raise(:error, reason, stack)
   end
 
-  defp __catch__(conn, kind, reason, stack, opts) do
+  def __catch__(conn, kind, reason, stack, opts) do
     maybe_render(conn, kind, reason, stack, opts)
     :erlang.raise(kind, reason, stack)
   end

@@ -739,9 +739,14 @@ defmodule Phoenix.Endpoint do
 
         try do
           super(conn, opts)
+        rescue
+          e in Plug.Conn.WrapperError ->
+            %{conn: conn, kind: kind, reason: reason, stack: stack} = e
+            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, @phoenix_render_errors)
         catch
           kind, reason ->
-            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, @phoenix_render_errors)
+            stack = System.stacktrace()
+            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, @phoenix_render_errors)
         end
       end
 
