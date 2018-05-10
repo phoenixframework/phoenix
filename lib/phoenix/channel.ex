@@ -259,6 +259,7 @@ defmodule Phoenix.Channel do
   incoming events:
 
       use Phoenix.Channel, log_join: :info, log_handle_in: false
+
   """
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
@@ -267,10 +268,6 @@ defmodule Phoenix.Channel do
   @type socket_ref :: {transport_pid :: Pid, serializer :: module,
                        topic :: binary, ref :: binary, join_ref :: binary}
 
-  @callback code_change(old_vsn, Socket.t, extra :: term) ::
-              {:ok, Socket.t} |
-              {:error, reason :: term} when old_vsn: term | {:down, term}
-
   @callback join(topic :: binary, auth_msg :: map, Socket.t) ::
               {:ok, Socket.t} |
               {:ok, map, Socket.t} |
@@ -278,16 +275,28 @@ defmodule Phoenix.Channel do
 
   @callback handle_in(event :: String.t, msg :: map, Socket.t) ::
               {:noreply, Socket.t} |
+              {:noreply, Socket.t, timeout | :hibernate} |
               {:reply, reply, Socket.t} |
               {:stop, reason :: term, Socket.t} |
               {:stop, reason :: term, reply, Socket.t}
+
+  @callback handle_out(event :: String.t, msg :: map, Socket.t) ::
+              {:noreply, Socket.t} |
+              {:noreply, Socket.t, timeout | :hibernate} |
+              {:stop, reason :: term, Socket.t}
 
   @callback handle_info(term, Socket.t) ::
               {:noreply, Socket.t} |
               {:stop, reason :: term, Socket.t}
 
+  @callback code_change(old_vsn, Socket.t, extra :: term) ::
+              {:ok, Socket.t} |
+              {:error, reason :: term} when old_vsn: term | {:down, term}
+
   @callback terminate(reason :: :normal | :shutdown | {:shutdown, :left | :closed | term}, Socket.t) ::
               term
+
+  @optional_callbacks handle_in: 3, handle_out: 3, handle_info: 2, code_change: 3, terminate: 2
 
   defmacro __using__(opts \\ []) do
     quote do
@@ -303,23 +312,8 @@ defmodule Phoenix.Channel do
       import Phoenix.Socket, only: [assign: 3]
 
       def __socket__(:private) do
-        %{log_join: @phoenix_log_join,
-          log_handle_in: @phoenix_log_handle_in}
+        %{log_join: @phoenix_log_join, log_handle_in: @phoenix_log_handle_in}
       end
-
-      def code_change(_old, socket, _extra), do: {:ok, socket}
-
-      def handle_in(_event, _message, socket) do
-        {:noreply, socket}
-      end
-
-      def handle_info(message, state) do
-        Phoenix.Channel.Server.unhandled_handle_info(message, state)
-      end
-
-      def terminate(_reason, _socket), do: :ok
-
-      defoverridable code_change: 3, handle_info: 2, handle_in: 3, terminate: 2
     end
   end
 
@@ -366,7 +360,7 @@ defmodule Phoenix.Channel do
 
   @doc false
   def __on_definition__(env, :def, :handle_out, [event, _payload, _socket], _, _)
-    when is_binary(event) do
+      when is_binary(event) do
 
     unless event in Module.get_attribute(env.module, :phoenix_intercepts) do
       IO.write "#{Path.relative_to(env.file, File.cwd!)}:#{env.line}: [warning] " <>
@@ -374,7 +368,9 @@ defmodule Phoenix.Channel do
                "Add \"#{event}\" to your list of intercepted events with intercept/1"
     end
   end
+
   def __on_definition__(_env, _kind, _name, _args, _guards, _body) do
+    :ok
   end
 
   @doc """

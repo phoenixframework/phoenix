@@ -1,11 +1,11 @@
 defmodule Phoenix.Endpoint.Supervisor do
-  # This module contains the logic used by most functions
-  # in Phoenix.Endpoint as well the supervisor for starting
-  # the adapters/handlers.
+  # This module contains the logic used by most functions in Phoenix.Endpoint
+  # as well the supervisor for sockets, adapters, watchers, etc.
   @moduledoc false
 
   require Logger
   use Supervisor
+  alias Phoenix.Endpoint.{CowboyAdapter, Cowboy2Adapter}
 
   @doc """
   Starts the endpoint supervision tree.
@@ -38,16 +38,13 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     children =
       pubsub_children(mod, conf) ++
+      socket_children(mod) ++
       config_children(mod, conf, otp_app) ++
-      server_children(mod, conf, server?) ++
+      server_children(mod, conf, otp_app, server?) ++
       watcher_children(mod, conf, server?)
 
-    supervise(children, strategy: :one_for_one)
-  end
-
-  defp config_children(mod, conf, otp_app) do
-    args = [mod, conf, defaults(otp_app, mod), [name: Module.concat(mod, "Config")]]
-    [worker(Phoenix.Config, args)]
+    # Supervisor.init(children, strategy: :one_for_one)
+    {:ok, {{:one_for_one, 3, 5}, children}}
   end
 
   defp pubsub_children(mod, conf) do
@@ -61,18 +58,83 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  # TODO v1.4: Handlers -> Phoenix.Server
-  # TODO v1.4: Each transport should have its own tree
-  defp server_children(mod, conf, server?) do
+  defp socket_children(mod) do
+    mod.__sockets__
+    |> Enum.uniq_by(&elem(&1, 1))
+    |> Enum.map(fn {_, mod, opts, _} -> mod.child_spec(opts) end)
+  end
+
+  defp config_children(mod, conf, otp_app) do
+    args = [mod, conf, defaults(otp_app, mod), [name: Module.concat(mod, "Config")]]
+    [worker(Phoenix.Config, args)]
+  end
+
+  defp server_children(mod, config, otp_app, server?) do
     if server? do
-      server = Module.concat(mod, "Server")
-      long_poll = Module.concat(mod, "LongPoll.Supervisor")
-      [supervisor(Phoenix.Endpoint.Handler, [conf[:otp_app], mod, [name: server]]),
-       supervisor(Phoenix.Transports.LongPoll.Supervisor, [[name: long_poll]])]
+      user_adapter = user_adapter(mod, config)
+      autodetected_adapter = cowboy_version_adapter()
+      warn_on_different_adapter_version(user_adapter, autodetected_adapter, mod)
+      adapter = user_adapter || autodetected_adapter
+
+      for {scheme, port} <- [http: 4000, https: 4040], opts = config[scheme] do
+        port = :proplists.get_value(:port, opts, port)
+
+        unless port do
+          raise "server can't start because :port in #{scheme} config is nil, " <>
+                  "please use a valid port number"
+        end
+
+        opts = [port: port_to_integer(port), otp_app: otp_app] ++ :proplists.delete(:port, opts)
+        adapter.child_spec(scheme, mod, opts)
+      end
     else
       []
     end
   end
+
+  defp user_adapter(endpoint, config) do
+    case config[:handler] do
+      nil ->
+        config[:adapter]
+
+      Phoenix.Endpoint.CowboyHandler ->
+        Logger.warn "Phoenix.Endpoint.CowboyHandler is deprecated, please use Phoenix.Endpoint.CowboyAdapter instead"
+        CowboyAdapter
+
+      other ->
+        Logger.warn "The :handler option in #{inspect endpoint} is deprecated, please use :adapter instead"
+        other
+    end
+  end
+
+  defp cowboy_version_adapter() do
+    case Application.spec(:cowboy, :vsn) do
+      [?1 | _] -> CowboyAdapter
+      _ -> Cowboy2Adapter
+    end
+  end
+
+  defp warn_on_different_adapter_version(CowboyAdapter, Cowboy2Adapter, endpoint) do
+    Logger.warn("""
+    You have specified #{inspect CowboyAdapter} for Cowboy v1.x \
+    in the :adapter configuration of your Phoenix endpoint #{inspect endpoint} \
+    but your mix.exs has fetched Cowboy v2.x.
+
+    If you wish to use Cowboy 1, please update mix.exs to point to the \
+    correct Cowboy version:
+
+        {:cowboy, "~> 1.0"}
+
+    If you want to use Cowboy 2, then please remove the :adapter option \
+    in your config.exs file or set it to:
+
+        adapter: Phoenix.Endpoint.Cowboy2Adapter
+
+    """)
+
+    raise "aborting due to adapter mismatch"
+  end
+  defp warn_on_different_adapter_version(_user, _autodetected, _endpoint), do: :ok
 
   defp watcher_children(_mod, conf, server?) do
     if server? do
@@ -269,11 +331,11 @@ defmodule Phoenix.Endpoint.Supervisor do
     raise ArgumentError, "expected a path starting with a single / but got #{inspect path}"
   end
 
-  # TODO v1.4: Deprecate {:system, env_var}
+  # TODO: Deprecate {:system, env_var} once we require Elixir v1.7+
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 
-  # TODO v1.4: Deprecate {:system, env_var}
+  # TODO: Deprecate {:system, env_var} once we require Elixir v1.7+
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port

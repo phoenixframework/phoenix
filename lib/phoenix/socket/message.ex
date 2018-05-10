@@ -9,6 +9,7 @@ defmodule Phoenix.Socket.Message do
     * `event`- The string event name, for example "phx_join"
     * `payload` - The message payload
     * `ref` - The unique string ref
+    * `join_ref` - The unique string ref when joining
 
   """
 
@@ -46,6 +47,7 @@ defmodule Phoenix.Socket.Reply do
     * `status` - The reply status as an atom
     * `payload` - The reply payload
     * `ref` - The unique string ref
+    * `join_ref` - The unique string ref when joining
 
   """
 

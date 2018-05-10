@@ -1,5 +1,4 @@
 defmodule Phoenix.Endpoint.CowboyWebSocket do
-  # Implementation of the WebSocket transport for Cowboy.
   @moduledoc false
 
   if Code.ensure_loaded?(:cowboy_websocket_handler) do
@@ -9,12 +8,16 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
   @connection Plug.Adapters.Cowboy.Conn
   @already_sent {:plug_conn, :sent}
 
-  def init({transport, :http}, req, {module, opts}) when transport in [:tcp, :ssl] do
+  def init({transport, :http}, req, {module, args}) when transport in [:tcp, :ssl] do
+    {endpoint, handler, opts} = args
     conn = @connection.conn(req, transport)
+
     try do
-      case module.init(conn, opts) do
+      case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
         {:ok, %{adapter: {@connection, req}}, args} ->
-          {:upgrade, :protocol, __MODULE__, req, args}
+          timeout = Keyword.fetch!(opts, :timeout)
+          {:upgrade, :protocol, __MODULE__, req, {handler, args, timeout}}
+
         {:error, %{adapter: {@connection, req}}} ->
           {:shutdown, req, :no_state}
       end
@@ -22,8 +25,8 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
       kind, reason ->
         # Although we are not performing a call, we are using the call
         # function for now so it is properly handled in error reports.
-        mfa = {module, :call, [conn, opts]}
-        {:upgrade, :protocol, __MODULE__, req, {:error, mfa, kind, reason, System.stacktrace}}
+        mfa = {module, :call, [conn, args]}
+        {:upgrade, :protocol, __MODULE__, req, {:error, mfa, kind, reason, System.stacktrace()}}
     after
       receive do
         @already_sent -> :ok
@@ -33,17 +36,16 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     end
   end
 
-  def upgrade(req, env, __MODULE__, {handler, opts}) do
-    args = [req, env, __MODULE__, {handler, opts}]
-    resume(:cowboy_websocket, :upgrade, args)
-  end
-
   def upgrade(_req, _env, __MODULE__, {:error, mfa, kind, reason, stack}) do
     reason = format_reason(kind, reason, stack)
     exit({reason, mfa})
   end
 
-  def terminate(_reason,  _req, _state) do
+  def upgrade(req, env, __MODULE__, {_, _, _} = args) do
+    resume(:cowboy_websocket, :upgrade, [req, env, __MODULE__, args])
+  end
+
+  def terminate(_reason, _req, _state) do
     :ok
   end
 
@@ -57,6 +59,7 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     else
       {:suspend, module, fun, args} ->
         {:suspend, __MODULE__, :resume, [module, fun, args]}
+
       _ ->
         # We are forcing a shutdown exit because we want to make
         # sure all transports exits with reason shutdown to guarantee
@@ -71,50 +74,54 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
 
   ## Websocket callbacks
 
-  def websocket_init(_transport, req, {handler, args}) do
-    {:ok, state, timeout} = handler.ws_init(args)
+  def websocket_init(_transport, req, {handler, args, timeout}) do
+    {:ok, state} = handler.init(args)
     {:ok, :cowboy_req.compact(req), {handler, state}, timeout}
   end
 
-  def websocket_handle({opcode = :text, payload}, req, {handler, state}) do
-    handle_reply req, handler, handler.ws_handle(opcode, payload, state)
+  def websocket_handle({opcode, payload}, req, {handler, state})
+      when opcode in [:text, :binary] do
+    handle_reply(req, handler, handler.handle_in({payload, opcode: opcode}, state))
   end
-  def websocket_handle({opcode = :binary, payload}, req, {handler, state}) do
-    handle_reply req, handler, handler.ws_handle(opcode, payload, state)
-  end
-  def websocket_handle(_other, req, {handler, state}) do
-    {:ok, req, {handler, state}}
+
+  def websocket_handle(_other, req, state) do
+    {:ok, req, state}
   end
 
   def websocket_info(message, req, {handler, state}) do
-    handle_reply req, handler, handler.ws_info(message, state)
+    handle_reply(req, handler, handler.handle_info(message, state))
   end
 
   def websocket_terminate({:error, :closed}, _req, {handler, state}) do
-    handler.ws_close(state)
-    :ok
-  end
-  def websocket_terminate({:remote, :closed}, _req, {handler, state}) do
-    handler.ws_close(state)
-    :ok
-  end
-  def websocket_terminate({:remote, code, _}, _req, {handler, state})
-      when code in 1000..1003 or code in 1005..1011 or code == 1015 do
-    handler.ws_close(state)
-    :ok
-  end
-  def websocket_terminate(reason, _req, {handler, state}) do
-    handler.ws_terminate(reason, state)
+    handler.terminate(:closed, state)
     :ok
   end
 
-  defp handle_reply(req, handler, {:shutdown, new_state}) do
-    {:shutdown, req, {handler, new_state}}
+  def websocket_terminate({:remote, :closed}, _req, {handler, state}) do
+    handler.terminate(:closed, state)
+    :ok
   end
-  defp handle_reply(req, handler, {:ok, new_state}) do
-    {:ok, req, {handler, new_state}}
+
+  def websocket_terminate({:remote, code, _}, _req, {handler, state})
+      when code in 1000..1003 or code in 1005..1011 or code == 1015 do
+    handler.terminate(:closed, state)
+    :ok
   end
-  defp handle_reply(req, handler, {:reply, {opcode, payload}, new_state}) do
-    {:reply, {opcode, payload}, req, {handler, new_state}}
+
+  def websocket_terminate(reason, _req, {handler, state}) do
+    handler.terminate(reason, state)
+    :ok
   end
+
+  defp handle_reply(req, handler, {:ok, state}),
+    do: {:ok, req, {handler, state}}
+
+  defp handle_reply(req, handler, {:push, data, state}),
+    do: {:reply, data, req, {handler, state}}
+
+  defp handle_reply(req, handler, {:reply, _status, data, state}),
+    do: {:reply, data, req, {handler, state}}
+
+  defp handle_reply(req, handler, {:stop, _reason, state}),
+    do: {:shutdown, req, {handler, state}}
 end

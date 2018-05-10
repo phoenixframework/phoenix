@@ -6,18 +6,11 @@ defmodule Phoenix.Integration.WebSocketTest do
   import ExUnit.CaptureLog
 
   alias Phoenix.Integration.WebsocketClient
-  alias Phoenix.Socket.{V2, Message}
-  alias Phoenix.Transports.WebSocketSerializer
+  alias Phoenix.Socket.{V1, V2, Message}
   alias __MODULE__.Endpoint
 
   @moduletag :capture_log
   @port 5807
-
-  handler =
-    case Application.spec(:cowboy, :vsn) do
-      [?2 | _] -> Phoenix.Endpoint.Cowboy2Handler
-      _ -> Phoenix.Endpoint.CowboyHandler
-    end
 
   Application.put_env(:phoenix, Endpoint, [
     https: false,
@@ -25,7 +18,6 @@ defmodule Phoenix.Integration.WebSocketTest do
     secret_key_base: String.duplicate("abcdefgh", 8),
     debug_errors: false,
     server: true,
-    handler: handler,
     pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__]
   ])
 
@@ -71,36 +63,12 @@ defmodule Phoenix.Integration.WebSocketTest do
 
     channel "room:*", RoomChannel
 
-    transport :websocket, Phoenix.Transports.WebSocket,
-      check_origin: ["//example.com"], timeout: 200
-
     def connect(%{"reject" => "true"}, _socket) do
       :error
     end
 
     def connect(params, socket) do
-      Logger.disable(self())
-      {:ok, assign(socket, :user_id, params["user_id"])}
-    end
-
-    def id(socket) do
-      if id = socket.assigns.user_id, do: "user_sockets:#{id}"
-    end
-  end
-
-  defmodule LoggingSocket do
-    use Phoenix.Socket
-
-    channel "room:*", RoomChannel
-
-    transport :websocket, Phoenix.Transports.WebSocket,
-      check_origin: ["//example.com"], timeout: 200
-
-    def connect(%{"reject" => "true"}, _socket) do
-      :error
-    end
-
-    def connect(params, socket) do
+      unless params["logging"] == "enabled", do: Logger.disable(self())
       {:ok, assign(socket, :user_id, params["user_id"])}
     end
 
@@ -112,9 +80,11 @@ defmodule Phoenix.Integration.WebSocketTest do
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
-    socket "/ws", UserSocket
-    socket "/ws/admin", UserSocket
-    socket "/ws/logging", LoggingSocket
+    socket "/ws", UserSocket,
+      websocket: [check_origin: ["//example.com"], timeout: 200]
+
+    socket "/ws/admin", UserSocket,
+      websocket: [check_origin: ["//example.com"], timeout: 200]
   end
 
   setup_all do
@@ -122,7 +92,7 @@ defmodule Phoenix.Integration.WebSocketTest do
     :ok
   end
 
-  for {serializer, vsn, join_ref} <- [{WebSocketSerializer, "1.0.0", nil}, {V2.JSONSerializer, "2.0.0", "1"}] do
+  for {serializer, vsn, join_ref} <- [{V1.JSONSerializer, "1.0.0", nil}, {V2.JSONSerializer, "2.0.0", "1"}] do
     @serializer serializer
     @vsn vsn
     @join_ref join_ref
@@ -157,7 +127,7 @@ defmodule Phoenix.Integration.WebSocketTest do
         assert Process.alive?(channel_pid)
 
         WebsocketClient.send_event(sock, "room:lobby1", "new_msg", %{body: "hi!"})
-        assert_receive %Message{event: "new_msg", payload: %{"transport" => "Phoenix.Transports.WebSocket", "body" => "hi!"}}
+        assert_receive %Message{event: "new_msg", payload: %{"transport" => ":websocket", "body" => "hi!"}}
 
         WebsocketClient.leave(sock, "room:lobby1", %{})
         assert_receive %Message{event: "you_left", payload: %{"message" => "bye!"}}
@@ -175,7 +145,7 @@ defmodule Phoenix.Integration.WebSocketTest do
 
       test "logs and filter params on join and handle_in" do
         topic = "room:admin-lobby2"
-        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/logging/websocket?vsn=#{@vsn}", @serializer)
+        {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}&logging=enabled", @serializer)
         log = capture_log fn ->
           WebsocketClient.join(sock, topic, %{"join" => "yes", "password" => "no"})
           assert_receive %Message{event: "phx_reply",
@@ -295,7 +265,7 @@ defmodule Phoenix.Integration.WebSocketTest do
           assert WebsocketClient.start_link(self(), url,  @serializer) ==
                 {:error, {403, "Forbidden"}}
         end
-        assert log =~ "The client's requested channel transport version \"123.1.1\" does not match server's version"
+        assert log =~ "The client's requested transport version \"123.1.1\" does not match server's version"
       end
 
       test "shuts down if client goes quiet" do

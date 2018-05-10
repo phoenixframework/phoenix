@@ -103,8 +103,12 @@ The message flow looks something like this:
 In your Phoenix app's `Endpoint` module, a `socket` declaration specifies which socket handler will receive connections on a given URL.
 
 ```elixir
-socket "/socket", HelloWeb.UserSocket
+socket "/socket", HelloWeb.UserSocket,
+  websocket: true,
+  longpoll: false
 ```
+
+Phoenix comes with two default transports: websocket and longpoll. You can configure them directly via the `socket` declaration.
 
 ### Socket Handlers
 
@@ -142,31 +146,6 @@ The `Phoenix.Socket.Message` module defines a struct with the following keys whi
 - `event` - The string event name, for example `"phx_join"`
 - `payload` - The message payload
 - `ref` - The unique string ref
-
-### Transports
-
-The transport layer is involved in the "last mile" - actually getting messages to and from clients.
-The `Phoenix.Channel.Transport` module handles all the message dispatching into and out of a Channel.
-
-### Transport Adapters
-
-Within a given socket handler, we can configure which transport adapter to use.
-This determines the protocol(s) by which clients may connect.
-
-For example, in the socket handler module of a freshly-generated Phoenix app, you'll find:
-
-```elixir
-transport :websocket, Phoenix.Transports.WebSocket # transport adapter
-```
-
-If clients of your application don't support WebSockets, you can use the long polling adapter instead:
-
-```elixir
-transport :longpoll, Phoenix.Transports.LongPoll
-```
-
-Other transport adapters are possible, and we can write our own if we follow the adapter contract.
-Please see `Phoenix.TransportsWebSocket` for an example.
 
 ### PubSub
 

@@ -584,7 +584,10 @@ defmodule Phoenix.Endpoint do
 
   defp server() do
     quote location: :keep, unquote: false do
-      @doc false
+      @doc """
+      Returns the child specification to start the endpoint
+      under a supervision tree.
+      """
       def child_spec(opts) do
         %{
           id: __MODULE__,
@@ -592,8 +595,6 @@ defmodule Phoenix.Endpoint do
           type: :supervisor
         }
       end
-
-      defoverridable child_spec: 1
 
       @doc """
       Starts the endpoint supervision tree.
@@ -715,10 +716,17 @@ defmodule Phoenix.Endpoint do
   end
 
   @doc false
-  defmacro __before_compile__(env) do
-    sockets = Module.get_attribute(env.module, :phoenix_sockets)
-    otp_app = Module.get_attribute(env.module, :otp_app)
-    instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, env.module)
+  defmacro __before_compile__(%{module: module}) do
+    sockets = Module.get_attribute(module, :phoenix_sockets)
+    otp_app = Module.get_attribute(module, :otp_app)
+    instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, module)
+
+    dispatches =
+      for {_, _, _, paths} <- sockets, {path, return} <- paths do
+        quote do
+          def __dispatch__(unquote(path), _opts), do: unquote(Macro.escape(return))
+        end
+      end
 
     quote do
       defoverridable [call: 2]
@@ -737,10 +745,13 @@ defmodule Phoenix.Endpoint do
         end
       end
 
-      @doc """
-      Returns all sockets configured in this endpoint.
-      """
-      def __sockets__, do: unquote(sockets)
+      @doc false
+      def __sockets__, do: unquote(Macro.escape(sockets))
+
+      @doc false
+      def __dispatch__(path, opts)
+      unquote(dispatches)
+      def __dispatch__(_, opts), do: {:plug, __MODULE__, opts}
 
       unquote(instrumentation)
     end
@@ -749,19 +760,85 @@ defmodule Phoenix.Endpoint do
   ## API
 
   @doc """
-  Defines a mount-point for a Socket module to handle channel definitions.
+  Defines a websocket/longpoll mount-point for a socket.
+
+  Note: the `:websocket` and `:longpoll` options only have an
+  effect if the socket given as argument has no `transport`
+  declarations in it.
+
+  ## Options
+
+    * `:websocket` - controls the websocket configuration.
+      Defaults to `true`. May be false or a keyword list
+      of options. see "WebSocket configuration" for more info.
+
+    * `:longpoll` - controls the longpoll configuration.
+      Defaults to `false`. May be true or a keyword list
+      of options. see "Longpoll configuration" for more info.
+
+    * `:shutdown` - the maximum shutdown time of each channel
+      when the endpoint is shutting down. Applies only to channel-
+      based sockets.
 
   ## Examples
 
       socket "/ws", MyApp.UserSocket
-      socket "/ws/admin", MyApp.AdminUserSocket
 
-  By default, the given path is a websocket upgrade endpoint,
-  with long-polling fallback. The transports can be configured
-  within the Socket handler. See `Phoenix.Socket` for more information
-  on defining socket handlers.
+      socket "/ws/admin", MyApp.AdminUserSocket,
+        longpoll: true,
+        websocket: [compress: true]
+
+  ## Websocket configuration
+
+    * `:timeout` - the timeout for keeping websocket connections
+      open after it last received data, defaults to 60_000ms
+
+    * `:transport_log` - if the transport layer itself should log and,
+      if so, the level
+
+    * `:serializer` - a list of serializers for messages. See
+      `Phoenix.Socket` for more information.
+
+    * `:check_origin` - if we should check the origin of requests when the
+      origin header is present. It defaults to true and, in such cases,
+      it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
+      It may be set to `false` (not recommended) or to a list of explicitly
+      allowed origins.
+
+          check_origin: ["https://example.com",
+                         "//another.com:888", "//other.com"]
+
+      Note: To connect from a native app be sure to either have the native app
+      set an origin or allow any origin via `check_origin: false`
+
+    * `:code_reloader` - enable or disable the code reloader. Defaults to your
+      endpoint configuration
+
+  ## Longpoll configuration
+
+    * `:window_ms` - how long the client can wait for new messages
+      in its poll request
+
+    * `:pubsub_timeout_ms` - how long a request can wait for the
+      pubsub layer to respond
+
+    * `:crypto` - options for verifying and signing the token, accepted
+      by `Phoenix.Token`. By default tokens are valid for 2 weeks
+
+    * `:transport_log` - if the transport layer itself should log and, if so,
+      the level
+
+    * `:check_origin` - if we should check the origin of requests when the
+      origin header is present. It defaults to true and, in such cases,
+      it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
+      It may be set to `false` (not recommended) or to a list of explicitly
+      allowed origins.
+
+    * `:code_reloader` - enable or disable the code reloader. Defaults to your
+      endpoint configuration
+
   """
-  defmacro socket(path, module) do
+  defmacro socket(path, module, opts \\ []) do
     # Tear the alias to simply store the root in the AST.
     # This will make Elixir unable to track the dependency
     # between endpoint <-> socket and avoid recompiling the
@@ -770,9 +847,43 @@ defmodule Phoenix.Endpoint do
     module = tear_alias(module)
 
     quote do
-      @phoenix_sockets {unquote(path), unquote(module)}
+      @phoenix_sockets Phoenix.Endpoint.__socket__(__MODULE__, unquote(path), unquote(module), unquote(opts))
     end
   end
+
+  @doc false
+  # TODO: Move default configs here once the transport is deprecated
+  # TODO: Return only socket and opts once Cowboy1 transport handling is removed
+  def __socket__(endpoint, path, socket, opts) do
+    paths = []
+    {websocket, opts} = Keyword.pop(opts, :websocket, true)
+    {longpoll, opts} = Keyword.pop(opts, :longpoll, false)
+
+    paths =
+      if websocket do
+        triplet = {:websocket, socket, socket_config(websocket, Phoenix.Transports.WebSocket)}
+        [{socket_path(path, :websocket), triplet} | paths]
+      else
+        paths
+      end
+
+    paths =
+      if longpoll do
+        plug_init = {endpoint, socket, socket_config(longpoll, Phoenix.Transports.LongPoll)}
+        [{socket_path(path, :longpoll), {:plug, Phoenix.Transports.LongPoll, plug_init}} | paths]
+      else
+        paths
+      end
+
+    {path, socket, opts, paths}
+  end
+
+  defp socket_path(path, key) do
+    Plug.Router.Utils.split(path) ++ [Atom.to_string(key)]
+  end
+
+  defp socket_config(true, module), do: module.default_config()
+  defp socket_config(config, module), do: Keyword.merge(module.default_config(), config)
 
   @doc """
   Instruments the given function using the instrumentation provided by

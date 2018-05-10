@@ -1,4 +1,4 @@
-defmodule Phoenix.Endpoint.CowboyHandler do
+defmodule Phoenix.Endpoint.CowboyAdapter do
   @moduledoc """
   The Cowboy adapter for Phoenix.
 
@@ -9,7 +9,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
 
   *NOTE*: This feature depends on the internals of Cowboy 1.0 API
   and how it integrates with Phoenix. Those may change at *any time*,
-  without backwards compatibility, specifically when Cowboy 2.0 is released.
+  without backwards compatibility.
 
   You can provide custom dispatch options in order to use Phoenix's
   builtin Cowboy server with custom handlers. For example, to handle
@@ -27,7 +27,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
       ```
       {"/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
         {Phoenix.Transports.WebSocket,
-          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, :websocket}}}
+          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, websocket_config}}}
       ```
 
     * Per longpoll transport:
@@ -35,7 +35,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
       ```
       {"/socket/long_poll", Plug.Adapters.Cowboy.Handler,
         {Phoenix.Transports.LongPoll,
-          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, :longpoll}}}
+          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, longpoll_config}}}
       ```
 
     * For the live-reload websocket:
@@ -43,7 +43,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
       ```
       {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
         {Phoenix.Transports.WebSocket,
-          {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}}
+          {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, websocket_config}}}
       ```
 
       If you decide to include the live-reload websocket, you should
@@ -64,7 +64,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
                     {"/bar", MyAppWeb.AnotherHandler, []},
                     {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
                       {Phoenix.Transports.WebSocket,
-                        {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}},
+                        {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, websocket_config}}},
                     {:_, Plug.Adapters.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
                   ]}]]
 
@@ -74,47 +74,55 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   It is also important to specify your handlers first, otherwise
   Phoenix will intercept the requests before they get to your handler.
   """
-  @behaviour Phoenix.Endpoint.Handler
+
   require Logger
 
-  @doc """
-  Generates a childspec to be used in the supervision tree.
-  """
+  @doc false
   def child_spec(scheme, endpoint, config) do
     if scheme == :https do
       Application.ensure_all_started(:ssl)
     end
 
     dispatches =
-      for {path, socket} <- endpoint.__sockets__,
-          {transport, {module, config}} <- socket.__transports__,
-          # Allow handlers to be configured at the transport level
-          handler = config[:cowboy] || default_for(module),
-          do: {Path.join(path, Atom.to_string(transport)),
-               handler,
-               {module, {endpoint, socket, transport}}}
+      for {path, socket, _, transports} <- endpoint.__sockets__,
+          transport <- transports(endpoint, path, socket, transports),
+          do: transport
 
     dispatches =
       dispatches ++ [{:_, Plug.Adapters.Cowboy.Handler, {endpoint, []}}]
 
-    # Use put_new to allow custom dispatches
     config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
+    spec = Plug.Adapters.Cowboy.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
+    update_in spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]}
+  end
 
-    {ref, mfa, type, timeout, kind, modules} =
-      Plug.Adapters.Cowboy.child_spec(scheme, endpoint, [], config)
+  defp transports(endpoint, path, socket, socket_transports) do
+    case socket.__transports__ do
+      transports when transports == %{} ->
+        for {path, transport} <- socket_transports,
+            {handler, init} = handler_for_transport(transport, endpoint, socket),
+            do: {"/" <> Path.join(path), handler, init}
 
-    # Rewrite MFA for proper error reporting
-    mfa = {__MODULE__, :start_link, [scheme, endpoint, mfa]}
-    {ref, mfa, type, timeout, kind, modules}
+      transports ->
+        for {transport, {module, config}} <- transports,
+            handler = config[:cowboy] || default_for(module),
+            do: {Path.join(path, Atom.to_string(transport)), handler, {module, {endpoint, socket, config}}}
+    end
+  end
+
+  defp handler_for_transport({:websocket, socket, config}, endpoint, socket) do
+    {Phoenix.Endpoint.CowboyWebSocket, {Phoenix.Transports.WebSocket, {endpoint, socket, config}}}
+  end
+
+  defp handler_for_transport({:plug, module, config}, _endpoint, _socket) do
+    {Plug.Adapters.Cowboy.Handler, {module, config}}
   end
 
   defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy.Handler
   defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.CowboyWebSocket
   defp default_for(_), do: nil
 
-  @doc """
-  Callback to start the Cowboy endpoint.
-  """
+  @doc false
   def start_link(scheme, endpoint, {m, f, [ref | _] = a}) do
     # ref is used by Ranch to identify its listeners, defaulting
     # to plug.HTTP and plug.HTTPS and overridable by users.

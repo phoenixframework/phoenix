@@ -152,14 +152,11 @@ defmodule Phoenix.ChannelTest do
   """
 
   alias Phoenix.Socket
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Broadcast
-  alias Phoenix.Socket.Reply
-  alias Phoenix.Socket.Transport
+  alias Phoenix.Socket.{Broadcast, Message, Reply}
   alias Phoenix.Channel.Server
 
   defmodule NoopSerializer do
-    @behaviour Phoenix.Transports.Serializer
+    @behaviour Phoenix.Socket.Serializer
     @moduledoc false
 
     def fastlane!(%Broadcast{} = msg) do
@@ -183,51 +180,66 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
-  Builds a socket.
+  Builds a socket for the given `socket` module.
 
   The socket is then used to subscribe and join channels.
   Use this function when you want to create a blank socket
   to pass to functions like `UserSocket.connect/2`.
 
-  Otherwise, use `socket/2` if you want to build a socket with
+  Otherwise, use `socket/3` if you want to build a socket with
   id and assigns.
 
   The socket endpoint is read from the `@endpoint` variable.
   """
-  defmacro socket() do
-    if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
-      quote do
-        %Socket{serializer: NoopSerializer,
-                transport_pid: self(),
-                endpoint: unquote(endpoint),
-                pubsub_server: unquote(endpoint).__pubsub_server__(),
-                transport: unquote(__MODULE__),
-                transport_name: :channel_test}
-      end
-    else
-      raise "module attribute @endpoint not set for socket/0"
-    end
+  defmacro socket(socket) do
+    build_socket(socket, nil, [], __CALLER__)
   end
 
   @doc """
-  Builds a socket with given id and assigns.
+  Builds a socket for the given `socket` module with given id and assigns.
 
   The socket endpoint is read from the `@endpoint` variable.
   """
-  defmacro socket(id, assigns) do
-    if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
+  defmacro socket(socket, id, assigns) do
+    build_socket(socket, id, assigns, __CALLER__)
+  end
+
+  defp build_socket(socket, id, assigns, caller) do
+    if endpoint = Module.get_attribute(caller.module, :endpoint) do
       quote do
-        %Socket{serializer: NoopSerializer,
-                transport_pid: self(),
-                endpoint: unquote(endpoint),
-                pubsub_server: unquote(endpoint).__pubsub_server__(),
-                id: unquote(id),
-                assigns: Enum.into(unquote(assigns), %{}),
-                transport: unquote(__MODULE__),
-                transport_name: :channel_test}
+        %Socket{
+          assigns: Enum.into(unquote(assigns), %{}),
+          endpoint: unquote(endpoint),
+          handler: unquote(socket || first_socket!(endpoint)),
+          id: unquote(id),
+          pubsub_server: unquote(endpoint).__pubsub_server__(),
+          serializer: NoopSerializer,
+          transport: :channel_test,
+          transport_pid: self()
+        }
       end
     else
       raise "module attribute @endpoint not set for socket/2"
+    end
+  end
+
+  @doc false
+  defmacro socket() do
+    IO.warn "Phoenix.ChannelTest.socket/0 is deprecated, please call socket/1 instead"
+    build_socket(nil, nil, [], __CALLER__)
+  end
+
+  @doc false
+  defmacro socket(id, assigns) do
+    IO.warn "Phoenix.ChannelTest.socket/2 is deprecated, please call socket/3 instead"
+    build_socket(nil, id, assigns, __CALLER__)
+  end
+
+  # TODO v2: Remove this alongside the deprecations above.
+  defp first_socket!(endpoint) do
+    case endpoint.__sockets__ do
+      [] -> raise ArgumentError, "#{inspect endpoint} has no socket declaration"
+      [{_, socket} | _] -> socket
     end
   end
 
@@ -249,32 +261,29 @@ defmodule Phoenix.ChannelTest do
 
   @doc false
   def __connect__(endpoint, handler, params) do
-    endpoint
-    |> Transport.connect(handler, :channel_test, __MODULE__, NoopSerializer, __stringify__(params))
-    |> subscribe_to_socket_id(endpoint, handler)
+    map = %{
+      endpoint: endpoint,
+      transport: :channel_test,
+      options: [serializer: [{NoopSerializer, "~> 1.0.0"}]],
+      params: __stringify__(params)
+    }
+
+    with {:ok, state} <- handler.connect(map),
+         {:ok, {_, socket}} = handler.init(state),
+         do: {:ok, socket}
   end
-  defp subscribe_to_socket_id({:ok, socket}, endpoint, handler) do
-    if topic = handler.id(socket) do
-      :ok = endpoint.subscribe(topic)
-    end
-    {:ok, socket}
-  end
-  defp subscribe_to_socket_id(error, _endpoint, _handler), do: error
 
   @doc "See `subscribe_and_join!/4`."
   def subscribe_and_join!(%Socket{} = socket, topic) when is_binary(topic) do
-    subscribe_and_join!(socket, topic, %{})
+    subscribe_and_join!(socket, nil, topic, %{})
   end
+
   @doc "See `subscribe_and_join!/4`."
   def subscribe_and_join!(%Socket{} = socket, topic, payload)
       when is_binary(topic) and is_map(payload) do
-
-    {channel, opts} = match_topic_to_channel!(socket, topic)
-
-    socket
-    |> with_opts(opts)
-    |> subscribe_and_join!(channel, topic, payload)
+    subscribe_and_join!(socket, nil, topic, payload)
   end
+
   @doc """
   Same as `subscribe_and_join/4`, but returns either the socket
   or throws an error.
@@ -292,18 +301,15 @@ defmodule Phoenix.ChannelTest do
 
   @doc "See `subscribe_and_join/4`."
   def subscribe_and_join(%Socket{} = socket, topic) when is_binary(topic) do
-    subscribe_and_join(socket, topic, %{})
+    subscribe_and_join(socket, nil, topic, %{})
   end
+
   @doc "See `subscribe_and_join/4`."
   def subscribe_and_join(%Socket{} = socket, topic, payload)
       when is_binary(topic) and is_map(payload) do
-
-    {channel, opts} = match_topic_to_channel!(socket, topic)
-
-    socket
-    |> with_opts(opts)
-    |> subscribe_and_join(channel, topic, payload)
+    subscribe_and_join(socket, nil, topic, payload)
   end
+
   @doc """
   Subscribes to the given topic and joins the channel
   under the given topic and payload.
@@ -328,17 +334,12 @@ defmodule Phoenix.ChannelTest do
 
   @doc "See `join/4`."
   def join(%Socket{} = socket, topic) when is_binary(topic) do
-    join(socket, topic, %{})
+    join(socket, nil, topic, %{})
   end
+
   @doc "See `join/4`."
-  def join(%Socket{} = socket, topic, payload)
-      when is_binary(topic) and is_map(payload) do
-
-    {channel, opts} = match_topic_to_channel!(socket, topic)
-
-    socket
-    |> with_opts(opts)
-    |> join(channel, topic, payload)
+  def join(%Socket{} = socket, topic, payload) when is_binary(topic) and is_map(payload) do
+    join(socket, nil, topic, payload)
   end
 
   @doc """
@@ -351,12 +352,23 @@ defmodule Phoenix.ChannelTest do
   """
   def join(%Socket{} = socket, channel, topic, payload \\ %{})
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
+    message = %Message{
+      event: "phx_join",
+      payload: payload,
+      topic: topic,
+      ref: System.unique_integer([:positive])
+    }
 
-    ref = System.unique_integer([:positive])
-    socket = Transport.build_channel_socket(socket, channel, topic, ref, [])
+    {channel, opts} =
+      if channel do
+        {channel, []}
+      else
+        match_topic_to_channel!(socket, topic)
+      end
 
-    case Server.join(socket, payload) do
+    case Server.join(socket, channel, message, opts) do
       {:ok, reply, pid} ->
+        Process.link(pid)
         {:ok, reply, Server.socket(pid)}
       {:error, _} = error ->
         error
@@ -391,13 +403,13 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
-  Emulates the client closing the channel.
+  Emulates the client closing the socket.
 
-  Closing channels is synchronous and has a default timeout
+  Closing socket is synchronous and has a default timeout
   of 5000 milliseconds.
   """
   def close(socket, timeout \\ 5000) do
-    Server.close(socket.channel_pid, timeout)
+    Server.close([socket.channel_pid], timeout)
   end
 
   @doc """
@@ -601,8 +613,4 @@ defmodule Phoenix.ChannelTest do
 
   defp stringify_kv({k, v}),
     do: {to_string(k), __stringify__(v)}
-
-  defp with_opts(%Socket{} = socket, opts) do
-    %Socket{socket | assigns: Map.merge(socket.assigns, opts[:assigns] || %{})}
-  end
 end

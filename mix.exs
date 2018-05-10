@@ -14,19 +14,8 @@ defmodule Phoenix.MixProject do
       preferred_cli_env: [docs: :docs],
       consolidate_protocols: Mix.env != :test,
       xref: [exclude: [Ecto.Type, :ranch, {:cowboy_req, :compact, 1}]],
-
       name: "Phoenix",
-      docs: [
-        source_ref: "v#{@version}",
-        main: "overview",
-        logo: "logo.png",
-        extra_section: "GUIDES",
-        assets: "guides/assets",
-        formatters: ["html", "epub"],
-        groups_for_modules: groups_for_modules(),
-        extras: extras(),
-        groups_for_extras: groups_for_extras()
-      ],
+      docs: docs(),
       aliases: aliases(),
       source_url: "https://github.com/phoenixframework/phoenix",
       homepage_url: "http://www.phoenixframework.org",
@@ -90,6 +79,20 @@ defmodule Phoenix.MixProject do
     ]
   end
 
+  defp docs do
+    [
+      source_ref: "v#{@version}",
+      main: "overview",
+      logo: "logo.png",
+      extra_section: "GUIDES",
+      assets: "guides/assets",
+      formatters: ["html", "epub"],
+      groups_for_modules: groups_for_modules(),
+      extras: extras(),
+      groups_for_extras: groups_for_extras()
+    ]
+  end
+
   defp extras do
     [
       "guides/introduction/overview.md",
@@ -148,9 +151,14 @@ defmodule Phoenix.MixProject do
       "Endpoint And Plugs": [
         Phoenix.CodeReloader,
         Phoenix.Endpoint,
-        Phoenix.Endpoint.CowboyHandler,
-        Phoenix.Endpoint.Handler,
+        Phoenix.Endpoint.CowboyAdapter,
+        Phoenix.Endpoint.Cowboy2Adapter,
         Phoenix.Logger,
+      ],
+
+      "Testing": [
+        Phoenix.ChannelTest,
+        Phoenix.ConnTest,
       ],
 
       "Socket And Transport": [
@@ -168,11 +176,6 @@ defmodule Phoenix.MixProject do
         Phoenix.Template.Engine,
         Phoenix.Template.ExsEngine,
         Phoenix.Template.HTML,
-      ],
-
-      "Testing": [
-        Phoenix.ChannelTest,
-        Phoenix.ConnTest,
       ],
     ]
   end

@@ -1,145 +1,116 @@
 defmodule Phoenix.Endpoint.Cowboy2Handler do
-  @moduledoc """
-  The Cowboy2 adapter for Phoenix.
+  @moduledoc false
 
-  It implements the required `child_spec/3` function as well
-  as the handler for the WebSocket transport.
-
-  ## Custom dispatch options
-
-  You can provide custom dispatch options in order to use Phoenix's
-  builtin Cowboy server with custom handlers. For example, to handle
-  raw WebSockets [as shown in Cowboy's docs](https://github.com/ninenines/cowboy/tree/2.0.x/examples)).
-
-  The options are passed to both `:http` and `:https` keys in the
-  endpoint configuration. However, once you pass your custom dispatch
-  options, you will need to manually wire all Phoenix endpoints,
-  including the socket transports.
-
-  You will need the following rules:
-
-    * Per websocket transport:
-
-      ```
-      {"/socket/websocket", Phoenix.Endpoint.Cowboy2WebSocket,
-        {Phoenix.Transports.WebSocket,
-          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, :websocket}}}
-      ```
-
-    * Per longpoll transport:
-
-      ```
-      {"/socket/long_poll", Plug.Adapters.Cowboy2.Handler,
-        {Phoenix.Transports.LongPoll,
-          {MyAppWeb.Endpoint, MyAppWeb.UserSocket, :longpoll}}}
-      ```
-
-    * For the live-reload websocket:
-
-      ```
-      {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.Cowboy2WebSocket,
-        {Phoenix.Transports.WebSocket,
-          {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}}
-      ```
-
-      If you decide to include the live-reload websocket, you should
-      disable it when building for production.
-
-    * For the endpoint:
-
-      ```
-      {:_, Plug.Adapters.Cowboy2.Handler, {MyAppWeb.Endpoint, []}}
-      ```
-
-  For example:
-
-      config :myapp, MyAppWeb.Endpoint,
-        http: [dispatch: [
-                {:_, [
-                    {"/foo", MyAppWeb.CustomHandler, []},
-                    {"/bar", MyAppWeb.AnotherHandler, []},
-                    {"/phoenix/live_reload/socket/websocket", Phoenix.Endpoint.Cowboy2WebSocket,
-                      {Phoenix.Transports.WebSocket,
-                        {MyAppWeb.Endpoint, Phoenix.LiveReloader.Socket, :websocket}}},
-                    {:_, Plug.Adapters.Cowboy2.Handler, {MyAppWeb.Endpoint, []}}
-                  ]}]]
-
-  Note: if you reconfigure HTTP options in `MyAppWeb.Endpoint.init/1`,
-  your dispatch options set in mix config will be overwritten.
-
-  It is also important to specify your handlers first, otherwise
-  Phoenix will intercept the requests before they get to your handler.
-  """
-
-  @behaviour Phoenix.Endpoint.Handler
-  require Logger
-
-  @doc """
-  Generates a childspec to be used in the supervision tree.
-  """
-  def child_spec(scheme, endpoint, config) do
-    if scheme == :https do
-      Application.ensure_all_started(:ssl)
-    end
-
-    dispatches =
-      for {path, socket} <- endpoint.__sockets__,
-          {transport, {module, config}} <- socket.__transports__,
-          # Allow handlers to be configured at the transport level
-          handler = config[:cowboy] || default_for(module),
-          do: {Path.join(path, Atom.to_string(transport)),
-               handler,
-               {module, {endpoint, socket, transport}}}
-
-    dispatches =
-      dispatches ++ [{:_, Plug.Adapters.Cowboy2.Handler, {endpoint, []}}]
-
-    # Use put_new to allow custom dispatches
-    config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
-
-    cowboy_supervisor =
-      Plug.Adapters.Cowboy2.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
-
-    %{
-      start: start,
-      id: id,
-      type: type,
-      shutdown: shutdown,
-      restart: restart,
-      modules: modules,
-    } = cowboy_supervisor
-
-    start = {__MODULE__, :start_link, [scheme, endpoint, start]}
-    {id, start, restart, shutdown, type, modules}
+  if Code.ensure_loaded?(:cowboy_websocket) do
+    @behaviour :cowboy_websocket
   end
 
-  defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy2.Handler
-  defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.Cowboy2WebSocket
-  defp default_for(_), do: nil
+  @connection Plug.Adapters.Cowboy2.Conn
+  @already_sent {:plug_conn, :sent}
 
-  @doc """
-  Callback to start the Cowboy2 endpoint.
-  """
-  def start_link(scheme, endpoint, {m, f, [ref | _] = a}) do
-    # ref is used by Ranch to identify its listeners, defaulting
-    # to plug.HTTP and plug.HTTPS and overridable by users.
-    case apply(m, f, a) do
-      {:ok, pid} ->
-        Logger.info info(scheme, endpoint, ref)
-        {:ok, pid}
+  # Note we keep the websocket state as [handler | state]
+  # to avoid conflicts with {endpoint, opts}.
+  def init(req, {endpoint, opts}) do
+    %{path_info: path_info} = conn = @connection.conn(req)
 
-      {:error, {:shutdown, {_, _, {{_, {:error, :eaddrinuse}}, _}}}} = error ->
-        Logger.error [info(scheme, endpoint, ref), " failed, port already in use"]
-        error
+    try do
+      case endpoint.__dispatch__(path_info, opts) do
+        {:websocket, handler, opts} ->
+          case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
+            {:ok, %{adapter: {@connection, req}}, state} ->
+              timeout = Keyword.fetch!(opts, :timeout)
+              compress = Keyword.fetch!(opts, :compress)
+              cowboy_opts = %{idle_timeout: timeout, compress: compress}
+              {:cowboy_websocket, req, [handler | state], cowboy_opts}
 
-      {:error, _} = error ->
-        error
+            {:error, %{adapter: {@connection, req}}} ->
+              {:error, req}
+          end
+
+        {:plug, handler, opts} ->
+          %{adapter: {@connection, req}} =
+            conn
+            |> handler.call(opts)
+            |> maybe_send(handler)
+
+          {:ok, req, {handler, opts}}
+      end
+    catch
+      :error, value ->
+        stack = System.stacktrace()
+        exception = Exception.normalize(:error, value, stack)
+        exit({{exception, stack}, {endpoint, :call, [conn, opts]}})
+
+      :throw, value ->
+        stack = System.stacktrace()
+        exit({{{:nocatch, value}, stack}, {endpoint, :call, [conn, opts]}})
+
+      :exit, value ->
+        exit({value, {endpoint, :call, [conn, opts]}})
+    after
+      receive do
+        @already_sent -> :ok
+      after
+        0 -> :ok
+      end
     end
   end
 
-  defp info(scheme, endpoint, ref) do
-    {addr, port} = :ranch.get_addr(ref)
-    addr_str = :inet.ntoa(addr)
-    "Running #{inspect endpoint} with Cowboy2 using #{scheme}://#{addr_str}:#{port}"
+  defp maybe_send(%Plug.Conn{state: :unset}, _plug), do: raise(Plug.Conn.NotSentError)
+  defp maybe_send(%Plug.Conn{state: :set} = conn, _plug), do: Plug.Conn.send_resp(conn)
+  defp maybe_send(%Plug.Conn{} = conn, _plug), do: conn
+
+  defp maybe_send(other, plug) do
+    raise "Cowboy2 adapter expected #{inspect(plug)} to return Plug.Conn but got: " <>
+            inspect(other)
   end
+
+  ## Websocket callbacks
+
+  def websocket_init([handler | state]) do
+    {:ok, state} = handler.init(state)
+    {:ok, [handler | state]}
+  end
+
+  def websocket_handle({opcode, payload}, [handler | state]) when opcode in [:text, :binary] do
+    handle_reply(handler, handler.handle_in({payload, opcode: opcode}, state))
+  end
+
+  def websocket_handle(_other, handler_state) do
+    {:ok, handler_state}
+  end
+
+  def websocket_info(message, [handler | state]) do
+    handle_reply(handler, handler.handle_info(message, state))
+  end
+
+  def terminate(_reason, _req, {_handler, _state}) do
+    :ok
+  end
+
+  def terminate({:error, :closed}, _req, [handler | state]) do
+    handler.terminate(:closed, state)
+  end
+
+  def terminate({:remote, :closed}, _req, [handler | state]) do
+    handler.terminate(:closed, state)
+  end
+
+  def terminate({:remote, code, _}, _req, [handler | state])
+      when code in 1000..1003 or code in 1005..1011 or code == 1015 do
+    handler.terminate(:closed, state)
+  end
+
+  def terminate(:remote, _req, [handler | state]) do
+    handler.terminate(:closed, state)
+  end
+
+  def terminate(reason, _req, [handler | state]) do
+    handler.terminate(reason, state)
+  end
+
+  defp handle_reply(handler, {:ok, state}), do: {:ok, [handler | state]}
+  defp handle_reply(handler, {:push, data, state}), do: {:reply, data, [handler | state]}
+  defp handle_reply(handler, {:reply, _status, data, state}), do: {:reply, data, [handler | state]}
+  defp handle_reply(handler, {:stop, _reason, state}), do: {:stop, [handler | state]}
 end

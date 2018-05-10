@@ -6,6 +6,13 @@ for pattern <- ["../../../installer/lib/phx_new/project.ex",
     file <- [_|_] = Path.wildcard(Path.expand(pattern, __DIR__)),
     do: Code.require_file(file, __DIR__)
 
+# Define a fake live reload socket.
+defmodule Phoenix.LiveReloader.Socket do
+  def child_spec(_) do
+    Supervisor.Spec.worker(Task, [fn -> :ok end], restart: :temporary)
+  end
+end
+
 # Here we test the installer is up to date.
 defmodule Mix.Tasks.Phx.NewTest do
   use ExUnit.Case

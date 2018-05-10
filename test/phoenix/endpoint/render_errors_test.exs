@@ -1,8 +1,8 @@
 defmodule Phoenix.Endpoint.RenderErrorsTest do
   use ExUnit.Case, async: true
   use RouterHelper
-  import ExUnit.CaptureLog
 
+  import ExUnit.CaptureLog
   view = __MODULE__
 
   def render("app.html", %{view_template: view_template} = assigns) do
@@ -228,14 +228,6 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
       conn(:get, "/?_format=unknown")
       |> render([], fn -> throw :hello end)
     end) =~ "Could not render errors due to unknown format \"unknown\""
-  end
-
-  test "does not capture warning when format does match ErrorView" do
-    assert capture_log(fn ->
-      conn(:get, "/")
-      |> put_req_header("accept", "text/html")
-      |> render([], fn -> throw :hello end)
-    end) == ""
   end
 
   test "exception page for NoRouteError with plug_status 404" do
