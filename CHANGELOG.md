@@ -1,4 +1,4 @@
-# Changelog
+# Changelog for v1.4
 
 ## Cowboy 2 support
 
