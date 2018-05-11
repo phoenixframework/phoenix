@@ -112,7 +112,7 @@ defmodule Phoenix.Socket.Transport do
 
   means `child_spec([shutdown: 5000])` will be invoked.
   """
-  @callback child_spec(keyword) :: Supervisor.child_spec
+  @callback child_spec(keyword) :: :supervisor.child_spec
 
   @doc """
   Connects to the socket.
