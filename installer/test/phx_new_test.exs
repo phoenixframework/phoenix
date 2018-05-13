@@ -25,6 +25,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/README.md"
       assert_file "phx_blog/mix.exs", fn file ->
+        assert file =~ ~s[:phoenix, "~> #{Application.spec(:phx_new, :vsn)}"]
         assert file =~ "app: :phx_blog"
         refute file =~ "deps_path: \"../../deps\""
         refute file =~ "lockfile: \"../../mix.lock\""
@@ -72,6 +73,12 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web.ex", "defmodule PhxBlogWeb"
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex",
                   "<title>PhxBlog · Phoenix Framework</title>"
+      assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.eex", fn file ->
+        version = Application.spec(:phx_new, :vsn) |> to_string() |> Version.parse!()
+        changelog_vsn = "v#{version.major}.#{version.minor}"
+        assert file =~
+          "https://github.com/phoenixframework/phoenix/blob/#{changelog_vsn}/CHANGELOG.md"
+      end
 
       # webpack
       assert_file "phx_blog/.gitignore", "/assets/node_modules/"

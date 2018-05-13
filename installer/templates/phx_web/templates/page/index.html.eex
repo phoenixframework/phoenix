@@ -13,6 +13,9 @@
       <li>
         <a href="https://github.com/phoenixframework/phoenix">Source</a>
       </li>
+      <li>
+        <a href="https://github.com/phoenixframework/phoenix/blob/<%= phoenix_github_version_tag %>/CHANGELOG.md"><%= phoenix_github_version_tag %> Changelog</a>
+      </li>
     </ul>
   </article>
   <article class="column">

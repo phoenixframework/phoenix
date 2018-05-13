@@ -5,6 +5,8 @@ defmodule Phx.New.Generator do
 
   @phoenix Path.expand("../..", __DIR__)
 
+  @phoenix_version Version.parse!("1.3.0")
+
   @callback prepare_project(Project.t) :: Project.t
   @callback generate(Project.t) :: Project.t
 
@@ -101,6 +103,8 @@ defmodule Phx.New.Generator do
         :error -> adapter_config
       end
 
+    version = @phoenix_version
+
     binding = [
       elixir_version: elixir_version(),
       app_name: project.app,
@@ -111,6 +115,7 @@ defmodule Phx.New.Generator do
       web_app_name: project.web_app,
       endpoint_module: inspect(Module.concat(project.web_namespace, Endpoint)),
       web_namespace: inspect(project.web_namespace),
+      phoenix_github_version_tag: "v#{version.major}.#{version.minor}",
       phoenix_dep: phoenix_dep(phoenix_path),
       phoenix_path: phoenix_path,
       phoenix_webpack_path: phoenix_webpack_path(project, dev),
@@ -248,7 +253,7 @@ defmodule Phx.New.Generator do
   defp phoenix_html_webpack_path(%Project{in_umbrella?: false}),
     do: "../deps/phoenix_html"
 
-  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.3.0"}]
+  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> #{@phoenix_version}"}]
   defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 
