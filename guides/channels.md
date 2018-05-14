@@ -51,7 +51,7 @@ Let's take a look at them.
 To start communicating, a client connects to a node (a Phoenix server) using a transport (eg, Websockets or long polling) and joins one or more channels using that single network connection.
 One channel server process is created per client, per topic.
 The appropriate socket handler initializes a `%Phoenix.Socket` for the channel server (possibly after authenticating the client).
-The channel server then hold onto the `%Phoenix.Socket{}` and can maintain any state it needs within its `socket.assigns`.
+The channel server then holds onto the `%Phoenix.Socket{}` and can maintain any state it needs within its `socket.assigns`.
 
 Once the connection is established, each incoming message from a client is routed, based on its topic, to the correct channel server.
 If the channel server asks to broadcast a message, that message is sent to the local PubSub, which sends it out to any clients connected to the same server and subscribed to that topic.
