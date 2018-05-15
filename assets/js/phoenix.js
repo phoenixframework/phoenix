@@ -712,6 +712,7 @@ const Serializer = {
 export class Socket {
   constructor(endPoint, opts = {}){
     this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
+    this.channelsByTopic      = {}
     this.channels             = []
     this.sendBuffer           = []
     this.ref                  = 0
@@ -871,7 +872,10 @@ export class Socket {
    * @private
    */
   triggerChanError(){
-    this.channels.forEach( channel => channel.trigger(CHANNEL_EVENTS.error) )
+    Object.keys(this.channelsByTopic).forEach(topic => {
+      let topicChannels = this.channelsByTopic[topic]
+      topicChannels.forEach( channel => channel.trigger(CHANNEL_EVENTS.error) )
+    });
   }
 
   /**
@@ -895,6 +899,12 @@ export class Socket {
    * @param {Channel}
    */
   remove(channel){
+    let topic = channel.topic
+    this.channelsByTopic[topic] = this.channelsByTopic[topic].filter(c => c.joinRef() !== channel.joinRef())
+
+    if (this.channelsByTopic[topic].length === 0) {
+      delete this.channelsByTopic[topic]
+    }
     this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
   }
 
@@ -907,6 +917,10 @@ export class Socket {
    */
   channel(topic, chanParams = {}){
     let chan = new Channel(topic, chanParams, this)
+    if (this.channelsByTopic[topic] === undefined) {
+      this.channelsByTopic[topic] = []
+    }
+    this.channelsByTopic[topic].push(chan)
     this.channels.push(chan)
     return chan
   }
@@ -965,8 +979,12 @@ export class Socket {
       if(ref && ref === this.pendingHeartbeatRef){ this.pendingHeartbeatRef = null }
 
       this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
-      this.channels.filter( channel => channel.isMember(topic, event, payload, join_ref) )
+
+      let topicChannels = this.channelsByTopic[topic] || []
+
+      topicChannels.filter( channel => channel.isMember(topic, event, payload, join_ref) )
                    .forEach( channel => channel.trigger(event, payload, ref, join_ref) )
+
       this.stateChangeCallbacks.message.forEach( callback => callback(msg) )
     })
   }
