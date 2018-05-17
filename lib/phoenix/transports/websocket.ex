@@ -23,7 +23,8 @@ defmodule Phoenix.Transports.WebSocket do
         {:error, conn}
 
       %{params: params} = conn ->
-        config = %{endpoint: endpoint, transport: :websocket, options: opts, params: params}
+        connect_info = Transport.connect_info(conn, opts)
+        config = %{endpoint: endpoint, transport: :websocket, options: opts, params: params, connect_info: connect_info}
 
         case handler.connect(config) do
           {:ok, state} -> {:ok, conn, state}

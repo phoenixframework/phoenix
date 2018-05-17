@@ -140,6 +140,7 @@ defmodule Phoenix.Socket do
   performing token verification on connect.
   """
   @callback connect(params :: map, Socket.t) :: {:ok, Socket.t} | :error
+  @callback connect(params :: map, Socket.t, connect_info :: map) :: {:ok, Socket.t} | :error
 
   @doc ~S"""
   Identifies the socket connection.
@@ -156,6 +157,8 @@ defmodule Phoenix.Socket do
   Returning `nil` makes this socket anonymous.
   """
   @callback id(Socket.t) :: String.t | nil
+
+  @optional_callbacks connect: 2, connect: 3
 
   defmodule InvalidMessageError do
     @moduledoc """
@@ -445,13 +448,14 @@ defmodule Phoenix.Socket do
       endpoint: endpoint,
       options: options,
       transport: transport,
-      params: params
+      params: params,
+      connect_info: connect_info
     } = map
 
     vsn = params["vsn"] || "1.0.0"
 
     case negotiate_serializer(Keyword.fetch!(options, :serializer), vsn) do
-      {:ok, serializer} -> user_connect(handler, endpoint, transport, serializer, params)
+      {:ok, serializer} -> user_connect(handler, endpoint, transport, serializer, params, connect_info)
       :error -> :error
     end
   end
@@ -534,7 +538,7 @@ defmodule Phoenix.Socket do
     end
   end
 
-  defp user_connect(handler, endpoint, transport, serializer, params) do
+  defp user_connect(handler, endpoint, transport, serializer, params, connect_info) do
     # The information in the Phoenix.Socket goes to userland and channels.
     socket = %Socket{
       handler: handler,
@@ -550,7 +554,14 @@ defmodule Phoenix.Socket do
       channels_inverse: %{}
     }
 
-    case handler.connect(params, socket) do
+    connect_result =
+      if function_exported?(handler, :connect, 3) do
+        handler.connect(params, socket, connect_info)
+      else
+        handler.connect(params, socket)
+      end
+
+    case connect_result do
       {:ok, %Socket{} = socket} ->
         case handler.id(socket) do
           nil ->

@@ -99,8 +99,8 @@ defmodule Phoenix.Transports.LongPoll do
       "phx:lp:"
       <> Base.encode64(:crypto.strong_rand_bytes(16))
       <> (System.system_time(:millisecond) |> Integer.to_string)
-
-    arg = {endpoint, handler, opts, conn.params, priv_topic}
+    connect_info = Transport.connect_info(conn, opts)
+    arg = {endpoint, handler, opts, conn.params, priv_topic, connect_info}
 
     case Supervisor.start_child(Phoenix.Transports.LongPoll.Supervisor, [arg]) do
       {:ok, :undefined} ->

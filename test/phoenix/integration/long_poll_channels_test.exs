@@ -53,6 +53,34 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     end
   end
 
+  defmodule UserSocketConnectInfo do
+    use Phoenix.Socket
+
+    channel "room:*", RoomChannel
+
+    def connect(params, socket, connect_info) do
+      unless params["logging"] == "enabled", do: Logger.disable(self())
+      address = Tuple.to_list(connect_info.peer_data.address) |> Enum.join(".")
+      uri = Map.from_struct(connect_info.uri)
+
+      connect_info =
+        connect_info
+        |> update_in([:peer_data], &Map.put(&1, :address, address))
+        |> Map.put(:uri, uri)
+
+      socket =
+        socket
+        |> assign(:user_id, params["user_id"])
+        |> assign(:connect_info, connect_info)
+
+      {:ok, socket}
+    end
+
+    def id(socket) do
+      if id = socket.assigns.user_id, do: "user_sockets:#{id}"
+    end
+  end
+
   defmodule UserSocket do
     use Phoenix.Socket
 
@@ -76,10 +104,26 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     use Phoenix.Endpoint, otp_app: :phoenix
 
     socket "/ws", UserSocket,
-      longpoll: [window_ms: 200, pubsub_timeout_ms: 200, check_origin: ["//example.com"]]
+      longpoll: [
+        window_ms: 200,
+        pubsub_timeout_ms: 200,
+        check_origin: ["//example.com"]
+      ]
 
     socket "/ws/admin", UserSocket,
-      longpoll: [window_ms: 200, pubsub_timeout_ms: 200, check_origin: ["//example.com"]]
+      longpoll: [
+        window_ms: 200,
+        pubsub_timeout_ms: 200,
+        check_origin: ["//example.com"]
+      ]
+
+    socket "/ws/connect_info", UserSocketConnectInfo,
+      longpoll: [
+        window_ms: 200,
+        pubsub_timeout_ms: 200,
+        check_origin: ["//example.com"],
+        connect_info: [:x_headers, :peer_data, :uri]
+      ]
   end
 
   setup_all do
@@ -147,30 +191,29 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
   process. If the mode is pubsub, the session will use the
   pubsub system.
   """
-  def join(path, topic, vsn, mode \\ :local, payload \\ %{}, params \\ %{})
+  def join(path, topic, vsn, mode \\ :local, payload \\ %{}, params \\ %{}, headers \\ %{})
 
-  def join(path, topic, vsn, :local, payload, params) do
-    resp = poll :get, path, vsn, params, %{}
+  def join(path, topic, vsn, :local, payload, params, headers) do
+    resp = poll :get, path, vsn, params, %{}, headers
     assert resp.body["token"]
     assert resp.body["status"] == 410
     assert resp.status == 200
 
     session = resp.body |> Map.take(["token"]) |> Map.merge(params)
-
     resp = poll :post, path, vsn, session, %{
       "topic" => topic,
       "event" => "phx_join",
       "ref" => "1",
       "join_ref" => "1",
       "payload" => payload
-    }
+    }, headers
 
     assert resp.body["status"] == 200
     session
   end
 
-  def join(path, topic, vsn, :pubsub, payload, params) do
-    session = join(path, topic, vsn, :local, payload, params)
+  def join(path, topic, vsn, :pubsub, payload, params, headers) do
+    session = join(path, topic, vsn, :local, payload, params, headers)
 
     {:ok, {:v1, _id, pid, topic}} =
       Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
@@ -199,13 +242,13 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         topic: "room:lobby"
       }
 
-      assert status_msg == %Message{
+      assert %Message{
         event: "joined",
         payload: %{"status" => "connected", "user_id" => nil},
         ref: nil,
         join_ref: nil,
         topic: "room:lobby"
-      }
+      } = status_msg
 
       assert user_entered == %Message{
         event: "user_entered",
@@ -218,6 +261,51 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       # poll without messages sends 204 no_content
       resp = poll(:get, "/ws", @vsn, session)
       assert resp.body["status"] == 204
+    end
+
+    test "#{@mode}: transport x_headers are extracted to the socket connect_info" do
+      session = join("/ws/connect_info", "room:lobby", @vsn, @mode, %{}, %{}, %{"x-application" => "Phoenix"})
+
+      # pull messages
+      resp = poll(:get, "/ws/connect_info", @vsn, session)
+      assert resp.body["status"] == 200
+
+      [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
+
+      assert %{"connect_info" =>
+               %{"x_headers" =>
+                 %{"x-application" => "Phoenix"}}} = status_msg.payload
+    end
+
+    test "#{@mode}: transport peer_data is extracted to the socket connect_info" do
+      session = join("/ws/connect_info", "room:lobby", @vsn, @mode, %{}, %{}, %{"x-application" => "Phoenix"})
+
+      # pull messages
+      resp = poll(:get, "/ws/connect_info", @vsn, session)
+      assert resp.body["status"] == 200
+
+      [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
+
+      assert %{"connect_info" =>
+               %{"peer_data" =>
+                 %{"address" => "127.0.0.1"}}} = status_msg.payload
+    end
+
+    test "#{@mode}: transport uri is extracted to the socket connect_info" do
+      session = join("/ws/connect_info", "room:lobby", @vsn, @mode, %{}, %{}, %{"x-application" => "Phoenix"})
+
+      # pull messages
+      resp = poll(:get, "/ws/connect_info", @vsn, session)
+      assert resp.body["status"] == 200
+
+      [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
+      query = "vsn=#{@vsn}"
+      assert %{"connect_info" =>
+                %{"uri" =>
+                  %{"host" => "127.0.0.1",
+                    "path" => "/ws/connect_info/longpoll",
+                    "query" => ^query,
+                    "scheme" => "http"}}} = status_msg.payload
     end
 
     test "#{@mode}: publishing events" do

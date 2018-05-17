@@ -388,6 +388,45 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
+  @doc false
+  def connect_info(conn, opts) do
+    keys = Keyword.get(opts, :connect_info, [])
+    Enum.reduce(keys, %{}, fn
+      :peer_data, connect_info ->
+        Map.put(connect_info, :peer_data, Plug.Conn.get_peer_data(conn))
+
+      :x_headers, connect_info ->
+        Map.put(connect_info, :x_headers, fetch_x_headers(conn))
+
+      :uri, connect_info ->
+        Map.put(connect_info, :uri, fetch_uri(conn))
+
+      invalid, _connect_info ->
+        raise ArgumentError, "connection info keys are expected to be one of [:peer_data, :x_headers, :uri], got: #{inspect(invalid)}"
+    end)
+  end
+
+  defp fetch_x_headers(conn) do
+    Enum.reduce(conn.req_headers, %{}, fn({header, value}, x_headers) ->
+      if String.starts_with?(header, "x-") do
+        Map.put(x_headers, header, value)
+      else
+        x_headers
+      end
+    end)
+  end
+
+  defp fetch_uri(%{host: host, scheme: scheme, query_string: query_string, port: port, request_path: request_path}) do
+    %URI{
+      scheme: to_string(scheme),
+      query: query_string,
+      port: port,
+      host: host,
+      authority: host,
+      path: request_path,
+    }
+  end
+
   defp check_origin_config(handler, endpoint, opts) do
     Phoenix.Config.cache(endpoint, {:check_origin, handler}, fn _ ->
       check_origin =

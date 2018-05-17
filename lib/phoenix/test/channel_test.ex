@@ -256,22 +256,33 @@ defmodule Phoenix.ChannelTest do
   the result of the handler's `connect/2` callback.
   """
   defmacro connect(handler, params) do
-    if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
-      quote do
-        unquote(__MODULE__).__connect__(unquote(endpoint), unquote(handler), unquote(params))
-      end
-    else
-      raise "module attribute @endpoint not set for socket/2"
+    endpoint = Module.get_attribute(__CALLER__.module, :endpoint)
+    connect_info = quote do: %{}
+    quote_connect(handler, endpoint, params, connect_info)
+  end
+
+  defmacro connect(handler, params, connect_info) do
+    endpoint = Module.get_attribute(__CALLER__.module, :endpoint)
+    quote_connect(handler, endpoint, params, connect_info)
+  end
+
+  defp quote_connect(_handler, nil, _params, _connect_info) do
+    raise "module attribute @endpoint not set for socket/2"
+  end
+  defp quote_connect(handler, endpoint, params, connect_info) do
+    quote do
+      unquote(__MODULE__).__connect__(unquote(endpoint), unquote(handler), unquote(params), unquote(connect_info))
     end
   end
 
   @doc false
-  def __connect__(endpoint, handler, params) do
+  def __connect__(endpoint, handler, params, connect_info) do
     map = %{
       endpoint: endpoint,
       transport: :channel_test,
       options: [serializer: [{NoopSerializer, "~> 1.0.0"}]],
-      params: __stringify__(params)
+      params: __stringify__(params),
+      connect_info: connect_info
     }
 
     with {:ok, state} <- handler.connect(map),
