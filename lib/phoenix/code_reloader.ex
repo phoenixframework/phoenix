@@ -14,15 +14,24 @@ defmodule Phoenix.CodeReloader do
 
   @doc """
   Reloads code for the current Mix project by invoking the
-  `:reloadable_compilers`.
+  `:reloadable_compilers` on the list of `:reloadable_apps`.
 
   This is configured in your application environment like:
 
       config :your_app, YourApp.Endpoint,
-        reloadable_compilers: [:gettext, :phoenix, :elixir]
+        reloadable_compilers: [:gettext, :phoenix, :elixir],
+        reloadable_apps: [:ui, :backend]
 
   Keep in mind `:reloadable_compilers` must be a subset of the
   `:compilers` specified in `project/0` in your `mix.exs`.
+
+  The `:reloadable_apps` defaults to `nil`. In such case
+  default behaviour is to reload current project if it
+  consists of single app, or all applications within umbrella
+  project. You can set `:reloadable_apps` to subset of default
+  applications to reload only some of them, empty list - to
+  effectively disable code reloader, or include external
+  applications from library dependencies.
   """
   @spec reload!(module) :: :ok | {:error, binary()}
   defdelegate reload!(endpoint), to: Phoenix.CodeReloader.Server
