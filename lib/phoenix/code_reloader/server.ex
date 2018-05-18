@@ -155,6 +155,8 @@ defmodule Phoenix.CodeReloader.Server do
         mix_compile_unless_stale_config(compilers)
       end
     end
+    
+    :ok
   end
 
   defp mix_compile_project(nil, _, _), do: :ok
@@ -162,6 +164,7 @@ defmodule Phoenix.CodeReloader.Server do
     if app in apps_to_reload do
       mix_compile_unless_stale_config(compilers)
     end
+
     :ok
   end
 
