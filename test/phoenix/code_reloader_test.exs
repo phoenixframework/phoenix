@@ -6,6 +6,10 @@ defmodule Phoenix.CodeReloaderTest do
     def config(:reloadable_compilers) do
       [:gettext, :phoenix, :elixir]
     end
+
+    def config(:reloadable_apps) do
+      nil
+    end
   end
 
   def reload!(_) do

@@ -183,6 +183,7 @@ defmodule Phoenix.Endpoint.Supervisor do
      check_origin: true,
      http: false,
      https: false,
+     reloadable_apps: nil,
      reloadable_compilers: [:gettext, :phoenix, :elixir],
      secret_key_base: nil,
      static_url: nil,
