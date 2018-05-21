@@ -392,7 +392,7 @@ Next, let's show the user's email address in the user show template. Add the fol
 
 ```
 
-Now if we visit `http://localhost:4000/users/new`, we'll see the new email input, but if you try to save a user, you'll find that the email field is ignored. No validations are run telling you it was blank and the data was not saved, and at the end you'll get an exception `(UndefinedFunctionError) function nil.email/0 is undefined or private`. What gives?
+Now if we visit [http://localhost:4000/users/new](http://localhost:4000/users/new), we'll see the new email input, but if you try to save a user, you'll find that the email field is ignored. No validations are run telling you it was blank and the data was not saved, and at the end you'll get an exception `(UndefinedFunctionError) function nil.email/0 is undefined or private`. What gives?
 
 We used Ecto's `belongs_to` and `has_one` associations to wire-up how our data is related at the context level, but remember this is decoupled from our web-facing user input. To associate user input to our schema associations, we need to handle it the way we've handled other user input so far – in changesets. Remove the alias for Credential added by the generator and modify your `alias Hello.Accounts.User`, `create_user/1` and `update_user/2` functions in your `Accounts` context to build a changeset which knows how to cast user input with nested credential information:
 
@@ -420,7 +420,7 @@ We used Ecto's `belongs_to` and `has_one` associations to wire-up how our data i
 ```
 We updated the functions to pipe our user changeset into `Ecto.Changeset.cast_assoc/3`. Ecto's `cast_assoc/3` allows us to tell the changeset how to cast user input to a schema relation. We also used the `:with` option to tell Ecto to use our `Credential.changeset/2` function to cast the data. This way, any validations we perform in `Credential.changeset/2` will be applied when saving the `User` changeset.
 
-Finally, if you visit `http://localhost:4000/users/new` and attempt to save an empty email address, you'll see the proper validation error message. If you enter valid information, the data will be casted and persisted properly.
+Finally, if you visit [http://localhost:4000/users/new](http://localhost:4000/users/new) and attempt to save an empty email address, you'll see the proper validation error message. If you enter valid information, the data will be casted and persisted properly.
 
 ```
 Show User
@@ -563,7 +563,7 @@ Next, add a new template in `lib/hello_web/templates/session/new.html.eex:`
 
 To keep things simple, we added both our sign-in and sign-out forms in this template. For our sign-in form, we pass the `@conn` directly to `form_for`, pointing our form action at `session_path(@conn, :create)`. We also pass the `as: :user` option which tells Phoenix to wrap the form parameters inside a `"user"` key. Next, we used the `text_input` and `password_input` functions to send up an `"email"` and `"password"` parameter.
 
-For logging out, we simply defined a form that sends the `DELETE` HTTP method to server's session delete path. Now if you visit the sign-in page at http://localhost:4000/sessions/new and enter a bad email address, you should be greeted with your flash message. Entering a valid email address will redirect to the home page with a success flash notice.
+For logging out, we simply defined a form that sends the `DELETE` HTTP method to server's session delete path. Now if you visit the sign-in page at [http://localhost:4000/sessions/new](http://localhost:4000/sessions/new) and enter a bad email address, you should be greeted with your flash message. Entering a valid email address will redirect to the home page with a success flash notice.
 
 With authentication in place, we're in good shape to begin building out our next features.
 
@@ -678,7 +678,7 @@ Generated hello app
 [info]  == Migrated in 0.0s
 ```
 
-Now, let's fire up the server with `mix phx.server` and visit `http://localhost:4000/cms/pages`. If we haven't logged in yet, we'll be redirected to the home page with a flash error message telling us to sign in. Let's sign in at `http://localhost:4000/sessions/new`, then re-visit `http://localhost:4000/cms/pages`. Now that we're authenticated, we should see a familiar resource listing for pages, with a `New Page` link.
+Now, let's fire up the server with `mix phx.server` and visit [http://localhost:4000/cms/pages](http://localhost:4000/cms/pages). If we haven't logged in yet, we'll be redirected to the home page with a flash error message telling us to sign in. Let's sign in at [http://localhost:4000/sessions/new](http://localhost:4000/sessions/new), then re-visit [http://localhost:4000/cms/pages](http://localhost:4000/cms/pages). Now that we're authenticated, we should see a familiar resource listing for pages, with a `New Page` link.
 
 Before we create any pages, we need page authors. Let's run the `phx.gen.context` generator to generate an `Author` schema along with injected context functions:
 
@@ -980,7 +980,7 @@ Next, let's open up `lib/hello_web/templates/cms/page/show.html.eex` and make us
 </ul>
 ```
 
-Now, fire up your server with `mix phx.server` and try it out. Visit `http://localhost:4000/cms/pages/new` and save a new page.
+Now, fire up your server with `mix phx.server` and try it out. Visit [http://localhost:4000/cms/pages/new](http://localhost:4000/cms/pages/new) and save a new page.
 
 ```
 Page created successfully.
