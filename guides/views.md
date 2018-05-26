@@ -67,7 +67,7 @@ rendering with assigns [:conn, :view_module, :view_template]
 
 Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.eex` templates and turns them into `render/2` function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved. This is also why we were able to define functions like `title/0` in our `LayoutView` and they were immediately available inside the layout's `app.html.eex` – the call to `title/0` was just a local function call!
 
-When we `use HelloWeb, :view`, we get other conveniences as well. Since the `view/0` function imports `HelloWeb.Router.Helpers`, we don't have to fully qualify path helpers in templates. Let's see how that works by changing the template for our Welcome to Phoenix page.
+When we `use HelloWeb, :view`, we get other conveniences as well. Since the `view/0` function imports `HelloWeb.Router.Routes`, we don't have to fully qualify path helpers in templates. Let's see how that works by changing the template for our Welcome to Phoenix page.
 
 Let's open up the `lib/hello_web/templates/page/index.html.eex` and locate this stanza.
 

@@ -18,7 +18,7 @@ defmodule Phoenix.View do
             use Phoenix.View, root: "lib/web/templates"
 
             # Import common functionality
-            import YourApp.Router.Helpers
+            import YourApp.Router.Routes
 
             # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
             use Phoenix.HTML

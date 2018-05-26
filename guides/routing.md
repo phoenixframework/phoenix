@@ -238,12 +238,12 @@ end
 
 ## Path Helpers
 
-Path helpers are functions which are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloWeb.Router.Helpers`. Their names are derived from the name of the controller used in the route definition. Our controller is `HelloWeb.PageController`, and `page_path` is the function which will return the path to the root of our application.
+Path routes are functions which are dynamically defined on the `Router.Routes` module for an individual application. For us, that is `HelloWeb.Router.Routes`. Their names are derived from the name of the controller used in the route definition. Our controller is `HelloWeb.PageController`, and `page_path` is the function which will return the path to the root of our application.
 
 That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the `Endpoint` or connection and action as arguments, it returns the path to us.
 
 ```elixir
-iex> HelloWeb.Router.Helpers.page_path(HelloWeb.Endpoint, :index)
+iex> HelloWeb.Router.Routes.page_path(HelloWeb.Endpoint, :index)
 "/"
 ```
 
@@ -262,7 +262,7 @@ This pays off tremendously if we should ever have to change the path of our rout
 When we ran the `phx.routes` task for our user resource, it listed the `user_path` as the path helper function for each line of output. Here is what that translates to for each action:
 
 ```elixir
-iex> import HelloWeb.Router.Helpers
+iex> import HelloWeb.Router.Routes
 iex> alias HelloWeb.Endpoint
 iex> user_path(Endpoint, :index)
 "/users"
@@ -333,14 +333,14 @@ When calling path helper functions for nested routes, we will need to pass the I
 
 ```elixir
 iex> alias HelloWeb.Endpoint
-iex> HelloWeb.Router.Helpers.user_post_path(Endpoint, :show, 42, 17)
+iex> HelloWeb.Router.Routes.user_post_path(Endpoint, :show, 42, 17)
 "/users/42/posts/17"
 ```
 
 Again, if we add a key/value pair to the end of the function call, it is added to the query string.
 
 ```elixir
-iex> HelloWeb.Router.Helpers.user_post_path(Endpoint, :index, 42, active: true)
+iex> HelloWeb.Router.Routes.user_post_path(Endpoint, :index, 42, active: true)
 "/users/42/posts?active=true"
 ```
 
@@ -471,10 +471,10 @@ admin_review_path  DELETE  /admin/reviews/:id              HelloWeb.Admin.Review
 The path helpers now return what we want them to as well. Run `$ iex -S mix` and give it a try yourself.
 
 ```elixir
-iex(1)> HelloWeb.Router.Helpers.review_path(HelloWeb.Endpoint, :index)
+iex(1)> HelloWeb.Router.Routes.review_path(HelloWeb.Endpoint, :index)
 "/reviews"
 
-iex(2)> HelloWeb.Router.Helpers.admin_review_path(HelloWeb.Endpoint, :show, 1234)
+iex(2)> HelloWeb.Router.Routes.admin_review_path(HelloWeb.Endpoint, :show, 1234)
 "/admin/reviews/1234"
 ```
 
