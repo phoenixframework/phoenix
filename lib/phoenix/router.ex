@@ -41,7 +41,7 @@ defmodule Phoenix.Router do
 
   ## Helpers
 
-  Phoenix automatically generates a module `Helpers` inside your router
+  Phoenix automatically generates a module `Routes` inside your router
   which contains named helpers to help developers generate and keep
   their routes up to date.
 
@@ -52,22 +52,22 @@ defmodule Phoenix.Router do
 
   will generate the following named helper:
 
-      MyAppWeb.Router.Helpers.page_path(conn_or_endpoint, :show, "hello")
+      MyAppWeb.Router.Routes.page_path(conn_or_endpoint, :show, "hello")
       "/pages/hello"
 
-      MyAppWeb.Router.Helpers.page_path(conn_or_endpoint, :show, "hello", some: "query")
+      MyAppWeb.Router.Routes.page_path(conn_or_endpoint, :show, "hello", some: "query")
       "/pages/hello?some=query"
 
-      MyAppWeb.Router.Helpers.page_url(conn_or_endpoint, :show, "hello")
+      MyAppWeb.Router.Routes.page_url(conn_or_endpoint, :show, "hello")
       "http://example.com/pages/hello"
 
-      MyAppWeb.Router.Helpers.page_url(conn_or_endpoint, :show, "hello", some: "query")
+      MyAppWeb.Router.Routes.page_url(conn_or_endpoint, :show, "hello", some: "query")
       "http://example.com/pages/hello?some=query"
 
   If the route contains glob-like patterns, parameters for those have to be given as
   list:
 
-      MyAppWeb.Router.Helpers.dynamic_path(conn_or_endpoint, :show, ["dynamic", "something"])
+      MyAppWeb.Router.Routes.dynamic_path(conn_or_endpoint, :show, ["dynamic", "something"])
       "/dynamic/something"
 
   The URL generated in the named URL helpers is based on the configuration for
@@ -76,7 +76,7 @@ defmodule Phoenix.Router do
   struct:
 
       uri = %URI{scheme: "https", host: "other.example.com"}
-      MyAppWeb.Router.Helpers.page_url(uri, :show, "hello")
+      MyAppWeb.Router.Routes.page_url(uri, :show, "hello")
       "https://other.example.com/pages/hello"
 
   The named helper can also be customized with the `:as` option. Given
@@ -86,7 +86,7 @@ defmodule Phoenix.Router do
 
   the named helper will be:
 
-      MyAppWeb.Router.Helpers.special_page_path(conn, :show, "hello")
+      MyAppWeb.Router.Routes.special_page_path(conn, :show, "hello")
       "/pages/hello"
 
   ## Scopes and Resources
@@ -189,7 +189,7 @@ defmodule Phoenix.Router do
   alias Phoenix.Router.Resource
   alias Phoenix.Router.Scope
   alias Phoenix.Router.Route
-  alias Phoenix.Router.Helpers
+  alias Phoenix.Router.Routes
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
@@ -323,7 +323,7 @@ defmodule Phoenix.Router do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
     routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1)})
 
-    Helpers.define(env, routes_with_exprs)
+    Routes.define(env, routes_with_exprs)
     matches = Enum.map(routes_with_exprs, &build_match/1)
 
     # @anno is used here to avoid warnings if forwarding to root path
@@ -339,7 +339,7 @@ defmodule Phoenix.Router do
       def __routes__,  do: unquote(Macro.escape(routes))
 
       @doc false
-      def __helpers__, do: __MODULE__.Helpers
+      def __helpers__, do: __MODULE__.Routes
 
       defp prepare(conn) do
         update_in conn.private,

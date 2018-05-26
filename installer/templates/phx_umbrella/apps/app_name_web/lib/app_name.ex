@@ -22,7 +22,7 @@ defmodule <%= web_namespace %> do
       use Phoenix.Controller, namespace: <%= web_namespace %>
       import Plug.Conn
       import <%= web_namespace %>.Gettext
-      alias <%= web_namespace %>.Router.Helpers, as: Routes
+      alias <%= web_namespace %>.Router.Routes
     end
   end
 
@@ -39,7 +39,7 @@ defmodule <%= web_namespace %> do
 
       import <%= web_namespace %>.ErrorHelpers
       import <%= web_namespace %>.Gettext
-      alias <%= web_namespace %>.Router.Helpers, as: Routes
+      alias <%= web_namespace %>.Router.Routes
     end
   end
 
