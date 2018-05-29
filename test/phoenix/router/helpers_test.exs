@@ -15,10 +15,12 @@ defmodule Phoenix.Router.HelpersTest do
     end
     """
 
-    assert extract_defhelper(route, 1) == String.trim """
+    assert extract_defhelper(route, 1) =~ String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, ["bar"]))
-    end
+      case(segments(("" <> "/foo") <> "/" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, ["bar"])) do
+        {:ok, segments} ->
+          path(conn_or_endpoint, segments)
+        {:error, :invalid_query} ->
     """
   end
 
@@ -31,10 +33,12 @@ defmodule Phoenix.Router.HelpersTest do
     end
     """
 
-    assert extract_defhelper(route, 1) == String.trim """
+    assert extract_defhelper(route, 1) =~ String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, ["bar"]))
-    end
+      case(segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, ["bar"])) do
+        {:ok, segments} ->
+          path(conn_or_endpoint, segments)
+        {:error, :invalid_query} ->
     """
   end
 
@@ -53,6 +57,7 @@ defmodule Phoenix.Router.HelpersTest do
     use Phoenix.Router
 
     get "/posts/top", PostController, :top, as: :top
+    get "/posts/bottom/:order/:count", PostController, :bottom, as: :bottom
     get "/posts/:id", PostController, :show
     get "/posts/file/*file", PostController, :file
     get "/posts/skip", PostController, :skip, as: nil
@@ -133,6 +138,35 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert_raise ArgumentError, fn ->
       Helpers.post_path(__MODULE__, :show, nil)
+    end
+  end
+
+  test "url helper shows an error if an id is accidentally passed" do
+    error_message = """
+    Elixir.Phoenix.Router.HelpersTest.Router.Helpers.bottom_path/5 called with invalid params. The last argument to this function should be a keyword list or a map.
+    For example:
+
+      Router.bottom_path(conn, :bottom, :asc, 8, page: 5, per_page: 10)
+
+    It is possible you have called this function without defining the proper number of path segments in your router.
+    """ |> String.trim_trailing()
+
+    assert_raise ArgumentError, error_message, fn ->
+      Helpers.bottom_path(__MODULE__, :bottom, :asc, 8, {:not, :enumerable})
+    end
+
+    error_message = """
+    Elixir.Phoenix.Router.HelpersTest.Router.Helpers.top_path/3 called with invalid params. The last argument to this function should be a keyword list or a map.
+    For example:
+
+      Router.top_path(conn, :top, page: 5, per_page: 10)
+
+    It is possible you have called this function without defining the proper number of path segments in your router.
+    """ |> String.trim_trailing()
+
+
+    assert_raise ArgumentError, error_message, fn ->
+      Helpers.top_path(__MODULE__, :top, "invalid")
     end
   end
 
