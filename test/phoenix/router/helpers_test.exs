@@ -15,12 +15,10 @@ defmodule Phoenix.Router.HelpersTest do
     end
     """
 
-    assert extract_defhelper(route, 1) =~ String.trim """
+    assert extract_defhelper(route, 1) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      case(segments(("" <> "/foo") <> "/" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, ["bar"])) do
-        {:ok, segments} ->
-          path(conn_or_endpoint, segments)
-        {:error, :invalid_query} ->
+      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, [\"bar\"], opts: :world, helper: \"hello_world\", var_length: length([bar])))
+    end
     """
   end
 
@@ -33,12 +31,10 @@ defmodule Phoenix.Router.HelpersTest do
     end
     """
 
-    assert extract_defhelper(route, 1) =~ String.trim """
+    assert extract_defhelper(route, 1) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      case(segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, ["bar"])) do
-        {:ok, segments} ->
-          path(conn_or_endpoint, segments)
-        {:error, :invalid_query} ->
+      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> Enum.map_join(bar, \"/\", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, [\"bar\"], opts: :world, helper: \"hello_world\", var_length: length([bar])))
+    end
     """
   end
 
@@ -146,7 +142,7 @@ defmodule Phoenix.Router.HelpersTest do
     Elixir.Phoenix.Router.HelpersTest.Router.Helpers.bottom_path/5 called with invalid params. The last argument to this function should be a keyword list or a map.
     For example:
 
-      Router.bottom_path(conn, :bottom, :asc, 8, page: 5, per_page: 10)
+      Router.bottom_path(conn, :bottom, :arg1, :arg2, page: 5, per_page: 10)
 
     It is possible you have called this function without defining the proper number of path segments in your router.
     """ |> String.trim_trailing()

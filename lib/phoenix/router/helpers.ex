@@ -176,24 +176,37 @@ defmodule Phoenix.Router.Helpers do
       defp to_param(true), do: "true"
       defp to_param(data), do: Phoenix.Param.to_param(data)
 
-      defp segments(segments, [], _reserved) do
-        {:ok, segments}
+      defp segments!(segments, [], _reserved, _opts) do
+        segments
       end
 
-      defp segments(segments, query, reserved) when is_list(query) or is_map(query) do
+      defp segments!(segments, query, reserved, _opts) when is_list(query) or is_map(query) do
         dict = for {k, v} <- query,
                not ((k = to_string(k)) in reserved),
                do: {k, v}
 
 
         case Conn.Query.encode dict, &to_param/1 do
-          "" -> {:ok, segments}
-          o  -> {:ok, segments <> "?" <> o}
+          "" -> segments
+          o  -> segments <> "?" <> o
         end
       end
 
-      defp segments(segments, query, reserved) do
-        {:error, :invalid_query}
+      defp segments!(segments, query, reserved, opts) do
+        helper = Keyword.get(opts, :helper)
+        var_length = Keyword.get(opts, :var_length)
+        opts = Keyword.get(opts, :opts)
+        arity = var_length + 3
+        call_vars = if var_length > 0, do: Enum.map(1..(var_length), &(":arg#{&1}")), else: []
+
+        raise ArgumentError, "#{__MODULE__}.#{helper}_path/#{arity} " <>
+          "called with invalid params. The last argument to this function should " <>
+          "be a keyword list or a map.\n" <>
+          "For example:\n\n" <>
+          "  Router.#{helper}_path(conn, :#{opts}, " <>
+          "#{Enum.join(call_vars ++ [""], ", ")}page: 5, per_page: 10)\n\n" <>
+          "It is possible you have called this function without defining the proper " <>
+          "number of path segments in your router."
       end
     end
 
@@ -228,26 +241,11 @@ defmodule Phoenix.Router.Helpers do
       end
 
       def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params) do
-        case segments(unquote(segs), params, unquote(bins)) do
-          {:ok, segments} ->
-            path(conn_or_endpoint, segments)
-
-          {:error, :invalid_query} ->
-            call_vars =
-              Enum.map(unquote(vars), fn
-                param when is_atom(param) -> ":#{param}"
-                other -> to_string(other)
-              end)
-            arity = length(unquote(vars)) + 3
-            raise ArgumentError, "#{__MODULE__}.#{unquote(helper)}_path/#{arity} " <>
-              "called with invalid params. The last argument to this function should " <>
-              "be a keyword list or a map.\n" <>
-              "For example:\n\n" <>
-              "  Router.#{unquote(helper)}_path(conn, :#{unquote(opts)}, " <>
-              "#{Enum.join(call_vars ++ [""], ", ")}page: 5, per_page: 10)\n\n" <>
-              "It is possible you have called this function without defining the proper " <>
-              "number of path segments in your router."
-        end
+        path(conn_or_endpoint, segments!(unquote(segs), params, unquote(bins), [
+          opts: unquote(opts),
+          helper: unquote(helper),
+          var_length: length(unquote(vars))
+        ]))
       end
 
       def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars)) do
