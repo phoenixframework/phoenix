@@ -9,6 +9,8 @@
 
 See the official site at http://www.phoenixframework.org/
 
+Install the latest version of Phoenix by following the instructions at https://hexdocs.pm/phoenix/installation.html#phoenix
+
 ## Documentation
 
 API documentation is available at [https://hexdocs.pm/phoenix](https://hexdocs.pm/phoenix)
