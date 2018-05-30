@@ -19,6 +19,10 @@ Phoenix.js documentation is available at [https://hexdocs.pm/phoenix/js](https:/
 
 We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs [in the issue tracker][4].
 
+### Installing the Phoenix (phx_new Mix archive)
+
+You can install stable/released versions of Phoenix following the instructions [here](https://hexdocs.pm/phoenix/installation.html#phoenix)
+
 ### Generating a Phoenix project from unreleased versions
 
 You can create a new project using the latest Phoenix source installer (the `phx.new` Mix task) with the following steps:
