@@ -25,7 +25,6 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/README.md"
       assert_file "phx_blog/mix.exs", fn file ->
-        assert file =~ ~s[:phoenix, "~> #{Application.spec(:phx_new, :vsn)}"]
         assert file =~ "app: :phx_blog"
         refute file =~ "deps_path: \"../../deps\""
         refute file =~ "lockfile: \"../../mix.lock\""
