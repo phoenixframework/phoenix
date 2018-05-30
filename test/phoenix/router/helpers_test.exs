@@ -17,7 +17,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert extract_defhelper(route, 1) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, [\"bar\"], opts: :world, helper: \"hello_world\", var_length: length([bar])))
+      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, [\"bar\"], {\"hello_world\", :world, length([bar])}))
     end
     """
   end
@@ -33,7 +33,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert extract_defhelper(route, 1) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> Enum.map_join(bar, \"/\", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, [\"bar\"], opts: :world, helper: \"hello_world\", var_length: length([bar])))
+      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> Enum.map_join(bar, \"/\", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, [\"bar\"], {\"hello_world\", :world, length([bar])}))
     end
     """
   end
@@ -145,7 +145,7 @@ defmodule Phoenix.Router.HelpersTest do
       Router.bottom_path(conn, :bottom, :arg1, :arg2, page: 5, per_page: 10)
 
     It is possible you have called this function without defining the proper number of path segments in your router.
-    """ |> String.trim_trailing()
+    """
 
     assert_raise ArgumentError, error_message, fn ->
       Helpers.bottom_path(__MODULE__, :bottom, :asc, 8, {:not, :enumerable})
@@ -158,7 +158,7 @@ defmodule Phoenix.Router.HelpersTest do
       Router.top_path(conn, :top, page: 5, per_page: 10)
 
     It is possible you have called this function without defining the proper number of path segments in your router.
-    """ |> String.trim_trailing()
+    """
 
 
     assert_raise ArgumentError, error_message, fn ->

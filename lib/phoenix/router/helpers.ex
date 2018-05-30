@@ -192,21 +192,20 @@ defmodule Phoenix.Router.Helpers do
         end
       end
 
-      defp segments!(segments, query, reserved, opts) do
-        helper = Keyword.get(opts, :helper)
-        var_length = Keyword.get(opts, :var_length)
-        opts = Keyword.get(opts, :opts)
+      defp segments!(segments, query, reserved, {helper, opts, var_length}) do
         arity = var_length + 3
         call_vars = if var_length > 0, do: Enum.map(1..(var_length), &(":arg#{&1}")), else: []
 
-        raise ArgumentError, "#{__MODULE__}.#{helper}_path/#{arity} " <>
-          "called with invalid params. The last argument to this function should " <>
-          "be a keyword list or a map.\n" <>
-          "For example:\n\n" <>
-          "  Router.#{helper}_path(conn, :#{opts}, " <>
-          "#{Enum.join(call_vars ++ [""], ", ")}page: 5, per_page: 10)\n\n" <>
-          "It is possible you have called this function without defining the proper " <>
-          "number of path segments in your router."
+        raise ArgumentError, """
+        #{__MODULE__}.#{helper}_path/#{arity} called with invalid params. The last argument to \
+        this function should be a keyword list or a map.
+        For example:
+
+          Router.#{helper}_path(conn, :#{opts}, #{Enum.join(call_vars ++ [""], ", ")}page: 5, per_page: 10)
+
+        It is possible you have called this function without defining the proper \
+        number of path segments in your router.
+        """
       end
     end
 
@@ -241,11 +240,8 @@ defmodule Phoenix.Router.Helpers do
       end
 
       def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params) do
-        path(conn_or_endpoint, segments!(unquote(segs), params, unquote(bins), [
-          opts: unquote(opts),
-          helper: unquote(helper),
-          var_length: length(unquote(vars))
-        ]))
+        path(conn_or_endpoint, segments!(unquote(segs), params, unquote(bins),
+              {unquote(helper), unquote(opts), length(unquote(vars))}))
       end
 
       def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars)) do
