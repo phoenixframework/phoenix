@@ -409,7 +409,7 @@ defmodule Phoenix.Socket do
     quote do
       def __transports__, do: unquote(Macro.escape(transports))
       unquote(channel_defs)
-      def __channel__(_topic, _transport), do: nil
+      def __channel__(_topic), do: nil
     end
   end
 

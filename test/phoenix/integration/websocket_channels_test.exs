@@ -276,6 +276,24 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
         assert_receive {:DOWN, _, :process, ^socket, :normal}, 400
       end
+
+      test "warns for unmatched topic" do
+        {:ok, sock} = WebsocketClient.start_link(self(), "#{@vsn_path}&logging=enabled", @serializer)
+        log = capture_log(fn ->
+          WebsocketClient.join(sock, "unmatched-topic", %{})
+          assert_receive %Message{
+            event: "phx_reply",
+            ref: "1",
+            topic: "unmatched-topic",
+            join_ref: nil,
+            payload: %{
+              "status" => "error",
+              "response" => %{"reason" => "unmatched topic"}
+            }
+          }
+        end)
+        assert log =~ "[warn]  Ignoring unmatched topic \"unmatched-topic\" in Phoenix.Integration.WebSocketChannelsTest.UserSocket"
+      end
     end
   end
 end
