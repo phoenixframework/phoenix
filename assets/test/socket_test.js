@@ -33,6 +33,14 @@ describe("constructor", () => {
     assert.equal(typeof socket.reconnectAfterMs, "function")
   })
 
+  it("supports closure or literal params", () => {
+    socket = new Socket("/socket", {params: {one: "two"}})
+    assert.deepEqual(socket.params(), {one: "two"})
+
+    socket = new Socket("/socket", {params: function(){ return({three: "four"}) }})
+    assert.deepEqual(socket.params(), {three: "four"})
+  })
+
   it("overrides some defaults with options", () => {
     const customTransport = function transport() {}
     const customLogger = function logger() {}
@@ -54,7 +62,7 @@ describe("constructor", () => {
     assert.equal(socket.transport, customTransport)
     assert.equal(socket.logger, customLogger)
     assert.equal(socket.reconnectAfterMs, customReconnect)
-    assert.deepEqual(socket.params, {one: "two"})
+    assert.deepEqual(socket.params(), {one: "two"})
   })
 
   describe("with Websocket", () => {
@@ -370,7 +378,7 @@ describe("channel", () => {
 
     assert.deepStrictEqual(channel.socket, socket)
     assert.equal(channel.topic, "topic")
-    assert.deepEqual(channel.params, {one: "two"})
+    assert.deepEqual(channel.params(), {one: "two"})
   })
 
   it("adds channel to sockets channels list", () => {

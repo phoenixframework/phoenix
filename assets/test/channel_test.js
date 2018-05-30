@@ -21,7 +21,7 @@ describe("constructor", () => {
 
     assert.equal(channel.state, "closed")
     assert.equal(channel.topic, "topic")
-    assert.deepEqual(channel.params, { one: "two" })
+    assert.deepEqual(channel.params(), { one: "two" })
     assert.deepEqual(channel.socket, socket)
     assert.equal(channel.timeout, 1234)
     assert.equal(channel.joinedOnce, false)
@@ -29,39 +29,52 @@ describe("constructor", () => {
     assert.deepEqual(channel.pushBuffer, [])
   })
 
-  it("sets up joinPush object", () => {
+  it("sets up joinPush objec with literal params", () => {
     channel = new Channel("topic", { one: "two" }, socket)
     const joinPush = channel.joinPush
 
     assert.deepEqual(joinPush.channel, channel)
-    assert.deepEqual(joinPush.payload, { one: "two" })
+    assert.deepEqual(joinPush.payload(), { one: "two" })
     assert.equal(joinPush.event, "phx_join")
     assert.equal(joinPush.timeout, 1234)
   })
+
+  it("sets up joinPush objec with closure params", () => {
+    channel = new Channel("topic", function(){ return({one: "two"}) }, socket)
+    const joinPush = channel.joinPush
+
+    assert.deepEqual(joinPush.channel, channel)
+    assert.deepEqual(joinPush.payload(), { one: "two" })
+    assert.equal(joinPush.event, "phx_join")
+    assert.equal(joinPush.timeout, 1234)
+  })
+
 })
 
-describe("updateJoinParams", () => {
+describe("updating join params", () => {
   beforeEach(() => {
     socket = { timeout: 1234 }
   })
 
   it("can update the join params", () => {
-    channel = new Channel("topic", { one: "two" }, socket)
+    let counter = 0
+    let params = function(){ return({value: counter}) }
+
+    channel = new Channel("topic", params, socket)
     const joinPush = channel.joinPush
 
     assert.deepEqual(joinPush.channel, channel)
-    assert.deepEqual(joinPush.payload, { one: "two" })
+    assert.deepEqual(joinPush.payload(), { value: 0 })
     assert.equal(joinPush.event, "phx_join")
     assert.equal(joinPush.timeout, 1234)
 
-    channel.updateJoinParams({ three: "four" })
+    counter++
 
     assert.deepEqual(joinPush.channel, channel)
-    assert.deepEqual(joinPush.payload, { three: "four" })
-    assert.deepEqual(channel.params, { three: "four" })
+    assert.deepEqual(joinPush.payload(), { value: 1 })
+    assert.deepEqual(channel.params(), { value: 1 })
     assert.equal(joinPush.event, "phx_join")
     assert.equal(joinPush.timeout, 1234)
-
   });
 });
 
@@ -759,7 +772,7 @@ describe("on", () => {
 
     assert.ok(!ignoredSpy.called)
   })
-  
+
   it("generates unique refs for callbacks", () => {
     const ref1 = channel.on("event1", () => 0)
     const ref2 = channel.on("event2", () => 0)
@@ -793,11 +806,11 @@ describe("off", () => {
     assert.ok(!spy2.called)
     assert.ok(spy3.called)
   })
-  
+
   it("removes callback by its ref", () => {
     const spy1 = sinon.spy()
     const spy2 = sinon.spy()
-    
+
     const ref1 = channel.on("event", spy1)
     const ref2 = channel.on("event", spy2)
 
@@ -805,7 +818,7 @@ describe("off", () => {
     channel.trigger("event", {}, defaultRef)
 
     assert.ok(!spy1.called)
-    assert.ok(spy2.called)    
+    assert.ok(spy2.called)
   })
 })
 

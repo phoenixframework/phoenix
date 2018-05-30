@@ -216,6 +216,16 @@ const TRANSPORTS = {
   websocket: "websocket"
 }
 
+// wraps value in closure or returns closure
+let closure = (value) => {
+  if(typeof(value) === "function"){
+    return value
+  } else {
+    let closure = function(){ return value }
+    return closure
+  }
+}
+
 /**
  * Initializes the Push
  * @param {Channel} channel - The Channel
@@ -227,7 +237,7 @@ class Push {
   constructor(channel, event, payload, timeout){
     this.channel      = channel
     this.event        = event
-    this.payload      = payload || {}
+    this.payload      = payload || function(){ return {} }
     this.receivedResp = null
     this.timeout      = timeout
     this.timeoutTimer = null
@@ -254,7 +264,7 @@ class Push {
     this.channel.socket.push({
       topic: this.channel.topic,
       event: this.event,
-      payload: this.payload,
+      payload: this.payload(),
       ref: this.ref,
       join_ref: this.channel.joinRef()
     })
@@ -272,16 +282,6 @@ class Push {
 
     this.recHooks.push({status, callback})
     return this
-  }
-
-  /**
-   * Updates the Push payload for subsequent resends
-   *
-   * @param {Object} payload
-   * @returns {Push}
-   */
-  updatePayload(payload) {
-    this.payload = payload;
   }
 
   /**
@@ -355,14 +355,14 @@ class Push {
 /**
  *
  * @param {string} topic
- * @param {Object} params
+ * @param {(Object|function)} params
  * @param {Socket} socket
  */
 export class Channel {
   constructor(topic, params, socket) {
     this.state       = CHANNEL_STATES.closed
     this.topic       = topic
-    this.params      = params || {}
+    this.params      = closure(params || {})
     this.socket      = socket
     this.bindings    = []
     this.bindingRef  = 0
@@ -393,7 +393,7 @@ export class Channel {
     })
     this.joinPush.receive("timeout", () => { if(!this.isJoining()){ return }
       this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
-      let leavePush = new Push(this, CHANNEL_EVENTS.leave, {}, this.timeout)
+      let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), this.timeout)
       leavePush.send()
       this.state = CHANNEL_STATES.errored
       this.joinPush.reset()
@@ -427,17 +427,6 @@ export class Channel {
       this.rejoin(timeout)
       return this.joinPush
     }
-  }
-
-  /**
-   * Updates the params passed as the second argument to `new Channel("topic", params, socket)`
-   * Any subsequent reconnects on the channel will send the updated params to the `join` callback on the sever
-   *
-   * @param {Object} params
-   */
-  updateJoinParams(params = {}) {
-    this.params = params;
-    this.joinPush.updatePayload(params);
   }
 
   /**
@@ -504,7 +493,7 @@ export class Channel {
     if(!this.joinedOnce){
       throw(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`)
     }
-    let pushEvent = new Push(this, event, payload, timeout)
+    let pushEvent = new Push(this, event, function(){ return payload }, timeout)
     if(this.canPush()){
       pushEvent.send()
     } else {
@@ -537,7 +526,7 @@ export class Channel {
       this.socket.log("channel", `leave ${this.topic}`)
       this.trigger(CHANNEL_EVENTS.close, "leave")
     }
-    let leavePush = new Push(this, CHANNEL_EVENTS.leave, {}, timeout)
+    let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), timeout)
     leavePush.receive("ok", () => onClose() )
              .receive("timeout", () => onClose() )
     leavePush.send()
@@ -705,7 +694,7 @@ const Serializer = {
  *
  * Defaults to 20s (double the server long poll timer).
  *
- * @param {Object} [opts.params] - The optional params to pass when connecting
+ * @param {{Object|function)} [opts.params] - The optional params to pass when connecting
  *
  *
 */
@@ -732,7 +721,7 @@ export class Socket {
     }
     this.logger               = opts.logger || function(){} // noop
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
-    this.params               = opts.params || {}
+    this.params               = closure(opts.params || {})
     this.endPoint             = `${endPoint}/${TRANSPORTS.websocket}`
     this.heartbeatTimer       = null
     this.pendingHeartbeatRef  = null
@@ -755,7 +744,7 @@ export class Socket {
    */
   endPointURL(){
     let uri = Ajax.appendParams(
-      Ajax.appendParams(this.endPoint, this.params), {vsn: VSN})
+      Ajax.appendParams(this.endPoint, this.params()), {vsn: VSN})
     if(uri.charAt(0) !== "/"){ return uri }
     if(uri.charAt(1) === "/"){ return `${this.protocol()}:${uri}` }
 
@@ -783,7 +772,7 @@ export class Socket {
   connect(params){
     if(params){
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
-      this.params = params
+      this.params = closure(params)
     }
     if(this.conn){ return }
 
