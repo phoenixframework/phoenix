@@ -5,7 +5,7 @@
 // and connect at the socket path in "lib/web/endpoint.ex".
 //
 // Pass the token on params as below. Or remove it
-// from the params if you don't care about authentication.
+// from the params if you are not using authentication.
 import {Socket} from "phoenix"
 
 let socket = new Socket("/socket", {params: {token: window.userToken}})
