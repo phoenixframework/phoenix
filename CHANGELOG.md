@@ -60,7 +60,7 @@ The old APIs for building transports are also deprecated. The good news is: adap
 ### JavaScript client
 
   * Add new instance-based Presence API with simplified synchronization callbacks
-  * Add `updateJoinParams` to channel for explicit param updates between rejoins
+  * Accept a function for socket and channel `params` for dynamic parameter generation when connecting and joining
   * Fix race condition when presence diff arrives before state
 
 ## v1.3
