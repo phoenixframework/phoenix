@@ -138,30 +138,15 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   test "url helper shows an error if an id is accidentally passed" do
-    error_message = """
-    Elixir.Phoenix.Router.HelpersTest.Router.Helpers.bottom_path/5 called with invalid params. The last argument to this function should be a keyword list or a map.
-    For example:
+    error_suggestion = ~r/Router.bottom_path\(conn, :bottom, arg1, arg2, page: 5, per_page: 10\)/
 
-      Router.bottom_path(conn, :bottom, :arg1, :arg2, page: 5, per_page: 10)
-
-    It is possible you have called this function without defining the proper number of path segments in your router.
-    """
-
-    assert_raise ArgumentError, error_message, fn ->
+    assert_raise ArgumentError, error_suggestion, fn ->
       Helpers.bottom_path(__MODULE__, :bottom, :asc, 8, {:not, :enumerable})
     end
 
-    error_message = """
-    Elixir.Phoenix.Router.HelpersTest.Router.Helpers.top_path/3 called with invalid params. The last argument to this function should be a keyword list or a map.
-    For example:
+    error_suggestion = ~r/Router.top_path\(conn, :top, page: 5, per_page: 10\)/
 
-      Router.top_path(conn, :top, page: 5, per_page: 10)
-
-    It is possible you have called this function without defining the proper number of path segments in your router.
-    """
-
-
-    assert_raise ArgumentError, error_message, fn ->
+    assert_raise ArgumentError, error_suggestion, fn ->
       Helpers.top_path(__MODULE__, :top, "invalid")
     end
   end

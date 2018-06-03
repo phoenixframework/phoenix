@@ -194,14 +194,14 @@ defmodule Phoenix.Router.Helpers do
 
       defp segments!(segments, query, reserved, {helper, opts, var_length}) do
         arity = var_length + 3
-        call_vars = if var_length > 0, do: Enum.map(1..(var_length), &(":arg#{&1}")), else: []
+        call_vars = if var_length > 0, do: Enum.map(1..(var_length), &("arg#{&1}")), else: []
 
         raise ArgumentError, """
         #{__MODULE__}.#{helper}_path/#{arity} called with invalid params. The last argument to \
         this function should be a keyword list or a map.
         For example:
 
-          Router.#{helper}_path(conn, :#{opts}, #{Enum.join(call_vars ++ [""], ", ")}page: 5, per_page: 10)
+          Router.#{helper}_path(#{Enum.join(["conn", ":#{opts}" | call_vars], ", ")}, page: 5, per_page: 10)
 
         It is possible you have called this function without defining the proper \
         number of path segments in your router.
