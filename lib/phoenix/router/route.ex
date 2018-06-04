@@ -45,16 +45,19 @@ defmodule Phoenix.Router.Route do
   end
 
   @doc """
-  Builds the expressions used by the route.
+  Builds the compiled expressions used by the route.
   """
   def exprs(route) do
     {path, binding} = build_path_and_binding(route)
 
-    %{path: path,
+    %{
+      path: path,
       host: build_host(route.host),
       verb_match: verb_match(route.verb),
       binding: binding,
-      route_match: build_route_match(route, binding)}
+      prepare: build_prepare(route, binding),
+      dispatch: build_dispatch(route)
+    }
   end
 
   defp verb_match(:*), do: Macro.var(:_verb, nil)
@@ -81,17 +84,14 @@ defmodule Phoenix.Router.Route do
     end
   end
 
-  defp build_route_match(route, binding) do
-    dispatch_block = build_dispatch(route)
-    pipes_block = build_pipes(route)
-    exprs =
-      [build_params(binding),
-       maybe_merge(:private, route.private),
-       maybe_merge(:assigns, route.assigns)]
+  defp build_prepare(route, binding) do
+    exprs = [
+      build_params(binding),
+      maybe_merge(:private, route.private),
+      maybe_merge(:assigns, route.assigns)
+    ]
 
-    conn_block = {:__block__, [], Enum.filter(exprs, & &1 != nil)}
-
-    {conn_block, pipes_block, dispatch_block}
+    {:__block__, [], Enum.filter(exprs, & &1 != nil)}
   end
 
   defp build_dispatch(%Route{kind: :forward} = route) do
@@ -136,22 +136,6 @@ defmodule Phoenix.Router.Route do
                    path_params: path_binding}
     end
   end
-
-  defp build_pipes(%Route{pipe_through: []}) do
-    quote do: fn conn -> conn end
-  end
-  defp build_pipes(%Route{pipe_through: pipe_through}) do
-    plugs = pipe_through |> Enum.reverse |> Enum.map(&{&1, [], true})
-    {conn, body} = Plug.Builder.compile(__ENV__, plugs, [])
-
-    quote do
-      fn unquote(conn) ->
-        unquote(conn) = Plug.Conn.put_private(unquote(conn), :phoenix_pipelines, unquote(pipe_through))
-        unquote(body)
-      end
-    end
-  end
-
 
   @doc """
   Forwards requests to another Plug at a new path.
