@@ -324,7 +324,7 @@ defmodule Phoenix.Router do
     routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1)})
 
     Helpers.define(env, routes_with_exprs)
-    matches = Enum.map(routes_with_exprs, &build_match/1)
+    {matches, _} = Enum.map_reduce(routes_with_exprs, %{}, &build_match/2)
 
     # @anno is used here to avoid warnings if forwarding to root path
     match_404 =
@@ -343,9 +343,9 @@ defmodule Phoenix.Router do
 
       defp prepare(conn) do
         update_in conn.private,
-          &(&1 |> Map.put(:phoenix_pipelines, [])
-          |> Map.put(:phoenix_router, __MODULE__)
-          |> Map.put(__MODULE__, {conn.script_name, @phoenix_forwards}))
+          &(&1
+            |> Map.put(:phoenix_router, __MODULE__)
+            |> Map.put(__MODULE__, {conn.script_name, @phoenix_forwards}))
       end
 
       unquote(matches)
@@ -353,16 +353,58 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp build_match({route, exprs}) do
-    {conn_block, pipelines, dispatch} = exprs.route_match
+  defp build_match({route, exprs}, known_pipelines) do
+    %{pipe_through: pipe_through} = route
 
-    quote line: route.line do
-      @doc false
-      def __match_route__(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
-                 unquote(exprs.host)) do
+    %{
+      prepare: prepare,
+      dispatch: dispatch,
+      verb_match: verb_match,
+      path: path,
+      host: host
+    } = exprs
 
-        unquote(conn_block)
-        {var!(conn), unquote(pipelines), unquote(dispatch)}
+
+    {pipe_name, pipe_definition, known_pipelines} =
+      case known_pipelines do
+        %{^pipe_through => name} ->
+          {name, :ok, known_pipelines}
+
+        %{} ->
+          name = :"__pipe_through#{map_size(known_pipelines)}__"
+          {name, build_pipes(name, pipe_through), Map.put(known_pipelines, pipe_through, name)}
+      end
+
+    quoted =
+      quote line: route.line do
+        unquote(pipe_definition)
+
+        @doc false
+        def __match_route__(var!(conn), unquote(verb_match), unquote(path), unquote(host)) do
+          unquote(prepare)
+          {var!(conn), &unquote(Macro.var(pipe_name, __MODULE__))/1, unquote(dispatch)}
+        end
+      end
+
+    {quoted, known_pipelines}
+  end
+
+  defp build_pipes(name, []) do
+    quote do
+      defp unquote(name)(conn) do
+        Plug.Conn.put_private(conn, :phoenix_pipelines, [])
+      end
+    end
+  end
+
+  defp build_pipes(name, pipe_through) do
+    plugs = pipe_through |> Enum.reverse |> Enum.map(&{&1, [], true})
+    {conn, body} = Plug.Builder.compile(__ENV__, plugs, init_mode: Phoenix.plug_init_mode())
+
+    quote do
+      defp unquote(name)(unquote(conn)) do
+        unquote(conn) = Plug.Conn.put_private(unquote(conn), :phoenix_pipelines, unquote(pipe_through))
+        unquote(body)
       end
     end
   end
