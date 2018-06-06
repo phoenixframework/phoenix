@@ -6,6 +6,7 @@ defmodule Phoenix.Router.RouteTest do
   def init(opts), do: opts
 
   defmodule AdminRouter do
+    def init(opts), do: opts
     def call(conn, _), do: Plug.Conn.assign(conn, :fwd_conn, conn)
   end
 
@@ -53,9 +54,9 @@ defmodule Phoenix.Router.RouteTest do
     assert exprs(route).verb_match == {:_verb, [], nil}
   end
 
-  test "forward sets path_info and script_name for target, then resumes" do
+  test "as a plug, it forwards and sets path_info and script_name for target, then resumes" do
     conn = %Plug.Conn{path_info: ["admin", "stats"], script_name: ["phoenix"]}
-    conn = forward(conn, ["admin"], AdminRouter, [])
+    conn = call(conn, {["admin"], AdminRouter, []})
     fwd_conn = conn.assigns[:fwd_conn]
     assert fwd_conn.path_info == ["stats"]
     assert fwd_conn.script_name == ["phoenix", "admin"]

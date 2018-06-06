@@ -186,10 +186,7 @@ defmodule Phoenix.Router do
   No plug is invoked in case no matches were found.
   """
 
-  alias Phoenix.Router.Resource
-  alias Phoenix.Router.Scope
-  alias Phoenix.Router.Route
-  alias Phoenix.Router.Helpers
+  alias Phoenix.Router.{Resource, Scope, Route, Helpers}
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
@@ -269,13 +266,13 @@ defmodule Phoenix.Router do
   def __call__({%Plug.Conn{private: %{phoenix_bypass: :all}} = conn, _pipeline, _dispatch}) do
     conn
   end
-  def __call__({conn, pipeline, dispatch}) do
+  def __call__({conn, pipeline, {plug, opts}}) do
     case pipeline.(conn) do
       %Plug.Conn{halted: true} = halted_conn ->
         halted_conn
       %Plug.Conn{} = piped_conn ->
         try do
-          dispatch.(piped_conn)
+          plug.call(piped_conn, plug.init(opts))
         rescue
           e in Plug.Conn.WrapperError ->
             Plug.Conn.WrapperError.reraise(e)

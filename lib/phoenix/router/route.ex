@@ -28,6 +28,18 @@ defmodule Phoenix.Router.Route do
 
   @type t :: %Route{}
 
+  @doc "Used as a plug on forwarding"
+  def init(opts), do: opts
+
+  @doc "Used as a plug on forwarding"
+  def call(%{path_info: path, script_name: script} = conn, {fwd_segments, plug, opts}) do
+    new_path = path -- fwd_segments
+    {base, ^new_path} = Enum.split(path, length(path) - length(new_path))
+    conn = %{conn | path_info: new_path, script_name: script ++ base}
+    conn = plug.call(conn, plug.init(opts))
+    %{conn | path_info: path, script_name: script}
+  end
+
   @doc """
   Receives the verb, path, plug, options and helper
   and returns a `Phoenix.Router.Route` struct.
@@ -96,24 +108,15 @@ defmodule Phoenix.Router.Route do
 
   defp build_dispatch(%Route{kind: :forward} = route) do
     {_params, fwd_segments} = Plug.Router.Utils.build_path_match(route.path)
-    opts = route.opts |> route.plug.init() |> Macro.escape()
 
     quote do
-      fn conn ->
-        Phoenix.Router.Route.forward(conn, unquote(fwd_segments), unquote(route.plug), unquote(opts))
-      end
+      {Phoenix.Router.Route, {unquote(fwd_segments), unquote(route.plug), unquote(route.opts)}}
     end
   end
+
   defp build_dispatch(%Route{} = route) do
     quote do
-      fn conn ->
-        # We need to store this in a variable so the compiler
-        # does not see a call and then suddenly start tracking
-        # changes in the controller.
-        plug = unquote(route.plug)
-        opts = plug.init(unquote(route.opts))
-        plug.call(conn, opts)
-      end
+      {unquote(route.plug), unquote(route.opts)}
     end
   end
 
@@ -131,21 +134,10 @@ defmodule Phoenix.Router.Route do
     quote do
       path_binding = unquote({:%{}, [], binding})
       var!(conn) =
-        %Plug.Conn{var!(conn) |
-                   params: Map.merge(var!(conn).params, path_binding),
-                   path_params: path_binding}
+        %{var!(conn)
+          | params: Map.merge(var!(conn).params, path_binding),
+            path_params: path_binding}
     end
-  end
-
-  @doc """
-  Forwards requests to another Plug at a new path.
-  """
-  def forward(%Plug.Conn{path_info: path, script_name: script} = conn, fwd_segments, target, opts) do
-    new_path = path -- fwd_segments
-    {base, ^new_path} = Enum.split(path, length(path) - length(new_path))
-
-    conn = %Plug.Conn{conn | path_info: new_path, script_name: script ++ base} |> target.call(opts)
-    %Plug.Conn{conn | path_info: path, script_name: script}
   end
 
   @doc """
