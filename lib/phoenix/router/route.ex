@@ -97,13 +97,15 @@ defmodule Phoenix.Router.Route do
   end
 
   defp build_prepare(route, binding) do
-    exprs = [
-      build_params(binding),
-      maybe_merge(:private, route.private),
-      maybe_merge(:assigns, route.assigns)
-    ]
+    {static_data, match_params, merge_params} = build_params(binding)
+    {match_private, merge_private} = build_prepare_expr(:private, route.private)
+    {match_assigns, merge_assigns} = build_prepare_expr(:assigns, route.assigns)
 
-    {:__block__, [], Enum.filter(exprs, & &1 != nil)}
+    quote do
+      unquote_splicing(static_data)
+      %{unquote_splicing(match_params ++ match_private ++ match_assigns)} = var!(conn)
+      var!(conn) = %{var!(conn) | unquote_splicing(merge_params ++ merge_private ++ merge_assigns)}
+    end
   end
 
   defp build_dispatch(%Route{kind: :forward} = route) do
@@ -120,24 +122,23 @@ defmodule Phoenix.Router.Route do
     end
   end
 
-  defp maybe_merge(key, data) do
-    if map_size(data) > 0 do
-      quote do
-        var!(conn) =
-          update_in var!(conn).unquote(key), &Map.merge(&1, unquote(Macro.escape(data)))
-      end
-    end
+  defp build_prepare_expr(_key, data) when data == %{}, do: {[], []}
+  defp build_prepare_expr(key, data) do
+    var = Macro.var(key, :conn)
+    merge = quote(do: Map.merge(unquote(var), unquote(Macro.escape(data))))
+    {[{key, var}], [{key, merge}]}
   end
 
-  defp build_params([]), do: nil
+  defp build_params([]), do: {[], [], []}
   defp build_params(binding) do
-    quote do
-      path_binding = unquote({:%{}, [], binding})
-      var!(conn) =
-        %{var!(conn)
-          | params: Map.merge(var!(conn).params, path_binding),
-            path_params: path_binding}
-    end
+    params = Macro.var(:params, :conn)
+    path_params = Macro.var(:path_params, :conn)
+    merge_params = quote(do: Map.merge(unquote(params), unquote(path_params)))
+    {
+      [quote(do: unquote(path_params) = %{unquote_splicing(binding)})],
+      [{:params, params}],
+      [{:params, merge_params}, {:path_params, path_params}]
+    }
   end
 
   @doc """
