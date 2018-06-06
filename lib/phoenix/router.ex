@@ -378,8 +378,7 @@ defmodule Phoenix.Router do
 
         @doc false
         def __match_route__(var!(conn), unquote(verb_match), unquote(path), unquote(host)) do
-          unquote(prepare)
-          {var!(conn), &unquote(Macro.var(pipe_name, __MODULE__))/1, unquote(dispatch)}
+          {unquote(prepare), &unquote(Macro.var(pipe_name, __MODULE__))/1, unquote(dispatch)}
         end
       end
 
