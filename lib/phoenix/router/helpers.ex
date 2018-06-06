@@ -287,15 +287,15 @@ defmodule Phoenix.Router.Helpers do
   def raise_route_error(mod, fun, arity, action, routes) do
     prelude =
       if Keyword.has_key?(routes, action) do
-        "No action #{inspect action} for helper #{inspect mod}.#{fun}/#{arity}"
+        "no action #{inspect action} for helper #{inspect mod}.#{fun}/#{arity}"
       else
-        "No function clause for #{inspect mod}.#{fun}/#{arity} and action #{inspect action}"
+        "no function clause for #{inspect mod}.#{fun}/#{arity} and action #{inspect action}"
       end
 
     suggestions =
       for {action, bindings} <- routes do
-        bindings = Enum.join(bindings, ", ")
-        "\n    #{fun}(conn_or_endpoint, #{inspect action}, #{bindings}, opts \\\\ [])"
+        bindings = Enum.join([inspect(action) | bindings], ", ")
+        "\n    #{fun}(conn_or_endpoint, #{bindings}, params \\\\ [])"
       end
 
     raise ArgumentError, "#{prelude}. The following actions/clauses are supported:\n#{suggestions}"
@@ -307,8 +307,11 @@ defmodule Phoenix.Router.Helpers do
   def encode_param(str), do: URI.encode(str, &URI.char_unreserved?/1)
 
   defp expand_segments([]), do: "/"
-  defp expand_segments(segments) when is_list(segments),
-    do: expand_segments(segments, "")
+
+  defp expand_segments(segments) when is_list(segments) do
+    expand_segments(segments, "")
+  end
+
   defp expand_segments(segments) do
     quote(do: "/" <> Enum.map_join(unquote(segments), "/", &unquote(__MODULE__).encode_param/1))
   end
@@ -318,8 +321,10 @@ defmodule Phoenix.Router.Helpers do
 
   defp expand_segments([h|t], acc) when is_binary(h),
     do: expand_segments(t, quote(do: unquote(acc) <> unquote("/" <> h)))
+
   defp expand_segments([h|t], acc),
     do: expand_segments(t, quote(do: unquote(acc) <> "/" <> URI.encode(to_param(unquote(h)), &URI.char_unreserved?/1)))
+
   defp expand_segments([], acc),
     do: acc
 end

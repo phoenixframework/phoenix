@@ -161,10 +161,10 @@ defmodule Phoenix.Router.HelpersTest do
 
     error_message = fn helper, arity ->
       """
-      No function clause for #{inspect Helpers}.#{helper}/#{arity} and action :skip. The following actions/clauses are supported:
+      no function clause for #{inspect Helpers}.#{helper}/#{arity} and action :skip. The following actions/clauses are supported:
 
-          #{helper}(conn_or_endpoint, :file, file, opts \\\\ [])
-          #{helper}(conn_or_endpoint, :show, id, opts \\\\ [])
+          #{helper}(conn_or_endpoint, :file, file, params \\\\ [])
+          #{helper}(conn_or_endpoint, :show, id, params \\\\ [])
 
       """ |> String.trim
     end
@@ -267,15 +267,15 @@ defmodule Phoenix.Router.HelpersTest do
 
     error_message = fn helper, arity ->
       """
-      No function clause for #{inspect Helpers}.#{helper}/#{arity} and action :skip. The following actions/clauses are supported:
+      no function clause for #{inspect Helpers}.#{helper}/#{arity} and action :skip. The following actions/clauses are supported:
 
-          user_comment_file_path(conn_or_endpoint, :create, user_id, comment_id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :delete, user_id, comment_id, id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :edit, user_id, comment_id, id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :index, user_id, comment_id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :new, user_id, comment_id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :show, user_id, comment_id, id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :update, user_id, comment_id, id, opts \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :create, user_id, comment_id, params \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :delete, user_id, comment_id, id, params \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :edit, user_id, comment_id, id, params \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :index, user_id, comment_id, params \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :new, user_id, comment_id, params \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :show, user_id, comment_id, id, params \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :update, user_id, comment_id, id, params \\\\ [])
       """ |> String.trim
     end
 
@@ -289,15 +289,15 @@ defmodule Phoenix.Router.HelpersTest do
 
     arity_error_message =
       """
-      No action :show for helper #{inspect Helpers}.user_comment_path/3. The following actions/clauses are supported:
+      no action :show for helper #{inspect Helpers}.user_comment_path/3. The following actions/clauses are supported:
 
-          user_comment_path(conn_or_endpoint, :create, user_id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :delete, user_id, id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :edit, user_id, id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :index, user_id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :new, user_id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :show, user_id, id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :update, user_id, id, opts \\\\ [])
+          user_comment_path(conn_or_endpoint, :create, user_id, params \\\\ [])
+          user_comment_path(conn_or_endpoint, :delete, user_id, id, params \\\\ [])
+          user_comment_path(conn_or_endpoint, :edit, user_id, id, params \\\\ [])
+          user_comment_path(conn_or_endpoint, :index, user_id, params \\\\ [])
+          user_comment_path(conn_or_endpoint, :new, user_id, params \\\\ [])
+          user_comment_path(conn_or_endpoint, :show, user_id, id, params \\\\ [])
+          user_comment_path(conn_or_endpoint, :update, user_id, id, params \\\\ [])
 
       """ |> String.trim
 
