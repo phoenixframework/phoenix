@@ -97,14 +97,15 @@ defmodule Phoenix.Router.Helpers do
   Generates the helper module for the given environment and routes.
   """
   def define(env, routes) do
-    ast = for {route, exprs} <- routes, do: defhelper(route, exprs)
+    # Ignore any route without helper or forwards.
+    routes =
+      Enum.filter(routes, fn {route, _exprs} ->
+        (not is_nil(route.helper) and not (route.kind == :forward))
+      end)
 
-    catch_all =
-      routes
-      |> Enum.filter(fn {route, _exprs} ->
-        (not is_nil(route.helper) and not (route.kind == :forward)) end)
-      |> Enum.group_by(fn {route, _exprs} -> route.helper end)
-      |> Enum.map(&defhelper_catch_all/1)
+    impls = for {route, exprs} <- routes, do: defhelper(route, exprs)
+    groups = Enum.group_by(routes, fn {route, _exprs} -> route.helper end)
+    catch_all = Enum.map(groups, &defhelper_catch_all/1)
 
     # It is in general bad practice to generate large chunks of code
     # inside quoted expressions. However, we can get away with this
@@ -119,9 +120,8 @@ defmodule Phoenix.Router.Helpers do
       @moduledoc """
       Module with named helpers generated from #{inspect unquote(env.module)}.
       """
-      unquote(ast)
-
-      unquote(catch_all)
+      unquote_splicing(impls)
+      unquote_splicing(catch_all)
 
       @doc """
       Generates the connection/endpoint base URL without any path information.
@@ -207,8 +207,6 @@ defmodule Phoenix.Router.Helpers do
 
   In case a helper name was not given, or route is forwarded, returns nil.
   """
-  def defhelper(%Route{helper: nil}, _exprs), do: nil
-  def defhelper(%Route{kind: :forward}, _exprs), do: nil
   def defhelper(%Route{} = route, exprs) do
     helper = route.helper
     opts = route.opts
