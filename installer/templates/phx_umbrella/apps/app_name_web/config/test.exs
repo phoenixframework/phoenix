@@ -1,3 +1,6 @@
+# When using umbrella applications, this file should only
+# configure what the :<%= web_app_name %> application itself.
+# All other configuration goes to the umbrella root.
 use Mix.Config
 
 # We don't run a server during test. If one is required,

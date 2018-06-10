@@ -1,3 +1,6 @@
+# When using umbrella applications, this file should only
+# configure what the :<%= web_app_name %> application itself.
+# All other configuration goes to the umbrella root.
 use Mix.Config
 
 # For development, we disable any cache and enable
@@ -42,6 +45,3 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
   ]
 
 <% end %>
-
-# Initialize plugs at runtime for faster development compilation
-config :phoenix, :plug_init_mode, :runtime
