@@ -326,38 +326,34 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
-  test "new with mysql adapter" do
-    in_tmp "new with mysql adapter", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mysql"])
-
-      assert_file "custom_path_umbrella/apps/custom_path/mix.exs", ~r/:mariaex/
-      assert_file "custom_path_umbrella/apps/custom_path/config/dev.exs",
-        [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
-      assert_file "custom_path_umbrella/apps/custom_path/config/test.exs",
-        [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
-      assert_file "custom_path_umbrella/apps/custom_path/config/prod.secret.exs",
-        [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
-
-      assert_file "custom_path_umbrella/apps/custom_path/test/support/data_case.ex",
-        "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path_umbrella/apps/custom_path_web/test/support/channel_case.ex",
-        "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path_umbrella/apps/custom_path_web/test/support/conn_case.ex",
-        "Ecto.Adapters.SQL.Sandbox.mode"
-    end
-  end
-
   test "new defaults to pg adapter" do
     in_tmp "new defaults to pg adapter", fn ->
       app = "custom_path"
       project_path = Path.join(File.cwd!, app)
       Mix.Tasks.Phx.New.run([project_path, "--umbrella"])
 
-      assert_file app_path(app, "mix.exs"), ~r/:postgrex/
-      assert_file app_path(app, "config/dev.exs"), [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
-      assert_file app_path(app, "config/test.exs"), [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
-      assert_file app_path(app, "config/prod.secret.exs"), [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/]
+      assert_file app_path(app, "mix.exs"), ":postgrex"
+      assert_file app_path(app, "config/dev.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
+      assert_file app_path(app, "config/test.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
+      assert_file app_path(app, "config/prod.secret.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/]
+      assert_file app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.Postgres"
+
+      assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
+      assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
+    end
+  end
+
+  test "new with mysql adapter" do
+    in_tmp "new with mysql adapter", fn ->
+      app = "custom_path"
+      project_path = Path.join(File.cwd!, app)
+      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mysql"])
+
+      assert_file app_path(app, "mix.exs"), ":mariaex"
+      assert_file app_path(app, "config/dev.exs"), [~r/username: "root"/, ~r/password: ""/]
+      assert_file app_path(app, "config/test.exs"), [~r/username: "root"/, ~r/password: ""/]
+      assert_file app_path(app, "config/prod.secret.exs"), [~r/username: "root"/, ~r/password: ""/]
+      assert_file app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.MySQL"
 
       assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
       assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"

@@ -153,23 +153,20 @@ defmodule Phx.New.Generator do
     append_to app_path, "config/dev.exs", """
 
     # Configure your database
-    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-      adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:dev]},
+    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config adapter_config[:dev]},
       pool_size: 10
     """
 
     append_to app_path, "config/test.exs", """
 
     # Configure your database
-    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-      adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:test]}
+    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config adapter_config[:test]}
     """
 
     append_to app_path, "config/prod.secret.exs", """
 
     # Configure your database
-    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-      adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
+    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config adapter_config[:prod]},
       pool_size: 15
     """
   end
@@ -180,6 +177,7 @@ defmodule Phx.New.Generator do
     |> hd()
     |> Module.concat(PubSub)
   end
+
   defp get_ecto_adapter("mysql", app, module) do
     {:mariaex, Ecto.Adapters.MySQL, db_config(app, module, "root", "")}
   end

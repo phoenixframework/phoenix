@@ -122,19 +122,13 @@ Our `Hello.Repo` module is the foundation we need to work with databases in a Ph
 
 ```elixir
 defmodule Hello.Repo do
-  use Ecto.Repo, otp_app: :hello
-
-  @doc """
-  Dynamically loads the repository url from the
-  DATABASE_URL environment variable.
-  """
-  def init(_, opts) do
-    {:ok, Keyword.put(opts, :url, System.get_env("DATABASE_URL"))}
-  end
+  use Ecto.Repo,
+    otp_app: :hello,
+    adapter: Ecto.Adapter.Postgres
 end
 ```
 
-Our repo has three main tasks - to bring in all the common query functions from `Ecto.Repo`, to set the `otp_app` name equal to our application name, and to initialize the options passed to the database adapter in `init/2`. We'll talk more about how to use the Repo in a bit.
+Our repo has three main tasks - to bring in all the common query functions from `Ecto.Repo`, to set the `otp_app` name equal to our application name, and to configure our database adapter. We'll talk more about how to use the Repo in a bit.
 
 When `phx.new` generated our application, it included some basic repo configuration as well. Let's look at `config/dev.exs`.
 
@@ -142,7 +136,6 @@ When `phx.new` generated our application, it included some basic repo configurat
 ...
 # Configure your database
 config :hello, Hello.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "hello_dev",
@@ -493,15 +486,14 @@ Next, we need to configure our new adapter. Let's open up our `config/dev.exs` f
 
 ```
 config :hello_phoenix, HelloPhoenix.Repo,
-adapter: Ecto.Adapters.MySQL,
 username: "root",
 password: "",
 database: "hello_phoenix_dev"
 ```
 
-If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. The most important thing is to make sure we are using the MySQL adapter `adapter: Ecto.Adapters.MySQL,`.
+If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. We also need to configure the correct values in the `config/test.exs` and `config/prod.secret.exs` files as well.
 
-We also need to configure the correct values in the `config/test.exs` and `config/prod.secret.exs` files as well.
+The last change is to open up `lib/hello_phoenix/repo.ex` and make sure to set the `:adapter` to `Ecto.Adapters.MySQL`.
 
 Now all we need to do is fetch our new dependency, and we'll be ready to go.
 

@@ -85,19 +85,6 @@ By default the last plug in the endpoint is the router. The router matches a pat
 
 The endpoint can be customized to add additional plugs, to allow HTTP basic authentication, CORS, subdomain routing and more.
 
-The final thing generated in the endpoint by default is the `init` function. This callback is used for dynamic configuration. The specifics of the dynamic configuration are covered in the `Phoenix.Endpoint` module documentation.
-
-```elixir
-def init(_key, config) do
-  if config[:load_from_system_env] do
-    port = System.get_env("PORT") || raise "expected the PORT environment variable to be set"
-    {:ok, Keyword.put(config, :http, [:inet6, port: port])}
-  else
-    {:ok, config}
-  end
-end
-```
-
 Faults in the different parts of the supervision tree, such as the Ecto Repo, will not immediately impact the main application. The supervisor is therefore able to restart those processes separately after unexpected faults. It is also possible for an application to have multiple endpoints, each with its own supervision tree.
 
 There are many functions defined in the endpoint module for path helpers, channel subscriptions and broadcasts, instrumentation, and endpoint configuration. These are all covered in the [Endpoint API docs](Phoenix.Endpoint.html#module-endpoint-api) for `Phoenix.Endpoint`.

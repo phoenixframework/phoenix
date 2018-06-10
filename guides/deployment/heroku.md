@@ -134,7 +134,6 @@ First, let's make sure our secret key is loaded from Heroku's environment variab
 
 ```elixir
 config :hello, HelloWeb.Endpoint,
-  load_from_system_env: true,
   url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: Map.fetch!(System.get_env(), "SECRET_KEY_BASE")
@@ -145,7 +144,6 @@ Then, we'll add the production database configuration to `config/prod.exs`:
 ```elixir
 # Configure your database
 config :hello, Hello.Repo,
-  adapter: Ecto.Adapters.Postgres,
   url: System.get_env("DATABASE_URL"),
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
   ssl: true
@@ -184,7 +182,6 @@ use Mix.Config
 ...
 
 config :hello, HelloWeb.Endpoint,
-  load_from_system_env: true,
   url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
   force_ssl: [rewrite_on: [:x_forwarded_proto]],
   cache_static_manifest: "priv/static/cache_manifest.json",
@@ -195,7 +192,6 @@ config :logger, level: :info
 
 # Configure your database
 config :hello, Hello.Repo,
-  adapter: Ecto.Adapters.Postgres,
   url: System.get_env("DATABASE_URL"),
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
   ssl: true

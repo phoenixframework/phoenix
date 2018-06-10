@@ -37,7 +37,6 @@ config :foo, Foo.Endpoint,
 
 # Configure your database
 config :foo, Foo.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "foo_prod",

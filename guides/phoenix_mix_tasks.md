@@ -711,7 +711,6 @@ Notice that this task has updated `config/config.exs`. If we take a look, we'll 
 ```elixir
 . . .
 config :hello, OurCustom.Repo,
-adapter: Ecto.Adapters.Postgres,
 database: "hello_repo",
 username: "user",
 password: "pass",
