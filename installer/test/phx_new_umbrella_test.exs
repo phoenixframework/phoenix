@@ -35,16 +35,16 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(@app, "README.md")
       assert_file root_path(@app, ".gitignore")
-      assert_file( root_path(@app, ".gitignore"), ~r/\n$/)
 
       assert_file app_path(@app, "README.md")
-      assert_file app_path(@app, ".gitignore")
       assert_file app_path(@app, ".gitignore"), "#{@app}-*.tar"
-      assert_file( app_path(@app, ".gitignore"), ~r/\n$/)
+
       assert_file web_path(@app, "README.md")
+
       assert_file root_path(@app, "mix.exs"), fn file ->
         assert file =~ "apps_path: \"apps\""
       end
+
       assert_file app_path(@app, "mix.exs"), fn file ->
         assert file =~ "app: :phx_umb"
         assert file =~ ~S{build_path: "../../_build"}
@@ -56,18 +56,19 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file root_path(@app, "config/config.exs"), fn file ->
         assert file =~ ~S[import_config "../apps/*/config/config.exs"]
         assert file =~ ~S[import_config "#{Mix.env}.exs"]
+        assert file =~ "config :phoenix, :json_library, Jason"
       end
+
       assert_file app_path(@app, "config/config.exs"), fn file ->
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
-        assert file =~ "config :ecto, :json_library, Jason"
         refute file =~ "namespace"
         refute file =~ "config :phx_blog_web, :generators"
       end
+
       assert_file web_path(@app, "config/config.exs"), fn file ->
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmbWeb.Endpoint"
         assert file =~ "generators: [context_app: :phx_umb]\n"
-        assert file =~ "config :phoenix, :json_library, Jason"
       end
 
       assert_file web_path(@app, "config/prod.exs"), fn file ->
@@ -226,7 +227,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(@app, "config/dev.exs"), fn file ->
         refute file =~ config
-        assert file =~ "config :phoenix, :plug_init_mode, :runtime"
       end
       assert_file web_path(@app, "config/test.exs"), &refute(&1 =~ config)
       assert_file web_path(@app, "config/prod.secret.exs"), &refute(&1 =~ config)
