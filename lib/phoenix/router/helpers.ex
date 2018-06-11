@@ -192,9 +192,8 @@ defmodule Phoenix.Router.Helpers do
         end
       end
 
-      defp segments!(segments, query, reserved, {helper, opts, var_length}) do
-        arity = var_length + 3
-        call_vars = if var_length > 0, do: Enum.map(1..(var_length), &("arg#{&1}")), else: []
+      defp segments!(segments, query, reserved, {helper, opts, call_vars}) do
+        arity = length(call_vars) + 3
 
         raise ArgumentError, """
         #{__MODULE__}.#{helper}_path/#{arity} called with invalid params.
@@ -241,7 +240,7 @@ defmodule Phoenix.Router.Helpers do
 
       def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params) do
         path(conn_or_endpoint, segments!(unquote(segs), params, unquote(bins),
-              {unquote(helper), unquote(opts), length(unquote(vars))}))
+              {unquote(helper), unquote(opts), unquote(Enum.map(vars, &Macro.to_string/1))}))
       end
 
       def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars)) do

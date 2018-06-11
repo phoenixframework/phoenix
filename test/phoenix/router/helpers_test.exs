@@ -17,7 +17,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert extract_defhelper(route, 1) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, [\"bar\"], {\"hello_world\", :world, length([bar])}))
+      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, [\"bar\"], {\"hello_world\", :world, [\"bar\"]}))
     end
     """
   end
@@ -33,7 +33,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert extract_defhelper(route, 1) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> Enum.map_join(bar, \"/\", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, [\"bar\"], {\"hello_world\", :world, length([bar])}))
+      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> Enum.map_join(bar, \"/\", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, [\"bar\"], {\"hello_world\", :world, [\"bar\"]}))
     end
     """
   end
@@ -138,7 +138,7 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   test "url helper shows an error if an id is accidentally passed" do
-    error_suggestion = ~r/Router.bottom_path\(conn, :bottom, arg1, arg2, page: 5, per_page: 10\)/
+    error_suggestion = ~r/Router.bottom_path\(conn, :bottom, order, count, page: 5, per_page: 10\)/
 
     assert_raise ArgumentError, error_suggestion, fn ->
       Helpers.bottom_path(__MODULE__, :bottom, :asc, 8, {:not, :enumerable})
