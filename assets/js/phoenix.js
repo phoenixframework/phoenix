@@ -843,7 +843,9 @@ export class Socket {
     this.log("transport", "close", event)
     this.triggerChanError()
     clearInterval(this.heartbeatTimer)
-    this.reconnectTimer.scheduleTimeout()
+    if (event && event.code !== WS_CLOSE_NORMAL) {
+      this.reconnectTimer.scheduleTimeout()
+    }
     this.stateChangeCallbacks.close.forEach( callback => callback(event) )
   }
 
