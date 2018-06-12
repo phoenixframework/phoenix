@@ -15,7 +15,7 @@ in lib/hello/application.ex:
 
     children = [
       ...
-      supervisor(HelloWeb.Presence, []),
+      HelloWeb.Presence,
     ]
 
 You're all set! See the Phoenix.Presence docs for more details:
@@ -35,7 +35,7 @@ This sets up the module for presence, defining the functions we require for trac
 ```elixir
 children = [
   # ...
-  supervisor(HelloWeb.Presence, [])
+  HelloWeb.Presence,
 ]
 ```
 
@@ -95,11 +95,11 @@ defmodule HelloWeb.RoomChannel do
 end
 ```
 
-Finally we can use the client-side Presence library provided by Phoenix in order to manage the state and presence diffs that come down the socket. We listen for the initial `presence_state` event fired after joining to get the initial state and the later `presence_diff` events that contain joins and leaves.
+Finally we can use the client-side Presence library included in `phoenix.js` to manage the state and presence diffs that come down the socket. It listens for the `"presence_state"` and `"presence_diff"` events and provides a simple callback for you to handle the events as they happen, with the `onSync` callback.
 
-We can use the included `Presence.syncState()` and `Presence.syncDiff()` methods to easily handle these events and sync our `presences` variable with the latest state. When we want to use the current presence state we can pass it through `Presence.list()` in order to get each presence individually.
+The `onSync` callback allows you to easily react to presence state changes, which most often results in re-rendering an updated list of active users. You can use the `list` method is to format and return each individual presence based on the needs of your application.
 
-When we want to iterate the users, we use the `Presences.list()` function which takes a presences object and a callback function. The callback will be called for each presence item with 2 arguments, the presence id and a list of metas (one for each presence for that presence id). We use this to display the users and the number of devices they are online with.
+To iterate users, we use the `presences.list()` function which accepts a callback. The callback will be called for each presence item with 2 arguments, the presence id and a list of metas (one for each presence for that presence id). We use this to display the users and the number of devices they are online with.
 
 We can see presence working by adding the following to `assets/js/app.js`:
 
@@ -107,13 +107,16 @@ We can see presence working by adding the following to `assets/js/app.js`:
 import {Socket, Presence} from "phoenix"
 
 let socket = new Socket("/socket", {
-  params: { user_id: window.location.search.split("=")[1] }
+  params: {user_id: window.location.search.split("=")[1]}
 })
 
-function renderOnlineUsers(presences) {
+let channel = socket.channel("room:lobby", {})
+let presence = new Presence(channel)
+
+function renderOnlineUsers(presence) {
   let response = ""
 
-  Presence.list(presences, (id, {metas: [first, ...rest]}) => {
+  presence.list((id, {metas: [first, ...rest]}) => {
     let count = rest.length + 1
     response += `<br>${id} (count: ${count})</br>`
   })
@@ -123,19 +126,7 @@ function renderOnlineUsers(presences) {
 
 socket.connect()
 
-let presences = {}
-
-let channel = socket.channel("room:lobby", {})
-
-channel.on("presence_state", state => {
-  presences = Presence.syncState(presences, state)
-  renderOnlineUsers(presences)
-})
-
-channel.on("presence_diff", diff => {
-  presences = Presence.syncDiff(presences, diff)
-  renderOnlineUsers(presences)
-})
+presence.onSync(() => renderOnlineUsers(presence))
 
 channel.join()
 ```
