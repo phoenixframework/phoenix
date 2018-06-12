@@ -726,7 +726,7 @@ export class Socket {
     this.heartbeatTimer       = null
     this.pendingHeartbeatRef  = null
     this.reconnectTimer       = new Timer(() => {
-      this.disconnect(() => this.connect())
+      this.teardown(() => this.connect())
     }, this.reconnectAfterMs)
   }
 
@@ -757,12 +757,8 @@ export class Socket {
    * @param {string} reason
    */
   disconnect(callback, code, reason){
-    if(this.conn){
-      this.conn.onclose = function(){} // noop
-      if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
-      this.conn = null
-    }
-    callback && callback()
+    this.reconnectTimer.reset()
+    this.teardown(callback, code, reason)
   }
 
   /**
@@ -839,6 +835,16 @@ export class Socket {
   /**
    * @private
    */
+
+  teardown(callback, code, reason){
+    if(this.conn){
+      this.conn.onclose = function(){} // noop
+      if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
+      this.conn = null
+    }
+    callback && callback()
+  }
+
   onConnClose(event){
     this.log("transport", "close", event)
     this.triggerChanError()
