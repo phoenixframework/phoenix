@@ -998,6 +998,8 @@ defmodule Phoenix.Controller do
         context of the application (like critical domain cookies)
       * x-permitted-cross-domain-policies - set to none to restrict
         Adobe Flash Player’s access to data
+      * cross-origin-window-policy - set to deny to avoid window
+        control attacks
 
   A custom headers map may also be given to be merged with defaults.
   """
@@ -1016,7 +1018,8 @@ defmodule Phoenix.Controller do
       {"x-xss-protection", "1; mode=block"},
       {"x-content-type-options", "nosniff"},
       {"x-download-options", "noopen"},
-      {"x-permitted-cross-domain-policies", "none"}
+      {"x-permitted-cross-domain-policies", "none"},
+      {"cross-origin-window-policy", "deny"}
     ])
   end
 
