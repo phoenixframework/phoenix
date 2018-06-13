@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.3 (2018-07-13)
+
+* Enhancements
+  * [Router] cache pipeline compilation to improve performance
+
+* Bug Fixes
+  * [Phoenix.Router] Fix reraise deprecation warnings when using Plug 1.5 and above
+  * [Digester] Fix option parser warnings
+
+* Deprecations
+  * [Socket] deprecate via opton in channel/3 macro
+
 ## 1.3.2 (2018-03-08)
 
 * Bug Fixes

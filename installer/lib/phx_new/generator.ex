@@ -243,7 +243,7 @@ defmodule Phx.New.Generator do
   defp phoenix_html_brunch_path(%Project{in_umbrella?: false}),
     do: "../deps/phoenix_html"
 
-  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.3.2"}]
+  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.3.3"}]
   # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 
