@@ -17,7 +17,7 @@ defmodule Phoenix.Socket.PoolSupervisor do
     import Supervisor.Spec
 
     ref = :ets.new(name, [:named_table, :public, read_concurrency: true])
-    :ets.insert(ref, {:partitions, partitions - 1})
+    :ets.insert(ref, {:partitions, partitions})
 
     children =
       for i <- 0..(partitions - 1) do
