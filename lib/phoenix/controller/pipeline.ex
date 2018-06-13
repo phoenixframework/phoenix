@@ -134,8 +134,8 @@ defmodule Phoenix.Controller.Pipeline do
     args = [controller: controller, action: action, params: conn.params]
     reraise Phoenix.ActionClauseError, args, stack
   end
-  def __catch__(%Plug.Conn{} = conn, reason, _controller, _action, _stack) do
-    Plug.Conn.WrapperError.reraise(conn, :error, reason)
+  def __catch__(%Plug.Conn{} = conn, reason, _controller, _action, stack) do
+    Phoenix.PlugError.reraise(conn, :error, reason, stack)
   end
 
   @doc """
