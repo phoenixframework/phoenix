@@ -75,6 +75,8 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
   Phoenix will intercept the requests before they get to your handler.
   """
 
+  import Phoenix.Endpoint.Cowboy2Adapter, only: [info: 3]
+
   require Logger
 
   @doc false
@@ -128,21 +130,15 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
     # to plug.HTTP and plug.HTTPS and overridable by users.
     case apply(m, f, a) do
       {:ok, pid} ->
-        Logger.info info(scheme, endpoint, ref)
+        Logger.info(fn -> info(scheme, endpoint, ref) end)
         {:ok, pid}
 
       {:error, {:shutdown, {_, _, {{_, {:error, :eaddrinuse}}, _}}}} = error ->
-        Logger.error [info(scheme, endpoint, ref), " failed, port already in use"]
+        Logger.error(fn -> [info(scheme, endpoint, ref), " failed, port already in use"] end)
         error
 
       {:error, _} = error ->
         error
     end
-  end
-
-  defp info(scheme, endpoint, ref) do
-    {addr, port} = :ranch.get_addr(ref)
-    addr_str = :inet.ntoa(addr)
-    "Running #{inspect endpoint} with Cowboy using #{scheme}://#{addr_str}:#{port}"
   end
 end

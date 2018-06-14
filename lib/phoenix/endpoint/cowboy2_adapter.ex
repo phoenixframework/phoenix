@@ -51,7 +51,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
     # to plug.HTTP and plug.HTTPS and overridable by users.
     case apply(m, f, a) do
       {:ok, pid} ->
-        Logger.info info(scheme, endpoint, ref)
+        Logger.info(fn -> info(scheme, endpoint, ref) end)
         {:ok, pid}
 
       {:error, {:shutdown, {_, _, {{_, {:error, :eaddrinuse}}, _}}}} = error ->
@@ -63,9 +63,19 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
     end
   end
 
-  defp info(scheme, endpoint, ref) do
+  @doc false
+  def info(scheme, endpoint, ref) do
+    server = "cowboy #{Application.spec(:cowboy)[:vsn]}"
+    "Running #{inspect endpoint} with #{server} at #{uri(scheme, ref)}"
+  end
+  defp uri(scheme, ref) do
     {addr, port} = :ranch.get_addr(ref)
-    addr_str = :inet.ntoa(addr)
-    "Running #{inspect endpoint} with Cowboy2 using #{scheme}://#{addr_str}:#{port}"
+    host =
+      case to_string(:inet.ntoa(addr)) do
+        "0.0.0.0" -> "localhost"
+        host -> host
+      end
+
+    %URI{host: host, port: port, scheme: to_string(scheme)}
   end
 end
