@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.3 (2018-07-13)
+## 1.3.3 (2018-06-15)
 
 * Enhancements
   * [Router] cache pipeline compilation to improve performance
