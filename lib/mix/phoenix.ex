@@ -25,8 +25,12 @@ defmodule Mix.Phoenix do
 
   Files are evaluated against EEx according to
   the given binding.
+
+  ## Options
+    * `:force` - forces installation without a shell prompt.
+
   """
-  def copy_from(apps, source_dir, binding, mapping) when is_list(mapping) do
+  def copy_from(apps, source_dir, binding, mapping, opts \\ []) when is_list(mapping) do
     roots = Enum.map(apps, &to_app_source(&1, source_dir))
 
     for {format, source_file_path, target} <- mapping do
@@ -37,13 +41,13 @@ defmodule Mix.Phoenix do
         end) || raise "could not find #{source_file_path} in any of the sources"
 
       case format do
-        :text -> Mix.Generator.create_file(target, File.read!(source))
-        :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+        :text -> Mix.Generator.create_file(target, File.read!(source), opts)
+        :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, binding), opts)
         :new_eex ->
           if File.exists?(target) do
             :ok
           else
-            Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+            Mix.Generator.create_file(target, EEx.eval_file(source, binding), opts)
           end
       end
     end
