@@ -255,7 +255,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       If you are not sure, prefer a new context over adding to the existing one.
 
       """
-      unless Mix.shell.yes?("Would you like proceed? [Y/n]") do
+      unless Mix.shell.yes?("Would you like proceed?") do
         System.halt()
       end
     end
