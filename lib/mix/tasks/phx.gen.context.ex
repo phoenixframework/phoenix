@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   The context is an Elixir module that serves as an API boundary for
   the given resource. A context often holds many related resources.
   Therefore, if the context already exists, it will be augmented with
-  functions for the given resource. 
+  functions for the given resource.
 
   > Note: A resource may also be split
   > over distinct contexts (such as Accounts.User and Payments.User).
@@ -248,14 +248,15 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       The #{inspect context.module} context currently has #{function_count} functions and
       #{file_count} files in its directory.
 
-        * It's ok to have multiple resources in the same context as
+        * It's OK to have multiple resources in the same context as
           long as they are closely related
         * If they are not closely related, another context probably works better
 
-      If you are not sure, prefer a new context over adding to the existing one.
+      If you are not sure, prefer creating a new context over adding to the
+      existing one.
 
       """
-      unless Mix.shell.yes?("Would you like proceed?") do
+      unless Mix.shell.yes?("Would you like to proceed?") do
         System.halt()
       end
     end
