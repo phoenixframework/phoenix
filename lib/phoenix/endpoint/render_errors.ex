@@ -17,6 +17,8 @@ defmodule Phoenix.Endpoint.RenderErrors do
   import Phoenix.Controller
   require Logger
 
+  alias Phoenix.Router.NoRouteError
+
   @doc false
   defmacro __using__(opts) do
     quote do
@@ -47,7 +49,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
   end
 
   @doc false
-  def __catch__(_conn, :error, %Phoenix.Router.NoRouteError{} = reason, stack, opts) do
+  def __catch__(_conn, :error, %NoRouteError{} = reason, stack, opts) do
     maybe_render(reason.conn, :error, reason, stack, opts)
     :erlang.raise(:error, reason, stack)
   end
@@ -58,6 +60,15 @@ defmodule Phoenix.Endpoint.RenderErrors do
   end
 
   ## Rendering
+
+  @doc false
+  def __debugger_banner__(_conn, _status, _kind, %NoRouteError{router: router}, _stack) do
+    """
+    <h3>Available routes</h3>
+    <pre>#{Phoenix.Router.ConsoleFormatter.format(router)}</pre>
+    """
+  end
+  def __debugger_banner__(_conn, _status, _kind, _reason, _stack), do: nil
 
   # Made public with @doc false for testing.
   @doc false
