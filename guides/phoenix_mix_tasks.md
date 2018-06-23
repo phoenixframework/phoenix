@@ -187,7 +187,7 @@ defmodule Hello.MixProject do
 . . .
 ```
 
-#### `mix phx.gen.html`
+#### [mix phx.gen.html](`Mix.Tasks.Phx.Gen.Html.run/1`)
 
 Phoenix now offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto context, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
 
@@ -310,7 +310,7 @@ Compiling 15 files (.ex)
     (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
 ```
 
-#### `mix phx.gen.json`
+#### [mix phx.gen.json](`Mix.Tasks.Phx.Gen.Json.run/1`)
 
 Phoenix also offers the ability to generate all the code to stand up a complete JSON resource - ecto migration, ecto schema, controller with all the necessary actions and view. This command will not create any template for the app.
 
@@ -427,7 +427,7 @@ Compiling 18 files (.ex)
     (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
 ```
 
-#### `mix phx.gen.context`
+#### [mix phx.gen.context](`Mix.Tasks.Phx.Gen.Context.run/1`)
 
 If we don't need a complete HTML/JSON resource and instead are only interested in a context, we can use the `phx.gen.context` task. It will generate a context, a schema, a migration and a test case.
 
@@ -454,7 +454,7 @@ $ mix phx.gen.context Accounts User users name:string age:integer
 * injecting test/hello/admin/accounts/accounts_test.exs
 ```
 
-#### `mix phx.gen.schema`
+#### [mix phx.gen.schema](`Mix.Tasks.Phx.Gen.Schema.run/1`)
 
 If we don't need a complete HTML/JSON resource and are not interested in generating or altering a context we can use the `phx.gen.schema` task. It will generate a schema, and a migration.
 
@@ -466,7 +466,7 @@ $ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id
 * creating priv/repo/migrations/20170906162013_create_credentials.exs
 ```
 
-#### `mix phx.gen.channel`
+#### [mix phx.gen.channel](`Mix.Tasks.Phx.Gen.Channel.run/1`)
 
 This task will generate a basic Phoenix channel as well a test case for it. It takes the module name for the channel as argument:
 
@@ -484,7 +484,7 @@ Add the channel to your `lib/hello_web/channels/user_socket.ex` handler, for exa
     channel "rooms:lobby", HelloWeb.RoomChannel
 ```
 
-#### `mix phx.gen.presence`
+#### [mix phx.gen.presence](`Mix.Tasks.Phx.Gen.Presence.run/1`)
 
 This task will generate a Presence tracker. The module name can be passed as an argument,
 `Presence` is used if no module name is passed.
@@ -494,7 +494,7 @@ $ mix phx.gen.presence Presence
 $ lib/hello_web/channels/presence.ex
 ```
 
-#### `mix phx.routes`
+#### `mix [mix phx.routes](`Mix.Tasks.Phx.Routes.run/1`)
 
 This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [Routing Guide](routing.html).
 
@@ -511,7 +511,7 @@ $ mix phx.routes TaskTesterWeb.Router
 page_path  GET  /  TaskTesterWeb.PageController.index/2
 ```
 
-#### `mix phx.server`
+#### [mix phx.server](`Mix.Tasks.Phx.Server.run/1`)
 
 This is the task we use to get our application running. It takes no arguments at all. If we pass any in, they will be silently ignored.
 
@@ -536,7 +536,7 @@ Interactive Elixir (1.0.4) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)>
 ```
 
-#### `mix phx.digest`
+#### [mix phx.digest](`Mix.Tasks.Phx.Digest.run/1`)
 
 This task does two things, it creates a digest for our static assets and then compresses them.
 
