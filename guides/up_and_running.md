@@ -18,6 +18,7 @@ $ mix phx.new hello
 
 > A note about [Ecto](https://hexdocs.pm/phoenix/ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL or MongoDB. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to the `mix phx.new`. This flag may also be combined with `--no-webpack` to create a skeleton application.
 
+> Note to learn more about `mix phx.new` read [Phoenix Mix Tasks](phoenix_mix_tasks).
 
 ```console
 mix phx.new hello
