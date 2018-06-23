@@ -180,28 +180,34 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
-  Builds a socket for the given `socket` module.
+  Builds a socket for the given `socket_module`.
 
   The socket is then used to subscribe and join channels.
   Use this function when you want to create a blank socket
   to pass to functions like `UserSocket.connect/2`.
 
   Otherwise, use `socket/3` if you want to build a socket with
-  id and assigns.
+  existing id and assigns.
 
-  The socket endpoint is read from the `@endpoint` variable.
+  ## Examples
+
+      socket(MyApp.UserSocket)
+
   """
-  defmacro socket(socket) do
-    build_socket(socket, nil, [], __CALLER__)
+  defmacro socket(socket_module) do
+    build_socket(socket_module, nil, [], __CALLER__)
   end
 
   @doc """
-  Builds a socket for the given `socket` module with given id and assigns.
+  Builds a socket for the given `socket_module` with given id and assigns.
 
-  The socket endpoint is read from the `@endpoint` variable.
+  ## Examples
+
+      socket(MyApp.UserSocket, "user_id", %{some: :assign})
+
   """
-  defmacro socket(socket, id, assigns) do
-    build_socket(socket, id, assigns, __CALLER__)
+  defmacro socket(socket_module, socket_id, socket_assigns) do
+    build_socket(socket_module, socket_id, socket_assigns, __CALLER__)
   end
 
   defp build_socket(socket, id, assigns, caller) do
@@ -239,7 +245,7 @@ defmodule Phoenix.ChannelTest do
   defp first_socket!(endpoint) do
     case endpoint.__sockets__ do
       [] -> raise ArgumentError, "#{inspect endpoint} has no socket declaration"
-      [{_, socket} | _] -> socket
+      [{_, socket, _, _} | _] -> socket
     end
   end
 
