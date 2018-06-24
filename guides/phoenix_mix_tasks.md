@@ -2,6 +2,8 @@
 
 There are currently a number of built-in Phoenix-specific and ecto-specific mix tasks available to us within a newly-generated application. We can also create our own application specific tasks.
 
+> Note to learn more about `mix` read the [Introduction to Mix](https://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html).
+
 ## Phoenix Specific Mix Tasks
 
 ```console
