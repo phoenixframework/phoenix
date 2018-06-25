@@ -36,7 +36,7 @@ defmodule Phoenix.Endpoint.Handler do
   end
 
   defp default(config, otp_app, port) when is_list(config) do
-    {config_keywords, config_other} = Enum.partition(config, &keyword_item?/1)
+    {config_keywords, config_other} = Enum.split_with(config, &keyword_item?/1)
 
     config_keywords =
       config_keywords
