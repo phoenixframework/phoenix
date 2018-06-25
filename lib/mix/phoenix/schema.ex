@@ -53,7 +53,7 @@ defmodule Mix.Phoenix.Schema do
     file      = Mix.Phoenix.context_lib_path(ctx_app, basename <> ".ex")
     table     = opts[:table] || schema_plural
     uniques   = uniques(cli_attrs)
-    {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
+    {assocs, attrs} = split_with_attrs_and_assocs(module, attrs(cli_attrs))
     types = types(attrs)
     web_namespace = opts[:web]
     web_path = web_namespace && Phoenix.Naming.underscore(web_namespace)
@@ -229,9 +229,9 @@ defmodule Mix.Phoenix.Schema do
               "The supported types are: #{@valid_types |> Enum.sort() |> Enum.join(", ")}"
   end
 
-  defp partition_attrs_and_assocs(schema_module, attrs) do
+  defp split_with_attrs_and_assocs(schema_module, attrs) do
     {assocs, attrs} =
-      Enum.partition(attrs, fn
+      Enum.split_with(attrs, fn
         {_, {:references, _}} ->
           true
         {key, :references} ->

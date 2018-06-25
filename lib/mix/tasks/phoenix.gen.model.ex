@@ -98,7 +98,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     path      = binding[:path]
 
     Mix.Phoenix.check_module_name_availability!(binding[:module])
-    {assocs, attrs} = partition_attrs_and_assocs(attrs)
+    {assocs, attrs} = split_with_attrs_and_assocs(attrs)
 
     binding = binding ++
               [attrs: attrs, plural: plural, types: types(attrs), uniques: uniques,
@@ -151,8 +151,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   end
 
 
-  defp partition_attrs_and_assocs(attrs) do
-    Enum.partition attrs, fn
+  defp split_with_attrs_and_assocs(attrs) do
+    Enum.split_with attrs, fn
       {_, {:references, _}} ->
         true
       {key, :references} ->
