@@ -57,6 +57,12 @@ $ npm run watch
 $ MIX_ENV=docs mix docs
 ```
 
+## Building phoenix from source
+```bash
+$ mix deps.get
+$ mix compile
+```
+
 ## Important links
 
 * [#elixir-lang][1] on [Freenode][2] IRC
