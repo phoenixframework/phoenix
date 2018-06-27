@@ -66,6 +66,13 @@ $ mix deps.get
 $ mix compile
 ```
 
+## Building phoenix installer from source
+```bash
+$ mix deps.get
+$ mix compile
+$ mix archive.build
+```
+
 ## Important links
 
 * [#elixir-lang][1] on [Freenode][2] IRC
