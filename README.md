@@ -54,6 +54,9 @@ $ npm run watch
 ### Building docs from source
 
 ```bash
+$ cd assets
+$ npm install
+$ cd ..
 $ MIX_ENV=docs mix docs
 ```
 
