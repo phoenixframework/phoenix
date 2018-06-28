@@ -43,18 +43,34 @@ defp deps do
 
 To create projects outside of the `installer/` directory, add the latest archive to your machine by following the instructions in [installer/README.md](https://github.com/phoenixframework/phoenix/blob/master/installer/README.md)
 
+To build the documentation from source:
+
+```bash
+$ cd assets
+$ npm install
+$ cd ..
+$ MIX_ENV=docs mix docs
+```
+
+To build phoenix from source:
+```bash
+$ mix deps.get
+$ mix compile
+```
+
+To build the phoenix installer from source
+```bash
+$ mix deps.get
+$ mix compile
+$ mix archive.build
+```
+
 ### Building phoenix.js
 
 ```bash
 $ cd assets
 $ npm install
 $ npm run watch
-```
-
-### Building docs from source
-
-```bash
-$ MIX_ENV=docs mix docs
 ```
 
 ## Important links
