@@ -78,6 +78,10 @@ defmodule Mix.Tasks.Phx.New do
 
   You can read more about umbrella projects using the
   official [Elixir guide](http://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-apps.html#umbrella-projects)
+
+  To print the Phoenix installer version, pass `-v` or `--version`, for example:
+
+      mix phx.new -v
   """
   use Mix.Task
   alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
