@@ -223,16 +223,25 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
     <<serial::unsigned-64>> = :crypto.strong_rand_bytes(8)
 
     # Dates must be in 'YYMMDD' format
-    not_before =
-      Date.utc_today()
-      |> Date.to_iso8601(:basic)
-      |> String.slice(2, 6)
 
-    not_after =
-      Date.utc_today()
-      |> Map.update!(:year, &(&1 + 1))
-      |> Date.to_iso8601(:basic)
-      |> String.slice(2, 6)
+    # This requires Elixir v1.5:
+    # Date.utc_today()
+    # |> Date.to_iso8601(:basic)
+    # |> String.slice(2, 6)
+
+    {{year, month, day}, _} =
+      :erlang.timestamp()
+      |> :calendar.now_to_datetime()
+
+    yy = year |> Integer.to_string() |> String.slice(2, 2)
+    mm = month |> Integer.to_string() |> String.pad_leading(2, "0")
+    dd = day |> Integer.to_string() |> String.pad_leading(2, "0")
+
+    not_before = yy <> mm <> dd
+
+    yy2 = (year + 1) |> Integer.to_string() |> String.slice(2, 2)
+
+    not_after = yy2 <> mm <> dd
 
     otp_tbs_certificate(
       version: :v3,
