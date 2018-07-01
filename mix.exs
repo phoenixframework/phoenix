@@ -53,7 +53,7 @@ defmodule Phoenix.MixProject do
       {:inch_ex, "~> 0.2", only: :docs},
 
       # Test dependencies
-      {:gettext, "~> 0.8", only: :test},
+      {:gettext, "~> 0.15.0", only: :test},
       {:phoenix_html, "~> 2.11", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
     ]
