@@ -1389,7 +1389,7 @@ defmodule Phoenix.Controller do
         cur_uri  = MyAppWeb.Endpoint.struct_url()
         cur_path = Phoenix.Controller.current_path(conn, params)
 
-        MyAppWeb.Router.Helpers.url(%{cur_uri | scheme: "https", path: cur_path})
+        MyAppWeb.Router.Helpers.url(%URI{cur_uri | scheme: "https"}) <> cur_path
       end
 
   However, if you want all generated URLs to always have a certain schema,
