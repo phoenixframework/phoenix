@@ -7,9 +7,9 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
 
   @warning """
   WARNING: only use the generated certificate for testing in a closed network
-  environment, e.g. for running a server on `localhost`. For production,
-  staging or testing servers on the public internet, obtain a proper
-  certificate, for example from [Let's Encrypt](https://letsencrypt.org).
+  environment, such as running a development server on `localhost`.
+  For production, staging, or testing servers on the public internet, obtain a
+  proper certificate, for example from [Let's Encrypt](https://letsencrypt.org).
 
   NOTE: when using Google Chrome, open chrome://flags/#allow-insecure-localhost
   to enable the use of self-signed certificates on `localhost`.
@@ -223,12 +223,6 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
     <<serial::unsigned-64>> = :crypto.strong_rand_bytes(8)
 
     # Dates must be in 'YYMMDD' format
-
-    # This requires Elixir v1.5:
-    # Date.utc_today()
-    # |> Date.to_iso8601(:basic)
-    # |> String.slice(2, 6)
-
     {{year, month, day}, _} =
       :erlang.timestamp()
       |> :calendar.now_to_datetime()
