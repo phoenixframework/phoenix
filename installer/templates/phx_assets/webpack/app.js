@@ -13,7 +13,5 @@ import css from "../css/app.css"
 
 // Import local files
 //
-// Local files can be imported directly using relative
-// paths "./socket" or full ones "web/static/js/socket".
-
+// Local files can be imported directly using relative paths, for example:
 // import socket from "./socket"
