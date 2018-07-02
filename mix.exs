@@ -14,6 +14,7 @@ defmodule Phoenix.MixProject do
       preferred_cli_env: [docs: :docs],
       consolidate_protocols: Mix.env != :test,
       xref: [exclude: [Ecto.Type, :ranch, {:cowboy_req, :compact, 1}]],
+      elixirc_paths: elixirc_paths(Mix.env),
       name: "Phoenix",
       docs: docs(),
       aliases: aliases(),
@@ -25,6 +26,9 @@ defmodule Phoenix.MixProject do
       """
     ]
   end
+
+  defp elixirc_paths(:docs), do: ["lib", "installer/lib"]
+  defp elixirc_paths(_), do: ["lib"]
 
   def application do
     [
