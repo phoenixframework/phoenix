@@ -285,6 +285,44 @@ for example
 if you need to take the server down
 `docker-compose down`
 
+### Graceful system restarts
+
+Prerequisite: docker needs to restart with systemctl, you can verify this with `systemctl | grep docker.service` you should something like `loaded active and running`
+
+in case your machine gets rebooted without your knowledge or in case your app consumes so much memory that it brings docker down, you can restart automatically your app with systemctl.
+Systemctl is a linux primitive to handle starting and stopping applications.
+
+on an ubutun system
+
+- add a .service file
+  `vi /etc/systemd/system/docker-compose-app.service`
+  add the following contents
+
+  ```
+  [Unit]
+  Description=Docker Compose Application Service
+  Requires=docker.service
+  After=docker.service
+
+  [Service]
+  WorkingDirectory=/etc/opt/my_app_name/
+  ExecStart=/usr/local/bin/docker-compose up
+  ExecStop=/usr/local/bin/docker-compose down
+  TimeoutStartSec=0
+  Restart=on-failure
+  StartLimitIntervalSec=60
+  StartLimitBurst=3
+
+  [Install]
+  WantedBy=multi-user.target
+  ```
+
+- enable the service
+  `sudo systemctl enable docker-compose-app`
+
+- start the service
+  `sudo systemctl start docker-compose-app`
+
 ### Releasing the next version
 
 Now that you have a first version working, let's release the next one.
@@ -302,3 +340,7 @@ If you make changes to your code and/or add migrations for example, you simply n
 
 - run the migration if any
   `docker-compose run web /opt/app/bin/start_server migrate`
+
+```
+
+```
