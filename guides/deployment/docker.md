@@ -1,11 +1,11 @@
-# Introduction to Deployments with docker
+# Introduction to Deployments with Docker
 
 First things first, we need a running application to deploy it. If you don't yet have one, head to
 [Up and Running Guide](up_and_running.html).
 
-Docker enables you to deploy to the platform of your choice AWS, Google cloud, Digital ocean...
+Docker enables you to deploy to the platform of your choice: AWS, Google Cloud, Digital Ocean...
 
-In this guide we will cover a simple deployement to a single machine. There are two steps for that.
+In this guide we will cover a simple deployment to a single machine. There are two steps for that:
 
 - Building an image
   Docker defines images and container. An image is a set of definitions for an environement (installed libraries...). A container is a running instance of an image. One of the intricacy of building an image is handling environement variables.
@@ -206,13 +206,13 @@ Here are the steps taken here
 
 ### Test that your build works
 
-You need to push that image to a registery in order to run it on another machine than yours. At hub.docker.com you can create an account and you get one free private image.
+You need to push that image to a registery in order to run it on another machine than yours. You can create an account on [docker hub](https://hub.docker.com) and you get one free private image.
 
 To test your build use:
 
 - `docker build -t my_docker_hub_handle/my_app:1 .`
 
-To push that image to docker hub:
+To push that image to Docker Hub:
 
 - `docker login` (you will need to enter your username and password)
 - `docker push my_docker_hub_handle/my_app:1`
