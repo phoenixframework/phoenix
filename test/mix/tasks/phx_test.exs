@@ -6,6 +6,7 @@ defmodule Mix.Tasks.Phx.Test do
     assert_received {:mix_shell, :info, ["mix phx.digest" <> _]}
     assert_received {:mix_shell, :info, ["mix phx.digest.clean" <> _]}
     assert_received {:mix_shell, :info, ["mix phx.gen.channel" <> _]}
+    assert_received {:mix_shell, :info, ["mix phx.gen.cert" <> _]}
     assert_received {:mix_shell, :info, ["mix phx.gen.context" <> _]}
     assert_received {:mix_shell, :info, ["mix phx.gen.embedded" <> _]}
     assert_received {:mix_shell, :info, ["mix phx.gen.html" <> _]}
