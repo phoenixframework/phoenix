@@ -48,10 +48,11 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
 
   @doc false
   def run(all_args) do
-    {opts, args, _} =
-      OptionParser.parse(
+    {opts, args} =
+      OptionParser.parse!(
         all_args,
-        aliases: [n: :name, o: :output]
+        aliases: [n: :name, o: :output],
+        strict: [name: :string, output: :string]
       )
 
     path = opts[:output] || @default_path
