@@ -245,7 +245,7 @@ defmodule Phoenix.ChannelTest do
   defp first_socket!(endpoint) do
     case endpoint.__sockets__ do
       [] -> raise ArgumentError, "#{inspect endpoint} has no socket declaration"
-      [{_, socket, _, _} | _] -> socket
+      [{_, socket, _} | _] -> socket
     end
   end
 

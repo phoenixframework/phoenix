@@ -61,7 +61,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp socket_children(mod) do
     mod.__sockets__
     |> Enum.uniq_by(&elem(&1, 1))
-    |> Enum.map(fn {_, mod, opts, _} -> mod.child_spec(opts) end)
+    |> Enum.map(fn {_, mod, opts} -> mod.child_spec(opts) end)
   end
 
   defp config_children(mod, conf, otp_app) do

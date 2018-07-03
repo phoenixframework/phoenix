@@ -86,39 +86,80 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
     end
 
     dispatches =
-      for {path, socket, _, transports} <- endpoint.__sockets__,
-          transport <- transports(endpoint, path, socket, transports),
+      for {path, socket, socket_opts} <- endpoint.__sockets__,
+          transport <- transports(endpoint, path, socket, socket_opts),
           do: transport
 
-    dispatches =
-      dispatches ++ [{:_, Plug.Adapters.Cowboy.Handler, {endpoint, []}}]
+    dispatches = dispatches ++ [{:_, Plug.Adapters.Cowboy.Handler, {endpoint, []}}]
 
     config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
     spec = Plug.Adapters.Cowboy.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
-    update_in spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]}
+    update_in(spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]})
   end
 
-  defp transports(endpoint, path, socket, socket_transports) do
-    case socket.__transports__ do
+  defp transports(endpoint, path, socket, socket_opts) do
+    case deprecated_transports(socket) do
       transports when transports == %{} ->
-        for {path, transport} <- socket_transports,
-            {handler, init} = handler_for_transport(transport, endpoint, socket),
-            do: {"/" <> Path.join(path), handler, init}
+        socket_transports(endpoint, path, socket, socket_opts)
 
       transports ->
         for {transport, {module, config}} <- transports,
             handler = config[:cowboy] || default_for(module),
-            do: {Path.join(path, Atom.to_string(transport)), handler, {module, {endpoint, socket, config}}}
+            do:
+              {Path.join(path, Atom.to_string(transport)), handler,
+               {module, {endpoint, socket, config}}}
     end
   end
 
-  defp handler_for_transport({:websocket, socket, config}, endpoint, socket) do
-    {Phoenix.Endpoint.CowboyWebSocket, {Phoenix.Transports.WebSocket, {endpoint, socket, config}}}
+  defp deprecated_transports(socket) do
+    if Code.ensure_loaded?(socket) and function_exported?(socket, :__transports__, 0) do
+      socket.__transports__
+    else
+      %{}
+    end
   end
 
-  defp handler_for_transport({:plug, module, config}, _endpoint, _socket) do
-    {Plug.Adapters.Cowboy.Handler, {module, config}}
+  defp socket_transports(endpoint, path, socket, opts) do
+    paths = []
+    websocket = Keyword.get(opts, :websocket, true)
+    longpoll = Keyword.get(opts, :longpoll, false)
+
+    paths =
+      if websocket do
+        init = {endpoint, socket, socket_config(websocket, Phoenix.Transports.WebSocket)}
+
+        [
+          {socket_path(path, :websocket), Phoenix.Endpoint.CowboyWebSocket,
+           {Phoenix.Transports.WebSocket, init}}
+          | paths
+        ]
+      else
+        paths
+      end
+
+    paths =
+      if longpoll do
+        init = {endpoint, socket, socket_config(longpoll, Phoenix.Transports.LongPoll)}
+
+        [
+          {socket_path(path, :longpoll), Plug.Adapters.Cowboy.Handler,
+           {Phoenix.Transports.LongPoll, init}}
+          | paths
+        ]
+      else
+        paths
+      end
+
+    paths
   end
+
+  defp socket_path(path, key) do
+    parts = Plug.Router.Utils.split(path) ++ [Atom.to_string(key)]
+    "/" <> Path.join(parts)
+  end
+
+  defp socket_config(true, module), do: module.default_config()
+  defp socket_config(config, module), do: Keyword.merge(module.default_config(), config)
 
   defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy.Handler
   defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.CowboyWebSocket

@@ -716,7 +716,8 @@ defmodule Phoenix.Endpoint do
     instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, module)
 
     dispatches =
-      for {_, _, _, paths} <- sockets, {path, return} <- paths do
+      for {path, socket, socket_opts} <- sockets,
+          {path, return} <- socket_paths(module, path, socket, socket_opts) do
         quote do
           def __dispatch__(unquote(path), _opts), do: unquote(Macro.escape(return))
         end
@@ -755,6 +756,38 @@ defmodule Phoenix.Endpoint do
       unquote(instrumentation)
     end
   end
+
+  @doc false
+  defp socket_paths(endpoint, path, socket, opts) do
+    paths = []
+    websocket = Keyword.get(opts, :websocket, true)
+    longpoll = Keyword.get(opts, :longpoll, false)
+
+    paths =
+      if websocket do
+        triplet = {:websocket, socket, socket_config(websocket, Phoenix.Transports.WebSocket)}
+        [{socket_path(path, :websocket), triplet} | paths]
+      else
+        paths
+      end
+
+    paths =
+      if longpoll do
+        plug_init = {endpoint, socket, socket_config(longpoll, Phoenix.Transports.LongPoll)}
+        [{socket_path(path, :longpoll), {:plug, Phoenix.Transports.LongPoll, plug_init}} | paths]
+      else
+        paths
+      end
+
+    paths
+  end
+
+  defp socket_path(path, key) do
+    Plug.Router.Utils.split(path) ++ [Atom.to_string(key)]
+  end
+
+  defp socket_config(true, module), do: module.default_config()
+  defp socket_config(config, module), do: Keyword.merge(module.default_config(), config)
 
   ## API
 
@@ -846,42 +879,9 @@ defmodule Phoenix.Endpoint do
     module = tear_alias(module)
 
     quote do
-      @phoenix_sockets Phoenix.Endpoint.__socket__(__MODULE__, unquote(path), unquote(module), unquote(opts))
+      @phoenix_sockets {unquote(path), unquote(module), unquote(opts)}
     end
   end
-
-  @doc false
-  # TODO: Return only socket and opts once Cowboy1 transport handling is removed
-  def __socket__(endpoint, path, socket, opts) do
-    paths = []
-    {websocket, opts} = Keyword.pop(opts, :websocket, true)
-    {longpoll, opts} = Keyword.pop(opts, :longpoll, false)
-
-    paths =
-      if websocket do
-        triplet = {:websocket, socket, socket_config(websocket, Phoenix.Transports.WebSocket)}
-        [{socket_path(path, :websocket), triplet} | paths]
-      else
-        paths
-      end
-
-    paths =
-      if longpoll do
-        plug_init = {endpoint, socket, socket_config(longpoll, Phoenix.Transports.LongPoll)}
-        [{socket_path(path, :longpoll), {:plug, Phoenix.Transports.LongPoll, plug_init}} | paths]
-      else
-        paths
-      end
-
-    {path, socket, opts, paths}
-  end
-
-  defp socket_path(path, key) do
-    Plug.Router.Utils.split(path) ++ [Atom.to_string(key)]
-  end
-
-  defp socket_config(true, module), do: module.default_config()
-  defp socket_config(config, module), do: Keyword.merge(module.default_config(), config)
 
   @doc """
   Instruments the given function using the instrumentation provided by
