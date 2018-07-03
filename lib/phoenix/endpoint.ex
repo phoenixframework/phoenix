@@ -454,7 +454,7 @@ defmodule Phoenix.Endpoint do
 
   Read more about instrumentation in the "Instrumentation" section.
   """
-  @macrocallback instrument(instrument_event :: Macro.t, runtime_metadata :: Macro.t, funcion :: Macro.t) :: Macro.t
+  @macrocallback instrument(instrument_event :: Macro.t, runtime_metadata :: Macro.t, function :: Macro.t) :: Macro.t
 
   @doc false
   defmacro __using__(opts) do
