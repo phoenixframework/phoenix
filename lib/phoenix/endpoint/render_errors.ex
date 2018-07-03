@@ -12,12 +12,15 @@ defmodule Phoenix.Endpoint.RenderErrors do
   #
   @moduledoc false
 
-  @already_sent {:plug_conn, :sent}
   import Plug.Conn
-  import Phoenix.Controller
+
+  require Phoenix.Endpoint
   require Logger
 
   alias Phoenix.Router.NoRouteError
+  alias Phoenix.Controller
+
+  @already_sent {:plug_conn, :sent}
 
   @doc false
   defmacro __using__(opts) do
@@ -49,15 +52,34 @@ defmodule Phoenix.Endpoint.RenderErrors do
   end
 
   @doc false
-  def __catch__(_conn, :error, %NoRouteError{} = reason, stack, opts) do
-    maybe_render(reason.conn, :error, reason, stack, opts)
-    :erlang.raise(:error, reason, stack)
-  end
-
   def __catch__(conn, kind, reason, stack, opts) do
-    maybe_render(conn, kind, reason, stack, opts)
+    receive do
+      @already_sent ->
+        send(self(), @already_sent)
+        %Plug.Conn{conn | state: :sent}
+
+      after 0 ->
+        instrument_render(conn, kind, reason, stack, opts)
+    end
+
     :erlang.raise(kind, reason, stack)
   end
+
+  defp instrument_render(conn, kind, reason, stack, opts) do
+    level = Keyword.get(opts, :log_level, :info)
+    status = status(kind, reason)
+    conn = error_conn(conn, kind, reason)
+
+    Phoenix.Endpoint.instrument(
+      conn,
+      :phoenix_error_render,
+      %{status: status, conn: conn, kind: kind, reason: reason, stacktrace: stack, log_level: level},
+      fn -> render(conn, status, kind, reason, stack, opts) end
+    )
+  end
+
+  defp error_conn(_conn, :error, %NoRouteError{conn: conn}), do: conn
+  defp error_conn(conn, _kind, _reason), do: conn
 
   ## Rendering
 
@@ -70,32 +92,23 @@ defmodule Phoenix.Endpoint.RenderErrors do
   end
   def __debugger_banner__(_conn, _status, _kind, _reason, _stack), do: nil
 
-  # Made public with @doc false for testing.
-  @doc false
-  def render(conn, kind, reason, stack, opts) do
-    conn = conn |> maybe_fetch_query_params() |> maybe_fetch_format(opts)
+  defp render(conn, status, kind, reason, stack, opts) do
+    view = Keyword.fetch!(opts, :view)
+    conn =
+      conn
+      |> maybe_fetch_query_params()
+      |> maybe_fetch_format(opts)
+      |> Plug.Conn.put_status(status)
+      |> Controller.put_layout(opts[:layout] || false)
+      |> Controller.put_view(view)
 
     reason = Exception.normalize(kind, reason, stack)
-    format = get_format(conn)
-    status = status(kind, reason)
-    format = "#{status}.#{format}"
+    format = Controller.get_format(conn)
+    template = "#{conn.status}.#{format}"
 
-    conn
-    |> put_layout(opts[:layout] || false)
-    |> put_view(opts[:view])
-    |> put_status(status)
-    |> render(format, %{kind: kind, reason: reason, stack: stack})
-  end
-
-  defp maybe_render(conn, kind, reason, stack, opts) do
-    receive do
-      @already_sent ->
-        send self(), @already_sent
-        %Plug.Conn{conn | state: :sent}
-    after
-      0 ->
-        render conn, kind, reason, stack, opts
-    end
+    Controller.__render_without_instrumentation__(conn, view, template, format, %{
+      kind: kind, reason: reason, stack: stack
+    })
   end
 
   defp maybe_fetch_query_params(conn) do
@@ -112,7 +125,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
     # We ignore params["_format"] although we respect any already stored.
     case conn.private do
       %{phoenix_format: format} when is_binary(format) -> conn
-      _ -> accepts(conn, Keyword.fetch!(opts, :accepts))
+      _ -> Controller.accepts(conn, Keyword.fetch!(opts, :accepts))
     end
   rescue
     e in Phoenix.NotAcceptableError ->
@@ -121,7 +134,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
                    "Errors will be rendered using the first accepted format #{inspect fallback_format} as fallback. " <>
                    "Please customize the :accepts option under the :render_errors configuration " <>
                    "in your endpoint if you want to support other formats or choose another fallback")
-      put_format(conn, fallback_format)
+      Controller.put_format(conn, fallback_format)
   end
 
   defp status(:error, error), do: Plug.Exception.status(error)
