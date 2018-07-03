@@ -149,7 +149,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       Gen.Context.run(~w(Blog Comment comments title:string))
 
       assert_received {:mix_shell, :info, ["You are generating into an existing context" <> notice]}
-      assert notice =~ "Phoenix.Blog context currently has 6 functions and\n2 files in its directory"
+      assert notice =~ "Phoenix.Blog context currently has 6 functions and 2 files in its directory"
       assert_received {:mix_shell, :yes?, ["Would you like to proceed?"]}
 
       assert_file "lib/phoenix/blog/comment.ex", fn file ->
