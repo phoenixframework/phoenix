@@ -121,8 +121,8 @@ defmodule Phoenix.Socket.TransportTest do
       assert conn.status == 403
     end
 
-    def check_origin_callback(origin, allowed_host \\ "example.com")
-    def check_origin_callback(origin, allowed_host), do: origin.host == allowed_host
+    def check_origin_callback(%URI{host: "example.com"}), do: true
+    def check_origin_callback(%URI{host: _}), do: false
 
     test "checks the origin of requests against an MFA" do
       # callback without additional arguments
@@ -137,9 +137,12 @@ defmodule Phoenix.Socket.TransportTest do
       refute check_origin("http://example.com/", check_origin: mfa).halted
     end
 
+    def check_origin_additional(%URI{host: allowed}, allowed), do: true
+    def check_origin_additional(%URI{host: _}, _allowed), do: false
+
     test "checks the origin of requests against an MFA, passing additional arguments" do
       # callback with additional argument
-      mfa = {__MODULE__, :check_origin_callback, ["host.com"]}
+      mfa = {__MODULE__, :check_origin_additional, ["host.com"]}
 
       # a not allowed host
       conn = check_origin("http://notallowed.com/", check_origin: mfa)
