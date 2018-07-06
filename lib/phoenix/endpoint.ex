@@ -102,8 +102,8 @@ defmodule Phoenix.Endpoint do
       by `mix phx.digest`.
 
     * `:check_origin` - configure transports to check origins or not. May
-      be false, true or a list of hosts that are allowed. Hosts also support
-      wildcards. For example:
+      be false, true, a list of hosts that are allowed or a function provided as
+      MFA tuple. Hosts also support wildcards. For example:
 
           check_origin: ["//phoenixframework.org", "//*.example.com"]
 

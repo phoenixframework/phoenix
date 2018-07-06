@@ -392,6 +392,8 @@ defmodule Phoenix.Socket.Transport do
             Enum.map(origins, &parse_origin/1)
           boolean when is_boolean(boolean) ->
             boolean
+          {module, function, arguments} ->
+            {module, function, arguments}
         end
 
       {:cache, check_origin}
@@ -417,6 +419,8 @@ defmodule Phoenix.Socket.Transport do
     do: compare?(uri.host, host_to_binary(endpoint.config(:url)[:host]))
   defp origin_allowed?(check_origin, uri, _endpoint) when is_list(check_origin),
     do: origin_allowed?(uri, check_origin)
+  defp origin_allowed?({module, function, arguments}, uri, _endpoint),
+    do: apply(module, function, [uri | arguments])
 
   defp origin_allowed?(uri, allowed_origins) do
     %{scheme: origin_scheme, host: origin_host, port: origin_port} = uri
