@@ -120,6 +120,35 @@ defmodule Phoenix.Socket.TransportTest do
       assert conn.halted
       assert conn.status == 403
     end
+
+    def check_origin_callback(origin, allowed_host \\ "example.com")
+    def check_origin_callback(origin, allowed_host), do: origin.host == allowed_host
+
+    test "checks the origin of requests against an MFA" do
+      # callback without additional arguments
+      mfa = {__MODULE__, :check_origin_callback, []}
+
+      # a not allowed host
+      conn = check_origin("http://notallowed.com/", check_origin: mfa)
+      assert conn.halted
+      assert conn.status == 403
+
+      # an allowed host
+      refute check_origin("http://example.com/", check_origin: mfa).halted
+    end
+
+    test "checks the origin of requests against an MFA, passing additional arguments" do
+      # callback with additional argument
+      mfa = {__MODULE__, :check_origin_callback, ["host.com"]}
+
+      # a not allowed host
+      conn = check_origin("http://notallowed.com/", check_origin: mfa)
+      assert conn.halted
+      assert conn.status == 403
+
+      # an allowed host
+      refute check_origin("https://host.com/", check_origin: mfa).halted
+    end
   end
 
   describe "force_ssl/4" do

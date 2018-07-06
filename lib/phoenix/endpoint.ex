@@ -102,10 +102,19 @@ defmodule Phoenix.Endpoint do
       by `mix phx.digest`.
 
     * `:check_origin` - configure transports to check origins or not. May
-      be false, true or a list of hosts that are allowed. Hosts also support
-      wildcards. For example:
+      be `false`, `true`, a list of hosts that are allowed, or a function provided as
+      MFA tuple. Hosts also support wildcards.
+
+      For example, using a list of hosts:
 
           check_origin: ["//phoenixframework.org", "//*.example.com"]
+
+      or a custom MFA function:
+
+          check_origin: {MyAppWeb.Auth, :my_check_origin?, []}
+
+      The MFA is invoked with the request `%URI{}` as the first argument,
+      followed by arguments in the MFA list.
 
     * `:http` - the configuration for the HTTP server. Currently uses
       Cowboy and accepts all options as defined by
