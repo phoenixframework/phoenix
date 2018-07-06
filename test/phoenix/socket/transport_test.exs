@@ -79,15 +79,31 @@ defmodule Phoenix.Socket.TransportTest do
       assert conn.halted
     end
 
-    test "allows invalid URIs" do
+
+    test "halts invalid URIs when check origin is configured" do
       origins = ["//example.com", "http://scheme.com", "//port.com:81"]
 
-      for config <- [origins, false, true] do
-        conn = check_origin("file://", check_origin: config)
-        refute conn.halted
-        conn = check_origin("", check_origin: config)
-        refute conn.halted
+      for config <- [origins, true] do
+        assert check_origin("file://", check_origin: config).halted
+        assert check_origin("null", check_origin: config).halted
+        assert check_origin("", check_origin: config).halted
       end
+    end
+
+    def invalid_allowed?(%URI{host: nil}), do: true
+
+    test "allows custom MFA check to handle invalid host" do
+      mfa = {__MODULE__, :invalid_allowed?, []}
+
+      refute check_origin("file://", check_origin: mfa).halted
+      refute check_origin("null", check_origin: mfa).halted
+      refute check_origin("", check_origin: mfa).halted
+    end
+
+    test "does not halt invalid URIs when check_origin is disabled" do
+      refute check_origin("file://", check_origin: false).halted
+      refute check_origin("null", check_origin: false).halted
+      refute check_origin("", check_origin: false).halted
     end
 
     test "checks the origin of requests against allowed origins" do

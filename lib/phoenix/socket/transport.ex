@@ -349,14 +349,16 @@ defmodule Phoenix.Socket.Transport do
 
   def check_origin(conn, handler, endpoint, opts, sender) do
     import Plug.Conn
-    origin       = get_req_header(conn, "origin") |> List.first
+    origin       = conn |> get_req_header("origin") |> List.first()
     check_origin = check_origin_config(handler, endpoint, opts)
 
     cond do
       is_nil(origin) or check_origin == false ->
         conn
+
       origin_allowed?(check_origin, URI.parse(origin), endpoint) ->
         conn
+
       true ->
         Logger.error """
         Could not check origin for Phoenix.Socket transport.
@@ -415,8 +417,9 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp origin_allowed?(_check_origin, %URI{host: nil}, _endpoint),
-    do: true
+  defp origin_allowed?(check_origin, %URI{host: nil}, _endpoint)
+       when check_origin == true or is_list(check_origin),
+    do: false
   defp origin_allowed?(true, uri, endpoint),
     do: compare?(uri.host, host_to_binary(endpoint.config(:url)[:host]))
   defp origin_allowed?(check_origin, uri, _endpoint) when is_list(check_origin),
