@@ -398,6 +398,9 @@ defmodule Phoenix.Socket.Transport do
 
           {module, function, arguments} ->
             {module, function, arguments}
+
+          invalid ->
+            raise ArgumentError, "check_origin expects a boolean, list of hosts, or MFA tuple, got: #{inspect(invalid)}"
         end
 
       {:cache, check_origin}
