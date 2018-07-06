@@ -417,15 +417,14 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp origin_allowed?(check_origin, %URI{host: nil}, _endpoint)
-       when check_origin == true or is_list(check_origin),
+  defp origin_allowed?({module, function, arguments}, uri, _endpoint),
+    do: apply(module, function, [uri | arguments])
+  defp origin_allowed?(_check_origin, %{host: nil}, _endpoint),
     do: false
   defp origin_allowed?(true, uri, endpoint),
     do: compare?(uri.host, host_to_binary(endpoint.config(:url)[:host]))
   defp origin_allowed?(check_origin, uri, _endpoint) when is_list(check_origin),
     do: origin_allowed?(uri, check_origin)
-  defp origin_allowed?({module, function, arguments}, uri, _endpoint),
-    do: apply(module, function, [uri | arguments])
 
   defp origin_allowed?(uri, allowed_origins) do
     %{scheme: origin_scheme, host: origin_host, port: origin_port} = uri
