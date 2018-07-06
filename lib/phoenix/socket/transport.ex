@@ -390,8 +390,10 @@ defmodule Phoenix.Socket.Transport do
         case Keyword.get(opts, :check_origin, endpoint.config(:check_origin)) do
           origins when is_list(origins) ->
             Enum.map(origins, &parse_origin/1)
+
           boolean when is_boolean(boolean) ->
             boolean
+
           {module, function, arguments} ->
             {module, function, arguments}
         end
