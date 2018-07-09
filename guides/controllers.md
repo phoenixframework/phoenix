@@ -372,7 +372,7 @@ defmodule HelloWeb.Router do
 . . .
 ```
 
-We also need to tell the controller to render a template with the same format as the one returned by `Phoenix.Controller.get_format/1`. We do that by substituting the atom version of the template `:index` for the string version `"index.html"`.
+We also need to tell the controller to render a template with the same format as the one returned by `Phoenix.Controller.get_format/1`. We do that by substituting the name of the template "index.html" with the atom version `:index`.
 
 ```elixir
 def index(conn, _params) do
