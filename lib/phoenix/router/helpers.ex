@@ -176,11 +176,11 @@ defmodule Phoenix.Router.Helpers do
       defp to_param(true), do: "true"
       defp to_param(data), do: Phoenix.Param.to_param(data)
 
-      defp segments!(segments, [], _reserved, _opts) do
+      defp segments(segments, [], _reserved, _opts) do
         segments
       end
 
-      defp segments!(segments, query, reserved, _opts) when is_list(query) or is_map(query) do
+      defp segments(segments, query, reserved, _opts) when is_list(query) or is_map(query) do
         dict = for {k, v} <- query,
                not ((k = to_string(k)) in reserved),
                do: {k, v}
@@ -190,21 +190,6 @@ defmodule Phoenix.Router.Helpers do
           "" -> segments
           o  -> segments <> "?" <> o
         end
-      end
-
-      defp segments!(segments, query, reserved, {helper, opts, call_vars}) do
-        arity = length(call_vars) + 3
-
-        raise ArgumentError, """
-        #{__MODULE__}.#{helper}_path/#{arity} called with invalid params.
-        The last argument to this function should be a keyword list or a map.
-        For example:
-
-            Router.#{helper}_path(#{Enum.join(["conn", ":#{opts}" | call_vars], ", ")}, page: 5, per_page: 10)
-
-        It is possible you have called this function without defining the proper
-        number of path segments in your router.
-        """
       end
     end
 
@@ -236,8 +221,9 @@ defmodule Phoenix.Router.Helpers do
         unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), [])
       end
 
-      def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params) do
-        path(conn_or_endpoint, segments!(unquote(segs), params, unquote(bins),
+      def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
+          when is_list(params) or is_map(params) do
+        path(conn_or_endpoint, segments(unquote(segs), params, unquote(bins),
               {unquote(helper), unquote(opts), unquote(Enum.map(vars, &Macro.to_string/1))}))
       end
 
@@ -245,7 +231,8 @@ defmodule Phoenix.Router.Helpers do
         unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), [])
       end
 
-      def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params) do
+      def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
+          when is_list(params) or is_map(params) do
         url(conn_or_endpoint) <> unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
       end
     end
@@ -255,7 +242,7 @@ defmodule Phoenix.Router.Helpers do
     routes =
       routes_and_exprs
       |> Enum.map(fn {routes, exprs} -> {routes.opts, Enum.map(exprs.binding, &elem(&1, 0))} end)
-      |> Enum.sort
+      |> Enum.sort()
 
     bindings =
       routes
@@ -270,30 +257,30 @@ defmodule Phoenix.Router.Helpers do
         quote @anno do
           def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding)) do
             path(conn_or_endpoint, "/")
-            raise_route_error(unquote(helper), :path, unquote(arity), action)
+            raise_route_error(unquote(helper), :path, unquote(arity), action, [])
           end
 
           def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding), params) do
             path(conn_or_endpoint, "/")
-            raise_route_error(unquote(helper), :path, unquote(arity + 1), action)
+            raise_route_error(unquote(helper), :path, unquote(arity + 1), action, params)
           end
 
           def unquote(:"#{helper}_url")(conn_or_endpoint, action, unquote_splicing(binding)) do
             url(conn_or_endpoint)
-            raise_route_error(unquote(helper), :url, unquote(arity), action)
+            raise_route_error(unquote(helper), :url, unquote(arity), action, [])
           end
 
           def unquote(:"#{helper}_url")(conn_or_endpoint, action, unquote_splicing(binding), params) do
             url(conn_or_endpoint)
-            raise_route_error(unquote(helper), :url, unquote(arity + 1), action)
+            raise_route_error(unquote(helper), :url, unquote(arity + 1), action, params)
           end
         end
       end
 
     [quote @anno do
-      defp raise_route_error(unquote(helper), suffix, arity, action) do
+      defp raise_route_error(unquote(helper), suffix, arity, action, params) do
         Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_#{suffix}",
-                                                 arity, action, unquote(routes))
+                                                 arity, action, unquote(routes), params)
       end
     end | catch_alls]
   end
@@ -301,7 +288,9 @@ defmodule Phoenix.Router.Helpers do
   @doc """
   Callback for generate router catch alls.
   """
-  def raise_route_error(mod, fun, arity, action, routes) do
+  def raise_route_error(mod, fun, arity, action, routes, params)
+      when is_list(params) or is_map(params) do
+
     prelude =
       if Keyword.has_key?(routes, action) do
         "no action #{inspect action} for helper #{inspect mod}.#{fun}/#{arity}"
@@ -316,6 +305,20 @@ defmodule Phoenix.Router.Helpers do
       end
 
     raise ArgumentError, "#{prelude}. The following actions/clauses are supported:\n#{suggestions}"
+  end
+  def raise_route_error(mod, fun, arity, action, routes, _params) do
+    call_vars = Keyword.fetch!(routes, action)
+
+    raise ArgumentError, """
+    #{inspect(mod)}.#{fun}/#{arity} called with invalid params.
+    The last argument to this function should be a keyword list or a map.
+    For example:
+
+    #{fun}(#{Enum.join(["conn", ":#{action}" | call_vars], ", ")}, page: 5, per_page: 10)
+
+    It is possible you have called this function without defining the proper
+    number of path segments in your router.
+    """
   end
 
   @doc """

@@ -8,7 +8,6 @@ defmodule Phoenix.Router.HelpersTest do
 
   test "defhelper with :identifiers" do
     route = build(:match, :get, "/foo/:bar", nil, Hello, :world, "hello_world")
-
     assert extract_defhelper(route, 0) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar)) do
       hello_world_path(conn_or_endpoint, :world, bar, [])
@@ -16,8 +15,8 @@ defmodule Phoenix.Router.HelpersTest do
     """
 
     assert extract_defhelper(route, 1) == String.trim """
-    def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, [\"bar\"], {\"hello_world\", :world, [\"bar\"]}))
+    def(hello_world_path(conn_or_endpoint, :world, bar, params) when is_list(params) or is_map(params)) do
+      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, ["bar"], {"hello_world", :world, ["bar"]}))
     end
     """
   end
@@ -32,8 +31,8 @@ defmodule Phoenix.Router.HelpersTest do
     """
 
     assert extract_defhelper(route, 1) == String.trim """
-    def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments!((\"\" <> \"/foo\") <> \"/\" <> Enum.map_join(bar, \"/\", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, [\"bar\"], {\"hello_world\", :world, [\"bar\"]}))
+    def(hello_world_path(conn_or_endpoint, :world, bar, params) when is_list(params) or is_map(params)) do
+      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, ["bar"], {"hello_world", :world, ["bar"]}))
     end
     """
   end
@@ -81,6 +80,9 @@ defmodule Phoenix.Router.HelpersTest do
     end
 
     get "/", PageController, :root, as: :page
+    get "/products/:id", ProductController, :show
+    get "/products/:id/:sort", ProductController, :show
+    get "/products/:id/:sort/:page", ProductController, :show
   end
 
   # Emulate regular endpoint functions
@@ -138,13 +140,13 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   test "url helper shows an error if an id is accidentally passed" do
-    error_suggestion = ~r/Router.bottom_path\(conn, :bottom, order, count, page: 5, per_page: 10\)/
+    error_suggestion = ~r/bottom_path\(conn, :bottom, order, count, page: 5, per_page: 10\)/
 
     assert_raise ArgumentError, error_suggestion, fn ->
       Helpers.bottom_path(__MODULE__, :bottom, :asc, 8, {:not, :enumerable})
     end
 
-    error_suggestion = ~r/Router.top_path\(conn, :top, page: 5, per_page: 10\)/
+    error_suggestion = ~r/top_path\(conn, :top, page: 5, per_page: 10\)/
 
     assert_raise ArgumentError, error_suggestion, fn ->
       Helpers.top_path(__MODULE__, :top, "invalid")
@@ -547,5 +549,14 @@ defmodule Phoenix.Router.HelpersTest do
   test "helpers properly encode named and query string params" do
     assert Router.Helpers.post_path(__MODULE__, :show, "my path", foo: "my param") ==
       "/posts/my%20path?foo=my+param"
+  end
+
+  test "duplicate helpers with unique arities" do
+    assert Helpers.product_path(__MODULE__, :show, 123) == "/products/123"
+    assert Helpers.product_path(__MODULE__, :show, 123, foo: "bar") == "/products/123?foo=bar"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc") == "/products/123/asc"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc", foo: "bar") == "/products/123/asc?foo=bar"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc", 1) == "/products/123/asc/1"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc", 1, foo: "bar") == "/products/123/asc/1?foo=bar"
   end
 end
