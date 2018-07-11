@@ -140,7 +140,7 @@ defmodule Phoenix.Integration.EndpointTest do
 
     capture_log fn ->
       # Has server: false
-      {:ok, _} = DevEndpoint.start_link
+      {:ok, _} = DevEndpoint.start_link()
 
       # Requests
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})

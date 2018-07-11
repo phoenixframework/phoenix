@@ -680,14 +680,15 @@ defmodule Phoenix.Controller do
       get_format(conn) ||
       raise "cannot render template #{inspect template} because conn.params[\"_format\"] is not set. " <>
             "Please set `plug :accepts, ~w(html json ...)` in your pipeline."
-    do_render(conn, template_name(template, format), format, assigns)
+
+    instrument_render_and_send(conn, format, template, assigns)
   end
 
   def render(conn, template, assigns)
       when is_binary(template) and (is_map(assigns) or is_list(assigns)) do
     case Path.extname(template) do
       "." <> format ->
-        do_render(conn, template, format, assigns)
+        instrument_render_and_send(conn, format, template, assigns)
       "" ->
         raise "cannot render template #{inspect template} without format. Use an atom if the " <>
               "template format is meant to be set dynamically based on the request format"
@@ -721,34 +722,49 @@ defmodule Phoenix.Controller do
     |> render(template, assigns)
   end
 
-  defp do_render(conn, template, format, assigns) do
-    assigns = to_map(assigns)
+  @doc false
+  def __put_render__(conn, view, template, format, assigns) do
     content_type = MIME.type(format)
-    conn =
-      conn
-      |> put_private(:phoenix_template, template)
-      |> prepare_assigns(assigns, format)
+    conn = prepare_assigns(conn, assigns, template, format)
+    data = Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
 
-    view = Map.get(conn.private, :phoenix_view) ||
-            raise "a view module was not specified, set one with put_view/2"
-
-    runtime_data = %{view: view, template: template, format: format, conn: conn}
-    data = Phoenix.Endpoint.instrument conn, :phoenix_controller_render, runtime_data, fn ->
-      Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
-    end
-
-    send_resp(conn, conn.status || 200, content_type, data)
+    conn
+    |> ensure_resp_content_type(content_type)
+    |> resp(conn.status || 200, data)
   end
 
-  defp prepare_assigns(conn, assigns, format) do
+  defp instrument_render_and_send(conn, format, template, assigns) do
+    template = template_name(template, format)
+
+    view =
+      Map.get(conn.private, :phoenix_view) ||
+        raise "a view module was not specified, set one with put_view/2"
+
+    metadata = %{view: view, template: template, format: format, conn: conn}
+
+    conn =
+      Phoenix.Endpoint.instrument(conn, :phoenix_controller_render, metadata, fn ->
+        __put_render__(conn, view, template, format, assigns)
+      end)
+
+    send_resp(conn)
+  end
+
+  defp prepare_assigns(conn, assigns, template, format) do
+    assigns = to_map(assigns)
     layout =
       case layout(conn, assigns, format) do
         {mod, layout} -> {mod, template_name(layout, format)}
         false -> false
       end
 
-    update_in conn.assigns,
-              & &1 |> Map.merge(assigns) |> Map.put(:layout, layout)
+    conn
+    |> put_private(:phoenix_template, template)
+    |> Map.update!(:assigns, fn prev ->
+      prev
+      |> Map.merge(assigns)
+      |> Map.put(:layout, layout)
+    end)
   end
 
   defp layout(conn, assigns, format) do

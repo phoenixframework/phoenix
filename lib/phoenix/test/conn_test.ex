@@ -609,7 +609,7 @@ defmodule Phoenix.ConnTest do
       flunk "expected error to be sent as #{expected_status} status, but no error happened"
     end
   end
-  defp receive_response({:error, {exception, stack}}, expected_status) do
+  defp receive_response({:error, {_kind, exception, stack}}, expected_status) do
     receive do
       {ref, {^expected_status, headers, body}} when is_reference(ref) ->
         {expected_status, headers, body}
@@ -642,8 +642,8 @@ defmodule Phoenix.ConnTest do
   defp wrap_request(func) do
     try do
       {:ok, func.()}
-    rescue
-      exception -> {:error, {exception, System.stacktrace()}}
+    catch
+      kind, error -> {:error, {kind, error, System.stacktrace()}}
     end
   end
 end

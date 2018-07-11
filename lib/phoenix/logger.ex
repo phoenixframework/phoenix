@@ -28,6 +28,20 @@ defmodule Phoenix.Logger do
   require Logger
   import Phoenix.Controller
 
+  def phoenix_error_render(:start, _compile, %{log_level: false}), do: :ok
+  def phoenix_error_render(:start, _, %{log_level: level} = runtime) do
+    %{status: status, kind: kind, reason: reason} = runtime
+
+    Logger.log(level, fn ->
+      ["Converted #{kind} #{error_banner(kind, reason)} to #{status} response"]
+    end)
+    :ok
+  end
+  def phoenix_error_render(:stop, _time_diff, :ok), do: :ok
+
+  defp error_banner(:error, %type{}), do: inspect(type)
+  defp error_banner(_kind, reason), do: inspect(reason)
+
   def phoenix_controller_call(:start, _compile, %{log_level: false}), do: :ok
   def phoenix_controller_call(:start, %{module: module}, %{log_level: level, conn: conn}) do
     Logger.log level, fn ->
