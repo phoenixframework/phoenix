@@ -722,7 +722,15 @@ export class Socket {
     this.logger               = opts.logger || function(){} // noop
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
     this.params               = closure(opts.params || {})
-    this.endPoint             = `${endPoint}/${TRANSPORTS.websocket}`
+
+    var endPointUrlObject
+    try {
+      endPointUrlObject = new URL(endPoint)
+    } catch (e) {
+      endPointUrlObject = new URL(endPoint, `${location.protocol.match(/^https/) ? "wss" : "ws"}://${location.host}${location.pathname}`)
+    }
+
+    this.endPoint             = `${(endPointUrlObject.hostname === 'blank') ? '' : endPointUrlObject.origin}${endPointUrlObject.pathname}/${TRANSPORTS.websocket}${endPointUrlObject.search}`
     this.heartbeatTimer       = null
     this.pendingHeartbeatRef  = null
     this.reconnectTimer       = new Timer(() => {
