@@ -723,12 +723,14 @@ defmodule Phoenix.Controller do
   end
 
   @doc false
-  def __prepare_conn_and_render__(conn, view, template, format, assigns) do
+  def __put_render__(conn, view, template, format, assigns) do
     content_type = MIME.type(format)
     conn = prepare_assigns(conn, assigns, template, format)
-
     data = Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
-    {ensure_resp_content_type(conn, content_type), data}
+
+    conn
+    |> ensure_resp_content_type(content_type)
+    |> resp(conn.status || 200, data)
   end
 
   defp instrument_render_and_send(conn, format, template, assigns) do
@@ -740,12 +742,12 @@ defmodule Phoenix.Controller do
 
     metadata = %{view: view, template: template, format: format, conn: conn}
 
-    {conn, data} =
+    conn =
       Phoenix.Endpoint.instrument(conn, :phoenix_controller_render, metadata, fn ->
-        __prepare_conn_and_render__(conn, view, template, format, assigns)
+        __put_render__(conn, view, template, format, assigns)
       end)
 
-    send_resp(conn, conn.status || 200, data)
+    send_resp(conn)
   end
 
   defp prepare_assigns(conn, assigns, template, format) do

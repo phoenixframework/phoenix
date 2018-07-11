@@ -71,12 +71,12 @@ defmodule Phoenix.Endpoint.RenderErrors do
     conn = error_conn(conn, kind, reason)
     metadata = %{status: status, conn: conn, kind: kind, reason: reason, stacktrace: stack, log_level: level}
 
-    {conn, data} =
+    conn =
       Phoenix.Endpoint.instrument(conn, :phoenix_error_render, metadata, fn ->
         render(conn, status, kind, reason, stack, opts)
       end)
 
-    send_resp(conn, status, data)
+    send_resp(conn)
   end
 
   defp error_conn(_conn, :error, %NoRouteError{conn: conn}), do: conn
@@ -108,7 +108,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
     template = "#{conn.status}.#{format}"
     assigns = %{kind: kind, reason: reason, stack: stack}
 
-    Controller.__prepare_conn_and_render__(conn, view, template, format, assigns)
+    Controller.__put_render__(conn, view, template, format, assigns)
   end
 
   defp maybe_fetch_query_params(conn) do
