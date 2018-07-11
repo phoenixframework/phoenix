@@ -59,23 +59,24 @@ defmodule Phoenix.Endpoint.RenderErrors do
         %Plug.Conn{conn | state: :sent}
 
       after 0 ->
-        instrument_render(conn, kind, reason, stack, opts)
+        instrument_render_and_send(conn, kind, reason, stack, opts)
     end
 
     :erlang.raise(kind, reason, stack)
   end
 
-  defp instrument_render(conn, kind, reason, stack, opts) do
+  defp instrument_render_and_send(conn, kind, reason, stack, opts) do
     level = Keyword.get(opts, :log_level, :info)
     status = status(kind, reason)
     conn = error_conn(conn, kind, reason)
+    metadata = %{status: status, conn: conn, kind: kind, reason: reason, stacktrace: stack, log_level: level}
 
-    Phoenix.Endpoint.instrument(
-      conn,
-      :phoenix_error_render,
-      %{status: status, conn: conn, kind: kind, reason: reason, stacktrace: stack, log_level: level},
-      fn -> render(conn, status, kind, reason, stack, opts) end
-    )
+    {conn, data} =
+      Phoenix.Endpoint.instrument(conn, :phoenix_error_render, metadata, fn ->
+        render(conn, status, kind, reason, stack, opts)
+      end)
+
+    send_resp(conn, status, data)
   end
 
   defp error_conn(_conn, :error, %NoRouteError{conn: conn}), do: conn
@@ -105,10 +106,9 @@ defmodule Phoenix.Endpoint.RenderErrors do
     reason = Exception.normalize(kind, reason, stack)
     format = Controller.get_format(conn)
     template = "#{conn.status}.#{format}"
+    assigns = %{kind: kind, reason: reason, stack: stack}
 
-    Controller.__render_without_instrumentation__(conn, view, template, format, %{
-      kind: kind, reason: reason, stack: stack
-    })
+    Controller.__prepare_conn_and_render__(conn, view, template, format, assigns)
   end
 
   defp maybe_fetch_query_params(conn) do
