@@ -14,8 +14,6 @@ In any case, this chapter provides a general overview of the deployment steps, w
 
 Let's explore those steps above one by one.
 
-> Note: this guide assumes you are using at least Elixir v1.0.4, which brought some improvements on how applications are compiled and are optimized for the production environment
-
 ## Handling of your application secrets
 
 All Phoenix applications have data that must be kept secure, for example, the username and password for your production database, and the secret Phoenix uses to sign and encrypt important information. This data is typically kept in `config/prod.secret.exs` and by default it is not checked into your version control system.
