@@ -15,11 +15,19 @@ defmodule Phoenix.View do
       defmodule YourAppWeb do
         def view do
           quote do
-            use Phoenix.View, root: "lib/web/templates"
+            use Phoenix.View, root: "lib/app_web/templates", namespace: "web"
+            
+            # Import convenience functions from controllers
+            import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]<%= if html do %>
+            # Use all HTML functionality (forms, tags, etc)
+            use Phoenix.HTML<% end %>
+          
+            import AppWeb.ErrorHelpers
+            import AppWeb.Gettext
 
-            # Import common functionality
-            import YourApp.Router.Helpers
-
+            # Alias the Helpers module as Routes
+            alias  AppWeb.Router.Helpers, as: Routes
+  
             # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
             use Phoenix.HTML
           end

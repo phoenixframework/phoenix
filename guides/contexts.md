@@ -147,7 +147,7 @@ defmodule HelloWeb.UserController do
       {:ok, user} ->
         conn
         |> put_flash(:info, "User created successfully.")
-        |> redirect(to: user_path(conn, :show, user))
+        |> redirect(to: Routes.user_path(conn, :show, user))
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
     end
@@ -480,7 +480,7 @@ defmodule HelloWeb.SessionController do
       {:error, :unauthorized} ->
         conn
         |> put_flash(:error, "Bad email/password combination")
-        |> redirect(to: session_path(conn, :new))
+        |> redirect(to: Routes.session_path(conn, :new))
     end
   end
 
@@ -540,7 +540,7 @@ Next, add a new template in `lib/hello_web/templates/session/new.html.eex:`
 ```eex
 <h1>Sign in</h1>
 
-<%= form_for @conn, session_path(@conn, :create), [method: :post, as: :user], fn f -> %>
+<%= form_for @conn, Routes.session_path(@conn, :create), [method: :post, as: :user], fn f -> %>
   <div class="form-group">
     <%= text_input f, :email, placeholder: "Email" %>
   </div>
@@ -554,7 +554,7 @@ Next, add a new template in `lib/hello_web/templates/session/new.html.eex:`
   </div>
 <% end %>
 
-<%= form_for @conn, session_path(@conn, :delete), [method: :delete, as: :user], fn _ -> %>
+<%= form_for @conn, Routes.session_path(@conn, :delete), [method: :delete, as: :user], fn _ -> %>
   <div class="form-group">
     <%= submit "logout" %>
   </div>
@@ -893,7 +893,7 @@ Open up your generated `lib/hello_web/controllers/cms/page_controller.ex` and ma
     else
       conn
       |> put_flash(:error, "You can't modify that page")
-      |> redirect(to: cms_page_path(conn, :index))
+      |> redirect(to: Routes.cms_page_path(conn, :index))
       |> halt()
     end
   end
@@ -921,7 +921,7 @@ With our new plugs in place, we can now modify our `create`, `edit`, `update`, a
       {:ok, page} ->
         conn
         |> put_flash(:info, "Page created successfully.")
-        |> redirect(to: cms_page_path(conn, :show, page))
+        |> redirect(to: Routes.cms_page_path(conn, :show, page))
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
     end
@@ -935,7 +935,7 @@ With our new plugs in place, we can now modify our `create`, `edit`, `update`, a
       {:ok, page} ->
         conn
         |> put_flash(:info, "Page updated successfully.")
-        |> redirect(to: cms_page_path(conn, :show, page))
+        |> redirect(to: Routes.cms_page_path(conn, :show, page))
       {:error, %Ecto.Changeset{} = changeset} ->
 -       render(conn, "edit.html", page: page, changeset: changeset)
 +       render(conn, "edit.html", changeset: changeset)
@@ -950,7 +950,7 @@ With our new plugs in place, we can now modify our `create`, `edit`, `update`, a
 
     conn
     |> put_flash(:info, "Page deleted successfully.")
-    |> redirect(to: cms_page_path(conn, :index))
+    |> redirect(to: Routes.cms_page_path(conn, :index))
   end
 ```
 

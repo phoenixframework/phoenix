@@ -518,7 +518,7 @@ defmodule HelloWeb.PageController do
   use HelloWeb, :controller
 
   def index(conn, _params) do
-    redirect(conn, to: redirect_test_path(conn, :redirect_test))
+    redirect(conn, to: Routes.redirect_test_path(conn, :redirect_test))
   end
 end
 ```
@@ -527,7 +527,7 @@ Note that we can't use the url helper here because `redirect/2` using the atom `
 
 ```elixir
 def index(conn, _params) do
-  redirect(conn, to: redirect_test_url(conn, :redirect_test))
+  redirect(conn, to: Routes.redirect_test_url(conn, :redirect_test))
 end
 ```
 
@@ -535,7 +535,7 @@ If we want to use the url helper to pass a full url to `redirect/2`, we must use
 
 ```elixir
 def index(conn, _params) do
-  redirect(conn, external: redirect_test_url(conn, :redirect_test))
+  redirect(conn, external: Routes.redirect_test_url(conn, :redirect_test))
 end
 ```
 

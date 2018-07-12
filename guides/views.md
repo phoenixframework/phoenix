@@ -67,7 +67,8 @@ rendering with assigns [:conn, :view_module, :view_template]
 
 Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.eex` templates and turns them into `render/2` function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved. This is also why we were able to define functions like `title/0` in our `LayoutView` and they were immediately available inside the layout's `app.html.eex` – the call to `title/0` was just a local function call!
 
-When we `use HelloWeb, :view`, we get other conveniences as well. Since the `view/0` function imports `HelloWeb.Router.Helpers`, we don't have to fully qualify path helpers in templates. Let's see how that works by changing the template for our Welcome to Phoenix page.
+When we `use HelloWeb, :view`, we get other conveniences as well. Since `view/0` aliases `HelloWeb.Router.Helpers` as `Routes` (look in `lib/hello_web.ex`), we can simply call these helpers by using `Routes.*_path` in templates. Let's see how that works by changing the template for our Welcome to Phoenix page.
+
 
 Let's open up the `lib/hello_web/templates/page/index.html.eex` and locate this stanza.
 
@@ -84,7 +85,7 @@ Then let's add a line with a link back to the same page. (The objective is to se
 <div class="jumbotron">
   <h2><%= gettext("Welcome to %{name}!", name: "Phoenix") %></h2>
   <p class="lead">A productive web framework that<br>does not compromise speed and maintainability.</p>
-  <p><a href="<%= page_path(@conn, :index) %>">Link back to this page</a></p>
+  <p><a href="<%= Routes.page_path(@conn, :index) %>">Link back to this page</a></p>
 </div>
 ```
 
@@ -94,7 +95,9 @@ Now we can reload the page and view source to see what we have.
 <a href="/">Link back to this page</a>
 ```
 
-Great, `page_path/2` evaluated to `/` as we would expect, and we didn't need to qualify it with `Phoenix.View`.
+Great, `Routes.page_path/2` evaluated to `/` as we would expect, we just had to use the alias set in `Phoenix.View`.
+
+If you happen to need access to the path helpers outside views, controllers or templates, you can either call them by the full qualified name, `HelloWeb.Router.Helpers.*_path()` or alias it yourself in the calling module, by defining `alias HelloWeb.Router.Helpers, as: Routes` in the module you want to use, and then calling `Routes.*_path()`, where `Hello*` is the name of your actual application.
 
 ### More About Views
 

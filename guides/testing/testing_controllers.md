@@ -136,7 +136,7 @@ defmodule HelloWeb.UserControllerTest do
 
     response =
       conn
-      |> get(user_path(conn, :index))
+      |> get(Routes.user_path(conn, :index))
       |> json_response(200)
 
     expected = %{
@@ -267,7 +267,7 @@ test "Responds with user info if the user is found", %{conn: conn} do
 
   response =
     conn
-    |> get(user_path(conn, :show, user.id))
+    |> get(Routes.user_path(conn, :show, user.id))
     |> json_response(200)
 
   expected = %{"data" => %{"email" => user.email, "name" => user.name}}
@@ -302,7 +302,7 @@ describe "show/2" do
 
     response =
       conn
-      |> get(user_path(conn, :show, user.id))
+      |> get(Routes.user_path(conn, :show, user.id))
       |> json_response(200)
 
     expected = %{"data" => %{"email" => user.email, "name" => user.name}}
@@ -324,7 +324,7 @@ Finally, let's change our `index/2` test to also use the new `create_user` funct
 
       response =
         conn
-        |> get(user_path(conn, :index))
+        |> get(Routes.user_path(conn, :index))
         |> json_response(200)
 
       expected = %{"data" => [%{"name" => user.name, "email" => user.email}]}
@@ -393,7 +393,7 @@ Walking through our TDD steps, we add a test that supplies a non-existent user i
 
 ```elixir
 test "Responds with a message indicating user not found", %{conn:  conn} do
-  conn = get(conn, user_path(conn, :show, -1))
+  conn = get(conn, Routes.user_path(conn, :show, -1))
 
   assert text_response(conn, 404) =~ "User not found"
 end

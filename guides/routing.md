@@ -250,10 +250,10 @@ iex> HelloWeb.Router.Helpers.page_path(HelloWeb.Endpoint, :index)
 This is significant because we can use the `page_path` function in a template to link to the root of our application. We can then use this helper in our templates:
 
 ```html
-<a href="<%= page_path(@conn, :index) %>">To the Welcome Page!</a>
+<a href="<%= Routes.page_path(@conn, :index) %>">To the Welcome Page!</a>
 ```
 
-The `page_path` function is imported into our template with `use HelloWeb, :view`. Please see the [View Guide](views.html) for more information.
+The reason we can use `Routes.page_path` instead of the full `HelloWeb.Router.Helpers.page_path` name is because `HelloWeb.Router.Helpers` is aliased as `Routes` by default in the `view/0` definition (`lib/hello_web.ex`) and made available to our templates through `use HelloWeb, :view`. We can, of course, use `HelloWeb.Router.Helpers.page_path(@conn, :index)` instead, but the convention is to use the aliased version for conciseness (note that the alias is only set automatically for use in views, controllers and templates - outside these you need either the full name, or to alias it yourself inside the module definition: `alias HelloWeb.Router.Helpers, as: Routes`). Please see the [View Guide](views.html) for more information.
 
 This pays off tremendously if we should ever have to change the path of our route in the router. Since the path helpers are built dynamically from the routes, any calls to `page_path` in our templates will still work.
 
@@ -262,41 +262,41 @@ This pays off tremendously if we should ever have to change the path of our rout
 When we ran the `phx.routes` task for our user resource, it listed the `user_path` as the path helper function for each line of output. Here is what that translates to for each action:
 
 ```elixir
-iex> import HelloWeb.Router.Helpers
+iex> alias HelloWeb.Router.Helpers, as: Routes
 iex> alias HelloWeb.Endpoint
-iex> user_path(Endpoint, :index)
+iex> Routes.user_path(Endpoint, :index)
 "/users"
 
-iex> user_path(Endpoint, :show, 17)
+iex> Routes.user_path(Endpoint, :show, 17)
 "/users/17"
 
-iex> user_path(Endpoint, :new)
+iex> Routes.user_path(Endpoint, :new)
 "/users/new"
 
-iex> user_path(Endpoint, :create)
+iex> Routes.user_path(Endpoint, :create)
 "/users"
 
-iex> user_path(Endpoint, :edit, 37)
+iex> Routes.user_path(Endpoint, :edit, 37)
 "/users/37/edit"
 
-iex> user_path(Endpoint, :update, 37)
+iex> Routes.user_path(Endpoint, :update, 37)
 "/users/37"
 
-iex> user_path(Endpoint, :delete, 17)
+iex> Routes.user_path(Endpoint, :delete, 17)
 "/users/17"
 ```
 
 What about paths with query strings? By adding an optional fourth argument of key value pairs, the path helpers will return those pairs in the query string.
 
 ```elixir
-iex> user_path(Endpoint, :show, 17, admin: true, active: false)
+iex> Routes.user_path(Endpoint, :show, 17, admin: true, active: false)
 "/users/17?admin=true&active=false"
 ```
 
 What if we need a full url instead of a path? Just replace `_path` with `_url`:
 
 ```elixir
-iex(3)> user_url(Endpoint, :index)
+iex(3)> Routes.user_url(Endpoint, :index)
 "http://localhost:4000/users"
 ```
 
@@ -341,6 +341,15 @@ Again, if we add a key/value pair to the end of the function call, it is added t
 
 ```elixir
 iex> HelloWeb.Router.Helpers.user_post_path(Endpoint, :index, 42, active: true)
+"/users/42/posts?active=true"
+```
+
+If we had aliased the `Helpers` module as before (it is only automatically aliased for views, templates and controllers, in this case, since we're inside `iex` we need to do it ourselves), we could instead do:
+
+```elixir
+iex> alias HelloWeb.Router.Helpers, as: Routes
+iex> alias HelloWeb.Endpoint
+iex> Routes.user_post_path(Endpoint, :index, 42, active: true)
 "/users/42/posts?active=true"
 ```
 
