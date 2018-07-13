@@ -331,7 +331,7 @@ defmodule Phoenix.Endpoint do
 
   By default, Phoenix instruments the following events:
 
-    * `:phoenix_controller_call` - it's the whole controller pipeline.
+    * `:phoenix_controller_call` - the entire controller pipeline.
       The `%Plug.Conn{}` is passed as runtime metadata.
     * `:phoenix_controller_render` - the rendering of a view from a
       controller. The map of runtime metadata passed to instrumentation
@@ -339,6 +339,11 @@ defmodule Phoenix.Endpoint do
       the `:template` key - for the name of the template, e.g.,
       `"index.html"`, the `:format` key - for the format of the template, and
       the `:conn` key - containing the `%Plug.Conn{}`.
+    * `:phoenix_error_render` - the rendering of an error view when an exception,
+      throw, or exit is caught. The map of runtime metadata contains the `:status`
+      key of the error's HTTP status code, the `:conn` key containg the
+      `%Plug.Conn{}`, as well as the `:kind`, `:reason`, and `:stacktrace` of
+      the caught error.
     * `:phoenix_channel_join` - the joining of a channel. The `%Phoenix.Socket{}`
       and join params are passed as runtime metadata via `:socket` and `:params`.
     * `:phoenix_channel_receive` - the receipt of an incoming message over a

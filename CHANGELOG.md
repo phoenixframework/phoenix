@@ -37,6 +37,7 @@ The old APIs for building transports are also deprecated. The good news is: adap
   * [Endpoint] Add `Cowboy2Adapter` for HTTP2 support with cowboy2
   * [Endpoint] The `socket/3` macro now accepts direct configuration about websockets and longpoll
   * [Endpoint] Support MFA function in `:check_origin` config for custom origin checking
+  * [Endpoint] Add new `:phoenix_error_render` instrumentation callback
   * [Logger] Add whitelist support to `filter_parameters` logger configuration, via new `:keep` tuple format
   * [Phoenix] Add `Phoenix.json_library/0` and replace `Poison` with `Jason` for JSON encoding in new projects
   * [Router] Display list of available routes on debugger 404 error page
