@@ -97,7 +97,7 @@ Now we can reload the page and view source to see what we have.
 
 Great, `Routes.page_path/2` evaluated to `/` as we would expect, we just had to use the alias set in `Phoenix.View`.
 
-If you happen to need access to the path helpers outside views, controllers or templates, you can either call them by the full qualified name, `HelloWeb.Router.Helpers.*_path()` or alias it yourself in the calling module, by defining `alias HelloWeb.Router.Helpers, as: Routes` in the module you want to use, and then calling `Routes.*_path()`, where `Hello*` is the name of your actual application.
+If you happen to need access to the path helpers outside views, controllers or templates, you can either call them by the full qualified name, e.g. `HelloWeb.Router.Helpers.page_path(@conn, :index)` or alias it yourself in the calling module, by defining `alias HelloWeb.Router.Helpers, as: Routes` in the module you want to use, and then calling, e.g., `Routes.page_path(@conn, :index)`.
 
 ### More About Views
 

@@ -225,14 +225,14 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-Important: If we don't do this, our application won't compile, and we'll get an error.
+Important: If we don't do this, we will see the following warnings in our logs, and our application will error when trying to execute the function.
 
 ```console
 $ mix phx.server
 Compiling 17 files (.ex)
 
 == Compilation error in file lib/hello_web/controllers/post_controller.ex ==
-** (CompileError) lib/hello_web/controllers/post_controller.ex:22: undefined function Routes.post_path/3
+** (CompileError) lib/hello_web/controllers/post_controller.ex:22: undefined function HelloWeb.Router.Helpers.post_path/3
     (stdlib) lists.erl:1338: :lists.foreach/2
     (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
     (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
@@ -267,7 +267,7 @@ $ mix phx.server
 Compiling 15 files (.ex)
 
 == Compilation error in file lib/hello_web/views/post_view.ex ==
-** (CompileError) lib/hello_web/templates/post/edit.html.eex:3: undefined function Routes.post_path/3
+** (CompileError) lib/hello_web/templates/post/edit.html.eex:3: undefined function HelloWeb.Router.Helpers.post_path/3
     (stdlib) lists.erl:1338: :lists.foreach/2
     (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
     (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
@@ -306,7 +306,7 @@ $ mix phx.server
 Compiling 15 files (.ex)
 
 == Compilation error in file lib/hello_web/views/post_view.ex ==
-** (CompileError) lib/hello_web/templates/post/edit.html.eex:3: undefined function Routes.post_path/3
+** (CompileError) lib/hello_web/templates/post/edit.html.eex:3: undefined function HelloWeb.Router.Helpers.post_path/3
     (stdlib) lists.erl:1338: :lists.foreach/2
     (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
     (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
@@ -353,7 +353,7 @@ $ mix phx.server
 Compiling 19 files (.ex)
 
 == Compilation error in file lib/hello_web/controllers/post_controller.ex ==
-** (CompileError) lib/hello_web/controllers/post_controller.ex:18: undefined function Routes.post_path/3
+** (CompileError) lib/hello_web/controllers/post_controller.ex:18: undefined function HelloWeb.Router.Helpers.post_path/3
     (stdlib) lists.erl:1338: :lists.foreach/2
     (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
     (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1

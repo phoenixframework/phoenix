@@ -10,26 +10,25 @@ defmodule Phoenix.View do
 
   ## Examples
 
-  Phoenix defines the view template at `lib/web/web.ex`:
+  Phoenix defines the view template at `lib/your_app_web.ex`:
 
       defmodule YourAppWeb do
+        # ...
+
         def view do
           quote do
-            use Phoenix.View, root: "lib/app_web/templates", namespace: "web"
+            use Phoenix.View, root: "lib/your_app_web/templates", namespace: "web"
             
             # Import convenience functions from controllers
             import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]<%= if html do %>
             # Use all HTML functionality (forms, tags, etc)
-            use Phoenix.HTML<% end %>
+            use Phoenix.HTML
           
-            import AppWeb.ErrorHelpers
-            import AppWeb.Gettext
+            import YourAppWeb.ErrorHelpers
+            import YourAppWeb.Gettext
 
             # Alias the Helpers module as Routes
-            alias  AppWeb.Router.Helpers, as: Routes
-  
-            # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
-            use Phoenix.HTML
+            alias  YourAppWeb.Router.Helpers, as: Routes
           end
         end
 
@@ -42,11 +41,11 @@ defmodule Phoenix.View do
         use YourAppWeb, :view
       end
 
-  Because we have defined the template root to be "lib/web/templates", `Phoenix.View`
-  will automatically load all templates at "web/templates/user" and include them
+  Because we have defined the template root to be "lib/your_app_web/templates", `Phoenix.View`
+  will automatically load all templates at "your_app_web/templates/user" and include them
   in the `YourApp.UserView`. For example, imagine we have the template:
 
-      # web/templates/user/index.html.eex
+      # your_app_web/templates/user/index.html.eex
       Hello <%= @name %>
 
   The `.eex` extension maps to a template engine which tells Phoenix how
@@ -284,7 +283,7 @@ defmodule Phoenix.View do
 
   To use a precompiled template, create a `scripts.html.eex` file in the `templates`
   directory for the corresponding view you want it to render for. For example,
-  for the `UserView`, create the `scripts.html.eex` file at `web/templates/user/`.
+  for the `UserView`, create the `scripts.html.eex` file at `your_app_web/templates/user/`.
 
   ## Rendering based on controller template
 
