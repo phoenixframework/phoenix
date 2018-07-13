@@ -186,7 +186,7 @@ defmodule Phoenix.MixProject do
 
   defp aliases do
     [
-      "docs": ["docs", &generate_js_docs/1]
+      docs: ["docs", &generate_js_docs/1]
     ]
   end
 
