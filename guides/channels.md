@@ -181,7 +181,7 @@ Phoenix ships with a JavaScript client that is available when generating a new P
   - [dn-phoenix](https://github.com/jfis/dn-phoenix)
 
 ## Tying it all together
-Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](http://www.phoenixframework.org/docs/up-and-running) we'll see that the endpoint is already set up for us in `lib/hello_web/endpoint.ex`:
+Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](https://hexdocs.pm/phoenix/up_and_running.html) we'll see that the endpoint is already set up for us in `lib/hello_web/endpoint.ex`:
 
 ```elixir
 defmodule HelloWeb.Endpoint do

@@ -12,7 +12,7 @@
       <section class="container">
         <nav role="navigation">
           <ul>
-            <li><a href="http://www.phoenixframework.org/docs">Get Started</a></li>
+            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
           </ul>
         </nav>
         <a href="http://phoenixframework.org/" class="phx-logo">
