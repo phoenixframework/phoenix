@@ -248,7 +248,7 @@ Great, so we have a `render/2` function that takes a template and an `assigns` m
     <div class="container">
       <div class="header">
         <ul class="nav nav-pills pull-right">
-          <li><a href="http://www.phoenixframework.org/docs">Get Started</a></li>
+          <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
         </ul>
         <span class="logo"></span>
       </div>
