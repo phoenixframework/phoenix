@@ -134,6 +134,7 @@ First, let's make sure our secret key is loaded from Heroku's environment variab
 
 ```elixir
 config :hello, HelloWeb.Endpoint,
+  load_from_system_env: true,
   url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: Map.fetch!(System.get_env(), "SECRET_KEY_BASE")
@@ -182,6 +183,7 @@ use Mix.Config
 ...
 
 config :hello, HelloWeb.Endpoint,
+  load_from_system_env: true,
   url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
   force_ssl: [rewrite_on: [:x_forwarded_proto]],
   cache_static_manifest: "priv/static/cache_manifest.json",
