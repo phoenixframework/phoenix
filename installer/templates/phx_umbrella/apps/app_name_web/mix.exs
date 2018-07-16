@@ -54,6 +54,6 @@ defmodule <%= web_namespace %>.MixProject do
   #
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
-    [<%= if ecto do %>"test": ["ecto.create --quiet", "ecto.migrate", "test"]<% end %>]
+    [<%= if ecto do %>test: ["ecto.create --quiet", "ecto.migrate", "test"]<% end %>]
   end
 end
