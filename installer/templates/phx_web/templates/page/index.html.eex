@@ -1,11 +1,11 @@
 <section class="phx-hero">
-  <h2><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
+  <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1>
   <p>A productive web framework that<br/>does not compromise speed and maintainability.</p>
 </section>
 
 <section class="row">
   <article class="column">
-    <h4>Resources</h4>
+    <h2>Resources</h2>
     <ul>
       <li>
         <a href="https://hexdocs.pm/phoenix/overview.html">Guides &amp; Docs</a>
@@ -19,7 +19,7 @@
     </ul>
   </article>
   <article class="column">
-    <h4>Help</h4>
+    <h2>Help</h2>
     <ul>
       <li>
         <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
