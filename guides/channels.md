@@ -401,7 +401,7 @@ Next we need to pass this token to JavaScript. We can do so inside a script tag 
 
 ```html
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
-<script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+<script src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
 ```
 
 **Step 3 - Pass the Token to the Socket Constructor and Verify**

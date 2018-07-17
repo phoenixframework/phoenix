@@ -225,17 +225,14 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-Important: If we don't do this, our application won't compile, and we'll get an error.
+Important: If we don't do this, we will see the following warnings in our logs, and our application will error when trying to execute the function.
 
 ```console
 $ mix phx.server
 Compiling 17 files (.ex)
 
-== Compilation error in file lib/hello_web/controllers/post_controller.ex ==
-** (CompileError) lib/hello_web/controllers/post_controller.ex:22: undefined function post_path/3
-    (stdlib) lists.erl:1338: :lists.foreach/2
-    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
-    (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
+warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
+  lib/hello_web/controllers/post_controller.ex:22: 
 ```
 
 If we don't want to create a context or schema for our resource we can use the `--no-context` flag. Note that this still requires a context module name as a parameter.
@@ -260,17 +257,14 @@ Add the resource to your browser scope in lib/hello_web/router.ex:
     resources "/posts", PostController
 ```
 
-Important: If we don't do this, our application won't compile, and we'll get an error.
+Important: If we don't do this, we'll get the following warning in our logs and the application will error when attempting to load the page:
 
 ```console
 $ mix phx.server
 Compiling 15 files (.ex)
 
-== Compilation error in file lib/hello_web/views/post_view.ex ==
-** (CompileError) lib/hello_web/templates/post/edit.html.eex:3: undefined function post_path/3
-    (stdlib) lists.erl:1338: :lists.foreach/2
-    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
-    (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
+warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
+  lib/hello_web/templates/post/edit.html.eex:3
 ```
 
 Similarly - if we want a context created without a schema for our resource we can use the `--no-schema` flag.
@@ -299,17 +293,14 @@ Add the resource to your browser scope in lib/hello_web/router.ex:
     resources "/posts", PostController
 ```
 
-Important: If we don't do this, our application won't compile, and we'll get an error.
+Important: If we don't do this, we'll get the following warning in our logs and the application will error when attempting to load the page:
 
 ```console
 $ mix phx.server
 Compiling 15 files (.ex)
 
-== Compilation error in file lib/hello_web/views/post_view.ex ==
-** (CompileError) lib/hello_web/templates/post/edit.html.eex:3: undefined function post_path/3
-    (stdlib) lists.erl:1338: :lists.foreach/2
-    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
-    (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
+warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
+  lib/hello_web/templates/post/edit.html.eex:3
 ```
 
 #### [mix phx.gen.json](`Mix.Tasks.Phx.Gen.Json.run/1`)
@@ -346,17 +337,14 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-Important: If we don't do this, our application won't compile, and we'll get an error.
+Important: If we don't do this, we'll get the following warning in our logs and the application will error when attempting to load the page:
 
 ```console
 $ mix phx.server
 Compiling 19 files (.ex)
 
-== Compilation error in file lib/hello_web/controllers/post_controller.ex ==
-** (CompileError) lib/hello_web/controllers/post_controller.ex:18: undefined function post_path/3
-    (stdlib) lists.erl:1338: :lists.foreach/2
-    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
-    (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
+warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
+  lib/hello_web/controllers/post_controller.ex:18
 ```
 
 If we don't want to create a context or schema for our resource we can use the `--no-context` flag. Note that this still requires a context module name as a parameter.
