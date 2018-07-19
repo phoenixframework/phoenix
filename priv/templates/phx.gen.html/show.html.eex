@@ -1,4 +1,4 @@
-<h2>Show <%= schema.human_singular %></h2>
+<h1>Show <%= schema.human_singular %></h1>
 
 <ul>
 <%= for {k, _} <- schema.attrs do %>

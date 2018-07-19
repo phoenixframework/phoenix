@@ -1,4 +1,4 @@
-<h2>New <%= schema.human_singular %></h2>
+<h1>New <%= schema.human_singular %></h1>
 
 <%%= render "form.html", Map.put(assigns, :action, Routes.<%= schema.route_helper %>_path(@conn, :create)) %>
 

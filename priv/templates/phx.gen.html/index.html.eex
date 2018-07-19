@@ -1,4 +1,4 @@
-<h2>Listing <%= schema.human_plural %></h2>
+<h1>Listing <%= schema.human_plural %></h1>
 
 <table>
   <thead>
