@@ -47,7 +47,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       context = Context.new("Site.Blog", schema, [])
 
       assert %Context{
-        alias: Site.Blog,
+        alias: Blog,
         base_module: Phoenix,
         basename: "blog",
         module: Phoenix.Site.Blog,
