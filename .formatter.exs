@@ -43,6 +43,8 @@ locals_without_parens = [
   # Phoenix.Socket
   channel: 2,
   channel: 3,
+  transport: 2,
+  transport: 3,
 
   # Phoenix.ChannelTest
   assert_broadcast: 2,
