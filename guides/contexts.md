@@ -29,7 +29,7 @@ Before we use the generators, we need to undo the changes we made in the Ecto gu
 
 ```console
 $ rm lib/hello/user.ex
-$ rm priv/repo/migrations/*_create_user.exs
+$ rm priv/repo/migrations/*_create_users.exs
 ```
 
 Next, let's reset our database so we also discard the table we have just removed:
@@ -312,8 +312,7 @@ Before we integrate credentials in the web layer, we need to let our context kno
 
 
 ```elixir
-- alias Hello.Accounts.User
-+ alias Hello.Accounts.{User, Credential}
++ alias Hello.Accounts.Credential
 
 
   schema "users" do
@@ -330,8 +329,7 @@ Before we integrate credentials in the web layer, we need to let our context kno
 We used `Ecto.Schema`'s `has_one` macro to let Ecto know how to associate our parent User to a child Credential. Next, let's add the relationships in the opposite direction in `accounts/credential.ex`:
 
 ```elixir
-- alias Hello.Accounts.Credential
-+ alias Hello.Accounts.{Credential, User}
++ alias Hello.Accounts.User
 
 
   schema "credentials" do
@@ -775,8 +773,7 @@ Now that we know where our data dependencies exist, let's add our schema associa
 
 
 ```elixir
-- alias Hello.CMS.Page
-+ alias Hello.CMS.{Page, Author}
++ alias Hello.CMS.Author
 
 
   schema "pages" do
@@ -795,8 +792,7 @@ Next, let's add the association in the other direction in `lib/hello/cms/author.
 
 ```elixir
 
-- alias Hello.CMS.Author
-+ alias Hello.CMS.{Author, Page}
++ alias Hello.CMS.Page
 
 
   schema "authors" do
