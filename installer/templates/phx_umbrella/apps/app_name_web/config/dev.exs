@@ -33,6 +33,7 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
 #
 #     https: [
 #       port: 4001,
+#       cipher_suite: :strong,
 #       keyfile: "priv/cert/selfsigned_key.pem",
 #       certfile: "priv/cert/selfsigned.pem"
 #     ],

@@ -26,11 +26,13 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
 #     config :<%= app_name %>, <%= endpoint_module %>,
 #       ...
 #       url: [host: "example.com", port: 443],
-#       https: [:inet6,
-#               port: 443,
-#               cipher_suite: :strong,
-#               keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
-#               certfile: System.get_env("SOME_APP_SSL_CERT_PATH")]
+#       https: [
+#         :inet6,
+#         port: 443,
+#         cipher_suite: :strong,
+#         keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
+#         certfile: System.get_env("SOME_APP_SSL_CERT_PATH")
+#       ]
 #
 # The `cipher_suite` is set to `:strong` to support only the
 # latest and more secure SSL ciphers. This means old browsers
