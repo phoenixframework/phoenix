@@ -18,8 +18,8 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
   @moduledoc """
   Generates a self-signed certificate for HTTPS testing.
 
-    mix phx.gen.cert
-    mix phx.gen.cert my-app my-app.local my-app.internal.example.com
+      mix phx.gen.cert
+      mix phx.gen.cert my-app my-app.local my-app.internal.example.com
 
   Creates a private key and a self-signed certificate in PEM format. These
   files can be referenced in the `certfile` and `keyfile` parameters of an
