@@ -41,8 +41,9 @@ defmodule Phoenix.Channel.Server do
     Phoenix.Endpoint.instrument socket, :phoenix_channel_join, instrument, fn ->
       ref = make_ref()
       key = {self(), ref}
+      args = [socket, payload, self(), ref]
 
-      case PoolSupervisor.start_child(socket.handler, key, [socket, payload, self(), ref]) do
+      case PoolSupervisor.start_child(socket.endpoint, socket.handler, key, args) do
         {:ok, :undefined} ->
           log_join socket, topic, fn -> "Replied #{topic} :error" end
           receive do: ({^ref, reply} -> {:error, reply})

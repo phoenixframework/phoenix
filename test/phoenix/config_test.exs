@@ -25,9 +25,6 @@ defmodule Phoenix.ConfigTest do
     assert :ets.lookup(meta.test, :parsers) == [parsers: false]
     assert :ets.lookup(meta.test, :static)  == [static: [at: "/"]]
     assert :ets.lookup(meta.test, :custom)  == [custom: true]
-
-    assert stop(meta.test) == :ok
-    assert :ets.info(meta.test, :name) == :undefined
   end
 
   test "can change configuration", meta do

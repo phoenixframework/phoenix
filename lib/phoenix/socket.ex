@@ -430,11 +430,14 @@ defmodule Phoenix.Socket do
 
   def __child_spec__(handler, opts) do
     import Supervisor.Spec
+    endpoint = Keyword.fetch!(opts, :endpoint)
+    shutdown = Keyword.get(opts, :shutdown, 5_000)
     partitions = Keyword.get(opts, :partitions) || System.schedulers_online()
 
-    worker_opts = [shutdown: Keyword.get(opts, :shutdown, 5_000), restart: :temporary]
+    worker_opts = [shutdown: shutdown, restart: :temporary]
     worker = worker(Phoenix.Channel.Server, [], worker_opts)
-    supervisor(Phoenix.Socket.PoolSupervisor, [{handler, partitions, worker}], id: handler)
+    args = {endpoint, handler, partitions, worker}
+    supervisor(Phoenix.Socket.PoolSupervisor, [args], id: handler)
   end
 
   def __connect__(handler, map) do

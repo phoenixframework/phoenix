@@ -2,29 +2,40 @@ defmodule Phoenix.Socket.PoolSupervisor do
   @moduledoc false
   use Supervisor
 
-  def start_link({name, _partitions, _worker} = triplet) do
-    Supervisor.start_link(__MODULE__, triplet, name: name)
+  def start_link(args) do
+    Supervisor.start_link(__MODULE__, args)
   end
 
-  def start_child(name, key, args) do
-    partitions = :ets.lookup_element(name, :partitions, 2)
-    sup = :ets.lookup_element(name, :erlang.phash2(key, partitions), 2)
+  def start_child(endpoint, name, key, args) do
+    ets = endpoint.config({:socket, name})
+    partitions = :ets.lookup_element(ets, :partitions, 2)
+    sup = :ets.lookup_element(ets, :erlang.phash2(key, partitions), 2)
     Supervisor.start_child(sup, args)
   end
 
   @doc false
-  def init({name, partitions, worker}) do
+  def start_pooled(worker, ref, i) do
+    case Supervisor.start_link([worker], strategy: :simple_one_for_one) do
+      {:ok, pid} ->
+        :ets.insert(ref, {i, pid})
+        {:ok, pid}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc false
+  def init({endpoint, name, partitions, worker}) do
     import Supervisor.Spec
 
     ref = :ets.new(name, [:named_table, :public, read_concurrency: true])
     :ets.insert(ref, {:partitions, partitions})
+    Phoenix.Config.permanent(endpoint, {:socket, name}, ref)
 
     children =
       for i <- 0..(partitions - 1) do
-        name = :"#{name}#{i}"
-        :ets.insert(ref, {i, name})
-        supervisor_opts = [strategy: :simple_one_for_one, name: name]
-        supervisor(Supervisor, [[worker], supervisor_opts], id: name)
+        supervisor(__MODULE__, [worker, ref, i], id: i, function: :start_pooled)
       end
 
     supervise(children, strategy: :one_for_one)

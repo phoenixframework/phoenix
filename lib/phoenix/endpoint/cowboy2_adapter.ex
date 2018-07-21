@@ -68,6 +68,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
     server = "cowboy #{Application.spec(:cowboy)[:vsn]}"
     "Running #{inspect endpoint} with #{server} at #{uri(scheme, ref)}"
   end
+
   defp uri(scheme, ref) do
     case :ranch.get_addr(ref) do
       {:local, unix_path} ->

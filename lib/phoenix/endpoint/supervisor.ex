@@ -37,9 +37,9 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
 
     children =
+      config_children(mod, conf, otp_app) ++
       pubsub_children(mod, conf) ++
       socket_children(mod) ++
-      config_children(mod, conf, otp_app) ++
       server_children(mod, conf, otp_app, server?) ++
       watcher_children(mod, conf, server?)
 
@@ -58,10 +58,10 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp socket_children(mod) do
-    mod.__sockets__
+  defp socket_children(endpoint) do
+    endpoint.__sockets__
     |> Enum.uniq_by(&elem(&1, 1))
-    |> Enum.map(fn {_, mod, opts} -> mod.child_spec(opts) end)
+    |> Enum.map(fn {_, socket, opts} -> socket.child_spec([endpoint: endpoint] ++ opts) end)
   end
 
   defp config_children(mod, conf, otp_app) do
