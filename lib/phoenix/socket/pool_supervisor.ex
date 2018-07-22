@@ -29,7 +29,7 @@ defmodule Phoenix.Socket.PoolSupervisor do
   def init({endpoint, name, partitions, worker}) do
     import Supervisor.Spec
 
-    ref = :ets.new(name, [:named_table, :public, read_concurrency: true])
+    ref = :ets.new(name, [:public, read_concurrency: true])
     :ets.insert(ref, {:partitions, partitions})
     Phoenix.Config.permanent(endpoint, {:socket, name}, ref)
 
