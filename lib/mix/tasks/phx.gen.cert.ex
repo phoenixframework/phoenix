@@ -91,7 +91,8 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
 
         {:error, :not_supported} ->
           Mix.raise("""
-          Failed to generate an RSA key pair
+          Failed to generate an RSA key pair.
+
           This Mix task requires Erlang/OTP 20 or later. Please upgrade to a
           newer version, or use another tool, such as OpenSSL, to generate a
           certificate.
@@ -115,11 +116,15 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
     Mix.shell().info("""
 
     If you have not already done so, please update your HTTPS Endpoint
-    configuration in #{Mix.Phoenix.web_path(app)}/config/dev.exs, e.g.:
+    configuration in #{Mix.Phoenix.web_path(app)}/config/dev.exs:
 
       config #{inspect(app)}, #{base}Web.Endpoint,
         http: [port: 4000],
-        https: [port: 4001, certfile: "#{certfile}", keyfile: "#{keyfile}"],
+        https: [
+          port: 4001,
+          certfile: "#{certfile}",
+          keyfile: "#{keyfile}"
+        ],
         ...
 
     #{@warning}
