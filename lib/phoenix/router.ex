@@ -101,7 +101,7 @@ defmodule Phoenix.Router do
   The route above will dispatch to `MyAppWeb.PageController`. This syntax
   is not only convenient for developers, since we don't have to repeat
   the `MyAppWeb.` prefix on all routes, but it also allows Phoenix to put
-  less pressure in the Elixir compiler. If instead we had written:
+  less pressure on the Elixir compiler. If instead we had written:
 
       get "/pages/:id", MyAppWeb.PageController, :show
 
