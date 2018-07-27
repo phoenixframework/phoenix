@@ -363,6 +363,8 @@ defmodule Phoenix.Socket.Transport do
         Logger.error """
         Could not check origin for Phoenix.Socket transport.
 
+        Origin of the request: #{origin}
+
         This happens when you are attempting a socket connection to
         a different host than the one configured in your config/
         files. For example, in development the host is configured

@@ -4,6 +4,8 @@ defmodule Phoenix.Socket.TransportTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
+  import ExUnit.CaptureLog
+
   alias Phoenix.Socket.Transport
 
   Application.put_env :phoenix, __MODULE__.Endpoint,
@@ -16,7 +18,7 @@ defmodule Phoenix.Socket.TransportTest do
   end
 
   setup_all do
-    Endpoint.start_link
+    Endpoint.start_link()
     :ok
   end
 
@@ -79,15 +81,21 @@ defmodule Phoenix.Socket.TransportTest do
       assert conn.halted
     end
 
-
     test "halts invalid URIs when check origin is configured" do
+      Logger.enable(self())
       origins = ["//example.com", "http://scheme.com", "//port.com:81"]
 
-      for config <- [origins, true] do
-        assert check_origin("file://", check_origin: config).halted
-        assert check_origin("null", check_origin: config).halted
-        assert check_origin("", check_origin: config).halted
-      end
+      logs =
+        capture_log(fn ->
+          for config <- [origins, true] do
+            assert check_origin("file://", check_origin: config).halted
+            assert check_origin("null", check_origin: config).halted
+            assert check_origin("", check_origin: config).halted
+          end
+        end)
+
+      assert logs =~ "Origin of the request: file://"
+      assert logs =~ "Origin of the request: null"
     end
 
     def invalid_allowed?(%URI{host: nil}), do: true
