@@ -670,7 +670,7 @@ It's important to note that `halt/1` simply sets the `:halted` key on `Plug.Conn
   |> send_resp(404, "Not found")
 ```
 
-It's also important to note that halting will only stop the plug pipeline from continuing. Function plugs will still execute unless their implementation checks for the `:halt` value.
+It's also important to note that halting will only stop the plug pipeline from continuing. Function plugs will still execute unless their implementation checks for the `:halted` value.
 
 ```
   def post_authorization_plug(%{halted: true} = conn, _), do: conn
