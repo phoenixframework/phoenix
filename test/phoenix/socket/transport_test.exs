@@ -1,7 +1,7 @@
 System.put_env("TRANSPORT_TEST_HOST", "host.com")
 
 defmodule Phoenix.Socket.TransportTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
   use RouterHelper
 
   import ExUnit.CaptureLog
@@ -18,7 +18,7 @@ defmodule Phoenix.Socket.TransportTest do
   end
 
   setup_all do
-    Endpoint.start_link
+    Endpoint.start_link()
     :ok
   end
 
@@ -94,8 +94,8 @@ defmodule Phoenix.Socket.TransportTest do
           end
         end)
 
-      assert logs =~ "file://"
-      assert logs =~ "null"
+      assert logs =~ "Origin of the request: file://"
+      assert logs =~ "Origin of the request: null"
     end
 
     def invalid_allowed?(%URI{host: nil}), do: true
