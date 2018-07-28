@@ -175,6 +175,7 @@ defmodule Phoenix.CodeReloader.Server do
     case Mix.Utils.extract_stale(configs, manifests) do
       [] ->
         mix_compile(compilers)
+
       files ->
         raise """
         could not compile application: #{Mix.Project.config[:app]}.
@@ -198,14 +199,22 @@ defmodule Phoenix.CodeReloader.Server do
     # We call build_structure mostly for Windows so new
     # assets in priv are copied to the build directory.
     Mix.Project.build_structure
-    res = Enum.map(compilers, &Mix.Task.run("compile.#{&1}", []))
+    results = Enum.map(compilers, &Mix.Task.run("compile.#{&1}", []))
 
-    if :ok in res && consolidate_protocols?() do
-      Mix.Task.reenable("compile.protocols")
-      Mix.Task.run("compile.protocols", [])
+    # Results are either {:ok, _} | {:error, _}, {:noop, _} or
+    # :ok | :error | :noop. So we use proplists to do the unwraping.
+    cond do
+      :proplists.get_value(:error, results, false) ->
+        exit({:shutdown, 1})
+
+      :proplists.get_value(:ok, results, false) && consolidate_protocols?() ->
+        Mix.Task.reenable("compile.protocols")
+        Mix.Task.run("compile.protocols", [])
+        :ok
+
+      true ->
+        :ok
     end
-
-    res
   end
 
   defp consolidate_protocols? do
