@@ -22,13 +22,12 @@ defmodule MixHelper do
 
   def in_tmp(which, function) do
     path = Path.join([tmp_path(), random_string(10), to_string(which)])
-    cwd = File.cwd!()
+
     try do
       File.rm_rf!(path)
       File.mkdir_p!(path)
       File.cd!(path, function)
     after
-      File.cd!(cwd)
       File.rm_rf!(path)
     end
   end
@@ -36,15 +35,15 @@ defmodule MixHelper do
   def in_tmp_project(which, function) do
     conf_before = Application.get_env(:phoenix, :generators) || []
     path = Path.join([tmp_path(), random_string(10), to_string(which)])
-    cwd = File.cwd!()
+
     try do
       File.rm_rf!(path)
       File.mkdir_p!(path)
-      File.cd!(path)
-      File.touch!("mix.exs")
-      function.()
+      File.cd!(path, fn ->
+        File.touch!("mix.exs")
+        function.()
+      end)
     after
-      File.cd!(cwd)
       File.rm_rf!(path)
       Application.put_env(:phoenix, :generators, conf_before)
     end
@@ -53,19 +52,16 @@ defmodule MixHelper do
   def in_tmp_umbrella_project(which, function) do
     conf_before = Application.get_env(:phoenix, :generators) || []
     path = Path.join([tmp_path(), random_string(10), to_string(which)])
-    cwd = File.cwd!()
+
     try do
       apps_path = Path.join(path, "apps")
       File.rm_rf!(path)
       File.mkdir_p!(path)
       File.mkdir_p!(apps_path)
-      File.cd!(path)
-      File.touch!("mix.exs")
-      File.cd!(apps_path)
-      function.()
+      File.touch!(Path.join(path, "mix.exs"))
+      File.cd!(apps_path, function)
     after
       Application.put_env(:phoenix, :generators, conf_before)
-      File.cd!(cwd)
       File.rm_rf!(path)
     end
   end
