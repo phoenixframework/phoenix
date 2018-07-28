@@ -627,9 +627,6 @@ defmodule Phoenix.Router do
     add_resources path, controller, [], do: nested_context
   end
 
-  @doc """
-  See `resources/4`.
-  """
   defmacro resources(path, controller, opts) do
     add_resources path, controller, opts, do: nil
   end
