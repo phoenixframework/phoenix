@@ -491,9 +491,7 @@ defmodule Phoenix.Endpoint do
       # Avoid unused variable warnings
       _ = var!(code_reloading?)
 
-      @doc """
-      Callback invoked on endpoint initialization.
-      """
+      @doc false
       def init(_key, config) do
         {:ok, config}
       end
