@@ -4,6 +4,7 @@ defmodule Phoenix.Router.Route do
   # as it contains internal routing information.
   @moduledoc false
 
+  require Logger
   alias Phoenix.Router.Route
 
   @doc """
@@ -160,7 +161,9 @@ defmodule Phoenix.Router.Route do
     case Plug.Router.Utils.build_path_match(path) do
       {[], path_segments} ->
         if phoenix_forwards[plug] do
-          raise ArgumentError, "`#{inspect plug}` has already been forwarded to. A module can only be forwarded a single time."
+          Logger.warn(
+            "`#{inspect(plug)}` has already been forwarded to. Normally a module can only be forwarded a single time. Please make sure you intended to do so."
+          )
         end
         path_segments
       _ ->
