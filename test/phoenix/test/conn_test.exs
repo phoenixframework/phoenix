@@ -181,6 +181,20 @@ defmodule Phoenix.Test.ConnTest do
                                "over_cookie" => "pos_cookie",
                                "resp_cookie" => "resp_cookie"}
     end
+
+    test "peer data is persisted" do
+      peer_data = %{
+        address: {127, 0, 0, 1},
+        port: 111317,
+        ssl_cert: <<1, 2, 3, 4>>
+      }
+      conn = 
+        build_conn()
+        |> Plug.Test.put_peer_data(peer_data)
+
+      conn = conn |> recycle()
+      assert Plug.Conn.get_peer_data(conn) == peer_data
+    end
   end
 
   test "ensure_recycled/1" do
