@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.4 (2018-08-06)
+
+* Bug Fixes
+  * [CodeReloader] Fix code reloader failing to properly report Elixir 1.6+ compiler errors
+
 ## 1.3.3 (2018-06-15)
 
 * Enhancements
