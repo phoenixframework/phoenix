@@ -154,7 +154,7 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
   end
 
   defp socket_path(path, key) do
-    parts = Plug.Router.Utils.split(path) ++ [Atom.to_string(key)]
+    parts = String.split(path, "/", trim: true) ++ [Atom.to_string(key)]
     "/" <> Path.join(parts)
   end
 

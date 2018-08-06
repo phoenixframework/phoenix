@@ -795,7 +795,7 @@ defmodule Phoenix.Endpoint do
   end
 
   defp socket_path(path, key) do
-    Plug.Router.Utils.split(path) ++ [Atom.to_string(key)]
+    String.split(path, "/", trim: true) ++ [Atom.to_string(key)]
   end
 
   defp socket_config(true, module), do: module.default_config()

@@ -89,7 +89,7 @@ defmodule Phoenix.Router.Scope do
   def push(module, opts) when is_list(opts) do
     path = with path when not is_nil(path) <- Keyword.get(opts, :path),
                 path <- validate_path(path),
-                do: Plug.Router.Utils.split(path)
+                do: String.split(path, "/", trim: true)
 
     alias = Keyword.get(opts, :alias)
     alias = alias && Atom.to_string(alias)
@@ -139,7 +139,7 @@ defmodule Phoenix.Router.Scope do
 
   defp join_path(stack, path) do
     "/" <>
-      ([Plug.Router.Utils.split(path)|extract(stack, :path)]
+      ([String.split(path, "/", trim: true) | extract(stack, :path)]
        |> Enum.reverse()
        |> Enum.concat()
        |> Enum.join("/"))

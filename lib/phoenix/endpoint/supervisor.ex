@@ -238,7 +238,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   Builds the script_name for caching.
   """
   def script_name(endpoint) do
-    {:cache, Plug.Router.Utils.split(endpoint.config(:url)[:path] || "/")}
+    {:cache, String.split(endpoint.config(:url)[:path] || "/", "/", trim: true)}
   end
 
   @doc """
