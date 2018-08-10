@@ -62,11 +62,13 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       unless params["logging"] == "enabled", do: Logger.disable(self())
       address = Tuple.to_list(connect_info.peer_data.address) |> Enum.join(".")
       uri = Map.from_struct(connect_info.uri)
-
+      x_headers = Enum.into(connect_info.x_headers, %{})
+      
       connect_info =
         connect_info
         |> update_in([:peer_data], &Map.put(&1, :address, address))
         |> Map.put(:uri, uri)
+        |> Map.put(:x_headers, x_headers)
 
       socket =
         socket

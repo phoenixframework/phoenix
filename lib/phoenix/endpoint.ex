@@ -858,6 +858,19 @@ defmodule Phoenix.Endpoint do
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
 
+    * `connect_info` - a list of keys that represent data to be copied from
+      the transport to be made available in the user socket connect/3 callback.
+      
+      Valid Keys
+
+        `:peer_data` - the result of Plug.Conn.get_peer_data.
+        `:x_headers` - all request headers that have an `X-` prefix.
+        `:uri` - a %URI{} with information from the conn.
+
+      Example
+
+        connect_info: [:peer_data, :x_headers, :uri]
+
   ## Longpoll configuration
 
     * `:window_ms` - how long the client can wait for new messages
@@ -880,6 +893,19 @@ defmodule Phoenix.Endpoint do
 
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
+    
+    * `connect_info` - a list of keys that represent data to be copied from
+      the transport to be made available in the user socket connect/3 callback.
+      
+      Valid Keys
+
+        `:peer_data` - the result of Plug.Conn.get_peer_data.
+        `:x_headers` - all request headers that have an `X-` prefix.
+        `:uri` - a %URI{} with information from the conn.
+
+      Example
+
+        connect_info: [:peer_data, :x_headers, :uri]
 
   """
   defmacro socket(path, module, opts \\ []) do

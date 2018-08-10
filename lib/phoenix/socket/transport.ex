@@ -388,7 +388,18 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  @doc false
+  @doc """
+  Extract connection information from the conn and return a map.
+  Keys are retrieved from the optional transport option `:connect_info`.
+  This functionality is transport specific. Please refer to your transports's
+  documentation for more information.
+
+  Valid Keys
+
+    `:peer_data` - the result of Plug.Conn.get_peer_data.
+    `:x_headers` - a list of all request headers that have an `X-` prefix.
+    `:uri` - a %URI{} derived from the conn.
+  """
   def connect_info(conn, opts) do
     keys = Keyword.get(opts, :connect_info, [])
     
@@ -412,8 +423,7 @@ defmodule Phoenix.Socket.Transport do
   defp fetch_x_headers(conn) do
     for {header, _} = pair <- conn.req_headers,
         String.starts_with?(header, "x-"),
-        do: pair,
-        into: %{}
+        do: pair
   end
 
   defp fetch_uri(%{host: host, scheme: scheme, query_string: query_string, port: port, request_path: request_path}) do

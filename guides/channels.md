@@ -406,10 +406,10 @@ Next we need to pass this token to JavaScript. We can do so inside a script tag 
 
 **Step 3 - Pass the Token to the Socket Constructor and Verify**
 
-We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/2` function. To do so, edit `web/channels/user_socket.ex`, as follows:
+We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/3` function. To do so, edit `web/channels/user_socket.ex`, as follows:
 
 ```elixir
-def connect(%{"token" => token}, socket) do
+def connect(%{"token" => token}, socket, _connect_info) do
   # max_age: 1209600 is equivalent to two weeks in seconds
   case Phoenix.Token.verify(socket, "user socket", token, max_age: 1209600) do
     {:ok, user_id} ->

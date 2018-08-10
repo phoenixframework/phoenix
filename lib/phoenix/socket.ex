@@ -26,9 +26,10 @@ defmodule Phoenix.Socket do
 
   Socket handlers are mounted in Endpoints and must define two callbacks:
 
-    * `connect/2` - receives the socket params and authenticates the connection.
-      Must return a `Phoenix.Socket` struct, often with custom assigns.
-    * `id/1` - receives the socket returned by `connect/2` and returns the
+    * `connect/3` - receives the socket params, connection info if any, and 
+      authenticates the connection. Must return a `Phoenix.Socket` struct, 
+      often with custom assigns. 
+    * `id/1` - receives the socket returned by `connect/3` and returns the
       id of this connection as a string. The `id` is used to identify socket
       connections, often to a particular user, allowing us to force disconnections.
       For sockets requiring no authentication, `nil` can be returned.
@@ -40,7 +41,7 @@ defmodule Phoenix.Socket do
 
         channel "room:*", MyApp.RoomChannel
 
-        def connect(params, socket) do
+        def connect(params, socket, _connect_info) do
           {:ok, assign(socket, :user_id, params["user_id"])}
         end
 
@@ -580,7 +581,8 @@ defmodule Phoenix.Socket do
         :error
 
       invalid ->
-        Logger.error "#{inspect handler}.connect/2 returned invalid value #{inspect invalid}. " <>
+        connect_arity = if function_exported?(handler, :connect, 3), do: "connect/3", else: "connect/2"
+        Logger.error "#{inspect handler}. #{connect_arity} returned invalid value #{inspect invalid}. " <>
                      "Expected {:ok, socket} or :error"
         :error
     end

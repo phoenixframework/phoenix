@@ -21,11 +21,11 @@ defmodule Phoenix.ChannelTest do
         |> subscribe_and_join(RoomChannel, "room:lobby", %{"id" => 3})
 
   You usually want to set the same ID and assigns your
-  `UserSocket.connect/2` callback would set. Alternatively,
-  you can use the `connect/2` helper to call your `UserSocket.connect/2`
+  `UserSocket.connect/3` callback would set. Alternatively,
+  you can use the `connect/3` helper to call your `UserSocket.connect/3`
   callback and initialize the socket with the socket id:
 
-      {:ok, socket} = connect(UserSocket, %{"some" => "params"})
+      {:ok, socket} = connect(UserSocket, %{"some" => "params"}, %{})
       {:ok, _, socket} = subscribe_and_join(socket, "room:lobby", %{"id" => 3})
 
   Once called, `subscribe_and_join/4` will subscribe the
@@ -184,7 +184,7 @@ defmodule Phoenix.ChannelTest do
 
   The socket is then used to subscribe and join channels.
   Use this function when you want to create a blank socket
-  to pass to functions like `UserSocket.connect/2`.
+  to pass to functions like `UserSocket.connect/3`.
 
   Otherwise, use `socket/3` if you want to build a socket with
   existing id and assigns.
@@ -253,7 +253,7 @@ defmodule Phoenix.ChannelTest do
   Initiates a transport connection for the socket handler.
 
   Useful for testing UserSocket authentication. Returns
-  the result of the handler's `connect/2` callback.
+  the result of the handler's `connect/3` callback.
   """
   defmacro connect(handler, params) do
     endpoint = Module.get_attribute(__CALLER__.module, :endpoint)
@@ -607,9 +607,9 @@ defmodule Phoenix.ChannelTest do
     unless socket.handler do
       raise """
       No socket handler found to lookup channel for topic #{inspect topic}.
-      Use `connect/2` when calling `subscribe_and_join` without a channel, for example:
+      Use `connect/3` when calling `subscribe_and_join` without a channel, for example:
 
-          {:ok, socket} = connect(UserSocket, %{})
+          {:ok, socket} = connect(UserSocket, %{}, %{})
           socket = subscribe_and_join!(socket, "foo:bar", %{})
       """
     end
