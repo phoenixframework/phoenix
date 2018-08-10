@@ -7,6 +7,8 @@ defmodule Phoenix.Endpoint.Supervisor do
   use Supervisor
   alias Phoenix.Endpoint.{CowboyAdapter, Cowboy2Adapter}
 
+  @default_schemes [http: 4000, https: 4040]
+
   @doc """
   Starts the endpoint supervision tree.
   """
@@ -76,7 +78,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       warn_on_different_adapter_version(user_adapter, autodetected_adapter, mod)
       adapter = user_adapter || autodetected_adapter
 
-      for {scheme, port} <- [http: 4000, https: 4040], opts = config[scheme] do
+      for {scheme, port} <- (config[:schemes] || @default_schemes), opts = config[scheme] do
         port = :proplists.get_value(:port, opts, port)
 
         unless port do
