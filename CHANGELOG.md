@@ -42,6 +42,7 @@ The old APIs for building transports are also deprecated. The good news is: adap
   * [Phoenix] Add `Phoenix.json_library/0` and replace `Poison` with `Jason` for JSON encoding in new projects
   * [Router] Display list of available routes on debugger 404 error page
   * [Router] Raise on duplicate plugs in `pipe_through` scopes
+  * [Presence] Add `Presence.get_by_key` to fetch presences for specific user
 
 ### Bug Fixes
 
