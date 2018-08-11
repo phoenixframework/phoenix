@@ -392,7 +392,7 @@ defmodule Phoenix.Socket.Transport do
   Extracts connection information from `conn` and returns a map.
 
   Keys are retrieved from the optional transport option `:connect_info`.
-  This functionality is transport specific. Please refer to your transports's
+  This functionality is transport specific. Please refer to your transports'
   documentation for more information.
 
   The supported keys are:
@@ -402,9 +402,7 @@ defmodule Phoenix.Socket.Transport do
     * `:uri` - a `%URI{}` derived from the conn.
 
   """
-  def connect_info(conn, opts) do
-    keys = Keyword.get(opts, :connect_info, [])
-    
+  def connect_info(conn, keys) do
     for key <- keys, into: %{} do
       case key do
         :peer_data ->
