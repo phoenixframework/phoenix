@@ -382,32 +382,6 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         end
       end
 
-      test "shuts down on pubsub crash" do
-        session = join("/ws", "room:lobby", @vsn)
-
-        channel = Process.whereis(:"room:lobby")
-        assert channel
-        Process.monitor(channel)
-
-        capture_log fn ->
-          for shard <- 0..(@pool_size - 1) do
-            local_pubsub_server = Process.whereis(Local.local_name(__MODULE__, shard))
-            Process.monitor(local_pubsub_server)
-            Process.exit(local_pubsub_server, :kill)
-            assert_receive {:DOWN, _, :process, ^local_pubsub_server, :killed}
-          end
-        end
-
-        resp = poll :post, "/ws", @vsn, session, %{
-          "topic" => "room:lobby",
-          "event" => "new_msg",
-          "ref" => "1",
-          "payload" => %{"body" => "hi!"}
-        }
-        assert resp.body["status"] == 410
-        assert_receive {:DOWN, _, :process, ^channel, _}
-      end
-
       test "filter params on join" do
         log = capture_log fn ->
           join("/ws", "room:lobby", @vsn, :local, %{"foo" => "bar", "password" => "shouldnotshow"}, %{"logging" => "enabled"})
