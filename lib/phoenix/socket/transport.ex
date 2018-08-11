@@ -388,6 +388,55 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
+  @doc """
+  Extracts connection information from `conn` and returns a map.
+
+  Keys are retrieved from the optional transport option `:connect_info`.
+  This functionality is transport specific. Please refer to your transports'
+  documentation for more information.
+
+  The supported keys are:
+
+    * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`.
+    * `:x_headers` - a list of all request headers that have an "x-" prefix.
+    * `:uri` - a `%URI{}` derived from the conn.
+
+  """
+  def connect_info(conn, keys) do
+    for key <- keys, into: %{} do
+      case key do
+        :peer_data ->
+          {:peer_data, Plug.Conn.get_peer_data(conn)}
+
+        :x_headers ->
+          {:x_headers, fetch_x_headers(conn)}
+
+        :uri ->
+          {:uri, fetch_uri(conn)}
+
+        _ ->
+          raise ArgumentError, "connection info keys are expected to be one of [:peer_data, :x_headers, :uri], got: #{inspect(key)}"
+      end
+    end
+  end
+
+  defp fetch_x_headers(conn) do
+    for {header, _} = pair <- conn.req_headers,
+        String.starts_with?(header, "x-"),
+        do: pair
+  end
+
+  defp fetch_uri(%{host: host, scheme: scheme, query_string: query_string, port: port, request_path: request_path}) do
+    %URI{
+      scheme: to_string(scheme),
+      query: query_string,
+      port: port,
+      host: host,
+      authority: host,
+      path: request_path,
+    }
+  end
+
   defp check_origin_config(handler, endpoint, opts) do
     Phoenix.Config.cache(endpoint, {:check_origin, handler}, fn _ ->
       check_origin =

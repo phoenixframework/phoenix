@@ -21,11 +21,11 @@ defmodule Phoenix.ChannelTest do
         |> subscribe_and_join(RoomChannel, "room:lobby", %{"id" => 3})
 
   You usually want to set the same ID and assigns your
-  `UserSocket.connect/2` callback would set. Alternatively,
-  you can use the `connect/2` helper to call your `UserSocket.connect/2`
+  `UserSocket.connect/3` callback would set. Alternatively,
+  you can use the `connect/3` helper to call your `UserSocket.connect/3`
   callback and initialize the socket with the socket id:
 
-      {:ok, socket} = connect(UserSocket, %{"some" => "params"})
+      {:ok, socket} = connect(UserSocket, %{"some" => "params"}, %{})
       {:ok, _, socket} = subscribe_and_join(socket, "room:lobby", %{"id" => 3})
 
   Once called, `subscribe_and_join/4` will subscribe the
@@ -184,7 +184,7 @@ defmodule Phoenix.ChannelTest do
 
   The socket is then used to subscribe and join channels.
   Use this function when you want to create a blank socket
-  to pass to functions like `UserSocket.connect/2`.
+  to pass to functions like `UserSocket.connect/3`.
 
   Otherwise, use `socket/3` if you want to build a socket with
   existing id and assigns.
@@ -253,12 +253,12 @@ defmodule Phoenix.ChannelTest do
   Initiates a transport connection for the socket handler.
 
   Useful for testing UserSocket authentication. Returns
-  the result of the handler's `connect/2` callback.
+  the result of the handler's `connect/3` callback.
   """
-  defmacro connect(handler, params) do
+  defmacro connect(handler, params, connect_info \\ quote(do: %{})) do
     if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
       quote do
-        unquote(__MODULE__).__connect__(unquote(endpoint), unquote(handler), unquote(params))
+        unquote(__MODULE__).__connect__(unquote(endpoint), unquote(handler), unquote(params), unquote(connect_info))
       end
     else
       raise "module attribute @endpoint not set for socket/2"
@@ -266,12 +266,13 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc false
-  def __connect__(endpoint, handler, params) do
+  def __connect__(endpoint, handler, params, connect_info) do
     map = %{
       endpoint: endpoint,
       transport: :channel_test,
       options: [serializer: [{NoopSerializer, "~> 1.0.0"}]],
-      params: __stringify__(params)
+      params: __stringify__(params),
+      connect_info: connect_info
     }
 
     with {:ok, state} <- handler.connect(map),
@@ -596,9 +597,9 @@ defmodule Phoenix.ChannelTest do
     unless socket.handler do
       raise """
       No socket handler found to lookup channel for topic #{inspect topic}.
-      Use `connect/2` when calling `subscribe_and_join` without a channel, for example:
+      Use `connect/3` when calling `subscribe_and_join` without a channel, for example:
 
-          {:ok, socket} = connect(UserSocket, %{})
+          {:ok, socket} = connect(UserSocket, %{}, %{})
           socket = subscribe_and_join!(socket, "foo:bar", %{})
       """
     end
