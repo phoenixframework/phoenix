@@ -458,6 +458,7 @@ defmodule Phoenix.ConnTest do
     build_conn()
     |> Map.put(:host, conn.host)
     |> Plug.Test.recycle_cookies(conn)
+    |> Plug.Test.put_peer_data(Plug.Conn.get_peer_data(conn))
     |> copy_headers(conn.req_headers, ~w(accept authorization))
   end
 
