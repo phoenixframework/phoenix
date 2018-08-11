@@ -255,23 +255,13 @@ defmodule Phoenix.ChannelTest do
   Useful for testing UserSocket authentication. Returns
   the result of the handler's `connect/3` callback.
   """
-  defmacro connect(handler, params) do
-    endpoint = Module.get_attribute(__CALLER__.module, :endpoint)
-    connect_info = quote do: %{}
-    quote_connect(handler, endpoint, params, connect_info)
-  end
-
-  defmacro connect(handler, params, connect_info) do
-    endpoint = Module.get_attribute(__CALLER__.module, :endpoint)
-    quote_connect(handler, endpoint, params, connect_info)
-  end
-
-  defp quote_connect(_handler, nil, _params, _connect_info) do
-    raise "module attribute @endpoint not set for socket/2"
-  end
-  defp quote_connect(handler, endpoint, params, connect_info) do
-    quote do
-      unquote(__MODULE__).__connect__(unquote(endpoint), unquote(handler), unquote(params), unquote(connect_info))
+  defmacro connect(handler, params, connect_info \\ quote(do: %{})) do
+    if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
+      quote do
+        unquote(__MODULE__).__connect__(unquote(endpoint), unquote(handler), unquote(params), unquote(connect_info))
+      end
+    else
+      raise "module attribute @endpoint not set for socket/2"
     end
   end
 
