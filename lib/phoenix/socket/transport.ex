@@ -389,7 +389,7 @@ defmodule Phoenix.Socket.Transport do
   end
 
   @doc """
-  Extracts connection information from the conn and return a map.
+  Extracts connection information from `conn` and returns a map.
 
   Keys are retrieved from the optional transport option `:connect_info`.
   This functionality is transport specific. Please refer to your transports's
