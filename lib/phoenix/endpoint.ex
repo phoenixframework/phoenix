@@ -859,15 +859,15 @@ defmodule Phoenix.Endpoint do
       endpoint configuration
 
     * `connect_info` - a list of keys that represent data to be copied from
-      the transport to be made available in the user socket connect/3 callback.
+      the transport to be made available in the user socket `connect/3` callback.
       
-      Valid Keys
+      The valid keys are:
 
-        `:peer_data` - the result of Plug.Conn.get_peer_data.
-        `:x_headers` - all request headers that have an `X-` prefix.
-        `:uri` - a %URI{} with information from the conn.
+        * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`.
+        * `:x_headers` - all request headers that have an "x-" prefix.
+        * `:uri` - a `%URI{}` with information from the conn.
 
-      Example
+      For example:
 
         connect_info: [:peer_data, :x_headers, :uri]
 
