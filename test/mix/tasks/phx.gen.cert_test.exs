@@ -2,13 +2,13 @@ Code.require_file("../../../installer/test/mix_helper.exs", __DIR__)
 
 defmodule Mix.Tasks.Phx.CertTest do
   use ExUnit.Case
-  import MixHelper
-
-  alias Mix.Tasks.Phx.Gen
 
   @otp_release :erlang.system_info(:otp_release) |> List.to_integer()
 
   if @otp_release >= 20 do
+    import MixHelper
+    alias Mix.Tasks.Phx.Gen
+
     # RSA key generation requires OTP 20 or later
     test "write certificate and key files" do
       in_tmp("mix_phx_gen_cert", fn ->
