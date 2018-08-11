@@ -38,6 +38,10 @@ defmodule Phoenix.Integration.EndpointTest do
     match _ do
       raise Phoenix.Router.NoRouteError, conn: conn, router: __MODULE__
     end
+
+    def __routes__ do
+      []
+    end
   end
 
   defmodule Wrapper do
