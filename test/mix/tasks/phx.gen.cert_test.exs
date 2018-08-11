@@ -9,6 +9,8 @@ defmodule Mix.Tasks.Phx.CertTest do
     import MixHelper
     alias Mix.Tasks.Phx.Gen
 
+    @timeout 5_000
+
     # RSA key generation requires OTP 20 or later
     test "write certificate and key files" do
       in_tmp("mix_phx_gen_cert", fn ->
@@ -50,15 +52,15 @@ defmodule Mix.Tasks.Phx.CertTest do
         {:ok, {_, port}} = :ssl.sockname(server)
 
         spawn_link(fn ->
-          with {:ok, conn} <- :ssl.transport_accept(server, 100),
-               :ok <- :ssl.ssl_accept(conn, 200) do
+          with {:ok, conn} <- :ssl.transport_accept(server, @timeout),
+               :ok <- :ssl.ssl_accept(conn, @timeout) do
             :ssl.close(conn)
           end
         end)
 
         # We don't actually verify the server cert contents, we just check that
         # the client and server are able to complete the TLS handshake
-        assert {:ok, client} = :ssl.connect('localhost', port, [], 200)
+        assert {:ok, client} = :ssl.connect('localhost', port, [], @timeout)
         :ssl.close(client)
         :ssl.close(server)
       end)
