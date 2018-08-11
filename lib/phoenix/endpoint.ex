@@ -795,7 +795,7 @@ defmodule Phoenix.Endpoint do
   end
 
   defp socket_path(path, key) do
-    Plug.Router.Utils.split(path) ++ [Atom.to_string(key)]
+    String.split(path, "/", trim: true) ++ [Atom.to_string(key)]
   end
 
   defp socket_config(true, module), do: module.default_config()
@@ -806,23 +806,25 @@ defmodule Phoenix.Endpoint do
   @doc """
   Defines a websocket/longpoll mount-point for a socket.
 
-  Note: the `:websocket` and `:longpoll` options only have an
-  effect if the socket given as argument has no `transport`
-  declarations in it.
+  Note: for backwards compatibility purposes, the `:websocket`
+  and `:longpoll` options only have an effect if the socket
+  given as argument has no `transport` declarations in it.
 
   ## Options
 
     * `:websocket` - controls the websocket configuration.
       Defaults to `true`. May be false or a keyword list
-      of options. see "WebSocket configuration" for more info.
+      of options. See "Shared configuration" and
+      "WebSocket configuration" for the whole list.
 
     * `:longpoll` - controls the longpoll configuration.
       Defaults to `false`. May be true or a keyword list
-      of options. see "Longpoll configuration" for more info.
+      of options. See "Shared configuration" and
+      "Longpoll configuration" for the whole list.
 
     * `:shutdown` - the maximum shutdown time of each channel
-      when the endpoint is shutting down. Applies only to channel-
-      based sockets.
+      when the endpoint is shutting down. Applies only to
+      channel-based sockets.
 
   ## Examples
 
@@ -832,16 +834,16 @@ defmodule Phoenix.Endpoint do
         longpoll: true,
         websocket: [compress: true]
 
-  ## Websocket configuration
-
-    * `:timeout` - the timeout for keeping websocket connections
-      open after it last received data, defaults to 60_000ms
-
-    * `:transport_log` - if the transport layer itself should log and,
-      if so, the level
+  ## Shared configuration
+  
+  The configuration below can be given to both `:websocket` and
+  `:longpoll` keys:
 
     * `:serializer` - a list of serializers for messages. See
       `Phoenix.Socket` for more information.
+
+    * `:transport_log` - if the transport layer itself should log and,
+      if so, the level
 
     * `:check_origin` - if we should check the origin of requests when the
       origin header is present. It defaults to true and, in such cases,
@@ -858,7 +860,29 @@ defmodule Phoenix.Endpoint do
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
 
+    * `connect_info` - a list of keys that represent data to be copied from
+      the transport to be made available in the user socket `connect/3` callback.
+      
+      The valid keys are:
+
+        * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`.
+        * `:x_headers` - all request headers that have an "x-" prefix.
+        * `:uri` - a `%URI{}` with information from the conn.
+
+      For example:
+
+        connect_info: [:peer_data, :x_headers, :uri]
+
+  ## Websocket configuration
+
+  The following configuration applies only to `:websocket`.
+
+    * `:timeout` - the timeout for keeping websocket connections
+      open after it last received data, defaults to 60_000ms
+
   ## Longpoll configuration
+
+  The following configuration applies only to `:longpoll`.
 
     * `:window_ms` - how long the client can wait for new messages
       in its poll request
@@ -868,18 +892,6 @@ defmodule Phoenix.Endpoint do
 
     * `:crypto` - options for verifying and signing the token, accepted
       by `Phoenix.Token`. By default tokens are valid for 2 weeks
-
-    * `:transport_log` - if the transport layer itself should log and, if so,
-      the level
-
-    * `:check_origin` - if we should check the origin of requests when the
-      origin header is present. It defaults to true and, in such cases,
-      it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
-      It may be set to `false` (not recommended) or to a list of explicitly
-      allowed origins.
-
-    * `:code_reloader` - enable or disable the code reloader. Defaults to your
-      endpoint configuration
 
   """
   defmacro socket(path, module, opts \\ []) do

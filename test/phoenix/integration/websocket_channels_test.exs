@@ -56,6 +56,36 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     end
   end
 
+  defmodule UserSocketConnectInfo do
+    use Phoenix.Socket
+
+    channel "room:*", RoomChannel
+
+    def connect(params, socket, connect_info) do
+      unless params["logging"] == "enabled", do: Logger.disable(self())
+      address = Tuple.to_list(connect_info.peer_data.address) |> Enum.join(".")
+      uri = Map.from_struct(connect_info.uri)
+      x_headers = Enum.into(connect_info.x_headers, %{})
+      
+      connect_info =
+        connect_info
+        |> update_in([:peer_data], &Map.put(&1, :address, address))
+        |> Map.put(:uri, uri)
+        |> Map.put(:x_headers, x_headers)
+
+      socket =
+        socket
+        |> assign(:user_id, params["user_id"])
+        |> assign(:connect_info, connect_info)
+
+      {:ok, socket}
+    end
+
+    def id(socket) do
+      if id = socket.assigns.user_id, do: "user_sockets:#{id}"
+    end
+  end
+
   defmodule UserSocket do
     use Phoenix.Socket
 
@@ -79,10 +109,23 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     use Phoenix.Endpoint, otp_app: :phoenix
 
     socket "/ws", UserSocket,
-      websocket: [check_origin: ["//example.com"], timeout: 200]
+      websocket: [
+        check_origin: ["//example.com"],
+        timeout: 200
+      ]
 
     socket "/ws/admin", UserSocket,
-      websocket: [check_origin: ["//example.com"], timeout: 200]
+      websocket: [
+        check_origin: ["//example.com"],
+        timeout: 200
+      ]
+
+    socket "/ws/connect_info", UserSocketConnectInfo,
+      websocket: [
+        check_origin: ["//example.com"],
+        timeout: 200,
+        connect_info: [:x_headers, :peer_data, :uri]
+      ]
   end
 
   setup_all do
@@ -140,6 +183,61 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
         WebsocketClient.send_event(sock, "room:lobby1", "new_msg", %{body: "Should ignore"})
         refute_receive %Message{event: "new_msg"}
+      end
+
+      test "transport x_headers are extracted to the socket connect_info" do
+        extra_headers = [{"x-application", "Phoenix"}]
+        {:ok, sock} =
+          WebsocketClient.start_link(
+            self(),
+            "ws://127.0.0.1:#{@port}/ws/connect_info/websocket?vsn=#{@vsn}",
+            @serializer,
+            extra_headers
+          )
+
+        WebsocketClient.join(sock, "room:lobby1", %{})
+
+        assert_receive %Message{event: "joined",
+                                payload: %{"connect_info" =>
+                                  %{"x_headers" =>
+                                    %{"x-application" => "Phoenix"}}}}
+      end
+
+      test "transport peer_data is extracted to the socket connect_info" do
+        {:ok, sock} =
+          WebsocketClient.start_link(
+            self(),
+            "ws://127.0.0.1:#{@port}/ws/connect_info/websocket?vsn=#{@vsn}",
+            @serializer
+          )
+
+        WebsocketClient.join(sock, "room:lobby1", %{})
+
+        assert_receive %Message{event: "joined",
+                                payload: %{"connect_info" =>
+                                  %{"peer_data" =>
+                                    %{"address" => "127.0.0.1",
+                                      "port" => _,
+                                      "ssl_cert" => nil}}}}
+      end
+
+      test "transport uri is extracted to the socket connect_info" do
+        {:ok, sock} =
+          WebsocketClient.start_link(
+            self(),
+            "ws://127.0.0.1:#{@port}/ws/connect_info/websocket?vsn=#{@vsn}",
+            @serializer
+          )
+        WebsocketClient.join(sock, "room:lobby1", %{})
+
+        assert_receive %Message{event: "joined",
+                                payload: %{"connect_info" =>
+                                  %{"uri" =>
+                                    %{"host" => "127.0.0.1",
+                                      "path" => "/ws/connect_info/websocket",
+                                      "query" => "vsn=#{@vsn}",
+                                      "scheme" => "http",
+                                      "port" => 80}}}}
       end
 
       test "logs and filter params on join and handle_in" do

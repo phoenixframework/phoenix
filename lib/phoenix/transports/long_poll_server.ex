@@ -25,8 +25,14 @@ defmodule Phoenix.Transports.LongPoll.Server do
     GenServer.start_link(__MODULE__, arg)
   end
 
-  def init({endpoint, handler, options, params, priv_topic}) do
-    config = %{endpoint: endpoint, transport: :longpoll, options: options, params: params}
+  def init({endpoint, handler, options, params, priv_topic, connect_info}) do
+    config = %{
+      endpoint: endpoint,
+      transport: :longpoll,
+      options: options,
+      params: params,
+      connect_info: connect_info
+    }
     window_ms = Keyword.fetch!(options, :window_ms)
 
     case handler.connect(config) do

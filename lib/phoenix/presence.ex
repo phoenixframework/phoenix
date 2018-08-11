@@ -175,6 +175,11 @@ defmodule Phoenix.Presence do
         Phoenix.Presence.list(__MODULE__, topic)
       end
 
+      def get_by_key(%Phoenix.Socket{topic: topic}, key), do: get_by_key(topic, key)
+      def get_by_key(topic, key) do
+        Phoenix.Presence.get_by_key(__MODULE__, topic, key)
+      end
+
       def handle_diff(diff, state) do
         Phoenix.Presence.handle_diff(__MODULE__,
           diff, state.node_name, state.pubsub_server, state.task_sup
@@ -248,6 +253,36 @@ defmodule Phoenix.Presence do
 
     module.fetch(topic, grouped)
   end
+
+  @doc """
+  Returns the map of presence metadata for a topic-key pair.
+
+  ## Examples
+
+  Uses the same data format as `Phoenix.Presence.list/1`, but only
+  returns metadata for the presences under a topic and key pair. For example,
+  a user with key `"user1"`, connected to the same chat room `"room:1"` from two
+  devices, could return:
+
+      iex> MyPresence.get_by_key("room:1", "user1")
+      %{name: "User 1", metas: [%{device: "Desktop"}, %{device: "Mobile"}]}
+
+  Like `Phoenix.Presence.list/1`, the presence metadata is passed to the `fetch`
+  callback of your presence module to fetch any additional information.
+  """
+  def get_by_key(module, topic, key) do
+    string_key = to_string(key)
+
+    case Phoenix.Tracker.get_by_key(module, topic, key) do
+      [] -> []
+      [_|_] = pid_metas ->
+        metas = Enum.map(pid_metas, fn {_pid, meta} -> meta end)
+        %{^string_key => fetched_metas} = module.fetch(topic, %{string_key => %{metas: metas}})
+
+        fetched_metas
+    end
+  end
+
 
   defp group(presences) do
     presences

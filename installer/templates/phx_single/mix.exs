@@ -38,7 +38,7 @@ defmodule <%= app_module %>.MixProject do
   defp deps do
     [
       <%= phoenix_dep %>,
-      {:phoenix_pubsub, "~> 1.0"},<%= if ecto do %>
+      {:phoenix_pubsub, "~> 1.1"},<%= if ecto do %>
       {:phoenix_ecto, "~> 3.2"},
       {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
       {:phoenix_html, "~> 2.11"},

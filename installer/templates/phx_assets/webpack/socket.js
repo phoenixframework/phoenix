@@ -38,10 +38,10 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 //
 //     <script>window.userToken = "<%%= assigns[:user_token] %>";</script>
 //
-// You will need to verify the user token in the "connect/2" function
+// You will need to verify the user token in the "connect/3" function
 // in "lib/web/channels/user_socket.ex":
 //
-//     def connect(%{"token" => token}, socket) do
+//     def connect(%{"token" => token}, socket, _connect_info) do
 //       # max_age: 1209600 is equivalent to two weeks in seconds
 //       case Phoenix.Token.verify(socket, "user socket", token, max_age: 1209600) do
 //         {:ok, user_id} ->

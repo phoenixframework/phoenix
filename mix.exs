@@ -49,7 +49,7 @@ defmodule Phoenix.MixProject do
     [
       {:cowboy, "~> 1.0 or ~> 2.3", optional: true},
       {:plug, "~> 1.6.2 or ~> 1.7"},
-      {:phoenix_pubsub, "~> 1.0"},
+      {:phoenix_pubsub, "~> 1.1"},
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies

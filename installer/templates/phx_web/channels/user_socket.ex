@@ -15,7 +15,7 @@ defmodule <%= web_namespace %>.UserSocket do
   #
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
-  def connect(_params, socket) do
+  def connect(_params, socket, _connect_info) do
     {:ok, socket}
   end
 
