@@ -230,6 +230,7 @@ defmodule Phoenix.Channel.Server do
       topic: #{inspect topic}
       event: #{inspect event}
       payload: #{inspect payload}
+
     """
   end
 
