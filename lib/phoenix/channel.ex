@@ -195,7 +195,6 @@ defmodule Phoenix.Channel do
       restarts in transient mode, and linked processes exit with the same reason
       unless they're trapping exits
 
-
   ## Subscribing to external topics
 
   Sometimes you may need to programmatically subscribe a socket to external
@@ -485,7 +484,7 @@ defmodule Phoenix.Channel do
   end
   def socket_ref(_socket) do
     raise ArgumentError, """
-    Socket refs can only be generated for a socket that has joined with a push ref
+    socket refs can only be generated for a socket that has joined with a push ref
     """
   end
 
@@ -508,6 +507,7 @@ defmodule Phoenix.Channel do
           push(socket, "feed", %{list: feed_items(socket)})
           {:noreply, socket}
         end
+
     """
   end
 end
