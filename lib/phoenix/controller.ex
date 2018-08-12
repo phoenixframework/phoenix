@@ -868,7 +868,7 @@ defmodule Phoenix.Controller do
       filename extension
     * `:charset` - the charset of the file, such as "utf-8".
       Defaults to none
-    * `:offset` - the bytes to offset when reading. Defualts to `0`
+    * `:offset` - the bytes to offset when reading. Defaults to `0`
     * `:length` - the total bytes to read. Defaults to `:all`
 
   ## Examples
