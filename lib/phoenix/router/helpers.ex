@@ -7,7 +7,7 @@ defmodule Phoenix.Router.Helpers do
   alias Plug.Conn
 
   @doc """
-  Callback invoked by url generated in each helper module.
+  Callback invoked by the url generated in each helper module.
   """
   def url(router, %Conn{private: private}) do
     case private do

@@ -65,6 +65,7 @@ defmodule Phoenix do
   in your `config/config.exs`:
 
       config :phoenix, :json_library, Jason
+
   """
   def json_library do
     Application.get_env(:phoenix, :json_library, Poison)
@@ -86,6 +87,7 @@ defmodule Phoenix do
     configure an existing encoder in your mix config using:
 
         config :phoenix, :json_library, MyJSONLibrary
+
     """
   end
 end
