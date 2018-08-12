@@ -490,7 +490,7 @@ defmodule Phoenix.ChannelTest do
 
   Like `assert_push`, the event and payload are patterns.
 
-  The timeout is in milliseconds and defaults to the :refute_receive_timeout
+  The timeout is in milliseconds and defaults to the `:refute_receive_timeout`
   set on the `:ex_unit` application (which defaults to 100ms).
   Keep in mind this macro will block the test by the
   timeout value, so use it only when necessary as overuse
@@ -535,7 +535,7 @@ defmodule Phoenix.ChannelTest do
 
   Like `assert_reply`, the event and payload are patterns.
 
-  The timeout is in milliseconds and defaults to the :refute_receive_timeout
+  The timeout is in milliseconds and defaults to the `:refute_receive_timeout`
   set on the `:ex_unit` application (which defaults to 100ms).
   Keep in mind this macro will block the test by the
   timeout value, so use it only when necessary as overuse
@@ -581,7 +581,7 @@ defmodule Phoenix.ChannelTest do
 
   Like `assert_broadcast`, the event and payload are patterns.
 
-  The timeout is in milliseconds and defaults to the :refute_receive_timeout
+  The timeout is in milliseconds and defaults to the `:refute_receive_timeout`
   set on the `:ex_unit` application (which defaults to 100ms).
   Keep in mind this macro will block the test by the
   timeout value, so use it only when necessary as overuse
