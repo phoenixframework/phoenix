@@ -425,7 +425,7 @@ defmodule Phoenix.Controller do
   @doc """
   Stores the view for rendering.
 
-  Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
+  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
   @spec put_view(Plug.Conn.t, atom) :: Plug.Conn.t
   def put_view(%Plug.Conn{state: state} = conn, module) when state in @unsent do
@@ -437,7 +437,7 @@ defmodule Phoenix.Controller do
   @doc """
   Stores the view for rendering if one was not stored yet.
 
-  Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
+  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
   @spec put_new_view(Plug.Conn.t, atom) :: Plug.Conn.t
   def put_new_view(%Plug.Conn{state: state} = conn, module)
@@ -483,7 +483,7 @@ defmodule Phoenix.Controller do
       iex> layout(conn)
       {AppView, :print}
 
-  Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
+  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
   @spec put_layout(Plug.Conn.t, {atom, binary | atom} | binary | false) :: Plug.Conn.t
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
@@ -514,7 +514,7 @@ defmodule Phoenix.Controller do
   @doc """
   Stores the layout for rendering if one was not stored yet.
 
-  Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
+  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
   @spec put_new_layout(Plug.Conn.t, {atom, binary | atom} | false) :: Plug.Conn.t
   def put_new_layout(%Plug.Conn{state: state} = conn, layout)
@@ -538,7 +538,7 @@ defmodule Phoenix.Controller do
       iex> layout_formats(conn)
       ["html", "mobile"]
 
-  Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
+  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
   @spec put_layout_formats(Plug.Conn.t, [String.t]) :: Plug.Conn.t
   def put_layout_formats(%Plug.Conn{state: state} = conn, formats)
@@ -867,9 +867,9 @@ defmodule Phoenix.Controller do
       sent as download. It is automatically inferred from the
       filename extension
     * `:charset` - the charset of the file, such as "utf-8".
-      Defaults to none.
-    * `:offset` - the bytes to offset when reading. Defualts to `0`.
-    * `:length` - the total bytes to read. Defaults to `:all`.
+      Defaults to none
+    * `:offset` - the bytes to offset when reading. Defualts to `0`
+    * `:length` - the total bytes to read. Defaults to `:all`
 
   ## Examples
 
@@ -1002,19 +1002,19 @@ defmodule Phoenix.Controller do
 
   It sets the following headers:
 
-      * x-frame-options - set to SAMEORIGIN to avoid clickjacking
+      * `x-frame-options` - set to SAMEORIGIN to avoid clickjacking
         through iframes unless in the same origin
-      * x-content-type-options - set to nosniff. This requires
+      * `x-content-type-options` - set to nosniff. This requires
         script and style tags to be sent with proper content type
-      * x-xss-protection - set to "1; mode=block" to improve XSS
+      * `x-xss-protection` - set to "1; mode=block" to improve XSS
         protection on both Chrome and IE
-      * x-download-options - set to noopen to instruct the browser
+      * `x-download-options` - set to noopen to instruct the browser
         not to open a download directly in the browser, to avoid
         HTML files rendering inline and accessing the security
         context of the application (like critical domain cookies)
-      * x-permitted-cross-domain-policies - set to none to restrict
+      * `x-permitted-cross-domain-policies` - set to none to restrict
         Adobe Flash Player’s access to data
-      * cross-origin-window-policy - set to deny to avoid window
+      * `cross-origin-window-policy` - set to deny to avoid window
         control attacks
 
   A custom headers map may also be given to be merged with defaults.
@@ -1110,6 +1110,7 @@ defmodule Phoenix.Controller do
   And now you can use it in accepts too:
 
       plug :accepts, ["html", "json-api"]
+
   """
   @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t | no_return()
   def accepts(conn, [_|_] = accepted) do
@@ -1217,7 +1218,7 @@ defmodule Phoenix.Controller do
               inspect(header) <> " with extensions: " <> inspect(exts)
             end)}
 
-      To accept custom formats, register them under the `:mime` library
+      To accept custom formats, register them under the :mime library
       in your config/config.exs file:
 
           config :mime, :types, %{
@@ -1285,7 +1286,7 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Returns a message from flash by key.
+  Returns a message from flash by `key`.
 
   ## Examples
 
@@ -1354,6 +1355,7 @@ defmodule Phoenix.Controller do
 
       iex> current_path(conn, %{})
       "/users/123"
+
   """
   def current_path(%Plug.Conn{query_string: ""} = conn) do
     conn.request_path
