@@ -494,8 +494,8 @@ defmodule Phoenix.Channel do
 
   defp assert_joined!(%Socket{joined: false}) do
     raise """
-    `push`, `reply`, and `broadcast` can only be called after the socket has finished joining.
-    To push a message on join, send to self and handle in handle_info/2, ie:
+    push/3, reply/2, and broadcast/3 can only be called after the socket has finished joining.
+    To push a message on join, send to self and handle in handle_info/2. For example:
 
         def join(topic, auth_msg, socket) do
           ...
