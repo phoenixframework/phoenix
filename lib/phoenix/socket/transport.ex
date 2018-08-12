@@ -129,10 +129,10 @@ defmodule Phoenix.Socket.Transport do
   In the default `Phoenix.Socket` implementation, the
   metadata expects the following keys:
 
-    * endpoint - the application endpoint
-    * transport - the transport name
-    * params - the connection parameters
-    * options - a keyword list of transport options, often
+    * `:endpoint` - the application endpoint
+    * `:transport` - the transport name
+    * `:params` - the connection parameters
+    * `:options` - a keyword list of transport options, often
       given by developers when configuring the transport.
       It must include a `:serializer` field with the list of
       serializers and their requirements
@@ -381,6 +381,7 @@ defmodule Phoenix.Socket.Transport do
 
                 check_origin: ["https://example.com",
                                "//another.com:888", "//other.com"]
+
         """
         resp(conn, :forbidden, "")
         |> sender.()
@@ -397,9 +398,9 @@ defmodule Phoenix.Socket.Transport do
 
   The supported keys are:
 
-    * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`.
-    * `:x_headers` - a list of all request headers that have an "x-" prefix.
-    * `:uri` - a `%URI{}` derived from the conn.
+    * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
+    * `:x_headers` - a list of all request headers that have an "x-" prefix
+    * `:uri` - a `%URI{}` derived from the conn
 
   """
   def connect_info(conn, keys) do
@@ -415,7 +416,7 @@ defmodule Phoenix.Socket.Transport do
           {:uri, fetch_uri(conn)}
 
         _ ->
-          raise ArgumentError, "connection info keys are expected to be one of [:peer_data, :x_headers, :uri], got: #{inspect(key)}"
+          raise ArgumentError, ":connect_info keys are expected to be one of :peer_data, :x_headers, or :uri, got: #{inspect(key)}"
       end
     end
   end
@@ -451,7 +452,7 @@ defmodule Phoenix.Socket.Transport do
             {module, function, arguments}
 
           invalid ->
-            raise ArgumentError, "check_origin expects a boolean, list of hosts, or MFA tuple, got: #{inspect(invalid)}"
+            raise ArgumentError, ":check_origin expects a boolean, list of hosts, or MFA tuple, got: #{inspect(invalid)}"
         end
 
       {:cache, check_origin}
@@ -462,7 +463,7 @@ defmodule Phoenix.Socket.Transport do
     case URI.parse(origin) do
       %{host: nil} ->
         raise ArgumentError,
-          "invalid check_origin: #{inspect origin}. " <>
+          "invalid :check_origin option: #{inspect origin}. " <>
           "Expected an origin with a host that is parsable by URI.parse/1. For example: " <>
           "[\"https://example.com\", \"//another.com:888\", \"//other.com\"]"
 

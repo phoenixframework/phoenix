@@ -26,13 +26,13 @@ defmodule Phoenix.Socket do
 
   Socket handlers are mounted in Endpoints and must define two callbacks:
 
-    * `connect/3` - receives the socket params, connection info if any, and 
-      authenticates the connection. Must return a `Phoenix.Socket` struct, 
-      often with custom assigns. 
+    * `connect/3` - receives the socket params, connection info if any, and
+      authenticates the connection. Must return a `Phoenix.Socket` struct,
+      often with custom assigns
     * `id/1` - receives the socket returned by `connect/3` and returns the
       id of this connection as a string. The `id` is used to identify socket
       connections, often to a particular user, allowing us to force disconnections.
-      For sockets requiring no authentication, `nil` can be returned.
+      For sockets requiring no authentication, `nil` can be returned
 
   ## Examples
 
@@ -53,20 +53,20 @@ defmodule Phoenix.Socket do
 
   ## Socket fields
 
-    * `id` - The string id of the socket
-    * `assigns` - The map of socket assigns, default: `%{}`
-    * `channel` - The current channel module
-    * `channel_pid` - The channel pid
-    * `endpoint` - The endpoint module where this socket originated, for example: `MyApp.Endpoint`
-    * `handler` - The socket module where this socket originated, for example: `MyApp.UserSocket`
-    * `joined` - If the socket has effectively joined the channel
-    * `join_ref` - The ref sent by the client when joining
-    * `ref` - The latest ref sent by the client
-    * `pubsub_server` - The registered name of the socket's pubsub server
-    * `topic` - The string topic, for example `"room:123"`
-    * `transport` - An identifier for the transport, used for logging
-    * `transport_pid` - The pid of the socket's transport process
-    * `serializer` - The serializer for socket messages
+    * `:id` - The string id of the socket
+    * `:assigns` - The map of socket assigns, default: `%{}`
+    * `:channel` - The current channel module
+    * `:channel_pid` - The channel pid
+    * `:endpoint` - The endpoint module where this socket originated, for example: `MyApp.Endpoint`
+    * `:handler` - The socket module where this socket originated, for example: `MyApp.UserSocket`
+    * `:joined` - If the socket has effectively joined the channel
+    * `:join_ref` - The ref sent by the client when joining
+    * `:ref` - The latest ref sent by the client
+    * `:pubsub_server` - The registered name of the socket's pubsub server
+    * `:topic` - The string topic, for example `"room:123"`
+    * `:transport` - An identifier for the transport, used for logging
+    * `:transport_pid` - The pid of the socket's transport process
+    * `:serializer` - The serializer for socket messages
 
   ## Client-server communication
 
@@ -117,6 +117,7 @@ defmodule Phoenix.Socket do
   run:
 
       send(socket.transport_pid, :garbage_collect)
+
   """
 
   require Logger
@@ -240,7 +241,7 @@ defmodule Phoenix.Socket do
   ## USER API
 
   @doc """
-  Adds key/value pair to socket assigns.
+  Adds a key/value pair to socket assigns.
 
   ## Examples
 
@@ -264,7 +265,7 @@ defmodule Phoenix.Socket do
 
   ## Options
 
-    * `:assigns` - the map of socket assigns to merge into the socket on join.
+    * `:assigns` - the map of socket assigns to merge into the socket on join
 
   ## Examples
 
@@ -331,9 +332,9 @@ defmodule Phoenix.Socket do
           longpoll: [key1: value1, key2: value2, key3: value3]
 
     Note the websocket/longpoll configuration given to socket/3
-    will only apply after you remove all `transport/3` calls from
+    will only apply after you remove all transport/3 calls from
     your socket definition. If you have explicitly upgraded to
-    Cowboy 2, any transport defined with the `transport/3` macro
+    Cowboy 2, any transport defined with the transport/3 macro
     will be ignored.
     """
 
@@ -380,6 +381,7 @@ defmodule Phoenix.Socket do
 
         transport :#{name}, #{inspect transport_mod},
           serializer: [{#{inspect serializer}, "~> 1.0.0"}]
+
     """
   end
 
