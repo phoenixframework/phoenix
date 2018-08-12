@@ -399,7 +399,7 @@ defmodule Phoenix.Channel.Server do
 
   defp handle_result(result, :handle_in) do
     raise """
-    Expected `handle_in/3` to return one of:
+    Expected handle_in/3 to return one of:
 
         {:noreply, Socket.t} |
         {:noreply, Socket.t, timeout | :hibernate} |
@@ -415,7 +415,7 @@ defmodule Phoenix.Channel.Server do
 
   defp handle_result(result, callback) do
     raise """
-    Expected `#{callback}` to return one of:
+    Expected #{callback} to return one of:
 
         {:noreply, Socket.t} |
         {:noreply, Socket.t, timeout | :hibernate} |
@@ -459,7 +459,7 @@ defmodule Phoenix.Channel.Server do
 
   defp handle_reply(_socket, reply) do
     raise """
-    Channel replies from `handle_in/3` are expected to be one of:
+    Channel replies from handle_in/3 are expected to be one of:
 
         status :: atom
         {status :: atom, response :: map}
