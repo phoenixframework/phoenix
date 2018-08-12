@@ -49,7 +49,7 @@ defmodule Phoenix.Naming do
   end
 
   @doc """
-  Converts String to underscore case.
+  Converts a string to underscore case.
 
   ## Examples
 
@@ -71,9 +71,9 @@ defmodule Phoenix.Naming do
   defp to_lower_char(char), do: char
 
   @doc """
-  Converts String to camel case.
+  Converts a string to camel case.
 
-  Takes an optional `:lower` option to return lowerCamelCase.
+  Takes an optional `:lower` flag to return lowerCamelCase.
 
   ## Examples
 
@@ -106,12 +106,15 @@ defmodule Phoenix.Naming do
   @doc """
   Converts an attribute/form field into its humanize version.
 
+  ## Examples
+
       iex> Phoenix.Naming.humanize(:username)
       "Username"
       iex> Phoenix.Naming.humanize(:created_at)
       "Created at"
       iex> Phoenix.Naming.humanize("user_id")
       "User"
+
   """
   @spec humanize(atom | String.t) :: String.t
   def humanize(atom) when is_atom(atom),
