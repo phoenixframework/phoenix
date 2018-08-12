@@ -85,7 +85,7 @@ defmodule Phoenix.Router.ForwardTest do
       end
     end
 
-    assert_raise ArgumentError, ~r{Dynamic segment `"/api/:version"` not allowed}, fn ->
+    assert_raise ArgumentError, ~r{dynamic segment "/api/:version" not allowed}, fn ->
       Code.eval_quoted(router)
     end
   end
@@ -99,7 +99,7 @@ defmodule Phoenix.Router.ForwardTest do
       end
     end
 
-    assert_raise ArgumentError, ~r{`Phoenix.Router.ForwardTest.ApiRouter` has already been forwarded}, fn ->
+    assert_raise ArgumentError, ~r{Phoenix.Router.ForwardTest.ApiRouter has already been forwarded}, fn ->
       Code.eval_quoted(router)
     end
   end

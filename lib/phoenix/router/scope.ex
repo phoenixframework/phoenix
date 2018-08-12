@@ -32,11 +32,10 @@ defmodule Phoenix.Router.Scope do
   @doc """
   Validates a path is a string and contains a leading prefix.
   """
-
   def validate_path("/" <> _ = path), do: path
   def validate_path(path) when is_binary(path) do
-    IO.write :stderr, """
-    warning: router paths should begin with a forward slash, got: #{inspect path}
+    IO.warn """
+    router paths should begin with a forward slash, got: #{inspect path}
     #{Exception.format_stacktrace}
     """
 
@@ -113,7 +112,7 @@ defmodule Phoenix.Router.Scope do
   end
 
   @doc """
-  Returns true if the module's definition is currently within a scope block
+  Returns true if the module's definition is currently within a scope block.
   """
   def inside_scope?(module), do: length(get_stack(module)) > 1
 
