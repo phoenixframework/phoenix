@@ -53,15 +53,15 @@ defmodule Phoenix.Controller.Pipeline do
     cond do
       fallback == nil ->
         raise """
-        action_fallback can only be called when using Phoenix.Controller.
+        action_fallback/1 can only be called when using Phoenix.Controller.
         Add `use Phoenix.Controller` to #{inspect module}
         """
 
       fallback != :unregistered ->
-        raise "action_fallback can only be called a single time per controller."
+        raise "action_fallback/1 can only be called a single time per controller"
 
       not is_atom(plug) ->
-        raise ArgumentError, "expected action_fallback to be a module or function plug, got #{inspect plug}"
+        raise ArgumentError, "expected action_fallback/1 to be a module or function plug, got #{inspect plug}"
 
       fallback == :unregistered ->
         case Atom.to_charlist(plug) do
