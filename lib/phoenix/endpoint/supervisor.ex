@@ -214,7 +214,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   Builds the endpoint url from its configuration.
 
   The result is wrapped in a `{:cache, value}` tuple so
-  the Phoenix.Config layer knows how to cache it.
+  the `Phoenix.Config` layer knows how to cache it.
   """
   def url(endpoint) do
     {:cache, build_url(endpoint, endpoint.config(:url)) |> String.Chars.URI.to_string()}
@@ -245,7 +245,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   Builds the static url from its configuration.
 
   The result is wrapped in a `{:cache, value}` tuple so
-  the Phoenix.Config layer knows how to cache it.
+  the `Phoenix.Config` layer knows how to cache it.
   """
   def static_url(endpoint) do
     url = endpoint.config(:static_url) || endpoint.config(:url)
@@ -256,7 +256,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   Builds a struct url for user processing.
 
   The result is wrapped in a `{:cache, value}` tuple so
-  the Phoenix.Config layer knows how to cache it.
+  the `Phoenix.Config` layer knows how to cache it.
   """
   def struct_url(endpoint) do
     url    = endpoint.config(:url)
@@ -308,7 +308,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   just the static path is returned.
 
   The result is wrapped in a `{:cache | :nocache, value}` tuple so
-  the Phoenix.Config layer knows how to cache it.
+  the `Phoenix.Config` layer knows how to cache it.
   """
   @invalid_local_url_chars ["\\"]
 

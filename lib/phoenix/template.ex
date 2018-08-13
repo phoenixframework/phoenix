@@ -54,7 +54,7 @@ defmodule Phoenix.Template do
     * template root - the directory where templates are defined
 
     * template engine - a module that receives a template path
-      and transforms its source code into Elixir quoted expressions.
+      and transforms its source code into Elixir quoted expressions
 
   ## Custom Template Engines
 

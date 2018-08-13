@@ -419,6 +419,7 @@ defmodule Phoenix.Router do
       match(:move, "/events/:id", EventController, :move)
 
       match(:*, "/any", SomeController, :any)
+
   """
   defmacro match(verb, path, plug, plug_opts, options \\ []) do
     add_route(:match, verb, path, plug, plug_opts, options)

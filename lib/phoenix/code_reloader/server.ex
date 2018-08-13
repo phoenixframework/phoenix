@@ -155,7 +155,7 @@ defmodule Phoenix.CodeReloader.Server do
         mix_compile_unless_stale_config(compilers)
       end
     end
-    
+
     :ok
   end
 
@@ -183,6 +183,7 @@ defmodule Phoenix.CodeReloader.Server do
         You must restart your server after changing the following config or lib files:
 
           * #{Enum.map_join(files, "\n  * ", &Path.relative_to_cwd/1)}
+
         """
      end
    end

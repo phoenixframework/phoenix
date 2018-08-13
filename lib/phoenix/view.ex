@@ -18,13 +18,13 @@ defmodule Phoenix.View do
         def view do
           quote do
             use Phoenix.View, root: "lib/your_app_web/templates", namespace: "web"
-            
+
             # Import convenience functions from controllers
             import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]
 
             # Use all HTML functionality (forms, tags, etc)
             use Phoenix.HTML
-          
+
             import YourAppWeb.ErrorHelpers
             import YourAppWeb.Gettext
 
@@ -110,7 +110,7 @@ defmodule Phoenix.View do
     * `:root` - the template root to find templates
     * `:path` - the optional path to search for templates within the `:root`.
       Defaults to the underscored view module name. A blank string may
-      be provided to use the `:root` path directly as the template lookup path.
+      be provided to use the `:root` path directly as the template lookup path
     * `:namespace` - the namespace to consider when calculating view paths
     * `:pattern` - the wildcard pattern to apply to the root
       when finding templates. Default `"*"`
@@ -215,7 +215,7 @@ defmodule Phoenix.View do
   Phoenix, they are:
 
     * `:layout` - tells Phoenix to wrap the rendered result in the
-      given layout. See next section.
+      given layout. See next section
 
   The following assigns are reserved, and cannot be set directly:
 
