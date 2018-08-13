@@ -6,11 +6,11 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
 
       mix phx.gen.embedded Blog.Post title:string views:integer
 
-  The first argument is the schema module followed by the schema attributes
+  The first argument is the schema module followed by the schema attributes.
 
   The generated schema above will contain:
 
-    * an embedded schema file in lib/my_app/blog/post.ex.
+    * an embedded schema file in `lib/my_app/blog/post.ex`
 
   ## Attributes
 

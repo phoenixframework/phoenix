@@ -11,15 +11,17 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   The generated schema above will contain:
 
-    * a schema file in lib/my_app/blog/post.ex, with a `blog_posts` table.
+    * a schema file in `lib/my_app/blog/post.ex`, with a `blog_posts` table
     * a migration file for the repository
 
   The generated migration can be skipped with `--no-migration`.
 
   ## Contexts
 
-  Your schemas can be generated and added to a separate OTP app. Make sure your configuration is
-  properly setup or manually specify the context app with the `--context-app` option with the CLI.
+  Your schemas can be generated and added to a separate OTP app.
+  Make sure your configuration is properly setup or manually
+  specify the context app with the `--context-app` option with
+  the CLI.
 
       # Via config
       config :marketing_web, :generators, context_app: :marketing

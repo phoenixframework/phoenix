@@ -12,20 +12,20 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   The context is an Elixir module that serves as an API boundary for
   the given resource. A context often holds many related resources.
   Therefore, if the context already exists, it will be augmented with
-  functions for the given resource. 
+  functions for the given resource.
 
   > Note: A resource may also be split
-  > over distinct contexts (such as Accounts.User and Payments.User).
+  > over distinct contexts (such as `Accounts.User` and `Payments.User`).
 
   The schema is responsible for mapping the database fields into an
   Elixir struct.
 
   Overall, this generator will add the following files to `lib/`:
 
-    * a context module in lib/app/accounts/accounts.ex for the accounts API
-    * a schema in lib/app/accounts/user.ex, with an `users` table
-    * a view in lib/app_web/views/user_view.ex
-    * a controller in lib/app_web/controllers/user_controller.ex
+    * a context module in `lib/app/accounts/accounts.ex` for the accounts API
+    * a schema in `lib/app/accounts/user.ex`, with an `users` table
+    * a view in `lib/app_web/views/user_view.ex`
+    * a controller in `lib/app_web/controllers/user_controller.ex`
 
   A migration file for the repository and test files for the context and
   controller features will also be generated.

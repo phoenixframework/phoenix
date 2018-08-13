@@ -12,13 +12,14 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
   For a regular application:
 
-    * a channel in lib/my_app_web/channels
-    * a channel_test in test/my_app_web/channels
+    * a channel in `lib/my_app_web/channels`
+    * a channel test in `test/my_app_web/channels`
 
   For an umbrella application:
 
-    * a channel in apps/my_app_web/lib/app_name_web/channels
-    * a channel_test in apps/my_app_web/test/my_app_web/channels
+    * a channel in `apps/my_app_web/lib/app_name_web/channels`
+    * a channel test in `apps/my_app_web/test/my_app_web/channels`
+
   """
   use Mix.Task
 
@@ -55,6 +56,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
     mix phx.gen.channel expects just the module name:
 
         mix phx.gen.channel Room
+
     """
   end
 

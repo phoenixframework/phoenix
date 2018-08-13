@@ -20,10 +20,10 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   The schema is responsible for mapping the database fields into an
   Elixir struct.
 
-  Overall, this generator will add the following files to lib/your_app:
+  Overall, this generator will add the following files to `lib/your_app`:
 
-    * a context module in accounts/accounts.ex, serving as the API boundary
-    * a schema in accounts/user.ex, with a `users` table
+    * a context module in `accounts/accounts.ex`, serving as the API boundary
+    * a schema in `accounts/user.ex`, with a `users` table
 
   A migration file for the repository and test files for the context
   will also be generated.

@@ -11,11 +11,8 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
   The only argument is the module name of the Presence tracker,
   which defaults to Presence.
 
-  A new file will be generated in:
-
-    * lib/my_app_web/channels/presence.ex
-
-  Where `my_app_web` is the snake cased version of the module name provided.
+  A new file will be generated in `lib/my_app_web/channels/presence.ex`,
+  where `my_app_web` is the snake cased version of the module name provided.
   """
   use Mix.Task
 
