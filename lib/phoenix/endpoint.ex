@@ -9,13 +9,13 @@ defmodule Phoenix.Endpoint do
   Overall, an endpoint has three responsibilities:
 
     * to provide a wrapper for starting and stopping the
-      endpoint as part of a supervision tree;
+      endpoint as part of a supervision tree
 
     * to define an initial plug pipeline for requests
-      to pass through;
+      to pass through
 
     * to host web specific configuration for your
-      application.
+      application
 
   ## Endpoints
 
@@ -74,12 +74,12 @@ defmodule Phoenix.Endpoint do
 
     * `:code_reloader` - when `true`, enables code reloading functionality.
       For code the list of code reloader configuration options see
-      `Phoenix.CodeReloader.reload!/1`.
+      `Phoenix.CodeReloader.reload!/1`
 
     * `:debug_errors` - when `true`, uses `Plug.Debugger` functionality for
       debugging failures in the application. Recommended to be set to `true`
       only in development as it allows listing of the application source
-      code during debugging. Defaults to `false`.
+      code during debugging. Defaults to `false`
 
     * `:render_errors` - responsible for rendering templates whenever there
       is a failure in the application. For example, if the application crashes
@@ -88,18 +88,18 @@ defmodule Phoenix.Endpoint do
 
           [view: MyApp.ErrorView, accepts: ~w(html), layout: false]
 
-      The default format is used when none is set in the connection.
+      The default format is used when none is set in the connection
 
     * `:instrumenters` - a list of instrumenter modules whose callbacks will
       be fired on instrumentation events. Read more on instrumentation in the
-      "Instrumentation" section below.
+      "Instrumentation" section below
 
   ### Runtime configuration
 
     * `:cache_static_manifest` - a path to a json manifest file that contains
       static files and their digested version. This is typically set to
       "priv/static/cache_manifest.json" which is the file automatically generated
-      by `mix phx.digest`.
+      by `mix phx.digest`
 
     * `:check_origin` - configure transports to check origins or not. May
       be `false`, `true`, a list of hosts that are allowed, or a function provided as
@@ -114,17 +114,17 @@ defmodule Phoenix.Endpoint do
           check_origin: {MyAppWeb.Auth, :my_check_origin?, []}
 
       The MFA is invoked with the request `%URI{}` as the first argument,
-      followed by arguments in the MFA list.
+      followed by arguments in the MFA list
 
     * `:http` - the configuration for the HTTP server. Currently uses
       Cowboy and accepts all options as defined by
       [`Plug.Adapters.Cowboy`](https://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
-      Defaults to `false`.
+      Defaults to `false`
 
     * `:https` - the configuration for the HTTPS server. Currently uses
       Cowboy and accepts all options as defined by
       [`Plug.Adapters.Cowboy`](https://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
-      Defaults to `false`.
+      Defaults to `false`
 
     * `:force_ssl` - ensures no data is ever sent via HTTP, always redirecting
       to HTTPS. It expects a list of options which are forwarded to `Plug.SSL`.
@@ -132,16 +132,16 @@ defmodule Phoenix.Endpoint do
       forcing browsers to always use HTTPS. If an unsafe request (HTTP) is sent,
       it redirects to the HTTPS version using the `:host` specified in the `:url`
       configuration. To dynamically redirect to the `host` of the current request,
-      set `:host` in the `:force_ssl` configuration to `nil`.
+      set `:host` in the `:force_ssl` configuration to `nil`
 
     * `:secret_key_base` - a secret key used as a base to generate secrets
       for encrypting and signing data. For example, cookies and tokens
       are signed by default, but they may also be encrypted if desired.
-      Defaults to `nil` as it must be set per application.
+      Defaults to `nil` as it must be set per application
 
     * `:server` - when `true`, starts the web server when the endpoint
       supervision tree starts. Defaults to `false`. The `mix phx.server`
-      task automatically sets this to `true`.
+      task automatically sets this to `true`
 
     * `:url` - configuration for generating URLs throughout the app.
       Accepts the `:host`, `:scheme`, `:path` and `:port` options. All
@@ -165,11 +165,11 @@ defmodule Phoenix.Endpoint do
       terminating SSL there.
 
       The `:path` option can be used to override root path. Useful when hosting
-      Phoenix behind a reverse proxy with URL rewrite rules.
+      Phoenix behind a reverse proxy with URL rewrite rules
 
     * `:static_url` - configuration for generating URLs for static files.
       It will fallback to `url` if no option is provided. Accepts the same
-      options as `url`.
+      options as `url`
 
     * `:watchers` - a set of watchers to run alongside your server. It
       expects a list of tuples containing the executable and its arguments.
@@ -225,13 +225,13 @@ defmodule Phoenix.Endpoint do
   that are automatically defined in your endpoint:
 
     * for handling paths and URLs: `c:struct_url/0`, `c:url/0`, `c:path/1`,
-      `c:static_url/0`, and `c:static_path/1`;
-    * for handling channel subscriptions: `c:subscribe/2` and `c:unsubscribe/1`;
+      `c:static_url/0`, and `c:static_path/1`
+    * for handling channel subscriptions: `c:subscribe/2` and `c:unsubscribe/1`
     * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,
       `c:broadcast_from/4`, and `c:broadcast_from!/4`
-    * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`;
-    * for instrumentation: `c:instrument/3`;
-    * as required by the `Plug` behaviour: `c:Plug.init/1` and `c:Plug.call/2`.
+    * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`
+    * for instrumentation: `c:instrument/3`
+    * as required by the `Plug` behaviour: `c:Plug.init/1` and `c:Plug.call/2`
 
   ## Instrumentation
 
@@ -255,10 +255,10 @@ defmodule Phoenix.Endpoint do
 
     1. The event callback is called *before* the event happens (in this case,
        before the view is rendered) with the atom `:start` as the first
-       argument; see the "Before clause" section below.
-    2. The event occurs (in this case, the view is rendered).
+       argument; see the "Before clause" section below
+    2. The event occurs (in this case, the view is rendered)
     3. The same event callback is called again, this time with the atom `:stop`
-       as the first argument; see the "After clause" section below.
+       as the first argument; see the "After clause" section below
 
   The second and third argument that each event callback takes depends on the
   callback being an "after" or a "before" callback i.e. it depends on the
@@ -287,13 +287,13 @@ defmodule Phoenix.Endpoint do
       instrumentation is happening (under the `:module` key), the file and line
       (`:file` and `:line`), and the function inside which the instrumentation
       is happening (under `:function`). This information can be used arbitrarily
-      by the callback.
+      by the callback
     * `runtime_metadata` is a map of runtime data that the instrumentation
       passes to the callbacks. This can be used for any purposes: for example,
       when instrumenting the rendering of a view, the name of the view could be
       passed in these runtime data so that instrumenters know which view is
       being rendered (`instrument(:view_render, %{view: "index.html"}, fn
-      ...)`).
+      ...)`)
 
   #### "After" clause
 
@@ -305,11 +305,11 @@ defmodule Phoenix.Endpoint do
   where:
 
     * `time_diff` is an integer representing the time it took to execute the
-      instrumented function **in native units**.
+      instrumented function **in native units**
 
     * `result_of_before_callback` is the return value of the "before" clause of
       the same `event_callback`. This is a means of passing data from the
-      "before" clause to the "after" clause when instrumenting.
+      "before" clause to the "after" clause when instrumenting
 
   The return value of each "before" event callback will be stored and passed to
   the corresponding "after" callback.
@@ -332,23 +332,23 @@ defmodule Phoenix.Endpoint do
   By default, Phoenix instruments the following events:
 
     * `:phoenix_controller_call` - the entire controller pipeline.
-      The `%Plug.Conn{}` is passed as runtime metadata.
+      The `%Plug.Conn{}` is passed as runtime metadata
     * `:phoenix_controller_render` - the rendering of a view from a
       controller. The map of runtime metadata passed to instrumentation
       callbacks has the `:view` key - for the name of the view, e.g. `HexWeb.ErrorView`,
       the `:template` key - for the name of the template, e.g.,
       `"index.html"`, the `:format` key - for the format of the template, and
-      the `:conn` key - containing the `%Plug.Conn{}`.
+      the `:conn` key - containing the `%Plug.Conn{}`
     * `:phoenix_error_render` - the rendering of an error view when an exception,
       throw, or exit is caught. The map of runtime metadata contains the `:status`
       key of the error's HTTP status code, the `:conn` key containg the
       `%Plug.Conn{}`, as well as the `:kind`, `:reason`, and `:stacktrace` of
-      the caught error.
+      the caught error
     * `:phoenix_channel_join` - the joining of a channel. The `%Phoenix.Socket{}`
-      and join params are passed as runtime metadata via `:socket` and `:params`.
+      and join params are passed as runtime metadata via `:socket` and `:params`
     * `:phoenix_channel_receive` - the receipt of an incoming message over a
       channel. The `%Phoenix.Socket{}`, payload, event, and ref are passed as
-      runtime metadata via `:socket`, `:params`, `:event`, and `:ref`.
+      runtime metadata via `:socket`, `:params`, `:event`, and `:ref`
 
   ### Dynamic instrumentation
 
@@ -357,7 +357,6 @@ defmodule Phoenix.Endpoint do
   is not known at compile time, only at runtime, you can use the
   `Phoenix.Endpoint.instrument/4` macro. Refer to its documentation for more
   information.
-
   """
 
   @type topic :: String.t
@@ -369,7 +368,7 @@ defmodule Phoenix.Endpoint do
   # Configuration
 
   @doc """
-  Starts the Endpoint supervision tree.
+  Starts the endpoint supervision tree.
 
   Starts endpoint's configuration cache and possibly the servers for
   handling requests.
@@ -417,7 +416,7 @@ defmodule Phoenix.Endpoint do
   @callback static_url() :: String.t
 
   @doc """
-  Generates a route to a static file in `priv/static`
+  Generates a route to a static file in `priv/static`.
   """
   @callback static_path(path :: String.t) :: String.t
 
@@ -506,7 +505,7 @@ defmodule Phoenix.Endpoint do
       server
     else
       raise ArgumentError, """
-      No pubsub server configured, please setup pubsub in your config.
+      no :pubsub server configured, please setup :pubsub in your config.
 
       By default this looks like:
 
@@ -514,6 +513,7 @@ defmodule Phoenix.Endpoint do
             ...,
             pubsub: [name: MyApp.PubSub,
             adapter: Phoenix.PubSub.PG2]
+
       """
     end
   end
@@ -815,16 +815,16 @@ defmodule Phoenix.Endpoint do
     * `:websocket` - controls the websocket configuration.
       Defaults to `true`. May be false or a keyword list
       of options. See "Shared configuration" and
-      "WebSocket configuration" for the whole list.
+      "WebSocket configuration" for the whole list
 
     * `:longpoll` - controls the longpoll configuration.
       Defaults to `false`. May be true or a keyword list
       of options. See "Shared configuration" and
-      "Longpoll configuration" for the whole list.
+      "Longpoll configuration" for the whole list
 
     * `:shutdown` - the maximum shutdown time of each channel
       when the endpoint is shutting down. Applies only to
-      channel-based sockets.
+      channel-based sockets
 
   ## Examples
 
@@ -835,12 +835,12 @@ defmodule Phoenix.Endpoint do
         websocket: [compress: true]
 
   ## Shared configuration
-  
+
   The configuration below can be given to both `:websocket` and
   `:longpoll` keys:
 
     * `:serializer` - a list of serializers for messages. See
-      `Phoenix.Socket` for more information.
+      `Phoenix.Socket` for more information
 
     * `:transport_log` - if the transport layer itself should log and,
       if so, the level
@@ -860,14 +860,14 @@ defmodule Phoenix.Endpoint do
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
 
-    * `connect_info` - a list of keys that represent data to be copied from
-      the transport to be made available in the user socket `connect/3` callback.
-      
+    * `:connect_info` - a list of keys that represent data to be copied from
+      the transport to be made available in the user socket `connect/3` callback
+
       The valid keys are:
 
-        * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`.
-        * `:x_headers` - all request headers that have an "x-" prefix.
-        * `:uri` - a `%URI{}` with information from the conn.
+        * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
+        * `:x_headers` - all request headers that have an "x-" prefix
+        * `:uri` - a `%URI{}` with information from the conn
 
       For example:
 
@@ -882,7 +882,7 @@ defmodule Phoenix.Endpoint do
 
   ## Longpoll configuration
 
-  The following configuration applies only to `:longpoll`.
+  The following configuration applies only to `:longpoll`:
 
     * `:window_ms` - how long the client can wait for new messages
       in its poll request
@@ -946,13 +946,14 @@ defmodule Phoenix.Endpoint do
   @doc """
   Checks if Endpoint's web server has been configured to start.
 
-    * `otp_app` - The otp app running the endpoint, for example `:my_app`
+    * `otp_app` - The OTP app running the endpoint, for example `:my_app`
     * `endpoint` - The endpoint module, for example `MyApp.Endpoint`
 
   ## Examples
 
       iex> Phoenix.Endpoint.server?(:my_app, MyApp.Endpoint)
       true
+
   """
   def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
     Phoenix.Endpoint.Supervisor.server?(otp_app, endpoint)
