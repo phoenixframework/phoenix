@@ -55,7 +55,9 @@ defmodule Mix.Phoenix do
     do: Application.app_dir(app, source_dir)
 
   @doc """
-  Inflect path, scope, alias and more from the given name.
+  Inflects path, scope, alias and more from the given name.
+
+  ## Examples
 
       iex> Mix.Phoenix.inflect("user")
       [alias: "User",
@@ -86,6 +88,7 @@ defmodule Mix.Phoenix do
        scoped: "Admin.SuperUser",
        singular: "super_user",
        path: "admin/super_user"]
+
   """
   def inflect(singular) do
     base       = Mix.Phoenix.base
@@ -147,7 +150,7 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
-  Returns the otp app from the Mix project configuration.
+  Returns the OTP app from the Mix project configuration.
   """
   def otp_app do
     Mix.Project.config |> Keyword.fetch!(:app)
@@ -170,8 +173,8 @@ defmodule Mix.Phoenix do
   @doc """
   The paths to look for template files for generators.
 
-  Defaults to checking the current app's priv directory,
-  and falls back to phoenix's priv directory.
+  Defaults to checking the current app's `priv` directory,
+  and falls back to Phoenix's `priv` directory.
   """
   def generator_paths do
     [".", :phoenix]
@@ -233,7 +236,7 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
-  Returns the otp context app.
+  Returns the OTP context app.
   """
   def context_app do
     this_app = otp_app()
@@ -307,6 +310,7 @@ defmodule Mix.Phoenix do
         Existing deps:
 
             #{inspect Map.keys(deps)}
+
         """
     end
   end
