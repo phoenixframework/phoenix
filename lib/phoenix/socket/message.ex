@@ -4,12 +4,12 @@ defmodule Phoenix.Socket.Message do
 
   The message format requires the following keys:
 
-    * `topic` - The string topic or topic:subtopic pair namespace, for
+    * `:topic` - The string topic or topic:subtopic pair namespace, for
       example "messages", "messages:123"
-    * `event`- The string event name, for example "phx_join"
-    * `payload` - The message payload
-    * `ref` - The unique string ref
-    * `join_ref` - The unique string ref when joining
+    * `:event`- The string event name, for example "phx_join"
+    * `:payload` - The message payload
+    * `:ref` - The unique string ref
+    * `:join_ref` - The unique string ref when joining
 
   """
 
@@ -43,11 +43,11 @@ defmodule Phoenix.Socket.Reply do
 
   The message format requires the following keys:
 
-    * `topic` - The string topic or topic:subtopic pair namespace, for example "messages", "messages:123"
-    * `status` - The reply status as an atom
-    * `payload` - The reply payload
-    * `ref` - The unique string ref
-    * `join_ref` - The unique string ref when joining
+    * `:topic` - The string topic or topic:subtopic pair namespace, for example "messages", "messages:123"
+    * `:status` - The reply status as an atom
+    * `:payload` - The reply payload
+    * `:ref` - The unique string ref
+    * `:join_ref` - The unique string ref when joining
 
   """
 
@@ -61,9 +61,9 @@ defmodule Phoenix.Socket.Broadcast do
 
   The message format requires the following keys:
 
-    * `topic` - The string topic or topic:subtopic pair namespace, for example "messages", "messages:123"
-    * `event`- The string event name, for example "phx_join"
-    * `payload` - The message payload
+    * `:topic` - The string topic or topic:subtopic pair namespace, for example "messages", "messages:123"
+    * `:event`- The string event name, for example "phx_join"
+    * `:payload` - The message payload
 
   """
 
