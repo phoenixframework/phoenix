@@ -19,6 +19,10 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__]
   ])
 
+  defp lobby do
+    "room:lobby#{System.unique_integer()}"
+  end
+
   defmodule RoomChannel do
     use Phoenix.Channel
 
@@ -151,37 +155,38 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
       test "join, leave, and event messages" do
         {:ok, sock} = WebsocketClient.start_link(self(), @vsn_path, @serializer)
-        WebsocketClient.join(sock, "room:lobby1", %{})
+        lobby = lobby()
+        WebsocketClient.join(sock, lobby, %{})
 
         assert_receive %Message{event: "phx_reply",
                                 join_ref: @join_ref,
                                 payload: %{"response" => %{}, "status" => "ok"},
-                                ref: "1", topic: "room:lobby1"}
+                                ref: "1", topic: ^lobby}
 
         assert_receive %Message{event: "joined",
                                 payload: %{"status" => "connected", "user_id" => nil}}
         assert_receive %Message{event: "user_entered",
                                 payload: %{"user" => nil},
-                                ref: nil, topic: "room:lobby1"}
+                                ref: nil, topic: ^lobby}
 
-        channel_pid = Process.whereis(:"room:lobby1")
+        channel_pid = Process.whereis(String.to_atom(lobby))
         assert channel_pid
         assert Process.alive?(channel_pid)
 
-        WebsocketClient.send_event(sock, "room:lobby1", "new_msg", %{body: "hi!"})
+        WebsocketClient.send_event(sock, lobby, "new_msg", %{body: "hi!"})
         assert_receive %Message{event: "new_msg", payload: %{"transport" => ":websocket", "body" => "hi!"}}
 
-        WebsocketClient.leave(sock, "room:lobby1", %{})
+        WebsocketClient.leave(sock, lobby, %{})
         assert_receive %Message{event: "you_left", payload: %{"message" => "bye!"}}
         assert_receive %Message{event: "phx_reply", payload: %{"status" => "ok"}}
         assert_receive %Message{event: "phx_close", payload: %{}}
         refute Process.alive?(channel_pid)
 
-        WebsocketClient.send_event(sock, "room:lobby1", "new_msg", %{body: "Should ignore"})
+        WebsocketClient.send_event(sock, lobby, "new_msg", %{body: "Should ignore"})
         refute_receive %Message{event: "new_msg"}
         assert_receive %Message{event: "phx_reply", payload: %{"response" => %{"reason" => "unmatched topic"}}}
 
-        WebsocketClient.send_event(sock, "room:lobby1", "new_msg", %{body: "Should ignore"})
+        WebsocketClient.send_event(sock, lobby, "new_msg", %{body: "Should ignore"})
         refute_receive %Message{event: "new_msg"}
       end
 
@@ -195,7 +200,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
             extra_headers
           )
 
-        WebsocketClient.join(sock, "room:lobby1", %{})
+        WebsocketClient.join(sock, lobby(), %{})
 
         assert_receive %Message{event: "joined",
                                 payload: %{"connect_info" =>
@@ -211,7 +216,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
             @serializer
           )
 
-        WebsocketClient.join(sock, "room:lobby1", %{})
+        WebsocketClient.join(sock, lobby(), %{})
 
         assert_receive %Message{event: "joined",
                                 payload: %{"connect_info" =>
@@ -228,7 +233,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
             "ws://127.0.0.1:#{@port}/ws/connect_info/websocket?vsn=#{@vsn}",
             @serializer
           )
-        WebsocketClient.join(sock, "room:lobby1", %{})
+        WebsocketClient.join(sock, lobby(), %{})
 
         assert_receive %Message{event: "joined",
                                 payload: %{"connect_info" =>
@@ -262,24 +267,27 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
       test "sends phx_error if a channel server abnormally exits" do
         {:ok, sock} = WebsocketClient.start_link(self(), @vsn_path, @serializer)
 
-        WebsocketClient.join(sock, "room:lobby", %{})
+        lobby = lobby()
+        WebsocketClient.join(sock, lobby, %{})
         assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
         assert_receive %Message{event: "joined"}
         assert_receive %Message{event: "user_entered"}
 
         capture_log fn ->
-          WebsocketClient.send_event(sock, "room:lobby", "boom", %{})
-          assert_receive %Message{event: "phx_error", payload: %{}, topic: "room:lobby"}
+          WebsocketClient.send_event(sock, lobby, "boom", %{})
+          assert_receive %Message{event: "phx_error", payload: %{}, topic: ^lobby}
         end
       end
 
       test "channels are terminated if transport normally exits" do
         {:ok, sock} = WebsocketClient.start_link(self(), @vsn_path, @serializer)
 
-        WebsocketClient.join(sock, "room:lobby2", %{})
+        lobby = lobby()
+        WebsocketClient.join(sock, lobby, %{})
         assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
         assert_receive %Message{event: "joined"}
-        channel = Process.whereis(:"room:lobby2")
+
+        channel = Process.whereis(String.to_atom(lobby))
         assert channel
         Process.monitor(channel)
         WebsocketClient.close(sock)
@@ -290,11 +298,11 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
       test "refuses websocket events that haven't joined" do
         {:ok, sock} = WebsocketClient.start_link(self(), @vsn_path, @serializer)
 
-        WebsocketClient.send_event(sock, "room:lobby", "new_msg", %{body: "hi!"})
+        WebsocketClient.send_event(sock, lobby(), "new_msg", %{body: "hi!"})
         refute_receive %Message{event: "new_msg"}
         assert_receive %Message{event: "phx_reply", payload: %{"response" => %{"reason" => "unmatched topic"}}}
 
-        WebsocketClient.send_event(sock, "room:lobby1", "new_msg", %{body: "Should ignore"})
+        WebsocketClient.send_event(sock, lobby(), "new_msg", %{body: "Should ignore"})
         refute_receive %Message{event: "new_msg"}
       end
 
