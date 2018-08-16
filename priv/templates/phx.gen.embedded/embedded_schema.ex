@@ -8,7 +8,7 @@ defmodule <%= inspect schema.module %> do
 <% end %>  end
 
   @doc """
-  Builds a changeset based on the `struct` and `params`.
+  Builds a changeset based on the `<%= schema.singular %>` and `attrs`.
   """
   def changeset(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
     <%= schema.singular %>
