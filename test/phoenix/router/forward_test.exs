@@ -6,6 +6,7 @@ end
 defmodule Phoenix.Router.ForwardTest do
   use ExUnit.Case, async: true
   use RouterHelper
+  import ExUnit.CaptureLog
 
   defmodule Controller do
     use Phoenix.Controller
@@ -99,9 +100,8 @@ defmodule Phoenix.Router.ForwardTest do
       end
     end
 
-    assert_raise ArgumentError, ~r{`Phoenix.Router.ForwardTest.ApiRouter` has already been forwarded}, fn ->
-      Code.eval_quoted(router)
-    end
+    log = capture_log([level: :warn], fn -> Code.eval_quoted(router) end)
+    assert log =~ "`Phoenix.Router.ForwardTest.ApiRouter` has already been forwarded"
   end
 
   test "accumulates phoenix_forwards" do
