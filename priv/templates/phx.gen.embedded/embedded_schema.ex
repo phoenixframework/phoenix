@@ -7,7 +7,9 @@ defmodule <%= inspect schema.module %> do
 <%= for {k, v} <- schema.types do %>    field <%= inspect k %>, <%= inspect v %><%= schema.defaults[k] %>
 <% end %>  end
 
-  @doc false
+  @doc """
+  Builds a changeset based on the `<%= schema.singular %>` and `attrs`.
+  """
   def changeset(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
     <%= schema.singular %>
     |> cast(attrs, [<%= Enum.map_join(schema.attrs, ", ", &inspect(elem(&1, 0))) %>])

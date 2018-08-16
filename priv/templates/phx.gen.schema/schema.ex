@@ -12,7 +12,9 @@ defmodule <%= inspect schema.module %> do
     timestamps()
   end
 
-  @doc false
+  @doc """
+  Builds a changeset based on the `<%= schema.singular %>` and `attrs`.
+  """
   def changeset(<%= schema.singular %>, attrs) do
     <%= schema.singular %>
     |> cast(attrs, [<%= Enum.map_join(schema.attrs, ", ", &inspect(elem(&1, 0))) %>])
