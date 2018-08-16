@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Options
 
-    * `--umbrella` - generate an umbrella application,
+    * `--umbrella` - generate an umbrella project,
       with one application for your domain, and
       a second application for the web interface.
 
