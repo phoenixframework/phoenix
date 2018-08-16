@@ -142,4 +142,16 @@ defmodule Phoenix.Router.ForwardTest do
     assert conn.resp_body == "health"
     assert conn.private[ApiRouter] == {[], %{Phoenix.Test.HealthController => []}}
   end
+
+  test "forwards raises if using the plug to arguments" do
+    error_message = ~r/expects a module/
+    assert_raise(ArgumentError, error_message, fn ->
+      defmodule BrokenRouter do
+        use Phoenix.Router
+        scope "/" do
+          forward "/health", to: HealthController
+        end
+      end
+    end)
+  end
 end
