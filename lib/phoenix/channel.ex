@@ -195,7 +195,6 @@ defmodule Phoenix.Channel do
       restarts in transient mode, and linked processes exit with the same reason
       unless they're trapping exits
 
-
   ## Subscribing to external topics
 
   Sometimes you may need to programmatically subscribe a socket to external
@@ -485,7 +484,7 @@ defmodule Phoenix.Channel do
   end
   def socket_ref(_socket) do
     raise ArgumentError, """
-    Socket refs can only be generated for a socket that has joined with a push ref
+    socket refs can only be generated for a socket that has joined with a push ref
     """
   end
 
@@ -495,8 +494,8 @@ defmodule Phoenix.Channel do
 
   defp assert_joined!(%Socket{joined: false}) do
     raise """
-    `push`, `reply`, and `broadcast` can only be called after the socket has finished joining.
-    To push a message on join, send to self and handle in handle_info/2, ie:
+    push/3, reply/2, and broadcast/3 can only be called after the socket has finished joining.
+    To push a message on join, send to self and handle in handle_info/2. For example:
 
         def join(topic, auth_msg, socket) do
           ...
@@ -508,6 +507,7 @@ defmodule Phoenix.Channel do
           push(socket, "feed", %{list: feed_items(socket)})
           {:noreply, socket}
         end
+
     """
   end
 end
