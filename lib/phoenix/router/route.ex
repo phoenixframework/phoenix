@@ -9,17 +9,17 @@ defmodule Phoenix.Router.Route do
   @doc """
   The `Phoenix.Router.Route` struct. It stores:
 
-    * :verb - the HTTP verb as an upcased string
-    * :line - the line the route was defined
-    * :kind - the kind of route, one of `:match`, `:forward`
-    * :path - the normalized path as string
-    * :host - the request host or host prefix
-    * :plug - the plug module
-    * :opts - the plug options
-    * :helper - the name of the helper as a string (may be nil)
-    * :private - the private route info
-    * :assigns - the route info
-    * :pipe_through - the pipeline names as a list of atoms
+    * `:verb` - the HTTP verb as an upcased string
+    * `:line` - the line the route was defined
+    * `:kind` - the kind of route, one of `:match`, `:forward`
+    * `:path` - the normalized path as string
+    * `:host` - the request host or host prefix
+    * `:plug` - the plug module
+    * `:opts` - the plug options
+    * `:helper` - the name of the helper as a string (may be nil)
+    * `:private` - the private route info
+    * `:assigns` - the route info
+    * `:pipe_through` - the pipeline names as a list of atoms
 
   """
 
@@ -153,18 +153,18 @@ defmodule Phoenix.Router.Route do
   @doc """
   Validates and returns the list of forward path segments.
 
-  Raises RuntimeError plug is already forwarded or path contains
-  a dynamic segment.
+  Raises `RuntimeError` if the `plug` is already forwarded or the
+  `path` contains a dynamic segment.
   """
   def forward_path_segments(path, plug, phoenix_forwards) do
     case build_path_match(path) do
       {[], path_segments} ->
         if phoenix_forwards[plug] do
-          raise ArgumentError, "`#{inspect plug}` has already been forwarded to. A module can only be forwarded a single time."
+          raise ArgumentError, "#{inspect plug} has already been forwarded to. A module can only be forwarded a single time."
         end
         path_segments
       _ ->
-        raise ArgumentError, "Dynamic segment `\"#{path}\"` not allowed when forwarding. Use a static path instead."
+        raise ArgumentError, "dynamic segment \"#{path}\" not allowed when forwarding. Use a static path instead."
     end
   end
 
