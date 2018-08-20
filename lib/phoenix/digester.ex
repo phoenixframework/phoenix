@@ -14,10 +14,8 @@ defmodule Phoenix.Digester do
   @moduledoc false
 
   @doc """
-  Digests and compresses the static files and saves them in the given output path.
-
-    * `input_path` - The path where the assets are located
-    * `output_path` - The path where the compiled/compressed files will be saved
+  Digests and compresses the static files in the given `input_path`
+  and saves them in the given `output_path`.
   """
   @spec compile(String.t, String.t) :: :ok | {:error, :invalid_path}
   def compile(input_path, output_path) do
@@ -276,20 +274,23 @@ defmodule Phoenix.Digester do
   end
 
   @doc """
-  Delete compiled/compressed asset files that are no longer in use based on
-  specified criteria.
+  Deletes compiled/compressed asset files that are no longer in use based on
+  the specified criteria.
 
-    * `output_path` - The path where the compiled/compressed files will be saved
+  ## Arguments
+
+    * `path` - The path where the compiled/compressed files are saved
     * `age` - The max age of assets to keep in seconds
     * `keep` - The number of old versions to keep
+
   """
   @spec clean(String.t, integer, integer, integer) :: :ok | {:error, :invalid_path}
-  def clean(output_path, age, keep, now \\ now()) do
-    if File.exists?(output_path) do
-      manifest = load_manifest(output_path)
+  def clean(path, age, keep, now \\ now()) do
+    if File.exists?(path) do
+      manifest = load_manifest(path)
       files = files_to_clean(manifest, now - age, keep)
-      remove_files(files, output_path)
-      remove_files_from_manifest(manifest, files, output_path)
+      remove_files(files, path)
+      remove_files_from_manifest(manifest, files, path)
       :ok
     else
       {:error, :invalid_path}
@@ -324,11 +325,11 @@ defmodule Phoenix.Digester do
     for file <- files do
       output_path
       |> Path.join(file)
-      |> File.rm
+      |> File.rm()
 
       output_path
       |> Path.join("#{file}.gz")
-      |> File.rm
+      |> File.rm()
     end
   end
 
