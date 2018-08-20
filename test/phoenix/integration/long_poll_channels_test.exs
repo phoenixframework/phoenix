@@ -6,7 +6,6 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
   alias Phoenix.Integration.HTTPClient
   alias Phoenix.Socket.{Broadcast, Message, V1, V2}
-  alias Phoenix.PubSub.Local
   alias __MODULE__.Endpoint
 
   @moduletag :capture_log
