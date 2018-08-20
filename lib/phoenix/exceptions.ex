@@ -23,7 +23,7 @@ defmodule Phoenix.MissingParamError do
   This exception is raised by `Phoenix.Controller.scrub_params/2` which:
 
     * Checks to see if the required_key is present (can be empty)
-    * Changes all empty parameters to nils ("" -> nil).
+    * Changes all empty parameters to nils ("" -> nil)
 
   If you are seeing this error, you should handle the error and surface it
   to the end user. It means that there is a parameter missing from the request.
@@ -52,6 +52,7 @@ defmodule Phoenix.ActionClauseError do
     action arguments do not match. The request parameters are:
 
       #{inspect params}
+
     """
     %Phoenix.ActionClauseError{message: msg}
   end
