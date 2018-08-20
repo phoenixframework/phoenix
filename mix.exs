@@ -53,7 +53,7 @@ defmodule Phoenix.MixProject do
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies
-      {:ex_doc, "~> 0.18", only: :docs},
+      {:ex_doc, "~> 0.19.1", only: :docs},
       {:inch_ex, "~> 0.2", only: :docs},
 
       # Test dependencies
