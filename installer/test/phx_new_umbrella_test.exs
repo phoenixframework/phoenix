@@ -311,6 +311,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file "custom_path_umbrella/apps/phx_umb/mix.exs", ~r/mod: {PhoteuxBlog.Application, \[\]}/
       assert_file "custom_path_umbrella/apps/phx_umb_web/lib/phx_umb_web/application.ex", ~r/defmodule PhoteuxBlogWeb.Application/
       assert_file "custom_path_umbrella/apps/phx_umb_web/mix.exs", ~r/mod: {PhoteuxBlogWeb.Application, \[\]}/
+      assert_file "custom_path_umbrella/apps/phx_umb/config/config.exs", ~r/namespace: PhoteuxBlog/
     end
   end
 
