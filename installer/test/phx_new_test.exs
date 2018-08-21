@@ -51,7 +51,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
       assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb do"
-        assert file =~ "use Phoenix.View, root: \"lib/phx_blog_web/templates\""
+        assert file =~ "use Phoenix.View,\n        root: \"lib/phx_blog_web/templates\""
       end
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r/defmodule PhxBlogWeb.Endpoint do/
 
@@ -86,7 +86,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/assets/webpack.config.js", "js/app.js"
       assert_file "phx_blog/assets/.babelrc", "env"
       assert_file "phx_blog/config/dev.exs", fn file ->
-        assert file =~ "watchers: [node:"
+        assert file =~ "watchers: [\n    node:"
         assert file =~ "lib/phx_blog_web/views/.*(ex)"
         assert file =~ "lib/phx_blog_web/templates/.*(eex)"
       end

@@ -23,19 +23,19 @@ defmodule <%= web_namespace %>.ChannelCase do
       # The default endpoint for testing
       @endpoint <%= endpoint_module %>
     end
-  end
+  end<%= if ecto do %>
 
-<%= if ecto do %>
   setup tags do
     <%= adapter_config[:test_setup] %>
+
     unless tags[:async] do
       <%= adapter_config[:test_async] %>
     end
+
     :ok
-  end
-<% else %>
+  end<% else %>
+
   setup _tags do
     :ok
-  end
-<% end %>
+  end<% end %>
 end

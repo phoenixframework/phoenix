@@ -24,19 +24,19 @@ defmodule <%= web_namespace %>.ConnCase do
       # The default endpoint for testing
       @endpoint <%= endpoint_module %>
     end
-  end
+  end<%= if ecto do %>
 
-<%= if ecto do %>
   setup tags do
     <%= adapter_config[:test_setup] %>
+
     unless tags[:async] do
       <%= adapter_config[:test_async] %>
     end
+
     {:ok, conn: Phoenix.ConnTest.build_conn()}
-  end
-<% else %>
+  end<% else %>
+
   setup _tags do
     {:ok, conn: Phoenix.ConnTest.build_conn()}
-  end
-<% end %>
+  end<% end %>
 end
