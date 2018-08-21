@@ -44,11 +44,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       try do
         Mix.Tasks.Phx.New.run(["phx_blog", "--no-webpack", "--no-ecto"])
 
-        # Copy artifacts from Phoenix so we can compile and run tests
-        File.cp_r "_build",   "bootstrap/phx_blog/_build"
-        File.cp_r "deps",     "bootstrap/phx_blog/deps"
-        File.cp_r "mix.lock", "bootstrap/phx_blog/mix.lock"
-
         in_project :phx_blog, project_path, fn _ ->
           Mix.Task.clear()
           Mix.Task.run "compile", ["--no-deps-check"]
