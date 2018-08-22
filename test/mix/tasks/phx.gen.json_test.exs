@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
         assert file =~ "defmodule PhoenixWeb.PostControllerTest"
         assert file =~ """
-              assert json_response(conn, 200)["data"] == %{
+              assert %{
                 "id" => id,
                 "alarm" => "14:00:00.000000",
                 "announcement_date" => "2010-04-17",
@@ -66,7 +66,8 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
                 "tags" => [],
                 "title" => "some title",
                 "votes" => 42,
-                "weight" => 120.5}
+                "weight" => 120.5
+              } = json_response(conn, 200)["data"]
         """
       end
 
