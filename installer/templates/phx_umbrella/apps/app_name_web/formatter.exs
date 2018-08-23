@@ -1,4 +1,4 @@
-[<%= if ecto do %>
-  import_deps: [:ecto],<% end %>
+[
+  import_deps: [:phoenix],
   inputs: ["*.{ex,exs}", "{config,lib,test}/**/*.{ex,exs}"]
 ]

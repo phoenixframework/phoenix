@@ -55,7 +55,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(@app, "config/config.exs"), fn file ->
         assert file =~ ~S[import_config "../apps/*/config/config.exs"]
-        assert file =~ ~S[import_config "#{Mix.env}.exs"]
+        assert file =~ ~S[import_config "#{Mix.env()}.exs"]
         assert file =~ "config :phoenix, :json_library, Jason"
       end
 

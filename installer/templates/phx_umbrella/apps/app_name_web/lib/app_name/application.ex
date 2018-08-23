@@ -9,7 +9,7 @@ defmodule <%= web_namespace %>.Application do
     # List all child processes to be supervised
     children = [
       # Start the endpoint when the application starts
-      <%= endpoint_module %>,
+      <%= endpoint_module %>
       # Starts a worker by calling: <%= web_namespace %>.Worker.start_link(arg)
       # {<%= web_namespace %>.Worker, arg},
     ]
