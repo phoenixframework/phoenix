@@ -28,6 +28,7 @@ defmodule Phx.New.Web do
     {:eex,  "phx_test/support/channel_case.ex",       :web, "test/support/channel_case.ex"},
     {:eex,  "phx_test/support/conn_case.ex",          :web, "test/support/conn_case.ex"},
     {:eex,  "phx_test/views/error_view_test.exs",     :web, "test/:web_app/views/error_view_test.exs"},
+    {:eex,  "#{@pre}/formatter.exs",                  :web, ".formatter.exs"},
   ]
 
   template :gettext, [

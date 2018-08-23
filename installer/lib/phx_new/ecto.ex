@@ -17,6 +17,7 @@ defmodule Phx.New.Ecto do
     {:eex,  "#{@pre}/README.md",                   :app, "README.md"},
     {:eex,  "#{@pre}/mix.exs",                     :app, "mix.exs"},
     {:eex,  "#{@pre}/gitignore",                   :app, ".gitignore"},
+    {:eex,  "#{@pre}/formatter.exs",               :app, ".formatter.exs"},
   ]
 
   template :ecto, [
