@@ -5,13 +5,11 @@ defmodule <%= web_namespace %>.ErrorViewTest do
   import Phoenix.View
 
   <%= if html do %>test "renders 404.html" do
-    assert render_to_string(<%= web_namespace %>.ErrorView, "404.html", []) ==
-           "Not Found"
+    assert render_to_string(<%= web_namespace %>.ErrorView, "404.html", []) == "Not Found"
   end
 
   test "renders 500.html" do
-    assert render_to_string(<%= web_namespace %>.ErrorView, "500.html", []) ==
-           "Internal Server Error"
+    assert render_to_string(<%= web_namespace %>.ErrorView, "500.html", []) == "Internal Server Error"
   end<% else %>test "renders 404.json" do
     assert render(<%= web_namespace %>.ErrorView, "404.json", []) ==
            %{errors: %{detail: "Not Found"}}

@@ -4,7 +4,7 @@ defmodule Phx.New.MixProject do
   def project do
     [
       app: :phx_new,
-      start_permanent: Mix.env == :prod,
+      start_permanent: Mix.env() == :prod,
       version: "1.4.0-dev",
       elixir: "~> 1.5"
     ]
