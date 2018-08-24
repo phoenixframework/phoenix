@@ -79,10 +79,11 @@ defmodule Mix.Tasks.Phx.NewTest do
             end)
           end) =~ ~r"3 tests, 0 failures"
 
-
-          File.mkdir_p!("deps/phoenix")
-          File.cp_r!(Path.join(root, ".formatter.exs"), "deps/phoenix/.formatter.exs")
-          Mix.Task.run("format", ["--check-formatted"])
+          if Version.match?(System.version(), ">= 1.6.0") do
+            File.mkdir_p!("deps/phoenix")
+            File.cp_r!(Path.join(root, ".formatter.exs"), "deps/phoenix/.formatter.exs")
+            Mix.Task.run("format", ["--check-formatted"])
+          end
         end
       after
         Code.delete_path Path.join(project_path, "_build/test/consolidated")
