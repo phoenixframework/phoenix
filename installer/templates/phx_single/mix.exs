@@ -10,9 +10,9 @@ defmodule <%= app_module %>.MixProject do
       deps_path: "../../deps",
       lockfile: "../../mix.lock",<% end %>
       elixir: "~> 1.5",
-      elixirc_paths: elixirc_paths(Mix.env),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers,
-      start_permanent: Mix.env == :prod,<%= if ecto do %>
+      elixirc_paths: elixirc_paths(Mix.env()),
+      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      start_permanent: Mix.env() == :prod,<%= if ecto do %>
       aliases: aliases(),<% end %>
       deps: deps()
     ]

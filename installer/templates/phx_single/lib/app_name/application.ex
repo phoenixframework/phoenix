@@ -10,10 +10,10 @@ defmodule <%= app_module %>.Application do
     children = [<%= if ecto do %>
       # Start the Ecto repository
       <%= app_module %>.Repo,<% end %>
-      # Start the endpoint when the application starts
-      <%= endpoint_module %>,
       # Starts a worker by calling: <%= app_module %>.Worker.start_link(arg)
       # {<%= app_module %>.Worker, arg},
+      # Start the endpoint when the application starts
+      <%= endpoint_module %>
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
