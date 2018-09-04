@@ -101,7 +101,6 @@ Here's an example configuration from `config/prod.exs`.
 ```elixir
 use Mix.Config
 
-. . .
 config :hello, HelloWeb.Endpoint,
   http: [port: {:system, "PORT"}],
   url: [host: "example.com"],
