@@ -120,7 +120,7 @@ Without the `otp_app:` key, we need to provide absolute paths to the files where
 Path.expand("../../../some/path/to/ssl/key.pem", __DIR__)
 ```
 
-If you require further customization to the TLS versions or ciphers used you can include additional `https:` configuration. For example to disable older versions of TLS which are now considered insecure you could add `versions: [:'tlsv1.2']`. More information on the available settings is available in the (Erlang SSL docs)[http://erlang.org/doc/man/ssl.html}] (see "SSL OPTION DESCRIPTIONS - SERVER SIDE").
+If you require further customization to the TLS versions or ciphers used you can include additional `https:` configuration. For example to disable older versions of TLS which are now considered insecure you could add `versions: [:'tlsv1.2']`. More information on the available settings is available in the [Erlang SSL docs](http://erlang.org/doc/man/ssl.html) (see "TLS/DTLS OPTION DESCRIPTIONS - SERVER SIDE").
 
 
 ### SSL in Development
