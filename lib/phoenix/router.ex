@@ -775,8 +775,7 @@ defmodule Phoenix.Router do
     router_opts = Keyword.put(router_opts, :as, nil)
 
     quote unquote: true, bind_quoted: [path: path, plug: plug] do
-      plug = Scope.expand_alias(__MODULE__, plug)
-      Scope.register_forwards(__MODULE__, path, plug)
+      plug = Scope.register_forwards(__MODULE__, path, plug)
       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
     end
   end
