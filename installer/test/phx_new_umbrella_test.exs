@@ -89,7 +89,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
       assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
         assert file =~ "defmodule PhxUmbWeb do"
-        assert file =~ "use Phoenix.View, root: \"lib/phx_umb_web/templates\""
+        assert file =~ ~r/use Phoenix.View,\s+root: "lib\/phx_umb_web\/templates"/
       end
       assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), ~r/defmodule PhxUmbWeb.Endpoint do/
       assert_file web_path(@app, "test/#{@app}_web/controllers/page_controller_test.exs")
@@ -119,7 +119,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "assets/webpack.config.js"), "js/app.js"
       assert_file web_path(@app, "assets/.babelrc"), "env"
       assert_file web_path(@app, "config/dev.exs"), fn file ->
-        assert file =~ "watchers: [node:"
+        assert file =~ ~r/watchers: \[\s+node:/
         assert file =~ "lib/#{@app}_web/views/.*(ex)"
         assert file =~ "lib/#{@app}_web/templates/.*(eex)"
       end
@@ -231,7 +231,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "config/test.exs"), &refute(&1 =~ config)
       assert_file web_path(@app, "config/prod.secret.exs"), &refute(&1 =~ config)
 
-      assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/Supervisor.start_link\(\[\]/
+      assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/Supervisor.start_link\(/
 
       # No HTML
       assert File.exists?(web_path(@app, "test/#{@app}_web/controllers"))
@@ -493,7 +493,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/.gitignore",  ~r/\n$/
         assert_file "another/assets/webpack.config.js", "js/app.js"
         assert_file "another/assets/.babelrc", "env"
-        assert_file "another/config/dev.exs", "watchers: [node:"
+        assert_file "another/config/dev.exs", ~r/watchers: \[\s+node:/
         assert_file "another/assets/static/favicon.ico"
         assert_file "another/assets/static/images/phoenix.png"
         assert_file "another/assets/css/app.css"
