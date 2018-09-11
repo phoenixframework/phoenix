@@ -871,7 +871,10 @@ defmodule Phoenix.Endpoint do
 
       For example:
 
-        connect_info: [:peer_data, :x_headers, :uri]
+          socket "/socket", AppWeb.UserSocket,
+            websocket: [
+              connect_info: [:peer_data, :x_headers, :uri]
+            ]
 
   ## Websocket configuration
 
