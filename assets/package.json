@@ -23,6 +23,7 @@
     "webpack": "4.0.0",
     "webpack-cli": "^2.0.10"
   },
+  "sideEffects": false,
   "scripts": {
     "test": "mocha ./test/**/*.js --compilers js:babel-register -r jsdom-global/register",
     "docs": "documentation build js/phoenix.js -f html -o ../doc/js",
