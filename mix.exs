@@ -144,6 +144,7 @@ defmodule Phoenix.MixProject do
     # Phoenix
     # Phoenix.Channel
     # Phoenix.Controller
+    # Phoenix.Endpoint
     # Phoenix.Naming
     # Phoenix.Param
     # Phoenix.Presence
@@ -152,20 +153,19 @@ defmodule Phoenix.MixProject do
     # Phoenix.View
 
     [
-      "Endpoint And Plugs": [
-        Phoenix.CodeReloader,
-        Phoenix.Endpoint,
-        Phoenix.Endpoint.CowboyAdapter,
-        Phoenix.Endpoint.Cowboy2Adapter,
-        Phoenix.Logger,
-      ],
-
       "Testing": [
         Phoenix.ChannelTest,
         Phoenix.ConnTest,
       ],
 
-      "Socket And Transport": [
+      "Adapters and Plugs": [
+        Phoenix.CodeReloader,
+        Phoenix.Endpoint.CowboyAdapter,
+        Phoenix.Endpoint.Cowboy2Adapter,
+        Phoenix.Logger,
+      ],
+
+      "Socket and Transport": [
         Phoenix.Socket,
         Phoenix.Socket.Broadcast,
         Phoenix.Socket.Message,
