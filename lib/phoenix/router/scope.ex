@@ -1,5 +1,5 @@
 defmodule Phoenix.Router.Scope do
-  alias Phoenix.Router.Scope
+  alias Phoenix.Router.{Scope, Route}
   @moduledoc false
 
   @stack :phoenix_router_scopes
@@ -117,9 +117,22 @@ defmodule Phoenix.Router.Scope do
   def inside_scope?(module), do: length(get_stack(module)) > 1
 
   @doc """
-  Expands alias within scoped block.
+  Add a forward to the router.
   """
-  def expand_alias(module, alias) do
+  def register_forwards(module, path, plug) when is_atom(plug) do
+    plug = expand_alias(module, plug)
+    phoenix_forwards = Module.get_attribute(module, :phoenix_forwards)
+    path_segments = Route.forward_path_segments(path, plug, phoenix_forwards)
+    phoenix_forwards = Map.put(phoenix_forwards, plug, path_segments)
+    Module.put_attribute(module, :phoenix_forwards, phoenix_forwards)
+    plug
+  end
+
+  def register_forwards(_, _, plug) do
+    raise ArgumentError, "forward expects a module as the second argument, #{inspect plug} given"
+  end
+
+  defp expand_alias(module, alias) do
     if inside_scope?(module) do
       module
       |> get_stack()
