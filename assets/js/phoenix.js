@@ -185,7 +185,7 @@
  * @module phoenix
  */
 
-const global = typeof(self) !== "undefined" ? self : window
+const global = typeof self !== "undefined" ? self : window
 const VSN = "2.0.0"
 const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 const DEFAULT_TIMEOUT = 10000
@@ -218,7 +218,7 @@ const TRANSPORTS = {
 
 // wraps value in closure or returns closure
 let closure = (value) => {
-  if(typeof(value) === "function"){
+  if(typeof value === "function"){
     return value
   } else {
     let closure = function(){ return value }
