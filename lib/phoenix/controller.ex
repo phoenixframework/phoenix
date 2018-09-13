@@ -559,7 +559,7 @@ defmodule Phoenix.Controller do
   @doc """
   Retrieves the current layout.
   """
-  @spec layout(Plug.Conn.t) :: {atom, String.t} | false
+  @spec layout(Plug.Conn.t) :: {atom, String.t | atom} | false
   def layout(conn), do: conn.private |> Map.get(:phoenix_layout, false)
 
   @doc """
