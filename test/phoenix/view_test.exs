@@ -64,6 +64,16 @@ defmodule Phoenix.ViewTest do
                       [["" | "<div>Show! "] | "Hello world"] | "</div>\n"] | "</html>\n"]}
   end
 
+  test "validates explicitly passed layout" do
+    assert_raise ArgumentError, fn ->
+      render(MyApp.View, "show.html",
+        title: "Test",
+        message: "Hello world",
+        layout: {"not a layout", "app.html"}
+      )
+    end
+  end
+
   test "converts assigns to maps and removes :layout" do
     html = render_to_iodata(MyApp.UserView, "edit.html",
       title: "Test",

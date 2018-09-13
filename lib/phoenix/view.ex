@@ -241,21 +241,30 @@ defmodule Phoenix.View do
     |> render_within(module, template)
   end
 
-  defp render_within({{layout_mod, layout_tpl}, assigns}, inner_mod, inner_tpl) do
-    assigns = Map.merge(assigns, %{view_module: inner_mod,
-                                   view_template: inner_tpl})
-
-    render_layout(layout_mod, layout_tpl, assigns)
-  end
-
   defp render_within({false, assigns}, module, template) do
     assigns = Map.merge(assigns, %{view_module: module,
                                    view_template: template})
     module.render(template, assigns)
   end
 
-  defp render_layout(layout_mod, layout_tpl, assigns) do
+  defp render_within({layout, assigns}, inner_mod, inner_tpl) do
+    assigns = Map.merge(assigns, %{view_module: inner_mod, view_template: inner_tpl})
+    render_layout(layout, assigns)
+  end
+
+  defp render_layout({layout_mod, layout_tpl}, assigns)
+       when is_atom(layout_mod) and is_binary(layout_tpl) do
     layout_mod.render(layout_tpl, assigns)
+  end
+
+  defp render_layout(layout, _assigns) do
+    raise ArgumentError, """
+    invalid value for reserved key :layout in View.render/3 assigns
+
+    :layout accepts a tuple of the form {LayoutModule, "template.extension"}
+
+    got: #{inspect(layout)}
+    """
   end
 
   @doc """
