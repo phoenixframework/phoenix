@@ -107,7 +107,7 @@ defmodule Phoenix.Presence do
   @type presence :: %{key: String.t, meta: map()}
   @type topic :: String.t
 
-  @callback start_link(Keyword.t) :: {:ok, pid()} | {:error, reason :: term()} :: :ignore
+  @callback start_link(Keyword.t) :: {:ok, pid()} | {:error, reason :: term()} | :ignore
   @callback init(Keyword.t) :: {:ok, state :: term} | {:error, reason :: term}
   @callback track(Phoenix.Socket.t, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
   @callback track(pid, topic, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
