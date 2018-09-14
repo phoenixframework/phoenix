@@ -24,12 +24,14 @@ defmodule Phoenix.Endpoint.Supervisor do
   def init({otp_app, mod}) do
     id = :crypto.strong_rand_bytes(16) |> Base.encode64
 
-    conf =
+    secret_conf =
       case mod.init(:supervisor, [endpoint_id: id] ++ config(otp_app, mod)) do
         {:ok, conf} -> conf
         other -> raise ArgumentError, "expected init/2 callback to return {:ok, config}, got: #{inspect other}"
       end
 
+    # Drop all secrets from secret_conf before passing it around
+    conf = Keyword.drop(secret_conf, [:secret_key_base])
     server? = server?(conf)
 
     if server? and conf[:code_reloader] do
@@ -37,7 +39,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
 
     children =
-      config_children(mod, conf, otp_app) ++
+      config_children(mod, secret_conf, otp_app) ++
       pubsub_children(mod, conf) ++
       socket_children(mod) ++
       server_children(mod, conf, otp_app, server?) ++
