@@ -17,7 +17,7 @@
     "expose-loader": "^0.7.5",
     "jsdom": "9.8.3",
     "jsdom-global": "2.1.0",
-    "mocha": "~2.4.4",
+    "mocha": "~2.4",
     "mock-socket": "^6.0.1",
     "sinon": "^1.17.6",
     "webpack": "4.0.0",
