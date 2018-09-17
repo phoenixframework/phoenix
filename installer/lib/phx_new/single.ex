@@ -44,8 +44,8 @@ defmodule Phx.New.Single do
 
   template :webpack, [
     {:eex,  "phx_assets/webpack/webpack.config.js", :project, "assets/webpack.config.js"},
-    {:text,  "phx_assets/webpack/babelrc",          :project, "assets/.babelrc"},
-    {:text, "phx_assets/app.css",                   :project, "assets/css/app.css"},
+    {:text, "phx_assets/webpack/babelrc",           :project, "assets/.babelrc"},
+    {:eex,  "phx_assets/app.css",                   :project, "assets/css/app.css"},
     {:text, "phx_assets/phoenix.css",               :project, "assets/css/phoenix.css"},
     {:eex,  "phx_assets/webpack/app.js",            :project, "assets/js/app.js"},
     {:eex,  "phx_assets/webpack/socket.js",         :project, "assets/js/socket.js"},
@@ -68,7 +68,7 @@ defmodule Phx.New.Single do
   template :bare, []
 
   template :static, [
-    {:text,   "phx_assets/app.css",        :project, "priv/static/css/app.css"},
+    {:eex,    "phx_assets/app.css",        :project, "priv/static/css/app.css"},
     {:append, "phx_assets/phoenix.css",    :project, "priv/static/css/app.css"},
     {:text,   "phx_assets/bare/app.js",    :project, "priv/static/js/app.js"},
     {:text,   "phx_assets/robots.txt",     :project, "priv/static/robots.txt"},

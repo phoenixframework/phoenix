@@ -92,7 +92,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
       assert_file "phx_blog/assets/static/favicon.ico"
       assert_file "phx_blog/assets/static/images/phoenix.png"
-      assert_file "phx_blog/assets/css/app.css"
+      assert_file "phx_blog/assets/css/app.css",
+                  ~s[@import "./phoenix.css"]
       assert_file "phx_blog/assets/js/app.js",
                   ~s[import socket from "./socket"]
       assert_file "phx_blog/assets/js/socket.js",
@@ -217,7 +218,9 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/.gitignore"
       assert_file "phx_blog/.gitignore", ~r/\n$/
-      assert_file "phx_blog/priv/static/css/app.css"
+      assert_file "phx_blog/priv/static/css/app.css",
+                  &refute(&1 =~ ~s[@import "./phoenix.css"])
+
       assert_file "phx_blog/priv/static/favicon.ico"
       assert_file "phx_blog/priv/static/images/phoenix.png"
       assert_file "phx_blog/priv/static/js/phoenix.js"
