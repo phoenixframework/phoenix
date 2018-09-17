@@ -29,7 +29,7 @@ describe("constructor", () => {
     assert.equal(socket.timeout, 10000)
     assert.equal(socket.longpollerTimeout, 20000)
     assert.equal(socket.heartbeatIntervalMs, 30000)
-    assert.equal(typeof socket.logger, "function")
+    assert.equal(socket.logger, null)
     assert.equal(typeof socket.reconnectAfterMs, "function")
   })
 
