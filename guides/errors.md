@@ -2,7 +2,7 @@
 
 Phoenix provides an `ErrorView`, `lib/hello_web/views/error_view.ex`, to render errors in our applications. The full module name will include the name of our application, as in `Hello.ErrorView`.
 
-Phoenix will detect any 400 or 500 status level errors in our application and use the `render/2` function in our `ErrorView` to render an appropriate error template. We get default implementations for 404 and 500 HTML errors, but we can add any clauses to `render/2` that we might need. Any errors which don't match an existing clause of `render/2` will be caught by `template_not_found/2`.
+Phoenix will detect any 400 or 500 status level errors in our application and use the `render/2` function in our `ErrorView` to render an appropriate error template. Any errors which don't match an existing clause of `render/2` will be caught by `template_not_found/2`.
 
 We can also customize the implementation of any of these functions however we like.
 
@@ -12,18 +12,17 @@ Here's what the `ErrorView` looks like.
 defmodule Hello.ErrorView do
   use Hello.Web, :view
 
-  def render("404.html", _assigns) do
-    "Page not found"
-  end
+  # If you want to customize a particular status code
+  # for a certain format, you may uncomment below.
+  # def render("500.html", _assigns) do
+  #   "Internal Server Error"
+  # end
 
-  def render("500.html", _assigns) do
-    "Server internal error"
-  end
-
-  # In case no render clause matches or no
-  # template is found, let's render it as 500
-  def template_not_found(_template, assigns) do
-    render("500.html", assigns)
+  # By default, Phoenix returns the status message from
+  # the template name. For example, "404.html" becomes
+  # "Not Found".
+  def template_not_found(template, _assigns) do
+    Phoenix.Controller.status_message_from_template(template)
   end
 end
 ```
