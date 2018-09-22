@@ -36,9 +36,9 @@ defmodule Phx.New.Generator do
       unquote(templates_ast)
       def template_files(name), do: Keyword.fetch!(@templates, name)
       # Embed missing files from Phoenix static.
-      embed_text :phoenix_js, from_file: Path.expand("../../../priv/static/phoenix.js", unquote(__DIR__))
-      embed_text :phoenix_png, from_file: Path.expand("../../../priv/static/phoenix.png", unquote(__DIR__))
-      embed_text :phoenix_favicon, from_file: Path.expand("../../../priv/static/favicon.ico", unquote(__DIR__))
+      embed_text :phoenix_js, from_file: Path.expand("../../templates/phx_assets/phoenix.js", unquote(__DIR__))
+      embed_text :phoenix_png, from_file: Path.expand("../../templates/phx_assets/phoenix.png", unquote(__DIR__))
+      embed_text :phoenix_favicon, from_file: Path.expand("../../templates/phx_assets/favicon.ico", unquote(__DIR__))
     end
   end
 

@@ -7,8 +7,9 @@ defmodule Phx.New.MixProject do
     [
       app: :phx_new,
       start_permanent: Mix.env() == :prod,
-      version: "1.4.0-dev",
+      version: "1.4.0-dev.0",
       elixir: "~> 1.5",
+      deps: deps(),
       package: [
         maintainers: [
           "Chris McCord",
@@ -29,6 +30,11 @@ defmodule Phx.New.MixProject do
       with Phoenix dependencies.
       """
     ]
+  end
+
+
+  def deps do
+    [{:ex_doc, "~> 0.19.1", only: :docs}]
   end
 
   # Configuration for the OTP application

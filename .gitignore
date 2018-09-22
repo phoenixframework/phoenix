@@ -8,5 +8,7 @@
 
 /installer/_build
 /installer/tmp
+/installer/doc
+/installer/deps
 
 erl_crash.dump

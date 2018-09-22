@@ -88,4 +88,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
     end
   end
+
+  test "assets are in sync with installer" do
+    for file <- ~w(favicon.ico phoenix.js phoenix.png) do
+      assert File.read!("priv/static/#{file}") ==
+             File.read!("installer/templates/phx_assets/#{file}")
+    end
+  end
 end
