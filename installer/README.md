@@ -1,6 +1,12 @@
 ## mix phx.new
 
-Provides `phx.new` installer as an archive. To build and install it locally
+Provides `phx.new` installer as an archive.
+
+To install from hex, run:
+
+    $ mix archive.install hex phx_new 1.4.0-dev.0 
+
+To build and install it locally,
 ensure any previous archive versions are removed:
 
     $ mix archive.uninstall phx_new
