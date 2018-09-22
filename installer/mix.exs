@@ -1,7 +1,7 @@
 defmodule Phx.New.MixProject do
   use Mix.Project
 
-  @url "https://github.com/phoenixframework/phoenix/installer"
+  @url "https://github.com/phoenixframework/phoenix"
 
   def project do
     [
