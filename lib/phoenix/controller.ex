@@ -38,6 +38,8 @@ defmodule Phoenix.Controller do
       the layout view. By default it uses the base alias
       in your controller name
 
+    * `:layout` - changes the layout name. Default is `LayoutView`
+
     * `:log` - the level to log. When false, disables controller
       logging
 
@@ -1441,6 +1443,7 @@ defmodule Phoenix.Controller do
         |> Enum.take(2)
         |> Module.concat()
       end
-    Module.concat(namespace, "LayoutView")
+    layout = Keyword.get(opts, :layout, "LayoutView")
+    Module.concat(namespace, layout)
   end
 end
