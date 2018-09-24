@@ -30,3 +30,6 @@ script:
 after_script:
   - cd $TRAVIS_BUILD_DIR
   - MIX_ENV=docs mix inch.report
+cache:
+  directories:
+  - assets/node_modules
