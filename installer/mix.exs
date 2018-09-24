@@ -1,7 +1,8 @@
 defmodule Phx.New.MixProject do
   use Mix.Project
 
-  @url "https://github.com/phoenixframework/phoenix"
+  @github_path "phoenixframework/phoenix"
+  @url "https://github.com/#{@github_path}"
 
   def project do
     [
@@ -21,7 +22,9 @@ defmodule Phx.New.MixProject do
         links: %{github: @url},
         files: ~w(lib templates mix.exs README.md)
       ],
+
       source_url: @url,
+      docs: docs(),
       homepage_url: "http://www.phoenixframework.org",
       description: """
       Phoenix framework project generator.
@@ -35,6 +38,12 @@ defmodule Phx.New.MixProject do
 
   def deps do
     [{:ex_doc, "~> 0.19.1", only: :docs}]
+  end
+
+  defp docs do
+    [
+      source_url_pattern: "https://github.com/#{@github_path}/blob/master/installer/%{path}#L%{line}"
+    ]
   end
 
   # Configuration for the OTP application
