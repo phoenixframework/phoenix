@@ -13,6 +13,8 @@
   9. Start -dev version in related files below
   10. Update `phoenix_dep` in `installer/lib/phoenix_new.ex` back to git
   11. Publish to `npm` with `npm publish`
+  12. Replace `master` for `source_url_pattern` in `installer/mix.exs`
+  13. Push installer (phx_new hex package) to hex
 
 ## Files with version
 
