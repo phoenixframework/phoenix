@@ -382,17 +382,17 @@ export class Channel {
     })
     this.onClose( () => {
       this.rejoinTimer.reset()
-      this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`)
+      if (this.socket.hasLogger()) this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`)
       this.state = CHANNEL_STATES.closed
       this.socket.remove(this)
     })
     this.onError( reason => { if(this.isLeaving() || this.isClosed()){ return }
-      this.socket.log("channel", `error ${this.topic}`, reason)
+      if (this.socket.hasLogger()) this.socket.log("channel", `error ${this.topic}`, reason)
       this.state = CHANNEL_STATES.errored
       this.rejoinTimer.scheduleTimeout()
     })
     this.joinPush.receive("timeout", () => { if(!this.isJoining()){ return }
-      this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
+      if (this.socket.hasLogger()) this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
       let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), this.timeout)
       leavePush.send()
       this.state = CHANNEL_STATES.errored
@@ -523,7 +523,7 @@ export class Channel {
   leave(timeout = this.timeout){
     this.state = CHANNEL_STATES.leaving
     let onClose = () => {
-      this.socket.log("channel", `leave ${this.topic}`)
+      if (this.socket.hasLogger()) this.socket.log("channel", `leave ${this.topic}`)
       this.trigger(CHANNEL_EVENTS.close, "leave")
     }
     let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), timeout)
@@ -552,12 +552,16 @@ export class Channel {
   /**
    * @private
    */
+  isLifecycleEvent(event) { return CHANNEL_LIFECYCLE_EVENTS.indexOf(event) >= 0 }
+
+  /**
+   * @private
+   */
   isMember(topic, event, payload, joinRef){
     if(this.topic !== topic){ return false }
-    let isLifecycleEvent = CHANNEL_LIFECYCLE_EVENTS.indexOf(event) >= 0
 
-    if(joinRef && isLifecycleEvent && joinRef !== this.joinRef()){
-      this.socket.log("channel", "dropping outdated message", {topic, event, payload, joinRef})
+    if(joinRef && joinRef !== this.joinRef() && this.isLifecycleEvent(event)){
+      if (this.socket.hasLogger()) this.socket.log("channel", "dropping outdated message", {topic, event, payload, joinRef})
       return false
     } else {
       return true
@@ -591,8 +595,11 @@ export class Channel {
     let handledPayload = this.onMessage(event, payload, ref, joinRef)
     if(payload && !handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
 
-    this.bindings.filter( bind => bind.event === event)
-                 .map( bind => bind.callback(handledPayload, ref, joinRef || this.joinRef()))
+    for (let i = 0; i < this.bindings.length; i++) {
+      const bind = this.bindings[i]
+      if(bind.event !== event){ continue }
+      bind.callback(handledPayload, ref, joinRef || this.joinRef())
+    }
   }
 
   /**
@@ -719,7 +726,7 @@ export class Socket {
     this.reconnectAfterMs     = opts.reconnectAfterMs || function(tries){
       return [1000, 2000, 5000, 10000][tries - 1] || 10000
     }
-    this.logger               = opts.logger || function(){} // noop
+    this.logger               = opts.logger || null
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
     this.params               = closure(opts.params || {})
     this.endPoint             = `${endPoint}/${TRANSPORTS.websocket}`
@@ -789,6 +796,11 @@ export class Socket {
   log(kind, msg, data){ this.logger(kind, msg, data) }
 
   /**
+   * Returns true if a logger has been set on this socket.
+   */
+  hasLogger(){ return this.logger !== null }
+
+  /**
    * Registers callbacks for connection open events
    *
    * @example socket.onOpen(function(){ console.info("the socket was opened") })
@@ -822,7 +834,7 @@ export class Socket {
    * @private
    */
   onConnOpen(){
-    this.log("transport", `connected to ${this.endPointURL()}`)
+    if (this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     if(!this.conn.skipHeartbeat){
@@ -846,7 +858,7 @@ export class Socket {
   }
 
   onConnClose(event){
-    this.log("transport", "close", event)
+    if (this.hasLogger()) this.log("transport", "close", event)
     this.triggerChanError()
     clearInterval(this.heartbeatTimer)
     if(event && event.code !== WS_CLOSE_NORMAL) {
@@ -859,7 +871,7 @@ export class Socket {
    * @private
    */
   onConnError(error){
-    this.log("transport", error)
+    if (this.hasLogger()) this.log("transport", error)
     this.triggerChanError()
     this.stateChangeCallbacks.error.forEach( callback => callback(error) )
   }
@@ -912,18 +924,15 @@ export class Socket {
    * @param {Object} data
    */
   push(data){
-    let {topic, event, payload, ref, join_ref} = data
-    let callback = () => {
-      this.encode(data, result => {
-        this.conn.send(result)
-      })
+    if (this.hasLogger()) {
+      let {topic, event, payload, ref, join_ref} = data
+      this.log("push", `${topic} ${event} (${join_ref}, ${ref})`, payload)
     }
-    this.log("push", `${topic} ${event} (${join_ref}, ${ref})`, payload)
+
     if(this.isConnected()){
-      callback()
-    }
-    else {
-      this.sendBuffer.push(callback)
+      this.encode(data, result => this.conn.send(result))
+    } else {
+      this.sendBuffer.push(() => this.encode(data, result => this.conn.send(result)))
     }
   }
 
@@ -941,7 +950,7 @@ export class Socket {
   sendHeartbeat(){ if(!this.isConnected()){ return }
     if(this.pendingHeartbeatRef){
       this.pendingHeartbeatRef = null
-      this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
+      if (this.hasLogger()) this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
       this.conn.close(WS_CLOSE_NORMAL, "hearbeat timeout")
       return
     }
@@ -961,10 +970,17 @@ export class Socket {
       let {topic, event, payload, ref, join_ref} = msg
       if(ref && ref === this.pendingHeartbeatRef){ this.pendingHeartbeatRef = null }
 
-      this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
-      this.channels.filter( channel => channel.isMember(topic, event, payload, join_ref) )
-                   .forEach( channel => channel.trigger(event, payload, ref, join_ref) )
-      this.stateChangeCallbacks.message.forEach( callback => callback(msg) )
+      if (this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
+
+      for (let i = 0; i < this.channels.length; i++) {
+        const channel = this.channels[i]
+        if(!channel.isMember(topic, event, payload, join_ref)){ continue }
+        channel.trigger(event, payload, ref, join_ref)
+      }
+
+      for (let i = 0; i < this.stateChangeCallbacks.message.length; i++) {
+        this.stateChangeCallbacks.message[i](msg)
+      }
     })
   }
 }
@@ -1113,7 +1129,7 @@ export class Ajax {
   }
 
   static serialize(obj, parentKey){
-    let queryStr = [];
+    let queryStr = []
     for(var key in obj){ if(!obj.hasOwnProperty(key)){ continue }
       let paramKey = parentKey ? `${parentKey}[${key}]` : key
       let paramVal = obj[key]
@@ -1255,7 +1271,7 @@ export class Presence {
       if(currentPresence){
         let joinedRefs = state[key].metas.map(m => m.phx_ref)
         let curMetas = currentPresence.metas.filter(m => joinedRefs.indexOf(m.phx_ref) < 0)
-        state[key].metas.unshift(...curMetas);
+        state[key].metas.unshift(...curMetas)
       }
       onJoin(key, currentPresence, newPresence)
     })
