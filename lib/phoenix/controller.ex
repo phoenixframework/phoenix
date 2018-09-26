@@ -880,7 +880,7 @@ defmodule Phoenix.Controller do
       send_download(conn, {:file, path})
 
   When using `{:file, path}`, the filename is inferred from the
-  given path must may also be set explicitly.
+  given path but may also be set explicitly.
 
   To allow the user to download contents that are in memory as
   a binary or string:
