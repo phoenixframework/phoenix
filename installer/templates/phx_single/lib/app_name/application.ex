@@ -11,7 +11,7 @@ defmodule <%= app_module %>.Application do
       # Start the Ecto repository
       <%= app_module %>.Repo,<% end %>
       # Start the endpoint when the application starts
-      <%= endpoint_module %>,
+      <%= endpoint_module %>
       # Starts a worker by calling: <%= app_module %>.Worker.start_link(arg)
       # {<%= app_module %>.Worker, arg},
     ]

@@ -39,15 +39,12 @@ defmodule Mix.Tasks.Phx.NewTest do
       secret_key_base: String.duplicate("abcdefgh", 8),
       code_reloader: true)
 
+    root = File.cwd!
+
     in_tmp "bootstrap", fn ->
       project_path = Path.join(File.cwd!(), "phx_blog")
       try do
         Mix.Tasks.Phx.New.run(["phx_blog", "--no-webpack", "--no-ecto"])
-
-        # Copy artifacts from Phoenix so we can compile and run tests
-        File.cp_r "_build",   "bootstrap/phx_blog/_build"
-        File.cp_r "deps",     "bootstrap/phx_blog/deps"
-        File.cp_r "mix.lock", "bootstrap/phx_blog/mix.lock"
 
         in_project :phx_blog, project_path, fn _ ->
           Mix.Task.clear()
@@ -81,6 +78,12 @@ defmodule Mix.Tasks.Phx.NewTest do
               Mix.Task.run("test", ["--no-start", "--no-compile"])
             end)
           end) =~ ~r"3 tests, 0 failures"
+
+          if Version.match?(System.version(), ">= 1.6.0") do
+            File.mkdir_p!("deps/phoenix")
+            File.cp_r!(Path.join(root, ".formatter.exs"), "deps/phoenix/.formatter.exs")
+            Mix.Task.run("format", ["--check-formatted"])
+          end
         end
       after
         Code.delete_path Path.join(project_path, "_build/test/consolidated")

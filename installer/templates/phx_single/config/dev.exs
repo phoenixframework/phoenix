@@ -11,8 +11,15 @@ config :<%= app_name %>, <%= endpoint_module %>,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  watchers: <%= if webpack do %>[node: ["node_modules/webpack/bin/webpack.js", "--mode", "development", "--watch-stdin",
-                    cd: Path.expand("../assets", __DIR__)]]<% else %>[]<% end %>
+  watchers: <%= if webpack do %>[
+    node: [
+      "node_modules/webpack/bin/webpack.js",
+      "--mode",
+      "development",
+      "--watch-stdin",
+      cd: Path.expand("../assets", __DIR__)
+    ]
+  ]<% else %>[]<% end %>
 
 # ## SSL Support
 #
@@ -36,9 +43,9 @@ config :<%= app_name %>, <%= endpoint_module %>,
 #
 # If desired, both `http:` and `https:` keys can be
 # configured to run both http and https servers on
-# different ports.
+# different ports.<%= if html do %>
 
-<%= if html do %># Watch static and templates for browser reloading.
+# Watch static and templates for browser reloading.
 config :<%= app_name %>, <%= endpoint_module %>,
   live_reload: [
     patterns: [
@@ -47,9 +54,9 @@ config :<%= app_name %>, <%= endpoint_module %>,
       ~r{lib/<%= lib_web_name %>/views/.*(ex)$},
       ~r{lib/<%= lib_web_name %>/templates/.*(eex)$}
     ]
-  ]
+  ]<% end %>
 
-<% end %># Do not include metadata nor timestamps in development logs
+# Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 
 # Set a higher stacktrace during development. Avoid configuring such

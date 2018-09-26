@@ -3,21 +3,21 @@
 #
 # This configuration file is loaded before any dependency and
 # is restricted to this project.
-use Mix.Config
 
-<%= if namespaced? || ecto || generators do %># General application configuration
+# General application configuration
+use Mix.Config<%= if namespaced? || ecto || generators do %>
+
 config :<%= app_name %><%= if namespaced? do %>,
   namespace: <%= app_module %><% end %><%= if ecto do %>,
   ecto_repos: [<%= app_module %>.Repo]<% end %><%= if generators do %>,
-  generators: <%= inspect generators %><% end %>
+  generators: <%= inspect generators %><% end %><% end %>
 
-<% end %># Configures the endpoint
+# Configures the endpoint
 config :<%= app_name %>, <%= endpoint_module %>,
   url: [host: "localhost"],
   secret_key_base: "<%= secret_key_base %>",
   render_errors: [view: <%= web_namespace %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json)],
-  pubsub: [name: <%= app_module %>.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: <%= app_module %>.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -26,9 +26,8 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix<%= if ecto do %> and Ecto<% end %>
 config :phoenix, :json_library, Jason<%= if ecto do %>
-config :ecto, :json_library, Jason
-<% end %>
+config :ecto, :json_library, Jason<% end %>
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"
