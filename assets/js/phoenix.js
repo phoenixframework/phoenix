@@ -596,9 +596,9 @@ export class Channel {
     if(payload && !handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
 
     for (let i = 0; i < this.bindings.length; i++) {
-      const bind = this.bindings[i];
-      if (bind.event !== event) continue;
-      bind.callback(handledPayload, ref, joinRef || this.joinRef());
+      const bind = this.bindings[i]
+      if(bind.event !== event){ continue }
+      bind.callback(handledPayload, ref, joinRef || this.joinRef())
     }
   }
 
@@ -930,9 +930,9 @@ export class Socket {
     }
 
     if(this.isConnected()){
-      this.encode(data, result => this.conn.send(result));
+      this.encode(data, result => this.conn.send(result))
     } else {
-      this.sendBuffer.push(() => this.encode(data, result => this.conn.send(result)));
+      this.sendBuffer.push(() => this.encode(data, result => this.conn.send(result)))
     }
   }
 
@@ -973,13 +973,13 @@ export class Socket {
       if (this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
 
       for (let i = 0; i < this.channels.length; i++) {
-        const channel = this.channels[i];
-        if (!channel.isMember(topic, event, payload, join_ref)) continue;
-        channel.trigger(event, payload, ref, join_ref);
+        const channel = this.channels[i]
+        if(!channel.isMember(topic, event, payload, join_ref)){ continue }
+        channel.trigger(event, payload, ref, join_ref)
       }
 
       for (let i = 0; i < this.stateChangeCallbacks.message.length; i++) {
-        this.stateChangeCallbacks.message[i](msg);
+        this.stateChangeCallbacks.message[i](msg)
       }
     })
   }
@@ -1129,7 +1129,7 @@ export class Ajax {
   }
 
   static serialize(obj, parentKey){
-    let queryStr = [];
+    let queryStr = []
     for(var key in obj){ if(!obj.hasOwnProperty(key)){ continue }
       let paramKey = parentKey ? `${parentKey}[${key}]` : key
       let paramVal = obj[key]
@@ -1271,7 +1271,7 @@ export class Presence {
       if(currentPresence){
         let joinedRefs = state[key].metas.map(m => m.phx_ref)
         let curMetas = currentPresence.metas.filter(m => joinedRefs.indexOf(m.phx_ref) < 0)
-        state[key].metas.unshift(...curMetas);
+        state[key].metas.unshift(...curMetas)
       }
       onJoin(key, currentPresence, newPresence)
     })
