@@ -101,7 +101,7 @@ defmodule Phoenix.Endpoint do
       "priv/static/cache_manifest.json" which is the file automatically generated
       by `mix phx.digest`
 
-    * `:check_origin` - configure transports to check origins or not. May
+    * `:check_origin` - configure transports to check `origin` header or not. May
       be `false`, `true`, a list of hosts that are allowed, or a function provided as
       MFA tuple. Hosts also support wildcards.
 
@@ -115,6 +115,8 @@ defmodule Phoenix.Endpoint do
 
       The MFA is invoked with the request `%URI{}` as the first argument,
       followed by arguments in the MFA list
+
+      Defaults to `true`.
 
     * `:http` - the configuration for the HTTP server. Currently uses
       Cowboy and accepts all options as defined by
