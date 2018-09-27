@@ -18,13 +18,13 @@ In a freshly generated application (we use a project named "hello" in the exampl
 $ mix test
 ....
 
-Finished in 0.2 seconds
-4 tests, 0 failures
+Finished in 0.09 seconds
+3 tests, 0 failures
 
 Randomized with seed 652656
 ```
 
-We already have four tests!
+We already have three tests!
 
 In fact, we already have a directory structure completely set up for testing, including a test helper and support files.
 
@@ -81,17 +81,12 @@ defmodule HelloWeb.ErrorViewTest do
 
   test "renders 404.html" do
     assert render_to_string(HelloWeb.ErrorView, "404.html", []) ==
-           "Page not found"
+           "Not Found"
   end
 
   test "render 500.html" do
     assert render_to_string(HelloWeb.ErrorView, "500.html", []) ==
-           "Internal server error"
-  end
-
-  test "render any other" do
-    assert render_to_string(HelloWeb.ErrorView, "505.html", []) ==
-           "Internal server error"
+           "Internal Server Error"
   end
 end
 ```
@@ -133,7 +128,7 @@ $ mix test
 ....
 
 Finished in 0.2 seconds
-4 tests, 0 failures
+3 tests, 0 failures
 
 Randomized with seed 540755
 ```
@@ -157,7 +152,7 @@ $ mix test test/hello_web/views/error_view_test.exs
 ...
 
 Finished in 0.2 seconds
-3 tests, 0 failures
+2 tests, 0 failures
 
 Randomized with seed 220535
 ```
@@ -167,19 +162,19 @@ And we can run a single test in a file by appending a colon and a line number to
 Let's say we only wanted to run the test for the way `HelloWeb.ErrorView` renders `500.html`. The test begins on line 12 of the file, so this is how we would do it.
 
 ```console
-$ mix test test/hello_web/views/error_view_test.exs:12
-Including tags: [line: "12"]
+$ mix test test/hello_web/views/error_view_test.exs:11
+Including tags: [line: "11"]
 Excluding tags: [:test]
 
 .
 
 Finished in 0.1 seconds
-3 tests, 0 failures, 2 skipped
+2 tests, 0 failures, 1 excluded
 
 Randomized with seed 288117
 ```
 
-We chose to run this specifying the first line of the test, but actually, any line of that test will do. These line numbers would all work - `:13`, `:14`, or `:15`.
+We chose to run this specifying the first line of the test, but actually, any line of that test will do. These line numbers would all work - `:11`, `:12`, or `:13`.
 
 ### Running Tests Using Tags
 
@@ -221,7 +216,7 @@ Excluding tags: [:test]
 ...
 
 Finished in 0.1 seconds
-4 tests, 0 failures, 1 skipped
+3 tests, 0 failures, 1 excluded
 
 Randomized with seed 125659
 ```
@@ -229,14 +224,14 @@ Randomized with seed 125659
 > Note: ExUnit tells us exactly which tags it is including and excluding for each test run. If we look back to the previous section on running tests, we'll see that line numbers specified for individual tests are actually treated as tags.
 
 ```console
-$ mix test test/hello_web/views/error_view_test.exs:12
-Including tags: [line: "12"]
+$ mix test test/hello_web/views/error_view_test.exs:11
+Including tags: [line: "11"]
 Excluding tags: [:test]
 
 .
 
 Finished in 0.2 seconds
-3 tests, 0 failures, 2 skipped
+2 tests, 0 failures, 1 excluded
 
 Randomized with seed 364723
 ```
@@ -251,7 +246,7 @@ Excluding tags: [:test]
 ...
 
 Finished in 0.1 seconds
-4 tests, 0 failures, 1 skipped
+3 tests, 0 failures, 1 excluded
 
 Randomized with seed 833356
 ```
@@ -266,9 +261,10 @@ Excluding tags: [:test]
 
 
 Finished in 0.1 seconds
-4 tests, 0 failures, 4 skipped
+3 tests, 0 failures, 3 excluded
 
 Randomized with seed 622422
+The --only option was given to "mix test" but no test executed
 ```
 
 We can use the `--exclude` flag in a similar way. This will run all of the tests except those in the error view case.
@@ -280,7 +276,7 @@ Excluding tags: [:error_view_case]
 .
 
 Finished in 0.2 seconds
-4 tests, 0 failures, 3 skipped
+3 tests, 0 failures, 2 excluded
 
 Randomized with seed 682868
 ```
@@ -301,15 +297,14 @@ defmodule HelloWeb.ErrorViewTest do
   @tag individual_test: "yup"
   test "renders 404.html" do
     assert render_to_string(HelloWeb.ErrorView, "404.html", []) ==
-           "Page not found"
+           "Not Found"
   end
 
   @tag individual_test: "nope"
   test "render 500.html" do
     assert render_to_string(HelloWeb.ErrorView, "500.html", []) ==
-           "Server internal error"
+           "Internal Server Error"
   end
-  ...
 end
 ```
 
@@ -323,7 +318,7 @@ Excluding tags: [:test]
 ..
 
 Finished in 0.1 seconds
-4 tests, 0 failures, 2 skipped
+3 tests, 0 failures, 1 excluded
 
 Randomized with seed 813729
 ```
@@ -338,7 +333,7 @@ Excluding tags: [:test]
 .
 
 Finished in 0.1 seconds
-4 tests, 0 failures, 3 skipped
+3 tests, 0 failures, 2 excluded
 
 Randomized with seed 770938
 ```
@@ -352,27 +347,10 @@ Excluding tags: [individual_test: "nope"]
 ...
 
 Finished in 0.2 seconds
-4 tests, 0 failures, 1 skipped
+3 tests, 0 failures, 1 excluded
 
 Randomized with seed 539324
 ```
-
-Here's an interesting case, let's exclude all of the tests from the error view case except the ones tagged with `individual_test`.
-
-```console
-$ mix test --exclude error_view_case --include individual_test
-Including tags: [:individual_test]
-Excluding tags: [:error_view_case]
-
-...
-
-Finished in 0.2 seconds
-4 tests, 0 failures, 1 skipped
-
-Randomized with seed 41241
-```
-
-This runs the two tests tagged with `individual_test` as well as the one from `test/hello_web/controllers/page_controller_test.exs`.
 
 We can be more specific and exclude all the tests from the error view case except the one tagged with `individual_test` that has the value "yup".
 
@@ -384,7 +362,7 @@ Excluding tags: [:error_view_case]
 ..
 
 Finished in 0.2 seconds
-4 tests, 0 failures, 2 skipped
+3 tests, 0 failures, 1 excluded
 
 Randomized with seed 61472
 ```
@@ -408,7 +386,7 @@ Excluding tags: [error_view_case: true]
 .
 
 Finished in 0.2 seconds
-4 tests, 0 failures, 3 skipped
+3 tests, 0 failures, 2 excluded
 
 Randomized with seed 186055
 ```
@@ -423,7 +401,7 @@ Excluding tags: [error_view_case: true]
 ....
 
 Finished in 0.2 seconds
-4 tests, 0 failures
+3 tests, 0 failures
 
 Randomized with seed 748424
 ```
@@ -439,7 +417,7 @@ $ mix test --seed 401472
 ....
 
 Finished in 0.2 seconds
-4 tests, 0 failures
+3 tests, 0 failures
 
 Randomized with seed 401472
 ```
@@ -455,10 +433,6 @@ At the root of our new application, let's run the `mix phx.gen.html` task with t
 ```console
 $ mix phx.gen.html Users User users name:string email:string bio:string number_of_pets:integer
 
-...
-
-Generated hello app
-
 * creating lib/hello_web/controllers/user_controller.ex
 * creating lib/hello_web/templates/user/edit.html.eex
 * creating lib/hello_web/templates/user/form.html.eex
@@ -468,13 +442,13 @@ Generated hello app
 * creating lib/hello_web/views/user_view.ex
 * creating test/hello_web/controllers/user_controller_test.exs
 * creating lib/hello/users/user.ex
-* creating priv/repo/migrations/20170830041905_create_users.exs
+* creating priv/repo/migrations/20180904210841_create_users.exs
 * creating lib/hello/users/users.ex
 * injecting lib/hello/users/users.ex
 * creating test/hello/users/users_test.exs
 * injecting test/hello/users/users_test.exs
 
-Add the resource to your browser scope in web/router.ex:
+Add the resource to your browser scope in lib/hello_web/router.ex:
 
     resources "/users", UserController
 
@@ -512,7 +486,7 @@ $ mix test
 ................
 
 Finished in 0.1 seconds
-20 tests, 0 failures
+19 tests, 0 failures
 
 Randomized with seed 537537
 ```

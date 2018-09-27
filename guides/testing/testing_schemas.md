@@ -11,34 +11,45 @@ $ mix test
 ................
 
 Finished in 0.6 seconds
-20 tests, 0 failures
+19 tests, 0 failures
 
 Randomized with seed 638414
 ```
 
-Great. We've got twenty tests and they are all passing!
+Great. We've got nineteen tests and they are all passing!
 
 ## Test Driving a Changeset
 
-We'll be adding additional validations to the schema module, so let's create `test/hello/accounts/user_test.exs` with this content:
+We'll be adding additional validations to the schema module, so let's open the generated `test/hello/accounts/accounts_test.exs` and take a look:
 
 ```elixir
-defmodule Hello.Accounts.UserTest do
+defmodule Hello.AccountsTest do
   use Hello.DataCase
 
-  alias Hello.Accounts.User
+  alias Hello.Accounts
 
-  @valid_attrs %{bio: "my life", email: "pat@example.com", name: "Pat Example", number_of_pets: 4}
-  @invalid_attrs %{}
+  describe "users" do
+    alias Hello.Accounts.User
 
-  test "changeset with valid attributes" do
-    changeset = User.changeset(%User{}, @valid_attrs)
-    assert changeset.valid?
-  end
+    @valid_attrs %{bio: "some bio", email: "some email", name: "some name", number_of_pets: 42}
+    @update_attrs %{bio: "some updated bio", email: "some updated email", name: "some updated name", number_of_pets: 43}
+    @invalid_attrs %{bio: nil, email: nil, name: nil, number_of_pets: nil}
 
-  test "changeset with invalid attributes" do
-    changeset = User.changeset(%User{}, @invalid_attrs)
-    refute changeset.valid?
+    # ...
+
+    test "create_user/1 with valid data creates a user" do
+      assert {:ok, %User{} = user} = Accounts.create_user(@valid_attrs)
+      assert user.bio == "some bio"
+      assert user.email == "some email"
+      assert user.name == "some name"
+      assert user.number_of_pets == 42
+    end
+
+    test "create_user/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Accounts.create_user(@invalid_attrs)
+    end
+
+    # ...
   end
 end
 ```
@@ -53,8 +64,6 @@ We alias our `Hello.Accounts.User` module so that we can refer to its structs as
 
 We also define module attributes for `@valid_attrs` and `@invalid_attrs` so they will be available to all our tests.
 
-If we run the tests again, we've got 22, and they should all pass.
-
 #### Number of Pets
 
 While Phoenix generated our model with all of the fields required, the number of pets a user has is optional in our domain.
@@ -64,7 +73,7 @@ Let's write a new test to verify that.
 To test this, we can delete the `:number_of_pets` key and value from the `@valid_attrs` map and make a `User` changeset from those new attributes. Then we can assert that the changeset is still valid.
 
 ```elixir
-defmodule Hello.Accounts.UserTest do
+defmodule Hello.AccountsTest do
   ...
 
   test "number_of_pets is not required" do
@@ -80,21 +89,21 @@ Now, let's run the tests again.
 $ mix test
 ....................
 
-  1) test number_of_pets is not required (Hello.Accounts.UserTest)
-     test/hello/accounts/user_test.exs:19
+  1) test number_of_pets is not required (Hello.AccountsTest)
+     test/hello/accounts/accounts_test.exs:19
      Expected truthy, got false
      code: assert changeset.valid?()
      stacktrace:
-       test/hello/accounts/user_test.exs:21: (test)
+       test/hello/accounts/accounts_test.exs:21: (test)
 ..
 
 Finished in 0.4 seconds
-23 tests, 1 failure
+20 tests, 1 failure
 
 Randomized with seed 780208
 ```
 
-It fails - which is exactly what it should do! We haven't written the code to make it pass yet. To do that, we need to remove the `:number_of_pets` attribute from our `validate_required/3` function in `lib/hello_web/models/user.ex`.
+It fails - which is exactly what it should do! We haven't written the code to make it pass yet. To do that, we need to remove the `:number_of_pets` attribute from our `validate_required/3` function in `lib/hello_web/accounts/user.ex`.
 
 ```elixir
 defmodule Hello.Accounts.User do
@@ -115,7 +124,7 @@ $ mix test
 .......................
 
 Finished in 0.3 seconds
-23 tests, 0 failures
+20 tests, 0 failures
 
 Randomized with seed 963040
 ```
@@ -127,7 +136,7 @@ In the Ecto Guide, we learned that the user's `:bio` attribute has two business 
 First, we change the `:bio` attribute to have a value of a single character. Then we create a changeset with the new attributes and test its validity.
 
 ```elixir
-defmodule Hello.Accounts.UserTest do
+defmodule Hello.AccountsTest do
   ...
 
   test "bio must be at least two characters long" do
@@ -144,17 +153,17 @@ When we run the test, it fails, as we would expect.
 $ mix test
 ...................
 
-  1) test bio must be at least two characters long (Hello.Accounts.UserTest)
-     test/hello/accounts/user_test.exs:24
+  1) test bio must be at least two characters long (Hello.AccountsTest)
+     test/hello/accounts/accounts_test.exs:24
      Expected false or nil, got true
      code: refute changeset.valid?()
      stacktrace:
-       test/hello/accounts/user_test.exs:27: (test)
+       test/hello/accounts/accounts_test.exs:27: (test)
 
 ....
 
 Finished in 0.3 seconds
-24 tests, 1 failure
+21 tests, 1 failure
 
 Randomized with seed 327779
 ```
@@ -166,7 +175,7 @@ We can do better.
 Let's change our test to get a better message while still testing the same behavior. We can leave the code to set the new `:bio` value in place. In the `assert`, however, we'll use the `errors_on/1` function we get from `DataCase` to generate a map of errors, and check that the `:bio` attribute error is in that map.
 
 ```elixir
-defmodule Hello.Accounts.UserTest do
+defmodule Hello.AccountsTest do
   ...
 
   test "bio must be at least two characters long" do
@@ -183,18 +192,18 @@ When we run the tests again, we get a different message entirely.
 $ mix test
 ...................
 
-  1) test bio must be at least two characters long (Hello.Accounts.UserTest)
-     test/hello/accounts/user_test.exs:24
+  1) test bio must be at least two characters long (Hello.AccountsTest)
+     test/hello/accounts/accounts_test.exs:24
      match (=) failed
      code:  assert %{bio: ["should be at least 2 character(s)"]} = errors_on(changeset)
      right: %{}
      stacktrace:
-       test/hello/accounts/user_test.exs:27: (test)
+       test/hello/accounts/accounts_test.exs:27: (test)
 
 ....
 
 Finished in 0.4 seconds
-24 tests, 1 failure
+21 tests, 1 failure
 
 Randomized with seed 435902
 ```
@@ -235,7 +244,7 @@ $ mix test
 ........................
 
 Finished in 0.2 seconds
-24 tests, 0 failures
+21 tests, 0 failures
 
 Randomized with seed 305958
 ```
@@ -245,7 +254,7 @@ The other business requirement for the `:bio` field is that it be a maximum of o
 We'll use String.duplicate/2 to produce n-long "a" string here.
 
 ```elixir
-defmodule Hello.Accounts.UserTest do
+defmodule Hello.AccountsTest do
   ...
 
   test "bio must be at most 140 characters long" do
@@ -262,18 +271,18 @@ When we run the test, it fails as we want it to.
 $ mix test
 .......................
 
-  1) test bio must be at most 140 characters long (Hello.Accounts.UserTest)
-     test/hello/accounts/user_test.exs:30
+  1) test bio must be at most 140 characters long (Hello.AccountsTest)
+     test/hello/accounts/accounts_test.exs:30
      match (=) failed
      code:  assert %{bio: ["should be at most 140 character(s)"]} = errors_on(changeset)
      right: %{}
      stacktrace:
-       test/hello/accounts/user_test.exs:33: (test)
+       test/hello/accounts/accounts_test.exs:33: (test)
 
 .
 
 Finished in 0.3 seconds
-25 tests, 1 failure
+22 tests, 1 failure
 
 Randomized with seed 593838
 ```
@@ -300,7 +309,7 @@ $ mix test
 .........................
 
 Finished in 0.4 seconds
-25 tests, 0 failures
+22 tests, 0 failures
 
 Randomized with seed 468975
 ```
@@ -312,7 +321,7 @@ We have one last attribute to validate. Currently, `:email` is just a string lik
 This process will feel familiar by now. First, we change the value of the `:email` attribute to omit the "@". Then we write an assertion which uses `errors_on/1` to check for the correct validation error on the `:email` attribute.
 
 ```elixir
-defmodule Hello.Accounts.UserTest do
+defmodule Hello.AccountsTest do
   ...
 
   test "email must contain at least an @" do
@@ -329,18 +338,18 @@ When we run the tests, it fails. We see that we're getting an empty map of error
 $ mix test
 .......................
 
-  1) test email must contain at least an @ (Hello.Accounts.UserTest)
-     test/hello/accounts/user_test.exs:36
+  1) test email must contain at least an @ (Hello.AccountsTest)
+     test/hello/accounts/accounts_test.exs:36
      match (=) failed
      code:  assert %{email: ["has invalid format"]} = errors_on(changeset)
      right: %{}
      stacktrace:
-       test/hello/accounts/user_test.exs:39: (test)
+       test/hello/accounts/accounts_test.exs:39: (test)
 
 ..
 
 Finished in 0.4 seconds
-26 tests, 1 failure
+23 tests, 1 failure
 
 Randomized with seed 962127
 ```
@@ -441,7 +450,7 @@ $ mix test
 ..........................
 
 Finished in 0.2 seconds
-26 tests, 0 failures
+23 tests, 0 failures
 
 Randomized with seed 330955
 ```
@@ -466,7 +475,7 @@ bio:string number_of_pets:integer
 * creating lib/hello_web/views/user_view.ex
 * creating test/hello_web/controllers/user_controller_test.exs
 * creating lib/hello/accounts/user.ex
-* creating priv/repo/migrations/20170906212909_create_users.exs
+* creating priv/repo/migrations/20180906212909_create_users.exs
 * creating lib/hello/accounts/accounts.ex
 * injecting lib/hello/accounts/accounts.ex
 * creating test/hello/accounts/accounts_test.exs
