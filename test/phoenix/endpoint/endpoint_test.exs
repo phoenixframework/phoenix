@@ -12,6 +12,8 @@ defmodule Phoenix.Endpoint.EndpointTest do
            pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
+  Application.put_env(:phoenix, __MODULE__.NoPubSubEndpoint, Keyword.delete(@config, :pubsub))
+
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
@@ -19,6 +21,15 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert is_list(config)
     assert @otp_app == :phoenix
     assert code_reloading? == false
+  end
+
+  defmodule NoPubSubEndpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+
+    def init(_, config) do
+      pubsub = [adapter: Phoenix.PubSub.PG2, name: :named_at_runtime_endpoint_pub]
+      {:ok, Keyword.put(config, :pubsub, pubsub)}
+    end
   end
 
   setup_all do
@@ -33,6 +44,12 @@ defmodule Phoenix.Endpoint.EndpointTest do
       start: {Endpoint, :start_link, [[]]},
       type: :supervisor
     }
+  end
+
+  test "errors if pubsub is not set at runtime and not compile time" do
+    Process.flag(:trap_exit, true)
+    {:error, {%ArgumentError{message: message}, _}} = NoPubSubEndpoint.start_link()
+    assert message =~ "no :pubsub server was configured at compile time"
   end
 
   test "has reloadable configuration" do

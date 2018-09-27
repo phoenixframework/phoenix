@@ -54,7 +54,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     if adapter = pub_conf[:adapter] do
       pub_conf = [fastlane: Phoenix.Channel.Server] ++ pub_conf
-      [supervisor(adapter, [mod.__pubsub_server__(), pub_conf])]
+      [supervisor(adapter, [Phoenix.Endpoint.__pubsub_server__!(mod), pub_conf])]
     else
       []
     end
