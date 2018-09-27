@@ -63,10 +63,10 @@ defmodule Phx.New.Web do
   template :bare, []
 
   template :static, [
-    {:text,   "phx_assets/app.css",        :web, "priv/static/css/app.css"},
-    {:append, "phx_assets/phoenix.css",    :web, "priv/static/css/app.css"},
-    {:text,   "phx_assets/bare/app.js",    :web, "priv/static/js/app.js"},
-    {:text,   "phx_assets/robots.txt",     :web, "priv/static/robots.txt"},
+    {:text, "phx_assets/app.css",     :web, "priv/static/css/app.css"},
+    {:text, "phx_assets/phoenix.css", :web, "priv/static/css/phoenix.css"},
+    {:text, "phx_assets/bare/app.js", :web, "priv/static/js/app.js"},
+    {:text, "phx_assets/robots.txt",  :web, "priv/static/robots.txt"},
   ]
 
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do

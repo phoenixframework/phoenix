@@ -93,6 +93,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/assets/static/favicon.ico"
       assert_file "phx_blog/assets/static/images/phoenix.png"
       assert_file "phx_blog/assets/css/app.css"
+      assert_file "phx_blog/assets/css/phoenix.css"
       assert_file "phx_blog/assets/js/app.js",
                   ~s[import socket from "./socket"]
       assert_file "phx_blog/assets/js/socket.js",
@@ -104,6 +105,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       refute File.exists? "phx_blog/priv/static/css/app.css"
+      refute File.exists? "phx_blog/priv/static/css/phoenix.css"
       refute File.exists? "phx_blog/priv/static/js/phoenix.js"
       refute File.exists? "phx_blog/priv/static/js/app.js"
 
@@ -160,6 +162,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # No webpack & No HTML
       refute_file "phx_blog/priv/static/css/app.css"
+      refute_file "phx_blog/priv/static/css/phoenix.css"
       refute_file "phx_blog/priv/static/favicon.ico"
       refute_file "phx_blog/priv/static/images/phoenix.png"
       refute_file "phx_blog/priv/static/js/phoenix.js"
@@ -218,6 +221,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/.gitignore"
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/priv/static/css/app.css"
+      assert_file "phx_blog/priv/static/css/phoenix.css"
       assert_file "phx_blog/priv/static/favicon.ico"
       assert_file "phx_blog/priv/static/images/phoenix.png"
       assert_file "phx_blog/priv/static/js/phoenix.js"
