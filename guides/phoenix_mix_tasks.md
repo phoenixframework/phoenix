@@ -139,9 +139,8 @@ We can also see that files related to the application as a whole - eg. files in 
 
 ```console
 * creating task_tester/lib/hello.ex
-* creating task_tester/lib/hello/endpoint.ex
+* creating task_tester/lib/hello_web/endpoint.ex
 * creating task_tester/lib/hello/repo.ex
-* creating task_tester/test/hello_test.exs
 ```
 
 If we only want to change the qualifying prefix for module names, we can do that with the `--module` flag. It's important to note that the value of the `--module` must look like a valid module name with proper capitalization. The task will throw an error if it doesn't.
@@ -153,27 +152,25 @@ $  mix phx.new task_tester --module Hello
 * creating task_tester/config/prod.exs
 * creating task_tester/config/prod.secret.exs
 * creating task_tester/config/test.exs
+* creating task_tester/lib/task_tester/application.ex
 * creating task_tester/lib/task_tester.ex
-* creating task_tester/lib/task_tester/endpoint.ex
-* creating task_tester/priv/static/robots.txt
-* creating task_tester/test/controllers/page_controller_test.exs
-* creating task_tester/test/views/error_view_test.exs
-* creating task_tester/test/views/page_view_test.exs
-* creating task_tester/test/support/conn_case.ex
-* creating task_tester/test/support/channel_case.ex
-* creating task_tester/test/test_helper.exs
-* creating task_tester/web/controllers/page_controller.ex
-* creating task_tester/web/templates/layout/app.html.eex
-* creating task_tester/web/templates/page/index.html.eex
-* creating task_tester/web/views/error_view.ex
-* creating task_tester/web/views/layout_view.ex
-* creating task_tester/web/views/page_view.ex
-* creating task_tester/web/router.ex
-* creating task_tester/web/web.ex
+* creating task_tester/lib/task_tester_web/channels/user_socket.ex
+* creating task_tester/lib/task_tester_web/views/error_helpers.ex
+* creating task_tester/lib/task_tester_web/views/error_view.ex
+* creating task_tester/lib/task_tester_web/endpoint.ex
+* creating task_tester/lib/task_tester_web/router.ex
+* creating task_tester/lib/task_tester_web.ex
 * creating task_tester/mix.exs
 * creating task_tester/README.md
+* creating task_tester/.gitignore
+* creating task_tester/test/support/channel_case.ex
+* creating task_tester/test/support/conn_case.ex
+* creating task_tester/test/test_helper.exs
+* creating task_tester/test/task_tester_web/views/error_view_test.exs
+* creating task_tester/lib/task_tester_web/gettext.ex
+* creating task_tester/priv/gettext/en/LC_MESSAGES/errors.po
+* creating task_tester/priv/gettext/errors.pot
 * creating task_tester/lib/task_tester/repo.ex
-. . .
 ```
 
 Notice that none of the files have `hello` in their names. All filenames related to the application name are `task_tester`.

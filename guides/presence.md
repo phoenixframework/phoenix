@@ -131,7 +131,7 @@ presence.onSync(() => renderOnlineUsers(presence))
 channel.join()
 ```
 
-We can ensure this is working by opening 3 browser tabs. If we navigate to [http://localhost:4000/?name=Alice](http://localhost:4000/?name=Alice) on two browser tabs and [http://localhost:4000/?name=Bob](http://localhost:4000/?name=Bob) then we should see:
+We can ensure this is working by opening 3 browser tabs. If we navigate to <http://localhost:4000/?name=Alice> on two browser tabs and <http://localhost:4000/?name=Bob> then we should see:
 
 ```
 Alice (count: 2)
