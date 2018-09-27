@@ -40,7 +40,7 @@ defmodule Phx.New.Web do
   template :webpack, [
     {:eex,  "phx_assets/webpack/webpack.config.js", :web, "assets/webpack.config.js"},
     {:text, "phx_assets/webpack/babelrc",           :web, "assets/.babelrc"},
-    {:eex, "phx_assets/app.css",                    :web, "assets/css/app.css"},
+    {:text, "phx_assets/app.css",                   :web, "assets/css/app.css"},
     {:text, "phx_assets/phoenix.css",               :web, "assets/css/phoenix.css"},
     {:eex,  "phx_assets/webpack/app.js",            :web, "assets/js/app.js"},
     {:eex,  "phx_assets/webpack/socket.js",         :web, "assets/js/socket.js"},
@@ -63,7 +63,7 @@ defmodule Phx.New.Web do
   template :bare, []
 
   template :static, [
-    {:eex,   "phx_assets/app.css",         :web, "priv/static/css/app.css"},
+    {:text,   "phx_assets/app.css",        :web, "priv/static/css/app.css"},
     {:append, "phx_assets/phoenix.css",    :web, "priv/static/css/app.css"},
     {:text,   "phx_assets/bare/app.js",    :web, "priv/static/js/app.js"},
     {:text,   "phx_assets/robots.txt",     :web, "priv/static/robots.txt"},

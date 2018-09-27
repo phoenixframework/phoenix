@@ -125,8 +125,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
       assert_file web_path(@app, "assets/static/favicon.ico")
       assert_file web_path(@app, "assets/static/images/phoenix.png")
-      assert_file web_path(@app, "assets/css/app.css"),
-                  ~s[@import "./phoenix.css"]
+      assert_file web_path(@app, "assets/css/app.css")
       assert_file web_path(@app, "assets/js/app.js"),
                   ~s[import socket from "./socket"]
       assert_file web_path(@app, "assets/js/socket.js"),
@@ -263,9 +262,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-webpack"])
 
       assert_file web_path(@app, ".gitignore")
-      assert_file web_path(@app, ".gitignore"),  ~r/\n$/
-      assert_file web_path(@app, "priv/static/css/app.css"),
-                  &refute(&1 =~ ~s[@import "./phoenix.css"])
+      assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
+      assert_file web_path(@app, "priv/static/css/app.css")
       assert_file web_path(@app, "priv/static/favicon.ico")
       assert_file web_path(@app, "priv/static/images/phoenix.png")
       assert_file web_path(@app, "priv/static/js/phoenix.js")
