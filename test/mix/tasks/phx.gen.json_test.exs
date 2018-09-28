@@ -54,21 +54,21 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ """
 
               assert %{
-                "id" => id,
-                "alarm" => "14:00:00.000000",
-                "announcement_date" => "2010-04-17",
-                "cost" => "120.5",
-                "deleted_at" => "2010-04-17T14:00:00.000000",
-                "drafted_at" => "2010-04-17T14:00:00.000000",
-                "popular" => true,
-                "published_at" => "2010-04-17 14:00:00.000000Z",
-                "secret" => "7488a646-e31f-11e4-aace-600308960662",
-                "slug" => "some slug",
-                "tags" => [],
-                "title" => "some title",
-                "votes" => 42,
-                "weight" => 120.5
-              } = json_response(conn, 200)["data"]
+                       "id" => id,
+                       "alarm" => "14:00:00.000000",
+                       "announcement_date" => "2010-04-17",
+                       "cost" => "120.5",
+                       "deleted_at" => "2010-04-17T14:00:00.000000",
+                       "drafted_at" => "2010-04-17T14:00:00.000000",
+                       "popular" => true,
+                       "published_at" => "2010-04-17 14:00:00.000000Z",
+                       "secret" => "7488a646-e31f-11e4-aace-600308960662",
+                       "slug" => "some slug",
+                       "tags" => [],
+                       "title" => "some title",
+                       "votes" => 42,
+                       "weight" => 120.5
+                     } = json_response(conn, 200)["data"]
         """
       end
 
