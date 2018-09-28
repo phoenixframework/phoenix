@@ -220,7 +220,7 @@ defmodule Phoenix.Socket do
       @before_compile Phoenix.Socket
       Module.register_attribute(__MODULE__, :phoenix_channels, accumulate: true)
       @phoenix_transports %{}
-      @phoenix_log Phoenix.Socket.__log__(__MODULE__, unquote(opts))
+      @phoenix_log Keyword.get(unquote(opts), :log, :info)
 
       ## Callbacks
 
@@ -545,10 +545,6 @@ defmodule Phoenix.Socket do
     Phoenix.Channel.Server.close(Map.keys(channels_inverse))
     :ok
   end
-
-  @doc false
-  def __log__(Phoenix.LiveReloader.Socket, _opts), do: false
-  def __log__(_user_socket, opts), do: Keyword.get(opts, :log, :info)
 
   defp negotiate_serializer(serializers, vsn) when is_list(serializers) do
     case Version.parse(vsn) do
