@@ -510,7 +510,8 @@ defmodule Phoenix.Endpoint do
       server
     else
       raise ArgumentError, """
-      no :pubsub server configured, please setup :pubsub in your config.
+      no :pubsub server was configured at compile time, please setup :pubsub
+      in your config.
 
       By default this looks like:
 
