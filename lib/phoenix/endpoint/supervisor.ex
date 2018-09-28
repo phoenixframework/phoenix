@@ -347,6 +347,10 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
 
+  def pubsub_server(endpoint) do
+    {:cache, endpoint.config(:pubsub)[:name]}
+  end
+
   @doc """
   Invoked to warm up caches on start and config change.
   """

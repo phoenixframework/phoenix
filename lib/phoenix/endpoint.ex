@@ -525,7 +525,11 @@ defmodule Phoenix.Endpoint do
 
   defp pubsub() do
     quote do
-      def __pubsub_server__, do: __MODULE__.config(:pubsub)[:name]
+      def __pubsub_server__ do
+        Phoenix.Config.cache(__MODULE__,
+          :__phoenix_pubsub_server__,
+          &Phoenix.Endpoint.Supervisor.pubsub_server/1)
+      end
 
       # TODO v2: Remove pid version
       @doc false
