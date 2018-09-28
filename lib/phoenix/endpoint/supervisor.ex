@@ -49,12 +49,16 @@ defmodule Phoenix.Endpoint.Supervisor do
     {:ok, {{:one_for_one, 3, 5}, children}}
   end
 
-  defp pubsub_children(mod, conf) do
+  defp pubsub_children(_mod, conf) do
     pub_conf = conf[:pubsub]
 
     if adapter = pub_conf[:adapter] do
+      unless pub_conf[:name] do
+        raise ArgumentError, "an adapter was given to :pubsub but no :name was defined, " <>
+          "please pass the :name option accordingly"
+      end
       pub_conf = [fastlane: Phoenix.Channel.Server] ++ pub_conf
-      [supervisor(adapter, [Phoenix.Endpoint.__pubsub_server__!(mod), pub_conf])]
+      [supervisor(adapter, [pub_conf[:name], pub_conf])]
     else
       []
     end
