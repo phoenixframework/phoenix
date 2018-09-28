@@ -66,6 +66,24 @@ defmodule Phoenix.Logger do
   end
   def phoenix_channel_receive(:stop, _compile, :ok), do: :ok
 
+  def phoenix_socket_connect(:start, _compile, %{log: false}), do: :ok
+  def phoenix_socket_connect(:start, _compile, %{log: level} = meta) do
+    %{
+      transport: transport,
+      params: params,
+      connect_info: connect_info,
+      user_socket: user_socket,
+    } = meta
+
+    Logger.log(level, fn ->
+      "CONNECT #{inspect(user_socket)}\n" <>
+      "  Transport: #{inspect(transport)}\n" <>
+      "  Connect Info: #{inspect(connect_info)}\n" <>
+      "  Parameters: #{inspect(filter_values(params))}"
+    end)
+  end
+  def phoenix_socket_connect(:stop, _compile, _), do: :ok
+
   @doc false
   def filter_values(values, params \\ Application.get_env(:phoenix, :filter_parameters))
   def filter_values(values, {:discard, params}), do: discard_values(values, params)

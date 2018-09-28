@@ -61,7 +61,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
   end
 
   defmodule UserSocketConnectInfo do
-    use Phoenix.Socket
+    use Phoenix.Socket, log: false
 
     channel "room:*", RoomChannel
 
@@ -70,7 +70,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
       address = Tuple.to_list(connect_info.peer_data.address) |> Enum.join(".")
       uri = Map.from_struct(connect_info.uri)
       x_headers = Enum.into(connect_info.x_headers, %{})
-      
+
       connect_info =
         connect_info
         |> update_in([:peer_data], &Map.put(&1, :address, address))
@@ -243,6 +243,25 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
                                       "query" => "vsn=#{@vsn}",
                                       "scheme" => "http",
                                       "port" => 80}}}}
+      end
+
+      test "logs user socket connect when enabled" do
+        log = capture_log(fn ->
+          {:ok, _} = WebsocketClient.start_link(self(), "#{@vsn_path}&logging=enabled", @serializer)
+        end)
+        assert log =~ "CONNECT #{inspect(UserSocket)}"
+      end
+
+      test "does not log user socket connect when disabled" do
+        log = capture_log(fn ->
+          {:ok, _} =
+            WebsocketClient.start_link(
+              self(),
+              "ws://127.0.0.1:#{@port}/ws/connect_info/websocket?vsn=#{@vsn}",
+              @serializer
+            )
+        end)
+        assert log =~ ""
       end
 
       test "logs and filter params on join and handle_in" do

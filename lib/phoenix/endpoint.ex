@@ -351,6 +351,9 @@ defmodule Phoenix.Endpoint do
     * `:phoenix_channel_receive` - the receipt of an incoming message over a
       channel. The `%Phoenix.Socket{}`, payload, event, and ref are passed as
       runtime metadata via `:socket`, `:params`, `:event`, and `:ref`
+    * `:phoenix_socket_connect` - the connection of the user socket transport.
+      The map of runtime metadata contains the `:transport`, `:params`, a map of
+      `connect_info`, and the `:user_socket` module.
 
   ### Dynamic instrumentation
 

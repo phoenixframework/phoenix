@@ -68,6 +68,14 @@ defmodule Phoenix.Socket do
     * `:transport_pid` - The pid of the socket's transport process
     * `:serializer` - The serializer for socket messages
 
+  ## Logging
+
+  Logging for socket connections is set via the `:log` option, for example:
+
+      use Phoenix.Socket, log: :debug
+
+  Defaults to the `:info` log level. Pass `false` to disable logging.
+
   ## Client-server communication
 
   The encoding of server data and the decoding of client data is done
@@ -121,6 +129,7 @@ defmodule Phoenix.Socket do
   """
 
   require Logger
+  require Phoenix.Endpoint
   alias Phoenix.Socket
   alias Phoenix.Socket.{Broadcast, Message, Reply}
 
@@ -202,7 +211,7 @@ defmodule Phoenix.Socket do
           transport_pid: pid,
         }
 
-  defmacro __using__(_opts) do
+  defmacro __using__(opts) do
     quote do
       ## User API
 
@@ -211,6 +220,7 @@ defmodule Phoenix.Socket do
       @before_compile Phoenix.Socket
       Module.register_attribute(__MODULE__, :phoenix_channels, accumulate: true)
       @phoenix_transports %{}
+      @phoenix_log Phoenix.Socket.__log__(__MODULE__, unquote(opts))
 
       ## Callbacks
 
@@ -222,7 +232,7 @@ defmodule Phoenix.Socket do
       end
 
       @doc false
-      def connect(map), do: Phoenix.Socket.__connect__(__MODULE__, map)
+      def connect(map), do: Phoenix.Socket.__connect__(__MODULE__, map, @phoenix_log)
 
       @doc false
       def init(state), do: Phoenix.Socket.__init__(state)
@@ -446,7 +456,7 @@ defmodule Phoenix.Socket do
     supervisor(Phoenix.Socket.PoolSupervisor, [args], id: handler)
   end
 
-  def __connect__(handler, map) do
+  def __connect__(user_socket, map, log) do
     %{
       endpoint: endpoint,
       options: options,
@@ -454,13 +464,29 @@ defmodule Phoenix.Socket do
       params: params,
       connect_info: connect_info
     } = map
-
     vsn = params["vsn"] || "1.0.0"
+    meta = Map.merge(map, %{vsn: vsn, user_socket: user_socket, log: log})
 
-    case negotiate_serializer(Keyword.fetch!(options, :serializer), vsn) do
-      {:ok, serializer} -> user_connect(handler, endpoint, transport, serializer, params, connect_info)
-      :error -> :error
-    end
+    Phoenix.Endpoint.instrument(endpoint, :phoenix_socket_connect, meta, fn ->
+      case negotiate_serializer(Keyword.fetch!(options, :serializer), vsn) do
+        {:ok, serializer} ->
+          user_socket
+          |> user_connect(endpoint, transport, serializer, params, connect_info)
+          |> log_connect_result(user_socket, log)
+
+        :error -> :error
+      end
+    end)
+  end
+
+  defp log_connect_result(result, _user_socket, false = _level), do: result
+  defp log_connect_result({:ok, _} = result, user_socket, level) do
+    Logger.log(level, fn -> "Replied #{inspect(user_socket)} :ok" end)
+    result
+  end
+  defp log_connect_result(:error = result, user_socket, level) do
+    Logger.log(level, fn -> "Replied #{inspect(user_socket)} :error" end)
+    result
   end
 
   def __init__({state, %{id: id, endpoint: endpoint} = socket}) do
@@ -519,6 +545,10 @@ defmodule Phoenix.Socket do
     Phoenix.Channel.Server.close(Map.keys(channels_inverse))
     :ok
   end
+
+  @doc false
+  def __log__(Phoenix.LiveReloader.Socket, _opts), do: false
+  def __log__(_user_socket, opts), do: Keyword.get(opts, :log, :info)
 
   defp negotiate_serializer(serializers, vsn) when is_list(serializers) do
     case Version.parse(vsn) do
