@@ -43,6 +43,8 @@ The old APIs for building transports are also deprecated. The good news is: adap
   * [Router] Display list of available routes on debugger 404 error page
   * [Router] Raise on duplicate plugs in `pipe_through` scopes
   * [Presence] Add `Presence.get_by_key` to fetch presences for specific user
+  * [Socket] Add new `phoenix_socket_connect` instrumentation
+  * [Logger] Log calls to user socket connect
 
 ### Bug Fixes
 
