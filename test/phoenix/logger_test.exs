@@ -164,6 +164,24 @@ defmodule Phoenix.LoggerTest do
     assert log == ""
   end
 
+  test "logs phoenix_socket_connect as configured by the user socket" do
+    meta = %{
+      transport: :websocket,
+      params: %{},
+      connect_info: %{},
+      user_socket: TestUserSocket,
+    }
+
+    log = capture_log(fn ->
+      Phoenix.Logger.phoenix_socket_connect(:start, %{}, Map.put(meta, :log, :info))
+    end)
+    assert log =~ "CONNECT TestUserSocket"
+
+    log = capture_log(fn ->
+      Phoenix.Logger.phoenix_socket_connect(:start, %{}, Map.put(meta, :log, false))
+    end)
+    assert log == ""
+  end
 
   defp action(conn) do
     LoggerController.call(conn, LoggerController.init(:index))
