@@ -4,8 +4,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect context.module %>
   alias <%= inspect schema.module %>
 
-  @create_attrs <%= inspect schema.params.create %>
-  @update_attrs <%= inspect schema.params.update %>
+  @create_attrs %{
+<%= schema.params.create |> Enum.map(fn {key, val} -> "    #{key}: #{inspect(val)}" end) |> Enum.join(",\n") %>
+  }
+  @update_attrs %{
+<%= schema.params.update |> Enum.map(fn {key, val} -> "    #{key}: #{inspect(val)}" end) |> Enum.join(",\n") %>
+  }
   @invalid_attrs <%= inspect for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %>
 
   def fixture(:<%= schema.singular %>) do
@@ -26,18 +30,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "create <%= schema.singular %>" do
     test "renders <%= schema.singular %> when data is valid", %{conn: conn} do
-      conn = post conn, Routes.<%= schema.route_helper %>_path(conn, :create), <%= schema.singular %>: @create_attrs
+      conn = post(conn, Routes.<%= schema.route_helper %>_path(conn, :create), <%= schema.singular %>: @create_attrs)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = get(conn, Routes.<%= schema.route_helper %>_path(conn, :show, id))
 
-      assert json_response(conn, 200)["data"] == %{
+      assert %{
                "id" => id<%= for {key, val} <- schema.params.create do %>,
-               "<%= key %>" => <%= Phoenix.json_library().encode!(val) %><% end %>}
+               "<%= key %>" => <%= Phoenix.json_library().encode!(val) %><% end %>
+             } = json_response(conn, 200)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post conn, Routes.<%= schema.route_helper %>_path(conn, :create), <%= schema.singular %>: @invalid_attrs
+      conn = post(conn, Routes.<%= schema.route_helper %>_path(conn, :create), <%= schema.singular %>: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
@@ -46,18 +51,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     setup [:create_<%= schema.singular %>]
 
     test "renders <%= schema.singular %> when data is valid", %{conn: conn, <%= schema.singular %>: %<%= inspect schema.alias %>{id: id} = <%= schema.singular %>} do
-      conn = put conn, Routes.<%= schema.route_helper %>_path(conn, :update, <%= schema.singular %>), <%= schema.singular %>: @update_attrs
+      conn = put(conn, Routes.<%= schema.route_helper %>_path(conn, :update, <%= schema.singular %>), <%= schema.singular %>: @update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = get(conn, Routes.<%= schema.route_helper %>_path(conn, :show, id))
 
-      assert json_response(conn, 200)["data"] == %{
+      assert %{
                "id" => id<%= for {key, val} <- schema.params.update do %>,
-               "<%= key %>" => <%= Phoenix.json_library().encode!(val) %><% end %>}
+               "<%= key %>" => <%= Phoenix.json_library().encode!(val) %><% end %>
+             } = json_response(conn, 200)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      conn = put conn, Routes.<%= schema.route_helper %>_path(conn, :update, <%= schema.singular %>), <%= schema.singular %>: @invalid_attrs
+      conn = put(conn, Routes.<%= schema.route_helper %>_path(conn, :update, <%= schema.singular %>), <%= schema.singular %>: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
@@ -68,6 +74,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "deletes chosen <%= schema.singular %>", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn = delete(conn, Routes.<%= schema.route_helper %>_path(conn, :delete, <%= schema.singular %>))
       assert response(conn, 204)
+
       assert_error_sent 404, fn ->
         get(conn, Routes.<%= schema.route_helper %>_path(conn, :show, <%= schema.singular %>))
       end
