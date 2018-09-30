@@ -101,7 +101,7 @@ The `onSync` callback allows you to easily react to presence state changes, whic
 
 To iterate users, we use the `presences.list()` function which accepts a callback. The callback will be called for each presence item with 2 arguments, the presence id and a list of metas (one for each presence for that presence id). We use this to display the users and the number of devices they are online with.
 
-We can see presence working by adding the following to `assets/js/app.js`:
+We can see presence working by adding the following to `assets/js/socket.js`:
 
 ```javascript
 import {Socket, Presence} from "phoenix"
