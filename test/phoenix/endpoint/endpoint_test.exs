@@ -32,6 +32,10 @@ defmodule Phoenix.Endpoint.EndpointTest do
     end
   end
 
+  defmodule NoConfigEndpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+  end
+
   setup_all do
     Endpoint.start_link()
     on_exit fn -> Application.delete_env(:phoenix, :serve_endpoints) end
@@ -50,6 +54,12 @@ defmodule Phoenix.Endpoint.EndpointTest do
     Process.flag(:trap_exit, true)
     {:error, {%ArgumentError{message: message}, _}} = NoPubSubEndpoint.start_link()
     assert message =~ "no :pubsub server was configured at compile time"
+  end
+
+  test "warns if there is no configuration for an endpoint" do
+    assert ExUnit.CaptureLog.capture_log(fn ->
+      NoConfigEndpoint.start_link()
+    end) =~ "no configuration"
   end
 
   test "has reloadable configuration" do

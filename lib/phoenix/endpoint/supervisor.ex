@@ -24,11 +24,23 @@ defmodule Phoenix.Endpoint.Supervisor do
   def init({otp_app, mod}) do
     id = :crypto.strong_rand_bytes(16) |> Base.encode64
 
+    default_conf = [endpoint_id: id] ++ config(otp_app, mod)
+
     secret_conf =
-      case mod.init(:supervisor, [endpoint_id: id] ++ config(otp_app, mod)) do
-        {:ok, conf} -> conf
-        other -> raise ArgumentError, "expected init/2 callback to return {:ok, config}, got: #{inspect other}"
+      case mod.init(:supervisor, default_conf) do
+        {:ok, conf} ->
+          if !Application.get_env(otp_app, mod) and conf == default_conf do
+            Logger.warn(
+              "no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}"
+            )
+          end
+
+          conf
+
+        other ->
+          raise ArgumentError, "expected init/2 callback to return {:ok, config}, got: #{inspect other}"
       end
+
 
     # Drop all secrets from secret_conf before passing it around
     conf = Keyword.drop(secret_conf, [:secret_key_base])

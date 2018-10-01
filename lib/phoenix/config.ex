@@ -75,15 +75,8 @@ defmodule Phoenix.Config do
 
   defp fetch_config(otp_app, module) do
     case Application.fetch_env(otp_app, module) do
-      {:ok, conf} ->
-        conf
-
-      :error ->
-        Logger.warn(
-          "no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(module)}"
-        )
-
-        []
+      {:ok, conf} -> conf
+      :error -> []
     end
   end
 
