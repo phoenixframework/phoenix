@@ -261,7 +261,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
               @serializer
             )
         end)
-        assert log =~ ""
+        assert log == ""
       end
 
       test "logs and filter params on join and handle_in" do
