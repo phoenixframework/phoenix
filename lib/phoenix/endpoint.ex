@@ -510,8 +510,7 @@ defmodule Phoenix.Endpoint do
       server
     else
       raise ArgumentError, """
-      no :pubsub server was configured at compile time, please setup :pubsub
-      in your config.
+      no :pubsub server configured at, please setup :pubsub in your config.
 
       By default this looks like:
 
@@ -526,13 +525,11 @@ defmodule Phoenix.Endpoint do
 
   defp pubsub() do
     quote do
-      @pubsub_server var!(config)[:pubsub][:name] ||
-        (if var!(config)[:pubsub][:adapter] do
-          raise ArgumentError, "an adapter was given to :pubsub but no :name was defined, " <>
-                               "please pass the :name option accordingly"
-        end)
-
-      def __pubsub_server__, do: @pubsub_server
+      def __pubsub_server__ do
+        Phoenix.Config.cache(__MODULE__,
+          :__phoenix_pubsub_server__,
+          &Phoenix.Endpoint.Supervisor.pubsub_server/1)
+      end
 
       # TODO v2: Remove pid version
       @doc false

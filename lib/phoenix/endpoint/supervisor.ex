@@ -61,12 +61,16 @@ defmodule Phoenix.Endpoint.Supervisor do
     {:ok, {{:one_for_one, 3, 5}, children}}
   end
 
-  defp pubsub_children(mod, conf) do
+  defp pubsub_children(_mod, conf) do
     pub_conf = conf[:pubsub]
 
     if adapter = pub_conf[:adapter] do
+      unless pub_conf[:name] do
+        raise ArgumentError, "an adapter was given to :pubsub but no :name was defined, " <>
+          "please pass the :name option accordingly"
+      end
       pub_conf = [fastlane: Phoenix.Channel.Server] ++ pub_conf
-      [supervisor(adapter, [Phoenix.Endpoint.__pubsub_server__!(mod), pub_conf])]
+      [supervisor(adapter, [pub_conf[:name], pub_conf])]
     else
       []
     end
@@ -354,6 +358,10 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
+
+  def pubsub_server(endpoint) do
+    {:cache, endpoint.config(:pubsub)[:name]}
+  end
 
   @doc """
   Invoked to warm up caches on start and config change.

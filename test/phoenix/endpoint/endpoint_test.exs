@@ -11,8 +11,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
            cache_static_manifest: "../../../../test/fixtures/cache_manifest.json",
            pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
-
-  Application.put_env(:phoenix, __MODULE__.NoPubSubEndpoint, Keyword.delete(@config, :pubsub))
+  Application.put_env(:phoenix, __MODULE__.NoPubSubNameEndpoint, [])
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
@@ -23,11 +22,11 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert code_reloading? == false
   end
 
-  defmodule NoPubSubEndpoint do
+  defmodule NoPubSubNameEndpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
     def init(_, config) do
-      pubsub = [adapter: Phoenix.PubSub.PG2, name: :named_at_runtime_endpoint_pub]
+      pubsub = [adapter: Phoenix.PubSub.PG2]
       {:ok, Keyword.put(config, :pubsub, pubsub)}
     end
   end
@@ -50,10 +49,10 @@ defmodule Phoenix.Endpoint.EndpointTest do
     }
   end
 
-  test "errors if pubsub is not set at runtime and not compile time" do
+  test "errors if pubsub adapter is set but not a name" do
     Process.flag(:trap_exit, true)
-    {:error, {%ArgumentError{message: message}, _}} = NoPubSubEndpoint.start_link()
-    assert message =~ "no :pubsub server was configured at compile time"
+    {:error, {%ArgumentError{message: message}, _}} = NoPubSubNameEndpoint.start_link()
+    assert message =~ "an adapter was given to :pubsub but no :name"
   end
 
   test "warns if there is no configuration for an endpoint" do
