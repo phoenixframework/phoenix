@@ -1,7 +1,8 @@
 defmodule Phoenix.Endpoint.Cowboy2Handler do
   @moduledoc false
 
-  if Code.ensure_loaded?(:cowboy_websocket) do
+  if Code.ensure_loaded?(:cowboy_websocket) and
+    function_exported?(:cowboy_websocket, :behaviour_info, 1) do
     @behaviour :cowboy_websocket
   end
 
