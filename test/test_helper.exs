@@ -3,6 +3,11 @@ Code.require_file("support/router_helper.exs", __DIR__)
 # Starts web server applications
 Application.ensure_all_started(:cowboy)
 
+case {System.get_env("COWBOY_VERSION"), Application.spec(:cowboy, :vsn)} do
+  {"1" <> _, [?2 | _]} -> raise "Invalid cowboy version, please check lockfile"
+  _ -> nil
+end
+
 # Used whenever a router fails. We default to simply
 # rendering a short string.
 defmodule Phoenix.ErrorView do
