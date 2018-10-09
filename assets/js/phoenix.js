@@ -218,7 +218,7 @@ const TRANSPORTS = {
 
 // wraps value in closure or returns closure
 const closure = (value) => {
-  typeof value === "function" ? value : (() => value)
+  return typeof value === "function" ? value : (() => value)
 }
 
 /**
