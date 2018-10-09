@@ -550,7 +550,7 @@ defmodule Phoenix.ConnTest do
 
   See `bypass_through/1`.
   """
-  @spec bypass_through(Conn.t, module, :atom | list) :: Conn.t
+  @spec bypass_through(Conn.t, module, atom | list) :: Conn.t
   def bypass_through(conn, router, pipelines \\ []) do
     Plug.Conn.put_private(conn, :phoenix_bypass, {router, List.wrap(pipelines)})
   end
