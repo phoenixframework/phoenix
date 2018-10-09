@@ -26,7 +26,8 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
-## 1.4.0-dev
+
+## 1.4.0-rc.0 (2018-10-09)
 
 ### Enhancements
 

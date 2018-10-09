@@ -5,7 +5,7 @@ defmodule Phx.New.Generator do
 
   @phoenix Path.expand("../..", __DIR__)
 
-  @phoenix_version Version.parse!("1.4.0")
+  @phoenix_version Version.parse!("1.4.0-rc")
 
   @callback prepare_project(Project.t) :: Project.t
   @callback generate(Project.t) :: Project.t
@@ -251,8 +251,8 @@ defmodule Phx.New.Generator do
   defp phoenix_html_webpack_path(%Project{in_umbrella?: false}),
     do: "../deps/phoenix_html"
 
-  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> #{@phoenix_version}"}]
-  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
+  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> #{@phoenix_version}"}]
+  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 
   defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"

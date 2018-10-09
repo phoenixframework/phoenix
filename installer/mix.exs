@@ -8,7 +8,7 @@ defmodule Phx.New.MixProject do
     [
       app: :phx_new,
       start_permanent: Mix.env() == :prod,
-      version: "1.4.0-dev.0",
+      version: "1.4.0-rc.0",
       elixir: "~> 1.5",
       deps: deps(),
       package: [
