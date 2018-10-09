@@ -8,7 +8,7 @@
  * Connect to the server using the `Socket` class:
  *
  * ```javascript
- * let socket = new Socket("/socket", {params: {userToken: "123"}})
+ * const socket = new Socket("/socket", {params: {userToken: "123"}})
  * socket.connect()
  * ```
  *
@@ -27,7 +27,7 @@
  * the channel is joined with ok/error/timeout matches:
  *
  * ```javascript
- * let channel = socket.channel("room:123", {token: roomToken})
+ * const channel = socket.channel("room:123", {token: roomToken})
  * channel.on("new_msg", msg => console.log("Got message", msg) )
  * $input.onEnter( e => {
  *   channel.push("new_msg", {body: e.target.val}, 10000)
@@ -115,8 +115,8 @@
  * pass your channel in to track lifecycle events:
  *
  * ```javascript
- * let channel = new socket.channel("some:topic")
- * let presence = new Presence(channel)
+ * const channel = new socket.channel("some:topic")
+ * const presence = new Presence(channel)
  * ```
  *
  * Next, use the `presence.onSync` callback to react to state changes
@@ -144,12 +144,12 @@
  * they came online from:
  *
  * ```javascript
- * let listBy = (id, {metas: [first, ...rest]}) => {
+ * const listBy = (id, {metas: [first, ...rest]}) => {
  *   first.count = rest.length + 1 // count of this user's presences
  *   first.id = id
  *   return first
  * }
- * let onlineUsers = presence.list(listBy)
+ * const onlineUsers = presence.list(listBy)
  * ```
  *
  * ### Handling individual presence join and leave events
@@ -158,7 +158,7 @@
  * react to individual presences joining and leaving the app. For example:
  *
  * ```javascript
- * let presence = new Presence(channel)
+ * const presence = new Presence(channel)
  *
  * // detect if user has joined for the 1st time or from another tab/device
  * presence.onJoin((id, current, newPres) => {
@@ -217,13 +217,8 @@ const TRANSPORTS = {
 }
 
 // wraps value in closure or returns closure
-let closure = (value) => {
-  if(typeof value === "function"){
-    return value
-  } else {
-    let closure = function(){ return value }
-    return closure
-  }
+const closure = (value) => {
+  typeof value === "function" ? value : (() => value)
 }
 
 /**
@@ -393,7 +388,7 @@ export class Channel {
     })
     this.joinPush.receive("timeout", () => { if(!this.isJoining()){ return }
       if (this.socket.hasLogger()) this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
-      let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), this.timeout)
+      const leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), this.timeout)
       leavePush.send()
       this.state = CHANNEL_STATES.errored
       this.joinPush.reset()
@@ -463,7 +458,7 @@ export class Channel {
    * @returns {integer} ref
    */
   on(event, callback){
-    let ref = this.bindingRef++
+    const ref = this.bindingRef++
     this.bindings.push({event, ref, callback})
     return ref
   }
@@ -493,7 +488,7 @@ export class Channel {
     if(!this.joinedOnce){
       throw(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`)
     }
-    let pushEvent = new Push(this, event, function(){ return payload }, timeout)
+    const pushEvent = new Push(this, event, function(){ return payload }, timeout)
     if(this.canPush()){
       pushEvent.send()
     } else {
@@ -522,11 +517,11 @@ export class Channel {
    */
   leave(timeout = this.timeout){
     this.state = CHANNEL_STATES.leaving
-    let onClose = () => {
+    const onClose = () => {
       if (this.socket.hasLogger()) this.socket.log("channel", `leave ${this.topic}`)
       this.trigger(CHANNEL_EVENTS.close, "leave")
     }
-    let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), timeout)
+    const leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), timeout)
     leavePush.receive("ok", () => onClose() )
              .receive("timeout", () => onClose() )
     leavePush.send()
@@ -592,7 +587,7 @@ export class Channel {
    * @private
    */
   trigger(event, payload, ref, joinRef){
-    let handledPayload = this.onMessage(event, payload, ref, joinRef)
+    const handledPayload = this.onMessage(event, payload, ref, joinRef)
     if(payload && !handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
 
     for (let i = 0; i < this.bindings.length; i++) {
@@ -635,14 +630,14 @@ export class Channel {
 
 const Serializer = {
   encode(msg, callback){
-    let payload = [
+    const payload = [
       msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload
     ]
     return callback(JSON.stringify(payload))
   },
 
   decode(rawPayload, callback){
-    let [join_ref, ref, topic, event, payload] = JSON.parse(rawPayload)
+    const [join_ref, ref, topic, event, payload] = JSON.parse(rawPayload)
 
     return callback({join_ref, ref, topic, event, payload})
   }
@@ -750,7 +745,7 @@ export class Socket {
    * @returns {string}
    */
   endPointURL(){
-    let uri = Ajax.appendParams(
+    const uri = Ajax.appendParams(
       Ajax.appendParams(this.endPoint, this.params()), {vsn: VSN})
     if(uri.charAt(0) !== "/"){ return uri }
     if(uri.charAt(1) === "/"){ return `${this.protocol()}:${uri}` }
@@ -915,7 +910,7 @@ export class Socket {
    * @returns {Channel}
    */
   channel(topic, chanParams = {}){
-    let chan = new Channel(topic, chanParams, this)
+    const chan = new Channel(topic, chanParams, this)
     this.channels.push(chan)
     return chan
   }
@@ -925,7 +920,7 @@ export class Socket {
    */
   push(data){
     if (this.hasLogger()) {
-      let {topic, event, payload, ref, join_ref} = data
+      const {topic, event, payload, ref, join_ref} = data
       this.log("push", `${topic} ${event} (${join_ref}, ${ref})`, payload)
     }
 
@@ -941,7 +936,7 @@ export class Socket {
    * @returns {string}
    */
   makeRef(){
-    let newRef = this.ref + 1
+    const newRef = this.ref + 1
     if(newRef === this.ref){ this.ref = 0 } else { this.ref = newRef }
 
     return this.ref.toString()
@@ -967,7 +962,7 @@ export class Socket {
 
   onConnMessage(rawMessage){
     this.decode(rawMessage.data, msg => {
-      let {topic, event, payload, ref, join_ref} = msg
+      const {topic, event, payload, ref, join_ref} = msg
       if(ref && ref === this.pendingHeartbeatRef){ this.pendingHeartbeatRef = null }
 
       if (this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
@@ -1076,10 +1071,10 @@ export class Ajax {
 
   static request(method, endPoint, accept, body, timeout, ontimeout, callback){
     if(global.XDomainRequest){
-      let req = new XDomainRequest() // IE8, IE9
+      const req = new XDomainRequest() // IE8, IE9
       this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
     } else {
-      let req = global.XMLHttpRequest ?
+      const req = global.XMLHttpRequest ?
                   new global.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
                   new ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
       this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
@@ -1090,7 +1085,7 @@ export class Ajax {
     req.timeout = timeout
     req.open(method, endPoint)
     req.onload = () => {
-      let response = this.parseJSON(req.responseText)
+      const response = this.parseJSON(req.responseText)
       callback && callback(response)
     }
     if(ontimeout){ req.ontimeout = ontimeout }
@@ -1108,7 +1103,7 @@ export class Ajax {
     req.onerror = () => { callback && callback(null) }
     req.onreadystatechange = () => {
       if(req.readyState === this.states.complete && callback){
-        let response = this.parseJSON(req.responseText)
+        const response = this.parseJSON(req.responseText)
         callback(response)
       }
     }
@@ -1129,10 +1124,10 @@ export class Ajax {
   }
 
   static serialize(obj, parentKey){
-    let queryStr = []
+    const queryStr = []
     for(var key in obj){ if(!obj.hasOwnProperty(key)){ continue }
-      let paramKey = parentKey ? `${parentKey}[${key}]` : key
-      let paramVal = obj[key]
+      const paramKey = parentKey ? `${parentKey}[${key}]` : key
+      const paramVal = obj[key]
       if(typeof paramVal === "object"){
         queryStr.push(this.serialize(paramVal, paramKey))
       } else {
@@ -1145,7 +1140,7 @@ export class Ajax {
   static appendParams(url, params){
     if(Object.keys(params).length === 0){ return url }
 
-    let prefix = url.match(/\?/) ? "&" : "?"
+    const prefix = url.match(/\?/) ? "&" : "?"
     return `${url}${prefix}${this.serialize(params)}`
   }
 }
@@ -1161,7 +1156,7 @@ Ajax.states = {complete: 4}
 export class Presence {
 
   constructor(channel, opts = {}){
-    let events = opts.events || {state: "presence_state", diff: "presence_diff"}
+    const events = opts.events || {state: "presence_state", diff: "presence_diff"}
     this.state = {}
     this.pendingDiffs = []
     this.channel = channel
@@ -1173,7 +1168,7 @@ export class Presence {
     }
 
     this.channel.on(events.state, newState => {
-      let {onJoin, onLeave, onSync} = this.caller
+      const {onJoin, onLeave, onSync} = this.caller
 
       this.joinRef = this.channel.joinRef()
       this.state = Presence.syncState(this.state, newState, onJoin, onLeave)
@@ -1186,7 +1181,7 @@ export class Presence {
     })
 
     this.channel.on(events.diff, diff => {
-      let {onJoin, onLeave, onSync} = this.caller
+      const {onJoin, onLeave, onSync} = this.caller
 
       if(this.inPendingSyncState()){
         this.pendingDiffs.push(diff)
@@ -1220,9 +1215,9 @@ export class Presence {
    * @returns {Presence}
    */
   static syncState(currentState, newState, onJoin, onLeave){
-    let state = this.clone(currentState)
-    let joins = {}
-    let leaves = {}
+    const state = this.clone(currentState)
+    const joins = {}
+    const leaves = {}
 
     this.map(state, (key, presence) => {
       if(!newState[key]){
@@ -1230,12 +1225,12 @@ export class Presence {
       }
     })
     this.map(newState, (key, newPresence) => {
-      let currentPresence = state[key]
+      const currentPresence = state[key]
       if(currentPresence){
-        let newRefs = newPresence.metas.map(m => m.phx_ref)
-        let curRefs = currentPresence.metas.map(m => m.phx_ref)
-        let joinedMetas = newPresence.metas.filter(m => curRefs.indexOf(m.phx_ref) < 0)
-        let leftMetas = currentPresence.metas.filter(m => newRefs.indexOf(m.phx_ref) < 0)
+        const newRefs = newPresence.metas.map(m => m.phx_ref)
+        const curRefs = currentPresence.metas.map(m => m.phx_ref)
+        const joinedMetas = newPresence.metas.filter(m => curRefs.indexOf(m.phx_ref) < 0)
+        const leftMetas = currentPresence.metas.filter(m => newRefs.indexOf(m.phx_ref) < 0)
         if(joinedMetas.length > 0){
           joins[key] = newPresence
           joins[key].metas = joinedMetas
@@ -1261,24 +1256,24 @@ export class Presence {
    * @returns {Presence}
    */
   static syncDiff(currentState, {joins, leaves}, onJoin, onLeave){
-    let state = this.clone(currentState)
+    const state = this.clone(currentState)
     if(!onJoin){ onJoin = function(){} }
     if(!onLeave){ onLeave = function(){} }
 
     this.map(joins, (key, newPresence) => {
-      let currentPresence = state[key]
+      const currentPresence = state[key]
       state[key] = newPresence
       if(currentPresence){
-        let joinedRefs = state[key].metas.map(m => m.phx_ref)
-        let curMetas = currentPresence.metas.filter(m => joinedRefs.indexOf(m.phx_ref) < 0)
+        const joinedRefs = state[key].metas.map(m => m.phx_ref)
+        const curMetas = currentPresence.metas.filter(m => joinedRefs.indexOf(m.phx_ref) < 0)
         state[key].metas.unshift(...curMetas)
       }
       onJoin(key, currentPresence, newPresence)
     })
     this.map(leaves, (key, leftPresence) => {
-      let currentPresence = state[key]
+      const currentPresence = state[key]
       if(!currentPresence){ return }
-      let refsToRemove = leftPresence.metas.map(m => m.phx_ref)
+      const refsToRemove = leftPresence.metas.map(m => m.phx_ref)
       currentPresence.metas = currentPresence.metas.filter(p => {
         return refsToRemove.indexOf(p.phx_ref) < 0
       })
@@ -1322,7 +1317,7 @@ export class Presence {
  * calculated timeout retries, such as exponential backoff.
  *
  * @example
- * let reconnectTimer = new Timer(() => this.connect(), function(tries){
+ * const reconnectTimer = new Timer(() => this.connect(), function(tries){
  *   return [1000, 5000, 10000][tries - 1] || 10000
  * })
  * reconnectTimer.scheduleTimeout() // fires after 1000
