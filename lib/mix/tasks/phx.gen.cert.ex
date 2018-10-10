@@ -116,7 +116,7 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
     Mix.shell().info("""
 
     If you have not already done so, please update your HTTPS Endpoint
-    configuration in #{Mix.Phoenix.web_path(app)}/config/dev.exs:
+    configuration in config/dev.exs:
 
       config #{inspect(app)}, #{base}Web.Endpoint,
         http: [port: 4000],
