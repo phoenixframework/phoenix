@@ -23,3 +23,4 @@
   * `installer/mix.exs`
   * `installer/README.md`
   * `package.json`
+  * `guides/introduction/installation.md`
