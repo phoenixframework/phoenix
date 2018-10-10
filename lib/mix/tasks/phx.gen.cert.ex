@@ -48,6 +48,10 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
 
   @doc false
   def run(all_args) do
+    if Mix.Project.umbrella?() do
+      Mix.raise("mix phx.gen.channel can only be run inside an application directory")
+    end
+
     {opts, args} =
       OptionParser.parse!(
         all_args,
