@@ -1,5 +1,7 @@
 # Changelog for v1.4
 
+See the [upgrade guides](https://gist.github.com/chrismccord/bb1f8b136f5a9e4abc0bfc07b832257e) to bring your Phoenix 1.3.x apps up to speed.
+
 ## Cowboy 2 support
 
 TODO: Write about how to use Cowboy 2
