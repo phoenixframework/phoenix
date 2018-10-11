@@ -79,7 +79,7 @@ defmodule Phoenix.MixProject do
       licenses: ["MIT"],
       links: %{github: "https://github.com/phoenixframework/phoenix"},
       files: ~w(assets lib priv) ++
-        ~w(CHANGELOG.md LICENSE.md mix.exs package.json README.md)
+        ~w(CHANGELOG.md LICENSE.md .formatter.exs mix.exs package.json README.md)
     ]
   end
 
