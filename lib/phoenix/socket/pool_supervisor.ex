@@ -7,10 +7,23 @@ defmodule Phoenix.Socket.PoolSupervisor do
   end
 
   def start_child(endpoint, name, key, args) do
-    ets = endpoint.config({:socket, name})
-    partitions = :ets.lookup_element(ets, :partitions, 2)
-    sup = :ets.lookup_element(ets, :erlang.phash2(key, partitions), 2)
-    Supervisor.start_child(sup, args)
+    case endpoint.config({:socket, name}) do
+      ets when is_reference(ets) ->
+        partitions = :ets.lookup_element(ets, :partitions, 2)
+        sup = :ets.lookup_element(ets, :erlang.phash2(key, partitions), 2)
+        Supervisor.start_child(sup, args)
+
+      nil ->
+        raise ArgumentError, """
+        no socket supervision tree found for #{inspect(name)}.
+
+        Ensure your #{inspect(endpoint)} contains a socket mount, for example:
+
+            socket "/socket", #{inspect(name)},
+              websocket: true,
+              longpoll: true
+        """
+    end
   end
 
   @doc false
