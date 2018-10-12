@@ -122,7 +122,7 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
     If you have not already done so, please update your HTTPS Endpoint
     configuration in config/dev.exs:
 
-      config #{inspect(app)}, #{base}Web.Endpoint,
+      config #{inspect(app)}, #{inspect(Mix.Phoenix.web_module(base))}.Endpoint,
         http: [port: 4000],
         https: [
           port: 4001,
