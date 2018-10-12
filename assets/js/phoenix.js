@@ -837,16 +837,19 @@ export class Socket {
     if (this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
     this.flushSendBuffer()
     this.reconnectTimer.reset()
-    if(!this.conn.skipHeartbeat){
-      clearInterval(this.heartbeatTimer)
-      this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
-    }
+    this.resetHeartbeat()
     this.stateChangeCallbacks.open.forEach( callback => callback() )
   }
 
   /**
    * @private
    */
+
+  resetHeartbeat(){ if(this.conn.skipHeartbeat){ return }
+    this.pendingHeartbeatRef = null
+    clearInterval(this.heartbeatTimer)
+    this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
+  }
 
   teardown(callback, code, reason){
     if(this.conn){
