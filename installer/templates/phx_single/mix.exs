@@ -42,7 +42,7 @@ defmodule <%= app_module %>.MixProject do
       {:phoenix_ecto, "~> 3.2"},
       {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
       {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
+      {:phoenix_live_reload, "~> 1.2-rc", only: :dev},<% end %>
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:cowboy, "~> 1.0"}
