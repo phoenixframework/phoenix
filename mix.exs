@@ -1,7 +1,7 @@
 defmodule Phoenix.MixProject do
   use Mix.Project
 
-  @version "1.4.0-rc.0"
+  @version "1.4.0-rc.1"
 
   def project do
     [
@@ -47,8 +47,8 @@ defmodule Phoenix.MixProject do
 
   defp deps do
     [
-      {:cowboy, "~> 1.0 or ~> 2.3", optional: true},
-      {:plug, "~> 1.6.2 or ~> 1.7"},
+      {:cowboy, "~> 1.0 or ~> 2.5", optional: true},
+      {:plug, "~> 1.6.4 or ~> 1.7"},
       {:phoenix_pubsub, "~> 1.1"},
       {:jason, "~> 1.0", optional: true},
 
