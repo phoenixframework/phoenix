@@ -36,7 +36,7 @@ defmodule Phoenix.View do
         # ...
       end
 
-  We can use the definition above to define any view in your application:
+  You can use the definition above to define any view in your application:
 
       defmodule YourApp.UserView do
         use YourAppWeb, :view
@@ -124,7 +124,7 @@ defmodule Phoenix.View do
   namespace is `MyApp`, templates are expected at `Path.join(root, "user")`.
   On the other hand, if the view is `MyApp.Admin.UserView`,
   the path will be `Path.join(root, "admin/user")` and so on. For
-  explicit root path locations, the `:path` option can instead be provided.
+  explicit root path locations, the `:path` option can be provided instead.
   The `:root` and `:path` are joined to form the final lookup path.
   A blank string may be provided to use the `:root` path directly as the
   template lookup path.
@@ -138,7 +138,7 @@ defmodule Phoenix.View do
     if Module.get_attribute(module, :view_resource) do
       raise ArgumentError,
             "use Phoenix.View is being called twice in the module #{module}. " <>
-              "Make sure to call it only per module"
+              "Make sure to call it only once per module"
     else
       view_resource = String.to_atom(Phoenix.Naming.resource_name(module, "View"))
       Module.put_attribute(module, :view_resource, view_resource)
@@ -183,7 +183,7 @@ defmodule Phoenix.View do
   @doc false
   defmacro __before_compile__(_env) do
     # We are using @anno because we don't want warnings coming from
-    # render/2 to be reported in case the user has defined a catch all
+    # render/2 to be reported in case the user has defined a catch-all
     # render/2 clause.
     quote @anno do
       # Catch-all clause for rendering.
@@ -199,7 +199,7 @@ defmodule Phoenix.View do
   It expects the view module, the template as a string, and a
   set of assigns.
 
-  Notice this function returns the inner representation of a
+  Notice that this function returns the inner representation of a
   template. If you want the encoded template as a result, use
   `render_to_iodata/3` instead.
 
@@ -229,7 +229,7 @@ defmodule Phoenix.View do
   `{LayoutModule, "template.extension"}`.
 
   To render the template within the layout, simply call `render/3`
-  using the `@view_module` and `@view_template` assign:
+  using the `@view_module` and `@view_template` assigns:
 
       <%= render(@view_module, @view_template, assigns) %>
 
