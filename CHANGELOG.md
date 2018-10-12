@@ -29,6 +29,19 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
 
+## 1.4.0-rc.1 
+
+### Enhancements
+
+  * [Socket] Improve error message when missing socket mount in endpoint
+
+### Bug Fixes
+
+  * Add missing `.formatter.exs` to hex package for proper elixir formatter integration
+  * [phx.new] Revert `Routes.static_url` in app layout in favor of original `Routes.static_path`
+  * [phx.new] Use phoenix_live_reload 1.2-rc to fix hex version errors
+
+
 ## 1.4.0-rc.0 (2018-10-09)
 
 ### Enhancements
