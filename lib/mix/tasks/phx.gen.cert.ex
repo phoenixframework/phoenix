@@ -48,6 +48,10 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
 
   @doc false
   def run(all_args) do
+    if Mix.Project.umbrella?() do
+      Mix.raise("mix phx.gen.cert can only be run inside an application directory")
+    end
+
     {opts, args} =
       OptionParser.parse!(
         all_args,
@@ -116,7 +120,7 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
     Mix.shell().info("""
 
     If you have not already done so, please update your HTTPS Endpoint
-    configuration in #{Mix.Phoenix.web_path(app)}/config/dev.exs:
+    configuration in config/dev.exs:
 
       config #{inspect(app)}, #{base}Web.Endpoint,
         http: [port: 4000],
