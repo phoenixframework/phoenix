@@ -42,6 +42,9 @@ The old APIs for building transports are also deprecated. The good news is: adap
   * [phx.new] Revert `Routes.static_url` in app layout in favor of original `Routes.static_path`
   * [phx.new] Use phoenix_live_reload 1.2-rc to fix hex version errors
 
+### JavaScript client
+
+  * Fix reconnect caused by pending heartbeat
 
 ## 1.4.0-rc.0 (2018-10-09)
 
