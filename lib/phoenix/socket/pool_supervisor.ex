@@ -8,7 +8,7 @@ defmodule Phoenix.Socket.PoolSupervisor do
 
   def start_child(endpoint, name, key, args) do
     case endpoint.config({:socket, name}) do
-      ets when is_reference(ets) ->
+      ets when not is_nil(ets) ->
         partitions = :ets.lookup_element(ets, :partitions, 2)
         sup = :ets.lookup_element(ets, :erlang.phash2(key, partitions), 2)
         Supervisor.start_child(sup, args)
