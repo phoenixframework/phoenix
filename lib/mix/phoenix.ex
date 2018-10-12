@@ -337,7 +337,10 @@ defmodule Mix.Phoenix do
     end
   end
 
-  defp web_module(base) do
+  @doc """
+  Returns the web module prefix.
+  """
+  def web_module(base) do
     if base |> to_string() |> String.ends_with?("Web") do
       Module.concat([base])
     else
