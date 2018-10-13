@@ -1,4 +1,4 @@
-defmodule Phoenix.Router.Helpers do
+defmodule Phoenix.Router.Routes do
   # Module that generates the routing helpers.
   @moduledoc false
 
@@ -127,14 +127,14 @@ defmodule Phoenix.Router.Helpers do
       Generates the connection/endpoint base URL without any path information.
       """
       def url(data) do
-        Phoenix.Router.Helpers.url(unquote(env.module), data)
+        Phoenix.Router.Routes.url(unquote(env.module), data)
       end
 
       @doc """
       Generates the path information including any necessary prefix.
       """
       def path(data, path) do
-        Phoenix.Router.Helpers.path(unquote(env.module), data, path)
+        Phoenix.Router.Routes.path(unquote(env.module), data, path)
       end
 
       @doc """
@@ -193,7 +193,7 @@ defmodule Phoenix.Router.Helpers do
       end
     end
 
-    Module.create(Module.concat(env.module, Helpers), code,
+    Module.create(Module.concat(env.module, Routes), code,
                   line: env.line, file: env.file)
   end
 
@@ -279,7 +279,7 @@ defmodule Phoenix.Router.Helpers do
 
     [quote @anno do
       defp raise_route_error(unquote(helper), suffix, arity, action, params) do
-        Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_#{suffix}",
+        Phoenix.Router.Routes.raise_route_error(__MODULE__, "#{unquote(helper)}_#{suffix}",
                                                  arity, action, unquote(routes), params)
       end
     end | catch_alls]
