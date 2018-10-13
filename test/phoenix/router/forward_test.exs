@@ -117,7 +117,7 @@ defmodule Phoenix.Router.ForwardTest do
   end
 
   test "helpers cascade script name across forwards based on main router" do
-    import AdminDashboard.Helpers
+    import AdminDashboard.Routes
     assert page_path(%Plug.Conn{}, :stats) == "/stats"
 
     conn = call(Router, :get, "stats")

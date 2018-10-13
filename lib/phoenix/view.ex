@@ -28,8 +28,8 @@ defmodule Phoenix.View do
             import YourAppWeb.ErrorHelpers
             import YourAppWeb.Gettext
 
-            # Alias the Helpers module as Routes
-            alias  YourAppWeb.Router.Helpers, as: Routes
+            # Alias the Routes module
+            alias  YourAppWeb.Router.Routes
           end
         end
 
