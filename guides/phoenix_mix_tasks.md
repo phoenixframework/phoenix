@@ -20,7 +20,7 @@ mix phx.gen.json       # Generates controller, views, and context for a JSON res
 mix phx.gen.presence   # Generates a Presence tracker
 mix phx.gen.schema     # Generates an Ecto schema and migration file
 mix phx.gen.secret     # Generates a secret
-mix phx.new            # Creates a new Phoenix v1.3.0 application
+mix phx.new            # Creates a new Phoenix application
 mix phx.new.ecto       # Creates a new Ecto project within an umbrella project
 mix phx.new.web        # Creates a new Phoenix web project within an umbrella project
 mix phx.routes         # Prints all routes
