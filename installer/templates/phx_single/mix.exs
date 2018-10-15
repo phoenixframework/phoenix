@@ -39,8 +39,10 @@ defmodule <%= app_module %>.MixProject do
     [
       <%= phoenix_dep %>,
       {:phoenix_pubsub, "~> 1.1"},<%= if ecto do %>
-      {:phoenix_ecto, "~> 3.2"},
-      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
+      {:phoenix_ecto, "~> 3.5"},
+      {:ecto, "~> 3.0-rc", override: true},
+      {:ecto_sql, "~> 3.0-rc", override: true},
+      {<%= inspect adapter_app %>, ">= 0.0.0-rc"},<% end %><%= if html do %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2-rc", only: :dev},<% end %>
       {:gettext, "~> 0.11"},
