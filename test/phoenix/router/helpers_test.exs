@@ -9,12 +9,24 @@ defmodule Phoenix.Router.HelpersTest do
   test "defhelper with :identifiers" do
     route = build(:match, :get, "/foo/:bar", nil, Hello, :world, "hello_world")
     assert extract_defhelper(route, 0) == String.trim """
+    def(hello_world_path(conn_or_endpoint, :world, vars) when is_map(vars)) do
+      hello_world_path(conn_or_endpoint, :world, vars, [])
+    end
+    """
+
+    assert extract_defhelper(route, 1) == String.trim """
+    def(hello_world_path(conn_or_endpoint, :world, %{bar: bar}, params) when is_list(params) or is_map(params)) do
+      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, ["bar"], {}))
+    end
+    """
+
+    assert extract_defhelper(route, 2) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar)) do
       hello_world_path(conn_or_endpoint, :world, bar, [])
     end
     """
 
-    assert extract_defhelper(route, 1) == String.trim """
+    assert extract_defhelper(route, 3) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params) when is_list(params) or is_map(params)) do
       path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, ["bar"], {"hello_world", :world, ["bar"]}))
     end
@@ -25,12 +37,24 @@ defmodule Phoenix.Router.HelpersTest do
     route = build(:match, :get, "/foo/*bar", nil, Hello, :world, "hello_world")
 
     assert extract_defhelper(route, 0) == String.trim """
+    def(hello_world_path(conn_or_endpoint, :world, vars) when is_map(vars)) do
+      hello_world_path(conn_or_endpoint, :world, vars, [])
+    end
+    """
+
+    assert extract_defhelper(route, 1) == String.trim """
+    def(hello_world_path(conn_or_endpoint, :world, %{bar: bar}, params) when is_list(params) or is_map(params)) do
+      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, ["bar"], {}))
+    end
+    """
+
+    assert extract_defhelper(route, 2) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar)) do
       hello_world_path(conn_or_endpoint, :world, bar, [])
     end
     """
 
-    assert extract_defhelper(route, 1) == String.trim """
+    assert extract_defhelper(route, 3) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params) when is_list(params) or is_map(params)) do
       path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, ["bar"], {"hello_world", :world, ["bar"]}))
     end
@@ -175,6 +199,11 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.top_path(__MODULE__, :top, %{"id" => 5}) == "/posts/top?id=5"
     assert Helpers.top_path(__MODULE__, :top, %{"id" => "foo"}) == "/posts/top?id=foo"
     assert Helpers.top_path(__MODULE__, :top, %{"id" => "foo bar"}) == "/posts/top?id=foo+bar"
+
+    assert Helpers.bottom_path(__MODULE__, :bottom, :asc, 8) == "/posts/bottom/asc/8"
+    assert Helpers.bottom_path(__MODULE__, :bottom, :asc, 8, foo: :bar) == "/posts/bottom/asc/8?foo=bar"
+    assert Helpers.bottom_path(__MODULE__, :bottom, %{order: :asc, count: 8}) == "/posts/bottom/asc/8"
+    assert Helpers.bottom_path(__MODULE__, :bottom, %{order: :asc, count: 8}, foo: :bar) == "/posts/bottom/asc/8?foo=bar"
 
     error_message = fn helper, arity ->
       """
