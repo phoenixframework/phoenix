@@ -215,25 +215,32 @@ defmodule Phoenix.Router.Helpers do
     {bins, vars} = :lists.unzip(exprs.binding)
     segs = expand_segments(exprs.path)
 
-    q1 = if Enum.count(bins) > 0 do
+    map_match_quotes = if Enum.count(bins) > 0 do
       match = Enum.into(bins, [], fn(k) -> {String.to_atom(k), Macro.var(:"#{k}", nil)} end)
       pattern = {:%{}, [], match}
 
-      quote do
+      q1 = quote @anno do
         def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), vars) when is_map(vars) do
           unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), vars, [])
         end
+      end
 
+      q2 = quote @anno do
         def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote(pattern), params)
             when is_list(params) or is_map(params) do
           path(conn_or_endpoint, segments(unquote(segs), params, unquote(bins), {}))
         end
       end
+
+      [q1, q2]
     else
-      quote(do: nil)
+      []
     end
 
-    q2 = quote do
+    # We are using @anno to avoid warnings in case a path has already been defined.
+    quote @anno do
+      unquote_splicing(map_match_quotes)
+
       def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars)) do
         unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), [])
       end
@@ -252,11 +259,6 @@ defmodule Phoenix.Router.Helpers do
           when is_list(params) or is_map(params) do
         url(conn_or_endpoint) <> unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
       end
-    end
-
-    # We are using @anno to avoid warnings in case a path has already been defined.
-    quote @anno do
-      unquote_splicing([q1, q2])
     end
   end
 
