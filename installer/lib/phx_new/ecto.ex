@@ -25,6 +25,7 @@ defmodule Phx.New.Ecto do
     {:keep, "phx_ecto/priv/repo/migrations", :app, "priv/repo/migrations"},
     {:eex,  "phx_ecto/seeds.exs",            :app, "priv/repo/seeds.exs"},
     {:eex,  "phx_ecto/data_case.ex",         :app, "test/support/data_case.ex"},
+    {:eex,  "phx_ecto/formatter.exs",        :app, "priv/repo/migrations/.formatter.exs"},
   ]
 
   def prepare_project(%Project{} = project) do

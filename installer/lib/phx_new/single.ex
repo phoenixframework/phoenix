@@ -39,6 +39,7 @@ defmodule Phx.New.Single do
   template :ecto, [
     {:eex,  "phx_ecto/repo.ex",              :project, "lib/:app/repo.ex"},
     {:keep, "phx_ecto/priv/repo/migrations", :project, "priv/repo/migrations"},
+    {:eex,  "phx_ecto/formatter.exs",        :project, "priv/repo/migrations/.formatter.exs"},
     {:eex,  "phx_ecto/seeds.exs",            :project, "priv/repo/seeds.exs"},
     {:eex,  "phx_ecto/data_case.ex",         :project, "test/support/data_case.ex"},
   ]

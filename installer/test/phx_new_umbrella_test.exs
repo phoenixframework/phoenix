@@ -172,6 +172,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file app_path(@app, "lib/#{@app}/repo.ex"), ~r"defmodule PhxUmb.Repo"
       assert_file app_path(@app, "priv/repo/seeds.exs"), ~r"PhxUmb.Repo.insert!"
       assert_file app_path(@app, "test/support/data_case.ex"), ~r"defmodule PhxUmb.DataCase"
+      assert_file app_path(@app, "priv/repo/migrations/.formatter.exs"), ~r"import_deps: \[:ecto_sql\]"
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}

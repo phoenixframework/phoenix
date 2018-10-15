@@ -24,6 +24,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([@app_name])
 
       assert_file "phx_blog/README.md"
+      assert_file "phx_blog/.formatter.exs"
       assert_file "phx_blog/mix.exs", fn file ->
         assert file =~ "app: :phx_blog"
         refute file =~ "deps_path: \"../../deps\""
@@ -125,6 +126,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/priv/repo/seeds.exs", ~r"PhxBlog.Repo.insert!"
       assert_file "phx_blog/test/support/data_case.ex", ~r"defmodule PhxBlog.DataCase"
       assert_file "phx_blog/lib/phx_blog_web.ex", ~r"defmodule PhxBlogWeb"
+      assert_file "phx_blog/lib/phx_blog_web.ex", ~r"defmodule PhxBlogWeb"
+      assert_file "phx_blog/priv/repo/migrations/.formatter.exs", ~r"import_deps: \[:ecto_sql\]"
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}

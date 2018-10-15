@@ -39,7 +39,7 @@ defmodule <%= web_namespace %>.MixProject do
     [
       <%= phoenix_dep %>,
       {:phoenix_pubsub, "~> 1.1"},<%= if ecto do %>
-      {:phoenix_ecto, "~> 3.2"},<% end %><%= if html do %>
+      {:phoenix_ecto, "~> 3.5"},<% end %><%= if html do %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2-rc", only: :dev},<% end %>
       {:gettext, "~> 0.11"},<%= if app_name != web_app_name do %>
