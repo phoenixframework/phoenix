@@ -52,13 +52,15 @@ $ cd ..
 $ MIX_ENV=docs mix docs
 ```
 
-To build phoenix from source:
+To build Phoenix from source:
+
 ```bash
 $ mix deps.get
 $ mix compile
 ```
 
-To build the phoenix installer from source
+To build the Phoenix installer from source:
+
 ```bash
 $ mix deps.get
 $ mix compile
