@@ -176,6 +176,11 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.top_path(__MODULE__, :top, %{"id" => "foo"}) == "/posts/top?id=foo"
     assert Helpers.top_path(__MODULE__, :top, %{"id" => "foo bar"}) == "/posts/top?id=foo+bar"
 
+    assert Helpers.bottom_path(__MODULE__, :bottom, :asc, 8) == "/posts/bottom/asc/8"
+    assert Helpers.bottom_path(__MODULE__, :bottom, :asc, 8, foo: :bar) == "/posts/bottom/asc/8?foo=bar"
+    assert Helpers.bottom_path(__MODULE__, :bottom, %{order: :asc, count: 8}) == "/posts/bottom/asc/8"
+    assert Helpers.bottom_path(__MODULE__, :bottom, %{order: :asc, count: 8}, foo: :bar) == "/posts/bottom/asc/8?foo=bar"
+
     error_message = fn helper, arity ->
       """
       no function clause for #{inspect Helpers}.#{helper}/#{arity} and action :skip. The following actions/clauses are supported:
