@@ -204,11 +204,12 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates schema with proper datetime types", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Comment comments title:string drafted_at:datetime published_at:naive_datetime edited_at:utc_datetime))
+      Gen.Schema.run(~w(Blog.Comment comments title:string drafted_at:datetime published_at:naive_datetime edited_at:utc_datetime locked_at:naive_datetime_usec))
 
       assert_file "lib/phoenix/blog/comment.ex", fn file ->
         assert file =~ "field :drafted_at, :naive_datetime"
         assert file =~ "field :published_at, :naive_datetime"
+        assert file =~ "field :locked_at, :naive_datetime_usec"
         assert file =~ "field :edited_at, :utc_datetime"
       end
 

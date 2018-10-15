@@ -39,6 +39,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       Gen.Html.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
                       tags:array:text popular:boolean drafted_at:datetime
                       published_at:utc_datetime deleted_at:naive_datetime
+                      locked_at:naive_datetime_usec
                       secret:uuid announcement_date:date alarm:time
                       weight:float user_id:references:users))
 
@@ -47,13 +48,14 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_file "test/phoenix/blog/blog_test.exs", fn file ->
         assert file =~ "alarm: ~T[15:01:01.000000]"
         assert file =~ "announcement_date: ~D[2010-04-17]"
-        assert file =~ "deleted_at: ~N[2010-04-17 14:00:00.000000]"
+        assert file =~ "deleted_at: ~N[2010-04-17 14:00:00]"
+        assert file =~ "locked_at: ~N[2010-04-17 14:00:00.000000]"
         assert file =~ "cost: \"120.5\""
         assert file =~ "published_at: \"2010-04-17T14:00:00.000000Z\""
         assert file =~ "weight: 120.5"
 
         assert file =~ "assert post.announcement_date == ~D[2011-05-18]"
-        assert file =~ "assert post.deleted_at == ~N[2011-05-18 15:01:01.000000]"
+        assert file =~ "assert post.deleted_at == ~N[2011-05-18 15:01:01]"
         assert file =~ "assert post.published_at == DateTime.from_naive!(~N[2011-05-18T15:01:01.000000Z], \"Etc/UTC\")"
         assert file =~ "assert post.alarm == ~T[15:01:01.000000]"
         assert file =~ "assert post.cost == Decimal.new(\"120.5\")"

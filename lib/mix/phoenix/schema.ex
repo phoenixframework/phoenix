@@ -32,9 +32,24 @@ defmodule Mix.Phoenix.Schema do
             context_app: nil,
             route_helper: nil
 
-  @valid_types [:integer, :float, :decimal, :boolean, :map, :string,
-                :array, :references, :text, :date, :time,
-                :naive_datetime, :utc_datetime, :uuid, :binary]
+  @valid_types [
+    :integer,
+    :float,
+    :decimal,
+    :boolean,
+    :map,
+    :string,
+    :array,
+    :references,
+    :text,
+    :date,
+    :time,
+    :naive_datetime,
+    :naive_datetime_usec,
+    :utc_datetime,
+    :uuid,
+    :binary
+  ]
 
   def valid_types, do: @valid_types
 
@@ -191,7 +206,8 @@ defmodule Mix.Phoenix.Schema do
         :time           -> %Time{hour: 14, minute: 0, second: 0, microsecond: {0, 6}}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
         :utc_datetime   -> "2010-04-17T14:00:00.000000Z"
-        :naive_datetime -> ~N[2010-04-17 14:00:00.000000]
+        :naive_datetime -> ~N[2010-04-17 14:00:00]
+        :naive_datetime_usec -> ~N[2010-04-17 14:00:00.000000]
         _               -> "some #{key}"
     end
   end
@@ -208,7 +224,8 @@ defmodule Mix.Phoenix.Schema do
         :time           -> %Time{hour: 15, minute: 1, second: 1, microsecond: {0, 6}}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960668"
         :utc_datetime   -> "2011-05-18T15:01:01.000000Z"
-        :naive_datetime -> ~N[2011-05-18 15:01:01.000000]
+        :naive_datetime -> ~N[2011-05-18 15:01:01]
+        :naive_datetime_usec -> ~N[2011-05-18 15:01:01.000000]
         _               -> "some updated #{key}"
     end
   end
