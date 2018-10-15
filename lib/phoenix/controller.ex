@@ -1040,12 +1040,17 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Gets the CSRF token.
+  Gets or generates a CSRF token.
+
+  If a token exists, it is returned, otherwise it is generated and stored
+  in the process dictionary.
   """
   defdelegate get_csrf_token(), to: Plug.CSRFProtection
 
   @doc """
-  Deletes any CSRF token set.
+  Deletes the CSRF token from the process dictionary.
+
+  *Note*: The token is deleted only after a response has been sent.
   """
   defdelegate delete_csrf_token(), to: Plug.CSRFProtection
 
