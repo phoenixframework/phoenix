@@ -29,6 +29,17 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
 
+## 1.4.0-rc.2
+
+### Enhancements
+  
+  * [phx.new] Use Ecto 3.0RC, with `ecto_sql` in new project deps
+  * [phx.gen.html|json|schema|context] Support new Ecto 3.0 usec datetime types
+
+### Bug Fixes
+
+  * [phx.gen.json|html] Fix generator tests incorrectly encoding datetimes
+
 ## 1.4.0-rc.1 (2018-10-12)
 
 ### Enhancements
