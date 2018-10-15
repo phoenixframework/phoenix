@@ -38,9 +38,13 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     in_tmp_project config.test, fn ->
      Gen.Json.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
                      tags:array:text popular:boolean drafted_at:datetime
-                     published_at:utc_datetime deleted_at:naive_datetime
-                     locked_at:naive_datetime_usec
-                     secret:uuid announcement_date:date alarm:time
+                     published_at:utc_datetime
+                     published_at_usec:utc_datetime_usec
+                     deleted_at:naive_datetime
+                     deleted_at_usec:naive_datetime_usec
+                     alarm:time
+                     alarm_usec:time_usec
+                     secret:uuid announcement_date:date
                      weight:float user_id:references:users))
 
       assert_file "lib/phoenix/blog/post.ex"
@@ -56,14 +60,16 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
               assert %{
                        "id" => id,
-                       "alarm" => "14:00:00.000000",
+                       "alarm" => "14:00:00",
+                       "alarm_usec" => "14:00:00.000000",
                        "announcement_date" => "2010-04-17",
                        "cost" => "120.5",
                        "deleted_at" => "2010-04-17T14:00:00",
+                       "deleted_at_usec" => "2010-04-17T14:00:00.000000",
                        "drafted_at" => "2010-04-17T14:00:00",
-                       "locked_at" => "2010-04-17T14:00:00.000000",
                        "popular" => true,
-                       "published_at" => "2010-04-17T14:00:00.000000Z",
+                       "published_at" => "2010-04-17T14:00:00Z",
+                       "published_at_usec" => "2010-04-17T14:00:00.000000Z",
                        "secret" => "7488a646-e31f-11e4-aace-600308960662",
                        "slug" => "some slug",
                        "tags" => [],

@@ -61,7 +61,10 @@ defmodule Mix.PhoenixTest do
       name: :text,
       date_of_birth: :date,
       happy_hour: :time,
+      happy_hour_usec: :time_usec,
       joined: :naive_datetime,
+      joined_utc: :utc_datetime,
+      joined_utc_usec: :utc_datetime_usec,
       token: :uuid,
       other: :other
     ]
@@ -74,8 +77,11 @@ defmodule Mix.PhoenixTest do
       meta: %{},
       name: "some name",
       date_of_birth: %Date{year: 2010, month: 4, day: 17},
-      happy_hour: %Time{hour: 14, minute: 0, second: 0, microsecond: {0, 6}},
+      happy_hour: %Time{hour: 14, minute: 0, second: 0},
+      happy_hour_usec: %Time{hour: 14, minute: 0, second: 0, microsecond: {0, 6}},
       joined: %NaiveDateTime{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0},
+      joined_utc: "2010-04-17T14:00:00Z",
+      joined_utc_usec: "2010-04-17T14:00:00.000000Z",
       token: "7488a646-e31f-11e4-aace-600308960662",
       other: "some other"
     }
