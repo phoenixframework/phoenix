@@ -133,8 +133,8 @@ defmodule Phoenix.Controller.Pipeline do
 
   @doc false
   def __catch__(%Plug.Conn{}, :function_clause, controller, action,
-                [{controller, action, [%Plug.Conn{} = conn | _], _loc} | _] = stack) do
-    args = [controller: controller, action: action, params: conn.params]
+      [{controller, action, [%Plug.Conn{} | _] = action_args, _loc} | _] = stack) do
+    args = [module: controller, function: action, arity: length(action_args), args: action_args]
     reraise Phoenix.ActionClauseError, args, stack
   end
   def __catch__(%Plug.Conn{} = conn, reason, _controller, _action, stack) do
