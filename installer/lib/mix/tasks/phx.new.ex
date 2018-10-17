@@ -136,6 +136,8 @@ defmodule Mix.Tasks.Phx.New do
   defp prompt_to_install_deps(%Project{} = project, generator) do
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
 
+    {:ok, cwd_path} = :file.get_cwd()
+    
     maybe_cd(project.project_path, fn ->
       mix_pending =
         install_mix(install?)
@@ -154,7 +156,7 @@ defmodule Mix.Tasks.Phx.New do
       end
 
       pending = mix_pending ++ (webpack_pending || [])
-      print_missing_commands(pending, project.project_path)
+      print_missing_commands(pending, project.project_path, IO.chardata_to_string(cwd_path))
 
       if Project.ecto?(project) do
         print_ecto_info(project, generator)
@@ -180,7 +182,7 @@ defmodule Mix.Tasks.Phx.New do
     assets_path = Path.join(project.web_path || project.project_path, "assets")
     webpack_config = Path.join(assets_path, "webpack.config.js")
 
-    maybe_cmd "cd #{relative_app_path(assets_path)} && npm install && node node_modules/webpack/bin/webpack.js --mode development",
+    maybe_cmd "cd #{relative_app_path(assets_path, project.project_path)} && npm install && node node_modules/webpack/bin/webpack.js --mode development",
               File.exists?(webpack_config), install? && System.find_executable("npm")
   end
 
@@ -208,16 +210,16 @@ defmodule Mix.Tasks.Phx.New do
     """
   end
 
-  defp print_missing_commands([], path) do
+  defp print_missing_commands([], path, cwd_path) do
     Mix.shell.info """
 
     We are all set! Go into your application by running:
 
-        $ cd #{relative_app_path(path)}
+        $ cd #{relative_app_path(path, cwd_path)}
     """
   end
-  defp print_missing_commands(commands, path) do
-    steps = ["$ cd #{relative_app_path(path)}" | commands]
+  defp print_missing_commands(commands, path, cwd_path) do
+    steps = ["$ cd #{relative_app_path(path, cwd_path)}" | commands]
     Mix.shell.info """
 
     We are almost there! The following steps are missing:
@@ -259,8 +261,8 @@ defmodule Mix.Tasks.Phx.New do
         $ iex -S mix phx.server
     """
   end
-  defp relative_app_path(path) do
-    case Path.relative_to_cwd(path) do
+  defp relative_app_path(path, cwd_path) do
+    case Path.relative_to(path, cwd_path) do
       ^path -> Path.basename(path)
       rel   -> rel
     end
