@@ -39,21 +39,31 @@ defmodule Phoenix.MissingParamError do
 end
 
 defmodule Phoenix.ActionClauseError do
-  defexception [message: nil, plug_status: 400]
+  exception_keys =
+    FunctionClauseError.__struct__
+    |> Map.keys()
+    |> Kernel.--([:__exception__, :__struct__])
 
-  def exception(opts) do
-    controller = Keyword.fetch!(opts, :controller)
-    action = Keyword.fetch!(opts, :action)
-    params = Keyword.fetch!(opts, :params)
-    msg = """
-    could not find a matching #{inspect controller}.#{action} clause
-    to process request. This typically happens when there is a
-    parameter mismatch but may also happen when any of the other
-    action arguments do not match. The request parameters are:
+  defexception exception_keys
 
-      #{inspect params}
-
-    """
-    %Phoenix.ActionClauseError{message: msg}
+  def message(exception) do
+    exception
+    |> Map.put(:__struct__, FunctionClauseError)
+    |> FunctionClauseError.message()
   end
+
+  def blame(exception, stacktrace) do
+    {exception, stacktrace} =
+      exception
+      |> Map.put(:__struct__, FunctionClauseError)
+      |> FunctionClauseError.blame(exception, stacktrace)
+
+    exception = Map.put(exception, :__struct__, __MODULE__)
+
+    {exception, stacktrace}
+  end
+end
+
+defimpl Plug.Exception, for: Phoenix.ActionClauseError do
+  def status(_), do: 400
 end
