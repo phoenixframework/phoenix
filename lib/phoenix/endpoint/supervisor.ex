@@ -141,7 +141,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     If you wish to use Cowboy 1, please update mix.exs to point to the \
     correct Cowboy version:
 
-        {:cowboy, "~> 1.0"}
+        {:plug_cowboy, "~> 1.0"}
 
     If you want to use Cowboy 2, then please remove the :adapter option \
     in your config.exs file or set it to:

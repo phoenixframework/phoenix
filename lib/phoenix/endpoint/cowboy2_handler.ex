@@ -6,7 +6,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
     @behaviour :cowboy_websocket
   end
 
-  @connection Plug.Adapters.Cowboy2.Conn
+  @connection Plug.Cowboy.Conn
   @already_sent {:plug_conn, :sent}
 
   # Note we keep the websocket state as [handler | state]
