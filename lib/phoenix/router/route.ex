@@ -121,13 +121,16 @@ defmodule Phoenix.Router.Route do
     {_params, fwd_segments} = build_path_match(route.path)
 
     quote do
-      {Phoenix.Router.Route, {unquote(fwd_segments), unquote(route.plug), unquote(route.opts)}}
+      {
+        Phoenix.Router.Route,
+        {unquote(fwd_segments), unquote(route.plug), unquote(Macro.escape(route.opts))}
+      }
     end
   end
 
   defp build_dispatch(%Route{} = route) do
     quote do
-      {unquote(route.plug), unquote(route.opts)}
+      {unquote(route.plug), unquote(Macro.escape(route.opts))}
     end
   end
 

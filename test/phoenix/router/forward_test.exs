@@ -43,6 +43,11 @@ defmodule Phoenix.Router.ForwardTest do
     def call(conn, %{non: :literal} = opts), do: assign(conn, :opts, opts)
   end
 
+  defmodule AssignOptsPlug do
+    def init(opts), do: opts
+    def call(conn, opts), do: assign(conn, :opts, opts)
+  end
+
   defmodule Router do
     use Phoenix.Router
 
@@ -50,6 +55,7 @@ defmodule Phoenix.Router.ForwardTest do
       get "/stats", Controller, :stats
       forward "/admin", AdminDashboard
       forward "/init", InitPlug
+      forward "/assign/opts", AssignOptsPlug, %{foo: "bar"}
       scope "/internal" do
         forward "/api/v1", ApiRouter
       end
@@ -110,6 +116,7 @@ defmodule Phoenix.Router.ForwardTest do
       Phoenix.Router.ForwardTest.AdminDashboard => ["admin"],
       Phoenix.Router.ForwardTest.ApiRouter => ["api", "v1"],
       Phoenix.Router.ForwardTest.InitPlug => ["init"],
+      Phoenix.Router.ForwardTest.AssignOptsPlug => ["assign", "opts"]
     }}
     assert conn.private[AdminDashboard] ==
       {["admin"], %{Phoenix.Router.ForwardTest.ApiRouter => ["api-admin"]}}
@@ -135,6 +142,10 @@ defmodule Phoenix.Router.ForwardTest do
 
   test "forward can handle plugs with non-literal init returns" do
     assert call(Router, :get, "init").assigns.opts == %{non: :literal}
+  end
+
+  test "forward can handle plugs with custom options" do
+    assert call(Router, :get, "assign/opts").assigns.opts == %{foo: "bar"}
   end
 
   test "forward with scoped alias" do

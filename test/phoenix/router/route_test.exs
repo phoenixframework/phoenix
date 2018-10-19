@@ -63,4 +63,15 @@ defmodule Phoenix.Router.RouteTest do
     assert conn.path_info == ["admin", "stats"]
     assert conn.script_name == ["phoenix"]
   end
+
+  test "exprs/1 returns quoted expressions" do
+    opts = %{a: ~r/foo/}
+    escaped_opts = Macro.escape(opts)
+
+    route = build(1, :match, :*, "/foo", nil, __MODULE__, opts, "hello_world", [], %{}, %{})
+    assert {__MODULE__, escaped_opts} == exprs(route).dispatch
+
+    fwd_route = build(1, :forward, :*, "/foo", nil, __MODULE__, opts, "hello_world", [], %{}, %{})
+    assert {_, {:{}, _, [_, __MODULE__, ^escaped_opts]}} = exprs(fwd_route).dispatch
+  end
 end
