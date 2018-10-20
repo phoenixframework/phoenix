@@ -66,22 +66,16 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
   @doc false
   def info(scheme, endpoint, ref) do
     server = "cowboy #{Application.spec(:cowboy)[:vsn]}"
-    "Running #{inspect endpoint} with #{server} at #{uri(scheme, ref)}"
+    "Running #{inspect endpoint} with #{server} at #{uri(scheme, endpoint, ref)}"
   end
 
-  defp uri(scheme, ref) do
+  defp uri(scheme, endpoint, ref) do
     case :ranch.get_addr(ref) do
       {:local, unix_path} ->
         %URI{host: URI.encode_www_form(unix_path), scheme: "#{scheme}+unix"}
 
-      {addr, port} ->
-        host =
-          case to_string(:inet.ntoa(addr)) do
-            "0.0.0.0" -> "localhost"
-            host -> host
-          end
-
-        %URI{host: host, port: port, scheme: to_string(scheme)}
+      _ ->
+        endpoint.struct_url()
     end
   end
 end
