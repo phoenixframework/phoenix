@@ -47,8 +47,8 @@ defmodule Phoenix.MixProject do
 
   defp deps do
     [
-      {:plug_cowboy, "~> 1.0-dev or ~> 2.0-dev", github: "elixir-plug/plug_cowboy", optional: true},
-      {:plug, github: "elixir-plug/plug", override: true},
+      {:plug_cowboy, "~> 1.0 or ~> 2.0", optional: true},
+      {:plug, "~> 1.7"},
       {:phoenix_pubsub, "~> 1.1"},
       {:jason, "~> 1.0", optional: true},
 
