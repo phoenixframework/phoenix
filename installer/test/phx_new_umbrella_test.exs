@@ -150,7 +150,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "{:phoenix,"
         assert file =~ "{:phoenix_pubsub,"
         assert file =~ "{:gettext,"
-        assert file =~ "{:cowboy,"
+        assert file =~ "{:plug_cowboy,"
       end
 
       # app deps

@@ -13,7 +13,7 @@ defmodule Phoenix.MixProject do
       lockfile: lockfile(),
       preferred_cli_env: [docs: :docs],
       consolidate_protocols: Mix.env != :test,
-      xref: [exclude: [Ecto.Type, :ranch, {:cowboy_req, :compact, 1}]],
+      xref: [exclude: [Ecto.Type, :ranch, {:cowboy_req, :compact, 1}, Plug.Adapters.Cowboy.Conn, Plug.Cowboy.Conn]],
       elixirc_paths: elixirc_paths(Mix.env),
       name: "Phoenix",
       docs: docs(),
@@ -47,8 +47,8 @@ defmodule Phoenix.MixProject do
 
   defp deps do
     [
-      {:cowboy, "~> 1.0 or ~> 2.5", optional: true},
-      {:plug, "~> 1.6.4 or ~> 1.7"},
+      {:plug_cowboy, "~> 1.0 or ~> 2.0", optional: true},
+      {:plug, "~> 1.7"},
       {:phoenix_pubsub, "~> 1.1"},
       {:jason, "~> 1.0", optional: true},
 

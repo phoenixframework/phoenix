@@ -47,7 +47,7 @@ defmodule <%= web_namespace %>.MixProject do
       {:gettext, "~> 0.11"},<%= if app_name != web_app_name do %>
       {:<%= app_name %>, in_umbrella: true},<% end %>
       {:jason, "~> 1.0"},
-      {:cowboy, "~> 1.0"}
+      {:plug_cowboy, "~> 2.0"}
     ]
   end
 

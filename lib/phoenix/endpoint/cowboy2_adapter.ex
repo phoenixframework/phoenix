@@ -41,7 +41,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
 
     dispatches = [{:_, Phoenix.Endpoint.Cowboy2Handler, {endpoint, endpoint.init([])}}]
     config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
-    spec = Plug.Adapters.Cowboy2.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
+    spec = Plug.Cowboy.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
     update_in spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]}
   end
 
