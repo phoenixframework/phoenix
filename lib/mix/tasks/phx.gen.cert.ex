@@ -126,6 +126,7 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
         http: [port: 4000],
         https: [
           port: 4001,
+          cipher_suite: :strong,
           certfile: "#{certfile}",
           keyfile: "#{keyfile}"
         ],
