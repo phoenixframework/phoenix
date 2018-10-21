@@ -732,7 +732,7 @@ defmodule Phoenix.Endpoint do
       for {path, socket, socket_opts} <- sockets,
           {path, return} <- socket_paths(module, path, socket, socket_opts) do
         quote do
-          def __dispatch__(unquote(path), _opts), do: unquote(Macro.escape(return))
+          def __handler__(unquote(path), _opts), do: unquote(Macro.escape(return))
         end
       end
 
@@ -762,15 +762,14 @@ defmodule Phoenix.Endpoint do
       def __sockets__, do: unquote(Macro.escape(sockets))
 
       @doc false
-      def __dispatch__(path, opts)
+      def __handler__(path, opts)
       unquote(dispatches)
-      def __dispatch__(_, opts), do: {:plug, __MODULE__, opts}
+      def __handler__(_, opts), do: {:plug, __MODULE__, opts}
 
       unquote(instrumentation)
     end
   end
 
-  @doc false
   defp socket_paths(endpoint, path, socket, opts) do
     paths = []
     websocket = Keyword.get(opts, :websocket, true)

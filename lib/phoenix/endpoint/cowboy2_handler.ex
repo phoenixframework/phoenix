@@ -15,7 +15,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
     %{path_info: path_info} = conn = @connection.conn(req)
 
     try do
-      case endpoint.__dispatch__(path_info, opts) do
+      case endpoint.__handler__(path_info, opts) do
         {:websocket, handler, opts} ->
           case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
             {:ok, %{adapter: {@connection, req}}, state} ->
