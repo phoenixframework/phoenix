@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([@app_name])
 
       assert_file "phx_blog/README.md"
-      assert_file "phx_blog/.formatter.exs"
+      assert_file "phx_blog/.formatter.exs", ~r/import_deps: \[:ecto, :phoenix\]/
       assert_file "phx_blog/mix.exs", fn file ->
         assert file =~ "app: :phx_blog"
         refute file =~ "deps_path: \"../../deps\""
