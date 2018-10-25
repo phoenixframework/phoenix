@@ -7,11 +7,12 @@ There are currently a number of built-in Phoenix-specific and ecto-specific mix 
 ## Phoenix Specific Mix Tasks
 
 ```console
-
 ➜ mix help | grep -i phx
 mix local.phx          # Updates the Phoenix project generator locally
+mix phx                # Prints Phoenix help information
 mix phx.digest         # Digests and compresses static files
 mix phx.digest.clean   # Removes old versions of static assets.
+mix phx.gen.cert       # Generates a self-signed certificate for HTTPS testing
 mix phx.gen.channel    # Generates a Phoenix channel
 mix phx.gen.context    # Generates a context with functions around an Ecto schema
 mix phx.gen.embedded   # Generates an embedded Ecto schema file
