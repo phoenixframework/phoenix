@@ -79,6 +79,7 @@ The old APIs for building transports are also deprecated. The good news is: adap
   * [Presence] Add `Presence.get_by_key` to fetch presences for specific user
   * [Socket] Add new `phoenix_socket_connect` instrumentation
   * [Logger] Log calls to user socket connect
+  * [CodeReloader] Add `:reloadable_apps` endpoint configuration option to allow recompiling local dependencies
 
 ### Bug Fixes
 
