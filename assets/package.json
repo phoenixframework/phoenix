@@ -19,7 +19,7 @@
     "growl": "~> 1.10.0",
     "jsdom": "9.8.3",
     "jsdom-global": "2.1.0",
-    "mocha": "~2.4",
+    "mocha": "^5.2.0",
     "mock-socket": "^6.0.1",
     "sinon": "^1.17.6",
     "webpack": "^4.23.1",
@@ -27,7 +27,7 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "mocha ./test/**/*.js --compilers js:@babel/register -r jsdom-global/register",
+    "test": "mocha ./test/**/*.js --exit --compilers js:@babel/register -r jsdom-global/register",
     "docs": "documentation build js/phoenix.js -f html -o ../doc/js",
     "build": "webpack --mode production",
     "watch": "webpack --mode development --watch"
