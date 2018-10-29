@@ -39,8 +39,6 @@ defmodule <%= web_namespace %>.MixProject do
     [
       <%= phoenix_dep %>,
       {:phoenix_pubsub, "~> 1.1"},<%= if ecto do %>
-      # TODO: temporarily requires ecto until final release
-      {:ecto, "~> 3.0-rc", override: true},
       {:phoenix_ecto, "~> 3.5"},<% end %><%= if html do %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2-rc", only: :dev},<% end %>
