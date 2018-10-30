@@ -78,15 +78,36 @@ defmodule Phoenix do
   end
 
   defp warn_on_missing_json_library do
-    module = json_library()
-    Code.ensure_loaded?(module) || IO.warn """
-    failed to load #{inspect(module)} for Phoenix JSON encoding
-    (module #{inspect(module)} is not available).
+    configured_lib = Application.get_env(:phoenix, :json_library)
+    default_lib = json_library()
 
-    Ensure #{inspect(module)} is loaded from your deps in mix.exs, or
-    configure an existing encoder in your Mix config using:
+    cond do
+      configured_lib && not Code.ensure_loaded?(configured_lib) ->
+        warn_json configured_lib, """
+        found #{inspect(configured_lib)} in your application configuration
+        for Phoenix JSON encoding, but failed to load the library.
+        """
 
-        config :phoenix, :json_library, MyJSONLibrary
+      not Code.ensure_loaded?(default_lib) and Code.ensure_loaded?(Jason) ->
+        warn_json(Jason)
+
+      not Code.ensure_loaded?(default_lib) ->
+        warn_json(default_lib)
+
+      true -> :ok
+    end
+  end
+
+  defp warn_json(lib, preabmle \\ nil) do
+    IO.warn """
+    #{preabmle || "failed to load #{inspect(lib)} for Phoenix JSON encoding"}
+    (module #{inspect(lib)} is not available).
+
+    Ensure #{inspect(lib)} exists in your deps in mix.exs,
+    and you have configured Phoenix to use it for JSON encoding by
+    verifying the following exists in your config/config.exs:
+
+        config :phoenix, :json_library, #{inspect(lib)}
 
     """
   end

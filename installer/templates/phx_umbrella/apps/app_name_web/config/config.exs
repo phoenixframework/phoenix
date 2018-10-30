@@ -17,10 +17,6 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
   render_errors: [view: <%= web_namespace %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json)],
   pubsub: [name: <%= web_namespace %>.PubSub, adapter: Phoenix.PubSub.PG2]
 
-
-# Use Jason for JSON parsing in Phoenix
-config :phoenix, :json_library, Jason
-
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
