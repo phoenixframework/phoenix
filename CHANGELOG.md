@@ -29,6 +29,13 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
 
+## 1.4.0-rc.3 (2018-10-30)
+
+### Enhancements
+  * [phx.new] Update Ecto deps with the release of Ecto 3.0 including `phoenix_ecto` 4.0
+  * [phx.new] Import Ecto's `.formatter.exs` in new projects 
+  * [Endpoint] Log the configured url instead of raw IP when booting endpoint webserver
+
 ## 1.4.0-rc.2 (2018-10-20)
 
 ### Enhancements
