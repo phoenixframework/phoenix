@@ -167,21 +167,3 @@ With `force_ssl: :hsts` set the `Strict-Transport-Security` header is set with a
 This can result in unexpected behaviour if you access your application on localhost, for example `https://localhost:4000`, as from that point forward and traffic coming from localhost will be expected to be encrypted, except port 80 which will be redirected to port 443. This has the potential to disrupt traffic to any other local servers or proxies that you may be running on your computer. Other applications or proxies on localhost will refuse to work unless the traffic is encrypted.
 
 If you do inadvertently turn on HSTS for localhost you may need to reset the cache on your browser before it will accept any HTTP traffic from localhost. For Chrome you need to `Empty Cache and Hard Reload` which is available from the reload menu that appears when you click and hold the reload icon from the Developer Tools Panel. For Safari you will need to clear your cache, remove the entry from `~/Library/Cookies/HSTS.plist` (or delete that file entirely) and restart Safari. Alternately you can set the `:expires` option on `force_ssl` to `0` which should expired the entry to turn off HSTS. More information on the options for HSTS are available at [Plug.SSL](https://hexdocs.pm/plug/Plug.SSL.html).
-
-### Releasing with Exrm
-
-In order to build and run a release with Exrm, make sure you also include the `:ssl` app in `mix.exs`:
-
-```elixir
-def application do
-  [mod: {MyApp, []},
-   applications: [:phoenix, :phoenix_html, :cowboy, :logger, :gettext,
-                  :phoenix_ecto, :postgrex, :ssl]]
-end
-```
-
-Or else you might run into errors:
-
-```
-** (MatchError) no match of right hand side value: {:error, {:ssl, {'no such file or directory', 'ssl.app'}}}
-```

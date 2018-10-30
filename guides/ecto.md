@@ -471,7 +471,7 @@ defmodule HelloPhoenix.MixProject do
     [
       {:phoenix, "~> 1.3.0"},
       {:phoenix_pubsub, "~> 1.0"},
-      {:phoenix_ecto, "~> 3.5"},
+      {:phoenix_ecto, "~> 4.0"},
       {:ecto_sql, "~> 3.0-rc"},
       {:mariaex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.10"},
