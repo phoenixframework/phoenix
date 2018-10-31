@@ -24,7 +24,13 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([@app_name])
 
       assert_file "phx_blog/README.md"
-      assert_file "phx_blog/.formatter.exs", ~r/import_deps: \[:ecto, :phoenix\]/
+
+      assert_file "phx_blog/.formatter.exs", fn file ->
+        assert file =~ "import_deps: [:ecto, :phoenix]"
+        assert file =~ "inputs: [\"*.{ex,exs}\", \"priv/*/seeds.exs\", \"{config,lib,test}/**/*.{ex,exs}\"]"
+        assert file =~ "subdirectories: [\"priv/*/migrations\"]"
+      end
+
       assert_file "phx_blog/mix.exs", fn file ->
         assert file =~ "app: :phx_blog"
         refute file =~ "deps_path: \"../../deps\""
@@ -172,6 +178,12 @@ defmodule Mix.Tasks.Phx.NewTest do
       # No Ecto
       config = ~r/config :phx_blog, PhxBlog.Repo,/
       refute File.exists?("phx_blog/lib/phx_blog/repo.ex")
+
+      assert_file "phx_blog/.formatter.exs", fn file ->
+        assert file =~ "import_deps: [:phoenix]"
+        assert file =~ "inputs: [\"*.{ex,exs}\", \"{config,lib,test}/**/*.{ex,exs}\"]"
+        refute file =~ "subdirectories:"
+      end
 
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_ecto")
 

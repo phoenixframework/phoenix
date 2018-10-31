@@ -1,5 +1,6 @@
 [
-  import_deps: [<%= if ecto do %>:ecto, <% end %>:phoenix],
-  inputs: ["*.{ex,exs}", "{config,lib,priv,test}/**/*.{ex,exs}"]<%= if ecto do %>,
-  subdirectories: ["priv/*/migrations"]<% end %>
+  import_deps: [<%= if ecto do %>:ecto, <% end %>:phoenix],<%= if ecto do %>
+  inputs: ["*.{ex,exs}", "priv/*/seeds.exs", "{config,lib,test}/**/*.{ex,exs}"],
+  subdirectories: ["priv/*/migrations"]<% else %>
+  inputs: ["*.{ex,exs}", "{config,lib,test}/**/*.{ex,exs}"]<% end %>
 ]
