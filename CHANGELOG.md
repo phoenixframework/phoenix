@@ -29,6 +29,11 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
 
+## 1.4.0-rc.4
+
+### Enhancements
+  * [Endpoint] Allow custom keyword pairs to be passed to the socket `:connect_info` options.
+
 ## 1.4.0-rc.3 (2018-10-30)
 
 ### Enhancements

@@ -869,12 +869,23 @@ defmodule Phoenix.Endpoint do
         * `:x_headers` - all request headers that have an "x-" prefix
         * `:uri` - a `%URI{}` with information from the conn
 
+      Arbitrary keywords may also appear following the above valid keys, which
+      is useful for passing custom connection information to the socket.
+
       For example:
 
           socket "/socket", AppWeb.UserSocket,
             websocket: [
               connect_info: [:peer_data, :x_headers, :uri]
             ]
+
+      With arbitrary keywords:
+
+          socket "/socket", AppWeb.UserSocket,
+            websocket: [
+              connect_info: [:uri, signing_salt: "NZIguRPO"]
+            ]
+
 
   ## Websocket configuration
 

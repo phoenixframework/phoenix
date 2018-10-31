@@ -130,6 +130,14 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         timeout: 200,
         connect_info: [:x_headers, :peer_data, :uri]
       ]
+
+    socket "/ws/connect_info_custom", UserSocketConnectInfo,
+      websocket: [
+        check_origin: ["//example.com"],
+        timeout: 200,
+        connect_info: [:x_headers, :peer_data, :uri, signing_salt: "salt"]
+      ]
+
   end
 
   setup_all do
@@ -243,6 +251,21 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
                                       "query" => "vsn=#{@vsn}",
                                       "scheme" => "http",
                                       "port" => 80}}}}
+      end
+
+      test "transport custom keywords are extracted to the socket connect_info" do
+        {:ok, sock} =
+          WebsocketClient.start_link(
+            self(),
+            "ws://127.0.0.1:#{@port}/ws/connect_info_custom/websocket?vsn=#{@vsn}",
+            @serializer
+          )
+        WebsocketClient.join(sock, lobby(), %{})
+
+        assert_receive %Message{
+          event: "joined",
+          payload: %{"connect_info" => %{"signing_salt" => "salt"}}
+        }
       end
 
       test "logs user socket connect when enabled" do

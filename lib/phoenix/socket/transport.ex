@@ -415,8 +415,10 @@ defmodule Phoenix.Socket.Transport do
         :uri ->
           {:uri, fetch_uri(conn)}
 
+        {key, val} -> {key, val}
+
         _ ->
-          raise ArgumentError, ":connect_info keys are expected to be one of :peer_data, :x_headers, or :uri, got: #{inspect(key)}"
+          raise ArgumentError, ":connect_info keys are expected to be one of :peer_data, :x_headers, or :uri, optionally followed by custom keyword pairs, got: #{inspect(key)}"
       end
     end
   end
