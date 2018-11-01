@@ -33,7 +33,7 @@ defmodule Phoenix.Channel.Server do
           channel: channel,
           join_ref: join_ref,
           assigns: Map.merge(socket.assigns, assigns),
-          private: channel.__socket__(:private)
+          private: Map.merge(channel.__socket__(:private), socket.private)
       }
 
     instrument = %{params: payload, socket: socket}
