@@ -76,6 +76,18 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ":inet6"
       end
 
+      assert_file app_path(@app, ".formatter.exs"), fn file ->
+        assert file =~ "import_deps: [:ecto]"
+        assert file =~ "inputs: [\"*.{ex,exs}\", \"priv/*/seeds.exs\", \"{config,lib,test}/**/*.{ex,exs}\"]"
+        assert file =~ "subdirectories: [\"priv/*/migrations\"]"
+      end
+
+      assert_file web_path(@app, ".formatter.exs"), fn file ->
+        assert file =~ "inputs: [\"*.{ex,exs}\", \"{config,lib,test}/**/*.{ex,exs}\"]"
+        refute file =~ "import_deps: [:ecto]"
+        refute file =~ "subdirectories:"
+      end
+
       assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/defmodule PhxUmb.Application do/
       assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/PhxUmb.Repo/
       assert_file app_path(@app, "lib/#{@app}.ex"), ~r/defmodule PhxUmb do/
