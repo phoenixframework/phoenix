@@ -434,7 +434,7 @@ defmodule Phoenix.ConnTest do
       assert redirected_to(conn, 301) =~ "/foo/bar"
       assert redirected_to(conn, :moved_permanently) =~ "/foo/bar"
   """
-  @spec redirected_to(Conn.t, status :: non_neg_integer) :: Conn.t
+  @spec redirected_to(Conn.t, status :: non_neg_integer) :: String.t
   def redirected_to(conn, status \\ 302)
 
   def redirected_to(%Conn{state: :unset}, _status) do
