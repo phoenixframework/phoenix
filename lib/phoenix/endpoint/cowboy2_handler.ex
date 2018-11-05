@@ -25,7 +25,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
               {:cowboy_websocket, req, [handler | state], cowboy_opts}
 
             {:error, %{adapter: {@connection, req}}} ->
-              {:error, req}
+              {:ok, req, {handler, opts}}
           end
 
         {:plug, handler, opts} ->
