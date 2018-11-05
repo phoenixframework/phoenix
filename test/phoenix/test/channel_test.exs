@@ -16,7 +16,10 @@ defmodule Phoenix.Test.ChannelTest do
   @moduletag :capture_log
 
   defp assert_graceful_exit(pid) do
-    assert_receive {:graceful_exit, ^pid, %Message{event: "phx_close"}}
+    assert_receive {:EXIT, ^pid, reason}
+                   when reason == :normal
+                   when reason == :shutdown
+                   when tuple_size(reason) == 2 and elem(reason, 0) == :shutdown
   end
 
   defmodule EmptyChannel do

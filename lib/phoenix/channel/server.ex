@@ -380,13 +380,7 @@ defmodule Phoenix.Channel.Server do
   ## Handle results
 
   defp handle_result({:stop, reason, socket}, _callback) do
-    case reason do
-      :normal -> notify_transport_of_graceful_exit(socket)
-      :shutdown -> notify_transport_of_graceful_exit(socket)
-      {:shutdown, _} -> notify_transport_of_graceful_exit(socket)
-      _ -> :noop
-    end
-    {:stop, reason, socket}
+    {:stop, reason, put_in(socket.ref, nil)}
   end
 
   defp handle_result({:noreply, socket}, _callback) do
@@ -423,13 +417,6 @@ defmodule Phoenix.Channel.Server do
 
     got #{inspect result}
     """
-  end
-
-  defp notify_transport_of_graceful_exit(socket) do
-    %{topic: topic, join_ref: ref, transport_pid: transport_pid} = socket
-    close_msg = %Message{join_ref: ref, ref: ref, topic: topic, event: "phx_close", payload: %{}}
-    send(transport_pid, {:graceful_exit, self(), close_msg})
-    :ok
   end
 
   ## Handle in/replies

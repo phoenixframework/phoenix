@@ -502,26 +502,13 @@ defmodule Phoenix.Socket do
   def __info__({:DOWN, ref, _, pid, reason}, {state, socket}) do
     case state.channels_inverse do
       %{^pid => {topic, join_ref}} ->
+        event = if graceful_exit?(reason), do: "phx_close", else: "phx_error"
         state = delete_channel(state, pid, topic, ref)
-        {:push, encode_on_exit(socket, topic, join_ref, reason), {state, socket}}
+        {:push, encode_down(socket, event, topic, join_ref), {state, socket}}
 
       %{} ->
         {:ok, {state, socket}}
     end
-  end
-
-  def __info__({:graceful_exit, pid, %Phoenix.Socket.Message{} = message}, {state, socket}) do
-    state =
-      case state.channels_inverse do
-        %{^pid => {topic, _join_ref}} ->
-          {^pid, monitor_ref} = Map.fetch!(state.channels, topic)
-          delete_channel(state, pid, topic, monitor_ref)
-
-        %{} ->
-          state
-      end
-
-    {:push, encode_reply(socket, message), {state, socket}}
   end
 
   def __info__(%Broadcast{event: "disconnect"}, state) do
@@ -653,6 +640,10 @@ defmodule Phoenix.Socket do
     end
 
     :ok = Phoenix.Channel.Server.close([pid])
+    %{^pid => {_, join_ref}} = state.channels_inverse
+    {opcode, down_message} = encode_down(socket, "phx_close", topic, join_ref)
+    send(self(), {:socket_push, opcode, down_message})
+
     handle_in(nil, message, delete_channel(state, pid, topic, ref), socket)
   end
 
@@ -687,8 +678,8 @@ defmodule Phoenix.Socket do
     }
   end
 
-  defp encode_on_exit(socket, topic, ref, _reason) do
-    message = %Message{join_ref: ref, ref: ref, topic: topic, event: "phx_error", payload: %{}}
+  defp encode_down(socket, event, topic, ref) do
+    message = %Message{join_ref: ref, ref: ref, topic: topic, event: event, payload: %{}}
     encode_reply(socket, message)
   end
 
@@ -702,4 +693,9 @@ defmodule Phoenix.Socket do
     {:socket_push, opcode, payload} = serializer.encode!(message)
     {opcode, payload}
   end
+
+  defp graceful_exit?(:normal), do: true
+  defp graceful_exit?(:shutdown), do: true
+  defp graceful_exit?({:shutdown, _}), do: true
+  defp graceful_exit?(_), do: false
 end
