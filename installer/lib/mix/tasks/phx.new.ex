@@ -136,25 +136,25 @@ defmodule Mix.Tasks.Phx.New do
   defp prompt_to_install_deps(%Project{} = project, generator) do
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
 
+    cd_step = ["$ cd #{relative_app_path(project.project_path)}"]
+
     maybe_cd(project.project_path, fn ->
-      mix_pending =
-        install_mix(install?)
+      mix_step = install_mix(install?)
 
       compile =
-        case mix_pending do
+        case mix_step do
           [] -> Task.async(fn -> rebar_available?() && cmd("mix deps.compile") end)
           _  -> Task.async(fn -> :ok end)
         end
 
-      webpack_pending = install_webpack(install?, project)
+      webpack_step = install_webpack(install?, project)
       Task.await(compile, :infinity)
 
       if Project.webpack?(project) and !System.find_executable("npm") do
         print_webpack_info(project, generator)
       end
 
-      pending = mix_pending ++ (webpack_pending || [])
-      print_missing_commands(pending, project.project_path)
+      print_missing_steps(cd_step ++ mix_step ++ webpack_step)
 
       if Project.ecto?(project) do
         print_ecto_info(project, generator)
@@ -208,16 +208,7 @@ defmodule Mix.Tasks.Phx.New do
     """
   end
 
-  defp print_missing_commands([], path) do
-    Mix.shell.info """
-
-    We are all set! Go into your application by running:
-
-        $ cd #{relative_app_path(path)}
-    """
-  end
-  defp print_missing_commands(commands, path) do
-    steps = ["$ cd #{relative_app_path(path)}" | commands]
+  defp print_missing_steps(steps) do
     Mix.shell.info """
 
     We are almost there! The following steps are missing:
