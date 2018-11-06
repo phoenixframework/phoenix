@@ -20,12 +20,12 @@ defmodule Phoenix.Channel do
   matched in your channels' `join/3` callback to pluck out the scoped pattern:
 
       # handles the special `"lobby"` subtopic
-      def join("room:lobby", _auth_message, socket) do
+      def join("room:lobby", _payload, socket) do
         {:ok, socket}
       end
 
       # handles any other subtopic as the room ID, for example `"room:12"`, `"room:34"`
-      def join("room:" <> room_id, auth_message, socket) do
+      def join("room:" <> room_id, _payload, socket) do
         {:ok, socket}
       end
 
@@ -243,8 +243,8 @@ defmodule Phoenix.Channel do
   simply relay the `%Phoenix.Socket.Broadcast{}` event and payload:
 
       alias Phoenix.Socket.Broadcast
-      def handle_info(%Broadcast{topic: _, event: ev, payload: payload}, socket) do
-        push(socket, ev, payload)
+      def handle_info(%Broadcast{topic: _, event: event, payload: payload}, socket) do
+        push(socket, event, payload)
         {:noreply, socket}
       end
 
@@ -267,31 +267,74 @@ defmodule Phoenix.Channel do
   @type socket_ref :: {transport_pid :: Pid, serializer :: module,
                        topic :: binary, ref :: binary, join_ref :: binary}
 
-  @callback join(topic :: binary, auth_msg :: map, Socket.t) ::
-              {:ok, Socket.t} |
-              {:ok, map, Socket.t} |
-              {:error, map}
+  @doc """
+  Handle channel joins by `topic`.
 
-  @callback handle_in(event :: String.t, msg :: map, Socket.t) ::
+  To authorize a socket, return `{:ok, socket}` or `{:ok, reply, socket}`. To
+  refuse authorization, return `{:error, reason}`.
+
+  ## Example
+
+      def join("room:lobby", payload, socket) do
+        if authorized?(payload) do
+          {:ok, socket}
+        else
+          {:error, %{reason: "unauthorized"}}
+        end
+      end
+
+  """
+  @callback join(topic :: binary, payload :: map, socket :: Socket.t) ::
+              {:ok, Socket.t} |
+              {:ok, reply :: map, Socket.t} |
+              {:error, reason :: map}
+
+  @doc """
+  Handle incoming `event`s.
+
+  ## Example
+
+      def handle_in("ping", payload, socket) do
+        {:reply, {:ok, payload}, socket}
+      end
+
+  """
+  @callback handle_in(event :: String.t, payload :: map, socket :: Socket.t) ::
               {:noreply, Socket.t} |
               {:noreply, Socket.t, timeout | :hibernate} |
               {:reply, reply, Socket.t} |
               {:stop, reason :: term, Socket.t} |
               {:stop, reason :: term, reply, Socket.t}
 
-  @callback handle_out(event :: String.t, msg :: map, Socket.t) ::
+  @doc """
+  Intercepts outgoing `event`s.
+
+  See `intercept/1`.
+  """
+  @callback handle_out(event :: String.t, payload :: map, socket :: Socket.t) ::
               {:noreply, Socket.t} |
               {:noreply, Socket.t, timeout | :hibernate} |
               {:stop, reason :: term, Socket.t}
 
-  @callback handle_info(term, Socket.t) ::
+  @doc """
+  Handle regular Elixir process messages.
+
+  See `GenServer.handle_info/2`.
+  """
+  @callback handle_info(msg :: term, socket :: Socket.t) ::
               {:noreply, Socket.t} |
               {:stop, reason :: term, Socket.t}
 
+  @doc false
   @callback code_change(old_vsn, Socket.t, extra :: term) ::
               {:ok, Socket.t} |
               {:error, reason :: term} when old_vsn: term | {:down, term}
 
+  @doc """
+  Invoked when the channel process is about to exit.
+
+  See `GenServer.terminate/2`.
+  """
   @callback terminate(reason :: :normal | :shutdown | {:shutdown, :left | :closed | term}, Socket.t) ::
               term
 
@@ -348,6 +391,7 @@ defmodule Phoenix.Channel do
   `handle_out/3` callbacks must return one of:
 
       {:noreply, Socket.t} |
+      {:noreply, Socket.t, timeout | :hibernate} |
       {:stop, reason :: term, Socket.t}
 
   """
