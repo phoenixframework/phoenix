@@ -82,15 +82,15 @@ defmodule Phoenix.Presence do
   including the `:metas` key, but can extend the map of information
   to include any additional information. For example:
 
-      def fetch(_topic, entries) do
+      def fetch(_topic, presences) do
         query =
           from u in User,
-            where: u.id in ^Map.keys(entries),
+            where: u.id in ^Map.keys(presences),
             select: {u.id, u}
 
-        users = query |> Repo.all |> Enum.into(%{})
+        users = query |> Repo.all() |> Enum.into(%{})
 
-        for {key, %{metas: metas}} <- entries, into: %{} do
+        for {key, %{metas: metas}} <- presences, into: %{} do
           {key, %{metas: metas, user: users[key]}}
         end
       end
@@ -107,16 +107,120 @@ defmodule Phoenix.Presence do
   @type presence :: %{key: String.t, meta: map()}
   @type topic :: String.t
 
-  @callback start_link(Keyword.t) :: {:ok, pid()} | {:error, reason :: term()} | :ignore
+  @doc false
+  @callback start_link(Keyword.t) ::
+    {:ok, pid()} |
+    {:error, reason :: term()} |
+    :ignore
+
+  @doc false
   @callback init(Keyword.t) :: {:ok, state :: term} | {:error, reason :: term}
-  @callback track(Phoenix.Socket.t, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
-  @callback track(pid, topic, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
-  @callback untrack(Phoenix.Socket.t, key :: String.t) :: :ok
+
+  @doc """
+  Track a channel's process as a presence.
+
+  Tracked presences are grouped by `key`, cast as a string. For example, to
+  group each user's channels together, use user IDs as keys. Each presence can
+  be associated with a map of metadata to store small, emphemeral state, such as
+  a user's online status. To store detailed information, see `fetch/2`.
+
+  ## Example
+
+      alias MyApp.Presence
+      def handle_info(:after_join, socket) do
+        {:ok, _} = Presence.track(socket, socket.assigns.user_id, %{
+          online_at: inspect(System.system_time(:second))
+        })
+        {:noreply, socket}
+      end
+
+  """
+  @callback track(socket :: Phoenix.Socket.t, key :: String.t, meta :: map()) ::
+    {:ok, ref :: binary()} |
+    {:error, reason :: term()}
+
+  @doc """
+  Track an arbitary process as a presence.
+
+  Same with `track/3`, except track any process by `topic` and `key`.
+  """
+  @callback track(pid, topic, key :: String.t, meta :: map()) ::
+    {:ok, ref :: binary()} |
+    {:error, reason :: term()}
+
+  @doc """
+  Stop tracking a channel's process.
+  """
+  @callback untrack(socket :: Phoenix.Socket.t, key :: String.t) :: :ok
+
+  @doc """
+  Stop tracking a process.
+  """
   @callback untrack(pid, topic, key :: String.t) :: :ok
-  @callback update(Phoenix.Socket.t, key :: String.t, meta :: map() | (map() -> map())) :: {:ok, binary()} | {:error, reason :: term()}
-  @callback update(pid, topic, key :: String.t, meta :: map() | (map() -> map())) :: {:ok, binary()} | {:error, reason :: term()}
+
+  @doc """
+  Update a channel presence's metadata.
+
+  Replace a presence's metadata by passing a new map or a function that takes
+  the current map and returns a new one.
+  """
+  @callback update(socket :: Phoenix.Socket.t, key :: String.t, meta :: map() | (map() -> map())) ::
+    {:ok, ref :: binary()} |
+    {:error, reason :: term()}
+
+  @doc """
+  Update a process presence's metadata.
+
+  Same as `update/3`, but with an arbitary process.
+  """
+  @callback update(pid, topic, key :: String.t, meta :: map() | (map() -> map())) ::
+    {:ok, ref :: binary()} |
+    {:error, reason :: term()}
+
+  @doc """
+  Extend presence information with additional data.
+
+  When `list/1` is used to list all presences of the given `topic`, this
+  callback is triggered once to modify the result before it is broadcasted to
+  all channel subscribers. This avoids N query problems and provides a single
+  place to extend presence metadata. You must return a map of data matching the
+  original result, including the `:metas` key, but can extend the map to include
+  any additional information.
+
+  The default implementation simply passes `presences` through unchanged.
+
+  ## Example
+
+      def fetch(_topic, presences) do
+        query =
+          from u in User,
+            where: u.id in ^Map.keys(presences),
+            select: {u.id, u}
+
+        users = query |> Repo.all() |> Enum.into(%{})
+        for {key, %{metas: metas}} <- presences, into: %{} do
+          {key, %{metas: metas, user: users[key]}}
+        end
+      end
+
+  """
   @callback fetch(topic, presences) :: presences
+
+  @doc """
+  Returns presences for a channel.
+
+  Calls `list/2` with presence module.
+  """
+  @callback list(socket :: Phoenix.Socket.t) :: presences
+
+  @doc """
+  Returns presences for a topic.
+
+  Calls `list/2` with presence module.
+  """
   @callback list(topic) :: presences
+
+  @doc false
   @callback handle_diff(%{topic => {joins :: presences, leaves :: presences}}, state :: term) :: {:ok, state :: term}
 
   defmacro __using__(opts) do
