@@ -43,7 +43,7 @@ defmodule <%= app_module %>.MixProject do
       {:ecto_sql, "~> 3.0"},
       {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
       {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2-rc", only: :dev},<% end %>
+      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %>
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"}

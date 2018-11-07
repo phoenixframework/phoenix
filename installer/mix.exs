@@ -1,6 +1,7 @@
 defmodule Phx.New.MixProject do
   use Mix.Project
 
+  @version "1.4.0"
   @github_path "phoenixframework/phoenix"
   @url "https://github.com/#{@github_path}"
 
@@ -8,7 +9,7 @@ defmodule Phx.New.MixProject do
     [
       app: :phx_new,
       start_permanent: Mix.env() == :prod,
-      version: "1.4.0-rc.3",
+      version: @version,
       elixir: "~> 1.5",
       deps: deps(),
       package: [
@@ -42,7 +43,7 @@ defmodule Phx.New.MixProject do
 
   defp docs do
     [
-      source_url_pattern: "https://github.com/#{@github_path}/blob/master/installer/%{path}#L%{line}"
+      source_url_pattern: "https://github.com/#{@github_path}/blob/v#{@version}/installer/%{path}#L%{line}"
     ]
   end
 

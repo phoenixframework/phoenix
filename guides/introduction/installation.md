@@ -45,7 +45,7 @@ Once we have Elixir and Erlang, we are ready to install the Phoenix Mix archive.
 Here's the command to install the Phoenix archive:
 
 ```console
-$ mix archive.install hex phx_new 1.4.0-rc.3
+$ mix archive.install hex phx_new 1.4.0
 ```
 > Note: if the Phoenix archive won't install properly with this command, we can download the package from the [Phoenix archives](https://github.com/phoenixframework/archives), save it to the filesystem, and then run: `mix archive.install /path/to/local/phx_new.ez`.
 
