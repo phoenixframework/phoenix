@@ -115,7 +115,7 @@ defmodule Phx.New.Generator do
       web_app_name: project.web_app,
       endpoint_module: inspect(Module.concat(project.web_namespace, Endpoint)),
       web_namespace: inspect(project.web_namespace),
-      phoenix_github_version_tag: "v#{version.major}.#{version.minor}",
+      phoenix_github_version_tag: "v#{version.major}.#{version.minor}.#{version.patch}",
       phoenix_dep: phoenix_dep(phoenix_path),
       phoenix_path: phoenix_path,
       phoenix_webpack_path: phoenix_webpack_path(project, dev),
