@@ -74,8 +74,21 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
       {:local, unix_path} ->
         %URI{host: URI.encode_www_form(unix_path), scheme: "#{scheme}+unix"}
 
-      _ ->
-        endpoint.struct_url()
+      {addr, port} ->
+        scheme = to_string(scheme)
+        url = endpoint.struct_url()
+
+        if url.scheme == scheme do
+          url
+        else
+          host =
+            case to_string(:inet.ntoa(addr)) do
+              "0.0.0.0" -> "localhost"
+              host -> host
+            end
+
+          %URI{host: host, port: port, scheme: scheme}
+        end
     end
   end
 end
