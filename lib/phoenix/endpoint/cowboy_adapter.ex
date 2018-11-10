@@ -97,29 +97,7 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
     update_in(spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]})
   end
 
-  defp transports(endpoint, path, socket, socket_opts) do
-    case deprecated_transports(socket) do
-      transports when transports == %{} ->
-        socket_transports(endpoint, path, socket, socket_opts)
-
-      transports ->
-        for {transport, {module, config}} <- transports,
-            handler = config[:cowboy] || default_for(module),
-            do:
-              {Path.join(path, Atom.to_string(transport)), handler,
-               {module, {endpoint, socket, config}}}
-    end
-  end
-
-  defp deprecated_transports(socket) do
-    if Code.ensure_loaded?(socket) and function_exported?(socket, :__transports__, 0) do
-      socket.__transports__
-    else
-      %{}
-    end
-  end
-
-  defp socket_transports(endpoint, path, socket, opts) do
+  defp transports(endpoint, path, socket, opts) do
     paths = []
     websocket = Keyword.get(opts, :websocket, true)
     longpoll = Keyword.get(opts, :longpoll, false)
@@ -160,10 +138,6 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
 
   defp socket_config(true, module), do: module.default_config()
   defp socket_config(config, module), do: Keyword.merge(module.default_config(), config)
-
-  defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy.Handler
-  defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.CowboyWebSocket
-  defp default_for(_), do: nil
 
   @doc false
   def start_link(scheme, endpoint, {m, f, [ref | _] = a}) do

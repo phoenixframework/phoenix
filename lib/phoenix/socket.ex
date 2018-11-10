@@ -219,7 +219,6 @@ defmodule Phoenix.Socket do
       @behaviour Phoenix.Socket
       @before_compile Phoenix.Socket
       Module.register_attribute(__MODULE__, :phoenix_channels, accumulate: true)
-      @phoenix_transports %{}
       @phoenix_log Keyword.get(unquote(opts), :log, :info)
 
       ## Callbacks
@@ -315,104 +314,14 @@ defmodule Phoenix.Socket do
   # but we should keep the warning for backwards compatibility.
 
   @doc false
-  defmacro transport(name, module, config \\ []) do
+  defmacro transport(_name, _module, _config \\ []) do
     quote do
-      @phoenix_transports Phoenix.Socket.__transport__(
-        @phoenix_transports, unquote(name), unquote(module), unquote(config))
+      IO.warn "transport/3 in Phoenix.Socket is deprecated and has no effect"
     end
   end
-
-  @doc false
-  def __transport__(transports, name, module, user_conf) do
-    IO.warn """
-    transport/3 in Phoenix.Socket is deprecated.
-
-    Instead of defining transports in your socket.ex file:
-
-        transport :websocket, Phoenix.Transport.Websocket,
-          key1: value1, key2: value2, key3: value3
-
-        transport :longpoll, Phoenix.Transport.LongPoll,
-          key1: value1, key2: value2, key3: value3
-
-    You should configure websocket/longpoll in your endpoint.ex:
-
-        socket "/socket", MyApp.UserSocket,
-          websocket: [key1: value1, key2: value2, key3: value3],
-          longpoll: [key1: value1, key2: value2, key3: value3]
-
-    Note the websocket/longpoll configuration given to socket/3
-    will only apply after you remove all transport/3 calls from
-    your socket definition. If you have explicitly upgraded to
-    Cowboy 2, any transport defined with the transport/3 macro
-    will be ignored.
-    """
-
-    defaults = module.default_config()
-
-    conf =
-      user_conf
-      |> normalize_serializer_conf(name, module, defaults[:serializer] || [])
-      |> merge_defaults(defaults)
-
-    Map.update(transports, name, {module, conf}, fn {dup_module, _} ->
-      raise ArgumentError,
-        "duplicate transports (#{inspect dup_module} and #{inspect module}) defined for #{inspect name}"
-    end)
-  end
-  defp merge_defaults(conf, defaults), do: Keyword.merge(defaults, conf)
-
-  defp normalize_serializer_conf(conf, name, transport_mod, default) do
-    update_in(conf[:serializer], fn
-      nil ->
-        precompile_serializers(default)
-
-      Phoenix.Transports.LongPollSerializer = serializer ->
-        warn_serializer_deprecation(name, transport_mod, serializer)
-        precompile_serializers(default)
-
-      Phoenix.Transports.WebSocketSerializer = serializer ->
-        warn_serializer_deprecation(name, transport_mod, serializer)
-        precompile_serializers(default)
-
-      [_ | _] = serializer ->
-        precompile_serializers(serializer)
-
-      serializer when is_atom(serializer) ->
-        warn_serializer_deprecation(name, transport_mod, serializer)
-        precompile_serializers([{serializer, "~> 1.0.0"}])
-    end)
-  end
-
-  defp warn_serializer_deprecation(name, transport_mod, serializer) do
-    IO.warn """
-    passing a serializer module to the transport macro is deprecated.
-    Use a list with version requirements instead. For example:
-
-        transport :#{name}, #{inspect transport_mod},
-          serializer: [{#{inspect serializer}, "~> 1.0.0"}]
-
-    """
-  end
-
-  defp precompile_serializers(serializers) do
-    for {module, requirement} <- serializers do
-      case Version.parse_requirement(requirement) do
-        {:ok, requirement} -> {rewrite_serializer(module), requirement}
-        :error -> Version.match?("1.0.0", requirement)
-      end
-    end
-  end
-
-  defp rewrite_serializer(Phoenix.Transports.V2.WebSocketSerializer), do: Phoenix.Socket.V2.JSONSerializer
-  defp rewrite_serializer(Phoenix.Transports.V2.LongPollSerializer), do: Phoenix.Socket.V2.JSONSerializer
-  defp rewrite_serializer(Phoenix.Transports.WebSocketSerializer), do: Phoenix.Socket.V1.JSONSerializer
-  defp rewrite_serializer(Phoenix.Transports.LongPollSerializer), do: Phoenix.Socket.V1.JSONSerializer
-  defp rewrite_serializer(module), do: module
 
   defmacro __before_compile__(env) do
-    transports = Module.get_attribute(env.module, :phoenix_transports)
-    channels   = Module.get_attribute(env.module, :phoenix_channels)
+    channels = Module.get_attribute(env.module, :phoenix_channels)
 
     channel_defs =
       for {topic_pattern, module, opts} <- channels do
@@ -422,7 +331,6 @@ defmodule Phoenix.Socket do
       end
 
     quote do
-      def __transports__, do: unquote(Macro.escape(transports))
       unquote(channel_defs)
       def __channel__(_topic), do: nil
     end
@@ -542,6 +450,9 @@ defmodule Phoenix.Socket do
   end
 
   def __terminate__(_reason, {%{channels_inverse: channels_inverse}, _socket}) do
+    # Although this is not strictly necessary, as each channel server
+    # watches the transport, it is a more efficient way of doing as
+    # we terminate all channels at once.
     Phoenix.Channel.Server.close(Map.keys(channels_inverse))
     :ok
   end
