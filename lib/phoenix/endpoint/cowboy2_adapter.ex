@@ -74,8 +74,8 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
       {:local, unix_path} ->
         %URI{host: URI.encode_www_form(unix_path), scheme: "#{scheme}+unix"}
 
-      _ ->
-        endpoint.struct_url()
+      {_, port} ->
+        %URI{host: endpoint.host(), port: port, scheme: to_string(scheme)}
     end
   end
 end
