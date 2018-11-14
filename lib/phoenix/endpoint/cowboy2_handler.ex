@@ -19,9 +19,16 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
         {:websocket, handler, opts} ->
           case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
             {:ok, %{adapter: {@connection, req}}, state} ->
-              timeout = Keyword.fetch!(opts, :timeout)
-              compress = Keyword.fetch!(opts, :compress)
-              cowboy_opts = %{idle_timeout: timeout, compress: compress}
+              cowboy_opts =
+                opts
+                |> Enum.flat_map(fn
+                  {:timeout, timeout} -> [idle_timeout: timeout]
+                  {:compress, _} = opt -> [opt]
+                  {:max_frame_size, _} = opt -> [opt]
+                  _other -> []
+                end)
+                |> Map.new()
+
               {:cowboy_websocket, req, [handler | state], cowboy_opts}
 
             {:error, %{adapter: {@connection, req}}} ->

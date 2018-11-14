@@ -894,6 +894,10 @@ defmodule Phoenix.Endpoint do
     * `:timeout` - the timeout for keeping websocket connections
       open after it last received data, defaults to 60_000ms
 
+    * `:max_frame_size` - the maximum allowed frame size in bytes.
+      Supported from Cowboy 2.3 onwards, defaults to "infinity".
+
+
   ## Longpoll configuration
 
   The following configuration applies only to `:longpoll`:
