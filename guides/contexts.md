@@ -79,7 +79,7 @@ Phoenix generated the web files as expected in `lib/hello_web/`. We can also see
 
 ```elixir
   scope "/", HelloWeb do
-    pipe_through :browser # Use the default browser stack
+    pipe_through :browser
 
     get "/", PageController, :index
 +   resources "/users", UserController
@@ -497,7 +497,7 @@ Next, let's wire up our session routes in `lib/hello_web/router.ex`:
 
 ```elixir
   scope "/", HelloWeb do
-    pipe_through :browser # Use the default browser stack
+    pipe_through :browser
 
     get "/", PageController, :index
     resources "/users", UserController

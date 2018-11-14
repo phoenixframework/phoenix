@@ -109,7 +109,7 @@ defmodule HelloWeb.Router do
   end
 
   scope "/", HelloWeb do
-    pipe_through :browser # Use the default browser stack
+    pipe_through :browser
 
     get "/", PageController, :index
   end
@@ -134,7 +134,7 @@ The `scope "/"` block of our `router.ex` file should now look like this:
 
 ```elixir
 scope "/", HelloWeb do
-  pipe_through :browser # Use the default browser stack
+  pipe_through :browser
 
   get "/", PageController, :index
   get "/hello", HelloController, :index
@@ -218,7 +218,7 @@ For this exercise, we're going to re-use the `HelloController` we just created a
 
 ```elixir
 scope "/", HelloWeb do
-  pipe_through :browser # Use the default browser stack.
+  pipe_through :browser
 
   get "/", PageController, :index
   get "/hello", HelloController, :index

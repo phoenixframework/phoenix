@@ -21,7 +21,7 @@ defmodule HelloWeb.Router do
   end
 
   scope "/", HelloWeb do
-    pipe_through :browser # Use the default browser stack
+    pipe_through :browser
 
     get "/", PageController, :index
   end
@@ -92,7 +92,7 @@ Let's add a resource to our `lib/hello_web/router.ex` file like this:
 
 ```elixir
 scope "/", HelloWeb do
-  pipe_through :browser # Use the default browser stack
+  pipe_through :browser
 
   get "/", PageController, :index
   resources "/users", UserController
@@ -797,7 +797,6 @@ defmodule HelloWeb.Router do
   ...
 
   scope "/reviews" do
-    # Use the default browser stack.
     pipe_through [:browser, :review_checks, :other_great_stuff]
 
     resources "/", HelloWeb.ReviewController
