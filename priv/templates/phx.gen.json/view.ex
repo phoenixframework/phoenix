@@ -10,8 +10,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{data: render_one(<%= schema.singular %>, <%= inspect schema.alias %>View, "<%= schema.singular %>.json")}
   end
 
-  def render("<%= schema.singular %>.json", %{<%= schema.singular %>: <%= schema.singular %>}) do
+  def render("<%= schema.singular %>.json", %{<%= schema.singular %>:  %<%= inspect schema.module %>{} = <%= schema.singular %>}) do
     %{id: <%= schema.singular %>.id<%= for {k, _} <- schema.attrs do %>,
       <%= k %>: <%= schema.singular %>.<%= k %><% end %>}
+  end
+
+  def render("<%= schema.singular %>.json", _) do
+    %{}
   end
 end
