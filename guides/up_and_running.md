@@ -26,8 +26,8 @@ mix phx.new hello
 * creating hello/config/dev.exs
 * creating hello/config/prod.exs
 ...
-* creating hello/lib/hello_web/views/layout_view.ex
-* creating hello/lib/hello_web/views/page_view.ex
+* creating hello/assets/static/images/phoenix.png
+* creating hello/assets/static/favicon.ico
 
 Fetch and install dependencies? [Yn]
 ```
@@ -40,7 +40,7 @@ Fetch and install dependencies? [Yn] Y
 * running mix deps.compile
 * running cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
 
-We are all set! Go into your application by running:
+We are almost there! The following steps are missing:
 
     $ cd hello
 
@@ -69,6 +69,8 @@ Now we'll create our database:
 
 ```
 $ mix ecto.create
+Compiling 13 files (.ex)
+Generated hello app
 The database for Hello.Repo has been created
 ```
 
@@ -78,8 +80,10 @@ And finally, we'll start the Phoenix server:
 
 ```console
 $ mix phx.server
-[info] Running HelloWeb.Endpoint with Cowboy using http://0.0.0.0:4000
-19:30:43 - info: compiled 6 files into 2 files, copied 3 in 2.1 sec
+[info] Running HelloWeb.Endpoint with cowboy 2.5.0 at http://localhost:4000
+
+Webpack is watching the files…
+...
 ```
 
 If we choose not to have Phoenix install our dependencies when we generate a new application, the `phx.new` task will prompt us to take the necessary steps when we do want to install them.
