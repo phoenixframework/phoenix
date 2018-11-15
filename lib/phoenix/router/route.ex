@@ -77,8 +77,8 @@ defmodule Phoenix.Router.Route do
 
   defp build_path_and_binding(%Route{path: path} = route) do
     {params, segments} = case route.kind do
-      :forward -> build_path_match(path <> "/*_forward_path_info")
-      :match   -> build_path_match(path)
+      :forward -> Plug.Router.Utils.build_path_match(path <> "/*_forward_path_info")
+      :match   -> Plug.Router.Utils.build_path_match(path)
     end
 
     binding = for var <- params, var != :_forward_path_info do
@@ -118,7 +118,7 @@ defmodule Phoenix.Router.Route do
   end
 
   defp build_dispatch(%Route{kind: :forward} = route) do
-    {_params, fwd_segments} = build_path_match(route.path)
+    {_params, fwd_segments} = Plug.Router.Utils.build_path_match(route.path)
 
     quote do
       {
@@ -160,7 +160,7 @@ defmodule Phoenix.Router.Route do
   `path` contains a dynamic segment.
   """
   def forward_path_segments(path, plug, phoenix_forwards) do
-    case build_path_match(path) do
+    case Plug.Router.Utils.build_path_match(path) do
       {[], path_segments} ->
         if phoenix_forwards[plug] do
           raise ArgumentError, "#{inspect plug} has already been forwarded to. A module can only be forwarded a single time."
@@ -168,16 +168,6 @@ defmodule Phoenix.Router.Route do
         path_segments
       _ ->
         raise ArgumentError, "dynamic segment \"#{path}\" not allowed when forwarding. Use a static path instead."
-    end
-  end
-
-  if Code.ensure_loaded?(Plug.Router.Utils) do
-    defp build_path_match(path) do
-      Plug.Router.Utils.build_path_match(path)
-    end
-  else
-    defp build_path_match(path) do
-      Plug.Router.Compiler.build_path_match(path)
     end
   end
 end
