@@ -415,7 +415,7 @@ SELECT u0."email" FROM "users" AS u0 []
 ["user1@example.com", "user2@example.com"]
 ```
 
-First, we imported `Ecto.Query`, which imports the `from` macro of Ecto's Query DSL. Next, we built a query which selects all the the email addresses in our user's table. Let's try another example.
+First, we imported `Ecto.Query`, which imports the `from` macro of Ecto's Query DSL. Next, we built a query which selects all the email addresses in our user's table. Let's try another example.
 
 ```console
 iex)> Repo.one(from u in User, where: ilike(u.email, "%1%"),
