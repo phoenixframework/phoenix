@@ -189,7 +189,7 @@ Templates are scoped to a view, which are scoped to controller. Phoenix creates 
 Let's do that now. Create `lib/hello_web/templates/hello/index.html.eex` and make it look like this:
 
 ```html
-<div class="jumbotron">
+<div class="phx-hero">
   <h2>Hello World, from Phoenix!</h2>
 </div>
 ```
@@ -262,7 +262,7 @@ To do that, we'll use the special EEx tags for executing Elixir expressions - `<
 And this is what the template should look like:
 
 ```html
-<div class="jumbotron">
+<div class="phx-hero">
   <h2>Hello World, from <%= @messenger %>!</h2>
 </div>
 ```
