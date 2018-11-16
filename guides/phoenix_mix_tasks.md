@@ -30,15 +30,15 @@ mix phx.server         # Starts applications and their servers
 
 We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea. And here we are.
 
-### [`mix phx.new`](Mix.Tasks.Phx.New.html)
+### `mix phx.new`
 
 This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](up_and_running.html).
 
 Before we begin, we should note that Phoenix uses [Ecto](https://github.com/elixir-lang/ecto) for database access and [webpack](https://webpack.js.org/) for asset management by default. We can pass `--no-ecto` to opt out of Ecto and  `--no-webpack` to opt out of webpack.
 
-> Note: If we do use webpack, we need to install its dependencies before we start our application. `phx.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
+> Note: If we do use webpack, we need to install its dependencies before we start our application. `mix phx.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
 
-We need to pass `phx.new` a name for our application. Conventionally, we use all lower-case letters with underscores.
+We need to pass a name for our application to `mix phx.new`. Conventionally, we use all lower-case letters with underscores.
 
 ```console
 $ mix phx.new task_tester
@@ -64,7 +64,7 @@ $ mix phx.new /Users/me/work/task_tester
 . . .
 ```
 
-The `phx.new` task will also ask us if we want to install our dependencies. (Please see the note above about webpack dependencies.)
+The `mix phx.new` task will also ask us if we want to install our dependencies. (Please see the note above about webpack dependencies.)
 
 ```console
 Fetch and install dependencies? [Yn] y
@@ -72,7 +72,7 @@ Fetch and install dependencies? [Yn] y
 * running mix deps.get
 ```
 
-Once all of our dependencies are installed, `phx.new` will tell us what our next steps are.
+Once all of our dependencies are installed, `mix phx.new` will tell us what our next steps are.
 
 ```console
 We are all set! Run your Phoenix application:
@@ -85,7 +85,7 @@ You can also run it inside IEx (Interactive Elixir) as:
 $ iex -S mix phx.server
 ```
 
-By default `phx.new` will assume we want to use ecto for our contexts. If we don't want to use ecto in our application, we can use the `--no-ecto` flag.
+By default `mix phx.new` will assume we want to use ecto for our contexts. If we don't want to use ecto in our application, we can use the `--no-ecto` flag.
 
 ```console
 $ mix phx.new task_tester --no-ecto
@@ -95,7 +95,7 @@ $ mix phx.new task_tester --no-ecto
 
 With the `--no-ecto` flag, Phoenix will not make either ecto or postgrex a dependency of our application, and it will not create a `repo.ex` file.
 
-By default, Phoenix will name our OTP application after the name we pass into `phx.new`. If we want, we can specify a different OTP application name with the `--app` flag.
+By default, Phoenix will name our OTP application after the name we pass into `mix phx.new`. If we want, we can specify a different OTP application name with the `--app` flag.
 
 ```console
 $  mix phx.new task_tester --app hello
@@ -187,11 +187,11 @@ defmodule Hello.MixProject do
 . . .
 ```
 
-### [`mix phx.gen.html`](Mix.Tasks.Phx.Gen.Html.html)
+### `mix phx.gen.html`
 
 Phoenix now offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto context, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
 
-The `phx.gen.html` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
+The `mix phx.gen.html` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer
@@ -211,7 +211,7 @@ $ mix phx.gen.html Blog Post posts body:string word_count:integer
 * injecting test/hello/blog/blog_test.exs
 ```
 
-When `phx.gen.html` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
+When `mix phx.gen.html` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
 
 ```console
 Add the resource to your browser scope in lib/hello_web/router.ex:
@@ -301,11 +301,11 @@ warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
   lib/hello_web/templates/post/edit.html.eex:3
 ```
 
-### [`mix phx.gen.json`](Mix.Tasks.Phx.Gen.Json.html)
+### `mix phx.gen.json`
 
 Phoenix also offers the ability to generate all the code to stand up a complete JSON resource - ecto migration, ecto schema, controller with all the necessary actions and view. This command will not create any template for the app.
 
-The `phx.gen.json` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
+The `mix phx.gen.json` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
 ```console
 $ mix phx.gen.json Blog Post posts title:string content:string
@@ -322,7 +322,7 @@ $ mix phx.gen.json Blog Post posts title:string content:string
 * injecting test/hello/blog/blog_test.exs
 ```
 
-When `phx.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
+When `mix phx.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
 
 ```console
 Add the resource to your :api scope in lib/hello_web/router.ex:
@@ -415,11 +415,11 @@ Compiling 18 files (.ex)
     (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
 ```
 
-### [`mix phx.gen.context`](Mix.Tasks.Phx.Gen.Context.html)
+### `mix phx.gen.context`
 
-If we don't need a complete HTML/JSON resource and instead are only interested in a context, we can use the `phx.gen.context` task. It will generate a context, a schema, a migration and a test case.
+If we don't need a complete HTML/JSON resource and instead are only interested in a context, we can use the `mix phx.gen.context` task. It will generate a context, a schema, a migration and a test case.
 
-The `phx.gen.context` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes.
+The `mix phx.gen.context` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes.
 
 ```console
 $ mix phx.gen.context Accounts User users name:string age:integer
@@ -442,11 +442,11 @@ $ mix phx.gen.context Accounts User users name:string age:integer
 * injecting test/hello/admin/accounts/accounts_test.exs
 ```
 
-### [`mix phx.gen.schema`](Mix.Tasks.Phx.Gen.Schema.html)
+### `mix phx.gen.schema`
 
-If we don't need a complete HTML/JSON resource and are not interested in generating or altering a context we can use the `phx.gen.schema` task. It will generate a schema, and a migration.
+If we don't need a complete HTML/JSON resource and are not interested in generating or altering a context we can use the `mix phx.gen.schema` task. It will generate a schema, and a migration.
 
-The `phx.gen.schema` task takes a number of arguments, the module name of the schema (which may be namespaced), the resource name, and a list of column_name:type attributes.
+The `mix phx.gen.schema` task takes a number of arguments, the module name of the schema (which may be namespaced), the resource name, and a list of column_name:type attributes.
 
 ```console
 $ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id:references:users
@@ -454,7 +454,7 @@ $ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id
 * creating priv/repo/migrations/20170906162013_create_credentials.exs
 ```
 
-### [`mix phx.gen.channel`](Mix.Tasks.Phx.Gen.Channel.html)
+### `mix phx.gen.channel`
 
 This task will generate a basic Phoenix channel as well a test case for it. It takes the module name for the channel as argument:
 
@@ -464,7 +464,7 @@ $ mix phx.gen.channel Room
 * creating test/hello_web/channels/room_channel_test.exs
 ```
 
-When `phx.gen.channel` is done, it helpfully tells us that we need to add a channel route to our router file.
+When `mix phx.gen.channel` is done, it helpfully tells us that we need to add a channel route to our router file.
 
 ```console
 Add the channel to your `lib/hello_web/channels/user_socket.ex` handler, for example:
@@ -472,7 +472,7 @@ Add the channel to your `lib/hello_web/channels/user_socket.ex` handler, for exa
     channel "rooms:lobby", HelloWeb.RoomChannel
 ```
 
-### [`mix phx.gen.presence`](Mix.Tasks.Phx.Gen.Presence.html)
+### `mix phx.gen.presence`
 
 This task will generate a Presence tracker. The module name can be passed as an argument,
 `Presence` is used if no module name is passed.
@@ -482,7 +482,7 @@ $ mix phx.gen.presence Presence
 $ lib/hello_web/channels/presence.ex
 ```
 
-### [`mix phx.routes`](Mix.Tasks.Phx.Routes.html)
+### `mix phx.routes`
 
 This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [Routing Guide](routing.html).
 
@@ -499,7 +499,7 @@ $ mix phx.routes TaskTesterWeb.Router
 page_path  GET  /  TaskTesterWeb.PageController.index/2
 ```
 
-### [`mix phx.server`](Mix.Tasks.Phx.Server.html)
+### `mix phx.server`
 
 This is the task we use to get our application running. It takes no arguments at all. If we pass any in, they will be silently ignored.
 
@@ -524,7 +524,7 @@ Interactive Elixir (1.0.4) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)>
 ```
 
-### [`mix phx.digest`](Mix.Tasks.Phx.Digest.html)
+### `mix phx.digest`
 
 This task does two things, it creates a digest for our static assets and then compresses them.
 
@@ -571,7 +571,7 @@ We can optionally determine which files should be gzipped by using the `:gzippab
 config :phoenix, :gzippable_exts, ~w(.js .css)
 ```
 
-> Note: We can specify a different output folder where `phx.digest` will put processed files. The first argument is the path where the static files are located.
+> Note: We can specify a different output folder where `mix phx.digest` will put processed files. The first argument is the path where the static files are located.
 ```console
 $ mix phx.digest priv/static -o www/public
 Check your digested files at 'www/public'.
@@ -579,7 +579,7 @@ Check your digested files at 'www/public'.
 
 ## Ecto Specific Mix Tasks
 
-Newly generated Phoenix applications now include ecto and postgrex as dependencies by default (which is to say, unless we use the `--no-ecto` flag with `phx.new`). With those dependencies come mix tasks to take care of common ecto operations. Let's see which tasks we get out of the box.
+Newly generated Phoenix applications now include ecto and postgrex as dependencies by default (which is to say, unless we use `mix phx.new` with the `--no-ecto` flag). With those dependencies come mix tasks to take care of common ecto operations. Let's see which tasks we get out of the box.
 
 ```console
 $ mix help | grep -i ecto

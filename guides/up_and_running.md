@@ -8,15 +8,17 @@ At this point, we should have Elixir, Erlang, Hex, and the Phoenix archive insta
 
 Ok, we're ready to go!
 
-We can run [`mix phx.new`](phoenix_mix_tasks.html#mix-phx-new) from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
+We can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
 
 ```console
 $ mix phx.new hello
 ```
 
-> A note about [webpack](https://webpack.js.org/) before we begin: Phoenix will use webpack for asset management by default. Webpacks' dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `phx.new` mix task. If we say "no" at that point, and if we don't install those dependencies later with `npm install`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use webpack at all, we can simply pass `--no-webpack` to `mix phx.new`.
+> A note about [webpack](https://webpack.js.org/) before we begin: Phoenix will use webpack for asset management by default. Webpacks' dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `mix phx.new` task. If we say "no" at that point, and if we don't install those dependencies later with `npm install`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use webpack at all, we can simply pass `--no-webpack` to `mix phx.new`.
 
 > A note about [Ecto](https://hexdocs.pm/phoenix/ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL or MongoDB. If our application will not require this component we can skip this dependency by passing `--no-ecto` to `mix phx.new`. This flag may also be combined with `--no-webpack` to create a skeleton application.
+
+> To learn more about `mix phx.new` you can read the [Mix Tasks Guide](phoenix_mix_tasks.html#phoenix-specific-mix-tasks).
 
 ```console
 mix phx.new hello
@@ -57,7 +59,7 @@ You can also run your app inside IEx (Interactive Elixir) as:
 
 Once our dependencies are installed, the task will prompt us to change into our project directory and start our application.
 
-Phoenix assumes that our PostgreSQL database will have a `postgres` user account with the correct permissions and a password of "postgres". If that isn't the case, please see the instructions for the [`ecto.create`](phoenix_mix_tasks.html#mix-ecto-create) mix task.
+Phoenix assumes that our PostgreSQL database will have a `postgres` user account with the correct permissions and a password of "postgres". If that isn't the case, please see the [`Mix Tasks Guide`](phoenix_mix_tasks.html#ecto-specific-mix-tasks) to learn more about the `mix ecto.create` task.
 
 Ok, let's give it a try. First, we'll `cd` into the `hello/` directory we've just created:
 
@@ -84,7 +86,7 @@ Webpack is watching the files…
 ...
 ```
 
-If we choose not to have Phoenix install our dependencies when we generate a new application, the `phx.new` mix task will prompt us to take the necessary steps when we do want to install them.
+If we choose not to have Phoenix install our dependencies when we generate a new application, the `mix phx.new` task will prompt us to take the necessary steps when we do want to install them.
 
 ```console
 Fetch and install dependencies? [Yn] n
