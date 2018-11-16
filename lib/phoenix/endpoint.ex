@@ -777,16 +777,18 @@ defmodule Phoenix.Endpoint do
 
     paths =
       if websocket do
-        triplet = {:websocket, socket, socket_config(websocket, Phoenix.Transports.WebSocket)}
-        [{socket_path(path, :websocket), triplet} | paths]
+        config = socket_config(websocket, Phoenix.Transports.WebSocket)
+        triplet = {:websocket, socket, config}
+        [{socket_path(path, config), triplet} | paths]
       else
         paths
       end
 
     paths =
       if longpoll do
-        plug_init = {endpoint, socket, socket_config(longpoll, Phoenix.Transports.LongPoll)}
-        [{socket_path(path, :longpoll), {:plug, Phoenix.Transports.LongPoll, plug_init}} | paths]
+        config = socket_config(longpoll, Phoenix.Transports.LongPoll)
+        plug_init = {endpoint, socket, config}
+        [{socket_path(path, config), {:plug, Phoenix.Transports.LongPoll, plug_init}} | paths]
       else
         paths
       end
@@ -794,8 +796,9 @@ defmodule Phoenix.Endpoint do
     paths
   end
 
-  defp socket_path(path, key) do
-    String.split(path, "/", trim: true) ++ [Atom.to_string(key)]
+  defp socket_path(path, config) do
+    end_path_fragment = Keyword.fetch!(config, :path)
+    String.split(path <> "/" <> end_path_fragment, "/", trim: true)
   end
 
   defp socket_config(true, module), do: module.default_config()
@@ -838,6 +841,9 @@ defmodule Phoenix.Endpoint do
 
   The configuration below can be given to both `:websocket` and
   `:longpoll` keys:
+
+    * `:path` - the path to use for the transport. Will default
+       to the transport name ("/websocket" or "/longpoll")
 
     * `:serializer` - a list of serializers for messages. See
       `Phoenix.Socket` for more information

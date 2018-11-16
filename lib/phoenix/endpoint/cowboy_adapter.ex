@@ -126,10 +126,11 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
 
     paths =
       if websocket do
-        init = {endpoint, socket, socket_config(websocket, Phoenix.Transports.WebSocket)}
+        config = socket_config(websocket, Phoenix.Transports.WebSocket)
+        init = {endpoint, socket, config}
 
         [
-          {socket_path(path, :websocket), Phoenix.Endpoint.CowboyWebSocket,
+          {socket_path(path, config), Phoenix.Endpoint.CowboyWebSocket,
            {Phoenix.Transports.WebSocket, init}}
           | paths
         ]
@@ -139,10 +140,11 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
 
     paths =
       if longpoll do
-        init = {endpoint, socket, socket_config(longpoll, Phoenix.Transports.LongPoll)}
+        config = socket_config(longpoll, Phoenix.Transports.LongPoll)
+        init = {endpoint, socket, config}
 
         [
-          {socket_path(path, :longpoll), Plug.Adapters.Cowboy.Handler,
+          {socket_path(path, config), Plug.Adapters.Cowboy.Handler,
            {Phoenix.Transports.LongPoll, init}}
           | paths
         ]
@@ -152,9 +154,9 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
 
     paths
   end
-
-  defp socket_path(path, key) do
-    parts = String.split(path, "/", trim: true) ++ [Atom.to_string(key)]
+  defp socket_path(path, config) do
+    end_path_fragment = Keyword.fetch!(config, :path)
+    parts = String.split(path <> "/" <> end_path_fragment, "/", trim: true)
     "/" <> Path.join(parts)
   end
 

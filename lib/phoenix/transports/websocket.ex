@@ -4,6 +4,7 @@ defmodule Phoenix.Transports.WebSocket do
 
   def default_config() do
     [
+      path: "/websocket",
       serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
       timeout: 60_000,
       transport_log: false,
