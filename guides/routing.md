@@ -881,7 +881,7 @@ defmodule HelloWeb.Endpoint do
 end
 ```
 
-By default, Phoenix supports both websockets and longpoll when invoking Phoenix.Endpoint.socket/3 in your endpoint. Here we're specifying that incoming socket connections can be made via a WebSocket connection.
+By default, Phoenix supports both websockets and longpoll when invoking `Phoenix.Endpoint.socket/3` in your endpoint. Here we're specifying that incoming socket connections can be made via a WebSocket connection.
 
 Next, we need to open our `lib/hello_web/channels/user_socket.ex` file and use the `channel/3` macro to define our channel routes. The routes will match a topic pattern to a channel to handle events. If we have a channel module called `RoomChannel` and a topic called `"rooms:*"`, the code to do this is straightforward.
 
