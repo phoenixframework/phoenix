@@ -88,7 +88,7 @@ end
 We have a route. We created a new controller action. We have made modifications to the main application view. Now all we need is a new template to display the string we get from `handler_info/1`. Let's create a new one at `lib/hello_web/templates/page/test.html.eex`.
 
 ```html
-<div class="jumbotron">
+<div class="phx-hero">
   <p><%= handler_info(@conn) %></p>
 </div>
 ```
@@ -110,7 +110,7 @@ Now that we have a function, visible to our template, that returns a list of key
 We can add a header and a list comprehension like this.
 
 ```html
-<div class="jumbotron">
+<div class="phx-hero">
   <p><%= handler_info(@conn) %></p>
 
   <h3>Keys for the conn Struct</h3>
@@ -147,7 +147,7 @@ We need to change `key` to `@key` here because this is a new template, not part 
 Now that we have a template, we simply render it within our list comprehension in the `test.html.eex` template.
 
 ```html
-<div class="jumbotron">
+<div class="phx-hero">
   <p><%= handler_info(@conn) %></p>
 
   <h3>Keys for the conn Struct</h3>
@@ -169,7 +169,7 @@ Let's move our template into a shared view.
 `key.html.eex` is currently rendered by the `HelloWeb.PageView` module, but we use a render call which assumes that the current schema is what we want to render with. We could make that explicit, and re-write it like this:
 
 ```html
-<div class="jumbotron">
+<div class="phx-hero">
   ...
 
   <%= for key <- connection_keys(@conn) do %>
