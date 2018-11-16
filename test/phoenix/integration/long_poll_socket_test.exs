@@ -65,6 +65,10 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     socket "/ws", UserSocket,
       longpoll: [window_ms: 200, pubsub_timeout_ms: 200, check_origin: ["//example.com"]],
       custom: :value
+
+    socket "/custom/:socket_var", UserSocket,
+      longpoll: [path: ":path_var/path", check_origin: ["//example.com"], timeout: 200],
+      custom: :value
   end
 
   setup_all do
@@ -80,48 +84,64 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     :ok
   end
 
-  def poll(method, params, body \\ nil, headers \\ %{}) do
+  def poll(method, path, params, body \\ nil, headers \\ %{}) do
     headers = Map.merge(%{"content-type" => "application/json"}, headers)
-    url = "http://127.0.0.1:#{@port}/ws/longpoll?" <> URI.encode_query(params)
+    url = "http://127.0.0.1:#{@port}/#{path}?" <> URI.encode_query(params)
     {:ok, resp} = HTTPClient.request(method, url, headers, body)
     update_in(resp.body, &Phoenix.json_library().decode!(&1))
   end
 
   test "refuses unallowed origins" do
     capture_log(fn ->
-      resp = poll(:get, %{}, nil, %{"origin" => "https://example.com"})
+      resp = poll(:get, "ws/longpoll", %{}, nil, %{"origin" => "https://example.com"})
       assert resp.body["status"] == 410
 
-      resp = poll(:get, %{}, nil, %{"origin" => "http://notallowed.com"})
+      resp = poll(:get, "ws/longpoll", %{}, nil, %{"origin" => "http://notallowed.com"})
       assert resp.body["status"] == 403
     end)
   end
 
   test "returns params with sync request" do
-    resp = poll(:get, %{"hello" => "world"}, nil)
+    resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
     assert resp.body["token"]
     assert resp.body["status"] == 410
     assert resp.status == 200
     secret = Map.take(resp.body, ["token"])
 
-    resp = poll(:post, secret, "params")
+    resp = poll(:post, "ws/longpoll", secret, "params")
     assert resp.body["status"] == 200
 
-    resp = poll(:get, secret, nil)
+    resp = poll(:get, "ws/longpoll", secret, nil)
     assert resp.body["messages"] == [~s(%{"hello" => "world"})]
   end
 
+  @tag :cowboy2
+  test "allows a path with variables" do
+    path = "custom/123/456/path"
+    resp = poll(:get, path, %{"key" => "value"}, nil)
+    secret = Map.take(resp.body, ["token"])
+
+    resp = poll(:post, path, secret, "params")
+    assert resp.body["status"] == 200
+
+    resp = poll(:get, path, secret, nil)
+    [params] = resp.body["messages"]
+    assert params =~ ~s("key" => "value")
+    assert params =~ ~s("socket_var" => "123")
+    assert params =~ ~s(path_var" => "456")
+  end
+
   test "returns pong from async request" do
-    resp = poll(:get, %{"hello" => "world"}, nil)
+    resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
     assert resp.body["token"]
     assert resp.body["status"] == 410
     assert resp.status == 200
     secret = Map.take(resp.body, ["token"])
 
-    resp = poll(:post, secret, "ping")
+    resp = poll(:post, "ws/longpoll", secret, "ping")
     assert resp.body["status"] == 200
 
-    resp = poll(:get, secret, nil)
+    resp = poll(:get, "ws/longpoll", secret, nil)
     assert resp.body["messages"] == ["pong"]
   end
 end
