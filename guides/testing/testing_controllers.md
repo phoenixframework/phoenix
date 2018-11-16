@@ -177,7 +177,7 @@ defmodule HelloWeb.Router do
   end
 
   scope "/", HelloWeb do
-    pipe_through :browser # Use the default browser stack
+    pipe_through :browser
 
     get "/", PageController, :index
   end
