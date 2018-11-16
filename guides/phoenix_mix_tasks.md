@@ -30,7 +30,7 @@ mix phx.server         # Starts applications and their servers
 
 We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea. And here we are.
 
-#### `mix phx.new`
+### [`mix phx.new`](Mix.Tasks.Phx.New.html)
 
 This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](up_and_running.html).
 
@@ -187,7 +187,7 @@ defmodule Hello.MixProject do
 . . .
 ```
 
-#### [mix phx.gen.html](`Mix.Tasks.Phx.Gen.Html.run/1`)
+### [`mix phx.gen.html`](Mix.Tasks.Phx.Gen.Html.html)
 
 Phoenix now offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto context, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
 
@@ -301,7 +301,7 @@ warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
   lib/hello_web/templates/post/edit.html.eex:3
 ```
 
-#### [mix phx.gen.json](`Mix.Tasks.Phx.Gen.Json.run/1`)
+### [`mix phx.gen.json`](Mix.Tasks.Phx.Gen.Json.html)
 
 Phoenix also offers the ability to generate all the code to stand up a complete JSON resource - ecto migration, ecto schema, controller with all the necessary actions and view. This command will not create any template for the app.
 
@@ -415,7 +415,7 @@ Compiling 18 files (.ex)
     (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
 ```
 
-#### [mix phx.gen.context](`Mix.Tasks.Phx.Gen.Context.run/1`)
+### [`mix phx.gen.context`](Mix.Tasks.Phx.Gen.Context.html)
 
 If we don't need a complete HTML/JSON resource and instead are only interested in a context, we can use the `phx.gen.context` task. It will generate a context, a schema, a migration and a test case.
 
@@ -442,7 +442,7 @@ $ mix phx.gen.context Accounts User users name:string age:integer
 * injecting test/hello/admin/accounts/accounts_test.exs
 ```
 
-#### [mix phx.gen.schema](`Mix.Tasks.Phx.Gen.Schema.run/1`)
+### [`mix phx.gen.schema`](Mix.Tasks.Phx.Gen.Schema.html)
 
 If we don't need a complete HTML/JSON resource and are not interested in generating or altering a context we can use the `phx.gen.schema` task. It will generate a schema, and a migration.
 
@@ -454,7 +454,7 @@ $ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id
 * creating priv/repo/migrations/20170906162013_create_credentials.exs
 ```
 
-#### [mix phx.gen.channel](`Mix.Tasks.Phx.Gen.Channel.run/1`)
+### [`mix phx.gen.channel`](Mix.Tasks.Phx.Gen.Channel.html)
 
 This task will generate a basic Phoenix channel as well a test case for it. It takes the module name for the channel as argument:
 
@@ -472,7 +472,7 @@ Add the channel to your `lib/hello_web/channels/user_socket.ex` handler, for exa
     channel "rooms:lobby", HelloWeb.RoomChannel
 ```
 
-#### [mix phx.gen.presence](`Mix.Tasks.Phx.Gen.Presence.run/1`)
+### [`mix phx.gen.presence`](Mix.Tasks.Phx.Gen.Presence.html)
 
 This task will generate a Presence tracker. The module name can be passed as an argument,
 `Presence` is used if no module name is passed.
@@ -482,7 +482,7 @@ $ mix phx.gen.presence Presence
 $ lib/hello_web/channels/presence.ex
 ```
 
-#### `mix [mix phx.routes](`Mix.Tasks.Phx.Routes.run/1`)
+### [`mix phx.routes`](Mix.Tasks.Phx.Routes.html)
 
 This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [Routing Guide](routing.html).
 
@@ -499,7 +499,7 @@ $ mix phx.routes TaskTesterWeb.Router
 page_path  GET  /  TaskTesterWeb.PageController.index/2
 ```
 
-#### [mix phx.server](`Mix.Tasks.Phx.Server.run/1`)
+### [`mix phx.server`](Mix.Tasks.Phx.Server.html)
 
 This is the task we use to get our application running. It takes no arguments at all. If we pass any in, they will be silently ignored.
 
@@ -524,7 +524,7 @@ Interactive Elixir (1.0.4) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)>
 ```
 
-#### [mix phx.digest](`Mix.Tasks.Phx.Digest.run/1`)
+### [`mix phx.digest`](Mix.Tasks.Phx.Digest.html)
 
 This task does two things, it creates a digest for our static assets and then compresses them.
 
@@ -593,7 +593,7 @@ mix ecto.rollback        # Reverts migrations down on a repo
 
 Note: We can run any of the tasks above with the `--no-start` flag to execute the task without starting the application.
 
-#### `ecto.create`
+### `mix ecto.create`
 This task will create the database specified in our repo. By default it will look for the repo named after our application (the one generated with our app unless we opted out of ecto), but we can pass in another repo if we want.
 
 Here's what it looks like in action.
@@ -677,7 +677,7 @@ $ mix ecto.drop -r OurCustom.Repo
 The database for OurCustom.Repo has been dropped.
 ```
 
-#### `ecto.gen.repo`
+### `mix ecto.gen.repo`
 
 Many applications require more than one data store. For each data store, we'll need a new repo, and we can generate them automatically with `ecto.gen.repo`.
 
@@ -724,7 +724,7 @@ children = [
 . . .
 ```
 
-#### `ecto.gen.migration`
+### `mix ecto.gen.migration`
 
 Migrations are a programmatic, repeatable way to affect changes to a database schema. Migrations are also just modules, and we can create them with the `ecto.gen.migration` task. Let's walk through the steps to create a migration for a new comments table.
 
@@ -779,7 +779,7 @@ For example, to alter an existing schema see the documentation on ecto’s
 
 That's it! We're ready to run our migration.
 
-#### `ecto.migrate`
+### `mix ecto.migrate`
 
 Once we have our migration module ready, we can simply run `mix ecto.migrate` to have our changes applied to the database.
 
@@ -837,7 +837,7 @@ The `--to` option will behave the same way.
 mix ecto.migrate --to 20150317170448
 ```
 
-#### `ecto.rollback`
+### `mix ecto.rollback`
 
 The `ecto.rollback` task will reverse the last migration we have run, undoing the schema changes. `ecto.migrate` and `ecto.rollback` are mirror images of each other.
 
