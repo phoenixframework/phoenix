@@ -76,15 +76,20 @@ defmodule Phoenix.Socket do
 
   Defaults to the `:info` log level. Pass `false` to disable logging.
 
+  ## Garbage collection
+
+  It's possible to force garbage collection in the transport process after
+  processing large messages. For example, to trigger such from your channels,
+  run:
+
+      send(socket.transport_pid, :garbage_collect)
+
   ## Client-server communication
 
   The encoding of server data and the decoding of client data is done
   according to a serializer, defined in `Phoenix.Socket.Serializer`.
   By default, JSON encoding is used to broker messages to and from
   clients with `Phoenix.Socket.V2.JSONSerializer`.
-
-  The serializer `encode!/1` and `fastlane!/1` functions must return
-  a tuple in the format `{:text | :binary, iodata}`.
 
   The serializer `decode!` function must return a `Phoenix.Socket.Message`
   which is forwarded to channels except:
@@ -117,14 +122,6 @@ defmodule Phoenix.Socket do
   See the `Phoenix.Socket.Transport` documentation for more information on
   writing your own socket that does not leverage channels or for writing
   your own transports that interacts with other sockets.
-
-  ## Garbage collection
-
-  It's possible to force garbage collection in the transport process after
-  processing large messages. For example, to trigger such from your channels,
-  run:
-
-      send(socket.transport_pid, :garbage_collect)
 
   """
 
@@ -418,26 +415,25 @@ defmodule Phoenix.Socket do
     end
   end
 
-  def __info__({:graceful_exit, pid, %Phoenix.Socket.Message{} = message}, {state, socket}) do
-    state =
-      case state.channels_inverse do
-        %{^pid => {topic, _join_ref}} ->
-          {^pid, monitor_ref} = Map.fetch!(state.channels, topic)
-          delete_channel(state, pid, topic, monitor_ref)
-
-        %{} ->
-          state
-      end
-
-    {:push, encode_reply(socket, message), {state, socket}}
-  end
-
   def __info__(%Broadcast{event: "disconnect"}, state) do
     {:stop, {:shutdown, :disconnected}, state}
   end
 
   def __info__({:socket_push, opcode, payload}, state) do
     {:push, {opcode, payload}, state}
+  end
+
+  def __info__({:socket_close, pid, _reason}, {state, socket}) do
+    case state.channels_inverse do
+      %{^pid => {topic, join_ref}} ->
+        {^pid, monitor_ref} = Map.fetch!(state.channels, topic)
+        state = delete_channel(state, pid, topic, monitor_ref)
+        {:socket_push, opcode, payload} = serialize_close(socket, topic, join_ref)
+        {:push, {opcode, payload}, {state, socket}}
+
+      %{} ->
+        {:ok, {state, socket}}
+    end
   end
 
   def __info__(:garbage_collect, state) do
@@ -449,11 +445,7 @@ defmodule Phoenix.Socket do
     {:ok, state}
   end
 
-  def __terminate__(_reason, {%{channels_inverse: channels_inverse}, _socket}) do
-    # Although this is not strictly necessary, as each channel server
-    # watches the transport, it is a more efficient way of doing as
-    # we terminate all channels at once.
-    Phoenix.Channel.Server.close(Map.keys(channels_inverse))
+  def __terminate__(_reason, _state_socket) do
     :ok
   end
 
@@ -563,8 +555,18 @@ defmodule Phoenix.Socket do
         "Closing existing channel for new join."
     end
 
-    :ok = Phoenix.Channel.Server.close([pid])
-    handle_in(nil, message, delete_channel(state, pid, topic, ref), socket)
+    :ok = shutdown_duplicate_channel(pid)
+
+    # We have to send a message to the client because the client
+    # may be expecting us to explicitly shutdown previous channels,
+    # even when they are duplicate. Instead, we would prefer for
+    # the client to automatically handle this, but that was not the
+    # case up to Phoenix v1.4.0.
+    {^topic, join_ref} = Map.fetch!(state.channels_inverse, pid)
+    send self(), serialize_close(socket, topic, join_ref)
+
+    state = delete_channel(state, pid, topic, ref)
+    handle_in(nil, message, state, socket)
   end
 
   defp handle_in({pid, _ref}, message, state, socket) do
@@ -612,5 +614,23 @@ defmodule Phoenix.Socket do
   defp encode_reply(%{serializer: serializer}, message) do
     {:socket_push, opcode, payload} = serializer.encode!(message)
     {opcode, payload}
+  end
+
+  defp serialize_close(%{serializer: serializer}, topic, join_ref) do
+    message = %Message{join_ref: join_ref, ref: join_ref, topic: topic, event: "phx_close", payload: %{}}
+    serializer.encode!(message)
+  end
+
+  defp shutdown_duplicate_channel(pid) do
+    ref = Process.monitor(pid)
+    Process.exit(pid, {:shutdown, :duplicate_join})
+
+    receive do
+      {:DOWN, ^ref, _, _, _} -> :ok
+    after
+      5_000 ->
+        Process.exit(pid, :kill)
+        receive do: ({:DOWN, ^ref, _, _, _} -> :ok)
+    end
   end
 end

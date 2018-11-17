@@ -334,7 +334,8 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         Process.monitor(channel)
         WebsocketClient.close(sock)
 
-        assert_receive {:DOWN, _, :process, ^channel, {:shutdown, :closed}}
+        assert_receive {:DOWN, _, :process, ^channel, shutdown}
+                       when shutdown in [:shutdown, {:shutdown, :closed}]
       end
 
       test "refuses websocket events that haven't joined" do

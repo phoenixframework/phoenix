@@ -16,7 +16,7 @@ defmodule Phoenix.Test.ChannelTest do
   @moduletag :capture_log
 
   defp assert_graceful_exit(pid) do
-    assert_receive {:graceful_exit, ^pid, %Message{event: "phx_close"}}
+    assert_receive {:socket_close, ^pid, _}
   end
 
   defmodule EmptyChannel do
@@ -263,7 +263,7 @@ defmodule Phoenix.Test.ChannelTest do
     pid = socket.channel_pid
     assert_receive {:terminate, _}
     assert_receive {:EXIT, ^pid, _}
-    refute_receive {:graceful_exit, _, _}
+    refute_receive {:socket_close, _, _}
   end
 
   test "pushes on stop" do
@@ -400,7 +400,7 @@ defmodule Phoenix.Test.ChannelTest do
 
     pid = socket.channel_pid
     assert_receive {:terminate, {:shutdown, :closed}}
-    assert_graceful_exit(pid)
+    assert_receive {:EXIT, ^pid, {:shutdown, :closed}}
 
     # Closing again doesn't crash
     _ = close(socket)
