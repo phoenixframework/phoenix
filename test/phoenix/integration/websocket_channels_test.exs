@@ -60,6 +60,34 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     end
   end
 
+  defmodule CustomChannel do
+    use GenServer
+
+    def start_link(triplet) do
+      GenServer.start_link(__MODULE__, triplet)
+    end
+
+    def init({payload, from, socket}) do
+      case payload["action"] do
+        "ok" ->
+          GenServer.reply(from, %{"action" => "ok"})
+          {:ok, socket}
+
+        "ignore" ->
+          GenServer.reply(from, %{"action" => "ignore"})
+          :ignore
+
+        "error" ->
+          raise "oops"
+      end
+    end
+
+    def handle_info(%Message{event: "close"}, socket) do
+      send socket.transport_pid, {:socket_close, self(), :shutdown}
+      {:stop, :shutdown, socket}
+    end
+  end
+
   defmodule UserSocketConnectInfo do
     use Phoenix.Socket, log: false
 
@@ -94,6 +122,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     use Phoenix.Socket
 
     channel "room:*", RoomChannel
+    channel "custom:*", CustomChannel
 
     def connect(%{"reject" => "true"}, _socket) do
       :error
@@ -137,7 +166,6 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         timeout: 200,
         connect_info: [:x_headers, :peer_data, :uri, signing_salt: "salt"]
       ]
-
   end
 
   setup_all do
@@ -443,6 +471,48 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         end)
         assert log =~ "[warn]  Ignoring unmatched topic \"unmatched-topic\" in Phoenix.Integration.WebSocketChannelsTest.UserSocket"
       end
+    end
+  end
+
+  # Those tests are not transport specific but for integration purposes
+  # it is best to assert custom channels work throughout the whole stack,
+  # compared to only testing the socket <-> channel communication. Which
+  # is why test them under the latest websocket transport.
+  describe "custom channels" do
+    @serializer V2.JSONSerializer
+    @vsn "2.0.0"
+    @vsn_path "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}"
+
+    test "join, ignore, error, and event messages" do
+      {:ok, sock} = WebsocketClient.start_link(self(), @vsn_path, @serializer)
+
+      WebsocketClient.join(sock, "custom:ignore", %{"action" => "ignore"})
+
+      assert_receive %Message{event: "phx_reply",
+                              join_ref: "1",
+                              payload: %{"response" => %{"action" => "ignore"}, "status" => "error"},
+                              ref: "1",
+                              topic: "custom:ignore"}
+
+
+      WebsocketClient.join(sock, "custom:error", %{"action" => "error"})
+
+      assert_receive %Message{event: "phx_reply",
+                              join_ref: "2",
+                              payload: %{"response" => %{"reason" => "join crashed"}, "status" => "error"},
+                              ref: "2",
+                              topic: "custom:error"}
+
+      WebsocketClient.join(sock, "custom:ok", %{"action" => "ok"})
+
+      assert_receive %Message{event: "phx_reply",
+                              join_ref: "3",
+                              payload: %{"response" => %{"action" => "ok"}, "status" => "ok"},
+                              ref: "3",
+                              topic: "custom:ok"}
+
+      WebsocketClient.send_event(sock, "custom:ok", "close", %{body: "bye!"})
+      assert_receive %Message{event: "phx_close", payload: %{}}
     end
   end
 end

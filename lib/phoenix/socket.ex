@@ -123,6 +123,59 @@ defmodule Phoenix.Socket do
   writing your own socket that does not leverage channels or for writing
   your own transports that interacts with other sockets.
 
+  ## Custom channels
+
+  You can list any module as a channel as long as it implements
+  a `start_link/1` function that receives a tuple with three elements:
+
+      {auth_payload, from, socket}
+
+  A custom channel implementation MUST invoke
+  `GenServer.reply(from, reply_payload)` during its initialization
+  with a custom `reply_payload` that will be sent as a reply to the
+  client. Failing to do so will block the socket forever.
+
+  A custom channel receives `Phoenix.Socket.Message` structs as regular
+  messages from the transport. Replies to those messages and custom
+  messages can be sent to the socket at any moment by building an
+  appropriate `Phoenix.Socket.Reply` and `Phoenix.Socket.Message`
+  structs, encoding them with the serializer and dispatching the
+  serialized result to the transport.
+
+  For example, to handle "phx_leave" messages, which is recommended
+  to be handled by all channel implementations, one may do:
+
+      def handle_info(
+            %Message{topic: topic, event: "phx_leave"} = message,
+            %{topic: topic, serializer: serializer, transport_pid: transport_pid} = socket
+          ) do
+        send transport_pid, serializer.encode!(build_leave_reply(message))
+        {:stop, {:shutdown, :left}, socket}
+      end
+
+  We also recommend all channels to monitor the `transport_pid`
+  on `init` and exit if the transport exits. We also advise to rewrite
+  `:normal` exit reasons (usually due to the socket being closed)
+  to the `{:shutdown, :closed}` to guarantee links are broken on
+  the channel exit (as a `:normal` exit does not break links):
+
+      def handle_info({:DOWN, _, _, transport_pid, reason}, %{transport_pid: transport_pid} = socket) do
+        reason = if reason == :normal, do: {:shutdown, :closed}, else: reason
+        {:stop, reason, socket}
+      end
+
+  Any process exit is treated as an error by the socket layer unless
+  a `{:socket_close, pid, reason}` message is sent to the socket before
+  shutdown.
+
+  Custom channel implementations cannot be tested with `Phoenix.ChannelTest`
+  and are currently considered experimental. The underlying API may be
+  changed at any moment.
+
+  **Note:** in future Phoenix versions we will require custom channels
+  to provide a custom `child_spec/1` function instead of `start_link/1`.
+  Since the default behaviour of `child_spec/1` is to invoke `start_link/1`,
+  this behaviour should be backwards compatible in almost all cases.
   """
 
   require Logger
@@ -654,6 +707,7 @@ defmodule Phoenix.Socket do
     # even when they are duplicate. Instead, we would prefer for
     # the client to automatically handle this, but that was not the
     # case up to Phoenix v1.4.0.
+    # TODO: Remove this message on Phoenix v1.5+
     {^topic, join_ref} = Map.fetch!(state.channels_inverse, pid)
     send self(), serialize_close(socket, topic, join_ref)
 

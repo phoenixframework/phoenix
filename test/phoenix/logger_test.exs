@@ -136,7 +136,6 @@ defmodule Phoenix.LoggerTest do
   end
 
   test "logs phoenix_channel_join as configured by the channel" do
-
     log = capture_log(fn ->
       socket = %Phoenix.Socket{private: %{log_join: :info}}
       Phoenix.Logger.phoenix_channel_join(:start, %{}, %{socket: socket, params: %{}})
