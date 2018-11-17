@@ -417,7 +417,7 @@ defmodule Phoenix.ChannelTest do
   of 5000 milliseconds.
   """
   def close(socket, timeout \\ 5000) do
-    Server.close([socket.channel_pid], timeout)
+    Server.close(socket.channel_pid, timeout)
   end
 
   @doc """
