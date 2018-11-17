@@ -63,6 +63,8 @@ defmodule Phoenix.Channel.Server do
 
   @doc """
   Gets the socket from the channel.
+
+  Used by channel tests.
   """
   @spec socket(pid) :: Socket.t
   def socket(pid) do
@@ -70,54 +72,21 @@ defmodule Phoenix.Channel.Server do
   end
 
   @doc """
-  Notifies the channels the clients closed.
+  Emulates the socket being closed.
 
-  This event is synchronous as we want to guarantee
-  proper termination of the channels.
+  Used by channel tests.
   """
-  @spec close([pid], timeout) :: :ok
-  def close(pids, timeout \\ 5000)
-
-  def close([], _timeout) do
-    :ok
-  end
-
-  def close(pids, timeout) do
-    # We need to guarantee that the channel has been closed
-    # otherwise the link in the transport will trigger it to crash.
-    pids_and_refs =
-      for pid <- pids do
-        ref = Process.monitor(pid)
-        GenServer.cast(pid, :close)
-        {pid, ref}
-      end
-
-    timeout_ref = make_ref()
-    timer_ref = Process.send_after(self(), {:timeout, timeout_ref}, timeout)
-
-    Enum.reduce(pids_and_refs, :infinity, fn {pid, ref}, timeout ->
-      receive do
-        {:DOWN, ^ref, _, _, _} -> timeout
-        {:timeout, ^timeout_ref} -> kill(pid, ref)
-      after
-        timeout -> kill(pid, ref)
-      end
-    end)
-
-    Process.cancel_timer(timer_ref)
+  @spec close(pid, timeout) :: :ok
+  def close(pid, timeout) do
+    GenServer.cast(pid, :close)
+    ref = Process.monitor(pid)
 
     receive do
-      {:timeout, ^timeout_ref} -> :ok
+      {:DOWN, ^ref, _, _, _} -> :ok
     after
-      0 -> :ok
-    end
-  end
-
-  defp kill(pid, ref) do
-    Process.exit(pid, :kill)
-
-    receive do
-      {:DOWN, ^ref, _, _, _} -> 0
+      timeout ->
+        Process.exit(pid, :kill)
+        receive do: ({:DOWN, ^ref, _, _, _} -> :ok)
     end
   end
 
@@ -277,7 +246,7 @@ defmodule Phoenix.Channel.Server do
 
   @doc false
   def handle_cast(:close, socket) do
-    handle_result({:stop, {:shutdown, :closed}, socket}, :handle_cast)
+    {:stop, {:shutdown, :closed}, socket}
   end
 
   @doc false
@@ -303,7 +272,8 @@ defmodule Phoenix.Channel.Server do
   end
 
   def handle_info({:DOWN, _, _, transport_pid, reason}, %{transport_pid: transport_pid} = socket) do
-    handle_result({:stop, reason, socket}, :handle_info)
+    reason = if reason == :normal, do: {:shutdown, :closed}, else: reason
+    {:stop, reason, socket}
   end
 
   def handle_info(msg, %{channel: channel} = socket) do
@@ -381,9 +351,9 @@ defmodule Phoenix.Channel.Server do
 
   defp handle_result({:stop, reason, socket}, _callback) do
     case reason do
-      :normal -> notify_transport_of_graceful_exit(socket)
-      :shutdown -> notify_transport_of_graceful_exit(socket)
-      {:shutdown, _} -> notify_transport_of_graceful_exit(socket)
+      :normal -> send_socket_close(socket, reason)
+      :shutdown -> send_socket_close(socket, reason)
+      {:shutdown, _} -> send_socket_close(socket, reason)
       _ -> :noop
     end
     {:stop, reason, socket}
@@ -425,11 +395,8 @@ defmodule Phoenix.Channel.Server do
     """
   end
 
-  defp notify_transport_of_graceful_exit(socket) do
-    %{topic: topic, join_ref: ref, transport_pid: transport_pid} = socket
-    close_msg = %Message{join_ref: ref, ref: ref, topic: topic, event: "phx_close", payload: %{}}
-    send(transport_pid, {:graceful_exit, self(), close_msg})
-    :ok
+  defp send_socket_close(%{transport_pid: transport_pid}, reason) do
+    send(transport_pid, {:socket_close, self(), reason})
   end
 
   ## Handle in/replies
