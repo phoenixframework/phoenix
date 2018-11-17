@@ -353,6 +353,10 @@ defmodule Phoenix.Channel do
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
 
+      def start_link(triplet) do
+        GenServer.start_link(Phoenix.Channel.Server, triplet)
+      end
+
       def __socket__(:private) do
         %{log_join: @phoenix_log_join, log_handle_in: @phoenix_log_handle_in}
       end

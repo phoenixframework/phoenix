@@ -9,57 +9,44 @@ defmodule Phoenix.Channel.Server do
   alias Phoenix.Socket
   alias Phoenix.Socket.{Broadcast, Message, Reply, PoolSupervisor}
 
-  ## Transport API
+  ## Socket API
 
   @doc """
   Starts a channel server.
+
+  It is just some basic indirection to please a simple_one_for_one supervisor.
   """
-  def start_link(socket, payload, pid, ref) do
-    GenServer.start_link(__MODULE__, {socket, payload, pid, ref})
+  def start_link(channel, triplet) do
+    channel.start_link(triplet)
   end
 
   @doc """
   Joins the channel in socket with authentication payload.
   """
-  @spec join(Socket.t, module, Message.t, keyword) :: {:ok, map, pid, Socket.t} | {:error, map}
+  @spec join(Socket.t, module, Message.t, keyword) :: {:ok, term, pid} | {:error, term}
   def join(socket, channel, message, opts) do
     %{topic: topic, payload: payload, ref: join_ref} = message
-    assigns = Keyword.get(opts, :assigns, %{})
+    assigns = Map.merge(socket.assigns, Keyword.get(opts, :assigns, %{}))
+    socket = %{socket | topic: topic, channel: channel, join_ref: join_ref, assigns: assigns}
 
-    socket =
-      %Socket{
-        socket
-        | topic: topic,
-          channel: channel,
-          join_ref: join_ref,
-          assigns: Map.merge(socket.assigns, assigns),
-          private: Map.merge(channel.__socket__(:private), socket.private)
-      }
+    ref = make_ref()
+    from = {self(), ref}
 
-    instrument = %{params: payload, socket: socket}
+    # TODO: When we migrate to DynamicSupervisor, we will start
+    # {channel, {payload, from, socket}} and have its child spec
+    # point back to this module start link.
+    args = [channel, {payload, from, socket}]
 
-    Phoenix.Endpoint.instrument socket, :phoenix_channel_join, instrument, fn ->
-      ref = make_ref()
-      key = {self(), ref}
-      args = [socket, payload, self(), ref]
-
-      case PoolSupervisor.start_child(socket.endpoint, socket.handler, key, args) do
-        {:ok, :undefined} ->
-          log_join socket, topic, fn -> "Replied #{topic} :error" end
-          receive do: ({^ref, reply} -> {:error, reply})
-        {:ok, pid} ->
-          log_join socket, topic, fn -> "Replied #{topic} :ok" end
-          receive do: ({^ref, reply} -> {:ok, reply, pid})
-        {:error, reason} ->
-          Logger.error fn -> Exception.format_exit(reason) end
-          {:error, %{reason: "join crashed"}}
-      end
+    case PoolSupervisor.start_child(socket.endpoint, socket.handler, from, args) do
+      {:ok, :undefined} ->
+        receive do: ({^ref, reply} -> {:error, reply})
+      {:ok, pid} ->
+        receive do: ({^ref, reply} -> {:ok, reply, pid})
+      {:error, reason} ->
+        Logger.error fn -> Exception.format_exit(reason) end
+        {:error, %{reason: "join crashed"}}
     end
   end
-
-  defp log_join(_, "phoenix" <> _, _func), do: :noop
-  defp log_join(%{private: %{log_join: false}}, _topic, _func), do: :noop
-  defp log_join(%{private: %{log_join: level}}, _topic, func), do: Logger.log(level, func)
 
   @doc """
   Gets the socket from the channel.
@@ -206,18 +193,21 @@ defmodule Phoenix.Channel.Server do
   ## Callbacks
 
   @doc false
-  def init({socket, auth_payload, parent, ref}) do
-    _ = Process.monitor(socket.transport_pid)
-    %{channel: channel, topic: topic} = socket
-    socket = %{socket | channel_pid: self()}
+  def init({auth_payload, from, socket}) do
+    %{channel: channel, topic: topic, private: private} = socket
 
-    case channel.join(topic, auth_payload, socket) do
+    socket = %{socket
+               | channel_pid: self(),
+                 private: Map.merge(channel.__socket__(:private), private)}
+
+    case channel_join(socket, channel, topic, auth_payload) do
       {:ok, socket} ->
-        init(socket, %{}, parent, ref)
+        init(socket, channel, topic, %{}, from)
       {:ok, reply, socket} ->
-        init(socket, reply, parent, ref)
+        init(socket, channel, topic, reply, from)
       {:error, reply} ->
-        send(parent, {ref, reply})
+        log_join socket, topic, fn -> "Replied #{topic} :error" end
+        GenServer.reply(from, reply)
         :ignore
       other ->
         raise """
@@ -232,12 +222,28 @@ defmodule Phoenix.Channel.Server do
     end
   end
 
-  defp init(socket, reply, parent, ref) do
-    fastlane = {socket.transport_pid, socket.serializer, socket.channel.__intercepts__()}
-    PubSub.subscribe(socket.pubsub_server, socket.topic, link: true, fastlane: fastlane)
-    send(parent, {ref, reply})
+  defp channel_join(socket, channel, topic, auth_payload) do
+    instrument = %{params: auth_payload, socket: socket}
+
+    Phoenix.Endpoint.instrument socket, :phoenix_channel_join, instrument, fn ->
+      channel.join(topic, auth_payload, socket)
+    end
+  end
+
+  defp init(socket, channel, topic, reply, from) do
+    %{transport_pid: transport_pid, serializer: serializer, pubsub_server: pubsub_server} = socket
+    Process.monitor(transport_pid)
+
+    fastlane = {transport_pid, serializer, channel.__intercepts__()}
+    PubSub.subscribe(pubsub_server, topic, link: true, fastlane: fastlane)
+
+    log_join socket, topic, fn -> "Replied #{topic} :ok" end
+    GenServer.reply(from, reply)
     {:ok, %{socket | joined: true}}
   end
+
+  defp log_join(%{private: %{log_join: false}}, _topic, _func), do: :noop
+  defp log_join(%{private: %{log_join: level}}, _topic, func), do: Logger.log(level, func)
 
   @doc false
   def handle_call(:socket, _from, socket) do
