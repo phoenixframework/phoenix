@@ -89,7 +89,7 @@ defmodule Phoenix.Template do
   New encoders can be added via the format encoder option:
 
       config :phoenix, :format_encoders,
-        html: Phoenix.Template.HTML
+        html: Phoenix.HTML.Engine
 
   """
 
@@ -219,7 +219,7 @@ defmodule Phoenix.Template do
   end
 
   defp default_encoders do
-    [html: Phoenix.Template.HTML, json: Phoenix.json_library(), js: Phoenix.Template.HTML]
+    [html: Phoenix.HTML.Engine, json: Phoenix.json_library(), js: Phoenix.HTML.Engine]
   end
 
   @doc """

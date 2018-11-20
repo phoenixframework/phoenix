@@ -47,10 +47,13 @@ defmodule Phoenix.MixProject do
 
   defp deps do
     [
-      {:plug_cowboy, "~> 1.0 or ~> 2.0", optional: true},
       {:plug, "~> 1.7"},
       {:phoenix_pubsub, "~> 1.1"},
+
+      # Optional deps
+      {:plug_cowboy, "~> 1.0 or ~> 2.0", optional: true},
       {:jason, "~> 1.0", optional: true},
+      {:phoenix_html, "~> 2.13", github: "phoenixframework/phoenix_html", optional: true},
 
       # Docs dependencies
       {:ex_doc, "~> 0.19.1", only: :docs},
@@ -58,7 +61,6 @@ defmodule Phoenix.MixProject do
 
       # Test dependencies
       {:gettext, "~> 0.15.0", only: :test},
-      {:phoenix_html, "~> 2.11", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
     ]
   end
@@ -179,7 +181,6 @@ defmodule Phoenix.MixProject do
         Phoenix.Template.EExEngine,
         Phoenix.Template.Engine,
         Phoenix.Template.ExsEngine,
-        Phoenix.Template.HTML,
       ],
     ]
   end
