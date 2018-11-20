@@ -70,7 +70,7 @@ The old APIs for building transports are also deprecated. The good news is: adap
   * Use webpack for asset bundling
 
 ### Deprecations
-  * Elixir v1.3 is no longer supported, v1.4+ is required
+  * Elixir 1.3 is no longer supported, Elixir 1.4+ is required
   * [Controller] Passing a view in `render/3` and `render/4` is deprecated in favor of `put_view/2`
   * [Endpoint] The `:handler` option in the endpoint is deprecated in favor of `:adapter`
   * [Socket] `transport/3` is deprecated. The transport is now specified in the endpoint
