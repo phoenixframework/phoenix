@@ -430,9 +430,6 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         WebsocketClient.join(sock, "room:joiner", %{})
         assert_receive %Message{topic: "room:joiner", event: "phx_reply",
                                 ref: "2", payload: %{"response" => %{}, "status" => "ok"}}
-
-        assert_receive %Message{topic: "room:joiner", event: "phx_close",
-                                ref: "1", payload: %{}}
       end
 
       test "returns 403 when versions to not match" do

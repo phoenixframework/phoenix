@@ -481,8 +481,7 @@ defmodule Phoenix.Socket do
       %{^pid => {topic, join_ref}} ->
         {^pid, monitor_ref} = Map.fetch!(state.channels, topic)
         state = delete_channel(state, pid, topic, monitor_ref)
-        {:socket_push, opcode, payload} = serialize_close(socket, topic, join_ref)
-        {:push, {opcode, payload}, {state, socket}}
+        {:push, encode_close(socket, topic, join_ref), {state, socket}}
 
       %{} ->
         {:ok, {state, socket}}
@@ -609,16 +608,6 @@ defmodule Phoenix.Socket do
     end
 
     :ok = shutdown_duplicate_channel(pid)
-
-    # We have to send a message to the client because the client
-    # may be expecting us to explicitly shutdown previous channels,
-    # even when they are duplicate. Instead, we would prefer for
-    # the client to automatically handle this, but that was not the
-    # case up to Phoenix v1.4.0.
-    # TODO: Remove this message on Phoenix v1.5+
-    {^topic, join_ref} = Map.fetch!(state.channels_inverse, pid)
-    send self(), serialize_close(socket, topic, join_ref)
-
     state = delete_channel(state, pid, topic, ref)
     handle_in(nil, message, state, socket)
   end
@@ -670,9 +659,9 @@ defmodule Phoenix.Socket do
     {opcode, payload}
   end
 
-  defp serialize_close(%{serializer: serializer}, topic, join_ref) do
+  defp encode_close(socket, topic, join_ref) do
     message = %Message{join_ref: join_ref, ref: join_ref, topic: topic, event: "phx_close", payload: %{}}
-    serializer.encode!(message)
+    encode_reply(socket, message)
   end
 
   defp shutdown_duplicate_channel(pid) do
