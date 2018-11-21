@@ -6,6 +6,8 @@
 
 ### Enhancements
 
+  * [Endpoint] Allow named params to be used when defining socket paths
+
 ### Bug Fixes
 
 ### Deprecations
