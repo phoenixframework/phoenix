@@ -12,11 +12,10 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
   # Note we keep the websocket state as [handler | state]
   # to avoid conflicts with {endpoint, opts}.
   def init(req, {endpoint, opts}) do
-    %{path_info: path_info} = conn = @connection.conn(req)
-
+    conn = @connection.conn(req)
     try do
-      case endpoint.__handler__(path_info, opts) do
-        {:websocket, handler, opts} ->
+      case endpoint.__handler__(conn, opts) do
+        {:websocket, conn, handler, opts} ->
           case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
             {:ok, %{adapter: {@connection, req}}, state} ->
               cowboy_opts =
@@ -35,7 +34,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
               {:ok, req, {handler, opts}}
           end
 
-        {:plug, handler, opts} ->
+        {:plug, conn, handler, opts} ->
           %{adapter: {@connection, req}} =
             conn
             |> handler.call(opts)

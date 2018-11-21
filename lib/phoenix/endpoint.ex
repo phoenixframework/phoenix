@@ -730,9 +730,11 @@ defmodule Phoenix.Endpoint do
 
     dispatches =
       for {path, socket, socket_opts} <- sockets,
-          {path, return} <- socket_paths(module, path, socket, socket_opts) do
+          {path, type, conn_ast, socket, opts} <- socket_paths(module, path, socket, socket_opts) do
         quote do
-          def __handler__(unquote(path), _opts), do: unquote(Macro.escape(return))
+          defp do_handler(unquote(path), conn, _opts) do
+            {unquote(type), unquote(conn_ast), unquote(socket), unquote(Macro.escape(opts))}
+          end
         end
       end
 
@@ -762,11 +764,12 @@ defmodule Phoenix.Endpoint do
       def __sockets__, do: unquote(Macro.escape(sockets))
 
       @doc false
-      def __handler__(path, opts)
-      unquote(dispatches)
-      def __handler__(_, opts), do: {:plug, __MODULE__, opts}
+      def __handler__(%{path_info: path} = conn, opts), do: do_handler(path, conn, opts)
 
       unquote(instrumentation)
+
+      unquote(dispatches)
+      defp do_handler(_path, conn, opts), do: {:plug, conn, __MODULE__, opts}
     end
   end
 
@@ -778,8 +781,8 @@ defmodule Phoenix.Endpoint do
     paths =
       if websocket do
         config = socket_config(websocket, Phoenix.Transports.WebSocket)
-        triplet = {:websocket, socket, config}
-        [{socket_path(path, config), triplet} | paths]
+        {conn_ast, match_path} = socket_path(path, config)
+        [{match_path, :websocket, conn_ast, socket, config} | paths]
       else
         paths
       end
@@ -788,7 +791,8 @@ defmodule Phoenix.Endpoint do
       if longpoll do
         config = socket_config(longpoll, Phoenix.Transports.LongPoll)
         plug_init = {endpoint, socket, config}
-        [{socket_path(path, config), {:plug, Phoenix.Transports.LongPoll, plug_init}} | paths]
+        {conn_ast, match_path} = socket_path(path, config)
+        [{match_path, :plug, conn_ast, Phoenix.Transports.LongPoll, plug_init} | paths]
       else
         paths
       end
@@ -798,7 +802,25 @@ defmodule Phoenix.Endpoint do
 
   defp socket_path(path, config) do
     end_path_fragment = Keyword.fetch!(config, :path)
-    String.split(path <> "/" <> end_path_fragment, "/", trim: true)
+    {vars, path} =
+      String.split(path <> "/" <> end_path_fragment, "/", trim: true)
+      |> Enum.join("/")
+      |> Plug.Router.Utils.build_path_match()
+
+      conn_ast =
+        if vars == [] do
+          quote do
+            conn
+          end
+        else
+          params_map = {:%{}, [], Plug.Router.Utils.build_path_params_match(vars)}
+          quote do
+            params = unquote(params_map)
+            %Plug.Conn{conn | path_params: params, params: params}
+          end
+        end
+
+    {conn_ast, path}
   end
 
   defp socket_config(true, module), do: module.default_config()
@@ -836,6 +858,16 @@ defmodule Phoenix.Endpoint do
       socket "/ws/admin", MyApp.AdminUserSocket,
         longpoll: true,
         websocket: [compress: true]
+
+  ## Path params
+
+  It is possible to include variables in the path, these will be
+  available in the `params` that are passed to the socket.
+
+      socket "/ws/:user_id", MyApp.UserSocket,
+        websocket: [path: "/project/:project_id"]
+
+  Note: This feature is not supported with the Cowboy 1 adapter.
 
   ## Common configuration
 
