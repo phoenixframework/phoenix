@@ -67,6 +67,10 @@ defmodule Phoenix.Integration.WebSocketTest do
     socket "/custom/some_path", UserSocket,
       websocket: [path: "nested/path", check_origin: ["//example.com"], timeout: 200],
       custom: :value
+
+    socket "/custom/:socket_var", UserSocket,
+      websocket: [path: ":path_var/path", check_origin: ["//example.com"], timeout: 200],
+      custom: :value
   end
 
   setup_all do
@@ -98,6 +102,17 @@ defmodule Phoenix.Integration.WebSocketTest do
 
   test "allows a custom path" do
     path = "ws://127.0.0.1:#{@port}/custom/some_path/nested/path"
+    assert {:ok, _} = WebsocketClient.start_link(self(), "#{path}?key=value", :noop)
+  end
+
+  @tag :cowboy2
+  test "allows a path with variables" do
+    path = "ws://127.0.0.1:#{@port}/custom/123/456/path"
     assert {:ok, client} = WebsocketClient.start_link(self(), "#{path}?key=value", :noop)
+    WebsocketClient.send_message(client, "params")
+    assert_receive {:text, params}
+    assert params =~ ~s("key" => "value")
+    assert params =~ ~s("socket_var" => "123")
+    assert params =~ ~s(path_var" => "456")
   end
 end
