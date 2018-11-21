@@ -56,6 +56,10 @@ defmodule MyApp.UserView do
   def render("render_template.html" = tpl, %{name: name}) do
     render_template(tpl, %{name: String.upcase(name)})
   end
+
+  def render("to_iodata.html", %{to_iodata: to_iodata}) do
+    to_iodata
+  end
 end
 
 defmodule MyApp.Templates.UserView do

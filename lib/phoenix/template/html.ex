@@ -11,4 +11,5 @@ defmodule Phoenix.Template.HTML do
   """
   def encode_to_iodata!({:safe, body}), do: body
   def encode_to_iodata!(body) when is_binary(body), do: Plug.HTML.html_escape(body)
+  def encode_to_iodata!(other), do: Phoenix.HTML.Safe.to_iodata(other)
 end

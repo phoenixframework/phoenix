@@ -96,6 +96,9 @@ defmodule Phoenix.ViewTest do
 
     assert render_to_string(MyApp.UserView, "show.json", []) ==
            "{\"foo\":\"bar\"}"
+
+    assert render_to_string(MyApp.UserView, "to_iodata.html", to_iodata: 123) ==
+           "123"
   end
 
   test "renders views with layouts to iodata/string using encoders" do
@@ -117,6 +120,16 @@ defmodule Phoenix.ViewTest do
 
     assert html ==
            "<html>\n  <title>Test</title>\n<div>Show! Hello world</div>\n</html>\n"
+
+    html = render_to_string(MyApp.UserView, "to_iodata.html",
+      title: "Test",
+      message: "Hello world",
+      to_iodata: 123,
+      layout: {MyApp.LayoutView, "app.html"}
+    )
+
+    assert html ==
+           "<html>\n  <title>Test</title>\n123</html>\n"
   end
 
   ## render_many
