@@ -55,10 +55,10 @@ The old APIs for building transports are also deprecated. The good news is: adap
 
 
 ### Bug Fixes
-  * Add missing `.formatter.exs` to hex package for proper elixir formatter integration
+  * Add missing `.formatter.exs` to Hex package for proper elixir formatter integration
   * [phx.gen.cert] Fix usage inside umbrella applications
   * [phx.new] Revert `Routes.static_url` in app layout in favor of original `Routes.static_path`
-  * [phx.new] Use phoenix_live_reload 1.2-rc to fix hex version errors
+  * [phx.new] Use `phoenix_live_reload` 1.2 to fix Hex version errors
   * [phx.gen.json|html] Fix generator tests incorrectly encoding datetimes
   * [phx.gen.cert] Fix generation of cert inside umbrella projects
   * [Channel] Fix issue with WebSocket transport sending wrong ContentLength header with 403 response
@@ -70,6 +70,7 @@ The old APIs for building transports are also deprecated. The good news is: adap
   * Use webpack for asset bundling
 
 ### Deprecations
+  * Elixir 1.3 is no longer supported, Elixir 1.4+ is required
   * [Controller] Passing a view in `render/3` and `render/4` is deprecated in favor of `put_view/2`
   * [Endpoint] The `:handler` option in the endpoint is deprecated in favor of `:adapter`
   * [Socket] `transport/3` is deprecated. The transport is now specified in the endpoint
