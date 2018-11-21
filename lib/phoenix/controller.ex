@@ -381,6 +381,9 @@ defmodule Phoenix.Controller do
 
   For security, `:to` only accepts paths. Use the `:external`
   option to redirect to any URL.
+  
+  It will use the status code defined in the conn. If no 
+  status code is set, it sends a 302.
 
   ## Examples
 
