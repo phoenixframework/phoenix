@@ -249,7 +249,7 @@ defmodule Phoenix.Socket.Transport do
   defp do_dispatch({pid, _ref}, %{event: "phx_join"} = msg, socket) when is_pid(pid) do
     Logger.debug "Duplicate channel join for topic \"#{msg.topic}\" in #{inspect(socket.handler)}. " <>
                  "Closing existing channel for new join."
-    :ok = Phoenix.Channel.Server.close([pid])
+    :ok = Phoenix.Channel.Server.close(pid, 5000)
     do_dispatch(nil, msg, socket)
   end
 
