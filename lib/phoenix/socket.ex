@@ -360,9 +360,6 @@ defmodule Phoenix.Socket do
   end
   defp tear_alias(other), do: other
 
-  # TODO: Remove the transport/3 implementation on v1.5
-  # but we should keep the warning for backwards compatibility.
-
   @doc false
   defmacro transport(_name, _module, _config \\ []) do
     quote do
