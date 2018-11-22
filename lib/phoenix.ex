@@ -71,44 +71,49 @@ defmodule Phoenix do
     Application.get_env(:phoenix, :json_library, Poison)
   end
 
-  @doc false
-  # Returns the `:init_mode` to pass to `Plug.Builder.compile/3`.
+  @doc """
+  Returns the `:plug_init_mode` that controls when plugs are
+  initialized.
+
+  We recommend to set it to `:runtime` in development for
+  compilation time improvements. It must be `:compile` in
+  production (the default).
+
+  This option is passed as the `:init_mode` to `Plug.Builder.compile/3`.
+  """
   def plug_init_mode do
     Application.get_env(:phoenix, :plug_init_mode, :compile)
   end
 
   defp warn_on_missing_json_library do
     configured_lib = Application.get_env(:phoenix, :json_library)
-    default_lib = json_library()
 
     cond do
+      configured_lib && Code.ensure_loaded?(configured_lib) ->
+        true
+
       configured_lib && not Code.ensure_loaded?(configured_lib) ->
-        warn_json configured_lib, """
+        IO.warn """
         found #{inspect(configured_lib)} in your application configuration
-        for Phoenix JSON encoding, but failed to load the library.
+        for Phoenix JSON encoding, but module #{inspect(configured_lib)} is not available.
+        Ensure #{inspect(configured_lib)} is listed as a dependency in mix.exs.
         """
 
-      not Code.ensure_loaded?(default_lib) and Code.ensure_loaded?(Jason) ->
-        warn_json(Jason)
+      true ->
+        IO.warn """
+        Phoenix now requires you to explicitly list which engine to use
+        for Phoenix JSON encoding. We recommend everyone to upgrade to
+        Jason by setting in your config/config.exs:
 
-      not Code.ensure_loaded?(default_lib) ->
-        warn_json(default_lib)
+            config :phoenix, :json_encoding, Jason
 
-      true -> :ok
+        And then adding {:jason, "~> 1.0"} as a dependency.
+
+        If instead you would rather continue using Poison, then add to
+        your config/config.exs:
+
+            config :phoenix, :json_encoding, Poison
+        """
     end
-  end
-
-  defp warn_json(lib, preabmle \\ nil) do
-    IO.warn """
-    #{preabmle || "failed to load #{inspect(lib)} for Phoenix JSON encoding"}
-    (module #{inspect(lib)} is not available).
-
-    Ensure #{inspect(lib)} exists in your deps in mix.exs,
-    and you have configured Phoenix to use it for JSON encoding by
-    verifying the following exists in your config/config.exs:
-
-        config :phoenix, :json_library, #{inspect(lib)}
-
-    """
   end
 end
