@@ -185,7 +185,9 @@
  * @module phoenix
  */
 
-const global = typeof self !== "undefined" ? self : window
+const globalSelf = typeof self !== "undefined" ? self : null
+const globalWindow = typeof window !== "undefined" ? window : null
+const global = globalSelf || globalWindow || this
 const VSN = "2.0.0"
 const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 const DEFAULT_TIMEOUT = 10000

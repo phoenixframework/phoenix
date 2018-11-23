@@ -6,7 +6,8 @@ module.exports = {
     filename: 'phoenix.js',
     path: path.resolve(__dirname, '../priv/static'),
     library: 'Phoenix',
-    libraryTarget: 'umd'
+    libraryTarget: 'umd',
+    globalObject: 'this'
   },
   module: {
     rules: [
