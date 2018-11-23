@@ -156,7 +156,17 @@ defmodule Phoenix.Router.Helpers do
       Generates url to a static asset given its file path.
       """
       def static_url(%Conn{private: private} = conn, path) do
-        static_url(private.phoenix_endpoint, path)
+        case private do
+          %{phoenix_static_url: %URI{} = uri} ->
+            %URI{uri | path: static_path(conn, path)}
+            |> URI.to_string()
+
+          %{phoenix_static_url: url} when is_binary(url) ->
+            url <> static_path(conn, path)
+
+          %{phoenix_endpoint: endpoint} ->
+            static_url(endpoint, path)
+        end
       end
 
       def static_url(%Socket{endpoint: endpoint} = conn, path) do
