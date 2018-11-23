@@ -16,6 +16,8 @@
 
 ### JavaScript client
 
+  * Fix `window` reference causing phoenix.js errors in environments without global window object.
+
 ## v1.4
 
 The CHANGELOG for v1.4 releases can be found [in the v1.4 branch](https://github.com/phoenixframework/phoenix/blob/v1.4/CHANGELOG.md).
