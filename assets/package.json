@@ -27,7 +27,7 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "mocha ./test/**/*.js --exit --compilers js:@babel/register -r jsdom-global/register",
+    "test": "mocha ./test/**/*.js --exit -r @babel/register -r jsdom-global/register",
     "docs": "documentation build js/phoenix.js -f html -o ../doc/js",
     "build": "webpack --mode production",
     "watch": "webpack --mode development --watch"
