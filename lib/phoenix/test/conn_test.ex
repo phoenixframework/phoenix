@@ -54,12 +54,12 @@ defmodule Phoenix.ConnTest do
   For such cases, you need to set the `@endpoint` attribute to your controller
   and pass an atom representing the action to dispatch:
 
-    @endpoint MyAppWeb.HomeController
+      @endpoint MyAppWeb.HomeController
     
-    test "says welcome on the home page" do
-      conn = get(build_conn(), :index)
-      assert conn.resp_body =~ "Welcome!"
-    end
+      test "says welcome on the home page" do
+        conn = get(build_conn(), :index)
+        assert conn.resp_body =~ "Welcome!"
+      end
 
   Keep in mind that, once the `@endpoint` variable is set, all tests after
   setting it will be affected.
