@@ -39,7 +39,7 @@ defmodule Phoenix.ConnTest do
       |> put_req_header("accept", "application/json")
       |> get("/")
 
-  You can also created your own helpers, such as `json_conn()` that uses
+  You can also create your own helpers, such as `json_conn()` that uses
   `build_conn/0` and `put_req_header/3`, so you avoid repeating the connection
   setup throughout your tests.
 
