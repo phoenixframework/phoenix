@@ -10,8 +10,9 @@ defmodule Phoenix.Channel do
   Every time you join a channel, you need to choose which particular topic you
   want to listen to. The topic is just an identifier, but by convention it is
   often made of two parts: `"topic:subtopic"`. Using the `"topic:subtopic"`
-  approach pairs nicely with the `Phoenix.Socket.channel/2` allowing you to
-  match on all topics starting with a given prefix:
+  approach pairs nicely with the `Phoenix.Socket.channel/3` allowing you to
+  match on all topics starting with a given prefix by using a splat (the `*`
+  character) as the last character in the topic pattern:
 
       channel "room:*", MyApp.RoomChannel
 

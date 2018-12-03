@@ -94,9 +94,9 @@ defmodule Phoenix.Socket do
   The serializer `decode!` function must return a `Phoenix.Socket.Message`
   which is forwarded to channels except:
 
-    * "heartbeat" events in the "phoenix" topic - should just emit an OK reply
-    * "phx_join" on any topic - should join the topic
-    * "phx_leave" on any topic - should leave the topic
+    * `"heartbeat"` events in the "phoenix" topic - should just emit an OK reply
+    * `"phx_join"` on any topic - should join the topic
+    * `"phx_leave"` on any topic - should leave the topic
 
   Each message also has a `ref` field which is used to track responses.
 
@@ -108,10 +108,10 @@ defmodule Phoenix.Socket do
   The `Phoenix.Socket` implementation may also sent special messages
   and replies:
 
-    * "phx_error" - in case of errors, such as a channel process
+    * `"phx_error"` - in case of errors, such as a channel process
       crashing, or when attempting to join an already joined channel
 
-    * "phx_close" - the channel was gracefully closed
+    * `"phx_close"` - the channel was gracefully closed
 
   Phoenix ships with a JavaScript implementation of both websocket
   and long polling that interacts with Phoenix.Socket and can be
@@ -210,7 +210,7 @@ defmodule Phoenix.Socket do
 
       def id(socket), do: "users_socket:#{socket.assigns.user_id}"
 
-  Would allow you to broadcast a "disconnect" event and terminate
+  Would allow you to broadcast a `"disconnect"` event and terminate
   all active sockets and channels for a given user:
 
       MyApp.Endpoint.broadcast("users_socket:" <> user.id, "disconnect", %{})
@@ -319,7 +319,8 @@ defmodule Phoenix.Socket do
   @doc """
   Defines a channel matching the given topic and transports.
 
-    * `topic_pattern` - The string pattern, for example "room:*", "users:*", "system"
+    * `topic_pattern` - The string pattern, for example `"room:*"`, `"users:*"`,
+      or `"system"`
     * `module` - The channel module handler, for example `MyApp.RoomChannel`
     * `opts` - The optional list of options, see below
 
@@ -333,11 +334,11 @@ defmodule Phoenix.Socket do
 
   ## Topic Patterns
 
-  The `channel` macro accepts topic patterns in two flavors. A splat argument
-  can be provided as the last character to indicate a "topic:subtopic" match. If
-  a plain string is provided, only that topic will match the channel handler.
-  Most use-cases will use the "topic:*" pattern to allow more versatile topic
-  scoping.
+  The `channel` macro accepts topic patterns in two flavors. A splat (the `*`
+  character) argument can be provided as the last character to indicate a
+  `"topic:subtopic"` match. If a plain string is provided, only that topic will
+  match the channel handler. Most use-cases will use the `"topic:*"` pattern to
+  allow more versatile topic scoping.
 
   See `Phoenix.Channel` for more information
   """
