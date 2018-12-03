@@ -179,6 +179,8 @@ Phoenix ships with a JavaScript client that is available when generating a new P
 + C#
   - [PhoenixSharp](https://github.com/Mazyod/PhoenixSharp)
   - [dn-phoenix](https://github.com/jfis/dn-phoenix)
++ Elixir
+  - [phoenix_gen_socket_client](https://github.com/Aircloak/phoenix_gen_socket_client)
 
 ## Tying it all together
 Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](https://hexdocs.pm/phoenix/up_and_running.html) we'll see that the endpoint is already set up for us in `lib/hello_web/endpoint.ex`:
