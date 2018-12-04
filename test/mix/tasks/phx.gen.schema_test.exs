@@ -270,6 +270,16 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
+  test "generates schema without extra line break", config do
+    in_tmp_project config.test, fn ->
+      Gen.Schema.run(~w(Blog.Post posts title))
+
+      assert_file "lib/phoenix/blog/post.ex", fn file ->
+        assert file =~ "import Ecto.Changeset\n\n  schema"
+      end
+    end
+  end
+
   describe "inside umbrella" do
     test "raises with false context_app", config do
       in_tmp_umbrella_project config.test, fn ->
