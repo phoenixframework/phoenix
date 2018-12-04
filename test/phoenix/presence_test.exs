@@ -16,6 +16,10 @@ defmodule Phoenix.PresenceTest do
     end
   end
 
+  defmodule NoBroadcastPresence do
+    use Phoenix.Presence, otp_app: :phoenix, broadcast_diffs: false
+  end
+
   Application.put_env(:phoenix, MyPresence, pubsub_server: PresPub)
 
   setup_all do
@@ -114,6 +118,20 @@ defmodule Phoenix.PresenceTest do
       leaves: %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: ^u1_ref}]}}
     }}
     assert MyPresence.list(topic) == %{}
+  end
+
+  test "handle_diff does not broadcast events when broadcast_diffs=false",
+       %{topic: topic} = config do
+    pid = spawn(fn -> :timer.sleep(:infinity) end)
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
+    {:ok, _pid} = NoBroadcastPresence.start_link(pubsub_server: config.pubsub)
+    NoBroadcastPresence.track(pid, topic, "u1", %{name: "u1"})
+
+    refute_receive %Broadcast{}
+
+    Process.exit(pid, :kill)
+    refute_receive %Broadcast{}
+    assert NoBroadcastPresence.list(topic) == %{}
   end
 
   test "untrack with pid", %{topic: topic} = config do

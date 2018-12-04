@@ -284,11 +284,17 @@ defmodule Phoenix.Presence do
         Phoenix.Presence.get_by_key(__MODULE__, topic, key)
       end
 
-      def handle_diff(diff, state) do
-        Phoenix.Presence.handle_diff(__MODULE__,
-          diff, state.node_name, state.pubsub_server, state.task_sup
-        )
-        {:ok, state}
+      if Keyword.get(@opts, :broadcast_diffs, true) do
+        def handle_diff(diff, state) do
+          Phoenix.Presence.handle_diff(__MODULE__,
+            diff, state.node_name, state.pubsub_server, state.task_sup
+          )
+          {:ok, state}
+        end
+      else
+        def handle_diff(_diff, state) do
+          {:ok, state}
+        end
       end
 
       defoverridable fetch: 2, child_spec: 1
