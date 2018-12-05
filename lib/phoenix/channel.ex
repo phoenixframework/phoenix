@@ -185,16 +185,15 @@ defmodule Phoenix.Channel do
 
   You have three options to choose from when shutting down a channel:
 
-    * `:normal` - in such cases, the exit won't be logged, there is no restart
-      in transient mode, and linked processes do not exit
+    * `:normal` - in such cases, the exit won't be logged and linked processes
+      do not exit
 
     * `:shutdown` or `{:shutdown, term}` - in such cases, the exit won't be
-      logged, there is no restart in transient mode, and linked processes exit
-      with the same reason unless they're trapping exits
+      logged and linked processes exit with the same reason unless they're
+      trapping exits
 
-    * any other term - in such cases, the exit will be logged, there are
-      restarts in transient mode, and linked processes exit with the same reason
-      unless they're trapping exits
+    * any other term - in such cases, the exit will be logged and linked
+      processes exit with the same reason unless they're trapping exits
 
   ## Subscribing to external topics
 
@@ -248,6 +247,16 @@ defmodule Phoenix.Channel do
         push(socket, event, payload)
         {:noreply, socket}
       end
+
+  ## Hibernation
+
+  From Erlang/OTP 20, channels automatically hibernate to save memory
+  after 15_000 milliseconds of inactivity. This can be customized by
+  passing the `:hibernate_after` option to `use Phoenix.Channel`:
+
+      use Phoenix.Channel, hibernate_after: 60_000
+
+  You can also set it to `:infinity` to fully disable it.
 
   ## Logging
 
@@ -350,12 +359,13 @@ defmodule Phoenix.Channel do
       @phoenix_intercepts []
       @phoenix_log_join Keyword.get(opts, :log_join, :info)
       @phoenix_log_handle_in Keyword.get(opts, :log_handle_in, :debug)
+      @phoenix_hibernate_after Keyword.get(opts, :hibernate_after, 15_000)
 
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
 
       def start_link(triplet) do
-        GenServer.start_link(Phoenix.Channel.Server, triplet)
+        GenServer.start_link(Phoenix.Channel.Server, triplet, hibernate_after: @phoenix_hibernate_after)
       end
 
       def __socket__(:private) do
