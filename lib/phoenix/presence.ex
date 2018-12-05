@@ -11,7 +11,7 @@ defmodule Phoenix.Presence do
 
   In case you want to use only a subset of the functionality
   provided by `Phoenix.Presence`, such as tracking processes
-  but without broadcasting updates, we recommend you to look
+  but without broadcasting updates, we recommend that you look
   at the `Phoenix.Tracker` functionality from the `phoenix_pubsub`
   project.
 
