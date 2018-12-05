@@ -251,7 +251,7 @@ defmodule Phoenix.Channel do
 
   From Erlang/OTP 20, channels automatically hibernate to save memory
   after 15_000 milliseconds of inactivity. This can be customized by
-  on `use Phoenix.Channel`:
+  passing the `:hibernate_after` option to `use Phoenix.Channel`:
 
       use Phoenix.Channel, hibernate_after: 60_000
 
