@@ -4,8 +4,6 @@ Phoenix Presence is a feature which allows you to register process information o
 
 Phoenix Presence is special for a number of reasons. It has no single point of failure, no single source of truth, relies entirely on the standard library with no operational dependencies and self heals. This is all handled with a conflict-free replicated data type (CRDT) protocol.
 
-Presence is designed for situations where topic subscription information should be broadcast to connected channels. It is possible to use `Phoenix.Tracker` directly in other use cases, such as wanting to manually dispatch or skip change events.
-
 To get started with Presence we'll first need to generate a presence module. We can do this with the `mix phx.gen.presence` task:
 
 ```console
