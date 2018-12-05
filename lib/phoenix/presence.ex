@@ -5,9 +5,15 @@ defmodule Phoenix.Presence do
   This behaviour provides presence features such as fetching
   presences for a given topic, as well as handling diffs of
   join and leave events as they occur in real-time. Using this
-  module defines a supervisor and allows the calling module to
-  implement the `Phoenix.Tracker` behaviour which starts a
-  tracker process to handle presence information.
+  module defines a supervisor and a module that implements the
+  `Phoenix.Tracker` behaviour that uses `Phoenix.PubSub` to
+  broadcast presence updates.
+
+  In case you want to use only a subset of the functionality
+  provided by `Phoenix.Presence`, such as tracking processes
+  but without broadcasting updates, we recommend that you look
+  at the `Phoenix.Tracker` functionality from the `phoenix_pubsub`
+  project.
 
   ## Example Usage
 
