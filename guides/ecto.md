@@ -339,9 +339,9 @@ If we also have a requirement for the maximum length that a bio can have, we can
 Let's say we want to perform at least some rudimentary format validation on the `email` field. All we want to check for is the presence of the "@". The `validate_format/3` function is just what we need.
 
 ```elixir
-  def changeset(struct, params \\ %{}) do
-    struct
-    |> cast(params, [:name, :email, :bio, :number_of_pets])
+  def changeset(%User{} = user, attrs) do
+    user
+    |> cast(attrs, [:name, :email, :bio, :number_of_pets])
     |> validate_required([:name, :email, :bio, :number_of_pets])
     |> validate_length(:bio, min: 2)
     |> validate_length(:bio, max: 140)
@@ -361,9 +361,9 @@ There are many more validations and transformations we can perform in a changese
 
 ## Data Persistence
 
-We've talked a lot about migrations and data-storage, but we haven't yet persisted any of our schemas or changesets. We briefly looked at our repo module in `lib/hello/repo.ex` earlier, now it's time to put it to use. Ecto Repo's are the interface into a storage system, be it a Database like PostgreSQL, or an external service like a RESTful API. The Repo module's purpose is to take care of the finer details of persistence and data querying for us. As the caller, we only care about fetching and persisting data. The Repo takes care of the underlying Database adapter communication, connection pooling, and error translation for database constraint violations.
+We've talked a lot about migrations and data-storage, but we haven't yet persisted any of our schemas or changesets. We briefly looked at our repo module in `lib/hello/repo.ex` earlier, now it's time to put it to use. Ecto Repos are the interface into a storage system, be it a Database like PostgreSQL or an external service like a RESTful API. The Repo module's purpose is to take care of the finer details of persistence and data querying for us. As the caller, we only care about fetching and persisting data. The Repo takes care of the underlying Database adapter communication, connection pooling, and error translation for database constraint violations.
 
-Let's head back over to IEx with `iex -S mix`, and insert a couple of users to the database.
+Let's head back over to IEx with `iex -S mix`, and insert a couple of users into the database.
 
 ```console
 iex> alias Hello.{Repo, User}
@@ -415,7 +415,7 @@ SELECT u0."email" FROM "users" AS u0 []
 ["user1@example.com", "user2@example.com"]
 ```
 
-First, we imported `Ecto.Query`, which imports the `from` macro of Ecto's Query DSL. Next, we built a query which selects all the email addresses in our user's table. Let's try another example.
+First, we imported `Ecto.Query`, which imports the `from` macro of Ecto's Query DSL. Next, we built a query which selects all the email addresses in our users table. Let's try another example.
 
 ```console
 iex)> Repo.one(from u in User, where: ilike(u.email, "%1%"),
