@@ -45,9 +45,13 @@ defmodule <%= app_module %>.DataCase do
   """
   def errors_on(changeset) do
     Ecto.Changeset.traverse_errors(changeset, fn {message, opts} ->
-      Enum.reduce(opts, message, fn {key, value}, acc ->
-        String.replace(acc, "%{#{key}}", to_string(value))
-      end)
+      Enum.reduce(opts, message, &replace_message_embed/2)
     end)
+  end
+
+  defp replace_message_embed({_key, value}, message) when is_tuple(value), do: message
+
+  defp replace_message_embed({key, value}, message) do
+    String.replace(message, "%{#{key}}", to_string(value))
   end
 end
