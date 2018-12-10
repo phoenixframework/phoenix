@@ -128,7 +128,7 @@ defmodule Phoenix.Controller do
   function matched from the router. By default, it passes the conn and params.
   In some cases, overriding the `action/2` plug in your controller is a
   useful way to inject arguments into your actions that you would otherwise
-  need to fetch of the connection repeatedly. For example, imagine if you
+  need to repeatedly fetch off the connection. For example, imagine if you
   stored a `conn.assigns.current_user` in the connection and wanted quick
   access to the user for every action in your controller:
 
