@@ -1105,6 +1105,6 @@ defmodule Hello.UserRegistration do
   end
 end
 ```
-We can take advantage of `Ecto.Multi` to create a pipeline of operations that can be run inside a transaction of our `Repo`. If any given operation fails, the transaction will be rolled back and an error will be returned containing which operation failed, as well as the changes up to that point. In our `register_user/1` example, we specified two operations, one that calls into `Accounts.create_user/1` and another that passes the newly created user to `CMS.ensure_author_exits/1`. The final step of our function is to invoke the operations with `Repo.transaction/1`.
+We can take advantage of `Ecto.Multi` to create a pipeline of operations that can be run inside a transaction of our `Repo`. If any given operation fails, the transaction will be rolled back and an error will be returned containing which operation failed, as well as the changes up to that point. In our `register_user/1` example, we specified two operations, one that calls into `Accounts.create_user/1` and another that passes the newly created user to `CMS.ensure_author_exists/1`. The final step of our function is to invoke the operations with `Repo.transaction/1`.
 
 The `UserRegistration` setup is likely simpler to implement than the dynamic author system we built – we decided to take the harder path exactly because those are decisions developers take on their applications every day.
