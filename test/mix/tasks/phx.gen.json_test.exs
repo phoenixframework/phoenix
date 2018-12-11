@@ -38,6 +38,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     in_tmp_project config.test, fn ->
      Gen.Json.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
                      tags:array:text popular:boolean drafted_at:datetime
+                     params:map
                      published_at:utc_datetime
                      published_at_usec:utc_datetime_usec
                      deleted_at:naive_datetime
@@ -67,6 +68,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
                        "deleted_at" => "2010-04-17T14:00:00",
                        "deleted_at_usec" => "2010-04-17T14:00:00.000000",
                        "drafted_at" => "2010-04-17T14:00:00",
+                       "params" => %{},
                        "popular" => true,
                        "published_at" => "2010-04-17T14:00:00Z",
                        "published_at_usec" => "2010-04-17T14:00:00.000000Z",
