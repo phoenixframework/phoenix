@@ -109,9 +109,9 @@ It fails - which is exactly what it should do! We haven't written the code to ma
 defmodule Hello.Accounts.User do
   ...
 
-  def changeset(struct, params \\ %{}) do
-    struct
-    |> cast(params, [:name, :email, :bio, :number_of_pets])
+  def changeset(%User{} = user, attrs) do
+    user
+    |> cast(attrs, [:name, :email, :bio, :number_of_pets])
     |> validate_required([:name, :email, :bio])
   end
 end
@@ -228,9 +228,9 @@ Our test has pointed the way. Now let's make it pass by adding that validation.
 defmodule Hello.Accounts.User do
   ...
 
-  def changeset(struct, params \\ %{}) do
-    struct
-    |> cast(params, [:name, :email, :bio, :number_of_pets])
+  def changeset(%User{} = user, attrs) do
+    user
+    |> cast(attrs, [:name, :email, :bio, :number_of_pets])
     |> validate_required([:name, :email, :bio])
     |> validate_length(:bio, min: 2)
   end
@@ -293,9 +293,9 @@ To make this test pass, we need to add a maximum to the length validation of the
 defmodule Hello.Accounts.User do
   ...
 
-  def changeset(struct, params \\ %{}) do
-    struct
-    |> cast(params, [:name, :email, :bio, :number_of_pets])
+  def changeset(%User{} = user, attrs) do
+    user
+    |> cast(attrs, [:name, :email, :bio, :number_of_pets])
     |> validate_required([:name, :email, :bio])
     |> validate_length(:bio, min: 2, max: 140)
   end
@@ -360,9 +360,9 @@ Then we add the new validation to generate the error our test is looking for.
 defmodule Hello.Accounts.User do
   ...
 
-  def changeset(struct, params \\ %{}) do
-    struct
-    |> cast(params, [:name, :email, :bio, :number_of_pets])
+  def changeset(%User{} = user, attrs) do
+    user
+    |> cast(attrs, [:name, :email, :bio, :number_of_pets])
     |> validate_required([:name, :email, :bio])
     |> validate_length(:bio, min: 2, max: 140)
     |> validate_format(:email, ~r/@/)
