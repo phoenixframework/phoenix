@@ -84,7 +84,7 @@ defmodule HelloWeb.ErrorViewTest do
            "Not Found"
   end
 
-  test "render 500.html" do
+  test "renders 500.html" do
     assert render_to_string(HelloWeb.ErrorView, "500.html", []) ==
            "Internal Server Error"
   end
@@ -301,7 +301,7 @@ defmodule HelloWeb.ErrorViewTest do
   end
 
   @tag individual_test: "nope"
-  test "render 500.html" do
+  test "renders 500.html" do
     assert render_to_string(HelloWeb.ErrorView, "500.html", []) ==
            "Internal Server Error"
   end
