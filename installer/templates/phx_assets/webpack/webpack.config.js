@@ -20,7 +20,7 @@ module.exports = (env, options) => ({
     path: path.resolve(__dirname, '../priv/static/js')
   },
   stats: {
-    colors: true
+    colors: !/^win/i.test(process.platform)
   },
   module: {
     rules: [
