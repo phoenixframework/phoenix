@@ -19,6 +19,9 @@ module.exports = (env, options) => ({
     filename: 'app.js',
     path: path.resolve(__dirname, '../priv/static/js')
   },
+  stats: {
+    colors: !/^win/i.test(process.platform)
+  },
   module: {
     rules: [
       {
