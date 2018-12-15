@@ -361,7 +361,7 @@ class Push {
  * @param {Socket} socket
  */
 export class Channel {
-  constructor(topic, params, socket) {
+  constructor(topic, params, socket){
     this.state       = CHANNEL_STATES.closed
     this.topic       = topic
     this.params      = closure(params || {})
@@ -372,7 +372,7 @@ export class Channel {
     this.joinedOnce  = false
     this.joinPush    = new Push(this, CHANNEL_EVENTS.join, this.params, this.timeout)
     this.pushBuffer  = []
-    this.rejoinTimer  = new Timer(
+    this.rejoinTimer = new Timer(
       () => this.rejoinUntilConnected(),
       this.socket.reconnectAfterMs
     )
@@ -384,17 +384,17 @@ export class Channel {
     })
     this.onClose( () => {
       this.rejoinTimer.reset()
-      if (this.socket.hasLogger()) this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`)
+      if(this.socket.hasLogger()) this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`)
       this.state = CHANNEL_STATES.closed
       this.socket.remove(this)
     })
     this.onError( reason => { if(this.isLeaving() || this.isClosed()){ return }
-      if (this.socket.hasLogger()) this.socket.log("channel", `error ${this.topic}`, reason)
+      if(this.socket.hasLogger()) this.socket.log("channel", `error ${this.topic}`, reason)
       this.state = CHANNEL_STATES.errored
       this.rejoinTimer.scheduleTimeout()
     })
     this.joinPush.receive("timeout", () => { if(!this.isJoining()){ return }
-      if (this.socket.hasLogger()) this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
+      if(this.socket.hasLogger()) this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
       let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), this.timeout)
       leavePush.send()
       this.state = CHANNEL_STATES.errored
@@ -525,7 +525,7 @@ export class Channel {
   leave(timeout = this.timeout){
     this.state = CHANNEL_STATES.leaving
     let onClose = () => {
-      if (this.socket.hasLogger()) this.socket.log("channel", `leave ${this.topic}`)
+      if(this.socket.hasLogger()) this.socket.log("channel", `leave ${this.topic}`)
       this.trigger(CHANNEL_EVENTS.close, "leave")
     }
     let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), timeout)
@@ -554,7 +554,7 @@ export class Channel {
   /**
    * @private
    */
-  isLifecycleEvent(event) { return CHANNEL_LIFECYCLE_EVENTS.indexOf(event) >= 0 }
+  isLifecycleEvent(event){ return CHANNEL_LIFECYCLE_EVENTS.indexOf(event) >= 0 }
 
   /**
    * @private
@@ -563,7 +563,7 @@ export class Channel {
     if(this.topic !== topic){ return false }
 
     if(joinRef && joinRef !== this.joinRef() && this.isLifecycleEvent(event)){
-      if (this.socket.hasLogger()) this.socket.log("channel", "dropping outdated message", {topic, event, payload, joinRef})
+      if(this.socket.hasLogger()) this.socket.log("channel", "dropping outdated message", {topic, event, payload, joinRef})
       return false
     } else {
       return true
@@ -597,7 +597,7 @@ export class Channel {
     let handledPayload = this.onMessage(event, payload, ref, joinRef)
     if(payload && !handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
 
-    for (let i = 0; i < this.bindings.length; i++) {
+    for (let i = 0; i < this.bindings.length; i++){
       const bind = this.bindings[i]
       if(bind.event !== event){ continue }
       bind.callback(handledPayload, ref, joinRef || this.joinRef())
@@ -612,7 +612,7 @@ export class Channel {
   /**
    * @private
    */
-  isClosed() { return this.state === CHANNEL_STATES.closed }
+  isClosed(){ return this.state === CHANNEL_STATES.closed }
 
   /**
    * @private
@@ -622,7 +622,7 @@ export class Channel {
   /**
    * @private
    */
-  isJoined() { return this.state === CHANNEL_STATES.joined }
+  isJoined(){ return this.state === CHANNEL_STATES.joined }
 
   /**
    * @private
@@ -694,7 +694,7 @@ const Serializer = {
  * ```
  * @param {Function} [opts.logger] - The optional function for specialized logging, ie:
  * ```javascript
- * function(kind, msg, data) {
+ * function(kind, msg, data){
  *   console.log(`${kind}: ${msg}`, data)
  * }
  * ```
@@ -836,7 +836,7 @@ export class Socket {
    * @private
    */
   onConnOpen(){
-    if (this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
+    if(this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     this.resetHeartbeat()
@@ -864,10 +864,10 @@ export class Socket {
   }
 
   onConnClose(event){
-    if (this.hasLogger()) this.log("transport", "close", event)
+    if(this.hasLogger()) this.log("transport", "close", event)
     this.triggerChanError()
     clearInterval(this.heartbeatTimer)
-    if(event && event.code !== WS_CLOSE_NORMAL) {
+    if(event && event.code !== WS_CLOSE_NORMAL){
       this.reconnectTimer.scheduleTimeout()
     }
     this.stateChangeCallbacks.close.forEach( callback => callback(event) )
@@ -877,7 +877,7 @@ export class Socket {
    * @private
    */
   onConnError(error){
-    if (this.hasLogger()) this.log("transport", error)
+    if(this.hasLogger()) this.log("transport", error)
     this.triggerChanError()
     this.stateChangeCallbacks.error.forEach( callback => callback(error) )
   }
@@ -930,7 +930,7 @@ export class Socket {
    * @param {Object} data
    */
   push(data){
-    if (this.hasLogger()) {
+    if(this.hasLogger()){
       let {topic, event, payload, ref, join_ref} = data
       this.log("push", `${topic} ${event} (${join_ref}, ${ref})`, payload)
     }
@@ -956,7 +956,7 @@ export class Socket {
   sendHeartbeat(){ if(!this.isConnected()){ return }
     if(this.pendingHeartbeatRef){
       this.pendingHeartbeatRef = null
-      if (this.hasLogger()) this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
+      if(this.hasLogger()) this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
       this.conn.close(WS_CLOSE_NORMAL, "hearbeat timeout")
       return
     }
@@ -976,15 +976,15 @@ export class Socket {
       let {topic, event, payload, ref, join_ref} = msg
       if(ref && ref === this.pendingHeartbeatRef){ this.pendingHeartbeatRef = null }
 
-      if (this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
+      if(this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
 
-      for (let i = 0; i < this.channels.length; i++) {
+      for (let i = 0; i < this.channels.length; i++){
         const channel = this.channels[i]
         if(!channel.isMember(topic, event, payload, join_ref)){ continue }
         channel.trigger(event, payload, ref, join_ref)
       }
 
-      for (let i = 0; i < this.stateChangeCallbacks.message.length; i++) {
+      for (let i = 0; i < this.stateChangeCallbacks.message.length; i++){
         this.stateChangeCallbacks.message[i](msg)
       }
     })
@@ -993,16 +993,14 @@ export class Socket {
   /**
    * @private
    */
-  resetChannelTimers() {
+  resetChannelTimers(){
     this.channels.forEach(channel => {
       channel.rejoinTimer.restart()
     })
   }
 }
 
-
 export class LongPoll {
-
   constructor(endPoint){
     this.endPoint        = null
     this.token           = null
@@ -1088,7 +1086,6 @@ export class LongPoll {
 }
 
 export class Ajax {
-
   static request(method, endPoint, accept, body, timeout, ontimeout, callback){
     if(global.XDomainRequest){
       let req = new XDomainRequest() // IE8, IE9
@@ -1174,7 +1171,6 @@ Ajax.states = {complete: 4}
  *        for example `{events: {state: "state", diff: "diff"}}`
  */
 export class Presence {
-
   constructor(channel, opts = {}){
     let events = opts.events || {state: "presence_state", diff: "presence_diff"}
     this.state = {}
@@ -1330,7 +1326,6 @@ export class Presence {
   static clone(obj){ return JSON.parse(JSON.stringify(obj)) }
 }
 
-
 /**
  *
  * Creates a timer that accepts a `timerCalc` function to perform
@@ -1364,7 +1359,7 @@ class Timer {
   restart(){
     const processing = this.timer !== null
     this.reset()
-    if (processing){
+    if(processing){
       this.scheduleTimeout()
     }
   }
@@ -1381,7 +1376,7 @@ class Timer {
     }, this.timerCalc(this.tries + 1))
   }
 
-  clearTimer() {
+  clearTimer(){
     clearTimeout(this.timer)
     this.timer = null
   }
