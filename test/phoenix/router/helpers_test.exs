@@ -4,50 +4,6 @@ defmodule Phoenix.Router.HelpersTest do
 
   alias Phoenix.Router.Helpers
 
-  ## Unit tests
-
-  test "defhelper with :identifiers" do
-    route = build(:match, :get, "/foo/:bar", nil, Hello, :world, "hello_world")
-    assert extract_defhelper(route, 0) == String.trim """
-    def(hello_world_path(conn_or_endpoint, :world, bar)) do
-      hello_world_path(conn_or_endpoint, :world, bar, [])
-    end
-    """
-
-    assert extract_defhelper(route, 1) == String.trim """
-    def(hello_world_path(conn_or_endpoint, :world, bar, params) when is_list(params) or is_map(params)) do
-      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, ["bar"], {"hello_world", :world, ["bar"]}))
-    end
-    """
-  end
-
-  test "defhelper with *identifiers" do
-    route = build(:match, :get, "/foo/*bar", nil, Hello, :world, "hello_world")
-
-    assert extract_defhelper(route, 0) == String.trim """
-    def(hello_world_path(conn_or_endpoint, :world, bar)) do
-      hello_world_path(conn_or_endpoint, :world, bar, [])
-    end
-    """
-
-    assert extract_defhelper(route, 1) == String.trim """
-    def(hello_world_path(conn_or_endpoint, :world, bar, params) when is_list(params) or is_map(params)) do
-      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, ["bar"], {"hello_world", :world, ["bar"]}))
-    end
-    """
-  end
-
-  defp build(kind, verb, path, host, controller, action, helper) do
-    Phoenix.Router.Route.build(1, kind, verb, path, host, controller, action, helper, [], %{}, %{})
-  end
-
-  defp extract_defhelper(route, pos) do
-    {:__block__, _, block} = Helpers.defhelper(route, Phoenix.Router.Route.exprs(route))
-    Enum.fetch!(block, pos) |> Macro.to_string()
-  end
-
-  ## Integration tests
-
   defmodule Router do
     use Phoenix.Router
 
