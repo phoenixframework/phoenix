@@ -155,7 +155,7 @@ describe("connect with WebSocket", () => {
   it("establishes websocket connection with endpoint", () => {
     socket.connect()
 
-    let conn = socket.conn
+    const conn = socket.conn
     assert.ok(conn instanceof WebSocket)
     assert.equal(conn.url, socket.endPointURL())
   })
@@ -189,7 +189,7 @@ describe("connect with WebSocket", () => {
   it("is idempotent", () => {
     socket.connect()
 
-    let conn = socket.conn
+    const conn = socket.conn
 
     socket.connect()
 
@@ -213,7 +213,7 @@ describe("connect with long poll", () => {
   it("establishes long poll connection with endpoint", () => {
     socket.connect()
 
-    let conn = socket.conn
+    const conn = socket.conn
     assert.ok(conn instanceof LongPoll)
     assert.equal(conn.pollEndpoint, "http://example.com/socket/longpoll?vsn=2.0.0")
     assert.equal(conn.timeout, 20000)
@@ -252,7 +252,7 @@ describe("connect with long poll", () => {
   it("is idempotent", () => {
     socket.connect()
 
-    let conn = socket.conn
+    const conn = socket.conn
 
     socket.connect()
 
@@ -795,7 +795,7 @@ describe("custom encoder and decoder", () => {
 
   it("encodes to JSON array by default", () => {
     socket = new Socket("/socket")
-    let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
+    const payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
     socket.encode(payload, encoded => {
       assert.deepStrictEqual(encoded, '["1","2","topic","join",{"foo":"bar"}]')
@@ -803,7 +803,7 @@ describe("custom encoder and decoder", () => {
   })
 
   it("allows custom encoding when using WebSocket transport", () => {
-    let encoder = (payload, callback) => callback("encode works")
+    const encoder = (payload, callback) => callback("encode works")
     socket = new Socket("/socket", {transport: WebSocket, encode: encoder})
 
     socket.encode({foo: "bar"}, encoded => {
@@ -812,9 +812,9 @@ describe("custom encoder and decoder", () => {
   })
 
   it("forces JSON encoding when using LongPoll transport", () => {
-    let encoder = (payload, callback) => callback("encode works")
+    const encoder = (payload, callback) => callback("encode works")
     socket = new Socket("/socket", {transport: LongPoll, encode: encoder})
-    let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
+    const payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
     socket.encode(payload, encoded => {
       assert.deepStrictEqual(encoded, '["1","2","topic","join",{"foo":"bar"}]')
@@ -823,7 +823,7 @@ describe("custom encoder and decoder", () => {
 
   it("decodes JSON by default", () => {
     socket = new Socket("/socket")
-    let encoded = '["1","2","topic","join",{"foo":"bar"}]'
+    const encoded = '["1","2","topic","join",{"foo":"bar"}]'
 
     socket.decode(encoded, decoded => {
       assert.deepStrictEqual(decoded, {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}})
@@ -831,7 +831,7 @@ describe("custom encoder and decoder", () => {
   })
 
   it("allows custom decoding when using WebSocket transport", () => {
-    let decoder = (payload, callback) => callback("decode works")
+    const decoder = (payload, callback) => callback("decode works")
     socket = new Socket("/socket", {transport: WebSocket, decode: decoder})
 
     socket.decode("...esoteric format...", decoded => {
@@ -840,9 +840,9 @@ describe("custom encoder and decoder", () => {
   })
 
   it("forces JSON decoding when using LongPoll transport", () => {
-    let decoder = (payload, callback) => callback("decode works")
+    const decoder = (payload, callback) => callback("decode works")
     socket = new Socket("/socket", {transport: LongPoll, decode: decoder})
-    let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
+    const payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
     socket.decode('["1","2","topic","join",{"foo":"bar"}]', decoded => {
       assert.deepStrictEqual(decoded, payload)

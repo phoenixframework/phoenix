@@ -58,7 +58,7 @@ describe("updating join params", () => {
 
   it("can update the join params", () => {
     let counter = 0
-    let params = function(){ return({value: counter}) }
+    const params = function(){ return({value: counter}) }
 
     channel = new Channel("topic", params, socket)
     const joinPush = channel.joinPush
@@ -826,7 +826,7 @@ describe("push", () => {
   let clock, joinPush
   let socketSpy
 
-  let pushParams = (channel) => {
+  const pushParams = (channel) => {
     return({
       topic: "topic",
       event: "event",
