@@ -6,6 +6,12 @@ defmodule Phoenix.Router.Helpers do
   alias Phoenix.Socket
   alias Plug.Conn
 
+  @anno (if :erlang.system_info(:otp_release) >= '19' do
+    [generated: true, unquote: false]
+  else
+    [line: -1, unquote: false]
+  end)
+
   @doc """
   Callback invoked by the url generated in each helper module.
   """
@@ -107,6 +113,62 @@ defmodule Phoenix.Router.Helpers do
     groups = Enum.group_by(routes, fn {route, _exprs} -> route.helper end)
     catch_all = Enum.map(groups, &defhelper_catch_all/1)
 
+    defhelper = quote @anno do
+      defhelper = fn helper, vars, opts, bins, segs ->
+        def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars)) do
+          unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), [])
+        end
+
+        def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
+            when is_list(params) or is_map(params) do
+          path(conn_or_endpoint, segments(unquote(segs), params, unquote(bins),
+                {unquote(helper), unquote(opts), unquote(Enum.map(vars, &Macro.to_string/1))}))
+        end
+
+        def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars)) do
+          unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), [])
+        end
+
+        def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
+            when is_list(params) or is_map(params) do
+          url(conn_or_endpoint) <> unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
+        end
+      end
+    end
+
+    defcatch_all = quote @anno do
+      defcatch_all = fn helper, bindings, routes ->
+        for binding <- bindings do
+          arity = length(binding) + 2
+
+          def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding)) do
+            path(conn_or_endpoint, "/")
+            raise_route_error(unquote(helper), :path, unquote(arity), action, [])
+          end
+
+          def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding), params) do
+            path(conn_or_endpoint, "/")
+            raise_route_error(unquote(helper), :path, unquote(arity + 1), action, params)
+          end
+
+          def unquote(:"#{helper}_url")(conn_or_endpoint, action, unquote_splicing(binding)) do
+            url(conn_or_endpoint)
+            raise_route_error(unquote(helper), :url, unquote(arity), action, [])
+          end
+
+          def unquote(:"#{helper}_url")(conn_or_endpoint, action, unquote_splicing(binding), params) do
+            url(conn_or_endpoint)
+            raise_route_error(unquote(helper), :url, unquote(arity + 1), action, params)
+          end
+        end
+
+        defp raise_route_error(unquote(helper), suffix, arity, action, params) do
+          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_#{suffix}",
+                                                   arity, action, unquote(routes), params)
+        end
+      end
+    end
+
     # It is in general bad practice to generate large chunks of code
     # inside quoted expressions. However, we can get away with this
     # here for two reasons:
@@ -120,6 +182,8 @@ defmodule Phoenix.Router.Helpers do
       @moduledoc """
       Module with named helpers generated from #{inspect unquote(env.module)}.
       """
+      unquote(defhelper)
+      unquote(defcatch_all)
       unquote_splicing(impls)
       unquote_splicing(catch_all)
 
@@ -193,15 +257,8 @@ defmodule Phoenix.Router.Helpers do
       end
     end
 
-    Module.create(Module.concat(env.module, Helpers), code,
-                  line: env.line, file: env.file)
+    Module.create(Module.concat(env.module, Helpers), code, line: env.line, file: env.file)
   end
-
-  @anno (if :erlang.system_info(:otp_release) >= '19' do
-    [generated: true]
-  else
-    [line: -1]
-  end)
 
   @doc """
   Receives a route and returns the quoted definition for its helper function.
@@ -215,26 +272,14 @@ defmodule Phoenix.Router.Helpers do
     {bins, vars} = :lists.unzip(exprs.binding)
     segs = expand_segments(exprs.path)
 
-    # We are using @anno to avoid warnings in case a path has already been defined.
-    quote @anno do
-      def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars)) do
-        unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), [])
-      end
-
-      def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
-          when is_list(params) or is_map(params) do
-        path(conn_or_endpoint, segments(unquote(segs), params, unquote(bins),
-              {unquote(helper), unquote(opts), unquote(Enum.map(vars, &Macro.to_string/1))}))
-      end
-
-      def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars)) do
-        unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), [])
-      end
-
-      def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
-          when is_list(params) or is_map(params) do
-        url(conn_or_endpoint) <> unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
-      end
+    quote do
+      defhelper.(
+        unquote(helper),
+        unquote(Macro.escape(vars)),
+        unquote(opts),
+        unquote(Macro.escape(bins)),
+        unquote(Macro.escape(segs))
+      )
     end
   end
 
@@ -249,40 +294,13 @@ defmodule Phoenix.Router.Helpers do
       |> Enum.map(fn {_, bindings} -> Enum.map(bindings, fn _ -> {:_, [], nil} end) end)
       |> Enum.uniq()
 
-    catch_alls =
-      for binding <- bindings do
-        arity = length(binding) + 2
-
-        # We are using @anno to avoid warnings in case a path has already been defined.
-        quote @anno do
-          def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding)) do
-            path(conn_or_endpoint, "/")
-            raise_route_error(unquote(helper), :path, unquote(arity), action, [])
-          end
-
-          def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding), params) do
-            path(conn_or_endpoint, "/")
-            raise_route_error(unquote(helper), :path, unquote(arity + 1), action, params)
-          end
-
-          def unquote(:"#{helper}_url")(conn_or_endpoint, action, unquote_splicing(binding)) do
-            url(conn_or_endpoint)
-            raise_route_error(unquote(helper), :url, unquote(arity), action, [])
-          end
-
-          def unquote(:"#{helper}_url")(conn_or_endpoint, action, unquote_splicing(binding), params) do
-            url(conn_or_endpoint)
-            raise_route_error(unquote(helper), :url, unquote(arity + 1), action, params)
-          end
-        end
-      end
-
-    [quote @anno do
-      defp raise_route_error(unquote(helper), suffix, arity, action, params) do
-        Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_#{suffix}",
-                                                 arity, action, unquote(routes), params)
-      end
-    end | catch_alls]
+    quote do
+      defcatch_all.(
+        unquote(helper),
+        unquote(Macro.escape(bindings)),
+        unquote(Macro.escape(routes))
+      )
+    end
   end
 
   @doc """
