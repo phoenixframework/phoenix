@@ -463,17 +463,22 @@ defmodule Phoenix.ConnTest do
   This emulates behaviour performed by browsers where cookies
   returned in the response are available in following requests.
 
+  By default, only the headers "accept" and "authorization" are
+  recycled. However, a custom set of headers can be specified by
+  passing a list of strings representing its names as the second
+  argument of the function.
+
   Note `recycle/1` is automatically invoked when dispatching
   to the endpoint, unless the connection has already been
   recycled.
   """
-  @spec recycle(Conn.t) :: Conn.t
-  def recycle(conn) do
+  @spec recycle(Conn.t, [String.t]) :: Conn.t
+  def recycle(conn, headers \\ ~w(accept authorization)) do
     build_conn()
     |> Map.put(:host, conn.host)
     |> Plug.Test.recycle_cookies(conn)
     |> Plug.Test.put_peer_data(Plug.Conn.get_peer_data(conn))
-    |> copy_headers(conn.req_headers, ~w(accept authorization))
+    |> copy_headers(conn.req_headers, headers)
   end
 
   defp copy_headers(conn, headers, copy) do
