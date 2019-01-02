@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Phx.Routes do
       Mix.raise """
       umbrella applications require an explicit router to be given to phx.routes, for example:
 
-        $ mix phx.routes MyAppWeb.Router
+          $ mix phx.routes MyAppWeb.Router
       """
     end
     web_router = web_mod(base, "Router")
@@ -51,7 +51,7 @@ defmodule Mix.Tasks.Phx.Routes do
     no router found at #{inspect web_router} or #{inspect old_router}.
     An explicit router module may be given to phx.routes, for example:
 
-      $ mix phx.routes MyAppWeb.Router
+        $ mix phx.routes MyAppWeb.Router
     """
   end
   defp router(router_name, _base) do
