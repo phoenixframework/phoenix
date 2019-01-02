@@ -197,6 +197,22 @@ defmodule Phoenix.Test.ConnTest do
     end
   end
 
+  describe "recycle/2" do
+    test "custom request headers are persisted" do
+      conn =
+        build_conn()
+        |> get("/")
+        |> put_req_header("accept", "text/html")
+        |> put_req_header("hello", "world")
+        |> put_req_header("foo", "bar")
+
+      conn = conn |> recycle(~w(hello accept))
+      assert get_req_header(conn, "accept") == ["text/html"]
+      assert get_req_header(conn, "hello") == ["world"]
+      assert get_req_header(conn, "foo") == []
+    end
+  end
+
   test "ensure_recycled/1" do
     conn =
       build_conn()
