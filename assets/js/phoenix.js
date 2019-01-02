@@ -423,7 +423,7 @@ export class Channel {
    */
   join(timeout = this.timeout){
     if(this.joinedOnce){
-      throw(`tried to join multiple times. 'join' can only be called a single time per channel instance`)
+      throw new Error(`tried to join multiple times. 'join' can only be called a single time per channel instance`)
     } else {
       this.joinedOnce = true
       this.rejoin(timeout)
@@ -493,7 +493,7 @@ export class Channel {
    */
   push(event, payload, timeout = this.timeout){
     if(!this.joinedOnce){
-      throw(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`)
+      throw new Error(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`)
     }
     let pushEvent = new Push(this, event, function(){ return payload }, timeout)
     if(this.canPush()){
@@ -595,7 +595,7 @@ export class Channel {
    */
   trigger(event, payload, ref, joinRef){
     let handledPayload = this.onMessage(event, payload, ref, joinRef)
-    if(payload && !handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
+    if(payload && !handledPayload){ throw new Error("channel onMessage callbacks must return the payload, modified or unmodified") }
 
     for (let i = 0; i < this.bindings.length; i++) {
       const bind = this.bindings[i]
@@ -1057,7 +1057,7 @@ export class LongPoll {
           this.onerror()
           this.closeAndRetry()
           break
-        default: throw(`unhandled poll status ${status}`)
+        default: throw new Error(`unhandled poll status ${status}`)
       }
     })
   }
