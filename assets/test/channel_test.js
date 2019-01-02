@@ -102,7 +102,7 @@ describe("join", () => {
   it("throws if attempting to join multiple times", () => {
     channel.join()
 
-    assert.throws(() => channel.join(), /tried to join multiple times/)
+    assert.throws(() => channel.join(), /^Error: tried to join multiple times/)
   })
 
   it("triggers socket push with channel params", () => {
@@ -926,7 +926,7 @@ describe("push", () => {
   })
 
   it("throws if channel has not been joined", () => {
-    assert.throws(() => channel.push("event", {}), /tried to push.*before joining/)
+    assert.throws(() => channel.push("event", {}), /^Error: tried to push.*before joining/)
   })
 })
 
