@@ -14,7 +14,7 @@ config :<%= web_app_name %><%= if namespaced? do %>,
 config :<%= web_app_name %>, <%= endpoint_module %>,
   url: [host: "localhost"],
   secret_key_base: "<%= secret_key_base %>",
-  render_errors: [view: <%= web_namespace %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json)],
+  render_errors: [view: <%= web_namespace %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json), layout: false],
   pubsub: [name: <%= web_namespace %>.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Import environment specific config. This must remain at the bottom
