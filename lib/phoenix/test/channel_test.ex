@@ -17,7 +17,7 @@ defmodule Phoenix.ChannelTest do
   `subscribe_and_join/4` topics and channels:
 
       {:ok, _, socket} =
-        socket("user:id", %{some_assigns: 1})
+        socket(UserSocket, "user:id", %{some_assigns: 1})
         |> subscribe_and_join(RoomChannel, "room:lobby", %{"id" => 3})
 
   You usually want to set the same ID and assigns your
