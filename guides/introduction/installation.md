@@ -4,7 +4,7 @@ In the [Overview Guide](overview.html) we got a look at the Phoenix ecosystem an
 
 Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.
 
-### Elixir 1.4 or later
+### Elixir 1.5 or later
 
 Phoenix is written in Elixir, and our application code will also be written in Elixir. We won't get far in a Phoenix app without it! The Elixir site maintains a great [Installation Page](https://elixir-lang.org/install.html) to help.
 
@@ -32,12 +32,12 @@ $ sudo apt-get install esl-erlang
 
 ### Phoenix
 
-To check that we are on Elixir 1.4 and Erlang 18 or later, run:
+To check that we are on Elixir 1.5 and Erlang 18 or later, run:
 ```console
 elixir -v
 Erlang/OTP 19 [erts-8.3] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
-Elixir 1.4.2
+Elixir 1.5.3
 ```
 
 Once we have Elixir and Erlang, we are ready to install the Phoenix Mix archive. A Mix archive is a Zip file which contains an application as well as its compiled BEAM files. It is tied to a specific version of the application. The archive is what we will use to generate a new, base Phoenix application which we can build from.
