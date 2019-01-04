@@ -59,7 +59,7 @@ You can also run your app inside IEx (Interactive Elixir) as:
 
 Once our dependencies are installed, the task will prompt us to change into our project directory and start our application.
 
-Phoenix assumes that our PostgreSQL database will have a `postgres` user account with the correct permissions and a password of "postgres". If that isn't the case, please see the [`Mix Tasks Guide`](phoenix_mix_tasks.html#ecto-specific-mix-tasks) to learn more about the `mix ecto.create` task.
+Phoenix assumes that our PostgreSQL database will have a `postgres` user account with the correct permissions and a password of "postgres". If that isn't the case, please see the [Mix Tasks Guide](phoenix_mix_tasks.html#ecto-specific-mix-tasks) to learn more about the `mix ecto.create` task.
 
 Ok, let's give it a try. First, we'll `cd` into the `hello/` directory we've just created:
 
