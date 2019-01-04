@@ -68,13 +68,13 @@ Define this route at the bottom of the `scope "/", HelloWeb do` block in the rou
 get "/", RootController, :index
 ```
 
-Then run `$ mix compile` at the root of your project.
+Then run `mix compile` at the root of your project.
 
 ## Examining Routes
 
 Phoenix provides a great tool for investigating routes in an application, the mix task `phx.routes`.
 
-Let's see how this works. Go to the root of a newly-generated Phoenix application and run `$ mix phx.routes`. (If you haven't already done so, you'll need to run `$ mix do deps.get, compile` before running the `routes` task.) You should see something like the following, generated from the only route we currently have:
+Let's see how this works. Go to the root of a newly-generated Phoenix application and run `mix phx.routes`. (If you haven't already done so, you'll need to run `mix do deps.get, compile` before running the `routes` task.) You should see something like the following, generated from the only route we currently have:
 
 ```console
 $ mix phx.routes
@@ -100,7 +100,7 @@ end
 ```
 For this purpose, it doesn't matter that we don't actually have a `HelloWeb.UserController`.
 
-Then go to the root of your project, and run `$ mix phx.routes`
+Then go to the root of your project, and run `mix phx.routes`
 
 You should see something like the following:
 
@@ -136,7 +136,7 @@ Let's say we have a read-only posts resource. We could define it like this:
 resources "/posts", PostController, only: [:index, :show]
 ```
 
-Running `$ mix phx.routes` shows that we now only have the routes to the index and show actions defined.
+Running `mix phx.routes` shows that we now only have the routes to the index and show actions defined.
 
 ```elixir
 post_path  GET     /posts      HelloWeb.PostController :index
@@ -149,7 +149,7 @@ Similarly, if we have a comments resource, and we don't want to provide a route 
 resources "/comments", CommentController, except: [:delete]
 ```
 
-Running `$ mix phx.routes` now shows that we have all the routes except the DELETE request to the delete action.
+Running `mix phx.routes` now shows that we have all the routes except the DELETE request to the delete action.
 
 ```elixir
 comment_path  GET    /comments           HelloWeb.CommentController :index
@@ -240,7 +240,7 @@ end
 
 Path helpers are functions which are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloWeb.Router.Helpers`. Their names are derived from the name of the controller used in the route definition. Our controller is `HelloWeb.PageController`, and `page_path` is the function which will return the path to the root of our application.
 
-That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the `Endpoint` or connection and action as arguments, it returns the path to us.
+That's a mouthful. Let's see it in action. Run `iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the `Endpoint` or connection and action as arguments, it returns the path to us.
 
 ```elixir
 iex> HelloWeb.Router.Helpers.page_path(HelloWeb.Endpoint, :index)
@@ -313,7 +313,7 @@ resources "/users", UserController do
   resources "/posts", PostController
 end
 ```
-When we run `$ mix phx.routes` now, in addition to the routes we saw for `users` above, we get the following set of routes:
+When we run `mix phx.routes` now, in addition to the routes we saw for `users` above, we get the following set of routes:
 
 ```elixir
 . . .
@@ -387,7 +387,7 @@ end
 
 Note also, that the way this scope is currently defined, we need to fully qualify our controller name, `HelloWeb.Admin.ReviewController`. We'll fix that in a minute.
 
-Running `$ mix phx.routes` again, in addition to the previous set of routes we get the following:
+Running `mix phx.routes` again, in addition to the previous set of routes we get the following:
 
 ```elixir
 . . .
@@ -416,7 +416,7 @@ scope "/admin" do
 end
 ```
 
-and we run `$ mix phx.routes`, we get this output:
+and we run `mix phx.routes`, we get this output:
 
 ```elixir
 . . .
@@ -454,7 +454,7 @@ scope "/admin", as: :admin do
 end
 ```
 
-`$ mix phx.routes` now shows us we have what we are looking for.
+`mix phx.routes` now shows us we have what we are looking for.
 
 ```elixir
 . . .
@@ -477,7 +477,7 @@ admin_review_path  PATCH   /admin/reviews/:id              HelloWeb.Admin.Review
 admin_review_path  DELETE  /admin/reviews/:id              HelloWeb.Admin.ReviewController :delete
 ```
 
-The path helpers now return what we want them to as well. Run `$ iex -S mix` and give it a try yourself.
+The path helpers now return what we want them to as well. Run `iex -S mix` and give it a try yourself.
 
 ```elixir
 iex(1)> HelloWeb.Router.Helpers.review_path(HelloWeb.Endpoint, :index)
@@ -499,7 +499,7 @@ scope "/admin", as: :admin do
 end
 ```
 
-Here's what `$ mix phx.routes` tells us:
+Here's what `mix phx.routes` tells us:
 
 ```elixir
 . . .
@@ -541,7 +541,7 @@ scope "/admin", HelloWeb.Admin, as: :admin do
 end
 ```
 
-Now run `$ mix phx.routes` again and you can see that we get the same result as above when we qualified each controller name individually.
+Now run `mix phx.routes` again and you can see that we get the same result as above when we qualified each controller name individually.
 
 This doesn't just apply to nested routes, we can even nest all of the routes for our application inside a scope that simply has an alias for the name of our Phoenix app, and eliminate the duplication of our application name in our controller names.
 
@@ -561,7 +561,7 @@ defmodule HelloWeb.Router do
 end
 ```
 
-Again `$ mix phx.routes` tells us that all of our controllers now have the correct, fully-qualified names.
+Again `mix phx.routes` tells us that all of our controllers now have the correct, fully-qualified names.
 
 ```elixir
  image_path  GET     /images            HelloWeb.ImageController :index
@@ -597,7 +597,7 @@ scope "/api", HelloWeb.Api, as: :api do
 end
 ```
 
-`$ mix phx.routes` tells us that we have the routes we're looking for.
+`mix phx.routes` tells us that we have the routes we're looking for.
 
 ```elixir
  api_v1_image_path  GET     /api/v1/images            HelloWeb.Api.V1.ImageController :index
@@ -650,7 +650,7 @@ defmodule HelloWeb.Router do
   . . .
 end
 ```
-And when we run `$ mix phx.routes`, we see the following output.
+And when we run `mix phx.routes`, we see the following output.
 
 ```elixir
 user_path  GET     /users           HelloWeb.UserController :index
