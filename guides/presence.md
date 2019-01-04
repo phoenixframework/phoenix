@@ -133,7 +133,7 @@ channel.join()
 
 We can ensure this is working by opening 3 browser tabs. If we navigate to <http://localhost:4000/?name=Alice> on two browser tabs and <http://localhost:4000/?name=Bob> then we should see:
 
-```console
+```plaintext
 Alice (count: 2)
 Bob (count: 1)
 ```
