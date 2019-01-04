@@ -63,11 +63,13 @@ Phoenix assumes that our PostgreSQL database will have a `postgres` user account
 
 Ok, let's give it a try. First, we'll `cd` into the `hello/` directory we've just created:
 
-    $ cd hello
+```console
+$ cd hello
+```
 
 Now we'll create our database:
 
-```
+```console
 $ mix ecto.create
 Compiling 13 files (.ex)
 Generated hello app
