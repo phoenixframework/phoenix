@@ -7,7 +7,7 @@ Phoenix applications start the HelloWeb.Endpoint as a supervised process. By def
 defmodule Hello.Application do
   use Application
   def start(_type, _args) do
-    #...
+    ...
 
     children = [
       supervisor(HelloWeb.Endpoint, []),
@@ -39,7 +39,9 @@ use Phoenix.Endpoint, otp_app: :hello
 Next the endpoint declares a socket on the "/socket" URI. "/socket" requests will be handled by the `HelloWeb.UserSocket` module which is declared elsewhere in our application. Here we are just declaring that such a connection will exist.
 
 ```elixir
-socket "/socket", HelloWeb.UserSocket
+socket "/socket", HelloWeb.UserSocket,
+  websocket: true,
+  longpoll: false
 ```
 
 Next comes a series of plugs that are relevant to all requests in our application. We can customize some of the features, for example, enabling `gzip: true` when deploying to production to gzip the static files.
@@ -48,7 +50,9 @@ Static files are served from `priv/static` before any part of our request makes 
 
 ```elixir
 plug Plug.Static,
-  at: "/", from: :hello, gzip: false,
+  at: "/",
+  from: :hello,
+  gzip: false,
   only: ~w(css fonts images js favicon.ico robots.txt)
 ```
 If code reloading is enabled, a socket will be used to communicate to the browser that the page needs to be reloaded when code is changed on the server. This feature is enabled by default in the development environment. This is configured using `config :hello, HelloWeb.Endpoint, code_reloader: true`.
@@ -105,12 +109,14 @@ config :hello, HelloWeb.Endpoint,
   http: [port: {:system, "PORT"}],
   url: [host: "example.com"],
   cache_static_manifest: "priv/static/cache_manifest.json",
-  https: [port: 443,
-          otp_app: :hello,
-          keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
-          certfile: System.get_env("SOME_APP_SSL_CERT_PATH"),
-          cacertfile: System.get_env("INTERMEDIATE_CERTFILE_PATH") # OPTIONAL Key for intermediate certificates
-          ]
+  https: [
+    port: 443,
+    otp_app: :hello,
+    keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
+    certfile: System.get_env("SOME_APP_SSL_CERT_PATH"),
+    # OPTIONAL Key for intermediate certificates:
+    cacertfile: System.get_env("INTERMEDIATE_CERTFILE_PATH")
+  ]
 
 ```
 
@@ -131,13 +137,13 @@ With your self-signed certificate, your development configuration in `config/dev
 
 ```elixir
 config :my_app, MyApp.Endpoint,
-       # ...
-       https: [
-         port: 4001,
-         cipher_suite: :strong,
-         keyfile: "priv/cert/selfsigned_key.pem",
-         certfile: "priv/cert/selfsigned.pem"
-       ]
+  ...
+  https: [
+    port: 4001,
+    cipher_suite: :strong,
+    keyfile: "priv/cert/selfsigned_key.pem",
+    certfile: "priv/cert/selfsigned.pem"
+  ]
 ```
 
 This can replace your `http` configuration, or you can run HTTP and HTTPS servers on different ports.
