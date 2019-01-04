@@ -171,10 +171,10 @@ The `Phoenix.Router.forward/4` macro can be used to send all requests that start
 defmodule HelloWeb.Router do
   use HelloWeb, :router
 
-  #...
+  ...
 
   scope "/", HelloWeb do
-    #...
+    ...
   end
 
   forward "/jobs", BackgroundJob.Plug
@@ -189,7 +189,7 @@ We can even use the `forward/4` macro in a pipeline. If we wanted to ensure that
 defmodule HelloWeb.Router do
   use HelloWeb, :router
 
-  #...
+  ...
 
   scope "/" do
     pipe_through [:authenticate_user, :ensure_admin]
@@ -316,7 +316,7 @@ end
 When we run `mix phx.routes` now, in addition to the routes we saw for `users` above, we get the following set of routes:
 
 ```elixir
-. . .
+...
 user_post_path  GET     /users/:user_id/posts           HelloWeb.PostController :index
 user_post_path  GET     /users/:user_id/posts/:id/edit  HelloWeb.PostController :edit
 user_post_path  GET     /users/:user_id/posts/new       HelloWeb.PostController :new
@@ -363,7 +363,7 @@ The paths to the user facing reviews would look like a standard resource.
 /reviews
 /reviews/1234
 /reviews/1234/edit
-. . .
+...
 ```
 
 The admin review paths could be prefixed with `/admin`.
@@ -372,7 +372,7 @@ The admin review paths could be prefixed with `/admin`.
 /admin/reviews
 /admin/reviews/1234
 /admin/reviews/1234/edit
-. . .
+...
 ```
 
 We accomplish this with a scoped route that sets a path option to `/admin` like this one. For now, let's not nest this scope inside of any other scopes (like the `scope "/", HelloWeb do` one provided for us in a new app).
@@ -390,7 +390,7 @@ Note also, that the way this scope is currently defined, we need to fully qualif
 Running `mix phx.routes` again, in addition to the previous set of routes we get the following:
 
 ```elixir
-. . .
+...
 review_path  GET     /admin/reviews           HelloWeb.Admin.ReviewController :index
 review_path  GET     /admin/reviews/:id/edit  HelloWeb.Admin.ReviewController :edit
 review_path  GET     /admin/reviews/new       HelloWeb.Admin.ReviewController :new
@@ -406,9 +406,9 @@ This looks good, but there is a problem here. Remember that we wanted both user 
 ```elixir
 scope "/", HelloWeb do
   pipe_through :browser
-  . . .
+  ...
   resources "/reviews", ReviewController
-  . . .
+  ...
 end
 
 scope "/admin" do
@@ -419,7 +419,7 @@ end
 and we run `mix phx.routes`, we get this output:
 
 ```elixir
-. . .
+...
 review_path  GET     /reviews                 HelloWeb.ReviewController :index
 review_path  GET     /reviews/:id/edit        HelloWeb.ReviewController :edit
 review_path  GET     /reviews/new             HelloWeb.ReviewController :new
@@ -428,7 +428,7 @@ review_path  POST    /reviews                 HelloWeb.ReviewController :create
 review_path  PATCH   /reviews/:id             HelloWeb.ReviewController :update
              PUT     /reviews/:id             HelloWeb.ReviewController :update
 review_path  DELETE  /reviews/:id             HelloWeb.ReviewController :delete
-. . .
+...
 review_path  GET     /admin/reviews           HelloWeb.Admin.ReviewController :index
 review_path  GET     /admin/reviews/:id/edit  HelloWeb.Admin.ReviewController :edit
 review_path  GET     /admin/reviews/new       HelloWeb.Admin.ReviewController :new
@@ -444,9 +444,9 @@ The actual routes we get all look right, except for the path helper `review_path
 ```elixir
 scope "/", HelloWeb do
   pipe_through :browser
-  . . .
+  ...
   resources "/reviews", ReviewController
-  . . .
+  ...
 end
 
 scope "/admin", as: :admin do
@@ -457,7 +457,7 @@ end
 `mix phx.routes` now shows us we have what we are looking for.
 
 ```elixir
-. . .
+...
       review_path  GET     /reviews                        HelloWeb.ReviewController :index
       review_path  GET     /reviews/:id/edit               HelloWeb.ReviewController :edit
       review_path  GET     /reviews/new                    HelloWeb.ReviewController :new
@@ -466,7 +466,7 @@ end
       review_path  PATCH   /reviews/:id                    HelloWeb.ReviewController :update
                    PUT     /reviews/:id                    HelloWeb.ReviewController :update
       review_path  DELETE  /reviews/:id                    HelloWeb.ReviewController :delete
-. . .
+...
 admin_review_path  GET     /admin/reviews                  HelloWeb.Admin.ReviewController :index
 admin_review_path  GET     /admin/reviews/:id/edit         HelloWeb.Admin.ReviewController :edit
 admin_review_path  GET     /admin/reviews/new              HelloWeb.Admin.ReviewController :new
@@ -502,7 +502,7 @@ end
 Here's what `mix phx.routes` tells us:
 
 ```elixir
-. . .
+...
  admin_image_path  GET     /admin/images            HelloWeb.Admin.ImageController :index
  admin_image_path  GET     /admin/images/:id/edit   HelloWeb.Admin.ImageController :edit
  admin_image_path  GET     /admin/images/new        HelloWeb.Admin.ImageController :new
@@ -635,7 +635,7 @@ This router is perfectly fine with two scopes defined for the same path.
 ```elixir
 defmodule HelloWeb.Router do
   use Phoenix.Router
-  . . .
+  ...
   scope "/", HelloWeb do
     pipe_through :browser
 
@@ -647,7 +647,7 @@ defmodule HelloWeb.Router do
 
     resources "/posts", PostController
   end
-  . . .
+  ...
 end
 ```
 And when we run `mix phx.routes`, we see the following output.
