@@ -18,7 +18,7 @@ This guide assumes that we have generated our new application with Ecto integrat
 
 The default Postgres configuration has a superuser account with username 'postgres' and the password 'postgres'. If you take a look at the file `config/dev.exs`, you'll see that Phoenix works off this assumption. If you don't have this account already setup on your machine, you can connect to your postgres instance by typing `psql` and then entering the following commands:
 
-```
+```sql
 CREATE USER postgres;
 ALTER USER postgres PASSWORD 'postgres';
 ALTER USER postgres WITH SUPERUSER;
