@@ -28,7 +28,7 @@ Let's open up our application layout template, `lib/hello_web/templates/layout/a
 
 to call a `title/0` function, like this.
 
-```elixir
+```html
 <title><%= title() %></title>
 ```
 
@@ -61,7 +61,7 @@ end
 ```
 
 Now if you fire up the server with `mix phx.server` and visit `http://localhost:4000`, you should see the following text below your layout header instead of the main template page:
-```
+```console
 rendering with assigns [:conn, :view_module, :view_template]
 ```
 
@@ -125,7 +125,7 @@ This is the message: <%= message() %>
 
 This doesn't correspond to any action in our controller, but we'll exercise it in an `iex` session. At the root of our project, we can run `iex -S mix`, and then explicitly render our template.
 
-```console
+```elixir
 iex(1)> Phoenix.View.render(HelloWeb.PageView, "test.html", %{})
   {:safe, [["" | "This is the message: "] | "Hello from the view!"]}
 ```
@@ -140,7 +140,7 @@ This is the message: <%= message() %>
 
 Note the `@` in the top line. Now if we change our function call, we see a different rendering after recompiling `PageView` module.
 
-```console
+```elixir
 iex(2)> r HelloWeb.PageView
 warning: redefining module HelloWeb.PageView (current version loaded from _build/dev/lib/hello/ebin/Elixir.HelloWeb.PageView.beam)
   lib/hello_web/views/page_view.ex:1
@@ -154,7 +154,7 @@ iex(3)> Phoenix.View.render(HelloWeb.PageView, "test.html", message: "Assigns ha
  ```
 Let's test out the HTML escaping, just for fun.
 
-```console
+```elixir
 iex(4)> Phoenix.View.render(HelloWeb.PageView, "test.html", message: "<script>badThings();</script>")
 {:safe,
   [[[["" | "I came from assigns: "] |
@@ -164,11 +164,11 @@ iex(4)> Phoenix.View.render(HelloWeb.PageView, "test.html", message: "<script>ba
 
 If we need only the rendered string, without the whole tuple, we can use the `render_to_iodata/3`.
 
- ```console
- iex(5)> Phoenix.View.render_to_iodata(HelloWeb.PageView, "test.html", message: "Assigns has an @.")
- [[[["" | "I came from assigns: "] | "Assigns has an @."] |
-   "\nThis is the message: "] | "Hello from the view!"]
-  ```
+```elixir
+iex(5)> Phoenix.View.render_to_iodata(HelloWeb.PageView, "test.html", message: "Assigns has an @.")
+[[[["" | "I came from assigns: "] | "Assigns has an @."] |
+  "\nThis is the message: "] | "Hello from the view!"]
+```
 
 ### A Word About Layouts
 
@@ -319,26 +319,26 @@ end
 In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. In our controller `show/2` function, `render(conn, "show.json", page: page)` will pattern match on the matching name and extension in the view's `render/2` functions. In other words, `render(conn, "index.json", pages: pages)` will call `render("index.json", %{pages: pages})`. The `render_many/3` function takes the data we want to respond with (`pages`), a `View`, and a string to pattern match on the `render/2` function defined on `View`. It will map over each item in `pages`, and pass the item to the `render/2` function in `View` matching the file string. `render_one/3` follows, the same signature, ultimately using the `render/2` matching `page.json` to specify what each `page` looks like. The `render/2` matching `"index.json"` will respond with JSON as you would expect:
 
 ```javascript
-  {
-    "data": [
-      {
-       "title": "foo"
-      },
-      {
-       "title": "bar"
-      },
-   ]
-  }
+{
+  "data": [
+    {
+     "title": "foo"
+    },
+    {
+     "title": "bar"
+    },
+ ]
+}
 ```
 
 And the `render/2` matching `"show.json"`:
 
 ```javascript
-  {
-    "data": {
-      "title": "foo"
-    }
+{
+  "data": {
+    "title": "foo"
   }
+}
 ```
 
 It's useful to build our views like this so they can be composable. Imagine a situation where our `Page` has a `has_many` relationship with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new `render/2`:
@@ -363,8 +363,8 @@ end
 The name used in assigns is determined from the view. For example the `PageView` will use `%{page: page}` and the `AuthorView` will use `%{author: author}`. This can be overridden with the `as` option. Let's assume that the author view uses `%{writer: writer}` instead of `%{author: author}`:
 
 ```elixir
-  def render("page_with_authors.json", %{page: page}) do
-    %{title: page.title,
-      authors: render_many(page.authors, AuthorView, "author.json", as: :writer)}
-  end
+def render("page_with_authors.json", %{page: page}) do
+  %{title: page.title,
+    authors: render_many(page.authors, AuthorView, "author.json", as: :writer)}
+end
 ```
