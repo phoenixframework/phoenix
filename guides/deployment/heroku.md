@@ -200,15 +200,14 @@ config :hello, Hello.Repo,
 Finally, we need to decrease the timeout for the websocket transport in `lib/hello_web/endpoint.ex`:
 
 ```elixir
-defmodule HelloWeb.UserSocket do
-  use Phoenix.Socket
+defmodule HelloWeb.Endpoint do
+  use Phoenix.Endpoint, otp_app: :hello
 
-  ...
-
-  ## Transports
   socket "/socket", HelloWeb.UserSocket,
     websocket: [timeout: 45_000],
     longpoll: false
+
+  ...
 end
 ```
 
@@ -271,7 +270,7 @@ Let's commit all our changes:
 ```
 $ git add config/prod.exs
 $ git add Procfile
-$ git add lib/hello_web/channels/user_socket.ex
+$ git add lib/hello_web/endpoint.ex
 $ git commit -m "Use production config from Heroku ENV variables and decrease socket timeout"
 ```
 
