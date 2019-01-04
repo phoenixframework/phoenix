@@ -41,7 +41,7 @@ Scopes have their own section in this guide, so we won't spend time on the `scop
 Inside the scope block, however, we have our first actual route:
 
 ```elixir
-  get "/", PageController, :index
+get "/", PageController, :index
 ```
 
 `get` is a Phoenix macro which expands out to define one clause of the `match/5` function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
@@ -51,7 +51,7 @@ The first argument to these macros is the path. Here, it is the root of the appl
 If this were the only route in our router module, the clause of the `match/5` function would look like this after the macro is expanded:
 
 ```elixir
-  def match(:get, "/", PageController, :index, [])
+def match(:get, "/", PageController, :index, [])
 ```
 
 The body of the `match/5` function sets up the connection and invokes the matched controller action.
@@ -203,7 +203,7 @@ This means that the plugs in the `authenticate_user` and `ensure_admin` pipeline
 The `opts` that are passed to the `init/1` callback of a Plug can be passed as a 3rd argument. For example, maybe the background job page lets you set the name of your application to be displayed on the page. This could be passed with:
 
 ```elixir
-  forward "/jobs", BackgroundJob.Plug, name: "Hello Phoenix"
+forward "/jobs", BackgroundJob.Plug, name: "Hello Phoenix"
 ```
 
 There is a fourth `router_opts` argument that can be passed. These options are outlined in the `Phoenix.Router.scope/2` documentation.
