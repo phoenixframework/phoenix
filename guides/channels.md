@@ -16,7 +16,6 @@ Any message sent on a topic, whether from the server or from a client, is sent t
 
 <pre>
 <code>
-
                                                                   +----------------+
                                                      +--Topic X-->| Mobile Client  |
                                                      |            +----------------+
