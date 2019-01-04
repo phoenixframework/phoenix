@@ -188,11 +188,11 @@ Changesets define a pipeline of transformations our data needs to undergo before
 Let's take a closer look at our default changeset function.
 
 ```elixir
-  def changeset(%User{} = user, attrs) do
-    user
-    |> cast(attrs, [:name, :email, :bio, :number_of_pets])
-    |> validate_required([:name, :email, :bio, :number_of_pets])
-  end
+def changeset(%User{} = user, attrs) do
+  user
+  |> cast(attrs, [:name, :email, :bio, :number_of_pets])
+  |> validate_required([:name, :email, :bio, :number_of_pets])
+end
 ```
 
 Right now, we have two transformations in our pipeline. In the first call, we invoke `Ecto.Changeset`'s `cast/3`, passing in our external parameters and marking which fields are required for validation.
@@ -210,7 +210,7 @@ Hello.User
 
 Next, let's build a changeset from our schema with an empty `User` struct, and an empty map of parameters.
 
-```console
+```elixir
 iex> changeset = User.changeset(%User{}, %{})
 
 #Ecto.Changeset<action: nil, changes: %{},
@@ -223,14 +223,14 @@ iex> changeset = User.changeset(%User{}, %{})
 
 Once we have a changeset, we can check it if it is valid.
 
-```console
+```elixir
 iex> changeset.valid?
 false
 ```
 
 Since this one is not valid, we can ask it what the errors are.
 
-```console
+```elixir
 iex> changeset.errors
 [name: {"can't be blank", [validation: :required]},
  email: {"can't be blank", [validation: :required]},
@@ -268,7 +268,7 @@ What happens if we pass a key/value pair that is in neither defined in the schem
 
 Inside our existing IEx shell, let's create a `params` map with valid values plus an extra `random_key: "random value"`.
 
-```console
+```elixir
 iex> params = %{name: "Joe Example", email: "joe@example.com", bio: "An example to all", number_of_pets: 5, random_key: "random value"}
 %{email: "joe@example.com", name: "Joe Example", bio: "An example to all",
 number_of_pets: 5, random_key: "random value"}
@@ -276,7 +276,7 @@ number_of_pets: 5, random_key: "random value"}
 
 Next, let's use our new `params` map to create another changeset.
 
-```console
+```elixir
 iex> changeset = User.changeset(%User{}, params)
 #Ecto.Changeset<action: nil,
  changes: %{bio: "An example to all", email: "joe@example.com",
@@ -286,14 +286,14 @@ iex> changeset = User.changeset(%User{}, params)
 
 Our new changeset is valid.
 
-```console
+```elixir
 iex> changeset.valid?
 true
 ```
 
 We can also check the changeset's changes - the map we get after all of the transformations are complete.
 
-```console
+```elixir
 iex(9)> changeset.changes
 %{bio: "An example to all", email: "joe@example.com", name: "Joe Example",
   number_of_pets: 5}
@@ -306,18 +306,18 @@ We can validate more than just whether a field is required or not. Let's take a 
 What if we had a requirement that all biographies in our system must be at least two characters long? We can do this easily by adding another transformation to the pipeline in our changeset which validates the length of the `bio` field.
 
 ```elixir
-  def changeset(%User{} = user, attrs) do
-    user
-    |> cast(attrs, [:name, :email, :bio, :number_of_pets])
-    |> validate_required([:name, :email, :bio, :number_of_pets])
-    |> validate_length(:bio, min: 2)
-  end
+def changeset(%User{} = user, attrs) do
+  user
+  |> cast(attrs, [:name, :email, :bio, :number_of_pets])
+  |> validate_required([:name, :email, :bio, :number_of_pets])
+  |> validate_length(:bio, min: 2)
+end
 ```
 
 Now, if we try to cast data containing a value of "A" for our user's bio, we should see the failed validation in the changeset's errors.
 
 
-```console
+```elixir
 iex> changeset = User.changeset(%User{}, %{bio: "A"})
 iex> changeset.errors[:bio]
 {"should be at least %{count} character(s)",
@@ -327,31 +327,31 @@ iex> changeset.errors[:bio]
 If we also have a requirement for the maximum length that a bio can have, we can simply add another validation.
 
 ```elixir
-  def changeset(%User{} = user, attrs) do
-    user
-    |> cast(attrs, [:name, :email, :bio, :number_of_pets])
-    |> validate_required([:name, :email, :bio, :number_of_pets])
-    |> validate_length(:bio, min: 2)
-    |> validate_length(:bio, max: 140)
-  end
+def changeset(%User{} = user, attrs) do
+  user
+  |> cast(attrs, [:name, :email, :bio, :number_of_pets])
+  |> validate_required([:name, :email, :bio, :number_of_pets])
+  |> validate_length(:bio, min: 2)
+  |> validate_length(:bio, max: 140)
+end
 ```
 
 Let's say we want to perform at least some rudimentary format validation on the `email` field. All we want to check for is the presence of the "@". The `validate_format/3` function is just what we need.
 
 ```elixir
-  def changeset(%User{} = user, attrs) do
-    user
-    |> cast(attrs, [:name, :email, :bio, :number_of_pets])
-    |> validate_required([:name, :email, :bio, :number_of_pets])
-    |> validate_length(:bio, min: 2)
-    |> validate_length(:bio, max: 140)
-    |> validate_format(:email, ~r/@/)
-  end
+def changeset(%User{} = user, attrs) do
+  user
+  |> cast(attrs, [:name, :email, :bio, :number_of_pets])
+  |> validate_required([:name, :email, :bio, :number_of_pets])
+  |> validate_length(:bio, min: 2)
+  |> validate_length(:bio, max: 140)
+  |> validate_format(:email, ~r/@/)
+end
 ```
 
 If we try to cast a user with an email of "example.com", we should see an error message like the following.
 
-```console
+```elixir
 iex> changeset = User.changeset(%User{}, %{email: "example.com"})
 iex> changeset.errors[:email]
 {"has invalid format", [validation: :format]}
@@ -365,7 +365,7 @@ We've talked a lot about migrations and data-storage, but we haven't yet persist
 
 Let's head back over to IEx with `iex -S mix`, and insert a couple of users into the database.
 
-```console
+```elixir
 iex> alias Hello.{Repo, User}
 [Hello.Repo, Hello.User]
 iex> Repo.insert(%User{email: "user1@example.com"})
@@ -389,7 +389,7 @@ INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETUR
 
 We started by aliasing our `User` and `Repo` modules for easy access. Next, we called `Repo.insert/1` and passed a user struct. Since we're in the `dev` environment, we can see the debug logs for the query our Repo performed when inserting the underlying `%User{}` data. We received a 2-tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful. With a couple of users inserted, let's fetch them back out of the repo.
 
-```console
+```elixir
 iex> Repo.all(User)
 [debug] QUERY OK source="users" db=2.7ms
 SELECT u0."id", u0."bio", u0."email", u0."name", u0."number_of_pets", u0."inserted_at", u0."updated_at" FROM "users" AS u0 []
@@ -405,7 +405,7 @@ SELECT u0."id", u0."bio", u0."email", u0."name", u0."number_of_pets", u0."insert
 
 That was easy! `Repo.all/1` takes a data source, our `User` schema in this case, and translates that to an underlying SQL query against our database. After it fetches the data, the Repo then uses our Ecto schema to map the database values back into Elixir data-structures according to our `User` schema. We're not just limited to basic querying – Ecto includes a full-fledged query DSL for advanced SQL generation. In addition to a natural Elixir DSL, Ecto's query engine gives us multiple great features, such as SQL injection protection and compile-time optimization of queries. Let's try it out.
 
-```console
+```elixir
 iex> import Ecto.Query
 Ecto.Query
 
@@ -417,7 +417,7 @@ SELECT u0."email" FROM "users" AS u0 []
 
 First, we imported `Ecto.Query`, which imports the `from` macro of Ecto's Query DSL. Next, we built a query which selects all the email addresses in our users table. Let's try another example.
 
-```console
+```elixir
 iex)> Repo.one(from u in User, where: ilike(u.email, "%1%"),
                                select: count(u.id))
 [debug] QUERY OK source="users" db=1.6ms SELECT count(u0."id") FROM "users" AS u0 WHERE (u0."email" ILIKE '%1%') []
@@ -426,7 +426,7 @@ iex)> Repo.one(from u in User, where: ilike(u.email, "%1%"),
 
 Now we're starting to get a taste of Ecto's rich querying capabilities. We used `Repo.one/1` to fetch the count of all users with an email address containing "1", and received the expected count in return. This just scratches the surface of Ecto's query interface, and much more is supported such as sub-querying, interval queries, and advanced select statements. For example, let's build a query to fetch a map of all user id's to their email addresses.
 
-```console
+```elixir
 iex> Repo.all(from u in User, select: %{u.id => u.email})
 [debug] QUERY OK source="users" db=0.9ms
 SELECT u0."id", u0."email" FROM "users" AS u0 []
@@ -447,7 +447,7 @@ Phoenix applications are configured to use PostgreSQL by default, but what if we
 
 If we are about to create a new application, configuring our application to use MySQL is easy. We can simply pass the `--database mysql` flag to `phx.new` and everything will be configured correctly.
 
-```
+```console
 $ mix phx.new hello_phoenix --database mysql
 
 ```
@@ -459,7 +459,7 @@ To switch adapters, we need to remove the Postgrex dependency and add a new one 
 
 Let's open up our `mix.exs` file and do that now.
 
-```
+```elixir
 defmodule HelloPhoenix.MixProject do
   use Mix.Project
 
@@ -485,7 +485,7 @@ end
 
 Next, we need to configure our new adapter. Let's open up our `config/dev.exs` file and do that.
 
-```
+```elixir
 config :hello_phoenix, HelloPhoenix.Repo,
 username: "root",
 password: "",
@@ -498,20 +498,20 @@ The last change is to open up `lib/hello_phoenix/repo.ex` and make sure to set t
 
 Now all we need to do is fetch our new dependency, and we'll be ready to go.
 
-```
+```console
 $ mix do deps.get, compile
 ```
 
 With our new adapter installed and configured, we're ready to create our database.
 
-```
+```console
 $ mix ecto.create
 ```
 
 The database for HelloPhoenix.repo has been created.
 We're also ready to run any migrations, or do anything else with Ecto that we might choose.
 
-```
+```console
 $ mix ecto.migrate
 [info] == Running HelloPhoenix.Repo.Migrations.CreateUser.change/0 forward
 [info] create table users
