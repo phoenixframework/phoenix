@@ -22,11 +22,11 @@ You're all set! See the Phoenix.Presence docs for more details:
 http://hexdocs.pm/phoenix/Phoenix.Presence.html
 ```
 
-If we open up the `hello_web/channels/presence.ex` file, we will see the following line:
+If we open up the `lib/hello_web/channels/presence.ex` file, we will see the following line:
 
 ```elixir
-  use Phoenix.Presence, otp_app: :hello,
-                        pubsub_server: Hello.PubSub
+use Phoenix.Presence, otp_app: :hello,
+                      pubsub_server: Hello.PubSub
 ```
 
 This sets up the module for presence, defining the functions we require for tracking presences. As mentioned in the generator task, we should add this module to our supervision tree in
@@ -34,7 +34,7 @@ This sets up the module for presence, defining the functions we require for trac
 
 ```elixir
 children = [
-  # ...
+  ...
   HelloWeb.Presence,
 ]
 ```
@@ -64,9 +64,9 @@ end
 We also need to change our connect function to take a `user_id` from the params and assign it on the socket. In production you may want to use `Phoenix.Token` if you have real users that are authenticated.
 
 ```elixir
-  def connect(params, socket) do
-    {:ok, assign(socket, :user_id, params["user_id"])}
-  end
+def connect(params, socket) do
+  {:ok, assign(socket, :user_id, params["user_id"])}
+end
 ```
 
 Next, we will create the channel that we'll communicate presence over. After a user joins we can push the list of presences down the channel and then track the connection. We can also provide a map of additional information to track.
@@ -133,7 +133,7 @@ channel.join()
 
 We can ensure this is working by opening 3 browser tabs. If we navigate to <http://localhost:4000/?name=Alice> on two browser tabs and <http://localhost:4000/?name=Bob> then we should see:
 
-```
+```console
 Alice (count: 2)
 Bob (count: 1)
 ```
