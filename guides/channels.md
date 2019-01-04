@@ -379,7 +379,7 @@ Let's say we have an authentication plug in our app called `OurAuth`. When `OurA
 
 ```elixir
 pipeline :browser do
-  # ...
+  ...
   plug OurAuth
   plug :put_user_token
 end
