@@ -47,7 +47,7 @@ Phoenix is made up of a number of distinct parts, each with its own purpose and 
 
 ## Phoenix Layers
 
-We just covered the internal parts that make up Phoenix, but its important to remember Phoenix itself is actually the top layer of a multi-layer system designed to be modular and flexible. The other layers include Cowboy, Plug, and Ecto.
+We just covered the internal parts that make up Phoenix, but it's important to remember Phoenix itself is actually the top layer of a multi-layer system designed to be modular and flexible. The other layers include Cowboy, Plug, and Ecto.
 
 ### Cowboy
 
