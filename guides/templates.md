@@ -65,7 +65,7 @@ def view do
 end
 ```
 
-Next, let's define a `handler_info/1` function at the bottom of the ` lib/hello_web/views/page_view.ex` which makes use of the `controller_module/1` and `action_name/1` functions we just imported. We'll also define a `connection_keys/1` function that we'll use in a moment.
+Next, let's define a `handler_info/1` function at the bottom of the `lib/hello_web/views/page_view.ex` which makes use of the `controller_module/1` and `action_name/1` functions we just imported. We'll also define a `connection_keys/1` function that we'll use in a moment.
 
 ```elixir
 defmodule HelloWeb.PageView do
