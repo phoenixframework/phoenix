@@ -38,7 +38,9 @@ defmodule Phoenix.Endpoint do
   to the supervision tree in generated applications. Endpoints can be
   added to the supervision tree as follows:
 
-      supervisor(YourApp.Endpoint, [])
+      children = [
+        YourApp.Endpoint
+      ]
 
   ### Endpoint configuration
 
