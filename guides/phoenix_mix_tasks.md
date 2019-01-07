@@ -7,7 +7,7 @@ There are currently a number of built-in Phoenix-specific and ecto-specific mix 
 ## Phoenix Specific Mix Tasks
 
 ```console
-➜ mix help | grep -i phx
+$ mix help | grep -i phx
 mix local.phx          # Updates the Phoenix project generator locally
 mix phx                # Prints Phoenix help information
 mix phx.digest         # Digests and compresses static files
@@ -43,7 +43,7 @@ We need to pass a name for our application to `mix phx.new`. Conventionally, we 
 ```console
 $ mix phx.new task_tester
 * creating task_tester/.gitignore
-. . .
+...
 ```
 
 We can also use either a relative or absolute path.
@@ -53,7 +53,7 @@ This relative path works.
 ```console
 $ mix phx.new ../task_tester
 * creating ../task_tester/.gitignore
-. . .
+...
 ```
 
 This absolute path works as well.
@@ -61,7 +61,7 @@ This absolute path works as well.
 ```console
 $ mix phx.new /Users/me/work/task_tester
 * creating /Users/me/work/task_tester/.gitignore
-. . .
+...
 ```
 
 The `mix phx.new` task will also ask us if we want to install our dependencies. (Please see the note above about webpack dependencies.)
@@ -90,7 +90,7 @@ By default `mix phx.new` will assume we want to use ecto for our contexts. If we
 ```console
 $ mix phx.new task_tester --no-ecto
 * creating task_tester/.gitignore
-. . .
+...
 ```
 
 With the `--no-ecto` flag, Phoenix will not make either ecto or postgrex a dependency of our application, and it will not create a `repo.ex` file.
@@ -113,7 +113,7 @@ $  mix phx.new task_tester --app hello
 * creating task_tester/lib/hello_web/router.ex
 * creating task_tester/lib/hello_web.ex
 * creating task_tester/mix.exs
-. . .
+...
 ```
 
 If we look in the resulting `mix.exs` file, we will see that our project app name is `hello`.
@@ -125,7 +125,7 @@ defmodule Hello.MixProject do
   def project do
     [app: :hello,
      version: "0.1.0",
-. . .
+...
 ```
 
 A quick check will show that all of our module names are qualified with `Hello`.
@@ -133,7 +133,7 @@ A quick check will show that all of our module names are qualified with `Hello`.
 ```elixir
 defmodule HelloWeb.PageController do
   use HelloWeb, :controller
-. . .
+...
 ```
 
 We can also see that files related to the application as a whole - eg. files in `lib/` and the test seed file - have `hello` in their names.
@@ -184,7 +184,7 @@ defmodule Hello.MixProject do
 
   def project do
     [app: :task_tester,
-. . .
+...
 ```
 
 ### `mix phx.gen.html`
@@ -697,13 +697,13 @@ worker(OurCustom.Repo, [])
 Notice that this task has updated `config/config.exs`. If we take a look, we'll see this extra configuration block for our new repo.
 
 ```elixir
-. . .
+...
 config :hello, OurCustom.Repo,
 database: "hello_repo",
 username: "user",
 password: "pass",
 hostname: "localhost"
-. . .
+...
 ```
 
 Of course, we'll need to change the login credentials to match what our database expects. We'll also need to change the config for other environments.
@@ -711,7 +711,7 @@ Of course, we'll need to change the login credentials to match what our database
 We certainly should follow the instructions and add our new repo to our supervision tree. In our `Hello` application, we would open up `lib/hello.ex`, and add our repo as a worker to the `children` list.
 
 ```elixir
-. . .
+...
 children = [
   # Start the Ecto repository
   Hello.Repo,
@@ -722,7 +722,7 @@ children = [
   # Here you could define other workers and supervisors as children
   OurCustom.Repo
 ]
-. . .
+...
 ```
 
 ### `mix ecto.gen.migration`
@@ -755,7 +755,7 @@ Notice that there is a single function `change/0` which will handle both forward
 What we want to do is create a `comments` table with a `body` column, a `word_count` column, and timestamp columns for `inserted_at` and `updated_at`.
 
 ```elixir
-. . .
+...
 def change do
   create table(:comments) do
     add :body,       :string
@@ -763,7 +763,7 @@ def change do
     timestamps()
   end
 end
-. . .
+...
 ```
 
 Again, we can run this task with the `-r` flag and another repo if we need to.
@@ -925,10 +925,10 @@ Indeed it does.
 If you want to make your new mix task to use your application's infrastructure, you need to make sure the application is started when mix task is being executed. This is particularly useful if you need to access your database from within the mix task. Thankfully, mix makes it really easy for us:
 
 ```elixir
-  . . .
-  def run(_args) do
-    Mix.Task.run("app.start")
-    Mix.shell.info("Now I have access to Repo and other goodies!")
-  end
-  . . .
+...
+def run(_args) do
+  Mix.Task.run("app.start")
+  Mix.shell.info("Now I have access to Repo and other goodies!")
+end
+...
 ```
