@@ -24,7 +24,7 @@ ALTER USER postgres PASSWORD 'postgres';
 ALTER USER postgres WITH SUPERUSER;
 ```
 
-Now that we have Ecto and Postgres installed and configured, the easiest way to use Ecto is to generate an Ecto *schema* through the `phx.gen.schema` task. Ecto schemas are a way for us to specify how Elixir data types map to and from external sources, such as database tables. Let's generate a `User` schema with `name`, `email`, `bio`, and `number_of_pets` fields.
+Now that we have Ecto and Postgres installed and configured, the easiest way to use Ecto is to generate an Ecto *schema* through the `mix phx.gen.schema` task. Ecto schemas are a way for us to specify how Elixir data types map to and from external sources, such as database tables. Let's generate a `User` schema with `name`, `email`, `bio`, and `number_of_pets` fields.
 
 ```console
 $ mix phx.gen.schema User users name:string email:string \
@@ -130,7 +130,7 @@ end
 
 Our repo has three main tasks - to bring in all the common query functions from `Ecto.Repo`, to set the `otp_app` name equal to our application name, and to configure our database adapter. We'll talk more about how to use the Repo in a bit.
 
-When `phx.new` generated our application, it included some basic repo configuration as well. Let's look at `config/dev.exs`.
+When `mix phx.new` generated our application, it included some basic repo configuration as well. Let's look at `config/dev.exs`.
 
 ```elixir
 ...
@@ -445,7 +445,7 @@ In our [Contexts guide](contexts.html), we'll find out how to wrap up our Ecto a
 
 Phoenix applications are configured to use PostgreSQL by default, but what if we want to use MySQL instead? In this guide, we'll walk through changing that default whether we are about to create a new application, or whether we have an existing one configured for PostgreSQL.
 
-If we are about to create a new application, configuring our application to use MySQL is easy. We can simply pass the `--database mysql` flag to `phx.new` and everything will be configured correctly.
+If we are about to create a new application, configuring our application to use MySQL is easy. We can simply pass the `--database mysql` flag to `mix phx.new` and everything will be configured correctly.
 
 ```console
 $ mix phx.new hello_phoenix --database mysql
