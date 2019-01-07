@@ -19,7 +19,7 @@ Let's use these ideas to build out our web application. Our goal is to build a u
 
 User accounts are often wide-reaching across a platform so it's important to think upfront about writing a well-defined interface. With that in mind, our goal is to build an accounts API that handles creating, updating, and deleting user accounts, as well as authenticating user credentials. We'll start off with basic features, but as we add authentication later, we'll see how starting with a solid foundation allows us to grow our application naturally as we add functionality.
 
-Phoenix includes the `phx.gen.html`, `phx.gen.json`, and `phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new user accounts context.
+Phoenix includes the `mix phx.gen.html`, `mix phx.gen.json`, and `mix phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new user accounts context.
 
 In order to run the context generators, we need to come up with a module name that groups the related functionality that we're building. In the [Ecto guide](ecto.html), we saw how we can use Changesets and Repos to validate and persist user schemas, but we didn't integrate this with our application at large. In fact, we didn't think about where a "user" in our application should live at all. Let's take a step back and think about the different parts of our system. We know that we'll have users of our product. Along with users comes things like account login credentials and user registration. An `Accounts` context in our system is a natural place for our user functionality to live.
 
@@ -43,7 +43,7 @@ The database for Hello.Repo has been created
 14:38:37.418 [info]  Already up
 ```
 
-Now we're ready to create our accounts context. We'll use the `phx.gen.html` task which creates a context module that wraps up Ecto access for creating, updating, and deleting users, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
+Now we're ready to create our accounts context. We'll use the `mix phx.gen.html` task which creates a context module that wraps up Ecto access for creating, updating, and deleting users, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
 
 ```console
 $ mix phx.gen.html Accounts User users name:string \
@@ -120,7 +120,7 @@ If we follow the "Back" link, we get a list of all users, which should contain t
 
 ## Starting With Generators
 
-That little `phx.gen.html` command packed a surprising punch. We got a lot of functionality out-of-the-box for creating, updating, and deleting users. This is far from a full-featured app, but remember, generators are first and foremost learning tools and a starting point for you to begin building real features. Code generation can't solve all your problems, but it will teach you the ins and outs of Phoenix and nudge you towards the proper mind-set when designing your application.
+That little `mix phx.gen.html` command packed a surprising punch. We got a lot of functionality out-of-the-box for creating, updating, and deleting users. This is far from a full-featured app, but remember, generators are first and foremost learning tools and a starting point for you to begin building real features. Code generation can't solve all your problems, but it will teach you the ins and outs of Phoenix and nudge you towards the proper mind-set when designing your application.
 
 Let's first check out the `UserController` that was generated in `lib/hello_web/controllers/user_controller.ex`:
 
@@ -156,7 +156,7 @@ defmodule HelloWeb.UserController do
 end
 ```
 
-We've seen how controllers work in our [controller guide](controllers.html), so the code probably isn't too surprising. What is worth noticing is how our controller calls into the `Accounts` context. We can see that the `index` action fetches a list of users with `Accounts.list_users/0`, and how users are persisted in the `create` action with `Accounts.create_user/1`. We haven't yet looked at the accounts context, so we don't yet know how user fetching and creation is happening under the hood – *but that's the point*. Our Phoenix controller is the web interface into our greater application. It shouldn't be concerned with the details of how users are fetched from the database or persisted into storage. We only care about telling our application to perform some work for us. This is great because our business logic and storage details are decoupled from the web layer of our application. If we move to a full-text storage engine later for fetching users instead of a SQL query, our controller doesn't need to be changed. Likewise, we can reuse our context code from any other interface in our application, be it a channel, mix task, or long-running process importing CSV data.
+We've seen how controllers work in our [Controllers guide](controllers.html), so the code probably isn't too surprising. What is worth noticing is how our controller calls into the `Accounts` context. We can see that the `index` action fetches a list of users with `Accounts.list_users/0`, and how users are persisted in the `create` action with `Accounts.create_user/1`. We haven't yet looked at the accounts context, so we don't yet know how user fetching and creation is happening under the hood – *but that's the point*. Our Phoenix controller is the web interface into our greater application. It shouldn't be concerned with the details of how users are fetched from the database or persisted into storage. We only care about telling our application to perform some work for us. This is great because our business logic and storage details are decoupled from the web layer of our application. If we move to a full-text storage engine later for fetching users instead of a SQL query, our controller doesn't need to be changed. Likewise, we can reuse our context code from any other interface in our application, be it a channel, mix task, or long-running process importing CSV data.
 
 In the case of our `create` action, when we successfully create a user, we use `Phoenix.Controller.put_flash/3` to show a success message, and then we redirect to the `user_path`'s show page. Conversely, if `Accounts.create_user/1` fails, we render our `"new.html"` template and pass along the Ecto changeset for the template to lift error messages from.
 
@@ -189,7 +189,7 @@ defmodule Hello.Accounts do
 end
 ```
 
-This module will be the public API for all account functionality in our system. For example, in addition to user account management, we may also handle user login credentials, account preferences, and password reset generation. If we look at the `list_users/0` function, we can see the private details of user fetching. And it's super simple. We have a call to `Repo.all(User)`. We saw how Ecto repo queries worked in [the Ecto guide](ecto.html), so this call should look familiar. Our `list_users` function is a generalized function specifying the *intent* of our code – namely to list users. The details of that intent where we use our Repo to fetch the users from our PostgreSQL database is hidden from our callers. This is a common theme we'll see re-iterated as we use the Phoenix generators. Phoenix will push us to think about where we have different responsibilities in our application, and then to wrap up those different areas behind well-named modules and functions that make the intent of our code clear, while encapsulating the details.
+This module will be the public API for all account functionality in our system. For example, in addition to user account management, we may also handle user login credentials, account preferences, and password reset generation. If we look at the `list_users/0` function, we can see the private details of user fetching. And it's super simple. We have a call to `Repo.all(User)`. We saw how Ecto repo queries worked in the [Ecto guide](ecto.html), so this call should look familiar. Our `list_users` function is a generalized function specifying the *intent* of our code – namely to list users. The details of that intent where we use our Repo to fetch the users from our PostgreSQL database is hidden from our callers. This is a common theme we'll see re-iterated as we use the Phoenix generators. Phoenix will push us to think about where we have different responsibilities in our application, and then to wrap up those different areas behind well-named modules and functions that make the intent of our code clear, while encapsulating the details.
 
 Now we know how data is fetched, but how are users persisted? Let's take a look at the `Accounts.create_user/1` function:
 
@@ -265,7 +265,7 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-This time around, we used the `phx.gen.context` task, which is just like `phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing users, we can integrate the new credential features into our existing web form.
+This time around, we used the `mix phx.gen.context` task, which is just like `mix phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing users, we can integrate the new credential features into our existing web form.
 
 We can see from the output that Phoenix generated an `accounts/credential.ex` file for our `Accounts.Credential` schema, as well as a migration. Notably, phoenix said it was `* injecting` code into the existing `accounts.ex` context file and test file. Since our `Accounts` module already exists, Phoenix knows to inject our code here.
 
@@ -453,7 +453,7 @@ def authenticate_by_email_password(email, _password) do
 end
 ```
 
-We defined an `authenticate_by_email_password/2` function, which discards the password field for now, but you could integrate tools like [guardian](https://github.com/ueberauth/guardian) or [comeonin](https://github.com/riverrun/comeonin) as you continue building your application. All we need to do in our function is find the user with matching credentials and return the `%Accounts.User{}` struct in a `:ok` tuple, or an `{:error, :unauthorized}` value to let the caller know their authentication attempt has failed.
+We defined an `authenticate_by_email_password/2` function, which discards the password field for now, but you could integrate tools like [Guardian](https://github.com/ueberauth/guardian) or [Comeonin](https://github.com/riverrun/comeonin) as you continue building your application. All we need to do in our function is find the user with matching credentials and return the `%Accounts.User{}` struct in a `:ok` tuple, or an `{:error, :unauthorized}` value to let the caller know their authentication attempt has failed.
 
 Now that we can authenticate a user from our context, let's add a login page to our web layer. First create a new controller in `lib/hello_web/controllers/session_controller.ex`:
 
