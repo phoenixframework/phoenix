@@ -102,13 +102,13 @@ $ mix ecto.migrate
 
 Before we jump into the generated code, let's start the server with `mix phx.server` and visit [http://localhost:4000/users](http://localhost:4000/users). Let's follow the "New User" link and click the "Submit" button without providing any input. We should be greeted with the following output:
 
-```
+```plaintext
 Oops, something went wrong! Please check the errors below.
 ```
 
 When we submit the form, we can see all the validation errors inline with the inputs. Nice! Out of the box, the context generator included the schema fields in our form template and we can see our default validations for required inputs are in effect. Let's enter some example user data and resubmit the form:
 
-```
+```plaintext
 User created successfully.
 
 Show User
@@ -194,23 +194,23 @@ This module will be the public API for all account functionality in our system. 
 Now we know how data is fetched, but how are users persisted? Let's take a look at the `Accounts.create_user/1` function:
 
 ```elixir
-  @doc """
-  Creates a user.
+@doc """
+Creates a user.
 
-  ## Examples
+## Examples
 
-      iex> create_user(%{field: value})
-      {:ok, %User{}}
+    iex> create_user(%{field: value})
+    {:ok, %User{}}
 
-      iex> create_user(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+    iex> create_user(%{field: bad_value})
+    {:error, %Ecto.Changeset{}}
 
-  """
-  def create_user(attrs \\ %{}) do
-    %User{}
-    |> User.changeset(attrs)
-    |> Repo.insert()
-  end
+"""
+def create_user(attrs \\ %{}) do
+  %User{}
+  |> User.changeset(attrs)
+  |> Repo.insert()
+end
 ```
 
 There's more documentation than code here, but a couple of things are important to highlight. First, we can see again that our Ecto Repo is used under the hood for database access. You probably also noticed the call to `User.changeset/2`. We talked about changesets before, and now we see them in action in our context.
@@ -271,7 +271,7 @@ We can see from the output that Phoenix generated an `accounts/credential.ex` fi
 
 Before we run our migrations, we need to make one change to the generated migration to enforce data integrity of user account credentials. In our case, we want a user's credentials to be deleted when the parent user is removed. Make the following change to your `*_create_credentials.exs` migration file in `priv/repo/migrations/`:
 
-```diff
+```elixir
   def change do
     create table(:credentials) do
       add :email, :string
@@ -345,17 +345,17 @@ We used `Ecto.Schema`'s `has_one` macro to let Ecto know how to associate our pa
 We used the `belongs_to` macro to map our child relationship to the parent `User`. With our schema associations set up, let's open up `accounts.ex` and make the following changes to the generated `list_users` and `get_user!`  functions:
 
 ```elixir
-  def list_users do
-    User
-    |> Repo.all()
-    |> Repo.preload(:credential)
-  end
+def list_users do
+  User
+  |> Repo.all()
+  |> Repo.preload(:credential)
+end
 
-  def get_user!(id) do
-    User
-    |> Repo.get!(id)
-    |> Repo.preload(:credential)
-  end
+def get_user!(id) do
+  User
+  |> Repo.get!(id)
+  |> Repo.preload(:credential)
+end
 ```
 
 We rewrote the `list_users/0` and `get_user!/1` to preload the credential association whenever we fetch users. The Repo preload functionality fetches a schema's association data from the database, then places it inside the schema. When operating on a collection, such as our query in `list_users`, Ecto can efficiently preload the associations in a single query. This allows us to represent our `%Accounts.User{}` structs as always containing credentials without the caller having to worry about fetching the extra data.
@@ -363,7 +363,7 @@ We rewrote the `list_users/0` and `get_user!/1` to preload the credential associ
 Next, let's expose our new feature to the web by adding the credentials input to our user form. Open up `lib/hello_web/templates/user/form.html.eex` and key in the new credential form group above the submit button:
 
 
-```eex
+```html
   ...
 + <div class="form-group">
 +   <%= inputs_for f, :credential, fn cf -> %>
@@ -380,13 +380,13 @@ We used `Phoenix.HTML`'s `inputs_for` function to add an associations nested fie
 
 Next, let's show the user's email address in the user show template. Add the following code to `lib/hello_web/templates/user/show.html.eex`:
 
-```eex
+```html
   ...
 + <li>
 +   <strong>Email:</strong>
 +   <%= @user.credential.email %>
 + </li>
-</ul>
+  </ul>
 
 ```
 
@@ -420,7 +420,7 @@ We updated the functions to pipe our user changeset into `Ecto.Changeset.cast_as
 
 Finally, if you visit [http://localhost:4000/users/new](http://localhost:4000/users/new) and attempt to save an empty email address, you'll see the proper validation error message. If you enter valid information, the data will be casted and persisted properly.
 
-```
+```plaintext
 Show User
 Name: Chris McCord
 Username: chrismccord
@@ -435,7 +435,9 @@ As we've seen, your context modules are dedicated modules that expose and group 
 
 To start, let's think of a function name that describes what we want to accomplish. To authenticate a user by email address, we'll need a way to lookup that user and verify their entered credentials are valid. We can do this by exposing a single function on our `Accounts` context.
 
-    > user = Accounts.authenticate_by_email_password(email, password)
+```elixir
+user = Accounts.authenticate_by_email_password(email, password)
+```
 
 That looks nice. A descriptive name that exposes the intent of our code is best. This function makes it crystal clear what purpose it serves, while allowing our caller to remain blissfully unaware of the internal details. Make the following additions to your `lib/hello/accounts.ex` file:
 
@@ -510,17 +512,17 @@ We used `resources` to generate a set of routes under the `"/session"` path. Thi
 
 
 ```elixir
-  defp authenticate_user(conn, _) do
-    case get_session(conn, :user_id) do
-      nil ->
-        conn
-        |> Phoenix.Controller.put_flash(:error, "Login required")
-        |> Phoenix.Controller.redirect(to: "/")
-        |> halt()
-      user_id ->
-        assign(conn, :current_user, Hello.Accounts.get_user!(user_id))
-    end
+defp authenticate_user(conn, _) do
+  case get_session(conn, :user_id) do
+    nil ->
+      conn
+      |> Phoenix.Controller.put_flash(:error, "Login required")
+      |> Phoenix.Controller.redirect(to: "/")
+      |> halt()
+    user_id ->
+      assign(conn, :current_user, Hello.Accounts.get_user!(user_id))
   end
+end
 ```
 
 We defined an `authenticate_user/2` plug in the router which simply uses `Plug.Conn.get_session/2` to check for a `:user_id` in the session. If we find one, it means a user has previously authenticated, and we call into `Hello.Accounts.get_user!/1` to place our `:current_user` into the connection assigns. If we don't have a session, we add a flash error message, redirect to the homepage, and we use `Plug.Conn.halt/1` to halt further plugs downstream from being invoked. We won't use this new plug quite yet, but it will be ready and waiting as we add authenticated routes in just a moment.
@@ -535,7 +537,7 @@ end
 
 Next, add a new template in `lib/hello_web/templates/session/new.html.eex:`
 
-```eex
+```html
 <h1>Sign in</h1>
 
 <%= form_for @conn, Routes.session_path(@conn, :create), [method: :post, as: :user], fn f -> %>
@@ -582,7 +584,7 @@ Applications with "users" are naturally heavily user driven. After all, our soft
 
 With our plan set, let's get to work. Run the following command to generate our new context:
 
-```
+```console
 $ mix phx.gen.html CMS Page pages title:string body:text \
 views:integer --web CMS
 
@@ -618,10 +620,10 @@ Remember to update your repository by running migrations:
 
 The `views` attribute on the pages will not be updated directly by the user, so let's remove it from the generated form. Open `lib/hello_web/templates/cms/page/form.html.eex` and remove this part:
 
-```eex
--  <%= label f, :views %>
--  <%= number_input f, :views %>
--  <%= error_tag f, :views %>
+```html
+- <%= label f, :views %>
+- <%= number_input f, :views %>
+- <%= error_tag f, :views %>
 ```
 
 Also, change `lib/hello/cms/page.ex` to remove `:views` from the permitted params:
@@ -639,31 +641,30 @@ Also, change `lib/hello/cms/page.ex` to remove `:views` from the permitted param
 Finally, open up the new file in `priv/repo/migrations` to ensure the `views` attribute will have a default value:
 
 ```elixir
-    create table(:pages) do
-      add :title, :string
-      add :body, :text
--     add :views, :integer
-+     add :views, :integer, default: 0
+  create table(:pages) do
+    add :title, :string
+    add :body, :text
+-   add :views, :integer
++   add :views, :integer, default: 0
 
-      timestamps()
-    end
+    timestamps()
+  end
 ```
 
 This time we passed the `--web` option to the generator. This tells Phoenix what namespace to use for the web modules, such as controllers and views. This is useful when you have conflicting resources in the system, such as our existing `PageController`, as well as a way to naturally namespace paths and functionality of different features, like a CMS system. Phoenix instructed us to add a new `scope` to the router for a `"/cms"` path prefix. Let's copy paste the following into our `lib/hello_web/router.ex`, but we'll make one modification to the `pipe_through` macro:
 
 
-```
-  scope "/cms", HelloWeb.CMS, as: :cms do
-    pipe_through [:browser, :authenticate_user]
+```elixir
+scope "/cms", HelloWeb.CMS, as: :cms do
+  pipe_through [:browser, :authenticate_user]
 
-    resources "/pages", PageController
-  end
-
+  resources "/pages", PageController
+end
 ```
 
 We added the `:authenticate_user` plug to require a signed-in user for all routes within this CMS scope. With our routes in place, we can migrate up the database:
 
-```
+```console
 $ mix ecto.migrate
 
 Compiling 12 files (.ex)
@@ -680,7 +681,7 @@ Now, let's fire up the server with `mix phx.server` and visit [http://localhost:
 
 Before we create any pages, we need page authors. Let's run the `phx.gen.context` generator to generate an `Author` schema along with injected context functions:
 
-```
+```console
 $ mix phx.gen.context CMS Author authors bio:text role:string \
 genre:string user_id:references:users:unique
 
@@ -721,7 +722,7 @@ We used the `:delete_all` strategy again to enforce data integrity. This way, wh
 
 Before we continue, we have a final migration to generate. Now that we have an authors table, we can associate pages and authors. Let's add an `author_id` field to the pages table. Run the following command to generate a new migration:
 
-```
+```console
 $ mix ecto.gen.migration add_author_id_to_pages
 
 * creating priv/repo/migrations
@@ -731,21 +732,21 @@ $ mix ecto.gen.migration add_author_id_to_pages
 Now open up the new `*_add_author_id_to_pages.exs` file in `priv/repo/migrations` and key this in:
 
 ```elixir
-  def change do
-    alter table(:pages) do
-      add :author_id, references(:authors, on_delete: :delete_all),
-                      null: false
-    end
-
-    create index(:pages, [:author_id])
+def change do
+  alter table(:pages) do
+    add :author_id, references(:authors, on_delete: :delete_all),
+                    null: false
   end
+
+  create index(:pages, [:author_id])
+end
 ```
 
 We used the `alter` macro to add a new `author_id` field to the pages table, with a foreign key to our authors table. We also used the `on_delete: :delete_all` option again to prune any pages when a parent author is deleted from the application.
 
 Now let's migrate up:
 
-```
+```console
 $ mix ecto.migrate
 
 [info]  == Running Hello.Repo.Migrations.CreateAuthors.change/0 forward
@@ -813,26 +814,26 @@ We added the `has_many` association for author pages, and then introduced our da
 With our associations in place, let's update our `CMS` context to require an author when creating or updating a page. We'll start off with data fetching changes. Open up your `CMS` context in `lib/hello/cms.ex` and replace the `list_pages/0`, `get_page!/1`, and `get_author!/1` functions with the following definitions:
 
 ```elixir
-  alias Hello.CMS.{Page, Author}
-  alias Hello.Accounts
+alias Hello.CMS.{Page, Author}
+alias Hello.Accounts
 
-  def list_pages do
-    Page
-    |> Repo.all()
-    |> Repo.preload(author: [user: :credential])
-  end
+def list_pages do
+  Page
+  |> Repo.all()
+  |> Repo.preload(author: [user: :credential])
+end
 
-  def get_page!(id) do
-    Page
-    |> Repo.get!(id)
-    |> Repo.preload(author: [user: :credential])
-  end
+def get_page!(id) do
+  Page
+  |> Repo.get!(id)
+  |> Repo.preload(author: [user: :credential])
+end
 
-  def get_author!(id) do
-    Author
-    |> Repo.get!(id)
-    |> Repo.preload(user: :credential)
-  end
+def get_author!(id) do
+  Author
+  |> Repo.get!(id)
+  |> Repo.preload(user: :credential)
+end
 ```
 
 We started by rewriting the `list_pages/0` function to preload the associated author, user, and credential data from the database. Next, we rewrote `get_page!/1` and `get_author!/1` to also preload the necessary data.
@@ -870,29 +871,28 @@ That wraps up our `CMS` changes. Now, let's update our web layer to support our 
 Open up your generated `lib/hello_web/controllers/cms/page_controller.ex` and make the following additions:
 
 ```elixir
+plug :require_existing_author
+plug :authorize_page when action in [:edit, :update, :delete]
 
-  plug :require_existing_author
-  plug :authorize_page when action in [:edit, :update, :delete]
+...
 
-  ...
+defp require_existing_author(conn, _) do
+  author = CMS.ensure_author_exists(conn.assigns.current_user)
+  assign(conn, :current_author, author)
+end
 
-  defp require_existing_author(conn, _) do
-    author = CMS.ensure_author_exists(conn.assigns.current_user)
-    assign(conn, :current_author, author)
+defp authorize_page(conn, _) do
+  page = CMS.get_page!(conn.params["id"])
+
+  if conn.assigns.current_author.id == page.author_id do
+    assign(conn, :page, page)
+  else
+    conn
+    |> put_flash(:error, "You can't modify that page")
+    |> redirect(to: Routes.cms_page_path(conn, :index))
+    |> halt()
   end
-
-  defp authorize_page(conn, _) do
-    page = CMS.get_page!(conn.params["id"])
-
-    if conn.assigns.current_author.id == page.author_id do
-      assign(conn, :page, page)
-    else
-      conn
-      |> put_flash(:error, "You can't modify that page")
-      |> redirect(to: Routes.cms_page_path(conn, :index))
-      |> halt()
-    end
-  end
+end
 ```
 
 We added two new plugs to our `CMS.PageController`. The first plug, `:require_existing_author`, runs for every action in this controller. The `require_existing_author/2` plug calls into our `CMS.ensure_author_exists/1` and passes in the `current_user` from the connection assigns. After finding or creating the author, we use `Plug.Conn.assign/3` to place a `:current_author` key into the assigns for use downstream.
@@ -968,17 +968,17 @@ end
 
 Next, let's open up `lib/hello_web/templates/cms/page/show.html.eex` and make use of our new function:
 
-```diff
-+ <li>
-+   <strong>Author:</strong>
-+   <%= author_name(@page) %>
-+ </li>
-</ul>
+```html
++   <li>
++     <strong>Author:</strong>
++     <%= author_name(@page) %>
++   </li>
+  </ul>
 ```
 
 Now, fire up your server with `mix phx.server` and try it out. Visit [http://localhost:4000/cms/pages/new](http://localhost:4000/cms/pages/new) and save a new page.
 
-```
+```plaintext
 Page created successfully.
 
 Show Page Title: Home
@@ -1011,7 +1011,9 @@ The race conditions would make this an unreliable way to update the existing tab
 
 Again, let's think of a function name that describes what we want to accomplish.
 
-    > page = CMS.inc_page_views(page)
+```elixir
+page = CMS.inc_page_views(page)
+```
 
 That looks great. Our callers will have no confusion over what this function does and we can wrap up the increment in an atomic operation to prevent race conditions.
 
@@ -1049,7 +1051,7 @@ We modified our `show` action to pipe our fetched page into `CMS.inc_page_views/
 
 We can also see our atomic update in action in the ecto debug logs:
 
-```
+```elixir
 [debug] QUERY OK source="pages" db=3.1ms
 UPDATE "pages" AS p0 SET "views" = p0."views" + $1 WHERE (p0."id" = $2)
 RETURNING p0."views" [1, 3]
