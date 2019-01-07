@@ -165,7 +165,7 @@ defmodule Hello.User do
   end
 
   @doc false
-  def changeset(%User{} = user, attrs) do
+  def changeset(user, attrs) do
     user
     |> cast(attrs, [:name, :email, :bio, :number_of_pets])
     |> validate_required([:name, :email, :bio, :number_of_pets])
@@ -182,7 +182,7 @@ Changesets define a pipeline of transformations our data needs to undergo before
 Let's take a closer look at our default changeset function.
 
 ```elixir
-def changeset(%User{} = user, attrs) do
+def changeset(user, attrs) do
   user
   |> cast(attrs, [:name, :email, :bio, :number_of_pets])
   |> validate_required([:name, :email, :bio, :number_of_pets])
@@ -300,7 +300,7 @@ We can validate more than just whether a field is required or not. Let's take a 
 What if we had a requirement that all biographies in our system must be at least two characters long? We can do this easily by adding another transformation to the pipeline in our changeset which validates the length of the `bio` field.
 
 ```elixir
-def changeset(%User{} = user, attrs) do
+def changeset(user, attrs) do
   user
   |> cast(attrs, [:name, :email, :bio, :number_of_pets])
   |> validate_required([:name, :email, :bio, :number_of_pets])
@@ -321,7 +321,7 @@ iex> changeset.errors[:bio]
 If we also have a requirement for the maximum length that a bio can have, we can simply add another validation.
 
 ```elixir
-def changeset(%User{} = user, attrs) do
+def changeset(user, attrs) do
   user
   |> cast(attrs, [:name, :email, :bio, :number_of_pets])
   |> validate_required([:name, :email, :bio, :number_of_pets])
@@ -333,7 +333,7 @@ end
 Let's say we want to perform at least some rudimentary format validation on the `email` field. All we want to check for is the presence of the "@". The `validate_format/3` function is just what we need.
 
 ```elixir
-def changeset(%User{} = user, attrs) do
+def changeset(user, attrs) do
   user
   |> cast(attrs, [:name, :email, :bio, :number_of_pets])
   |> validate_required([:name, :email, :bio, :number_of_pets])
