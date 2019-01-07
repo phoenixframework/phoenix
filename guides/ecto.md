@@ -207,12 +207,18 @@ Next, let's build a changeset from our schema with an empty `User` struct, and a
 ```elixir
 iex> changeset = User.changeset(%User{}, %{})
 
-#Ecto.Changeset<action: nil, changes: %{},
- errors: [name: {"can't be blank", [validation: :required]},
-  email: {"can't be blank", [validation: :required]},
-  bio: {"can't be blank", [validation: :required]},
-  number_of_pets: {"can't be blank", [validation: :required]}],
- data: #Hello.User<>, valid?: false>
+#Ecto.Changeset<
+  action: nil,
+  changes: %{},
+  errors: [
+    name: {"can't be blank", [validation: :required]},
+    email: {"can't be blank", [validation: :required]},
+    bio: {"can't be blank", [validation: :required]},
+    number_of_pets: {"can't be blank", [validation: :required]}
+  ],
+  data: #Hello.User<>,
+  valid?: false
+>
 ```
 
 Once we have a changeset, we can check it if it is valid.
@@ -226,10 +232,12 @@ Since this one is not valid, we can ask it what the errors are.
 
 ```elixir
 iex> changeset.errors
-[name: {"can't be blank", [validation: :required]},
- email: {"can't be blank", [validation: :required]},
- bio: {"can't be blank", [validation: :required]},
- number_of_pets: {"can't be blank", [validation: :required]}]
+[
+  name: {"can't be blank", [validation: :required]},
+  email: {"can't be blank", [validation: :required]},
+  bio: {"can't be blank", [validation: :required]},
+  number_of_pets: {"can't be blank", [validation: :required]}
+]
 ```
 
 Now, let's make `number_of_pets` optional. In order to do this, we simply remove it from the list.
@@ -246,16 +254,24 @@ Compiling 1 file (.ex)
 :ok
 
 iex> changeset = User.changeset(%User{}, %{})
-#Ecto.Changeset<action: nil, changes: %{},
- errors: [name: {"can't be blank", [validation: :required]},
-  email: {"can't be blank", [validation: :required]},
-  bio: {"can't be blank", [validation: :required]}],
- data: #Hello.User<>, valid?: false>
+#Ecto.Changeset<
+  action: nil,
+  changes: %{},
+  errors: [
+    name: {"can't be blank", [validation: :required]},
+    email: {"can't be blank", [validation: :required]},
+    bio: {"can't be blank", [validation: :required]}
+  ],
+  data: #Hello.User<>,
+  valid?: false
+>
 
 iex> changeset.errors
-[name: {"can't be blank", [validation: :required]},
- email: {"can't be blank", [validation: :required]},
- bio: {"can't be blank", [validation: :required]}]
+[
+  name: {"can't be blank", [validation: :required]},
+  email: {"can't be blank", [validation: :required]},
+  bio: {"can't be blank", [validation: :required]}
+]
 ```
 
 What happens if we pass a key/value pair that is in neither defined in the schema nor required?
@@ -263,19 +279,33 @@ What happens if we pass a key/value pair that is in neither defined in the schem
 Inside our existing IEx shell, let's create a `params` map with valid values plus an extra `random_key: "random value"`.
 
 ```elixir
-iex> params = %{name: "Joe Example", email: "joe@example.com", bio: "An example to all", number_of_pets: 5, random_key: "random value"}
-%{email: "joe@example.com", name: "Joe Example", bio: "An example to all",
-number_of_pets: 5, random_key: "random value"}
+iex> params = %{name: "Joe Example", email: "joe@example.com", bio: "An example to all",
+     number_of_pets: 5, random_key: "random value"}
+%{
+  bio: "An example to all",
+  email: "joe@example.com",
+  name: "Joe Example",
+  number_of_pets: 5,
+  random_key: "random value"
+}
 ```
 
 Next, let's use our new `params` map to create another changeset.
 
 ```elixir
 iex> changeset = User.changeset(%User{}, params)
-#Ecto.Changeset<action: nil,
- changes: %{bio: "An example to all", email: "joe@example.com",
-   name: "Joe Example", number_of_pets: 5}, errors: [],
- data: #Hello.User<>, valid?: true>
+#Ecto.Changeset<
+  action: nil,
+  changes: %{
+    bio: "An example to all",
+    email: "joe@example.com",
+    name: "Joe Example",
+    number_of_pets: 5
+  },
+  errors: [],
+  data: #Hello.User<>,
+  valid?: true
+>
 ```
 
 Our new changeset is valid.
@@ -288,9 +318,13 @@ true
 We can also check the changeset's changes - the map we get after all of the transformations are complete.
 
 ```elixir
-iex(9)> changeset.changes
-%{bio: "An example to all", email: "joe@example.com", name: "Joe Example",
-  number_of_pets: 5}
+iex> changeset.changes
+%{
+  bio: "An example to all",
+  email: "joe@example.com",
+  name: "Joe Example",
+  number_of_pets: 5
+}
 ```
 
 Notice that our `random_key` and `random_value` have been removed from the final changeset. Changesets allow us to cast external data, such as user input on a web form or data from a CSV file into valid data into our system. Invalid parameters will be stripped and bad data that is unable to be cast according to our schema will be highlighted in the changeset errors.
@@ -313,9 +347,10 @@ Now, if we try to cast data containing a value of "A" for our user's bio, we sho
 
 ```elixir
 iex> changeset = User.changeset(%User{}, %{bio: "A"})
+...
 iex> changeset.errors[:bio]
 {"should be at least %{count} character(s)",
- [count: 2, validation: :length, min: 2]}
+ [count: 2, validation: :length, kind: :min]}
 ```
 
 If we also have a requirement for the maximum length that a bio can have, we can simply add another validation.
@@ -347,6 +382,7 @@ If we try to cast a user with an email of "example.com", we should see an error 
 
 ```elixir
 iex> changeset = User.changeset(%User{}, %{email: "example.com"})
+...
 iex> changeset.errors[:email]
 {"has invalid format", [validation: :format]}
 ```
@@ -364,21 +400,33 @@ iex> alias Hello.{Repo, User}
 [Hello.Repo, Hello.User]
 iex> Repo.insert(%User{email: "user1@example.com"})
 [debug] QUERY OK db=4.6ms
-INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user1@example.com", {{2017, 5, 23}, {19, 6, 4, 822044}}, {{2017, 5, 23}, {19, 6, 4, 822055}}]
+INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user1@example.com", ~N[2017-05-23 19:06:04], ~N[2017-05-23 19:06:04]]
 {:ok,
- %Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-  bio: nil, email: "user1@example.com", id: 3,
-  inserted_at: ~N[2017-05-23 19:06:04.822044], name: nil, number_of_pets: nil,
-  updated_at: ~N[2017-05-23 19:06:04.822055]}}
+ %Hello.User{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+   bio: nil,
+   email: "user1@example.com",
+   id: 3,
+   inserted_at: ~N[2017-05-23 19:06:04],
+   name: nil,
+   number_of_pets: nil,
+   updated_at: ~N[2017-05-23 19:06:04]
+ }}
 
 iex> Repo.insert(%User{email: "user2@example.com"})
 [debug] QUERY OK db=5.1ms
-INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user2@example.com", {{2017, 5, 23}, {19, 6, 8, 452545}}, {{2017, 5, 23}, {19, 6, 8, 452556}}]
+INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user2@example.com", ~N[2017-05-23 19:06:08], ~N[2017-05-23 19:06:08]]
 {:ok,
- %Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-  bio: nil, email: "user2@example.com", id: 4,
-  inserted_at: ~N[2017-05-23 19:06:08.452545], name: nil, number_of_pets: nil,
-  updated_at: ~N[2017-05-23 19:06:08.452556]}}
+ %Hello.User{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+   bio: nil,
+   email: "user2@example.com",
+   id: 4,
+   inserted_at: ~N[2017-05-23 19:06:08],
+   name: nil,
+   number_of_pets: nil,
+   updated_at: ~N[2017-05-23 19:06:086]
+ }}
 ```
 
 We started by aliasing our `User` and `Repo` modules for easy access. Next, we called `Repo.insert/1` and passed a user struct. Since we're in the `dev` environment, we can see the debug logs for the query our Repo performed when inserting the underlying `%User{}` data. We received a 2-tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful. With a couple of users inserted, let's fetch them back out of the repo.
@@ -387,14 +435,28 @@ We started by aliasing our `User` and `Repo` modules for easy access. Next, we c
 iex> Repo.all(User)
 [debug] QUERY OK source="users" db=2.7ms
 SELECT u0."id", u0."bio", u0."email", u0."name", u0."number_of_pets", u0."inserted_at", u0."updated_at" FROM "users" AS u0 []
-[%Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-  bio: nil, email: "user1@example.com", id: 3,
-  inserted_at: ~N[2017-05-23 19:06:04.822044], name: nil, number_of_pets: nil,
-  updated_at: ~N[2017-05-23 19:06:04.822055]},
- %Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-  bio: nil, email: "user2@example.com", id: 4,
-  inserted_at: ~N[2017-05-23 19:06:08.452545], name: nil, number_of_pets: nil,
-  updated_at: ~N[2017-05-23 19:06:08.452556]}]
+[
+  %Hello.User{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+    bio: nil,
+    email: "user1@example.com",
+    id: 3,
+    inserted_at: ~N[2017-05-23 19:06:04],
+    name: nil,
+    number_of_pets: nil,
+    updated_at: ~N[2017-05-23 19:06:04]
+  },
+  %Hello.User{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+    bio: nil,
+    email: "user2@example.com",
+    id: 4,
+    inserted_at: ~N[2017-05-23 19:06:08],
+    name: nil,
+    number_of_pets: nil,
+    updated_at: ~N[2017-05-23 19:06:08]
+  }
+]
 ```
 
 That was easy! `Repo.all/1` takes a data source, our `User` schema in this case, and translates that to an underlying SQL query against our database. After it fetches the data, the Repo then uses our Ecto schema to map the database values back into Elixir data-structures according to our `User` schema. We're not just limited to basic querying – Ecto includes a full-fledged query DSL for advanced SQL generation. In addition to a natural Elixir DSL, Ecto's query engine gives us multiple great features, such as SQL injection protection and compile-time optimization of queries. Let's try it out.
@@ -412,7 +474,7 @@ SELECT u0."email" FROM "users" AS u0 []
 First, we imported `Ecto.Query`, which imports the `from` macro of Ecto's Query DSL. Next, we built a query which selects all the email addresses in our users table. Let's try another example.
 
 ```elixir
-iex)> Repo.one(from u in User, where: ilike(u.email, "%1%"),
+iex> Repo.one(from u in User, where: ilike(u.email, "%1%"),
                                select: count(u.id))
 [debug] QUERY OK source="users" db=1.6ms SELECT count(u0."id") FROM "users" AS u0 WHERE (u0."email" ILIKE '%1%') []
 1
@@ -457,7 +519,7 @@ Let's open up our `mix.exs` file and do that now.
 defmodule HelloPhoenix.MixProject do
   use Mix.Project
 
-  . . .
+  ...
   # Specifies your project dependencies.
   #
   # Type `mix help deps` for examples and options.
@@ -509,5 +571,5 @@ We're also ready to run any migrations, or do anything else with Ecto that we mi
 $ mix ecto.migrate
 [info] == Running HelloPhoenix.Repo.Migrations.CreateUser.change/0 forward
 [info] create table users
-[info] == Migrated in 0.2s
+[info] == Migrated 20170523151118 in 0.2s
 ```
