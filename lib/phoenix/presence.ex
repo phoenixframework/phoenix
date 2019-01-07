@@ -369,7 +369,7 @@ defmodule Phoenix.Presence do
 
   ## Examples
 
-  Uses the same data format as `Phoenix.Presence.list/1`, but only
+  Uses the same data format as `Phoenix.Presence.list/2`, but only
   returns metadata for the presences under a topic and key pair. For example,
   a user with key `"user1"`, connected to the same chat room `"room:1"` from two
   devices, could return:
@@ -377,7 +377,7 @@ defmodule Phoenix.Presence do
       iex> MyPresence.get_by_key("room:1", "user1")
       %{name: "User 1", metas: [%{device: "Desktop"}, %{device: "Mobile"}]}
 
-  Like `Phoenix.Presence.list/1`, the presence metadata is passed to the `fetch`
+  Like `Phoenix.Presence.list/2`, the presence metadata is passed to the `fetch`
   callback of your presence module to fetch any additional information.
   """
   def get_by_key(module, topic, key) do
