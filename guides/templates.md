@@ -29,10 +29,7 @@ defmodule HelloWeb.Router do
     get "/test", PageController, :test
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", Hello do
-  #   pipe_through :api
-  # end
+  ...
 end
 ```
 
@@ -53,18 +50,19 @@ We're going to create a function that tells us which controller and action are h
 To do that, we need to import the `action_name/1` and `controller_module/1` functions from `Phoenix.Controller` in `lib/hello_web.ex`.
 
 ```elixir
-  def view do
-    quote do
-      use Phoenix.View, root: "lib/hello_web/templates",
-                        namespace: HelloWeb
+def view do
+  quote do
+    use Phoenix.View,
+      root: "lib/hello_web/templates",
+      namespace: HelloWeb
 
-      # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1,
-                                        action_name: 1, controller_module: 1]
+    # Import convenience functions from controllers
+    import Phoenix.Controller,
+      only: [get_flash: 1, get_flash: 2, view_module: 1, action_name: 1, controller_module: 1]
 
-      ...
-    end
+    ...
   end
+end
 ```
 
 Next, let's define a `handler_info/1` function at the bottom of the ` lib/hello_web/views/page_view.ex` which makes use of the `controller_module/1` and `action_name/1` functions we just imported. We'll also define a `connection_keys/1` function that we'll use in a moment.
