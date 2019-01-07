@@ -713,13 +713,14 @@ We certainly should follow the instructions and add our new repo to our supervis
 ```elixir
 . . .
 children = [
-  # Start the endpoint when the application starts
-  supervisor(HelloWeb.Endpoint, []),
   # Start the Ecto repository
-  worker(Hello.Repo, []),
+  Hello.Repo,
+  # Start the endpoint when the application starts
+  HelloWeb.Endpoint,
+  # Starts a worker by calling: Hello.Worker.start_link(arg)
+  # {Hello.Worker, arg},
   # Here you could define other workers and supervisors as children
-  # worker(Hello.Worker, [arg1, arg2, arg3]),
-  worker(OurCustom.Repo, []),
+  OurCustom.Repo
 ]
 . . .
 ```
