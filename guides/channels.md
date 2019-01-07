@@ -14,9 +14,7 @@ Conceptually, Channels are pretty simple.
 Clients connect and subscribe to one or more topics, whether that's `public_chat` or `updates:user1`.
 Any message sent on a topic, whether from the server or from a client, is sent to all clients subscribed to that topic (including the sender, if it's subscribed), like this:
 
-<pre>
-<code>
-
+```plaintext
                                                                   +----------------+
                                                      +--Topic X-->| Mobile Client  |
                                                      |            +----------------+
@@ -28,8 +26,7 @@ Any message sent on a topic, whether from the server or from a client, is sent t
                                                      |            +----------------+
                                                      +--Topic X-->|   IoT Client   |
                                                                   +----------------+
-</code>
-</pre>
+```
 
 Channels can support any kind of client: a browser, native app, smart watch, embedded device, or anything else that can connect to a network.
 All the client needs is a suitable library; see the [Client Libraries](#client-libraries) section below.
@@ -61,8 +58,7 @@ Because only one message has to be sent per additional node, the performance cos
 
 The message flow looks something like this:
 
-<pre>
-<code>
+```plaintext
                                  Channel   +-------------------------+      +--------+
                                   route    | Sending Client, Topic 1 |      | Local  |
                               +----------->|     Channel.Server      |----->| PubSub |--+
@@ -95,8 +91,7 @@ The message flow looks something like this:
 +----------------+                         |   IoT Client, Topic 1   |      | Remote |  |
 |   IoT Client   |<-------Transport--------|     Channel.Server      |<-----| PubSub |<-+
 +----------------+                         +-------------------------+      +--------+
-</code>
-</pre>
+```
 
 ### Endpoint
 
@@ -380,7 +375,7 @@ Let's say we have an authentication plug in our app called `OurAuth`. When `OurA
 
 ```elixir
 pipeline :browser do
-  # ...
+  ...
   plug OurAuth
   plug :put_user_token
 end
