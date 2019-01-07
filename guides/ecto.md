@@ -27,10 +27,8 @@ ALTER USER postgres WITH SUPERUSER;
 Now that we have Ecto and Postgres installed and configured, the easiest way to use Ecto is to generate an Ecto *schema* through the `mix phx.gen.schema` task. Ecto schemas are a way for us to specify how Elixir data types map to and from external sources, such as database tables. Let's generate a `User` schema with `name`, `email`, `bio`, and `number_of_pets` fields.
 
 ```console
-$ mix phx.gen.schema User users name:string email:string \
-bio:string number_of_pets:integer
-
-* creating ./lib/hello/user.ex
+$ mix phx.gen.schema User users name:string email:string bio:string number_of_pets:integer
+* creating lib/hello/user.ex
 * creating priv/repo/migrations/20170523151118_create_users.exs
 
 Remember to update your repository by running migrations:
@@ -44,14 +42,9 @@ With our files in place, let's follow the instructions and run our migration. If
 
 ```console
 $ mix ecto.migrate
-Compiling 1 file (.ex)
-Generated hello app
-
 [info]  == Running Hello.Repo.Migrations.CreateUsers.change/0 forward
-
 [info]  create table users
-
-[info]  == Migrated in 0.0s
+[info]  == Migrated 20170523151118 in 0.0s
 ```
 
 Mix assumes that we are in the development environment unless we tell it otherwise with `MIX_ENV=another_environment mix some_task`. Our Ecto task will get its environment from Mix, and that's how we get the correct suffix to our database name.
@@ -73,6 +66,7 @@ hello_dev=# \d
  public | users             | table    | postgres
  public | users_id_seq      | sequence | postgres
 (3 rows)
+
 hello_dev=# \q
 ```
 
