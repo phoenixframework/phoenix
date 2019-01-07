@@ -200,7 +200,9 @@ Now that we've got the route, controller, view, and template, we should be able 
 
 There are a couple of interesting things to notice about what we just did. We didn't need to stop and re-start the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.eex` file consisted of only a single `div` tag, the page we get is a full HTML document. Our index template is rendered into the application layout - `lib/hello_web/templates/layout/app.html.eex`. If you open it, you'll see a line that looks like this:
 
-    <%= render(@view_module, @view_template, assigns) %>
+```html
+<%= render(@view_module, @view_template, assigns) %>
+```
 
 which is what renders our template into the layout before the HTML is sent off to the browser.
 
@@ -267,7 +269,7 @@ And this is what the template should look like:
 </div>
 ```
 
-Our messenger appears as `@messenger`. In this case, this is not a module attribute. It is special bit of metaprogrammed syntax which stands in for `assigns.messenger`. The result is much nicer on the eyes and much easier to work with in a template.
+Our messenger appears as `@messenger`. In this case, this is not a module attribute. It is a special bit of metaprogrammed syntax which stands in for `assigns.messenger`. The result is much nicer on the eyes and much easier to work with in a template.
 
 We're done. If you point your browser here: [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), you should see a page that looks like this:
 

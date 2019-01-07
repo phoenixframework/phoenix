@@ -39,7 +39,7 @@ As long as we change the action name in the `PageController` to `test` as well, 
 
 ```elixir
 defmodule HelloWeb.PageController do
-  . . .
+  ...
 
   def test(conn, _params) do
     render(conn, "index.html")
@@ -65,7 +65,7 @@ The second parameter is `params`. Not surprisingly, this is a map which holds an
 
 ```elixir
 defmodule HelloWeb.HelloController do
-  . . .
+  ...
 
   def show(conn, %{"messenger" => messenger}) do
     render(conn, "show.html", messenger: messenger)
@@ -93,7 +93,7 @@ To do this we modify the `index` action as follows:
 
 ```elixir
 defmodule HelloWeb.PageController do
-  . . .
+  ...
   def index(conn, _params) do
     conn
     |> put_flash(:info, "Welcome to Phoenix, from flash info!")
@@ -234,7 +234,7 @@ defmodule HelloWeb.PageController do
   use HelloWeb, :controller
 
   plug :assign_welcome_message, "Hi!" when action in [:index, :show]
-. . .
+...
 ```
 
 ### Sending responses directly
@@ -353,7 +353,7 @@ end
 ```
 What it doesn't have is an alternative template for rendering text. Let's add one at `lib/hello_web/templates/page/index.text.eex`. Here is our example `index.text.eex` template.
 
-```elixir
+```html
 OMG, this is actually some text.
 ```
 
@@ -369,7 +369,7 @@ defmodule HelloWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
-. . .
+...
 ```
 
 We also need to tell the controller to render a template with the same format as the one returned by `Phoenix.Controller.get_format/1`. We do that by substituting the name of the template "index.html" with the atom version `:index`.
@@ -392,7 +392,7 @@ end
 
 And let's add a bit to our text template.
 
-```elixir
+```html
 OMG, this is actually some text. <%= @message %>
 ```
 
@@ -468,10 +468,10 @@ In order to try out `redirect/2`, let's create a new route in `lib/hello_web/rou
 ```elixir
 defmodule HelloWeb.Router do
   use HelloWeb, :router
-  . . .
+  ...
 
   scope "/", HelloWeb do
-    . . .
+    ...
     get "/", PageController, :index
   end
 
@@ -479,7 +479,7 @@ defmodule HelloWeb.Router do
   scope "/", HelloWeb do
     get "/redirect_test", PageController, :redirect_test, as: :redirect_test
   end
-  . . .
+  ...
 end
 ```
 
@@ -644,6 +644,7 @@ end
 If we call this plug as part of the plug pipeline any downstream plugs will still be processed. If we want to prevent downstream plugs from being processed in the event of the 404 response we can simply call `Plug.Conn.halt/1`.
 
 ```elixir
+    ...
     case Blog.get_post(conn.params["id"]) do
       {:ok, post} ->
         assign(conn, :post, post)
@@ -657,24 +658,24 @@ If we call this plug as part of the plug pipeline any downstream plugs will stil
 It's important to note that `halt/1` simply sets the `:halted` key on `Plug.Conn.t` to `true`.  This is enough to prevent downstream plugs from being invoked but it will not stop the execution of code locally. As such
 
 ```elixir
-  conn
-  |> send_resp(404, "Not found")
-  |> halt()
+conn
+|> send_resp(404, "Not found")
+|> halt()
 ```
 
 ... is functionally equivalent to...
 
 ```elixir
-  conn
-  |> halt()
-  |> send_resp(404, "Not found")
+conn
+|> halt()
+|> send_resp(404, "Not found")
 ```
 
 It's also important to note that halting will only stop the plug pipeline from continuing. Function plugs will still execute unless their implementation checks for the `:halted` value.
 
-```
-  def post_authorization_plug(%{halted: true} = conn, _), do: conn
-  def post_authorization_plug(conn, _) do
-  . . .
-  end
+```elixir
+def post_authorization_plug(%{halted: true} = conn, _), do: conn
+def post_authorization_plug(conn, _) do
+  ...
+end
 ```
