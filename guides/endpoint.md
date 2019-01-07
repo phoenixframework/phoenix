@@ -10,7 +10,7 @@ defmodule Hello.Application do
     #...
 
     children = [
-      supervisor(HelloWeb.Endpoint, []),
+      HelloWeb.Endpoint
     ]
 
     opts = [strategy: :one_for_one, name: Hello.Supervisor]
