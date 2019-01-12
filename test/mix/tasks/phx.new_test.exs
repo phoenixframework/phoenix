@@ -72,6 +72,9 @@ defmodule Mix.Tasks.Phx.NewTest do
           # Ensure /priv static files are copied
           assert File.exists?("priv/static/js/phoenix.js")
 
+          # Ensure /.git path exists
+          assert File.exists?(".git/")
+
           # We can run tests too, starting the app.
           assert capture_io(fn ->
             capture_io(:user, fn ->

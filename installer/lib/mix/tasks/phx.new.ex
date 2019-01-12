@@ -92,7 +92,7 @@ defmodule Mix.Tasks.Phx.New do
   @switches [dev: :boolean, webpack: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
-             umbrella: :boolean]
+             umbrella: :boolean, git: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info "Phoenix v#{@version}"
@@ -121,7 +121,18 @@ defmodule Mix.Tasks.Phx.New do
     |> Generator.put_binding()
     |> validate_project()
     |> generator.generate()
+    |> init_git(opts)
     |> prompt_to_install_deps(generator)
+  end
+
+  defp init_git(%Project{} = project, opts) do
+    initialize? = Keyword.get(opts, :git, true)
+
+    maybe_cd(project.project_path, fn ->
+      maybe_cmd("git init", initialize?, true)
+    end)
+
+    project
   end
 
   defp validate_project(%Project{opts: opts} = project) do
