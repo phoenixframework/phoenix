@@ -269,6 +269,8 @@ Let's commit all our changes:
 
 ```
 $ git add config/prod.exs
+$ git add phoenix_static_buildpack.config
+$ git add compile
 $ git add Procfile
 $ git add lib/hello_web/endpoint.ex
 $ git commit -m "Use production config from Heroku ENV variables and decrease socket timeout"
@@ -326,10 +328,7 @@ remote: -----> Phoenix app detected
 remote:
 remote: -----> Loading configuration and environment
 remote:        Loading config...
-remote:        WARNING: phoenix_static_buildpack.config wasn't found in the app
-remote:        Using default config from Phoenix static buildpack
-remote:        Will use the following versions:
-remote:        * Node 0.12.4
+remote:        [...]
 remote:        Will export the following config vars:
 remote:        * Config vars DATABASE_URL
 remote:        * MIX_ENV=prod
@@ -341,7 +340,6 @@ remote:        Using default npm version
 remote:
 remote: -----> Building dependencies
 remote:        [...]
-remote:        Running default compile
 remote:               Building Phoenix static assets
 remote:        07 Jul 00:06:22 - info: compiled 3 files into 2 files, copied 3 in 3616ms
 remote:        Check your digested files at 'priv/static'.
