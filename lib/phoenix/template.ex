@@ -128,12 +128,11 @@ defmodule Phoenix.Template do
   defmacro __using__(options) do
     quote bind_quoted: [options: options], unquote: true do
       root = Keyword.fetch!(options, :root)
+      global_engines = Template.engines()
+      custom_engines = Keyword.get(options, :template_engines, %{})
       @phoenix_root Path.relative_to_cwd(root)
       @phoenix_pattern Keyword.get(options, :pattern, unquote(@default_pattern))
-      @phoenix_template_engines Enum.into(
-                                  Keyword.get(options, :template_engines, %{}),
-                                  Template.engines()
-                                )
+      @phoenix_template_engines Enum.into(custom_engines, global_engines)
       @before_compile unquote(__MODULE__)
 
       @doc """
