@@ -37,8 +37,6 @@ defmodule Phoenix.Template do
     * `:root` - the root template path to find templates
     * `:pattern` - the wildcard pattern to apply to the root
       when finding templates. Default `"*"`
-    * `:template_engines` - a map of template engines extensions
-      to template engine handlers
 
   ## Terminology
 
