@@ -121,4 +121,24 @@ defmodule Phoenix.TemplateTest do
   test "generates __phoenix_recompile__? function" do
     refute View.__phoenix_recompile__?
   end
+
+  defmodule CustomEngineView do
+    use Phoenix.Template,
+      root: Path.join(__DIR__, "../fixtures/templates"),
+      template_engines: %{
+        foo: Phoenix.Template.EExEngine
+      }
+
+    def render(template, assigns) do
+      render_template(template, assigns)
+    end
+  end
+
+  test "custom view has foo engine" do
+    assert %{foo: Phoenix.Template.EExEngine} = CustomEngineView.engines()
+  end
+
+  test "custom view renders custom templates" do
+    assert CustomEngineView.render("custom", %{}) == "from foo"
+  end
 end

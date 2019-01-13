@@ -130,7 +130,10 @@ defmodule Phoenix.Template do
       root = Keyword.fetch!(options, :root)
       @phoenix_root Path.relative_to_cwd(root)
       @phoenix_pattern Keyword.get(options, :pattern, unquote(@default_pattern))
-      @phoenix_template_engines Keyword.get(options, :template_engines, %{})
+      @phoenix_template_engines Enum.into(
+                                  Keyword.get(options, :template_engines, %{}),
+                                  Template.engines()
+                                )
       @before_compile unquote(__MODULE__)
 
       @doc """
@@ -152,11 +155,11 @@ defmodule Phoenix.Template do
     root    = Module.get_attribute(env.module, :phoenix_root)
     pattern = Module.get_attribute(env.module, :phoenix_pattern)
     engines = Module.get_attribute(env.module, :phoenix_template_engines)
-    engines = Enum.into(engines, engines())
 
-    pairs = for path <- find_all(root, pattern) do
-      compile(path, root, engines)
-    end
+    pairs =
+      for path <- find_all(root, engines, pattern) do
+        compile(path, root, engines)
+      end
 
     names = Enum.map(pairs, &elem(&1, 0))
     codes = Enum.map(pairs, &elem(&1, 1))
@@ -175,6 +178,10 @@ defmodule Phoenix.Template do
 
       defp render_template(template, assigns) do
         template_not_found(template, Map.put(assigns, :__phx_template_not_found__, __MODULE__))
+      end
+
+      def engines() do
+        @phoenix_template_engines
       end
 
       @doc """
@@ -228,6 +235,8 @@ defmodule Phoenix.Template do
   def engines do
     compiled_engines()
   end
+
+  defoverridable engines: 0
 
   defp compiled_engines do
     case Application.fetch_env(:phoenix, :compiled_template_engines) do
@@ -306,9 +315,15 @@ defmodule Phoenix.Template do
   @doc """
   Returns all template paths in a given template root.
   """
-  @spec find_all(root, pattern :: String.t) :: [path]
-  def find_all(root, pattern \\ @default_pattern) do
-    extensions = engines() |> Map.keys() |> Enum.join(",")
+  @spec find_all(root, pattern :: String.t()) :: [path]
+  def find_all(root, pattern \\ @default_pattern)
+
+  def find_all(root, pattern) do
+    find_all(root, engines(), pattern)
+  end
+
+  defp find_all(root, engines, pattern) do
+    extensions = engines |> Map.keys() |> Enum.join(",")
 
     root
     |> Path.join(pattern <> ".{#{extensions}}")
