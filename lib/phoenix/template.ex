@@ -194,7 +194,7 @@ defmodule Phoenix.Template do
       Returns true whenever the list of templates changes in the filesystem.
       """
       def __phoenix_recompile__? do
-        unquote(hash(root, pattern)) != Template.hash(@phoenix_root, @phoenix_pattern)
+        unquote(hash(root, engines, pattern)) != Template.hash(@phoenix_root, @phoenix_template_engines, @phoenix_pattern)
       end
     end
   end
@@ -335,8 +335,14 @@ defmodule Phoenix.Template do
   Used by Phoenix to check if a given root path requires recompilation.
   """
   @spec hash(root, pattern :: String.t) :: binary
-  def hash(root, pattern \\ @default_pattern) do
-    find_all(root, pattern)
+  def hash(root, pattern \\ @default_pattern)
+
+  def hash(root, pattern) do
+    hash(root, engines(), pattern)
+  end
+
+  def hash(root, engines, pattern) do
+    find_all(root, engines, pattern)
     |> Enum.sort()
     |> :erlang.md5()
   end
