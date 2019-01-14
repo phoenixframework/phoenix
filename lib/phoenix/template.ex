@@ -179,10 +179,6 @@ defmodule Phoenix.Template do
         template_not_found(template, Map.put(assigns, :__phx_template_not_found__, __MODULE__))
       end
 
-      def engines() do
-        @phoenix_template_engines
-      end
-
       @doc """
       Returns the template root alongside all templates.
       """
@@ -234,8 +230,6 @@ defmodule Phoenix.Template do
   def engines do
     compiled_engines()
   end
-
-  defoverridable engines: 0
 
   defp compiled_engines do
     case Application.fetch_env(:phoenix, :compiled_template_engines) do

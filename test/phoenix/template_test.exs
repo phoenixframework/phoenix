@@ -134,10 +134,6 @@ defmodule Phoenix.TemplateTest do
     end
   end
 
-  test "custom view has foo engine" do
-    assert %{foo: Phoenix.Template.EExEngine} = CustomEngineView.engines()
-  end
-
   test "custom view renders custom templates" do
     assert CustomEngineView.render("custom", %{}) == "from foo"
   end
