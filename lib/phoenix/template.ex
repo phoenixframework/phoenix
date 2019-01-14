@@ -156,7 +156,7 @@ defmodule Phoenix.Template do
     engines = Module.get_attribute(env.module, :phoenix_template_engines)
 
     pairs =
-      for path <- find_all(root, engines, pattern) do
+      for path <- find_all(root, pattern, engines) do
         compile(path, root, engines)
       end
 
@@ -194,7 +194,7 @@ defmodule Phoenix.Template do
       Returns true whenever the list of templates changes in the filesystem.
       """
       def __phoenix_recompile__? do
-        unquote(hash(root, engines, pattern)) != Template.hash(@phoenix_root, @phoenix_template_engines, @phoenix_pattern)
+        unquote(hash(root, pattern, engines)) != Template.hash(@phoenix_root, @phoenix_pattern, @phoenix_template_engines)
       end
     end
   end
@@ -314,14 +314,8 @@ defmodule Phoenix.Template do
   @doc """
   Returns all template paths in a given template root.
   """
-  @spec find_all(root, pattern :: String.t()) :: [path]
-  def find_all(root, pattern \\ @default_pattern)
-
-  def find_all(root, pattern) do
-    find_all(root, engines(), pattern)
-  end
-
-  defp find_all(root, engines, pattern) do
+  @spec find_all(root, pattern :: String.t(), %{atom => module}) :: [path]
+  def find_all(root, pattern \\ @default_pattern, engines \\ engines()) do
     extensions = engines |> Map.keys() |> Enum.join(",")
 
     root
@@ -334,15 +328,9 @@ defmodule Phoenix.Template do
 
   Used by Phoenix to check if a given root path requires recompilation.
   """
-  @spec hash(root, pattern :: String.t) :: binary
-  def hash(root, pattern \\ @default_pattern)
-
-  def hash(root, pattern) do
-    hash(root, engines(), pattern)
-  end
-
-  def hash(root, engines, pattern) do
-    find_all(root, engines, pattern)
+  @spec hash(root, pattern :: String.t, %{atom => module}) :: binary
+  def hash(root, pattern \\ @default_pattern, engines \\ engines()) do
+    find_all(root, pattern, engines)
     |> Enum.sort()
     |> :erlang.md5()
   end
