@@ -35,7 +35,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         }} = context
 
       assert String.ends_with?(context.dir, "lib/phoenix/blog")
-      assert String.ends_with?(context.file, "lib/phoenix/blog/blog.ex")
+      assert String.ends_with?(context.file, "lib/phoenix/blog.ex")
       assert String.ends_with?(context.test_file, "test/phoenix/blog/blog_test.exs")
       assert String.ends_with?(context.schema.file, "lib/phoenix/blog/post.ex")
     end
@@ -62,7 +62,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         }} = context
 
       assert String.ends_with?(context.dir, "lib/phoenix/site/blog")
-      assert String.ends_with?(context.file, "lib/phoenix/site/blog/blog.ex")
+      assert String.ends_with?(context.file, "lib/phoenix/site/blog.ex")
       assert String.ends_with?(context.test_file, "test/phoenix/site/blog/blog_test.exs")
       assert String.ends_with?(context.schema.file, "lib/phoenix/site/blog/post.ex")
     end
@@ -71,7 +71,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
   test "new existing context", config do
     in_tmp_project config.test, fn ->
       File.mkdir_p!("lib/phoenix/blog")
-      File.write!("lib/phoenix/blog/blog.ex", """
+      File.write!("lib/phoenix/blog.ex", """
       defmodule Phoenix.Blog do
       end
       """)
@@ -122,7 +122,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "field :title, :string"
       end
 
-      assert_file "lib/phoenix/blog/blog.ex", fn file ->
+      assert_file "lib/phoenix/blog.ex", fn file ->
         assert file =~ "def get_post!"
         assert file =~ "def list_posts"
         assert file =~ "def create_post"
@@ -149,7 +149,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       Gen.Context.run(~w(Blog Comment comments title:string))
 
       assert_received {:mix_shell, :info, ["You are generating into an existing context" <> notice]}
-      assert notice =~ "Phoenix.Blog context currently has 6 functions and 2 files in its directory"
+      assert notice =~ "Phoenix.Blog context currently has 6 functions and 1 files in its directory"
       assert_received {:mix_shell, :yes?, ["Would you like to proceed?"]}
 
       assert_file "lib/phoenix/blog/comment.ex", fn file ->
@@ -168,7 +168,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "add :title, :string"
       end
 
-      assert_file "lib/phoenix/blog/blog.ex", fn file ->
+      assert_file "lib/phoenix/blog.ex", fn file ->
         assert file =~ "def get_comment!"
         assert file =~ "def list_comments"
         assert file =~ "def create_comment"
@@ -185,7 +185,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
       refute_file "lib/phoenix/blog/post.ex"
 
-      assert_file "lib/phoenix/blog/blog.ex", fn file ->
+      assert_file "lib/phoenix/blog.ex", fn file ->
         assert file =~ "def get_post!"
         assert file =~ "def list_posts"
         assert file =~ "def create_post"
