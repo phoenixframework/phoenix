@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
                       weight:float user_id:references:users))
 
       assert_file "lib/phoenix/blog/post.ex"
-      assert_file "lib/phoenix/blog/blog.ex"
+      assert_file "lib/phoenix/blog.ex"
       assert_file "test/phoenix/blog/blog_test.exs", fn file ->
         assert file =~ "alarm: ~T[15:01:01]"
         assert file =~ "alarm_usec: ~T[15:01:01.000000]"
@@ -235,7 +235,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     in_tmp_project config.test, fn ->
       Gen.Html.run(~w(Blog Comment comments title:string --no-context))
 
-      refute_file "lib/phoenix/blog/blog.ex"
+      refute_file "lib/phoenix/blog.ex"
       refute_file "lib/phoenix/blog/comment.ex"
       assert Path.wildcard("priv/repo/migrations/*.exs") == []
 
@@ -259,7 +259,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     in_tmp_project config.test, fn ->
       Gen.Html.run(~w(Blog Comment comments title:string --no-schema))
 
-      assert_file "lib/phoenix/blog/blog.ex"
+      assert_file "lib/phoenix/blog.ex"
       refute_file "lib/phoenix/blog/comment.ex"
       assert Path.wildcard("priv/repo/migrations/*.exs") == []
 
@@ -285,7 +285,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         Application.put_env(:phoenix, :generators, context_app: nil)
         Gen.Html.run(~w(Accounts User users name:string))
 
-        assert_file "lib/phoenix/accounts/accounts.ex"
+        assert_file "lib/phoenix/accounts.ex"
         assert_file "lib/phoenix/accounts/user.ex"
 
         assert_file "lib/phoenix_web/controllers/user_controller.ex", fn file ->
@@ -320,7 +320,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
         Gen.Html.run(~w(Accounts User users name:string))
 
-        assert_file "another_app/lib/another_app/accounts/accounts.ex"
+        assert_file "another_app/lib/another_app/accounts.ex"
         assert_file "another_app/lib/another_app/accounts/user.ex"
 
         assert_file "lib/phoenix/controllers/user_controller.ex", fn file ->

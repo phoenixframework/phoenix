@@ -59,8 +59,8 @@ username:string:unique
 * creating test/hello_web/controllers/user_controller_test.exs
 * creating lib/hello/accounts/user.ex
 * creating priv/repo/migrations/20170629175236_create_users.exs
-* creating lib/hello/accounts/accounts.ex
-* injecting lib/hello/accounts/accounts.ex
+* creating lib/hello/accounts.ex
+* injecting lib/hello/accounts.ex
 * creating test/hello/accounts/accounts_test.exs
 * injecting test/hello/accounts/accounts_test.exs
 
@@ -75,7 +75,7 @@ Remember to update your repository by running migrations:
 
 ```
 
-Phoenix generated the web files as expected in `lib/hello_web/`. We can also see our context files were generated inside a `lib/hello/accounts/` directory. Note the difference between `lib/hello` and `lib/hello_web`. We have an `Accounts` module to serve as the public API for account functionality, as well as an `Accounts.User` struct, which is an Ecto schema for casting and validating user account data. Phoenix also provided web and context tests for us, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_web/router.ex`:
+Phoenix generated the web files as expected in `lib/hello_web/`. We can also see our context files were generated inside a `lib/hello/accounts.ex` file and our user schema in the directory of the same name. Note the difference between `lib/hello` and `lib/hello_web`. We have an `Accounts` module to serve as the public API for account functionality, as well as an `Accounts.User` struct, which is an Ecto schema for casting and validating user account data. Phoenix also provided web and context tests for us, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_web/router.ex`:
 
 ```elixir
   scope "/", HelloWeb do
@@ -160,7 +160,7 @@ We've seen how controllers work in our [controller guide](controllers.html), so 
 
 In the case of our `create` action, when we successfully create a user, we use `Phoenix.Controller.put_flash/3` to show a success message, and then we redirect to the `user_path`'s show page. Conversely, if `Accounts.create_user/1` fails, we render our `"new.html"` template and pass along the Ecto changeset for the template to lift error messages from.
 
-Next, let's dig deeper and check out our `Accounts` context in `lib/hello/accounts/accounts.ex`:
+Next, let's dig deeper and check out our `Accounts` context in `lib/hello/accounts.ex`:
 
 ```elixir
 defmodule Hello.Accounts do
@@ -257,7 +257,7 @@ email:string:unique user_id:references:users
 
 * creating lib/hello/accounts/credential.ex
 * creating priv/repo/migrations/20170629180555_create_credentials.exs
-* injecting lib/hello/accounts/accounts.ex
+* injecting lib/hello/accounts.ex
 * injecting test/hello/accounts/accounts_test.exs
 
 Remember to update your repository by running migrations:
@@ -267,7 +267,7 @@ Remember to update your repository by running migrations:
 
 This time around, we used the `phx.gen.context` task, which is just like `phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing users, we can integrate the new credential features into our existing web form.
 
-We can see from the output that Phoenix generated an `accounts/credential.ex` file for our `Accounts.Credential` schema, as well as a migration. Notably, phoenix said it was `* injecting` code into the existing `accounts/accounts.ex` context file and test file. Since our `Accounts` module already exists, Phoenix knows to inject our code here.
+We can see from the output that Phoenix generated an `accounts/credential.ex` file for our `Accounts.Credential` schema, as well as a migration. Notably, phoenix said it was `* injecting` code into the existing `accounts.ex` context file and test file. Since our `Accounts` module already exists, Phoenix knows to inject our code here.
 
 Before we run our migrations, we need to make one change to the generated migration to enforce data integrity of user account credentials. In our case, we want a user's credentials to be deleted when the parent user is removed. Make the following change to your `*_create_credentials.exs` migration file in `priv/repo/migrations/`:
 
@@ -342,7 +342,7 @@ We used `Ecto.Schema`'s `has_one` macro to let Ecto know how to associate our pa
 
 ```
 
-We used the `belongs_to` macro to map our child relationship to the parent `User`. With our schema associations set up, let's open up `accounts/accounts.ex` and make the following changes to the generated `list_users` and `get_user!`  functions:
+We used the `belongs_to` macro to map our child relationship to the parent `User`. With our schema associations set up, let's open up `accounts.ex` and make the following changes to the generated `list_users` and `get_user!`  functions:
 
 ```elixir
   def list_users do
@@ -437,7 +437,7 @@ To start, let's think of a function name that describes what we want to accompli
 
     > user = Accounts.authenticate_by_email_password(email, password)
 
-That looks nice. A descriptive name that exposes the intent of our code is best. This function makes it crystal clear what purpose it serves, while allowing our caller to remain blissfully unaware of the internal details. Make the following additions to your `lib/hello/accounts/accounts.ex` file:
+That looks nice. A descriptive name that exposes the intent of our code is best. This function makes it crystal clear what purpose it serves, while allowing our caller to remain blissfully unaware of the internal details. Make the following additions to your `lib/hello/accounts.ex` file:
 
 ```elixir
 def authenticate_by_email_password(email, _password) do
@@ -596,8 +596,8 @@ views:integer --web CMS
 * creating test/hello_web/controllers/cms/page_controller_test.exs
 * creating lib/hello/cms/page.ex
 * creating priv/repo/migrations/20170629195946_create_pages.exs
-* creating lib/hello/cms/cms.ex
-* injecting lib/hello/cms/cms.ex
+* creating lib/hello/cms.ex
+* injecting lib/hello/cms.ex
 * creating test/hello/cms/cms_test.exs
 * injecting test/hello/cms/cms_test.exs
 
@@ -686,7 +686,7 @@ genre:string user_id:references:users:unique
 
 * creating lib/hello/cms/author.ex
 * creating priv/repo/migrations/20170629200937_create_authors.exs
-* injecting lib/hello/cms/cms.ex
+* injecting lib/hello/cms.ex
 * injecting test/hello/cms/cms_test.exs
 
 Remember to update your repository by running migrations:
@@ -810,7 +810,7 @@ Next, let's add the association in the other direction in `lib/hello/cms/author.
 
 We added the `has_many` association for author pages, and then introduced our data dependency on the `Accounts` context by wiring up the `belongs_to` association to our `Accounts.User` schema.
 
-With our associations in place, let's update our `CMS` context to require an author when creating or updating a page. We'll start off with data fetching changes. Open up your `CMS` context in `lib/hello/cms/cms.ex` and replace the `list_pages/0`, `get_page!/1`, and `get_author!/1` functions with the following definitions:
+With our associations in place, let's update our `CMS` context to require an author when creating or updating a page. We'll start off with data fetching changes. Open up your `CMS` context in `lib/hello/cms.ex` and replace the `list_pages/0`, `get_page!/1`, and `get_author!/1` functions with the following definitions:
 
 ```elixir
   alias Hello.CMS.{Page, Author}
@@ -837,7 +837,7 @@ With our associations in place, let's update our `CMS` context to require an aut
 
 We started by rewriting the `list_pages/0` function to preload the associated author, user, and credential data from the database. Next, we rewrote `get_page!/1` and `get_author!/1` to also preload the necessary data.
 
-With our data access functions in place, let's turn our focus towards persistence. We can fetch authors alongside pages, but we haven't yet allowed authors to be persisted when we create or edit pages. Let's fix that. Open up `lib/hello/cms/cms.ex` and make the following changes:
+With our data access functions in place, let's turn our focus towards persistence. We can fetch authors alongside pages, but we haven't yet allowed authors to be persisted when we create or edit pages. Let's fix that. Open up `lib/hello/cms.ex` and make the following changes:
 
 
 ```elixir
@@ -1015,7 +1015,7 @@ Again, let's think of a function name that describes what we want to accomplish.
 
 That looks great. Our callers will have no confusion over what this function does and we can wrap up the increment in an atomic operation to prevent race conditions.
 
-Open up your CMS context (`lib/hello/cms/cms.ex`), and add this new function:
+Open up your CMS context (`lib/hello/cms.ex`), and add this new function:
 
 
 ```elixir

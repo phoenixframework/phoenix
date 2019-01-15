@@ -29,8 +29,8 @@ defmodule Mix.Phoenix.Context do
     basedir   = Phoenix.Naming.underscore(context_name)
     basename  = Path.basename(basedir)
     dir       = Mix.Phoenix.context_lib_path(ctx_app, basedir)
+    file      = dir <> ".ex"
     test_dir  = Mix.Phoenix.context_test_path(ctx_app, basedir)
-    file      = Path.join([dir, basename <> ".ex"])
     test_file = Path.join([test_dir, basename <> "_test.exs"])
     generate? = Keyword.get(opts, :context, true)
 
