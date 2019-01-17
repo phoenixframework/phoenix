@@ -2,7 +2,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   use <%= inspect context.web_module %>, :controller
 
   alias <%= inspect context.module %>
-  alias <%= inspect schema.module %>
 
   def index(conn, _params) do
     <%= schema.plural %> = <%= inspect context.alias %>.list_<%= schema.plural %>()
@@ -10,7 +9,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def new(conn, _params) do
-    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(%<%= inspect schema.alias %>{})
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>()
     render(conn, "new.html", changeset: changeset)
   end
 

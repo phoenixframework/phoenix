@@ -91,6 +91,6 @@
       %Ecto.Changeset{source: %<%= inspect schema.alias %>{}}
 
   """
-  def change_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
+  def change_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %> \\ %<%= inspect schema.alias %>{}) do
     <%= inspect schema.alias %>.changeset(<%= schema.singular %>, %{})
   end

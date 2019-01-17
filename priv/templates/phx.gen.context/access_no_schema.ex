@@ -84,6 +84,6 @@
       %Todo{...}
 
   """
-  def change_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
+  def change_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %> \\ %<%= inspect schema.alias %>{}) do
     raise "TODO"
   end
