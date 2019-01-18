@@ -91,7 +91,7 @@ defmodule HelloWeb.ErrorViewTest do
 end
 ```
 
-`HelloWeb.ErrorViewTest` sets `async: true` which means that this test case will be run in parallel with other test cases. While individual tests within the case still run serially, this can greatly increase overall test speeds. It is possible to encounter strange behavior with asynchronous tests, but thanks to the [`Ecto.Adapters.SQL.Sandbox`](https://hexdocs.pm/ecto/Ecto.Adapters.SQL.Sandbox.html), async tests involving a database can be done without worry. This means that the vast majority of tests in your Phoenix application will be able to be run asynchronously.
+`HelloWeb.ErrorViewTest` sets `async: true` which means that this test case will be run in parallel with other test cases. While individual tests within the case still run serially, this can greatly increase overall test speeds. It is possible to encounter strange behavior with asynchronous tests, but thanks to the [`Ecto.Adapters.SQL.Sandbox`](https://hexdocs.pm/ecto_sql/Ecto.Adapters.SQL.Sandbox.html), async tests involving a database can be done without worry. This means that the vast majority of tests in your Phoenix application will be able to be run asynchronously.
 
 It also imports `Phoenix.View` in order to use the `render_to_string/3` function. With that, all the assertions can be simple string equality tests.
 
