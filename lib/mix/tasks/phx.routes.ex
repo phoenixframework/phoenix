@@ -27,13 +27,25 @@ defmodule Mix.Tasks.Phx.Routes do
 
   @doc false
   def run(args, base \\ Mix.Phoenix.base()) do
-    Mix.Task.run "compile", args
+    Mix.Task.run("compile", args)
 
-    args
-    |> Enum.at(0)
-    |> router(base)
-    |> ConsoleFormatter.format()
+    {router_mod, opts} =
+      case OptionParser.parse(args, switches: [enpdoint: :string, router: :string]) do
+        {opts, [passed_router], _} -> {router(passed_router, base), opts}
+        {opts, [], _} -> {router(opts[:router], base), opts}
+      end
+
+
+    router_mod
+    |> ConsoleFormatter.format(endpoint(opts[:endpoint], base))
     |> Mix.shell.info()
+  end
+
+  defp endpoint(nil, base) do
+    loaded(web_mod(base, "Endpoint"))
+  end
+  defp endpoint(module, base) do
+    loaded(Module.concat([module]))
   end
 
   defp router(nil, base) do
@@ -55,11 +67,13 @@ defmodule Mix.Tasks.Phx.Routes do
     """
   end
   defp router(router_name, _base) do
-    arg_router = Module.concat("Elixir", router_name)
-    loaded(arg_router) || Mix.raise "the provided router, #{inspect arg_router}, does not exist"
+    arg_router = Module.concat([router_name])
+    loaded(arg_router) || Mix.raise "the provided router, #{inspect(arg_router)}, does not exist"
   end
 
-  defp loaded(module), do: Code.ensure_loaded?(module) && module
+  defp loaded(module) do
+    if Code.ensure_loaded?(module), do: module
+  end
 
   defp app_mod(base, name), do: Module.concat([base, name])
 
