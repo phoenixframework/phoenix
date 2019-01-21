@@ -149,7 +149,7 @@ config :hello, Hello.Repo,
   ssl: true
 ```
 
-Afterwards, let's tell the Phoenix application to bind to the PORT environment variable provided by heroku's [dyno networking](https://devcenter.heroku.com/articles/dynos#common-runtime-networking) so that it can accept incoming web traffic. Add this beneath your endpoint configuration:
+Afterwards, let's tell the Phoenix application to bind to the PORT environment variable provided by Heroku's [dyno networking](https://devcenter.heroku.com/articles/dynos#common-runtime-networking) so that it can accept incoming web traffic. Add this beneath your endpoint configuration:
 
 ```elixir
 http: [port: System.get_env("PORT")]
