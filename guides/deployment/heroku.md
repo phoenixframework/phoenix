@@ -149,6 +149,12 @@ config :hello, Hello.Repo,
   ssl: true
 ```
 
+Afterwards, let's tell the Phoenix application to bind to the PORT environment variable provided by Heroku's [dyno networking](https://devcenter.heroku.com/articles/dynos#common-runtime-networking) so that it can accept incoming web traffic. Add this beneath your endpoint configuration:
+
+```elixir
+http: [port: System.get_env("PORT")]
+```
+
 Now, let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Find the url line:
 
 ```elixir
@@ -182,6 +188,7 @@ use Mix.Config
 ...
 
 config :hello, HelloWeb.Endpoint,
+  http: [port: System.get_env("PORT")],
   url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
   force_ssl: [rewrite_on: [:x_forwarded_proto]],
   cache_static_manifest: "priv/static/cache_manifest.json",
