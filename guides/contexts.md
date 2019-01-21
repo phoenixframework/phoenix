@@ -9,7 +9,7 @@ Using the context generators is a great way for beginners and intermediate Elixi
 
 ## Thinking about design
 
-Contexts are dedicated modules that expose and group related functionality. For example, anytime you call Elixir's standard library, be it `Logger.info/1` or `Stream.map/2`, you are accessing different contexts. Internally, Elixir's logger is made of multiple modules, such as `Logger.Config` and `Logger.Backends`, but we never interact with those modules directly. We call the `Logger` module the context, exactly because it exposes and groups all of the logging functionality.
+Contexts are dedicated modules that expose and group related functionality. For example, anytime you call Elixir's standard library, be it `Logger.info/1` or `Stream.map/2`, you are accessing different contexts. Internally, Elixir's logger is made of multiple modules, but we never interact with those modules directly. We call the `Logger` module the context, exactly because it exposes and groups all of the logging functionality.
 
 Phoenix projects are structured like Elixir and any other Elixir project – we split our code into contexts. A context will group related functionality, such as posts and comments, often encapsulating patterns such as data access and data validation. By using contexts, we decouple and isolate our systems into manageable, independent parts.
 

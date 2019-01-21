@@ -420,7 +420,7 @@ For a list of valid content mime-types, please see the [mime.types](https://gith
 
 We can also set the HTTP status code of a response similarly to the way we set the content type. The `Plug.Conn` module, imported into all controllers, has a `put_status/2` function to do this.
 
-`put_status/2` takes `conn` as the first parameter and as the second parameter either an integer or a "friendly name" used as an atom for the status code we want to set. Here is the list of supported [friendly names](https://github.com/elixir-lang/plug/blob/v1.3.0/lib/plug/conn/status.ex#L9-L69). Please note that the rule to convert a "friendly name" to an atom follows [this rule](https://github.com/elixir-plug/plug/blob/v1.3.0/lib/plug/conn/status.ex#L74-L77). For example, `I'm a teapot` becomes `:im_a_teapot`.
+`Plug.Conn.put_status/2` takes `conn` as the first parameter and as the second parameter either an integer or a "friendly name" used as an atom for the status code we want to set. The list of status code atom representations can be found in `Plug.Conn.Status.code/1` documentation.
 
 Let's change the status in our `PageController` `index` action.
 

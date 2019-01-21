@@ -4,7 +4,7 @@
 
 Testing has become integral to the software development process, and the ability to easily write meaningful tests is an indispensable feature for any modern web framework. Phoenix takes this seriously, providing support files to make all the major components of the framework easy to test. It also generates test modules with real-world examples alongside any generated modules to help get us going.
 
-Elixir ships with a built-in testing framework called [ExUnit](https://hexdocs.pm/ex_unit/1.5.1/ExUnit.html). ExUnit strives to be clear and explicit, keeping magic to a minimum. Phoenix uses ExUnit for all of its testing, and we will use it here as well.
+Elixir ships with a built-in testing framework called [ExUnit](https://hexdocs.pm/ex_unit/ExUnit.html). ExUnit strives to be clear and explicit, keeping magic to a minimum. Phoenix uses ExUnit for all of its testing, and we will use it here as well.
 
 ExUnit refers to a test module as a "test case", and we will do the same.
 
@@ -91,7 +91,7 @@ defmodule HelloWeb.ErrorViewTest do
 end
 ```
 
-`HelloWeb.ErrorViewTest` sets `async: true` which means that this test case will be run in parallel with other test cases. While individual tests within the case still run serially, this can greatly increase overall test speeds. It is possible to encounter strange behavior with asynchronous tests, but thanks to the [`Ecto.Adapters.SQL.Sandbox`](https://hexdocs.pm/ecto/Ecto.Adapters.SQL.Sandbox.html), async tests involving a database can be done without worry. This means that the vast majority of tests in your Phoenix application will be able to be run asynchronously.
+`HelloWeb.ErrorViewTest` sets `async: true` which means that this test case will be run in parallel with other test cases. While individual tests within the case still run serially, this can greatly increase overall test speeds. It is possible to encounter strange behavior with asynchronous tests, but thanks to the [`Ecto.Adapters.SQL.Sandbox`](https://hexdocs.pm/ecto_sql/Ecto.Adapters.SQL.Sandbox.html), async tests involving a database can be done without worry. This means that the vast majority of tests in your Phoenix application will be able to be run asynchronously.
 
 It also imports `Phoenix.View` in order to use the `render_to_string/3` function. With that, all the assertions can be simple string equality tests.
 
