@@ -485,7 +485,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_layout(Plug.Conn.t, {atom, binary | atom} | binary | false) :: Plug.Conn.t
+  @spec put_layout(Plug.Conn.t, {atom, binary | atom} | atom | binary | false) :: Plug.Conn.t
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
       do_put_layout(conn, layout)
