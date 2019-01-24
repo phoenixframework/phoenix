@@ -171,6 +171,8 @@ Phoenix ships with a JavaScript client that is available when generating a new P
   - [SwiftPhoenix](https://github.com/davidstump/SwiftPhoenixClient)
 + Java (Android)
   - [JavaPhoenixChannels](https://github.com/eoinsha/JavaPhoenixChannels)
++ Kotlin (Android)
+  - [JavaPhoenixClient](https://github.com/dsrees/JavaPhoenixClient)
 + C#
   - [PhoenixSharp](https://github.com/Mazyod/PhoenixSharp)
   - [dn-phoenix](https://github.com/jfis/dn-phoenix)
