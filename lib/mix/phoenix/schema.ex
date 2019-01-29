@@ -30,7 +30,8 @@ defmodule Mix.Phoenix.Schema do
             web_path: nil,
             web_namespace: nil,
             context_app: nil,
-            route_helper: nil
+            route_helper: nil,
+            migration_module: nil
 
   @valid_types [
     :integer,
@@ -76,6 +77,7 @@ defmodule Mix.Phoenix.Schema do
     web_path = web_namespace && Phoenix.Naming.underscore(web_namespace)
     embedded? = Keyword.get(opts, :embedded, false)
     generate? = Keyword.get(opts, :schema, true)
+    migration_module = migration_module()
 
     singular =
       module
@@ -122,7 +124,8 @@ defmodule Mix.Phoenix.Schema do
       route_helper: route_helper(web_path, singular),
       sample_id: sample_id(opts),
       context_app: ctx_app,
-      generate?: generate?}
+      generate?: generate?,
+      migration_module: migration_module}
   end
 
   @doc """
@@ -342,5 +345,20 @@ defmodule Mix.Phoenix.Schema do
     "#{web_path}_#{singular}"
     |> String.trim_leading("_")
     |> String.replace("/", "_")
+  end
+
+@doc """
+  Looks in the application configuration file for a custom migration module to use when generating the migration file.
+  
+  ## Example
+    config :ecto_sql, migration_module: MyApplication.CustomMigrationModule
+  If a custom migration module is not defined in the configuration, returns the default Ecto.Migration
+  """
+  defp migration_module() do
+    case Application.get_env(:ecto_sql, :migration_module) do
+      nil -> Ecto.Migration
+      migration_module when is_atom(migration_module) -> migration_module
+      other -> raise "Expect :migration_module to be a module, got: #{inspect(other)}"
+    end
   end
 end

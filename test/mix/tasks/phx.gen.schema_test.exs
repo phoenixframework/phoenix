@@ -268,6 +268,22 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         end
       end
     end
+
+    in_tmp_project "uses defaults from generators configuration (binary_id) with Migration Module set", fn ->
+      with_generator_env [binary_id: true], fn ->
+        Application.put_env(:ecto_sql, :migration_module, MyCustomApp.MigrationModule)
+        Gen.Schema.run(~w(Blog.Post posts))
+        Application.delete_env(:ecto_sql, :migration_module)
+
+        assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
+
+        assert_file migration, fn file ->
+          assert file =~ "use MyCustomApp.MigrationModule"
+          assert file =~ "create table(:posts, primary_key: false) do"
+          assert file =~ "add :id, :binary_id, primary_key: true"
+        end
+      end
+    end
   end
 
   test "generates schema without extra line break", config do
