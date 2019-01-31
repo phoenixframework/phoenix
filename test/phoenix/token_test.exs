@@ -46,6 +46,7 @@ defmodule Phoenix.TokenTest do
     assert Token.verify(conn(), "id", token, max_age: -1000) == {:error, :expired}
     assert Token.verify(conn(), "id", token, max_age: 100) == {:ok, 1}
     assert Token.verify(conn(), "id", token, max_age: -100) == {:error, :expired}
+    assert Token.verify(conn(), "id", token, max_age: 0) == {:error, :expired}
 
     token = Token.sign(conn(), "id", 1)
     assert Token.verify(conn(), "id", token, max_age: 0.1) == {:ok, 1}
