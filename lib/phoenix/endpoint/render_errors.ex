@@ -66,7 +66,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
   end
 
   defp instrument_render_and_send(conn, kind, reason, stack, opts) do
-    level = Keyword.get(opts, :log_level, :info)
+    level = Keyword.get(opts, :log_level, :debug)
     status = status(kind, reason)
     conn = error_conn(conn, kind, reason)
     metadata = %{status: status, conn: conn, kind: kind, reason: reason, stacktrace: stack, log_level: level}
