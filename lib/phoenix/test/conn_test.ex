@@ -10,9 +10,9 @@ defmodule Phoenix.ConnTest do
 
   `Phoenix.ConnTest` typically works against endpoints. That's the preferred way
   to test anything that your router dispatches to:
-  
+
       @endpoint MyAppWeb.Endpoint
-      
+
       test "says welcome on the home page" do
         conn = get(build_conn(), "/")
         assert conn.resp_body =~ "Welcome!"
@@ -55,7 +55,7 @@ defmodule Phoenix.ConnTest do
   and pass an atom representing the action to dispatch:
 
       @endpoint MyAppWeb.HomeController
-    
+
       test "says welcome on the home page" do
         conn = get(build_conn(), :index)
         assert conn.resp_body =~ "Welcome!"
@@ -370,7 +370,7 @@ defmodule Phoenix.ConnTest do
     if given == status do
       body
     else
-      raise "expected response with status #{given}, got: #{status}, with body:\n#{body}"
+      raise "expected response with status #{given}, got: #{status}, with body:\n#{inspect(body)}"
     end
   end
 
