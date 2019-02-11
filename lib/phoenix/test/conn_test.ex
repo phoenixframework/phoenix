@@ -10,9 +10,9 @@ defmodule Phoenix.ConnTest do
 
   `Phoenix.ConnTest` typically works against endpoints. That's the preferred way
   to test anything that your router dispatches to:
-  
+
       @endpoint MyAppWeb.Endpoint
-      
+
       test "says welcome on the home page" do
         conn = get(build_conn(), "/")
         assert conn.resp_body =~ "Welcome!"
@@ -55,7 +55,7 @@ defmodule Phoenix.ConnTest do
   and pass an atom representing the action to dispatch:
 
       @endpoint MyAppWeb.HomeController
-    
+
       test "says welcome on the home page" do
         conn = get(build_conn(), :index)
         assert conn.resp_body =~ "Welcome!"
@@ -68,12 +68,12 @@ defmodule Phoenix.ConnTest do
 
   Under other circumstances, you may be testing a view or another layer that
   requires a connection for processing. For such cases, a connection can be
-  created using the `conn/3` helper:
+  created using the `build_conn/3` helper:
 
       MyApp.UserView.render("hello.html", conn: build_conn(:get, "/"))
 
   While `build_conn/0` returns a connection with no request information to it,
-  `build_conn/2` returns a connection with the given request information already
+  `build_conn/3` returns a connection with the given request information already
   filled in.
 
   ## Recycling
