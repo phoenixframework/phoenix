@@ -605,25 +605,6 @@ describe("onConnOpen", () => {
     assert.ok(spy.calledOnce)
   })
 
-  it("resets all channel timers and schedules a timeout if the timer was in progress", () => {
-    const channel = socket.channel("topic", {})
-    const channel2 = socket.channel("topic2", {})
-
-    channel.rejoinTimer.tries = 1
-    channel2.rejoinTimer.tries = 2
-    channel2.rejoinTimer.scheduleTimeout()
-
-    assert.equal(channel.rejoinTimer.timer, null)
-    assert.notEqual(channel2.rejoinTimer.timer, null)
-
-    socket.onConnOpen()
-
-    assert.equal(channel.rejoinTimer.tries, 0)
-    assert.equal(channel2.rejoinTimer.tries, 0)
-    assert.equal(channel.rejoinTimer.timer, null)
-    assert.notEqual(channel2.rejoinTimer.timer, null)
-  })
-
   it("triggers onOpen callback", () => {
     const spy = sinon.spy()
 
