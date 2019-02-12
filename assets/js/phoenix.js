@@ -840,7 +840,6 @@ export class Socket {
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     this.resetHeartbeat()
-    this.resetChannelTimers()
     this.stateChangeCallbacks.open.forEach( callback => callback() )
   }
 
@@ -987,15 +986,6 @@ export class Socket {
       for (let i = 0; i < this.stateChangeCallbacks.message.length; i++) {
         this.stateChangeCallbacks.message[i](msg)
       }
-    })
-  }
-
-  /**
-   * @private
-   */
-  resetChannelTimers() {
-    this.channels.forEach(channel => {
-      channel.rejoinTimer.restart()
     })
   }
 }
@@ -1358,31 +1348,18 @@ class Timer {
 
   reset(){
     this.tries = 0
-    this.clearTimer()
-  }
-
-  restart(){
-    const processing = this.timer !== null
-    this.reset()
-    if (processing){
-      this.scheduleTimeout()
-    }
+    clearTimeout(this.timer)
   }
 
   /**
    * Cancels any previous scheduleTimeout and schedules callback
    */
   scheduleTimeout(){
-    this.clearTimer()
+    clearTimeout(this.timer)
 
     this.timer = setTimeout(() => {
       this.tries = this.tries + 1
       this.callback()
     }, this.timerCalc(this.tries + 1))
-  }
-
-  clearTimer() {
-    clearTimeout(this.timer)
-    this.timer = null
   }
 }
