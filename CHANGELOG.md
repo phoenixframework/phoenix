@@ -24,6 +24,17 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.1 (2019-02-12)
+
+### Enhancements
+  * Optimize router helper generation for faster compilation
+  * Drop special convention for context locations
+
+### Bug Fixes
+  * Add missing `:jason` to generated umbrella application
+
+### JavaScript client bug fixes
+  * Fix reconnect regression experienced with spotty connections
 
 ## 1.4.0 (2018-11-07)
 
