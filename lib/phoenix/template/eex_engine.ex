@@ -6,7 +6,9 @@ defmodule Phoenix.Template.EExEngine do
   @behaviour Phoenix.Template.Engine
 
   def compile(path, name) do
-    EEx.compile_file(path, engine: engine_for(name), line: 1, trim: true)
+    engine = engine_for(name)
+    trim = engine == Phoenix.HTML.Engine
+    EEx.compile_file(path, engine: engine, line: 1, trim: trim)
   end
 
   defp engine_for(name) do

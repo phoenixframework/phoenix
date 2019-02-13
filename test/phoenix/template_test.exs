@@ -78,6 +78,11 @@ defmodule Phoenix.TemplateTest do
            {:safe, ["<div>Show! ", "hello!", "</div>\n"]}
   end
 
+  test "plain text template has trim off" do
+    assert View.render("plain.text", %{}) ==
+           "First line\nSecond line\nThird line\nFourth line\n"
+  end
+
   test "adds catch-all render_template/2 that raises UndefinedError" do
     assert_raise Phoenix.Template.UndefinedError, ~r/Could not render "not-exists.html".*/, fn ->
       View.render("not-exists.html", %{})
