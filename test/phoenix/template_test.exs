@@ -60,6 +60,11 @@ defmodule Phoenix.TemplateTest do
     end
   end
 
+  test "render eex templates only trim html" do
+    assert {:safe, ["123", "456" | _]} = View.render("trim.html", %{})
+    assert "123\n456\n789\n" = View.render("no_trim.text", %{})
+  end
+
   test "render eex templates sanitizes against xss by default" do
     assert View.render("show.html", %{message: ""}) ==
            {:safe, ["<div>Show! ", [], "</div>\n"]}
