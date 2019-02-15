@@ -35,8 +35,8 @@ $ mix phx.gen.context Accounts User users name:string email:string:unique passwo
 
 * creating lib/hello/accounts/user.ex
 * creating priv/repo/migrations/20170913155721_create_users.exs
-* creating lib/hello/accounts/accounts.ex
-* injecting lib/hello/accounts/accounts.ex
+* creating lib/hello/accounts.ex
+* injecting lib/hello/accounts.ex
 * creating test/hello/accounts/accounts_test.exs
 * injecting test/hello/accounts/accounts_test.exs
 
@@ -401,7 +401,7 @@ end
 
 We want a HTTP status code of 404 to notify the requester that this resource was not found, as well as an accompanying error message. Notice that we use [`text_response/2`](https://hexdocs.pm/phoenix/Phoenix.ConnTest.html#text_response/2) instead of [`json_response/2`](https://hexdocs.pm/phoenix/Phoenix.ConnTest.html#json_response/2) to assert that the status code is 404 and the response body matches the accompanying error message. You can run this test now to see what happens. You should see that an `Ecto.NoResultsError` is thrown, because there is no such user in the database.
 
-Our controller action needs to handle the error thrown by Ecto. We have two choices here. By default, this will be handled by the [phoenix_ecto](https://github.com/phoenixframework/phoenix_ecto) library, returning a 404. However if we want to show a custom error message, we can create a new `get_user/1` function that does not throw an Ecto error. For this example, we'll take the second path and implement a new `get_user/1` function in the file `lib/hello/accounts/accounts.ex`, just before the `get_user!/1` function:
+Our controller action needs to handle the error thrown by Ecto. We have two choices here. By default, this will be handled by the [phoenix_ecto](https://github.com/phoenixframework/phoenix_ecto) library, returning a 404. However if we want to show a custom error message, we can create a new `get_user/1` function that does not throw an Ecto error. For this example, we'll take the second path and implement a new `get_user/1` function in the file `lib/hello/accounts.ex`, just before the `get_user!/1` function:
 
 ```elixir
 @doc """
