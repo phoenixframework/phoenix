@@ -3,7 +3,6 @@ defmodule Phoenix.Router.Helpers do
   @moduledoc false
 
   alias Phoenix.Router.Route
-  alias Phoenix.Socket
   alias Plug.Conn
 
   @anno (if :erlang.system_info(:otp_release) >= '19' do
@@ -23,7 +22,7 @@ defmodule Phoenix.Router.Helpers do
     end
   end
 
-  def url(_router, %Socket{endpoint: endpoint}) do
+  def url(_router, %_{endpoint: endpoint}) do
     endpoint.url()
   end
 
@@ -37,8 +36,8 @@ defmodule Phoenix.Router.Helpers do
 
   def url(router, other) do
     raise ArgumentError,
-      "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{} or a Phoenix.Endpoint " <>
-      "when building url for #{inspect router}, got: #{inspect other}"
+      "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
+      "or a Phoenix.Endpoint when building url for #{inspect(router)}, got: #{inspect(other)}"
   end
 
   @doc """
@@ -55,7 +54,7 @@ defmodule Phoenix.Router.Helpers do
     (uri.path || "") <> path
   end
 
-  def path(_router, %Socket{endpoint: endpoint}, path) do
+  def path(_router, %_{endpoint: endpoint}, path) do
     endpoint.path(path)
   end
 
@@ -65,8 +64,8 @@ defmodule Phoenix.Router.Helpers do
 
   def path(router, other, _path) do
     raise ArgumentError,
-      "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{} or a Phoenix.Endpoint " <>
-      "when building path for #{inspect router}, got: #{inspect other}"
+      "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
+      "or a Phoenix.Endpoint when building path for #{inspect(router)}, got: #{inspect(other)}"
   end
 
   ## Helpers
@@ -208,7 +207,7 @@ defmodule Phoenix.Router.Helpers do
         private.phoenix_endpoint.static_path(path)
       end
 
-      def static_path(%Socket{endpoint: endpoint} = conn, path) do
+      def static_path(%_{endpoint: endpoint} = conn, path) do
         endpoint.static_path(path)
       end
 
@@ -223,7 +222,7 @@ defmodule Phoenix.Router.Helpers do
         static_url(private.phoenix_endpoint, path)
       end
 
-      def static_url(%Socket{endpoint: endpoint} = conn, path) do
+      def static_url(%_{endpoint: endpoint} = conn, path) do
         static_url(endpoint, path)
       end
 
