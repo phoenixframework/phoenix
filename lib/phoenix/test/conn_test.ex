@@ -370,7 +370,7 @@ defmodule Phoenix.ConnTest do
     if given == status do
       body
     else
-      raise "expected response with status #{given}, got: #{status}, with body:\n#{body}"
+      raise "expected response with status #{given}, got: #{status}, with body:\n#{inspect(body)}"
     end
   end
 
