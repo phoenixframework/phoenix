@@ -136,7 +136,7 @@ First, let's make sure our secret key is loaded from Heroku's environment variab
 config :hello, HelloWeb.Endpoint,
   url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json",
-  secret_key_base: Map.fetch!(System.get_env(), "SECRET_KEY_BASE")
+  secret_key_base: System.get_env("SECRET_KEY_BASE") || raise "missing SECRET_KEY_BASE env var"
 ```
 
 Then, we'll add the production database configuration to `config/prod.exs`:
@@ -192,7 +192,7 @@ config :hello, HelloWeb.Endpoint,
   url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
   force_ssl: [rewrite_on: [:x_forwarded_proto]],
   cache_static_manifest: "priv/static/cache_manifest.json",
-  secret_key_base: Map.fetch!(System.get_env(), "SECRET_KEY_BASE")
+  secret_key_base: System.get_env("SECRET_KEY_BASE") || raise "missing SECRET_KEY_BASE env var"
 
 # Do not print debug messages in production
 config :logger, level: :info
