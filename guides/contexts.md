@@ -1029,7 +1029,7 @@ def inc_page_views(%Page{} = page) do
 end
 ```
 
-We built a query for fetching the current page given its ID which we pass to `Repo.update_all`. Ecto's `Repo.update_all` allows us to perform batch updates against the database, and is perfect for atomically updating values, such as incrementing our views count. The result of the repo operation returns the number of updated records, along with the selected schema values specified by the `returning` option. When we receive the new page views, we use `put_in(page.views, views)` to place the new view count within the page.
+We built a query for fetching the current page given its ID which we pass to `Repo.update_all`. Ecto's `Repo.update_all` allows us to perform batch updates against the database, and is perfect for atomically updating values, such as incrementing our views count. The result of the repo operation returns the number of updated records, along with the selected schema values specified by the `select` option. When we receive the new page views, we use `put_in(page.views, views)` to place the new view count within the page.
 
 With our context function in place, let's make use of it in our CMS page controller. Update your `show` action in `lib/hello_web/controllers/cms/page_controller.ex` to call our new function:
 
