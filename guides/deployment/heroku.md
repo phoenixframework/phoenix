@@ -85,14 +85,13 @@ Git remote heroku added
 
 > Note: the name of the Heroku application is the random string after "Creating" in the output above (mysterious-meadow-6277). This will be unique, so expect to see a different name from "mysterious-meadow-6277".
 
-The `--buildpack` option we are passing allows us to specify the [Elixir buildpack](https://github.com/HashNuke/heroku-buildpack-elixir) we want Heroku to use.
-A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient way of packaging framework and/or runtime support. In our case it's installing Erlang, Elixir, fetching our application dependencies, and so on, before we run it.
+The `--buildpack` option we are passing allows us to specify the [Elixir buildpack](https://github.com/HashNuke/heroku-buildpack-elixir) we want Heroku to use. A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient way of packaging framework and/or runtime support. In our case it's installing Erlang, Elixir, fetching our application dependencies, and so on, before we run it.
 
 The URL in the output is the URL to our application. If we open it in our browser now, we will get the default Heroku welcome page.
 
 > Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we wouldn't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
 
-By default the buildpack will use Elixir 1.5.0 - which will cause errors with the current version of Phoenix Framework.  We need to configure the buildpack. Create a config file named `elixir_buildpack.config` in the root directory for your project with the following (using your target version of elixir):
+The buildpack uses a predefined Elixir version but to avoid surprises when deploying, it is best to explicitly list the Elixir version we want in production to be the same we are using during development or in your continuous integration servers. This can be done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of elixir:
 
 ```
 elixir_version=1.8.1
