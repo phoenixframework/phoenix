@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   Overall, this generator will add the following files to `lib/`:
 
-    * a context module in `lib/app/accounts/accounts.ex` for the accounts API
+    * a context module in `lib/app/accounts.ex` for the accounts API
     * a schema in `lib/app/accounts/user.ex`, with an `users` table
     * a view in `lib/app_web/views/user_view.ex`
     * a controller in `lib/app_web/controllers/user_controller.ex`

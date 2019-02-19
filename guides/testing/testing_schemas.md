@@ -476,8 +476,8 @@ bio:string number_of_pets:integer
 * creating test/hello_web/controllers/user_controller_test.exs
 * creating lib/hello/accounts/user.ex
 * creating priv/repo/migrations/20180906212909_create_users.exs
-* creating lib/hello/accounts/accounts.ex
-* injecting lib/hello/accounts/accounts.ex
+* creating lib/hello/accounts.ex
+* injecting lib/hello/accounts.ex
 * creating test/hello/accounts/accounts_test.exs
 * injecting test/hello/accounts/accounts_test.exs
 
