@@ -205,8 +205,8 @@ $ mix phx.gen.html Blog Post posts body:string word_count:integer
 * creating test/hello_web/controllers/post_controller_test.exs
 * creating lib/hello/blog/post.ex
 * creating priv/repo/migrations/20170906150129_create_posts.exs
-* creating lib/hello/blog/blog.ex
-* injecting lib/hello/blog/blog.ex
+* creating lib/hello/blog.ex
+* injecting lib/hello/blog.ex
 * creating test/hello/blog/blog_test.exs
 * injecting test/hello/blog/blog_test.exs
 ```
@@ -277,8 +277,8 @@ $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-schema
 * creating lib/hello_web/templates/post/show.html.eex
 * creating lib/hello_web/views/post_view.ex
 * creating test/hello_web/controllers/post_controller_test.exs
-* creating lib/hello/blog/blog.ex
-* injecting lib/hello/blog/blog.ex
+* creating lib/hello/blog.ex
+* injecting lib/hello/blog.ex
 * creating test/hello/blog/blog_test.exs
 * injecting test/hello/blog/blog_test.exs
 ```
@@ -316,8 +316,8 @@ $ mix phx.gen.json Blog Post posts title:string content:string
 * creating lib/hello_web/controllers/fallback_controller.ex
 * creating lib/hello/blog/post.ex
 * creating priv/repo/migrations/20170906153323_create_posts.exs
-* creating lib/hello/blog/blog.ex
-* injecting lib/hello/blog/blog.ex
+* creating lib/hello/blog.ex
+* injecting lib/hello/blog.ex
 * creating test/hello/blog/blog_test.exs
 * injecting test/hello/blog/blog_test.exs
 ```
@@ -388,8 +388,8 @@ $ mix phx.gen.json Blog Post posts title:string content:string --no-schema
 * creating test/hello_web/controllers/post_controller_test.exs
 * creating lib/hello_web/views/changeset_view.ex
 * creating lib/hello_web/controllers/fallback_controller.ex
-* creating lib/hello/blog/blog.ex
-* injecting lib/hello/blog/blog.ex
+* creating lib/hello/blog.ex
+* injecting lib/hello/blog.ex
 * creating test/hello/blog/blog_test.exs
 * injecting test/hello/blog/blog_test.exs
 ```
@@ -408,9 +408,9 @@ Important: If we don't do this, our application won't compile, and we'll get an 
 $ mix phx.server
 Compiling 18 files (.ex)
 
-== Compilation error in file lib/hello/blog/blog.ex ==
-** (CompileError) lib/hello/blog/blog.ex:65: Hello.Blog.Post.__struct__/0 is undefined, cannot expand struct Hello.Blog.Post
-    lib/hello/blog/blog.ex:65: (module)
+== Compilation error in file lib/hello/blog.ex ==
+** (CompileError) lib/hello/blog.ex:65: Hello.Blog.Post.__struct__/0 is undefined, cannot expand struct Hello.Blog.Post
+    lib/hello/blog.ex:65: (module)
     (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
     (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
 ```
@@ -425,8 +425,8 @@ The `mix phx.gen.context` task takes a number of arguments, the module name of t
 $ mix phx.gen.context Accounts User users name:string age:integer
 * creating lib/hello/accounts/user.ex
 * creating priv/repo/migrations/20170906161158_create_users.exs
-* creating lib/hello/accounts/accounts.ex
-* injecting lib/hello/accounts/accounts.ex
+* creating lib/hello/accounts.ex
+* injecting lib/hello/accounts.ex
 * creating test/hello/accounts/accounts_test.exs
 * injecting test/hello/accounts/accounts_test.exs
 ```
@@ -436,8 +436,8 @@ $ mix phx.gen.context Accounts User users name:string age:integer
 ```console
 * creating lib/hello/admin/accounts/user.ex
 * creating priv/repo/migrations/20170906161246_create_users.exs
-* creating lib/hello/admin/accounts/accounts.ex
-* injecting lib/hello/admin/accounts/accounts.ex
+* creating lib/hello/admin/accounts.ex
+* injecting lib/hello/admin/accounts.ex
 * creating test/hello/admin/accounts/accounts_test.exs
 * injecting test/hello/admin/accounts/accounts_test.exs
 ```

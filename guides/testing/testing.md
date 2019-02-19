@@ -443,8 +443,8 @@ $ mix phx.gen.html Users User users name:string email:string bio:string number_o
 * creating test/hello_web/controllers/user_controller_test.exs
 * creating lib/hello/users/user.ex
 * creating priv/repo/migrations/20180904210841_create_users.exs
-* creating lib/hello/users/users.ex
-* injecting lib/hello/users/users.ex
+* creating lib/hello/users.ex
+* injecting lib/hello/users.ex
 * creating test/hello/users/users_test.exs
 * injecting test/hello/users/users_test.exs
 
