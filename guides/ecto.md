@@ -264,7 +264,7 @@ iex> changeset.errors
  bio: {"can't be blank", [validation: :required]}]
 ```
 
-What happens if we pass a key/value pair that is in neither defined in the schema nor required?
+What happens if we pass a key/value pair that is neither defined in the schema nor required?
 
 Inside our existing IEx shell, let's create a `params` map with valid values plus an extra `random_key: "random value"`.
 
