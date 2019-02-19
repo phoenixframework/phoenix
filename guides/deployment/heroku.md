@@ -92,6 +92,12 @@ The URL in the output is the URL to our application. If we open it in our browse
 
 > Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we wouldn't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
 
+By default the buildpack will use Elixir 1.5.0 - which will cause errors with the current version of Phoenix Framework.  We need to configure the buildpack. Create a config file named `elixir_buildpack.config` in the root directory for your project with the following (using your target version of elixir):
+
+```
+elixir_version=1.8.1
+```
+
 ## Adding the Phoenix Static Buildpack
 
 We need to compile static assets for a successful Phoenix deployment. The [Phoenix static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) can take care of that for us, so let's add it now.
@@ -276,6 +282,7 @@ Let's commit all our changes:
 
 ```
 $ git add config/prod.exs
+$ git add elixir_buildpack.config
 $ git add phoenix_static_buildpack.config
 $ git add compile
 $ git add Procfile
