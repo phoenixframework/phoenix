@@ -1,5 +1,5 @@
 defmodule <%= inspect schema.repo %>.Migrations.Create<%= Macro.camelize(schema.table) %> do
-  use <%=  inspect schema.migration_module %>
+  use <%= inspect schema.migration_module %>
 
   def change do
     create table(:<%= schema.table %><%= if schema.binary_id do %>, primary_key: false<% end %>) do
