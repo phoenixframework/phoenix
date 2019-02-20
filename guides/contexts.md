@@ -1021,9 +1021,8 @@ Open up your CMS context (`lib/hello/cms.ex`), and add this new function:
 ```elixir
 def inc_page_views(%Page{} = page) do
   {1, [%Page{views: views}]} =
-    Repo.update_all(
-      from(p in Page, where: p.id == ^page.id, select: [:views]),
-      [inc: [views: 1]])
+    from(p in Page, where: p.id == ^page.id, select: [:views])
+    |> Repo.update_all(inc: [views: 1])
 
   put_in(page.views, views)
 end
