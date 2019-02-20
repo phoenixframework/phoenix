@@ -115,7 +115,7 @@
  * pass your channel in to track lifecycle events:
  *
  * ```javascript
- * let channel = new socket.channel("some:topic")
+ * let channel = socket.channel("some:topic")
  * let presence = new Presence(channel)
  * ```
  *
