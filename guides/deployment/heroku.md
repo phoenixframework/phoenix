@@ -91,10 +91,15 @@ The URL in the output is the URL to our application. If we open it in our browse
 
 > Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we wouldn't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
 
-The buildpack uses a predefined Elixir version but to avoid surprises when deploying, it is best to explicitly list the Elixir version we want in production to be the same we are using during development or in your continuous integration servers. This can be done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of elixir:
+The buildpack uses a predefined Elixir and Erlang version but to avoid surprises when deploying, it is best to explicitly list the Elixir and Erlang version we want in production to be the same we are using during development or in your continuous integration servers. This can be done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of Elixir and Erlang:
 
 ```
+# Elixir version
 elixir_version=1.8.1
+
+# Erlang version
+# available versions https://github.com/HashNuke/heroku-buildpack-elixir-otp-builds/blob/master/otp-versions
+erlang_version=21.2.5
 ```
 
 ## Adding the Phoenix Static Buildpack
@@ -270,8 +275,6 @@ $ heroku config:set SECRET_KEY_BASE="xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zu
 Setting config vars and restarting mysterious-meadow-6277... done, v3
 SECRET_KEY_BASE: xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53
 ```
-
-If you need to make any of your config variables available at compile time, you will need to explicitly define which ones in a configuration file. Create a file `elixir_buildpack.config` in your application's root directory and add a line like: `config_vars_to_export=(MY_VAR)`. See [here](https://github.com/HashNuke/heroku-buildpack-elixir#specifying-config-vars-to-export-at-compile-time) for more information.
 
 ## Deploy Time!
 
