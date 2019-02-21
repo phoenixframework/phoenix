@@ -91,7 +91,7 @@ defmodule Mix.Phoenix do
 
   """
   def inflect(singular) do
-    base       = Mix.Phoenix.base
+    base       = Mix.Phoenix.base()
     web_module = base |> web_module() |> inspect()
     scoped     = Phoenix.Naming.camelize(singular)
     path       = Phoenix.Naming.underscore(scoped)
