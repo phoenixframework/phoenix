@@ -164,6 +164,8 @@ defmodule Phoenix.Template do
     codes = Enum.map(pairs, &elem(&1, 1))
 
     quote do
+      @phoenix_templates unquote(names)
+      
       unquote(codes)
 
       # Catch-all clause for template rendering.
@@ -183,7 +185,7 @@ defmodule Phoenix.Template do
       Returns the template root alongside all templates.
       """
       def __templates__ do
-        {@phoenix_root, @phoenix_pattern, unquote(names)}
+        {@phoenix_root, @phoenix_pattern, @phoenix_templates}
       end
 
       @doc """
