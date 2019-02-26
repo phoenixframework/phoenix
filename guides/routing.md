@@ -32,7 +32,7 @@ defmodule HelloWeb.Router do
   # end
 end
 ```
-The name you gave your application will appear instead of `Hello` for both the router module and controller name.
+The name you gave your application will appear instead of `HelloWeb` for both the router module and controller name.
 
 The first line of this module, `use HelloWeb, :router`, simply makes Phoenix router functions available in our particular router.
 
@@ -115,7 +115,7 @@ user_path  PATCH   /users/:id       HelloWeb.UserController :update
 user_path  DELETE  /users/:id       HelloWeb.UserController :delete
 ```
 
-Of course, the name of your project will replace `Hello`.
+Of course, the name of your project will replace `HelloWeb`.
 
 This is the standard matrix of HTTP verbs, paths, and controller actions. Let's look at them individually, in a slightly different order.
 
