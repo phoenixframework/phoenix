@@ -362,10 +362,15 @@ class Push {
  */
 export class Channel {
   constructor(topic, params, socket) {
+    this.socket      = socket
+    
+    if(this.isExistingChannel()){
+      throw new Error(`tried to construct multiple times. Perhaps you're instantiating this channel twice?`)
+    }
+
     this.state       = CHANNEL_STATES.closed
     this.topic       = topic
     this.params      = closure(params || {})
-    this.socket      = socket
     this.bindings    = []
     this.bindingRef  = 0
     this.timeout     = this.socket.timeout
@@ -409,6 +414,13 @@ export class Channel {
   /**
    * @private
    */
+  isExistingChannel(){
+    return this.socket.channels.find(channel => channel.topic === this.topic);
+  }
+
+  /**
+   * @private
+   */
   rejoinUntilConnected(){
     this.rejoinTimer.scheduleTimeout()
     if(this.socket.isConnected()){
@@ -422,7 +434,7 @@ export class Channel {
    * @returns {Push}
    */
   join(timeout = this.timeout){
-    if(this.joinedOnce){
+    if(this.joinedOnce || this.isExistingChannel()){
       throw new Error(`tried to join multiple times. 'join' can only be called a single time per channel instance`)
     } else {
       this.joinedOnce = true
