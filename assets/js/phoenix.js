@@ -422,7 +422,7 @@ export class Channel {
    * @returns {Push}
    */
   join(timeout = this.timeout){
-    if(this.joinedOnce){
+    if(this.joinedOnce || this.isJoining() || this.isJoined()){
       throw new Error(`tried to join multiple times. 'join' can only be called a single time per channel instance`)
     } else {
       this.joinedOnce = true

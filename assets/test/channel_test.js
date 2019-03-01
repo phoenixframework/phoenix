@@ -109,11 +109,29 @@ describe("join", () => {
     channel.join()
     assert.equal(socket.channels.length, 1)
 
-    // Move it back to not joined state to simulate a race condition
+    // Move joinedOnce back to false to simulate race condition
     channel.joinedOnce = false;
-    channel.join()
+    assert.throws(() => channel.join(), /^Error: tried to join multiple times/)
+  })
 
+  it("prevents duplicate join when joining", () => {
+    channel.join()
     assert.equal(socket.channels.length, 1)
+
+    // Move joinedOnce back to false and set state as joining to simulate race condition
+    channel.joinedOnce = false;
+    channel.state = "joining";
+    assert.throws(() => channel.join(), /^Error: tried to join multiple times/)
+  })
+
+  it("prevents duplicate join when joined before", () => {
+    channel.join()
+    assert.equal(socket.channels.length, 1)
+
+    // Move joinedOnce back to false and set state as joined to simulate race condition
+    channel.joinedOnce = false;
+    channel.state = "joined";
+    assert.throws(() => channel.join(), /^Error: tried to join multiple times/)
   })
 
   it("triggers socket push with channel params", () => {
