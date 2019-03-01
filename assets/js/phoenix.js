@@ -913,15 +913,21 @@ export class Socket {
   }
 
   /**
-   * Initiates a new channel for the given topic
+   * Initiates a new channel for the given topic if the channel
+   * does not exist
    *
    * @param {string} topic
    * @param {Object} chanParams - Parameters for the channel
    * @returns {Channel}
    */
   channel(topic, chanParams = {}){
-    let chan = new Channel(topic, chanParams, this)
-    this.channels.push(chan)
+    let chan = this.channels.find(channel => channel.topic === topic);
+    
+    if(!chan){
+      chan = new Channel(topic, chanParams, this)
+      this.channels.push(chan)
+    }
+
     return chan
   }
 

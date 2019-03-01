@@ -105,6 +105,17 @@ describe("join", () => {
     assert.throws(() => channel.join(), /^Error: tried to join multiple times/)
   })
 
+  it("prevents duplicate join when race condition", () => {
+    channel.join()
+    assert.equal(socket.channels.length, 1)
+
+    // Move it back to not joined state to simulate a race condition
+    channel.joinedOnce = false;
+    channel.join()
+
+    assert.equal(socket.channels.length, 1)
+  })
+
   it("triggers socket push with channel params", () => {
     sinon.stub(socket, "makeRef", () => defaultRef)
     const spy = sinon.spy(socket, "push")
