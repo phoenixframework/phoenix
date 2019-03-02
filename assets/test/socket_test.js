@@ -395,13 +395,11 @@ describe("channel", () => {
   it("doesn't add duplicated channel if already exists", () => {
     assert.equal(socket.channels.length, 0)
 
-     channel = socket.channel("topic", {one: "two"})
+    channel = socket.channel("topic", {one: "two"})
+    assert.equal(socket.channels.length, 1)
 
-     assert.equal(socket.channels.length, 1)
-
-     channel = socket.channel("topic", {two: "three"})
-
-     assert.equal(socket.channels.length, 1)
+    channel = socket.channel("topic", {two: "three"})
+    assert.equal(socket.channels.length, 1)
 
      const [foundChannel] = socket.channels
     assert.deepStrictEqual(foundChannel, channel)
