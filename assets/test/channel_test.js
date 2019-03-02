@@ -13,7 +13,7 @@ const defaultTimeout = 10000
 
 describe("constructor", () => {
   beforeEach(() => {
-    socket = { timeout: 1234 }
+    socket = new Socket("/socket", { timeout: 1234 })
   })
 
   it("sets defaults", () => {
@@ -49,11 +49,15 @@ describe("constructor", () => {
     assert.equal(joinPush.timeout, 1234)
   })
 
+  it("throws if instantiating the same channel twice", () => {
+    socket.channel("topic", {one: "two"})
+    assert.throws(() => new Channel("topic", function(){ return({one: "two"}) }, socket), /^Error: tried to instantiate the same channel twice/)
+  })
 })
 
 describe("updating join params", () => {
   beforeEach(() => {
-    socket = { timeout: 1234 }
+    socket = new Socket("/socket", { timeout: 1234 })
   })
 
   it("can update the join params", () => {

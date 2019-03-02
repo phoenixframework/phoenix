@@ -362,6 +362,10 @@ class Push {
  */
 export class Channel {
   constructor(topic, params, socket) {
+    if (socket.channels.find((c) => c.topic === topic)) {
+      throw new Error(`tried to instantiate the same channel twice. Try using a different topic`)
+    }
+
     this.state       = CHANNEL_STATES.closed
     this.topic       = topic
     this.params      = closure(params || {})
@@ -920,8 +924,13 @@ export class Socket {
    * @returns {Channel}
    */
   channel(topic, chanParams = {}){
-    let chan = new Channel(topic, chanParams, this)
-    this.channels.push(chan)
+    let chan = this.channels.find(c => c.topic === topic);
+
+    if(!chan){
+      chan = new Channel(topic, chanParams, this)
+      this.channels.push(chan)
+    }
+
     return chan
   }
 
