@@ -362,7 +362,7 @@ class Push {
  */
 export class Channel {
   constructor(topic, params, socket) {
-    if (socket.channels.find((c) => c.topic === topic)) {
+    if (socket.channels.find(c => c.topic === topic)) {
       throw new Error(`tried to instantiate the same channel twice. Try using a different topic`)
     }
 
