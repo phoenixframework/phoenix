@@ -401,7 +401,7 @@ describe("channel", () => {
     channel = socket.channel("topic", {two: "three"})
     assert.equal(socket.channels.length, 1)
 
-     const [foundChannel] = socket.channels
+    const [foundChannel] = socket.channels
     assert.deepStrictEqual(foundChannel, channel)
   })
 })
