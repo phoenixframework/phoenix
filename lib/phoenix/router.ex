@@ -569,6 +569,7 @@ defmodule Phoenix.Router do
       is automatically derived from the controller name, i.e. `UserController` will
       have name `"user"`
     * `:as` - configures the named helper exclusively
+    * `:alias` - an alias (atom) containing the controller scope
     * `:singleton` - defines routes for a singleton resource that is looked up by
       the client without referencing an ID. Read below for more information
 
