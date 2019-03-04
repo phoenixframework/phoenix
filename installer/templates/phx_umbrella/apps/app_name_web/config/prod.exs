@@ -23,7 +23,7 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
 # To get SSL working, you will need to add the `https` key
 # to the previous section and set your `:url` port to 443:
 #
-#     config :<%= app_name %>, <%= endpoint_module %>,
+#     config :<%= web_app_name %>, <%= endpoint_module %>,
 #       ...
 #       url: [host: "example.com", port: 443],
 #       https: [
@@ -47,7 +47,7 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
 # We also recommend setting `force_ssl` in your endpoint, ensuring
 # no data is ever sent via http, always redirecting to https:
 #
-#     config :<%= app_name %>, <%= endpoint_module %>,
+#     config :<%= web_app_name %>, <%= endpoint_module %>,
 #       force_ssl: [hsts: true]
 #
 # Check `Plug.SSL` for all available options in `force_ssl`.
@@ -62,7 +62,7 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
 # Alternatively, you can configure exactly which server to
 # start per endpoint:
 #
-#     config :<%= app_name %>, <%= endpoint_module %>, server: true
+#     config :<%= web_app_name %>, <%= endpoint_module %>, server: true
 #
 # Note you can't rely on `System.get_env/1` when using releases.
 # See the releases documentation accordingly.
