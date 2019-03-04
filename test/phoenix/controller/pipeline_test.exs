@@ -202,6 +202,28 @@ defmodule Phoenix.Controller.PipelineTest do
     end
   end
 
+  test "emits telemetry event before and after controller call" do
+    :telemetry.attach(:start, [:phoenix, :controller, :call, :start], fn _, measurements, metadata, _ ->
+      send(self(), {:event, :start, measurements, metadata})
+    end, nil)
+    :telemetry.attach(:stop, [:phoenix, :controller, :call, :stop], fn _, measurements, metadata, _ ->
+      send(self(), {:event, :stop, measurements, metadata})
+    end, nil)
+
+    MyController.call(stack_conn(), :show)
+
+    assert_receive {:event, :start, measurements, metadata}
+    assert measurements == %{}
+    assert %{controller: MyController, action: :show, conn: conn} = metadata
+    assert conn.private.stack == []
+
+    assert_receive {:event, :stop, measurements, metadata}
+    assert %{time: time} = measurements
+    assert is_integer(time)
+    assert %{controller: MyController, action: :show, conn: conn} = metadata
+    assert conn.private.stack == [:action, :before2, :before1]
+  end
+
   defp stack_conn() do
     conn(:get, "/")
     |> fetch_query_params()

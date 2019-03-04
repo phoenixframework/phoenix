@@ -23,10 +23,25 @@ defmodule Phoenix.Controller.Pipeline do
                  &(&1 |> Map.put(:phoenix_controller, __MODULE__)
                       |> Map.put(:phoenix_action, action))
 
-        Phoenix.Endpoint.instrument conn, :phoenix_controller_call,
+        start = System.monotonic_time()
+        :telemetry.execute([:phoenix, :controller, :call, :start], %{}, %{
+          conn: conn,
+          controller: __MODULE__,
+          action: action
+        })
+        conn = Phoenix.Endpoint.instrument conn, :phoenix_controller_call,
           %{conn: conn, log_level: @phoenix_log_level}, fn ->
           phoenix_controller_pipeline(conn, action)
         end
+        stop = System.monotonic_time()
+        :telemetry.execute([:phoenix, :controller, :call, :stop], %{
+          time: stop - start
+        }, %{
+          conn: conn,
+          controller: __MODULE__,
+          action: action
+        })
+        conn
       end
 
       @doc false

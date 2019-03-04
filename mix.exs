@@ -49,6 +49,7 @@ defmodule Phoenix.MixProject do
     [
       {:plug, "~> 1.7"},
       {:phoenix_pubsub, "~> 1.1"},
+      {:telemetry, "~> 0.4.0"},
 
       # Optional deps
       {:plug_cowboy, "~> 1.0 or ~> 2.0", optional: true},
