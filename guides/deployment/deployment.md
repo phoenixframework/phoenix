@@ -65,7 +65,7 @@ This step is required only if you have static assets like images, JavaScript, st
 Compilation of static assets happens in two steps:
 
 ```console
-$ cd assets && webpack --mode production
+$ npm run deploy --prefix ./assets
 
 $ mix phx.digest
 
@@ -122,7 +122,7 @@ $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 
 # Compile assets
-$ cd assets && webpack --mode production && cd ..
+$ npm run deploy --prefix ./assets
 
 $ mix phx.digest
 
