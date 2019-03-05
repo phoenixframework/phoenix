@@ -847,7 +847,7 @@ export class Socket {
    * @private
    */
 
-  resetHeartbeat(){ if(this.conn.skipHeartbeat){ return }
+  resetHeartbeat(){ if(this.conn && this.conn.skipHeartbeat){ return }
     this.pendingHeartbeatRef = null
     clearInterval(this.heartbeatTimer)
     this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
