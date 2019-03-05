@@ -35,7 +35,7 @@ defmodule Phoenix.Controller.Pipeline do
         end
         stop = System.monotonic_time()
         :telemetry.execute([:phoenix, :controller, :call, :stop], %{
-          time: stop - start
+          duration: stop - start
         }, %{
           conn: conn,
           controller: __MODULE__,
