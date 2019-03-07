@@ -38,9 +38,6 @@ defmodule Phoenix.Channel.Server do
     args = [channel, {payload, from, socket}]
 
     case PoolSupervisor.start_child(socket.endpoint, socket.handler, from, args) do
-      {:ok, :undefined} ->
-        receive do: ({^ref, {:error, reply}} -> {:error, reply})
-
       {:ok, pid} ->
         mon_ref = Process.monitor(pid)
 
@@ -210,6 +207,23 @@ defmodule Phoenix.Channel.Server do
 
   @doc false
   def init({auth_payload, from, socket}) do
+    # TODO: Use handle_continue when we support Erlang/OTP 21+.
+    send(self(), {:join, __MODULE__})
+    {:ok, {auth_payload, from, socket}}
+  end
+
+  @doc false
+  def handle_call(:socket, _from, socket) do
+    {:reply, socket, socket}
+  end
+
+  @doc false
+  def handle_cast(:close, socket) do
+    {:stop, {:shutdown, :closed}, socket}
+  end
+
+  @doc false
+  def handle_info({:join, __MODULE__}, {auth_payload, from, socket}) do
     %{channel: channel, topic: topic, private: private} = socket
 
     socket = %{socket
@@ -218,13 +232,13 @@ defmodule Phoenix.Channel.Server do
 
     case channel_join(socket, channel, topic, auth_payload) do
       {:ok, socket} ->
-        init(socket, channel, topic, %{}, from)
+        init_info(socket, channel, topic, %{}, from)
       {:ok, reply, socket} ->
-        init(socket, channel, topic, reply, from)
+        init_info(socket, channel, topic, reply, from)
       {:error, reply} ->
         log_join socket, topic, fn -> "Replied #{topic} :error" end
         GenServer.reply(from, {:error, reply})
-        :ignore
+        {:stop, :shutdown, socket}
       other ->
         raise """
         channel #{inspect socket.channel}.join/3 is expected to return one of:
@@ -238,40 +252,6 @@ defmodule Phoenix.Channel.Server do
     end
   end
 
-  defp channel_join(socket, channel, topic, auth_payload) do
-    instrument = %{params: auth_payload, socket: socket}
-
-    Phoenix.Endpoint.instrument socket, :phoenix_channel_join, instrument, fn ->
-      channel.join(topic, auth_payload, socket)
-    end
-  end
-
-  defp init(socket, channel, topic, reply, from) do
-    %{transport_pid: transport_pid, serializer: serializer, pubsub_server: pubsub_server} = socket
-    Process.monitor(transport_pid)
-
-    fastlane = {transport_pid, serializer, channel.__intercepts__()}
-    PubSub.subscribe(pubsub_server, topic, link: true, fastlane: fastlane)
-
-    log_join socket, topic, fn -> "Replied #{topic} :ok" end
-    GenServer.reply(from, {:ok, reply})
-    {:ok, %{socket | joined: true}}
-  end
-
-  defp log_join(%{private: %{log_join: false}}, _topic, _func), do: :noop
-  defp log_join(%{private: %{log_join: level}}, _topic, func), do: Logger.log(level, func)
-
-  @doc false
-  def handle_call(:socket, _from, socket) do
-    {:reply, socket, socket}
-  end
-
-  @doc false
-  def handle_cast(:close, socket) do
-    {:stop, {:shutdown, :closed}, socket}
-  end
-
-  @doc false
   def handle_info(%Message{topic: topic, event: "phx_leave", ref: ref}, %{topic: topic} = socket) do
     handle_in({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)})
   end
@@ -368,6 +348,31 @@ defmodule Phoenix.Channel.Server do
       {pid, _} -> send(pid, msg)
     end)
   end
+
+  ## Joins
+
+  defp channel_join(socket, channel, topic, auth_payload) do
+    instrument = %{params: auth_payload, socket: socket}
+
+    Phoenix.Endpoint.instrument socket, :phoenix_channel_join, instrument, fn ->
+      channel.join(topic, auth_payload, socket)
+    end
+  end
+
+  defp init_info(socket, channel, topic, reply, from) do
+    %{transport_pid: transport_pid, serializer: serializer, pubsub_server: pubsub_server} = socket
+    Process.monitor(transport_pid)
+
+    fastlane = {transport_pid, serializer, channel.__intercepts__()}
+    PubSub.subscribe(pubsub_server, topic, link: true, fastlane: fastlane)
+
+    log_join socket, topic, fn -> "Replied #{topic} :ok" end
+    GenServer.reply(from, {:ok, reply})
+    {:noreply, %{socket | joined: true}}
+  end
+
+  defp log_join(%{private: %{log_join: false}}, _topic, _func), do: :noop
+  defp log_join(%{private: %{log_join: level}}, _topic, func), do: Logger.log(level, func)
 
   ## Handle results
 
