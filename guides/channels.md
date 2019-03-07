@@ -54,7 +54,7 @@ Once the connection is established, each incoming message from a client is route
 If the channel server asks to broadcast a message, that message is sent to the local PubSub, which sends it out to any clients connected to the same server and subscribed to that topic.
 
 If there are other nodes in the cluster, the local PubSub also forwards the message to their PubSubs, which send it out to their own subscribers.
-Because only one message has to be sent per additional node, the performance cost of adding nodes in negligible, while each new node supports many more subscribers.
+Because only one message has to be sent per additional node, the performance cost of adding nodes is negligible, while each new node supports many more subscribers.
 
 The message flow looks something like this:
 
