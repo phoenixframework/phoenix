@@ -213,18 +213,11 @@ defmodule Phoenix.Presence do
   @callback fetch(topic, presences) :: presences
 
   @doc """
-  Returns presences for a channel.
+  Returns presences for a channel or topic.
 
   Calls `list/2` with presence module.
   """
-  @callback list(socket :: Phoenix.Socket.t) :: presences
-
-  @doc """
-  Returns presences for a topic.
-
-  Calls `list/2` with presence module.
-  """
-  @callback list(topic) :: presences
+  @callback list(Phoenix.Socket.t | topic) :: presences
 
   @doc false
   @callback handle_diff(%{topic => {joins :: presences, leaves :: presences}}, state :: term) :: {:ok, state :: term}
