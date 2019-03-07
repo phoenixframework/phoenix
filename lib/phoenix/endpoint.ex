@@ -834,9 +834,10 @@ defmodule Phoenix.Endpoint do
       of options. See "Shared configuration" and
       "Longpoll configuration" for the whole list
 
-    * `:shutdown` - the maximum shutdown time of each channel
-      when the endpoint is shutting down. Applies only to
-      channel-based sockets
+  If your socket is implemented using `Phoenix.Socket`,
+  you can also pass here all options accepted on
+  `use Phoenix.Socket`. An option given here will override
+  the value in `Phoenix.Socket`.
 
   ## Examples
 
@@ -910,7 +911,6 @@ defmodule Phoenix.Endpoint do
             websocket: [
               connect_info: [:uri, signing_salt: "NZIguRPO"]
             ]
-
 
   ## Websocket configuration
 

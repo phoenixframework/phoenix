@@ -68,13 +68,20 @@ defmodule Phoenix.Socket do
     * `:transport_pid` - The pid of the socket's transport process
     * `:serializer` - The serializer for socket messages
 
-  ## Logging
+  ## Using options
 
-  Logging for socket connections is set via the `:log` option, for example:
+  On `use Phoenix.Socket`, the following options are accepted:
 
-      use Phoenix.Socket, log: :debug
+    * `:log` - the default level to log socket actions. Defaults
+      to `:info`. May be set to `false` to disable it
 
-  Defaults to the `:info` log level. Pass `false` to disable logging.
+    * `:shutdown` - the maximum shutdown time of each channel
+      when the endpoint is shutting down. Applies only to
+      channel-based sockets
+
+    * `:partitions` - each channel is spawned under a supervisor.
+      This option controls how many supervisors will be spawned
+      to handlle channels. Defaults to the number of cores.
 
   ## Garbage collection
 
@@ -269,7 +276,7 @@ defmodule Phoenix.Socket do
       @behaviour Phoenix.Socket
       @before_compile Phoenix.Socket
       Module.register_attribute(__MODULE__, :phoenix_channels, accumulate: true)
-      @phoenix_log Keyword.get(unquote(opts), :log, :info)
+      @phoenix_socket_options unquote(opts)
 
       ## Callbacks
 
@@ -277,11 +284,11 @@ defmodule Phoenix.Socket do
 
       @doc false
       def child_spec(opts) do
-        Phoenix.Socket.__child_spec__(__MODULE__, opts)
+        Phoenix.Socket.__child_spec__(__MODULE__, opts, @phoenix_socket_options)
       end
 
       @doc false
-      def connect(map), do: Phoenix.Socket.__connect__(__MODULE__, map, @phoenix_log)
+      def connect(map), do: Phoenix.Socket.__connect__(__MODULE__, map, @phoenix_socket_options)
 
       @doc false
       def init(state), do: Phoenix.Socket.__init__(state)
@@ -400,11 +407,13 @@ defmodule Phoenix.Socket do
 
   ## CALLBACKS IMPLEMENTATION
 
-  def __child_spec__(handler, opts) do
+  def __child_spec__(handler, opts, socket_options) do
     import Supervisor.Spec
     endpoint = Keyword.fetch!(opts, :endpoint)
+
+    opts = Keyword.merge(socket_options, opts)
     shutdown = Keyword.get(opts, :shutdown, 5_000)
-    partitions = Keyword.get(opts, :partitions) || System.schedulers_online()
+    partitions = Keyword.get(opts, :partitions, System.schedulers_online())
 
     worker_opts = [shutdown: shutdown, restart: :temporary]
     worker = worker(Phoenix.Channel.Server, [], worker_opts)
@@ -412,7 +421,7 @@ defmodule Phoenix.Socket do
     supervisor(Phoenix.Socket.PoolSupervisor, [args], id: handler)
   end
 
-  def __connect__(user_socket, map, log) do
+  def __connect__(user_socket, map, socket_options) do
     %{
       endpoint: endpoint,
       options: options,
@@ -420,7 +429,10 @@ defmodule Phoenix.Socket do
       params: params,
       connect_info: connect_info
     } = map
+
     vsn = params["vsn"] || "1.0.0"
+    options = Keyword.merge(socket_options, options)
+    log = Keyword.get(options, :log, :info)
     meta = Map.merge(map, %{vsn: vsn, user_socket: user_socket, log: log})
 
     Phoenix.Endpoint.instrument(endpoint, :phoenix_socket_connect, meta, fn ->
