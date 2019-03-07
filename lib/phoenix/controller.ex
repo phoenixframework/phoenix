@@ -806,7 +806,7 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Puts the URL or `%URI{}` to be used for route generation.
+  Puts the url string or `%URI{}` to be used for route generation.
 
   This function overrides the default URL generation pulled
   from the `%Plug.Conn{}`'s endpoint configuration.
@@ -824,8 +824,8 @@ defmodule Phoenix.Controller do
 
   Now when you call `Routes.some_route_url(conn, ...)`, it will use
   the router url set above. Keep in mind that, if you want to generate
-  routes to the current domain, it is preferred to use `Routes.some_route_path`
-  helpers, as those are always relative.
+  routes to the *current* domain, it is preferred to use
+  `Routes.some_route_path` helpers, as those are always relative.
   """
   def put_router_url(conn, %URI{} = uri) do
     put_private(conn, :phoenix_router_url, uri)
@@ -837,12 +837,22 @@ defmodule Phoenix.Controller do
   @doc """
   Puts the format in the connection.
 
+  This format is used when rendering a template as an atom.
+  For example, `render(conn, :foo)` will render `"foo.FORMAT"`
+  where the format is the one set here. The default format
+  is typically set from the negotiation done in `accepts/2`.
+
   See `get_format/1` for retrieval.
   """
   def put_format(conn, format), do: put_private(conn, :phoenix_format, format)
 
   @doc """
   Returns the request format, such as "json", "html".
+
+  This format is used when rendering a template as an atom.
+  For example, `render(conn, :foo)` will render `"foo.FORMAT"`
+  where the format is the one set here. The default format
+  is typically set from the negotiation done in `accepts/2`.
   """
   def get_format(conn) do
     conn.private[:phoenix_format] || conn.params["_format"]
@@ -1344,12 +1354,26 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Returns the current request path, with and without query params.
+  Returns the current request path with its default query parameters:
 
-  By default, the connection's query params are included in
-  the generated path. Custom query params may be used instead
-  by providing a map of your own params. You may also retrieve
-  only the request path by passing an empty map of params.
+      iex> current_path(conn)
+      "/users/123?existing=param"
+
+  See `current_path/2` to override the default parameters.
+  """
+  def current_path(%Plug.Conn{query_string: ""} = conn) do
+    conn.request_path
+  end
+
+  def current_path(%Plug.Conn{query_string: query_string} = conn) do
+    conn.request_path <> "?" <> query_string
+  end
+
+  @doc """
+  Returns the current path with the given query parameters.
+
+  You may also retrieve only the request path by passing an
+  empty map of params.
 
   ## Examples
 
@@ -1366,12 +1390,6 @@ defmodule Phoenix.Controller do
       "/users/123"
 
   """
-  def current_path(%Plug.Conn{query_string: ""} = conn) do
-    conn.request_path
-  end
-  def current_path(%Plug.Conn{query_string: query_string} = conn) do
-    conn.request_path <> "?" <> query_string
-  end
   def current_path(%Plug.Conn{} = conn, params) when params == %{} do
     conn.request_path
   end
@@ -1379,8 +1397,20 @@ defmodule Phoenix.Controller do
     conn.request_path <> "?" <> Plug.Conn.Query.encode(params)
   end
 
+  @doc """
+  Returns the current request url with its default query parameters:
+
+      iex> current_url(conn)
+      "https://www.example.com/users/123?existing=param"
+
+  See `current_url/2` to override the default parameters.
+  """
+  def current_url(%Plug.Conn{} = conn) do
+    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn)
+  end
+
   @doc ~S"""
-  Returns the current request URL, with and without query params.
+  Returns the current request URL with query params.
 
   The path will be retrieved from the currently requested path via
   `current_path/1`. The scheme, host and others will be received from
@@ -1420,11 +1450,8 @@ defmodule Phoenix.Controller do
       end
 
   However, if you want all generated URLs to always have a certain schema,
-  host, etc, you may invoke `put_router_url/2`.
+  host, etc, you may use `put_router_url/2`.
   """
-  def current_url(%Plug.Conn{} = conn) do
-    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn)
-  end
   def current_url(%Plug.Conn{} = conn, %{} = params) do
     Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn, params)
   end
