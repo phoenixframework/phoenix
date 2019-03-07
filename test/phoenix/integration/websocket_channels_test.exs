@@ -70,12 +70,13 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     def init({payload, from, socket}) do
       case payload["action"] do
         "ok" ->
-          GenServer.reply(from, %{"action" => "ok"})
+          GenServer.reply(from, {:ok, %{"action" => "ok"}})
           {:ok, socket}
 
         "ignore" ->
-          GenServer.reply(from, %{"action" => "ignore"})
-          :ignore
+          GenServer.reply(from, {:error, %{"action" => "ignore"}})
+          send(self(), :stop)
+          {:ok, socket}
 
         "error" ->
           raise "oops"
@@ -84,6 +85,10 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
     def handle_info(%Message{event: "close"}, socket) do
       send socket.transport_pid, {:socket_close, self(), :shutdown}
+      {:stop, :shutdown, socket}
+    end
+
+    def handle_info(:stop, socket) do
       {:stop, :shutdown, socket}
     end
   end
