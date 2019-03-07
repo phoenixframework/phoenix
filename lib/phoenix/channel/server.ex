@@ -39,9 +39,25 @@ defmodule Phoenix.Channel.Server do
 
     case PoolSupervisor.start_child(socket.endpoint, socket.handler, from, args) do
       {:ok, :undefined} ->
-        receive do: ({^ref, reply} -> {:error, reply})
+        receive do: ({^ref, {:error, reply}} -> {:error, reply})
+
       {:ok, pid} ->
-        receive do: ({^ref, reply} -> {:ok, reply, pid})
+        mon_ref = Process.monitor(pid)
+
+        receive do
+          {^ref, {:ok, reply}} ->
+            Process.demonitor(mon_ref, [:flush])
+            {:ok, reply, pid}
+
+          {^ref, {:error, reply}} ->
+            Process.demonitor(mon_ref, [:flush])
+            {:error, reply}
+
+          {:DOWN, ^mon_ref, _, _, reason} ->
+            Logger.error fn -> Exception.format_exit(reason) end
+            {:error, %{reason: "join crashed"}}
+        end
+
       {:error, reason} ->
         Logger.error fn -> Exception.format_exit(reason) end
         {:error, %{reason: "join crashed"}}
@@ -207,7 +223,7 @@ defmodule Phoenix.Channel.Server do
         init(socket, channel, topic, reply, from)
       {:error, reply} ->
         log_join socket, topic, fn -> "Replied #{topic} :error" end
-        GenServer.reply(from, reply)
+        GenServer.reply(from, {:error, reply})
         :ignore
       other ->
         raise """
@@ -238,7 +254,7 @@ defmodule Phoenix.Channel.Server do
     PubSub.subscribe(pubsub_server, topic, link: true, fastlane: fastlane)
 
     log_join socket, topic, fn -> "Replied #{topic} :ok" end
-    GenServer.reply(from, reply)
+    GenServer.reply(from, {:ok, reply})
     {:ok, %{socket | joined: true}}
   end
 

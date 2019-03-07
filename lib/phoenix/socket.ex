@@ -131,9 +131,9 @@ defmodule Phoenix.Socket do
       {auth_payload, from, socket}
 
   A custom channel implementation MUST invoke
-  `GenServer.reply(from, reply_payload)` during its initialization
-  with a custom `reply_payload` that will be sent as a reply to the
-  client. Failing to do so will block the socket forever.
+  `GenServer.reply(from, {:ok | :error, reply_payload})` during its
+  initialization with a custom `reply_payload` that will be sent as
+  a reply to the client. Failing to do so will block the socket forever.
 
   A custom channel receives `Phoenix.Socket.Message` structs as regular
   messages from the transport. Replies to those messages and custom
