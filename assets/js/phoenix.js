@@ -773,6 +773,9 @@ export class Socket {
   /**
    *
    * @param {Object} params - The params to send when connecting, for example `{user_id: userToken}`
+   *
+   * Passing params to connect is deprecated; pass them in the Socket constructor instead:
+   * `new Socket("/socket", {params: {user_id: userToken}})`.
    */
   connect(params){
     if(params){
