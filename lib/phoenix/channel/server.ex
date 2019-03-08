@@ -314,6 +314,10 @@ defmodule Phoenix.Channel.Server do
     end
   end
 
+  def terminate(_reason, _socket) do
+    :ok
+  end
+
   @doc false
   def fastlane(subscribers, from, %Broadcast{event: event} = msg) do
     Enum.reduce(subscribers, %{}, fn
