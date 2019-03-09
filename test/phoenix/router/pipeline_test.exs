@@ -142,7 +142,8 @@ defmodule Phoenix.Router.PipelineTest do
         pipeline :browser do
         end
         scope "/" do
-          pipe_through [:browser, :auth, :browser]
+          pipe_through [:browser, :auth]
+          pipe_through [:browser]
         end
       end
     end
