@@ -146,7 +146,7 @@ First, let's make sure our secret key is loaded from Heroku's environment variab
 config :hello, HelloWeb.Endpoint,
   url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json",
-  secret_key_base: System.get_env("SECRET_KEY_BASE") || raise "missing SECRET_KEY_BASE env var"
+  secret_key_base: System.get_env("SECRET_KEY_BASE") || raise("missing SECRET_KEY_BASE env var")
 ```
 
 Then, we'll add the production database configuration to `config/prod.exs`:
