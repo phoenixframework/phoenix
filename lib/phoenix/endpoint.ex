@@ -562,7 +562,7 @@ defmodule Phoenix.Endpoint do
 
   defp plug() do
     quote location: :keep do
-      use Plug.Builder
+      use Plug.Builder, init_mode: Phoenix.plug_init_mode()
       import Phoenix.Endpoint
 
       Module.register_attribute(__MODULE__, :phoenix_sockets, accumulate: true)
@@ -789,6 +789,7 @@ defmodule Phoenix.Endpoint do
 
   defp socket_path(path, config) do
     end_path_fragment = Keyword.fetch!(config, :path)
+
     {vars, path} =
       String.split(path <> "/" <> end_path_fragment, "/", trim: true)
       |> Enum.join("/")
