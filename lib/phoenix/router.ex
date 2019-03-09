@@ -323,6 +323,13 @@ defmodule Phoenix.Router do
     Helpers.define(env, routes_with_exprs)
     {matches, _} = Enum.map_reduce(routes_with_exprs, %{}, &build_match/2)
 
+    checks =
+      for {%{line: line}, %{dispatch: {plug, _}}} <- routes_with_exprs, into: %{} do
+        quote line: line do
+          {unquote(plug).init([]), true}
+        end
+      end
+
     # @anno is used here to avoid warnings if forwarding to root path
     match_404 =
       quote @anno do
@@ -334,6 +341,9 @@ defmodule Phoenix.Router do
     quote do
       @doc false
       def __routes__,  do: unquote(Macro.escape(routes))
+
+      @doc false
+      def __checks__, do: unquote({:__block__, [], Map.keys(checks)})
 
       @doc false
       def __helpers__, do: __MODULE__.Helpers
@@ -360,7 +370,6 @@ defmodule Phoenix.Router do
       path: path,
       host: host
     } = exprs
-
 
     {pipe_name, pipe_definition, known_pipelines} =
       case known_pipelines do
