@@ -765,7 +765,7 @@ defmodule Phoenix.Router do
   ## Examples
 
       scope "/", MyPrefix do
-        get "/", ProxyPlug, controller: scoped_alias(MyController)
+        get "/", ProxyPlug, controller: scoped_alias(__MODULE__, MyController)
       end
   """
   def scoped_alias(router_module, alias) do
