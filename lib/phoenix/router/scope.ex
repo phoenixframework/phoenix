@@ -25,9 +25,10 @@ defmodule Phoenix.Router.Scope do
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
     as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
+    alias?  = Keyword.get(opts, :alias, true)
 
     {path, host, alias, as, pipes, private, assigns} =
-      join(module, path, plug, as, private, assigns)
+      join(module, path, plug, alias?, as, private, assigns)
     Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns)
   end
 
@@ -131,14 +132,23 @@ defmodule Phoenix.Router.Scope do
     raise ArgumentError, "forward expects a module as the second argument, #{inspect plug} given"
   end
 
-  defp expand_alias(module, alias) do
+  @doc """
+  Expands the alias in the current router scope.
+  """
+  def expand_alias(module, alias) do
     join_alias(get_top(module), alias)
   end
 
-  defp join(module, path, alias, as, private, assigns) do
+  defp join(module, path, alias, alias?, as, private, assigns) do
     top = get_top(module)
+    joined_alias =
+      if alias? do
+        join_alias(top, alias)
+      else
+        alias
+      end
 
-    {join_path(top, path), top.host, join_alias(top, alias), join_as(top, as), top.pipes,
+    {join_path(top, path), top.host, joined_alias, join_as(top, as), top.pipes,
      Map.merge(top.private, private), Map.merge(top.assigns, assigns)}
   end
 

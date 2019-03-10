@@ -680,7 +680,9 @@ defmodule Phoenix.Router do
 
     * `:path` - a string containing the path scope
     * `:as` - a string or atom containing the named helper scope
-    * `:alias` - an alias (atom) containing the controller scope
+    * `:alias` - an alias (atom) containing the controller scope.
+      When set, this value may be overridden per route by passing `alias: false`
+      to route definitions, such as `get`, `post`, etc.
     * `:host` - a string containing the host scope, or prefix host scope,
       ie `"foo.bar.com"`, `"foo."`
     * `:private` - a map of private data to merge into the connection when a route matches
@@ -752,6 +754,22 @@ defmodule Phoenix.Router do
         Scope.pop(__MODULE__)
       end
     end
+  end
+
+  @doc """
+  Returns the full alias with the current scope's aliased prefix.
+
+  Useful for applying the same short-hand alias handling to
+  other values besides the second argument in route definitions.
+
+  ## Examples
+
+      scope "/", MyPrefix do
+        get "/", ProxyPlug, controller: scoped_alias(MyController)
+      end
+  """
+  def scoped_alias(router_module, alias) do
+    Scope.expand_alias(router_module, alias)
   end
 
   @doc """
