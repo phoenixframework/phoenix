@@ -43,6 +43,10 @@ defmodule Phx.New.Project do
     Keyword.fetch!(binding, :webpack)
   end
 
+  def verbose?(%Project{opts: opts}) do
+    Keyword.get(opts, :verbose, false)
+  end
+
   def join_path(%Project{} = project, location, path)
       when location in [:project, :app, :web] do
 

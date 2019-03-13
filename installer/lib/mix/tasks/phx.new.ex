@@ -42,6 +42,8 @@ defmodule Mix.Tasks.Phx.New do
     * `--binary-id` - use `binary_id` as primary key type
       in Ecto schemas
 
+    * `--verbose` - use verbose output
+
   When passing the `--no-ecto` flag, Phoenix generators such as
   `phx.gen.html`, `phx.gen.json` and `phx.gen.context` may no
   longer work as expected as they generate context files that rely
@@ -92,10 +94,10 @@ defmodule Mix.Tasks.Phx.New do
   @switches [dev: :boolean, webpack: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
-             umbrella: :boolean]
+             umbrella: :boolean, verbose: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
-    Mix.shell.info "Phoenix v#{@version}"
+    Mix.shell.info("Phoenix v#{@version}")
   end
   def run(argv) do
     elixir_version_check!()
@@ -139,11 +141,11 @@ defmodule Mix.Tasks.Phx.New do
     cd_step = ["$ cd #{relative_app_path(project.project_path)}"]
 
     maybe_cd(project.project_path, fn ->
-      mix_step = install_mix(install?)
+      mix_step = install_mix(project, install?)
 
       compile =
         case mix_step do
-          [] -> Task.async(fn -> rebar_available?() && cmd("mix deps.compile") end)
+          [] -> Task.async(fn -> rebar_available?() && cmd(project, "mix deps.compile") end)
           _  -> Task.async(fn -> :ok end)
         end
 
@@ -180,12 +182,12 @@ defmodule Mix.Tasks.Phx.New do
     assets_path = Path.join(project.web_path || project.project_path, "assets")
     webpack_config = Path.join(assets_path, "webpack.config.js")
 
-    maybe_cmd "cd #{relative_app_path(assets_path)} && npm install && node node_modules/webpack/bin/webpack.js --mode development",
-              File.exists?(webpack_config), install? && System.find_executable("npm")
+    maybe_cmd(project, "cd #{relative_app_path(assets_path)} && npm install && node node_modules/webpack/bin/webpack.js --mode development",
+              File.exists?(webpack_config), install? && System.find_executable("npm"))
   end
 
-  defp install_mix(install?) do
-    maybe_cmd "mix deps.get", true, install? && hex_available?()
+  defp install_mix(project, install?) do
+    maybe_cmd(project, "mix deps.get", true, install? && hex_available?())
   end
 
   defp hex_available? do
@@ -268,10 +270,10 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
-  defp maybe_cmd(cmd, should_run?, can_run?) do
+  defp maybe_cmd(project, cmd, should_run?, can_run?) do
     cond do
       should_run? && can_run? ->
-        cmd(cmd)
+        cmd(project, cmd)
       should_run? ->
         ["$ #{cmd}"]
       true ->
@@ -279,13 +281,21 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
-  defp cmd(cmd) do
+  defp cmd(%Project{} = project, cmd) do
     Mix.shell.info [:green, "* running ", :reset, cmd]
-    case Mix.shell.cmd(cmd, quiet: true) do
+    case Mix.shell.cmd(cmd, cmd_opts(project)) do
       0 ->
         []
       _ ->
         ["$ #{cmd}"]
+    end
+  end
+
+  defp cmd_opts(%Project{} = project) do
+    if Project.verbose?(project) do
+      []
+    else
+      [quiet: true]
     end
   end
 
