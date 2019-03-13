@@ -37,7 +37,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert %{
                "id" => id<%= for {key, val} <- schema.params.create do %>,
-               "<%= key %>" => <%= if val == %{}, do: "%{}", else: Phoenix.json_library().encode!(val) %><% end %>
+               "<%= key %>" => <%= val |> Phoenix.json_library().encode!() |> Phoenix.json_library().decode!() |> inspect() %><% end %>
              } = json_response(conn, 200)["data"]
     end
 
