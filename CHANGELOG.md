@@ -30,6 +30,10 @@ The old APIs for building transports are also deprecated. The good news is: adap
   * [Router] add `scoped_alias` to return the full alias with the current scope's aliased prefix
   * [Router] add `alias: false` option to router definitions to to disable scope prefix on case by case basis
 
+### Bug Fixes
+  * [phx.gen.json] Fix invalid map fields for generated json tests
+  * [phx.gen.html|json|context|schema] prohibit context or schema creation with the same name as the application causing incorrect aliases to be generated
+
 ## 1.4.1 (2019-02-12)
 
 ### Enhancements
