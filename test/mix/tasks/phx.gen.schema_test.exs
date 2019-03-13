@@ -270,6 +270,25 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
+  test "generates migrations with a custom migration module", config do
+    in_tmp_project config.test, fn ->
+      try do
+        Application.put_env(:ecto_sql, :migration_module, MyCustomApp.MigrationModule)
+  
+        Gen.Schema.run(~w(Blog.Post posts))        
+  
+        assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
+  
+        assert_file migration, fn file ->
+          assert file =~ "use MyCustomApp.MigrationModule"
+          assert file =~ "create table(:posts) do"
+        end
+      after
+        Application.delete_env(:ecto_sql, :migration_module)
+      end
+    end
+  end
+
   test "generates schema without extra line break", config do
     in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post posts title))
