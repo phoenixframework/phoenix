@@ -257,7 +257,7 @@ defmodule Phoenix.Socket do
           channel_pid: pid,
           endpoint: atom,
           handler: atom,
-          id: nil,
+          id: String.t | nil,
           joined: boolean,
           ref: term,
           private: %{},
