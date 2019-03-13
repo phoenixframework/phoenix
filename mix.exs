@@ -13,7 +13,17 @@ defmodule Phoenix.MixProject do
       lockfile: lockfile(),
       preferred_cli_env: [docs: :docs],
       consolidate_protocols: Mix.env != :test,
-      xref: [exclude: [Ecto.Type, :ranch, {:cowboy_req, :compact, 1}, Plug.Adapters.Cowboy.Conn, Plug.Cowboy.Conn]],
+      xref: [
+        exclude: [
+          Phoenix.HTML.Safe,
+          Ecto.Type,
+          :ranch,
+          {:cowboy_req, :compact, 1},
+          Plug.Adapters.Cowboy.Conn,
+          Plug.Cowboy.Conn,
+          Plug.Cowboy
+        ]
+      ],
       elixirc_paths: elixirc_paths(Mix.env),
       name: "Phoenix",
       docs: docs(),
