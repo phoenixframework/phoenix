@@ -7,8 +7,6 @@ Ecto currently has adapters for the following databases:
 * PostgreSQL
 * MySQL
 * MSSQL
-* SQLite3
-* MongoDB
 
 Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default (you can pass the `--no-ecto` flag to exclude this).
 
