@@ -29,6 +29,7 @@ The old APIs for building transports are also deprecated. The good news is: adap
 ### Enhancements
   * [Router] add `scoped_alias` to return the full alias with the current scope's aliased prefix
   * [Router] add `alias: false` option to router definitions to to disable scope prefix on case by case basis
+  * [phx.routes] Show socket paths for websocket and longpoll transports
 
 ### Bug Fixes
   * [phx.gen.json] Fix invalid map fields for generated json tests
