@@ -208,6 +208,10 @@ defmodule Mix.Tasks.Phx.Gen.Context do
         raise_with_help "Expected the schema, #{inspect schema}, to be a valid module name"
       context == schema ->
         raise_with_help "The context and schema should have different names"
+      context == Mix.Phoenix.base() ->
+        raise_with_help "Cannot generate context #{context} because it has the same name as the application"
+      schema == Mix.Phoenix.base() ->
+        raise_with_help "Cannot generate schema #{schema} because it has the same name as the application"
       true ->
         args
     end

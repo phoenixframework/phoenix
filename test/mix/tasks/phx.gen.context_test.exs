@@ -104,6 +104,14 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         Gen.Context.run(~w(Blog Blog blogs))
       end
 
+      assert_raise Mix.Error, ~r/Cannot generate context Phoenix because it has the same name as the application/, fn ->
+        Gen.Context.run(~w(Phoenix Post blogs))
+      end
+
+      assert_raise Mix.Error, ~r/Cannot generate schema Phoenix because it has the same name as the application/, fn ->
+        Gen.Context.run(~w(Blog Phoenix blogs))
+      end
+
       assert_raise Mix.Error, ~r/Invalid arguments/, fn ->
         Gen.Context.run(~w(Blog.Post posts))
       end
