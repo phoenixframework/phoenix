@@ -44,7 +44,7 @@ defmodule Mix.Tasks.Phx.Routes do
   defp endpoint(nil, base) do
     loaded(web_mod(base, "Endpoint"))
   end
-  defp endpoint(module, base) do
+  defp endpoint(module, _base) do
     loaded(Module.concat([module]))
   end
 
