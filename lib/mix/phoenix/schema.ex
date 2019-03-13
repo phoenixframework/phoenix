@@ -30,7 +30,8 @@ defmodule Mix.Phoenix.Schema do
             web_path: nil,
             web_namespace: nil,
             context_app: nil,
-            route_helper: nil
+            route_helper: nil,
+            migration_module: nil
 
   @valid_types [
     :integer,
@@ -122,7 +123,8 @@ defmodule Mix.Phoenix.Schema do
       route_helper: route_helper(web_path, singular),
       sample_id: sample_id(opts),
       context_app: ctx_app,
-      generate?: generate?}
+      generate?: generate?,
+      migration_module: migration_module()}
   end
 
   @doc """
@@ -342,5 +344,12 @@ defmodule Mix.Phoenix.Schema do
     "#{web_path}_#{singular}"
     |> String.trim_leading("_")
     |> String.replace("/", "_")
+  end
+
+  defp migration_module do
+    case Application.get_env(:ecto_sql, :migration_module, Ecto.Migration) do
+      migration_module when is_atom(migration_module) -> migration_module
+      other -> Mix.raise "Expected :migration_module to be a module, got: #{inspect(other)}"
+    end
   end
 end
