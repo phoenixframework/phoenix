@@ -36,7 +36,9 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   setup_all do
-    Endpoint.start_link()
+    ExUnit.CaptureLog.capture_log(fn ->
+      Endpoint.start_link()
+    end)
     on_exit fn -> Application.delete_env(:phoenix, :serve_endpoints) end
     :ok
   end
@@ -49,6 +51,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
     }
   end
 
+  @tag :capture_log
   test "errors if pubsub adapter is set but not a name" do
     Process.flag(:trap_exit, true)
     {:error, {%ArgumentError{message: message}, _}} = NoPubSubNameEndpoint.start_link()
@@ -114,6 +117,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.static_path("/foo.css") == "/foo-ghijkl.css?vsn=d"
   end
 
+  @tag :capture_log
   test "invokes init/2 callback" do
     Application.put_env(:phoenix, __MODULE__.InitEndpoint, parent: self())
 
@@ -126,26 +130,28 @@ defmodule Phoenix.Endpoint.EndpointTest do
       end
     end
 
-    {:ok, pid} = InitEndpoint.start_link
+    {:ok, pid} = InitEndpoint.start_link()
     assert_receive {^pid, :sample}
   end
 
+  @tag :capture_log
   test "uses url configuration for static path" do
     Application.put_env(:phoenix, __MODULE__.UrlEndpoint, url: [path: "/api"])
     defmodule UrlEndpoint do
       use Phoenix.Endpoint, otp_app: :phoenix
     end
-    UrlEndpoint.start_link
+    UrlEndpoint.start_link()
     assert UrlEndpoint.path("/phoenix.png") =~ "/api/phoenix.png"
     assert UrlEndpoint.static_path("/phoenix.png") =~ "/api/phoenix.png"
   end
 
+  @tag :capture_log
   test "uses static_url configuration for static path" do
     Application.put_env(:phoenix, __MODULE__.StaticEndpoint, static_url: [path: "/static"])
     defmodule StaticEndpoint do
       use Phoenix.Endpoint, otp_app: :phoenix
     end
-    StaticEndpoint.start_link
+    StaticEndpoint.start_link()
     assert StaticEndpoint.path("/phoenix.png") =~ "/phoenix.png"
     assert StaticEndpoint.static_path("/phoenix.png") =~ "/static/phoenix.png"
   end
