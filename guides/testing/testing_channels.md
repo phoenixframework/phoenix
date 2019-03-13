@@ -168,6 +168,8 @@ Since the `handle_in/3` callback for the `"shout"` event just broadcasts the sam
 all subscribers in the `"room:lobby"` should receive the message. To check that, we do
 `assert_broadcast "shout", %{"hello" => "all"}`.
 
+**NOTE:** `assert_broadcast/3` tests that the message was broadcast in the PubSub system.
+  For testing if a client receives a message, use `assert_push/3`
 
 #### Testing an Asynchronous Push from the Server
 
