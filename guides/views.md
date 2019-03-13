@@ -73,18 +73,18 @@ When we `use HelloWeb, :view`, we get other conveniences as well. Since `view/0`
 Let's open up the `lib/hello_web/templates/page/index.html.eex` and locate this stanza.
 
 ```html
-<div class="phx-hero">
-  <h2><%= gettext("Welcome to %{name}!", name: "Phoenix") %></h2>
-  <p class="lead">A productive web framework that<br>does not compromise speed and maintainability.</p>
-</div>
+<section class="phx-hero">
+  <h1><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1>
+  <p>A productive web framework that<br/>does not compromise speed or maintainability.</p>
+</section>
 ```
 
 Then let's add a line with a link back to the same page. (The objective is to see how path helpers respond in a template, not to add any functionality.)
 
 ```html
-<div class="phx-hero">
-  <h2><%= gettext("Welcome to %{name}!", name: "Phoenix") %></h2>
-  <p class="lead">A productive web framework that<br>does not compromise speed and maintainability.</p>
+<section class="phx-hero">
+  <h1><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1>
+  <p>A productive web framework that<br/>does not compromise speed or maintainability.</p>
   <p><a href="<%= Routes.page_path(@conn, :index) %>">Link back to this page</a></p>
 </div>
 ```

@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Phx do
     Application.ensure_all_started(:phoenix)
     Mix.shell.info "Phoenix v#{Application.spec(:phoenix, :vsn)}"
     Mix.shell.info "Productive. Reliable. Fast."
-    Mix.shell.info "A productive web framework that does not compromise speed and maintainability."
+    Mix.shell.info "A productive web framework that does not compromise speed or maintainability."
     Mix.shell.info "\nAvailable tasks:\n"
     Mix.Tasks.Help.run(["--search", "phx."])
   end
