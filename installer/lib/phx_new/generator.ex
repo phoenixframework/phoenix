@@ -5,7 +5,7 @@ defmodule Phx.New.Generator do
 
   @phoenix Path.expand("../..", __DIR__)
 
-  @phoenix_version Version.parse!("1.4.1")
+  @phoenix_version Version.parse!("1.4.2")
 
   @callback prepare_project(Project.t) :: Project.t
   @callback generate(Project.t) :: Project.t

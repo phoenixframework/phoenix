@@ -24,12 +24,16 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
-## 1.4.2-dev
+## 1.4.2 (2019-03-13)
 
 ### Enhancements
   * [Router] add `scoped_alias` to return the full alias with the current scope's aliased prefix
   * [Router] add `alias: false` option to router definitions to to disable scope prefix on case by case basis
+  * [Router] Support any struct with :endpoint key in path/url helpers
+  * [Channel] Optimize channel join through non-blocking callback init
+  * [Endpoint] Log Web access URLs for HTTP and HTTPS configurations
   * [phx.routes] Show socket paths for websocket and longpoll transports
+  * [phx.new] Add `--verbose` flag for verbose installer output
   * [phx.gen.schema] Allow the app configuration to specify a custom migration module for the generated migration code
 
 ### Bug Fixes
