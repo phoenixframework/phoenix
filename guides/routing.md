@@ -183,7 +183,7 @@ end
 
 This means that all routes starting with `/jobs` will be sent to the `BackgroundJob.Plug` module.
 
-We can even use the `forward/4` macro in a pipeline. If we wanted to ensure that the user was authenticated and an administrator in order to see the jobs page, we could use the following in our router.
+We can even use the `forward/4` macro in a pipeline. If we wanted to ensure that the user was authenticated as an administrator in order to see the jobs page, we could use the following in our router.
 
 ```elixir
 defmodule HelloWeb.Router do
