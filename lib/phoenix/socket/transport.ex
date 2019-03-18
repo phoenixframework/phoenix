@@ -10,19 +10,28 @@ defmodule Phoenix.Socket.Transport do
 
   Developers interested in implementing custom transports must invoke
   the socket API defined in this module. This module also provides
-  many conveniences to make it easier to build custom transports.
+  many conveniences that invokes the underlying socket API to make
+  it easier to build custom transports.
 
-  ## Workflow
+  ## Booting sockets
 
   Whenever your endpoint starts, it will automatically invoke the
   `child_spec/1` on each listed socket and start that specification
-  under the endpoint supervisor. For this reason, custom transports
-  that are manually started in the supervision tree must be listed
-  after the endpoint.
+  under the endpoint supervisor.
 
-  Whenever the transport receives a connection, it should invoke the
-  `c:connect/1` callback with a map of metadata. Different sockets may
-  require different metadatas.
+  Since the socket supervision tree is started by the endpoint,
+  any custom transport must be started after the endpoint in a
+  supervision tree.
+
+  ## Operating sockets
+
+  Sockets are operated by a transport. When a transport is defined,
+  it usually receives a socket module and the module will be invoked
+  when certain events happen at the transport level.
+
+  Whenever the transport receives a new connection, it should invoke
+  the `c:connect/1` callback with a map of metadata. Different sockets
+  may require different metadatas.
 
   If the connection is accepted, the transport can move the connection
   to another process, if so desires, or keep using the same process. The
