@@ -24,7 +24,7 @@ defmodule Phoenix.Controller.Pipeline do
                       |> Map.put(:phoenix_action, action))
 
         start = System.monotonic_time()
-        :telemetry.execute([:phoenix, :controller, :call, :start], %{}, %{
+        :telemetry.execute([:phoenix, :controller, :call, :start], %{time: System.system_time()}, %{
           conn: conn,
           controller: __MODULE__,
           action: action

@@ -213,13 +213,18 @@ defmodule Phoenix.Controller.PipelineTest do
     MyController.call(stack_conn(), :show)
 
     assert_receive {:event, :start, measurements, metadata}
-    assert measurements == %{}
+    assert map_size(measurements) == 1
+    assert %{time: time} = measurements
+    assert is_integer(time)
+    assert map_size(metadata) == 3
     assert %{controller: MyController, action: :show, conn: conn} = metadata
     assert conn.private.stack == []
 
     assert_receive {:event, :stop, measurements, metadata}
+    assert map_size(measurements) == 1
     assert %{duration: duration} = measurements
     assert is_integer(duration)
+    assert map_size(metadata) == 3
     assert %{controller: MyController, action: :show, conn: conn} = metadata
     assert conn.private.stack == [:action, :before2, :before1]
   end
