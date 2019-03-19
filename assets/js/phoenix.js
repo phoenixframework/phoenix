@@ -404,6 +404,7 @@ export class Channel {
     this.on(CHANNEL_EVENTS.reply, (payload, ref) => {
       this.trigger(this.replyEventName(ref), payload)
     })
+    this.socket.channels.push(this)
   }
 
   /**
@@ -923,9 +924,7 @@ export class Socket {
    * @returns {Channel}
    */
   channel(topic, chanParams = {}){
-    let chan = new Channel(topic, chanParams, this)
-    this.channels.push(chan)
-    return chan
+    return new Channel(topic, chanParams, this)
   }
 
   /**

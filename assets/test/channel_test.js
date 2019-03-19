@@ -13,7 +13,7 @@ const defaultTimeout = 10000
 
 describe("constructor", () => {
   beforeEach(() => {
-    socket = { timeout: 1234 }
+    socket = new Socket("/socket", { timeout: 1234 })
   })
 
   it("sets defaults", () => {
@@ -29,7 +29,7 @@ describe("constructor", () => {
     assert.deepEqual(channel.pushBuffer, [])
   })
 
-  it("sets up joinPush objec with literal params", () => {
+  it("sets up joinPush object with literal params", () => {
     channel = new Channel("topic", { one: "two" }, socket)
     const joinPush = channel.joinPush
 
@@ -39,7 +39,7 @@ describe("constructor", () => {
     assert.equal(joinPush.timeout, 1234)
   })
 
-  it("sets up joinPush objec with closure params", () => {
+  it("sets up joinPush object with closure params", () => {
     channel = new Channel("topic", function(){ return({one: "two"}) }, socket)
     const joinPush = channel.joinPush
 
@@ -53,7 +53,7 @@ describe("constructor", () => {
 
 describe("updating join params", () => {
   beforeEach(() => {
-    socket = { timeout: 1234 }
+    socket = new Socket("/socket", { timeout: 1234 })
   })
 
   it("can update the join params", () => {
