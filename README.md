@@ -46,9 +46,7 @@ To create projects outside of the `installer/` directory, add the latest archive
 To build the documentation from source:
 
 ```bash
-$ cd assets
-$ npm install
-$ cd ..
+$ mix npm.install
 $ MIX_ENV=docs mix docs
 ```
 
@@ -70,8 +68,8 @@ $ mix archive.build
 ### Building phoenix.js
 
 ```bash
+$ mix npm.install
 $ cd assets
-$ npm install
 $ npm run watch
 ```
 

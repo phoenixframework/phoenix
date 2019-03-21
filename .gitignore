@@ -12,3 +12,5 @@
 /installer/deps
 
 erl_crash.dump
+
+*.ez

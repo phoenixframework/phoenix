@@ -23,6 +23,9 @@ defmodule <%= root_app_module %>.MixProject do
   # Dependencies listed here are available only for this project
   # and cannot be accessed from applications inside the apps folder
   defp deps do
-    []
+    [
+      # "npm.install": ["cmd 'npm install --prefix apps/my_app/assets'",
+      #                 "cmd 'npm install --prefix apps/my_other_app/assets'"]
+    ]
   end
 end

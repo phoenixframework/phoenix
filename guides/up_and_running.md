@@ -14,7 +14,7 @@ We can run `mix phx.new` from any directory in order to bootstrap our Phoenix ap
 $ mix phx.new hello
 ```
 
-> A note about [webpack](https://webpack.js.org/) before we begin: Phoenix will use webpack for asset management by default. Webpack's dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `mix phx.new` task. If we say "no" at that point, and if we don't install those dependencies later with `npm install`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use webpack at all, we can simply pass `--no-webpack` to `mix phx.new`.
+> A note about [webpack](https://webpack.js.org/) before we begin: Phoenix will use webpack for asset management by default. Webpack's dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `mix phx.new` task. If we say "no" at that point, and if we don't install those dependencies later with `mix npm.install`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use webpack at all, we can simply pass `--no-webpack` to `mix phx.new`.
 
 > A note about [Ecto](https://hexdocs.pm/phoenix/ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL, MySQL, or MSSQL. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to `mix phx.new`. This flag may also be combined with `--no-webpack` to create a skeleton application.
 
@@ -38,7 +38,8 @@ Phoenix generates the directory structure and all the files we will need for our
 Fetch and install dependencies? [Yn] Y
 * running mix deps.get
 * running mix deps.compile
-* running cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
+* running mix npm.install
+* running cd assets && node node_modules/webpack/bin/webpack.js --mode development
 
 We are almost there! The following steps are missing:
 
@@ -97,7 +98,8 @@ We are almost there! The following steps are missing:
 
     $ cd hello
     $ mix deps.get
-    $ cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
+    $ mix npm.install
+    $ cd assets && node node_modules/webpack/bin/webpack.js --mode development
 
 Then configure your database in config/dev.exs and run:
 

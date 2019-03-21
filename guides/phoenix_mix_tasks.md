@@ -36,7 +36,7 @@ This is how we tell Phoenix the framework to generate a new Phoenix application 
 
 Before we begin, we should note that Phoenix uses [Ecto](https://github.com/elixir-lang/ecto) for database access and [webpack](https://webpack.js.org/) for asset management by default. We can pass `--no-ecto` to opt out of Ecto and  `--no-webpack` to opt out of webpack.
 
-> Note: If we do use webpack, we need to install its dependencies before we start our application. `mix phx.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
+> Note: If we do use webpack, we need to install its dependencies before we start our application. `mix phx.new` will ask to do this for us. Otherwise, we can install them with `mix npm.install` (or `npm install` from the assets folder). If we don't install them, the app will throw errors and may not serve our assets properly. For umbrella apps, `mix npm.install` must be configured in the root project `mix.exs` file.
 
 We need to pass a name for our application to `mix phx.new`. Conventionally, we use all lower-case letters with underscores.
 
@@ -68,7 +68,8 @@ The `mix phx.new` task will also ask us if we want to install our dependencies. 
 
 ```console
 Fetch and install dependencies? [Yn] y
-* cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
+* mix npm.install
+* cd assets && node node_modules/webpack/bin/webpack.js --mode development
 * running mix deps.get
 ```
 
