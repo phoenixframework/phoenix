@@ -627,6 +627,16 @@ defmodule Phoenix.Socket do
     {:ok, {state, socket}}
   end
 
+  defp handle_in(nil, %{event: "phx_leave", ref: ref, topic: topic}, state, socket) do
+    reply = %Reply{
+      ref: ref,
+      topic: topic,
+      status: :ok,
+      payload: %{}
+    }
+    {:reply, :ok, encode_reply(socket, reply), {state, socket}}
+  end
+
   defp handle_in(nil, message, state, socket) do
     {:reply, :error, encode_ignore(socket, message), {state, socket}}
   end
