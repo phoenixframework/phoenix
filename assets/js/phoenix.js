@@ -372,48 +372,48 @@ export class Channel {
     this.joinedOnce  = false
     this.joinPush    = new Push(this, CHANNEL_EVENTS.join, this.params, this.timeout)
     this.pushBuffer  = []
-    this.rejoinTimer  = new Timer(
-      () => this.rejoinUntilConnected(),
-      this.socket.reconnectAfterMs
-    )
+
+    this.rejoinTimer = new Timer(() => {
+      if(this.socket.isConnected()){ this.rejoin() }
+    }, this.socket.rejoinAfterMs)
+    this.socket.onError(() => this.rejoinTimer.reset())
+    this.socket.onOpen(() => {
+      this.rejoinTimer.reset()
+      if(this.isErrored()){ this.rejoin() }
+    })
     this.joinPush.receive("ok", () => {
       this.state = CHANNEL_STATES.joined
       this.rejoinTimer.reset()
       this.pushBuffer.forEach( pushEvent => pushEvent.send() )
       this.pushBuffer = []
     })
-    this.onClose( () => {
+    this.joinPush.receive("error", () => {
+      this.state = CHANNEL_STATES.errored
+      if(this.socket.isConnected()){ this.rejoinTimer.scheduleTimeout() }
+    })
+    this.onClose(() => {
       this.rejoinTimer.reset()
-      if (this.socket.hasLogger()) this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`)
+      if(this.socket.hasLogger()) this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`)
       this.state = CHANNEL_STATES.closed
       this.socket.remove(this)
     })
-    this.onError( reason => { if(this.isLeaving() || this.isClosed()){ return }
-      if (this.socket.hasLogger()) this.socket.log("channel", `error ${this.topic}`, reason)
+    this.onError(reason => {
+      if(this.socket.hasLogger()) this.socket.log("channel", `error ${this.topic}`, reason)
+      if(this.isJoining()){ this.joinPush.reset() }
       this.state = CHANNEL_STATES.errored
-      this.rejoinTimer.scheduleTimeout()
+      if(this.socket.isConnected()){ this.rejoinTimer.scheduleTimeout() }
     })
-    this.joinPush.receive("timeout", () => { if(!this.isJoining()){ return }
-      if (this.socket.hasLogger()) this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
+    this.joinPush.receive("timeout", () => {
+      if(this.socket.hasLogger()) this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
       let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), this.timeout)
       leavePush.send()
       this.state = CHANNEL_STATES.errored
       this.joinPush.reset()
-      this.rejoinTimer.scheduleTimeout()
+      if(this.socket.isConnected()){ this.rejoinTimer.scheduleTimeout() }
     })
     this.on(CHANNEL_EVENTS.reply, (payload, ref) => {
       this.trigger(this.replyEventName(ref), payload)
     })
-  }
-
-  /**
-   * @private
-   */
-  rejoinUntilConnected(){
-    this.rejoinTimer.scheduleTimeout()
-    if(this.socket.isConnected()){
-      this.rejoin()
-    }
   }
 
   /**
@@ -425,8 +425,9 @@ export class Channel {
     if(this.joinedOnce){
       throw new Error(`tried to join multiple times. 'join' can only be called a single time per channel instance`)
     } else {
+      this.timeout = timeout
       this.joinedOnce = true
-      this.rejoin(timeout)
+      this.rejoin()
       return this.joinPush
     }
   }
@@ -523,6 +524,7 @@ export class Channel {
    * @returns {Push}
    */
   leave(timeout = this.timeout){
+    this.rejoinTimer.reset()
     this.state = CHANNEL_STATES.leaving
     let onClose = () => {
       if (this.socket.hasLogger()) this.socket.log("channel", `leave ${this.topic}`)
@@ -683,16 +685,28 @@ const Serializer = {
  *
  * Defaults `DEFAULT_TIMEOUT`
  * @param {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
- * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millsec reconnect interval.
+ * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millsec
+ * socket reconnect interval.
  *
  * Defaults to stepped backoff of:
  *
  * ```javascript
  * function(tries){
- *   return [1000, 5000, 10000][tries - 1] || 10000
+ *   return [10, 50, 100, 150, 200, 250, 500, 1000, 2000][tries - 1] || 5000
  * }
- * ```
+ * ````
+ *
+ * @param {number} [opts.rejoinAfterMs] - The optional function that returns the millsec
+ * rejoin interval for individual channels.
+ *
+ * ```javascript
+ * function(tries){
+ *   return [1000, 2000, 5000][tries - 1] || 10000
+ * }
+ * ````
+ *
  * @param {Function} [opts.logger] - The optional function for specialized logging, ie:
+ *
  * ```javascript
  * function(kind, msg, data) {
  *   console.log(`${kind}: ${msg}`, data)
@@ -717,6 +731,8 @@ export class Socket {
     this.transport            = opts.transport || global.WebSocket || LongPoll
     this.defaultEncoder       = Serializer.encode
     this.defaultDecoder       = Serializer.decode
+    this.closeWasClean        = false
+    this.unloaded             = false
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
@@ -724,9 +740,27 @@ export class Socket {
       this.encode = this.defaultEncoder
       this.decode = this.defaultDecoder
     }
-    this.heartbeatIntervalMs  = opts.heartbeatIntervalMs || 30000
-    this.reconnectAfterMs     = opts.reconnectAfterMs || function(tries){
-      return [1000, 2000, 5000, 10000][tries - 1] || 10000
+    if(globalWindow){
+      globalWindow.addEventListener("beforeunload", e => {
+        this.unloaded = true
+        this.abnormalClose("unloaded")
+      })
+    }
+    this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000
+    this.rejoinAfterMs = (tries) => {
+      if(opts.rejoinAfterMs){
+        return opts.rejoinAfterMs(tries)
+      } else {
+        return [1000, 2000, 5000][tries - 1] || 10000
+      }
+    }
+    this.reconnectAfterMs = (tries) => {
+      if(this.unloaded){ return 100 }
+      if(opts.reconnectAfterMs){
+        return opts.reconnectAfterMs(tries)
+      } else {
+        return [10, 50, 100, 150, 200, 250, 500, 1000, 2000][tries - 1] || 5000
+      }
     }
     this.logger               = opts.logger || null
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
@@ -766,6 +800,7 @@ export class Socket {
    * @param {string} reason
    */
   disconnect(callback, code, reason){
+    this.closeWasClean = true
     this.reconnectTimer.reset()
     this.teardown(callback, code, reason)
   }
@@ -840,6 +875,8 @@ export class Socket {
    */
   onConnOpen(){
     if (this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
+    this.unloaded = false
+    this.closeWasClean = false
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     this.resetHeartbeat()
@@ -869,7 +906,7 @@ export class Socket {
     if (this.hasLogger()) this.log("transport", "close", event)
     this.triggerChanError()
     clearInterval(this.heartbeatTimer)
-    if(event && event.code !== WS_CLOSE_NORMAL) {
+    if(!this.closeWasClean){
       this.reconnectTimer.scheduleTimeout()
     }
     this.stateChangeCallbacks.close.forEach( callback => callback(event) )
@@ -888,7 +925,11 @@ export class Socket {
    * @private
    */
   triggerChanError(){
-    this.channels.forEach( channel => channel.trigger(CHANNEL_EVENTS.error) )
+    this.channels.forEach( channel => {
+      if(!(channel.isErrored() || channel.isLeaving() || channel.isClosed())){
+        channel.trigger(CHANNEL_EVENTS.error)
+      }
+    })
   }
 
   /**
@@ -959,11 +1000,16 @@ export class Socket {
     if(this.pendingHeartbeatRef){
       this.pendingHeartbeatRef = null
       if (this.hasLogger()) this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
-      this.conn.close(WS_CLOSE_NORMAL, "hearbeat timeout")
+      this.abnormalClose("heartbeat timeout")
       return
     }
     this.pendingHeartbeatRef = this.makeRef()
     this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef})
+  }
+
+  abnormalClose(reason){
+    this.closeWasClean = false
+    this.conn.close(WS_CLOSE_NORMAL, reason)
   }
 
   flushSendBuffer(){
