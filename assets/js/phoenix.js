@@ -718,7 +718,9 @@ const Serializer = {
  * Defaults to 20s (double the server long poll timer).
  *
  * @param {{Object|function)} [opts.params] - The optional params to pass when connecting
+ * @param {string} [opts.binaryType] - The binary type to use for binary WebSocket frames.
  *
+ * Defaults to "arraybuffer"
  *
 */
 export class Socket {
@@ -733,6 +735,7 @@ export class Socket {
     this.defaultDecoder       = Serializer.decode
     this.closeWasClean        = false
     this.unloaded             = false
+    this.binaryType           = opts.binaryType || "arraybuffer"
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
@@ -820,11 +823,12 @@ export class Socket {
     if(this.conn){ return }
 
     this.conn = new this.transport(this.endPointURL())
-    this.conn.timeout   = this.longpollerTimeout
-    this.conn.onopen    = () => this.onConnOpen()
-    this.conn.onerror   = error => this.onConnError(error)
-    this.conn.onmessage = event => this.onConnMessage(event)
-    this.conn.onclose   = event => this.onConnClose(event)
+    this.conn.binaryType = this.binaryType
+    this.conn.timeout    = this.longpollerTimeout
+    this.conn.onopen     = () => this.onConnOpen()
+    this.conn.onerror    = error => this.onConnError(error)
+    this.conn.onmessage  = event => this.onConnMessage(event)
+    this.conn.onclose    = event => this.onConnClose(event)
   }
 
   /**
