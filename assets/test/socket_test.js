@@ -32,6 +32,7 @@ describe("with transports", done =>{
       assert.equal(socket.longpollerTimeout, 20000)
       assert.equal(socket.heartbeatIntervalMs, 30000)
       assert.equal(socket.logger, null)
+      assert.equal(socket.binaryType, "arraybuffer")
       assert.equal(typeof socket.reconnectAfterMs, "function")
     })
 
