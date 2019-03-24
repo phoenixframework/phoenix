@@ -27,6 +27,7 @@ The old APIs for building transports are also deprecated. The good news is: adap
 ## 1.4.3-dev
 
 ### JavaScript client enhancements
+  * add `binaryType` option to socket constructor, with `arraybuffer` default for binary messages
   * use more aggressive socket reconnect for faster connection recovery
   * rejoin channels as soon as socket reconnects for faster rejoins
   * decouple channel rejoin backoffs with new `rejoinAfterMs` option
