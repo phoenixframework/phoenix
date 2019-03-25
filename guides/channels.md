@@ -236,7 +236,7 @@ We can use that library to connect to our socket and join our channel, we just n
 
 ```javascript
 // assets/js/socket.js
-...
+// ...
 socket.connect()
 
 // Now that you are connected, you can join channels with a topic:
@@ -251,7 +251,7 @@ export default socket
 After that, we need to make sure `assets/js/socket.js` gets imported into our application JavaScript file. To do that, uncomment the last line in `assets/js/app.js`.
 
 ```javascript
-...
+// ...
 import socket from "./socket"
 ```
 
@@ -267,7 +267,7 @@ In `lib/hello_web/templates/page/index.html.eex`, we'll replace the existing cod
 Now let's add a couple of event listeners to `assets/js/socket.js`:
 
 ```javascript
-...
+// ...
 let channel           = socket.channel("room:lobby", {})
 let chatInput         = document.querySelector("#chat-input")
 let messagesContainer = document.querySelector("#messages")
@@ -289,7 +289,7 @@ export default socket
 All we had to do is detect that enter was pressed and then `push` an event over the channel with the message body. We named the event `"new_msg"`. With this in place, let's handle the other piece of a chat application where we listen for new messages and append them to our messages container.
 
 ```javascript
-...
+// ...
 let channel           = socket.channel("room:lobby", {})
 let chatInput         = document.querySelector("#chat-input")
 let messagesContainer = document.querySelector("#messages")
