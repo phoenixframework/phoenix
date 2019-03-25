@@ -187,7 +187,7 @@ defmodule HelloWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :hello
 
   socket "/socket", HelloWeb.UserSocket
-  # ...
+  ...
 end
 ```
 
@@ -199,7 +199,7 @@ defmodule HelloWeb.UserSocket do
 
   ## Channels
   channel "room:*", HelloWeb.RoomChannel
-  # ...
+  ...
 ```
 
 Now, whenever a client sends a message whose topic starts with `"room:"`, it will be routed to our RoomChannel. Next, we'll define a `HelloWeb.RoomChannel` module to manage our chat room messages.
@@ -377,7 +377,7 @@ Let's say we have an authentication plug in our app called `OurAuth`. When `OurA
 
 ```elixir
 pipeline :browser do
-  # ...
+  ...
   plug OurAuth
   plug :put_user_token
 end
