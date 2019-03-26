@@ -71,7 +71,7 @@ describe("with transport", () => {
 
   describe("updating join params", () => {
     beforeEach(() => {
-      socket = {timeout: 1234, onError: function(){}, onOpen: function(){}}
+      socket = {timeout: 1234, channels: [], onError: function(){}, onOpen: function(){}}
     })
 
     it("can update the join params", () => {
