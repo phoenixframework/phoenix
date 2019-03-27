@@ -75,17 +75,17 @@ Now that we have the Toolbelt installed, let's create the Heroku application. In
 
 > Note: the first time we use a Heroku command, it may prompt us to log in. If this happens, just enter the email and password you specified during signup.
 
+We are going to use latest published buildpack, you can also get an edge version of this buildpack. See it's [README](https://github.com/HashNuke/heroku-buildpack-elixir) for more instructions on how to do this.
 ```console
-$ heroku create --buildpack "https://github.com/HashNuke/heroku-buildpack-elixir.git"
-Creating mysterious-meadow-6277... done, stack is cedar-14
-Buildpack set. Next release on mysterious-meadow-6277 will use https://github.com/HashNuke/heroku-buildpack-elixir.git.
+$ heroku create --buildpack hashnuke/elixir
+Creating app... done, ⬢ mysterious-meadow-6277
+Setting buildpack to hashnuke/elixir... done
 https://mysterious-meadow-6277.herokuapp.com/ | https://git.heroku.com/mysterious-meadow-6277.git
-Git remote heroku added
 ```
 
 > Note: the name of the Heroku application is the random string after "Creating" in the output above (mysterious-meadow-6277). This will be unique, so expect to see a different name from "mysterious-meadow-6277".
 
-The `--buildpack` option we are passing allows us to specify the [Elixir buildpack](https://github.com/HashNuke/heroku-buildpack-elixir) we want Heroku to use. A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient way of packaging framework and/or runtime support. In our case it's installing Erlang, Elixir, fetching our application dependencies, and so on, before we run it.
+A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient way of packaging framework and/or runtime support. In our case it's installing Erlang, Elixir, fetching our application dependencies, and so on, before we run it.
 
 The URL in the output is the URL to our application. If we open it in our browser now, we will get the default Heroku welcome page.
 
@@ -108,31 +108,15 @@ We need to compile static assets for a successful Phoenix deployment. The [Phoen
 
 _Skip this step if you do not have any static assets (i.e. you created your project with the `--no-webpack --no-html` flags)._
 
+
 ```console
 $ heroku buildpacks:add https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
 Buildpack added. Next release on mysterious-meadow-6277 will use:
   1. https://github.com/HashNuke/heroku-buildpack-elixir.git
   2. https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
-Run `git push heroku master` to create a new release using these buildpacks.
 ```
 
-This phoenix static buildpack pack can be configured to change the node version and compile options. Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. We will override the compile options here.
-
-Create a config file named `phoenix_static_buildpack.config` in the root directory for your project with the following:
-
-```
-compile="compile"
-```
-
-And a file named `compile` with the following contents:
-
-```
-npm run deploy
-cd $phoenix_dir
-mix "${phoenix_ex}.digest"
-```
-
-This will ensure that the `deploy` script in the package.json is used instead of the static buildpack default of `brunch`.
+This phoenix static buildpack pack can be configured to change the node version and compile options. Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
 
 ## Making our Project ready for Heroku
 
@@ -149,17 +133,7 @@ config :hello, HelloWeb.Endpoint,
   secret_key_base: System.get_env("SECRET_KEY_BASE") || raise("missing SECRET_KEY_BASE env var")
 ```
 
-Then, we'll add the production database configuration to `config/prod.exs`:
-
-```elixir
-# Configure your database
-config :hello, Hello.Repo,
-  url: System.get_env("DATABASE_URL"),
-  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-  ssl: true
-```
-
-Afterwards, let's tell the Phoenix application to bind to the PORT environment variable provided by Heroku's [dyno networking](https://devcenter.heroku.com/articles/dynos#common-runtime-networking) so that it can accept incoming web traffic. Add this beneath your endpoint configuration:
+Next let's tell the Phoenix application to bind to the PORT environment variable provided by Heroku's [dyno networking](https://devcenter.heroku.com/articles/dynos#common-runtime-networking) so that it can accept incoming web traffic. Add this anywhere within your endpoint configuration:
 
 ```elixir
 http: [port: System.get_env("PORT")]
@@ -171,17 +145,21 @@ Now, let's tell Phoenix to use our Heroku URL and enforce we only use the SSL ve
 url: [host: "example.com", port: 80],
 ```
 
-... and replace it with this (don't forget to replace `mysterious-meadow-6277` with your application name):
+... and replace it with this:
 
 ```elixir
-url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
+url: [scheme: "https", host: "", port: 443],
 force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
 
-... finally, if you would like to use a custom domain that has already been added to the Heroku app settings, replace the host with your custom domain and update the port to use Heroku's `PORT` environment variable:
+Then, we'll add the production database configuration to `config/prod.exs`:
 
 ```elixir
-url: [scheme: "https", host: "mywebsite.com", port: System.get_env("PORT")],
+# Configure your database
+config :hello, Hello.Repo,
+  url: System.get_env("DATABASE_URL"),
+  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+  ssl: true
 ```
 
 Since our configuration is now handled using Heroku's environment variables, we don't need to import the `config/prod.secret.exs` file in `/config/prod.exs` any longer, so we can delete the following line:
@@ -214,7 +192,7 @@ config :hello, Hello.Repo,
   ssl: true
 ```
 
-Finally, we need to decrease the timeout for the websocket transport in `lib/hello_web/endpoint.ex`:
+Finally, if you plan on using websockets, then we will need to decrease the timeout for the websocket transport in `lib/hello_web/endpoint.ex`. If you do not plan on using websockets, then leaving it set to false is fine. You can find further explanation of the options available at the [documentation](https://hexdocs.pm/phoenix/Phoenix.Endpoint.html#socket/3-websocket-configuration).
 
 ```elixir
 defmodule HelloWeb.Endpoint do
@@ -230,11 +208,7 @@ end
 
 This ensures that any idle connections are closed by Phoenix before they reach Heroku's 55-second timeout window.
 
-Lastly, we'll need to create a [Procfile](https://devcenter.heroku.com/articles/procfile) (a text file called "Procfile" in the root of our project’s folder) with the following line:
-
-```
-web: MIX_ENV=prod elixir --sname server -S mix phx.server
-```
+As is common with Heroku's buildpacks, you can create your own "Procfile", but for our case we will use the default one provided by the [heroku-buildpack-phoenix-static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static).
 
 ## Creating Environment Variables in Heroku
 
