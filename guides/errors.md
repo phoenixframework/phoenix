@@ -35,7 +35,7 @@ config :hello, HelloWeb.Endpoint,
   debug_errors: false,
   code_reloader: true,
   cache_static_lookup: false,
-  watchers: [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development", "--watch-stdin",
+  watchers: [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development", "--watch-stdin", "--color",
                     cd: Path.expand("../assets", __DIR__)]]
 ```
 

@@ -181,14 +181,14 @@ defmodule Phoenix.Endpoint do
       You can configure it to whatever build tool or command you want:
 
           [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development",
-              "--watch-stdin"]]
+              "--watch-stdin", "--color"]]
 
       The `:cd` option can be used on a watcher to override the folder from
       which the watcher will run. By default this will be the project's root:
       `File.cwd!()`
 
           [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development",
-              "--watch-stdin"], cd: "my_frontend"]
+              "--watch-stdin", "--color"], cd: "my_frontend"]
 
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of
