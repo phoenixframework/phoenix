@@ -637,7 +637,8 @@ export class Channel {
   isLeaving(){ return this.state === CHANNEL_STATES.leaving }
 }
 
-const Serializer = {
+/* The default serializer for encoding and decoding messages */
+export let Serializer = {
   encode(msg, callback){
     let payload = [
       msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload
