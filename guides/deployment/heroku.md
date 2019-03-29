@@ -139,16 +139,16 @@ Next let's tell the Phoenix application to bind to the PORT environment variable
 http: [port: System.get_env("PORT")]
 ```
 
-Now, let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Find the url line:
+Now, let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. If we don't override the `host` variable, then when using plugs like `Routes.page_url` (`Routes.page_path` is unaffected as it uses relative URL's) the URL will generate incorrectly. Find the url line:
 
 ```elixir
 url: [host: "example.com", port: 80],
 ```
 
-... and replace it with this:
+... and replace it with this (don't forget to replace `mysterious-meadow-6277` with your application name):
 
 ```elixir
-url: [scheme: "https", host: "", port: 443],
+url: [scheme: "https", host: "mysterious-meadow-6277", port: 443],
 force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
 
@@ -208,7 +208,7 @@ end
 
 This ensures that any idle connections are closed by Phoenix before they reach Heroku's 55-second timeout window.
 
-As is common with Heroku's buildpacks, you can create your own "Procfile", but for our case we will use the default one provided by the [heroku-buildpack-phoenix-static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static).
+As is common with Heroku's buildpacks, you can create your own "Procfile", but for our case we will use the default one provided by the [heroku-buildpack-phoenix-static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static). Since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to check on the sequence these are defined for your app.
 
 ## Creating Environment Variables in Heroku
 
