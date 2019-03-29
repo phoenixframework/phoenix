@@ -7,7 +7,7 @@ defmodule Phoenix.MixProject do
     [
       app: :phoenix,
       version: @version,
-      elixir: "~> 1.4",
+      elixir:  "~> 1.5.1 or ~> 1.6",
       deps: deps(),
       package: package(),
       lockfile: lockfile(),
