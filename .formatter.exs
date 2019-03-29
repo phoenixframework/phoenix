@@ -61,7 +61,11 @@ locals_without_parens = [
   refute_reply: 4,
 
   # Phoenix.ConnTest
-  assert_error_sent: 2
+  assert_error_sent: 2,
+
+  # Phoenix.LiveView.Router
+  live: 2,
+  live: 3
 ]
 
 [
