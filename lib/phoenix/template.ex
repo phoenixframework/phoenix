@@ -99,7 +99,12 @@ defmodule Phoenix.Template do
 
   alias Phoenix.Template
 
-  @engines  [eex: Phoenix.Template.EExEngine, exs: Phoenix.Template.ExsEngine]
+  @engines [
+    eex: Phoenix.Template.EExEngine,
+    exs: Phoenix.Template.ExsEngine,
+    leex: Phoenix.LiveView.Engine
+  ]
+
   @default_pattern "*"
 
   defmodule UndefinedError do
