@@ -93,7 +93,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/assets/.babelrc", "env"
       assert_file "phx_blog/config/dev.exs", fn file ->
         assert file =~ "watchers: [\n    node:"
-        assert file =~ "lib/phx_blog_web/views/.*(ex)"
+        assert file =~ "lib/phx_blog_web/{live,views}/.*(ex)"
         assert file =~ "lib/phx_blog_web/templates/.*(eex)"
       end
       assert_file "phx_blog/assets/static/favicon.ico"
