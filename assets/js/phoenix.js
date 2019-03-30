@@ -744,7 +744,7 @@ export class Socket {
       this.encode = this.defaultEncoder
       this.decode = this.defaultDecoder
     }
-    if(globalWindow){
+    if(globalWindow && globalWindow.addEventListener){
       globalWindow.addEventListener("beforeunload", e => {
         this.unloaded = true
         this.abnormalClose("unloaded")
