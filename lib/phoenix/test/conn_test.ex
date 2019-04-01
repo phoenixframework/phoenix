@@ -592,9 +592,9 @@ defmodule Phoenix.ConnTest do
   by your MyApp.ErrorView.
 
   The function accepts a status either as an integer HTTP status or
-  atom, such as `404` or `:not_found`. The list of allowed atoms is available
-  in `Plug.Conn.Status`. If an error is raised, a 3-tuple of the wrapped
-  response is returned matching the status, headers, and body of the response:
+  atom, such as `404` or `:not_found`. If an error is raised, a
+  3-tuple of the wrapped response is returned matching the
+  status, headers, and body of the response:
 
       {404, [{"content-type", "text/html"} | _], "Page not found"}
 
