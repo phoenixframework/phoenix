@@ -36,7 +36,7 @@ defmodule <%= app_module %>.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [<%= if ecto do %>
-      {:ecto_sql, "~> 3.0"},
+      {:ecto_sql, "~> 3.1"},
       {:<%= adapter_app %>, ">= 0.0.0"},
       {:jason, "~> 1.0"}
     <% end %>]
