@@ -321,11 +321,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       project_path = Path.join(File.cwd!, "custom_path")
       Mix.Tasks.Phx.New.run([project_path, "--database", "mysql"])
 
-      assert_file "custom_path/mix.exs", ":mariaex"
+      assert_file "custom_path/mix.exs", ":myxql"
       assert_file "custom_path/config/dev.exs", [~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/test.exs", [~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/prod.secret.exs", [~r/username: "root"/, ~r/password: ""/]
-      assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.MySQL"
+      assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.MyXQL"
 
       assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
       assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"

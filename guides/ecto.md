@@ -470,8 +470,8 @@ defmodule HelloPhoenix.MixProject do
       {:phoenix, "~> 1.4.0"},
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.0"},
-      {:mariaex, ">= 0.0.0"},
+      {:ecto_sql, "~> 3.1"},
+      {:myxql, ">= 0.0.0"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:gettext, "~> 0.11"},
@@ -492,7 +492,7 @@ database: "hello_phoenix_dev"
 
 If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. We also need to configure the correct values in the `config/test.exs` and `config/prod.secret.exs` files as well.
 
-The last change is to open up `lib/hello_phoenix/repo.ex` and make sure to set the `:adapter` to `Ecto.Adapters.MySQL`.
+The last change is to open up `lib/hello_phoenix/repo.ex` and make sure to set the `:adapter` to `Ecto.Adapters.MyXQL`.
 
 Now all we need to do is fetch our new dependency, and we'll be ready to go.
 

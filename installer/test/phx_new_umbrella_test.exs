@@ -368,11 +368,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       project_path = Path.join(File.cwd!, app)
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mysql"])
 
-      assert_file app_path(app, "mix.exs"), ":mariaex"
+      assert_file app_path(app, "mix.exs"), ":myxql"
       assert_file app_path(app, "config/dev.exs"), [~r/username: "root"/, ~r/password: ""/]
       assert_file app_path(app, "config/test.exs"), [~r/username: "root"/, ~r/password: ""/]
       assert_file app_path(app, "config/prod.secret.exs"), [~r/username: "root"/, ~r/password: ""/]
-      assert_file app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.MySQL"
+      assert_file app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.MyXQL"
 
       assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
       assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
