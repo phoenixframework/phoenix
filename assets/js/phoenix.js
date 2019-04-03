@@ -824,7 +824,7 @@ export class Socket {
       this.params = closure(params)
     }
     if(this.conn){ return }
-
+    this.closeWasClean = false
     this.conn = new this.transport(this.endPointURL())
     this.conn.binaryType = this.binaryType
     this.conn.timeout    = this.longpollerTimeout
