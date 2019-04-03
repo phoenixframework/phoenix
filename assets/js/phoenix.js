@@ -734,7 +734,6 @@ export class Socket {
     this.transport            = opts.transport || global.WebSocket || LongPoll
     this.defaultEncoder       = Serializer.encode
     this.defaultDecoder       = Serializer.decode
-    this.closeWasClean        = false
     this.unloaded             = false
     this.binaryType           = opts.binaryType || "arraybuffer"
     if(this.transport !== LongPoll){
@@ -822,7 +821,7 @@ export class Socket {
       this.params = closure(params)
     }
     if(this.conn){ return }
-
+    this.closeWasClean = false
     this.conn = new this.transport(this.endPointURL())
     this.conn.binaryType = this.binaryType
     this.conn.timeout    = this.longpollerTimeout
