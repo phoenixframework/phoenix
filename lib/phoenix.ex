@@ -105,14 +105,14 @@ defmodule Phoenix do
         for Phoenix JSON encoding. We recommend everyone to upgrade to
         Jason by setting in your config/config.exs:
 
-            config :phoenix, :json_encoding, Jason
+            config :phoenix, :json_library, Jason
 
         And then adding {:jason, "~> 1.0"} as a dependency.
 
         If instead you would rather continue using Poison, then add to
         your config/config.exs:
 
-            config :phoenix, :json_encoding, Poison
+            config :phoenix, :json_library, Poison
         """
     end
   end
