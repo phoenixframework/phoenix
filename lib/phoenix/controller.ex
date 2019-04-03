@@ -884,6 +884,7 @@ defmodule Phoenix.Controller do
       Defaults to none
     * `:offset` - the bytes to offset when reading. Defaults to `0`
     * `:length` - the total bytes to read. Defaults to `:all`
+    * `:encode` - encode filename using URI.encode_www_form. Defaults to `nil`
 
   ## Examples
 
@@ -925,12 +926,15 @@ defmodule Phoenix.Controller do
 
   defp prepare_send_download(conn, filename, opts) do
     content_type = opts[:content_type] || MIME.from_path(filename)
-    encoded_filename = URI.encode_www_form(filename)
+    encoded_filename = encode_filename(filename, opts[:encode])
     warn_if_ajax(conn)
     conn
     |> put_resp_content_type(content_type, opts[:charset])
     |> put_resp_header("content-disposition", ~s[attachment; filename="#{encoded_filename}"])
   end
+
+  defp encode_filename(filename, encode) when encode == false, do: filename
+  defp encode_filename(filename, encode), do: URI.encode_www_form(filename)
 
   defp ajax?(conn) do
     case get_req_header(conn, "x-requested-with") do
