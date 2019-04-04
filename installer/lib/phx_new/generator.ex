@@ -189,7 +189,8 @@ defmodule Phx.New.Generator do
   end
 
   defp db_config(app, module, user, pass) do
-    [dev:  [username: user, password: pass, database: "#{app}_dev", hostname: "localhost"],
+    [dev:  [username: user, password: pass, database: "#{app}_dev", hostname: "localhost",
+            show_sensitive_data_on_connection_error: true],
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
      prod: [username: user, password: pass, database: "#{app}_prod"],
