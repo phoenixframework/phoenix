@@ -1016,20 +1016,20 @@ defmodule Phoenix.Controller do
 
   It sets the following headers:
 
-      * `x-frame-options` - set to SAMEORIGIN to avoid clickjacking
-        through iframes unless in the same origin
-      * `x-content-type-options` - set to nosniff. This requires
-        script and style tags to be sent with proper content type
-      * `x-xss-protection` - set to "1; mode=block" to improve XSS
-        protection on both Chrome and IE
-      * `x-download-options` - set to noopen to instruct the browser
-        not to open a download directly in the browser, to avoid
-        HTML files rendering inline and accessing the security
-        context of the application (like critical domain cookies)
-      * `x-permitted-cross-domain-policies` - set to none to restrict
-        Adobe Flash Player’s access to data
-      * `cross-origin-window-policy` - set to deny to avoid window
-        control attacks
+    * `x-frame-options` - set to SAMEORIGIN to avoid clickjacking
+      through iframes unless in the same origin
+    * `x-content-type-options` - set to nosniff. This requires
+      script and style tags to be sent with proper content type
+    * `x-xss-protection` - set to "1; mode=block" to improve XSS
+      protection on both Chrome and IE
+    * `x-download-options` - set to noopen to instruct the browser
+      not to open a download directly in the browser, to avoid
+      HTML files rendering inline and accessing the security
+      context of the application (like critical domain cookies)
+    * `x-permitted-cross-domain-policies` - set to none to restrict
+      Adobe Flash Player’s access to data
+    * `cross-origin-window-policy` - set to deny to avoid window
+      control attacks
 
   A custom headers map may also be given to be merged with defaults.
   """
