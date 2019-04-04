@@ -934,7 +934,7 @@ defmodule Phoenix.Controller do
   end
 
   defp encode_filename(filename, encode) when encode == false, do: filename
-  defp encode_filename(filename, encode), do: URI.encode_www_form(filename)
+  defp encode_filename(filename, _encode), do: URI.encode_www_form(filename)
 
   defp ajax?(conn) do
     case get_req_header(conn, "x-requested-with") do
