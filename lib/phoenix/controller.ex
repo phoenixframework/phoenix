@@ -884,7 +884,9 @@ defmodule Phoenix.Controller do
       Defaults to none
     * `:offset` - the bytes to offset when reading. Defaults to `0`
     * `:length` - the total bytes to read. Defaults to `:all`
-    * `:encode` - encode filename using URI.encode_www_form. Defaults to `nil`
+    * `:encode` - encode filename using URI.encode_www_form.
+      Defaults to `nil`. Any value different of `false` will apply
+      the encode
 
   ## Examples
 
