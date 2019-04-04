@@ -885,8 +885,10 @@ defmodule Phoenix.Controller do
     * `:offset` - the bytes to offset when reading. Defaults to `0`
     * `:length` - the total bytes to read. Defaults to `:all`
     * `:encode` - encode filename using `URI.encode_www_form/1`.
-      Defaults to `true`. When `false`, disables encoding. Disable
-      encoding may cause security implications.
+      Defaults to `true`. When `false`, disables encoding. If you
+      disable encoding, you need to guarantee there are no special
+      characters in the filename, such as quotes, newlines, etc.
+      Otherwise you can expose your application to security attacks
 
   ## Examples
 
