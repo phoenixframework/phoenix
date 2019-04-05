@@ -27,7 +27,7 @@ defmodule Phoenix.Router.Helpers do
   end
 
   def url(_router, %URI{} = uri) do
-    URI.to_string(%URI{uri | path: nil})
+    URI.to_string(uri)
   end
 
   def url(_router, endpoint) when is_atom(endpoint) do

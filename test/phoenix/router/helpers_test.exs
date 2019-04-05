@@ -412,12 +412,21 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   test "phoenix_router_url with URI takes precedence over endpoint" do
-    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123, path: "/path"}
+    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123}
     conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), uri)
 
     assert Helpers.url(conn) == "https://phoenixframework.org:123"
     assert Helpers.admin_message_url(conn, :show, 1) ==
       "https://phoenixframework.org:123/admin/new/messages/1"
+  end
+
+  test "phoenix_router_url set to URI with path results in urls with that path" do
+    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123, path: "/path"}
+    conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), uri)
+
+    assert Helpers.url(conn) == "https://phoenixframework.org:123/path"
+    assert Helpers.admin_message_url(conn, :show, 1) ==
+      "https://phoenixframework.org:123/path/admin/new/messages/1"
   end
 
   test "helpers module generates a path helper" do
