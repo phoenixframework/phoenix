@@ -37,15 +37,6 @@ defmodule Phx.New.Web do
     {:eex,  "phx_gettext/errors.pot",               :web, "priv/gettext/errors.pot"}
   ]
 
-  template :webpack, [
-    {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
-    {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
-    {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/socket.js",         :web, "assets/js/socket.js"},
-    {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
-    {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
-  ]
-
   template :html, [
     {:eex,  "phx_web/controllers/page_controller.ex",         :web, "lib/:web_app/controllers/page_controller.ex"},
     {:eex,  "phx_web/templates/layout/app.html.eex",          :web, "lib/:web_app/templates/layout/app.html.eex"},
@@ -55,18 +46,6 @@ defmodule Phx.New.Web do
     {:eex,  "phx_test/controllers/page_controller_test.exs",  :web, "test/:web_app/controllers/page_controller_test.exs"},
     {:eex,  "phx_test/views/layout_view_test.exs",            :web, "test/:web_app/views/layout_view_test.exs"},
     {:eex,  "phx_test/views/page_view_test.exs",              :web, "test/:web_app/views/page_view_test.exs"},
-  ]
-
-  template :bare, []
-
-  template :static, [
-    {:text, "phx_static/app.js",      :web, "priv/static/js/app.js"},
-    {:text, "phx_static/app.css",     :web, "priv/static/css/app.css"},
-    {:text, "phx_static/phoenix.css", :web, "priv/static/css/phoenix.css"},
-    {:text, "phx_static/robots.txt",  :web, "priv/static/robots.txt"},
-    {:text, "phx_static/phoenix.js",  :web, "priv/static/js/phoenix.js"},
-    {:text, "phx_static/phoenix.png", :web, "priv/static/images/phoenix.png"},
-    {:text, "phx_static/favicon.ico", :web, "priv/static/favicon.ico"}
   ]
 
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do
@@ -89,9 +68,9 @@ defmodule Phx.New.Web do
     if Project.html?(project), do: gen_html(project)
 
     case {Project.webpack?(project), Project.html?(project)} do
-      {true, _}      -> gen_webpack(project)
-      {false, true}  -> gen_static(project)
-      {false, false} -> gen_bare(project)
+      {true, _}      -> Phx.New.Single.gen_webpack(project)
+      {false, true}  -> Phx.New.Single.gen_static(project)
+      {false, false} -> Phx.New.Single.gen_bare(project)
     end
 
     project
@@ -99,29 +78,5 @@ defmodule Phx.New.Web do
 
   defp gen_html(%Project{} = project) do
     copy_from project, __MODULE__, :html
-  end
-
-  defp gen_static(%Project{} = project) do
-    copy_from project, __MODULE__, :static
-  end
-
-  defp gen_webpack(%Project{web_path: web_path} = project) do
-    copy_from project, __MODULE__, :webpack
-
-    statics = %{
-      "phx_static/app.css" => "assets/css/app.css",
-      "phx_static/phoenix.css" => "assets/css/phoenix.css",
-      "phx_static/robots.txt" => "assets/static/robots.txt",
-      "phx_static/phoenix.png" => "assets/static/images/phoenix.png",
-      "phx_static/favicon.ico" => "assets/static/favicon.ico"
-    }
-
-    for {source, target} <- statics do
-      create_file Path.join(web_path, target), render(:static, source)
-    end
-  end
-
-  defp gen_bare(%Project{} = project) do
-    copy_from project, __MODULE__, :bare
   end
 end

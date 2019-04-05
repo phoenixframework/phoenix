@@ -16,14 +16,6 @@ defmodule Phx.New.Ecto do
     {:eex,    "#{@pre}/formatter.exs",               :app, ".formatter.exs"},
   ]
 
-  template :ecto, [
-    {:eex,  "phx_ecto/repo.ex",              :app, "lib/:app/repo.ex"},
-    {:keep, "phx_ecto/priv/repo/migrations", :app, "priv/repo/migrations"},
-    {:eex,  "phx_ecto/seeds.exs",            :app, "priv/repo/seeds.exs"},
-    {:eex,  "phx_ecto/data_case.ex",         :app, "test/support/data_case.ex"},
-    {:eex,  "phx_ecto/formatter.exs",        :app, "priv/repo/migrations/.formatter.exs"},
-  ]
-
   def prepare_project(%Project{} = project) do
     app_path = Path.expand(project.base_path)
     project_path = Path.dirname(Path.dirname(app_path))
@@ -36,13 +28,8 @@ defmodule Phx.New.Ecto do
 
   def generate(%Project{} = project) do
     copy_from project, __MODULE__, :new
-    if Project.ecto?(project), do: gen_ecto(project)
-
+    if Project.ecto?(project), do: Phx.New.Single.gen_ecto(project)
     project
   end
 
-  defp gen_ecto(project) do
-    copy_from project, __MODULE__, :ecto
-    gen_ecto_config(project)
-  end
 end
