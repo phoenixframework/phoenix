@@ -45,15 +45,12 @@ defmodule Phx.New.Single do
   ]
 
   template :webpack, [
-    {:eex,  "phx_assets/webpack/webpack.config.js", :project, "assets/webpack.config.js"},
-    {:text,  "phx_assets/webpack/babelrc",          :project, "assets/.babelrc"},
-    {:text, "phx_assets/app.css",                   :project, "assets/css/app.css"},
-    {:text, "phx_assets/phoenix.css",               :project, "assets/css/phoenix.css"},
-    {:eex,  "phx_assets/webpack/app.js",            :project, "assets/js/app.js"},
-    {:eex,  "phx_assets/webpack/socket.js",         :project, "assets/js/socket.js"},
-    {:eex,  "phx_assets/webpack/package.json",      :project, "assets/package.json"},
-    {:text, "phx_assets/robots.txt",                :project, "assets/static/robots.txt"},
-    {:keep, "phx_assets/vendor",                    :project, "assets/vendor"},
+    {:eex,  "phx_assets/webpack.config.js", :project, "assets/webpack.config.js"},
+    {:text, "phx_assets/babelrc",           :project, "assets/.babelrc"},
+    {:eex,  "phx_assets/app.js",            :project, "assets/js/app.js"},
+    {:eex,  "phx_assets/socket.js",         :project, "assets/js/socket.js"},
+    {:eex,  "phx_assets/package.json",      :project, "assets/package.json"},
+    {:keep, "phx_assets/vendor",            :project, "assets/vendor"},
   ]
 
   template :html, [
@@ -70,10 +67,13 @@ defmodule Phx.New.Single do
   template :bare, []
 
   template :static, [
-    {:text, "phx_assets/app.css",     :project, "priv/static/css/app.css"},
-    {:text, "phx_assets/phoenix.css", :project, "priv/static/css/phoenix.css"},
-    {:text, "phx_assets/bare/app.js", :project, "priv/static/js/app.js"},
-    {:text, "phx_assets/robots.txt",  :project, "priv/static/robots.txt"},
+    {:text, "phx_static/app.js",      :project, "priv/static/js/app.js"},
+    {:text, "phx_static/app.css",     :project, "priv/static/css/app.css"},
+    {:text, "phx_static/phoenix.css", :project, "priv/static/css/phoenix.css"},
+    {:text, "phx_static/robots.txt",  :project, "priv/static/robots.txt"},
+    {:text, "phx_static/phoenix.js",  :project, "priv/static/js/phoenix.js"},
+    {:text, "phx_static/phoenix.png", :project, "priv/static/images/phoenix.png"},
+    {:text, "phx_static/favicon.ico", :project, "priv/static/favicon.ico"}
   ]
 
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do
@@ -128,17 +128,24 @@ defmodule Phx.New.Single do
     gen_ecto_config(project)
   end
 
-  defp gen_static(%Project{web_path: web_path} = project) do
+  defp gen_static(%Project{} = project) do
     copy_from project, __MODULE__, :static
-    create_file Path.join(web_path, "priv/static/js/phoenix.js"), phoenix_js_text()
-    create_file Path.join(web_path, "priv/static/images/phoenix.png"), phoenix_png_text()
-    create_file Path.join(web_path, "priv/static/favicon.ico"), phoenix_favicon_text()
   end
 
   defp gen_webpack(%Project{web_path: web_path} = project) do
     copy_from project, __MODULE__, :webpack
-    create_file Path.join(web_path, "assets/static/images/phoenix.png"), phoenix_png_text()
-    create_file Path.join(web_path, "assets/static/favicon.ico"), phoenix_favicon_text()
+
+    statics = %{
+      "phx_static/app.css" => "assets/css/app.css",
+      "phx_static/phoenix.css" => "assets/css/phoenix.css",
+      "phx_static/robots.txt" => "assets/static/robots.txt",
+      "phx_static/phoenix.png" => "assets/static/images/phoenix.png",
+      "phx_static/favicon.ico" => "assets/static/favicon.ico"
+    }
+
+    for {source, target} <- statics do
+      create_file Path.join(web_path, target), render(:static, source)
+    end
   end
 
   defp gen_bare(%Project{} = project) do

@@ -4,7 +4,6 @@ defmodule Phx.New.Generator do
   alias Phx.New.{Project}
 
   @phoenix Path.expand("../..", __DIR__)
-
   @phoenix_version Version.parse!("1.4.0")
 
   @callback prepare_project(Project.t) :: Project.t
@@ -13,8 +12,8 @@ defmodule Phx.New.Generator do
   defmacro __using__(_env) do
     quote do
       @behaviour unquote(__MODULE__)
-      import unquote(__MODULE__)
       import Mix.Generator
+      import unquote(__MODULE__)
       Module.register_attribute(__MODULE__, :templates, accumulate: true)
       @before_compile unquote(__MODULE__)
     end
@@ -22,23 +21,21 @@ defmodule Phx.New.Generator do
 
   defmacro __before_compile__(env) do
     root = Path.expand("../../templates", __DIR__)
-    templates_ast = for {name, mappings} <- Module.get_attribute(env.module, :templates) do
-      for {format, source, _, _} <- mappings, format != :keep do
-        path = Path.join(root, source)
-        quote do
-          @external_resource unquote(path)
-          def render(unquote(name), unquote(source)), do: unquote(File.read!(path))
+
+    templates_ast =
+      for {name, mappings} <- Module.get_attribute(env.module, :templates) do
+        for {format, source, _, _} <- mappings, format != :keep do
+          path = Path.join(root, source)
+          quote do
+            @external_resource unquote(path)
+            def render(unquote(name), unquote(source)), do: unquote(File.read!(path))
+          end
         end
       end
-    end
 
     quote do
       unquote(templates_ast)
       def template_files(name), do: Keyword.fetch!(@templates, name)
-      # Embed missing files from Phoenix static.
-      embed_text :phoenix_js, from_file: Path.expand("../../templates/phx_assets/phoenix.js", unquote(__DIR__))
-      embed_text :phoenix_png, from_file: Path.expand("../../templates/phx_assets/phoenix.png", unquote(__DIR__))
-      embed_text :phoenix_favicon, from_file: Path.expand("../../templates/phx_assets/favicon.ico", unquote(__DIR__))
     end
   end
 
@@ -58,8 +55,9 @@ defmodule Phx.New.Generator do
           File.mkdir_p!(target)
         :text ->
           create_file(target, mod.render(name, source))
-        :append ->
-          append_to(Path.dirname(target), Path.basename(target), mod.render(name, source))
+        :config ->
+          contents = EEx.eval_string(mod.render(name, source), project.binding, file: source)
+          config_inject(Path.dirname(target), Path.basename(target), contents)
         :eex  ->
           contents = EEx.eval_string(mod.render(name, source), project.binding, file: source)
           create_file(target, contents)
@@ -67,9 +65,29 @@ defmodule Phx.New.Generator do
     end
   end
 
-  def append_to(path, file, contents) do
+  def config_inject(path, file, to_inject) do
     file = Path.join(path, file)
-    File.write!(file, File.read!(file) <> contents)
+
+    contents =
+      case File.read(file) do
+        {:ok, bin} -> bin
+        {:error, _} -> "use Mix.Config\n"
+      end
+
+    with :error <- split_with_self(contents, "use Mix.Config\n"),
+         :error <- split_with_self(contents, "import Config\n") do
+      Mix.raise ~s[Could not find "use Mix.Config" or "import Config" in #{inspect(file)}]
+    else
+      [left, middle, right] ->
+        File.write!(file, [left, middle, ?\n, String.strip(to_inject), ?\n, right])
+    end
+  end
+
+  defp split_with_self(contents, text) do
+    case :binary.split(contents, text) do
+      [left, right] -> [left, text, right]
+      [_] -> :error
+    end
   end
 
   def in_umbrella?(app_path) do
@@ -147,24 +165,21 @@ defmodule Phx.New.Generator do
     Macro.camelize(project.app) != inspect(project.app_mod)
   end
 
-  def gen_ecto_config(%Project{app_path: app_path, binding: binding}) do
+  def gen_ecto_config(%Project{project_path: project_path, binding: binding}) do
     adapter_config = binding[:adapter_config]
 
-    append_to app_path, "config/dev.exs", """
-
+    config_inject project_path, "config/dev.exs", """
     # Configure your database
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config adapter_config[:dev]},
       pool_size: 10
     """
 
-    append_to app_path, "config/test.exs", """
-
+    config_inject project_path, "config/test.exs", """
     # Configure your database
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config adapter_config[:test]}
     """
 
-    append_to app_path, "config/prod.secret.exs", """
-
+    config_inject project_path, "config/prod.secret.exs", """
     # Configure your database
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config adapter_config[:prod]},
       pool_size: 15
