@@ -218,13 +218,13 @@ defmodule Phoenix.Router.Helpers do
       @doc """
       Generates url to a static asset given its file path.
       """
-      def static_url(%Conn{private: private} = conn, path) do
+      def static_url(%Conn{private: private}, path) do
         case private do
-          %{phoenix_static_url: %URI{path: nil} = uri} ->
-            URI.to_string(%URI{uri | path: static_path(conn, path)})
+          %{phoenix_endpoint: endpoint, phoenix_static_url: %URI{path: nil} = uri} ->
+            URI.to_string(%URI{uri | path: endpoint.static_path(path)})
 
-          %{phoenix_static_url: %URI{path: static_prefix} = uri} ->
-            URI.to_string(%URI{uri | path: static_prefix <> static_path(conn, path)})
+          %{phoenix_endpoint: endpoint, phoenix_static_url: %URI{path: static_prefix} = uri} ->
+            URI.to_string(%URI{uri | path: static_prefix <> endpoint.static_path(path)})
 
           %{phoenix_static_url: url} when is_binary(url) ->
             url <> path
