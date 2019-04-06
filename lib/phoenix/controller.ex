@@ -1389,6 +1389,18 @@ defmodule Phoenix.Controller do
     conn.request_path <> "?" <> Plug.Conn.Query.encode(params)
   end
 
+  @doc """
+  Returns the current request url with its default query parameters:
+
+      iex> current_url(conn)
+      "https://www.example.com/users/123?existing=param"
+
+  See `current_url/2` to override the default parameters.
+  """
+  def current_url(%Plug.Conn{} = conn) do
+    router_module(conn).url(conn) <> current_path(conn)
+  end
+
   @doc ~S"""
   Returns the current request URL, with and without query params.
 
@@ -1436,7 +1448,7 @@ defmodule Phoenix.Controller do
     Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn)
   end
   def current_url(%Plug.Conn{} = conn, %{} = params) do
-    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn, params)
+    router_module(conn).url(conn) <> current_path(conn, params)
   end
 
   @doc false
