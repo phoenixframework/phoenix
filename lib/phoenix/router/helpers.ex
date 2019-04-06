@@ -158,10 +158,10 @@ defmodule Phoenix.Router.Helpers do
       def static_url(%Conn{private: private} = conn, path) do
         case private do
           %{phoenix_static_url: %URI{path: nil} = uri} ->
-            URI.to_string(%URI{uri | path: path})
+            URI.to_string(%URI{uri | path: static_path(conn, path)})
 
-          %{phoenix_static_url: %URI{path: static_path} = uri} ->
-            URI.to_string(%URI{uri | path: static_path <> path})
+          %{phoenix_static_url: %URI{path: static_prefix} = uri} ->
+            URI.to_string(%URI{uri | path: static_prefix <> static_path(conn, path)})
 
           %{phoenix_static_url: url} when is_binary(url) ->
             url <> path
