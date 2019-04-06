@@ -411,6 +411,15 @@ defmodule Phoenix.Router.HelpersTest do
       url <> "/admin/new/messages/1"
   end
 
+  test "phoenix_router_url set to string with path results in urls with that path" do
+    url = "https://phoenixframework.org/path"
+    conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), url)
+
+    assert Helpers.url(conn) == url
+    assert Helpers.admin_message_url(conn, :show, 1) ==
+      url <> "/admin/new/messages/1"
+  end
+
   test "phoenix_router_url with URI takes precedence over endpoint" do
     uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123}
     conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), uri)
