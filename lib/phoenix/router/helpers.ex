@@ -130,7 +130,19 @@ defmodule Phoenix.Router.Helpers do
 
         def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
             when is_list(params) or is_map(params) do
-          url(conn_or_endpoint) <> unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
+
+          url_prefix =
+            case conn_or_endpoint do
+              # When a `%URI{}` struct is passed, we call `url/1` with removed
+              # path because the path helper is also using the path value.
+              %URI{} = uri ->
+                url(%URI{uri | path: nil})
+
+              conn_or_endpoint ->
+                url(conn_or_endpoint)
+            end
+
+          url_prefix <> unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
         end
       end
     end
