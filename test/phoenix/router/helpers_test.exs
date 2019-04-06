@@ -471,6 +471,13 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
   end
 
+  test "phoenix_static_url set to string with path results in static url with that path" do
+    url = "https://phoenixframework.org/path"
+    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), url)
+
+    assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
+  end
+
   test "phoenix_static_url with URI takes precedence over endpoint" do
     uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123}
     conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), uri)
