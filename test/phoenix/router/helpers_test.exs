@@ -515,9 +515,9 @@ defmodule Phoenix.Router.HelpersTest do
     uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123, path: "/path"}
     conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), uri)
 
-    assert Helpers.url(conn) == "https://phoenixframework.org:123"
+    assert Helpers.url(conn) == "https://phoenixframework.org:123/path"
     assert Helpers.admin_message_url(conn, :show, 1) ==
-      "https://phoenixframework.org:123/admin/new/messages/1"
+      "https://phoenixframework.org:123/path/admin/new/messages/1"
   end
 
   test "phoenix_static_url with string takes precedence over endpoint" do

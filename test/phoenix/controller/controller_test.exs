@@ -571,7 +571,7 @@ defmodule Phoenix.Controller.ControllerTest do
   end
 
   describe "path and url generation" do
-    def url(), do: "https://www.example.com"
+    def url(_), do: "https://www.example.com"
 
     def build_conn_for_path(path) do
       conn(:get, path)

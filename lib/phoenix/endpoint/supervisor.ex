@@ -279,13 +279,8 @@ defmodule Phoenix.Endpoint.Supervisor do
   the `Phoenix.Config` layer knows how to cache it.
   """
   def struct_url(endpoint) do
-    url    = endpoint.config(:url)
-    struct = build_url(endpoint, url)
-    {:cache,
-      case url[:path] || "/" do
-        "/"  -> struct
-        path -> %{struct | path: path}
-      end}
+    url = endpoint.config(:url)
+    {:cache, build_url(endpoint, url)}
   end
 
   defp build_url(endpoint, url) do
