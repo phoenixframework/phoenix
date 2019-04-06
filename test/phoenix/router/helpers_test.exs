@@ -402,52 +402,6 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.url(uri()) == "https://example.com"
   end
 
-  test "phoenix_router_url with string takes precedence over endpoint" do
-    url = "https://phoenixframework.org"
-    conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), url)
-
-    assert Helpers.url(conn) == url
-    assert Helpers.admin_message_url(conn, :show, 1) ==
-      url <> "/admin/new/messages/1"
-  end
-
-  test "phoenix_router_url with URI takes precedence over endpoint" do
-    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123, path: "/path"}
-    conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), uri)
-
-    assert Helpers.url(conn) == "https://phoenixframework.org:123"
-    assert Helpers.admin_message_url(conn, :show, 1) ==
-      "https://phoenixframework.org:123/admin/new/messages/1"
-  end
-
-  test "phoenix_static_url with string takes precedence over endpoint" do
-    url = "https://phoenixframework.org"
-    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), url)
-
-    assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
-  end
-
-  test "phoenix_static_url set to string with path results in static url with that path" do
-    url = "https://phoenixframework.org/path"
-    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), url)
-
-    assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
-  end
-
-  test "phoenix_static_url with URI takes precedence over endpoint" do
-    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123}
-    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), uri)
-
-    assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/images/foo.png"
-  end
-
-  test "phoenix_static_url set to URI with path results in static url with that path" do
-    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123, path: "/path"}
-    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), uri)
-
-    assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/path/images/foo.png"
-  end
-
   test "helpers module generates a path helper" do
     assert Helpers.path(__MODULE__, "/") == "/"
     assert Helpers.path(conn_with_endpoint(), "/") == "/"
@@ -465,6 +419,20 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.admin_message_url(socket_with_endpoint(), :show, 1, []) == url
     assert Helpers.admin_message_url(uri(), :show, 1) == url
     assert Helpers.admin_message_url(uri(), :show, 1, []) == url
+  end
+
+  test "helpers properly encode named and query string params" do
+    assert Router.Helpers.post_path(__MODULE__, :show, "my path", foo: "my param") ==
+      "/posts/my%20path?foo=my+param"
+  end
+
+  test "duplicate helpers with unique arities" do
+    assert Helpers.product_path(__MODULE__, :show, 123) == "/products/123"
+    assert Helpers.product_path(__MODULE__, :show, 123, foo: "bar") == "/products/123?foo=bar"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc") == "/products/123/asc"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc", foo: "bar") == "/products/123/asc?foo=bar"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc", 1) == "/products/123/asc/1"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc", 1, foo: "bar") == "/products/123/asc/1?foo=bar"
   end
 
   ## Script name
@@ -509,8 +477,8 @@ defmodule Phoenix.Router.HelpersTest do
   test "urls use script name" do
     assert Helpers.page_url(ScriptName, :root) ==
            "https://example.com/api/"
-    assert Helpers.page_url(conn_with_script_name(), :root) ==
-           "https://example.com/api/"
+    assert Helpers.page_url(conn_with_script_name(~w(foo)), :root) ==
+           "https://example.com/foo/"
     assert Helpers.page_url(uri_with_script_name(), :root) ==
            "https://example.com:123/api/"
 
@@ -518,11 +486,13 @@ defmodule Phoenix.Router.HelpersTest do
            "https://example.com/api/posts/5"
     assert Helpers.post_url(conn_with_script_name(), :show, 5) ==
            "https://example.com/api/posts/5"
+    assert Helpers.post_url(conn_with_script_name(~w(foo)), :show, 5) ==
+           "https://example.com/foo/posts/5"
     assert Helpers.post_url(uri_with_script_name(), :show, 5) ==
            "https://example.com:123/api/posts/5"
   end
 
-  test "static does not use script name" do
+  test "static use endpoint script name only" do
     assert Helpers.static_path(conn_with_script_name(~w(foo)), "/images/foo.png") ==
            "/api/images/foo.png"
 
@@ -530,17 +500,61 @@ defmodule Phoenix.Router.HelpersTest do
            "https://static.example.com/api/images/foo.png"
   end
 
-  test "helpers properly encode named and query string params" do
-    assert Router.Helpers.post_path(__MODULE__, :show, "my path", foo: "my param") ==
-      "/posts/my%20path?foo=my+param"
+  ## Dynamics
+
+  test "phoenix_router_url with string takes precedence over endpoint" do
+    url = "https://phoenixframework.org"
+    conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), url)
+
+    assert Helpers.url(conn) == url
+    assert Helpers.admin_message_url(conn, :show, 1) ==
+      url <> "/admin/new/messages/1"
   end
 
-  test "duplicate helpers with unique arities" do
-    assert Helpers.product_path(__MODULE__, :show, 123) == "/products/123"
-    assert Helpers.product_path(__MODULE__, :show, 123, foo: "bar") == "/products/123?foo=bar"
-    assert Helpers.product_path(__MODULE__, :show, 123, "asc") == "/products/123/asc"
-    assert Helpers.product_path(__MODULE__, :show, 123, "asc", foo: "bar") == "/products/123/asc?foo=bar"
-    assert Helpers.product_path(__MODULE__, :show, 123, "asc", 1) == "/products/123/asc/1"
-    assert Helpers.product_path(__MODULE__, :show, 123, "asc", 1, foo: "bar") == "/products/123/asc/1?foo=bar"
+  test "phoenix_router_url with URI takes precedence over endpoint" do
+    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123, path: "/path"}
+    conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), uri)
+
+    assert Helpers.url(conn) == "https://phoenixframework.org:123"
+    assert Helpers.admin_message_url(conn, :show, 1) ==
+      "https://phoenixframework.org:123/admin/new/messages/1"
+  end
+
+  test "phoenix_static_url with string takes precedence over endpoint" do
+    url = "https://phoenixframework.org"
+    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), url)
+    assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
+
+    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), url)
+    assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
+  end
+
+  test "phoenix_static_url set to string with path results in static url with that path" do
+    url = "https://phoenixframework.org/path"
+    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), url)
+    assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
+
+    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), url)
+    assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
+  end
+
+  test "phoenix_static_url with URI takes precedence over endpoint" do
+    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123}
+
+    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), uri)
+    assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/images/foo.png"
+
+    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), uri)
+    assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/images/foo.png"
+  end
+
+  test "phoenix_static_url set to URI with path results in static url with that path" do
+    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123, path: "/path"}
+
+    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), uri)
+    assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/path/images/foo.png"
+
+    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), uri)
+    assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/path/images/foo.png"
   end
 end
