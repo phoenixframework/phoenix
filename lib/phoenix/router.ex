@@ -283,6 +283,14 @@ defmodule Phoenix.Router do
     end
   end
 
+  @doc """
+  Returns the path of the route that the request was matched to.
+  """
+  @spec match_path(Plug.Conn.t()) :: String.t() | nil
+  def match_path(%Plug.Conn{} = conn) do
+    Map.get(conn.private, :phoenix_route)
+  end
+
   defp match_dispatch() do
     quote location: :keep do
       @behaviour Plug
@@ -361,7 +369,7 @@ defmodule Phoenix.Router do
   end
 
   defp build_match({route, exprs}, known_pipelines) do
-    %{pipe_through: pipe_through} = route
+    %{pipe_through: pipe_through, path: route_path} = route
 
     %{
       prepare: prepare,
@@ -387,6 +395,8 @@ defmodule Phoenix.Router do
 
         @doc false
         def __match_route__(var!(conn), unquote(verb_match), unquote(path), unquote(host)) do
+          var!(conn) = Plug.Conn.put_private(var!(conn), :phoenix_route, unquote(route_path))
+
           {unquote(prepare), &unquote(Macro.var(pipe_name, __MODULE__))/1, unquote(dispatch)}
         end
       end

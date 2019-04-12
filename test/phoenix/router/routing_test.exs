@@ -2,6 +2,8 @@ defmodule Phoenix.Router.RoutingTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
+  import Phoenix.Router, only: [match_path: 1]
+
   defmodule UserController do
     use Phoenix.Controller
     def index(conn, _params), do: text(conn, "users index")
@@ -56,6 +58,7 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "75f6306d-a090-46f9-8b80-80fd57ec9a41"
     assert conn.path_params["id"] == "75f6306d-a090-46f9-8b80-80fd57ec9a41"
+    assert match_path(conn) == "/users/:id"
 
     conn = call(Router, :get, "users/75f6306d-a0/files/34-95")
     assert conn.status == 200
@@ -64,6 +67,7 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.path_params["user_id"] == "75f6306d-a0"
     assert conn.params["id"] == "34-95"
     assert conn.path_params["id"] == "34-95"
+    assert match_path(conn) == "/users/:user_id/files/:id"
   end
 
   test "get with named param" do
@@ -95,6 +99,7 @@ defmodule Phoenix.Router.RoutingTest do
     conn = call(Router, :get, "users/top")
     assert conn.status == 200
     assert conn.resp_body == "users top"
+    assert match_path(conn) == "/users/top"
   end
 
   test "options to custom action" do
@@ -120,18 +125,21 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.status == 200
     assert conn.params["user_name"] == "elixir"
     assert conn.params["path"] == ["Users", "home", "file.txt"]
+    assert match_path(conn) == "/files/:user_name/*path"
   end
 
   test "splat arg with preceding string to backups/*path" do
     conn = call(Router, :get, "backups/name")
     assert conn.status == 200
     assert conn.params["path"] == ["name"]
+    assert match_path(conn) == "/backups/*path"
   end
 
   test "splat arg with multiple preceding strings to static/images/icons/*path" do
     conn = call(Router, :get, "static/images/icons/elixir/logos/main.png")
     assert conn.status == 200
     assert conn.params["image"] == ["elixir", "logos", "main.png"]
+    assert match_path(conn) == "/static/images/icons/*image"
   end
 
   test "splat args are %encodings in path" do
@@ -145,6 +153,7 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.status == 404
     assert conn.params == %{"path" => ~w"foo bar baz"}
     assert conn.resp_body == "not found"
+    assert match_path(conn) == "/*path"
   end
 
   test "match on arbitrary http methods" do
@@ -152,6 +161,8 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.method == "MOVE"
     assert conn.status == 200
     assert conn.resp_body == "users move"
+
+    assert match_path(conn) == "/move"
   end
 
   test "any verb matches" do
