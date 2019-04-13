@@ -31,7 +31,7 @@ defmodule Mix.Phoenix.Context do
     dir       = Mix.Phoenix.context_lib_path(ctx_app, basedir)
     file      = dir <> ".ex"
     test_dir  = Mix.Phoenix.context_test_path(ctx_app, basedir)
-    test_file = Path.join([test_dir, basename <> "_test.exs"])
+    test_file = test_dir <> "_test.exs"
     generate? = Keyword.get(opts, :context, true)
 
     %Context{

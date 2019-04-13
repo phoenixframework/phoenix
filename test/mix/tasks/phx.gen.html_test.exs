@@ -49,7 +49,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert_file "lib/phoenix/blog/post.ex"
       assert_file "lib/phoenix/blog.ex"
-      assert_file "test/phoenix/blog/blog_test.exs", fn file ->
+      assert_file "test/phoenix/blog_test.exs", fn file ->
         assert file =~ "alarm: ~T[15:01:01]"
         assert file =~ "alarm_usec: ~T[15:01:01.000000]"
         assert file =~ "announcement_date: ~D[2010-04-17]"
