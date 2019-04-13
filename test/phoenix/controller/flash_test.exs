@@ -11,29 +11,29 @@ defmodule Phoenix.Controller.FlashTest do
 
   test "flash is persisted when status is a redirect" do
     for status <- 300..308 do
-      conn = conn(:get, "/") |> with_session |> fetch_flash()
+      conn = conn() |> with_session |> fetch_flash()
                              |> put_flash(:notice, "elixir") |> send_resp(status, "ok")
       assert get_flash(conn, :notice) == "elixir"
       assert get_resp_header(conn, "set-cookie") != []
-      conn = conn(:get, "/") |> recycle_cookies(conn) |> with_session |> fetch_flash()
+      conn = conn() |> recycle_cookies(conn) |> with_session |> fetch_flash()
       assert get_flash(conn, :notice) == "elixir"
     end
   end
 
   test "flash is not persisted when status is not redirect" do
     for status <- [299, 309, 200, 404] do
-      conn = conn(:get, "/") |> with_session |> fetch_flash()
+      conn = conn() |> with_session |> fetch_flash()
                              |> put_flash(:notice, "elixir") |> send_resp(status, "ok")
       assert get_flash(conn, :notice) == "elixir"
       assert get_resp_header(conn, "set-cookie") != []
-      conn = conn(:get, "/") |> recycle_cookies(conn) |> with_session |> fetch_flash()
+      conn = conn() |> recycle_cookies(conn) |> with_session |> fetch_flash()
       assert get_flash(conn, :notice) == nil
     end
   end
 
   test "flash does not write to session when it is empty and no session exists" do
     conn =
-      conn(:get, "/")
+      conn()
       |> with_session()
       |> fetch_flash()
       |> clear_flash()
@@ -44,14 +44,14 @@ defmodule Phoenix.Controller.FlashTest do
 
   test "flash writes to session when it is empty and a previous session exists" do
     persisted_flash_conn =
-      conn(:get, "/")
+      conn()
       |> with_session()
       |> fetch_flash()
       |> put_flash(:info, "existing")
       |> send_resp(302, "ok")
 
     conn =
-      conn(:get, "/")
+      conn()
       |> Plug.Test.recycle_cookies(persisted_flash_conn)
       |> with_session()
       |> fetch_flash()
@@ -63,36 +63,36 @@ defmodule Phoenix.Controller.FlashTest do
 
   test "get_flash/1 raises ArgumentError when flash not previously fetched" do
     assert_raise ArgumentError, fn ->
-      conn(:get, "/") |> with_session |> get_flash()
+      conn() |> with_session |> get_flash()
     end
   end
 
   test "get_flash/1 returns the map of messages" do
-    conn = conn(:get, "/") |> with_session |> fetch_flash([]) |> put_flash(:notice, "hi")
+    conn = conn() |> with_session |> fetch_flash([]) |> put_flash(:notice, "hi")
     assert get_flash(conn) == %{"notice" => "hi"}
   end
 
   test "get_flash/2 returns the message by key" do
-    conn = conn(:get, "/") |> with_session |> fetch_flash([]) |> put_flash(:notice, "hi")
+    conn = conn() |> with_session |> fetch_flash([]) |> put_flash(:notice, "hi")
     assert get_flash(conn, :notice) == "hi"
     assert get_flash(conn, "notice") == "hi"
   end
 
   test "get_flash/2 returns nil for missing key" do
-    conn = conn(:get, "/") |> with_session |> fetch_flash([])
+    conn = conn() |> with_session |> fetch_flash([])
     assert get_flash(conn, :notice) == nil
     assert get_flash(conn, "notice") == nil
   end
 
   test "put_flash/3 raises ArgumentError when flash not previously fetched" do
     assert_raise ArgumentError, fn ->
-      conn(:get, "/") |> with_session |> put_flash(:error, "boom!")
+      conn() |> with_session |> put_flash(:error, "boom!")
     end
   end
 
   test "put_flash/3 adds the key/message pair to the flash" do
     conn =
-      conn(:get, "/")
+      conn()
       |> with_session
       |> fetch_flash([])
       |> put_flash(:error, "oh noes!")
@@ -106,7 +106,7 @@ defmodule Phoenix.Controller.FlashTest do
 
   test "clear_flash/1 clears the flash messages" do
     conn =
-      conn(:get, "/")
+      conn()
       |> with_session
       |> fetch_flash([])
       |> put_flash(:error, "oh noes!")
@@ -119,7 +119,12 @@ defmodule Phoenix.Controller.FlashTest do
 
   test "fetch_flash/2 raises ArgumentError when session not previously fetched" do
     assert_raise ArgumentError, fn ->
-      conn(:get, "/") |> fetch_flash([])
+      conn() |> fetch_flash([])
     end
   end
+
+  defp conn() do
+    conn(:get, "/")
+  end
+
 end
