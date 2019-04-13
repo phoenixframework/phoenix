@@ -15,7 +15,7 @@ defmodule Phoenix.Controller.FlashTest do
                              |> put_flash(:notice, "elixir") |> send_resp(status, "ok")
       assert get_flash(conn, :notice) == "elixir"
       assert get_resp_header(conn, "set-cookie") != []
-      conn = conn() |> recycle_cookies(conn) |> with_session |> fetch_flash()
+      conn = conn(recycle_cookies: conn) |> with_session |> fetch_flash()
       assert get_flash(conn, :notice) == "elixir"
     end
   end
@@ -26,7 +26,7 @@ defmodule Phoenix.Controller.FlashTest do
                              |> put_flash(:notice, "elixir") |> send_resp(status, "ok")
       assert get_flash(conn, :notice) == "elixir"
       assert get_resp_header(conn, "set-cookie") != []
-      conn = conn() |> recycle_cookies(conn) |> with_session |> fetch_flash()
+      conn = conn(recycle_cookies: conn) |> with_session |> fetch_flash()
       assert get_flash(conn, :notice) == nil
     end
   end
@@ -51,8 +51,7 @@ defmodule Phoenix.Controller.FlashTest do
       |> send_resp(302, "ok")
 
     conn =
-      conn()
-      |> Plug.Test.recycle_cookies(persisted_flash_conn)
+      conn(recycle_cookies: persisted_flash_conn)
       |> with_session()
       |> fetch_flash()
       |> clear_flash()
@@ -123,8 +122,13 @@ defmodule Phoenix.Controller.FlashTest do
     end
   end
 
-  defp conn() do
-    conn(:get, "/")
+  defp conn(opts \\ []) do
+    conn = conn(:get, "/")
+
+    case opts[:recycle_cookies] do
+      nil -> conn
+      old_conn -> conn |> recycle_cookies(old_conn)
+    end
   end
 
 end
