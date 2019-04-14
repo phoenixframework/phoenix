@@ -343,6 +343,22 @@ defmodule Phoenix.Endpoint.Supervisor do
     raise_invalid_path(path)
   end
 
+  def integrity(_endpoint, "//" <> _ = path) do
+    raise_invalid_path(path)
+  end
+
+  def integrity(endpoint, "/" <> key = path) do
+    if String.contains?(path, @invalid_local_url_chars) do
+      raise ArgumentError, "unsafe characters detected for path #{inspect path}"
+    else
+      {:nocache, ""}
+    end
+  end
+
+  def integrity(_endpoint, path) when is_binary(path) do
+    raise_invalid_path(path)
+  end
+
   defp raise_invalid_path(path) do
     raise ArgumentError, "expected a path starting with a single / but got #{inspect path}"
   end
@@ -381,12 +397,26 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warmup_static(endpoint) do
-    for {key, value} <- cache_static_manifest(endpoint) do
+    manifest = cache_static_manifest(endpoint)
+    warmup_digested(endpoint, manifest)
+    warmup_integrity(endpoint, manifest)
+    endpoint.static_path("/")
+  end
+
+  defp warmup_digested(endpoint, manifest) do
+    for {key, value} <- Map.get(manifest, "latest", %{}) do
       Phoenix.Config.cache(endpoint, {:__phoenix_static__, "/" <> key}, fn _ ->
         {:cache, "/" <> value <> "?vsn=d"}
       end)
     end
-    endpoint.static_path("/")
+  end
+
+  defp warmup_integrity(endpoint, manifest) do
+    for {key, value} <- Map.get(manifest, "digests", %{}) do
+      Phoenix.Config.cache(endpoint, {:__phoenix_integrity__, "/" <> key}, fn _ ->
+        {:cache, "sha512-" <> Map.get(value, "sha512", "")}
+      end)
+    end
   end
 
   defp cache_static_manifest(endpoint) do
@@ -394,12 +424,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       outer = Application.app_dir(endpoint.config(:otp_app), inner)
 
       if File.exists?(outer) do
-        manifest =
-          outer
-          |> File.read!()
-          |> Phoenix.json_library().decode!()
-
-        manifest["latest"]
+        outer |> File.read!() |> Phoenix.json_library().decode!()
       else
         Logger.error "Could not find static manifest at #{inspect outer}. " <>
                      "Run \"mix phx.digest\" after building your static files " <>

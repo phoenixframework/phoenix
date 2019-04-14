@@ -699,6 +699,11 @@ defmodule Phoenix.Endpoint do
         Phoenix.Config.cache(__MODULE__, {:__phoenix_static__, path},
                              &Phoenix.Endpoint.Supervisor.static_path(&1, path))
       end
+
+      def integrity(path) do
+        Phoenix.Config.cache(__MODULE__, {:__phoenix_integrity__, path},
+                             &Phoenix.Endpoint.Supervisor.integrity(&1, path))
+      end
     end
   end
 
