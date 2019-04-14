@@ -12,8 +12,7 @@ defmodule Phoenix.Controller.Flash do
     conn = persist_flash(conn, found_flash || %{})
 
     register_before_send conn, fn conn ->
-      flash = conn.private[@session_atom]
-        || raise KeyError, key: @session_atom, term: conn.private
+      flash = Map.fetch!(conn.private, @session_atom)
       flash_size = map_size(flash)
 
       cond do
@@ -40,7 +39,7 @@ defmodule Phoenix.Controller.Flash do
   @doc false
   def get_flash(conn) do
     Map.get(conn.private, @session_atom) ||
-      raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
+      raise ArgumentError, "flash not fetched, call fetch_flash/2"
   end
 
   def get_flash(conn, key) do
