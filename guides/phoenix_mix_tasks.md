@@ -116,6 +116,14 @@ $  mix phx.new task_tester --app hello
 . . .
 ```
 
+At present, [Phoenix LiveView](https://github.com/phoenixframework/phoenix_live_view) must be manually added to your project.  To have have it included when you create your application, add the `--live` flag.
+
+```console
+$ mix phx.new task_tester --live
+* creating task_tester/.gitignore
+. . .
+```
+
 If we look in the resulting `mix.exs` file, we will see that our project app name is `hello`.
 
 ```elixir
@@ -230,7 +238,7 @@ $ mix phx.server
 Compiling 17 files (.ex)
 
 warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
-  lib/hello_web/controllers/post_controller.ex:22: 
+  lib/hello_web/controllers/post_controller.ex:22:
 ```
 
 If we don't want to create a context or schema for our resource we can use the `--no-context` flag. Note that this still requires a context module name as a parameter.

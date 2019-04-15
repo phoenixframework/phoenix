@@ -206,7 +206,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-html", "--no-webpack", "--no-ecto"])
+      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-html", "--no-webpack", "--no-ecto", "--no-live"])
 
       # No webpack
       assert_file web_path(@app, ".gitignore"), fn file ->
@@ -240,6 +240,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file root_path(@app, "config/prod.secret.exs"), &refute(&1 =~ config)
 
       assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/Supervisor.start_link\(/
+
+      # No LiveView (in web_path)
+      assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_view")
 
       # No HTML
       assert File.exists?(web_path(@app, "test/#{@app}_web/controllers"))

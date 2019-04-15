@@ -42,7 +42,8 @@ defmodule <%= app_module %>.MixProject do
       {:ecto_sql, "~> 3.1"},
       {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
       {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %>
+      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if live do %>
+      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view"},<% end %>
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"}

@@ -160,7 +160,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto"])
+      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto", "--no-live"])
 
       # No webpack
       refute File.read!("phx_blog/.gitignore") |> String.contains?("/assets/node_modules/")
@@ -199,6 +199,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/test.exs", &refute(&1 =~ config)
       assert_file "phx_blog/config/prod.secret.exs", &refute(&1 =~ config)
       assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
+
+      # No LiveView
+      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_view")
 
       # No HTML
       assert File.exists?("phx_blog/test/phx_blog_web/controllers")
@@ -245,6 +248,13 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--binary-id"])
       assert_file "phx_blog/config/config.exs", ~r/generators: \[binary_id: true\]/
+    end
+  end
+
+  test "new with live" do
+    in_tmp "new without defaults", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--live"])
+      assert_file "phx_blog/mix.exs", &assert(&1 =~ ~r":phoenix_live_view")
     end
   end
 

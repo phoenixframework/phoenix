@@ -40,7 +40,8 @@ defmodule <%= web_namespace %>.MixProject do
       <%= phoenix_dep %>,<%= if ecto do %>
       {:phoenix_ecto, "~> 4.0"},<% end %><%= if html do %>
       {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %>
+      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if live do %>
+      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view"},<% end %>
       {:gettext, "~> 0.11"},<%= if app_name != web_app_name do %>
       {:<%= app_name %>, in_umbrella: true},<% end %>
       {:jason, "~> 1.0"},
