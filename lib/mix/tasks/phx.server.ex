@@ -6,6 +6,9 @@ defmodule Mix.Tasks.Phx.Server do
   @moduledoc """
   Starts the application by configuring all endpoints servers to run.
 
+  Note: to start the endpoint without using this mix task you must set
+  `server: true` in your `Phoenix.Endpoint` configuration.
+
   ## Command line options
 
   This task accepts the same command-line arguments as `run`.
