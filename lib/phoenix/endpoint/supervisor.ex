@@ -317,7 +317,9 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp empty_string_if_root(other), do: other
 
   @doc """
-  Returns the static path of a file in the static root directory.
+  Returns a two item tuple with the first element containing the
+  static path of a file in the static root directory
+  and the second element containing the sha512 of that file (for SRI).
 
   When the file exists, it includes a timestamp. When it doesn't exist,
   just the static path is returned.
@@ -327,35 +329,26 @@ defmodule Phoenix.Endpoint.Supervisor do
   """
   @invalid_local_url_chars ["\\"]
 
-  def static_path(_endpoint, "//" <> _ = path) do
-    raise_invalid_path(path)
-  end
-
-  def static_path(_endpoint, "/" <> _ = path) do
-    if String.contains?(path, @invalid_local_url_chars) do
-      raise ArgumentError, "unsafe characters detected for path #{inspect path}"
-    else
-      {:nocache, path}
+  def static_path(endpoint, path) do
+    case static_lookup(endpoint, path) do
+      {:nocache, {path, _}} -> {:nocache, path}
+      other -> other
     end
   end
 
-  def static_path(_endpoint, path) when is_binary(path) do
+  def static_lookup(_endpoint, "//" <> _ = path) do
     raise_invalid_path(path)
   end
 
-  def integrity(_endpoint, "//" <> _ = path) do
-    raise_invalid_path(path)
-  end
-
-  def integrity(endpoint, "/" <> key = path) do
+  def static_lookup(_endpoint, "/" <> _ = path) do
     if String.contains?(path, @invalid_local_url_chars) do
       raise ArgumentError, "unsafe characters detected for path #{inspect path}"
     else
-      {:nocache, ""}
+      {:nocache, {path, ""}}
     end
   end
 
-  def integrity(_endpoint, path) when is_binary(path) do
+  def static_lookup(_endpoint, path) when is_binary(path) do
     raise_invalid_path(path)
   end
 
@@ -397,27 +390,31 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warmup_static(endpoint) do
-    manifest = cache_static_manifest(endpoint)
-    warmup_digested(endpoint, manifest)
-    warmup_integrity(endpoint, manifest)
+    warmup_static(endpoint, cache_static_manifest(endpoint))
     endpoint.static_path("/")
   end
 
-  defp warmup_digested(endpoint, manifest) do
-    for {key, value} <- Map.get(manifest, "latest", %{}) do
+  defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests}) do
+    Enum.each(Map.keys(latest), fn key ->
       Phoenix.Config.cache(endpoint, {:__phoenix_static__, "/" <> key}, fn _ ->
-        {:cache, "/" <> value <> "?vsn=d"}
+        {:cache, static_cache(digests, Map.get(latest, key))}
       end)
-    end
+    end)
   end
 
-  defp warmup_integrity(endpoint, manifest) do
-    for {key, value} <- Map.get(manifest, "digests", %{}) do
-      Phoenix.Config.cache(endpoint, {:__phoenix_integrity__, "/" <> key}, fn _ ->
-        {:cache, "sha512-" <> Map.get(value, "sha512", "")}
-      end)
-    end
+  defp warmup_static(_endpoint, _manifest) do
+    raise ArgumentError, "expected warmup_static/2 to include 'latest' and 'digests' keys in manifest"
   end
+
+  defp static_cache(digests, value) do
+    {
+      "/#{value}?vsn=d",
+      static_integrity(get_in(digests, [value, "sha512"]))
+    }
+  end
+
+  defp static_integrity(nil), do: ""
+  defp static_integrity(sha), do: "sha512-#{sha}"
 
   defp cache_static_manifest(endpoint) do
     if inner = endpoint.config(:cache_static_manifest) do

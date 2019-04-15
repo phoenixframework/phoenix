@@ -696,13 +696,16 @@ defmodule Phoenix.Endpoint do
       def static_path(path) do
         Phoenix.Config.cache(__MODULE__, :__phoenix_static__,
                              &Phoenix.Endpoint.Supervisor.static_path/1) <>
-        Phoenix.Config.cache(__MODULE__, {:__phoenix_static__, path},
-                             &Phoenix.Endpoint.Supervisor.static_path(&1, path))
+        elem(static_lookup(path), 0)
       end
 
-      def integrity(path) do
-        Phoenix.Config.cache(__MODULE__, {:__phoenix_integrity__, path},
-                             &Phoenix.Endpoint.Supervisor.integrity(&1, path))
+      def static_integrity(path) do
+        elem(static_lookup(path), 1)
+      end
+
+      def static_lookup(path) do
+        Phoenix.Config.cache(__MODULE__, {:__phoenix_static__, path},
+                             &Phoenix.Endpoint.Supervisor.static_lookup(&1, path))
       end
     end
   end
