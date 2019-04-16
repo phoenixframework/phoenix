@@ -153,6 +153,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "mix.exs"), fn file ->
         assert file =~ "{:phx_umb, in_umbrella: true}"
         assert file =~ "{:phoenix,"
+        refute file =~ "{:phoenix_live_view,"
         assert file =~ "{:gettext,"
         assert file =~ "{:plug_cowboy,"
       end
@@ -243,6 +244,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # No LiveView (in web_path)
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_view")
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/templates/page/hero.html.leex"))
+
+      refute_file web_path(@app, "assets/js/live.js")
 
       # No HTML
       assert File.exists?(web_path(@app, "test/#{@app}_web/controllers"))
@@ -294,6 +298,20 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   test "new with live" do
     in_tmp "new with live", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--live"])
+
+      assert_file web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex"), fn file ->
+        assert file =~ ~r/defmodule PhxUmbWeb.PageController/
+        assert file =~ ~s[render(conn, "index.html")]
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/live/page_live_view.ex")
+
+      assert_file web_path(@app, "lib/#{@app}_web/templates/page/index.html.eex"), fn file ->
+        assert file =~ ~s[<%= live_render(@conn, PhxUmbWeb.PageLiveView) %>]
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/templates/page/hero.html.leex")
+
       assert_file web_path(@app, "mix.exs"), &assert(&1 =~ ~r":phoenix_live_view")
 
       assert_file web_path(@app, "assets/package.json"),
@@ -305,7 +323,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ~s[signing_salt:]
       end
 
-      assert_file web_path(@app, "lib/phx_umb_web.ex"), fn file ->
+      assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
         assert file =~ "import Phoenix.LiveView, only: [live_render: 2, live_render: 3]"
         assert file =~ ~s[import Phoenix.LiveView.Router]
         assert file =~ "import Phoenix.LiveView.Controller, only: [live_render: 3]"

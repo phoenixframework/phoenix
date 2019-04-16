@@ -68,8 +68,10 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/test/support/conn_case.ex"
       assert_file "phx_blog/test/test_helper.exs"
 
-      assert_file "phx_blog/lib/phx_blog_web/controllers/page_controller.ex",
-                  ~r/defmodule PhxBlogWeb.PageController/
+      assert_file "phx_blog/lib/phx_blog_web/controllers/page_controller.ex", fn file ->
+        assert file =~ ~r/defmodule PhxBlogWeb.PageController/
+        assert file =~ ~s[render(conn, "index.html")]
+      end
 
       assert_file "phx_blog/lib/phx_blog_web/views/page_view.ex",
                   ~r/defmodule PhxBlogWeb.PageView/
@@ -232,6 +234,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       # No LiveView
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_view")
 
+      refute_file "phx_blog/assets/js/live.js"
+
       # No HTML
       assert File.exists?("phx_blog/test/phx_blog_web/controllers")
 
@@ -285,8 +289,28 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([@app_name, "--live"])
       assert_file "phx_blog/mix.exs", &assert(&1 =~ ~r":phoenix_live_view")
 
+      assert_file "phx_blog/lib/phx_blog_web/controllers/page_controller.ex", fn file ->
+        assert file =~ ~r/defmodule PhxBlogWeb.PageController/
+        assert file =~ ~s[render(conn, "index.html")]
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/live/page_live_view.ex"
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.eex", fn file ->
+        assert file =~ ~s[<%= live_render(@conn, PhxBlogWeb.PageLiveView) %>]
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/page/hero.html.leex"
+
       assert_file "phx_blog/assets/package.json",
                   ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
+
+      assert_file "phx_blog/assets/js/live.js", fn file ->
+        assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
+        assert file =~ ~s[let liveSocket = new LiveSocket("/live")]
+        assert file =~ ~s[liveSocket.connect()]
+        assert file =~ ~s[export default liveSocket]
+      end
 
       assert_file "phx_blog/config/config.exs", fn file ->
         assert file =~ ~s[live_view: []
