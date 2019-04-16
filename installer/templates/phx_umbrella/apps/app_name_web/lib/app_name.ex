@@ -19,7 +19,11 @@ defmodule <%= web_namespace %> do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: <%= web_namespace %>
+      use Phoenix.Controller, namespace: <%= web_namespace %><%= if live do %>
+
+      # Import convenience functions for LiveView rendering
+      import Phoenix.LiveView.Controller, only: [live_render: 3]<% end %>
+
       import Plug.Conn
       import <%= web_namespace %>.Gettext
       alias <%= web_namespace %>.Router.Helpers, as: Routes
@@ -33,7 +37,10 @@ defmodule <%= web_namespace %> do
         namespace: <%= web_namespace %>
 
       # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]<%= if html do %>
+      import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]<%= if live do %>
+
+      # Import convenience functions for LiveView rendering
+      import Phoenix.LiveView, only: [live_render: 2, live_render: 3]<%end %><%= if html do %>
 
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML<% end %>
@@ -48,7 +55,8 @@ defmodule <%= web_namespace %> do
     quote do
       use Phoenix.Router
       import Plug.Conn
-      import Phoenix.Controller
+      import Phoenix.Controller<%= if live do %>
+      import Phoenix.LiveView.Router<% end %>
     end
   end
 

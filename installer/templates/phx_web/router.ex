@@ -4,7 +4,8 @@ defmodule <%= web_namespace %>.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug :fetch_flash
+    plug :fetch_flash<%= if live do %>
+    plug Phoenix.LiveView.Flash<% end %>
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end<% end %>

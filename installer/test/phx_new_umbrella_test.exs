@@ -291,6 +291,31 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
+  test "new with live" do
+    in_tmp "new with live", fn ->
+      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--live"])
+      assert_file web_path(@app, "mix.exs"), &assert(&1 =~ ~r":phoenix_live_view")
+
+      assert_file web_path(@app, "assets/package.json"),
+                  ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
+
+      assert_file root_path(@app, "config/config.exs"), fn file ->
+        assert file =~ "config :phoenix, template_engines: [leex: Phoenix.LiveView.Engine]"
+        assert file =~ ~s[live_view: []
+        assert file =~ ~s[signing_salt:]
+      end
+
+      assert_file web_path(@app, "lib/phx_umb_web.ex"), fn file ->
+        assert file =~ "import Phoenix.LiveView, only: [live_render: 2, live_render: 3]"
+        assert file =~ ~s[import Phoenix.LiveView.Router]
+        assert file =~ "import Phoenix.LiveView.Controller, only: [live_render: 3]"
+      end
+
+      assert_file web_path(@app, "lib/phx_umb_web/endpoint.ex"), ~s[socket "/live", Phoenix.LiveView.Socket]
+      assert_file web_path(@app, "lib/phx_umb_web/router.ex"), ~s[plug Phoenix.LiveView.Flash]
+    end
+  end
+
   test "new with uppercase" do
     in_tmp "new with uppercase", fn ->
       Mix.Tasks.Phx.New.run(["phxUmb", "--umbrella"])

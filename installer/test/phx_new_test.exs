@@ -134,6 +134,35 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web.ex", ~r"defmodule PhxBlogWeb"
       assert_file "phx_blog/priv/repo/migrations/.formatter.exs", ~r"import_deps: \[:ecto_sql\]"
 
+      # LiveView (disabled by default)
+      refute_file "phx_blog/lib/phx_blog_web/live/page_live_view.ex"
+
+      refute_file "phx_blog/assets/js/live.js"
+
+      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_view")
+
+      assert_file "phx_blog/assets/package.json",
+                  &refute(&1 =~ ~s["phoenix_live_view": "file:../deps/phoenix_live_view"])
+
+      assert_file "phx_blog/assets/js/app.js", fn file ->
+        refute file =~ ~s[import liveSocket from "./live"]
+      end
+
+      assert_file "phx_blog/config/config.exs", fn file ->
+        refute file =~ "config :phoenix, template_engines: [leex: Phoenix.LiveView.Engine]"
+        refute file =~ ~s[live_view: []
+        refute file =~ ~s[signing_salt:]
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
+        refute file =~ "import Phoenix.LiveView, only: [live_render: 2, live_render: 3]"
+        refute file =~ ~s[import Phoenix.LiveView.Router]
+        refute file =~ "import Phoenix.LiveView.Controller, only: [live_render: 3]"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", &refute(&1 =~ ~s[socket "/live", Phoenix.LiveView.Socket])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug Phoenix.LiveView.Flash])
+
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
@@ -252,9 +281,26 @@ defmodule Mix.Tasks.Phx.NewTest do
   end
 
   test "new with live" do
-    in_tmp "new without defaults", fn ->
+    in_tmp "new with live", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--live"])
       assert_file "phx_blog/mix.exs", &assert(&1 =~ ~r":phoenix_live_view")
+
+      assert_file "phx_blog/assets/package.json",
+                  ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
+
+      assert_file "phx_blog/config/config.exs", fn file ->
+        assert file =~ ~s[live_view: []
+        assert file =~ ~s[signing_salt:]
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
+        assert file =~ "import Phoenix.LiveView, only: [live_render: 2, live_render: 3]"
+        assert file =~ ~s[import Phoenix.LiveView.Router]
+        assert file =~ "import Phoenix.LiveView.Controller, only: [live_render: 3]"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~s[socket "/live", Phoenix.LiveView.Socket]
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", ~s[plug Phoenix.LiveView.Flash]
     end
   end
 

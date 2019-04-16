@@ -17,7 +17,10 @@ config :<%= app_name %>, <%= endpoint_module %>,
   url: [host: "localhost"],
   secret_key_base: "<%= secret_key_base %>",
   render_errors: [view: <%= web_namespace %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json), layout: false],
-  pubsub_server: <%= app_module %>.PubSub
+  pubsub_server: <%= app_module %>.PubSub<%= if live do %>,
+  live_view: [
+    signing_salt: "<%= live_view_signing_salt %>"
+  ]<% end %>
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -25,7 +28,10 @@ config :logger, :console,
   metadata: [:request_id]
 
 # Use Jason for JSON parsing in Phoenix
-config :phoenix, :json_library, Jason
+config :phoenix, :json_library, Jason<%= if live do %>
+
+# Enable LiveView
+config :phoenix, template_engines: [leex: Phoenix.LiveView.Engine]<% end %>
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

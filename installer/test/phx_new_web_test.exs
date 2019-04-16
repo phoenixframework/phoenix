@@ -61,15 +61,4 @@ defmodule Mix.Tasks.Phx.New.WebTest do
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
     end
   end
-
-  test "new with live" do
-    in_tmp_umbrella_project "new with defaults", fn ->
-      Mix.Tasks.Phx.New.Web.run([@app_name, "--live"])
-
-      assert_file "#{@app_name}/mix.exs", fn file ->
-        assert file =~ "{:phoenix_live_view,"
-      end
-    end
-  end
-
 end
