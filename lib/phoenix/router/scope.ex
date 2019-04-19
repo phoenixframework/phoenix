@@ -25,6 +25,10 @@ defmodule Phoenix.Router.Scope do
     as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
     alias?  = Keyword.get(opts, :alias, true)
 
+    if to_string(as) == "static"  do
+      raise ArgumentError, "`static` is a reserved route prefix generated from #{inspect plug} or `:as` option"
+    end
+
     {path, host, alias, as, pipes, private, assigns} =
       join(module, path, plug, alias?, as, private, assigns)
     Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns)
