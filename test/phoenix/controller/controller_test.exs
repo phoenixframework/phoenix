@@ -424,6 +424,15 @@ defmodule Phoenix.Controller.ControllerTest do
              "world"
     end
 
+    test "sends file for download with custom :disposition" do
+      conn = send_download(conn(:get, "/"), {:file, @hello_txt}, disposition: :inline)
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-disposition") ==
+             ["inline; filename=\"hello.txt\""]
+      assert conn.resp_body ==
+             "world"
+    end
+
     test "sends file for download with custom :offset" do
       conn = send_download(conn(:get, "/"), {:file, @hello_txt}, offset: 2)
       assert conn.status == 200
@@ -459,6 +468,27 @@ defmodule Phoenix.Controller.ControllerTest do
              ["application/json; charset=utf8"]
       assert conn.resp_body ==
              "world"
+    end
+
+    test "sends binary for download with custom :disposition" do
+      conn = send_download(conn(:get, "/"), {:binary, "world"},
+                           filename: "hello.txt", disposition: :inline)
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-disposition") ==
+             ["inline; filename=\"hello.txt\""]
+      assert conn.resp_body ==
+             "world"
+    end
+
+    test "raises ArgumentError for :disposition other than :attachment or :inline" do
+      assert_raise(ArgumentError, ~r"expected :disposition to be :attachment or :inline, got: :foo", fn ->
+        send_download(conn(:get, "/"), {:file, @hello_txt}, disposition: :foo)
+      end)
+
+      assert_raise(ArgumentError, ~r"expected :disposition to be :attachment or :inline, got: :foo", fn ->
+        send_download(conn(:get, "/"), {:binary, "world"},
+                           filename: "hello.txt", disposition: :foo)
+      end)
     end
   end
 
