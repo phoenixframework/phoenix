@@ -880,6 +880,11 @@ defmodule Phoenix.Controller do
     * `:content_type` - the content type of the file or binary
       sent as download. It is automatically inferred from the
       filename extension
+    * `:disposition` - specifies dispositon type
+      (`:attachment` or `:inline`). If `:attachment` was used,
+      user will be prompted to save the file. If `:inline` was used,
+      the browser will attempt to open the file.
+      Defaults to `:attachment`.
     * `:charset` - the charset of the file, such as "utf-8".
       Defaults to none
     * `:offset` - the bytes to offset when reading. Defaults to `0`
@@ -925,12 +930,20 @@ defmodule Phoenix.Controller do
 
   defp prepare_send_download(conn, filename, opts) do
     content_type = opts[:content_type] || MIME.from_path(filename)
-    encoded_filename = URI.encode_www_form(filename)
+    encoded_filename = encode_filename(filename, Keyword.get(opts, :encode, true))
+    disposition_type = get_disposition_type(Keyword.get(opts, :disposition, :attachment))
     warn_if_ajax(conn)
     conn
     |> put_resp_content_type(content_type, opts[:charset])
-    |> put_resp_header("content-disposition", ~s[attachment; filename="#{encoded_filename}"])
+    |> put_resp_header("content-disposition", ~s[#{disposition_type}; filename="#{encoded_filename}"])
   end
+
+  defp encode_filename(filename, false), do: filename
+  defp encode_filename(filename, true), do: URI.encode_www_form(filename)
+
+  defp get_disposition_type(:attachment), do: "attachment"
+  defp get_disposition_type(:inline), do: "inline"
+  defp get_disposition_type(other), do: raise ArgumentError, "expected :disposition to be :attachment or :inline, got: #{inspect(other)}"
 
   defp ajax?(conn) do
     case get_req_header(conn, "x-requested-with") do
