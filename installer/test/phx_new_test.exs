@@ -307,7 +307,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/mix.exs", ":postgrex"
       assert_file "custom_path/config/dev.exs", [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
       assert_file "custom_path/config/test.exs", [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
-      assert_file "custom_path/config/prod.secret.exs", [~r/username: "postgres"/, ~r/password: "postgres"/]
+      assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Postgres"
 
       assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
@@ -324,7 +324,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/mix.exs", ":myxql"
       assert_file "custom_path/config/dev.exs", [~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/test.exs", [~r/username: "root"/, ~r/password: ""/]
-      assert_file "custom_path/config/prod.secret.exs", [~r/username: "root"/, ~r/password: ""/]
+      assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.MyXQL"
 
       assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"

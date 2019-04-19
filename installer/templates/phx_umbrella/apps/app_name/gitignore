@@ -21,11 +21,3 @@ erl_crash.dump
 
 # Ignore package tarball (built via "mix hex.build").
 <%= app_name %>-*.tar
-
-# Files matching config/*.secret.exs pattern contain sensitive
-# data and you should not commit them into version control.
-#
-# Alternatively, you may comment the line below and commit the
-# secrets files as long as you replace their contents by environment
-# variables.
-/config/*.secret.exs

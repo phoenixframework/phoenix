@@ -141,7 +141,6 @@ defmodule Phx.New.Generator do
       phoenix_static_path: phoenix_static_path(phoenix_path),
       pubsub_server: pubsub_server,
       secret_key_base: random_string(64),
-      prod_secret_key_base: random_string(64),
       signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
       webpack: webpack,
@@ -180,9 +179,17 @@ defmodule Phx.New.Generator do
     """
 
     config_inject project_path, "config/prod.secret.exs", """
-    # Configure your database
-    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config adapter_config[:prod]},
-      pool_size: 15
+    database_url =
+      System.get_env("DATABASE_URL") ||
+        raise \"""
+        environment variable DATABASE_URL is missing.
+        For example: ecto://USER:PASS@HOST/DATABASE
+        \"""
+
+    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
+      # ssl: true,
+      url: database_url,
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
     """
   end
 
@@ -208,7 +215,6 @@ defmodule Phx.New.Generator do
             show_sensitive_data_on_connection_error: true],
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
-     prod: [username: user, password: pass, database: "#{app}_prod"],
      test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, :manual)",
      test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{inspect module}.Repo)",
      test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, {:shared, self()})"]
