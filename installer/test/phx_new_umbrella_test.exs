@@ -54,24 +54,21 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file root_path(@app, "config/config.exs"), fn file ->
-        assert file =~ ~S[import_config "../apps/*/config/config.exs"]
         assert file =~ ~S[import_config "#{Mix.env()}.exs"]
         assert file =~ "config :phoenix, :json_library, Jason"
-      end
-
-      assert_file app_path(@app, "config/config.exs"), fn file ->
-        assert file =~ "ecto_repos: [PhxUmb.Repo]"
-        refute file =~ "namespace"
-        refute file =~ "config :phx_blog_web, :generators"
-      end
-
-      assert_file web_path(@app, "config/config.exs"), fn file ->
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmbWeb.Endpoint"
         assert file =~ "generators: [context_app: :phx_umb]\n"
+        refute file =~ "namespace"
       end
 
-      assert_file web_path(@app, "config/prod.exs"), fn file ->
+      assert_file root_path(@app, "config/dev.exs"), fn file ->
+        assert file =~ ~r/watchers: \[\s+node:/
+        assert file =~ "lib/#{@app}_web/{live,views}/.*(ex)"
+        assert file =~ "lib/#{@app}_web/templates/.*(eex)"
+      end
+
+      assert_file root_path(@app, "config/prod.exs"), fn file ->
         assert file =~ "port: 80"
         assert file =~ ":inet6"
       end
@@ -130,11 +127,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
       assert_file web_path(@app, "assets/webpack.config.js"), "js/app.js"
       assert_file web_path(@app, "assets/.babelrc"), "env"
-      assert_file web_path(@app, "config/dev.exs"), fn file ->
-        assert file =~ ~r/watchers: \[\s+node:/
-        assert file =~ "lib/#{@app}_web/{live,views}/.*(ex)"
-        assert file =~ "lib/#{@app}_web/templates/.*(eex)"
-      end
       assert_file web_path(@app, "assets/static/favicon.ico")
       assert_file web_path(@app, "assets/static/images/phoenix.png")
       assert_file web_path(@app, "assets/css/app.css")
@@ -173,6 +165,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # Ecto
       config = ~r/config :phx_umb, PhxUmb.Repo,/
+      assert_file root_path(@app, "config/dev.exs"), config
+      assert_file root_path(@app, "config/test.exs"), config
+      assert_file root_path(@app, "config/prod.secret.exs"), config
+
       assert_file app_path(@app, "mix.exs"), fn file ->
         assert file =~ "aliases: aliases()"
         assert file =~ "ecto.setup"
@@ -180,9 +176,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "{:jason,"
       end
 
-      assert_file app_path(@app, "config/dev.exs"), config
-      assert_file app_path(@app, "config/test.exs"), config
-      assert_file app_path(@app, "config/prod.secret.exs"), config
       assert_file app_path(@app, "lib/#{@app}/repo.ex"), ~r"defmodule PhxUmb.Repo"
       assert_file app_path(@app, "priv/repo/seeds.exs"), ~r"PhxUmb.Repo.insert!"
       assert_file app_path(@app, "test/support/data_case.ex"), ~r"defmodule PhxUmb.DataCase"
@@ -196,7 +189,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert msg =~ "$ cd phx_umb"
       assert msg =~ "$ mix deps.get"
 
-      assert_received {:mix_shell, :info, ["Then configure your database in apps/phx_umb/config/dev.exs" <> _]}
+      assert_received {:mix_shell, :info, ["Then configure your database in config/dev.exs" <> _]}
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
 
       # Channels
@@ -216,9 +209,12 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-html", "--no-webpack", "--no-ecto"])
 
       # No webpack
-      refute File.read!(web_path(@app, ".gitignore")) |> String.contains?("/assets/node_modules/")
-      assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
-      assert_file web_path(@app, "config/dev.exs"), ~r/watchers: \[\]/
+      assert_file web_path(@app, ".gitignore"), fn file ->
+        assert file =~ ~r/\n$/
+        refute file =~ "/assets/node_modules/"
+      end
+
+      assert_file root_path(@app, "config/dev.exs"), ~r/watchers: \[\]/
 
       # No webpack & No HTML
       refute_file web_path(@app, "priv/static/css/app.css")
@@ -234,19 +230,14 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file app_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_ecto")
 
-      assert_file app_path(@app, "config/config.exs"), fn file ->
+      assert_file root_path(@app, "config/config.exs"), fn file ->
         refute file =~ "config :phx_blog_web, :generators"
         refute file =~ "ecto_repos:"
       end
-      assert_file web_path(@app, "config/config.exs"), fn file ->
-        refute file =~ "config :phx_blog_web, :generators"
-      end
 
-      assert_file web_path(@app, "config/dev.exs"), fn file ->
-        refute file =~ config
-      end
-      assert_file web_path(@app, "config/test.exs"), &refute(&1 =~ config)
-      assert_file web_path(@app, "config/prod.secret.exs"), &refute(&1 =~ config)
+      assert_file root_path(@app, "config/dev.exs"), &refute(&1 =~ config)
+      assert_file root_path(@app, "config/test.exs"), &refute(&1 =~ config)
+      assert_file root_path(@app, "config/prod.secret.exs"), &refute(&1 =~ config)
 
       assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/Supervisor.start_link\(/
 
@@ -292,7 +283,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   test "new with binary_id" do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--binary-id"])
-      assert_file web_path(@app, "config/config.exs"), ~r/generators: \[context_app: :phx_umb, binary_id: true\]/
+      assert_file root_path(@app, "config/config.exs"),
+                  ~r/generators: \[context_app: :phx_umb, binary_id: true\]/
     end
   end
 
@@ -305,11 +297,12 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file "phxUmb_umbrella/apps/phxUmb/mix.exs", fn file ->
         assert file =~ "app: :phxUmb"
       end
+
       assert_file "phxUmb_umbrella/apps/phxUmb_web/mix.exs", fn file ->
         assert file =~ "app: :phxUmb_web"
       end
 
-      assert_file "phxUmb_umbrella/apps/phxUmb/config/dev.exs", fn file ->
+      assert_file "phxUmb_umbrella/config/dev.exs", fn file ->
         assert file =~ ~r/config :phxUmb, PhxUmb.Repo,/
         assert file =~ "database: \"phxumb_dev\""
       end
@@ -323,13 +316,13 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file "custom_path_umbrella/apps/phx_umb/mix.exs", ~r/app: :phx_umb/
       assert_file "custom_path_umbrella/apps/phx_umb_web/lib/phx_umb_web/endpoint.ex", ~r/app: :#{@app}_web/
-      assert_file "custom_path_umbrella/apps/phx_umb_web/config/config.exs", ~r/namespace: PhoteuxBlogWeb/
       assert_file "custom_path_umbrella/apps/phx_umb_web/lib/#{@app}_web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlogWeb/
       assert_file "custom_path_umbrella/apps/phx_umb/lib/phx_umb/application.ex", ~r/defmodule PhoteuxBlog.Application/
       assert_file "custom_path_umbrella/apps/phx_umb/mix.exs", ~r/mod: {PhoteuxBlog.Application, \[\]}/
       assert_file "custom_path_umbrella/apps/phx_umb_web/lib/phx_umb_web/application.ex", ~r/defmodule PhoteuxBlogWeb.Application/
       assert_file "custom_path_umbrella/apps/phx_umb_web/mix.exs", ~r/mod: {PhoteuxBlogWeb.Application, \[\]}/
-      assert_file "custom_path_umbrella/apps/phx_umb/config/config.exs", ~r/namespace: PhoteuxBlog/
+      assert_file "custom_path_umbrella/config/config.exs", ~r/namespace: PhoteuxBlogWeb/
+      assert_file "custom_path_umbrella/config/config.exs", ~r/namespace: PhoteuxBlog/
     end
   end
 
@@ -352,10 +345,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([project_path, "--umbrella"])
 
       assert_file app_path(app, "mix.exs"), ":postgrex"
-      assert_file app_path(app, "config/dev.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
-      assert_file app_path(app, "config/test.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
-      assert_file app_path(app, "config/prod.secret.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/]
       assert_file app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.Postgres"
+
+      assert_file root_path(app, "config/dev.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
+      assert_file root_path(app, "config/test.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
+      assert_file root_path(app, "config/prod.secret.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/]
 
       assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
       assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
@@ -369,10 +363,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mysql"])
 
       assert_file app_path(app, "mix.exs"), ":myxql"
-      assert_file app_path(app, "config/dev.exs"), [~r/username: "root"/, ~r/password: ""/]
-      assert_file app_path(app, "config/test.exs"), [~r/username: "root"/, ~r/password: ""/]
-      assert_file app_path(app, "config/prod.secret.exs"), [~r/username: "root"/, ~r/password: ""/]
       assert_file app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.MyXQL"
+
+      assert_file root_path(app, "config/dev.exs"), [~r/username: "root"/, ~r/password: ""/]
+      assert_file root_path(app, "config/test.exs"), [~r/username: "root"/, ~r/password: ""/]
+      assert_file root_path(app, "config/prod.secret.exs"), [~r/username: "root"/, ~r/password: ""/]
 
       assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
       assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
@@ -474,11 +469,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
           assert file =~ "lockfile: \"../../mix.lock\""
         end
 
-        assert_file "another/config/config.exs", fn file ->
+        assert_file "../config/config.exs", fn file ->
           assert file =~ "ecto_repos: [Another.Repo]"
         end
 
-        assert_file "another/config/prod.exs", fn file ->
+        assert_file "../config/prod.exs", fn file ->
           assert file =~ "port: 80"
           assert file =~ ":inet6"
         end
@@ -511,7 +506,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/.gitignore",  ~r/\n$/
         assert_file "another/assets/webpack.config.js", "js/app.js"
         assert_file "another/assets/.babelrc", "env"
-        assert_file "another/config/dev.exs", ~r/watchers: \[\s+node:/
         assert_file "another/assets/static/favicon.ico"
         assert_file "another/assets/static/images/phoenix.png"
         assert_file "another/assets/css/app.css"

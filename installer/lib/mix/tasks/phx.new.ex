@@ -98,48 +98,52 @@ defmodule Mix.Tasks.Phx.New do
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info("Phoenix v#{@version}")
   end
+
   def run(argv) do
     elixir_version_check!()
     case parse_opts(argv) do
-      {_opts, []}             -> Mix.Tasks.Help.run(["phx.new"])
+      {_opts, []} ->
+        Mix.Tasks.Help.run(["phx.new"])
+
       {opts, [base_path | _]} ->
         generator = if opts[:umbrella], do: Umbrella, else: Single
-        generate(base_path, generator, opts)
-    end
-  end
-  def run(argv, generator) do
-    elixir_version_check!()
-    case parse_opts(argv) do
-      {_opts, []}             -> Mix.Tasks.Help.run(["phx.new"])
-      {opts, [base_path | _]} -> generate(base_path, generator, opts)
+        generate(base_path, generator, :project_path, opts)
     end
   end
 
-  def generate(base_path, generator, opts) do
+  def run(argv, generator, path) do
+    elixir_version_check!()
+    case parse_opts(argv) do
+      {_opts, []} -> Mix.Tasks.Help.run(["phx.new"])
+      {opts, [base_path | _]} -> generate(base_path, generator, path, opts)
+    end
+  end
+
+  def generate(base_path, generator, path, opts) do
     base_path
     |> Project.new(opts)
     |> generator.prepare_project()
     |> Generator.put_binding()
-    |> validate_project()
+    |> validate_project(path)
     |> generator.generate()
-    |> prompt_to_install_deps(generator)
+    |> prompt_to_install_deps(generator, path)
   end
 
-  defp validate_project(%Project{opts: opts} = project) do
+  defp validate_project(%Project{opts: opts} = project, path) do
     check_app_name!(project.app, !!opts[:app])
-    check_directory_existence!(project.project_path)
+    check_directory_existence!(Map.fetch!(project, path))
     check_module_name_validity!(project.root_mod)
     check_module_name_availability!(project.root_mod)
 
     project
   end
 
-  defp prompt_to_install_deps(%Project{} = project, generator) do
+  defp prompt_to_install_deps(%Project{} = project, generator, path) do
+    path = Map.fetch!(project, path)
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
+    cd_step = ["$ cd #{relative_app_path(path)}"]
 
-    cd_step = ["$ cd #{relative_app_path(project.project_path)}"]
-
-    maybe_cd(project.project_path, fn ->
+    maybe_cd(path, fn ->
       mix_step = install_mix(project, install?)
 
       compile =
@@ -158,7 +162,7 @@ defmodule Mix.Tasks.Phx.New do
       print_missing_steps(cd_step ++ mix_step ++ webpack_step)
 
       if Project.ecto?(project) do
-        print_ecto_info(project, generator)
+        print_ecto_info(generator)
       end
 
       print_mix_info(generator)
@@ -218,22 +222,16 @@ defmodule Mix.Tasks.Phx.New do
     """
   end
 
-  defp print_ecto_info(%Project{}, Web), do: :ok
-  defp print_ecto_info(%Project{app_path: nil}, _gen), do: :ok
-  defp print_ecto_info(%Project{app_path: app_path} = project, _gen) do
-    config_path =
-      app_path
-      |> Path.join("config/dev.exs")
-      |> Path.relative_to(project.project_path)
-
+  defp print_ecto_info(Web), do: :ok
+  defp print_ecto_info(_gen) do
     Mix.shell.info """
-    Then configure your database in #{config_path} and run:
+    Then configure your database in config/dev.exs and run:
 
         $ mix ecto.create
     """
   end
 
-  defp print_mix_info(gen) when gen in [Ecto] do
+  defp print_mix_info(Ecto) do
     Mix.shell.info """
     You can run your app inside IEx (Interactive Elixir) as:
 
@@ -251,10 +249,11 @@ defmodule Mix.Tasks.Phx.New do
         $ iex -S mix phx.server
     """
   end
+
   defp relative_app_path(path) do
     case Path.relative_to_cwd(path) do
       ^path -> Path.basename(path)
-      rel   -> rel
+      rel -> rel
     end
   end
 

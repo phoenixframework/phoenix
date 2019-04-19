@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phx.New.WebTest do
     in_tmp_umbrella_project "new with defaults", fn ->
       Mix.Tasks.Phx.New.Web.run([@app_name])
 
-      assert_file "#{@app_name}/config/config.exs", fn file ->
+      assert_file "../config/config.exs", fn file ->
         assert file =~ "generators: [context_app: false]"
       end
 
