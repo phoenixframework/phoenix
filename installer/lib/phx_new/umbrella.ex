@@ -4,14 +4,15 @@ defmodule Phx.New.Umbrella do
   alias Phx.New.{Ecto, Web, Project}
 
   template :new, [
-    {:eex,  "phx_umbrella/gitignore",         :project, ".gitignore"},
-    {:eex,  "phx_umbrella/config/config.exs", :project, "config/config.exs"},
-    {:eex,  "phx_umbrella/config/dev.exs",    :project, "config/dev.exs"},
-    {:eex,  "phx_umbrella/config/test.exs",   :project, "config/test.exs"},
-    {:eex,  "phx_umbrella/config/prod.exs",   :project, "config/prod.exs"},
-    {:eex,  "phx_umbrella/mix.exs",           :project, "mix.exs"},
-    {:eex,  "phx_umbrella/README.md",         :project, "README.md"},
-    {:eex,  "phx_umbrella/formatter.exs",     :project, ".formatter.exs"},
+    {:eex,  "phx_umbrella/gitignore",              :project, ".gitignore"},
+    {:eex,  "phx_umbrella/config/config.exs",      :project, "config/config.exs"},
+    {:eex,  "phx_umbrella/config/dev.exs",         :project, "config/dev.exs"},
+    {:eex,  "phx_umbrella/config/test.exs",        :project, "config/test.exs"},
+    {:eex,  "phx_umbrella/config/prod.exs",        :project, "config/prod.exs"},
+    {:eex,  "phx_umbrella/config/prod.secret.exs", :project, "config/prod.secret.exs"},
+    {:eex,  "phx_umbrella/mix.exs",                :project, "mix.exs"},
+    {:eex,  "phx_umbrella/README.md",              :project, "README.md"},
+    {:eex,  "phx_umbrella/formatter.exs",          :project, ".formatter.exs"},
   ]
 
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do

@@ -1,9 +1,3 @@
-# Since configuration is shared in umbrella projects, this file
-# should only configure the :<%= web_app_name %> application itself
-# and only for organization purposes. All other config goes to
-# the umbrella root.
-use Mix.Config
-
 # For production, don't forget to configure the url host
 # to something meaningful, Phoenix uses this information
 # when generating URLs.
@@ -66,7 +60,3 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
 #
 # Note you can't rely on `System.get_env/1` when using releases.
 # See the releases documentation accordingly.
-
-# Finally import the config/prod.secret.exs which should be versioned
-# separately.
-import_config "prod.secret.exs"

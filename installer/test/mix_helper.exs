@@ -55,10 +55,15 @@ defmodule MixHelper do
 
     try do
       apps_path = Path.join(path, "apps")
+      config_path = Path.join(path, "config")
       File.rm_rf!(path)
       File.mkdir_p!(path)
       File.mkdir_p!(apps_path)
+      File.mkdir_p!(config_path)
       File.touch!(Path.join(path, "mix.exs"))
+      for file <- ~w(config.exs dev.exs test.exs prod.exs prod.secret.exs) do
+        File.write!(Path.join(config_path, file), "use Mix.Config\n")
+      end
       File.cd!(apps_path, function)
     after
       Application.put_env(:phoenix, :generators, conf_before)
