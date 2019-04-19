@@ -349,7 +349,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(app, "config/dev.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
       assert_file root_path(app, "config/test.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
-      assert_file root_path(app, "config/prod.secret.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/]
+      assert_file root_path(app, "config/prod.secret.exs"), [~r/url: database_url/]
 
       assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
       assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
@@ -367,7 +367,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(app, "config/dev.exs"), [~r/username: "root"/, ~r/password: ""/]
       assert_file root_path(app, "config/test.exs"), [~r/username: "root"/, ~r/password: ""/]
-      assert_file root_path(app, "config/prod.secret.exs"), [~r/username: "root"/, ~r/password: ""/]
+      assert_file root_path(app, "config/prod.secret.exs"), [~r/url: database_url/]
 
       assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
       assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
