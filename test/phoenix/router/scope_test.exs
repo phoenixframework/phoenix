@@ -205,4 +205,24 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     assert conn.status == 200
     assert conn.resp_body == "api v1 users show"
   end
+
+  test "raises for reserved prefixes" do
+    assert_raise ArgumentError, ~r/`static` is a reserved route prefix/, fn ->
+      defmodule ErrorRouter do
+        use Phoenix.Router
+        scope "/" do
+          get "/", StaticController, :index
+        end
+      end
+    end
+
+    assert_raise ArgumentError, ~r/`static` is a reserved route prefix/, fn ->
+      defmodule ErrorRouter do
+        use Phoenix.Router
+        scope "/" do
+          get "/", Api.V1.UserController, :show, as: :static
+        end
+      end
+    end
+  end
 end
