@@ -120,26 +120,9 @@ This phoenix static buildpack pack can be configured to change the node version 
 
 ## Making our Project ready for Heroku
 
-Every new Phoenix project ships with a config file `config/prod.secret.exs` which stores configuration that should not be committed along with our source code. By default Phoenix adds it to our `.gitignore` file.
+Every new Phoenix project ships with a config file `config/prod.secret.exs` which loads configuration and secrets from [environment variables](https://devcenter.heroku.com/articles/config-vars). This aligns well with Heroku best practices, so most the only work left for us to do is to configure URLs and SSL.
 
-This works great except Heroku uses [environment variables](https://devcenter.heroku.com/articles/config-vars) to pass sensitive informations to our application. It means we need to make some changes to our config before we can deploy.
-
-First, let's make sure our secret key is loaded from Heroku's environment variables instead of `config/prod.secret.exs` by adding a `secret_key_base` line  in `config/prod.exs` (remember to add a comma to the end of the preceding line):
-
-```elixir
-config :hello, HelloWeb.Endpoint,
-  url: [host: "example.com", port: 80],
-  cache_static_manifest: "priv/static/cache_manifest.json",
-  secret_key_base: System.get_env("SECRET_KEY_BASE") || raise("missing SECRET_KEY_BASE env var")
-```
-
-Next let's tell the Phoenix application to bind to the PORT environment variable provided by Heroku's [dyno networking](https://devcenter.heroku.com/articles/dynos#common-runtime-networking) so that it can accept incoming web traffic. Add this anywhere within your endpoint configuration:
-
-```elixir
-http: [port: System.get_env("PORT")]
-```
-
-Now, let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. If we don't override the `host` variable, then when using plugs like `Routes.page_url` (`Routes.page_path` is unaffected as it uses relative URL's) the URL will generate incorrectly. Find the url line:
+First let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Find the url line in your `config/prod.exs`:
 
 ```elixir
 url: [host: "example.com", port: 80],
@@ -152,44 +135,13 @@ url: [scheme: "https", host: "mysterious-meadow-6277", port: 443],
 force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
 
-Then, we'll add the production database configuration to `config/prod.exs`:
+Then open up your `config/prod.secret.exs` and uncomment the `# ssl: true,` line in your repository configuration. It will look like this:
 
 ```elixir
-# Configure your database
 config :hello, Hello.Repo,
-  url: System.get_env("DATABASE_URL"),
-  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-  ssl: true
-```
-
-Since our configuration is now handled using Heroku's environment variables, we don't need to import the `config/prod.secret.exs` file in `/config/prod.exs` any longer, so we can delete the following line:
-
-```elixir
-import_config "prod.secret.exs"
-```
-
-Our `config/prod.exs` now looks like this:
-
-```elixir
-use Mix.Config
-
-...
-
-config :hello, HelloWeb.Endpoint,
-  http: [port: System.get_env("PORT")],
-  url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
-  force_ssl: [rewrite_on: [:x_forwarded_proto]],
-  cache_static_manifest: "priv/static/cache_manifest.json",
-  secret_key_base: System.get_env("SECRET_KEY_BASE") || raise "missing SECRET_KEY_BASE env var"
-
-# Do not print debug messages in production
-config :logger, level: :info
-
-# Configure your database
-config :hello, Hello.Repo,
-  url: System.get_env("DATABASE_URL"),
-  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-  ssl: true
+  ssl: true,
+  url: database_url,
+  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 ```
 
 Finally, if you plan on using websockets, then we will need to decrease the timeout for the websocket transport in `lib/hello_web/endpoint.ex`. If you do not plan on using websockets, then leaving it set to false is fine. You can find further explanation of the options available at the [documentation](https://hexdocs.pm/phoenix/Phoenix.Endpoint.html#socket/3-websocket-configuration).
@@ -227,6 +179,7 @@ $ heroku config:set POOL_SIZE=18
 This value should be just under the number of available connections, leaving a couple open for migrations and mix tasks. The hobby-dev database allows 20 connections, so we set this number to 18. If additional dynos will share the database, reduce the `POOL_SIZE` to give each dyno an equal share.
 
 When running a mix task later (after we have pushed the project to Heroku) you will also want to limit its pool size like so:
+
 ```console
 $ heroku run "POOL_SIZE=2 mix hello.task"
 ```

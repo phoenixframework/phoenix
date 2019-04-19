@@ -10,7 +10,6 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 config :<%= web_app_name %>, <%= endpoint_module %>,
-  http: [:inet6, port: System.get_env("PORT") || 4000],
   url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
@@ -51,21 +50,16 @@ config :logger, level: :info
 #
 # Check `Plug.SSL` for all available options in `force_ssl`.
 
-# ## Using releases (distillery)
+# ## Using releases (Elixir v1.9+)
 #
 # If you are doing OTP releases, you need to instruct Phoenix
-# to start the server for all endpoints:
-#
-#     config :phoenix, :serve_endpoints, true
-#
-# Alternatively, you can configure exactly which server to
-# start per endpoint:
+# to start each relevant endpoint:
 #
 #     config :<%= web_app_name %>, <%= endpoint_module %>, server: true
 #
-# Note you can't rely on `System.get_env/1` when using releases.
-# See the releases documentation accordingly.
+# Then you can assemble a release by caling `mix release`.
+# See `mix help release` for more information.
 
-# Finally import the config/prod.secret.exs which should be versioned
-# separately.
+# Finally import the config/prod.secret.exs which loads secrets
+# and configuration from environment variables.
 import_config "prod.secret.exs"
