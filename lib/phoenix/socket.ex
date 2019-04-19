@@ -592,17 +592,17 @@ defmodule Phoenix.Socket do
     {:reply, :ok, encode_reply(socket, reply), {state, socket}}
   end
 
-  defp handle_in(nil, %{event: "phx_join", topic: topic, ref: ref} = message, state, socket) do
+  defp handle_in(nil, %{event: "phx_join", topic: topic, ref: ref, join_ref: join_ref} = message, state, socket) do
     case socket.handler.__channel__(topic) do
       {channel, opts} ->
         case Phoenix.Channel.Server.join(socket, channel, message, opts) do
           {:ok, reply, pid} ->
-            reply = %Reply{join_ref: ref, ref: ref, topic: topic, status: :ok, payload: reply}
-            state = put_channel(state, pid, topic, ref)
+            reply = %Reply{join_ref: join_ref, ref: ref, topic: topic, status: :ok, payload: reply}
+            state = put_channel(state, pid, topic, join_ref)
             {:reply, :ok, encode_reply(socket, reply), {state, socket}}
 
           {:error, reply} ->
-            reply = %Reply{join_ref: ref, ref: ref, topic: topic, status: :error, payload: reply}
+            reply = %Reply{join_ref: join_ref, ref: ref, topic: topic, status: :error, payload: reply}
             {:reply, :error, encode_reply(socket, reply), {state, socket}}
         end
 
@@ -627,13 +627,15 @@ defmodule Phoenix.Socket do
     {:ok, {state, socket}}
   end
 
-  defp handle_in(nil, %{event: "phx_leave", ref: ref, topic: topic}, state, socket) do
+  defp handle_in(nil, %{event: "phx_leave", ref: ref, topic: topic, join_ref: join_ref}, state, socket) do
     reply = %Reply{
       ref: ref,
+      join_ref: join_ref,
       topic: topic,
       status: :ok,
       payload: %{}
     }
+
     {:reply, :ok, encode_reply(socket, reply), {state, socket}}
   end
 

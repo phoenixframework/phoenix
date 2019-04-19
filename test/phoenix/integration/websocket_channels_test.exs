@@ -178,7 +178,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     :ok
   end
 
-  for {serializer, vsn, join_ref} <- [{V1.JSONSerializer, "1.0.0", nil}, {V2.JSONSerializer, "2.0.0", "1"}] do
+  for {serializer, vsn, join_ref} <- [{V1.JSONSerializer, "1.0.0", nil}, {V2.JSONSerializer, "2.0.0", 11}] do
     @serializer serializer
     @vsn vsn
     @vsn_path "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}"
@@ -491,16 +491,15 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
       WebsocketClient.join(sock, "custom:ignore", %{"action" => "ignore"})
 
       assert_receive %Message{event: "phx_reply",
-                              join_ref: "1",
+                              join_ref: 11,
                               payload: %{"response" => %{"action" => "ignore"}, "status" => "error"},
                               ref: "1",
                               topic: "custom:ignore"}
 
-
       WebsocketClient.join(sock, "custom:error", %{"action" => "error"})
 
       assert_receive %Message{event: "phx_reply",
-                              join_ref: "2",
+                              join_ref: 12,
                               payload: %{"response" => %{"reason" => "join crashed"}, "status" => "error"},
                               ref: "2",
                               topic: "custom:error"}
@@ -508,7 +507,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
       WebsocketClient.join(sock, "custom:ok", %{"action" => "ok"})
 
       assert_receive %Message{event: "phx_reply",
-                              join_ref: "3",
+                              join_ref: 13,
                               payload: %{"response" => %{"action" => "ok"}, "status" => "ok"},
                               ref: "3",
                               topic: "custom:ok"}

@@ -61,7 +61,9 @@ defmodule Phoenix.Integration.WebsocketClient do
 
   @doc false
   def init([sender, serializer], _conn_state) do
-    {:ok, %{sender: sender, join_ref: 1, ref: 0, serializer: serializer}}
+    # Use different initial join_ref from ref to
+    # make sure the server is not coupling them.
+    {:ok, %{sender: sender, topics: %{}, join_ref: 11, ref: 1, serializer: serializer}}
   end
 
   @doc false
@@ -80,13 +82,23 @@ defmodule Phoenix.Integration.WebsocketClient do
     {:reply, {:text, msg}, state}
   end
 
-  def websocket_info({:send, %Message{} = msg}, _conn_state, state) do
-    msg = Map.merge(msg, %{ref: to_string(state.ref + 1), join_ref: to_string(state.join_ref)})
-    {:reply, {:text, encode!(msg, state)}, put_in(state, [:ref], state.ref + 1)}
+  def websocket_info({:send, %Message{} = msg}, _conn_state, %{ref: ref} = state) do
+    {join_ref, state} = join_ref_for(msg, state)
+    msg = Map.merge(msg, %{ref: to_string(ref), join_ref: join_ref})
+    {:reply, {:text, encode!(msg, state)}, put_in(state.ref, ref + 1)}
   end
 
   def websocket_info(:close, _conn_state, _state) do
     {:close, <<>>, "done"}
+  end
+
+  defp join_ref_for(%{topic: topic, event: "phx_join"}, %{topics: topics, join_ref: join_ref} = state) do
+    topics = Map.put(topics, topic, join_ref)
+    {join_ref, %{state | topics: topics, join_ref: join_ref + 1}}
+  end
+
+  defp join_ref_for(%{topic: topic}, %{topics: topics} = state) do
+    {Map.get(topics, topic), state}
   end
 
   @doc false
