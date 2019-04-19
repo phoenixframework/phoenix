@@ -61,8 +61,8 @@ username:string:unique
 * creating priv/repo/migrations/20170629175236_create_users.exs
 * creating lib/hello/accounts.ex
 * injecting lib/hello/accounts.ex
-* creating test/hello/accounts/accounts_test.exs
-* injecting test/hello/accounts/accounts_test.exs
+* creating test/hello/accounts_test.exs
+* injecting test/hello/accounts_test.exs
 
 Add the resource to your browser scope in lib/hello_web/router.ex:
 
@@ -258,7 +258,7 @@ email:string:unique user_id:references:users
 * creating lib/hello/accounts/credential.ex
 * creating priv/repo/migrations/20170629180555_create_credentials.exs
 * injecting lib/hello/accounts.ex
-* injecting test/hello/accounts/accounts_test.exs
+* injecting test/hello/accounts_test.exs
 
 Remember to update your repository by running migrations:
 

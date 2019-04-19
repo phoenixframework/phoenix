@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
       assert String.ends_with?(context.dir, "lib/phoenix/blog")
       assert String.ends_with?(context.file, "lib/phoenix/blog.ex")
-      assert String.ends_with?(context.test_file, "test/phoenix/blog/blog_test.exs")
+      assert String.ends_with?(context.test_file, "test/phoenix/blog_test.exs")
       assert String.ends_with?(context.schema.file, "lib/phoenix/blog/post.ex")
     end
   end
@@ -63,7 +63,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
       assert String.ends_with?(context.dir, "lib/phoenix/site/blog")
       assert String.ends_with?(context.file, "lib/phoenix/site/blog.ex")
-      assert String.ends_with?(context.test_file, "test/phoenix/site/blog/blog_test.exs")
+      assert String.ends_with?(context.test_file, "test/phoenix/site/blog_test.exs")
       assert String.ends_with?(context.schema.file, "lib/phoenix/site/blog/post.ex")
     end
   end
@@ -139,7 +139,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def change_post"
       end
 
-      assert_file "test/phoenix/blog/blog_test.exs", fn file ->
+      assert_file "test/phoenix/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
         assert file =~ "describe \"posts\" do"
         assert file =~ "def post_fixture(attrs \\\\ %{})"
@@ -164,7 +164,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "field :title, :string"
       end
 
-      assert_file "test/phoenix/blog/blog_test.exs", fn file ->
+      assert_file "test/phoenix/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
         assert file =~ "describe \"comments\" do"
         assert file =~ "def comment_fixture(attrs \\\\ %{})"
@@ -203,7 +203,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "raise \"TODO\""
       end
 
-      assert_file "test/phoenix/blog/blog_test.exs", fn file ->
+      assert_file "test/phoenix/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
         assert file =~ "describe \"posts\" do"
         assert file =~ "def post_fixture(attrs \\\\ %{})"
