@@ -91,7 +91,7 @@ The URL in the output is the URL to our application. If we open it in our browse
 
 > Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we wouldn't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
 
-The buildpack uses a predefined Elixir and Erlang version but to avoid surprises when deploying, it is best to explicitly list the Elixir and Erlang version we want in production to be the same we are using during development or in your continuous integration servers. This can be done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of Elixir and Erlang:
+The buildpack uses a predefined Elixir and Erlang version but to avoid surprises when deploying, it is best to explicitly list the Elixir and Erlang version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of Elixir and Erlang:
 
 ```
 # Elixir version
