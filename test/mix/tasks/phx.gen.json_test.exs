@@ -51,7 +51,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       assert_file "lib/phoenix/blog/post.ex"
       assert_file "lib/phoenix/blog.ex"
 
-      assert_file "test/phoenix/blog/blog_test.exs", fn file ->
+      assert_file "test/phoenix/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
       end
 
