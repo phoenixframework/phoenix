@@ -407,10 +407,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp static_cache(digests, value) do
-    {
-      "/#{value}?vsn=d",
-      static_integrity(get_in(digests, [value, "sha512"]))
-    }
+    {"/#{value}?vsn=d", static_integrity(digests[value]["sha512"])}
   end
 
   defp static_integrity(nil), do: ""
