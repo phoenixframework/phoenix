@@ -38,7 +38,6 @@ defmodule Phoenix.Config do
   function that generates the cache to be idempotent.
   """
   @spec cache(module, term, (module -> {:cache | :nocache, term})) :: term
-
   def cache(module, key, fun) do
     case :ets.lookup(module, key) do
       [{^key, :cache, val}] ->
