@@ -106,7 +106,7 @@ erlang_version=21.2.5
 
 We need to compile static assets for a successful Phoenix deployment. The [Phoenix static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) can take care of that for us, so let's add it now.
 
-_Skip this step if you do not have any static assets (i.e. you created your project with the `--no-webpack --no-html` flags)._
+_Go the the next step if you do not have any static assets (i.e. you created your project with the `--no-webpack --no-html` flags)._
 
 
 ```console
@@ -117,6 +117,12 @@ Buildpack added. Next release on mysterious-meadow-6277 will use:
 ```
 
 This phoenix static buildpack pack can be configured to change the node version and compile options. Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
+
+## Adding a Procfile
+
+_If you're using the Phoenix Static Buildpack you can skip this step, because it provides you with a default Procfile that runs `mix phx.server`._
+
+The Procfile provided by the Elixir Buildpack runs the command `mix run --no-halt`. By default this will not start the Phoenix server. In order to override it, create a file called `Procfile` in the root directory and add this line to it `mix phx.server`. Heroku will recognize this file and use the command to start your application, ensuring that it also starts the Phoenix server.
 
 ## Making our Project ready for Heroku
 
@@ -213,8 +219,6 @@ Let's commit all our changes:
 $ git add config/prod.exs
 $ git add elixir_buildpack.config
 $ git add phoenix_static_buildpack.config
-$ git add compile
-$ git add Procfile
 $ git add lib/hello_web/endpoint.ex
 $ git commit -m "Use production config from Heroku ENV variables and decrease socket timeout"
 ```
