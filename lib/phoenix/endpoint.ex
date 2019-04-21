@@ -699,6 +699,10 @@ defmodule Phoenix.Endpoint do
         elem(static_lookup(path), 0)
       end
 
+      @doc """
+      Generates a base64-encoded cryptographic hash (sha512) to a static file
+      in `priv/static`. Meant to be used for Subresource Integrity with CDNs.
+      """
       def static_integrity(path) do
         elem(static_lookup(path), 1)
       end

@@ -395,7 +395,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests}) do
-    Enum.each(Map.keys(latest), fn key ->
+    Enum.each(latest, fn {key, _} ->
       Phoenix.Config.cache(endpoint, {:__phoenix_static__, "/" <> key}, fn _ ->
         {:cache, static_cache(digests, Map.get(latest, key))}
       end)
