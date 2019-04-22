@@ -227,7 +227,7 @@ defmodule Phoenix.Endpoint do
   that are automatically defined in your endpoint:
 
     * for handling paths and URLs: `c:struct_url/0`, `c:url/0`, `c:path/1`,
-      `c:static_url/0`, and `c:static_path/1`
+      `c:static_url/0`,`c:static_path/1`, and `c:static_integrity/1`
     * for handling channel subscriptions: `c:subscribe/2` and `c:unsubscribe/1`
     * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,
       `c:broadcast_from/4`, and `c:broadcast_from!/4`
@@ -424,6 +424,11 @@ defmodule Phoenix.Endpoint do
   Generates a route to a static file in `priv/static`.
   """
   @callback static_path(path :: String.t) :: String.t
+
+  @doc """
+  Generates an integrity hash to a static file in `priv/static`.
+  """
+  @callback static_integrity(path :: String.t) :: String.t
 
   # Channels
 

@@ -69,6 +69,7 @@ defmodule Phoenix.DigesterTest do
       assert is_integer(json["digests"][key]["mtime"])
       assert json["digests"][key]["size"] == 13900
       assert json["digests"][key]["digest"] =~ ~r"#{@hash_regex}"
+      assert json["digests"][key]["sha512"] == "93pY5dBa8nHHi0Zfj75O/vXCBXb+UvEVCyU7Yd3pzOJ7o1wkYBWbvs3pVXhBChEmo8MDANT11vsggo2+bnYqoQ=="
       assert json["version"] == 1
     end
 
