@@ -428,7 +428,7 @@ defmodule Phoenix.Endpoint do
   @doc """
   Generates an integrity hash to a static file in `priv/static`.
   """
-  @callback static_integrity(path :: String.t) :: String.t
+  @callback static_integrity(path :: String.t) :: String.t | nil
 
   # Channels
 
