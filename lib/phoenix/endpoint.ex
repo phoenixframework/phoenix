@@ -707,6 +707,10 @@ defmodule Phoenix.Endpoint do
         elem(static_lookup(path), 1)
       end
 
+      @doc """
+      Returns a two item tuple with the first item being the static_path
+      and the second item being the static_integrity
+      """
       def static_lookup(path) do
         Phoenix.Config.cache(__MODULE__, {:__phoenix_static__, path},
                              &Phoenix.Endpoint.Supervisor.static_lookup(&1, path))

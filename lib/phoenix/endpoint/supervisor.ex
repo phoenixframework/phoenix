@@ -329,13 +329,6 @@ defmodule Phoenix.Endpoint.Supervisor do
   """
   @invalid_local_url_chars ["\\"]
 
-  def static_path(endpoint, path) do
-    case static_lookup(endpoint, path) do
-      {:nocache, {path, _}} -> {:nocache, path}
-      other -> other
-    end
-  end
-
   def static_lookup(_endpoint, "//" <> _ = path) do
     raise_invalid_path(path)
   end
@@ -344,7 +337,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     if String.contains?(path, @invalid_local_url_chars) do
       raise ArgumentError, "unsafe characters detected for path #{inspect path}"
     else
-      {:nocache, {path, ""}}
+      {:nocache, {path, nil}}
     end
   end
 
@@ -410,7 +403,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     {"/#{value}?vsn=d", static_integrity(digests[value]["sha512"])}
   end
 
-  defp static_integrity(nil), do: ""
+  defp static_integrity(nil), do: nil
   defp static_integrity(sha), do: "sha512-#{sha}"
 
   defp cache_static_manifest(endpoint) do
