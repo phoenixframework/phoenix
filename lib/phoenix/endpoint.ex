@@ -430,6 +430,11 @@ defmodule Phoenix.Endpoint do
   """
   @callback static_integrity(path :: String.t) :: String.t | nil
 
+  @doc """
+  Generates a two item tuple containing the `static_path` and `static_integrity`
+  """
+  @callback static_lookup(path :: String.t) :: {String.t, String.t} | {String.t, nil}
+
   # Channels
 
   @doc """
