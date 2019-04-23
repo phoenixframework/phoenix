@@ -59,6 +59,8 @@ defmodule Phoenix.Router.HelpersTest do
     path
   end
 
+  def static_integrity(_path), do: nil
+
   alias Router.Helpers
 
   test "defines a __helpers__ function" do
@@ -425,6 +427,12 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.path(conn_with_endpoint(), "/") == "/"
     assert Helpers.path(socket_with_endpoint(), "/") == "/"
     assert Helpers.path(uri(), "/") == "/"
+  end
+
+  test "helpers module generates a static_integrity helper" do
+    assert is_nil(Helpers.static_integrity(__MODULE__, "/images/foo.png"))
+    assert is_nil(Helpers.static_integrity(conn_with_endpoint(), "/images/foo.png"))
+    assert is_nil(Helpers.static_integrity(socket_with_endpoint(), "/images/foo.png"))
   end
 
   test "helpers module generates named routes url helpers" do

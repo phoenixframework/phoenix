@@ -230,6 +230,21 @@ defmodule Phoenix.Router.Helpers do
         endpoint.static_url <> endpoint.static_path(path)
       end
 
+      @doc """
+      Generates an integrity hash to a static asset given its file path.
+      """
+      def static_integrity(%Conn{private: %{phoenix_endpoint: endpoint}}, path) do
+        static_integrity(endpoint, path)
+      end
+
+      def static_integrity(%_{endpoint: endpoint}, path) do
+        static_integrity(endpoint, path)
+      end
+
+      def static_integrity(endpoint, path) when is_atom(endpoint) do
+        endpoint.static_integrity(path)
+      end
+
       # Functions used by generated helpers
       # Those are inlined here for performance
 

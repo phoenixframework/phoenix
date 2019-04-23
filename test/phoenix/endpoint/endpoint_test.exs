@@ -216,4 +216,17 @@ defmodule Phoenix.Endpoint.EndpointTest do
       Endpoint.static_path("//invalid_path")
     end
   end
+
+  test "static_integrity/1 validates paths are local/safe" do
+    safe_path = "/some_safe_path"
+    assert is_nil(Endpoint.static_integrity(safe_path))
+
+    assert_raise ArgumentError, ~r/unsafe characters/, fn ->
+      Endpoint.static_integrity("/\\unsafe_path")
+    end
+
+    assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
+      Endpoint.static_integrity("//invalid_path")
+    end
+  end
 end
