@@ -227,7 +227,7 @@ defmodule Phoenix.Endpoint do
   that are automatically defined in your endpoint:
 
     * for handling paths and URLs: `c:struct_url/0`, `c:url/0`, `c:path/1`,
-      `c:static_url/0`, and `c:static_path/1`
+      `c:static_url/0`,`c:static_path/1`, and `c:static_integrity/1`
     * for handling channel subscriptions: `c:subscribe/2` and `c:unsubscribe/1`
     * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,
       `c:broadcast_from/4`, and `c:broadcast_from!/4`
@@ -424,6 +424,16 @@ defmodule Phoenix.Endpoint do
   Generates a route to a static file in `priv/static`.
   """
   @callback static_path(path :: String.t) :: String.t
+
+  @doc """
+  Generates an integrity hash to a static file in `priv/static`.
+  """
+  @callback static_integrity(path :: String.t) :: String.t | nil
+
+  @doc """
+  Generates a two item tuple containing the `static_path` and `static_integrity`.
+  """
+  @callback static_lookup(path :: String.t) :: {String.t, String.t} | {String.t, nil}
 
   # Channels
 
@@ -696,8 +706,24 @@ defmodule Phoenix.Endpoint do
       def static_path(path) do
         Phoenix.Config.cache(__MODULE__, :__phoenix_static__,
                              &Phoenix.Endpoint.Supervisor.static_path/1) <>
+        elem(static_lookup(path), 0)
+      end
+
+      @doc """
+      Generates a base64-encoded cryptographic hash (sha512) to a static file
+      in `priv/static`. Meant to be used for Subresource Integrity with CDNs.
+      """
+      def static_integrity(path) do
+        elem(static_lookup(path), 1)
+      end
+
+      @doc """
+      Returns a two item tuple with the first item being the `static_path`
+      and the second item being the `static_integrity`.
+      """
+      def static_lookup(path) do
         Phoenix.Config.cache(__MODULE__, {:__phoenix_static__, path},
-                             &Phoenix.Endpoint.Supervisor.static_path(&1, path))
+                             &Phoenix.Endpoint.Supervisor.static_lookup(&1, path))
       end
     end
   end

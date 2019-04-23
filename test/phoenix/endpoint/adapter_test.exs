@@ -69,9 +69,9 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   end
 
   test "static_path/2 returns file's path with lookup cache" do
-    assert {:nocache, "/phoenix.png"} =
-             Supervisor.static_path(HTTPEndpoint, "/phoenix.png")
-    assert {:nocache, "/images/unknown.png"} =
-             Supervisor.static_path(HTTPEndpoint, "/images/unknown.png")
+    assert {:nocache, {"/phoenix.png", nil}} =
+             Supervisor.static_lookup(HTTPEndpoint, "/phoenix.png")
+    assert {:nocache, {"/images/unknown.png", nil}} =
+             Supervisor.static_lookup(HTTPEndpoint, "/images/unknown.png")
   end
 end

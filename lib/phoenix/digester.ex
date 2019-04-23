@@ -118,7 +118,8 @@ defmodule Phoenix.Digester do
     %{logical_path: manifest_join(file.relative_path, file.filename),
       mtime: now(),
       size: file.size,
-      digest: file.digest}
+      digest: file.digest,
+      sha512: Base.encode64(:crypto.hash(:sha512, file.content))}
   end
 
   defp manifest_join(".", filename),  do: filename
