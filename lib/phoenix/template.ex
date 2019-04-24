@@ -145,7 +145,7 @@ defmodule Phoenix.Template do
       By default it raises but can be customized
       to render a particular template.
       """
-      @spec template_not_found(Phoenix.Template.name, map) :: no_return
+      @spec template_not_found(Phoenix.Template.name, map) :: no_return | String.t() | iolist()
       def template_not_found(template, assigns) do
         Template.raise_template_not_found(__MODULE__, template, assigns)
       end
