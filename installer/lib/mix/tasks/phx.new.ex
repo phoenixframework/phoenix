@@ -38,6 +38,8 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-html` - do not generate HTML views.
 
+    * `--no-gettext` - do not generate gettext files.
+
     * `--binary-id` - use `binary_id` as primary key type
       in Ecto schemas
 
@@ -93,7 +95,7 @@ defmodule Mix.Tasks.Phx.New do
   @switches [dev: :boolean, webpack: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
-             umbrella: :boolean, verbose: :boolean]
+             gettext: :boolean, umbrella: :boolean, verbose: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info("Phoenix v#{@version}")

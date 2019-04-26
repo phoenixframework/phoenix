@@ -105,10 +105,10 @@ defmodule Phx.New.Single do
 
   def generate(%Project{} = project) do
     copy_from project, __MODULE__, :new
-    copy_from project, __MODULE__, :gettext
 
     if Project.ecto?(project), do: gen_ecto(project)
     if Project.html?(project), do: gen_html(project)
+    if Project.gettext?(project), do: gen_gettext(project)
 
     case {Project.webpack?(project), Project.html?(project)} do
       {true, _}      -> gen_webpack(project)
@@ -121,6 +121,10 @@ defmodule Phx.New.Single do
 
   def gen_html(project) do
     copy_from project, __MODULE__, :html
+  end
+
+  def gen_gettext(project) do
+    copy_from project, __MODULE__, :gettext
   end
 
   def gen_ecto(project) do

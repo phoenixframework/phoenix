@@ -1,5 +1,5 @@
 <section class="phx-hero">
-  <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1>
+  <h1>Welcome to Phoenix!</h1>
   <p>A productive web framework that<br/>does not compromise speed or maintainability.</p>
 </section>
 
