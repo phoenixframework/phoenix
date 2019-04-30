@@ -124,6 +124,15 @@ defmodule Phoenix.Test.ChannelTest do
       {:noreply, socket}
     end
 
+    def handle_call(:ping, _from, socket) do
+      {:reply, :pong, socket}
+    end
+
+    def handle_cast({:ping, ref, sender}, socket) do
+      send(sender, {ref, :pong})
+      {:noreply, socket}
+    end
+
     def terminate(_reason, %{topic: "foo:timeout"}) do
       :timer.sleep(:infinity)
     end
@@ -375,6 +384,20 @@ defmodule Phoenix.Test.ChannelTest do
     socket = subscribe_and_join!(socket(UserSocket), Channel, "foo:ok")
     send socket.channel_pid, :broadcast
     assert_broadcast "info", %{"reason" => "broadcast"}
+  end
+
+  ## handle_call/cast
+
+  test "handles calls" do
+    socket = subscribe_and_join!(socket(UserSocket), Channel, "foo:ok")
+    assert GenServer.call(socket.channel_pid, :ping) == :pong
+  end
+
+  test "handles casts" do
+    socket = subscribe_and_join!(socket(UserSocket), Channel, "foo:ok")
+    ref = make_ref()
+    :ok = GenServer.cast(socket.channel_pid, {:ping, ref, self()})
+    assert_receive {^ref, :pong}
   end
 
   ## terminate
