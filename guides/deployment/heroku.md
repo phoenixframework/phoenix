@@ -91,11 +91,22 @@ The URL in the output is the URL to our application. If we open it in our browse
 
 > Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we wouldn't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
 
+The buildpack uses a predefined Elixir and Erlang version but to avoid surprises when deploying, it is best to explicitly list the Elixir and Erlang version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of Elixir and Erlang:
+
+```
+# Elixir version
+elixir_version=1.8.1
+
+# Erlang version
+# available versions https://github.com/HashNuke/heroku-buildpack-elixir-otp-builds/blob/master/otp-versions
+erlang_version=21.2.5
+```
+
 ## Adding the Phoenix Static Buildpack
 
 We need to compile static assets for a successful Phoenix deployment. The [Phoenix static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) can take care of that for us, so let's add it now.
 
-_Skip this step if you do not have any static assets (i.e. you created your project with the `--no-webpack --no-html` flags)._
+_Go the the next step if you do not have any static assets (i.e. you created your project with the `--no-webpack --no-html` flags)._
 
 
 ```console
@@ -106,6 +117,12 @@ Buildpack added. Next release on mysterious-meadow-6277 will use:
 ```
 
 This phoenix static buildpack pack can be configured to change the node version and compile options. Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
+
+## Adding a Procfile
+
+_If you're using the Phoenix Static Buildpack you can skip this step, because it provides you with a default Procfile that runs `mix phx.server`._
+
+The Procfile provided by the Elixir Buildpack runs the command `mix run --no-halt`. By default this will not start the Phoenix server. In order to override it, create a file called `Procfile` in the root directory and add this line to it `mix phx.server`. Heroku will recognize this file and use the command to start your application, ensuring that it also starts the Phoenix server.
 
 ## Making our Project ready for Heroku
 
@@ -192,8 +209,6 @@ Setting config vars and restarting mysterious-meadow-6277... done, v3
 SECRET_KEY_BASE: xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53
 ```
 
-If you need to make any of your config variables available at compile time, you will need to explicitly define which ones in a configuration file. Create a file `elixir_buildpack.config` in your application's root directory and add a line like: `config_vars_to_export=(MY_VAR)`. See [here](https://github.com/HashNuke/heroku-buildpack-elixir#specifying-config-vars-to-export-at-compile-time) for more information.
-
 ## Deploy Time!
 
 Our project is now ready to be deployed on Heroku.
@@ -202,7 +217,8 @@ Let's commit all our changes:
 
 ```
 $ git add config/prod.exs
-$ git add Procfile
+$ git add elixir_buildpack.config
+$ git add phoenix_static_buildpack.config
 $ git add lib/hello_web/endpoint.ex
 $ git commit -m "Use production config from Heroku ENV variables and decrease socket timeout"
 ```
@@ -259,10 +275,7 @@ remote: -----> Phoenix app detected
 remote:
 remote: -----> Loading configuration and environment
 remote:        Loading config...
-remote:        WARNING: phoenix_static_buildpack.config wasn't found in the app
-remote:        Using default config from Phoenix static buildpack
-remote:        Will use the following versions:
-remote:        * Node 0.12.4
+remote:        [...]
 remote:        Will export the following config vars:
 remote:        * Config vars DATABASE_URL
 remote:        * MIX_ENV=prod
@@ -274,7 +287,6 @@ remote:        Using default npm version
 remote:
 remote: -----> Building dependencies
 remote:        [...]
-remote:        Running default compile
 remote:               Building Phoenix static assets
 remote:        07 Jul 00:06:22 - info: compiled 3 files into 2 files, copied 3 in 3616ms
 remote:        Check your digested files at 'priv/static'.
