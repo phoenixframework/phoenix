@@ -52,5 +52,5 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
 #
 #     config :<%= web_app_name %>, <%= endpoint_module %>, server: true
 #
-# Then you can assemble a release by caling `mix release`.
+# Then you can assemble a release by calling `mix release`.
 # See `mix help release` for more information.
