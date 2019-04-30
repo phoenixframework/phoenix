@@ -476,6 +476,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "../config/prod.exs", fn file ->
           assert file =~ "port: 80"
           assert file =~ ":inet6"
+          assert file =~ "import_config \"prod.secret.exs\""
         end
 
         assert_file "another/lib/another/application.ex", ~r/defmodule Another.Application do/
