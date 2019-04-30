@@ -133,7 +133,7 @@ defmodule Phoenix.Digester do
 
   defp uncompressed_digested_file?(file_path) do
     Regex.match?(@digested_file_regex, Path.basename(file_path)) ||
-      !Path.extname(file_path) == ".gz"
+      Path.extname(file_path) != ".gz"
   end
 
   defp map_file(file_path, input_path) do
