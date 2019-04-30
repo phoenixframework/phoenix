@@ -1444,9 +1444,6 @@ defmodule Phoenix.Controller do
   However, if you want all generated URLs to always have a certain schema,
   host, etc, you may invoke `put_router_url/2`.
   """
-  def current_url(%Plug.Conn{} = conn) do
-    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn)
-  end
   def current_url(%Plug.Conn{} = conn, %{} = params) do
     router_module(conn).url(conn) <> current_path(conn, params)
   end
