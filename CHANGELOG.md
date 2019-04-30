@@ -24,6 +24,21 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.4 (2019-04-30)
+
+### Enhancements
+  * [Channel] Support `handle_call` and `handle_cast` proxying for channel servers
+  * [Router] Raise error when route name uses `static` in the prefix
+  * [Router] Add `Routes.static_integrity/1` for subresource integrity validation
+
+### Bug Fixes
+  * [phx.gen.*] prohibit context creation with the same name as the application
+
+### JavaScript client bug fixes
+  * Fix bug causing error on window unload when no connection is established
+  * Fix reconnect retry after explicit disconnect
+  * Fix `globalWindow` conflict with React Native applications
+
 ## 1.4.3 (2019-03-29)
 
 ### JavaScript client enhancements
