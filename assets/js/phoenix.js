@@ -746,8 +746,10 @@ export class Socket {
     }
     if(globalWindow){
       globalWindow.addEventListener("beforeunload", e => {
-        this.unloaded = true
-        this.abnormalClose("unloaded")
+        if(this.conn){
+          this.unloaded = true
+          this.abnormalClose("unloaded")
+        }
       })
     }
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000
