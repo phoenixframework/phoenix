@@ -668,11 +668,7 @@ export let Serializer = {
  * Defaults to WebSocket with automatic LongPoll fallback.
  * @param {Function} [opts.encode] - The function to encode outgoing messages.
  *
- * Defaults to JSON:
- *
- * ```javascript
- * (payload, callback) => callback(JSON.stringify(payload))
- * ```
+ * Defaults to JSON encoder.
  *
  * @param {Function} [opts.decode] - The function to decode incoming messages.
  *
