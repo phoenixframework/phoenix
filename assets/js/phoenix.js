@@ -186,8 +186,8 @@
  */
 
 const globalSelf = typeof self !== "undefined" ? self : null
-const globalWindow = typeof window !== "undefined" ? window : null
-const global = globalSelf || globalWindow || this
+const phxWindow = typeof window !== "undefined" ? window : null
+const global = globalSelf || phxWindow || this
 const VSN = "2.0.0"
 const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 const DEFAULT_TIMEOUT = 10000
@@ -744,8 +744,8 @@ export class Socket {
       this.encode = this.defaultEncoder
       this.decode = this.defaultDecoder
     }
-    if(globalWindow){
-      globalWindow.addEventListener("beforeunload", e => {
+    if(phxWindow && phxWindow.addEventListener){
+      phxWindow.addEventListener("beforeunload", e => {
         if(this.conn){
           this.unloaded = true
           this.abnormalClose("unloaded")
@@ -894,7 +894,7 @@ export class Socket {
    * @private
    */
 
-  resetHeartbeat(){ if(this.conn.skipHeartbeat){ return }
+  resetHeartbeat(){ if(this.conn && this.conn.skipHeartbeat){ return }
     this.pendingHeartbeatRef = null
     clearInterval(this.heartbeatTimer)
     this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
