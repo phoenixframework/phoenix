@@ -185,16 +185,15 @@ defmodule Phoenix.Channel do
 
   You have three options to choose from when shutting down a channel:
 
-    * `:normal` - in such cases, the exit won't be logged, there is no restart
-      in transient mode, and linked processes do not exit
+    * `:normal` - in such cases, the exit won't be logged and linked processes
+      do not exit
 
     * `:shutdown` or `{:shutdown, term}` - in such cases, the exit won't be
-      logged, there is no restart in transient mode, and linked processes exit
-      with the same reason unless they're trapping exits
+      logged and linked processes exit with the same reason unless they're
+      trapping exits
 
-    * any other term - in such cases, the exit will be logged, there are
-      restarts in transient mode, and linked processes exit with the same reason
-      unless they're trapping exits
+    * any other term - in such cases, the exit will be logged and linked
+      processes exit with the same reason unless they're trapping exits
 
   ## Subscribing to external topics
 
@@ -249,6 +248,16 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
+  ## Hibernation
+
+  From Erlang/OTP 20, channels automatically hibernate to save memory
+  after 15_000 milliseconds of inactivity. This can be customized by
+  passing the `:hibernate_after` option to `use Phoenix.Channel`:
+
+      use Phoenix.Channel, hibernate_after: 60_000
+
+  You can also set it to `:infinity` to fully disable it.
+
   ## Logging
 
   By default, channel `"join"` and `"handle_in"` events are logged, using
@@ -265,8 +274,9 @@ defmodule Phoenix.Channel do
   alias Phoenix.Channel.Server
 
   @type reply :: status :: atom | {status :: atom, response :: map}
-  @type socket_ref :: {transport_pid :: Pid, serializer :: module,
-                       topic :: binary, ref :: binary, join_ref :: binary}
+  @type socket_ref ::
+          {transport_pid :: Pid, serializer :: module, topic :: binary, ref :: binary,
+           join_ref :: binary}
 
   @doc """
   Handle channel joins by `topic`.
@@ -285,10 +295,10 @@ defmodule Phoenix.Channel do
       end
 
   """
-  @callback join(topic :: binary, payload :: map, socket :: Socket.t) ::
-              {:ok, Socket.t} |
-              {:ok, reply :: map, Socket.t} |
-              {:error, reason :: map}
+  @callback join(topic :: binary, payload :: map, socket :: Socket.t()) ::
+              {:ok, Socket.t()}
+              | {:ok, reply :: map, Socket.t()}
+              | {:error, reason :: map}
 
   @doc """
   Handle incoming `event`s.
@@ -300,46 +310,75 @@ defmodule Phoenix.Channel do
       end
 
   """
-  @callback handle_in(event :: String.t, payload :: map, socket :: Socket.t) ::
-              {:noreply, Socket.t} |
-              {:noreply, Socket.t, timeout | :hibernate} |
-              {:reply, reply, Socket.t} |
-              {:stop, reason :: term, Socket.t} |
-              {:stop, reason :: term, reply, Socket.t}
+  @callback handle_in(event :: String.t(), payload :: map, socket :: Socket.t()) ::
+              {:noreply, Socket.t()}
+              | {:noreply, Socket.t(), timeout | :hibernate}
+              | {:reply, reply, Socket.t()}
+              | {:stop, reason :: term, Socket.t()}
+              | {:stop, reason :: term, reply, Socket.t()}
 
   @doc """
   Intercepts outgoing `event`s.
 
   See `intercept/1`.
   """
-  @callback handle_out(event :: String.t, payload :: map, socket :: Socket.t) ::
-              {:noreply, Socket.t} |
-              {:noreply, Socket.t, timeout | :hibernate} |
-              {:stop, reason :: term, Socket.t}
+  @callback handle_out(event :: String.t(), payload :: map, socket :: Socket.t()) ::
+              {:noreply, Socket.t()}
+              | {:noreply, Socket.t(), timeout | :hibernate}
+              | {:stop, reason :: term, Socket.t()}
 
   @doc """
   Handle regular Elixir process messages.
 
   See `GenServer.handle_info/2`.
   """
-  @callback handle_info(msg :: term, socket :: Socket.t) ::
-              {:noreply, Socket.t} |
-              {:stop, reason :: term, Socket.t}
+  @callback handle_info(msg :: term, socket :: Socket.t()) ::
+              {:noreply, Socket.t()}
+              | {:stop, reason :: term, Socket.t()}
+
+  @doc """
+  Handle regular GenServer call messages.
+
+  See `GenServer.handle_call/3`.
+  """
+  @callback handle_call(msg :: term, from :: {pid, tag :: term}, socket :: Socket.t()) ::
+              {:reply, response :: term, Socket.t()}
+              | {:noreply, Socket.t()}
+              | {:stop, reason :: term, Socket.t()}
+
+  @doc """
+  Handle regular GenServer cast messages.
+
+  See `GenServer.handle_cast/2`.
+  """
+  @callback handle_cast(msg :: term, socket :: Socket.t()) ::
+              {:noreply, Socket.t()}
+              | {:stop, reason :: term, Socket.t()}
 
   @doc false
-  @callback code_change(old_vsn, Socket.t, extra :: term) ::
-              {:ok, Socket.t} |
-              {:error, reason :: term} when old_vsn: term | {:down, term}
+  @callback code_change(old_vsn, Socket.t(), extra :: term) ::
+              {:ok, Socket.t()}
+              | {:error, reason :: term}
+            when old_vsn: term | {:down, term}
 
   @doc """
   Invoked when the channel process is about to exit.
 
   See `GenServer.terminate/2`.
   """
-  @callback terminate(reason :: :normal | :shutdown | {:shutdown, :left | :closed | term}, Socket.t) ::
+  @callback terminate(
+              reason :: :normal | :shutdown | {:shutdown, :left | :closed | term},
+              Socket.t()
+            ) ::
               term
 
-  @optional_callbacks handle_in: 3, handle_out: 3, handle_info: 2, code_change: 3, terminate: 2
+  @optional_callbacks handle_in: 3,
+                      handle_out: 3,
+                      handle_info: 2,
+                      handle_call: 3,
+                      handle_cast: 2,
+                      code_change: 3,
+                      terminate: 2
 
   defmacro __using__(opts \\ []) do
     quote do
@@ -350,12 +389,15 @@ defmodule Phoenix.Channel do
       @phoenix_intercepts []
       @phoenix_log_join Keyword.get(opts, :log_join, :info)
       @phoenix_log_handle_in Keyword.get(opts, :log_handle_in, :debug)
+      @phoenix_hibernate_after Keyword.get(opts, :hibernate_after, 15_000)
 
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
 
       def start_link(triplet) do
-        GenServer.start_link(Phoenix.Channel.Server, triplet)
+        GenServer.start_link(Phoenix.Channel.Server, triplet,
+          hibernate_after: @phoenix_hibernate_after
+        )
       end
 
       def __socket__(:private) do
@@ -409,11 +451,12 @@ defmodule Phoenix.Channel do
   @doc false
   def __on_definition__(env, :def, :handle_out, [event, _payload, _socket], _, _)
       when is_binary(event) do
-
     unless event in Module.get_attribute(env.module, :phoenix_intercepts) do
-      IO.write "#{Path.relative_to(env.file, File.cwd!)}:#{env.line}: [warning] " <>
-               "An intercept for event \"#{event}\" has not yet been defined in #{env.module}.handle_out/3. " <>
-               "Add \"#{event}\" to your list of intercepted events with intercept/1"
+      IO.write(
+        "#{Path.relative_to(env.file, File.cwd!())}:#{env.line}: [warning] " <>
+          "An intercept for event \"#{event}\" has not yet been defined in #{env.module}.handle_out/3. " <>
+          "Add \"#{event}\" to your list of intercepted events with intercept/1"
+      )
     end
   end
 
@@ -434,7 +477,7 @@ defmodule Phoenix.Channel do
   """
   def broadcast(socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic} = assert_joined!(socket)
-    Server.broadcast pubsub_server, topic, event, message
+    Server.broadcast(pubsub_server, topic, event, message)
   end
 
   @doc """
@@ -442,7 +485,7 @@ defmodule Phoenix.Channel do
   """
   def broadcast!(socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic} = assert_joined!(socket)
-    Server.broadcast! pubsub_server, topic, event, message
+    Server.broadcast!(pubsub_server, topic, event, message)
   end
 
   @doc """
@@ -458,16 +501,20 @@ defmodule Phoenix.Channel do
 
   """
   def broadcast_from(socket, event, message) do
-    %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} = assert_joined!(socket)
-    Server.broadcast_from pubsub_server, channel_pid, topic, event, message
+    %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} =
+      assert_joined!(socket)
+
+    Server.broadcast_from(pubsub_server, channel_pid, topic, event, message)
   end
 
   @doc """
   Same as `broadcast_from/3`, but raises if broadcast fails.
   """
   def broadcast_from!(socket, event, message) do
-    %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} = assert_joined!(socket)
-    Server.broadcast_from! pubsub_server, channel_pid, topic, event, message
+    %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} =
+      assert_joined!(socket)
+
+    Server.broadcast_from!(pubsub_server, channel_pid, topic, event, message)
   end
 
   @doc """
@@ -518,6 +565,7 @@ defmodule Phoenix.Channel do
   def reply(socket_ref, status) when is_atom(status) do
     reply(socket_ref, {status, %{}})
   end
+
   def reply({transport_pid, serializer, topic, ref, join_ref}, {status, payload}) do
     Server.reply(transport_pid, join_ref, ref, topic, {status, payload}, serializer)
   end
@@ -527,10 +575,11 @@ defmodule Phoenix.Channel do
 
   See `reply/2` for example usage.
   """
-  @spec socket_ref(Socket.t) :: socket_ref
+  @spec socket_ref(Socket.t()) :: socket_ref
   def socket_ref(%Socket{joined: true, ref: ref} = socket) when not is_nil(ref) do
     {socket.transport_pid, socket.serializer, socket.topic, ref, socket.join_ref}
   end
+
   def socket_ref(_socket) do
     raise ArgumentError, """
     socket refs can only be generated for a socket that has joined with a push ref
