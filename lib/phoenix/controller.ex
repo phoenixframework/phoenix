@@ -1283,7 +1283,24 @@ defmodule Phoenix.Controller do
   @doc """
   Fetches the flash storage.
   """
-  defdelegate fetch_flash(conn, opts \\ []), to: Phoenix.Controller.Flash
+  def fetch_flash(conn, _opts \\ []) do
+    session_flash = get_session(conn, "phoenix_flash")
+    conn = persist_flash(conn, session_flash || %{})
+
+    register_before_send conn, fn conn ->
+      flash = conn.private.phoenix_flash
+      flash_size = map_size(flash)
+
+      cond do
+        is_nil(session_flash) and flash_size == 0 ->
+          conn
+        flash_size > 0 and conn.status in 300..308 ->
+          put_session(conn, "phoenix_flash", flash)
+        true ->
+          delete_session(conn, "phoenix_flash")
+      end
+    end
+  end
 
   @doc """
   Persists a value in flash.
@@ -1297,7 +1314,9 @@ defmodule Phoenix.Controller do
       "Welcome Back!"
 
   """
-  defdelegate put_flash(conn, key, message), to: Phoenix.Controller.Flash
+  def put_flash(conn, key, message) do
+    persist_flash(conn, Map.put(get_flash(conn), flash_key(key), message))
+  end
 
   @doc """
   Returns a map of previously set flash messages or an empty map.
@@ -1312,7 +1331,10 @@ defmodule Phoenix.Controller do
       %{"info" => "Welcome Back!"}
 
   """
-  defdelegate get_flash(conn), to: Phoenix.Controller.Flash
+  def get_flash(conn) do
+    Map.get(conn.private, :phoenix_flash) ||
+      raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
+  end
 
   @doc """
   Returns a message from flash by `key`.
@@ -1324,7 +1346,9 @@ defmodule Phoenix.Controller do
       "Welcome Back!"
 
   """
-  defdelegate get_flash(conn, key), to: Phoenix.Controller.Flash
+  def get_flash(conn, key) do
+    get_flash(conn)[flash_key(key)]
+  end
 
   @doc """
   Generates a status message from the template name.
@@ -1350,7 +1374,16 @@ defmodule Phoenix.Controller do
   @doc """
   Clears all flash messages.
   """
-  defdelegate clear_flash(conn), to: Phoenix.Controller.Flash
+  def clear_flash(conn) do
+    persist_flash(conn, %{})
+  end
+
+  defp flash_key(binary) when is_binary(binary), do: binary
+  defp flash_key(atom) when is_atom(atom), do: Atom.to_string(atom)
+
+  defp persist_flash(conn, value) do
+    put_private(conn, :phoenix_flash, value)
+  end
 
   @doc """
   Returns the current request path with its default query parameters:
