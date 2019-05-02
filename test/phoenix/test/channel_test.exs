@@ -3,7 +3,7 @@ defmodule Phoenix.Test.ChannelTest do
 
   alias Phoenix.Socket
   alias Phoenix.Socket.{Broadcast, Message}
-  alias __MODULE__.Endpoint
+  alias __MODULE__.{UserSocket, Endpoint}
 
   Application.put_env(:phoenix, Endpoint, [
     pubsub: [
@@ -13,10 +13,10 @@ defmodule Phoenix.Test.ChannelTest do
     server: false
   ])
 
-  @moduletag :capture_log
+  defmodule Endpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
 
-  defp assert_graceful_exit(pid) do
-    assert_receive {:socket_close, ^pid, _}
+    socket "/socket", UserSocket
   end
 
   defmodule EmptyChannel do
@@ -169,18 +169,17 @@ defmodule Phoenix.Test.ChannelTest do
     def id(_), do: "123"
   end
 
-  defmodule Endpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
-
-    socket "/socket", UserSocket
-  end
-
   @endpoint Endpoint
+  @moduletag :capture_log
   use Phoenix.ChannelTest
 
   setup_all do
     @endpoint.start_link()
     :ok
+  end
+
+  defp assert_graceful_exit(pid) do
+    assert_receive {:socket_close, ^pid, _}
   end
 
   ## socket

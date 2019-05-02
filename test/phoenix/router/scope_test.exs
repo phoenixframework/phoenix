@@ -17,6 +17,11 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     end
   end
 
+  defmodule Api.V1.VenueController do
+    def init(opts), do: opts
+    def call(conn, _opts), do: conn
+  end
+
   defmodule Router do
     use Phoenix.Router
 
