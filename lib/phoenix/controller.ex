@@ -1438,7 +1438,7 @@ defmodule Phoenix.Controller do
   See `current_url/2` to override the default parameters.
   """
   def current_url(%Plug.Conn{} = conn) do
-    router_module(conn).url(conn) <> current_path(conn)
+    Module.concat(router_module(conn), "Helpers").url(conn) <> current_path(conn)
   end
 
   @doc ~S"""
@@ -1485,7 +1485,7 @@ defmodule Phoenix.Controller do
   host, etc, you may use `put_router_url/2`.
   """
   def current_url(%Plug.Conn{} = conn, %{} = params) do
-    router_module(conn).url(conn) <> current_path(conn, params)
+    Module.concat(router_module(conn), "Helpers").url(conn) <> current_path(conn, params)
   end
 
   @doc false
