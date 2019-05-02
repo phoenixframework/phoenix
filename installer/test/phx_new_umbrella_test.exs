@@ -63,7 +63,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file root_path(@app, "config/dev.exs"), fn file ->
-        assert file =~ ~r/watchers: \[\s+node:/
+        assert file =~ ~r{watchers: \[\s+node:}
+        assert file =~ "cd: Path.expand(\"../apps/phx_umb_web/assets\", __DIR__)"
         assert file =~ "lib/#{@app}_web/{live,views}/.*(ex)"
         assert file =~ "lib/#{@app}_web/templates/.*(eex)"
       end
