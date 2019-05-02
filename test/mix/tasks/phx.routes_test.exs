@@ -1,5 +1,10 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
+defmodule PageController do
+  def init(opts), do: opts
+  def call(conn, _opts), do: conn
+end
+
 defmodule PhoenixTestWeb.Router do
   use Phoenix.Router
   get "/", PageController, :index, as: :page
@@ -9,7 +14,6 @@ defmodule PhoenixTestOld.Router do
   use Phoenix.Router
   get "/old", PageController, :index, as: :page
 end
-
 
 defmodule Mix.Tasks.Phx.RoutesTest do
   use ExUnit.Case, async: true

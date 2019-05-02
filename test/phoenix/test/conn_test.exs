@@ -4,17 +4,16 @@ defmodule Phoenix.Test.ConnTest.CatchAll do
   def call(conn, _opts), do: Plug.Conn.assign(conn, :catch_all, true)
 end
 
+alias Phoenix.Test.ConnTest.CatchAll
+
 defmodule Phoenix.Test.ConnTest.RedirRouter do
   use Phoenix.Router
-  alias Phoenix.Test.ConnTest.CatchAll
-
   get "/", CatchAll, :foo
-  get "/posts/:id", SomeController, :some_action
+  get "/posts/:id", CatchAll, :some_action
 end
 
 defmodule Phoenix.Test.ConnTest.Router do
   use Phoenix.Router
-  alias Phoenix.Test.ConnTest.CatchAll
 
   pipeline :browser do
     plug :put_bypass, :browser
