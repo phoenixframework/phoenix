@@ -601,13 +601,19 @@ defmodule Phoenix.Controller.ControllerTest do
   end
 
   describe "path and url generation" do
-    def url(_), do: "https://www.example.com"
+    defmodule PhoenixEndpoint do
+      def url(_), do: "https://www.example.com"
+    end
+
+    defmodule PhoenixRouter.Helpers do
+      def url(_), do: "https://www.example.com"
+    end
 
     def build_conn_for_path(path) do
       conn(:get, path)
       |> fetch_query_params()
-      |> put_private(:phoenix_endpoint, __MODULE__)
-      |> put_private(:phoenix_router, __MODULE__)
+      |> put_private(:phoenix_endpoint, PhoenixEndpoint)
+      |> put_private(:phoenix_router, PhoenixRouter)
     end
 
     test "current_path/1 uses the conn's query params" do
