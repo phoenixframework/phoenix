@@ -12,6 +12,35 @@ defmodule Phoenix.Router.Helpers do
   end)
 
   @doc """
+  Callback invoked by the url generated in each helper module.
+  """
+  def url(_router, %Conn{private: private}) do
+    case private do
+      %{phoenix_router_url: %URI{} = uri} -> URI.to_string(uri)
+      %{phoenix_router_url: url} when is_binary(url) -> url
+      %{phoenix_endpoint: endpoint} -> endpoint.url()
+    end
+  end
+
+  def url(_router, %_{endpoint: endpoint}) do
+    endpoint.url()
+  end
+
+  def url(_router, %URI{} = uri) do
+    URI.to_string(%{uri | path: nil})
+  end
+
+  def url(_router, endpoint) when is_atom(endpoint) do
+    endpoint.url()
+  end
+
+  def url(router, other) do
+    raise ArgumentError,
+      "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
+      "or a Phoenix.Endpoint when building url for #{inspect(router)}, got: #{inspect(other)}"
+  end
+
+  @doc """
   Callback invoked by path generated in each helper module.
   """
   def path(router, %Conn{} = conn, path) do
@@ -167,30 +196,8 @@ defmodule Phoenix.Router.Helpers do
       @doc """
       Generates the connection/endpoint base URL without any path information.
       """
-      def url(%Conn{private: private}) do
-        case private do
-          %{phoenix_router_url: %URI{} = uri} -> URI.to_string(uri)
-          %{phoenix_router_url: url} when is_binary(url) -> url
-          %{phoenix_endpoint: endpoint} -> endpoint.url()
-        end
-      end
-
-      def url(%_{endpoint: endpoint}) do
-        endpoint.url()
-      end
-
-      def url(%URI{} = uri) do
-        URI.to_string(%{uri | path: nil})
-      end
-
-      def url(endpoint) when is_atom(endpoint) do
-        endpoint.url()
-      end
-
-      def url(other) do
-        raise ArgumentError,
-          "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
-          "or a Phoenix.Endpoint when building url for #{inspect(__MODULE__)}, got: #{inspect(other)}"
+      def url(data) do
+        Phoenix.Router.Helpers.url(unquote(env.module), data)
       end
 
       @doc """
