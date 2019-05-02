@@ -15,7 +15,7 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
       "--mode",
       "development",
       "--watch-stdin",
-      cd: Path.expand("../assets", __DIR__)
+      cd: Path.expand("../apps/<%= web_app_name %>/assets", __DIR__)
     ]
   ]<% else %>[]<% end %>
 
