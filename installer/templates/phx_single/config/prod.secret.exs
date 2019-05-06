@@ -13,5 +13,5 @@ secret_key_base =
     """
 
 config :<%= app_name %>, <%= endpoint_module %>,
-  http: [:inet6, port: String.to_integer(System.get_env("PORT") || "4000")],
+  http: [:inet6, ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT") || "4000")],
   secret_key_base: secret_key_base
