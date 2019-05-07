@@ -75,7 +75,7 @@ defmodule Phoenix.Digester do
     digests =
       output_path
       |> filter_digested_files
-      |> generate_new_digests
+      |> generate_new_digests(latest)
 
     @empty_manifest
     |> Map.put("digests", digests)
@@ -93,7 +93,7 @@ defmodule Phoenix.Digester do
       |> Enum.filter(fn {file, _} -> File.exists?(Path.join(output_path, file)) end)
       |> Map.new
 
-    new_digests = generate_new_digests(files)
+    new_digests = generate_new_digests(files, latest)
 
     digests = Map.merge(old_digests_that_still_exist, new_digests)
 
@@ -107,19 +107,19 @@ defmodule Phoenix.Digester do
     File.write!(Path.join(output_path, "cache_manifest.json"), manifest_content)
   end
 
-  defp generate_new_digests(files) do
+  defp generate_new_digests(files, manifest) do
     Map.new(files, &({
        manifest_join(&1.relative_path, &1.digested_filename),
-       build_digest(&1)
+       build_digest(&1, digested_contents(&1, manifest))
      }))
   end
 
-  defp build_digest(file) do
+  defp build_digest(file, digested_file_content) do
     %{logical_path: manifest_join(file.relative_path, file.filename),
       mtime: now(),
       size: file.size,
       digest: file.digest,
-      sha512: Base.encode64(:crypto.hash(:sha512, file.content))}
+      sha512: Base.encode64(:crypto.hash(:sha512, digested_file_content))}
   end
 
   defp manifest_join(".", filename),  do: filename
