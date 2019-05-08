@@ -190,6 +190,34 @@ defmodule Phoenix.DigesterTest do
       assert digested_css =~ ~r"http://www.phoenixframework.org/absolute.png"
     end
 
+    test "sha512 matches content of digested file" do
+      input_path = "test/fixtures/digest/priv/static/"
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+
+      digested_css_filename =
+        assets_files(@output_path)
+        |> Enum.find(&(&1 =~ ~r"app-#{@hash_regex}.css"))
+
+      digested_css =
+        Path.join(@output_path, digested_css_filename)
+        |> File.read!()
+
+      cache_manifest_file =
+        @output_path
+        |> assets_files()
+        |> Enum.find(&(&1 =~ ~r"cache_manifest.json"))
+
+      json =
+        @output_path
+        |> Path.join(cache_manifest_file)
+        |> File.read!()
+        |> Phoenix.json_library().decode!()
+
+      integrity = Base.encode64(:crypto.hash(:sha512, digested_css))
+
+      assert json["digests"][digested_css_filename]["sha512"] == integrity
+    end
+
     test "digests sourceMappingURL asset paths found within javascript source files" do
       input_path = "test/fixtures/digest/priv/static/"
       assert :ok = Phoenix.Digester.compile(input_path, @output_path)
