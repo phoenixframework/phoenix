@@ -199,7 +199,9 @@ defmodule Phoenix.Socket.Transport do
   @doc """
   Invoked on termination.
 
-  If `reason` is `:closed`, it means the client closed the socket.
+  If `reason` is `:closed`, it means the client closed the socket. This is
+  considered a `:normal` exit signal, so linked process will not automatically
+  exit. See `Process.exit/2` for more details on exit signals.
   """
   @callback terminate(reason :: term, state) :: :ok
 
