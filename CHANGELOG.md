@@ -24,6 +24,16 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.5 (2019-05-08)
+
+### Bug Fixes
+  * [Controller] Fix `current_url` error caused by bad function dispatch
+  * [phx.new] Use proper path for watcher in umbrella
+  * [Digester] Fix invalid SRI hash generation
+
+### Enhancements
+  * [phx.new] Generate new `errors_on` function in `DataCase` module capable of handling array types
+
 ## 1.4.4 (2019-04-30)
 
 ### Enhancements
