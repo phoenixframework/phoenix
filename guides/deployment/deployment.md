@@ -29,7 +29,7 @@ $ export DATABASE_URL=ecto://USER:PASS@HOST/database
 
 Do not copy those values directly, set `SECRET_KEY_BASE` according to the result of `mix phx.gen.secret` and `DATABASE_URL` according to your database address.
 
-If for some reason you do not want to rely on environment variables, you can hard code the secrets in your `config/prod.secret.exs`, but make sure to check the file into your version control system.
+If for some reason you do not want to rely on environment variables, you can hard code the secrets in your `config/prod.secret.exs`, but make sure not to check the file into your version control system.
 
 With your secret information properly secured, it is time to configure assets!
 Before taking this step, we need to do one bit of preparation.
