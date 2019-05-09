@@ -249,8 +249,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
       Mix.shell.info """
       You are generating into an existing context.
-      The #{inspect context.module} context currently has #{function_count} functions and \
-      #{file_count} files in its directory.
+      The #{inspect context.module} context currently has #{function_count} function(s) and \
+      #{file_count} file(s) in its directory.
 
         * It's OK to have multiple resources in the same context as \
           long as they are closely related
