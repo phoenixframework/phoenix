@@ -30,7 +30,8 @@ defmodule Phoenix.Presence do
   running in your application, which is included by default as
   `MyApp.PubSub` for new applications.
 
-  Next, add the new supervisor to your supervision tree in `lib/my_app.ex`:
+  Next, add the new supervisor to your supervision tree in
+  `lib/my_app_web/application.ex`:
 
       children = [
         ...
