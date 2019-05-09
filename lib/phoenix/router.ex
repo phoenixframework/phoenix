@@ -324,9 +324,9 @@ defmodule Phoenix.Router do
     {matches, _} = Enum.map_reduce(routes_with_exprs, %{}, &build_match/2)
 
     checks =
-      for {%{line: line}, %{dispatch: {plug, _}}} <- routes_with_exprs, into: %{} do
+      for {%{line: line}, %{dispatch: {plug, params}}} <- routes_with_exprs, into: %{} do
         quote line: line do
-          {unquote(plug).init([]), true}
+          {unquote(plug).init(unquote(params)), true}
         end
       end
 
