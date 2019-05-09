@@ -20,6 +20,7 @@ The default Postgres configuration has a superuser account with username 'postgr
 CREATE USER postgres;
 ALTER USER postgres PASSWORD 'postgres';
 ALTER USER postgres WITH SUPERUSER;
+\q
 ```
 
 Now that we have Ecto and Postgres installed and configured, the easiest way to use Ecto is to generate an Ecto *schema* through the `phx.gen.schema` task. Ecto schemas are a way for us to specify how Elixir data types map to and from external sources, such as database tables. Let's generate a `User` schema with `name`, `email`, `bio`, and `number_of_pets` fields.
