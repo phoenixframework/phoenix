@@ -184,7 +184,7 @@ end
 
 Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is `EEx`, which stands for Embedded Elixir. Phoenix enhances EEx to include automatic escaping of values. This protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part. All of our template files will have the `.eex` file extension.
 
-Templates are scoped to a view, which are scoped to controller. Phoenix creates a `lib/hello_web/templates` directory where we can put all these. It is best to namespace these for organization, so for our hello page, that means we need to create a `hello` directory under `lib/hello_web/templates` and then create an `index.html.eex` file within it.
+Templates are scoped to a view, which are scoped to a controller. Phoenix creates a `lib/hello_web/templates` directory where we can put all these. It is best to namespace these for organization, so for our hello page, that means we need to create a `hello` directory under `lib/hello_web/templates` and then create an `index.html.eex` file within it.
 
 Let's do that now. Create `lib/hello_web/templates/hello/index.html.eex` and make it look like this:
 
