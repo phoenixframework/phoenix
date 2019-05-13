@@ -96,7 +96,7 @@ Running the application in detached mode allows us to keep the application runni
 
 The previous sections give an overview about the main steps required to deploy your Phoenix application. In practice, you will end-up adding steps of your own as well. For example, if you are using a database, you will also want to run `mix ecto.migrate` before starting the server to ensure your database is up to date.
 
-Overall, here is a script you can use as starting point:
+Overall, here is a script you can use as a starting point:
 
 ```elixir
 # Initial setup
