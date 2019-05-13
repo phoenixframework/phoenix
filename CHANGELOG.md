@@ -24,6 +24,11 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.6 (2019-05-13)
+
+### Bug Fixes
+  * [phx.new] Fix `errors_on` lookup in generated `DataCase` module using `Map.get` instead of `Keyword.get`
+
 ## 1.4.5 (2019-05-08)
 
 ### Bug Fixes
