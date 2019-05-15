@@ -122,7 +122,13 @@ This phoenix static buildpack pack can be configured to change the node version 
 
 _If you're using the Phoenix Static Buildpack you can skip this step, because it provides you with a default Procfile that runs `mix phx.server`._
 
-The Procfile provided by the Elixir Buildpack runs the command `mix run --no-halt`. By default this will not start the Phoenix server. In order to override it, create a file called `Procfile` in the root directory and add this line to it `mix phx.server`. Heroku will recognize this file and use the command to start your application, ensuring that it also starts the Phoenix server.
+The Procfile provided by the Elixir Buildpack runs the command `mix run --no-halt`. By default this will not start the Phoenix server. In order to override it, create a file called `Procfile` in the root directory and add a command to run Phoenix server with this line:
+
+```
+web: mix phx.server
+```
+
+Heroku will recognize this file and use the command to start your application, ensuring that it also starts the Phoenix server.
 
 ## Making our Project ready for Heroku
 
@@ -137,7 +143,7 @@ url: [host: "example.com", port: 80],
 ... and replace it with this (don't forget to replace `mysterious-meadow-6277` with your application name):
 
 ```elixir
-url: [scheme: "https", host: "mysterious-meadow-6277", port: 443],
+url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
 force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
 
@@ -215,7 +221,7 @@ Our project is now ready to be deployed on Heroku.
 
 Let's commit all our changes:
 
-```
+```console
 $ git add config/prod.exs
 $ git add elixir_buildpack.config
 $ git add phoenix_static_buildpack.config
