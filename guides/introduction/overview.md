@@ -51,7 +51,7 @@ We just covered the internal parts that make up Phoenix, but it's important to r
 
 ### Cowboy
 
-By default, the web server used by Phoenix (and Plug) is Cowboy. It is uncommon to interface with Cowboy directly when using Phoenix. If you do require using Cowboy directly, please refer to the [Cowboy documentation](https://ninenines.eu/docs/en/cowboy/1.0/guide/).
+By default, the web server used by Phoenix (and Plug) is Cowboy. It is uncommon to interface with Cowboy directly when using Phoenix. If you do require using Cowboy directly, please refer to the [Cowboy documentation](https://ninenines.eu/docs/en/cowboy/2.6/guide/).
 
 ### Plug
 
