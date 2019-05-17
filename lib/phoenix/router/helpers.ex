@@ -108,8 +108,10 @@ defmodule Phoenix.Router.Helpers do
         (not is_nil(route.helper) and not (route.kind == :forward))
       end)
 
-    impls = for {route, exprs} <- routes, do: defhelper(route, exprs)
     groups = Enum.group_by(routes, fn {route, _exprs} -> route.helper end)
+    impls = for {_helper, group} <- groups,
+	                {route, exprs} <- Enum.sort_by(group, fn {_, exprs} -> length(exprs.binding) end),
+	                do: defhelper(route, exprs)
     catch_all = Enum.map(groups, &defhelper_catch_all/1)
 
     defhelper = quote @anno do
@@ -136,9 +138,10 @@ defmodule Phoenix.Router.Helpers do
     end
 
     defcatch_all = quote @anno do
-      defcatch_all = fn helper, bindings, routes ->
-        for binding <- bindings do
-          arity = length(binding) + 2
+      defcatch_all = fn helper, lengths, routes ->
+	      for length <- lengths do
+	        binding = List.duplicate({:_, [], nil}, length)
+	        arity = length + 2
 
           def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding)) do
             path(conn_or_endpoint, "/")
@@ -307,15 +310,15 @@ defmodule Phoenix.Router.Helpers do
       |> Enum.map(fn {routes, exprs} -> {routes.opts, Enum.map(exprs.binding, &elem(&1, 0))} end)
       |> Enum.sort()
 
-    bindings =
-      routes
-      |> Enum.map(fn {_, bindings} -> Enum.map(bindings, fn _ -> {:_, [], nil} end) end)
-      |> Enum.uniq()
+    lengths =
+	    routes
+	    |> Enum.map(fn {_, bindings} -> length(bindings) end)
+	    |> Enum.uniq()
 
     quote do
       defcatch_all.(
         unquote(helper),
-        unquote(Macro.escape(bindings)),
+        unquote(lengths),
         unquote(Macro.escape(routes))
       )
     end

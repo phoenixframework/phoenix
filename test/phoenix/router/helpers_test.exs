@@ -54,6 +54,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     get "/", PostController, :root, as: :page
     get "/products/:id", ProductController, :show
+    get "/products", ProductController, :show
     get "/products/:id/:sort", ProductController, :show
     get "/products/:id/:sort/:page", ProductController, :show
   end
@@ -452,6 +453,8 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   test "duplicate helpers with unique arities" do
+    assert Helpers.product_path(__MODULE__, :show) == "/products"
+    assert Helpers.product_path(__MODULE__, :show, foo: "bar") == "/products?foo=bar"
     assert Helpers.product_path(__MODULE__, :show, 123) == "/products/123"
     assert Helpers.product_path(__MODULE__, :show, 123, foo: "bar") == "/products/123?foo=bar"
     assert Helpers.product_path(__MODULE__, :show, 123, "asc") == "/products/123/asc"
