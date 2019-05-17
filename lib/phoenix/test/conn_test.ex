@@ -575,17 +575,13 @@ defmodule Phoenix.ConnTest do
   def redirected_params(%Plug.Conn{} = conn) do
     router = Phoenix.Controller.router_module(conn)
     %URI{path: path, host: host} = conn |> redirected_to() |> URI.parse()
-    path_info = split_path(path)
 
-    case router.__match_route__("GET", path_info, host || conn.host) do
+    case Phoenix.Router.route_info(router, "GET", path, host || conn.host) do
       :error ->
         raise Phoenix.Router.NoRouteError, conn: conn, router: router
-      {%{path_params: path_params}, _prepare, _pipes, _dispatch} ->
+      %{path_params: path_params} ->
         Enum.into(path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
     end
-  end
-  defp split_path(path) do
-    for segment <- String.split(path, "/"), segment != "", do: segment
   end
 
   @doc """

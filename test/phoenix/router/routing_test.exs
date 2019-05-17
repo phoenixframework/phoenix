@@ -36,7 +36,7 @@ defmodule Phoenix.Router.RoutingTest do
     get "/backups/*path", UserController, :image
     get "/static/images/icons/*image", UserController, :image
 
-    trace "/trace", UserController, :trace
+    trace("/trace", UserController, :trace)
     options "/options", UserController, :options
     connect "/connect", UserController, :connect
     match :move, "/move", UserController, :move
@@ -189,31 +189,62 @@ defmodule Phoenix.Router.RoutingTest do
 
     test "logs controller and action with (path) parameters" do
       assert capture_log(fn -> call(Router, :get, "/users/1", foo: "bar") end) =~ """
-      [debug] Processing with Phoenix.Router.RoutingTest.UserController.show/2
-        Parameters: %{"foo" => "bar", "id" => "1"}
-        Pipelines: []
-      """
+             [debug] Processing with Phoenix.Router.RoutingTest.UserController.show/2
+               Parameters: %{"foo" => "bar", "id" => "1"}
+               Pipelines: []
+             """
     end
 
     test "logs controller and action with filtered parameters" do
       assert capture_log(fn -> call(Router, :get, "/users/1", password: "bar") end) =~ """
-      [debug] Processing with Phoenix.Router.RoutingTest.UserController.show/2
-        Parameters: %{"id" => "1", "password" => "[FILTERED]"}
-        Pipelines: []
-      """
+             [debug] Processing with Phoenix.Router.RoutingTest.UserController.show/2
+               Parameters: %{"id" => "1", "password" => "[FILTERED]"}
+               Pipelines: []
+             """
     end
 
     test "logs plug with pipeline and custom level" do
       assert capture_log(fn -> call(Router, :get, "/plug") end) =~ """
-      [info]  Processing with Phoenix.Router.RoutingTest.SomePlug
-        Parameters: %{}
-        Pipelines: [:noop]
-      """
+             [info]  Processing with Phoenix.Router.RoutingTest.SomePlug
+               Parameters: %{}
+               Pipelines: [:noop]
+             """
     end
 
     test "does not log when log is set to false" do
       refute capture_log(fn -> call(Router, :get, "/no_log", foo: "bar") end) =~
                "Processing with Phoenix.Router.RoutingTest.SomePlug"
     end
+  end
+
+  test "route_info returns route string and path params" do
+    assert Phoenix.Router.route_info(Router, "GET", "foo/bar/baz", nil) == %{
+             log: :debug,
+             path_params: %{"path" => ["foo", "bar", "baz"]},
+             pipe_through: [],
+             plug: Phoenix.Router.RoutingTest.UserController,
+             plug_opts: :not_found,
+             route: "/*path"
+           }
+
+    assert Phoenix.Router.route_info(Router, "GET", "users/1", nil) == %{
+             log: :debug,
+             path_params: %{"id" => "1"},
+             pipe_through: [],
+             plug: Phoenix.Router.RoutingTest.UserController,
+             plug_opts: :show,
+             route: "/users/:id",
+           }
+
+    assert Phoenix.Router.route_info(Router, "GET", "/", "host") == %{
+             log: :debug,
+             path_params: %{},
+             pipe_through: [],
+             plug: Phoenix.Router.RoutingTest.UserController,
+             plug_opts: :index,
+             route: "/",
+           }
+
+    assert Phoenix.Router.route_info(Router, "POST", "/not-exists", "host") == :error
   end
 end

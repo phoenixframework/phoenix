@@ -845,4 +845,39 @@ defmodule Phoenix.Router do
       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
     end
   end
+
+  @doc """
+  Returns the compile-time route info and runtime path params for a request.
+
+  A map of metadata is returned with the following keys:
+
+    * `:log` - the configured log level. For example `:debug`
+    * `:path_params` - the map of runtime path params
+    * `:pipe_through` - the list of pipelines for the route's scope, for example `[:browser]`
+    * `:plug` - the plug to dipatch the route to, for example `AppWeb.PostController`
+    * `:plug_opts` - the options to pass when calling the plug, for example: `:index`
+    * `:route` - the string route pattern, such as `"/posts/:id"`
+
+  ## Examples
+
+      iex> Phoenix.Router.route_info(AppWeb.Router, "GET", "/posts/123", "myhost")
+      %{
+        log: :debug,
+        path_params: %{"id" => "123"},
+        pipe_through: [:browser],
+        plug: AppWeb.PostController,
+        plug_opts: :show,
+        route: "/posts/:id",
+      }
+
+      iex> Phoenix.Router.route_info(MyRouter, "GET", "/not-exists", "myhost")
+      :error
+  """
+  def route_info(router, method, path, host) do
+    split_path = for segment <- String.split(path, "/"), segment != "", do: segment
+    case router.__match_route__(method, split_path, host) do
+      {%{} = metadata, _prepare, _pipeline, {_plug, _opts}} -> Map.delete(metadata, :conn)
+      :error -> :error
+    end
+  end
 end
