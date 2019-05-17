@@ -260,14 +260,14 @@ defmodule Phoenix.Router do
   end
 
   @doc false
-  def __call__({%Plug.Conn{private: %{phoenix_router: router, phoenix_bypass: {router, pipes}}} = conn, _pipeline, _dispatch}) do
+  def __call__(%{private: %{phoenix_router: router, phoenix_bypass: {router, pipes}}} = conn, _match) do
     Enum.reduce(pipes, conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
   end
-  def __call__({%Plug.Conn{private: %{phoenix_bypass: :all}} = conn, _pipeline, _dispatch}) do
+  def __call__(%{private: %{phoenix_bypass: :all}} = conn, _match) do
     conn
   end
-  def __call__({conn, pipeline, {plug, opts}}) do
-    case pipeline.(conn) do
+  def __call__(conn, {path_params, prepare, pipeline, {plug, opts}}) do
+    case conn |> prepare.(path_params) |> pipeline.() do
       %Plug.Conn{halted: true} = halted_conn ->
         halted_conn
       %Plug.Conn{} = piped_conn ->
@@ -299,10 +299,11 @@ defmodule Phoenix.Router do
       Callback invoked by Plug on every request.
       """
       def call(conn, _opts) do
-        conn
-        |> prepare()
-        |> __match_route__(conn.method, Enum.map(conn.path_info, &URI.decode/1), conn.host)
-        |> Phoenix.Router.__call__()
+        %{method: method, path_info: path_info, host: host} = conn = prepare(conn)
+        case __match_route__(method, Enum.map(path_info, &URI.decode/1), host) do
+          :error -> raise NoRouteError, conn: conn, router: __MODULE__
+          match -> Phoenix.Router.__call__(conn, match)
+        end
       end
 
       defoverridable [init: 1, call: 2]
@@ -333,8 +334,8 @@ defmodule Phoenix.Router do
     # @anno is used here to avoid warnings if forwarding to root path
     match_404 =
       quote @anno do
-        def __match_route__(conn, _method, _path_info, _host) do
-          raise NoRouteError, conn: conn, router: __MODULE__
+        def __match_route__(_method, _path_info, _host) do
+          :error
         end
       end
 
@@ -367,6 +368,7 @@ defmodule Phoenix.Router do
       prepare: prepare,
       dispatch: dispatch,
       verb_match: verb_match,
+      path_params: path_params,
       path: path,
       host: host
     } = exprs
@@ -386,8 +388,11 @@ defmodule Phoenix.Router do
         unquote(pipe_definition)
 
         @doc false
-        def __match_route__(var!(conn), unquote(verb_match), unquote(path), unquote(host)) do
-          {unquote(prepare), &unquote(Macro.var(pipe_name, __MODULE__))/1, unquote(dispatch)}
+        def __match_route__(unquote(verb_match), unquote(path), unquote(host)) do
+          {unquote(path_params),
+           fn var!(conn, :conn), var!(path_params, :conn) -> unquote(prepare) end,
+           &unquote(Macro.var(pipe_name, __MODULE__))/1,
+           unquote(dispatch)}
         end
       end
 

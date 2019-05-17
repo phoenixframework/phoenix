@@ -68,12 +68,15 @@ defmodule Phoenix.Router.Route do
       verb_match: verb_match(route.verb),
       binding: binding,
       prepare: build_prepare(route, binding),
+      path_params: build_path_params(binding),
       dispatch: build_dispatch(route)
     }
   end
 
   defp verb_match(:*), do: Macro.var(:_verb, nil)
   defp verb_match(verb), do: verb |> to_string() |> String.upcase()
+
+  defp build_path_params(binding), do: {:%{}, [], binding}
 
   defp build_path_and_binding(%Route{path: path} = route) do
     {params, segments} = case route.kind do
@@ -97,7 +100,7 @@ defmodule Phoenix.Router.Route do
   end
 
   defp build_prepare(route, binding) do
-    {static_data, match_params, merge_params} = build_params(binding)
+    {match_params, merge_params} = build_params(binding)
     {match_private, merge_private} = build_prepare_expr(:private, route.private)
     {match_assigns, merge_assigns} = build_prepare_expr(:assigns, route.assigns)
 
@@ -106,13 +109,12 @@ defmodule Phoenix.Router.Route do
 
     if merge_all != [] do
       quote do
-        unquote_splicing(static_data)
-        %{unquote_splicing(match_all)} = var!(conn)
-        %{var!(conn) | unquote_splicing(merge_all)}
+        %{unquote_splicing(match_all)} = var!(conn, :conn)
+        %{var!(conn, :conn) | unquote_splicing(merge_all)}
       end
     else
       quote do
-        var!(conn)
+        var!(conn, :conn)
       end
     end
   end
@@ -141,13 +143,13 @@ defmodule Phoenix.Router.Route do
     {[{key, var}], [{key, merge}]}
   end
 
-  defp build_params([]), do: {[], [], []}
-  defp build_params(binding) do
+  defp build_params([]), do: {[], []}
+  defp build_params(_binding) do
     params = Macro.var(:params, :conn)
     path_params = Macro.var(:path_params, :conn)
     merge_params = quote(do: Map.merge(unquote(params), unquote(path_params)))
+
     {
-      [quote(do: unquote(path_params) = %{unquote_splicing(binding)})],
       [{:params, params}],
       [{:params, merge_params}, {:path_params, path_params}]
     }
