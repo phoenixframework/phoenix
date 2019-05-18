@@ -179,7 +179,7 @@ Phoenix ships with a JavaScript client that is available when generating a new P
 + Elixir
   - [phoenix_gen_socket_client](https://github.com/Aircloak/phoenix_gen_socket_client)
 + GDScript (Godot Game Engine)
-  - [GodotPhoenixChannels)(https://github.com/alfredbaudisch/GodotPhoenixChannels)
+  - [GodotPhoenixChannels](https://github.com/alfredbaudisch/GodotPhoenixChannels)
 
 ## Tying it all together
 Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](https://hexdocs.pm/phoenix/up_and_running.html) we'll see that the endpoint is already set up for us in `lib/hello_web/endpoint.ex`:
