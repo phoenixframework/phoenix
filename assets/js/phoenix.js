@@ -525,9 +525,11 @@ export class Channel {
    */
   leave(timeout = this.timeout){
     this.rejoinTimer.reset()
+    this.joinPush.cancelTimeout()
+
     this.state = CHANNEL_STATES.leaving
     let onClose = () => {
-      if (this.socket.hasLogger()) this.socket.log("channel", `leave ${this.topic}`)
+      if(this.socket.hasLogger()) this.socket.log("channel", `leave ${this.topic}`)
       this.trigger(CHANNEL_EVENTS.close, "leave")
     }
     let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), timeout)
