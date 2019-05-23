@@ -325,8 +325,13 @@ And that's it!
 
 Heroku gives you the ability to connect to your dyno with an iex shell which allows running Elixir code such as database queries.
 
+- Modify the `web` process in your Procfile to run a named node:
+  ```
+  web: elixir --sname server -S mix phx.server
+  ```
+- Redeploy to Heroku
 - Connect to the dyno with `heroku ps:exec`
-note that if you have several applications on the same repository you will need to specify the app name or the remote name with `--app APP_NAME` or `--remote REMOTE_NAME`
+  note that if you have several applications on the same repository you will need to specify the app name or the remote name with `--app APP_NAME` or `--remote REMOTE_NAME`
 - Launch an iex session with `iex --sname console --remsh server@${HOSTNAME}`
 
 You have an iex session into your dyno!
