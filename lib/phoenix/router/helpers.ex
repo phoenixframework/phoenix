@@ -288,7 +288,7 @@ defmodule Phoenix.Router.Helpers do
   """
   def defhelper(%Route{} = route, exprs) do
     helper = route.helper
-    opts = route.opts
+    opts = route.plug_opts
 
     {bins, vars} = :lists.unzip(exprs.binding)
     segs = expand_segments(exprs.path)
@@ -307,7 +307,7 @@ defmodule Phoenix.Router.Helpers do
   def defhelper_catch_all({helper, routes_and_exprs}) do
     routes =
       routes_and_exprs
-      |> Enum.map(fn {routes, exprs} -> {routes.opts, Enum.map(exprs.binding, &elem(&1, 0))} end)
+      |> Enum.map(fn {routes, exprs} -> {routes.plug_opts, Enum.map(exprs.binding, &elem(&1, 0))} end)
       |> Enum.sort()
 
     lengths =
