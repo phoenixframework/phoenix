@@ -19,7 +19,7 @@ defmodule Phoenix.Router.RouteTest do
     assert route.line == 1
 
     assert route.plug == Hello
-    assert route.opts == :world
+    assert route.plug_opts == :world
     assert route.helper == "hello_world"
     assert route.pipe_through == [:foo, :bar]
     assert route.private == %{foo: "bar"}
