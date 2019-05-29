@@ -25,16 +25,13 @@ defmodule Phoenix.Endpoint.Supervisor do
   @doc false
   def init({otp_app, mod}) do
     id = :crypto.strong_rand_bytes(16) |> Base.encode64
-
     default_conf = [endpoint_id: id] ++ config(otp_app, mod)
 
     secret_conf =
       case mod.init(:supervisor, default_conf) do
         {:ok, conf} ->
-          if !Application.get_env(otp_app, mod) and conf == default_conf do
-            Logger.warn(
-              "no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}"
-            )
+          if is_nil(Application.get_env(otp_app, mod)) and conf == default_conf do
+            Logger.warn("no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}")
           end
 
           conf
@@ -43,10 +40,13 @@ defmodule Phoenix.Endpoint.Supervisor do
           raise ArgumentError, "expected init/2 callback to return {:ok, config}, got: #{inspect other}"
       end
 
-
     # Drop all secrets from secret_conf before passing it around
     conf = Keyword.drop(secret_conf, [:secret_key_base])
     server? = server?(conf)
+
+    if conf[:instrumenters] do
+      Logger.warn(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
+    end
 
     if server? and conf[:code_reloader] do
       Phoenix.CodeReloader.Server.check_symlinks()
@@ -67,10 +67,6 @@ defmodule Phoenix.Endpoint.Supervisor do
     pub_conf = conf[:pubsub]
 
     if adapter = pub_conf[:adapter] do
-      unless pub_conf[:name] do
-        raise ArgumentError, "an adapter was given to :pubsub but no :name was defined, " <>
-          "please pass the :name option accordingly"
-      end
       pub_conf = [fastlane: Phoenix.Channel.Server] ++ pub_conf
       [supervisor(adapter, [pub_conf[:name], pub_conf])]
     else
@@ -100,8 +96,8 @@ defmodule Phoenix.Endpoint.Supervisor do
         port = :proplists.get_value(:port, opts, port)
 
         unless port do
-          raise "server can't start because :port in #{scheme} config is nil, " <>
-                  "please use a valid port number"
+          Logger.error(":port for #{scheme} config is nil, cannot start server")
+          raise "aborting due to nil port"
         end
 
         opts = [port: port_to_integer(port), otp_app: otp_app] ++ :proplists.delete(:port, opts)
@@ -135,7 +131,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warn_on_different_adapter_version(CowboyAdapter, Cowboy2Adapter, endpoint) do
-    Logger.warn("""
+    Logger.error("""
     You have specified #{inspect CowboyAdapter} for Cowboy v1.x \
     in the :adapter configuration of your Phoenix endpoint #{inspect endpoint} \
     but your mix.exs has fetched Cowboy v2.x.
@@ -160,7 +156,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     if server? do
       Enum.map(conf[:watchers], fn {cmd, args} ->
         worker(Phoenix.Endpoint.Watcher, watcher_args(cmd, args),
-               id: {cmd, args}, restart: :transient)
+               id: make_ref(), restart: :transient)
       end)
     else
       []

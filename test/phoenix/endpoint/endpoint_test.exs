@@ -51,13 +51,6 @@ defmodule Phoenix.Endpoint.EndpointTest do
     }
   end
 
-  @tag :capture_log
-  test "errors if pubsub adapter is set but not a name" do
-    Process.flag(:trap_exit, true)
-    {:error, {%ArgumentError{message: message}, _}} = NoPubSubNameEndpoint.start_link()
-    assert message =~ "an adapter was given to :pubsub but no :name"
-  end
-
   test "warns if there is no configuration for an endpoint" do
     assert ExUnit.CaptureLog.capture_log(fn ->
       NoConfigEndpoint.start_link()

@@ -1,5 +1,7 @@
 defmodule Phoenix.Endpoint.Watcher do
   @moduledoc false
+  use Task
+
   require Logger
 
   def start_link(cmd, args, opts) do
