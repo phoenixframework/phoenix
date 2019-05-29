@@ -251,7 +251,12 @@ defmodule Phoenix.Channel.Server do
     }
 
     start = System.monotonic_time()
-    {reply, state} = channel_join(channel, topic, auth_payload, socket)
+    instrument = %{params: auth_payload, socket: socket}
+
+    {reply, state} = Phoenix.Endpoint.instrument(socket, :phoenix_channel_join, instrument, fn ->
+      channel_join(channel, topic, auth_payload, socket)
+    end)
+
     duration = System.monotonic_time() - start
     metadata = %{params: auth_payload, socket: socket, result: elem(reply, 0)}
     :telemetry.execute([:phoenix, :channel_joined], %{duration: duration}, metadata)
@@ -268,9 +273,14 @@ defmodule Phoenix.Channel.Server do
         %{topic: topic} = socket
       ) do
     start = System.monotonic_time()
-    result = socket.channel.handle_in(event, payload, put_in(socket.ref, ref))
-    duration = System.monotonic_time() - start
     metadata = %{ref: ref, event: event, params: payload, socket: socket}
+
+    result =
+      Phoenix.Endpoint.instrument(socket, :phoenix_channel_receive, metadata, fn ->
+        socket.channel.handle_in(event, payload, put_in(socket.ref, ref))
+      end)
+
+    duration = System.monotonic_time() - start
     :telemetry.execute([:phoenix, :channel_handled_in], %{duration: duration}, metadata)
     handle_in(result)
   end

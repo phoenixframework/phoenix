@@ -70,12 +70,15 @@ defmodule Phoenix.Endpoint.RenderErrors do
     status = status(kind, reason)
     conn = error_conn(conn, kind, reason)
     start = System.monotonic_time()
-    metadata = %{status: status, kind: kind, reason: reason, stacktrace: stack, log: level}
+    metadata = %{status: status, conn: conn, kind: kind, reason: reason, stacktrace: stack, log: level}
 
     try do
-      conn
-      |> render(status, kind, reason, stack, opts)
-      |> send_resp()
+      conn =
+        Phoenix.Endpoint.instrument(conn, :phoenix_error_render, metadata, fn ->
+          render(conn, status, kind, reason, stack, opts)
+        end)
+
+      send_resp(conn)
     after
       duration = System.monotonic_time() - start
       :telemetry.execute([:phoenix, :error_rendered], %{duration: duration}, metadata)

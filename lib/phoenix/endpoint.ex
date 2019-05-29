@@ -53,7 +53,7 @@ defmodule Phoenix.Endpoint do
   Endpoint configuration is split into two categories. Compile-time
   configuration means the configuration is read during compilation
   and changing it at runtime has no effect. The compile-time
-  configuration is mostly related to error handling and instrumentation.
+  configuration is mostly related to error handling.
 
   Runtime configuration, instead, is accessed during or
   after your application is started and can be read through the
@@ -91,10 +91,6 @@ defmodule Phoenix.Endpoint do
           [view: MyApp.ErrorView, accepts: ~w(html), layout: false]
 
       The default format is used when none is set in the connection
-
-    * `:instrumenters` - a list of instrumenter modules whose callbacks will
-      be fired on instrumentation events. Read more on instrumentation in the
-      "Instrumentation" section below
 
   ### Runtime configuration
 
@@ -232,7 +228,6 @@ defmodule Phoenix.Endpoint do
     * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,
       `c:broadcast_from/4`, and `c:broadcast_from!/4`
     * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`
-    * for instrumentation: `c:instrument/3`
     * as required by the `Plug` behaviour: `c:Plug.init/1` and `c:Plug.call/2`
 
   ## Instrumentation
@@ -386,17 +381,6 @@ defmodule Phoenix.Endpoint do
   Raises in case of failures.
   """
   @callback broadcast_from!(from :: pid, topic, event, msg) :: :ok | no_return
-
-  # Instrumentation
-
-  @doc """
-  Allows instrumenting operation defined by `function`.
-
-  `runtime_metadata` may be omitted and defaults to `nil`.
-
-  Read more about instrumentation in the "Instrumentation" section.
-  """
-  @macrocallback instrument(instrument_event :: Macro.t, runtime_metadata :: Macro.t, function :: Macro.t) :: Macro.t
 
   @doc false
   defmacro __using__(opts) do

@@ -518,30 +518,33 @@ defmodule Phoenix.Socket do
 
     vsn = params["vsn"] || "1.0.0"
     start = System.monotonic_time()
+    runtime = Map.merge(map, %{vsn: vsn, user_socket: user_socket, log: log})
 
-    case negotiate_serializer(Keyword.fetch!(options, :serializer), vsn) do
-      {:ok, serializer} ->
-        result = user_connect(user_socket, endpoint, transport, serializer, params, connect_info)
+    Phoenix.Endpoint.instrument(endpoint, :phoenix_socket_connect, runtime, fn ->
+      case negotiate_serializer(Keyword.fetch!(options, :serializer), vsn) do
+        {:ok, serializer} ->
+          result = user_connect(user_socket, endpoint, transport, serializer, params, connect_info)
 
-        metadata = %{
-          endpoint: endpoint,
-          transport: transport,
-          params: params,
-          connect_info: connect_info,
-          vsn: vsn,
-          user_socket: user_socket,
-          log: log,
-          result: result(result),
-          serializer: serializer
-        }
+          metadata = %{
+            endpoint: endpoint,
+            transport: transport,
+            params: params,
+            connect_info: connect_info,
+            vsn: vsn,
+            user_socket: user_socket,
+            log: log,
+            result: result(result),
+            serializer: serializer
+          }
 
-        duration = System.monotonic_time() - start
-        :telemetry.execute([:phoenix, :socket_connected], %{duration: duration}, metadata)
-        result
+          duration = System.monotonic_time() - start
+          :telemetry.execute([:phoenix, :socket_connected], %{duration: duration}, metadata)
+          result
 
-      :error ->
-        :error
-    end
+        :error ->
+          :error
+      end
+    end)
   end
 
   defp result({:ok, _}), do: :ok
