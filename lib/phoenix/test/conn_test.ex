@@ -580,7 +580,7 @@ defmodule Phoenix.ConnTest do
     case router.__match_route__("GET", path_info, host || conn.host) do
       :error ->
         raise Phoenix.Router.NoRouteError, conn: conn, router: router
-      {path_params, _prepare, _pipes, _dispatch} ->
+      {%{path_params: path_params}, _prepare, _pipes, _dispatch} ->
         Enum.into(path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
     end
   end

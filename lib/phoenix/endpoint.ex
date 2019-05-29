@@ -237,131 +237,45 @@ defmodule Phoenix.Endpoint do
 
   ## Instrumentation
 
-  Phoenix supports instrumentation through an extensible API. Each endpoint
-  defines an `c:instrument/3` macro that both users and Phoenix internals can call
-  to instrument generic events. This macro is responsible for measuring the time
-  it takes for the event to be processed and for notifying a list of interested
-  instrumenter modules of this measurement.
+  Phoenix uses the `:telemetry` library for instrumentation. The following events
+  are published by Phoenix with the following measurements and metadata:
 
-  You can configure this list of instrumenter modules in the compile-time
-  configuration of your endpoint. (see the `:instrumenters` option above). The
-  way these modules express their interest in events is by exporting public
-  functions where the name of each function is the name of an event. For
-  example, if someone instruments the `:render_view` event, then each
-  instrumenter module interested in that event will have to export
-  `render_view/3`.
+    * `[:phoenix, :endpoint, :start]` - dispatched by `Plug.Telemetry` in your
+      endpoint at the beginning of every request.
+      * Measurement: `%{time: System.monotonic_time}`
+      * Metadata: `%{conn: Plug.Conn.t}`
 
-  ### Callbacks cycle
+    * `[:phoenix, :endpoint, :stop]` - dispatched by `Plug.Telemetry` in your
+      endpoint whenever the response is sent
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{conn: Plug.Conn.t}`
 
-  The event callback sequence is:
+    * `[:phoenix, :router_dispatch, :start]` - dispatched by `Phoenix.Router`
+      before dispatching to a matched route
+      * Measurement: `%{time: System.monotonic_time}`
+      * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom]}`
 
-    1. The event callback is called *before* the event happens (in this case,
-       before the view is rendered) with the atom `:start` as the first
-       argument; see the "Before clause" section below
-    2. The event occurs (in this case, the view is rendered)
-    3. The same event callback is called again, this time with the atom `:stop`
-       as the first argument; see the "After clause" section below
+    * `[:phoenix, :router_dispatch, :stop]` - dispatched by `Phoenix.Router`
+      after successfully dispatching to a matched route
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom]}`
 
-  The second and third argument that each event callback takes depends on the
-  callback being an "after" or a "before" callback i.e. it depends on the
-  value of the first argument, `:start` or `:stop`. For this reason, most of
-  the time you will want to define (at least) two separate clauses for each
-  event callback, one for the "before" and one for the "after" callbacks.
+    * `[:phoenix, :error_rendered]` - dispatched at the end of an error view being rendered
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{status: Plug.Conn.status, kind: Exception.kind, reason: term, stacktrace: Exception.stacktrace}`
 
-  All event callbacks are run in the same process that calls the `c:instrument/3`
-  macro; hence, instrumenters should be careful to avoid performing blocking actions.
-  If an event callback fails in any way (exits, throws, or raises), it won't
-  affect anything as the error is caught, but the failure will be logged. Note
-  that "after" callbacks are not guaranteed to be called as, for example, a link
-  may break before they've been called.
+    * `[:phoenix, :socket_connected]` - dispatched at the end of a socket connection
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{endpoint: atom, transport: atom, params: term, connect_info: map, vsn: binary, user_socket: atom, result: :ok | :error, serializer: atom}`
 
-  #### "Before" clause
+    * `[:phoenix, :channel_joined]` - dispatched at the end of a channel join
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{params: term, socket: Phoenix.Socket.t}`
 
-  When the first argument to an event callback is `:start`, the signature of
-  that callback is:
+    * `[:phoenix, :channel_handled_in]` - dispatched at the end of a channel handle in
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{event: binary, params: term, socket: Phoenix.Socket.t}`
 
-      event_callback(:start, compile_metadata, runtime_metadata)
-
-  where:
-
-    * `compile_metadata` is a map of compile-time metadata about the environment
-      where `instrument/3` has been called. It contains the module where the
-      instrumentation is happening (under the `:module` key), the file and line
-      (`:file` and `:line`), and the function inside which the instrumentation
-      is happening (under `:function`). This information can be used arbitrarily
-      by the callback
-    * `runtime_metadata` is a map of runtime data that the instrumentation
-      passes to the callbacks. This can be used for any purposes: for example,
-      when instrumenting the rendering of a view, the name of the view could be
-      passed in these runtime data so that instrumenters know which view is
-      being rendered (`instrument(:view_render, %{view: "index.html"}, fn
-      ...)`)
-
-  #### "After" clause
-
-  When the first argument to an event callback is `:stop`, the signature of that
-  callback is:
-
-      event_callback(:stop, time_diff, result_of_before_callback)
-
-  where:
-
-    * `time_diff` is an integer representing the time it took to execute the
-      instrumented function **in native units**
-
-    * `result_of_before_callback` is the return value of the "before" clause of
-      the same `event_callback`. This is a means of passing data from the
-      "before" clause to the "after" clause when instrumenting
-
-  The return value of each "before" event callback will be stored and passed to
-  the corresponding "after" callback.
-
-  ### Using instrumentation
-
-  Each Phoenix endpoint defines its own `instrument/3` macro. This macro is
-  called like this:
-
-      require MyApp.Endpoint
-      MyApp.Endpoint.instrument(:render_view, %{view: "index.html"}, fn ->
-        # actual view rendering
-      end)
-
-  All the instrumenter modules that export a `render_view/3` function will be
-  notified of the event so that they can perform their respective actions.
-
-  ### Phoenix default events
-
-  By default, Phoenix instruments the following events:
-
-    * `:phoenix_controller_call` - the entire controller pipeline.
-      The `%Plug.Conn{}` is passed as runtime metadata
-    * `:phoenix_controller_render` - the rendering of a view from a
-      controller. The map of runtime metadata passed to instrumentation
-      callbacks has the `:view` key - for the name of the view, e.g. `HexWeb.ErrorView`,
-      the `:template` key - for the name of the template, e.g.,
-      `"index.html"`, the `:format` key - for the format of the template, and
-      the `:conn` key - containing the `%Plug.Conn{}`
-    * `:phoenix_error_render` - the rendering of an error view when an exception,
-      throw, or exit is caught. The map of runtime metadata contains the `:status`
-      key of the error's HTTP status code, the `:conn` key containg the
-      `%Plug.Conn{}`, as well as the `:kind`, `:reason`, and `:stacktrace` of
-      the caught error
-    * `:phoenix_channel_join` - the joining of a channel. The `%Phoenix.Socket{}`
-      and join params are passed as runtime metadata via `:socket` and `:params`
-    * `:phoenix_channel_receive` - the receipt of an incoming message over a
-      channel. The `%Phoenix.Socket{}`, payload, event, and ref are passed as
-      runtime metadata via `:socket`, `:params`, `:event`, and `:ref`
-    * `:phoenix_socket_connect` - the connection of the user socket transport.
-      The map of runtime metadata contains the `:transport`, `:params`, a map of
-      `connect_info`, and the `:user_socket` module.
-
-  ### Dynamic instrumentation
-
-  If you want to instrument a piece of code, but the endpoint that should
-  instrument it (the one that contains the `c:instrument/3` macro you want to use)
-  is not known at compile time, only at runtime, you can use the
-  `Phoenix.Endpoint.instrument/4` macro. Refer to its documentation for more
-  information.
   """
 
   @type topic :: String.t
@@ -979,31 +893,7 @@ defmodule Phoenix.Endpoint do
     end
   end
 
-  @doc """
-  Instruments the given function using the instrumentation provided by
-  the given endpoint.
-
-  To specify the endpoint that will provide instrumentation, the first argument
-  can be:
-
-    * a module name - the endpoint itself
-    * a `Plug.Conn` struct - this macro will look for the endpoint module in the
-      `:private` field of the connection; if it's not there, `fun` will be
-      executed with no instrumentation
-    * a `Phoenix.Socket` struct - this macro will look for the endpoint module in the
-      `:endpoint` field of the socket; if it's not there, `fun` will be
-      executed with no instrumentation
-
-  Usually, users should prefer to instrument events using the `c:instrument/3`
-  macro defined in every Phoenix endpoint. This macro should only be used for
-  cases when the endpoint is dynamic and not known at compile time.
-
-  ## Examples
-
-      endpoint = MyApp.Endpoint
-      Phoenix.Endpoint.instrument endpoint, :render_view, fn -> ... end
-
-  """
+  @doc false
   defmacro instrument(endpoint_or_conn_or_socket, event, runtime \\ Macro.escape(%{}), fun) do
     compile = Phoenix.Endpoint.Instrument.strip_caller(__CALLER__) |> Macro.escape()
 

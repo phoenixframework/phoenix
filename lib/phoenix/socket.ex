@@ -431,31 +431,37 @@ defmodule Phoenix.Socket do
     } = map
 
     vsn = params["vsn"] || "1.0.0"
+
     options = Keyword.merge(socket_options, options)
-    log = Keyword.get(options, :log, :info)
-    meta = Map.merge(map, %{vsn: vsn, user_socket: user_socket, log: log})
+    start = System.monotonic_time()
 
-    Phoenix.Endpoint.instrument(endpoint, :phoenix_socket_connect, meta, fn ->
-      case negotiate_serializer(Keyword.fetch!(options, :serializer), vsn) do
-        {:ok, serializer} ->
-          user_socket
-          |> user_connect(endpoint, transport, serializer, params, connect_info)
-          |> log_connect_result(user_socket, log)
+    case negotiate_serializer(Keyword.fetch!(options, :serializer), vsn) do
+      {:ok, serializer} ->
+        result = user_connect(user_socket, endpoint, transport, serializer, params, connect_info)
 
-        :error -> :error
-      end
-    end)
+        metadata = %{
+          endpoint: endpoint,
+          transport: transport,
+          params: params,
+          connect_info: connect_info,
+          vsn: vsn,
+          user_socket: user_socket,
+          log: Keyword.get(options, :log, :info),
+          result: result(result),
+          serializer: serializer
+        }
+
+        duration = System.monotonic_time() - start
+        :telemetry.execute([:phoenix, :socket_connected], %{duration: duration}, metadata)
+        result
+
+      :error ->
+        :error
+    end
   end
 
-  defp log_connect_result(result, _user_socket, false = _level), do: result
-  defp log_connect_result({:ok, _} = result, user_socket, level) do
-    Logger.log(level, fn -> "Replied #{inspect(user_socket)} :ok" end)
-    result
-  end
-  defp log_connect_result(:error = result, user_socket, level) do
-    Logger.log(level, fn -> "Replied #{inspect(user_socket)} :error" end)
-    result
-  end
+  defp result({:ok, _}), do: :ok
+  defp result(:error), do: :error
 
   def __init__({state, %{id: id, endpoint: endpoint} = socket}) do
     _ = id && endpoint.subscribe(id, link: true)

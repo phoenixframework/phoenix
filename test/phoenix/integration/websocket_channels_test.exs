@@ -305,24 +305,26 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         log = capture_log(fn ->
           {:ok, _} = WebsocketClient.start_link(self(), "#{@vsn_path}&logging=enabled", @serializer)
         end)
-        assert log =~ "CONNECT #{inspect(UserSocket)}"
+
+        assert log =~ "CONNECTED TO Phoenix.Integration.WebSocketChannelsTest.UserSocket in "
+        assert log =~ "  Transport: :websocket"
+        assert log =~ "  Connect Info: %{}"
+        assert log =~ "  Serializer: #{inspect @serializer}"
+        assert log =~ "  Parameters: %{\"logging\" => \"enabled\", \"vsn\" => #{inspect(@vsn)}}"
       end
 
       test "does not log user socket connect when disabled" do
         log = capture_log(fn ->
-          {:ok, _} =
-            WebsocketClient.start_link(
-              self(),
-              "ws://127.0.0.1:#{@port}/ws/connect_info/websocket?vsn=#{@vsn}",
-              @serializer
-            )
+          {:ok, _} = WebsocketClient.start_link(self(), @vsn_path, @serializer)
         end)
+
         assert log == ""
       end
 
       test "logs and filter params on join and handle_in" do
         topic = "room:admin-lobby2"
         {:ok, sock} = WebsocketClient.start_link(self(), "#{@vsn_path}&logging=enabled", @serializer)
+
         log = capture_log fn ->
           WebsocketClient.join(sock, topic, %{"join" => "yes", "password" => "no"})
           assert_receive %Message{event: "phx_reply",
@@ -330,12 +332,16 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
                                   payload: %{"response" => %{}, "status" => "ok"},
                                   ref: "1", topic: "room:admin-lobby2"}
         end
+
+        assert log =~ "JOINED room:admin-lobby2 in "
         assert log =~ "Parameters: %{\"join\" => \"yes\", \"password\" => \"[FILTERED]\"}"
 
         log = capture_log fn ->
           WebsocketClient.send_event(sock, topic, "new_msg", %{"in" => "yes", "password" => "no"})
           assert_receive %Message{event: "phx_reply", ref: "2"}
         end
+
+        assert log =~ "HANDLED new_msg INCOMING ON room:admin-lobby2 (Phoenix.Integration.WebSocketChannelsTest.RoomChannel)"
         assert log =~ "Parameters: %{\"in\" => \"yes\", \"password\" => \"[FILTERED]\"}"
       end
 

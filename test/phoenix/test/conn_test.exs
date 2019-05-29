@@ -59,6 +59,7 @@ defmodule Phoenix.Test.ConnTest do
   @endpoint Endpoint
 
   setup_all do
+    Logger.disable(self())
     Endpoint.start_link()
     :ok
   end
