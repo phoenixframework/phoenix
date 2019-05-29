@@ -219,7 +219,7 @@ defmodule Phoenix.ChannelTest do
           endpoint: unquote(endpoint),
           handler: unquote(socket || first_socket!(endpoint)),
           id: unquote(id),
-          pubsub_server: unquote(endpoint).__pubsub_server__(),
+          pubsub_server: unquote(endpoint).config(:pubsub_server),
           serializer: NoopSerializer,
           transport: :channel_test,
           transport_pid: self()

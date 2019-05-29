@@ -25,16 +25,16 @@ defmodule Phoenix.Endpoint.Supervisor do
   @doc false
   def init({otp_app, mod}) do
     id = :crypto.strong_rand_bytes(16) |> Base.encode64
-    default_conf = [endpoint_id: id] ++ config(otp_app, mod)
+    env_conf = [endpoint_id: id] ++ config(otp_app, mod)
 
     secret_conf =
-      case mod.init(:supervisor, default_conf) do
-        {:ok, conf} ->
-          if is_nil(Application.get_env(otp_app, mod)) and conf == default_conf do
+      case mod.init(:supervisor, env_conf) do
+        {:ok, init_conf} ->
+          if is_nil(Application.get_env(otp_app, mod)) and init_conf == env_conf do
             Logger.warn("no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}")
           end
 
-          conf
+          warn_on_deprecated_pubsub(init_conf)
 
         other ->
           raise ArgumentError, "expected init/2 callback to return {:ok, config}, got: #{inspect other}"
@@ -67,7 +67,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     pub_conf = conf[:pubsub]
 
     if adapter = pub_conf[:adapter] do
-      pub_conf = [fastlane: Phoenix.Channel.Server] ++ pub_conf
+      pub_conf = [fastlane: Phoenix.Channel.Server] ++ Keyword.put_new(pub_conf, :pool_size, 1)
       [supervisor(adapter, [pub_conf[:name], pub_conf])]
     else
       []
@@ -152,6 +152,10 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
   defp warn_on_different_adapter_version(_user, _autodetected, _endpoint), do: :ok
 
+  defp warn_on_deprecated_pubsub(conf) do
+    Keyword.put_new_lazy(conf, :pubsub_server, fn -> conf[:pubsub][:name] end)
+  end
+
   defp watcher_children(_mod, conf, server?) do
     if server? do
       Enum.map(conf[:watchers], fn {cmd, args} ->
@@ -162,6 +166,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       []
     end
   end
+
   defp watcher_args(cmd, cmd_args) do
     {args, opts} = Enum.split_while(cmd_args, &is_binary(&1))
     [cmd, args, opts]
@@ -353,10 +358,6 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
-
-  def pubsub_server(endpoint) do
-    {:cache, endpoint.config(:pubsub)[:name]}
-  end
 
   @doc """
   Invoked to warm up caches on start and config change.

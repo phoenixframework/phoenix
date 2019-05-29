@@ -177,21 +177,21 @@ defmodule Phoenix.Transports.LongPoll do
   defp client_ref(pid) when is_pid(pid), do: self()
 
   defp subscribe(endpoint, topic) when is_binary(topic),
-    do: Phoenix.PubSub.subscribe(endpoint.__pubsub_server__, topic, link: true)
+    do: Phoenix.PubSub.subscribe(endpoint.config(:pubsub_server), topic, link: true)
   defp subscribe(_endpoint, pid) when is_pid(pid),
     do: :ok
 
   defp broadcast_from!(endpoint, topic, msg) when is_binary(topic),
-    do: Phoenix.PubSub.broadcast_from!(endpoint.__pubsub_server__, self(), topic, msg)
+    do: Phoenix.PubSub.broadcast_from!(endpoint.config(:pubsub_server), self(), topic, msg)
   defp broadcast_from!(_endpoint, pid, msg) when is_pid(pid),
     do: send(pid, msg)
 
   defp sign_token(endpoint, data, opts) do
-    Phoenix.Token.sign(endpoint, Atom.to_string(endpoint.__pubsub_server__), data, opts[:crypto])
+    Phoenix.Token.sign(endpoint, Atom.to_string(endpoint.config(:pubsub_server)), data, opts[:crypto])
   end
 
   defp verify_token(endpoint, signed, opts) do
-    Phoenix.Token.verify(endpoint, Atom.to_string(endpoint.__pubsub_server__), signed, opts[:crypto])
+    Phoenix.Token.verify(endpoint, Atom.to_string(endpoint.config(:pubsub_server)), signed, opts[:crypto])
   end
 
   defp status_json(conn) do

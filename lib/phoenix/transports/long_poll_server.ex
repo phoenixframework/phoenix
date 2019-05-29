@@ -26,7 +26,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
           buffer: [],
           handler: {handler, handler_state},
           window_ms: trunc(window_ms * 1.5),
-          pubsub_server: endpoint.__pubsub_server__(),
+          pubsub_server: endpoint.config(:pubsub_server),
           priv_topic: priv_topic,
           last_client_poll: now_ms(),
           client_ref: nil

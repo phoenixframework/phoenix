@@ -533,7 +533,7 @@ defmodule Phoenix.Socket do
     socket = %Socket{
       handler: handler,
       endpoint: endpoint,
-      pubsub_server: endpoint.__pubsub_server__,
+      pubsub_server: endpoint.config(:pubsub_server),
       serializer: serializer,
       transport: transport
     }

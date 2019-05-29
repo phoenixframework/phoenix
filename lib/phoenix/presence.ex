@@ -114,15 +114,6 @@ defmodule Phoenix.Presence do
   @type presence :: %{key: String.t, meta: map()}
   @type topic :: String.t
 
-  @doc false
-  @callback start_link(Keyword.t) ::
-    {:ok, pid()} |
-    {:error, reason :: term()} |
-    :ignore
-
-  @doc false
-  @callback init(Keyword.t) :: {:ok, state :: term} | {:error, reason :: term}
-
   @doc """
   Track a channel's process as a presence.
 
@@ -221,6 +212,15 @@ defmodule Phoenix.Presence do
   @callback list(Phoenix.Socket.t | topic) :: presences
 
   @doc false
+  @callback start_link(Keyword.t) ::
+    {:ok, pid()} |
+    {:error, reason :: term()} |
+    :ignore
+
+  @doc false
+  @callback init(Keyword.t) :: {:ok, state :: term} | {:error, reason :: term}
+
+  @doc false
   @callback handle_diff(%{topic => {joins :: presences, leaves :: presences}}, state :: term) :: {:ok, state :: term}
 
   defmacro __using__(opts) do
@@ -230,7 +230,8 @@ defmodule Phoenix.Presence do
       @behaviour unquote(__MODULE__)
       @task_supervisor Module.concat(__MODULE__, TaskSupervisor)
 
-      @doc false
+      # Overridable
+
       def child_spec(opts) do
         %{
           id: __MODULE__,
@@ -238,6 +239,12 @@ defmodule Phoenix.Presence do
           type: :supervisor
         }
       end
+
+      def fetch(_topic, presences), do: presences
+
+      defoverridable fetch: 2, child_spec: 1
+
+      # Private
 
       def start_link(opts \\ []) do
         opts = Keyword.merge(@opts, opts)
@@ -250,6 +257,8 @@ defmodule Phoenix.Presence do
                 node_name: Phoenix.PubSub.node_name(server),
                 task_sup: @task_supervisor}}
       end
+
+      # User API
 
       def track(%Phoenix.Socket{} = socket, key, meta) do
         track(socket.channel_pid, socket.topic, key, meta)
@@ -272,26 +281,16 @@ defmodule Phoenix.Presence do
         Phoenix.Tracker.update(__MODULE__, pid, topic, key, meta)
       end
 
-      def fetch(_topic, presences), do: presences
-
       def list(%Phoenix.Socket{topic: topic}), do: list(topic)
-      def list(topic) do
-        Phoenix.Presence.list(__MODULE__, topic)
-      end
+      def list(topic), do: Phoenix.Presence.list(__MODULE__, topic)
 
       def get_by_key(%Phoenix.Socket{topic: topic}, key), do: get_by_key(topic, key)
-      def get_by_key(topic, key) do
-        Phoenix.Presence.get_by_key(__MODULE__, topic, key)
-      end
+      def get_by_key(topic, key), do: Phoenix.Presence.get_by_key(__MODULE__, topic, key)
 
       def handle_diff(diff, state) do
-        Phoenix.Presence.handle_diff(__MODULE__,
-          diff, state.node_name, state.pubsub_server, state.task_sup
-        )
+        Phoenix.Presence.handle_diff(__MODULE__, diff, state.node_name, state.pubsub_server, state.task_sup)
         {:ok, state}
       end
-
-      defoverridable fetch: 2, child_spec: 1
     end
   end
 
@@ -320,6 +319,7 @@ defmodule Phoenix.Presence do
           joins: module.fetch(topic, group(joins)),
           leaves: module.fetch(topic, group(leaves))
         }}
+
         Phoenix.PubSub.direct_broadcast!(node_name, pubsub_server, topic, msg)
       end
     end)
@@ -388,7 +388,6 @@ defmodule Phoenix.Presence do
         fetched_metas
     end
   end
-
 
   defp group(presences) do
     presences
