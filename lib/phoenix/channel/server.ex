@@ -32,9 +32,7 @@ defmodule Phoenix.Channel.Server do
     ref = make_ref()
     from = {self(), ref}
 
-    # TODO: When we migrate to DynamicSupervisor, we will start
-    # {channel, {payload, from, socket}} and have its child spec
-    # point back to this module start link.
+    # TODO: Migrate to DynamicSupervisor and invoke the channel child_spec.
     args = [channel, {payload, from, socket}]
 
     case PoolSupervisor.start_child(socket.endpoint, socket.handler, from, args) do
@@ -252,29 +250,13 @@ defmodule Phoenix.Channel.Server do
         private: Map.merge(channel.__socket__(:private), private)
     }
 
-    case channel_join(socket, channel, topic, auth_payload) do
-      {:ok, socket} ->
-        init_info(socket, channel, topic, %{}, from)
-
-      {:ok, reply, socket} ->
-        init_info(socket, channel, topic, reply, from)
-
-      {:error, reply} ->
-        log_join(socket, topic, fn -> "Replied #{topic} :error" end)
-        GenServer.reply(from, {:error, reply})
-        {:stop, :shutdown, socket}
-
-      other ->
-        raise """
-        channel #{inspect(socket.channel)}.join/3 is expected to return one of:
-
-            {:ok, Socket.t} |
-            {:ok, reply :: map, Socket.t} |
-            {:error, reply :: map}
-
-        got #{inspect(other)}
-        """
-    end
+    start = System.monotonic_time()
+    {reply, state} = channel_join(channel, topic, auth_payload, socket)
+    duration = System.monotonic_time() - start
+    metadata = %{params: auth_payload, socket: socket, result: elem(reply, 0)}
+    :telemetry.execute([:phoenix, :channel_joined], %{duration: duration}, metadata)
+    GenServer.reply(from, reply)
+    state
   end
 
   def handle_info(%Message{topic: topic, event: "phx_leave", ref: ref}, %{topic: topic} = socket) do
@@ -285,13 +267,12 @@ defmodule Phoenix.Channel.Server do
         %Message{topic: topic, event: event, payload: payload, ref: ref},
         %{topic: topic} = socket
       ) do
-    runtime = %{ref: ref, event: event, params: payload, socket: socket}
-
-    Phoenix.Endpoint.instrument(socket, :phoenix_channel_receive, runtime, fn ->
-      event
-      |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
-      |> handle_in()
-    end)
+    start = System.monotonic_time()
+    result = socket.channel.handle_in(event, payload, put_in(socket.ref, ref))
+    duration = System.monotonic_time() - start
+    metadata = %{ref: ref, event: event, params: payload, socket: socket}
+    :telemetry.execute([:phoenix, :channel_handled_in], %{duration: duration}, metadata)
+    handle_in(result)
   end
 
   def handle_info(
@@ -379,28 +360,39 @@ defmodule Phoenix.Channel.Server do
 
   ## Joins
 
-  defp channel_join(socket, channel, topic, auth_payload) do
-    instrument = %{params: auth_payload, socket: socket}
+  defp channel_join(channel, topic, auth_payload, socket) do
+    case channel.join(topic, auth_payload, socket) do
+      {:ok, socket} ->
+        {{:ok, %{}}, init_join(socket, channel, topic)}
 
-    Phoenix.Endpoint.instrument(socket, :phoenix_channel_join, instrument, fn ->
-      channel.join(topic, auth_payload, socket)
-    end)
+      {:ok, reply, socket} ->
+        {{:ok, reply}, init_join(socket, channel, topic)}
+
+      {:error, reply} ->
+        {{:error, reply}, {:stop, :shutdown, socket}}
+
+      other ->
+        raise """
+        channel #{inspect(socket.channel)}.join/3 is expected to return one of:
+
+            {:ok, Socket.t} |
+            {:ok, reply :: map, Socket.t} |
+            {:error, reply :: map}
+
+        got #{inspect(other)}
+        """
+    end
   end
 
-  defp init_info(socket, channel, topic, reply, from) do
+  defp init_join(socket, channel, topic) do
     %{transport_pid: transport_pid, serializer: serializer, pubsub_server: pubsub_server} = socket
     Process.monitor(transport_pid)
 
     fastlane = {transport_pid, serializer, channel.__intercepts__()}
     PubSub.subscribe(pubsub_server, topic, link: true, fastlane: fastlane)
 
-    log_join(socket, topic, fn -> "Replied #{topic} :ok" end)
-    GenServer.reply(from, {:ok, reply})
     {:noreply, %{socket | joined: true}}
   end
-
-  defp log_join(%{private: %{log_join: false}}, _topic, _func), do: :noop
-  defp log_join(%{private: %{log_join: level}}, _topic, func), do: Logger.log(level, func)
 
   ## Handle results
 

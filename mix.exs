@@ -58,12 +58,13 @@ defmodule Phoenix.MixProject do
   defp deps do
     [
       {:plug_cowboy, "~> 1.0 or ~> 2.0", optional: true},
-      {:plug, "~> 1.7"},
+      {:plug, "~> 1.8"},
+      {:telemetry, "~> 0.4"},
       {:phoenix_pubsub, "~> 1.1"},
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies
-      {:ex_doc, "~> 0.20.2", only: :docs},
+      {:ex_doc, "~> 0.20", only: :docs},
       {:inch_ex, "~> 0.2", only: :docs},
 
       # Test dependencies
@@ -156,6 +157,7 @@ defmodule Phoenix.MixProject do
     # Phoenix.Controller
     # Phoenix.Endpoint
     # Phoenix.Naming
+    # Phoenix.Logger
     # Phoenix.Param
     # Phoenix.Presence
     # Phoenix.Router
@@ -171,8 +173,7 @@ defmodule Phoenix.MixProject do
       "Adapters and Plugs": [
         Phoenix.CodeReloader,
         Phoenix.Endpoint.CowboyAdapter,
-        Phoenix.Endpoint.Cowboy2Adapter,
-        Phoenix.Logger,
+        Phoenix.Endpoint.Cowboy2Adapter
       ],
 
       "Socket and Transport": [
