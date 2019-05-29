@@ -685,14 +685,14 @@ defmodule Phoenix.Controller do
       raise "cannot render template #{inspect template} because conn.params[\"_format\"] is not set. " <>
             "Please set `plug :accepts, ~w(html json ...)` in your pipeline."
 
-    instrument_render_and_send(conn, format, template, assigns)
+    render_and_send(conn, format, template, assigns)
   end
 
   def render(conn, template, assigns)
       when is_binary(template) and (is_map(assigns) or is_list(assigns)) do
     case Path.extname(template) do
       "." <> format ->
-        instrument_render_and_send(conn, format, template, assigns)
+        render_and_send(conn, format, template, assigns)
       "" ->
         raise "cannot render template #{inspect template} without format. Use an atom if the " <>
               "template format is meant to be set dynamically based on the request format"
@@ -726,32 +726,19 @@ defmodule Phoenix.Controller do
     |> render(template, assigns)
   end
 
-  @doc false
-  def __put_render__(conn, view, template, format, assigns) do
-    content_type = MIME.type(format)
-    conn = prepare_assigns(conn, assigns, template, format)
-    data = Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
-
-    conn
-    |> ensure_resp_content_type(content_type)
-    |> resp(conn.status || 200, data)
-  end
-
-  defp instrument_render_and_send(conn, format, template, assigns) do
+  defp render_and_send(conn, format, template, assigns) do
     template = template_name(template, format)
 
     view =
       Map.get(conn.private, :phoenix_view) ||
         raise "a view module was not specified, set one with put_view/2"
 
-    metadata = %{view: view, template: template, format: format, conn: conn}
+    conn = prepare_assigns(conn, assigns, template, format)
+    data = Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
 
-    conn =
-      Phoenix.Endpoint.instrument(conn, :phoenix_controller_render, metadata, fn ->
-        __put_render__(conn, view, template, format, assigns)
-      end)
-
-    send_resp(conn)
+    conn
+    |> ensure_resp_content_type(MIME.type(format))
+    |> send_resp(conn.status || 200, data)
   end
 
   defp prepare_assigns(conn, assigns, template, format) do

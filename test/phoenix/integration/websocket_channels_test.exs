@@ -61,7 +61,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
   end
 
   defmodule CustomChannel do
-    use GenServer
+    use GenServer, restart: :temporary
 
     def start_link(triplet) do
       GenServer.start_link(__MODULE__, triplet)

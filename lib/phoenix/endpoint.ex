@@ -53,7 +53,7 @@ defmodule Phoenix.Endpoint do
   Endpoint configuration is split into two categories. Compile-time
   configuration means the configuration is read during compilation
   and changing it at runtime has no effect. The compile-time
-  configuration is mostly related to error handling and instrumentation.
+  configuration is mostly related to error handling.
 
   Runtime configuration, instead, is accessed during or
   after your application is started and can be read through the
@@ -91,10 +91,6 @@ defmodule Phoenix.Endpoint do
           [view: MyApp.ErrorView, accepts: ~w(html), layout: false]
 
       The default format is used when none is set in the connection
-
-    * `:instrumenters` - a list of instrumenter modules whose callbacks will
-      be fired on instrumentation events. Read more on instrumentation in the
-      "Instrumentation" section below
 
   ### Runtime configuration
 
@@ -232,7 +228,6 @@ defmodule Phoenix.Endpoint do
     * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,
       `c:broadcast_from/4`, and `c:broadcast_from!/4`
     * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`
-    * for instrumentation: `c:instrument/3`
     * as required by the `Plug` behaviour: `c:Plug.init/1` and `c:Plug.call/2`
 
   ## Instrumentation
@@ -386,17 +381,6 @@ defmodule Phoenix.Endpoint do
   Raises in case of failures.
   """
   @callback broadcast_from!(from :: pid, topic, event, msg) :: :ok | no_return
-
-  # Instrumentation
-
-  @doc """
-  Allows instrumenting operation defined by `function`.
-
-  `runtime_metadata` may be omitted and defaults to `nil`.
-
-  Read more about instrumentation in the "Instrumentation" section.
-  """
-  @macrocallback instrument(instrument_event :: Macro.t, runtime_metadata :: Macro.t, function :: Macro.t) :: Macro.t
 
   @doc false
   defmacro __using__(opts) do
@@ -652,8 +636,6 @@ defmodule Phoenix.Endpoint do
   @doc false
   defmacro __before_compile__(%{module: module}) do
     sockets = Module.get_attribute(module, :phoenix_sockets)
-    otp_app = Module.get_attribute(module, :otp_app)
-    instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, module)
 
     dispatches =
       for {path, socket, socket_opts} <- sockets,
@@ -692,9 +674,6 @@ defmodule Phoenix.Endpoint do
 
       @doc false
       def __handler__(%{path_info: path} = conn, opts), do: do_handler(path, conn, opts)
-
-      unquote(instrumentation)
-
       unquote(dispatches)
       defp do_handler(_path, conn, opts), do: {:plug, conn, __MODULE__, opts}
     end
@@ -894,15 +873,11 @@ defmodule Phoenix.Endpoint do
   end
 
   @doc false
-  defmacro instrument(endpoint_or_conn_or_socket, event, runtime \\ Macro.escape(%{}), fun) do
-    compile = Phoenix.Endpoint.Instrument.strip_caller(__CALLER__) |> Macro.escape()
+  defmacro instrument(_endpoint_or_conn_or_socket, _event, _runtime, _fun) do
+    IO.warn "Phoenix.Endpoint.instrument/4 is deprecated and has no effect. Use :telemetry instead",
+            Macro.Env.stacktrace(__CALLER__)
 
-    quote do
-      case Phoenix.Endpoint.Instrument.extract_endpoint(unquote(endpoint_or_conn_or_socket)) do
-        nil -> unquote(fun).()
-        endpoint -> endpoint.instrument(unquote(event), unquote(compile), unquote(runtime), unquote(fun))
-      end
-    end
+    :ok
   end
 
   @doc """

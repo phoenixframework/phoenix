@@ -73,9 +73,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
     metadata = %{status: status, kind: kind, reason: reason, stacktrace: stack, log: level}
 
     try do
-      conn
-      |> render(status, kind, reason, stack, opts)
-      |> send_resp()
+      render(conn, status, kind, reason, stack, opts)
     after
       duration = System.monotonic_time() - start
       :telemetry.execute([:phoenix, :error_rendered], %{duration: duration}, metadata)
@@ -111,7 +109,9 @@ defmodule Phoenix.Endpoint.RenderErrors do
     template = "#{conn.status}.#{format}"
     assigns = %{kind: kind, reason: reason, stack: stack}
 
-    Controller.__put_render__(conn, view, template, format, assigns)
+    conn
+    |> Controller.put_view(view)
+    |> Controller.render(template, assigns)
   end
 
   defp maybe_fetch_query_params(conn) do
