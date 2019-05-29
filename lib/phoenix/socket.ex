@@ -75,10 +75,6 @@ defmodule Phoenix.Socket do
     * `:log` - the default level to log socket actions. Defaults
       to `:info`. May be set to `false` to disable it
 
-    * `:shutdown` - the maximum shutdown time of each channel
-      when the endpoint is shutting down. Applies only to
-      channel-based sockets
-
     * `:partitions` - each channel is spawned under a supervisor.
       This option controls how many supervisors will be spawned
       to handlle channels. Defaults to the number of cores.
@@ -408,17 +404,11 @@ defmodule Phoenix.Socket do
   ## CALLBACKS IMPLEMENTATION
 
   def __child_spec__(handler, opts, socket_options) do
-    import Supervisor.Spec
     endpoint = Keyword.fetch!(opts, :endpoint)
-
     opts = Keyword.merge(socket_options, opts)
-    shutdown = Keyword.get(opts, :shutdown, 5_000)
     partitions = Keyword.get(opts, :partitions, System.schedulers_online())
-
-    worker_opts = [shutdown: shutdown, restart: :temporary]
-    worker = worker(Phoenix.Channel.Server, [], worker_opts)
-    args = {endpoint, handler, partitions, worker}
-    supervisor(Phoenix.Socket.PoolSupervisor, [args], id: handler)
+    args = {endpoint, handler, partitions}
+    Supervisor.child_spec({Phoenix.Socket.PoolSupervisor, args}, id: handler)
   end
 
   def __connect__(user_socket, map, socket_options) do

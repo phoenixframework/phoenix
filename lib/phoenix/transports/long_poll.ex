@@ -104,9 +104,10 @@ defmodule Phoenix.Transports.LongPoll do
     keys = Keyword.get(opts, :connect_info, [])
     connect_info = Transport.connect_info(conn, keys)
     arg = {endpoint, handler, opts, conn.params, priv_topic, connect_info}
+    spec = {Phoenix.Transports.LongPoll.Server, arg}
 
-    case Supervisor.start_child(Phoenix.Transports.LongPoll.Supervisor, [arg]) do
-      {:ok, :undefined} ->
+    case DynamicSupervisor.start_child(Phoenix.Transports.LongPoll.Supervisor, spec) do
+      :ignore ->
         conn |> put_status(:forbidden) |> status_json()
 
       {:ok, server_pid} ->

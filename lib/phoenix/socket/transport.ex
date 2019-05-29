@@ -431,7 +431,7 @@ defmodule Phoenix.Socket.Transport do
   defp compare_host?(request_host, allowed_host),
     do: request_host == allowed_host
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.7+
+  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 end

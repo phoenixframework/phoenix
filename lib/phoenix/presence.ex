@@ -298,6 +298,7 @@ defmodule Phoenix.Presence do
   @doc false
   def start_link(module, otp_app, task_supervisor, opts) do
     import Supervisor.Spec
+
     opts =
       opts
       |> Keyword.merge(Application.get_env(otp_app, module) || [])
@@ -307,6 +308,7 @@ defmodule Phoenix.Presence do
       supervisor(Task.Supervisor, [[name: task_supervisor]]),
       worker(Phoenix.Tracker, [module, opts, opts])
     ]
+
     Supervisor.start_link(children, strategy: :one_for_one)
   end
 

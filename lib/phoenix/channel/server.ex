@@ -1,6 +1,6 @@
 defmodule Phoenix.Channel.Server do
   @moduledoc false
-  use GenServer
+  use GenServer, restart: :temporary
 
   require Logger
   require Phoenix.Endpoint
@@ -31,11 +31,9 @@ defmodule Phoenix.Channel.Server do
 
     ref = make_ref()
     from = {self(), ref}
+    child_spec = channel.child_spec({payload, from, socket})
 
-    # TODO: Migrate to DynamicSupervisor and invoke the channel child_spec.
-    args = [channel, {payload, from, socket}]
-
-    case PoolSupervisor.start_child(socket.endpoint, socket.handler, from, args) do
+    case PoolSupervisor.start_child(socket.endpoint, socket.handler, from, child_spec) do
       {:ok, pid} ->
         mon_ref = Process.monitor(pid)
 

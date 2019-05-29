@@ -349,11 +349,11 @@ defmodule Phoenix.Endpoint.Supervisor do
     raise ArgumentError, "expected a path starting with a single / but got #{inspect path}"
   end
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.7+
+  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.7+
+  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
