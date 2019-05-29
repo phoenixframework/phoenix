@@ -24,8 +24,8 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   @doc false
   def init({otp_app, mod}) do
-    id = :crypto.strong_rand_bytes(16) |> Base.encode64
-    env_conf = [endpoint_id: id] ++ config(otp_app, mod)
+    default_conf = defaults(otp_app, mod)
+    env_conf = config(otp_app, mod, default_conf)
 
     secret_conf =
       case mod.init(:supervisor, env_conf) do
@@ -34,11 +34,19 @@ defmodule Phoenix.Endpoint.Supervisor do
             Logger.warn("no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}")
           end
 
-          warn_on_deprecated_pubsub(init_conf)
+          init_conf
 
         other ->
           raise ArgumentError, "expected init/2 callback to return {:ok, config}, got: #{inspect other}"
       end
+
+    extra_conf = [
+      endpoint_id: :crypto.strong_rand_bytes(16) |> Base.encode64,
+      pubsub_server: secret_conf[:pubsub_server] || secret_conf[:pubsub][:name]
+    ]
+
+    secret_conf = extra_conf ++ secret_conf
+    default_conf = extra_conf ++ default_conf
 
     # Drop all secrets from secret_conf before passing it around
     conf = Keyword.drop(secret_conf, [:secret_key_base])
@@ -53,7 +61,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
 
     children =
-      config_children(mod, secret_conf, otp_app) ++
+      config_children(mod, secret_conf, default_conf) ++
       pubsub_children(mod, conf) ++
       socket_children(mod) ++
       server_children(mod, conf, otp_app, server?) ++
@@ -80,8 +88,8 @@ defmodule Phoenix.Endpoint.Supervisor do
     |> Enum.map(fn {_, socket, opts} -> socket.child_spec([endpoint: endpoint] ++ opts) end)
   end
 
-  defp config_children(mod, conf, otp_app) do
-    args = [mod, conf, defaults(otp_app, mod), [name: Module.concat(mod, "Config")]]
+  defp config_children(mod, conf, default_conf) do
+    args = [mod, conf, default_conf, [name: Module.concat(mod, "Config")]]
     [worker(Phoenix.Config, args)]
   end
 
@@ -152,10 +160,6 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
   defp warn_on_different_adapter_version(_user, _autodetected, _endpoint), do: :ok
 
-  defp warn_on_deprecated_pubsub(conf) do
-    Keyword.put_new_lazy(conf, :pubsub_server, fn -> conf[:pubsub][:name] end)
-  end
-
   defp watcher_children(_mod, conf, server?) do
     if server? do
       Enum.map(conf[:watchers], fn {cmd, args} ->
@@ -176,7 +180,11 @@ defmodule Phoenix.Endpoint.Supervisor do
   The endpoint configuration used at compile time.
   """
   def config(otp_app, endpoint) do
-    Phoenix.Config.from_env(otp_app, endpoint, defaults(otp_app, endpoint))
+    config(otp_app, endpoint, defaults(otp_app, endpoint))
+  end
+
+  defp config(otp_app, endpoint, defaults) do
+    Phoenix.Config.from_env(otp_app, endpoint, defaults)
   end
 
   @doc """
@@ -211,7 +219,6 @@ defmodule Phoenix.Endpoint.Supervisor do
      url: [host: "localhost", path: "/"],
 
      # Supervisor config
-     pubsub: [pool_size: 1],
      watchers: []]
   end
 

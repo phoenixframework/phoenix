@@ -11,7 +11,6 @@ defmodule Phoenix.Endpoint.EndpointTest do
            cache_static_manifest: "../../../../test/fixtures/cache_manifest.json",
            pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
-  Application.put_env(:phoenix, __MODULE__.NoPubSubNameEndpoint, [])
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
@@ -22,23 +21,12 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert code_reloading? == false
   end
 
-  defmodule NoPubSubNameEndpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
-
-    def init(_, config) do
-      pubsub = [adapter: Phoenix.PubSub.PG2]
-      {:ok, Keyword.put(config, :pubsub, pubsub)}
-    end
-  end
-
   defmodule NoConfigEndpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
 
   setup_all do
-    ExUnit.CaptureLog.capture_log(fn ->
-      Endpoint.start_link()
-    end)
+    ExUnit.CaptureLog.capture_log(fn -> Endpoint.start_link() end)
     on_exit fn -> Application.delete_env(:phoenix, :serve_endpoints) end
     :ok
   end
@@ -58,6 +46,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   test "has reloadable configuration" do
+    endpoint_id = Endpoint.config(:endpoint_id)
     assert Endpoint.config(:url) == [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api"]
     assert Endpoint.config(:static_url) == [host: "static.example.com"]
     assert Endpoint.url == "https://example.com"
@@ -71,6 +60,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
       |> put_in([:static_url, :port], 456)
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
+    assert Endpoint.config(:endpoint_id) == endpoint_id
     assert Enum.sort(Endpoint.config(:url)) ==
            [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api", port: 1234]
     assert Enum.sort(Endpoint.config(:static_url)) ==
