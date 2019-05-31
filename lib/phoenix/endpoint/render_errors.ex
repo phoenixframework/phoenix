@@ -66,17 +66,23 @@ defmodule Phoenix.Endpoint.RenderErrors do
   end
 
   defp instrument_render_and_send(conn, kind, reason, stack, opts) do
-    level = Keyword.get(opts, :log_level, :info)
+    level = Keyword.get(opts, :log, :info)
     status = status(kind, reason)
     conn = error_conn(conn, kind, reason)
-    metadata = %{status: status, conn: conn, kind: kind, reason: reason, stacktrace: stack, log_level: level}
+    start = System.monotonic_time()
+    metadata = %{status: status, conn: conn, kind: kind, reason: reason, stacktrace: stack, log: level}
 
-    conn =
-      Phoenix.Endpoint.instrument(conn, :phoenix_error_render, metadata, fn ->
-        render(conn, status, kind, reason, stack, opts)
-      end)
+    try do
+      conn =
+        Phoenix.Endpoint.instrument(conn, :phoenix_error_render, metadata, fn ->
+          render(conn, status, kind, reason, stack, opts)
+        end)
 
-    send_resp(conn)
+      send_resp(conn)
+    after
+      duration = System.monotonic_time() - start
+      :telemetry.execute([:phoenix, :error_rendered], %{duration: duration}, metadata)
+    end
   end
 
   defp error_conn(_conn, :error, %NoRouteError{conn: conn}), do: conn

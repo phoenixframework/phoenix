@@ -6,7 +6,7 @@ defmodule Phoenix.Router.Scope do
   @pipes :phoenix_pipeline_scopes
   @top :phoenix_top_scopes
 
-  defstruct path: [], alias: [], as: [], pipes: [], host: nil, private: %{}, assigns: %{}
+  defstruct path: [], alias: [], as: [], pipes: [], host: nil, private: %{}, assigns: %{}, log: :debug
 
   @doc """
   Initializes the scope.
@@ -31,9 +31,11 @@ defmodule Phoenix.Router.Scope do
       raise ArgumentError, "`static` is a reserved route prefix generated from #{inspect plug} or `:as` option"
     end
 
-    {path, host, alias, as, pipes, private, assigns} =
+    {path, host, alias, as, pipes, private, assigns, log} =
       join(module, path, plug, alias?, as, private, assigns)
-    Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns)
+
+    log = Keyword.get(opts, :log, log)
+    Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns, log)
   end
 
   @doc """
@@ -106,7 +108,8 @@ defmodule Phoenix.Router.Scope do
       host: host || top.host,
       pipes: top.pipes,
       private: Map.merge(top.private, private),
-      assigns: Map.merge(top.assigns, assigns)
+      assigns: Map.merge(top.assigns, assigns),
+      log: Keyword.get(opts, :log, top.log)
     })
   end
 
@@ -145,6 +148,7 @@ defmodule Phoenix.Router.Scope do
 
   defp join(module, path, alias, alias?, as, private, assigns) do
     top = get_top(module)
+
     joined_alias =
       if alias? do
         join_alias(top, alias)
@@ -153,7 +157,7 @@ defmodule Phoenix.Router.Scope do
       end
 
     {join_path(top, path), top.host, joined_alias, join_as(top, as), top.pipes,
-     Map.merge(top.private, private), Map.merge(top.assigns, assigns)}
+     Map.merge(top.private, private), Map.merge(top.assigns, assigns), top.log}
   end
 
   defp join_path(top, path) do
