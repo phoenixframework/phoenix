@@ -14,6 +14,7 @@ defmodule Phoenix.Router.ForwardTest do
 
     def index(conn, _params), do: text(conn, "admin index")
     def stats(conn, _params), do: text(conn, "stats")
+    def params(conn, params), do: text(conn, inspect(params))
     def api_users(conn, _params), do: text(conn, "api users")
     def api_root(conn, _params), do: text(conn, "api root")
     defp assign_fwd_script(conn, _), do: assign(conn, :fwd_script, conn.script_name)
@@ -56,8 +57,9 @@ defmodule Phoenix.Router.ForwardTest do
       forward "/admin", AdminDashboard
       forward "/init", InitPlug
       forward "/assign/opts", AssignOptsPlug, %{foo: "bar"}
-      scope "/internal" do
-        forward "/api/v1", ApiRouter
+
+      scope "/params/:param" do
+        forward "/", Controller, :params
       end
     end
   end
@@ -114,9 +116,9 @@ defmodule Phoenix.Router.ForwardTest do
     conn = call(Router, :get, "admin")
     assert conn.private[Router] == {[], %{
       Phoenix.Router.ForwardTest.AdminDashboard => ["admin"],
-      Phoenix.Router.ForwardTest.ApiRouter => ["api", "v1"],
       Phoenix.Router.ForwardTest.InitPlug => ["init"],
-      Phoenix.Router.ForwardTest.AssignOptsPlug => ["assign", "opts"]
+      Phoenix.Router.ForwardTest.AssignOptsPlug => ["assign", "opts"],
+      Phoenix.Router.ForwardTest.Controller => []
     }}
     assert conn.private[AdminDashboard] ==
       {["admin"], %{Phoenix.Router.ForwardTest.ApiRouter => ["api-admin"]}}
@@ -146,6 +148,10 @@ defmodule Phoenix.Router.ForwardTest do
 
   test "forward can handle plugs with custom options" do
     assert call(Router, :get, "assign/opts").assigns.opts == %{foo: "bar"}
+  end
+
+  test "forward can handle params" do
+    assert call(Router, :get, "params/hello_world").resp_body =~ ~s["param" => "hello_world"]
   end
 
   test "forward with scoped alias" do
