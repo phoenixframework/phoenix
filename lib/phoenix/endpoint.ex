@@ -838,8 +838,8 @@ defmodule Phoenix.Endpoint do
         * `{:session, session_config}` - the session information from `Plug.Conn`.
           The `session_config` is an exact copy of the arguments given to `Plug.Session`.
           This requires the "_csrf_token" to be given as request parameter with
-          the value of `Plug.CSRFProtection.get_csrf_token/0` when connecting to
-          the socket. Otherwise the session will be `nil`.
+          the value of `URI.encode_www_form(Plug.CSRFProtection.get_csrf_token())`
+          when connecting to the socket. Otherwise the session will be `nil`.
 
       Arbitrary keywords may also appear following the above valid keys, which
       is useful for passing custom connection information to the socket.
