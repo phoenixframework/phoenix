@@ -330,7 +330,7 @@ defmodule Phoenix.Socket.Transport do
     * `:uri` - a `%URI{}` derived from the conn
 
   """
-  def connect_info(conn, keys) do
+  def connect_info(conn, endpoint, keys) do
     for key <- keys, into: %{} do
       case key do
         :peer_data ->
@@ -342,10 +342,22 @@ defmodule Phoenix.Socket.Transport do
         :uri ->
           {:uri, fetch_uri(conn)}
 
-        {key, val} -> {key, val}
+        {:session, {key, store, store_config}} ->
+          conn = Plug.Conn.fetch_cookies(conn)
 
-        _ ->
-          raise ArgumentError, ":connect_info keys are expected to be one of :peer_data, :x_headers, or :uri, optionally followed by custom keyword pairs, got: #{inspect(key)}"
+          with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
+               cookie when is_binary(cookie) <- conn.cookies[key],
+               conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
+               {_, session} <- store.get(conn, cookie, store_config),
+               csrf_state when is_binary(csrf_state) <- Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]),
+               true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
+            {:session, session}
+          else
+            _ -> {:session, nil}
+          end
+
+        {key, val} ->
+          {key, val}
       end
     end
   end

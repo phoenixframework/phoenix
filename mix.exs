@@ -56,7 +56,7 @@ defmodule Phoenix.MixProject do
 
   defp deps do
     [
-      {:plug, "~> 1.8"},
+      {:plug, "~> 1.8.1 or ~> 1.9"},
       {:telemetry, "~> 0.4"},
       {:phoenix_pubsub, "~> 1.1"},
 

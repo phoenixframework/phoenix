@@ -102,7 +102,7 @@ defmodule Phoenix.Transports.LongPoll do
       <> (System.system_time(:millisecond) |> Integer.to_string)
       
     keys = Keyword.get(opts, :connect_info, [])
-    connect_info = Transport.connect_info(conn, keys)
+    connect_info = Transport.connect_info(conn, endpoint, keys)
     arg = {endpoint, handler, opts, conn.params, priv_topic, connect_info}
     spec = {Phoenix.Transports.LongPoll.Server, arg}
 
