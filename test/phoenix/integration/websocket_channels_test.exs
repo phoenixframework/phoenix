@@ -302,7 +302,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         # GET the cookie and CSRF token
         conn = get(build_conn(), "/")
         extra_headers = [{"cookie", "_hello_key=" <> conn.resp_cookies["_hello_key"].value}]
-        csrf_token_query = "&_csrf_token=" <> conn.resp_body
+        csrf_token_query = "&_csrf_token=" <> URI.encode_www_form(conn.resp_body)
 
         # It works with headers and cookie
         {:ok, sock} = WebsocketClient.start_link(self(), path <> csrf_token_query, @serializer, extra_headers)
