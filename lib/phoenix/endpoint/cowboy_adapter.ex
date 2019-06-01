@@ -126,7 +126,7 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
 
     paths =
       if websocket do
-        config = socket_config(websocket, Phoenix.Transports.WebSocket)
+        config = Phoenix.Socket.Transport.load_config(websocket, Phoenix.Transports.WebSocket)
         init = {endpoint, socket, config}
 
         [
@@ -140,7 +140,7 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
 
     paths =
       if longpoll do
-        config = socket_config(longpoll, Phoenix.Transports.LongPoll)
+        config = Phoenix.Socket.Transport.load_config(longpoll, Phoenix.Transports.LongPoll)
         init = {endpoint, socket, config}
 
         [
@@ -159,9 +159,6 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
     parts = String.split(path <> "/" <> end_path_fragment, "/", trim: true)
     "/" <> Path.join(parts)
   end
-
-  defp socket_config(true, module), do: module.default_config()
-  defp socket_config(config, module), do: Keyword.merge(module.default_config(), config)
 
   defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy.Handler
   defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.CowboyWebSocket

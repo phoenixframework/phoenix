@@ -280,6 +280,43 @@ defmodule Phoenix.Socket.Transport do
     on_exit_message(topic, nil, reason)
   end
 
+  @doc false
+  def load_config(true, module),
+    do: module.default_config()
+
+  def load_config(config, module),
+    do: module.default_config() |> Keyword.merge(config) |> validate_config()
+
+  defp validate_config(config) do
+    {connect_info, config} = Keyword.pop(config, :connect_info, [])
+
+    connect_info =
+      Enum.map(connect_info, fn
+        key when key in [:peer_data, :uri, :x_headers] ->
+          key
+
+        {:session, session} ->
+          {:session, init_session(session)}
+
+        {_, _} = pair ->
+          pair
+
+        other ->
+          raise ArgumentError,
+                ":connect_info keys are expected to be one of :peer_data, :x_headers, :uri, or {:session, config}, " <>
+                  "optionally followed by custom keyword pairs, got: #{inspect(other)}"
+      end)
+
+    [connect_info: connect_info] ++ config
+  end
+
+  defp init_session(session) do
+    key = Keyword.fetch!(session, :key)
+    store = Plug.Session.Store.get(Keyword.fetch!(session, :store))
+    init = store.init(Keyword.drop(session, [:store, :key]))
+    {key, store, init}
+  end
+
   @doc """
   Runs the code reloader if enabled.
   """
