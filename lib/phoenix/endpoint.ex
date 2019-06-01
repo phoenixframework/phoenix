@@ -750,8 +750,41 @@ defmodule Phoenix.Endpoint do
     {conn_ast, path}
   end
 
-  defp socket_config(true, module), do: module.default_config()
-  defp socket_config(config, module), do: Keyword.merge(module.default_config(), config)
+  defp socket_config(true, module),
+    do: module.default_config()
+
+  defp socket_config(config, module),
+    do: module.default_config() |> Keyword.merge(config) |> validate_config()
+
+  defp validate_config(config) do
+    {connect_info, config} = Keyword.pop(config, :connect_info, [])
+
+    connect_info =
+      Enum.map(connect_info, fn
+        key when key in [:peer_data, :uri, :x_headers] ->
+          key
+
+        {:session, session} ->
+          {:session, init_session(session)}
+
+        {_, _} = pair ->
+          pair
+
+        other ->
+          raise ArgumentError,
+                ":connect_info keys are expected to be one of :peer_data, :x_headers, :uri, or {:session, config}, " <>
+                  "optionally followed by custom keyword pairs, got: #{inspect(other)}"
+      end)
+
+    [connect_info: connect_info] ++ config
+  end
+
+  defp init_session(session) do
+    key = Keyword.fetch!(session, :key)
+    store = Plug.Session.Store.get(Keyword.fetch!(session, :store))
+    init = store.init(Keyword.drop(session, [:store, :key]))
+    {key, store, init}
+  end
 
   ## API
 
@@ -833,6 +866,11 @@ defmodule Phoenix.Endpoint do
         * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
         * `:x_headers` - all request headers that have an "x-" prefix
         * `:uri` - a `%URI{}` with information from the conn
+        * `{:session, session_config}` - the session information from `Plug.Conn`.
+          The `session_config` is an exact copy of the arguments given to `Plug.Session`.
+          This requires the "_csrf_token" to be given as request parameter with
+          the value of `Plug.CSRFProtection.get_csrf_token/0` when connecting to
+          the socket. Otherwise the session will be `nil`.
 
       Arbitrary keywords may also appear following the above valid keys, which
       is useful for passing custom connection information to the socket.
@@ -841,14 +879,14 @@ defmodule Phoenix.Endpoint do
 
           socket "/socket", AppWeb.UserSocket,
             websocket: [
-              connect_info: [:peer_data, :x_headers, :uri]
+              connect_info: [:peer_data, :x_headers, :uri, session: [store: :cookie]]
             ]
 
       With arbitrary keywords:
 
           socket "/socket", AppWeb.UserSocket,
             websocket: [
-              connect_info: [:uri, signing_salt: "NZIguRPO"]
+              connect_info: [:uri, custom_value: "abcdef"]
             ]
 
 
@@ -858,6 +896,12 @@ defmodule Phoenix.Endpoint do
 
     * `:timeout` - the timeout for keeping websocket connections
       open after it last received data, defaults to 60_000ms
+
+    * `:max_frame_size` - the maximum allowed frame size in bytes.
+      Supported from Cowboy 2.3 onwards, defaults to "infinity"
+
+    * `:compress` - whether to enable per message compresssion on
+      all data frames, defaults to false
 
   ## Longpoll configuration
 

@@ -16,7 +16,8 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     http: [port: @port],
     debug_errors: false,
     server: true,
-    pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__]
+    pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__],
+    secret_key_base: String.duplicate("a", 64)
   ])
 
   defp lobby do
@@ -101,14 +102,12 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     def connect(params, socket, connect_info) do
       unless params["logging"] == "enabled", do: Logger.disable(self())
       address = Tuple.to_list(connect_info.peer_data.address) |> Enum.join(".")
-      uri = Map.from_struct(connect_info.uri)
-      x_headers = Enum.into(connect_info.x_headers, %{})
 
       connect_info =
         connect_info
-        |> update_in([:peer_data], &Map.put(&1, :address, address))
-        |> Map.put(:uri, uri)
-        |> Map.put(:x_headers, x_headers)
+        |> Map.update!(:peer_data, &Map.put(&1, :address, address))
+        |> Map.update!(:uri, &Map.from_struct/1)
+        |> Map.update!(:x_headers, &Map.new/1)
 
       socket =
         socket
@@ -146,6 +145,10 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
+    @session_config store: :cookie,
+                    key: "_hello_key",
+                    signing_salt: "change_me"
+
     socket "/ws", UserSocket,
       websocket: [
         check_origin: ["//example.com"],
@@ -162,21 +165,27 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
       websocket: [
         check_origin: ["//example.com"],
         timeout: 200,
-        connect_info: [:x_headers, :peer_data, :uri]
+        connect_info: [:x_headers, :peer_data, :uri, session: @session_config, signing_salt: "salt"]
       ]
 
-    socket "/ws/connect_info_custom", UserSocketConnectInfo,
-      websocket: [
-        check_origin: ["//example.com"],
-        timeout: 200,
-        connect_info: [:x_headers, :peer_data, :uri, signing_salt: "salt"]
-      ]
+    plug Plug.Session, @session_config
+    plug :fetch_session
+    plug Plug.CSRFProtection
+    plug :put_session
+
+    defp put_session(conn, _) do
+      conn
+      |> put_session(:from_session, "123")
+      |> send_resp(200, Plug.CSRFProtection.get_csrf_token())
+    end
   end
 
   setup_all do
     capture_log fn -> Endpoint.start_link() end
     :ok
   end
+
+  @endpoint Endpoint
 
   for {serializer, vsn, join_ref} <- [{V1.JSONSerializer, "1.0.0", nil}, {V2.JSONSerializer, "2.0.0", "1"}] do
     @serializer serializer
@@ -286,11 +295,40 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
                                       "port" => 80}}}}
       end
 
+      test "transport session is extracted to the socket connect_info" do
+        import Phoenix.ConnTest
+        path = "ws://127.0.0.1:#{@port}/ws/connect_info/websocket?vsn=#{@vsn}"
+
+        # GET the cookie and CSRF token
+        conn = get(build_conn(), "/")
+        extra_headers = [{"cookie", "_hello_key=" <> conn.resp_cookies["_hello_key"].value}]
+        csrf_token_query = "&_csrf_token=" <> conn.resp_body
+
+        # It works with headers and cookie
+        {:ok, sock} = WebsocketClient.start_link(self(), path <> csrf_token_query, @serializer, extra_headers)
+        WebsocketClient.join(sock, lobby(), %{})
+        assert_receive %Message{event: "joined",
+                                payload: %{"connect_info" => %{"session" =>
+                                             %{"from_session" => "123", "_csrf_token" => _}}}}
+
+        # It doesn't work without headers
+        {:ok, sock} = WebsocketClient.start_link(self(), path <> csrf_token_query, @serializer)
+        WebsocketClient.join(sock, lobby(), %{})
+        assert_receive %Message{event: "joined",
+                                payload: %{"connect_info" => %{"session" => nil}}}
+
+        # It doesn't work with invalid csrf token
+        {:ok, sock} = WebsocketClient.start_link(self(), path <> "&_csrf_token=bad", @serializer, extra_headers)
+        WebsocketClient.join(sock, lobby(), %{})
+        assert_receive %Message{event: "joined",
+                                payload: %{"connect_info" => %{"session" => nil}}}
+      end
+
       test "transport custom keywords are extracted to the socket connect_info" do
         {:ok, sock} =
           WebsocketClient.start_link(
             self(),
-            "ws://127.0.0.1:#{@port}/ws/connect_info_custom/websocket?vsn=#{@vsn}",
+            "ws://127.0.0.1:#{@port}/ws/connect_info/websocket?vsn=#{@vsn}",
             @serializer
           )
         WebsocketClient.join(sock, lobby(), %{})
