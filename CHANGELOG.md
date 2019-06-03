@@ -24,6 +24,15 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.7-dev
+
+### Enhancements
+  * [Router] Add `route_info` for compile and runtime metadata for a given request verb, path, and host
+  * [Endpoint|Router|Controller|Channel] Add `:telemetry` integration with dispatched telemetry events
+
+### Bug Fixes
+  * [Router] Fix compile error for scope's with named parameters when using `forward` route definitions
+
 ## 1.4.6 (2019-05-13)
 
 ### Bug Fixes
