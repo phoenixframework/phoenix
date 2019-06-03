@@ -40,6 +40,8 @@ defmodule Phoenix.Test.ConnTest do
   use Phoenix.ConnTest
   alias Phoenix.Test.ConnTest.{Router, RedirRouter}
 
+  @moduletag :capture_log
+
   defmodule ConnError do
     defexception [message: nil, plug_status: 500]
   end
@@ -188,7 +190,7 @@ defmodule Phoenix.Test.ConnTest do
         port: 111317,
         ssl_cert: <<1, 2, 3, 4>>
       }
-      conn = 
+      conn =
         build_conn()
         |> Plug.Test.put_peer_data(peer_data)
 
