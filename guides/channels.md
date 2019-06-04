@@ -262,7 +262,7 @@ Save the file and your browser should auto refresh, thanks to the Phoenix live r
 In `lib/hello_web/templates/page/index.html.eex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
 ```html
-<div id="messages"></div>
+<div id="messages" role="log" aria-live="polite"></div>
 <input id="chat-input" type="text"></input>
 ```
 
