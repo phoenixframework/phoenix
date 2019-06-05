@@ -10,7 +10,7 @@ for pattern <- ["../../../installer/lib/phx_new/project.ex",
 # Define a fake live reload socket.
 defmodule Phoenix.LiveReloader.Socket do
   def child_spec(_) do
-    Supervisor.Spec.worker(Task, [fn -> :ok end], restart: :temporary)
+    Supervisor.child_spec({Task, fn -> :ok end}, [])
   end
 end
 

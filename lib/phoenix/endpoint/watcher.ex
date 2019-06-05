@@ -1,10 +1,16 @@
 defmodule Phoenix.Endpoint.Watcher do
   @moduledoc false
-  use Task
-
   require Logger
 
-  def start_link(cmd, args, opts) do
+  def child_spec(args) do
+    %{
+      id: make_ref(),
+      start: {__MODULE__, :start_link, [args]},
+      restart: :transient
+    }
+  end
+
+  def start_link({cmd, args, opts}) do
     Task.start_link(__MODULE__, :watch, [to_string(cmd), args, opts])
   end
 

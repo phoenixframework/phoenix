@@ -25,7 +25,7 @@ defmodule Phoenix.Integration.WebSocketTest do
 
     def child_spec(opts) do
       :value = Keyword.fetch!(opts, :custom)
-      Supervisor.Spec.worker(Task, [fn -> :ok end], restart: :transient)
+      Supervisor.child_spec({Task, fn -> :ok end}, [])
     end
 
     def connect(map) do

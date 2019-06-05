@@ -17,7 +17,7 @@ defmodule Phoenix.CodeReloaderTest do
   end
 
   test "compile.phoenix tasks touches files" do
-    assert Mix.Tasks.Compile.Phoenix.run([]) == :noop
+    assert Mix.Tasks.Compile.Phoenix.run([]) == {:noop, []}
   end
 
   test "reloads on every request" do

@@ -27,7 +27,7 @@ defmodule Phoenix.Integration.LongPollSocketTest do
 
     def child_spec(opts) do
       :value = Keyword.fetch!(opts, :custom)
-      Supervisor.Spec.worker(Task, [fn -> :ok end], restart: :transient)
+      Supervisor.child_spec({Task, fn -> :ok end}, [])
     end
 
     def connect(map) do
@@ -77,8 +77,8 @@ defmodule Phoenix.Integration.LongPollSocketTest do
   end
 
   setup do
-    for {_, pid, _, _} <- Supervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
-      Supervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
+    for {_, pid, _, _} <- DynamicSupervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
+      DynamicSupervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
     end
 
     :ok

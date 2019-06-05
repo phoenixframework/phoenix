@@ -67,8 +67,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       server_children(mod, conf, otp_app, server?) ++
       watcher_children(mod, conf, server?)
 
-    # Supervisor.init(children, strategy: :one_for_one)
-    {:ok, {{:one_for_one, 3, 5}, children}}
+    Supervisor.init(children, strategy: :one_for_one)
   end
 
   defp pubsub_children(_mod, conf) do
@@ -89,8 +88,8 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp config_children(mod, conf, default_conf) do
-    args = [mod, conf, default_conf, [name: Module.concat(mod, "Config")]]
-    [worker(Phoenix.Config, args)]
+    args = {mod, conf, default_conf, name: Module.concat(mod, "Config")}
+    [{Phoenix.Config, args}]
   end
 
   defp server_children(mod, config, otp_app, server?) do
@@ -163,8 +162,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp watcher_children(_mod, conf, server?) do
     if server? do
       Enum.map(conf[:watchers], fn {cmd, args} ->
-        worker(Phoenix.Endpoint.Watcher, watcher_args(cmd, args),
-               id: make_ref(), restart: :transient)
+        {Phoenix.Endpoint.Watcher, watcher_args(cmd, args)}
       end)
     else
       []
@@ -173,7 +171,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp watcher_args(cmd, cmd_args) do
     {args, opts} = Enum.split_while(cmd_args, &is_binary(&1))
-    [cmd, args, opts]
+    {cmd, args, opts}
   end
 
   @doc """

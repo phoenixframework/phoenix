@@ -12,7 +12,7 @@ defmodule Phoenix.Config do
   @doc """
   Starts a Phoenix configuration handler.
   """
-  def start_link(module, config, defaults, opts \\ []) do
+  def start_link({module, config, defaults, opts}) do
     permanent = Keyword.keys(defaults)
     GenServer.start_link(__MODULE__, {module, config, permanent}, opts)
   end
