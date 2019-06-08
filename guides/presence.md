@@ -64,7 +64,7 @@ end
 We also need to change our connect function to take a `user_id` from the params and assign it on the socket. In production you may want to use `Phoenix.Token` if you have real users that are authenticated.
 
 ```elixir
-def connect(params, socket) do
+def connect(params, socket, _connect_info) do
   {:ok, assign(socket, :user_id, params["user_id"])}
 end
 ```
