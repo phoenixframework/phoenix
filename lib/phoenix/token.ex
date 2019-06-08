@@ -69,7 +69,7 @@ defmodule Phoenix.Token do
       defmodule MyApp.UserSocket do
         use Phoenix.Socket
 
-        def connect(%{"token" => token}, socket) do
+        def connect(%{"token" => token}, socket, _connect_info) do
           case Phoenix.Token.verify(socket, "user salt", token, max_age: 86400) do
             {:ok, user_id} ->
               socket = assign(socket, :user, Repo.get!(User, user_id))
@@ -78,6 +78,8 @@ defmodule Phoenix.Token do
               :error
           end
         end
+
+        def connect(_params, _socket, _connect_info), do: :error
       end
 
   In this example, the phoenix.js client will send the token in the
