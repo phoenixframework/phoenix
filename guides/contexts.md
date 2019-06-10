@@ -1096,8 +1096,8 @@ defmodule Hello.UserRegistration do
 
   def register_user(params) do
     Multi.new()
-    |> Multi.run(:user, fn _ -> Accounts.create_user(params) end)
-    |> Multi.run(:author, fn %{user: user} ->
+    |> Multi.run(:user, fn _repo, _ -> Accounts.create_user(params) end)
+    |> Multi.run(:author, fn _repo, %{user: user} ->
       {:ok, CMS.ensure_author_exists(user)}
     end)
     |> Repo.transaction()
