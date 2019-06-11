@@ -836,6 +836,9 @@ defmodule Phoenix.Endpoint do
     * `:compress` - whether to enable per message compresssion on
       all data frames, defaults to false
 
+    * `:subprotocol` - supported websocket subprotocol.
+      Used for handshake `Sec-WebSocket-Protocol` response header
+
   ## Longpoll configuration
 
   The following configuration applies only to `:longpoll`:
