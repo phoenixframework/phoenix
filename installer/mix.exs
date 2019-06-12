@@ -1,7 +1,7 @@
 defmodule Phx.New.MixProject do
   use Mix.Project
 
-  @version "1.4.6"
+  @version "1.4.7"
   @github_path "phoenixframework/phoenix"
   @url "https://github.com/#{@github_path}"
 
