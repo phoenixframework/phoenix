@@ -144,14 +144,12 @@ The `Phoenix.Socket.Message` module defines a struct with the following keys whi
 
 ### PubSub
 
-Typically, we don't directly use the Phoenix PubSub layer when developing Phoenix applications.
-Rather, it's used internally by Phoenix itself.
-But we may need to configure it.
-
 PubSub consists of the `Phoenix.PubSub` module and a variety of modules for different adapters and their `GenServer`s.
 These modules contain functions which are the nuts and bolts of organizing Channel communication - subscribing to topics, unsubscribing from topics, and broadcasting messages on a topic.
+PubSub is used internally by Phoenix.
+It's also useful in application development in any case where you want to notify interested processes of an event; for instance, letting all connected [live views](https://github.com/phoenixframework/phoenix_live_view) know that a new comment has been added to a post.
 
-The PubSub system also takes care of getting messages from one node to another, so that it can be sent to all subscribers across the cluster.
+The PubSub system takes care of getting messages from one node to another so that they can be sent to all subscribers across the cluster.
 By default, this is done using [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), which uses native BEAM messaging.
 
 If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](http://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
