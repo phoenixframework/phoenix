@@ -260,11 +260,19 @@ defmodule Phoenix.Router do
   end
 
   @doc false
-  def __call__(%{private: %{phoenix_router: router, phoenix_bypass: {router, pipes}}} = conn, _match) do
-    Enum.reduce(pipes, conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
+  def __call__(
+        %{private: %{phoenix_router: router, phoenix_bypass: {router, pipes}}} = conn,
+        {metadata, prepare, pipeline, _}
+      ) do
+    conn = prepare.(conn, metadata)
+
+    case pipes do
+      :current -> pipeline.(conn)
+      _ -> Enum.reduce(pipes, conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
+    end
   end
-  def __call__(%{private: %{phoenix_bypass: :all}} = conn, _match) do
-    conn
+  def __call__(%{private: %{phoenix_bypass: :all}} = conn, {metadata, prepare, _, _}) do
+    prepare.(conn, metadata)
   end
   def __call__(conn, {metadata, prepare, pipeline, {plug, opts}}) do
     conn = prepare.(conn, metadata)
