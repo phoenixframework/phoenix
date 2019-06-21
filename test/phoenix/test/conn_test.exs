@@ -25,7 +25,7 @@ defmodule Phoenix.Test.ConnTest.Router do
 
   scope "/" do
     pipe_through :browser
-    get "/stat", CatchAll, :stat
+    get "/stat", CatchAll, :stat, private: %{route: :stat}
     forward "/", CatchAll
   end
 
@@ -436,42 +436,61 @@ defmodule Phoenix.Test.ConnTest do
     conn =
       build_conn()
       |> bypass_through(Router, :browser)
-      |> get("/")
+      |> get("/stat")
 
     assert conn.assigns[:bypassed] == [:browser]
+    assert conn.private[:route] == :stat
     refute conn.assigns[:catch_all]
 
     conn =
       build_conn()
       |> bypass_through(Router, [:api])
-      |> get("/")
+      |> get("/stat")
 
     assert conn.assigns[:bypassed] == [:api]
+    assert conn.private[:route] == :stat
     refute conn.assigns[:catch_all]
 
     conn =
       build_conn()
       |> bypass_through(Router, [:browser, :api])
-      |> get("/")
+      |> get("/stat")
 
     assert conn.assigns[:bypassed] == [:browser, :api]
+    assert conn.private[:route] == :stat
     refute conn.assigns[:catch_all]
   end
 
-  test "bypass_through/2 bypasses route match" do
+  test "bypass_through/3 with empty pipeline" do
     conn =
       build_conn()
       |> bypass_through(Router, [])
-      |> get("/")
+      |> get("/stat")
+
+    refute conn.assigns[:bypassed]
+    assert conn.private[:route] == :stat
     refute conn.assigns[:catch_all]
   end
 
-  test "bypass_through/1 bypasses router" do
+  test "bypass_through/2 with route pipeline" do
+    conn =
+      build_conn()
+      |> bypass_through(Router)
+      |> get("/stat")
+
+    assert conn.assigns[:bypassed] == [:browser]
+    assert conn.private[:route] == :stat
+    refute conn.assigns[:catch_all]
+  end
+
+  test "bypass_through/1 without router" do
     conn =
       build_conn()
       |> bypass_through()
-      |> get("/")
+      |> get("/stat")
 
+    refute conn.assigns[:bypassed]
+    assert conn.private[:route] == :stat
     refute conn.assigns[:catch_all]
   end
 
