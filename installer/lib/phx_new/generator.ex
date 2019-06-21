@@ -79,7 +79,7 @@ defmodule Phx.New.Generator do
       Mix.raise ~s[Could not find "use Mix.Config" or "import Config" in #{inspect(file)}]
     else
       [left, middle, right] ->
-        File.write!(file, [left, middle, ?\n, String.strip(to_inject), ?\n, right])
+        File.write!(file, [left, middle, ?\n, String.trim(to_inject), ?\n, right])
     end
   end
 
