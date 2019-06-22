@@ -249,12 +249,18 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
       Mix.shell.info """
       You are generating into an existing context.
+
       The #{inspect context.module} context currently has #{function_count} functions and \
       #{file_count} files in its directory.
 
         * It's OK to have multiple resources in the same context as \
-          long as they are closely related
+      long as they are closely related. But if a context grows too \
+      large, consider breaking it apart
+
         * If they are not closely related, another context probably works better
+
+      The fact two entities are related in the database does not mean they belong \
+      to the same context.
 
       If you are not sure, prefer creating a new context over adding to the existing one.
       """
