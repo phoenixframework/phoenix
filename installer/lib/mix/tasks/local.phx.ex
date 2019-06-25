@@ -9,9 +9,9 @@ defmodule Mix.Tasks.Local.Phx do
 
       mix local.phx
 
-  Accepts the same command line options as `archive.install`.
+  Accepts the same command line options as `archive.install`. `phx.local` is no longer supported after 1.3. To update the Phoenix project generator, please use `mix archive.install hex phx_new` instead.
   """
   def run(args) do
-    Mix.Task.run "archive.install", [@url | args]
+    Mix.Task.run("archive.install", [@url | args])
   end
 end
