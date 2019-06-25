@@ -44,13 +44,3 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
 #       force_ssl: [hsts: true]
 #
 # Check `Plug.SSL` for all available options in `force_ssl`.
-
-# ## Using releases (Elixir v1.9+)
-#
-# If you are doing OTP releases, you need to instruct Phoenix
-# to start each relevant endpoint:
-#
-#     config :<%= web_app_name %>, <%= endpoint_module %>, server: true
-#
-# Then you can assemble a release by calling `mix release`.
-# See `mix help release` for more information.

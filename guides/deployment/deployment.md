@@ -8,9 +8,9 @@ When preparing an application for deployment, there are three main steps:
   * Compiling your application assets
   * Starting your server in production
 
-How those are exactly handled depends on your deployment infrastructure. We have included a guide specific to [Heroku](heroku.html), and for anyone not using Heroku, we recommend using [Distillery](https://github.com/bitwalker/distillery) ([guide for using Distillery with Phoenix](https://hexdocs.pm/distillery/guides/phoenix_walkthrough.html)).
+In this guide, we will learn how to get the production environment running locally. You can use the same techniques in this guide to run your application in production, but depending on your deployment infrastructure, extra steps will be necessary.
 
-In any case, this chapter provides a general overview of the deployment steps, which will be useful regardless of your infrastructure or if you want to run in production locally.
+As an example of deploying to other infrastructures, we are also discuss two different approaches in our guides: using [Elixir's releases with `mix release`](releases.html) and [by using Heroku](heroku.html).
 
 Let's explore those steps above one by one.
 
@@ -32,8 +32,8 @@ Do not copy those values directly, set `SECRET_KEY_BASE` according to the result
 If for some reason you do not want to rely on environment variables, you can hard code the secrets in your `config/prod.secret.exs`, but make sure not to check the file into your version control system.
 
 With your secret information properly secured, it is time to configure assets!
-Before taking this step, we need to do one bit of preparation.
-Since we will be readying everything for production, we need to do some setup in that environment by getting our dependencies and compiling.
+
+Before taking this step, we need to do one bit of preparation. Since we will be readying everything for production, we need to do some setup in that environment by getting our dependencies and compiling.
 
 ```console
 $ mix deps.get --only prod
@@ -48,9 +48,7 @@ Compilation of static assets happens in two steps:
 
 ```console
 $ npm run deploy --prefix ./assets
-
 $ mix phx.digest
-
 Check your digested files at "priv/static".
 ```
 
@@ -84,28 +82,19 @@ $ PORT=4001 MIX_ENV=prod iex -S mix phx.server
 10:59:19.136 [info] Running MyApp.Endpoint with Cowboy on http://example.com
 ```
 
-Or run it detached from the iex console. This effectively daemonizes the process so it can run independently in the background:
-
-```elixir
-MIX_ENV=prod PORT=4001 elixir --detached -S mix do compile, phx.server
-```
-
-Running the application in detached mode allows us to keep the application running even after we terminate the shell connection with the server.
-
 ## Putting it all together
 
 The previous sections give an overview about the main steps required to deploy your Phoenix application. In practice, you will end-up adding steps of your own as well. For example, if you are using a database, you will also want to run `mix ecto.migrate` before starting the server to ensure your database is up to date.
 
 Overall, here is a script you can use as a starting point:
 
-```elixir
+```console
 # Initial setup
 $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 
 # Compile assets
 $ npm run deploy --prefix ./assets
-
 $ mix phx.digest
 
 # Custom tasks (like DB migrations)
@@ -114,3 +103,5 @@ $ MIX_ENV=prod mix ecto.migrate
 # Finally run the server
 $ PORT=4001 MIX_ENV=prod mix phx.server
 ```
+
+And that's it. Next you can learn [how to deploy Phoenix with Elixir's releases](releases.html) and [how to deploy to Heroku](heroku.html).
