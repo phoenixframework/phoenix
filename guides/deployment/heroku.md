@@ -1,14 +1,14 @@
 # Deploying on Heroku
 
-### What we'll need
+## What we'll need
 
 The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](https://hexdocs.pm/phoenix/up_and_running.html).
 
-### Goals
+## Goals
 
 Our main goal for this guide is to get a Phoenix application running on Heroku.
 
-### Limitations
+## Limitations
 
 Heroku is a great platform and Elixir performs well on it. However, you may run into limitations if you plan to leverage advanced features provided by Elixir and Phoenix, such as:
 
@@ -76,6 +76,7 @@ Now that we have the Toolbelt installed, let's create the Heroku application. In
 > Note: the first time we use a Heroku command, it may prompt us to log in. If this happens, just enter the email and password you specified during signup.
 
 We are going to use latest published buildpack, you can also get an edge version of this buildpack. See it's [README](https://github.com/HashNuke/heroku-buildpack-elixir) for more instructions on how to do this.
+
 ```console
 $ heroku create --buildpack hashnuke/elixir
 Creating app... done, ⬢ mysterious-meadow-6277
@@ -106,9 +107,6 @@ erlang_version=21.2.5
 
 We need to compile static assets for a successful Phoenix deployment. The [Phoenix static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) can take care of that for us, so let's add it now.
 
-_Go the the next step if you do not have any static assets (i.e. you created your project with the `--no-webpack --no-html` flags)._
-
-
 ```console
 $ heroku buildpacks:add https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
 Buildpack added. Next release on mysterious-meadow-6277 will use:
@@ -116,13 +114,19 @@ Buildpack added. Next release on mysterious-meadow-6277 will use:
   2. https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
 ```
 
-This phoenix static buildpack pack can be configured to change the node version and compile options. Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
+This Phoenix Static Buildpack pack can be configured to change the node version and compile options. Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
 
-## Adding a Procfile
+Since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to make sure their sequence match the one above.
 
-_If you're using the Phoenix Static Buildpack you can skip this step, because it provides you with a default Procfile that runs `mix phx.server`._
+If your application does not have any static assets, (i.e. you created your project with the `--no-webpack --no-html` flags), you don't need to add the Phoenix Static Buildpack, but you need to tell Heroku how to start your Phoenix application.
 
-The Procfile provided by the Elixir Buildpack runs the command `mix run --no-halt`. By default this will not start the Phoenix server. In order to override it, create a file called `Procfile` in the root directory and add this line to it `mix phx.server`. Heroku will recognize this file and use the command to start your application, ensuring that it also starts the Phoenix server.
+The Procfile provided by the Elixir Buildpack runs the command `mix run --no-halt`. The Phoenix Buildpack changes it to the proper `mix phx.server`, which we have to manually configure when not using the Phoenix Buildpack. To do so, create a file called `Procfile` in the root directory and add a command to run Phoenix server with this line:
+
+```
+web: mix phx.server
+```
+
+Heroku will recognize this file and use the command to start your application, ensuring that it also starts the Phoenix server.
 
 ## Making our Project ready for Heroku
 
@@ -165,8 +169,6 @@ end
 ```
 
 This ensures that any idle connections are closed by Phoenix before they reach Heroku's 55-second timeout window.
-
-As is common with Heroku's buildpacks, you can create your own "Procfile", but for our case we will use the default one provided by the [heroku-buildpack-phoenix-static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static). Since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to check on the sequence these are defined for your app.
 
 ## Creating Environment Variables in Heroku
 
@@ -317,11 +319,11 @@ And that's it!
 
 ## Connecting to your dyno
 
-Heroku gives you the ability to connect to your dyno with an iex shell which allows running Elixir code such as database queries.
+Heroku gives you the ability to connect to your dyno with an IEx shell which allows running Elixir code such as database queries.
 
 - Connect to the dyno with `heroku ps:exec`
-note that if you have several applications on the same repository you will need to specify the app name or the remote name with `--app APP_NAME` or `--remote REMOTE_NAME`
-- Launch an iex session with `iex --sname console --remsh server@${HOSTNAME}`
+- Launch an iex session with `iex --sname console --remsh server@${HOSTNAME}` (if you have several applications on the same repository you will need to specify the app name or the remote name with `--app APP_NAME` or `--remote REMOTE_NAME`)
+- Launch an iex session with `iex --sname console --remsh server`
 
 You have an iex session into your dyno!
 
@@ -379,8 +381,7 @@ Commit this file to the repository and try to push again to Heroku.
 
 ### Connection Timeout Error
 
-If you are constantly getting connection timeouts while running `heroku run` this could mean that your internet provider has blocked
-port number 5000:
+If you are constantly getting connection timeouts while running `heroku run` this could mean that your internet provider has blocked port number 5000:
 
 ```console
 heroku run "POOL_SIZE=2 mix myapp.task"

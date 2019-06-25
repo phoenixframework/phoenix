@@ -50,16 +50,6 @@ config :logger, level: :info
 #
 # Check `Plug.SSL` for all available options in `force_ssl`.
 
-# ## Using releases (Elixir v1.9+)
-#
-# If you are doing OTP releases, you need to instruct Phoenix
-# to start each relevant endpoint:
-#
-#     config :<%= web_app_name %>, <%= endpoint_module %>, server: true
-#
-# Then you can assemble a release by calling `mix release`.
-# See `mix help release` for more information.
-
 # Finally import the config/prod.secret.exs which loads secrets
 # and configuration from environment variables.
 import_config "prod.secret.exs"
