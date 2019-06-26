@@ -42,6 +42,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     extra_conf = [
       endpoint_id: :crypto.strong_rand_bytes(16) |> Base.encode64,
+      # TODO: Remove this once :pubsub is removed
       pubsub_server: secret_conf[:pubsub_server] || secret_conf[:pubsub][:name]
     ]
 
@@ -73,9 +74,9 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp pubsub_children(_mod, conf) do
     pub_conf = conf[:pubsub]
 
-    if adapter = pub_conf[:adapter] do
-      pub_conf = [fastlane: Phoenix.Channel.Server] ++ Keyword.put_new(pub_conf, :pool_size, 1)
-      [supervisor(adapter, [pub_conf[:name], pub_conf])]
+    # TODO: Deprecate me
+    if pub_conf[:adapter] do
+      [{Phoenix.PubSub, pub_conf}]
     else
       []
     end

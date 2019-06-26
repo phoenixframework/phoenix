@@ -5,7 +5,7 @@ defmodule Phoenix.Channel.ChannelTest do
   import Phoenix.Channel
 
   setup_all do
-    {:ok, _} = Phoenix.PubSub.PG2.start_link(@pubsub, pool_size: 1)
+    start_supervised! {Phoenix.PubSub, name: @pubsub, pool_size: 1}
     :ok
   end
 

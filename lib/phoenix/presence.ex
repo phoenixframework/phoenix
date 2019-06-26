@@ -108,7 +108,6 @@ defmodule Phoenix.Presence do
   information, while maintaining the required `:metas` field from the
   original presence data.
   """
-  alias Phoenix.Socket.Broadcast
 
   @type presences :: %{String.t => %{metas: [map()]}}
   @type presence :: %{key: String.t, meta: map()}
@@ -253,9 +252,7 @@ defmodule Phoenix.Presence do
 
       def init(opts) do
         server = Keyword.fetch!(opts, :pubsub_server)
-        {:ok, %{pubsub_server: server,
-                node_name: Phoenix.PubSub.node_name(server),
-                task_sup: @task_supervisor}}
+        {:ok, %{pubsub_server: server, task_sup: @task_supervisor}}
       end
 
       # User API
@@ -288,7 +285,7 @@ defmodule Phoenix.Presence do
       def get_by_key(topic, key), do: Phoenix.Presence.get_by_key(__MODULE__, topic, key)
 
       def handle_diff(diff, state) do
-        Phoenix.Presence.handle_diff(__MODULE__, diff, state.node_name, state.pubsub_server, state.task_sup)
+        Phoenix.Presence.handle_diff(__MODULE__, diff, state.pubsub_server, state.task_sup)
         {:ok, state}
       end
     end
@@ -312,15 +309,13 @@ defmodule Phoenix.Presence do
   end
 
   @doc false
-  def handle_diff(module, diff, node_name, pubsub_server, sup_name) do
+  def handle_diff(module, diff, pubsub_server, sup_name) do
     Task.Supervisor.start_child(sup_name, fn ->
       for {topic, {joins, leaves}} <- diff do
-        msg = %Broadcast{topic: topic, event: "presence_diff", payload: %{
+        Phoenix.Channel.Server.local_broadcast(pubsub_server, topic, "presence_diff", %{
           joins: module.fetch(topic, group(joins)),
           leaves: module.fetch(topic, group(leaves))
-        }}
-
-        Phoenix.PubSub.direct_broadcast!(node_name, pubsub_server, topic, msg)
+        })
       end
     end)
   end

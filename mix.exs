@@ -58,7 +58,7 @@ defmodule Phoenix.MixProject do
     [
       {:plug, "~> 1.8.1 or ~> 1.9"},
       {:telemetry, "~> 0.4"},
-      {:phoenix_pubsub, "~> 1.1"},
+      {:phoenix_pubsub, "~> 2.0-dev", github: "phoenixframework/phoenix_pubsub"},
 
       # Optional deps
       {:plug_cowboy, "~> 1.0 or ~> 2.0", optional: true},

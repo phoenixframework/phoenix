@@ -19,7 +19,7 @@ defmodule Phoenix.PresenceTest do
   Application.put_env(:phoenix, MyPresence, pubsub_server: PresPub)
 
   setup_all do
-    {:ok, _} = Phoenix.PubSub.PG2.start_link(PresPub, pool_size: 1)
+    start_supervised! {Phoenix.PubSub, name: PresPub, pool_size: 1}
     assert {:ok, _pid} = MyPresence.start_link([])
     {:ok, pubsub: PresPub}
   end

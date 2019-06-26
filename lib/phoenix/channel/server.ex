@@ -89,6 +89,55 @@ defmodule Phoenix.Channel.Server do
   ## Channel API
 
   @doc """
+  Hook invoked by Phoenix.PubSub dispatch.
+  """
+  def dispatch(subscribers, from, %Broadcast{event: event} = msg) do
+    Enum.reduce(subscribers, %{}, fn
+      {pid, _}, cache when pid == from ->
+        cache
+
+      {pid, {:fastlane, fastlane_pid, serializer, event_intercepts}}, cache ->
+        if event in event_intercepts do
+          send(pid, msg)
+          cache
+        else
+          case cache do
+            %{^serializer => encoded_msg} ->
+              send(fastlane_pid, encoded_msg)
+              cache
+
+            %{} ->
+              encoded_msg = serializer.fastlane!(msg)
+              send(fastlane_pid, encoded_msg)
+              Map.put(cache, serializer, encoded_msg)
+          end
+        end
+
+      {pid, _}, cache ->
+        send(pid, msg)
+        cache
+    end)
+
+    :ok
+  end
+
+  def dispatch(entries, :none, message) do
+    for {pid, _} <- entries do
+      send(pid, message)
+    end
+
+    :ok
+  end
+
+  def dispatch(entries, from, message) do
+    for {pid, _} <- entries, pid != from do
+      send(pid, message)
+    end
+
+    :ok
+  end
+
+  @doc """
   Broadcasts on the given pubsub server with the given
   `topic`, `event` and `payload`.
 
@@ -96,15 +145,13 @@ defmodule Phoenix.Channel.Server do
   """
   def broadcast(pubsub_server, topic, event, payload)
       when is_binary(topic) and is_binary(event) and is_map(payload) do
-    PubSub.broadcast(pubsub_server, topic, %Broadcast{
+    broadcast = %Broadcast{
       topic: topic,
       event: event,
       payload: payload
-    })
-  end
+    }
 
-  def broadcast(_, topic, event, payload) do
-    raise_invalid_message(topic, event, payload)
+    PubSub.broadcast(pubsub_server, topic, broadcast, __MODULE__)
   end
 
   @doc """
@@ -115,15 +162,13 @@ defmodule Phoenix.Channel.Server do
   """
   def broadcast!(pubsub_server, topic, event, payload)
       when is_binary(topic) and is_binary(event) and is_map(payload) do
-    PubSub.broadcast!(pubsub_server, topic, %Broadcast{
+    broadcast = %Broadcast{
       topic: topic,
       event: event,
       payload: payload
-    })
-  end
+    }
 
-  def broadcast!(_, topic, event, payload) do
-    raise_invalid_message(topic, event, payload)
+    PubSub.broadcast!(pubsub_server, topic, broadcast, __MODULE__)
   end
 
   @doc """
@@ -134,15 +179,13 @@ defmodule Phoenix.Channel.Server do
   """
   def broadcast_from(pubsub_server, from, topic, event, payload)
       when is_binary(topic) and is_binary(event) and is_map(payload) do
-    PubSub.broadcast_from(pubsub_server, from, topic, %Broadcast{
+    broadcast = %Broadcast{
       topic: topic,
       event: event,
       payload: payload
-    })
-  end
+    }
 
-  def broadcast_from(_, _from, topic, event, payload) do
-    raise_invalid_message(topic, event, payload)
+    PubSub.broadcast_from(pubsub_server, from, topic, broadcast, __MODULE__)
   end
 
   @doc """
@@ -153,15 +196,47 @@ defmodule Phoenix.Channel.Server do
   """
   def broadcast_from!(pubsub_server, from, topic, event, payload)
       when is_binary(topic) and is_binary(event) and is_map(payload) do
-    PubSub.broadcast_from!(pubsub_server, from, topic, %Broadcast{
+    broadcast = %Broadcast{
       topic: topic,
       event: event,
       payload: payload
-    })
+    }
+
+    PubSub.broadcast_from!(pubsub_server, from, topic, broadcast, __MODULE__)
   end
 
-  def broadcast_from!(_, _from, topic, event, payload) do
-    raise_invalid_message(topic, event, payload)
+  @doc """
+  Broadcasts on the given pubsub server with the given
+  `topic`, `event` and `payload`.
+
+  The message is encoded as `Phoenix.Socket.Broadcast`.
+  """
+  def local_broadcast(pubsub_server, topic, event, payload)
+      when is_binary(topic) and is_binary(event) and is_map(payload) do
+    broadcast = %Broadcast{
+      topic: topic,
+      event: event,
+      payload: payload
+    }
+
+    PubSub.local_broadcast(pubsub_server, topic, broadcast, __MODULE__)
+  end
+
+  @doc """
+  Broadcasts on the given pubsub server with the given
+  `from`, `topic`, `event` and `payload`.
+
+  The message is encoded as `Phoenix.Socket.Broadcast`.
+  """
+  def local_broadcast_from(pubsub_server, from, topic, event, payload)
+      when is_binary(topic) and is_binary(event) and is_map(payload) do
+    broadcast = %Broadcast{
+      topic: topic,
+      event: event,
+      payload: payload
+    }
+
+    PubSub.local_broadcast_from(pubsub_server, from, topic, broadcast, __MODULE__)
   end
 
   @doc """
@@ -175,10 +250,6 @@ defmodule Phoenix.Channel.Server do
     :ok
   end
 
-  def push(_, topic, event, payload, _) do
-    raise_invalid_message(topic, event, payload)
-  end
-
   @doc """
   Replies to a given ref to the transport process.
   """
@@ -187,22 +258,6 @@ defmodule Phoenix.Channel.Server do
     reply = %Reply{topic: topic, join_ref: join_ref, ref: ref, status: status, payload: payload}
     send(pid, serializer.encode!(reply))
     :ok
-  end
-
-  def reply(_, _, _, topic, {_status, payload}, _) do
-    raise_invalid_message(topic, "phx_reply", payload)
-  end
-
-  @spec raise_invalid_message(topic :: term, event :: term, payload :: term) :: no_return()
-  defp raise_invalid_message(topic, event, payload) do
-    raise ArgumentError, """
-    topic and event must be strings, message must be a map, got:
-
-      topic: #{inspect(topic)}
-      event: #{inspect(event)}
-      payload: #{inspect(payload)}
-
-    """
   end
 
   ## Callbacks
@@ -320,42 +375,6 @@ defmodule Phoenix.Channel.Server do
     :ok
   end
 
-  @doc false
-  def fastlane(subscribers, from, %Broadcast{event: event} = msg) do
-    Enum.reduce(subscribers, %{}, fn
-      {pid, _fastlanes}, cache when pid == from ->
-        cache
-
-      {pid, nil}, cache ->
-        send(pid, msg)
-        cache
-
-      {pid, {fastlane_pid, serializer, event_intercepts}}, cache ->
-        if event in event_intercepts do
-          send(pid, msg)
-          cache
-        else
-          case Map.fetch(cache, serializer) do
-            {:ok, encoded_msg} ->
-              send(fastlane_pid, encoded_msg)
-              cache
-
-            :error ->
-              encoded_msg = serializer.fastlane!(msg)
-              send(fastlane_pid, encoded_msg)
-              Map.put(cache, serializer, encoded_msg)
-          end
-        end
-    end)
-  end
-
-  def fastlane(subscribers, from, msg) do
-    Enum.each(subscribers, fn
-      {pid, _} when pid == from -> :noop
-      {pid, _} -> send(pid, msg)
-    end)
-  end
-
   ## Joins
 
   defp channel_join(channel, topic, auth_payload, socket) do
@@ -386,8 +405,8 @@ defmodule Phoenix.Channel.Server do
     %{transport_pid: transport_pid, serializer: serializer, pubsub_server: pubsub_server} = socket
     Process.monitor(transport_pid)
 
-    fastlane = {transport_pid, serializer, channel.__intercepts__()}
-    PubSub.subscribe(pubsub_server, topic, link: true, fastlane: fastlane)
+    fastlane = {:fastlane, transport_pid, serializer, channel.__intercepts__()}
+    PubSub.subscribe(pubsub_server, topic, metadata: fastlane)
 
     {:noreply, %{socket | joined: true}}
   end
