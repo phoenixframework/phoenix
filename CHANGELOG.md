@@ -1,6 +1,4 @@
-# Changelog for v1.4
-
-## New feature!
+# Changelog for v1.5
 
 ## 1.5.0-dev
 
