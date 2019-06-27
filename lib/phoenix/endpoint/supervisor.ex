@@ -65,7 +65,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       config_children(mod, secret_conf, default_conf) ++
       pubsub_children(mod, conf) ++
       socket_children(mod) ++
-      server_children(mod, conf, otp_app, server?) ++
+      server_children(mod, conf, server?) ++
       watcher_children(mod, conf, server?)
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -93,24 +93,12 @@ defmodule Phoenix.Endpoint.Supervisor do
     [{Phoenix.Config, args}]
   end
 
-  defp server_children(mod, config, otp_app, server?) do
+  defp server_children(mod, config, server?) do
     if server? do
       user_adapter = user_adapter(mod, config)
       autodetected_adapter = cowboy_version_adapter()
       warn_on_different_adapter_version(user_adapter, autodetected_adapter, mod)
-      adapter = user_adapter || autodetected_adapter
-
-      for {scheme, port} <- [http: 4000, https: 4040], opts = config[scheme] do
-        port = :proplists.get_value(:port, opts, port)
-
-        unless port do
-          Logger.error(":port for #{scheme} config is nil, cannot start server")
-          raise "aborting due to nil port"
-        end
-
-        opts = [port: port_to_integer(port), otp_app: otp_app] ++ :proplists.delete(:port, opts)
-        adapter.child_spec(scheme, mod, opts)
-      end
+      (user_adapter || autodetected_adapter).child_specs(mod, config)
     else
       []
     end

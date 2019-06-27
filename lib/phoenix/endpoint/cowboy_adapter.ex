@@ -75,12 +75,29 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
   Phoenix will intercept the requests before they get to your handler.
   """
 
-  import Phoenix.Endpoint.Cowboy2Adapter, only: [info: 3]
-
   require Logger
 
   @doc false
-  def child_spec(scheme, endpoint, config) do
+  def child_specs(endpoint, config) do
+    Logger.warn "Phoenix.Endpoint.CowboyAdapter is deprecated and it will be removed in next versions. " <>
+                  "Please make sure {:plug_cowboy, \"~> 2.1\"} or later is listed in your mix.exs"
+
+    otp_app = Keyword.fetch!(config, :otp_app)
+
+    for {scheme, port} <- [http: 4000, https: 4040], opts = config[scheme] do
+      port = :proplists.get_value(:port, opts, port)
+
+      unless port do
+        Logger.error(":port for #{scheme} config is nil, cannot start server")
+        raise "aborting due to nil port"
+      end
+
+      opts = [port: port_to_integer(port), otp_app: otp_app] ++ :proplists.delete(:port, opts)
+      child_spec(scheme, endpoint, opts)
+    end
+  end
+
+  defp child_spec(scheme, endpoint, config) do
     if scheme == :https do
       Application.ensure_all_started(:ssl)
     end
@@ -93,8 +110,7 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
     dispatches = dispatches ++ [{:_, Plug.Adapters.Cowboy.Handler, {endpoint, []}}]
 
     config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
-    spec = Plug.Cowboy.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
-    update_in(spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]})
+    Plug.Cowboy.child_spec(scheme: scheme, plug: {endpoint, []}, options: config)
   end
 
   defp transports(endpoint, path, socket, opts) do
@@ -132,6 +148,7 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
 
     paths
   end
+
   defp socket_path(path, config) do
     end_path_fragment = Keyword.fetch!(config, :path)
     parts = String.split(path <> "/" <> end_path_fragment, "/", trim: true)
@@ -155,4 +172,24 @@ defmodule Phoenix.Endpoint.CowboyAdapter do
         error
     end
   end
+
+  defp info(scheme, endpoint, ref) do
+    server = "cowboy #{Application.spec(:cowboy)[:vsn]}"
+    "Running #{inspect endpoint} with #{server} at #{bound_address(scheme, ref)}"
+  end
+
+  defp bound_address(scheme, ref) do
+    case :ranch.get_addr(ref) do
+      {:local, unix_path} ->
+        "#{unix_path} (#{scheme}+unix)"
+
+      {addr, port} ->
+        "#{:inet.ntoa(addr)}:#{port} (#{scheme})"
+    end
+  end
+
+  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
+  defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
+  defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
+  defp port_to_integer(port) when is_integer(port), do: port
 end

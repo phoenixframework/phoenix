@@ -42,7 +42,7 @@ defmodule Phoenix.Endpoint do
         YourApp.Endpoint
       ]
 
-  ### Endpoint configuration
+  ## Endpoint configuration
 
   All endpoints are configured in your application environment.
   For example:
@@ -94,6 +94,9 @@ defmodule Phoenix.Endpoint do
 
   ### Runtime configuration
 
+    * `:adapter` - which webserver adapter to use for serving web requests.
+      See the "Adapter configuration" section below
+
     * `:cache_static_manifest` - a path to a json manifest file that contains
       static files and their digested version. This is typically set to
       "priv/static/cache_manifest.json" which is the file automatically generated
@@ -115,14 +118,6 @@ defmodule Phoenix.Endpoint do
       followed by arguments in the MFA list
 
       Defaults to `true`.
-
-    * `:http` - the configuration for the HTTP server. Currently uses
-      Cowboy and accepts all options as defined by
-      [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults to `false`
-
-    * `:https` - the configuration for the HTTPS server. Currently uses
-      Cowboy and accepts all options as defined by
-      [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults to `false`
 
     * `:force_ssl` - ensures no data is ever sent via HTTP, always redirecting
       to HTTPS. It expects a list of options which are forwarded to `Plug.SSL`.
@@ -201,20 +196,28 @@ defmodule Phoenix.Endpoint do
             ]
           ]
 
-    * `:pubsub` - configuration for this endpoint's pubsub adapter.
-      Configuration either requires a `:name` of the registered pubsub
-      server or a `:name` and `:adapter` pair. The pubsub name and adapter
-      are compile time configuration, while the remaining options are runtime.
-      The given adapter and name pair will be started as part of the supervision
-      tree. If no adapter is specified, the pubsub system will work by sending
-      events and subscribing to the given name. Defaults to:
+    * `:pubsub_server` - the name of the pubsub server to use in channels
+      and via the Endpoint broadcast funtions. The PubSub server is typically
+      started in your supervision tree.
 
-          [adapter: Phoenix.PubSub.PG2, name: MyApp.PubSub]
+  ### Adapter configuration
 
-      It also supports custom adapter configuration:
+  Phoenix allows you to choose which webserver adapter to use. The default
+  is `Phoenix.Endpoint.Cowboy2Adapter` which can be configured via the
+  following options.
 
-          [name: :my_pubsub, adapter: Phoenix.PubSub.Redis,
-           host: "192.168.100.1"]
+    * `:http` - the configuration for the HTTP server. It accepts all options
+      as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
+      to `false`
+
+    * `:https` - the configuration for the HTTPS server. It accepts all options
+      as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
+      to `false`
+
+    * `:drainer` - a drainer process that triggers when your application is
+      shutting to wait for any on-going request to finish. It accepts all
+      options as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.httml).
+      Defaults to `[]` and can be disabled by setting it to false.
 
   ## Endpoint API
 
