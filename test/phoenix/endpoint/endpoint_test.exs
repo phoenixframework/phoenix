@@ -160,6 +160,14 @@ defmodule Phoenix.Endpoint.EndpointTest do
     Endpoint.broadcast!("sometopic", "event4", %{key: :val})
     assert_receive %Phoenix.Socket.Broadcast{
       event: "event4", payload: %{key: :val}, topic: "sometopic"}
+
+    Endpoint.local_broadcast_from(some, "sometopic", "event1", %{key: :val})
+    assert_receive %Phoenix.Socket.Broadcast{
+      event: "event1", payload: %{key: :val}, topic: "sometopic"}
+
+    Endpoint.local_broadcast("sometopic", "event3", %{key: :val})
+    assert_receive %Phoenix.Socket.Broadcast{
+      event: "event3", payload: %{key: :val}, topic: "sometopic"}
   end
 
   test "server?/2 returns true for explicitly true server", config do

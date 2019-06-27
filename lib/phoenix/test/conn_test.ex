@@ -130,15 +130,6 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Deprecated version of `conn/0`. Use `build_conn/0` instead.
-  """
-  @spec conn() :: Conn.t
-  def conn() do
-    IO.warn "using conn/0 to build a connection is deprecated. Use build_conn/0 instead"
-    build_conn()
-  end
-
-  @doc """
   Creates a connection to be used in upcoming requests
   with a preset method, path and body.
 
@@ -150,18 +141,6 @@ defmodule Phoenix.ConnTest do
     Plug.Adapters.Test.Conn.conn(%Conn{}, method, path, params_or_body)
     |> Conn.put_private(:plug_skip_csrf_protection, true)
     |> Conn.put_private(:phoenix_recycled, true)
-  end
-
-  @doc """
-  Deprecated version of `conn/3`. Use `build_conn/3` instead.
-  """
-  @spec conn(atom | binary, binary, binary | list | map | nil) :: Conn.t
-  def conn(method, path, params_or_body \\ nil) do
-    IO.warn """
-    using conn/3 to build a connection is deprecated. Use build_conn/3 instead.
-    #{Exception.format_stacktrace}
-    """
-    build_conn(method, path, params_or_body)
   end
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]

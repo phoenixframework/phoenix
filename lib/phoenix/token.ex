@@ -178,7 +178,7 @@ defmodule Phoenix.Token do
       {:ok, message} ->
         %{data: data, signed: signed} = Plug.Crypto.safe_binary_to_term(message)
 
-        if expired?(signed, opts[:max_age]) do
+        if expired?(signed, Keyword.get(opts, :max_age, 86400)) do
           {:error, :expired}
         else
           {:ok, data}
@@ -225,18 +225,7 @@ defmodule Phoenix.Token do
   end
 
   defp expired?(_signed, :infinity), do: false
-
-  defp expired?(_signed, nil) do
-    # TODO v2: Default to 86400 on future releases.
-    Logger.warn ":max_age was not set on Phoenix.Token.verify/4. " <>
-                "A max_age is recommended otherwise tokens are forever valid. " <>
-                "Please set it to the amount of seconds the token is valid, " <>
-                "such as 86400 (1 day), or :infinity if you really want this token to be valid forever"
-    false
-  end
-
   defp expired?(_signed, max_age_secs) when max_age_secs <= 0, do: true
-
   defp expired?(signed, max_age_secs), do: (signed + trunc(max_age_secs * 1000)) < now_ms()
 
   defp now_ms, do: System.system_time(:millisecond)

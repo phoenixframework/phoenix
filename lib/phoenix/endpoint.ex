@@ -228,7 +228,8 @@ defmodule Phoenix.Endpoint do
     * for handling paths and URLs: `c:struct_url/0`, `c:url/0`, `c:path/1`,
       `c:static_url/0`,`c:static_path/1`, and `c:static_integrity/1`
     * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,
-      `c:broadcast_from/4`, and `c:broadcast_from!/4`
+      `c:broadcast_from/4`, `c:broadcast_from!/4`, `c:local_broadcast/3`,
+      and `c:local_broadcast_from/4`
     * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`
     * as required by the `Plug` behaviour: `c:Plug.init/1` and `c:Plug.call/2`
 
@@ -348,31 +349,39 @@ defmodule Phoenix.Endpoint do
 
   # Channels
 
-  # TODO: Add local_broadcast calls
-
   @doc """
-  Broadcasts a `msg` as `event` in the given `topic`.
+  Broadcasts a `msg` as `event` in the given `topic` to all nodes.
   """
   @callback broadcast(topic, event, msg) :: :ok | {:error, term}
 
   @doc """
-  Broadcasts a `msg` as `event` in the given `topic`.
+  Broadcasts a `msg` as `event` in the given `topic` to all nodes.
 
   Raises in case of failures.
   """
   @callback broadcast!(topic, event, msg) :: :ok | no_return
 
   @doc """
-  Broadcasts a `msg` from the given `from` as `event` in the given `topic`.
+  Broadcasts a `msg` from the given `from` as `event` in the given `topic` to all nodes.
   """
   @callback broadcast_from(from :: pid, topic, event, msg) :: :ok | {:error, term}
 
   @doc """
-  Broadcasts a `msg` from the given `from` as `event` in the given `topic`.
+  Broadcasts a `msg` from the given `from` as `event` in the given `topic` to all nodes.
 
   Raises in case of failures.
   """
   @callback broadcast_from!(from :: pid, topic, event, msg) :: :ok | no_return
+
+  @doc """
+  Broadcasts a `msg` as `event` in the given `topic` within the current node.
+  """
+  @callback local_broadcast(topic, event, msg) :: :ok
+
+  @doc """
+  Broadcasts a `msg` from the given `from` as `event` in the given `topic` within the current node.
+  """
+  @callback local_broadcast_from(from :: pid, topic, event, msg) :: :ok
 
   @doc false
   defmacro __using__(opts) do
@@ -430,6 +439,14 @@ defmodule Phoenix.Endpoint do
 
       def broadcast!(topic, event, msg) do
         Phoenix.Channel.Server.broadcast!(pubsub_server!(), topic, event, msg)
+      end
+
+      def local_broadcast(topic, event, msg) do
+        Phoenix.Channel.Server.local_broadcast(pubsub_server!(), topic, event, msg)
+      end
+
+      def local_broadcast_from(from, topic, event, msg) do
+        Phoenix.Channel.Server.local_broadcast_from(pubsub_server!(), from, topic, event, msg)
       end
 
       defp pubsub_server! do
