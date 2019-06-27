@@ -224,7 +224,6 @@ defmodule Phoenix.Endpoint do
 
     * for handling paths and URLs: `c:struct_url/0`, `c:url/0`, `c:path/1`,
       `c:static_url/0`,`c:static_path/1`, and `c:static_integrity/1`
-    * for handling channel subscriptions: `c:subscribe/2` and `c:unsubscribe/1`
     * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,
       `c:broadcast_from/4`, and `c:broadcast_from!/4`
     * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`
@@ -346,17 +345,7 @@ defmodule Phoenix.Endpoint do
 
   # Channels
 
-  @doc """
-  Subscribes the caller to the given topic.
-
-  See `Phoenix.PubSub.subscribe/3` for options.
-  """
-  @callback subscribe(topic, opts :: Keyword.t) :: :ok | {:error, term}
-
-  @doc """
-  Unsubscribes the caller from the given topic.
-  """
-  @callback unsubscribe(topic) :: :ok | {:error, term}
+  # TODO: Add local_broadcast calls
 
   @doc """
   Broadcasts a `msg` as `event` in the given `topic`.
@@ -414,12 +403,12 @@ defmodule Phoenix.Endpoint do
 
   defp pubsub() do
     quote do
-      # TODO: Deprecate me
+      @deprecated "#{inspect(__MODULE__)}.subscribe/2 is deprecated, please call Phoenix.PubSub directly instead"
       def subscribe(topic, opts \\ []) when is_binary(topic) do
         Phoenix.PubSub.subscribe(pubsub_server!(), topic, [])
       end
 
-      # TODO: Deprecate me
+      @deprecated "#{inspect(__MODULE__)}.unsubscribe/1 is deprecated, please call Phoenix.PubSub directly instead"
       def unsubscribe(topic) do
         Phoenix.PubSub.unsubscribe(pubsub_server!(), topic)
       end

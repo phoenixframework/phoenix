@@ -39,7 +39,7 @@ defmodule Phoenix.Test.ChannelTest do
     end
 
     def join("foo:external", _, socket) do
-      :ok = Endpoint.subscribe("external:topic")
+      :ok = Phoenix.PubSub.subscribe(Phoenix.Test.ChannelTest.PubSub, "external:topic")
       {:ok, socket}
     end
 
