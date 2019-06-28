@@ -31,7 +31,7 @@ defmodule Phoenix.PresenceTest do
   test "defines child_spec/1" do
     assert DefaultPresence.child_spec([]) == %{
       id: DefaultPresence,
-      start: {DefaultPresence, :start_link, [[]]},
+      start: {Phoenix.Presence, :start_link, [Phoenix.PresenceTest.DefaultPresence, [otp_app: :phoenix]]},
       type: :supervisor
     }
   end
