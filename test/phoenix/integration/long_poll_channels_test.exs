@@ -17,7 +17,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
     server: true,
-    pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__, pool_size: @pool_size]
+    pubsub_server: __MODULE__
   ])
 
   defmodule RoomChannel do
@@ -128,7 +128,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
   end
 
   setup_all do
-    capture_log fn -> Endpoint.start_link() end
+    capture_log(fn -> start_supervised! Endpoint end)
+    start_supervised! {Phoenix.PubSub, name: __MODULE__, pool_size: @pool_size}
     :ok
   end
 

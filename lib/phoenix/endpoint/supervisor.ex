@@ -71,10 +71,25 @@ defmodule Phoenix.Endpoint.Supervisor do
     Supervisor.init(children, strategy: :one_for_one)
   end
 
-  defp pubsub_children(_mod, conf) do
+  defp pubsub_children(mod, conf) do
     pub_conf = conf[:pubsub]
 
-    # TODO: Deprecate me
+    if pub_conf do
+      Logger.warn """
+      The :pubsub key in your #{inspect mod} is deprecated.
+
+      You must now start the pubsub in your application supervision tree.
+      Go to lib/my_app/application.ex and add the following:
+
+          {Phoenix.PubSub, #{inspect pub_conf}}
+
+      Now, back in your config files in config/*, you can remove the :pubsub
+      key and add the :pubsub_server key, with the PubSub name:
+
+          pubsub_server: #{inspect pub_conf[:name]}
+      """
+    end
+
     if pub_conf[:adapter] do
       [{Phoenix.PubSub, pub_conf}]
     else

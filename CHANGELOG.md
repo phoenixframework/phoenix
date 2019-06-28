@@ -1,5 +1,11 @@
 # Changelog for v1.5
 
+## Phoenix.PubSub 2.0 released
+
+Phoenix.PubSub 2.0 has been released with a more flexible and powerful fastlane mechanism. We use this opportunity to also move Phoenix.PubSub out of the endpoint and explicitly into your supervision tree. To update, you will need to remove or update the `{:phoenix_pubsub, "~> 1.x"}` entry in your `mix.exs` to at least "2.0".
+
+Then once you start an application, you will get a warning about the `:pubsub` key in your endpoint being deprecated. Follow the steps in the warning and you are good to go!
+
 ## 1.5.0-dev
 
 ### Enhancements
@@ -21,7 +27,7 @@
 
 ### phx.new installer
 
-  * `Phoenix.PubSub` is now started directly in your application supervision tree. For umbrella apps, it belongs to the context
+  * `Phoenix.PubSub` is now started directly in your application supervision tree
 
 ### JavaScript client
 

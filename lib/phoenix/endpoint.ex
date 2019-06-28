@@ -450,17 +450,8 @@ defmodule Phoenix.Endpoint do
       end
 
       defp pubsub_server! do
-        config(:pubsub_server) || raise ArgumentError, """
-        no :pubsub server configured at, please setup :pubsub in your config.
-
-        By default this looks like:
-
-            config :my_app, MyApp.PubSub,
-              ...,
-              pubsub: [name: MyApp.PubSub,
-              adapter: Phoenix.PubSub.PG2]
-
-        """
+        config(:pubsub_server) ||
+          raise ArgumentError, "no :pubsub_server configured for #{inspect(__MODULE__)}"
       end
     end
   end

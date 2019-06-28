@@ -9,7 +9,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
            server: false, http: [port: 80], https: [port: 443],
            force_ssl: [subdomains: true],
            cache_static_manifest: "../../../../test/fixtures/cache_manifest.json",
-           pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
+           pubsub_server: :endpoint_pub]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
   defmodule Endpoint do
@@ -26,7 +26,8 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   setup_all do
-    ExUnit.CaptureLog.capture_log(fn -> Endpoint.start_link() end)
+    ExUnit.CaptureLog.capture_log(fn -> start_supervised! Endpoint end)
+    start_supervised! {Phoenix.PubSub, name: :endpoint_pub}
     on_exit fn -> Application.delete_env(:phoenix, :serve_endpoints) end
     :ok
   end

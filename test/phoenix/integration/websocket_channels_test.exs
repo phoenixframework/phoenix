@@ -16,7 +16,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     http: [port: @port],
     debug_errors: false,
     server: true,
-    pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__],
+    pubsub_server: __MODULE__,
     secret_key_base: String.duplicate("a", 64)
   ])
 
@@ -181,7 +181,8 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
   end
 
   setup_all do
-    capture_log fn -> Endpoint.start_link() end
+    capture_log fn -> start_supervised! Endpoint end
+    start_supervised! {Phoenix.PubSub, name: __MODULE__}
     :ok
   end
 
