@@ -495,7 +495,7 @@ defmodule Phoenix.ConnTest do
 
   For example, imagine you are testing an authentication plug in
   isolation, but you need to invoke the Endpoint plugs and router
-  Ripelines to set up session and flash related dependencies.
+  pipelines to set up session and flash related dependencies.
   One option is to invoke an existing route that uses the proper
   pipelines. You can do so by passing the connection and the
   router name to `bypass_through`:
