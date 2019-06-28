@@ -7,12 +7,10 @@ defmodule <%= web_namespace %>.Application do
 
   def start(_type, _args) do
     children = [
-      # Start the PubSub system
-      {Phoenix.PubSub, name: <%= web_namespace %>.PubSub},
       # Start the Endpoint (http/https)
       <%= endpoint_module %>
-      # Starts a worker by calling: <%= web_namespace %>.Worker.start_link(arg)
-      # {<%= web_namespace %>.Worker, arg},
+      # Start a worker by calling: <%= web_namespace %>.Worker.start_link(arg)
+      # {<%= web_namespace %>.Worker, arg}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

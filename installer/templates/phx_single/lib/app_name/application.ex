@@ -10,11 +10,11 @@ defmodule <%= app_module %>.Application do
       # Start the Ecto repository
       <%= app_module %>.Repo,<% end %>
       # Start the PubSub system
-      {Phoenix.PubSub, name: <%= web_namespace %>.PubSub},
+      {Phoenix.PubSub, name: <%= app_module %>.PubSub},
       # Start the Endpoint (http/https)
       <%= endpoint_module %>
-      # Starts a worker by calling: <%= app_module %>.Worker.start_link(arg)
-      # {<%= app_module %>.Worker, arg},
+      # Start a worker by calling: <%= app_module %>.Worker.start_link(arg)
+      # {<%= app_module %>.Worker, arg}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

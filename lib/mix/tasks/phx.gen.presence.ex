@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
 
     binding = inflections ++ [
       otp_app: otp_app,
-      pubsub_server: Module.concat(inflections[:web_module], "PubSub")
+      pubsub_server: Module.concat(inflections[:base], "PubSub")
     ]
 
     files = [

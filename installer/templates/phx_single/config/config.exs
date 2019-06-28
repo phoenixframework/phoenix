@@ -17,7 +17,7 @@ config :<%= app_name %>, <%= endpoint_module %>,
   url: [host: "localhost"],
   secret_key_base: "<%= secret_key_base %>",
   render_errors: [view: <%= web_namespace %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json), layout: false],
-  pubsub_server: <%= web_namespace %>.PubSub
+  pubsub_server: <%= app_module %>.PubSub
 
 # Configures Elixir's Logger
 config :logger, :console,
