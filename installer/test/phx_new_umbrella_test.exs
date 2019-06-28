@@ -153,7 +153,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "mix.exs"), fn file ->
         assert file =~ "{:phx_umb, in_umbrella: true}"
         assert file =~ "{:phoenix,"
-        assert file =~ "{:phoenix_pubsub,"
         assert file =~ "{:gettext,"
         assert file =~ "{:plug_cowboy,"
       end
