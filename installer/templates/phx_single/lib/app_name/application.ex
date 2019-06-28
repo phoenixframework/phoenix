@@ -6,11 +6,12 @@ defmodule <%= app_module %>.Application do
   use Application
 
   def start(_type, _args) do
-    # List all child processes to be supervised
     children = [<%= if ecto do %>
       # Start the Ecto repository
       <%= app_module %>.Repo,<% end %>
-      # Start the endpoint when the application starts
+      # Start the PubSub system
+      {Phoenix.PubSub, name: <%= web_namespace %>.PubSub},
+      # Start the Endpoint (http/https)
       <%= endpoint_module %>
       # Starts a worker by calling: <%= app_module %>.Worker.start_link(arg)
       # {<%= app_module %>.Worker, arg},

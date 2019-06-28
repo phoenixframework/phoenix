@@ -6,5 +6,5 @@ defmodule <%= module %> do
   docs for more details.
   """
   use Phoenix.Presence, otp_app: <%= inspect otp_app %>,
-                        pubsub_server: <%= inspect binding()[:pubsub_server] %>
+                        pubsub_server: <%= inspect pubsub_server %>
 end
