@@ -63,50 +63,58 @@ defmodule Phoenix.Presence do
 
   In the example above, the current presence information for
   the socket's topic is pushed to the client as a `"presence_state"` event.
-  Next, `Presence.track` is used to register this
-  channel's process as a presence for the socket's user ID, with
-  a map of metadata.
+  Next, `Presence.track` is used to register this channel's process as a
+  presence for the socket's user ID, with a map of metadata.
 
   Finally, a diff of presence join and leave events will be sent to the
   client as they happen in real-time with the "presence_diff" event.
   The diff structure will be a map of `:joins` and `:leaves` of the form:
 
-      %{joins: %{"123" => %{metas: [%{status: "away", phx_ref: ...}]},
-        leaves: %{"456" => %{metas: [%{status: "online", phx_ref: ...}]},
+      %{
+        joins: %{"123" => %{metas: [%{status: "away", phx_ref: ...}]},
+        leaves: %{"456" => %{metas: [%{status: "online", phx_ref: ...}]
+      },
 
-  See `Phoenix.Presence.list/2` for more information on the presence
-  data structure.
+  See `c:list/2` for more information on the presence data structure.
 
   ## Fetching Presence Information
 
   Presence metadata should be minimized and used to store small,
   ephemeral state, such as a user's "online" or "away" status.
-  More detailed information, such as user details that need to
-  be fetched from the database, can be achieved by overriding the `fetch/2`
-  function. The `fetch/2` callback is triggered when using `list/1`
-  and serves as a mechanism to fetch presence information a single time,
-  before broadcasting the information to all channel subscribers.
+  More detailed information, such as user details that need to be fetched
+  from the database, can be achieved by overriding the `c:fetch/2` function.
+
+  The `c:fetch/2` callback is triggered when using `c:list/2` and on
+  every update, and it serves as a mechanism to fetch presence information
+  a single time, before broadcasting the information to all channel subscribers.
   This prevents N query problems and gives you a single place to group
-  isolated data fetching to extend presence metadata. The function must
-  return a map of data matching the outlined Presence data structure,
-  including the `:metas` key, but can extend the map of information
-  to include any additional information. For example:
+  isolated data fetching to extend presence metadata.
+
+  The function must return a map of data matching the outlined Presence
+  data structure, including the `:metas` key, but can extend the map of
+  information to include any additional information. For example:
 
       def fetch(_topic, presences) do
-        query =
-          from u in User,
-            where: u.id in ^Map.keys(presences),
-            select: {u.id, u}
-
-        users = query |> Repo.all() |> Enum.into(%{})
+        users = entries |> Map.keys() |> Accounts.get_users_map()
 
         for {key, %{metas: metas}} <- presences, into: %{} do
           {key, %{metas: metas, user: users[key]}}
         end
       end
 
-  The function above fetches all users from the database who
-  have registered presences for the given topic. The fetched
+  Where `Account.get_users_map/1` could be implemented like:
+
+      def get_users_map(ids) do
+        query =
+          from u in User,
+            where: u.id in ^ids,
+            select: {u.id, u}
+
+        query |> Repo.all() |> Enum.into(%{})
+      end
+
+  The `fetch/2` function above fetches all users from the database who
+  have registered presences for the given topic. The presences
   information is then extended with a `:user` key of the user's
   information, while maintaining the required `:metas` field from the
   original presence data.
