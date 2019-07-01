@@ -151,10 +151,10 @@ Elixir releases work well with container technologies, such as Docker. The idea 
 Here is an example Docker file to run at the root of your application covering all of the steps above:
 
 ```
-# FROM elixir:1.9.0-alpine as build
+FROM elixir:1.9.0-alpine as build
 
 # install build dependencies
-RUN apk add --update build-base nodejs npm
+RUN apk add --update build-base npm git
 
 # prepare build dir
 RUN mkdir /app
