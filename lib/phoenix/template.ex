@@ -184,16 +184,12 @@ defmodule Phoenix.Template do
         template_not_found(template, Map.put(assigns, :__phx_template_not_found__, __MODULE__))
       end
 
-      @doc """
-      Returns the template root alongside all templates.
-      """
+      @doc false
       def __templates__ do
         {@phoenix_root, @phoenix_pattern, unquote(names)}
       end
 
-      @doc """
-      Returns true whenever the list of templates changes in the filesystem.
-      """
+      @doc false
       def __phoenix_recompile__? do
         unquote(hash(root, pattern, engines)) != Template.hash(@phoenix_root, @phoenix_pattern, @phoenix_template_engines)
       end
