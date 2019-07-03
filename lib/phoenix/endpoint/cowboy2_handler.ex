@@ -17,7 +17,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
       case endpoint.__handler__(conn, opts) do
         {:websocket, conn, handler, opts} ->
           case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
-            {:ok, %{adapter: {@connection, req}}, state} ->
+            {:ok, %Plug.Conn{adapter: {@connection, req}} = conn, state} ->
               cowboy_opts =
                 opts
                 |> Enum.flat_map(fn
@@ -28,10 +28,10 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
                 end)
                 |> Map.new()
 
-              {:cowboy_websocket, req, [handler | state], cowboy_opts}
+              {:cowboy_websocket, copy_resp_headers(conn, req), [handler | state], cowboy_opts}
 
-            {:error, %{adapter: {@connection, req}}} ->
-              {:ok, req, {handler, opts}}
+            {:error, %Plug.Conn{adapter: {@connection, req}} = conn} ->
+              {:ok, copy_resp_headers(conn, req), {handler, opts}}
           end
 
         {:plug, conn, handler, opts} ->
@@ -114,6 +114,13 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
 
   def terminate(reason, _req, [handler | state]) do
     handler.terminate(reason, state)
+  end
+
+  @doc false
+  def copy_resp_headers(%Plug.Conn{} = conn, req) do
+    Enum.reduce(conn.resp_headers, req, fn {key, val}, acc ->
+      :cowboy_req.set_resp_header(key, val, acc)
+    end)
   end
 
   defp handle_reply(handler, {:ok, state}), do: {:ok, [handler | state]}
