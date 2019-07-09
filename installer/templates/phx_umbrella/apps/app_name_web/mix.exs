@@ -37,8 +37,7 @@ defmodule <%= web_namespace %>.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      <%= phoenix_dep %>,
-      {:phoenix_pubsub, "~> 1.1"},<%= if ecto do %>
+      <%= phoenix_dep %>,<%= if ecto do %>
       {:phoenix_ecto, "~> 4.0"},<% end %><%= if html do %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %>

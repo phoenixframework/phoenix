@@ -130,15 +130,6 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Deprecated version of `conn/0`. Use `build_conn/0` instead.
-  """
-  @spec conn() :: Conn.t
-  def conn() do
-    IO.warn "using conn/0 to build a connection is deprecated. Use build_conn/0 instead"
-    build_conn()
-  end
-
-  @doc """
   Creates a connection to be used in upcoming requests
   with a preset method, path and body.
 
@@ -150,18 +141,6 @@ defmodule Phoenix.ConnTest do
     Plug.Adapters.Test.Conn.conn(%Conn{}, method, path, params_or_body)
     |> Conn.put_private(:plug_skip_csrf_protection, true)
     |> Conn.put_private(:phoenix_recycled, true)
-  end
-
-  @doc """
-  Deprecated version of `conn/3`. Use `build_conn/3` instead.
-  """
-  @spec conn(atom | binary, binary, binary | list | map | nil) :: Conn.t
-  def conn(method, path, params_or_body \\ nil) do
-    IO.warn """
-    using conn/3 to build a connection is deprecated. Use build_conn/3 instead.
-    #{Exception.format_stacktrace}
-    """
-    build_conn(method, path, params_or_body)
   end
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
@@ -501,24 +480,34 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Calls the Endpoint and bypasses Router match.
+  Calls the Endpoint and Router pipelines.
 
-  Useful for unit testing Plugs where Endpoint and/or
-  router pipeline plugs are required for proper setup.
+  Useful for unit testing Plugs where Endpoint and/or router pipeline
+  plugs are required for proper setup.
 
   Note the use of `get("/")` following `bypass_through` in the examples below.
   To execute the plug pipelines, you must issue a request against the router.
   Most often, you can simpy send a GET request against the root path, but you
   may also specify a different method or path which your pipelines may operate
-  against. If you ommit the request you may find that your tests return
-  a `flash not fetched, call fetch_flash/2` or similar error.
+  against.
 
   ## Examples
 
-  For example, imagine you are testing an authentication
-  plug in isolation, but you need to invoke the Endpoint plugs
-  and `:browser` pipeline of your Router for session and flash
-  related dependencies:
+  For example, imagine you are testing an authentication plug in
+  isolation, but you need to invoke the Endpoint plugs and router
+  pipelines to set up session and flash related dependencies.
+  One option is to invoke an existing route that uses the proper
+  pipelines. You can do so by passing the connection and the
+  router name to `bypass_through`:
+
+      conn =
+        conn
+        |> bypass_through(MyAppWeb.Router)
+        |> get("/some_url")
+        |> MyApp.RequireAuthentication.call([])
+      assert conn.halted
+
+  You can also specify which pipelines you want to run:
 
       conn =
         conn
@@ -527,22 +516,14 @@ defmodule Phoenix.ConnTest do
         |> MyApp.RequireAuthentication.call([])
       assert conn.halted
 
-  Alternatively, you could invoke only the Endpoint, and Router:
-
-      conn =
-        conn
-        |> bypass_through(MyAppWeb.Router, [])
-        |> get("/")
-        |> MyApp.RequireAuthentication.call([])
-      assert conn.halted
-
-  Or only invoke the Endpoint's plugs:
+  Alternatively, you could only invoke the Endpoint's plugs:
 
       conn =
         conn
         |> bypass_through()
         |> get("/")
         |> MyApp.RequireAuthentication.call([])
+
       assert conn.halted
   """
   @spec bypass_through(Conn.t) :: Conn.t
@@ -551,12 +532,22 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Calls the Endpoint and bypasses Router match.
+  Calls the Endpoint and Router pipelines for the current route.
+
+  See `bypass_through/1`.
+  """
+  @spec bypass_through(Conn.t, module) :: Conn.t
+  def bypass_through(conn, router) do
+    Plug.Conn.put_private(conn, :phoenix_bypass, {router, :current})
+  end
+
+  @doc """
+  Calls the Endpoint and and the given Router pipelines.
 
   See `bypass_through/1`.
   """
   @spec bypass_through(Conn.t, module, atom | list) :: Conn.t
-  def bypass_through(conn, router, pipelines \\ []) do
+  def bypass_through(conn, router, pipelines) do
     Plug.Conn.put_private(conn, :phoenix_bypass, {router, List.wrap(pipelines)})
   end
 
@@ -575,17 +566,13 @@ defmodule Phoenix.ConnTest do
   def redirected_params(%Plug.Conn{} = conn) do
     router = Phoenix.Controller.router_module(conn)
     %URI{path: path, host: host} = conn |> redirected_to() |> URI.parse()
-    path_info = split_path(path)
 
-    case router.__match_route__("GET", path_info, host || conn.host) do
+    case Phoenix.Router.route_info(router, "GET", path, host || conn.host) do
       :error ->
         raise Phoenix.Router.NoRouteError, conn: conn, router: router
-      {path_params, _prepare, _pipes, _dispatch} ->
+      %{path_params: path_params} ->
         Enum.into(path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
     end
-  end
-  defp split_path(path) do
-    for segment <- String.split(path, "/"), segment != "", do: segment
   end
 
   @doc """

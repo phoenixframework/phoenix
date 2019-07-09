@@ -6,8 +6,13 @@ defmodule <%= app_module %>.Application do
   use Application
 
   def start(_type, _args) do
-    children = [
-      <%= if ecto do %><%= app_module %>.Repo<% else %># <%= app_module %>.Worker<% end %>
+    children = [<%= if ecto do %>
+      # Start the Ecto repository
+      <%= app_module %>.Repo,<% end %>
+      # Start the PubSub system
+      {Phoenix.PubSub, name: <%= app_module %>.PubSub}
+      # Start a worker by calling: <%= app_module %>.Worker.start_link(arg)
+      # {<%= app_module %>.Worker, arg}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: <%= app_module %>.Supervisor)

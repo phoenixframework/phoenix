@@ -74,11 +74,11 @@ defmodule Phoenix.Router.PipelineTest.Router do
   end
 
   defp put_assign(conn, value) do
-    assign conn, :stack, value
+    assign(conn, :stack, [value | conn.assigns[:stack] || []])
   end
 
   defp put_params(conn, _) do
-    assign conn, :params, conn.params
+    assign(conn, :params, conn.params)
   end
 end
 
@@ -95,26 +95,22 @@ defmodule Phoenix.Router.PipelineTest do
 
   test "does not invoke pipelines at root" do
     conn = call(Router, :get, "/root")
-    assert conn.private[:phoenix_pipelines] == []
     assert conn.assigns[:stack] == nil
   end
 
   test "invokes pipelines per scope" do
     conn = call(Router, :get, "/browser/root")
-    assert conn.private[:phoenix_pipelines] == [:browser]
-    assert conn.assigns[:stack] == "browser"
+    assert conn.assigns[:stack] == ["browser"]
   end
 
   test "invokes pipelines in a nested scope" do
     conn = call(Router, :get, "/browser/api/root")
-    assert conn.private[:phoenix_pipelines] == [:browser, :api]
-    assert conn.assigns[:stack] == "api"
+    assert conn.assigns[:stack] == ["api", "browser"]
   end
 
   test "invokes multiple pipelines" do
     conn = call(Router, :get, "/browser-api/root")
-    assert conn.private[:phoenix_pipelines] == [:browser, :api]
-    assert conn.assigns[:stack] == "api"
+    assert conn.assigns[:stack] == ["api", "browser"]
   end
 
   test "halts on pipeline multiple pipelines" do

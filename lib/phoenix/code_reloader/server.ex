@@ -5,7 +5,7 @@ defmodule Phoenix.CodeReloader.Server do
   require Logger
   alias Phoenix.CodeReloader.Proxy
 
-  def start_link() do
+  def start_link(_) do
     GenServer.start_link(__MODULE__, false, name: __MODULE__)
   end
 

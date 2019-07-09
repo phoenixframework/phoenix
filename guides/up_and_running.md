@@ -16,7 +16,7 @@ $ mix phx.new hello
 
 > A note about [webpack](https://webpack.js.org/) before we begin: Phoenix will use webpack for asset management by default. Webpack's dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `mix phx.new` task. If we say "no" at that point, and if we don't install those dependencies later with `npm install`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use webpack at all, we can simply pass `--no-webpack` to `mix phx.new`.
 
-> A note about [Ecto](https://hexdocs.pm/phoenix/ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL, MySQL, or MSSQL. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to `mix phx.new`. This flag may also be combined with `--no-webpack` to create a skeleton application.
+> A note about [Ecto](https://hexdocs.pm/phoenix/ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL, MySQL, and others. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to `mix phx.new`. This flag may also be combined with `--no-webpack` to create a skeleton application.
 
 > To learn more about `mix phx.new` you can read the [Mix Tasks Guide](phoenix_mix_tasks.html#phoenix-specific-mix-tasks).
 
@@ -32,7 +32,11 @@ mix phx.new hello
 Fetch and install dependencies? [Yn]
 ```
 
-Phoenix generates the directory structure and all the files we will need for our application. When it's done, it will ask us if we want it to install our dependencies for us. Let's say yes to that.
+Phoenix generates the directory structure and all the files we will need for our application. 
+
+> Phoenix promotes the usage of git as version control software: among the generated files we find a `.gitignore`. We can `git init` our repository, and immediately add and commit all that hasn't been marked ignored. 
+
+When it's done, it will ask us if we want it to install our dependencies for us. Let's say yes to that.
 
 ```console
 Fetch and install dependencies? [Yn] Y

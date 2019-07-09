@@ -258,6 +258,15 @@ defmodule Phoenix.Channel do
 
   You can also set it to `:infinity` to fully disable it.
 
+  ## Shutdown
+
+  You can configure the shutdown of each channel used when your application
+  is shutting down by setting the `:shutdown` value on use:
+
+      use Phoenix.Channel, shutdown: 5_000
+
+  It defaults to 5_000.
+
   ## Logging
 
   By default, channel `"join"` and `"handle_in"` events are logged, using
@@ -390,9 +399,19 @@ defmodule Phoenix.Channel do
       @phoenix_log_join Keyword.get(opts, :log_join, :info)
       @phoenix_log_handle_in Keyword.get(opts, :log_handle_in, :debug)
       @phoenix_hibernate_after Keyword.get(opts, :hibernate_after, 15_000)
+      @phoenix_shutdown Keyword.get(opts, :shutdown, 5000)
 
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
+
+      def child_spec(init_arg) do
+        %{
+          id: __MODULE__,
+          start: {__MODULE__, :start_link, [init_arg]},
+          shutdown: @phoenix_shutdown,
+          restart: :temporary
+        }
+      end
 
       def start_link(triplet) do
         GenServer.start_link(Phoenix.Channel.Server, triplet,

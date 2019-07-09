@@ -260,19 +260,38 @@ defmodule Phoenix.Router do
   end
 
   @doc false
-  def __call__(%{private: %{phoenix_router: router, phoenix_bypass: {router, pipes}}} = conn, _match) do
-    Enum.reduce(pipes, conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
+  def __call__(
+        %{private: %{phoenix_router: router, phoenix_bypass: {router, pipes}}} = conn,
+        {metadata, prepare, pipeline, _}
+      ) do
+    conn = prepare.(conn, metadata)
+
+    case pipes do
+      :current -> pipeline.(conn)
+      _ -> Enum.reduce(pipes, conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
+    end
   end
-  def __call__(%{private: %{phoenix_bypass: :all}} = conn, _match) do
-    conn
+  def __call__(%{private: %{phoenix_bypass: :all}} = conn, {metadata, prepare, _, _}) do
+    prepare.(conn, metadata)
   end
-  def __call__(conn, {path_params, prepare, pipeline, {plug, opts}}) do
-    case conn |> prepare.(path_params) |> pipeline.() do
+  def __call__(conn, {metadata, prepare, pipeline, {plug, opts}}) do
+    conn = prepare.(conn, metadata)
+    start = System.monotonic_time()
+    metadata = %{metadata | conn: conn}
+    :telemetry.execute([:phoenix, :router_dispatch, :start], %{time: start}, metadata)
+
+    case pipeline.(conn) do
       %Plug.Conn{halted: true} = halted_conn ->
         halted_conn
       %Plug.Conn{} = piped_conn ->
         try do
           plug.call(piped_conn, plug.init(opts))
+        else
+          conn ->
+            duration = System.monotonic_time() - start
+            metadata = %{metadata | conn: conn}
+            :telemetry.execute([:phoenix, :router_dispatch, :stop], %{duration: duration}, metadata)
+            conn
         rescue
           e in Plug.Conn.WrapperError ->
             Plug.Conn.WrapperError.reraise(e)
@@ -300,6 +319,7 @@ defmodule Phoenix.Router do
       """
       def call(conn, _opts) do
         %{method: method, path_info: path_info, host: host} = conn = prepare(conn)
+
         case __match_route__(method, Enum.map(path_info, &URI.decode/1), host) do
           :error -> raise NoRouteError, conn: conn, router: __MODULE__
           match -> Phoenix.Router.__call__(conn, match)
@@ -325,9 +345,9 @@ defmodule Phoenix.Router do
     {matches, _} = Enum.map_reduce(routes_with_exprs, %{}, &build_match/2)
 
     checks =
-      for {%{line: line}, %{dispatch: {plug, params}}} <- routes_with_exprs, into: %{} do
+      for {%{line: line, plug: plug, plug_opts: plug_opts}, _} <- routes_with_exprs, into: %{} do
         quote line: line do
-          {unquote(plug).init(unquote(params)), true}
+          {unquote(plug).init(unquote(Macro.escape(plug_opts))), []}
         end
       end
 
@@ -389,8 +409,8 @@ defmodule Phoenix.Router do
 
         @doc false
         def __match_route__(unquote(verb_match), unquote(path), unquote(host)) do
-          {unquote(path_params),
-           fn var!(conn, :conn), var!(path_params, :conn) -> unquote(prepare) end,
+          {unquote(build_metadata(route, path_params)),
+           fn var!(conn, :conn), %{path_params: var!(path_params, :conn)} -> unquote(prepare) end,
            &unquote(Macro.var(pipe_name, __MODULE__))/1,
            unquote(dispatch)}
         end
@@ -399,11 +419,25 @@ defmodule Phoenix.Router do
     {quoted, known_pipelines}
   end
 
+  defp build_metadata(route, path_params) do
+    %{path: path, plug: plug, plug_opts: plug_opts, log: log, pipe_through: pipe_through} = route
+
+    pairs = [
+      conn: nil,
+      route: path,
+      plug: plug,
+      plug_opts: Macro.escape(plug_opts),
+      log: log,
+      path_params: path_params,
+      pipe_through: pipe_through
+    ]
+
+    {:%{}, [], pairs}
+  end
+
   defp build_pipes(name, []) do
     quote do
-      defp unquote(name)(conn) do
-        Plug.Conn.put_private(conn, :phoenix_pipelines, [])
-      end
+      defp unquote(name)(conn), do: conn
     end
   end
 
@@ -412,21 +446,26 @@ defmodule Phoenix.Router do
     {conn, body} = Plug.Builder.compile(__ENV__, plugs, init_mode: Phoenix.plug_init_mode())
 
     quote do
-      defp unquote(name)(unquote(conn)) do
-        unquote(conn) = Plug.Conn.put_private(unquote(conn), :phoenix_pipelines, unquote(pipe_through))
-        unquote(body)
-      end
+      defp unquote(name)(unquote(conn)), do: unquote(body)
     end
   end
 
   @doc """
   Generates a route match based on an arbitrary HTTP method.
 
-  Useful for defining routes not included in the builtin macros:
-
-  #{Enum.map_join(@http_methods, ", ", &"`#{&1}`")}
+  Useful for defining routes not included in the builtin macros.
 
   The catch-all verb, `:*`, may also be used to match all HTTP methods.
+
+  ## Options
+
+    * `:as` - configures the named helper exclusively
+    * `:log` - the level to log the route dispatching under,
+      may be set to false. Defaults to `:debug`
+    * `:host` - a string containing the host scope, or prefix host scope,
+      ie `"foo.bar.com"`, `"foo."`
+    * `:private` - a map of private data to merge into the connection when a route matches
+    * `:assigns` - a map of data to merge into the connection when a route matches
 
   ## Examples
 
@@ -442,6 +481,10 @@ defmodule Phoenix.Router do
   for verb <- @http_methods do
     @doc """
     Generates a route to handle a #{verb} request to the given path.
+
+        #{verb}("/events/:id", EventController, :action)
+
+    See `match/5` for options.
     """
     defmacro unquote(verb)(path, plug, plug_opts, options \\ []) do
       add_route(:match, unquote(verb), path, plug, plug_opts, options)
@@ -692,6 +735,8 @@ defmodule Phoenix.Router do
       ie `"foo.bar.com"`, `"foo."`
     * `:private` - a map of private data to merge into the connection when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
+    * `:log` - the level to log the route dispatching under,
+      may be set to false. Defaults to `:debug`
 
   """
   defmacro scope(options, do: context) do
@@ -786,12 +831,9 @@ defmodule Phoenix.Router do
   The router pipelines will be invoked prior to forwarding the
   connection.
 
-  The forwarded plug will be initialized at compile time.
-
-  Note, however, that we don't advise forwarding to another
-  endpoint. The reason is that plugs defined by your app
-  and the forwarded endpoint would be invoked twice, which
-  may lead to errors.
+  However, we don't advise forwarding to another endpoint.
+  The reason is that plugs defined by your app and the forwarded
+  endpoint would be invoked twice, which may lead to errors.
 
   ## Examples
 
@@ -809,6 +851,41 @@ defmodule Phoenix.Router do
     quote unquote: true, bind_quoted: [path: path, plug: plug] do
       plug = Scope.register_forwards(__MODULE__, path, plug)
       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
+    end
+  end
+
+  @doc """
+  Returns the compile-time route info and runtime path params for a request.
+
+  A map of metadata is returned with the following keys:
+
+    * `:log` - the configured log level. For example `:debug`
+    * `:path_params` - the map of runtime path params
+    * `:pipe_through` - the list of pipelines for the route's scope, for example `[:browser]`
+    * `:plug` - the plug to dipatch the route to, for example `AppWeb.PostController`
+    * `:plug_opts` - the options to pass when calling the plug, for example: `:index`
+    * `:route` - the string route pattern, such as `"/posts/:id"`
+
+  ## Examples
+
+      iex> Phoenix.Router.route_info(AppWeb.Router, "GET", "/posts/123", "myhost")
+      %{
+        log: :debug,
+        path_params: %{"id" => "123"},
+        pipe_through: [:browser],
+        plug: AppWeb.PostController,
+        plug_opts: :show,
+        route: "/posts/:id",
+      }
+
+      iex> Phoenix.Router.route_info(MyRouter, "GET", "/not-exists", "myhost")
+      :error
+  """
+  def route_info(router, method, path, host) do
+    split_path = for segment <- String.split(path, "/"), segment != "", do: segment
+    case router.__match_route__(method, split_path, host) do
+      {%{} = metadata, _prepare, _pipeline, {_plug, _opts}} -> Map.delete(metadata, :conn)
+      :error -> :error
     end
   end
 end

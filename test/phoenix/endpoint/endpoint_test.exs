@@ -9,9 +9,8 @@ defmodule Phoenix.Endpoint.EndpointTest do
            server: false, http: [port: 80], https: [port: 443],
            force_ssl: [subdomains: true],
            cache_static_manifest: "../../../../test/fixtures/cache_manifest.json",
-           pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
+           pubsub_server: :endpoint_pub]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
-  Application.put_env(:phoenix, __MODULE__.NoPubSubNameEndpoint, [])
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
@@ -22,23 +21,13 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert code_reloading? == false
   end
 
-  defmodule NoPubSubNameEndpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
-
-    def init(_, config) do
-      pubsub = [adapter: Phoenix.PubSub.PG2]
-      {:ok, Keyword.put(config, :pubsub, pubsub)}
-    end
-  end
-
   defmodule NoConfigEndpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
 
   setup_all do
-    ExUnit.CaptureLog.capture_log(fn ->
-      Endpoint.start_link()
-    end)
+    ExUnit.CaptureLog.capture_log(fn -> start_supervised! Endpoint end)
+    start_supervised! {Phoenix.PubSub, name: :endpoint_pub}
     on_exit fn -> Application.delete_env(:phoenix, :serve_endpoints) end
     :ok
   end
@@ -51,13 +40,6 @@ defmodule Phoenix.Endpoint.EndpointTest do
     }
   end
 
-  @tag :capture_log
-  test "errors if pubsub adapter is set but not a name" do
-    Process.flag(:trap_exit, true)
-    {:error, {%ArgumentError{message: message}, _}} = NoPubSubNameEndpoint.start_link()
-    assert message =~ "an adapter was given to :pubsub but no :name"
-  end
-
   test "warns if there is no configuration for an endpoint" do
     assert ExUnit.CaptureLog.capture_log(fn ->
       NoConfigEndpoint.start_link()
@@ -65,6 +47,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   test "has reloadable configuration" do
+    endpoint_id = Endpoint.config(:endpoint_id)
     assert Endpoint.config(:url) == [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api"]
     assert Endpoint.config(:static_url) == [host: "static.example.com"]
     assert Endpoint.url == "https://example.com"
@@ -78,6 +61,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
       |> put_in([:static_url, :port], 456)
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
+    assert Endpoint.config(:endpoint_id) == endpoint_id
     assert Enum.sort(Endpoint.config(:url)) ==
            [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api", port: 1234]
     assert Enum.sort(Endpoint.config(:static_url)) ==
@@ -159,7 +143,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   test "injects pubsub broadcast with configured server" do
-    Endpoint.subscribe("sometopic")
+    Phoenix.PubSub.subscribe(:endpoint_pub, "sometopic")
     some = spawn fn -> :ok end
 
     Endpoint.broadcast_from(some, "sometopic", "event1", %{key: :val})
@@ -177,6 +161,14 @@ defmodule Phoenix.Endpoint.EndpointTest do
     Endpoint.broadcast!("sometopic", "event4", %{key: :val})
     assert_receive %Phoenix.Socket.Broadcast{
       event: "event4", payload: %{key: :val}, topic: "sometopic"}
+
+    Endpoint.local_broadcast_from(some, "sometopic", "event1", %{key: :val})
+    assert_receive %Phoenix.Socket.Broadcast{
+      event: "event1", payload: %{key: :val}, topic: "sometopic"}
+
+    Endpoint.local_broadcast("sometopic", "event3", %{key: :val})
+    assert_receive %Phoenix.Socket.Broadcast{
+      event: "event3", payload: %{key: :val}, topic: "sometopic"}
   end
 
   test "server?/2 returns true for explicitly true server", config do

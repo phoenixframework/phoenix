@@ -24,55 +24,74 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   @doc false
   def init({otp_app, mod}) do
-    id = :crypto.strong_rand_bytes(16) |> Base.encode64
-
-    default_conf = [endpoint_id: id] ++ config(otp_app, mod)
+    default_conf = defaults(otp_app, mod)
+    env_conf = config(otp_app, mod, default_conf)
 
     secret_conf =
-      case mod.init(:supervisor, default_conf) do
-        {:ok, conf} ->
-          if !Application.get_env(otp_app, mod) and conf == default_conf do
-            Logger.warn(
-              "no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}"
-            )
+      case mod.init(:supervisor, env_conf) do
+        {:ok, init_conf} ->
+          if is_nil(Application.get_env(otp_app, mod)) and init_conf == env_conf do
+            Logger.warn("no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}")
           end
 
-          conf
+          init_conf
 
         other ->
           raise ArgumentError, "expected init/2 callback to return {:ok, config}, got: #{inspect other}"
       end
 
+    extra_conf = [
+      endpoint_id: :crypto.strong_rand_bytes(16) |> Base.encode64,
+      # TODO: Remove this once :pubsub is removed
+      pubsub_server: secret_conf[:pubsub_server] || secret_conf[:pubsub][:name]
+    ]
+
+    secret_conf = extra_conf ++ secret_conf
+    default_conf = extra_conf ++ default_conf
 
     # Drop all secrets from secret_conf before passing it around
     conf = Keyword.drop(secret_conf, [:secret_key_base])
     server? = server?(conf)
+
+    if conf[:instrumenters] do
+      Logger.warn(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
+    end
 
     if server? and conf[:code_reloader] do
       Phoenix.CodeReloader.Server.check_symlinks()
     end
 
     children =
-      config_children(mod, secret_conf, otp_app) ++
+      config_children(mod, secret_conf, default_conf) ++
       pubsub_children(mod, conf) ++
       socket_children(mod) ++
-      server_children(mod, conf, otp_app, server?) ++
+      server_children(mod, conf, server?) ++
       watcher_children(mod, conf, server?)
 
-    # Supervisor.init(children, strategy: :one_for_one)
-    {:ok, {{:one_for_one, 3, 5}, children}}
+    Supervisor.init(children, strategy: :one_for_one)
   end
 
-  defp pubsub_children(_mod, conf) do
+  defp pubsub_children(mod, conf) do
     pub_conf = conf[:pubsub]
 
-    if adapter = pub_conf[:adapter] do
-      unless pub_conf[:name] do
-        raise ArgumentError, "an adapter was given to :pubsub but no :name was defined, " <>
-          "please pass the :name option accordingly"
-      end
-      pub_conf = [fastlane: Phoenix.Channel.Server] ++ pub_conf
-      [supervisor(adapter, [pub_conf[:name], pub_conf])]
+    if pub_conf do
+      Logger.warn """
+      The :pubsub key in your #{inspect mod} is deprecated.
+
+      You must now start the pubsub in your application supervision tree.
+      Go to lib/my_app/application.ex and add the following:
+
+          {Phoenix.PubSub, #{inspect pub_conf}}
+
+      Now, back in your config files in config/*, you can remove the :pubsub
+      key and add the :pubsub_server key, with the PubSub name:
+
+          pubsub_server: #{inspect pub_conf[:name]}
+      """
+    end
+
+    if pub_conf[:adapter] do
+      [{Phoenix.PubSub, pub_conf}]
     else
       []
     end
@@ -84,29 +103,17 @@ defmodule Phoenix.Endpoint.Supervisor do
     |> Enum.map(fn {_, socket, opts} -> socket.child_spec([endpoint: endpoint] ++ opts) end)
   end
 
-  defp config_children(mod, conf, otp_app) do
-    args = [mod, conf, defaults(otp_app, mod), [name: Module.concat(mod, "Config")]]
-    [worker(Phoenix.Config, args)]
+  defp config_children(mod, conf, default_conf) do
+    args = {mod, conf, default_conf, name: Module.concat(mod, "Config")}
+    [{Phoenix.Config, args}]
   end
 
-  defp server_children(mod, config, otp_app, server?) do
+  defp server_children(mod, config, server?) do
     if server? do
       user_adapter = user_adapter(mod, config)
       autodetected_adapter = cowboy_version_adapter()
       warn_on_different_adapter_version(user_adapter, autodetected_adapter, mod)
-      adapter = user_adapter || autodetected_adapter
-
-      for {scheme, port} <- [http: 4000, https: 4040], opts = config[scheme] do
-        port = :proplists.get_value(:port, opts, port)
-
-        unless port do
-          raise "server can't start because :port in #{scheme} config is nil, " <>
-                  "please use a valid port number"
-        end
-
-        opts = [port: port_to_integer(port), otp_app: otp_app] ++ :proplists.delete(:port, opts)
-        adapter.child_spec(scheme, mod, opts)
-      end
+      (user_adapter || autodetected_adapter).child_specs(mod, config)
     else
       []
     end
@@ -135,7 +142,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warn_on_different_adapter_version(CowboyAdapter, Cowboy2Adapter, endpoint) do
-    Logger.warn("""
+    Logger.error("""
     You have specified #{inspect CowboyAdapter} for Cowboy v1.x \
     in the :adapter configuration of your Phoenix endpoint #{inspect endpoint} \
     but your mix.exs has fetched Cowboy v2.x.
@@ -159,23 +166,27 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp watcher_children(_mod, conf, server?) do
     if server? do
       Enum.map(conf[:watchers], fn {cmd, args} ->
-        worker(Phoenix.Endpoint.Watcher, watcher_args(cmd, args),
-               id: {cmd, args}, restart: :transient)
+        {Phoenix.Endpoint.Watcher, watcher_args(cmd, args)}
       end)
     else
       []
     end
   end
+
   defp watcher_args(cmd, cmd_args) do
     {args, opts} = Enum.split_while(cmd_args, &is_binary(&1))
-    [cmd, args, opts]
+    {cmd, args, opts}
   end
 
   @doc """
   The endpoint configuration used at compile time.
   """
   def config(otp_app, endpoint) do
-    Phoenix.Config.from_env(otp_app, endpoint, defaults(otp_app, endpoint))
+    config(otp_app, endpoint, defaults(otp_app, endpoint))
+  end
+
+  defp config(otp_app, endpoint, defaults) do
+    Phoenix.Config.from_env(otp_app, endpoint, defaults)
   end
 
   @doc """
@@ -210,7 +221,6 @@ defmodule Phoenix.Endpoint.Supervisor do
      url: [host: "localhost", path: "/"],
 
      # Supervisor config
-     pubsub: [pool_size: 1],
      watchers: []]
   end
 
@@ -349,18 +359,14 @@ defmodule Phoenix.Endpoint.Supervisor do
     raise ArgumentError, "expected a path starting with a single / but got #{inspect path}"
   end
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.7+
+  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.7+
+  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
-
-  def pubsub_server(endpoint) do
-    {:cache, endpoint.config(:pubsub)[:name]}
-  end
 
   @doc """
   Invoked to warm up caches on start and config change.

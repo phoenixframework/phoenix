@@ -23,10 +23,7 @@ defmodule Phoenix.Controller.Pipeline do
                  &(&1 |> Map.put(:phoenix_controller, __MODULE__)
                       |> Map.put(:phoenix_action, action))
 
-        Phoenix.Endpoint.instrument conn, :phoenix_controller_call,
-          %{conn: conn, log_level: @phoenix_log_level}, fn ->
-          phoenix_controller_pipeline(conn, action)
-        end
+        phoenix_controller_pipeline(conn, action)
       end
 
       @doc false
@@ -86,6 +83,7 @@ defmodule Phoenix.Controller.Pipeline do
 
     quote do
       defoverridable [action: 2]
+
       def action(var!(conn_before), opts) do
         try do
           var!(conn_after) = super(var!(conn_before), opts)

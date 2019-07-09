@@ -249,7 +249,7 @@ Our basic user account features are nice, but let's take it up a notch by suppor
 
 For now, user credentials will contain only email information. Our first order of business is to decide where credentials live in the application. We have our `Accounts` context, which manages user accounts. User credentials is a natural fit here. Phoenix is also smart enough to generate code inside an existing context, which makes adding new resources to a context a breeze. Run the following command at your project root:
 
-> Sometimes it may be tricky to determine if two resources belong to the same context or not. In those cases, prefer distinct contexts per resource and refactor later if necessary. Otherwise you can easily end-up with large contexts of loosely related entities. In other words: if you are unsure, you should prefer explicit modules (contexts) between resources.
+> Sometimes it may be tricky to determine if two resources belong to the same context or not. In those cases, prefer distinct contexts per resource and refactor later if necessary. Otherwise you can easily end-up with large contexts of loosely related entities. Also keep in mind that the fact two resources are related does not necessarily mean they belong to the same context, otherwise you would quickly end-up with one large context, as the majority of resources in an application are connected to each other. To sum it up: if you are unsure, you should prefer explicit modules (contexts) between resources.
 
 ```console
 $ mix phx.gen.context Accounts Credential credentials \
@@ -1068,7 +1068,6 @@ As we explored the context API, you might have wondered:
 
 The answer is we've decided to expose `%Ecto.Changeset{}` as a public *data-structure* in our application. We saw before how changesets allow us to track field changes, perform validations, and generate error messages. Its use here is decoupled from the private Repo access and Ecto changeset API internals. We're exposing a data structure that the caller understands which contains the rich information like field errors. Conveniently for us, the `phoenix_ecto` project implements the necessary `Phoenix.Param` and [`Phoenix.HTML.FormData`](https://hexdocs.pm/phoenix_html/Phoenix.HTML.FormData.html) protocols which know how to handle `%Ecto.Changeset{}`'s for things like form generation and error messages. You can also think about it as being as if you had defined your own `%Accounts.Changes{}` struct for the same purpose and implemented the Phoenix protocols for the web-layer integration.
 
-
 ### Strategies for cross-context workflows
 
 Our CMS context supports lazily creating authors in the system when a user decides to publish page content. This makes sense for our use case because not all users of our system will be CMS authors. But what if our use case were for when all users of our app are indeed authors?
@@ -1085,7 +1084,7 @@ def create_user(attrs) do
 end
 ```
 
-This may accomplish what we want, but now we need to wire up the schema relationships in the `Accounts` context to the `CMS` author. Worse, we have now taken our isolated `Accounts` context and required it to know about a content management system. This isn't what we want for isolated responsibilities in our application. There's a better way to handle these requirements.
+This may accomplish what we want, but now we need to wire up the schema relationships in the `Accounts` context to the `CMS` author. Worse, we have now taken our isolated `Accounts` context and required it to know about a content management system, which in turn knows about `Accounts` too. With time, cyclic dependencies would blurry the lines between contexts, which is not what we want for isolated responsibilities in our application. There's a better way to handle these requirements.
 
 If you find yourself in similar situations where you feel your use case is requiring you to create circular dependencies across contexts, it's a sign you need a new context in the system to handle these application requirements. In our case, what we really want is an interface that handles all requirements when a user is created or registers in our application. To handle this, we could create a `UserRegistration` context, which calls into both the `Accounts` and `CMS` APIs to create a user, then associate a CMS author. Not only would this allow our Accounts to remain as isolated as possible, it gives us a clear, obvious API to handle `UserRegistration` needs in the system. If you take this approach, you can also use tools like `Ecto.Multi` to handle transactions across different context operations without deeply coupling the internal database calls. Part of our `UserRegistration` API could look something like this:
 
@@ -1096,8 +1095,8 @@ defmodule Hello.UserRegistration do
 
   def register_user(params) do
     Multi.new()
-    |> Multi.run(:user, fn _, _ -> Accounts.create_user(params) end)
-    |> Multi.run(:author, fn _, %{user: user} ->
+    |> Multi.run(:user, fn _repo, _changes_so_far -> Accounts.create_user(params) end)
+    |> Multi.run(:author, fn _repo, %{user: user} ->
       {:ok, CMS.ensure_author_exists(user)}
     end)
     |> Repo.transaction()

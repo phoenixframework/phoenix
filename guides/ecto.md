@@ -2,11 +2,10 @@
 
 Most web applications today need some form of data validation and persistence. In the Elixir ecosystem, we have Ecto to enable this. Before we jump into building database-backed web features, we're going to focus on the finer details of Ecto to give a solid base to build our web features on top of. Let's get started!
 
-Ecto currently has adapters for the following databases:
+Ecto has out of the box support for the following databases:
 
-* PostgreSQL
-* MySQL
-* MSSQL
+* PostgreSQL (via [`postgrex`](https://github.com/elixir-ecto/postgrex))
+* MySQL (via [`myxql`](https://github.com/elixir-ecto/myxql))
 
 Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default (you can pass the `--no-ecto` flag to exclude this).
 
@@ -469,7 +468,6 @@ defmodule HelloPhoenix.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.4.0"},
-      {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:ecto_sql, "~> 3.1"},
       {:myxql, ">= 0.0.0"},

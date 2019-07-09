@@ -75,10 +75,6 @@ defmodule Phoenix.Socket do
     * `:log` - the default level to log socket actions. Defaults
       to `:info`. May be set to `false` to disable it
 
-    * `:shutdown` - the maximum shutdown time of each channel
-      when the endpoint is shutting down. Applies only to
-      channel-based sockets
-
     * `:partitions` - each channel is spawned under a supervisor.
       This option controls how many supervisors will be spawned
       to handlle channels. Defaults to the number of cores.
@@ -408,17 +404,11 @@ defmodule Phoenix.Socket do
   ## CALLBACKS IMPLEMENTATION
 
   def __child_spec__(handler, opts, socket_options) do
-    import Supervisor.Spec
     endpoint = Keyword.fetch!(opts, :endpoint)
-
     opts = Keyword.merge(socket_options, opts)
-    shutdown = Keyword.get(opts, :shutdown, 5_000)
     partitions = Keyword.get(opts, :partitions, System.schedulers_online())
-
-    worker_opts = [shutdown: shutdown, restart: :temporary]
-    worker = worker(Phoenix.Channel.Server, [], worker_opts)
-    args = {endpoint, handler, partitions, worker}
-    supervisor(Phoenix.Socket.PoolSupervisor, [args], id: handler)
+    args = {endpoint, handler, partitions}
+    Supervisor.child_spec({Phoenix.Socket.PoolSupervisor, args}, id: handler)
   end
 
   def __connect__(user_socket, map, socket_options) do
@@ -431,31 +421,37 @@ defmodule Phoenix.Socket do
     } = map
 
     vsn = params["vsn"] || "1.0.0"
+
     options = Keyword.merge(socket_options, options)
-    log = Keyword.get(options, :log, :info)
-    meta = Map.merge(map, %{vsn: vsn, user_socket: user_socket, log: log})
+    start = System.monotonic_time()
 
-    Phoenix.Endpoint.instrument(endpoint, :phoenix_socket_connect, meta, fn ->
-      case negotiate_serializer(Keyword.fetch!(options, :serializer), vsn) do
-        {:ok, serializer} ->
-          user_socket
-          |> user_connect(endpoint, transport, serializer, params, connect_info)
-          |> log_connect_result(user_socket, log)
+    case negotiate_serializer(Keyword.fetch!(options, :serializer), vsn) do
+      {:ok, serializer} ->
+        result = user_connect(user_socket, endpoint, transport, serializer, params, connect_info)
 
-        :error -> :error
-      end
-    end)
+        metadata = %{
+          endpoint: endpoint,
+          transport: transport,
+          params: params,
+          connect_info: connect_info,
+          vsn: vsn,
+          user_socket: user_socket,
+          log: Keyword.get(options, :log, :info),
+          result: result(result),
+          serializer: serializer
+        }
+
+        duration = System.monotonic_time() - start
+        :telemetry.execute([:phoenix, :socket_connected], %{duration: duration}, metadata)
+        result
+
+      :error ->
+        :error
+    end
   end
 
-  defp log_connect_result(result, _user_socket, false = _level), do: result
-  defp log_connect_result({:ok, _} = result, user_socket, level) do
-    Logger.log(level, fn -> "Replied #{inspect(user_socket)} :ok" end)
-    result
-  end
-  defp log_connect_result(:error = result, user_socket, level) do
-    Logger.log(level, fn -> "Replied #{inspect(user_socket)} :error" end)
-    result
-  end
+  defp result({:ok, _}), do: :ok
+  defp result(:error), do: :error
 
   def __init__({state, %{id: id, endpoint: endpoint} = socket}) do
     _ = id && endpoint.subscribe(id, link: true)
@@ -537,7 +533,7 @@ defmodule Phoenix.Socket do
     socket = %Socket{
       handler: handler,
       endpoint: endpoint,
-      pubsub_server: endpoint.__pubsub_server__,
+      pubsub_server: endpoint.config(:pubsub_server),
       serializer: serializer,
       transport: transport
     }

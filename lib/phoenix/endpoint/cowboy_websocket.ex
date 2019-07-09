@@ -1,6 +1,8 @@
 defmodule Phoenix.Endpoint.CowboyWebSocket do
   @moduledoc false
 
+  alias Phoenix.Endpoint.Cowboy2Handler
+
   if Code.ensure_loaded?(:cowboy_websocket_handler) do
     @behaviour :cowboy_websocket_handler
   end
@@ -14,12 +16,13 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
 
     try do
       case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
-        {:ok, %{adapter: {@connection, req}}, args} ->
+        {:ok, %Plug.Conn{adapter: {@connection, req}} = conn, args} ->
           timeout = Keyword.fetch!(opts, :timeout)
+          req = Cowboy2Handler.copy_resp_headers(conn, req)
           {:upgrade, :protocol, __MODULE__, req, {handler, args, timeout}}
 
-        {:error, %{adapter: {@connection, req}}} ->
-          {:shutdown, req, :no_state}
+        {:error, %Plug.Conn{adapter: {@connection, req} = conn}} ->
+          {:shutdown, Cowboy2Handler.copy_resp_headers(conn, req), :no_state}
       end
     catch
       kind, reason ->

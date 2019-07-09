@@ -11,8 +11,8 @@ defmodule Mix.Tasks.Compile.Phoenix do
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
     case touch() do
-      [] -> :noop
-      _  -> :ok
+      [] -> {:noop, []}
+      _  -> {:ok, []}
     end
   end
 

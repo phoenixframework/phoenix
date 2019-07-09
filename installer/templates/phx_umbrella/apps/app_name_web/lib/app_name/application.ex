@@ -6,12 +6,11 @@ defmodule <%= web_namespace %>.Application do
   use Application
 
   def start(_type, _args) do
-    # List all child processes to be supervised
     children = [
-      # Start the endpoint when the application starts
+      # Start the Endpoint (http/https)
       <%= endpoint_module %>
-      # Starts a worker by calling: <%= web_namespace %>.Worker.start_link(arg)
-      # {<%= web_namespace %>.Worker, arg},
+      # Start a worker by calling: <%= web_namespace %>.Worker.start_link(arg)
+      # {<%= web_namespace %>.Worker, arg}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

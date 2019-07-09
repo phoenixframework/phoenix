@@ -19,7 +19,7 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     debug_errors: false,
     secret_key_base: String.duplicate("abcdefgh", 8),
     server: true,
-    pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__, pool_size: @pool_size]
+    pubsub_server: __MODULE__
   )
 
   defmodule UserSocket do
@@ -27,7 +27,7 @@ defmodule Phoenix.Integration.LongPollSocketTest do
 
     def child_spec(opts) do
       :value = Keyword.fetch!(opts, :custom)
-      Supervisor.Spec.worker(Task, [fn -> :ok end], restart: :transient)
+      Supervisor.child_spec({Task, fn -> :ok end}, [])
     end
 
     def connect(map) do
@@ -72,13 +72,14 @@ defmodule Phoenix.Integration.LongPollSocketTest do
   end
 
   setup_all do
-    capture_log(fn -> Endpoint.start_link() end)
+    capture_log(fn -> start_supervised! Endpoint end)
+    start_supervised! {Phoenix.PubSub, name: __MODULE__, pool_size: @pool_size}
     :ok
   end
 
   setup do
-    for {_, pid, _, _} <- Supervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
-      Supervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
+    for {_, pid, _, _} <- DynamicSupervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
+      DynamicSupervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
     end
 
     :ok

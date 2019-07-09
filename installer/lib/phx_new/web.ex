@@ -62,6 +62,7 @@ defmodule Phx.New.Web do
   end
 
   def generate(%Project{} = project) do
+    inject_umbrella_config_defaults(project)
     copy_from project, __MODULE__, :new
     copy_from project, __MODULE__, :gettext
 

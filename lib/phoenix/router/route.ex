@@ -15,16 +15,17 @@ defmodule Phoenix.Router.Route do
     * `:path` - the normalized path as string
     * `:host` - the request host or host prefix
     * `:plug` - the plug module
-    * `:opts` - the plug options
+    * `:plug_opts` - the plug options
     * `:helper` - the name of the helper as a string (may be nil)
     * `:private` - the private route info
     * `:assigns` - the route info
     * `:pipe_through` - the pipeline names as a list of atoms
+    * `:log` - if we should log the matching of this route
 
   """
 
-  defstruct [:verb, :line, :kind, :path, :host, :plug, :opts,
-             :helper, :private, :pipe_through, :assigns]
+  defstruct [:verb, :line, :kind, :path, :host, :plug, :plug_opts,
+             :helper, :private, :pipe_through, :assigns, :log]
 
   @type t :: %Route{}
 
@@ -44,16 +45,16 @@ defmodule Phoenix.Router.Route do
   Receives the verb, path, plug, options and helper
   and returns a `Phoenix.Router.Route` struct.
   """
-  @spec build(non_neg_integer, :match | :forward, String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}, %{}) :: t
-  def build(line, kind, verb, path, host, plug, opts, helper, pipe_through, private, assigns)
+  @spec build(non_neg_integer, :match | :forward, String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}, %{}, atom) :: t
+  def build(line, kind, verb, path, host, plug, plug_opts, helper, pipe_through, private, assigns, log)
       when is_atom(verb) and (is_binary(host) or is_nil(host)) and
            is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
-           is_list(pipe_through) and is_map(private) and is_map(assigns)
-           and kind in [:match, :forward] do
+           is_list(pipe_through) and is_map(private) and is_map(assigns) and
+           is_atom(log) and kind in [:match, :forward] do
 
     %Route{kind: kind, verb: verb, path: path, host: host, private: private,
-           plug: plug, opts: opts, helper: helper,
-           pipe_through: pipe_through, assigns: assigns, line: line}
+           plug: plug, plug_opts: plug_opts, helper: helper,
+           pipe_through: pipe_through, assigns: assigns, line: line, log: log}
   end
 
   @doc """
@@ -125,14 +126,14 @@ defmodule Phoenix.Router.Route do
     quote do
       {
         Phoenix.Router.Route,
-        {unquote(fwd_segments), unquote(route.plug), unquote(Macro.escape(route.opts))}
+        {unquote(fwd_segments), unquote(route.plug), unquote(Macro.escape(route.plug_opts))}
       }
     end
   end
 
   defp build_dispatch(%Route{} = route) do
     quote do
-      {unquote(route.plug), unquote(Macro.escape(route.opts))}
+      {unquote(route.plug), unquote(Macro.escape(route.plug_opts))}
     end
   end
 

@@ -144,14 +144,12 @@ The `Phoenix.Socket.Message` module defines a struct with the following keys whi
 
 ### PubSub
 
-Typically, we don't directly use the Phoenix PubSub layer when developing Phoenix applications.
-Rather, it's used internally by Phoenix itself.
-But we may need to configure it.
-
 PubSub consists of the `Phoenix.PubSub` module and a variety of modules for different adapters and their `GenServer`s.
 These modules contain functions which are the nuts and bolts of organizing Channel communication - subscribing to topics, unsubscribing from topics, and broadcasting messages on a topic.
+PubSub is used internally by Phoenix.
+It's also useful in application development in any case where you want to notify interested processes of an event; for instance, letting all connected [live views](https://github.com/phoenixframework/phoenix_live_view) know that a new comment has been added to a post.
 
-The PubSub system also takes care of getting messages from one node to another, so that it can be sent to all subscribers across the cluster.
+The PubSub system takes care of getting messages from one node to another so that they can be sent to all subscribers across the cluster.
 By default, this is done using [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), which uses native BEAM messaging.
 
 If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](http://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
@@ -179,7 +177,7 @@ Phoenix ships with a JavaScript client that is available when generating a new P
 + Elixir
   - [phoenix_gen_socket_client](https://github.com/Aircloak/phoenix_gen_socket_client)
 + GDScript (Godot Game Engine)
-  - [GodotPhoenixChannels)(https://github.com/alfredbaudisch/GodotPhoenixChannels)
+  - [GodotPhoenixChannels](https://github.com/alfredbaudisch/GodotPhoenixChannels)
 
 ## Tying it all together
 Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](https://hexdocs.pm/phoenix/up_and_running.html) we'll see that the endpoint is already set up for us in `lib/hello_web/endpoint.ex`:
@@ -262,7 +260,7 @@ Save the file and your browser should auto refresh, thanks to the Phoenix live r
 In `lib/hello_web/templates/page/index.html.eex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
 ```html
-<div id="messages"></div>
+<div id="messages" role="log" aria-live="polite"></div>
 <input id="chat-input" type="text"></input>
 ```
 
@@ -275,7 +273,7 @@ let chatInput         = document.querySelector("#chat-input")
 let messagesContainer = document.querySelector("#messages")
 
 chatInput.addEventListener("keypress", event => {
-  if(event.keyCode === 13){
+  if(event.key === 'Enter'){
     channel.push("new_msg", {body: chatInput.value})
     chatInput.value = ""
   }
@@ -297,14 +295,14 @@ let chatInput         = document.querySelector("#chat-input")
 let messagesContainer = document.querySelector("#messages")
 
 chatInput.addEventListener("keypress", event => {
-  if(event.keyCode === 13){
+  if(event.key === 'Enter'){
     channel.push("new_msg", {body: chatInput.value})
     chatInput.value = ""
   }
 })
 
 channel.on("new_msg", payload => {
-  let messageItem = document.createElement("li")
+  let messageItem = document.createElement("p")
   messageItem.innerText = `[${Date()}] ${payload.body}`
   messagesContainer.appendChild(messageItem)
 })

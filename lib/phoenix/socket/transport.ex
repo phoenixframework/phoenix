@@ -207,6 +207,43 @@ defmodule Phoenix.Socket.Transport do
 
   require Logger
 
+  @doc false
+  def load_config(true, module),
+    do: module.default_config()
+
+  def load_config(config, module),
+    do: module.default_config() |> Keyword.merge(config) |> validate_config()
+
+  defp validate_config(config) do
+    {connect_info, config} = Keyword.pop(config, :connect_info, [])
+
+    connect_info =
+      Enum.map(connect_info, fn
+        key when key in [:peer_data, :uri, :x_headers] ->
+          key
+
+        {:session, session} ->
+          {:session, init_session(session)}
+
+        {_, _} = pair ->
+          pair
+
+        other ->
+          raise ArgumentError,
+                ":connect_info keys are expected to be one of :peer_data, :x_headers, :uri, or {:session, config}, " <>
+                  "optionally followed by custom keyword pairs, got: #{inspect(other)}"
+      end)
+
+    [connect_info: connect_info] ++ config
+  end
+
+  defp init_session(session) do
+    key = Keyword.fetch!(session, :key)
+    store = Plug.Session.Store.get(Keyword.fetch!(session, :store))
+    init = store.init(Keyword.drop(session, [:store, :key]))
+    {key, store, init}
+  end
+
   @doc """
   Runs the code reloader if enabled.
   """
@@ -330,7 +367,7 @@ defmodule Phoenix.Socket.Transport do
     * `:uri` - a `%URI{}` derived from the conn
 
   """
-  def connect_info(conn, keys) do
+  def connect_info(conn, endpoint, keys) do
     for key <- keys, into: %{} do
       case key do
         :peer_data ->
@@ -342,10 +379,22 @@ defmodule Phoenix.Socket.Transport do
         :uri ->
           {:uri, fetch_uri(conn)}
 
-        {key, val} -> {key, val}
+        {:session, {key, store, store_config}} ->
+          conn = Plug.Conn.fetch_cookies(conn)
 
-        _ ->
-          raise ArgumentError, ":connect_info keys are expected to be one of :peer_data, :x_headers, or :uri, optionally followed by custom keyword pairs, got: #{inspect(key)}"
+          with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
+               cookie when is_binary(cookie) <- conn.cookies[key],
+               conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
+               {_, session} <- store.get(conn, cookie, store_config),
+               csrf_state when is_binary(csrf_state) <- Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]),
+               true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
+            {:session, session}
+          else
+            _ -> {:session, nil}
+          end
+
+        {key, val} ->
+          {key, val}
       end
     end
   end
@@ -431,7 +480,7 @@ defmodule Phoenix.Socket.Transport do
   defp compare_host?(request_host, allowed_host),
     do: request_host == allowed_host
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.7+
+  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 end

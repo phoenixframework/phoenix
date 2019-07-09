@@ -83,6 +83,14 @@ defmodule Phx.New.Generator do
     end
   end
 
+  def inject_umbrella_config_defaults(project) do
+    unless File.exists?(Project.join_path(project, :project, "config/dev.exs")) do
+      path = Project.join_path(project, :project, "config/config.exs")
+      extra = Phx.New.Umbrella.render(:new, "phx_umbrella/config/extra_config.exs")
+      File.write(path, [File.read!(path), extra])
+    end
+  end
+
   defp split_with_self(contents, text) do
     case :binary.split(contents, text) do
       [left, right] -> [left, text, right]

@@ -1,24 +1,7 @@
-defmodule Phoenix.Transports.LongPoll.Supervisor do
-  @moduledoc false
-  use Supervisor
-
-  def start_link() do
-    Supervisor.start_link(__MODULE__, [], name: __MODULE__)
-  end
-
-  def init([]) do
-    children = [
-      worker(Phoenix.Transports.LongPoll.Server, [], restart: :temporary)
-    ]
-
-    supervise(children, strategy: :simple_one_for_one)
-  end
-end
-
 defmodule Phoenix.Transports.LongPoll.Server do
   @moduledoc false
 
-  use GenServer
+  use GenServer, restart: :temporary
   alias Phoenix.PubSub
 
   def start_link(arg) do
@@ -43,7 +26,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
           buffer: [],
           handler: {handler, handler_state},
           window_ms: trunc(window_ms * 1.5),
-          pubsub_server: endpoint.__pubsub_server__(),
+          pubsub_server: endpoint.config(:pubsub_server),
           priv_topic: priv_topic,
           last_client_poll: now_ms(),
           client_ref: nil

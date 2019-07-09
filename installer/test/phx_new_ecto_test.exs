@@ -12,10 +12,21 @@ defmodule Mix.Tasks.Phx.New.EctoTest do
     :ok
   end
 
+  @app_name "phx_ecto"
+
   test "new without args" do
-    in_tmp_umbrella_project "new without args", fn ->
-      assert capture_io(fn -> Mix.Tasks.Phx.New.Ecto.run([]) end) =~
-             "Creates a new Ecto project within an umbrella project."
+    assert capture_io(fn -> Mix.Tasks.Phx.New.Ecto.run([]) end) =~
+           "Creates a new Ecto project within an umbrella project."
+  end
+
+  test "new with barebones umbrella" do
+    in_tmp_umbrella_project "new with barebones umbrella", fn ->
+      files = ~w[../config/dev.exs ../config/test.exs ../config/prod.exs ../config/prod.secret.exs]
+      Enum.each(files, &File.rm/1)
+
+      assert_file "../config/config.exs", &refute(&1 =~ ~S[import_config "#{Mix.env()}.exs"])
+      Mix.Tasks.Phx.New.Ecto.run([@app_name])
+      assert_file "../config/config.exs", &assert(&1 =~ ~S[import_config "#{Mix.env()}.exs"])
     end
   end
 
@@ -29,7 +40,7 @@ defmodule Mix.Tasks.Phx.New.EctoTest do
 
   test "new with defaults", config do
     in_tmp_umbrella_project config.test, fn ->
-      Mix.Tasks.Phx.New.Ecto.run(["phx_ecto"])
+      Mix.Tasks.Phx.New.Ecto.run([@app_name])
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}

@@ -7,7 +7,7 @@ defmodule Phoenix.MixProject do
     [
       app: :phoenix,
       version: @version,
-      elixir:  "~> 1.5.1 or ~> 1.6",
+      elixir:  "~> 1.6",
       deps: deps(),
       package: package(),
       lockfile: lockfile(),
@@ -56,16 +56,17 @@ defmodule Phoenix.MixProject do
 
   defp deps do
     [
-      {:plug, "~> 1.7"},
-      {:phoenix_pubsub, "~> 1.1"},
+      {:plug, "~> 1.8.1 or ~> 1.9"},
+      {:telemetry, "~> 0.4"},
+      {:phoenix_pubsub, "~> 2.0-dev", github: "phoenixframework/phoenix_pubsub"},
 
       # Optional deps
-      {:plug_cowboy, "~> 1.0 or ~> 2.0", optional: true},
+      {:plug_cowboy, "~> 1.0 or ~> 2.1", optional: true},
       {:jason, "~> 1.0", optional: true},
       {:phoenix_html, "~> 2.13", optional: true},
 
       # Docs dependencies
-      {:ex_doc, "~> 0.20.2", only: :docs},
+      {:ex_doc, "~> 0.20", only: :docs},
       {:inch_ex, "~> 0.2", only: :docs},
 
       # Test dependencies
@@ -132,6 +133,7 @@ defmodule Phoenix.MixProject do
       "guides/testing/testing_channels.md",
 
       "guides/deployment/deployment.md",
+      "guides/deployment/releases.md",
       "guides/deployment/heroku.md"
       ]
   end
@@ -153,6 +155,7 @@ defmodule Phoenix.MixProject do
     # Phoenix.Controller
     # Phoenix.Endpoint
     # Phoenix.Naming
+    # Phoenix.Logger
     # Phoenix.Param
     # Phoenix.Presence
     # Phoenix.Router
@@ -168,8 +171,7 @@ defmodule Phoenix.MixProject do
       "Adapters and Plugs": [
         Phoenix.CodeReloader,
         Phoenix.Endpoint.CowboyAdapter,
-        Phoenix.Endpoint.Cowboy2Adapter,
-        Phoenix.Logger,
+        Phoenix.Endpoint.Cowboy2Adapter
       ],
 
       "Socket and Transport": [
