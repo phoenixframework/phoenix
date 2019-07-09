@@ -154,7 +154,7 @@ Here is an example Docker file to run at the root of your application covering a
 FROM elixir:1.9.0-alpine as build
 
 # install build dependencies
-RUN apk add --update git build-base npm yarn python
+RUN apk add --update build-base npm git
 
 # prepare build dir
 RUN mkdir /app
