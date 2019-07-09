@@ -133,6 +133,7 @@ defmodule Phoenix.MixProject do
       "guides/testing/testing_channels.md",
 
       "guides/deployment/deployment.md",
+      "guides/deployment/releases.md",
       "guides/deployment/heroku.md"
       ]
   end
