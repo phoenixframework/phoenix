@@ -359,6 +359,7 @@ defmodule Phoenix.Socket.Transport do
   Should be called by transports before connecting when appropriate.
   If the sec-websocket-protocol header matches the allowed subprotocol,
   it will put sec-websocket-protocol response header and return the given connection.
+  If no sec-websocket-protocol header was sent it will return the given connection.
 
   Otherwise a 403 Forbidden response will be sent and the connection halted.
   It is a noop if the connection has been halted.
@@ -366,6 +367,7 @@ defmodule Phoenix.Socket.Transport do
   def check_origin(conn, subprotocol)
 
   def check_subprotocol(%Plug.Conn{halted: true} = conn, _subprotocol), do: conn
+  def check_subprotocol(conn, nil), do: conn
 
   def check_subprotocol(conn, subprotocol) do
     import Plug.Conn
