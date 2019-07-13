@@ -19,6 +19,7 @@ defmodule Phoenix.Transports.WebSocket do
     |> Transport.transport_log(opts[:transport_log])
     |> Transport.force_ssl(handler, endpoint, opts)
     |> Transport.check_origin(handler, endpoint, opts)
+    |> Transport.check_subprotocol(opts[:subprotocol])
     |> case do
       %{halted: true} = conn ->
         {:error, conn}

@@ -354,6 +354,49 @@ defmodule Phoenix.Socket.Transport do
   end
 
   @doc """
+  Checks the Websocket subprotocol request header against the allowed subprotocol.
+
+  Should be called by transports before connecting when appropriate.
+  If the sec-websocket-protocol header matches the allowed subprotocol,
+  it will put sec-websocket-protocol response header and return the given connection.
+
+  Otherwise a 403 Forbidden response will be sent and the connection halted.
+  It is a noop if the connection has been halted.
+  """
+  def check_origin(conn, subprotocol)
+
+  def check_subprotocol(%Plug.Conn{halted: true} = conn, _subprotocol), do: conn
+
+  def check_subprotocol(conn, subprotocol) do
+    import Plug.Conn
+    subprotocols = get_req_header(conn, "sec-websocket-protocol")
+
+    case Enum.member?(subprotocols, subprotocol) do
+      true ->
+        put_resp_header(conn, "sec-websocket-protocol", subprotocol)
+
+      false ->
+        Logger.error """
+        Could not check Websocket subprotocol for Phoenix.Socket transport.
+
+        Subprotocols of the request: #{inspect(subprotocols)}
+        Expected subprotocol: #{inspect(subprotocol)}
+
+        This happens when you are attempting a socket connection to
+        a different subprotocol than the one configured in your endpoint.
+        To fix this issue, you may either:
+
+          1. update websocket: [subprotocol: ...] to your actual subprotocol
+             in your endpoint socket configuration.
+
+          2. check the correctness of the `sec-websocket-protocol` request header
+             sends from the client.
+        """
+        conn |> resp(:forbidden, "") |> halt()
+    end
+  end
+
+  @doc """
   Extracts connection information from `conn` and returns a map.
 
   Keys are retrieved from the optional transport option `:connect_info`.
