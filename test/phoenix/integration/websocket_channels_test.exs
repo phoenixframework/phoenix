@@ -107,7 +107,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         connect_info
         |> Map.update!(:peer_data, &Map.put(&1, :address, address))
         |> Map.update!(:uri, &Map.from_struct/1)
-        |> Map.update!(:x_headers, &Map.new/1)
+        |> Map.update!(:headers, &Map.new/1)
 
       socket =
         socket
@@ -165,7 +165,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
       websocket: [
         check_origin: ["//example.com"],
         timeout: 200,
-        connect_info: [:x_headers, :peer_data, :uri, session: @session_config, signing_salt: "salt"]
+        connect_info: [:headers, :peer_data, :uri, session: @session_config, signing_salt: "salt"]
       ]
 
     plug Plug.Session, @session_config
@@ -241,7 +241,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         refute_receive %Message{event: "new_msg"}
       end
 
-      test "transport x_headers are extracted to the socket connect_info" do
+      test "transport headers are extracted to the socket connect_info" do
         extra_headers = [{"x-application", "Phoenix"}]
         {:ok, sock} =
           WebsocketClient.start_link(
@@ -255,8 +255,8 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
         assert_receive %Message{event: "joined",
                                 payload: %{"connect_info" =>
-                                  %{"x_headers" =>
-                                    %{"x-application" => "Phoenix"}}}}
+                                  %{"headers" =>
+                                  %{"connection" => "Upgrade", "host" => "127.0.0.1", "sec-websocket-key" => _, "sec-websocket-version" => "13", "upgrade" => "websocket", "x-application" => "Phoenix"}}}}
       end
 
       test "transport peer_data is extracted to the socket connect_info" do

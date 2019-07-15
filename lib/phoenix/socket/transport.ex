@@ -219,7 +219,7 @@ defmodule Phoenix.Socket.Transport do
 
     connect_info =
       Enum.map(connect_info, fn
-        key when key in [:peer_data, :uri, :x_headers] ->
+        key when key in [:peer_data, :uri, :headers] ->
           key
 
         {:session, session} ->
@@ -230,7 +230,7 @@ defmodule Phoenix.Socket.Transport do
 
         other ->
           raise ArgumentError,
-                ":connect_info keys are expected to be one of :peer_data, :x_headers, :uri, or {:session, config}, " <>
+                ":connect_info keys are expected to be one of :peer_data, :headers, :uri, or {:session, config}, " <>
                   "optionally followed by custom keyword pairs, got: #{inspect(other)}"
       end)
 
@@ -363,7 +363,7 @@ defmodule Phoenix.Socket.Transport do
   The supported keys are:
 
     * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
-    * `:x_headers` - a list of all request headers that have an "x-" prefix
+    * `:headers` - a list of all request headers
     * `:uri` - a `%URI{}` derived from the conn
 
   """
@@ -373,8 +373,8 @@ defmodule Phoenix.Socket.Transport do
         :peer_data ->
           {:peer_data, Plug.Conn.get_peer_data(conn)}
 
-        :x_headers ->
-          {:x_headers, fetch_x_headers(conn)}
+        :headers ->
+          {:headers, conn.req_headers}
 
         :uri ->
           {:uri, fetch_uri(conn)}
@@ -397,12 +397,6 @@ defmodule Phoenix.Socket.Transport do
           {key, val}
       end
     end
-  end
-
-  defp fetch_x_headers(conn) do
-    for {header, _} = pair <- conn.req_headers,
-        String.starts_with?(header, "x-"),
-        do: pair
   end
 
   defp fetch_uri(%{host: host, scheme: scheme, query_string: query_string, port: port, request_path: request_path}) do

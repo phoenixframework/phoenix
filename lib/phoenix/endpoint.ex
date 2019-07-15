@@ -797,7 +797,7 @@ defmodule Phoenix.Endpoint do
       The valid keys are:
 
         * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
-        * `:x_headers` - all request headers that have an "x-" prefix
+        * `:headers` - all request headers
         * `:uri` - a `%URI{}` with information from the conn
         * `{:session, session_config}` - the session information from `Plug.Conn`.
           The `session_config` is an exact copy of the arguments given to `Plug.Session`.
@@ -812,7 +812,7 @@ defmodule Phoenix.Endpoint do
 
           socket "/socket", AppWeb.UserSocket,
             websocket: [
-              connect_info: [:peer_data, :x_headers, :uri, session: [store: :cookie]]
+              connect_info: [:peer_data, :headers, :uri, session: [store: :cookie]]
             ]
 
       With arbitrary keywords:

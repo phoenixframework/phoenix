@@ -61,13 +61,13 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       unless params["logging"] == "enabled", do: Logger.disable(self())
       address = Tuple.to_list(connect_info.peer_data.address) |> Enum.join(".")
       uri = Map.from_struct(connect_info.uri)
-      x_headers = Enum.into(connect_info.x_headers, %{})
-      
+      headers = Enum.into(connect_info.headers, %{})
+
       connect_info =
         connect_info
         |> update_in([:peer_data], &Map.put(&1, :address, address))
         |> Map.put(:uri, uri)
-        |> Map.put(:x_headers, x_headers)
+        |> Map.put(:headers, headers)
 
       socket =
         socket
@@ -123,7 +123,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         window_ms: 200,
         pubsub_timeout_ms: 200,
         check_origin: ["//example.com"],
-        connect_info: [:x_headers, :peer_data, :uri]
+        connect_info: [:headers, :peer_data, :uri]
       ]
   end
 
@@ -265,7 +265,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       assert resp.body["status"] == 204
     end
 
-    test "#{@mode}: transport x_headers are extracted to the socket connect_info" do
+    test "#{@mode}: transport headers are extracted to the socket connect_info" do
       session = join("/ws/connect_info", "room:lobby", @vsn, @mode, %{}, %{}, %{"x-application" => "Phoenix"})
 
       # pull messages
@@ -275,8 +275,14 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
 
       assert %{"connect_info" =>
-               %{"x_headers" =>
-                 %{"x-application" => "Phoenix"}}} = status_msg.payload
+               %{"headers" => %{
+                  "connection" => "keep-alive",
+                  "content-length" => "0",
+                  "content-type" => "application/json",
+                  "host" => "127.0.0.1:5808",
+                  "te" => "",
+                  "x-application" => "Phoenix"
+                }}} = status_msg.payload
     end
 
     test "#{@mode}: transport peer_data is extracted to the socket connect_info" do
