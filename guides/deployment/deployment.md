@@ -94,12 +94,7 @@ $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 
 # Compile assets
-<<<<<<< HEAD
-$ cd assets && webpack --mode production && cd ..
-
-=======
 $ npm run deploy --prefix ./assets
->>>>>>> 99a02839... Add a guide on v1.9 releases
 $ mix phx.digest
 
 # Custom tasks (like DB migrations)
