@@ -102,22 +102,8 @@ defmodule Phoenix.Endpoint do
       "priv/static/cache_manifest.json" which is the file automatically generated
       by `mix phx.digest`
 
-    * `:check_origin` - configure transports to check `origin` header or not. May
-      be `false`, `true`, a list of hosts that are allowed, or a function provided as
-      MFA tuple. Hosts also support wildcards.
-
-      For example, using a list of hosts:
-
-          check_origin: ["//phoenixframework.org", "//*.example.com"]
-
-      or a custom MFA function:
-
-          check_origin: {MyAppWeb.Auth, :my_check_origin?, []}
-
-      The MFA is invoked with the request `%URI{}` as the first argument,
-      followed by arguments in the MFA list
-
-      Defaults to `true`.
+    * `:check_origin` - configure the default `:check_origin` setting for
+      transports. See `socket/3` for options. Defaults to `true`.
 
     * `:force_ssl` - ensures no data is ever sent via HTTP, always redirecting
       to HTTPS. It expects a list of options which are forwarded to `Plug.SSL`.
@@ -776,17 +762,32 @@ defmodule Phoenix.Endpoint do
     * `:transport_log` - if the transport layer itself should log and,
       if so, the level
 
-    * `:check_origin` - if we should check the origin of requests when the
-      origin header is present. It defaults to true and, in such cases,
-      it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
-      It may be set to `false` (not recommended) or to a list of explicitly
-      allowed origins.
+    * `:check_origin` - if the transport should check the origin of requests when
+      the `origin` header is present. May be `true`, `false`, a list of hosts that
+      are allowed, or a function provided as MFA tuple. Defaults to `:check_origin`
+      setting at endpoint configuration.
 
-          check_origin: ["https://example.com",
-                         "//another.com:888", "//other.com"]
+      If `true`, the header is checked against `:host` in `YourApp.Endpoint.config(:url)[:host]`.
 
-      Note: To connect from a native app be sure to either have the native app
-      set an origin or allow any origin via `check_origin: false`
+      If `false`, your app is vulnerable to Cross-Site WebSocket Hijacking (CSWSH)
+      attacks. Only use in development, when the host is truly unknown or when
+      serving clients that do not send the `origin` header, such as mobile apps.
+
+      You can also specify a list of explicitly allowed origins. Wildcards are
+      supported.
+
+          check_origin: [
+            "https://example.com",
+            "//another.com:888",
+            "//*.other.com"
+          ]
+
+      Or a custom MFA function:
+
+          check_origin: {MyAppWeb.Auth, :my_check_origin?, []}
+
+      The MFA is invoked with the request `%URI{}` as the first argument,
+      followed by arguments in the MFA list.
 
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
