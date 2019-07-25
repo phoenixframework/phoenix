@@ -17,6 +17,22 @@ defmodule Phoenix.CodeReloader.Server do
     GenServer.call(__MODULE__, {:reload!, endpoint}, :infinity)
   end
 
+  @doc """
+  Synchronizes with the code server if it is alive.
+
+  If it is not running, it also returns true.
+  """
+  def sync do
+    pid = Process.whereis(__MODULE__)
+    ref = Process.monitor(pid)
+    GenServer.cast(pid, {:sync, self(), ref})
+
+    receive do
+      ^ref -> :ok
+      {:DOWN, ^ref, _, _, _} -> :ok
+    end
+  end
+
   ## Callbacks
 
   def init(false) do
@@ -77,16 +93,21 @@ defmodule Phoenix.CodeReloader.Server do
     {:noreply, state}
   end
 
+  def handle_cast({:sync, pid, ref}, state) do
+    send(pid, ref)
+    {:noreply, state}
+  end
+
+  def handle_info(_, state) do
+    {:noreply, state}
+  end
+
   defp default_reloadable_apps() do
     if Mix.Project.umbrella? do
       Enum.map(Mix.Dep.Umbrella.cached, &(&1.app))
     else
       [Mix.Project.config()[:app]]
     end
-  end
-
-  def handle_info(_, state) do
-    {:noreply, state}
   end
 
   defp os_symlink({:win32, _}),

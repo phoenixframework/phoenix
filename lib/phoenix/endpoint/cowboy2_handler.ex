@@ -12,54 +12,64 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
   # Note we keep the websocket state as [handler | state]
   # to avoid conflicts with {endpoint, opts}.
   def init(req, {endpoint, opts}) do
-    conn = @connection.conn(req)
-    try do
-      case endpoint.__handler__(conn, opts) do
-        {:websocket, conn, handler, opts} ->
-          case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
-            {:ok, %Plug.Conn{adapter: {@connection, req}} = conn, state} ->
-              cowboy_opts =
-                opts
-                |> Enum.flat_map(fn
-                  {:timeout, timeout} -> [idle_timeout: timeout]
-                  {:compress, _} = opt -> [opt]
-                  {:max_frame_size, _} = opt -> [opt]
-                  _other -> []
-                end)
-                |> Map.new()
+    init(@connection.conn(req), endpoint, opts, true)
+  end
 
-              {:cowboy_websocket, copy_resp_headers(conn, req), [handler | state], cowboy_opts}
+  defp init(conn, endpoint, opts, retry?) do
+    case endpoint.__handler__(conn, opts) do
+      {:websocket, conn, handler, opts} ->
+        case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
+          {:ok, %Plug.Conn{adapter: {@connection, req}} = conn, state} ->
+            cowboy_opts =
+              opts
+              |> Enum.flat_map(fn
+                {:timeout, timeout} -> [idle_timeout: timeout]
+                {:compress, _} = opt -> [opt]
+                {:max_frame_size, _} = opt -> [opt]
+                _other -> []
+              end)
+              |> Map.new()
 
-            {:error, %Plug.Conn{adapter: {@connection, req}} = conn} ->
-              {:ok, copy_resp_headers(conn, req), {handler, opts}}
-          end
+            {:cowboy_websocket, copy_resp_headers(conn, req), [handler | state], cowboy_opts}
 
-        {:plug, conn, handler, opts} ->
-          %{adapter: {@connection, req}} =
-            conn
-            |> handler.call(opts)
-            |> maybe_send(handler)
+          {:error, %Plug.Conn{adapter: {@connection, req}} = conn} ->
+            {:ok, copy_resp_headers(conn, req), {handler, opts}}
+        end
 
-          {:ok, req, {handler, opts}}
+      {:plug, conn, handler, opts} ->
+        %{adapter: {@connection, req}} =
+          conn
+          |> handler.call(opts)
+          |> maybe_send(handler)
+
+        {:ok, req, {handler, opts}}
+    end
+  catch
+    :error, value ->
+      case System.stacktrace do
+        # Maybe the handler is not available because the code is being recompiled.
+        # Sync with the code reloader and retry once.
+        [{^endpoint, :__handler__, _, _} | _] when value == :undef and retry? ->
+          Phoenix.CodeReloader.Server.sync()
+          init(conn, endpoint, opts, false)
+
+        _ ->
+          stack = System.stacktrace()
+          exception = Exception.normalize(:error, value, stack)
+          exit({{exception, stack}, {endpoint, :call, [conn, opts]}})
       end
-    catch
-      :error, value ->
-        stack = System.stacktrace()
-        exception = Exception.normalize(:error, value, stack)
-        exit({{exception, stack}, {endpoint, :call, [conn, opts]}})
 
-      :throw, value ->
-        stack = System.stacktrace()
-        exit({{{:nocatch, value}, stack}, {endpoint, :call, [conn, opts]}})
+    :throw, value ->
+      stack = System.stacktrace()
+      exit({{{:nocatch, value}, stack}, {endpoint, :call, [conn, opts]}})
 
-      :exit, value ->
-        exit({value, {endpoint, :call, [conn, opts]}})
+    :exit, value ->
+      exit({value, {endpoint, :call, [conn, opts]}})
+  after
+    receive do
+      @already_sent -> :ok
     after
-      receive do
-        @already_sent -> :ok
-      after
-        0 -> :ok
-      end
+      0 -> :ok
     end
   end
 

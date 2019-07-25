@@ -20,6 +20,22 @@ defmodule Phoenix.CodeReloaderTest do
     assert Mix.Tasks.Compile.Phoenix.run([]) == :noop
   end
 
+  @tag :capture_log
+  test "syncs with code server" do
+    assert Phoenix.CodeReloader.Server.sync == :ok
+
+    # Even in case of crashes, it works.
+    :sys.suspend(Phoenix.CodeReloader.Server)
+
+    Task.start_link(fn ->
+      Phoenix.CodeReloader.Server
+      |> Process.whereis()
+      |> Process.exit(:kill)
+    end)
+
+    assert Phoenix.CodeReloader.Server.sync == :ok
+  end
+
   test "reloads on every request" do
     pid = Process.whereis(Phoenix.CodeReloader.Server)
     :erlang.trace(pid, true, [:receive])
