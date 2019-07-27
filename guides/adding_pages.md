@@ -206,7 +206,7 @@ There are a couple of interesting things to notice about what we just did. We di
 
 which is what renders our template into the layout before the HTML is sent off to the browser.
 
-A note on hot code reloading, some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the dicussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
+> A note on hot code reloading: Some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the dicussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
 
 ## Another New Page
 
