@@ -21,7 +21,7 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
           req = Cowboy2Handler.copy_resp_headers(conn, req)
           {:upgrade, :protocol, __MODULE__, req, {handler, args, timeout}}
 
-        {:error, %Plug.Conn{adapter: {@connection, req} = conn}} ->
+        {:error, %Plug.Conn{adapter: {@connection, req}} = conn} ->
           {:shutdown, Cowboy2Handler.copy_resp_headers(conn, req), :no_state}
       end
     catch
