@@ -95,7 +95,7 @@ defmodule Phoenix.Channel.ChannelTest do
     }
   end
 
-  test "broadcasts when not joined" do
+  test "`broadcast_from`s when not joined" do
     socket = %Phoenix.Socket{joined: false}
 
     assert_raise RuntimeError, ~r"join", fn ->
@@ -104,14 +104,6 @@ defmodule Phoenix.Channel.ChannelTest do
 
     assert_raise RuntimeError, ~r"join", fn ->
       broadcast_from!(socket, "event", %{key: :val})
-    end
-
-    assert_raise RuntimeError, ~r"join", fn ->
-      broadcast(socket, "event", %{key: :val})
-    end
-
-    assert_raise RuntimeError, ~r"join", fn ->
-      broadcast!(socket, "event", %{key: :val})
     end
   end
 

@@ -494,16 +494,14 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast(socket, event, message) do
-    %{pubsub_server: pubsub_server, topic: topic} = assert_joined!(socket)
+  def broadcast(%Socket{pubsub_server: pubsub_server, topic: topic}, event, message) do
     Server.broadcast(pubsub_server, topic, event, message)
   end
 
   @doc """
   Same as `broadcast/3`, but raises if broadcast fails.
   """
-  def broadcast!(socket, event, message) do
-    %{pubsub_server: pubsub_server, topic: topic} = assert_joined!(socket)
+  def broadcast!(%Socket{pubsub_server: pubsub_server, topic: topic}, event, message) do
     Server.broadcast!(pubsub_server, topic, event, message)
   end
 
