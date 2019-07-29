@@ -126,8 +126,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
     handler.terminate(reason, state)
   end
 
-  @doc false
-  def copy_resp_headers(%Plug.Conn{} = conn, req) do
+  defp copy_resp_headers(%Plug.Conn{} = conn, req) do
     Enum.reduce(conn.resp_headers, req, fn {key, val}, acc ->
       :cowboy_req.set_resp_header(key, val, acc)
     end)
