@@ -47,7 +47,6 @@ To build the documentation from source:
 
 ```bash
 $ npm install --prefix assets
-$ cd ..
 $ MIX_ENV=docs mix docs
 ```
 
