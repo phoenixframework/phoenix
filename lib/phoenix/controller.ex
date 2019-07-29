@@ -1051,6 +1051,10 @@ defmodule Phoenix.Controller do
       control attacks
 
   A custom headers map may also be given to be merged with defaults.
+  It is recommended for custom header keys to be in lowercase, to avoid sending
+  duplicate keys in a request.
+  Additionally, responses with mixed-case headers served over HTTP/2 are not
+  considered valid by common clients, resulting in dropped responses.
   """
   def put_secure_browser_headers(conn, headers \\ %{})
   def put_secure_browser_headers(conn, []) do
