@@ -362,7 +362,7 @@ defmodule Phoenix.ChannelTest do
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
     message = %Message{
       event: "phx_join",
-      payload: payload,
+      payload: __stringify__(payload),
       topic: topic,
       ref: System.unique_integer([:positive])
     }
