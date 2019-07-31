@@ -161,7 +161,7 @@ comment_path  PATCH  /comments/:id       HelloWeb.CommentController :update
               PUT    /comments/:id       HelloWeb.CommentController :update
 ```
 
-The `Phoenix.Router.resources/4` function describes additional options for customizing resource routes.
+The `Phoenix.Router.resources/4` macro describes additional options for customizing resource routes.
 
 ## Forward
 
