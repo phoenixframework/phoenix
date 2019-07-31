@@ -135,7 +135,7 @@ defmodule MyApp.Release do
   end
   
   defp load_app do
-    Application.ensure_all_started(@app)
+    Application.load(@app)
   end
 end
 ```
@@ -149,6 +149,8 @@ $ _build/dev/rel/my_app/bin/my_app eval "MyApp.Release.migrate"
 ```
 
 And that's it!
+
+You can use this approach to create any custom command to run in production. In this case, we used `load_app`, which calls `Application.load/1` to load the current application without starting it. However, you may want to write a custom command that starts the whole application. In such cases, `Application.ensure_all_started/1` must be used. Keep in mind starting the application will start all processes for the current application, including the Phoenix endpoint.
 
 ## Containers
 
