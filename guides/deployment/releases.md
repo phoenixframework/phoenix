@@ -150,7 +150,17 @@ $ _build/dev/rel/my_app/bin/my_app eval "MyApp.Release.migrate"
 
 And that's it!
 
-You can use this approach to create any custom command to run in production. In this case, we used `load_app`, which calls `Application.load/1` to load the current application without starting it. However, you may want to write a custom command that starts the whole application. In such cases, `Application.ensure_all_started/1` must be used. Keep in mind starting the application will start all processes for the current application, including the Phoenix endpoint.
+You can use this approach to create any custom command to run in production. In this case, we used `load_app`, which calls `Application.load/1` to load the current application without starting it. However, you may want to write a custom command that starts the whole application. In such cases, `Application.ensure_all_started/1` must be used. Keep in mind starting the application will start all processes for the current application, including the Phoenix endpoint. This can be circumvented by changing your supervision tree to not start certain children under certain conditions. For example, in the release commands file you could do:
+
+```elixir
+defp start_app do
+  load_app()
+  Application.put_env(@app, :minimal, true)
+  Application.ensure_all_started(@app)
+end
+```
+
+And then in your application you check `Application.get_env(@app, :minimal)` and start only part of the children when it is set.
 
 ## Containers
 
