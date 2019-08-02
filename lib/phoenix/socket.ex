@@ -303,19 +303,24 @@ defmodule Phoenix.Socket do
   ## USER API
 
   @doc """
-  Adds a key/value pair to socket assigns.
+  Adds key value pairs to socket assigns.
+
+  A single key value pair may be passed, a keyword list or map
+  of assigns may be provided to be merged into existing socket
+  assigns.
 
   ## Examples
 
-      iex> socket.assigns[:token]
-      nil
-      iex> socket = assign(socket, :token, "bar")
-      iex> socket.assigns[:token]
-      "bar"
-
+  iex> assign(socket, :name, "Elixir")
+  iex> assign(socket, name: "Elixir", logo: "💧")
   """
-  def assign(socket = %Socket{}, key, value) do
-    put_in socket.assigns[key], value
+  def assign(%Socket{} = socket, key, value) do
+    assign(socket, [{key, value}])
+  end
+
+  def assign(%Socket{} = socket, attrs)
+  when is_map(attrs) or is_list(attrs) do
+    %{socket | assigns: Map.merge(socket.assigns, Map.new(attrs))}
   end
 
   @doc """
