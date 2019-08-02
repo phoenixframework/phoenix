@@ -24,6 +24,11 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.10-dev
+
+### Enhancements
+  * [Socket] support assigning multiple key/value pairs with keyword list or map with `assign/2`.
+
 ## 1.4.9 (2019-07-03)
 
 ### Enhancements
