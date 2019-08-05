@@ -73,6 +73,12 @@ $ PORT=4001 MIX_ENV=prod mix phx.server
 10:59:19.136 [info] Running MyApp.Endpoint with Cowboy on http://example.com
 ```
 
+To run in detached mode so that the Phoenix server does not stop and continues to run even if you close the terminal:
+
+```console
+$ PORT=4001 MIX_ENV=prod elixir --erl "-detached" -S mix phx.server
+```
+
 In case you get an error message, please read it carefully, and open up a bug report if it is still not clear how to address it.
 
 You can also run your application inside an interactive shell:
