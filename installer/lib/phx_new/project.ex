@@ -47,6 +47,10 @@ defmodule Phx.New.Project do
     Keyword.get(opts, :verbose, false)
   end
 
+  def auto_install?(%Project{opts: opts}) do
+    Keyword.get(opts, :auto_install, false)
+  end
+
   def join_path(%Project{} = project, location, path)
       when location in [:project, :app, :web] do
 

@@ -160,7 +160,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto"])
+      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto", "--auto-install"])
 
       # No webpack
       refute File.read!("phx_blog/.gitignore") |> String.contains?("/assets/node_modules/")
@@ -223,6 +223,9 @@ defmodule Mix.Tasks.Phx.NewTest do
                   &refute(&1 =~ ~r"Phoenix.LiveReloader.Socket")
       assert_file "phx_blog/lib/phx_blog_web/views/error_view.ex", ~r".json"
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~r"pipeline :browser")
+
+      # Auto install
+      refute_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
     end
   end
 

@@ -43,6 +43,8 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--verbose` - use verbose output
 
+    * `--auto-install` - automatically fetch and install dependencies without prompting
+
   When passing the `--no-ecto` flag, Phoenix generators such as
   `phx.gen.html`, `phx.gen.json` and `phx.gen.context` may no
   longer work as expected as they generate context files that rely
@@ -85,7 +87,7 @@ defmodule Mix.Tasks.Phx.New do
       mix phx.new -v
   """
   use Mix.Task
-  alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
+  alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto, DependencyInstaller}
 
   @version Mix.Project.config[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application"
@@ -93,7 +95,7 @@ defmodule Mix.Tasks.Phx.New do
   @switches [dev: :boolean, webpack: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
-             umbrella: :boolean, verbose: :boolean]
+             umbrella: :boolean, verbose: :boolean, auto_install: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info("Phoenix v#{@version}")
@@ -140,20 +142,13 @@ defmodule Mix.Tasks.Phx.New do
 
   defp prompt_to_install_deps(%Project{} = project, generator, path) do
     path = Map.fetch!(project, path)
-    install? = Mix.shell.yes?("\nFetch and install dependencies?")
+    install? = Project.auto_install?(project) || Mix.shell.yes?("\nFetch and install dependencies?")
     cd_step = ["$ cd #{relative_app_path(path)}"]
 
     maybe_cd(path, fn ->
-      mix_step = install_mix(project, install?)
-
-      compile =
-        case mix_step do
-          [] -> Task.async(fn -> rebar_available?() && cmd(project, "mix deps.compile") end)
-          _  -> Task.async(fn -> :ok end)
-        end
-
-      webpack_step = install_webpack(install?, project)
-      Task.await(compile, :infinity)
+      mix_step = DependencyInstaller.install_mix(project, install?)
+      webpack_step = DependencyInstaller.install_webpack(install?, project, &relative_app_path/1)
+      DependencyInstaller.compile(project, mix_step)
 
       if Project.webpack?(project) and !System.find_executable("npm") do
         print_webpack_info(project, generator)
@@ -180,26 +175,6 @@ defmodule Mix.Tasks.Phx.New do
   end
   defp switch_to_string({name, nil}), do: name
   defp switch_to_string({name, val}), do: name <> "=" <> val
-
-  defp install_webpack(install?, project) do
-    assets_path = Path.join(project.web_path || project.project_path, "assets")
-    webpack_config = Path.join(assets_path, "webpack.config.js")
-
-    maybe_cmd(project, "cd #{relative_app_path(assets_path)} && npm install && node node_modules/webpack/bin/webpack.js --mode development",
-              File.exists?(webpack_config), install? && System.find_executable("npm"))
-  end
-
-  defp install_mix(project, install?) do
-    maybe_cmd(project, "mix deps.get", true, install? && hex_available?())
-  end
-
-  defp hex_available? do
-    Code.ensure_loaded?(Hex)
-  end
-
-  defp rebar_available? do
-    Mix.Rebar.rebar_cmd(:rebar) && Mix.Rebar.rebar_cmd(:rebar3)
-  end
 
   defp print_webpack_info(_project, _gen) do
     Mix.shell.info """
@@ -265,35 +240,6 @@ defmodule Mix.Tasks.Phx.New do
       apply(Regex, :recompile!, [regex])
     else
       regex
-    end
-  end
-
-  defp maybe_cmd(project, cmd, should_run?, can_run?) do
-    cond do
-      should_run? && can_run? ->
-        cmd(project, cmd)
-      should_run? ->
-        ["$ #{cmd}"]
-      true ->
-        []
-    end
-  end
-
-  defp cmd(%Project{} = project, cmd) do
-    Mix.shell.info [:green, "* running ", :reset, cmd]
-    case Mix.shell.cmd(cmd, cmd_opts(project)) do
-      0 ->
-        []
-      _ ->
-        ["$ #{cmd}"]
-    end
-  end
-
-  defp cmd_opts(%Project{} = project) do
-    if Project.verbose?(project) do
-      []
-    else
-      [quiet: true]
     end
   end
 

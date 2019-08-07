@@ -8,6 +8,13 @@ defmodule Phoenix.LiveReloader do
   def call(conn, _), do: conn
 end
 
+# Mock installing so we don't install dependencies for testing
+defmodule Phx.New.DependencyInstaller do
+  def install_webpack(_install?, _project, _relative_app_path), do: ["$ cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development"]
+  def install_mix(_project, _install?), do: ["$ mix deps.get"]
+  def compile(_project, _mix_step), do: :ok
+end
+
 defmodule MixHelper do
   import ExUnit.Assertions
   import ExUnit.CaptureIO
