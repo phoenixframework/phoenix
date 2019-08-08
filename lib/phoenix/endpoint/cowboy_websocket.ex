@@ -15,7 +15,7 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     conn = @connection.conn(req, transport)
 
     try do
-      case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
+      case module.connect(conn, endpoint, handler, opts) do
         {:ok, %Plug.Conn{adapter: {@connection, req}} = conn, args} ->
           timeout = Keyword.fetch!(opts, :timeout)
           req = Cowboy2Handler.copy_resp_headers(conn, req)
