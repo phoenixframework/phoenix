@@ -28,16 +28,71 @@ defmodule Phoenix.Router do
         get "/pages/:page", PageController, :show
       end
 
-  The `get/3` macro above accepts a request of format `"/pages/VALUE"` and
-  dispatches it to the show action in the `PageController`.
-
-  Routes can also match glob-like patterns, routing any path with a common
-  base to the same controller. For example:
-
-      get "/dynamic*anything", DynamicController, :show
+  The `get/3` macro above accepts a request to `/pages/hello` and dispatches
+  it to the `PageController`'s `show` action with `%{"page" => "hello"}` in
+  `params`.
 
   Phoenix's router is extremely efficient, as it relies on Elixir
   pattern matching for matching routes and serving requests.
+
+  ## Routing
+
+  `get/3`, `post/3`, `put/3` and other macros named after HTTP verbs are used
+  to create routes.
+
+  The route:
+
+      get "/pages", PageController, :index
+
+  matches a `GET` request to `/pages` and dispatches it to the `index` action in
+  `PageController`.
+
+      get "/pages/:page", PageController, :show
+
+  matches `/pages/hello` and dispatches to the `show` action with
+  `%{"path" => "hello"}` in `params`.
+
+      defmodule PageController do
+        def show(conn, params) do
+          # %{"page" => "hello"} == params
+        end
+      end
+
+  Partial and multiple segments can be matched. For example:
+
+      get "/api/v:version/pages/:id", PageController, :show
+
+  matches `/api/v1/pages/2` and puts `%{"version" => "1", "id" => "2"}` in
+  `params`. Only the trailing part of a segment can be captured.
+
+  Routes are matched from top to bottom. The second route here:
+
+      get "/pages/:page", PageController, :show
+      get "/pages/hello", PageController, :hello
+
+  will never match `/pages/hello` because `/pages/:page` matches that first.
+
+  Routes can use glob-like patterns to match trailing segments.
+
+      get "/pages/*page", PageController, :show
+
+  matches `/pages/hello/world` and puts the globbed segments in `params["page"]`.
+
+      GET /pages/hello/world
+      %{"page" => ["hello", "world"]} = params
+
+  Globs can match segments partially too. The difference is the whole segment
+  is captured along with the trailing segments.
+
+      get "/pages/he*page", PageController, :show
+
+  matches
+
+      GET /pages/hello/world
+      %{"page" => ["hello", "world"]} = params
+
+      GET /pages/hey/world
+      %{"page" => ["hey", "world"]} = params
 
   ## Helpers
 
@@ -67,8 +122,8 @@ defmodule Phoenix.Router do
   If the route contains glob-like patterns, parameters for those have to be given as
   list:
 
-      MyAppWeb.Router.Helpers.dynamic_path(conn_or_endpoint, :show, ["dynamic", "something"])
-      "/dynamic/something"
+      MyAppWeb.Router.Helpers.pages_path(conn_or_endpoint, :show, ["hello", "world"])
+      "/pages/hello/world"
 
   The URL generated in the named URL helpers is based on the configuration for
   `:url`, `:http` and `:https`. However, if for some reason you need to manually
