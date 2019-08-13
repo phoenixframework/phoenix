@@ -23,7 +23,7 @@ Once that is done, you can assemble a release by going through all of the steps 
 
 First set the environment variables:
 
-```
+```console
 $ mix phx.gen.secret
 REALLY_LONG_SECRET
 $ export SECRET_KEY_BASE=REALLY_LONG_SECRET
@@ -32,7 +32,7 @@ $ export DATABASE_URL=ecto://USER:PASS@HOST/database
 
 Then load dependencies to compile code and assets:
 
-```
+```console
 # Initial setup
 $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
@@ -44,7 +44,7 @@ $ mix phx.digest
 
 And now run `mix release`:
 
-```
+```console
 $ MIX_ENV=prod mix release
 Generated my_app app
 * assembling my_app-0.1.0 on MIX_ENV=prod
@@ -68,7 +68,7 @@ config :my_app, MyApp.Endpoint, server: true
 
 Now assemble the release once again:
 
-```
+```console
 $ MIX_ENV=prod mix release
 Generated my_app app
 * assembling my_app-0.1.0 on MIX_ENV=prod
@@ -98,7 +98,7 @@ However, in many cases, we don't want to set the values for `SECRET_KEY_BASE` an
 
 Now if you assemble another release, you should see this:
 
-```
+```console
 $ MIX_ENV=prod mix release
 Generated my_app app
 * assembling my_app-0.1.0 on MIX_ENV=prod
@@ -133,7 +133,7 @@ defmodule MyApp.Release do
   defp repos do
     Application.fetch_env!(@app, :ecto_repos)
   end
-  
+
   defp load_app do
     Application.load(@app)
   end
@@ -144,7 +144,7 @@ Where you replace the first two lines by your application names.
 
 Now you can assemble a new release with `MIX_ENV=prod mix release` and you can invoke any code, including the functions in the module above, by calling the `eval` command:
 
-```
+```console
 $ _build/prod/rel/my_app/bin/my_app eval "MyApp.Release.migrate"
 ```
 
@@ -168,7 +168,7 @@ Elixir releases work well with container technologies, such as Docker. The idea 
 
 Here is an example Docker file to run at the root of your application covering all of the steps above:
 
-```
+```docker
 FROM elixir:1.9.0-alpine AS build
 
 # install build dependencies

@@ -35,8 +35,7 @@ Let's separate this process into a few steps so we can keep track of where we ar
 - Initialize Git repository
 - Sign up for Heroku
 - Install the Heroku Toolbelt
-- Create the Heroku application
-- Add the Phoenix static buildpack
+- Create and setup Heroku application
 - Make our project ready for Heroku
 - Deploy time!
 - Useful Heroku commands
@@ -69,8 +68,11 @@ Once we have signed up, we can download the correct version of the Heroku Toolbe
 
 The Heroku CLI, part of the Toolbelt, is useful to create Heroku applications, list currently running dynos for an existing application, tail logs or run one-off commands (mix tasks for instance).
 
-## Creating the Heroku Application
+## Create and Setup Heroku Application
+There are two different ways to deploy a Phoenix app on Heroku. We could use Heroku buildpacks or their container stack. The difference between these two approaches is in how we tell Heroku to treat our build. In buildpack case, we need to update our apps configuration on Heroku to use Phoenix/Elixir specific buildpacks instead of trying to automatically detect it. On container approach, we have more control on how we want to setup our app and we can define our container image using `Dockerfile` and `heroku.yml`. We describe both approaches below.
 
+### Using Heroku Buildpacks
+#### Create Application
 Now that we have the Toolbelt installed, let's create the Heroku application. In our project directory, run:
 
 > Note: the first time we use a Heroku command, it may prompt us to log in. If this happens, just enter the email and password you specified during signup.
@@ -103,7 +105,7 @@ elixir_version=1.8.1
 erlang_version=21.2.5
 ```
 
-## Adding the Phoenix Static Buildpack
+#### Adding the Phoenix Static Buildpack
 
 We need to compile static assets for a successful Phoenix deployment. The [Phoenix static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) can take care of that for us, so let's add it now.
 
@@ -127,6 +129,34 @@ web: mix phx.server
 ```
 
 Heroku will recognize this file and use the command to start your application, ensuring that it also starts the Phoenix server.
+
+### Using Container Stack
+#### Create Heroku application
+Set the stack of your app to `container`, this allows us to use `Dockerfile` to define our app setup.
+```console
+$ heroku create
+Creating app... done, ⬢ mysterious-meadow-6277
+$ heroku stack:set container
+```
+Add a new `heroku.yml` file to your root folder. In this file you can define addons used by your app, how to build the image and what configs are passed to the image. You can learn more about Heroku's `heroku.yml` options [here](https://devcenter.heroku.com/articles/build-docker-images-heroku-yml). Here is a sample:
+```yaml
+setup:
+  addons:
+    - plan: heroku-postgresql
+      as: DATABASE
+build:
+  docker:
+    web: Dockerfile
+  config:
+    MIX_ENV: prod
+    SECRET_KEY_BASE: $SECRET_KEY_BASE
+    DATBASE_URL: $DATABASE_URL
+```
+
+#### Setup Your app with Dockerfile
+Add `Dockerfile` to your root folder. You can follow [container release docs](./releases.md#containers).
+
+Once you have the image definition setup, you can push your app to heroku and you can see it starts building the image and deploy it.
 
 ## Making our Project ready for Heroku
 
