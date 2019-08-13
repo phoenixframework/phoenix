@@ -154,40 +154,9 @@ build:
 ```
 
 #### Setup Your app with Dockerfile
-Add `Dockerfile` to your root folder, in this example we used [`bitwalker/alpine-elixir-phoenix:latest`](https://hub.docker.com/r/bitwalker/alpine-elixir-phoenix) as our base image. Here is a sample basic `Dockerfile`:
+Add `Dockerfile` to your root folder. You can follow [container release docs](./releases.md#containers).
 
-```dockerfile
-FROM bitwalker/alpine-elixir-phoenix:latest
-
-ARG SECRET_KEY_BASE
-
-# Set exposed ports
-EXPOSE 5000
-ENV PORT=5000 MIX_ENV=prod
-
-# Cache elixir deps
-ADD mix.exs mix.lock ./
-RUN mix do deps.get, deps.compile
-
-# Same with npm deps
-ADD assets/package.json assets/
-RUN cd assets && \
-    npm install
-
-ADD . .
-
-# Run frontend build, compile, and digest assets
-RUN cd assets/ && \
-    npm run deploy && \
-    cd - && \
-    mix do compile, phx.digest
-
-USER default
-
-CMD ["mix", "phx.server"]
-```
-Now you can push your app to heroku and you can see it starts building the image and deploy it.
-
+Once you have the image definition setup, you can push your app to heroku and you can see it starts building the image and deploy it.
 
 ## Making our Project ready for Heroku
 
