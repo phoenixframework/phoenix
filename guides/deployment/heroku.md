@@ -150,7 +150,7 @@ build:
   config:
     MIX_ENV: prod
     SECRET_KEY_BASE: $SECRET_KEY_BASE
-    DATBASE_URL: $DATABASE_URL
+    DATABASE_URL: $DATABASE_URL
 ```
 
 #### Setup Your app with Dockerfile
