@@ -50,7 +50,7 @@ defmodule Phoenix.Router do
       get "/pages/:page", PageController, :show
 
   matches `/pages/hello` and dispatches to the `show` action with
-  `%{"path" => "hello"}` in `params`.
+  `%{"page" => "hello"}` in `params`.
 
       defmodule PageController do
         def show(conn, params) do
