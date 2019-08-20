@@ -165,7 +165,7 @@ defmodule Phoenix.Endpoint do
       `File.cwd!()`
 
           [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development",
-              "--watch-stdin"], cd: "my_frontend"]
+              "--watch-stdin", cd: "my_frontend"]]
 
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of
