@@ -39,8 +39,8 @@ The project which contains many HTML helper functions used in Phoenix.
 ## Cowboy
 The webserver Phoenix is based on.
 - [Source Code and Readme](https://github.com/ninenines/cowboy)
-- [User Guides](http://ninenines.eu/docs/en/cowboy/1.0/guide/)
-- [Manual/Function Reference](http://ninenines.eu/docs/en/cowboy/1.0/manual/)
+- [User Guides](http://ninenines.eu/docs/en/cowboy/2.6/guide/)
+- [Manual/Function Reference](http://ninenines.eu/docs/en/cowboy/2.6/manual/)
 
 ## EEx
 The default templating system for Phoenix.

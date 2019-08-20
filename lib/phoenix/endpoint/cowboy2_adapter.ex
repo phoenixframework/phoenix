@@ -23,7 +23,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
 
   You can provide custom dispatch options in order to use Phoenix's
   builtin Cowboy server with custom handlers. For example, to handle
-  raw WebSockets [as shown in Cowboy's docs](https://github.com/ninenines/cowboy/tree/2.0.x/examples)).
+  raw WebSockets [as shown in Cowboy's docs](https://github.com/ninenines/cowboy/tree/master/examples)).
 
   The options are passed to both `:http` and `:https` keys in the
   endpoint configuration. However, once you pass your custom dispatch
