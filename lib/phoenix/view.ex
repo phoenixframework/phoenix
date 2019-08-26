@@ -388,7 +388,12 @@ defmodule Phoenix.View do
   defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
 
   defp assign_resource(assigns, view, resource) do
-    as = Map.get(assigns, :as) || view.__resource__
+    as =
+      case assigns do
+        %{as: as} -> as
+        _ -> view.__resource__
+      end
+
     Map.put(assigns, as, resource)
   end
 
