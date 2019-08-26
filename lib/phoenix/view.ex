@@ -384,6 +384,8 @@ defmodule Phoenix.View do
     render view, template, assign_resource(assigns, view, resource)
   end
 
+  @compile {:inline, [to_map: 1]}
+
   defp to_map(assigns) when is_map(assigns), do: assigns
   defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
 
