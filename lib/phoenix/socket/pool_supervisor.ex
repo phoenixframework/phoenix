@@ -26,15 +26,22 @@ defmodule Phoenix.Socket.PoolSupervisor do
     end
   end
 
-  @doc false
-  def start_pooled(worker, ref, i) do
-    case Supervisor.start_link([worker], strategy: :simple_one_for_one) do
-      {:ok, pid} ->
-        :ets.insert(ref, {i, pid})
-        {:ok, pid}
+  defmodule WorkerSupervisor do
+    @behaviour :supervisor
 
-      {:error, reason} ->
-        {:error, reason}
+    def start_link(worker, ref, i) do
+      case :supervisor.start_link(__MODULE__, worker) do
+        {:ok, pid} ->
+          :ets.insert(ref, {i, pid})
+          {:ok, pid}
+
+        {:error, reason} ->
+          {:error, reason}
+      end
+    end
+
+    def init(worker) do
+      {:ok, {%{strategy: :simple_one_for_one}, [worker]}}
     end
   end
 
@@ -48,7 +55,7 @@ defmodule Phoenix.Socket.PoolSupervisor do
 
     children =
       for i <- 0..(partitions - 1) do
-        supervisor(__MODULE__, [worker, ref, i], id: i, function: :start_pooled)
+        supervisor(WorkerSupervisor, [worker, ref, i], id: i)
       end
 
     supervise(children, strategy: :one_for_one)
