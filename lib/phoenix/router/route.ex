@@ -9,7 +9,7 @@ defmodule Phoenix.Router.Route do
   @doc """
   The `Phoenix.Router.Route` struct. It stores:
 
-    * `:verb` - the HTTP verb as an upcased string
+    * `:verb` - the HTTP verb as an atom
     * `:line` - the line the route was defined
     * `:kind` - the kind of route, one of `:match`, `:forward`
     * `:path` - the normalized path as string
@@ -45,7 +45,7 @@ defmodule Phoenix.Router.Route do
   Receives the verb, path, plug, options and helper
   and returns a `Phoenix.Router.Route` struct.
   """
-  @spec build(non_neg_integer, :match | :forward, String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}, %{}, atom) :: t
+  @spec build(non_neg_integer, :match | :forward, atom, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}, %{}, atom) :: t
   def build(line, kind, verb, path, host, plug, plug_opts, helper, pipe_through, private, assigns, log)
       when is_atom(verb) and (is_binary(host) or is_nil(host)) and
            is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
