@@ -12,15 +12,15 @@ defmodule Phoenix.Socket.Serializer do
   Encodes a `Phoenix.Socket.Broadcast` struct to fastlane format.
   """
   @callback fastlane!(Phoenix.Socket.Broadcast.t()) ::
-              {:socket_push, :text, String.t()}
-              | {:socket_push, :binary, binary()}
+              {:socket_push, :text, iodata()}
+              | {:socket_push, :binary, iodata()}
 
   @doc """
   Encodes `Phoenix.Socket.Message` and `Phoenix.Socket.Reply` structs to push format.
   """
   @callback encode!(Phoenix.Socket.Message.t() | Phoenix.Socket.Reply.t()) ::
-              {:socket_push, :text, String.t()}
-              | {:socket_push, :binary, binary()}
+              {:socket_push, :text, iodata()}
+              | {:socket_push, :binary, iodata()}
 
   @doc """
   Decodes iodata into `Phoenix.Socket.Message` struct.
