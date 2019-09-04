@@ -391,7 +391,10 @@ defmodule Phoenix.View do
   @compile {:inline, [get_resource_name: 2]}
 
   defp get_resource_name(assigns, view) do
-    Map.get(assigns, :as) || view.__resource__
+    case assigns do
+      %{as: as} -> as
+      _ -> view.__resource__
+    end
   end
 
   defp assign_resource(assigns, view, resource) do
