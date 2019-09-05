@@ -6,12 +6,12 @@ defmodule Phoenix.Socket.PoolSupervisor do
     Supervisor.start_link(__MODULE__, args)
   end
 
-  def start_child(endpoint, name, key, args) do
+  def start_child(endpoint, name, key, spec) do
     case endpoint.config({:socket, name}) do
       ets when not is_nil(ets) ->
         partitions = :ets.lookup_element(ets, :partitions, 2)
         sup = :ets.lookup_element(ets, :erlang.phash2(key, partitions), 2)
-        Supervisor.start_child(sup, args)
+        DynamicSupervisor.start_child(sup, spec)
 
       nil ->
         raise ArgumentError, """
@@ -27,8 +27,8 @@ defmodule Phoenix.Socket.PoolSupervisor do
   end
 
   @doc false
-  def start_pooled(worker, ref, i) do
-    case Supervisor.start_link([worker], strategy: :simple_one_for_one) do
+  def start_pooled(ref, i) do
+    case DynamicSupervisor.start_link(strategy: :one_for_one) do
       {:ok, pid} ->
         :ets.insert(ref, {i, pid})
         {:ok, pid}
@@ -39,18 +39,21 @@ defmodule Phoenix.Socket.PoolSupervisor do
   end
 
   @doc false
-  def init({endpoint, name, partitions, worker}) do
-    import Supervisor.Spec
-
+  def init({endpoint, name, partitions}) do
     ref = :ets.new(name, [:public, read_concurrency: true])
     :ets.insert(ref, {:partitions, partitions})
     Phoenix.Config.permanent(endpoint, {:socket, name}, ref)
 
     children =
       for i <- 0..(partitions - 1) do
-        supervisor(__MODULE__, [worker, ref, i], id: i, function: :start_pooled)
+        %{
+          id: i,
+          start: {__MODULE__, :start_pooled, [ref, i]},
+          type: :supervisor,
+          shutdown: :infinity
+        }
       end
 
-    supervise(children, strategy: :one_for_one)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end

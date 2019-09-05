@@ -32,11 +32,13 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
 
     binding = inflections ++ [
       otp_app: otp_app,
-      pubsub_server: Module.concat(inflections[:base], PubSub)
+      pubsub_server: Module.concat(inflections[:base], "PubSub")
     ]
+
     files = [
       {:eex, "presence.ex", Path.join(web_prefix, "channels/#{binding[:path]}.ex")},
     ]
+
     Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.presence", binding, files
 
     Mix.shell.info """

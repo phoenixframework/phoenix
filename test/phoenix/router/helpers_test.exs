@@ -1,3 +1,20 @@
+modules = [
+  PostController,
+  ChatController,
+  UserController,
+  CommentController,
+  FileController,
+  ProductController,
+  Admin.MessageController
+]
+
+for module <- modules do
+  defmodule module do
+    def init(opts), do: opts
+    def call(conn, _opts), do: conn
+  end
+end
+
 defmodule Phoenix.Router.HelpersTest do
   use ExUnit.Case, async: true
   use RouterHelper
@@ -24,7 +41,7 @@ defmodule Phoenix.Router.HelpersTest do
     resources "/files", FileController
 
     resources "/account", UserController, as: :account, singleton: true do
-      resources "/page", PagesController, as: :page, only: [:show], singleton: true
+      resources "/page", PostController, as: :page, only: [:show], singleton: true
     end
 
     scope "/admin", alias: Admin do
@@ -35,8 +52,9 @@ defmodule Phoenix.Router.HelpersTest do
       resources "/messages", MessageController
     end
 
-    get "/", PageController, :root, as: :page
+    get "/", PostController, :root, as: :page
     get "/products/:id", ProductController, :show
+    get "/products", ProductController, :show
     get "/products/:id/:sort", ProductController, :show
     get "/products/:id/:sort/:page", ProductController, :show
   end
@@ -435,6 +453,8 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   test "duplicate helpers with unique arities" do
+    assert Helpers.product_path(__MODULE__, :show) == "/products"
+    assert Helpers.product_path(__MODULE__, :show, foo: "bar") == "/products?foo=bar"
     assert Helpers.product_path(__MODULE__, :show, 123) == "/products/123"
     assert Helpers.product_path(__MODULE__, :show, 123, foo: "bar") == "/products/123?foo=bar"
     assert Helpers.product_path(__MODULE__, :show, 123, "asc") == "/products/123/asc"

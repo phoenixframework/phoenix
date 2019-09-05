@@ -15,7 +15,7 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
       "--mode",
       "development",
       "--watch-stdin",
-      cd: Path.expand("../assets", __DIR__)
+      cd: Path.expand("../apps/<%= web_app_name %>/assets", __DIR__)
     ]
   ]<% else %>[]<% end %>
 
@@ -49,7 +49,7 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",<%= if gettext do %>
       ~r"priv/gettext/.*(po)$",<% end %>
-      ~r"lib/<%= web_app_name %>/{live,views}/.*(ex)$",
+      ~r"lib/<%= web_app_name %>/(live|views)/.*(ex)$",
       ~r"lib/<%= web_app_name %>/templates/.*(eex)$"
     ]
   ]<% end %>

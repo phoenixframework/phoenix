@@ -184,7 +184,7 @@ end
 
 Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is `EEx`, which stands for Embedded Elixir. Phoenix enhances EEx to include automatic escaping of values. This protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part. All of our template files will have the `.eex` file extension.
 
-Templates are scoped to a view, which are scoped to controller. Phoenix creates a `lib/hello_web/templates` directory where we can put all these. It is best to namespace these for organization, so for our hello page, that means we need to create a `hello` directory under `lib/hello_web/templates` and then create an `index.html.eex` file within it.
+Templates are scoped to a view, which are scoped to a controller. Phoenix creates a `lib/hello_web/templates` directory where we can put all these. It is best to namespace these for organization, so for our hello page, that means we need to create a `hello` directory under `lib/hello_web/templates` and then create an `index.html.eex` file within it.
 
 Let's do that now. Create `lib/hello_web/templates/hello/index.html.eex` and make it look like this:
 
@@ -201,12 +201,12 @@ Now that we've got the route, controller, view, and template, we should be able 
 There are a couple of interesting things to notice about what we just did. We didn't need to stop and re-start the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.eex` file consisted of only a single `div` tag, the page we get is a full HTML document. Our index template is rendered into the application layout - `lib/hello_web/templates/layout/app.html.eex`. If you open it, you'll see a line that looks like this:
 
 ```html
-<%= render(@view_module, @view_template, assigns) %>
+<%= render @view_module, @view_template, assigns %>
 ```
 
 which is what renders our template into the layout before the HTML is sent off to the browser.
 
-A note on hot code reloading, some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the dicussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
+> A note on hot code reloading: Some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the discussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
 
 ## Another New Page
 

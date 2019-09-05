@@ -27,9 +27,9 @@ defmodule Phx.New.Ecto do
   end
 
   def generate(%Project{} = project) do
+    inject_umbrella_config_defaults(project)
     copy_from project, __MODULE__, :new
     if Project.ecto?(project), do: Phx.New.Single.gen_ecto(project)
     project
   end
-
 end

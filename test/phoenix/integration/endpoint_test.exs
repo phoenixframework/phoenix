@@ -9,10 +9,10 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.AdapterTest.ProdInet6Endpoint
 
   Application.put_env(:endpoint_int, ProdEndpoint,
-    http: [port: "4807"], url: [host: "example.com"], server: true,
+    http: [port: "4807"], url: [host: "example.com"], server: true, drainer: false,
     render_errors: [accepts: ~w(html json)])
   Application.put_env(:endpoint_int, DevEndpoint,
-      http: [port: "4808"], debug_errors: true)
+      http: [port: "4808"], debug_errors: true, drainer: false)
   Application.put_env(:endpoint_int, ProdInet6Endpoint,
     http: [{:port, "4809"}, :inet6],
     url: [host: "example.com"], server: true)
@@ -102,6 +102,19 @@ defmodule Phoenix.Integration.EndpointTest do
   @dev  4808
 
   alias Phoenix.Integration.HTTPClient
+
+  @tag :cowboy2
+  test "starts drainer in supervision tree if configured" do
+    capture_log fn ->
+      {:ok, _} = ProdInet6Endpoint.start_link()
+      assert List.keyfind(Supervisor.which_children(ProdInet6Endpoint), Plug.Cowboy.Drainer, 0)
+      Supervisor.stop(ProdInet6Endpoint)
+
+      {:ok, _} = ProdEndpoint.start_link()
+      refute List.keyfind(Supervisor.which_children(ProdEndpoint), Plug.Cowboy.Drainer, 0)
+      Supervisor.stop(ProdEndpoint)
+    end
+  end
 
   test "adapters starts on configured port and serves requests and stops for prod" do
     capture_log fn ->

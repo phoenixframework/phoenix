@@ -65,11 +65,11 @@ if code_reloading? do
 end
 ```
 
-[Plug.RequestId](https://hexdocs.pm/plug/Plug.RequestId.html) generates a unique id for each request and [Plug.Logger](https://hexdocs.pm/plug/Plug.Logger.html) logs the request path, status code and request time by default.
+[Plug.RequestId](https://hexdocs.pm/plug/Plug.RequestId.html) generates a unique id for each request and [Plug.Telemetry](https://hexdocs.pm/plug/Plug.Telemetry.html) adds instrumentation points so Phoenix can log the request path, status code and request time by default.
 
 ```elixir
 plug Plug.RequestId
-plug Plug.Logger
+plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 ```
 
 [Plug.Session](https://hexdocs.pm/plug/Plug.Session.html) handles the session cookies and session stores.

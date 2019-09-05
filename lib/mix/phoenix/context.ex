@@ -61,6 +61,7 @@ defmodule Mix.Phoenix.Context do
       |> Code.string_to_quoted!()
       |> Macro.postwalk(0, fn
         {:def, _, _} = node, count -> {node, count + 1}
+        {:defdelegate, _, _} = node, count -> {node, count + 1}
         node, count -> {node, count}
       end)
 

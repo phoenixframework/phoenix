@@ -15,9 +15,18 @@ defmodule Mix.Tasks.Phx.New.WebTest do
   end
 
   test "new without args" do
-    in_tmp_umbrella_project "new without args", fn ->
-      assert capture_io(fn -> Mix.Tasks.Phx.New.Web.run([]) end) =~
-             "Creates a new Phoenix web project within an umbrella project."
+    assert capture_io(fn -> Mix.Tasks.Phx.New.Web.run([]) end) =~
+           "Creates a new Phoenix web project within an umbrella project."
+  end
+
+  test "new with barebones umbrella" do
+    in_tmp_umbrella_project "new with barebones umbrella", fn ->
+      files = ~w[../config/dev.exs ../config/test.exs ../config/prod.exs ../config/prod.secret.exs]
+      Enum.each(files, &File.rm/1)
+
+      assert_file "../config/config.exs", &refute(&1 =~ ~S[import_config "#{Mix.env()}.exs"])
+      Mix.Tasks.Phx.New.Web.run([@app_name])
+      assert_file "../config/config.exs", &assert(&1 =~ ~S[import_config "#{Mix.env()}.exs"])
     end
   end
 

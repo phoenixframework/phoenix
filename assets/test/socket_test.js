@@ -646,6 +646,19 @@ describe("with transports", done =>{
       assert.ok(spy.calledOnce)
     })
 
+    it('schedules reconnectTimer timeout if connection cannot be made after a previous clean disconnect', () => {
+      const spy = sinon.spy(socket.reconnectTimer, 'scheduleTimeout')
+
+      socket.disconnect();
+      socket.connect();
+
+      const event = { code: 1001 }
+
+      socket.onConnClose(event)
+
+      assert.ok(spy.calledOnce)
+    })
+
     it("triggers onClose callback", () => {
       const spy = sinon.spy()
 

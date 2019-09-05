@@ -63,8 +63,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file root_path(@app, "config/dev.exs"), fn file ->
-        assert file =~ ~r/watchers: \[\s+node:/
-        assert file =~ "lib/#{@app}_web/{live,views}/.*(ex)"
+        assert file =~ ~r{watchers: \[\s+node:}
+        assert file =~ "cd: Path.expand(\"../apps/phx_umb_web/assets\", __DIR__)"
+        assert file =~ "lib/#{@app}_web/(live|views)/.*(ex)"
         assert file =~ "lib/#{@app}_web/templates/.*(eex)"
       end
 
@@ -152,7 +153,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "mix.exs"), fn file ->
         assert file =~ "{:phx_umb, in_umbrella: true}"
         assert file =~ "{:phoenix,"
-        assert file =~ "{:phoenix_pubsub,"
         assert file =~ "{:gettext,"
         assert file =~ "{:plug_cowboy,"
       end
@@ -476,6 +476,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "../config/prod.exs", fn file ->
           assert file =~ "port: 80"
           assert file =~ ":inet6"
+          assert file =~ "import_config \"prod.secret.exs\""
         end
 
         assert_file "another/lib/another/application.ex", ~r/defmodule Another.Application do/

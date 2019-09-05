@@ -161,7 +161,7 @@ comment_path  PATCH  /comments/:id       HelloWeb.CommentController :update
               PUT    /comments/:id       HelloWeb.CommentController :update
 ```
 
-The `Phoenix.Router.resources/4` function describes additional options for customizing resource routes.
+The `Phoenix.Router.resources/4` macro describes additional options for customizing resource routes.
 
 ## Forward
 
@@ -691,7 +691,7 @@ Endpoints organize all the plugs common to every request, and apply them before 
 
 - [Plug.RequestId](https://hexdocs.pm/plug/Plug.RequestId.html) - generates a unique request id for each request.
 
-- [Plug.Logger](https://hexdocs.pm/plug/Plug.Logger.html) - logs incoming requests
+- [Plug.Telemetry](https://hexdocs.pm/plug/Plug.Telemetry.html) - adds instrumentation points so Phoenix can log the request path, status code and request time by default.
 
 - [Plug.Parsers](https://hexdocs.pm/plug/Plug.Parsers.html) - parses the request body when a known parser is available. By default parsers parse urlencoded, multipart and json (with `jason`). The request body is left untouched when the request content-type cannot be parsed
 

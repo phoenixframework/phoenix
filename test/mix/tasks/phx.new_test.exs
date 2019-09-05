@@ -1,15 +1,16 @@
 for pattern <- ["../../../installer/lib/phx_new/project.ex",
                 "../../../installer/lib/phx_new/generator.ex",
-                "../../../installer/lib/phx_new/*.ex",
+                "../../../installer/lib/phx_new/single.ex",
+                "../../../installer/lib/phx_new/ecto.ex",
                 "../../../installer/lib/mix/tasks/phx.new.ex",
                 "../../../installer/test/mix_helper.exs"],
-    file <- [_|_] = Path.wildcard(Path.expand(pattern, __DIR__)),
+    file <- Path.wildcard(Path.expand(pattern, __DIR__)),
     do: Code.require_file(file, __DIR__)
 
 # Define a fake live reload socket.
 defmodule Phoenix.LiveReloader.Socket do
   def child_spec(_) do
-    Supervisor.Spec.worker(Task, [fn -> :ok end], restart: :temporary)
+    Supervisor.child_spec({Task, fn -> :ok end}, [])
   end
 end
 

@@ -219,7 +219,7 @@ defmodule Phoenix.ChannelTest do
           endpoint: unquote(endpoint),
           handler: unquote(socket || first_socket!(endpoint)),
           id: unquote(id),
-          pubsub_server: unquote(endpoint).__pubsub_server__(),
+          pubsub_server: unquote(endpoint).config(:pubsub_server),
           serializer: NoopSerializer,
           transport: :channel_test,
           transport_pid: self()
@@ -242,7 +242,7 @@ defmodule Phoenix.ChannelTest do
     build_socket(nil, id, assigns, __CALLER__)
   end
 
-  # TODO v2: Remove this alongside the deprecations above.
+  # TODO: Remove this when Cowboy 1 adapter is removed
   defp first_socket!(endpoint) do
     case endpoint.__sockets__ do
       [] -> raise ArgumentError, "#{inspect endpoint} has no socket declaration"
@@ -362,7 +362,7 @@ defmodule Phoenix.ChannelTest do
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
     message = %Message{
       event: "phx_join",
-      payload: payload,
+      payload: __stringify__(payload),
       topic: topic,
       ref: System.unique_integer([:positive])
     }

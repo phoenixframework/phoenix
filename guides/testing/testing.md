@@ -159,7 +159,7 @@ Randomized with seed 220535
 
 And we can run a single test in a file by appending a colon and a line number to the filename.
 
-Let's say we only wanted to run the test for the way `HelloWeb.ErrorView` renders `500.html`. The test begins on line 12 of the file, so this is how we would do it.
+Let's say we only wanted to run the test for the way `HelloWeb.ErrorView` renders `500.html`. The test begins on line 11 of the file, so this is how we would do it.
 
 ```console
 $ mix test test/hello_web/views/error_view_test.exs:11

@@ -69,6 +69,11 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
 
+  setup do
+    Logger.disable(self())
+    :ok
+  end
+
   test "call/2 is overridden" do
     assert_raise RuntimeError, "oops", fn ->
       call(Router, :get, "/boom")
@@ -122,6 +127,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   end
 
   test "logs converted errors if response has not yet been sent" do
+    Logger.enable(self())
     conn = put_endpoint(conn(:get, "/"))
 
     assert capture_log(fn ->
@@ -246,11 +252,9 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     assert body == "Layout: Got 500 from throw with GET"
   end
 
-  @tag :capture_log
   test "exception page is shown even with invalid format" do
     conn = conn(:get, "/") |> put_req_header("accept", "unknown/unknown")
     body = assert_render(500, conn, [], fn -> throw :hello end)
-
     assert body == "Got 500 from throw with GET"
   end
 
@@ -261,6 +265,8 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   end
 
   test "captures warning when format is not supported" do
+    Logger.enable(self())
+
     assert capture_log(fn ->
       conn = conn(:get, "/") |> put_req_header("accept", "unknown/unknown")
       assert_render(500, conn, [], fn -> throw :hello end)
@@ -268,6 +274,8 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   end
 
   test "captures warning when format does not match error view" do
+    Logger.enable(self())
+
     assert capture_log(fn ->
       conn = conn(:get, "/?_format=unknown")
       assert_render(500, conn, [], fn -> throw :hello end)

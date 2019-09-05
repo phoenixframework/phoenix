@@ -15,7 +15,7 @@ defmodule Phoenix.ConfigTest do
   end
 
   test "starts an ets table as part of the module", meta do
-    {:ok, _pid} = start_link(meta.test, @all, @defaults)
+    {:ok, _pid} = start_link({meta.test, @all, @defaults, []})
     assert :ets.info(meta.test, :name) == meta.test
     assert :ets.lookup(meta.test, :parsers) == [parsers: false]
     assert :ets.lookup(meta.test, :static)  == [static: [at: "/"]]
@@ -23,7 +23,7 @@ defmodule Phoenix.ConfigTest do
   end
 
   test "can change configuration", meta do
-    {:ok, _pid} = start_link(meta.test, @all, @defaults)
+    {:ok, _pid} = start_link({meta.test, @all, @defaults, []})
 
     # Nothing changed
     config_change(meta.test, [], [])
@@ -43,7 +43,7 @@ defmodule Phoenix.ConfigTest do
   end
 
   test "can cache", meta do
-    {:ok, _pid} = start_link(meta.test, @all, @defaults)
+    {:ok, _pid} = start_link({meta.test, @all, @defaults, []})
 
     assert cache(meta.test, :__hello__, fn _ -> {:nocache, 1} end) == 1
     assert cache(meta.test, :__hello__, fn _ -> {:cache, 2} end) == 2

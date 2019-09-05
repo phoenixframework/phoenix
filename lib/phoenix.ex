@@ -44,13 +44,12 @@ defmodule Phoenix do
       :erlang.system_flag(:backtrace_depth, stacktrace_depth)
     end
 
-    # Start the supervision tree
-    import Supervisor.Spec
+    Phoenix.Logger.install()
 
     children = [
       # Code reloading must be serial across all Phoenix apps
-      worker(Phoenix.CodeReloader.Server, []),
-      supervisor(Phoenix.Transports.LongPoll.Supervisor, [])
+      Phoenix.CodeReloader.Server,
+      {DynamicSupervisor, name: Phoenix.Transports.LongPoll.Supervisor, strategy: :one_for_one}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Phoenix.Supervisor)

@@ -685,14 +685,14 @@ defmodule Phoenix.Controller do
       raise "cannot render template #{inspect template} because conn.params[\"_format\"] is not set. " <>
             "Please set `plug :accepts, ~w(html json ...)` in your pipeline."
 
-    instrument_render_and_send(conn, format, template, assigns)
+    render_and_send(conn, format, template, assigns)
   end
 
   def render(conn, template, assigns)
       when is_binary(template) and (is_map(assigns) or is_list(assigns)) do
     case Path.extname(template) do
       "." <> format ->
-        instrument_render_and_send(conn, format, template, assigns)
+        render_and_send(conn, format, template, assigns)
       "" ->
         raise "cannot render template #{inspect template} without format. Use an atom if the " <>
               "template format is meant to be set dynamically based on the request format"
@@ -726,32 +726,19 @@ defmodule Phoenix.Controller do
     |> render(template, assigns)
   end
 
-  @doc false
-  def __put_render__(conn, view, template, format, assigns) do
-    content_type = MIME.type(format)
-    conn = prepare_assigns(conn, assigns, template, format)
-    data = Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
-
-    conn
-    |> ensure_resp_content_type(content_type)
-    |> resp(conn.status || 200, data)
-  end
-
-  defp instrument_render_and_send(conn, format, template, assigns) do
+  defp render_and_send(conn, format, template, assigns) do
     template = template_name(template, format)
 
     view =
       Map.get(conn.private, :phoenix_view) ||
         raise "a view module was not specified, set one with put_view/2"
 
-    metadata = %{view: view, template: template, format: format, conn: conn}
+    conn = prepare_assigns(conn, assigns, template, format)
+    data = Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
 
-    conn =
-      Phoenix.Endpoint.instrument(conn, :phoenix_controller_render, metadata, fn ->
-        __put_render__(conn, view, template, format, assigns)
-      end)
-
-    send_resp(conn)
+    conn
+    |> ensure_resp_content_type(MIME.type(format))
+    |> send_resp(conn.status || 200, data)
   end
 
   defp prepare_assigns(conn, assigns, template, format) do
@@ -1064,6 +1051,10 @@ defmodule Phoenix.Controller do
       control attacks
 
   A custom headers map may also be given to be merged with defaults.
+  It is recommended for custom header keys to be in lowercase, to avoid sending
+  duplicate keys in a request.
+  Additionally, responses with mixed-case headers served over HTTP/2 are not
+  considered valid by common clients, resulting in dropped responses.
   """
   def put_secure_browser_headers(conn, headers \\ %{})
   def put_secure_browser_headers(conn, []) do
@@ -1283,7 +1274,24 @@ defmodule Phoenix.Controller do
   @doc """
   Fetches the flash storage.
   """
-  defdelegate fetch_flash(conn, opts \\ []), to: Phoenix.Controller.Flash
+  def fetch_flash(conn, _opts \\ []) do
+    session_flash = get_session(conn, "phoenix_flash")
+    conn = persist_flash(conn, session_flash || %{})
+
+    register_before_send conn, fn conn ->
+      flash = conn.private.phoenix_flash
+      flash_size = map_size(flash)
+
+      cond do
+        is_nil(session_flash) and flash_size == 0 ->
+          conn
+        flash_size > 0 and conn.status in 300..308 ->
+          put_session(conn, "phoenix_flash", flash)
+        true ->
+          delete_session(conn, "phoenix_flash")
+      end
+    end
+  end
 
   @doc """
   Persists a value in flash.
@@ -1297,7 +1305,9 @@ defmodule Phoenix.Controller do
       "Welcome Back!"
 
   """
-  defdelegate put_flash(conn, key, message), to: Phoenix.Controller.Flash
+  def put_flash(conn, key, message) do
+    persist_flash(conn, Map.put(get_flash(conn), flash_key(key), message))
+  end
 
   @doc """
   Returns a map of previously set flash messages or an empty map.
@@ -1312,7 +1322,10 @@ defmodule Phoenix.Controller do
       %{"info" => "Welcome Back!"}
 
   """
-  defdelegate get_flash(conn), to: Phoenix.Controller.Flash
+  def get_flash(conn) do
+    Map.get(conn.private, :phoenix_flash) ||
+      raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
+  end
 
   @doc """
   Returns a message from flash by `key`.
@@ -1324,7 +1337,9 @@ defmodule Phoenix.Controller do
       "Welcome Back!"
 
   """
-  defdelegate get_flash(conn, key), to: Phoenix.Controller.Flash
+  def get_flash(conn, key) do
+    get_flash(conn)[flash_key(key)]
+  end
 
   @doc """
   Generates a status message from the template name.
@@ -1350,7 +1365,16 @@ defmodule Phoenix.Controller do
   @doc """
   Clears all flash messages.
   """
-  defdelegate clear_flash(conn), to: Phoenix.Controller.Flash
+  def clear_flash(conn) do
+    persist_flash(conn, %{})
+  end
+
+  defp flash_key(binary) when is_binary(binary), do: binary
+  defp flash_key(atom) when is_atom(atom), do: Atom.to_string(atom)
+
+  defp persist_flash(conn, value) do
+    put_private(conn, :phoenix_flash, value)
+  end
 
   @doc """
   Returns the current request path with its default query parameters:
@@ -1405,7 +1429,7 @@ defmodule Phoenix.Controller do
   See `current_url/2` to override the default parameters.
   """
   def current_url(%Plug.Conn{} = conn) do
-    router_module(conn).url(conn) <> current_path(conn)
+    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn)
   end
 
   @doc ~S"""
@@ -1452,7 +1476,7 @@ defmodule Phoenix.Controller do
   host, etc, you may use `put_router_url/2`.
   """
   def current_url(%Plug.Conn{} = conn, %{} = params) do
-    router_module(conn).url(conn) <> current_path(conn, params)
+    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn, params)
   end
 
   @doc false

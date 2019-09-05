@@ -12,6 +12,35 @@ defmodule Phoenix.Router.Helpers do
   end)
 
   @doc """
+  Callback invoked by the url generated in each helper module.
+  """
+  def url(_router, %Conn{private: private}) do
+    case private do
+      %{phoenix_router_url: %URI{} = uri} -> URI.to_string(uri)
+      %{phoenix_router_url: url} when is_binary(url) -> url
+      %{phoenix_endpoint: endpoint} -> endpoint.url()
+    end
+  end
+
+  def url(_router, %_{endpoint: endpoint}) do
+    endpoint.url()
+  end
+
+  def url(_router, %URI{} = uri) do
+    URI.to_string(%{uri | path: nil})
+  end
+
+  def url(_router, endpoint) when is_atom(endpoint) do
+    endpoint.url()
+  end
+
+  def url(router, other) do
+    raise ArgumentError,
+      "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
+      "or a Phoenix.Endpoint when building url for #{inspect(router)}, got: #{inspect(other)}"
+  end
+
+  @doc """
   Callback invoked by path generated in each helper module.
   """
   def path(router, %Conn{} = conn, path) do
@@ -79,8 +108,10 @@ defmodule Phoenix.Router.Helpers do
         (not is_nil(route.helper) and not (route.kind == :forward))
       end)
 
-    impls = for {route, exprs} <- routes, do: defhelper(route, exprs)
     groups = Enum.group_by(routes, fn {route, _exprs} -> route.helper end)
+    impls = for {_helper, group} <- groups,
+	                {route, exprs} <- Enum.sort_by(group, fn {_, exprs} -> length(exprs.binding) end),
+	                do: defhelper(route, exprs)
     catch_all = Enum.map(groups, &defhelper_catch_all/1)
 
     defhelper = quote @anno do
@@ -107,9 +138,10 @@ defmodule Phoenix.Router.Helpers do
     end
 
     defcatch_all = quote @anno do
-      defcatch_all = fn helper, bindings, routes ->
-        for binding <- bindings do
-          arity = length(binding) + 2
+      defcatch_all = fn helper, lengths, routes ->
+	      for length <- lengths do
+	        binding = List.duplicate({:_, [], nil}, length)
+	        arity = length + 2
 
           def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding)) do
             path(conn_or_endpoint, "/")
@@ -167,30 +199,8 @@ defmodule Phoenix.Router.Helpers do
       @doc """
       Generates the connection/endpoint base URL without any path information.
       """
-      def url(%Conn{private: private}) do
-        case private do
-          %{phoenix_router_url: %URI{} = uri} -> URI.to_string(uri)
-          %{phoenix_router_url: url} when is_binary(url) -> url
-          %{phoenix_endpoint: endpoint} -> endpoint.url()
-        end
-      end
-
-      def url(%_{endpoint: endpoint}) do
-        endpoint.url()
-      end
-
-      def url(%URI{} = uri) do
-        URI.to_string(%{uri | path: nil})
-      end
-
-      def url(endpoint) when is_atom(endpoint) do
-        endpoint.url()
-      end
-
-      def url(other) do
-        raise ArgumentError,
-          "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
-          "or a Phoenix.Endpoint when building url for #{inspect(__MODULE__)}, got: #{inspect(other)}"
+      def url(data) do
+        Phoenix.Router.Helpers.url(unquote(env.module), data)
       end
 
       @doc """
@@ -278,7 +288,7 @@ defmodule Phoenix.Router.Helpers do
   """
   def defhelper(%Route{} = route, exprs) do
     helper = route.helper
-    opts = route.opts
+    opts = route.plug_opts
 
     {bins, vars} = :lists.unzip(exprs.binding)
     segs = expand_segments(exprs.path)
@@ -297,18 +307,18 @@ defmodule Phoenix.Router.Helpers do
   def defhelper_catch_all({helper, routes_and_exprs}) do
     routes =
       routes_and_exprs
-      |> Enum.map(fn {routes, exprs} -> {routes.opts, Enum.map(exprs.binding, &elem(&1, 0))} end)
+      |> Enum.map(fn {routes, exprs} -> {routes.plug_opts, Enum.map(exprs.binding, &elem(&1, 0))} end)
       |> Enum.sort()
 
-    bindings =
-      routes
-      |> Enum.map(fn {_, bindings} -> Enum.map(bindings, fn _ -> {:_, [], nil} end) end)
-      |> Enum.uniq()
+    lengths =
+	    routes
+	    |> Enum.map(fn {_, bindings} -> length(bindings) end)
+	    |> Enum.uniq()
 
     quote do
       defcatch_all.(
         unquote(helper),
-        unquote(Macro.escape(bindings)),
+        unquote(lengths),
         unquote(Macro.escape(routes))
       )
     end

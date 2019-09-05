@@ -346,8 +346,9 @@ defmodule Phoenix.View do
   """
   def render_many(collection, view, template, assigns \\ %{}) do
     assigns = to_map(assigns)
+    resource_name = get_resource_name(assigns, view)
     Enum.map(collection, fn resource ->
-      render view, template, assign_resource(assigns, view, resource)
+      render(view, template, Map.put(assigns, resource_name, resource))
     end)
   end
 
@@ -384,12 +385,22 @@ defmodule Phoenix.View do
     render view, template, assign_resource(assigns, view, resource)
   end
 
+  @compile {:inline, [to_map: 1]}
+
   defp to_map(assigns) when is_map(assigns), do: assigns
   defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
 
+  @compile {:inline, [get_resource_name: 2]}
+
+  defp get_resource_name(assigns, view) do
+    case assigns do
+      %{as: as} -> as
+      _ -> view.__resource__
+    end
+  end
+
   defp assign_resource(assigns, view, resource) do
-    as = Map.get(assigns, :as) || view.__resource__
-    Map.put(assigns, as, resource)
+    Map.put(assigns, get_resource_name(assigns, view), resource)
   end
 
   @doc """

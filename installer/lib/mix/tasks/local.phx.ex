@@ -1,7 +1,6 @@
 defmodule Mix.Tasks.Local.Phx do
   use Mix.Task
 
-  @url "https://github.com/phoenixframework/archives/raw/master/phx_new.ez"
   @shortdoc "Updates the Phoenix project generator locally"
 
   @moduledoc """
@@ -9,9 +8,9 @@ defmodule Mix.Tasks.Local.Phx do
 
       mix local.phx
 
-  Accepts the same command line options as `archive.install`.
+  Accepts the same command line options as `archive.install hex phx_new`.
   """
   def run(args) do
-    Mix.Task.run "archive.install", [@url | args]
+    Mix.Task.run("archive.install", ["hex", "phx_new" | args])
   end
 end
