@@ -721,6 +721,9 @@ export let Serializer = {
  *
  * Defaults to "arraybuffer"
  *
+ * @param {vsn} [opts.vsn] - The serializer's protocol version to send on connect.
+ *
+ * Defaults to DEFAULT_VSN.
 */
 export class Socket {
   constructor(endPoint, opts = {}){
