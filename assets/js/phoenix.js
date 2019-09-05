@@ -188,7 +188,7 @@
 const globalSelf = typeof self !== "undefined" ? self : null
 const phxWindow = typeof window !== "undefined" ? window : null
 const global = globalSelf || phxWindow || this
-const VSN = "2.0.0"
+const DEFAULT_VSN = "2.0.0"
 const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 const DEFAULT_TIMEOUT = 10000
 const WS_CLOSE_NORMAL = 1000
@@ -770,6 +770,7 @@ export class Socket {
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
     this.params               = closure(opts.params || {})
     this.endPoint             = `${endPoint}/${TRANSPORTS.websocket}`
+    this.vsn                  = opts.vsn || DEFAULT_VSN
     this.heartbeatTimer       = null
     this.pendingHeartbeatRef  = null
     this.reconnectTimer       = new Timer(() => {
@@ -791,7 +792,7 @@ export class Socket {
    */
   endPointURL(){
     let uri = Ajax.appendParams(
-      Ajax.appendParams(this.endPoint, this.params()), {vsn: VSN})
+      Ajax.appendParams(this.endPoint, this.params()), {vsn: this.vsn})
     if(uri.charAt(0) !== "/"){ return uri }
     if(uri.charAt(1) === "/"){ return `${this.protocol()}:${uri}` }
 
