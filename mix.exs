@@ -83,14 +83,10 @@ defmodule Phoenix.MixProject do
 
   defp package do
     [
-      maintainers: [
-        "Chris McCord", "José Valim", "Lance Halvorsen", "Gary Rennie",
-        "Jason Stiebs", "Eric Meadows-Jönsson", "Sonny Scroggin"
-      ],
+      maintainers: ["Chris McCord", "José Valim", "Gary Rennie", "Jason Stiebs"],
       licenses: ["MIT"],
       links: %{github: "https://github.com/phoenixframework/phoenix"},
-      files: ~w(assets lib priv) ++
-        ~w(CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
+      files: ~w(assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
     ]
   end
 
