@@ -87,7 +87,7 @@ defmodule Phoenix.MixProject do
       maintainers: ["Chris McCord", "José Valim", "Gary Rennie", "Jason Stiebs"],
       licenses: ["MIT"],
       links: %{github: "https://github.com/phoenixframework/phoenix"},
-      files: ~w(lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
+      files: ~w(assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
     ]
   end
 
