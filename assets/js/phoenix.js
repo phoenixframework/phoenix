@@ -733,6 +733,7 @@ export class Socket {
     this.ref                  = 0
     this.timeout              = opts.timeout || DEFAULT_TIMEOUT
     this.transport            = opts.transport || global.WebSocket || LongPoll
+    this.transport_protocol   = opts.transport_protocol || null
     this.defaultEncoder       = Serializer.encode
     this.defaultDecoder       = Serializer.decode
     this.closeWasClean        = false
@@ -831,7 +832,11 @@ export class Socket {
     }
     if(this.conn){ return }
     this.closeWasClean = false
-    this.conn = new this.transport(this.endPointURL())
+    if ( this.transport_protocol ) {
+      this.conn = new this.transport(this.endPointURL(), this.transport_protocol )
+    } else {
+      this.conn = new this.transport(this.endPointURL() )
+    }
     this.conn.binaryType = this.binaryType
     this.conn.timeout    = this.longpollerTimeout
     this.conn.onopen     = () => this.onConnOpen()

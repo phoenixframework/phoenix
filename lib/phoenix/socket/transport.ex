@@ -219,7 +219,7 @@ defmodule Phoenix.Socket.Transport do
 
     connect_info =
       Enum.map(connect_info, fn
-        key when key in [:peer_data, :uri, :x_headers] ->
+        key when key in [:peer_data, :uri, :x_headers, :protocol ] ->
           key
 
         {:session, session} ->
@@ -378,6 +378,9 @@ defmodule Phoenix.Socket.Transport do
 
         :uri ->
           {:uri, fetch_uri(conn)}
+
+        :protocol ->
+          { :protocol, Plug.Conn.get_req_header( conn, "sec-websocket-protocol" ) }
 
         {:session, {key, store, store_config}} ->
           conn = Plug.Conn.fetch_cookies(conn)
