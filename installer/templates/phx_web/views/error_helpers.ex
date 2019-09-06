@@ -1,8 +1,8 @@
 defmodule <%= web_namespace %>.ErrorHelpers do
   @moduledoc """
   Conveniences for translating and building error messages.
-  """
-<%= if html do %>
+  """<%= if html do %>
+
   use Phoenix.HTML
 
   @doc """
@@ -12,8 +12,8 @@ defmodule <%= web_namespace %>.ErrorHelpers do
     Enum.map(Keyword.get_values(form.errors, field), fn error ->
       content_tag(:span, translate_error(error), class: "help-block")
     end)
-  end
-<% end %>
+  end<% end %><%= if gettext do %>
+
   @doc """
   Translates an error message using gettext.
   """
@@ -40,5 +40,16 @@ defmodule <%= web_namespace %>.ErrorHelpers do
     else
       Gettext.dgettext(<%= web_namespace %>.Gettext, "errors", msg, opts)
     end
-  end
+  end<% else %>
+
+  @doc """
+  Translates an error message.
+  """
+  def translate_error({msg, opts}) do
+    # Because the error messages we show in our forms and APIs
+    # are defined inside Ecto, we need to translate them dynamically.
+    Enum.reduce(opts, msg, fn {key, value}, acc ->
+      String.replace(acc, "%{#{key}}", to_string(value))
+    end)
+  end<% end %>
 end

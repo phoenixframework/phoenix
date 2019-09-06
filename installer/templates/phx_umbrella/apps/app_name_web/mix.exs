@@ -11,7 +11,7 @@ defmodule <%= web_namespace %>.MixProject do
       lockfile: "../../mix.lock",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      compilers: [:phoenix<%= if gettext do %>, :gettext<% end %>] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -40,8 +40,8 @@ defmodule <%= web_namespace %>.MixProject do
       <%= phoenix_dep %>,<%= if ecto do %>
       {:phoenix_ecto, "~> 4.0"},<% end %><%= if html do %>
       {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %>
-      {:gettext, "~> 0.11"},<%= if app_name != web_app_name do %>
+      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if gettext do %>
+      {:gettext, "~> 0.11"},<% end %><%= if app_name != web_app_name do %>
       {:<%= app_name %>, in_umbrella: true},<% end %>
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"}

@@ -160,7 +160,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto"])
+      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto", "--no-gettext"])
 
       # No webpack
       refute File.read!("phx_blog/.gitignore") |> String.contains?("/assets/node_modules/")
@@ -178,6 +178,15 @@ defmodule Mix.Tasks.Phx.NewTest do
       # No Ecto
       config = ~r/config :phx_blog, PhxBlog.Repo,/
       refute File.exists?("phx_blog/lib/phx_blog/repo.ex")
+
+      # No gettext
+      refute_file "phx_blog/lib/phx_blog_web/gettext.ex"
+      refute_file "phx_blog/priv/gettext/en/LC_MESSAGES/errors.po"
+      refute_file "phx_blog/priv/gettext/errors.pot"
+      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":gettext")
+      assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"import AmsMockWeb.Gettext")
+      assert_file "phx_blog/lib/phx_blog_web/views/error_helpers.ex", &refute(&1 =~ ~r"gettext")
+      assert_file "phx_blog/config/dev.exs", &refute(&1 =~ ~r"gettext")
 
       assert_file "phx_blog/.formatter.exs", fn file ->
         assert file =~ "import_deps: [:phoenix]"

@@ -11,7 +11,7 @@ defmodule <%= app_module %>.MixProject do
       lockfile: "../../mix.lock",<% end %>
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      compilers: [:phoenix<%= if gettext do %>, :gettext<% end %>] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,<%= if ecto do %>
       aliases: aliases(),<% end %>
       deps: deps()
@@ -42,8 +42,8 @@ defmodule <%= app_module %>.MixProject do
       {:ecto_sql, "~> 3.1"},
       {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
       {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %>
-      {:gettext, "~> 0.11"},
+      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if gettext do %>
+      {:gettext, "~> 0.11"},<% end %>
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"}
     ]
