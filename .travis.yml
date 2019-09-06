@@ -14,6 +14,9 @@ matrix:
     - elixir: 1.8
       otp_release: 21.0
       env: COWBOY_VERSION=2.0
+    - elixir: 1.9
+      otp_release: 22.0
+      env: COWBOY_VERSION=2.0
     - elixir: 1.6
       otp_release: 19.3
       env: COWBOY_VERSION=1.0
@@ -22,6 +25,9 @@ matrix:
       env: COWBOY_VERSION=1.0
     - elixir: 1.8
       otp_release: 21.0
+      env: COWBOY_VERSION=1.0
+    - elixir: 1.9
+      otp_release: 22.0
       env: COWBOY_VERSION=1.0
 sudo: false
 env:
