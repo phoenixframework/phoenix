@@ -1,5 +1,6 @@
-<section class="phx-hero">
-  <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1>
+<section class="phx-hero"><%= if gettext do %>
+  <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
+  <h1>Welcome to Phoenix!</h1><% end %>
   <p>A productive web framework that<br/>does not compromise speed or maintainability.</p>
 </section>
 

@@ -64,9 +64,9 @@ defmodule Phx.New.Web do
   def generate(%Project{} = project) do
     inject_umbrella_config_defaults(project)
     copy_from project, __MODULE__, :new
-    copy_from project, __MODULE__, :gettext
 
     if Project.html?(project), do: gen_html(project)
+    if Project.gettext?(project), do: gen_gettext(project)
 
     case {Project.webpack?(project), Project.html?(project)} do
       {true, _}      -> Phx.New.Single.gen_webpack(project)
@@ -79,5 +79,9 @@ defmodule Phx.New.Web do
 
   defp gen_html(%Project{} = project) do
     copy_from project, __MODULE__, :html
+  end
+
+  defp gen_gettext(%Project{} = project) do
+    copy_from project, __MODULE__, :gettext
   end
 end
