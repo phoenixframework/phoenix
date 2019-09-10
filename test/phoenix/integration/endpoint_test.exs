@@ -14,7 +14,7 @@ defmodule Phoenix.Integration.EndpointTest do
   Application.put_env(:endpoint_int, DevEndpoint,
       http: [port: "4808"], debug_errors: true, drainer: false)
   Application.put_env(:endpoint_int, ProdInet6Endpoint,
-    http: [{:port, "4809"}, :inet6],
+    http: [port: "4809", transport_options: [socket_opts: [:inet6]]],
     url: [host: "example.com"], server: true)
 
   defmodule Router do
