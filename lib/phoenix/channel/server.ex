@@ -12,15 +12,6 @@ defmodule Phoenix.Channel.Server do
   ## Socket API
 
   @doc """
-  Starts a channel server.
-
-  It is just some basic indirection to please a simple_one_for_one supervisor.
-  """
-  def start_link(channel, triplet) do
-    channel.start_link(triplet)
-  end
-
-  @doc """
   Joins the channel in socket with authentication payload.
   """
   @spec join(Socket.t(), module, Message.t(), keyword) :: {:ok, term, pid} | {:error, term}
