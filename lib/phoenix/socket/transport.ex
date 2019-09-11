@@ -391,7 +391,7 @@ defmodule Phoenix.Socket.Transport do
       a different subprotocols than the one configured in your endpoint.
       To fix this issue, you may either:
 
-        1. update websocket: [subprotocols: ...] to your actual subprotocols
+        1. update websocket: [subprotocols: [..]] to your actual subprotocols
            in your endpoint socket configuration.
 
         2. check the correctness of the `sec-websocket-protocol` request header
@@ -399,6 +399,27 @@ defmodule Phoenix.Socket.Transport do
       """
       conn |> resp(:forbidden, "") |> halt()
     end
+
+  end
+
+  def check_subprotocols(conn, subprotocols) do
+    import Plug.Conn
+    Logger.error """
+    Could not check Websocket subprotocols for Phoenix.Socket transport.
+
+    Expected subprotocols should be a list.
+    Passed expected subprotocols: #{inspect(subprotocols)}
+
+    This happens when you incorrectly configured supported subprotocols.
+    To fix this issue, you may either:
+
+      1. update websocket: [subprotocols: [..]] to your actual subprotocols
+         in your endpoint socket configuration.
+
+      2. remove `websocket` option from your endpoint socket configuration
+         if you don't use Websocket subprotocols.
+    """
+    conn |> resp(:forbidden, "") |> halt()
   end
 
   @doc """
