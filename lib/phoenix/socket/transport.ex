@@ -364,7 +364,7 @@ defmodule Phoenix.Socket.Transport do
   Otherwise a 403 Forbidden response will be sent and the connection halted.
   It is a noop if the connection has been halted.
   """
-  def check_origin(conn, subprotocol)
+  def check_subprotocol(conn, subprotocol)
 
   def check_subprotocol(%Plug.Conn{halted: true} = conn, _subprotocol), do: conn
   def check_subprotocol(conn, nil), do: conn
