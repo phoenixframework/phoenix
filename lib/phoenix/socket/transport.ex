@@ -392,7 +392,7 @@ defmodule Phoenix.Socket.Transport do
              in your endpoint socket configuration.
 
           2. check the correctness of the `sec-websocket-protocol` request header
-             sends from the client.
+             sent from the client.
         """
         conn |> resp(:forbidden, "") |> halt()
     end
