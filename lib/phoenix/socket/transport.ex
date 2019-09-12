@@ -393,7 +393,9 @@ defmodule Phoenix.Socket.Transport do
       2. remove `websocket` option from your endpoint socket configuration
          if you don't use Websocket subprotocols.
     """
-    conn |> resp(:forbidden, "") |> halt()
+    resp(conn, :forbidden, "")
+    |> send_resp()
+    |> halt()
   end
 
   @doc """
@@ -466,7 +468,9 @@ defmodule Phoenix.Socket.Transport do
         2. check the correctness of the `sec-websocket-protocol` request header
           sent from the client.
       """
-      conn |> resp(:forbidden, "") |> halt()
+      resp(conn, :forbidden, "")
+      |> send_resp()
+      |> halt()
     end
   end
 
