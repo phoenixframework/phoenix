@@ -446,7 +446,7 @@ defmodule Phoenix.Socket.Transport do
 
   defp do_check_subprotocols(conn, subprotocols, subprotocols_header) do
     import Plug.Conn
-    request_subprotocols = subprotocols_header |> List.first |> Plug.Conn.Utils.list
+    request_subprotocols = subprotocols_header |> hd |> Plug.Conn.Utils.list
     subprotocol = Enum.find(subprotocols, fn elem -> Enum.find(request_subprotocols, & &1 == elem) end)
 
     if subprotocol do
