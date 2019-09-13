@@ -376,11 +376,11 @@ export class Channel {
     this.rejoinTimer = new Timer(() => {
       if(this.socket.isConnected()){ this.rejoin() }
     }, this.socket.rejoinAfterMs)
-    this.socket.onError(() => this.rejoinTimer.reset())
+    this.socket.onError(() => this.rejoinTimer.reset(), topic)
     this.socket.onOpen(() => {
       this.rejoinTimer.reset()
       if(this.isErrored()){ this.rejoin() }
-    })
+    }, topic)
     this.joinPush.receive("ok", () => {
       this.state = CHANNEL_STATES.joined
       this.rejoinTimer.reset()
@@ -859,14 +859,15 @@ export class Socket {
    * @example socket.onOpen(function(){ console.info("the socket was opened") })
    *
    * @param {Function} callback
+   * @param {Function} callback
    */
-  onOpen(callback){ this.stateChangeCallbacks.open.push(callback) }
+  onOpen(callback, ref = this.ref){ this.stateChangeCallbacks.open.push({ [ref]: callback }) }
 
   /**
    * Registers callbacks for connection close events
    * @param {Function} callback
    */
-  onClose(callback){ this.stateChangeCallbacks.close.push(callback) }
+  onClose(callback, ref = this.ref){ this.stateChangeCallbacks.close.push({ [ref]: callback }) }
 
   /**
    * Registers callbacks for connection error events
@@ -875,13 +876,13 @@ export class Socket {
    *
    * @param {Function} callback
    */
-  onError(callback){ this.stateChangeCallbacks.error.push(callback) }
+  onError(callback, ref = this.ref){ this.stateChangeCallbacks.error.push({ [ref]: callback }) }
 
   /**
    * Registers callbacks for connection message events
    * @param {Function} callback
    */
-  onMessage(callback){ this.stateChangeCallbacks.message.push(callback) }
+  onMessage(callback, ref = this.ref){ this.stateChangeCallbacks.message.push({ [ref]: callback }) }
 
   /**
    * @private
@@ -893,7 +894,7 @@ export class Socket {
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     this.resetHeartbeat()
-    this.stateChangeCallbacks.open.forEach( callback => callback() )
+    this.stateChangeCallbacks.open.forEach(entry => entry[Object.keys(entry)[0]]() )
   }
 
   /**
@@ -922,7 +923,7 @@ export class Socket {
     if(!this.closeWasClean){
       this.reconnectTimer.scheduleTimeout()
     }
-    this.stateChangeCallbacks.close.forEach( callback => callback(event) )
+    this.stateChangeCallbacks.close.forEach(entry => entry[Object.keys(entry)[0]](event) )
   }
 
   /**
@@ -931,7 +932,7 @@ export class Socket {
   onConnError(error){
     if (this.hasLogger()) this.log("transport", error)
     this.triggerChanError()
-    this.stateChangeCallbacks.error.forEach( callback => callback(error) )
+    this.stateChangeCallbacks.error.forEach(entry => entry[Object.keys(entry)[0]](error) )
   }
 
   /**
@@ -967,6 +968,11 @@ export class Socket {
    */
   remove(channel){
     this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
+
+    this.stateChangeCallbacks.open = this.stateChangeCallbacks.open.filter(entry => {
+      const topic = Object.keys(entry)[0]
+      return topic !== channel.topic
+    })
   }
 
   /**
@@ -1046,7 +1052,8 @@ export class Socket {
       }
 
       for (let i = 0; i < this.stateChangeCallbacks.message.length; i++) {
-        this.stateChangeCallbacks.message[i](msg)
+        const entry = this.stateChangeCallbacks.message[i]
+        entry[Object.keys(entry)[0]](msg)
       }
     })
   }
