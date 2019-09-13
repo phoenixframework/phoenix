@@ -354,6 +354,41 @@ defmodule Phoenix.Socket.Transport do
   end
 
   @doc """
+  Checks the Websocket subprotocols request header against the allowed subprotocols.
+
+  Should be called by transports before connecting when appropriate.
+  If the sec-websocket-protocol header matches the allowed subprotocols,
+  it will put sec-websocket-protocol response header and return the given connection.
+  If no sec-websocket-protocol header was sent it will return the given connection.
+
+  Otherwise a 403 Forbidden response will be sent and the connection halted.
+  It is a noop if the connection has been halted.
+  """
+  def check_subprotocols(conn, subprotocols)
+
+  def check_subprotocols(%Plug.Conn{halted: true} = conn, _subprotocols), do: conn
+  def check_subprotocols(conn, nil), do: conn
+
+  def check_subprotocols(conn, subprotocols) when is_list(subprotocols) do
+    case Plug.Conn.get_req_header(conn, "sec-websocket-protocol") do
+      [] ->
+        conn
+
+      [subprotocols_header | _] ->
+        request_subprotocols = subprotocols_header |> Plug.Conn.Utils.list()
+        subprotocol = Enum.find(subprotocols, fn elem -> Enum.find(request_subprotocols, &(&1 == elem)) end)
+
+        if subprotocol do
+          Plug.Conn.put_resp_header(conn, "sec-websocket-protocol", subprotocol)
+        else
+          subprotocols_error_response(conn, subprotocols)
+        end
+    end
+  end
+
+  def check_subprotocols(conn, subprotocols), do: subprotocols_error_response(conn, subprotocols)
+
+  @doc """
   Extracts connection information from `conn` and returns a map.
 
   Keys are retrieved from the optional transport option `:connect_info`.
@@ -397,6 +432,37 @@ defmodule Phoenix.Socket.Transport do
           {key, val}
       end
     end
+  end
+
+  defp subprotocols_error_response(conn, subprotocols) do
+    import Plug.Conn
+    request_headers = get_req_header(conn, "sec-websocket-protocol")
+
+    Logger.error """
+    Could not check Websocket subprotocols for Phoenix.Socket transport.
+
+    Subprotocols of the request: #{inspect(request_headers)}
+    Configured supported subprotocols: #{inspect(subprotocols)}
+
+    This happens when you are attempting a socket connection to
+    a different subprotocols than the one configured in your endpoint
+    or when you incorrectly configured supported subprotocols.
+
+    To fix this issue, you may either:
+
+      1. update websocket: [subprotocols: [..]] to your actual subprotocols
+         in your endpoint socket configuration.
+
+      2. check the correctness of the `sec-websocket-protocol` request header
+         sent from the client.
+
+      3. remove `websocket` option from your endpoint socket configuration
+         if you don't use Websocket subprotocols.
+    """
+
+    resp(conn, :forbidden, "")
+    |> send_resp()
+    |> halt()
   end
 
   defp fetch_x_headers(conn) do
