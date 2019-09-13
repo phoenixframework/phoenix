@@ -374,8 +374,8 @@ defmodule Phoenix.Socket.Transport do
       [] ->
         conn
 
-      subprotocols_header ->
-        request_subprotocols = subprotocols_header |> hd |> Plug.Conn.Utils.list()
+      [subprotocols_header | _] ->
+        request_subprotocols = subprotocols_header |> Plug.Conn.Utils.list()
         subprotocol = Enum.find(subprotocols, fn elem -> Enum.find(request_subprotocols, &(&1 == elem)) end)
 
         if subprotocol do
@@ -451,13 +451,13 @@ defmodule Phoenix.Socket.Transport do
     To fix this issue, you may either:
 
       1. update websocket: [subprotocols: [..]] to your actual subprotocols
-        in your endpoint socket configuration.
+         in your endpoint socket configuration.
 
       2. check the correctness of the `sec-websocket-protocol` request header
-        sent from the client.
+         sent from the client.
 
       3. remove `websocket` option from your endpoint socket configuration
-      if you don't use Websocket subprotocols.
+         if you don't use Websocket subprotocols.
     """
 
     resp(conn, :forbidden, "")
