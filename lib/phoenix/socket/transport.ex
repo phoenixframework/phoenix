@@ -371,32 +371,22 @@ defmodule Phoenix.Socket.Transport do
 
   def check_subprotocols(conn, subprotocols) when is_list(subprotocols) do
     case Plug.Conn.get_req_header(conn, "sec-websocket-protocol") do
-      [] -> conn
-      subprotocols_header -> do_check_subprotocols(conn, subprotocols, subprotocols_header)
+      [] ->
+        conn
+
+      subprotocols_header ->
+        request_subprotocols = subprotocols_header |> hd |> Plug.Conn.Utils.list()
+        subprotocol = Enum.find(subprotocols, fn elem -> Enum.find(request_subprotocols, &(&1 == elem)) end)
+
+        if subprotocol do
+          Plug.Conn.put_resp_header(conn, "sec-websocket-protocol", subprotocol)
+        else
+          subprotocols_error_response(conn, subprotocols)
+        end
     end
   end
 
-  def check_subprotocols(conn, subprotocols) do
-    import Plug.Conn
-    Logger.error """
-    Could not check Websocket subprotocols for Phoenix.Socket transport.
-
-    Expected subprotocols should be a list.
-    Passed expected subprotocols: #{inspect(subprotocols)}
-
-    This happens when you incorrectly configured supported subprotocols.
-    To fix this issue, you may either:
-
-      1. update websocket: [subprotocols: [..]] to your actual subprotocols
-         in your endpoint socket configuration.
-
-      2. remove `websocket` option from your endpoint socket configuration
-         if you don't use Websocket subprotocols.
-    """
-    resp(conn, :forbidden, "")
-    |> send_resp()
-    |> halt()
-  end
+  def check_subprotocols(conn, subprotocols), do: subprotocols_error_response(conn, subprotocols)
 
   @doc """
   Extracts connection information from `conn` and returns a map.
@@ -444,34 +434,35 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp do_check_subprotocols(conn, subprotocols, subprotocols_header) do
+  defp subprotocols_error_response(conn, subprotocols) do
     import Plug.Conn
-    request_subprotocols = subprotocols_header |> hd |> Plug.Conn.Utils.list
-    subprotocol = Enum.find(subprotocols, fn elem -> Enum.find(request_subprotocols, & &1 == elem) end)
+    request_headers = get_req_header(conn, "sec-websocket-protocol")
 
-    if subprotocol do
-      put_resp_header(conn, "sec-websocket-protocol", subprotocol)
-    else
-      Logger.error """
-      Could not check Websocket subprotocols for Phoenix.Socket transport.
+    Logger.error """
+    Could not check Websocket subprotocols for Phoenix.Socket transport.
 
-      Subprotocols of the request: #{inspect(request_subprotocols)}
-      Expected subprotocols: #{inspect(subprotocols)}
+    Subprotocols of the request: #{inspect(request_headers)}
+    Configured supported subprotocols: #{inspect(subprotocols)}
 
-      This happens when you are attempting a socket connection to
-      a different subprotocols than the one configured in your endpoint.
-      To fix this issue, you may either:
+    This happens when you are attempting a socket connection to
+    a different subprotocols than the one configured in your endpoint
+    or when you incorrectly configured supported subprotocols.
 
-        1. update websocket: [subprotocols: [..]] to your actual subprotocols
-          in your endpoint socket configuration.
+    To fix this issue, you may either:
 
-        2. check the correctness of the `sec-websocket-protocol` request header
-          sent from the client.
-      """
-      resp(conn, :forbidden, "")
-      |> send_resp()
-      |> halt()
-    end
+      1. update websocket: [subprotocols: [..]] to your actual subprotocols
+        in your endpoint socket configuration.
+
+      2. check the correctness of the `sec-websocket-protocol` request header
+        sent from the client.
+
+      3. remove `websocket` option from your endpoint socket configuration
+      if you don't use Websocket subprotocols.
+    """
+
+    resp(conn, :forbidden, "")
+    |> send_resp()
+    |> halt()
   end
 
   defp fetch_x_headers(conn) do
