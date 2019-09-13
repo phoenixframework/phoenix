@@ -61,7 +61,7 @@ defmodule Phoenix.Integration.WebSocketTest do
     use Phoenix.Endpoint, otp_app: :phoenix
 
     socket "/ws", UserSocket,
-      websocket: [check_origin: ["//example.com"], timeout: 200],
+      websocket: [check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200],
       custom: :value
 
     socket "/custom/some_path", UserSocket,
@@ -86,6 +86,19 @@ defmodule Phoenix.Integration.WebSocketTest do
       headers = [{"origin", "http://notallowed.com"}]
       assert {:error, {403, _}} = WebsocketClient.start_link(self(), @path, :noop, headers)
     end)
+  end
+
+  test "refuses unallowed Websocket subprotocols" do
+    assert capture_log(fn ->
+      headers = [{"sec-websocket-protocol", "sip"}]
+      assert {:ok, _} = WebsocketClient.start_link(self(), @path, :noop, headers)
+
+      headers = []
+      assert {:ok, _} = WebsocketClient.start_link(self(), @path, :noop, headers)
+
+      headers = [{"sec-websocket-protocol", "mqtt"}]
+      assert {:error, {403, _}} = WebsocketClient.start_link(self(), @path, :noop, headers)
+    end) =~ "Could not check Websocket subprotocols"
   end
 
   test "returns params with sync request" do

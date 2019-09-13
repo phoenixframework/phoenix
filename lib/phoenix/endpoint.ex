@@ -867,6 +867,13 @@ defmodule Phoenix.Endpoint do
     * `:compress` - whether to enable per message compresssion on
       all data frames, defaults to false
 
+    * `:subprotocols` - a list of supported websocket subprotocols.
+      Used for handshake `Sec-WebSocket-Protocol` response header, defaults to nil.
+
+      For example:
+
+          subprotocols: ["sip", "mqtt"]
+
   ## Longpoll configuration
 
   The following configuration applies only to `:longpoll`:
