@@ -390,7 +390,11 @@ describe("with transports", done =>{
       sinon.stub(channel1, "joinRef").returns(1)
       sinon.stub(channel2, "joinRef").returns(2)
 
+      assert.equal(socket.stateChangeCallbacks.open.length, 2)
+
       socket.remove(channel1)
+
+      assert.equal(socket.stateChangeCallbacks.open.length, 1)
 
       assert.equal(socket.channels.length, 1)
 
