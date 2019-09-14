@@ -988,6 +988,11 @@ export class Socket {
     this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
   }
 
+  /**
+   * stateChangeCallbacks is an array of "tuples" [[ref, callback], [...]]
+   * and can be cleaned up when a channel goes offline
+   * @param {Channel}
+   */
   off(channel) {
     let refs = channel.stateChangeRefs
     this.stateChangeCallbacks.open = this.stateChangeCallbacks.open.filter(([ref]) => {
