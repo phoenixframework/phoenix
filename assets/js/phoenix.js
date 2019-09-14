@@ -984,8 +984,8 @@ export class Socket {
    * @param {Channel}
    */
   remove(channel){
-    this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
     this.off(channel)
+    this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
   }
 
   off(channel) {
