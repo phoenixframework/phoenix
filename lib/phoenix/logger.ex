@@ -24,6 +24,13 @@ defmodule Phoenix.Logger do
   With the configuration above, Phoenix will filter all parameters,
   except those that match exactly `id` or `order`. If a kept parameter
   matches, all parameters nested under that one will also be kept.
+
+  ## Disabling
+
+  When you are using custom logging system it is not always desirable to enable
+  `#{inspect __MODULE__}` by default. You can always disable this in general by:
+
+      config :phoenix, :logger, false
   """
 
   require Logger
