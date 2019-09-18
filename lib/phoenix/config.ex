@@ -70,8 +70,13 @@ defmodule Phoenix.Config do
   Useful to read a particular value at compilation time.
   """
   def from_env(otp_app, module, defaults) do
-    Keyword.merge(defaults, fetch_config(otp_app, module), &merger/3)
+    otp_app
+    |> fetch_config(module)
+    |> merge(defaults)
   end
+
+  @doc false
+  def merge(a, b), do: Keyword.merge(b, a, &merger/3)
 
   defp fetch_config(otp_app, module) do
     case Application.fetch_env(otp_app, module) do
