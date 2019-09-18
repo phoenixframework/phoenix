@@ -45,6 +45,7 @@ defmodule Phoenix.MixProject do
       mod: {Phoenix, []},
       extra_applications: [:logger, :eex, :crypto],
       env: [
+        logger: true,
         stacktrace_depth: nil,
         template_engines: [],
         format_encoders: [],

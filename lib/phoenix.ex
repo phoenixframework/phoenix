@@ -44,7 +44,9 @@ defmodule Phoenix do
       :erlang.system_flag(:backtrace_depth, stacktrace_depth)
     end
 
-    Phoenix.Logger.install()
+    if Application.fetch_env!(:phoenix, :logger) do
+      Phoenix.Logger.install()
+    end
 
     # Start the supervision tree
     import Supervisor.Spec
