@@ -377,12 +377,12 @@ describe("with transport", () => {
       })
 
       it("removes channel bindings", () => {
-        let bindings = helpers.getBindings("chan_reply_1")
+        let bindings = helpers.getBindings("chan_reply_3")
         assert.equal(bindings.length, 1)
 
         helpers.receiveOk()
 
-        bindings = helpers.getBindings("chan_reply_1")
+        bindings = helpers.getBindings("chan_reply_3")
         assert.equal(bindings.length, 0)
       })
 
