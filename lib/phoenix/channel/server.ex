@@ -285,8 +285,9 @@ defmodule Phoenix.Channel.Server do
   end
 
   @doc false
-  def handle_info({:join, __MODULE__}, {auth_payload, from, socket}) do
+  def handle_info({:join, __MODULE__}, {auth_payload, {pid, _} = from, socket}) do
     %{channel: channel, topic: topic, private: private} = socket
+    Process.put(:"$callers", [pid])
 
     socket = %{
       socket
