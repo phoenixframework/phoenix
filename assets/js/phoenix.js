@@ -981,23 +981,27 @@ export class Socket {
   isConnected(){ return this.connectionState() === "open" }
 
   /**
+   * @private
+   *
    * @param {Channel}
    */
   remove(channel){
-    this.off(channel)
+    this.off(channel.stateChangeRefs)
     this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
   }
 
   /**
-   * stateChangeCallbacks is an array of "tuples" [[ref, callback], [...]]
-   * and can be cleaned up when a channel goes offline
-   * @param {Channel}
+   * Removes `onOpen`, `onClose`, `onError,` and `onMessage` registrations.
+   *
+   * @param {refs} - list of refs returned by calls to
+   *                 `onOpen`, `onClose`, `onError,` and `onMessage`
    */
-  off(channel) {
-    let refs = channel.stateChangeRefs
-    this.stateChangeCallbacks.open = this.stateChangeCallbacks.open.filter(([ref]) => {
-      return !refs.includes(ref)
-    })
+  off(refs) {
+    for(let key in this.stateChangeCallbacks){
+      this.stateChangeCallbacks[key] = this.stateChangeCallbacks[key].filter(([ref]) => {
+        return !refs.includes(ref)
+      })
+    }
   }
 
   /**
@@ -1222,6 +1226,7 @@ export class Ajax {
     try {
       return JSON.parse(resp)
     } catch(e) {
+      console && console.log("failed to parse JSON response", resp)
       return null
     }
   }
