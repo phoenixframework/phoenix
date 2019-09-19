@@ -24,6 +24,14 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.11-dev
+
+## JavaScript client enhancements
+  * Add `socket.off` for removing `onOpen`, `onError`, `onClose`, and `onMessage` registrations
+
+## JavaScript client bug fixes
+  * Fix channel memory leaks caused by state remaining in socket `onError`, and `onOpen` registrations
+
 ## 1.4.10 (2019-09-05)
 
 ### Enhancements
@@ -139,7 +147,7 @@ The old APIs for building transports are also deprecated. The good news is: adap
 
 ### Enhancements
   * [phx.new] Update Ecto deps with the release of Ecto 3.0 including `phoenix_ecto` 4.0
-  * [phx.new] Import Ecto's `.formatter.exs` in new projects 
+  * [phx.new] Import Ecto's `.formatter.exs` in new projects
   * [phx.new] Use Ecto 3.0RC, with `ecto_sql` in new project deps
   * [phx.new] Use Plug 1.7 with new `:plug_cowboy` dependency for cowboy adapter
   * [phx.gen.html|json|schema|context] Support new Ecto 3.0 usec datetime types
