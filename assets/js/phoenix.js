@@ -372,15 +372,17 @@ export class Channel {
     this.joinedOnce  = false
     this.joinPush    = new Push(this, CHANNEL_EVENTS.join, this.params, this.timeout)
     this.pushBuffer  = []
+    this.stateChangeRefs = [];
 
     this.rejoinTimer = new Timer(() => {
       if(this.socket.isConnected()){ this.rejoin() }
     }, this.socket.rejoinAfterMs)
-    this.socket.onError(() => this.rejoinTimer.reset())
-    this.socket.onOpen(() => {
-      this.rejoinTimer.reset()
-      if(this.isErrored()){ this.rejoin() }
-    })
+    this.stateChangeRefs.push(this.socket.onError(() => this.rejoinTimer.reset()))
+    this.stateChangeRefs.push(this.socket.onOpen(() => {
+        this.rejoinTimer.reset()
+        if(this.isErrored()){ this.rejoin() }
+      })
+    )
     this.joinPush.receive("ok", () => {
       this.state = CHANNEL_STATES.joined
       this.rejoinTimer.reset()
@@ -860,13 +862,21 @@ export class Socket {
    *
    * @param {Function} callback
    */
-  onOpen(callback){ this.stateChangeCallbacks.open.push(callback) }
+  onOpen(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.open.push([ref, callback])
+    return ref
+  }
 
   /**
    * Registers callbacks for connection close events
    * @param {Function} callback
    */
-  onClose(callback){ this.stateChangeCallbacks.close.push(callback) }
+  onClose(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.close.push([ref, callback])
+    return ref
+  }
 
   /**
    * Registers callbacks for connection error events
@@ -875,13 +885,21 @@ export class Socket {
    *
    * @param {Function} callback
    */
-  onError(callback){ this.stateChangeCallbacks.error.push(callback) }
+  onError(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.error.push([ref, callback])
+    return ref
+  }
 
   /**
    * Registers callbacks for connection message events
    * @param {Function} callback
    */
-  onMessage(callback){ this.stateChangeCallbacks.message.push(callback) }
+  onMessage(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.message.push([ref, callback])
+    return ref
+  }
 
   /**
    * @private
@@ -893,7 +911,7 @@ export class Socket {
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     this.resetHeartbeat()
-    this.stateChangeCallbacks.open.forEach( callback => callback() )
+    this.stateChangeCallbacks.open.forEach(([, callback]) => callback() )
   }
 
   /**
@@ -922,7 +940,7 @@ export class Socket {
     if(!this.closeWasClean){
       this.reconnectTimer.scheduleTimeout()
     }
-    this.stateChangeCallbacks.close.forEach( callback => callback(event) )
+    this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event) )
   }
 
   /**
@@ -931,7 +949,7 @@ export class Socket {
   onConnError(error){
     if (this.hasLogger()) this.log("transport", error)
     this.triggerChanError()
-    this.stateChangeCallbacks.error.forEach( callback => callback(error) )
+    this.stateChangeCallbacks.error.forEach(([, callback]) => callback(error) )
   }
 
   /**
@@ -966,7 +984,20 @@ export class Socket {
    * @param {Channel}
    */
   remove(channel){
+    this.off(channel)
     this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
+  }
+
+  /**
+   * stateChangeCallbacks is an array of "tuples" [[ref, callback], [...]]
+   * and can be cleaned up when a channel goes offline
+   * @param {Channel}
+   */
+  off(channel) {
+    let refs = channel.stateChangeRefs
+    this.stateChangeCallbacks.open = this.stateChangeCallbacks.open.filter(([ref]) => {
+      return !refs.includes(ref)
+    })
   }
 
   /**
@@ -1046,7 +1077,8 @@ export class Socket {
       }
 
       for (let i = 0; i < this.stateChangeCallbacks.message.length; i++) {
-        this.stateChangeCallbacks.message[i](msg)
+        let [, callback] = this.stateChangeCallbacks.message[i]
+        callback(msg)
       }
     })
   }
@@ -1190,7 +1222,6 @@ export class Ajax {
     try {
       return JSON.parse(resp)
     } catch(e) {
-      console && console.log("failed to parse JSON response", resp)
       return null
     }
   }
