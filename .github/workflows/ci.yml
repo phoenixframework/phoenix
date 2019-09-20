@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  mix_test:
+    name: mix test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}} | Cowboy ${{matrix.cowboy}})
+    strategy:
+      matrix:
+        include:
+          - elixir: '1.7.4'
+            otp: '21.3'
+            cowboy: '2'
+          - elixir: '1.8.2'
+            otp: '21.3'
+            cowboy: '2'
+          - elixir: '1.9.4'
+            otp: '22.3'
+            cowboy: '2'
+          - elixir: '1.10.2'
+            cowboy: '1'
+            otp: '22.3'
+          - elixir: '1.7.4'
+            otp: '21.3'
+            cowboy: '1'
+          - elixir: '1.8.2'
+            otp: '21.3'
+            cowboy: '1'
+          - elixir: '1.9.4'
+            otp: '22.3'
+            cowboy: '1'
+          - elixir: '1.10.2'
+            otp: '22.3'
+            cowboy: '2'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-elixir@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - name: Install Dependencies
+        env:
+          COWBOY_VERSION: ${{matrix.cowboy}}
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          mix deps.get
+      - name: Run Tests
+        env:
+          ELIXIR_ASSERT_TIMEOUT: 2000
+          COWBOY_VERSION: ${{matrix.cowboy}}
+        run: mix test && cd installer && elixir -S mix test
+
+  inch:
+    name: inch report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-elixir@v1
+        with:
+          otp-version: 22.3
+          elixir-version: 1.10.2
+      - name: Install Dependencies
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          MIX_ENV=docs mix deps.get
+      - name: Compile
+        run: MIX_ENV=docs mix compile --docs
+      - name: Run Inch Report
+        run: MIX_ENV=docs mix inch.report
+
+  npm_test:
+    name: npm test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-elixir@v1
+        with:
+          otp-version: 22.3
+          elixir-version: 1.10.2
+      - name: Install Dependencies
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          mix deps.get
+      - name: Setup Node.js 6.2
+        uses: actions/setup-node@v1
+        with:
+          node-version: 6.2
+      - name: npm install and test
+        run: |
+          cd assets
+          npm install
+          npm test
