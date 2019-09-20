@@ -76,7 +76,7 @@ defmodule Phoenix.MixProject do
 
       # Docs dependencies
       {:ex_doc, "~> 0.20", only: :docs},
-      {:inch_ex, "~> 0.2", only: :docs},
+      {:inch_ex, "~> 2.0", only: :docs},
 
       # Test dependencies
       {:gettext, "~> 0.15.0", only: :test},
