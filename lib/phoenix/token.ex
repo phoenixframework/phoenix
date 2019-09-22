@@ -90,11 +90,10 @@ defmodule Phoenix.Token do
   """
 
   require Logger
-  alias Plug.Crypto.KeyGenerator
-  alias Plug.Crypto.MessageVerifier
+  alias Plug.Crypto.{KeyGenerator, MessageVerifier, MessageEncryptor}
 
   @doc """
-  Encodes data and signs it resulting in a token you can send to clients.
+  Encodes  and signs data into a token you can send to clients.
 
   ## Options
 
@@ -109,13 +108,42 @@ defmodule Phoenix.Token do
 
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
-    {signed_at_seconds, key_opts} = Keyword.pop(opts, :signed_at)
-    signed_at_ms = if signed_at_seconds, do: trunc(signed_at_seconds * 1000), else: now_ms()
-    secret = get_key_base(context) |> get_secret(salt, key_opts)
+    data
+    |> encode(opts)
+    |> MessageVerifier.sign(get_key_base(context) |> get_secret(salt, opts))
+  end
 
-    %{data: data, signed: signed_at_ms}
-    |> :erlang.term_to_binary()
-    |> MessageVerifier.sign(secret)
+  @doc """
+  Encodes, encrypts, and signs data into a token you can send to clients.
+
+  ## Options
+
+    * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to 1000
+    * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to 32
+    * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to `:sha256`
+    * `:signed_at` - set the timestamp of the token in seconds.
+      Defaults to `System.system_time(:second)`
+
+  """
+  def encrypt(context, secret, salt, data, opts \\ [])
+      when is_binary(secret) and is_binary(salt) do
+    key_base = get_key_base(context)
+
+    data
+    |> encode(opts)
+    |> MessageEncryptor.encrypt(
+      get_secret(key_base, secret, opts),
+      get_secret(key_base, salt, opts)
+    )
+  end
+
+  defp encode(data, opts) do
+    signed_at_seconds = Keyword.get(opts, :signed_at)
+    signed_at_ms = if signed_at_seconds, do: trunc(signed_at_seconds * 1000), else: now_ms()
+    :erlang.term_to_binary(%{data: data, signed: signed_at_ms})
   end
 
   @doc """
@@ -175,16 +203,8 @@ defmodule Phoenix.Token do
     secret = context |> get_key_base() |> get_secret(salt, opts)
 
     case MessageVerifier.verify(token, secret) do
-      {:ok, message} ->
-        %{data: data, signed: signed} = Plug.Crypto.safe_binary_to_term(message)
-
-        if expired?(signed, Keyword.get(opts, :max_age, 86400)) do
-          {:error, :expired}
-        else
-          {:ok, data}
-        end
-      :error ->
-        {:error, :invalid}
+      {:ok, message} -> decode(message, opts)
+      :error -> {:error, :invalid}
     end
   end
 
@@ -192,24 +212,74 @@ defmodule Phoenix.Token do
     {:error, :missing}
   end
 
+  @doc """
+  Decrypts the original data from the token and verifies its integrity.
+
+  ## Options
+
+    * `:max_age` - verifies the token only if it has been generated
+      "max age" ago in seconds. A reasonable value is 1 day (86400
+      seconds)
+    * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to 1000
+    * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to 32
+    * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to `:sha256`
+
+  """
+  def decrypt(context, secret, salt, token, opts \\ [])
+
+  def decrypt(context, secret, salt, token, opts)
+      when is_binary(secret) and is_binary(salt) and is_binary(token) do
+    key_base = context |> get_key_base()
+    secret = get_secret(key_base, secret, opts)
+    salt = get_secret(key_base, salt, opts)
+
+    case MessageEncryptor.decrypt(token, secret, salt) do
+      {:ok, message} -> decode(message, opts)
+      :error -> {:error, :invalid}
+    end
+  end
+
+  def decrypt(_context, secret, salt, nil, _opts) when is_binary(secret) and is_binary(salt) do
+    {:error, :missing}
+  end
+
+  defp decode(message, opts) do
+    %{data: data, signed: signed} = Plug.Crypto.safe_binary_to_term(message)
+
+    if expired?(signed, Keyword.get(opts, :max_age, 86400)) do
+      {:error, :expired}
+    else
+      {:ok, data}
+    end
+  end
+
+  ## Helpers
+
   defp get_key_base(%Plug.Conn{} = conn),
     do: conn |> Phoenix.Controller.endpoint_module() |> get_endpoint_key_base()
+
   defp get_key_base(%Phoenix.Socket{} = socket),
     do: get_endpoint_key_base(socket.endpoint)
+
   defp get_key_base(endpoint) when is_atom(endpoint),
     do: get_endpoint_key_base(endpoint)
+
   defp get_key_base(string) when is_binary(string) and byte_size(string) >= 20,
     do: string
 
   defp get_endpoint_key_base(endpoint) do
-    endpoint.config(:secret_key_base) || raise """
-    no :secret_key_base configuration found in #{inspect endpoint}.
-    Ensure your environment has the necessary mix configuration. For example:
+    endpoint.config(:secret_key_base) ||
+      raise """
+      no :secret_key_base configuration found in #{inspect(endpoint)}.
+      Ensure your environment has the necessary mix configuration. For example:
 
-        config :my_app, MyApp.Endpoint,
-            secret_key_base: ...
+          config :my_app, MyApp.Endpoint,
+              secret_key_base: ...
 
-    """
+      """
   end
 
   # Gathers configuration and generates the key secrets and signing secrets.
@@ -217,16 +287,13 @@ defmodule Phoenix.Token do
     iterations = Keyword.get(opts, :key_iterations, 1000)
     length = Keyword.get(opts, :key_length, 32)
     digest = Keyword.get(opts, :key_digest, :sha256)
-    key_opts = [iterations: iterations,
-                length: length,
-                digest: digest,
-                cache: Plug.Keys]
+    key_opts = [iterations: iterations, length: length, digest: digest, cache: Plug.Keys]
     KeyGenerator.generate(secret_key_base, salt, key_opts)
   end
 
   defp expired?(_signed, :infinity), do: false
   defp expired?(_signed, max_age_secs) when max_age_secs <= 0, do: true
-  defp expired?(signed, max_age_secs), do: (signed + trunc(max_age_secs * 1000)) < now_ms()
+  defp expired?(signed, max_age_secs), do: signed + trunc(max_age_secs * 1000) < now_ms()
 
   defp now_ms, do: System.system_time(:millisecond)
 end
