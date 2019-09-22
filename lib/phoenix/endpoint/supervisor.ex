@@ -10,8 +10,8 @@ defmodule Phoenix.Endpoint.Supervisor do
   @doc """
   Starts the endpoint supervision tree.
   """
-  def start_link(otp_app, mod) do
-    case Supervisor.start_link(__MODULE__, {otp_app, mod}, name: mod) do
+  def start_link(otp_app, mod, opts \\ []) do
+    case Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
       {:ok, _} = ok ->
         warmup(mod)
         log_access_info(otp_app, mod)
@@ -23,8 +23,8 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   @doc false
-  def init({otp_app, mod}) do
-    default_conf = defaults(otp_app, mod)
+  def init({otp_app, mod, opts}) do
+    default_conf = Phoenix.Config.merge(defaults(otp_app, mod), opts)
     env_conf = config(otp_app, mod, default_conf)
 
     secret_conf =

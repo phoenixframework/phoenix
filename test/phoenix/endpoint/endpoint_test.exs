@@ -105,8 +105,6 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
   @tag :capture_log
   test "invokes init/2 callback" do
-    Application.put_env(:phoenix, __MODULE__.InitEndpoint, parent: self())
-
     defmodule InitEndpoint do
       use Phoenix.Endpoint, otp_app: :phoenix
 
@@ -116,7 +114,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
       end
     end
 
-    {:ok, pid} = InitEndpoint.start_link()
+    {:ok, pid} = InitEndpoint.start_link(parent: self())
     assert_receive {^pid, :sample}
   end
 

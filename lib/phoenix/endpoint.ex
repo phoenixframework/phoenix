@@ -486,8 +486,8 @@ defmodule Phoenix.Endpoint do
       @doc """
       Starts the endpoint supervision tree.
       """
-      def start_link(_opts \\ []) do
-        Phoenix.Endpoint.Supervisor.start_link(@otp_app, __MODULE__)
+      def start_link(opts \\ []) do
+        Phoenix.Endpoint.Supervisor.start_link(@otp_app, __MODULE__, opts)
       end
 
       @doc """
