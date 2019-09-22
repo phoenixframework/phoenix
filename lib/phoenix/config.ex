@@ -70,13 +70,17 @@ defmodule Phoenix.Config do
   Useful to read a particular value at compilation time.
   """
   def from_env(otp_app, module, defaults) do
-    otp_app
-    |> fetch_config(module)
-    |> merge(defaults)
+    config = fetch_config(otp_app, module)
+
+    merge(defaults, config)
   end
 
-  @doc false
-  def merge(a, b), do: Keyword.merge(b, a, &merger/3)
+  @doc """
+  Take 2 keyword lists and merge them recursively.
+
+  Used to merge configuration values into defaults.
+  """
+  def merge(a, b), do: Keyword.merge(a, b, &merger/3)
 
   defp fetch_config(otp_app, module) do
     case Application.fetch_env(otp_app, module) do
