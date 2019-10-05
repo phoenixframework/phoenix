@@ -1,6 +1,5 @@
 defmodule Mix.Tasks.Phx.Interactive do
     use Mix.Task
-    import Phx.New.Generator
    
     @shortdoc "Phoenix Interactive Installer Prompt"
   
