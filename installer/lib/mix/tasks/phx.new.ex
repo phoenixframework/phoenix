@@ -43,6 +43,7 @@ defmodule Mix.Tasks.Phx.New do
     * `--binary-id` - use `binary_id` as primary key type
       in Ecto schemas
 
+    * `--interactive` - interactive mode
     * `--verbose` - use verbose output
 
   When passing the `--no-ecto` flag, Phoenix generators such as
@@ -87,7 +88,7 @@ defmodule Mix.Tasks.Phx.New do
       mix phx.new -v
   """
   use Mix.Task
-  alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
+  alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto, Interactive}
 
   @version Mix.Project.config[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application"
@@ -95,7 +96,7 @@ defmodule Mix.Tasks.Phx.New do
   @switches [dev: :boolean, webpack: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
-             gettext: :boolean, umbrella: :boolean, verbose: :boolean]
+             gettext: :boolean, umbrella: :boolean, interactive: :boolean, verbose: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info("Phoenix v#{@version}")
@@ -113,6 +114,10 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
+  def interactive() do
+    
+  end
+
   def run(argv, generator, path) do
     elixir_version_check!()
     case parse_opts(argv) do
@@ -122,13 +127,22 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   def generate(base_path, generator, path, opts) do
+
     base_path
     |> Project.new(opts)
+    |> interactive_installer()
     |> generator.prepare_project()
     |> Generator.put_binding()
     |> validate_project(path)
     |> generator.generate()
     |> prompt_to_install_deps(generator, path)
+  end
+
+  def interactive_installer(%Project{opts: opts} = project) do
+    case Project.interactive?(project) do
+      true -> Interactive.installer(project)
+      false -> project
+    end
   end
 
   defp validate_project(%Project{opts: opts} = project, path) do
