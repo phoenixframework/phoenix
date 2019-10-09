@@ -111,6 +111,7 @@ config :hello, HelloWeb.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json",
   https: [
     port: 443,
+    cipher_suite: :strong,
     otp_app: :hello,
     keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
     certfile: System.get_env("SOME_APP_SSL_CERT_PATH"),
@@ -126,7 +127,7 @@ Without the `otp_app:` key, we need to provide absolute paths to the files where
 Path.expand("../../../some/path/to/ssl/key.pem", __DIR__)
 ```
 
-If you require further customization to the TLS versions or ciphers used you can include additional `https:` configuration. For example to disable older versions of TLS which are now considered insecure you could add `versions: [:'tlsv1.2']`. More information on the available settings is available in the [Erlang SSL docs](http://erlang.org/doc/man/ssl.html) (see "TLS/DTLS OPTION DESCRIPTIONS - SERVER SIDE").
+The options under the `https:` key are passed to the Plug adapter, typically `Plug.Cowboy`, which in turn uses `Plug.SSL` to select the TLS socket options. Please refer to the documentation for [Plug.SSL.configure/1](https://hexdocs.pm/plug/Plug.SSL.html#configure/1) for more information on the available options and their defaults. The [Plug HTTPS Guide](https://hexdocs.pm/plug/https.html) and the [Erlang/OTP ssl](http://erlang.org/doc/man/ssl.html) documentation also provide valuable information.
 
 
 ### SSL in Development
@@ -163,6 +164,8 @@ To dynamically redirect to the `host` of the current request, set `:host` in the
 config :my_app, MyApp.Endpoint,
   force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil]
 ```
+
+In these examples, the `rewrite_on:` key specifies the HTTP header used by a reverse proxy or load balancer in front of the application to indicate whether the request was received over HTTP or HTTPS. For more information on the implications of offloading TLS to an external element, in particular relating to secure cookies, refer to the [Plug HTTPS Guide](https://hexdocs.pm/plug/https.html#offloading-tls). Keep in mind that the options passed to `Plug.SSL` in that document should be set using the `force_ssl:` endpoint option in a Phoenix application.
 
 ### HSTS
 
