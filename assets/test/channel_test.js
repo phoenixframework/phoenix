@@ -809,6 +809,19 @@ describe("with transport", () => {
       const ref2 = channel.on("event2", () => 0)
       assert.equal(ref1 + 1, ref2)
     })
+
+    it("calls all callbacks for event if they modified during event processing", () => {
+      const spy = sinon.spy()
+
+      const ref = channel.on("event", () => {
+        channel.off("event", ref)
+      })
+      channel.on("event", spy)
+
+      channel.trigger("event", {}, defaultRef)
+
+      assert.ok(spy.called)
+    })
   })
 
   describe("off", () => {

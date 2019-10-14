@@ -603,9 +603,10 @@ export class Channel {
     let handledPayload = this.onMessage(event, payload, ref, joinRef)
     if(payload && !handledPayload){ throw new Error("channel onMessage callbacks must return the payload, modified or unmodified") }
 
-    for (let i = 0; i < this.bindings.length; i++) {
-      const bind = this.bindings[i]
-      if(bind.event !== event){ continue }
+    const eventBindings = this.bindings.filter(bind => bind.event === event)
+
+    for (let i = 0; i < eventBindings.length; i++) {
+      const bind = eventBindings[i]
       bind.callback(handledPayload, ref, joinRef || this.joinRef())
     }
   }
