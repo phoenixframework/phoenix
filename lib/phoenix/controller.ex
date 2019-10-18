@@ -167,6 +167,13 @@ defmodule Phoenix.Controller do
 
       use Phoenix.Controller.Pipeline, opts
 
+      @before_compile Phoenix.Controller
+    end
+  end
+
+  @doc false
+  defmacro __before_compile__(_env) do
+    quote do
       plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, opts), :app}
       plug :put_new_view, Phoenix.Controller.__view__(__MODULE__)
     end
