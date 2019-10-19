@@ -90,6 +90,8 @@ When we work with Ecto schemas in these guides, we will use PostgreSQL and the P
 
 Postgrex is a direct Phoenix dependency, and it will be automatically installed along with the rest of our dependencies as we start building our app.
 
+Mac users can optionally install [Postgres.app](https://postgresapp.com) to automatically start PostgreSQL.
+
 ### inotify-tools (for linux users)
 
 This is a Linux-only filesystem watcher that Phoenix uses for live code reloading. (Mac OS X or Windows users can safely ignore it.)
