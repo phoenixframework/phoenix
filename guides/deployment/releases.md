@@ -175,11 +175,11 @@ RUN mix deps.compile
 
 # build assets
 COPY assets assets
+COPY priv priv
 RUN cd assets && npm install && npm run deploy
 RUN mix phx.digest
 
 # build project
-COPY priv priv
 COPY lib lib
 RUN mix compile
 
