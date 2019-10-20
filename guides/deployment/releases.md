@@ -201,8 +201,8 @@ COPY priv priv
 COPY lib lib
 RUN mix compile
 
-# build release
-COPY rel rel
+# build release (uncomment COPY if rel/ exists)
+# COPY rel rel
 RUN mix release
 
 # prepare release image
