@@ -20,11 +20,11 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
 #       ...
 #       url: [host: "example.com", port: 443],
 #       https: [
-#         :inet6,
 #         port: 443,
 #         cipher_suite: :strong,
 #         keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
-#         certfile: System.get_env("SOME_APP_SSL_CERT_PATH")
+#         certfile: System.get_env("SOME_APP_SSL_CERT_PATH"),
+#         transport_options: [socket_opts: [:inet6]]
 #       ]
 #
 # The `cipher_suite` is set to `:strong` to support only the
