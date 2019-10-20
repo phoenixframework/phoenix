@@ -54,9 +54,9 @@ defmodule Hello.AccountsTest do
 end
 ```
 
-In the first line, we `use Hello.DataCase`, which is defined in `test/support/data_case.ex`. `Hello.DataCase` is responsible for importing and aliasing all the necessary modules for all of our schema cases. `Hello.DataCase` will also run all of our schema tests within a database transaction unless we've tagged an individual test case with `:async`.
+In the first line, we `use Hello.DataCase`, which is defined in `test/support/data_case.ex`. `Hello.DataCase` is responsible for importing and aliasing all the necessary modules for all of our schema cases. `Hello.DataCase` will also run all of our schema tests within the SQL sandbox, which will revert any changes to the database at the end of the test.
 
-> Note: We should not tag any schema case that interacts with a database as `:async`. This may cause  erratic test results and possibly even deadlocks.
+>  If you are using PostgreSQL, you can even run database tests asynchronously by setting `use Hello.DataCase, async: true`, although this option is not recommendded for other databases.
 
 `Hello.DataCase` is also a place to define any helper functions we might need to test our schemas. We get an example function `errors_on/1` for free, and we'll see how that works shortly.
 
