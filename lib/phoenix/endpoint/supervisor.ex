@@ -11,14 +11,44 @@ defmodule Phoenix.Endpoint.Supervisor do
   Starts the endpoint supervision tree.
   """
   def start_link(otp_app, mod, opts \\ []) do
-    case Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
-      {:ok, _} = ok ->
-        warmup(mod)
-        log_access_info(otp_app, mod)
-        ok
-
+    with {:ok, _} <- check_force_ssl(otp_app, mod),
+         {:ok, _} = ok <- Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
+      warmup(mod)
+      log_access_info(otp_app, mod)
+      ok
+    else
       {:error, _} = error ->
         error
+    end
+  end
+
+  defp check_force_ssl(otp_app, mod) do
+    compile_config = mod.__compile_config__() |> Keyword.get(:force_ssl)
+
+    runtime_config =
+      config(otp_app, mod)
+      |> Keyword.take(Phoenix.Endpoint.Supervisor.compile_config_keys())
+      |> Keyword.get(:force_ssl)
+
+    if compile_config != runtime_config do
+      require Logger
+
+      Logger.error("""
+      Failed :force_ssl check for Phoenix.Endpoint.Supervisor.
+
+      Compile time configuration: #{inspect(compile_config)}
+      Runtime configuration     : #{inspect(runtime_config)}
+
+      This happens when the :force_ssl config at compile time does
+      not match the :force_ssl config at run time. For example, if
+      your releases.exs file sets :force_ssl to something different
+      than your config.exs file. To fix this issue, you should
+      move the :force_ssl config from releases.exs to prod.exs.
+      """)
+
+      {:error, "failed force_ssl check"}
+    else
+      {:ok, nil}
     end
   end
 
