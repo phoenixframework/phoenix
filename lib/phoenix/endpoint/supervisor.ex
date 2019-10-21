@@ -433,4 +433,8 @@ defmodule Phoenix.Endpoint.Supervisor do
       Logger.info("Access #{inspect(endpoint)} at #{endpoint.url()}")
     end
   end
+
+  def compile_config_keys do
+    [:force_ssl]
+  end
 end

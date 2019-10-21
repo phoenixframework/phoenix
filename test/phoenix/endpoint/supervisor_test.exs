@@ -74,4 +74,8 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     assert {:nocache, {"/images/unknown.png", nil}} =
              Supervisor.static_lookup(HTTPEndpoint, "/images/unknown.png")
   end
+
+  test "compile_config_keys/0 returns config keys we want to store for runtime checks" do
+    assert Supervisor.compile_config_keys() == [:force_ssl]
+  end
 end
