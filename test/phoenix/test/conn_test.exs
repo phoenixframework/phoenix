@@ -151,11 +151,13 @@ defmodule Phoenix.Test.ConnTest do
         build_conn()
         |> get("/")
         |> put_req_header("accept", "text/html")
+        |> put_req_header("accept-language", "ja")
         |> put_req_header("authorization", "Bearer mytoken")
         |> put_req_header("hello", "world")
 
       conn = conn |> recycle()
       assert get_req_header(conn, "accept") == ["text/html"]
+      assert get_req_header(conn, "accept-language") == ["ja"]
       assert get_req_header(conn, "authorization") == ["Bearer mytoken"]
       assert get_req_header(conn, "hello") == []
     end
