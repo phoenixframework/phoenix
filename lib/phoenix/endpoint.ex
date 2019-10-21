@@ -452,6 +452,7 @@ defmodule Phoenix.Endpoint do
       if force_ssl = Phoenix.Endpoint.__force_ssl__(__MODULE__, var!(config)) do
         plug Plug.SSL, force_ssl
       end
+      @force_ssl force_ssl
 
       if var!(config)[:debug_errors] do
         use Plug.Debugger,
@@ -487,7 +488,16 @@ defmodule Phoenix.Endpoint do
       Starts the endpoint supervision tree.
       """
       def start_link(opts \\ []) do
-        Phoenix.Endpoint.Supervisor.start_link(@otp_app, __MODULE__, opts)
+        force_ssl_compiled_config = @force_ssl
+        # is there a better awy than using Application_get_env/3 here? 
+        force_ssl_runtime_config = Application.get_env(@otp_app, __MODULE__)[:force_ssl]
+        if force_ssl_compiled_config != force_ssl_runtime_config do
+          require Logger
+          Logger.error("TODO: explain error here")
+          {:error, "force_ssl changed"}
+        else
+          Phoenix.Endpoint.Supervisor.start_link(@otp_app, __MODULE__, opts)
+        end
       end
 
       @doc """
