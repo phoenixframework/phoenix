@@ -22,46 +22,41 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp check_compile_configs(mod, runtime_configs) do
+  defp check_compile_configs!(mod, runtime_configs) do
     compile_configs = mod.__compile_config__()
 
     bad_keys =
-      Phoenix.Endpoint.Supervisor.compile_config_keys()
-      |> Enum.map(fn key ->
+      Enum.filter(Phoenix.Endpoint.Supervisor.compile_config_keys(), fn key ->
         compile_config = Keyword.get(compile_configs, key)
         runtime_config = Keyword.get(runtime_configs, key)
 
-        if compile_config == runtime_config do
-          {:ok, key}
+        if compile_config != runtime_config do
+          require Logger
+
+          Logger.error("""
+          #{inspect(key)} mismatch for #{inspect(mod)}.
+
+          Compile time configuration: #{inspect(compile_config)}
+          Runtime configuration     : #{inspect(runtime_config)}
+
+          #{inspect(key)} is a compile-time configuration, so setting
+          it at runtime has no effect. Therefore you must set it in your
+          config/prod.exs or similar (not in your config/releases.exs)
+          and make sure the value doesn't change.
+          """)
+
+          true
         else
-          {:error, {key, compile_config, runtime_config}}
+          false
         end
       end)
-      |> Enum.filter(fn {status, _} -> status == :error end)
-      |> Enum.map(fn {:error, {key, compile_config, runtime_config}} ->
-        require Logger
 
-        Logger.error("""
-        Failed :#{key} check for Phoenix.Endpoint.Supervisor.
-
-        Compile time configuration: #{inspect(compile_config)}
-        Runtime configuration     : #{inspect(runtime_config)}
-
-        This happens when the :#{key} config at compile time does
-        not match the :#{key} config at runtime. For example, if
-        your releases.exs file sets :#{key} to something different
-        than your config.exs file. To fix this issue, you should
-        move the :#{key} config from releases.exs to prod.exs.
-        """)
-
-        key
-      end)
-
-    if Enum.empty?(bad_keys) do
-      {:ok, nil}
-    else
-      {:error, bad_keys}
+    unless Enum.empty?(bad_keys) do
+      raise ArgumentError,
+            "expected these options to be unchanged from compile time: #{inspect(bad_keys)}"
     end
+
+    :ok
   end
 
   @doc false
@@ -94,16 +89,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     # Drop all secrets from secret_conf before passing it around
     conf = Keyword.drop(secret_conf, [:secret_key_base])
     server? = server?(conf)
-
-    {:ok, _} =
-      case check_compile_configs(mod, conf) do
-        {:error, keys} ->
-          raise ArgumentError,
-                "expected these options to be unchanged from compile time: #{inspect(keys)}"
-
-        other ->
-          other
-      end
+    check_compile_configs!(mod, conf)
 
     if conf[:instrumenters] do
       Logger.warn(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
