@@ -22,6 +22,48 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
+  defp check_compile_configs(mod, runtime_configs) do
+    compile_configs = mod.__compile_config__()
+
+    bad_keys =
+      Phoenix.Endpoint.Supervisor.compile_config_keys()
+      |> Enum.map(fn key ->
+        compile_config = Keyword.get(compile_configs, key)
+        runtime_config = Keyword.get(runtime_configs, key)
+
+        if compile_config == runtime_config do
+          {:ok, key}
+        else
+          {:error, {key, compile_config, runtime_config}}
+        end
+      end)
+      |> Enum.filter(fn {status, _} -> status == :error end)
+      |> Enum.map(fn {:error, {key, compile_config, runtime_config}} ->
+        require Logger
+
+        Logger.error("""
+        Failed :#{key} check for Phoenix.Endpoint.Supervisor.
+
+        Compile time configuration: #{inspect(compile_config)}
+        Runtime configuration     : #{inspect(runtime_config)}
+
+        This happens when the :#{key} config at compile time does
+        not match the :#{key} config at runtime. For example, if
+        your releases.exs file sets :#{key} to something different
+        than your config.exs file. To fix this issue, you should
+        move the :#{key} config from releases.exs to prod.exs.
+        """)
+
+        key
+      end)
+
+    if Enum.empty?(bad_keys) do
+      {:ok, nil}
+    else
+      {:error, bad_keys}
+    end
+  end
+
   @doc false
   def init({otp_app, mod, opts}) do
     default_conf = Phoenix.Config.merge(defaults(otp_app, mod), opts)
@@ -52,6 +94,16 @@ defmodule Phoenix.Endpoint.Supervisor do
     # Drop all secrets from secret_conf before passing it around
     conf = Keyword.drop(secret_conf, [:secret_key_base])
     server? = server?(conf)
+
+    {:ok, _} =
+      case check_compile_configs(mod, conf) do
+        {:error, keys} ->
+          raise ArgumentError,
+                "expected these options to be unchanged from compile time: #{inspect(keys)}"
+
+        other ->
+          other
+      end
 
     if conf[:instrumenters] do
       Logger.warn(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
@@ -432,5 +484,15 @@ defmodule Phoenix.Endpoint.Supervisor do
     if Phoenix.Endpoint.server?(otp_app, endpoint) do
       Logger.info("Access #{inspect(endpoint)} at #{endpoint.url()}")
     end
+  end
+
+  @doc """
+  List of keys which we ensure are unchanged from compile time to runtime. For
+  example, the :force_ssl option must be available at compile time in order to 
+  work properly. We check these keys so we can warn the user that changing the
+  option at runtime may lead to undesirable behavior.
+  """
+  def compile_config_keys do
+    [:force_ssl]
   end
 end

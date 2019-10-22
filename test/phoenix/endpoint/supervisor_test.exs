@@ -52,6 +52,11 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(:static_url), do: [host: "static.example.com"]
   end
 
+  defmodule ForceSslEndpoint do
+    def init(:supervisor, config), do: {:ok, config}
+    def __compile_config__(), do: [force_ssl: [rewrite_on: [:x_forwarded_proto]]]
+  end
+
   test "generates the static url based on the static host configuration" do
     static_host = {:cache, "http://static.example.com"}
     assert Supervisor.static_url(StaticURLEndpoint) == static_host
@@ -73,5 +78,17 @@ defmodule Phoenix.Endpoint.SupervisorTest do
              Supervisor.static_lookup(HTTPEndpoint, "/phoenix.png")
     assert {:nocache, {"/images/unknown.png", nil}} =
              Supervisor.static_lookup(HTTPEndpoint, "/images/unknown.png")
+  end
+
+  test "compile_config_keys/0 returns config keys we want to store for runtime checks" do
+    assert Supervisor.compile_config_keys() == [:force_ssl]
+  end
+
+  test "init/1 fails when force_ssl check fails" do
+    Application.put_env(:phoenix, ForceSslEndpoint, force_ssl: [hsts: true])
+
+    assert_raise ArgumentError,
+                 "expected these options to be unchanged from compile time: [:force_ssl]",
+                 fn -> Supervisor.init({:phoenix, ForceSslEndpoint, []}) end
   end
 end

@@ -19,6 +19,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert is_list(config)
     assert @otp_app == :phoenix
     assert code_reloading? == false
+    assert @compile_config == [force_ssl: [subdomains: true]]
   end
 
   defmodule NoConfigEndpoint do
@@ -220,5 +221,9 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
       Endpoint.static_integrity("//invalid_path")
     end
+  end
+
+  test "__compile_config__/0 returns selected configs from compile time" do
+    assert Endpoint.__compile_config__() == [force_ssl: [subdomains: true]]
   end
 end
