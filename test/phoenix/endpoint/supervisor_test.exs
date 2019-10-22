@@ -53,6 +53,7 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   end
 
   defmodule ForceSslEndpoint do
+    def init(:supervisor, config), do: {:ok, config}
     def __compile_config__(), do: [force_ssl: [rewrite_on: [:x_forwarded_proto]]]
   end
 
@@ -83,8 +84,11 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     assert Supervisor.compile_config_keys() == [:force_ssl]
   end
 
-  test "start_link/3 fails when force_ssl check fails" do
+  test "init/1 fails when force_ssl check fails" do
     Application.put_env(:phoenix, ForceSslEndpoint, force_ssl: [hsts: true])
-    assert Supervisor.start_link(:phoenix, ForceSslEndpoint) == {:error, "failed force_ssl check"}
+
+    assert_raise ArgumentError,
+                 "expected these options to be unchanged from compile time: [:force_ssl]",
+                 fn -> Supervisor.init({:phoenix, ForceSslEndpoint, []}) end
   end
 end
