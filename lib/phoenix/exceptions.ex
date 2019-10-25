@@ -56,7 +56,7 @@ defmodule Phoenix.ActionClauseError do
     {exception, stacktrace} =
       exception
       |> Map.put(:__struct__, FunctionClauseError)
-      |> FunctionClauseError.blame(exception, stacktrace)
+      |> FunctionClauseError.blame(stacktrace)
 
     exception = Map.put(exception, :__struct__, __MODULE__)
 
