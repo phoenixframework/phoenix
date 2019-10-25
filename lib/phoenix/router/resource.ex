@@ -21,7 +21,7 @@ defmodule Phoenix.Router.Resource do
     * `:collection` - the context for collection routes
 
   """
-  defstruct [:path, :actions, :param, :route, :controller, :route, :member, :collection, :singleton]
+  defstruct [:path, :actions, :param, :route, :controller, :member, :collection, :singleton]
   @type t :: %Resource{}
 
   @doc """
