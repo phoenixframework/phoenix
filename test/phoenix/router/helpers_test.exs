@@ -5,7 +5,8 @@ modules = [
   CommentController,
   FileController,
   ProductController,
-  Admin.MessageController
+  Admin.MessageController,
+  SubPlug
 ]
 
 for module <- modules do
@@ -57,6 +58,8 @@ defmodule Phoenix.Router.HelpersTest do
     get "/products", ProductController, :show
     get "/products/:id/:sort", ProductController, :show
     get "/products/:id/:sort/:page", ProductController, :show
+
+    get "/mfa_path", SubPlug, func: {M, :f, [10]}
   end
 
   # Emulate regular endpoint functions
@@ -386,6 +389,10 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.admin_message_path(__MODULE__, :index) == "/admin/new/messages"
     assert Helpers.admin_message_path(__MODULE__, :show, 1, []) == "/admin/new/messages/1"
     assert Helpers.admin_message_path(__MODULE__, :show, 1) == "/admin/new/messages/1"
+  end
+
+  test "can pass an {m, f, a} tuple as a plug argument" do
+    assert Helpers.sub_plug_path(__MODULE__, func: {M, :f, [10]}) == "/mfa_path"
   end
 
   ## Others
