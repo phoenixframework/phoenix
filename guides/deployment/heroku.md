@@ -175,6 +175,16 @@ url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
 force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
 
+Also, regardless if you are using distillery or mix releases, the buildpack requires that you set `server: true` so the prod.exs configuration should appear something like this.
+
+```elixir
+config :hello, Hello.Endpoint,
+  server: true,
+  http: [:inet6, port: String.to_integer(System.get_env("PORT") || "4000")],
+  url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
+  force_ssl: [rewrite_on: [:x_forwarded_proto]]
+```
+
 Then open up your `config/prod.secret.exs` and uncomment the `# ssl: true,` line in your repository configuration. It will look like this:
 
 ```elixir
