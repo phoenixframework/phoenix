@@ -101,7 +101,7 @@ defmodule Phoenix.Router.Helpers do
   @doc """
   Generates the helper module for the given environment and routes.
   """
-  def define(env, routes) do
+  def define(env, routes, opts \\ []) do
     # Ignore any route without helper or forwards.
     routes =
       Enum.filter(routes, fn {route, _exprs} ->
@@ -171,6 +171,8 @@ defmodule Phoenix.Router.Helpers do
       end
     end
 
+    docs = Keyword.get(opts, :docs, true)
+
     # It is in general bad practice to generate large chunks of code
     # inside quoted expressions. However, we can get away with this
     # here for two reasons:
@@ -181,7 +183,7 @@ defmodule Phoenix.Router.Helpers do
     #   per helper module anyway.
     #
     code = quote do
-      @moduledoc """
+      @moduledoc unquote(docs) && """
       Module with named helpers generated from #{inspect unquote(env.module)}.
       """
       unquote(defhelper)
@@ -189,21 +191,21 @@ defmodule Phoenix.Router.Helpers do
       unquote_splicing(impls)
       unquote_splicing(catch_all)
 
-      @doc """
+      @doc unquote(docs) && """
       Generates the path information including any necessary prefix.
       """
       def path(data, path) do
         Phoenix.Router.Helpers.path(unquote(env.module), data, path)
       end
 
-      @doc """
+      @doc unquote(docs) && """
       Generates the connection/endpoint base URL without any path information.
       """
       def url(data) do
         Phoenix.Router.Helpers.url(unquote(env.module), data)
       end
 
-      @doc """
+      @doc unquote(docs) && """
       Generates path to a static asset given its file path.
       """
       def static_path(%Conn{private: private} = conn, path) do
@@ -218,7 +220,7 @@ defmodule Phoenix.Router.Helpers do
         endpoint.static_path(path)
       end
 
-      @doc """
+      @doc unquote(docs) && """
       Generates url to a static asset given its file path.
       """
       def static_url(%Conn{private: private}, path) do
@@ -237,7 +239,7 @@ defmodule Phoenix.Router.Helpers do
         endpoint.static_url <> endpoint.static_path(path)
       end
 
-      @doc """
+      @doc unquote(docs) && """
       Generates an integrity hash to a static asset given its file path.
       """
       def static_integrity(%Conn{private: %{phoenix_endpoint: endpoint}}, path) do
