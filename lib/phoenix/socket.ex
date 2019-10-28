@@ -108,7 +108,7 @@ defmodule Phoenix.Socket do
   the original message. Both data-types also include a join_ref that
   uniquely identifes the currently joined channel.
 
-  The `Phoenix.Socket` implementation may also sent special messages
+  The `Phoenix.Socket` implementation may also send special messages
   and replies:
 
     * `"phx_error"` - in case of errors, such as a channel process
