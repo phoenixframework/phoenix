@@ -25,7 +25,8 @@ defmodule Mix.Tasks.Phx.Gen.Secret do
   end
 
   defp random_string(length) when length > 31 do
-    :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
+    num_bytes = trunc(Float.ceil(length * 3 / 4))
+    :crypto.strong_rand_bytes(num_bytes) |> Base.encode64() |> binary_part(0, length)
   end
   defp random_string(_), do: Mix.raise "The secret should be at least 32 characters long"
 
