@@ -26,7 +26,7 @@ defmodule Phx.New.MixProject do
 
       source_url: @url,
       docs: docs(),
-      homepage_url: "http://www.phoenixframework.org",
+      homepage_url: "https://www.phoenixframework.org",
       description: """
       Phoenix framework project generator.
 
