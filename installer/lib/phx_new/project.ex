@@ -61,7 +61,7 @@ defmodule Phx.New.Project do
   end
 
   defp expand_path_with_bindings(path, %Project{} = project) do
-    Regex.replace(Mix.Tasks.Phx.New.recompile(~r/:[a-zA-Z0-9_]+/), path, fn ":" <> key, _ ->
+    Regex.replace(Regex.recompile!(~r/:[a-zA-Z0-9_]+/), path, fn ":" <> key, _ ->
         project |> Map.fetch!(:"#{key}") |> to_string()
     end)
   end

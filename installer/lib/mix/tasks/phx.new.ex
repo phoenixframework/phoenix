@@ -261,15 +261,6 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Helpers
 
-  @doc false
-  def recompile(regex) do
-    if Code.ensure_loaded?(Regex) and function_exported?(Regex, :recompile!, 1) do
-      apply(Regex, :recompile!, [regex])
-    else
-      regex
-    end
-  end
-
   defp maybe_cmd(project, cmd, should_run?, can_run?) do
     cond do
       should_run? && can_run? ->
@@ -300,7 +291,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp check_app_name!(name, from_app_flag) do
-    unless name =~ recompile(~r/^[a-z][\w_]*$/) do
+    unless name =~ Regex.recompile!(~r/^[a-z][\w_]*$/) do
       extra =
         if !from_app_flag do
           ". The application name is inferred from the path, if you'd like to " <>
@@ -315,7 +306,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp check_module_name_validity!(name) do
-    unless inspect(name) =~ recompile(~r/^[A-Z]\w*(\.[A-Z]\w*)*$/) do
+    unless inspect(name) =~ Regex.recompile!(~r/^[A-Z]\w*(\.[A-Z]\w*)*$/) do
       Mix.raise "Module name must be a valid Elixir alias (for example: Foo.Bar), got: #{inspect name}"
     end
   end

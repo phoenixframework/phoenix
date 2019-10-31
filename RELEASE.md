@@ -1,17 +1,14 @@
 # Release Instructions
 
-**IMPORTANT**: when building the archive, it must be done in the minimum supported Erlang and Elixir versions.
-
   1. Check related deps for required version bumps and compatibility (`phoenix_ecto`, `phoenix_pubsub_redis`, `phoenix_html`)
-  2. Bump version in related files below
-  3. Update `@phoenix_version` in `installer/lib/phx_new/generator.ex` to "x.y.z"
+  2. Update `phoenix_dep` in `installer/lib/phx_new/generator.ex` to release
+  3. Bump version in related files below
   4. Run tests, commit, push code
   5. Publish `phx_new` and `phoenix` packages and docs after pruning any extraneous uncommitted files
   6. Test installer by generating a new app, running `mix deps.get`, and compiling
-  7. Start -dev version in related files below
-  8. Update `phoenix_dep` in `installer/lib/phx_new/generator.ex` back to git
-  9. Publish to `npm` with `npm publish`
-  10. Replace `master` for `source_url_pattern` in `installer/mix.exs`
+  7. Publish to `npm` with `npm publish`
+  8. Start -dev version in related files below
+  9. Update `phoenix_dep` in `installer/lib/phx_new/generator.ex` back to git
 
 ## Files with version
 
