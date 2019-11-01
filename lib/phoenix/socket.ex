@@ -311,8 +311,8 @@ defmodule Phoenix.Socket do
 
   ## Examples
 
-  iex> assign(socket, :name, "Elixir")
-  iex> assign(socket, name: "Elixir", logo: "💧")
+      iex> assign(socket, :name, "Elixir")
+      iex> assign(socket, name: "Elixir", logo: "💧")
   """
   def assign(%Socket{} = socket, key, value) do
     assign(socket, [{key, value}])
