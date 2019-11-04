@@ -139,7 +139,7 @@ defmodule Phoenix.Endpoint do
       will be referenced from `System.get_env("HOST")` at runtime.
 
       The `:scheme` option accepts `"http"` and `"https"` values. Default value
-      is infered from top level `:http` or `:https` option. It is useful
+      is inferred from top level `:http` or `:https` option. It is useful
       when hosting Phoenix behind a load balancer or reverse proxy and
       terminating SSL there.
 
@@ -183,7 +183,7 @@ defmodule Phoenix.Endpoint do
           ]
 
     * `:pubsub_server` - the name of the pubsub server to use in channels
-      and via the Endpoint broadcast funtions. The PubSub server is typically
+      and via the Endpoint broadcast functions. The PubSub server is typically
       started in your supervision tree.
 
   ### Adapter configuration
