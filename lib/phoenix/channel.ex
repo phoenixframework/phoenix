@@ -60,7 +60,7 @@ defmodule Phoenix.Channel do
   You can also push a message directly down the socket:
 
       # client asks for their current rank, push sent directly as a new event.
-      def handle_in("current_rank", socket) do
+      def handle_in("current_rank", _,socket) do
         push(socket, "current_rank", %{val: Game.get_rank(socket.assigns[:user])})
         {:noreply, socket}
       end
