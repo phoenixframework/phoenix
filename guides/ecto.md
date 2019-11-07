@@ -11,7 +11,7 @@ Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by def
 
 For a thorough, general guide for Ecto, check out the [Ecto getting started guide](https://hexdocs.pm/ecto/getting-started.html). For an overview of all Ecto specific mix tasks for Phoenix, see the [mix tasks guide](phoenix_mix_tasks.html#ecto-specific-mix-tasks).
 
-This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. For instructions on switching to MySQL, please see the [Using MySQL](ecto.md#using-mysql) section.
+This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. For instructions on switching to MySQL, please see the [Using MySQL](#using-mysql) section.
 
 The default Postgres configuration has a superuser account with username 'postgres' and the password 'postgres'. If you take a look at the file `config/dev.exs`, you'll see that Phoenix works off this assumption. If you don't have this account already setup on your machine, you can connect to your postgres instance by typing `psql` and then entering the following commands:
 
