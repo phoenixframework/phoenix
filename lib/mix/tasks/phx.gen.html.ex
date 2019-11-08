@@ -161,7 +161,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
     if schema.web_namespace do
-      Mix.shell.info """
+      Mix.shell().info """
 
       Add the resource to your #{schema.web_namespace} :browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
@@ -172,7 +172,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
           end
       """
     else
-      Mix.shell.info """
+      Mix.shell().info """
 
       Add the resource to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 

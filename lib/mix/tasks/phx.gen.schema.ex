@@ -162,7 +162,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   @doc false
   def print_shell_instructions(%Schema{} = schema) do
     if schema.migration? do
-      Mix.shell.info """
+      Mix.shell().info """
 
       Remember to update your repository by running migrations:
 

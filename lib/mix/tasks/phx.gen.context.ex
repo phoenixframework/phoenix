@@ -171,7 +171,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     if String.contains?(file, content_to_inject) do
       :ok
     else
-      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
+      Mix.shell().info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
 
       file
       |> String.trim_trailing()
@@ -247,7 +247,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       function_count = Context.function_count(context)
       file_count = Context.file_count(context)
 
-      Mix.shell.info """
+      Mix.shell().info """
       You are generating into an existing context.
 
       The #{inspect context.module} context currently has #{function_count} functions and \
@@ -264,7 +264,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
       If you are not sure, prefer creating a new context over adding to the existing one.
       """
-      unless Mix.shell.yes?("Would you like to proceed?") do
+      unless Mix.shell().yes?("Would you like to proceed?") do
         System.halt()
       end
     end

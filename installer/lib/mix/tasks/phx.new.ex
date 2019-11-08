@@ -98,7 +98,7 @@ defmodule Mix.Tasks.Phx.New do
              gettext: :boolean, umbrella: :boolean, verbose: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
-    Mix.shell.info("Phoenix v#{@version}")
+    Mix.shell().info("Phoenix v#{@version}")
   end
 
   def run(argv) do
@@ -142,7 +142,7 @@ defmodule Mix.Tasks.Phx.New do
 
   defp prompt_to_install_deps(%Project{} = project, generator, path) do
     path = Map.fetch!(project, path)
-    install? = Mix.shell.yes?("\nFetch and install dependencies?")
+    install? = Mix.shell().yes?("\nFetch and install dependencies?")
     cd_step = ["$ cd #{relative_app_path(path)}"]
 
     maybe_cd(path, fn ->
@@ -204,7 +204,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp print_webpack_info(_project, _gen) do
-    Mix.shell.info """
+    Mix.shell().info """
     Phoenix uses an optional assets build tool called webpack
     that requires node.js and npm. Installation instructions for
     node.js, which includes npm, can be found at http://nodejs.org.
@@ -216,7 +216,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp print_missing_steps(steps) do
-    Mix.shell.info """
+    Mix.shell().info """
 
     We are almost there! The following steps are missing:
 
@@ -226,7 +226,7 @@ defmodule Mix.Tasks.Phx.New do
 
   defp print_ecto_info(Web), do: :ok
   defp print_ecto_info(_gen) do
-    Mix.shell.info """
+    Mix.shell().info """
     Then configure your database in config/dev.exs and run:
 
         $ mix ecto.create
@@ -234,14 +234,14 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp print_mix_info(Ecto) do
-    Mix.shell.info """
+    Mix.shell().info """
     You can run your app inside IEx (Interactive Elixir) as:
 
         $ iex -S mix
     """
   end
   defp print_mix_info(_gen) do
-    Mix.shell.info """
+    Mix.shell().info """
     Start your Phoenix app with:
 
         $ mix phx.server
@@ -273,8 +273,8 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp cmd(%Project{} = project, cmd) do
-    Mix.shell.info [:green, "* running ", :reset, cmd]
-    case Mix.shell.cmd(cmd, cmd_opts(project)) do
+    Mix.shell().info [:green, "* running ", :reset, cmd]
+    case Mix.shell().cmd(cmd, cmd_opts(project)) do
       0 ->
         []
       _ ->
@@ -326,7 +326,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp check_directory_existence!(path) do
-    if File.dir?(path) and not Mix.shell.yes?("The directory #{path} already exists. Are you sure you want to continue?") do
+    if File.dir?(path) and not Mix.shell().yes?("The directory #{path} already exists. Are you sure you want to continue?") do
       Mix.raise "Please select another directory for installation."
     end
   end

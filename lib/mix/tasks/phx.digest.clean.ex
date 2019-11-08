@@ -49,9 +49,9 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
         # true. In case it's not true, build structure is mostly a no-op, so we
         # are fine.
         Mix.Project.build_structure()
-        Mix.shell.info [:green, "Clean complete for #{inspect output_path}"]
+        Mix.shell().info [:green, "Clean complete for #{inspect output_path}"]
       {:error, :invalid_path} ->
-        Mix.shell.error "The output path #{inspect output_path} does not exist"
+        Mix.shell().error "The output path #{inspect output_path} does not exist"
     end
   end
 end

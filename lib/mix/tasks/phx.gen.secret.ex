@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Phx.Gen.Secret do
 
   @doc false
   def run([]),    do: run(["64"])
-  def run([int]), do: int |> parse!() |> random_string() |> Mix.shell.info()
+  def run([int]), do: int |> parse!() |> random_string() |> Mix.shell().info()
   def run([_|_]), do: invalid_args!()
 
   defp parse!(int) do

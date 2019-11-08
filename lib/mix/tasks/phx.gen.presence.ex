@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
 
     Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.presence", binding, files
 
-    Mix.shell.info """
+    Mix.shell().info """
 
     Add your new module to your supervision tree,
     in lib/#{otp_app}/application.ex:
