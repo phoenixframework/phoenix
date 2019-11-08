@@ -144,7 +144,7 @@ defmodule Mix.Phoenix do
 
   defp app_base(app) do
     case Application.get_env(app, :namespace, app) do
-      ^app -> app |> to_string |> Phoenix.Naming.camelize()
+      ^app -> app |> to_string() |> Phoenix.Naming.camelize()
       mod  -> mod |> inspect()
     end
   end
@@ -153,16 +153,16 @@ defmodule Mix.Phoenix do
   Returns the OTP app from the Mix project configuration.
   """
   def otp_app do
-    Mix.Project.config |> Keyword.fetch!(:app)
+    Mix.Project.config() |> Keyword.fetch!(:app)
   end
 
   @doc """
   Returns all compiled modules in a project.
   """
   def modules do
-    Mix.Project.compile_path
+    Mix.Project.compile_path()
     |> Path.join("*.beam")
-    |> Path.wildcard
+    |> Path.wildcard()
     |> Enum.map(&beam_to_module/1)
   end
 

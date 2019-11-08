@@ -37,6 +37,6 @@ defmodule Mix.Tasks.Phx.Server do
   end
 
   defp iex_running? do
-    Code.ensure_loaded?(IEx) and IEx.started?
+    Code.ensure_loaded?(IEx) and IEx.started?()
   end
 end
