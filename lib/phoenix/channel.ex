@@ -198,7 +198,7 @@ defmodule Phoenix.Channel do
   ## Subscribing to external topics
 
   Sometimes you may need to programmatically subscribe a socket to external
-  topics in addition to the the internal `socket.topic`. For example,
+  topics in addition to the internal `socket.topic`. For example,
   imagine you have a bidding system where a remote client dynamically sets
   preferences on products they want to receive bidding notifications on.
   Instead of requiring a unique channel process and topic per
