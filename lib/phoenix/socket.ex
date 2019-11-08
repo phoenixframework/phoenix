@@ -77,7 +77,7 @@ defmodule Phoenix.Socket do
 
     * `:partitions` - each channel is spawned under a supervisor.
       This option controls how many supervisors will be spawned
-      to handlle channels. Defaults to the number of cores.
+      to handle channels. Defaults to the number of cores.
 
   ## Garbage collection
 
