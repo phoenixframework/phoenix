@@ -102,7 +102,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   @doc false
   def run(args) do
-    if Mix.Project.umbrella? do
+    if Mix.Project.umbrella?() do
       Mix.raise "mix phx.gen.html can only be run inside an application directory"
     end
 

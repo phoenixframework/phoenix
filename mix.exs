@@ -12,7 +12,7 @@ defmodule Phoenix.MixProject do
       package: package(),
       lockfile: lockfile(),
       preferred_cli_env: [docs: :docs],
-      consolidate_protocols: Mix.env != :test,
+      consolidate_protocols: Mix.env() != :test,
       xref: [
         exclude: [
           Ecto.Type,
@@ -23,7 +23,7 @@ defmodule Phoenix.MixProject do
           Plug.Cowboy
         ]
       ],
-      elixirc_paths: elixirc_paths(Mix.env),
+      elixirc_paths: elixirc_paths(Mix.env()),
       name: "Phoenix",
       docs: docs(),
       aliases: aliases(),
