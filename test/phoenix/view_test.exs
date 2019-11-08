@@ -29,7 +29,7 @@ defmodule Phoenix.ViewTest do
     catch
       _, _ ->
         info = [file: 'test/fixtures/templates/show.html.eex', line: 1]
-        assert {MyApp.View, :"show.html", 1, info} in System.stacktrace
+        assert {MyApp.View, :"show.html", 1, info} in System.stacktrace()
     else
       _ ->
         flunk "expected rendering to raise"

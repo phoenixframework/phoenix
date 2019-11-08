@@ -874,7 +874,7 @@ defmodule Mix.Tasks.Hello.Greeting do
   """
 
   def run(_args) do
-    Mix.shell.info("Greetings from the Hello Phoenix Application!")
+    Mix.shell().info("Greetings from the Hello Phoenix Application!")
   end
 
   # We can define other functions as needed here.
@@ -892,7 +892,7 @@ The `@shortdoc` module attribute holds a string which will describe our task whe
 
 `@moduledoc` serves the same function that it does in any module. It's where we can put long-form documentation and doctests, if we have any.
 
-The `run/1` function is the critical heart of any mix task. It's the function that does all the work when users invoke our task. In ours, all we do is send a greeting from our app, but we can implement our `run/1` function to do whatever we need it to. Note that `Mix.shell.info/1` is the preferred way to print text back out to the user.
+The `run/1` function is the critical heart of any mix task. It's the function that does all the work when users invoke our task. In ours, all we do is send a greeting from our app, but we can implement our `run/1` function to do whatever we need it to. Note that `Mix.shell().info/1` is the preferred way to print text back out to the user.
 
 Of course, our task is just a module, so we can define other private functions as needed to support our `run/1` function.
 
@@ -928,7 +928,7 @@ If you want to make your new mix task to use your application's infrastructure, 
   . . .
   def run(_args) do
     Mix.Task.run("app.start")
-    Mix.shell.info("Now I have access to Repo and other goodies!")
+    Mix.shell().info("Now I have access to Repo and other goodies!")
   end
   . . .
 ```

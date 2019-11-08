@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Phx.NewTest do
           Mix.Task.run "compile", ["--no-deps-check"]
           assert_received {:mix_shell, :info, ["Generated phx_blog app"]}
           refute_received {:mix_shell, :info, ["Generated phoenix app"]}
-          Mix.shell.flush()
+          Mix.shell().flush()
 
           # Adding a new template touches file (through mix)
           File.touch! "lib/phx_blog_web/views/layout_view.ex", @epoch

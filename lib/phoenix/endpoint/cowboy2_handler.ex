@@ -46,7 +46,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
     end
   catch
     :error, value ->
-      case System.stacktrace do
+      case System.stacktrace() do
         # Maybe the handler is not available because the code is being recompiled.
         # Sync with the code reloader and retry once.
         [{^endpoint, :__handler__, _, _} | _] when value == :undef and retry? ->

@@ -159,7 +159,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
     if schema.web_namespace do
-      Mix.shell.info """
+      Mix.shell().info """
 
       Add the resource to your #{schema.web_namespace} :api scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
@@ -170,7 +170,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
           end
       """
     else
-      Mix.shell.info """
+      Mix.shell().info """
 
       Add the resource to your :api scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 

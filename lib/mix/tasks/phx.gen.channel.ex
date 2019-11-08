@@ -42,7 +42,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
       {:eex, "channel_test.exs", Path.join(test_prefix, "channels/#{binding[:path]}_channel_test.exs")},
     ]
 
-    Mix.shell.info """
+    Mix.shell().info """
 
     Add the channel to your `#{Mix.Phoenix.web_path(context_app, "channels/user_socket.ex")}` handler, for example:
 

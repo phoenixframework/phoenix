@@ -75,7 +75,7 @@ defmodule Phoenix.CodeReloader.Server do
           :exit, {:shutdown, 1} ->
             :error
           kind, reason ->
-            IO.puts Exception.format(kind, reason, System.stacktrace)
+            IO.puts Exception.format(kind, reason, System.stacktrace())
             :error
         end
       end)

@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Phx.Routes do
 
     router_mod
     |> ConsoleFormatter.format(endpoint(opts[:endpoint], base))
-    |> Mix.shell.info()
+    |> Mix.shell().info()
   end
 
   defp endpoint(nil, base) do

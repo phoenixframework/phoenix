@@ -324,14 +324,14 @@ defmodule Mix.Phoenix do
     case Enum.filter(file_paths, &File.exists?(&1)) do
       [] -> :ok
       conflicts ->
-        Mix.shell.info"""
+        Mix.shell().info"""
         The following files conflict with new files to be generated:
 
         #{conflicts |> Enum.map(&"  * #{&1}") |> Enum.join("\n")}
 
         See the --web option to namespace similarly named resources
         """
-        unless Mix.shell.yes?("Proceed with interactive overwrite?") do
+        unless Mix.shell().yes?("Proceed with interactive overwrite?") do
           System.halt()
         end
     end
