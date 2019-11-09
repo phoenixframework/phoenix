@@ -24,7 +24,10 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
-## 1.4.11-dev
+## 1.4.11 (2019-11-09)
+
+### Enhancements
+  * [Token] - Add `encrypt` and `decrypt`
 
 ## JavaScript client enhancements
   * Add `socket.off` for removing `onOpen`, `onError`, `onClose`, and `onMessage` registrations
