@@ -66,4 +66,5 @@ end
 
 defimpl Plug.Exception, for: Phoenix.ActionClauseError do
   def status(_), do: 400
+  def actions(_), do: []
 end
