@@ -51,7 +51,7 @@ config :<%= app_name %>, <%= endpoint_module %>,
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/<%= lib_web_name %>/{live,views}/.*(ex)$",
+      ~r"lib/<%= lib_web_name %>/(live|views)/.*(ex)$",
       ~r"lib/<%= lib_web_name %>/templates/.*(eex)$"
     ]
   ]<% end %>
