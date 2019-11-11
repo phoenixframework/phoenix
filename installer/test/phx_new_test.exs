@@ -133,6 +133,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/test/support/data_case.ex", ~r"defmodule PhxBlog.DataCase"
       assert_file "phx_blog/lib/phx_blog_web.ex", ~r"defmodule PhxBlogWeb"
       assert_file "phx_blog/priv/repo/migrations/.formatter.exs", ~r"import_deps: \[:ecto_sql\]"
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r"plug Phoenix.Ecto.CheckRepoStatus, otp_app: :phx_blog"
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
@@ -178,6 +179,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       # No Ecto
       config = ~r/config :phx_blog, PhxBlog.Repo,/
       refute File.exists?("phx_blog/lib/phx_blog/repo.ex")
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
+        refute file =~ "plug Phoenix.Ecto.CheckRepoStatus, otp_app: :phx_blog"
+      end
 
       # No gettext
       refute_file "phx_blog/lib/phx_blog_web/gettext.ex"

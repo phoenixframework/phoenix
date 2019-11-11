@@ -20,7 +20,8 @@ defmodule <%= endpoint_module %> do
   if code_reloading? do<%= if html do %>
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader<% end %>
-    plug Phoenix.CodeReloader
+    plug Phoenix.CodeReloader<%= if ecto do %>
+    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :<%= web_app_name %><% end %>
   end
 
   plug Plug.RequestId
