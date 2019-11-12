@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git://github.com/phoenixframework/phoenix.git"
   },
-  "author": "Chris McCord <chris@chrismccord.com> (https://www.phoenixframework.org)",
+  "author": "Chris McCord <chris@chrismccord.com> (http://www.phoenixframework.org)",
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@babel/preset-env": "^7.0.0",

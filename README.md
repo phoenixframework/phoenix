@@ -7,7 +7,7 @@
 
 ## Getting started
 
-See the official site at https://www.phoenixframework.org/
+See the official site at http://www.phoenixframework.org/
 
 Install the latest version of Phoenix by following the instructions at https://hexdocs.pm/phoenix/installation.html#phoenix
 
