@@ -72,7 +72,7 @@ defmodule Phoenix.Router do
 end
 ```
 
-Plug provides a protocol called `Plug.Exception` specifically for adding a status to exception structs.
+Plug provides a protocol called `Plug.Exception` where we are able to customize the status and add actions that exception structs can returns on the debug error page.
 
 If we wanted to supply a status of 404 for an `Ecto.NoResultsError`, we could do it by defining an implementation for the `Plug.Exception` protocol like this:
 
@@ -83,3 +83,20 @@ end
 ```
 
 Note that this is just an example: Phoenix [already does this](https://github.com/phoenixframework/phoenix_ecto/blob/master/lib/phoenix_ecto/plug.ex) for `Ecto.NoResultsError`, so you don't have to.
+
+#### Actions
+
+Actions are functions that can be triggered by the error page, it is basically a list of maps defining a `label` and a `handler` to be executed.
+It is rendered in the error page as a collection of buttons and follows the format of: `[%{label: String.t(), handler: {module(), function :: atom(), args :: []}}]`.
+
+If we wanted to return some actions for an `Ecto.NoResultsError` we would implement `Plug.Exception` like this:
+
+```elixir
+defimpl Plug.Exception, for: Ecto.NoResultsError do
+  def status(_exception), do: 404
+  def actions(_exception), do: [%{
+      label: "Run seeds",
+      handler: {Code, :eval_file, "priv/repo/seeds.exs"}
+    }]
+end
+```
