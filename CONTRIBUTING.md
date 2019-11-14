@@ -207,7 +207,7 @@ of beginning users because expert users have more tools at their disposal to
 help themselves.
 
 The general pattern we use for presenting information is to first introduce a
-small, discreet topic, then write a small amount of code to demonstrate the
+small, discrete topic, then write a small amount of code to demonstrate the
 concept, then verify that the code worked.
 
 In this way, we build from small, easily digestible concepts into more complex
