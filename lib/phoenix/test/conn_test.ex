@@ -369,7 +369,7 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Asserts the given status code, that we have an text response and
+  Asserts the given status code, that we have a text response and
   returns the response body if one was set or sent.
 
   ## Examples
@@ -384,7 +384,7 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Asserts the given status code, that we have an json response and
+  Asserts the given status code, that we have a json response and
   returns the decoded JSON response if one was set or sent.
 
   ## Examples
@@ -542,7 +542,7 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Calls the Endpoint and and the given Router pipelines.
+  Calls the Endpoint and the given Router pipelines.
 
   See `bypass_through/1`.
   """
