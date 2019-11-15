@@ -116,7 +116,7 @@ defmodule Phoenix.Template do
     def message(exception) do
       "Could not render #{inspect exception.template} for #{inspect exception.module}, "
         <> "please define a matching clause for render/2 or define a template at "
-        <> "#{inspect Path.relative_to_cwd exception.root}. "
+        <> "#{inspect Path.join(Path.relative_to_cwd(exception.root), exception.pattern)}. "
         <> available_templates(exception.available)
         <> "\nAssigns:\n\n"
         <> inspect(exception.assigns)
