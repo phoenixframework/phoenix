@@ -584,7 +584,7 @@ defmodule Phoenix.Router do
   end
 
   @doc """
-  Defines a pipeline to send the connection through.
+  Defines a list of plugs (and pipelines) to send the connection through.
 
   See `pipeline/2` for more information.
   """
