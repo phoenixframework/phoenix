@@ -72,12 +72,12 @@ The Heroku CLI, part of the Toolbelt, is useful to create Heroku applications, l
 There are two different ways to deploy a Phoenix app on Heroku. We could use Heroku buildpacks or their container stack. The difference between these two approaches is in how we tell Heroku to treat our build. In buildpack case, we need to update our apps configuration on Heroku to use Phoenix/Elixir specific buildpacks instead of trying to automatically detect it. On container approach, we have more control on how we want to setup our app and we can define our container image using `Dockerfile` and `heroku.yml`. We describe both approaches below.
 
 ### Using Heroku Buildpacks
+
+A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient way of packaging framework and/or runtime support. Phoenix requires 2 buildpacks to run on Heroku, the first adds basic Elixir support and the second adds Phoenix specific commands. We will see how to install both in the next sections.
+
 #### Create Application
-Now that we have the Toolbelt installed, let's create the Heroku application. In our project directory, run:
 
-> Note: the first time we use a Heroku command, it may prompt us to log in. If this happens, just enter the email and password you specified during signup.
-
-We are going to use latest published buildpack, you can also get an edge version of this buildpack. See it's [README](https://github.com/HashNuke/heroku-buildpack-elixir) for more instructions on how to do this.
+Now that we have the Toolbelt installed, let's create the Heroku application. We will do so using the latest available version of the [Elixir buildpack](https://github.com/HashNuke/heroku-buildpack-elixir):
 
 ```console
 $ heroku create --buildpack hashnuke/elixir
@@ -86,11 +86,11 @@ Setting buildpack to hashnuke/elixir... done
 https://mysterious-meadow-6277.herokuapp.com/ | https://git.heroku.com/mysterious-meadow-6277.git
 ```
 
+> Note: the first time we use a Heroku command, it may prompt us to log in. If this happens, just enter the email and password you specified during signup.
+
 > Note: the name of the Heroku application is the random string after "Creating" in the output above (mysterious-meadow-6277). This will be unique, so expect to see a different name from "mysterious-meadow-6277".
 
-A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient way of packaging framework and/or runtime support. In our case it's installing Erlang, Elixir, fetching our application dependencies, and so on, before we run it.
-
-The URL in the output is the URL to our application. If we open it in our browser now, we will get the default Heroku welcome page.
+> Note: the URL in the output is the URL to our application. If we open it in our browser now, we will get the default Heroku welcome page.
 
 > Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we wouldn't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
 
@@ -105,9 +105,9 @@ elixir_version=1.8.1
 erlang_version=21.2.5
 ```
 
-#### Adding the Phoenix Static Buildpack
+#### Adding the Phoenix Server and Assets Buildpack
 
-We need to compile static assets for a successful Phoenix deployment. The [Phoenix static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) can take care of that for us, so let's add it now.
+To successfully run Phoenix in production, we need to compile assets and start the Phoenix server. The [Phoenix Static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) can take care of that for us, so let's add it now.
 
 ```console
 $ heroku buildpacks:add https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
@@ -116,19 +116,17 @@ Buildpack added. Next release on mysterious-meadow-6277 will use:
   2. https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
 ```
 
-This Phoenix Static Buildpack pack can be configured to change the node version and compile options. Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
+This Phoenix Static buildpack pack can be configured to change the node version and the options for asset compilation. Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
 
-Since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to make sure their sequence match the one above.
-
-If your application does not have any static assets, (i.e. you created your project with the `--no-webpack --no-html` flags), you don't need to add the Phoenix Static Buildpack, but you need to tell Heroku how to start your Phoenix application.
-
-The Procfile provided by the Elixir Buildpack runs the command `mix run --no-halt`. The Phoenix Buildpack changes it to the proper `mix phx.server`, which we have to manually configure when not using the Phoenix Buildpack. To do so, create a file called `Procfile` in the root directory and add a command to run Phoenix server with this line:
+The Phoenix Static buildpack also configures Heroku to use the proper command to start your application. The Elixir Buildpack runs by default `mix run --no-halt`, which will not start your Phoenix server. The Phoenix Static buildpack changes it to the proper `mix phx.server`. If you don't want to use the Phoenix Static buildpack, then you must manually define a `Procfile` at the root of your application with the proper command:
 
 ```
 web: mix phx.server
 ```
 
 Heroku will recognize this file and use the command to start your application, ensuring that it also starts the Phoenix server.
+
+Finally, note that since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to make sure the Phoenix Static buildpack comes last.
 
 ### Using Container Stack
 #### Create Heroku application
