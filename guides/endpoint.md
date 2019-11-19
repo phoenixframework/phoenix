@@ -75,10 +75,7 @@ plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 [Plug.Session](https://hexdocs.pm/plug/Plug.Session.html) handles the session cookies and session stores.
 
 ```elixir
-plug Plug.Session,
-  store: :cookie,
-  key: "_hello_key",
-  signing_salt: "change_me"
+plug Plug.Session, @session_options
 ```
 
 By default the last plug in the endpoint is the router. The router matches a path to a particular controller action or plug. The router is covered in the [Routing Guide](routing.html).
