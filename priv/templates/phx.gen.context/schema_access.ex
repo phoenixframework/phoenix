@@ -67,7 +67,7 @@
   end
 
   @doc """
-  Deletes a <%= inspect schema.alias %>.
+  Deletes a <%= schema.singular %>.
 
   ## Examples
 
