@@ -75,7 +75,7 @@ defmodule Phoenix.Endpoint do
   ### Compile-time configuration
 
     * `:code_reloader` - when `true`, enables code reloading functionality.
-      For code the list of code reloader configuration options see
+      For the list of code reloader configuration options see
       `Phoenix.CodeReloader.reload!/1`
 
     * `:debug_errors` - when `true`, uses `Plug.Debugger` functionality for
