@@ -1150,6 +1150,10 @@ export class LongPoll {
           this.onopen()
           this.poll()
           break
+        case 403:
+          this.onerror()
+          this.close()
+          break
         case 0:
         case 500:
           this.onerror()
