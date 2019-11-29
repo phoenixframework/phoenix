@@ -32,7 +32,7 @@ defmodule HelloWeb.Router do
   # end
 end
 ```
-The name you gave your application will appear instead of `HelloWeb` for both the router module and controller name.
+Both the router and controller module names will be prefixed with the name you gave your application instead of `HelloWeb`.
 
 The first line of this module, `use HelloWeb, :router`, simply makes Phoenix router functions available in our particular router.
 
