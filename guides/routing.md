@@ -181,7 +181,7 @@ defmodule HelloWeb.Router do
 end
 ```
 
-This means that all routes starting with `/jobs` will be sent to the `BackgroundJob.Plug` module.
+This means that all routes starting with `/jobs` will be sent to the `HelloWeb.BackgroundJob.Plug` module.
 
 We can even use the `forward/4` macro in a pipeline. If we wanted to ensure that the user was authenticated and an administrator in order to see the jobs page, we could use the following in our router.
 
@@ -214,16 +214,16 @@ Writing an actual background job worker is beyond the scope of this guide. Howev
 
 
 ```elixir
-defmodule BackgroundJob.Plug do
+defmodule HelloWeb.BackgroundJob.Plug do
   def init(opts), do: opts
   def call(conn, opts) do
     conn
     |> Plug.Conn.assign(:name, Keyword.get(opts, :name, "Background Job"))
-    |> BackgroundJob.Router.call(opts)
+    |> HelloWeb.BackgroundJob.Router.call(opts)
   end
 end
 
-defmodule BackgroundJob.Router do
+defmodule HelloWeb.BackgroundJob.Router do
   use Plug.Router
 
   plug :match
