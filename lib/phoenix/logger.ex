@@ -25,10 +25,26 @@ defmodule Phoenix.Logger do
   except those that match exactly `id` or `order`. If a kept parameter
   matches, all parameters nested under that one will also be kept.
 
+  ## Endpoint filtering
+
+  When servicing requests, Phoenix will log information about the incoming
+  request and outgoing response. In some cases it may pollute the logs
+  if certain endpoints are logged (for example logging for `/metrics` when
+  using something like Prometheus to collect logs or `/health` if you are
+  health checking your application with Kubernetes). Endpoint logs can be
+  filtered out via the `filter_endpoint_logs` option:
+
+    config :phoenix, :filter_endpoint_logs, ["/metrics", "/health"]
+
+  With the configuration above, Phoenix will not log out request timings or
+  details when requests come in for the `/metrics` and `/health` endpoints.
+
+  Phoenix's default is `[]`.
+
   ## Disabling
 
   When you are using custom logging system it is not always desirable to enable
-  `#{inspect __MODULE__}` by default. You can always disable this in general by:
+  `#{inspect(__MODULE__)}` by default. You can always disable this in general by:
 
       config :phoenix, :logger, false
   """
@@ -113,20 +129,30 @@ defmodule Phoenix.Logger do
   defp phoenix_endpoint_start(_, _, %{conn: conn} = metadata, _) do
     level = metadata[:options][:log] || :info
 
-    Logger.log(level, fn ->
-      %{method: method, request_path: request_path} = conn
-      [method, ?\s, request_path]
-    end)
+    unless filter_endpoint_log?(conn) do
+      Logger.log(level, fn ->
+        %{method: method, request_path: request_path} = conn
+        [method, ?\s, request_path]
+      end)
+    end
   end
 
   defp phoenix_endpoint_stop(_, %{duration: duration}, %{conn: conn} = metadata, _) do
     level = metadata[:options][:log] || :info
 
-    Logger.log(level, fn ->
-      %{status: status, state: state} = conn
-      status = Integer.to_string(status)
-      [connection_type(state), ?\s, status, " in ", duration(duration)]
-    end)
+    unless filter_endpoint_log?(conn) do
+      Logger.log(level, fn ->
+        %{status: status, state: state} = conn
+        status = Integer.to_string(status)
+        [connection_type(state), ?\s, status, " in ", duration(duration)]
+      end)
+    end
+  end
+
+  defp filter_endpoint_log?(conn) do
+    :phoenix
+    |> Application.get_env(:filter_endpoint_logs, [])
+    |> Enum.member?(conn.request_path)
   end
 
   defp connection_type(:set_chunked), do: "Chunked"
