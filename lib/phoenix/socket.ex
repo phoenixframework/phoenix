@@ -106,7 +106,7 @@ defmodule Phoenix.Socket do
   The server may send messages or replies back. For messages, the
   ref uniquely identifies the message. For replies, the ref matches
   the original message. Both data-types also include a join_ref that
-  uniquely identifes the currently joined channel.
+  uniquely identifies the currently joined channel.
 
   The `Phoenix.Socket` implementation may also send special messages
   and replies:

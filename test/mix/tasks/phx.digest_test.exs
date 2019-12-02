@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Phx.DigestTest do
   end
 
   @input_path "input_path"
-  test "uses the input path as output path when no outputh path is given" do
+  test "uses the input path as output path when no output path is given" do
     in_tmp @input_path, fn ->
       File.mkdir_p!(@input_path)
       Mix.Tasks.Phx.Digest.run([@input_path, "--no-deps-check"])
