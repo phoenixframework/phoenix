@@ -32,7 +32,7 @@ defmodule HelloWeb.Router do
   # end
 end
 ```
-The name you gave your application will appear instead of `HelloWeb` for both the router module and controller name.
+Both the router and controller module names will be prefixed with the name you gave your application instead of `HelloWeb`.
 
 The first line of this module, `use HelloWeb, :router`, simply makes Phoenix router functions available in our particular router.
 
@@ -181,7 +181,7 @@ defmodule HelloWeb.Router do
 end
 ```
 
-This means that all routes starting with `/jobs` will be sent to the `BackgroundJob.Plug` module.
+This means that all routes starting with `/jobs` will be sent to the `HelloWeb.BackgroundJob.Plug` module.
 
 We can even use the `forward/4` macro in a pipeline. If we wanted to ensure that the user was authenticated and an administrator in order to see the jobs page, we could use the following in our router.
 
@@ -214,16 +214,16 @@ Writing an actual background job worker is beyond the scope of this guide. Howev
 
 
 ```elixir
-defmodule BackgroundJob.Plug do
+defmodule HelloWeb.BackgroundJob.Plug do
   def init(opts), do: opts
   def call(conn, opts) do
     conn
     |> Plug.Conn.assign(:name, Keyword.get(opts, :name, "Background Job"))
-    |> BackgroundJob.Router.call(opts)
+    |> HelloWeb.BackgroundJob.Router.call(opts)
   end
 end
 
-defmodule BackgroundJob.Router do
+defmodule HelloWeb.BackgroundJob.Router do
   use Plug.Router
 
   plug :match
