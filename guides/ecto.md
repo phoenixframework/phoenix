@@ -122,7 +122,7 @@ Our `Hello.Repo` module is the foundation we need to work with databases in a Ph
 defmodule Hello.Repo do
   use Ecto.Repo,
     otp_app: :hello,
-    adapter: Ecto.Adapter.Postgres
+    adapter: Ecto.Adapters.Postgres
 end
 ```
 
