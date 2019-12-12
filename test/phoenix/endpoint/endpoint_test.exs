@@ -179,6 +179,13 @@ defmodule Phoenix.Endpoint.EndpointTest do
       event: "event4", payload: %{key: :val}, topic: "sometopic"}
   end
 
+  test "loads cache manifest from specified application" do
+    config = put_in(@config[:cache_static_manifest], {:phoenix, "../../../../test/fixtures/cache_manifest.json"})
+    
+    assert Endpoint.config_change([{Endpoint, config}], []) == :ok
+    assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
+  end
+
   test "server?/2 returns true for explicitly true server", config do
     endpoint = Module.concat(__MODULE__, config.test)
     Application.put_env(:phoenix, endpoint, server: true)
