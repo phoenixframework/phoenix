@@ -12,7 +12,7 @@ defmodule <%= web_namespace %>.ConnCase do
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
   by setting `use <%= web_namespace %>.ConnCase, async: true`, although
-  this option is not recommendded for other databases.
+  this option is not recommended for other databases.
   """
 
   use ExUnit.CaseTemplate
