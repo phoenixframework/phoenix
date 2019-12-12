@@ -841,7 +841,7 @@ defmodule Phoenix.Endpoint do
     * `:max_frame_size` - the maximum allowed frame size in bytes.
       Supported from Cowboy 2.3 onwards, defaults to "infinity"
 
-    * `:compress` - whether to enable per message compresssion on
+    * `:compress` - whether to enable per message compression on
       all data frames, defaults to false
 
     * `:subprotocols` - a list of supported websocket subprotocols.
