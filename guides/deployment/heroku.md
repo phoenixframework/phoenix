@@ -13,16 +13,16 @@ Our main goal for this guide is to get a Phoenix application running on Heroku.
 Heroku is a great platform and Elixir performs well on it. However, you may run into limitations if you plan to leverage advanced features provided by Elixir and Phoenix, such as:
 
 - Connections are limited.
-    - Heroku [limits the number of simultaneous connections](https://devcenter.heroku.com/articles/http-routing#request-concurrency) as well as the [duration of each connection](https://devcenter.heroku.com/articles/limits#http-timeouts). It is common to use Elixir for real-time apps which need lots of concurrent, persistent connections, and Phoenix is capable of [handling over 2 million connections on a single server](http://www.phoenixframework.org/blog/the-road-to-2-million-websocket-connections).
+  - Heroku [limits the number of simultaneous connections](https://devcenter.heroku.com/articles/http-routing#request-concurrency) as well as the [duration of each connection](https://devcenter.heroku.com/articles/limits#http-timeouts). It is common to use Elixir for real-time apps which need lots of concurrent, persistent connections, and Phoenix is capable of [handling over 2 million connections on a single server](https://www.phoenixframework.org/blog/the-road-to-2-million-websocket-connections).
 
 - Distributed clustering is not possible.
-    - Heroku [firewalls dynos off from one another](https://devcenter.heroku.com/articles/dynos#networking). This means things like [distributed Phoenix channels](https://dockyard.com/blog/2016/01/28/running-elixir-and-phoenix-projects-on-a-cluster-of-nodes) and [distributed tasks](https://elixir-lang.org/getting-started/mix-otp/distributed-tasks-and-configuration.html) will need to rely on something like Redis instead of Elixir's built-in distribution.
+  - Heroku [firewalls dynos off from one another](https://devcenter.heroku.com/articles/dynos#networking). This means things like [distributed Phoenix channels](https://dockyard.com/blog/2016/01/28/running-elixir-and-phoenix-projects-on-a-cluster-of-nodes) and [distributed tasks](https://elixir-lang.org/getting-started/mix-otp/distributed-tasks.html) will need to rely on something like Redis instead of Elixir's built-in distribution.
 
 - In-memory state such as those in [Agents](https://elixir-lang.org/getting-started/mix-otp/agent.html), [GenServers](https://elixir-lang.org/getting-started/mix-otp/genserver.html), and [ETS](https://elixir-lang.org/getting-started/mix-otp/ets.html) will be lost every 24 hours.
-    - Heroku [restarts dynos](https://devcenter.heroku.com/articles/dynos#restarting) every 24 hours regardless of whether the node is healthy.
+  - Heroku [restarts dynos](https://devcenter.heroku.com/articles/dynos#restarting) every 24 hours regardless of whether the node is healthy.
 
-- [the built-in Observer](https://elixir-lang.org/getting-started/debugging.html#observer) can't be used with Heroku.
-    - Heroku does allow for connection into your dyno, but you won't be able to use the observer to watch the state of your dyno.
+- [The built-in Observer](https://elixir-lang.org/getting-started/debugging.html#observer) can't be used with Heroku.
+  - Heroku does allow for connection into your dyno, but you won't be able to use the observer to watch the state of your dyno.
 
 If you are just getting started or you don't expect to use the features above, Heroku should be enough for your needs. For instance, if you are migrating an existing application running on Heroku to Phoenix, keeping a similar set of features, Elixir will perform just as well or even better than your current stack.
 
@@ -35,8 +35,7 @@ Let's separate this process into a few steps so we can keep track of where we ar
 - Initialize Git repository
 - Sign up for Heroku
 - Install the Heroku Toolbelt
-- Create the Heroku application
-- Add the Phoenix static buildpack
+- Create and setup Heroku application
 - Make our project ready for Heroku
 - Deploy time!
 - Useful Heroku commands
@@ -69,13 +68,15 @@ Once we have signed up, we can download the correct version of the Heroku Toolbe
 
 The Heroku CLI, part of the Toolbelt, is useful to create Heroku applications, list currently running dynos for an existing application, tail logs or run one-off commands (mix tasks for instance).
 
-### Using Heroku Buildpacks
+## Create and Setup Heroku Application
 
-A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient way of packaging framework and/or runtime support. Phoenix requires 2 buildpacks to run on Heroku, the first adds basic Elixir support and the second adds Phoenix specific commands. We will see how to install both in the next sections.
+There are two different ways to deploy a Phoenix app on Heroku. We could use Heroku buildpacks or their container stack. The difference between these two approaches is in how we tell Heroku to treat our build. In buildpack case, we need to update our apps configuration on Heroku to use Phoenix/Elixir specific buildpacks. On container approach, we have more control on how we want to setup our app and we can define our container image using `Dockerfile` and `heroku.yml`. This section will explore the buildpack approach. In order to use Dockerfile, it is often recommended to convert our app to use releases, which we will describe later on.
 
-#### Create Application
+### Create Application
 
-Now that we have the Toolbelt installed, let's create the Heroku application. We will do so using the latest available version of the [Elixir buildpack](https://github.com/HashNuke/heroku-buildpack-elixir):
+A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient way of packaging framework and/or runtime support. Phoenix requires 2 buildpacks to run on Heroku, the first adds basic Elixir support and the second adds Phoenix specific commands.
+
+With the Toolbelt installed, let's create the Heroku application. We will do so using the latest available version of the [Elixir buildpack](https://github.com/HashNuke/heroku-buildpack-elixir):
 
 ```console
 $ heroku create --buildpack hashnuke/elixir
@@ -103,7 +104,7 @@ elixir_version=1.8.1
 erlang_version=21.2.5
 ```
 
-#### Adding the Phoenix Server and Assets Buildpack
+### Adding the Phoenix Server and Assets Buildpack
 
 To successfully run Phoenix in production, we need to compile assets and start the Phoenix server. The [Phoenix Static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) can take care of that for us, so let's add it now.
 
@@ -126,40 +127,11 @@ Heroku will recognize this file and use the command to start your application, e
 
 Finally, note that since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to make sure the Phoenix Static buildpack comes last.
 
-### Using Container Stack
-#### Create Heroku application
-Set the stack of your app to `container`, this allows us to use `Dockerfile` to define our app setup.
-```console
-$ heroku create
-Creating app... done, ⬢ mysterious-meadow-6277
-$ heroku stack:set container
-```
-Add a new `heroku.yml` file to your root folder. In this file you can define addons used by your app, how to build the image and what configs are passed to the image. You can learn more about Heroku's `heroku.yml` options [here](https://devcenter.heroku.com/articles/build-docker-images-heroku-yml). Here is a sample:
-```yaml
-setup:
-  addons:
-    - plan: heroku-postgresql
-      as: DATABASE
-build:
-  docker:
-    web: Dockerfile
-  config:
-    MIX_ENV: prod
-    SECRET_KEY_BASE: $SECRET_KEY_BASE
-    DATABASE_URL: $DATABASE_URL
-```
-
-#### Setup Your app with Dockerfile
-Add `Dockerfile` to your root folder. You can follow [container release docs](./releases.md#containers).
-
-Once you have the image definition setup, you can push your app to heroku and you can see it starts building the image and deploy it.
-
->>>>>>> a5c207dd... Update heroku.md
 ## Making our Project ready for Heroku
 
 Every new Phoenix project ships with a config file `config/prod.secret.exs` which loads configuration and secrets from [environment variables](https://devcenter.heroku.com/articles/config-vars). This aligns well with Heroku best practices, so most the only work left for us to do is to configure URLs and SSL.
 
-First let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Find the url line in your `config/prod.exs`:
+First let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Also, bind to the port requested by Heroku in the [`$PORT` environment variable](https://devcenter.heroku.com/articles/runtime-principles#web-servers). Find the url line in your `config/prod.exs`:
 
 ```elixir
 url: [host: "example.com", port: 80],
@@ -168,7 +140,8 @@ url: [host: "example.com", port: 80],
 ... and replace it with this (don't forget to replace `mysterious-meadow-6277` with your application name):
 
 ```elixir
-url: [scheme: "https", host: "mysterious-meadow-6277", port: 443],
+http: [port: {:system, "PORT"}],
+url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
 force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
 
@@ -244,7 +217,7 @@ Our project is now ready to be deployed on Heroku.
 
 Let's commit all our changes:
 
-```
+```console
 $ git add config/prod.exs
 $ git add elixir_buildpack.config
 $ git add phoenix_static_buildpack.config
@@ -344,15 +317,39 @@ $ heroku run "POOL_SIZE=2 mix ecto.migrate"
 
 And that's it!
 
-## Connecting to your dyno
+## Deploying to Heroku using the container stack
 
-Heroku gives you the ability to connect to your dyno with an IEx shell which allows running Elixir code such as database queries.
+### Create Heroku application
 
-- Connect to the dyno with `heroku ps:exec`
-- Launch an iex session with `iex --sname console --remsh server@${HOSTNAME}` (if you have several applications on the same repository you will need to specify the app name or the remote name with `--app APP_NAME` or `--remote REMOTE_NAME`)
-- Launch an iex session with `iex --sname console --remsh server`
+Set the stack of your app to `container`, this allows us to use `Dockerfile` to define our app setup.
 
-You have an iex session into your dyno!
+```console
+$ heroku create
+Creating app... done, ⬢ mysterious-meadow-6277
+$ heroku stack:set container
+```
+
+Add a new `heroku.yml` file to your root folder. In this file you can define addons used by your app, how to build the image and what configs are passed to the image. You can learn more about Heroku's `heroku.yml` options [here](https://devcenter.heroku.com/articles/build-docker-images-heroku-yml). Here is a sample:
+
+```yaml
+setup:
+  addons:
+    - plan: heroku-postgresql
+      as: DATABASE
+build:
+  docker:
+    web: Dockerfile
+  config:
+    MIX_ENV: prod
+    SECRET_KEY_BASE: $SECRET_KEY_BASE
+    DATABASE_URL: $DATABASE_URL
+```
+
+### Setup releases and Dockerfile
+
+Now we need to define a `Dockerfile` at the root folder of your project that contains your application. We recommend to use releases when doing so, as the release will allow us to build a container with only the parts of Erlang and Elixir we actually use. Follow [the releases docs](/releases.html). At the end of the guide, there is a sample Dockerfile file you can use.
+
+Once you have the image definition setup, you can push your app to heroku and you can see it starts building the image and deploy it.
 
 ## Useful Heroku Commands
 
@@ -373,6 +370,20 @@ In fact, we can run anything using the `heroku run` command, like the Ecto migra
 ```console
 $ heroku run "POOL_SIZE=2 mix ecto.migrate"
 ```
+
+## Connecting to your dyno
+
+Heroku gives you the ability to connect to your dyno with an IEx shell which allows running Elixir code such as database queries.
+
+- Modify the `web` process in your Procfile to run a named node:
+  ```
+  web: elixir --sname server -S mix phx.server
+  ```
+- Redeploy to Heroku
+- Connect to the dyno with `heroku ps:exec` (if you have several applications on the same repository you will need to specify the app name or the remote name with `--app APP_NAME` or `--remote REMOTE_NAME`)
+- Launch an iex session with `iex --sname console --remsh server`
+
+You have an iex session into your dyno!
 
 ## Troubleshooting
 
