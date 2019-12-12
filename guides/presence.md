@@ -39,7 +39,7 @@ children = [
 ]
 ```
 
-Next we will create a channel that Presence can communicate on. For this example we will create a `RoomChannel` ([see the channels guide for more details on this](channels.html)):
+Next we will create a channel that Presence can communicate on. For this example we will create a `RoomChannel` ([see the channels guide for more details on this](channels.md)):
 
 ```console
 $ mix phx.gen.channel Room
