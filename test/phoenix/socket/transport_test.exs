@@ -99,6 +99,7 @@ defmodule Phoenix.Socket.TransportTest do
     end
 
     def invalid_allowed?(%URI{host: nil}), do: true
+    def invalid_allowed?(%URI{host: ""}), do: true
 
     test "allows custom MFA check to handle invalid host" do
       mfa = {__MODULE__, :invalid_allowed?, []}
