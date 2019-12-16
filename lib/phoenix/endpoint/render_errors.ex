@@ -107,7 +107,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
     reason = Exception.normalize(kind, reason, stack)
     format = Controller.get_format(conn)
     template = "#{conn.status}.#{format}"
-    assigns = %{kind: kind, reason: reason, stack: stack}
+    assigns = %{kind: kind, reason: reason, stack: stack, status: conn.status}
 
     conn
     |> Controller.put_view(view)
