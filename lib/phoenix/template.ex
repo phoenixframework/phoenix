@@ -106,6 +106,7 @@ defmodule Phoenix.Template do
   ]
 
   @default_pattern "*"
+  @private_assigns [:__phx_template_not_found__]
 
   defmodule UndefinedError do
     @moduledoc """
@@ -338,7 +339,7 @@ defmodule Phoenix.Template do
   def raise_template_not_found(view_module, template, assigns) do
     {root, pattern, names} = view_module.__templates__()
     raise UndefinedError,
-      assigns: assigns,
+      assigns: Map.drop(assigns, @private_assigns),
       available: names,
       template: template,
       root: root,
