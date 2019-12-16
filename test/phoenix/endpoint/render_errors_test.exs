@@ -11,19 +11,19 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     "Layout: " <> render(view_template, assigns)
   end
 
-  def render("404.html", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
+  def render("404.html", %{kind: kind, reason: _reason, stack: _stack, status: 404, conn: conn}) do
     "Got 404 from #{kind} with #{conn.method}"
   end
 
-  def render("404.json", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
+  def render("404.json", %{kind: kind, reason: _reason, stack: _stack, status: 404, conn: conn}) do
     %{error: "Got 404 from #{kind} with #{conn.method}"}
   end
 
-  def render("415.html", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
+  def render("415.html", %{kind: kind, reason: _reason, stack: _stack, status: 415, conn: conn}) do
     "Got 415 from #{kind} with #{conn.method}"
   end
 
-  def render("500.html", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
+  def render("500.html", %{kind: kind, reason: _reason, stack: _stack, status: 500, conn: conn}) do
     "Got 500 from #{kind} with #{conn.method}"
   end
 
