@@ -157,7 +157,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     error_message = fn helper, arity ->
       """
-      no function clause for #{inspect Helpers}.#{helper}/#{arity} and action :skip. The following actions/clauses are supported:
+      no action :skip for #{inspect Helpers}.#{helper}/#{arity}. The following actions/clauses are supported:
 
           #{helper}(conn_or_endpoint, :file, file, params \\\\ [])
           #{helper}(conn_or_endpoint, :show, id, params \\\\ [])
@@ -261,43 +261,15 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.user_comment_path(__MODULE__, :new, 88, []) == "/users/88/comments/new"
     assert Helpers.user_comment_path(__MODULE__, :new, 88) == "/users/88/comments/new"
 
-    error_message = fn helper, arity ->
-      """
-      no function clause for #{inspect Helpers}.#{helper}/#{arity} and action :skip. The following actions/clauses are supported:
-
-          user_comment_file_path(conn_or_endpoint, :create, user_id, comment_id, params \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :delete, user_id, comment_id, id, params \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :edit, user_id, comment_id, id, params \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :index, user_id, comment_id, params \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :new, user_id, comment_id, params \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :show, user_id, comment_id, id, params \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :update, user_id, comment_id, id, params \\\\ [])
-      """ |> String.trim
-    end
-
-    assert_raise ArgumentError, error_message.("user_comment_file_path", 4), fn ->
+    assert_raise ArgumentError, ~r/no action :skip/, fn ->
       Helpers.user_comment_file_path(__MODULE__, :skip, 123, 456)
     end
 
-    assert_raise ArgumentError, error_message.("user_comment_file_path", 5), fn ->
+    assert_raise ArgumentError, ~r/no action :skip/, fn ->
       Helpers.user_comment_file_path(__MODULE__, :skip, 123, 456, foo: "bar")
     end
 
-    arity_error_message =
-      """
-      no action :show for helper #{inspect Helpers}.user_comment_path/3. The following actions/clauses are supported:
-
-          user_comment_path(conn_or_endpoint, :create, user_id, params \\\\ [])
-          user_comment_path(conn_or_endpoint, :delete, user_id, id, params \\\\ [])
-          user_comment_path(conn_or_endpoint, :edit, user_id, id, params \\\\ [])
-          user_comment_path(conn_or_endpoint, :index, user_id, params \\\\ [])
-          user_comment_path(conn_or_endpoint, :new, user_id, params \\\\ [])
-          user_comment_path(conn_or_endpoint, :show, user_id, id, params \\\\ [])
-          user_comment_path(conn_or_endpoint, :update, user_id, id, params \\\\ [])
-
-      """ |> String.trim
-
-    assert_raise ArgumentError, arity_error_message, fn ->
+    assert_raise ArgumentError, ~r/no function clause for Phoenix.Router.HelpersTest.Router.Helpers.user_comment_path\/3 and action :show/, fn ->
       Helpers.user_comment_path(__MODULE__, :show, 123)
     end
   end

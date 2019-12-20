@@ -327,16 +327,22 @@ defmodule Phoenix.Router.Helpers do
   @doc """
   Callback for generate router catch alls.
   """
-  def raise_route_error(mod, fun, arity, action, routes, params)
-      when is_list(params) or is_map(params) do
+  def raise_route_error(mod, fun, arity, action, routes, params) do
+    cond do
+      not Keyword.has_key?(routes, action) ->
+        "no action #{inspect action} for #{inspect mod}.#{fun}/#{arity}"
+        |> invalid_route_error(fun, routes)
 
-    prelude =
-      if Keyword.has_key?(routes, action) do
-        "no action #{inspect action} for helper #{inspect mod}.#{fun}/#{arity}"
-      else
+      is_list(params) or is_map(params) ->
         "no function clause for #{inspect mod}.#{fun}/#{arity} and action #{inspect action}"
-      end
+        |> invalid_route_error(fun, routes)
 
+      true ->
+        invalid_param_error(mod, fun, arity, action, routes)
+    end
+  end
+
+  defp invalid_route_error(prelude, fun, routes) do
     suggestions =
       for {action, bindings} <- routes do
         bindings = Enum.join([inspect(action) | bindings], ", ")
@@ -345,7 +351,8 @@ defmodule Phoenix.Router.Helpers do
 
     raise ArgumentError, "#{prelude}. The following actions/clauses are supported:\n#{suggestions}"
   end
-  def raise_route_error(mod, fun, arity, action, routes, _params) do
+
+  defp invalid_param_error(mod, fun, arity, action, routes) do
     call_vars = Keyword.fetch!(routes, action)
 
     raise ArgumentError, """
@@ -353,7 +360,7 @@ defmodule Phoenix.Router.Helpers do
     The last argument to this function should be a keyword list or a map.
     For example:
 
-    #{fun}(#{Enum.join(["conn", ":#{action}" | call_vars], ", ")}, page: 5, per_page: 10)
+        #{fun}(#{Enum.join(["conn", ":#{action}" | call_vars], ", ")}, page: 5, per_page: 10)
 
     It is possible you have called this function without defining the proper
     number of path segments in your router.
