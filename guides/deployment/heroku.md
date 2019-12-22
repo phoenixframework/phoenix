@@ -218,6 +218,8 @@ Let's commit all our changes:
 
 ```console
 $ git add config/prod.exs
+$ git add config/prod.secret.exs
+$ git add Procfile
 $ git add elixir_buildpack.config
 $ git add phoenix_static_buildpack.config
 $ git add lib/hello_web/endpoint.ex
