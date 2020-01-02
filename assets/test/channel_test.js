@@ -168,56 +168,60 @@ describe("with transport", () => {
         clock.restore()
       })
 
-      it("succeeds before timeout", () => {
+      it("succeeds before timeout", done => {
         const spy = sinon.stub(socket, "push")
         const timeout = joinPush.timeout
 
-        socket.connect()
-        helpers.receiveSocketOpen()
+        socket.connect(null, () => {
+          helpers.receiveSocketOpen()
 
-        channel.join()
-        assert.equal(spy.callCount, 1)
+          channel.join()
+          assert.equal(spy.callCount, 1)
 
 
-        assert.equal(channel.timeout, 10000)
-        clock.tick(100)
+          assert.equal(channel.timeout, 10000)
+          clock.tick(100)
 
-        joinPush.trigger("ok", {})
+          joinPush.trigger("ok", {})
 
-        assert.equal(channel.state, "joined")
+          assert.equal(channel.state, "joined")
 
-        clock.tick(timeout)
-        assert.equal(spy.callCount, 1)
+          clock.tick(timeout)
+          assert.equal(spy.callCount, 1)
+          done()
+        })
       })
 
-      it("retries with backoff after timeout", () => {
+      it("retries with backoff after timeout", done => {
         const spy = sinon.stub(socket, "push")
         const timeoutSpy = sinon.spy()
         const timeout = joinPush.timeout
 
-        socket.connect()
-        helpers.receiveSocketOpen()
+        socket.connect(null, () => {
+          helpers.receiveSocketOpen()
 
-        channel.join().receive("timeout", timeoutSpy)
+          channel.join().receive("timeout", timeoutSpy)
 
-        assert.equal(spy.callCount, 1)
-        assert.equal(timeoutSpy.callCount, 0)
+          assert.equal(spy.callCount, 1)
+          assert.equal(timeoutSpy.callCount, 0)
 
-        clock.tick(timeout)
-        assert.equal(spy.callCount, 2) // leave pushed to server
-        assert.equal(timeoutSpy.callCount, 1)
+          clock.tick(timeout)
+          assert.equal(spy.callCount, 2) // leave pushed to server
+          assert.equal(timeoutSpy.callCount, 1)
 
-        clock.tick(timeout + 1000)
-        assert.equal(spy.callCount, 4) // leave + rejoin
-        assert.equal(timeoutSpy.callCount, 2)
+          clock.tick(timeout + 1000)
+          assert.equal(spy.callCount, 4) // leave + rejoin
+          assert.equal(timeoutSpy.callCount, 2)
 
-        clock.tick(10000)
-        joinPush.trigger("ok", {})
-        assert.equal(spy.callCount, 6)
-        assert.equal(channel.state, "joined")
+          clock.tick(10000)
+          joinPush.trigger("ok", {})
+          assert.equal(spy.callCount, 6)
+          assert.equal(channel.state, "joined")
+          done()
+        })
       })
 
-      it("with socket and join delay", () => {
+      it("with socket and join delay", done => {
         const spy = sinon.stub(socket, "push")
         const clock = sinon.useFakeTimers()
         const joinPush = channel.joinPush
@@ -232,22 +236,23 @@ describe("with transport", () => {
 
         // join request returns between timeouts
         clock.tick(1000)
-        socket.connect()
+        socket.connect(null, () => {
+          assert.equal(channel.state, "errored")
 
-        assert.equal(channel.state, "errored")
+          helpers.receiveSocketOpen()
+          joinPush.trigger("ok", {})
 
-        helpers.receiveSocketOpen()
-        joinPush.trigger("ok", {})
+          // join request succeeds after delay
+          clock.tick(1000)
 
-        // join request succeeds after delay
-        clock.tick(1000)
+          assert.equal(channel.state, "joined")
 
-        assert.equal(channel.state, "joined")
-
-        assert.equal(spy.callCount, 3) // leave pushed to server
+          assert.equal(spy.callCount, 3) // leave pushed to server
+          done()
+        })        
       })
 
-      it("with socket delay only", () => {
+      it("with socket delay only", done => {
         const spy = sinon.stub(socket, "push")
         const clock = sinon.useFakeTimers()
         const joinPush = channel.joinPush
@@ -258,15 +263,16 @@ describe("with transport", () => {
 
         // connect socket after delay
         clock.tick(6000)
-        socket.connect()
+        socket.connect(null, () => {
+          // open socket after delay
+          clock.tick(5000)
+          helpers.receiveSocketOpen()
+          joinPush.trigger("ok", {})
 
-        // open socket after delay
-        clock.tick(5000)
-        helpers.receiveSocketOpen()
-        joinPush.trigger("ok", {})
-
-        joinPush.trigger("ok", {})
-        assert.equal(channel.state, "joined")
+          joinPush.trigger("ok", {})
+          assert.equal(channel.state, "joined")
+          done()
+        })
       })
     })
   })

@@ -11,6 +11,7 @@
   "author": "Chris McCord <chris@chrismccord.com> (https://www.phoenixframework.org)",
   "devDependencies": {
     "@babel/core": "^7.0.0",
+    "@babel/plugin-transform-runtime": "^7.7.6",
     "@babel/preset-env": "^7.0.0",
     "@babel/register": "^7.0.0",
     "babel-loader": "^8.0.0",
@@ -31,5 +32,8 @@
     "docs": "documentation build js/phoenix.js -f html -o ../doc/js",
     "build": "webpack --mode production",
     "watch": "webpack --mode development --watch"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.7.7"
   }
 }

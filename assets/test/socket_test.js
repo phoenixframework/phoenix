@@ -104,32 +104,42 @@ describe("with transports", done =>{
   })
 
   describe("endpointURL", () => {
-    it("returns endpoint for given full url", () => {
+    it("returns endpoint for given full url", async () => {
       jsdom.changeURL(window, "https://example.com/");
       socket = new Socket("wss://example.org/chat")
 
-      assert.equal(socket.endPointURL(), "wss://example.org/chat/websocket?vsn=2.0.0")
+      const url = await socket.endPointURL()
+      assert.equal(url, "wss://example.org/chat/websocket?vsn=2.0.0")
     })
 
-    it("returns endpoint for given protocol-relative url", () => {
+    it("returns endpoint for given protocol-relative url", async () => {
       jsdom.changeURL(window, "https://example.com/");
       socket = new Socket("//example.org/chat")
 
-      assert.equal(socket.endPointURL(), "wss://example.org/chat/websocket?vsn=2.0.0")
+      const url = await socket.endPointURL()
+      assert.equal(url, "wss://example.org/chat/websocket?vsn=2.0.0")
     })
 
-    it("returns endpoint for given path on https host", () => {
+    it("returns endpoint for given path on https host", async () => {
       jsdom.changeURL(window, "https://example.com/");
       socket = new Socket("/socket")
 
-      assert.equal(socket.endPointURL(), "wss://example.com/socket/websocket?vsn=2.0.0")
+      const url = await socket.endPointURL()
+      assert.equal(url, "wss://example.com/socket/websocket?vsn=2.0.0")
     })
 
-    it("returns endpoint for given path on http host", () => {
+    it("returns endpoint for given path on http host", async () => {
       jsdom.changeURL(window, "http://example.com/");
       socket = new Socket("/socket")
+      const url = await socket.endPointURL()
+      assert.equal(url, "ws://example.com/socket/websocket?vsn=2.0.0")
+    })
 
-      assert.equal(socket.endPointURL(), "ws://example.com/socket/websocket?vsn=2.0.0")
+    it("supports async params", async () => {
+      const params = async () => ({ one: "two" })
+      socket = new Socket("/socket", {params})
+      const url = await socket.endPointURL()
+      assert.equal(url, "ws://example.com/socket/websocket?one=two&vsn=2.0.0")
     })
   })
 
@@ -148,15 +158,17 @@ describe("with transports", done =>{
       socket = new Socket("/socket")
     })
 
-    it("establishes websocket connection with endpoint", () => {
-      socket.connect()
-
-      let conn = socket.conn
-      assert.ok(conn instanceof WebSocket)
-      assert.equal(conn.url, socket.endPointURL())
+    it("establishes websocket connection with endpoint", done => {
+      socket.connect(null, async () => {
+        let conn = socket.conn
+        assert.ok(conn instanceof WebSocket)
+        const url = await socket.endPointURL()
+        assert.equal(conn.url, url)
+        done()
+      })
     })
 
-    it("sets callbacks for connection", () => {
+    it("sets callbacks for connection", done => {
       let opens = 0
       socket.onOpen(() => ++opens)
       let closes = 0
@@ -166,30 +178,31 @@ describe("with transports", done =>{
       let lastMessage
       socket.onMessage((message) => lastMessage = message.payload)
 
-      socket.connect()
+      socket.connect(null, () => {
+        socket.conn.onopen[0]()
+        assert.equal(opens, 1)
 
-      socket.conn.onopen[0]()
-      assert.equal(opens, 1)
+        socket.conn.onclose[0]()
+        assert.equal(closes, 1)
 
-      socket.conn.onclose[0]()
-      assert.equal(closes, 1)
+        socket.conn.onerror[0]("error")
+        assert.equal(lastError, "error")
 
-      socket.conn.onerror[0]("error")
-      assert.equal(lastError, "error")
-
-      const data = {"topic":"topic","event":"event","payload":"payload","status":"ok"}
-      socket.conn.onmessage[0]({data: encode(data)})
-      assert.equal(lastMessage, "payload")
+        const data = {"topic":"topic","event":"event","payload":"payload","status":"ok"}
+        socket.conn.onmessage[0]({data: encode(data)})
+        assert.equal(lastMessage, "payload")
+        done()
+      })
     })
 
-    it("is idempotent", () => {
-      socket.connect()
-
-      let conn = socket.conn
-
-      socket.connect()
-
-      assert.deepStrictEqual(conn, socket.conn)
+    it("is idempotent", done => {
+      socket.connect(null, () => {
+        let conn = socket.conn
+        socket.connect(null, () => {
+          assert.deepStrictEqual(conn, socket.conn)
+          done()
+        })
+      })
     })
   })
 
@@ -198,16 +211,17 @@ describe("with transports", done =>{
       socket = new Socket("/socket", {transport: LongPoll})
     })
 
-    it("establishes long poll connection with endpoint", () => {
-      socket.connect()
-
-      let conn = socket.conn
-      assert.ok(conn instanceof LongPoll)
-      assert.equal(conn.pollEndpoint, "http://example.com/socket/longpoll?vsn=2.0.0")
-      assert.equal(conn.timeout, 20000)
+    it("establishes long poll connection with endpoint", done => {
+      socket.connect(null, () => {
+        let conn = socket.conn
+        assert.ok(conn instanceof LongPoll)
+        assert.equal(conn.pollEndpoint, "http://example.com/socket/longpoll?vsn=2.0.0")
+        assert.equal(conn.timeout, 20000)
+        done()
+      })
     })
 
-    it("sets callbacks for connection", () => {
+    it("sets callbacks for connection", done => {
       let opens = 0
       socket.onOpen(() => ++opens)
       let closes = 0
@@ -217,34 +231,35 @@ describe("with transports", done =>{
       let lastMessage
       socket.onMessage((message) => lastMessage = message.payload)
 
-      socket.connect()
+      socket.connect(null, () => {
+        socket.conn.onopen()
+        assert.equal(opens, 1)
 
-      socket.conn.onopen()
-      assert.equal(opens, 1)
+        socket.conn.onclose()
+        assert.equal(closes, 1)
 
-      socket.conn.onclose()
-      assert.equal(closes, 1)
+        socket.conn.onerror("error")
 
-      socket.conn.onerror("error")
+        assert.equal(lastError, "error")
 
-      assert.equal(lastError, "error")
+        socket.connect(null, () => {
+          const data = {"topic":"topic","event":"event","payload":"payload","status":"ok"}
 
-      socket.connect()
-
-      const data = {"topic":"topic","event":"event","payload":"payload","status":"ok"}
-
-      socket.conn.onmessage({data: encode(data)})
-      assert.equal(lastMessage, "payload")
+          socket.conn.onmessage({data: encode(data)})
+          assert.equal(lastMessage, "payload")
+          done()
+        })
+      })
     })
 
-    it("is idempotent", () => {
-      socket.connect()
-
-      let conn = socket.conn
-
-      socket.connect()
-
-      assert.deepStrictEqual(conn, socket.conn)
+    it("is idempotent", done => {
+      socket.connect(null, () => {
+        let conn = socket.conn
+        socket.connect(null, () => {
+          assert.deepStrictEqual(conn, socket.conn)
+          done()
+        })
+      })
     })
   })
 
@@ -263,28 +278,32 @@ describe("with transports", done =>{
       socket = new Socket("/socket")
     })
 
-    it("removes existing connection", () => {
-      socket.connect()
-      socket.disconnect()
-
-      assert.equal(socket.conn, null)
+    it("removes existing connection", done => {
+      socket.connect(null, () => {
+        socket.disconnect()
+        assert.equal(socket.conn, null)
+        done()
+      })
     })
 
-    it("calls callback", () => {
+    it("calls callback", done => {
       let count = 0
-      socket.connect()
-      socket.disconnect(() => count++)
-
-      assert.equal(count, 1)
+      socket.connect(null, () => {
+        socket.disconnect(() => count++)
+        assert.equal(count, 1)
+        done()
+      })
     })
 
-    it("calls connection close callback", () => {
-      socket.connect()
-      const spy = sinon.spy(socket.conn, "close")
+    it("calls connection close callback", done => {
+      socket.connect(null, () => {
+        const spy = sinon.spy(socket.conn, "close")
 
-      socket.disconnect(null, "code", "reason")
+        socket.disconnect(null, "code", "reason")
 
-      assert(spy.calledWith("code", "reason"))
+        assert(spy.calledWith("code", "reason"))
+        done()
+      })
     })
 
     it("does not throw when no connection", () => {
@@ -311,43 +330,48 @@ describe("with transports", done =>{
       assert.equal(socket.connectionState(), "closed")
     })
 
-    it("returns closed if readyState unrecognized", () => {
-      socket.connect()
-
-      socket.conn.readyState = 5678
-      assert.equal(socket.connectionState(), "closed")
+    it("returns closed if readyState unrecognized", done => {
+      socket.connect(null, () => {
+        socket.conn.readyState = 5678
+        assert.equal(socket.connectionState(), "closed")
+        done()
+      })      
     })
 
-    it("returns connecting", () => {
-      socket.connect()
-
-      socket.conn.readyState = 0
-      assert.equal(socket.connectionState(), "connecting")
-      assert.ok(!socket.isConnected(), "is not connected")
+    it("returns connecting", done => {
+      socket.connect(null, () => {
+        socket.conn.readyState = 0
+        assert.equal(socket.connectionState(), "connecting")
+        assert.ok(!socket.isConnected(), "is not connected")
+        done()
+      })
     })
 
-    it("returns open", () => {
-      socket.connect()
-
-      socket.conn.readyState = 1
-      assert.equal(socket.connectionState(), "open")
-      assert.ok(socket.isConnected(), "is connected")
+    it("returns open", done => {
+      socket.connect(null, () => {
+        socket.conn.readyState = 1
+        assert.equal(socket.connectionState(), "open")
+        assert.ok(socket.isConnected(), "is connected")
+        done()
+      })      
     })
 
-    it("returns closing", () => {
-      socket.connect()
-
-      socket.conn.readyState = 2
-      assert.equal(socket.connectionState(), "closing")
-      assert.ok(!socket.isConnected(), "is not connected")
+    it("returns closing", done => {
+      socket.connect(null, () => {
+        socket.conn.readyState = 2
+        assert.equal(socket.connectionState(), "closing")
+        assert.ok(!socket.isConnected(), "is not connected")
+        done()
+      })
     })
 
-    it("returns closed", () => {
-      socket.connect()
-
-      socket.conn.readyState = 3
-      assert.equal(socket.connectionState(), "closed")
-      assert.ok(!socket.isConnected(), "is not connected")
+    it("returns closed", done => {
+      socket.connect(null, () => {
+        socket.conn.readyState = 3
+        assert.equal(socket.connectionState(), "closed")
+        assert.ok(!socket.isConnected(), "is not connected")
+        done()
+      })
     })
   })
 
@@ -419,33 +443,37 @@ describe("with transports", done =>{
       socket = new Socket("/socket")
     })
 
-    it("sends data to connection when connected", () => {
-      socket.connect()
-      socket.conn.readyState = 1 // open
+    it("sends data to connection when connected", done => {
+      socket.connect(null, () => {
+        socket.conn.readyState = 1 // open
 
-      const spy = sinon.spy(socket.conn, "send")
+        const spy = sinon.spy(socket.conn, "send")
 
-      socket.push(data)
+        socket.push(data)
 
-      assert.ok(spy.calledWith(json))
+        assert.ok(spy.calledWith(json))
+        done()
+      })
     })
 
-    it("buffers data when not connected", () => {
-      socket.connect()
-      socket.conn.readyState = 0 // connecting
+    it("buffers data when not connected", done => {
+      socket.connect(null, () => {
+        socket.conn.readyState = 0 // connecting
 
-      const spy = sinon.spy(socket.conn, "send")
-
-      assert.equal(socket.sendBuffer.length, 0)
-
-      socket.push(data)
-
-      assert.ok(spy.neverCalledWith(json))
-      assert.equal(socket.sendBuffer.length, 1)
-
-      const [callback] = socket.sendBuffer
-      callback()
-      assert.ok(spy.calledWith(json))
+        const spy = sinon.spy(socket.conn, "send")
+  
+        assert.equal(socket.sendBuffer.length, 0)
+  
+        socket.push(data)
+  
+        assert.ok(spy.neverCalledWith(json))
+        assert.equal(socket.sendBuffer.length, 1)
+  
+        const [callback] = socket.sendBuffer
+        callback()
+        assert.ok(spy.calledWith(json))
+        done()
+      })
     })
   })
 
@@ -479,9 +507,9 @@ describe("with transports", done =>{
       window.XMLHttpRequest = null
     })
 
-    beforeEach(() => {
+    beforeEach(done => {
       socket = new Socket("/socket")
-      socket.connect()
+      socket.connect(null, done)
     })
 
     it("closes socket when heartbeat is not ack'd within heartbeat window", () => {
@@ -525,9 +553,9 @@ describe("with transports", done =>{
       window.XMLHttpRequest = null
     })
 
-    beforeEach(() => {
+    beforeEach(done => {
       socket = new Socket("/socket")
-      socket.connect()
+      socket.connect(null, done)
     })
 
     it("calls callbacks in buffer when connected", () => {
@@ -566,11 +594,11 @@ describe("with transports", done =>{
       mockServer.stop(() => done())
     })
 
-    beforeEach(() => {
+    beforeEach(done => {
       socket = new Socket("/socket", {
         reconnectAfterMs: () => 100000
       })
-      socket.connect()
+      socket.connect(null, done)
     })
 
     it("flushes the send buffer", () => {

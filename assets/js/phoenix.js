@@ -795,9 +795,10 @@ export class Socket {
    *
    * @returns {string}
    */
-  endPointURL(){
+  async endPointURL() {
+    const params = await this.params()
     let uri = Ajax.appendParams(
-      Ajax.appendParams(this.endPoint, this.params()), {vsn: this.vsn})
+      Ajax.appendParams(this.endPoint, params), {vsn: this.vsn})
     if(uri.charAt(0) !== "/"){ return uri }
     if(uri.charAt(1) === "/"){ return `${this.protocol()}:${uri}` }
 
@@ -826,20 +827,26 @@ export class Socket {
    * Passing params to connect is deprecated; pass them in the Socket constructor instead:
    * `new Socket("/socket", {params: {user_id: userToken}})`.
    */
-  connect(params){
+  connect(params, callback){
     if(params){
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
       this.params = closure(params)
     }
-    if(this.conn){ return }
+    if(this.conn){ 
+      callback && callback()
+      return 
+    }
     this.closeWasClean = false
-    this.conn = new this.transport(this.endPointURL())
-    this.conn.binaryType = this.binaryType
-    this.conn.timeout    = this.longpollerTimeout
-    this.conn.onopen     = () => this.onConnOpen()
-    this.conn.onerror    = error => this.onConnError(error)
-    this.conn.onmessage  = event => this.onConnMessage(event)
-    this.conn.onclose    = event => this.onConnClose(event)
+    this.endPointURL().then(url => {
+      this.conn = new this.transport(url)
+      this.conn.binaryType = this.binaryType
+      this.conn.timeout    = this.longpollerTimeout
+      this.conn.onopen     = () => this.onConnOpen()
+      this.conn.onerror    = error => this.onConnError(error)
+      this.conn.onmessage  = event => this.onConnMessage(event)
+      this.conn.onclose    = event => this.onConnClose(event)
+      callback && callback()
+    }).catch(error => console.log(error))
   }
 
   /**
