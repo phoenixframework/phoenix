@@ -335,7 +335,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         topic: "room:lobby"
       }
 
-      # Publish unauthorized event
+      # Publish event to an unjoined room
       capture_log fn ->
         Phoenix.PubSub.subscribe(__MODULE__, "room:private-room")
         resp = poll :post, "/ws", @vsn, session, %{
@@ -344,8 +344,19 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           "ref" => "12300",
           "payload" => %{"body" => "this method shouldn't send!'"}
         }
-        assert resp.body["status"] == 401
+        assert resp.body["status"] == 200
         refute_receive %Broadcast{event: "new_msg"}
+
+        # Get join error
+        resp = poll(:get, "/ws", @vsn, session)
+        assert resp.body["status"] == 200
+        assert List.last(resp.body["messages"]) == %Message{
+          join_ref: nil,
+          event: "phx_reply",
+          payload: %{"response" => %{"reason" => "unmatched topic"}, "status" => "error"},
+          ref: "12300",
+          topic: "room:private-room"
+        }
       end
     end
 
