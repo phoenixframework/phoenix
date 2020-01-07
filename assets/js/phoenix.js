@@ -474,6 +474,20 @@ export class Channel {
   }
 
   /**
+   * Unsubscribes off of channel events
+   *
+   * Use the ref returned from a channel.on() to unsubscribe one 
+   * handler, or pass nothing for the ref to unsubscribe all 
+   * handlers for the given event.
+   *
+   * @example
+   * // Unsubscribe the do_stuff handler
+   * const ref1 = channel.on("event", do_stuff)
+   * channel.off("event", ref1)
+   * 
+   * // Unsubscribe all handlers from event
+   * channel.off("event")
+   *
    * @param {string} event
    * @param {integer} ref
    */
