@@ -87,7 +87,7 @@ defmodule Phoenix.Transports.LongPoll do
 
     receive do
       {:ok, ^ref} -> :ok
-      {:error, ^ref} -> :unauthorized
+      {:error, ^ref} -> :ok
     after
       opts[:window_ms] -> :request_timeout
     end
