@@ -487,7 +487,7 @@ defmodule Phoenix.ConnTest do
 
   Note the use of `get("/")` following `bypass_through` in the examples below.
   To execute the plug pipelines, you must issue a request against the router.
-  Most often, you can simpy send a GET request against the root path, but you
+  Most often, you can simply send a GET request against the root path, but you
   may also specify a different method or path which your pipelines may operate
   against.
 
