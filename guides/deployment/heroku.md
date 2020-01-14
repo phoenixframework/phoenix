@@ -131,7 +131,7 @@ Finally, note that since we are using multiple buildpacks, you might run into an
 
 Every new Phoenix project ships with a config file `config/prod.secret.exs` which loads configuration and secrets from [environment variables](https://devcenter.heroku.com/articles/config-vars). This aligns well with Heroku best practices, so most the only work left for us to do is to configure URLs and SSL.
 
-First let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Find the url line in your `config/prod.exs`:
+First let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Also, bind to the port requested by Heroku in the [`$PORT` environment variable](https://devcenter.heroku.com/articles/runtime-principles#web-servers). Find the url line in your `config/prod.exs`:
 
 ```elixir
 url: [host: "example.com", port: 80],
@@ -140,6 +140,7 @@ url: [host: "example.com", port: 80],
 ... and replace it with this (don't forget to replace `mysterious-meadow-6277` with your application name):
 
 ```elixir
+http: [port: {:system, "PORT"}],
 url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
 force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
