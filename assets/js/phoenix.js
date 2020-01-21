@@ -476,15 +476,15 @@ export class Channel {
   /**
    * Unsubscribes off of channel events
    *
-   * Use the ref returned from a channel.on() to unsubscribe one 
-   * handler, or pass nothing for the ref to unsubscribe all 
+   * Use the ref returned from a channel.on() to unsubscribe one
+   * handler, or pass nothing for the ref to unsubscribe all
    * handlers for the given event.
    *
    * @example
    * // Unsubscribe the do_stuff handler
    * const ref1 = channel.on("event", do_stuff)
    * channel.off("event", ref1)
-   * 
+   *
    * // Unsubscribe all handlers from event
    * channel.off("event")
    *
@@ -762,7 +762,7 @@ export class Socket {
       this.decode = this.defaultDecoder
     }
     if(phxWindow && phxWindow.addEventListener){
-      phxWindow.addEventListener("beforeunload", e => {
+      phxWindow.addEventListener("unload", e => {
         if(this.conn){
           this.unloaded = true
           this.abnormalClose("unloaded")
