@@ -24,6 +24,27 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.12 (2020-01-22)
+
+### Enhancements
+  * [phx.new] Add `--no-gettext` flag to `phx.new` task
+  * [Controller] Allow filename encoding to be disabled in `send_download/3`
+  * [Generator] Allow a custom migration module to be given to the migration generator
+  * [Channel] Allow using a keyword list/map for socket assigns
+  * [Endpoint] Support Websocket subprotocols
+  * [Endpoint] Allow cache manifest to be loaded from specified application
+  * [Endpoint] Allow disabling logger via application configuration
+  * [ConnTest] Allow passing a custom set of headers to copy when recycling a connection
+
+### Bug Fixes
+  * [Channel] Fix error handling when joining a channel using LongPol
+  * [Controller] Fix blame in `Phoenix.ActionClauseError`
+  * [Router] Escape plug options in Router helpers
+
+### JavaScript Client Enhancements
+  * Teardown connection on `unload` instead of `beforeunload` to support cancellable unloads by userland scripts
+
+
 ## 1.4.11 (2019-11-09)
 
 ### Enhancements
