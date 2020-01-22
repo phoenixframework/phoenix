@@ -27,9 +27,9 @@ The old APIs for building transports are also deprecated. The good news is: adap
 ## 1.4.12 (2020-01-22)
 
 ### Enhancements
-  * [phx.new] Add `--no-gettext` flag to `phx.new` task
+  * [Generator] Add `--no-gettext` flag to `phx.new` task
+  * [Generator] Allow a custom migration module to be given to the migration generator
   * [Controller] Allow filename encoding to be disabled in `send_download/3`
-  * [Generator] Allow a custom migration module to be given to the migration generator
   * [Channel] Allow using a keyword list/map for socket assigns
   * [Endpoint] Support Websocket subprotocols
   * [Endpoint] Allow cache manifest to be loaded from specified application
