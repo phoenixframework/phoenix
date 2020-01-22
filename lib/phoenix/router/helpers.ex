@@ -191,21 +191,21 @@ defmodule Phoenix.Router.Helpers do
       unquote_splicing(impls)
       unquote_splicing(catch_all)
 
-      @doc unquote(docs) && """
+      @doc """
       Generates the path information including any necessary prefix.
       """
       def path(data, path) do
         Phoenix.Router.Helpers.path(unquote(env.module), data, path)
       end
 
-      @doc unquote(docs) && """
+      @doc """
       Generates the connection/endpoint base URL without any path information.
       """
       def url(data) do
         Phoenix.Router.Helpers.url(unquote(env.module), data)
       end
 
-      @doc unquote(docs) && """
+      @doc """
       Generates path to a static asset given its file path.
       """
       def static_path(%Conn{private: private} = conn, path) do
@@ -220,7 +220,7 @@ defmodule Phoenix.Router.Helpers do
         endpoint.static_path(path)
       end
 
-      @doc unquote(docs) && """
+      @doc """
       Generates url to a static asset given its file path.
       """
       def static_url(%Conn{private: private}, path) do
@@ -239,7 +239,7 @@ defmodule Phoenix.Router.Helpers do
         endpoint.static_url <> endpoint.static_path(path)
       end
 
-      @doc unquote(docs) && """
+      @doc """
       Generates an integrity hash to a static asset given its file path.
       """
       def static_integrity(%Conn{private: %{phoenix_endpoint: endpoint}}, path) do
