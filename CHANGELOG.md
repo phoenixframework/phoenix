@@ -14,9 +14,12 @@ Then once you start an application, you will get a warning about the `:pubsub` k
   * [Controller] Support `:disposition` option in `send_download/3`
   * [Controller] Allow filename encoding to be disabled in `send_download/3`
   * [Endpoint] Allow named params to be used when defining socket paths
+  * [Endpoint] Raise if `force_ssl` has changed from compile time to runtime
   * [Generator] Allow a custom migration module to be given to the migration generator
+  * [Generator] Add `Phoenix.Ecto.CheckRepoReady` plug to generated phoenix applications
   * [PubSub] Migrate to PubSub 2.0 with a more flexible fastlaning mechanism
   * [Testing] Allow a custom list of headers for recycling to be given to `recycle/2`
+  * [Token] Add `encrypt` and `decrypt` functions
 
 ### Bug Fixes
 
