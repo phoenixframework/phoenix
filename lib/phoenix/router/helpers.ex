@@ -101,7 +101,7 @@ defmodule Phoenix.Router.Helpers do
   @doc """
   Generates the helper module for the given environment and routes.
   """
-  def define(env, routes) do
+  def define(env, routes, opts \\ []) do
     # Ignore any route without helper or forwards.
     routes =
       Enum.filter(routes, fn {route, _exprs} ->
@@ -171,6 +171,8 @@ defmodule Phoenix.Router.Helpers do
       end
     end
 
+    docs = Keyword.get(opts, :docs, true)
+
     # It is in general bad practice to generate large chunks of code
     # inside quoted expressions. However, we can get away with this
     # here for two reasons:
@@ -181,7 +183,7 @@ defmodule Phoenix.Router.Helpers do
     #   per helper module anyway.
     #
     code = quote do
-      @moduledoc """
+      @moduledoc unquote(docs) && """
       Module with named helpers generated from #{inspect unquote(env.module)}.
       """
       unquote(defhelper)

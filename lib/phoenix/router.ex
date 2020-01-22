@@ -253,16 +253,18 @@ defmodule Phoenix.Router do
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @doc false
-  defmacro __using__(_) do
+  defmacro __using__(opts) do
     quote do
-      unquote(prelude())
+      unquote(prelude(opts))
       unquote(defs())
       unquote(match_dispatch())
     end
   end
 
-  defp prelude() do
+  defp prelude(opts) do
     quote do
+      @helpers_moduledoc Keyword.get(unquote(opts), :helpers_moduledoc, true)
+
       Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
       @phoenix_forwards %{}
 
@@ -411,7 +413,9 @@ defmodule Phoenix.Router do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
     routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1)})
 
-    Helpers.define(env, routes_with_exprs)
+    helpers_moduledoc = Module.get_attribute(env.module, :helpers_moduledoc)
+
+    Helpers.define(env, routes_with_exprs, docs: helpers_moduledoc)
     {matches, _} = Enum.map_reduce(routes_with_exprs, %{}, &build_match/2)
 
     checks =
