@@ -15,6 +15,13 @@ defmodule Phoenix.Router do
     end
   end
 
+  defmodule MalformedURIError do
+    @moduledoc """
+    Exception raised when the URI is malformed on matching.
+    """
+    defexception [:message, plug_status: 400]
+  end
+
   @moduledoc """
   Defines a Phoenix router.
 
@@ -375,7 +382,15 @@ defmodule Phoenix.Router do
       def call(conn, _opts) do
         %{method: method, path_info: path_info, host: host} = conn = prepare(conn)
 
-        case __match_route__(method, Enum.map(path_info, &URI.decode/1), host) do
+        decoded =
+          try do
+            Enum.map(path_info, &URI.decode/1)
+          rescue
+            ArgumentError ->
+              raise MalformedURIError, "malformed URI path: #{inspect conn.request_path}"
+          end
+
+        case __match_route__(method, decoded, host) do
           :error -> raise NoRouteError, conn: conn, router: __MODULE__
           match -> Phoenix.Router.__call__(conn, match)
         end

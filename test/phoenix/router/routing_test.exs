@@ -181,6 +181,12 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.resp_body == "users any"
   end
 
+  test "raises on malformed URIs" do
+    assert_raise Phoenix.Router.MalformedURIError, fn ->
+      call(Router, :get, "/<% foo %>")
+    end
+  end
+
   describe "logging" do
     setup do
       Logger.enable(self())

@@ -2,9 +2,17 @@ defmodule Phoenix.CodeReloader do
   @moduledoc """
   A plug and module to handle automatic code reloading.
 
-  For each request, Phoenix checks if any of the modules previously
-  compiled requires recompilation via `__phoenix_recompile__?/0` and then
-  calls `mix compile` for sources exclusive to the `web` directory.
+  For each request, Phoenix goes through all modules and checks if any of
+  them implement a `__phoenix_recompile__?/0` function. If they do and
+  it returns true, the module source file is touched, forcing it to be
+  recompiled. For this functionality to work, Phoenix requires you to add
+  the `:phoenix` compiler to your list of compilers:
+
+      compilers: [:phoenix] ++ Mix.compilers()
+
+  This is useful, for example, to recompile modules that depend on external
+  systems, such as directories, databases, etc. Note if you simply depend on
+  external files, `@external_resource` annotation should be used.
 
   To avoid race conditions, all code reloads are funneled through a
   sequential call operation.

@@ -2,7 +2,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
   @moduledoc false
 
   if Code.ensure_loaded?(:cowboy_websocket) and
-    function_exported?(:cowboy_websocket, :behaviour_info, 1) do
+       function_exported?(:cowboy_websocket, :behaviour_info, 1) do
     @behaviour :cowboy_websocket
   end
 
@@ -45,26 +45,17 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
         {:ok, req, {handler, opts}}
     end
   catch
-    :error, value ->
+    kind, reason ->
       case System.stacktrace() do
         # Maybe the handler is not available because the code is being recompiled.
         # Sync with the code reloader and retry once.
-        [{^endpoint, :__handler__, _, _} | _] when value == :undef and retry? ->
+        [{^endpoint, :__handler__, _, _} | _] when reason == :undef and retry? ->
           Phoenix.CodeReloader.Server.sync()
           init(conn, endpoint, opts, false)
 
-        _ ->
-          stack = System.stacktrace()
-          exception = Exception.normalize(:error, value, stack)
-          exit({{exception, stack}, {endpoint, :call, [conn, opts]}})
+        stacktrace ->
+          exit_on_error(kind, reason, stacktrace, {endpoint, :call, [conn, opts]})
       end
-
-    :throw, value ->
-      stack = System.stacktrace()
-      exit({{{:nocatch, value}, stack}, {endpoint, :call, [conn, opts]}})
-
-    :exit, value ->
-      exit({value, {endpoint, :call, [conn, opts]}})
   after
     receive do
       @already_sent -> :ok
@@ -81,6 +72,42 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
     raise "Cowboy2 adapter expected #{inspect(plug)} to return Plug.Conn but got: " <>
             inspect(other)
   end
+
+  defp exit_on_error(
+         :error,
+         %Plug.Conn.WrapperError{kind: kind, reason: reason, stack: stack},
+         _stack,
+         call
+       ) do
+    exit_on_error(kind, reason, stack, call)
+  end
+
+  defp exit_on_error(:error, value, stack, call) do
+    exception = Exception.normalize(:error, value, stack)
+    exit({{exception, stack}, call})
+  end
+
+  defp exit_on_error(:throw, value, stack, call) do
+    exit({{{:nocatch, value}, stack}, call})
+  end
+
+  defp exit_on_error(:exit, value, _stack, call) do
+    exit({value, call})
+  end
+
+  defp copy_resp_headers(%Plug.Conn{} = conn, req) do
+    Enum.reduce(conn.resp_headers, req, fn {key, val}, acc ->
+      :cowboy_req.set_resp_header(key, val, acc)
+    end)
+  end
+
+  defp handle_reply(handler, {:ok, state}), do: {:ok, [handler | state]}
+  defp handle_reply(handler, {:push, data, state}), do: {:reply, data, [handler | state]}
+
+  defp handle_reply(handler, {:reply, _status, data, state}),
+    do: {:reply, data, [handler | state]}
+
+  defp handle_reply(handler, {:stop, _reason, state}), do: {:stop, [handler | state]}
 
   ## Websocket callbacks
 
@@ -125,15 +152,4 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
   def terminate(reason, _req, [handler | state]) do
     handler.terminate(reason, state)
   end
-
-  defp copy_resp_headers(%Plug.Conn{} = conn, req) do
-    Enum.reduce(conn.resp_headers, req, fn {key, val}, acc ->
-      :cowboy_req.set_resp_header(key, val, acc)
-    end)
-  end
-
-  defp handle_reply(handler, {:ok, state}), do: {:ok, [handler | state]}
-  defp handle_reply(handler, {:push, data, state}), do: {:reply, data, [handler | state]}
-  defp handle_reply(handler, {:reply, _status, data, state}), do: {:reply, data, [handler | state]}
-  defp handle_reply(handler, {:stop, _reason, state}), do: {:stop, [handler | state]}
 end

@@ -100,7 +100,9 @@ defmodule Phoenix.Endpoint do
     * `:cache_static_manifest` - a path to a json manifest file that contains
       static files and their digested version. This is typically set to
       "priv/static/cache_manifest.json" which is the file automatically generated
-      by `mix phx.digest`
+      by `mix phx.digest`.
+      It can be either: a string containing a file system path or a tuple containing 
+      the application name and the path within that application.
 
     * `:check_origin` - configure the default `:check_origin` setting for
       transports. See `socket/3` for options. Defaults to `true`.
@@ -839,7 +841,7 @@ defmodule Phoenix.Endpoint do
     * `:max_frame_size` - the maximum allowed frame size in bytes.
       Supported from Cowboy 2.3 onwards, defaults to "infinity"
 
-    * `:compress` - whether to enable per message compresssion on
+    * `:compress` - whether to enable per message compression on
       all data frames, defaults to false
 
     * `:subprotocols` - a list of supported websocket subprotocols.

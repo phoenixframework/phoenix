@@ -452,7 +452,14 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp cache_static_manifest(endpoint) do
     if inner = endpoint.config(:cache_static_manifest) do
-      outer = Application.app_dir(endpoint.config(:otp_app), inner)
+      {app, inner} = 
+        case inner do
+          {_, _} = inner -> inner
+          inner when is_binary(inner) -> {endpoint.config(:otp_app), inner}
+          _ -> raise ArgumentError, ":cache_static_manifest must be a binary or a tuple"
+        end
+
+      outer = Application.app_dir(app, inner)
 
       if File.exists?(outer) do
         outer |> File.read!() |> Phoenix.json_library().decode!()

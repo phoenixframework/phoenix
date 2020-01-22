@@ -585,7 +585,7 @@ defmodule Phoenix.Controller.ControllerTest do
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController) == MyApp.Admin.UserView
   end
 
-  test "__layout__ returns the layout modoule based on controller module" do
+  test "__layout__ returns the layout module based on controller module" do
     assert Phoenix.Controller.__layout__(UserController, []) ==
            LayoutView
     assert Phoenix.Controller.__layout__(MyApp.UserController, []) ==

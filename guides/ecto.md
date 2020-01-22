@@ -122,9 +122,11 @@ Our `Hello.Repo` module is the foundation we need to work with databases in a Ph
 defmodule Hello.Repo do
   use Ecto.Repo,
     otp_app: :hello,
-    adapter: Ecto.Adapter.Postgres
+    adapter: Ecto.Adapters.Postgres
 end
 ```
+
+It begins by configuring our `otp_app` name and repo module. Then it sets the adapter – Postgres, in our case. It also sets our login credentials. Of course, you can change these to match your actual credentials if they are different.
 
 Our repo has three main tasks - to bring in all the common query functions from `Ecto.Repo`, to set the `otp_app` name equal to our application name, and to configure our database adapter. We'll talk more about how to use the Repo in a bit.
 
@@ -141,8 +143,6 @@ config :hello, Hello.Repo,
   pool_size: 10
 ...
 ```
-
-It begins by configuring our `otp_app` name and repo module. Then it sets the adapter – Postgres, in our case. It also sets our login credentials. Of course, you can change these to match your actual credentials if they are different.
 
 We also have similar configuration in `config/test.exs` and `config/prod.secret.exs` which can also be changed to match your actual credentials.
 
