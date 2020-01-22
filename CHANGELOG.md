@@ -37,7 +37,7 @@ The old APIs for building transports are also deprecated. The good news is: adap
   * [ConnTest] Allow passing a custom set of headers to copy when recycling a connection
 
 ### Bug Fixes
-  * [Channel] Fix error handling when joining a channel using LongPol
+  * [Channel] Fix error handling when joining a channel using LongPoll
   * [Controller] Fix blame in `Phoenix.ActionClauseError`
   * [Router] Escape plug options in Router helpers
 
