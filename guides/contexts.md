@@ -533,7 +533,7 @@ defmodule HelloWeb.SessionView do
 end
 ```
 
-Next, add a new template in `lib/hello_web/templates/session/new.html.eex:`
+Next, add a new template in `lib/hello_web/templates/session/new.html.eex`:
 
 ```eex
 <h1>Sign in</h1>
