@@ -1,4 +1,4 @@
-# Custom Errors
+# Custom Error Pages
 
 Phoenix provides an `ErrorView`, `lib/hello_web/views/error_view.ex`, to render errors in our applications. The full module name will include the name of our application, as in `Hello.ErrorView`.
 

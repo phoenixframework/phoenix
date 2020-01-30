@@ -4,7 +4,7 @@ There are currently a number of built-in Phoenix-specific and ecto-specific mix 
 
 > Note to learn more about `mix` read the [Introduction to Mix](https://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html).
 
-## Phoenix Specific Mix Tasks
+## Phoenix tasks
 
 ```console
 ➜ mix help | grep -i phx
@@ -28,168 +28,13 @@ mix phx.routes         # Prints all routes
 mix phx.server         # Starts applications and their servers
 ```
 
-We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea. And here we are.
+We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea.
 
-### `mix phx.new`
-
-This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](up_and_running.html).
-
-Before we begin, we should note that Phoenix uses [Ecto](https://github.com/elixir-lang/ecto) for database access and [webpack](https://webpack.js.org/) for asset management by default. We can pass `--no-ecto` to opt out of Ecto and  `--no-webpack` to opt out of webpack.
-
-> Note: If we do use webpack, we need to install its dependencies before we start our application. `mix phx.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
-
-We need to pass a name for our application to `mix phx.new`. Conventionally, we use all lower-case letters with underscores.
-
-```console
-$ mix phx.new task_tester
-* creating task_tester/.gitignore
-. . .
-```
-
-We can also use either a relative or absolute path.
-
-This relative path works.
-
-```console
-$ mix phx.new ../task_tester
-* creating ../task_tester/.gitignore
-. . .
-```
-
-This absolute path works as well.
-
-```console
-$ mix phx.new /Users/me/work/task_tester
-* creating /Users/me/work/task_tester/.gitignore
-. . .
-```
-
-The `mix phx.new` task will also ask us if we want to install our dependencies. (Please see the note above about webpack dependencies.)
-
-```console
-Fetch and install dependencies? [Yn] y
-* cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
-* running mix deps.get
-```
-
-Once all of our dependencies are installed, `mix phx.new` will tell us what our next steps are.
-
-```console
-We are all set! Run your Phoenix application:
-
-$ cd task_tester
-$ mix phx.server
-
-You can also run it inside IEx (Interactive Elixir) as:
-
-$ iex -S mix phx.server
-```
-
-By default `mix phx.new` will assume we want to use ecto for our contexts. If we don't want to use ecto in our application, we can use the `--no-ecto` flag.
-
-```console
-$ mix phx.new task_tester --no-ecto
-* creating task_tester/.gitignore
-. . .
-```
-
-With the `--no-ecto` flag, Phoenix will not make either ecto or postgrex a dependency of our application, and it will not create a `repo.ex` file.
-
-By default, Phoenix will name our OTP application after the name we pass into `mix phx.new`. If we want, we can specify a different OTP application name with the `--app` flag.
-
-```console
-$  mix phx.new task_tester --app hello
-* creating task_tester/config/config.exs
-* creating task_tester/config/dev.exs
-* creating task_tester/config/prod.exs
-* creating task_tester/config/prod.secret.exs
-* creating task_tester/config/test.exs
-* creating task_tester/lib/hello/application.ex
-* creating task_tester/lib/hello.ex
-* creating task_tester/lib/hello_web/channels/user_socket.ex
-* creating task_tester/lib/hello_web/views/error_helpers.ex
-* creating task_tester/lib/hello_web/views/error_view.ex
-* creating task_tester/lib/hello_web/endpoint.ex
-* creating task_tester/lib/hello_web/router.ex
-* creating task_tester/lib/hello_web.ex
-* creating task_tester/mix.exs
-. . .
-```
-
-If we look in the resulting `mix.exs` file, we will see that our project app name is `hello`.
-
-```elixir
-defmodule Hello.MixProject do
-  use Mix.Project
-
-  def project do
-    [app: :hello,
-     version: "0.1.0",
-. . .
-```
-
-A quick check will show that all of our module names are qualified with `Hello`.
-
-```elixir
-defmodule HelloWeb.PageController do
-  use HelloWeb, :controller
-. . .
-```
-
-We can also see that files related to the application as a whole - eg. files in `lib/` and the test seed file - have `hello` in their names.
-
-```console
-* creating task_tester/lib/hello.ex
-* creating task_tester/lib/hello_web/endpoint.ex
-* creating task_tester/lib/hello/repo.ex
-```
-
-If we only want to change the qualifying prefix for module names, we can do that with the `--module` flag. It's important to note that the value of the `--module` must look like a valid module name with proper capitalization. The task will throw an error if it doesn't.
-
-```console
-$  mix phx.new task_tester --module Hello
-* creating task_tester/config/config.exs
-* creating task_tester/config/dev.exs
-* creating task_tester/config/prod.exs
-* creating task_tester/config/prod.secret.exs
-* creating task_tester/config/test.exs
-* creating task_tester/lib/task_tester/application.ex
-* creating task_tester/lib/task_tester.ex
-* creating task_tester/lib/task_tester_web/channels/user_socket.ex
-* creating task_tester/lib/task_tester_web/views/error_helpers.ex
-* creating task_tester/lib/task_tester_web/views/error_view.ex
-* creating task_tester/lib/task_tester_web/endpoint.ex
-* creating task_tester/lib/task_tester_web/router.ex
-* creating task_tester/lib/task_tester_web.ex
-* creating task_tester/mix.exs
-* creating task_tester/README.md
-* creating task_tester/.gitignore
-* creating task_tester/test/support/channel_case.ex
-* creating task_tester/test/support/conn_case.ex
-* creating task_tester/test/test_helper.exs
-* creating task_tester/test/task_tester_web/views/error_view_test.exs
-* creating task_tester/lib/task_tester_web/gettext.ex
-* creating task_tester/priv/gettext/en/LC_MESSAGES/errors.po
-* creating task_tester/priv/gettext/errors.pot
-* creating task_tester/lib/task_tester/repo.ex
-```
-
-Notice that none of the files have `hello` in their names. All filenames related to the application name are `task_tester`.
-
-If we look at the project app name in `mix.exs`, we see that it is `task_tester`, but all the module qualifying names begin with `Hello`.
-
-```elixir
-defmodule Hello.MixProject do
-  use Mix.Project
-
-  def project do
-    [app: :task_tester,
-. . .
-```
+We will cover all Phoenix Mix tasks, except `new`, `new.ecto`, `new.web`, which are part of the Phoenix installer. You can learn more about them or any other task by calling `mix help TASK`.
 
 ### `mix phx.gen.html`
 
-Phoenix now offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto context, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
+Phoenix offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto context, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
 
 The `mix phx.gen.html` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
@@ -255,16 +100,6 @@ Add the resource to your browser scope in lib/hello_web/router.ex:
     resources "/posts", PostController
 ```
 
-Important: If we don't do this, we'll get the following warning in our logs and the application will error when attempting to load the page:
-
-```console
-$ mix phx.server
-Compiling 15 files (.ex)
-
-warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
-  lib/hello_web/templates/post/edit.html.eex:3
-```
-
 Similarly - if we want a context created without a schema for our resource we can use the `--no-schema` flag.
 
 ```console
@@ -284,22 +119,6 @@ $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-schema
 ```
 
 It will tell us we need to add a line to our router file, but since we skipped the schema, it won't mention anything about `ecto.migrate`.
-
-```console
-Add the resource to your browser scope in lib/hello_web/router.ex:
-
-    resources "/posts", PostController
-```
-
-Important: If we don't do this, we'll get the following warning in our logs and the application will error when attempting to load the page:
-
-```console
-$ mix phx.server
-Compiling 15 files (.ex)
-
-warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
-  lib/hello_web/templates/post/edit.html.eex:3
-```
 
 ### `mix phx.gen.json`
 
@@ -329,7 +148,6 @@ Add the resource to your :api scope in lib/hello_web/router.ex:
 
     resources "/posts", PostController, except: [:new, :edit]
 
-
 Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
@@ -345,75 +163,7 @@ warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
   lib/hello_web/controllers/post_controller.ex:18
 ```
 
-If we don't want to create a context or schema for our resource we can use the `--no-context` flag. Note that this still requires a context module name as a parameter.
-
-```console
-$ mix phx.gen.json Blog Post posts title:string content:string --no-context
-* creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/views/post_view.ex
-* creating test/hello_web/controllers/post_controller_test.exs
-* creating lib/hello_web/views/changeset_view.ex
-* creating lib/hello_web/controllers/fallback_controller.ex
-```
-
-It will tell us we need to add a line to our router file, but since we skipped the context, it won't mention anything about `ecto.migrate`.
-
-```console
-Add the resource to your :api scope in lib/hello_web/router.ex:
-
-    resources "/posts", PostController, except: [:new, :edit]
-```
-
-Important: If we don't do this, our application won't compile, and we'll get an error.
-
-```console
-$ mix phx.server
-Compiling 17 files (.ex)
-
-== Compilation error in file lib/hello_web/controllers/post_controller.ex ==
-** (CompileError) lib/hello_web/controllers/post_controller.ex:15: Hello.Blog.Post.__struct__/0 is undefined, cannot expand struct Hello.Blog.Post
-    (stdlib) lists.erl:1354: :lists.mapfoldl/3
-    (stdlib) lists.erl:1355: :lists.mapfoldl/3
-    (stdlib) lists.erl:1354: :lists.mapfoldl/3
-    lib/hello_web/controllers/post_controller.ex:14: (module)
-    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
-```
-
-Similarly - if we want a context created without a schema for our resource we can use the `--no-schema` flag.
-
-```console
-$ mix phx.gen.json Blog Post posts title:string content:string --no-schema
-* creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/views/post_view.ex
-* creating test/hello_web/controllers/post_controller_test.exs
-* creating lib/hello_web/views/changeset_view.ex
-* creating lib/hello_web/controllers/fallback_controller.ex
-* creating lib/hello/blog.ex
-* injecting lib/hello/blog.ex
-* creating test/hello/blog/blog_test.exs
-* injecting test/hello/blog/blog_test.exs
-```
-
-It will tell us we need to add a line to our router file, but since we skipped the context, it won't mention anything about `ecto.migrate`.
-
-```console
-Add the resource to your browser scope in lib/hello_web/router.ex:
-
-    resources "/posts", PostController
-```
-
-Important: If we don't do this, our application won't compile, and we'll get an error.
-
-```console
-$ mix phx.server
-Compiling 18 files (.ex)
-
-== Compilation error in file lib/hello/blog.ex ==
-** (CompileError) lib/hello/blog.ex:65: Hello.Blog.Post.__struct__/0 is undefined, cannot expand struct Hello.Blog.Post
-    lib/hello/blog.ex:65: (module)
-    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
-    (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
-```
+`mix phx.new.json` also supports `--no-context`, `--no-schema`, and others, as in `mix phx.new.html`.
 
 ### `mix phx.gen.context`
 
@@ -572,12 +322,13 @@ config :phoenix, :gzippable_exts, ~w(.js .css)
 ```
 
 > Note: We can specify a different output folder where `mix phx.digest` will put processed files. The first argument is the path where the static files are located.
+
 ```console
 $ mix phx.digest priv/static -o www/public
 Check your digested files at 'www/public'.
 ```
 
-## Ecto Specific Mix Tasks
+## Ecto tasks
 
 Newly generated Phoenix applications now include ecto and postgrex as dependencies by default (which is to say, unless we use `mix phx.new` with the `--no-ecto` flag). With those dependencies come mix tasks to take care of common ecto operations. Let's see which tasks we get out of the box.
 
@@ -851,7 +602,7 @@ $ mix ecto.rollback
 
 `ecto.rollback` will handle the same options as `ecto.migrate`, so `-n`, `--step`, `-v`, and `--to` will behave as they do for `ecto.migrate`.
 
-## Creating Our Own Mix Tasks
+## Creating our own Mix task
 
 As we've seen throughout this guide, both mix itself and the dependencies we bring in to our application provide a number of really useful tasks for free. Since neither of these could possibly anticipate all our individual application's needs, mix allows us to create our own custom tasks. That's exactly what we are going to do now.
 

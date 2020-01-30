@@ -7,10 +7,12 @@ defmodule Phoenix do
     * [Ecto](https://hexdocs.pm/ecto) - a language integrated query and
       database wrapper
 
+    * [EEx](https://hexdocs.pm/eex) - Elixir's built-in templating language
+
+    * [ExUnit](https://hexdocs.pm/ex_unit) - Elixir's built-in test framework
+
     * [Phoenix](https://hexdocs.pm/phoenix) - the Phoenix web framework
       (these docs)
-
-    * [Phoenix.js](js) - Phoenix Channels JavaScript client
 
     * [Phoenix PubSub](https://hexdocs.pm/phoenix_pubsub) - a distributed
       pub/sub system with presence support
@@ -24,11 +26,7 @@ defmodule Phoenix do
     * [Gettext](https://hexdocs.pm/gettext) - Internationalization and
       localization through [`gettext`](https://www.gnu.org/software/gettext/)
 
-  There are also optional packages depending on your configuration:
-
-    * [Phoenix PubSub Redis](https://hexdocs.pm/phoenix_pubsub_redis) - use
-      Redis to power the Phoenix PubSub system
-
+  To get started, see our [overview guides](/overview.html).
   """
   use Application
 

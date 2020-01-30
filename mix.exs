@@ -110,23 +110,22 @@ defmodule Phoenix.MixProject do
     [
       "guides/introduction/overview.md",
       "guides/introduction/installation.md",
-      "guides/introduction/learning.md",
+      "guides/introduction/up_and_running.md",
       "guides/introduction/community.md",
 
-      "guides/up_and_running.md",
-      "guides/adding_pages.md",
+      "guides/request_lifecycle.md",
       "guides/routing.md",
       "guides/plug.md",
       "guides/endpoint.md",
       "guides/controllers.md",
       "guides/views.md",
       "guides/templates.md",
-      "guides/channels.md",
-      "guides/presence.md",
       "guides/ecto.md",
       "guides/contexts.md",
-      "guides/phoenix_mix_tasks.md",
-      "guides/errors.md",
+      "guides/mix_tasks.md",
+
+      "guides/realtime/channels.md",
+      "guides/realtime/presence.md",
 
       "guides/testing/testing.md",
       "guides/testing/testing_schemas.md",
@@ -135,16 +134,20 @@ defmodule Phoenix.MixProject do
 
       "guides/deployment/deployment.md",
       "guides/deployment/releases.md",
-      "guides/deployment/heroku.md"
-      ]
+      "guides/deployment/heroku.md",
+
+      "guides/howto/custom_error_pages.md"
+    ]
   end
 
   defp groups_for_extras do
     [
       "Introduction": ~r/guides\/introduction\/.?/,
       "Guides": ~r/guides\/[^\/]+\.md/,
+      "Real-time components": ~r/guides\/realtime\/.?/,
       "Testing": ~r/guides\/testing\/.?/,
-      "Deployment": ~r/guides\/deployment\/.?/
+      "Deployment": ~r/guides\/deployment\/.?/,
+      "How-to's": ~r/guides\/howto\/.?/
     ]
   end
 

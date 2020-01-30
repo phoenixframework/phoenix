@@ -1,12 +1,8 @@
 # Up and Running
 
-The aim of this first guide is to get a Phoenix application up and running as quickly as possible.
+Let's get a Phoenix application up and running as quickly as possible.
 
 Before we begin, please take a minute to read the [Installation Guide](installation.html). By installing any necessary dependencies beforehand, we'll be able to get our application up and running smoothly.
-
-At this point, we should have Elixir, Erlang, Hex, and the Phoenix archive installed. We should also have PostgreSQL and node.js installed to build a default application.
-
-Ok, we're ready to go!
 
 We can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
 
@@ -16,7 +12,7 @@ $ mix phx.new hello
 
 > A note about [webpack](https://webpack.js.org/) before we begin: Phoenix will use webpack for asset management by default. Webpack's dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `mix phx.new` task. If we say "no" at that point, and if we don't install those dependencies later with `npm install`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use webpack at all, we can simply pass `--no-webpack` to `mix phx.new`.
 
-> A note about [Ecto](https://hexdocs.pm/phoenix/ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL, MySQL, and others. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to `mix phx.new`. This flag may also be combined with `--no-webpack` to create a skeleton application.
+> A note about [Ecto](ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL, MySQL, and others. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to `mix phx.new`. This flag may also be combined with `--no-webpack` to create a skeleton application.
 
 > To learn more about `mix phx.new` you can read the [Mix Tasks Guide](phoenix_mix_tasks.html#phoenix-specific-mix-tasks).
 
@@ -122,6 +118,8 @@ By default Phoenix accepts requests on port 4000. If we point our favorite web b
 
 If your screen looks like the image above, congratulations! You now have a working Phoenix application. In case you can't see the page above, try accessing it via [http://127.0.0.1:4000](http://127.0.0.1:4000) and later make sure your OS has defined "localhost" as "127.0.0.1".
 
-Locally, our application is running in an `iex` session. To stop it, we hit `ctrl-c` twice, just as we would to stop `iex` normally.
+To stop it, we hit `ctrl-c` twice.
 
-[The next step](https://hexdocs.pm/phoenix/adding_pages.html) is customizing our application just a bit to give us a sense of how a Phoenix app is put together.
+Now you are ready to explore the world provided by Phoenix! See [our community page](community.html) for books, screencasts, courses, and more.
+
+Alternatively, you can continue reading these guides to have a quick introduction into all the parts that make your Phoenix application. If that's the case, we recommend you to move forward to the [Request life-cycle](request_lifecycle.html) guide.
