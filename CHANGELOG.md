@@ -12,11 +12,9 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
   * [Channel] Do not block the channel supervisor on join
   * [Controller] Support `:disposition` option in `send_download/3`
-  * [Controller] Allow filename encoding to be disabled in `send_download/3`
   * [Endpoint] Allow named params to be used when defining socket paths
-  * [Generator] Allow a custom migration module to be given to the migration generator
+  * [Endpoint] Raise if `force_ssl` has changed from compile time to runtime
   * [PubSub] Migrate to PubSub 2.0 with a more flexible fastlaning mechanism
-  * [Testing] Allow a custom list of headers for recycling to be given to `recycle/2`
 
 ### Bug Fixes
 
@@ -28,6 +26,7 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 ### phx.new installer
 
   * `Phoenix.PubSub` is now started directly in your application supervision tree
+  * `Phoenix.Ecto.CheckRepoReady` is now added to new applications that use Ecto
 
 ### JavaScript client
 
