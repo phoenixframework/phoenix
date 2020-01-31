@@ -9,4 +9,5 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
   url: [host: "localhost"],
   secret_key_base: "<%= secret_key_base %>",
   render_errors: [view: <%= web_namespace %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json)],
-  pubsub: [name: <%= web_namespace %>.PubSub, adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: <%= web_namespace %>.PubSub, adapter: Phoenix.PubSub.PG2],
+  live_view: [signing_salt: "<%= lv_signing_salt %>"]

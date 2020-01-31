@@ -151,6 +151,7 @@ defmodule Phx.New.Generator do
       pubsub_server: pubsub_server,
       secret_key_base: random_string(64),
       signing_salt: random_string(8),
+      lv_signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
       webpack: webpack,
       ecto: ecto,
