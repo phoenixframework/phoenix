@@ -80,7 +80,7 @@ defmodule Mix.Tasks.Phx.NewTest do
             end)
           end) =~ ~r"3 tests, 0 failures"
 
-          if Version.match?(System.version(), ">= 1.6.0") do
+          if Version.match?(System.version(), ">= 1.7.0") do
             File.mkdir_p!("deps/phoenix")
             File.cp_r!(Path.join(root, ".formatter.exs"), "deps/phoenix/.formatter.exs")
             Mix.Task.run("format", ["--check-formatted"])
