@@ -44,6 +44,12 @@ defmodule Phoenix.Controller.PipelineTest do
     end
   end
 
+  defmodule NoViewsController do
+    use Phoenix.Controller, set_views: false
+
+    def show(conn, _), do: conn
+  end
+
   defmodule FallbackFunctionController do
     use Phoenix.Controller
 
@@ -91,6 +97,7 @@ defmodule Phoenix.Controller.PipelineTest do
 
     defp put_assign(conn, _), do: assign(conn, :value_before_action, :a_value)
   end
+
   def init(opts), do: opts
   def call(conn, :not_a_conn), do: Plug.Conn.send_resp(conn, 200, "fallback")
   def call(_conn, :bad_fallback), do: :bad_fallback
@@ -123,6 +130,15 @@ defmodule Phoenix.Controller.PipelineTest do
            |> put_view(Hello)
            |> put_layout(false)
            |> MyController.call(:create)
+    assert view_module(conn) == Hello
+    assert layout(conn) == false
+  end
+
+  test "does not set default view/layout" do
+    conn = stack_conn()
+           |> NoViewsController.call(:show)
+           |> put_new_view(Hello)
+
     assert view_module(conn) == Hello
     assert layout(conn) == false
   end
