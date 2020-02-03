@@ -89,7 +89,7 @@ defmodule Mix.Tasks.Phx.New do
   use Mix.Task
   alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
 
-  @version Mix.Project.config[:version]
+  @version Mix.Project.config()[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application"
 
   @switches [dev: :boolean, webpack: :boolean, ecto: :boolean,
@@ -332,8 +332,8 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    unless Version.match?(System.version, "~> 1.5") do
-      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.5.\n " <>
+    unless Version.match?(System.version(), "~> 1.6") do
+      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.6.\n " <>
                 "You have #{System.version()}. Please update accordingly"
     end
   end

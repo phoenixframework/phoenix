@@ -311,7 +311,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
   test "new with path, app and module" do
     in_tmp "new with path, app and module", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
+      project_path = Path.join(File.cwd!(), "custom_path")
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--app", @app, "--module", "PhoteuxBlog"])
 
       assert_file "custom_path_umbrella/apps/phx_umb/mix.exs", ~r/app: :phx_umb/
@@ -341,7 +341,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   test "new defaults to pg adapter" do
     in_tmp "new defaults to pg adapter", fn ->
       app = "custom_path"
-      project_path = Path.join(File.cwd!, app)
+      project_path = Path.join(File.cwd!(), app)
       Mix.Tasks.Phx.New.run([project_path, "--umbrella"])
 
       assert_file app_path(app, "mix.exs"), ":postgrex"
@@ -359,7 +359,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   test "new with mysql adapter" do
     in_tmp "new with mysql adapter", fn ->
       app = "custom_path"
-      project_path = Path.join(File.cwd!, app)
+      project_path = Path.join(File.cwd!(), app)
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mysql"])
 
       assert_file app_path(app, "mix.exs"), ":myxql"
@@ -376,7 +376,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
   test "new with invalid database adapter" do
     in_tmp "new with invalid database adapter", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
+      project_path = Path.join(File.cwd!(), "custom_path")
       assert_raise Mix.Error, ~s(Unknown database "invalid"), fn ->
         Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "invalid"])
       end
