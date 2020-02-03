@@ -420,19 +420,24 @@ defmodule Phoenix.Router do
   end
 
   defp build_metadata(route, path_params) do
-    %{path: path, plug: plug, plug_opts: plug_opts, log: log, pipe_through: pipe_through} = route
+    %{
+      path: path,
+      plug: plug,
+      plug_opts: plug_opts,
+      pipe_through: pipe_through,
+      metadata: metadata
+    } = route
 
     pairs = [
       conn: nil,
       route: path,
       plug: plug,
       plug_opts: Macro.escape(plug_opts),
-      log: log,
       path_params: path_params,
       pipe_through: pipe_through
     ]
 
-    {:%{}, [], pairs}
+    {:%{}, [], pairs ++ Macro.escape(Map.to_list(metadata))}
   end
 
   defp build_pipes(name, []) do
@@ -464,8 +469,11 @@ defmodule Phoenix.Router do
       may be set to false. Defaults to `:debug`
     * `:host` - a string containing the host scope, or prefix host scope,
       ie `"foo.bar.com"`, `"foo."`
-    * `:private` - a map of private data to merge into the connection when a route matches
+    * `:private` - a map of private data to merge into the connection
+      when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
+    * `:metadata` - a map of metadata used by the telemetry events and returned by
+      `route_info/4`
 
   ## Examples
 
