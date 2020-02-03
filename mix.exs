@@ -3,11 +3,16 @@ defmodule Phoenix.MixProject do
 
   @version "1.5.0-dev"
 
+  # If the elixir requirement is updated, we need to make the installer
+  # uses at least the minimum requirement used here. Although often the
+  # installer is ahead of Phoenix itself.
+  @elixir_requirement "~> 1.6"
+
   def project do
     [
       app: :phoenix,
       version: @version,
-      elixir:  "~> 1.6",
+      elixir: @elixir_requirement,
       deps: deps(),
       package: package(),
       lockfile: lockfile(),

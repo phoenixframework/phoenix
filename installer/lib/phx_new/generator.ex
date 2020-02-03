@@ -4,7 +4,7 @@ defmodule Phx.New.Generator do
   alias Phx.New.{Project}
 
   @phoenix Path.expand("../..", __DIR__)
-  @phoenix_version Version.parse!(Mix.Project.config[:version])
+  @phoenix_version Version.parse!(Mix.Project.config()[:version])
 
   @callback prepare_project(Project.t) :: Project.t
   @callback generate(Project.t) :: Project.t
