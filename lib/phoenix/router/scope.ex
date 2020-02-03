@@ -34,8 +34,12 @@ defmodule Phoenix.Router.Scope do
     {path, host, alias, as, pipes, private, assigns, log} =
       join(module, path, plug, alias?, as, private, assigns)
 
-    log = Keyword.get(opts, :log, log)
-    Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns, log)
+    metadata =
+      opts
+      |> Keyword.get(:metadata, %{})
+      |> Map.put(:log, Keyword.get(opts, :log, log))
+
+    Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns, metadata)
   end
 
   @doc """
