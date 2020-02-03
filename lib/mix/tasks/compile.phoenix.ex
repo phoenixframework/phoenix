@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Compile.Phoenix do
 
   @doc false
   def touch do
-    Mix.Phoenix.modules
+    Mix.Phoenix.modules()
     |> modules_for_recompilation
     |> modules_to_file_paths
     |> Stream.map(&touch_if_exists(&1))

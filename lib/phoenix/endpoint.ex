@@ -388,7 +388,7 @@ defmodule Phoenix.Endpoint do
       @otp_app unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
       var!(config) = Phoenix.Endpoint.Supervisor.config(@otp_app, __MODULE__)
       var!(code_reloading?) = var!(config)[:code_reloader]
-      @compile_config Keyword.take(var!(config), Phoenix.Endpoint.Supervisor.compile_config_keys)
+      @compile_config Keyword.take(var!(config), Phoenix.Endpoint.Supervisor.compile_config_keys())
 
       @doc false
       def __compile_config__ do

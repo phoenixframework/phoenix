@@ -40,7 +40,7 @@ end
 
 defmodule Phoenix.ActionClauseError do
   exception_keys =
-    FunctionClauseError.__struct__
+    FunctionClauseError.__struct__()
     |> Map.keys()
     |> Kernel.--([:__exception__, :__struct__])
 

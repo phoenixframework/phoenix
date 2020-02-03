@@ -14,7 +14,7 @@ defmodule Phoenix.Router.Scope do
   def init(module) do
     Module.put_attribute(module, @stack, [])
     Module.put_attribute(module, @top, %Scope{})
-    Module.put_attribute(module, @pipes, MapSet.new)
+    Module.put_attribute(module, @pipes, MapSet.new())
   end
 
   @doc """
@@ -45,7 +45,7 @@ defmodule Phoenix.Router.Scope do
   def validate_path(path) when is_binary(path) do
     IO.warn """
     router paths should begin with a forward slash, got: #{inspect path}
-    #{Exception.format_stacktrace}
+    #{Exception.format_stacktrace()}
     """
 
     "/" <> path
