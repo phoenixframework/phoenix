@@ -276,7 +276,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new with path, app and module" do
     in_tmp "new with path, app and module", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
+      project_path = Path.join(File.cwd!(), "custom_path")
       Mix.Tasks.Phx.New.run([project_path, "--app", @app_name, "--module", "PhoteuxBlog"])
 
       assert_file "custom_path/.gitignore"
@@ -310,7 +310,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new defaults to pg adapter" do
     in_tmp "new defaults to pg adapter", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
+      project_path = Path.join(File.cwd!(), "custom_path")
       Mix.Tasks.Phx.New.run([project_path])
 
       assert_file "custom_path/mix.exs", ":postgrex"
@@ -327,7 +327,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new with mysql adapter" do
     in_tmp "new with mysql adapter", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
+      project_path = Path.join(File.cwd!(), "custom_path")
       Mix.Tasks.Phx.New.run([project_path, "--database", "mysql"])
 
       assert_file "custom_path/mix.exs", ":myxql"
@@ -344,7 +344,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new with invalid database adapter" do
     in_tmp "new with invalid database adapter", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
+      project_path = Path.join(File.cwd!(), "custom_path")
       assert_raise Mix.Error, ~s(Unknown database "invalid"), fn ->
         Mix.Tasks.Phx.New.run([project_path, "--database", "invalid"])
       end

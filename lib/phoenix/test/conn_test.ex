@@ -159,7 +159,7 @@ defmodule Phoenix.ConnTest do
   def conn(method, path, params_or_body \\ nil) do
     IO.warn """
     using conn/3 to build a connection is deprecated. Use build_conn/3 instead.
-    #{Exception.format_stacktrace}
+    #{Exception.format_stacktrace()}
     """
     build_conn(method, path, params_or_body)
   end

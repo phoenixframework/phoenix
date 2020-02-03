@@ -174,13 +174,7 @@ defmodule Phoenix.Router.Route do
     end
   end
 
-  if Code.ensure_loaded?(Plug.Router.Utils) do
-    defp build_path_match(path) do
-      Plug.Router.Utils.build_path_match(path)
-    end
-  else
-    defp build_path_match(path) do
-      Plug.Router.Compiler.build_path_match(path)
-    end
+  defp build_path_match(path) do
+    Plug.Router.Utils.build_path_match(path)
   end
 end
