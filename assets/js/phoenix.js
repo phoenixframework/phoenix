@@ -939,12 +939,20 @@ export class Socket {
   }
 
   teardown(callback, code, reason){
-    if(this.conn){
-      this.conn.onclose = function(){} // noop
+    if(this.conn) {
       if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
-      this.conn = null
     }
-    callback && callback()
+
+    // Force connection cleanup and callback to the next event loop. This is
+    // necessary for `conn.close()` to finish and trigger all necesary
+    // callbacks.
+    setTimeout(() => {
+      if(this.conn){
+        this.conn.onclose = function(){} // noop
+        this.conn = null
+      }
+      callback && callback()
+    })
   }
 
   onConnClose(event){

@@ -263,19 +263,22 @@ describe("with transports", done =>{
       socket = new Socket("/socket")
     })
 
-    it("removes existing connection", () => {
+    it("removes existing connection", done => {
       socket.connect()
-      socket.disconnect()
-
-      assert.equal(socket.conn, null)
+      socket.disconnect(() => {
+        assert.equal(socket.conn, null)
+        done()
+      })
     })
 
-    it("calls callback", () => {
+    it("calls callback", done => {
       let count = 0
       socket.connect()
-      socket.disconnect(() => count++)
-
-      assert.equal(count, 1)
+      socket.disconnect(() => {
+        count++
+        assert.equal(count, 1)
+        done()
+      })
     })
 
     it("calls connection close callback", () => {
@@ -630,14 +633,13 @@ describe("with transports", done =>{
       assert.ok(spy.calledOnce)
     })
 
-    it('does not schedule reconnectTimer timeout if normal close after explicit disconnect', () => {
+    it('does not schedule reconnectTimer timeout if normal close after explicit disconnect', done => {
       const spy = sinon.spy(socket.reconnectTimer, 'scheduleTimeout')
 
-      const event = { code: 1000 }
-
-      socket.disconnect()
-
-      assert.ok(spy.notCalled)
+      socket.disconnect(() => {
+        assert.ok(spy.notCalled)
+        done()
+      })
     })
 
     it('schedules reconnectTimer timeout if not normal close', () => {
@@ -650,17 +652,19 @@ describe("with transports", done =>{
       assert.ok(spy.calledOnce)
     })
 
-    it('schedules reconnectTimer timeout if connection cannot be made after a previous clean disconnect', () => {
+    it('schedules reconnectTimer timeout if connection cannot be made after a previous clean disconnect', done => {
       const spy = sinon.spy(socket.reconnectTimer, 'scheduleTimeout')
 
-      socket.disconnect();
-      socket.connect();
+      socket.disconnect(() => {
+        socket.connect();
 
-      const event = { code: 1001 }
+        const event = { code: 1001 }
 
-      socket.onConnClose(event)
+        socket.onConnClose(event)
 
-      assert.ok(spy.calledOnce)
+        assert.ok(spy.calledOnce)
+        done()
+      })
     })
 
     it("triggers onClose callback", () => {
