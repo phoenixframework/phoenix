@@ -41,7 +41,7 @@ defmodule Phoenix.Logger do
     * `[:phoenix, :socket_connected]` - dispatched by `Phoenix.Socket`, at the end of a socket connection
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{endpoint: atom, transport: atom, params: term, connect_info: map, vsn: binary, user_socket: atom, result: :ok | :error, serializer: atom, log: Logger.level | false}`
-      * Disable logging: `use Phoenix.Socket, log: false`
+      * Disable logging: `use Phoenix.Socket, log: false` or `socket "/foo", MySocket, websocket: [log: false]` in your endpoint
 
     * `[:phoenix, :channel_joined]` - dispatched at the end of a channel join
       * Measurement: `%{duration: native_time}`

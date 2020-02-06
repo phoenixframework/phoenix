@@ -679,10 +679,6 @@ defmodule Phoenix.Endpoint do
   @doc """
   Defines a websocket/longpoll mount-point for a socket.
 
-  Note: for backwards compatibility purposes, the `:websocket`
-  and `:longpoll` options only have an effect if the socket
-  given as argument has no `transport` declarations in it.
-
   ## Options
 
     * `:websocket` - controls the websocket configuration.
@@ -696,9 +692,9 @@ defmodule Phoenix.Endpoint do
       "Longpoll configuration" for the whole list
 
   If your socket is implemented using `Phoenix.Socket`,
-  you can also pass here all options accepted on
-  `use Phoenix.Socket`. An option given here will override
-  the value in `Phoenix.Socket`.
+  you can also pass to each transport above all options
+  accepted on `use Phoenix.Socket`. An option given here
+  will override the value in `use Phoenix.Socket`.
 
   ## Examples
 
