@@ -1013,7 +1013,7 @@ export class Socket {
   off(refs) {
     for(let key in this.stateChangeCallbacks){
       this.stateChangeCallbacks[key] = this.stateChangeCallbacks[key].filter(([ref]) => {
-        return !refs.includes(ref)
+        return refs.indexOf(ref) === -1
       })
     }
   }
