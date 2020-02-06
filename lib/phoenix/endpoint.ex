@@ -88,7 +88,7 @@ defmodule Phoenix.Endpoint do
       with a 500 error during a HTML request, `render("500.html", assigns)`
       will be called in the view given to `:render_errors`. Defaults to:
 
-          [view: MyApp.ErrorView, accepts: ~w(html), layout: false]
+          [view: MyApp.ErrorView, accepts: ~w(html), layout: false, log: :debug]
 
       The default format is used when none is set in the connection
 
@@ -220,47 +220,15 @@ defmodule Phoenix.Endpoint do
       and `c:local_broadcast_from/4`
     * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`
     * as required by the `Plug` behaviour: `c:Plug.init/1` and `c:Plug.call/2`
-
+    
   ## Instrumentation
 
-  Phoenix uses the `:telemetry` library for instrumentation. The following events
-  are published by Phoenix with the following measurements and metadata:
-
-    * `[:phoenix, :endpoint, :start]` - dispatched by `Plug.Telemetry` in your
-      endpoint at the beginning of every request.
-      * Measurement: `%{time: System.monotonic_time}`
-      * Metadata: `%{conn: Plug.Conn.t}`
-
-    * `[:phoenix, :endpoint, :stop]` - dispatched by `Plug.Telemetry` in your
-      endpoint whenever the response is sent
-      * Measurement: `%{duration: native_time}`
-      * Metadata: `%{conn: Plug.Conn.t}`
-
-    * `[:phoenix, :router_dispatch, :start]` - dispatched by `Phoenix.Router`
-      before dispatching to a matched route
-      * Measurement: `%{time: System.monotonic_time}`
-      * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom]}`
-
-    * `[:phoenix, :router_dispatch, :stop]` - dispatched by `Phoenix.Router`
-      after successfully dispatching to a matched route
-      * Measurement: `%{duration: native_time}`
-      * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom]}`
-
-    * `[:phoenix, :error_rendered]` - dispatched at the end of an error view being rendered
-      * Measurement: `%{duration: native_time}`
-      * Metadata: `%{status: Plug.Conn.status, kind: Exception.kind, reason: term, stacktrace: Exception.stacktrace}`
-
-    * `[:phoenix, :socket_connected]` - dispatched at the end of a socket connection
-      * Measurement: `%{duration: native_time}`
-      * Metadata: `%{endpoint: atom, transport: atom, params: term, connect_info: map, vsn: binary, user_socket: atom, result: :ok | :error, serializer: atom}`
-
-    * `[:phoenix, :channel_joined]` - dispatched at the end of a channel join
-      * Measurement: `%{duration: native_time}`
-      * Metadata: `%{params: term, socket: Phoenix.Socket.t}`
-
-    * `[:phoenix, :channel_handled_in]` - dispatched at the end of a channel handle in
-      * Measurement: `%{duration: native_time}`
-      * Metadata: `%{event: binary, params: term, socket: Phoenix.Socket.t}`
+  To add metrics for requests to the endpoint you need to add the `Plug.Telemetry` plug:
+  
+      plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+      
+  This event is logged by `Phoenix.Logger`, to disable logging add the plug option:
+  `options: [log: false]`.
 
   """
 

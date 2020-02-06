@@ -9,6 +9,8 @@ defmodule Phoenix.Endpoint.RenderErrors do
   #
   #   * `:view` - the name of the view we render templates against
   #   * `:format` - the format to use when none is available from the request
+  #   * `:accepts` - list of accepted formats errors will be rendered for
+  #   * `:log` - the `t:Logger.level/0` or `false` to disable logging rendered errors
   #
   @moduledoc false
 
