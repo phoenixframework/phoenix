@@ -1,6 +1,58 @@
 defmodule Phoenix.Logger do
   @moduledoc """
   Instrumenter to handle logging of various instrumentation events.
+  
+  ## Instrumentation
+
+  Phoenix uses the `:telemetry` library for instrumentation. The following events
+  are published by Phoenix with the following measurements and metadata:
+
+    * `[:phoenix, :endpoint, :start]` - dispatched by `Plug.Telemetry` in your
+      endpoint at the beginning of every request.
+      * Measurement: `%{time: System.monotonic_time}`
+      * Metadata: `%{conn: Plug.Conn.t, options: Keyword.t}`
+      * Options: `%{log: Logger.level | false}`
+      * Disable logging: In your endpoint `plug Plug.Telemetry, ..., options: [log: false]`
+
+    * `[:phoenix, :endpoint, :stop]` - dispatched by `Plug.Telemetry` in your
+      endpoint whenever the response is sent
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{conn: Plug.Conn.t, options: Keyword.t}`
+      * Options: `%{log: Logger.level | false}`
+      * Disable logging: In your endpoint `plug Plug.Telemetry, ..., options: [log: false]`
+
+    * `[:phoenix, :router_dispatch, :start]` - dispatched by `Phoenix.Router`
+      before dispatching to a matched route
+      * Measurement: `%{time: System.monotonic_time}`
+      * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
+      * Disable logging: Pass `log: false` to the router macro, for example: `get("/page", PageController, :index, log: false)`
+
+    * `[:phoenix, :router_dispatch, :stop]` - dispatched by `Phoenix.Router`
+      after successfully dispatching to a matched route
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
+      * Disable logging: This event is not logged
+
+    * `[:phoenix, :error_rendered]` - dispatched at the end of an error view being rendered
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{status: Plug.Conn.status, kind: Exception.kind, reason: term, stacktrace: Exception.stacktrace}`
+      * Disable logging: Set `render_errors: [log: false]` on your endpoint configuration
+
+    * `[:phoenix, :socket_connected]` - dispatched by `Phoenix.Socket`, at the end of a socket connection
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{endpoint: atom, transport: atom, params: term, connect_info: map, vsn: binary, user_socket: atom, result: :ok | :error, serializer: atom, log: Logger.level | false}`
+      * Disable logging: `use Phoenix.Socket, log: false`
+
+    * `[:phoenix, :channel_joined]` - dispatched at the end of a channel join
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{params: term, socket: Phoenix.Socket.t}`
+      * Disable logging: This event cannot be disabled
+  
+    * `[:phoenix, :channel_handled_in]` - dispatched at the end of a channel handle in
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{event: binary, params: term, socket: Phoenix.Socket.t}`
+      * Disable logging: This event cannot be disabled
+
 
   ## Parameter filtering
 
@@ -152,7 +204,7 @@ defmodule Phoenix.Logger do
   defp error_banner(:error, %type{}), do: inspect(type)
   defp error_banner(_kind, reason), do: inspect(reason)
 
-  ## Event: [:phoenix, :routed, *]
+  ## Event: [:phoenix, :router_dispatch, :start]
 
   defp phoenix_router_dispatch_start(_, _, %{log: false}, _), do: :ok
 
