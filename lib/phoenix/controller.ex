@@ -170,7 +170,7 @@ defmodule Phoenix.Controller do
 
       use Phoenix.Controller.Pipeline, opts
 
-      if opts[:put_default_views] do
+      if Keyword.get(opts, :put_default_views, true) do
         plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, opts), :app}
         plug :put_new_view, Phoenix.Controller.__view__(__MODULE__)
       end
