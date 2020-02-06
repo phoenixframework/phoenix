@@ -162,9 +162,7 @@ defmodule Phoenix.Controller do
   connection-agnostic and typically invoked from your views.
   """
   defmacro __using__(opts) do
-    {put_default_views, opts} = Keyword.pop(opts, :put_default_views, true)
-
-    quote bind_quoted: [put_default_views: put_default_views, opts: opts] do
+    quote bind_quoted: [opts: opts] do
       import Phoenix.Controller
 
       # TODO v2: No longer automatically import dependencies
@@ -172,7 +170,7 @@ defmodule Phoenix.Controller do
 
       use Phoenix.Controller.Pipeline, opts
 
-      if put_default_views do
+      if opts[:put_default_views] do
         plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, opts), :app}
         plug :put_new_view, Phoenix.Controller.__view__(__MODULE__)
       end
