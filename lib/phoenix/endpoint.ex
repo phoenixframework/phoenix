@@ -215,20 +215,14 @@ defmodule Phoenix.Endpoint do
 
     * for handling paths and URLs: `c:struct_url/0`, `c:url/0`, `c:path/1`,
       `c:static_url/0`,`c:static_path/1`, and `c:static_integrity/1`
+
     * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,
       `c:broadcast_from/4`, `c:broadcast_from!/4`, `c:local_broadcast/3`,
       and `c:local_broadcast_from/4`
-    * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`
-    * as required by the `Plug` behaviour: `c:Plug.init/1` and `c:Plug.call/2`
-    
-  ## Instrumentation
 
-  To add metrics for requests to the endpoint you need to add the `Plug.Telemetry` plug:
-  
-      plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
-      
-  This event is logged by `Phoenix.Logger`, to disable logging add the plug option:
-  `options: [log: false]`.
+    * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`
+
+    * as required by the `Plug` behaviour: `c:Plug.init/1` and `c:Plug.call/2`
 
   """
 
