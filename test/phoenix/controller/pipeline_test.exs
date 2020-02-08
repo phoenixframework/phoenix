@@ -45,7 +45,7 @@ defmodule Phoenix.Controller.PipelineTest do
   end
 
   defmodule NoViewsController do
-    use Phoenix.Controller, set_views: false
+    use Phoenix.Controller, put_default_views: false
 
     def show(conn, _), do: conn
   end
