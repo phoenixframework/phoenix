@@ -237,4 +237,75 @@ defmodule Phoenix.Socket.TransportTest do
       refute conn.halted
     end
   end
+
+  describe "load_config/2" do
+    defmodule DummyTransport do
+      def default_config() do
+        [
+          window_ms: 10_000,
+          path: "/longpoll",
+          pubsub_timeout_ms: 2_000,
+          serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
+          transport_log: false,
+          crypto: [max_age: 1_209_600]
+        ]
+      end
+
+      def get_correct_session_config() do
+        send(self(), :get_correct_session_config)
+        [
+          store: :cookie,
+          encryption_salt: "encryption_salt",
+          key: "_session_key",
+          signing_salt: "signing_salt",
+        ]
+      end
+
+      def get_incorrect_session_config() do
+        %{}
+      end
+    end
+
+    test "return default_config from Transport module provided when true is given as config argument" do
+      assert DummyTransport.default_config == Transport.load_config(true, DummyTransport)
+    end
+
+    test "config passed will orverride default config from Transport module provided" do
+      window_ms = 5_000
+      config = Transport.load_config([window_ms: window_ms], DummyTransport)
+      assert Keyword.get(config, :window_ms) == window_ms
+    end
+
+    test "support MFA session config" do
+      config = Transport.load_config([
+          connect_info: [
+            session: {DummyTransport, :get_correct_session_config, []}
+          ]
+        ], DummyTransport)
+
+      %{
+        encryption_salt: encryption_salt,
+        key: session_key,
+        signing_salt: signing_salt,
+      } = DummyTransport.get_correct_session_config() |> Enum.into(%{})
+
+      assert {^session_key, Plug.Session.COOKIE, %{
+        encryption_salt: ^encryption_salt,
+        signing_salt: ^signing_salt,
+      }} = get_in(config, [:connect_info, :session])
+
+      assert_received :get_correct_session_config
+    end
+
+    test "raise exception if MFA is given as session config but it returns anything other than list" do
+
+      assert_raise(ArgumentError, fn ->
+        Transport.load_config([
+          connect_info: [
+            session: {DummyTransport, :get_incorrect_session_config, []}
+          ]
+        ], DummyTransport)
+      end)
+    end
+  end
 end
