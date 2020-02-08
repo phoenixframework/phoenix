@@ -83,14 +83,13 @@ defmodule Phoenix.Endpoint do
       only in development as it allows listing of the application source
       code during debugging. Defaults to `false`
 
-    * `:render_errors` - responsible for rendering templates whenever there
-      is a failure in the application. For example, if the application crashes
-      with a 500 error during a HTML request, `render("500.html", assigns)`
-      will be called in the view given to `:render_errors`. Defaults to:
-
-          [view: MyApp.ErrorView, accepts: ~w(html), layout: false, log: :debug]
-
-      The default format is used when none is set in the connection
+    * `:force_ssl` - ensures no data is ever sent via HTTP, always redirecting
+      to HTTPS. It expects a list of options which are forwarded to `Plug.SSL`.
+      By default it sets the "strict-transport-security" header in HTTPS requests,
+      forcing browsers to always use HTTPS. If an unsafe request (HTTP) is sent,
+      it redirects to the HTTPS version using the `:host` specified in the `:url`
+      configuration. To dynamically redirect to the `host` of the current request,
+      set `:host` in the `:force_ssl` configuration to `nil`
 
   ### Runtime configuration
 
@@ -101,19 +100,11 @@ defmodule Phoenix.Endpoint do
       static files and their digested version. This is typically set to
       "priv/static/cache_manifest.json" which is the file automatically generated
       by `mix phx.digest`.
-      It can be either: a string containing a file system path or a tuple containing 
+      It can be either: a string containing a file system path or a tuple containing
       the application name and the path within that application.
 
     * `:check_origin` - configure the default `:check_origin` setting for
       transports. See `socket/3` for options. Defaults to `true`.
-
-    * `:force_ssl` - ensures no data is ever sent via HTTP, always redirecting
-      to HTTPS. It expects a list of options which are forwarded to `Plug.SSL`.
-      By default it sets the "strict-transport-security" header in HTTPS requests,
-      forcing browsers to always use HTTPS. If an unsafe request (HTTP) is sent,
-      it redirects to the HTTPS version using the `:host` specified in the `:url`
-      configuration. To dynamically redirect to the `host` of the current request,
-      set `:host` in the `:force_ssl` configuration to `nil`
 
     * `:secret_key_base` - a secret key used as a base to generate secrets
       for encrypting and signing data. For example, cookies and tokens
@@ -130,15 +121,8 @@ defmodule Phoenix.Endpoint do
 
           [host: "localhost", path: "/"]
 
-      The `:port` option requires either an integer, string, or
-      `{:system, "ENV_VAR"}`. When given a tuple like `{:system, "PORT"}`,
-      the port will be referenced from `System.get_env("PORT")` at runtime
-      as a workaround for releases where environment specific information
-      is loaded only at compile-time.
-
-      The `:host` option requires a string or `{:system, "ENV_VAR"}`. Similar
-      to `:port`, when given a tuple like `{:system, "HOST"}`, the host
-      will be referenced from `System.get_env("HOST")` at runtime.
+      The `:port` option requires either an integer or string. The `:host`
+      option requires a string.
 
       The `:scheme` option accepts `"http"` and `"https"` values. Default value
       is inferred from top level `:http` or `:https` option. It is useful
@@ -187,6 +171,15 @@ defmodule Phoenix.Endpoint do
     * `:pubsub_server` - the name of the pubsub server to use in channels
       and via the Endpoint broadcast functions. The PubSub server is typically
       started in your supervision tree.
+
+    * `:render_errors` - responsible for rendering templates whenever there
+      is a failure in the application. For example, if the application crashes
+      with a 500 error during a HTML request, `render("500.html", assigns)`
+      will be called in the view given to `:render_errors`. Defaults to:
+
+          [view: MyApp.ErrorView, accepts: ~w(html), layout: false, log: :debug]
+
+      The default format is used when none is set in the connection
 
   ### Adapter configuration
 
@@ -435,7 +428,6 @@ defmodule Phoenix.Endpoint do
 
       # Compile after the debugger so we properly wrap it.
       @before_compile Phoenix.Endpoint
-      @phoenix_render_errors var!(config)[:render_errors]
     end
   end
 
@@ -605,11 +597,11 @@ defmodule Phoenix.Endpoint do
         rescue
           e in Plug.Conn.WrapperError ->
             %{conn: conn, kind: kind, reason: reason, stack: stack} = e
-            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, @phoenix_render_errors)
+            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, config(:render_errors))
         catch
           kind, reason ->
             stack = System.stacktrace()
-            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, @phoenix_render_errors)
+            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, config(:render_errors))
         end
       end
 
