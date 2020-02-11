@@ -90,7 +90,6 @@ defmodule Phoenix.Token do
   """
 
   require Logger
-  alias Plug.Crypto.{KeyGenerator, MessageVerifier, MessageEncryptor}
 
   @doc """
   Encodes  and signs data into a token you can send to clients.
@@ -108,9 +107,9 @@ defmodule Phoenix.Token do
 
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
-    data
-    |> encode(opts)
-    |> MessageVerifier.sign(get_key_base(context) |> get_secret(salt, opts))
+    context
+    |> get_key_base()
+    |> Plug.Crypto.sign(salt, data, opts)
   end
 
   @doc """
@@ -130,20 +129,9 @@ defmodule Phoenix.Token do
   """
   def encrypt(context, secret, salt, data, opts \\ [])
       when is_binary(secret) and is_binary(salt) do
-    key_base = get_key_base(context)
-
-    data
-    |> encode(opts)
-    |> MessageEncryptor.encrypt(
-      get_secret(key_base, secret, opts),
-      get_secret(key_base, salt, opts)
-    )
-  end
-
-  defp encode(data, opts) do
-    signed_at_seconds = Keyword.get(opts, :signed_at)
-    signed_at_ms = if signed_at_seconds, do: trunc(signed_at_seconds * 1000), else: now_ms()
-    :erlang.term_to_binary(%{data: data, signed: signed_at_ms})
+    context
+    |> get_key_base()
+    |> Plug.Crypto.encrypt(secret, salt, data, opts)
   end
 
   @doc """
@@ -197,19 +185,10 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256`
 
   """
-  def verify(context, salt, token, opts \\ [])
-
-  def verify(context, salt, token, opts) when is_binary(salt) and is_binary(token) do
-    secret = context |> get_key_base() |> get_secret(salt, opts)
-
-    case MessageVerifier.verify(token, secret) do
-      {:ok, message} -> decode(message, opts)
-      :error -> {:error, :invalid}
-    end
-  end
-
-  def verify(_context, salt, nil, _opts) when is_binary(salt) do
-    {:error, :missing}
+  def verify(context, salt, token, opts \\ []) when is_binary(salt) do
+    context
+    |> get_key_base()
+    |> Plug.Crypto.verify(salt, token, opts)
   end
 
   @doc """
@@ -229,31 +208,10 @@ defmodule Phoenix.Token do
 
   """
   def decrypt(context, secret, salt, token, opts \\ [])
-
-  def decrypt(context, secret, salt, token, opts)
-      when is_binary(secret) and is_binary(salt) and is_binary(token) do
-    key_base = context |> get_key_base()
-    secret = get_secret(key_base, secret, opts)
-    salt = get_secret(key_base, salt, opts)
-
-    case MessageEncryptor.decrypt(token, secret, salt) do
-      {:ok, message} -> decode(message, opts)
-      :error -> {:error, :invalid}
-    end
-  end
-
-  def decrypt(_context, secret, salt, nil, _opts) when is_binary(secret) and is_binary(salt) do
-    {:error, :missing}
-  end
-
-  defp decode(message, opts) do
-    %{data: data, signed: signed} = Plug.Crypto.safe_binary_to_term(message)
-
-    if expired?(signed, Keyword.get(opts, :max_age, 86400)) do
-      {:error, :expired}
-    else
-      {:ok, data}
-    end
+      when is_binary(secret) and is_binary(salt) do
+    context
+    |> get_key_base()
+    |> Plug.Crypto.decrypt(secret, salt, token, opts)
   end
 
   ## Helpers
@@ -281,19 +239,4 @@ defmodule Phoenix.Token do
 
       """
   end
-
-  # Gathers configuration and generates the key secrets and signing secrets.
-  defp get_secret(secret_key_base, salt, opts) do
-    iterations = Keyword.get(opts, :key_iterations, 1000)
-    length = Keyword.get(opts, :key_length, 32)
-    digest = Keyword.get(opts, :key_digest, :sha256)
-    key_opts = [iterations: iterations, length: length, digest: digest, cache: Plug.Keys]
-    KeyGenerator.generate(secret_key_base, salt, key_opts)
-  end
-
-  defp expired?(_signed, :infinity), do: false
-  defp expired?(_signed, max_age_secs) when max_age_secs <= 0, do: true
-  defp expired?(signed, max_age_secs), do: signed + trunc(max_age_secs * 1000) < now_ms()
-
-  defp now_ms, do: System.system_time(:millisecond)
 end
