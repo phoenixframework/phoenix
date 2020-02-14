@@ -109,83 +109,80 @@ defmodule Phoenix.TokenTest do
     test "token with string" do
       id = 1
       key = String.duplicate("abc123", 5)
-      token = Token.encrypt(key, "secret", "id", id)
-      assert Token.decrypt(key, "secret", "id", token) == {:ok, id}
+      token = Token.encrypt(key, "secret", id)
+      assert Token.decrypt(key, "secret", token) == {:ok, id}
     end
 
     test "token with connection" do
       id = 1
-      token = Token.encrypt(conn(), "secret", "id", id)
-      assert Token.decrypt(conn(), "secret", "id", token) == {:ok, id}
+      token = Token.encrypt(conn(), "secret", id)
+      assert Token.decrypt(conn(), "secret", token) == {:ok, id}
     end
 
     test "token with socket" do
       id = 1
-      token = Token.encrypt(socket(), "secret", "id", id)
-      assert Token.decrypt(socket(), "secret", "id", token) == {:ok, id}
+      token = Token.encrypt(socket(), "secret", id)
+      assert Token.decrypt(socket(), "secret", token) == {:ok, id}
     end
 
     test "fails on missing token" do
-      assert Token.decrypt(TokenEndpoint, "secret", "id", nil) == {:error, :missing}
+      assert Token.decrypt(TokenEndpoint, "secret", nil) == {:error, :missing}
     end
 
     test "fails on invalid token" do
-      token = Token.encrypt(TokenEndpoint, "secret", "id", 1)
+      token = Token.encrypt(TokenEndpoint, "secret", 1)
 
-      assert Token.decrypt(TokenEndpoint, "secret", "id", "garbage") ==
+      assert Token.decrypt(TokenEndpoint, "secret", "garbage") ==
                {:error, :invalid}
 
-      assert Token.decrypt(TokenEndpoint, "secret", "not_id", token) ==
-               {:error, :invalid}
-
-      assert Token.decrypt(TokenEndpoint, "not_secret", "id", token) ==
+      assert Token.decrypt(TokenEndpoint, "not_secret", token) ==
                {:error, :invalid}
     end
 
     test "supports max age in seconds" do
-      token = Token.encrypt(conn(), "secret", "id", 1)
-      assert Token.decrypt(conn(), "secret", "id", token, max_age: 1000) == {:ok, 1}
-      assert Token.decrypt(conn(), "secret", "id", token, max_age: -1000) == {:error, :expired}
-      assert Token.decrypt(conn(), "secret", "id", token, max_age: 100) == {:ok, 1}
-      assert Token.decrypt(conn(), "secret", "id", token, max_age: -100) == {:error, :expired}
-      assert Token.decrypt(conn(), "secret", "id", token, max_age: 0) == {:error, :expired}
+      token = Token.encrypt(conn(), "secret", 1)
+      assert Token.decrypt(conn(), "secret", token, max_age: 1000) == {:ok, 1}
+      assert Token.decrypt(conn(), "secret", token, max_age: -1000) == {:error, :expired}
+      assert Token.decrypt(conn(), "secret", token, max_age: 100) == {:ok, 1}
+      assert Token.decrypt(conn(), "secret", token, max_age: -100) == {:error, :expired}
+      assert Token.decrypt(conn(), "secret", token, max_age: 0) == {:error, :expired}
 
-      token = Token.encrypt(conn(), "secret", "id", 1)
-      assert Token.decrypt(conn(), "secret", "id", token, max_age: 0.1) == {:ok, 1}
+      token = Token.encrypt(conn(), "secret", 1)
+      assert Token.decrypt(conn(), "secret", token, max_age: 0.1) == {:ok, 1}
       :timer.sleep(150)
-      assert Token.decrypt(conn(), "secret", "id", token, max_age: 0.1) == {:error, :expired}
+      assert Token.decrypt(conn(), "secret", token, max_age: 0.1) == {:error, :expired}
     end
 
     test "supports :infinity for max age" do
-      token = Token.encrypt(conn(), "secret", "id", 1)
-      assert Token.decrypt(conn(), "secret", "id", token, max_age: :infinity) == {:ok, 1}
+      token = Token.encrypt(conn(), "secret", 1)
+      assert Token.decrypt(conn(), "secret", token, max_age: :infinity) == {:ok, 1}
     end
 
     test "supports signed_at in seconds" do
       seconds_in_day = 24 * 60 * 60
       day_ago_seconds = System.system_time(:second) - seconds_in_day
-      token = Token.encrypt(conn(), "secret", "id", 1, signed_at: day_ago_seconds)
-      assert Token.decrypt(conn(), "secret", "id", token, max_age: seconds_in_day + 1) == {:ok, 1}
+      token = Token.encrypt(conn(), "secret", 1, signed_at: day_ago_seconds)
+      assert Token.decrypt(conn(), "secret", token, max_age: seconds_in_day + 1) == {:ok, 1}
 
-      assert Token.decrypt(conn(), "secret", "id", token, max_age: seconds_in_day - 1) ==
+      assert Token.decrypt(conn(), "secret", token, max_age: seconds_in_day - 1) ==
                {:error, :expired}
     end
 
     test "passes key_iterations options to key generator" do
-      signed1 = Token.encrypt(conn(), "secret", "id", 1, signed_at: 0, key_iterations: 1)
-      signed2 = Token.encrypt(conn(), "secret", "id", 1, signed_at: 0, key_iterations: 2)
+      signed1 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_iterations: 1)
+      signed2 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_iterations: 2)
       assert signed1 != signed2
     end
 
     test "passes key_digest options to key generator" do
-      signed1 = Token.encrypt(conn(), "secret", "id", 1, signed_at: 0, key_digest: :sha256)
-      signed2 = Token.encrypt(conn(), "secret", "id", 1, signed_at: 0, key_digest: :sha512)
+      signed1 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_digest: :sha256)
+      signed2 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_digest: :sha512)
       assert signed1 != signed2
     end
 
     test "passes key_length options to key generator" do
-      signed1 = Token.encrypt(conn(), "secret", "id", 1, signed_at: 0, key_length: 16)
-      signed2 = Token.encrypt(conn(), "secret", "id", 1, signed_at: 0, key_length: 32)
+      signed1 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_length: 16)
+      signed2 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_length: 32)
       assert signed1 != signed2
     end
   end

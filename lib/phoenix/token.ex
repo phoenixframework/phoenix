@@ -127,11 +127,10 @@ defmodule Phoenix.Token do
       Defaults to `System.system_time(:second)`
 
   """
-  def encrypt(context, secret, salt, data, opts \\ [])
-      when is_binary(secret) and is_binary(salt) do
+  def encrypt(context, secret, data, opts \\ []) when is_binary(secret) do
     context
     |> get_key_base()
-    |> Plug.Crypto.encrypt(secret, salt, data, opts)
+    |> Plug.Crypto.encrypt(secret, data, opts)
   end
 
   @doc """
@@ -207,11 +206,10 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256`
 
   """
-  def decrypt(context, secret, salt, token, opts \\ [])
-      when is_binary(secret) and is_binary(salt) do
+  def decrypt(context, secret, token, opts \\ []) when is_binary(secret) do
     context
     |> get_key_base()
-    |> Plug.Crypto.decrypt(secret, salt, token, opts)
+    |> Plug.Crypto.decrypt(secret, token, opts)
   end
 
   ## Helpers
