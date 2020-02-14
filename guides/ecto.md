@@ -9,7 +9,7 @@ Ecto has out of the box support for the following databases:
 
 Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default (you can pass the `--no-ecto` flag to exclude this).
 
-For a thorough, general guide for Ecto, check out the [Ecto getting started guide](https://hexdocs.pm/ecto/getting-started.html). For an overview of all Ecto specific mix tasks for Phoenix, see the [mix tasks guide](phoenix_mix_tasks.html#ecto-specific-mix-tasks).
+For a thorough, general guide for Ecto, check out the [Ecto getting started guide](https://hexdocs.pm/ecto/getting-started.html). For an overview of all Ecto specific mix tasks for Phoenix, see the [mix tasks guide](mix_tasks.html#ecto-specific-mix-tasks).
 
 This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. For instructions on switching to MySQL, please see the [Using MySQL](#using-mysql) section.
 
@@ -514,3 +514,9 @@ $ mix ecto.migrate
 [info] create table users
 [info] == Migrated in 0.2s
 ```
+
+## Other options
+
+While Phoenix uses [the Ecto project](https://hexdocs.pm/ecto) to interact with the data access layer, there are many other data access options, some built into the Erlang standard library. [ETS](http://www.erlang.org/doc/man/ets.html) and [DETS](http://www.erlang.org/doc/man/dets.html) are key value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
+
+The data world is your oyster, but we won't be covering these options in these guides.

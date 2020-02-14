@@ -363,7 +363,7 @@ We rewrote the `list_users/0` and `get_user!/1` to preload the credential associ
 Next, let's expose our new feature to the web by adding the credentials input to our user form. Open up `lib/hello_web/templates/user/form.html.eex` and key in the new credential form group above the submit button:
 
 
-```eex
+```html
   ...
 + <div class="form-group">
 +   <%= inputs_for f, :credential, fn cf -> %>
@@ -380,7 +380,7 @@ We used `Phoenix.HTML`'s `inputs_for` function to add an associations nested fie
 
 Next, let's show the user's email address in the user show template. Add the following code to `lib/hello_web/templates/user/show.html.eex`:
 
-```eex
+```html
   ...
 + <li>
 +   <strong>Email:</strong>
@@ -535,7 +535,7 @@ end
 
 Next, add a new template in `lib/hello_web/templates/session/new.html.eex`:
 
-```eex
+```html
 <h1>Sign in</h1>
 
 <%= form_for @conn, Routes.session_path(@conn, :create), [method: :post, as: :user], fn f -> %>
@@ -618,7 +618,7 @@ Remember to update your repository by running migrations:
 
 The `views` attribute on the pages will not be updated directly by the user, so let's remove it from the generated form. Open `lib/hello_web/templates/cms/page/form.html.eex` and remove this part:
 
-```eex
+```html
 -  <%= label f, :views %>
 -  <%= number_input f, :views %>
 -  <%= error_tag f, :views %>

@@ -28,7 +28,7 @@ $ mix ecto.create
 
 If you have any questions about this process, now is a good time to jump over to the [Up and Running Guide](up_and_running.html).
 
-Let's create an `Accounts` context for this example. Since context creation is not in scope of this guide, we will use the generator. If you aren't familiar, read [this section of the Mix guide](phoenix_mix_tasks.html#phoenix-specific-mix-tasks) and [the Contexts Guide](contexts.html#content).
+Let's create an `Accounts` context for this example. Since context creation is not in scope of this guide, we will use the generator. If you aren't familiar, read [the Contexts Guide](contexts.html#content).
 
 ```console
 $ mix phx.gen.context Accounts User users name:string email:string:unique password:string

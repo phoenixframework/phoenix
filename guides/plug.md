@@ -113,7 +113,7 @@ We are able to add this module plug to our browser pipeline via `plug HelloWeb.P
 
 To see the assign in action, go to the layout in "lib/hello_web/templates/layout/app.html.eex" and add the following close to the main container:
 
-```eex
+```html
 <main role="main" class="container">
   <p>Locale: <%= @locale %></p>
 ```
@@ -124,7 +124,11 @@ That's all there is to Plug. Phoenix embraces the plug design of composable tran
 
 ## Where to plug
 
-The endpoint, router, and controllers in Phoenix accept plugs declarations. In the endpoint, we did:
+The endpoint, router, and controllers in Phoenix accept plugs.
+
+### Endpoint plugs
+
+Endpoints organize all the plugs common to every request, and apply them before dispatching into the router with its custom pipelines. We added a plug to the endpoint like this:
 
 ```elixir
 defmodule HelloWeb.Endpoint do
@@ -133,6 +137,39 @@ defmodule HelloWeb.Endpoint do
   plug :instrospect
   plug HelloWeb.Router
 ```
+
+The default Endpoint plugs do quite a lot of work. Here they are in order:
+
+- [Plug.Static](https://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes before the logger, serving of static assets is not logged
+
+- [Phoenix.CodeReloader](https://hexdocs.pm/phoenix/Phoenix.CodeReloader.html) - a plug that enables code reloading for all entries in the web directory. It is configured directly in the Phoenix application
+
+- [Plug.RequestId](https://hexdocs.pm/plug/Plug.RequestId.html) - generates a unique request id for each request.
+
+- [Plug.Telemetry](https://hexdocs.pm/plug/Plug.Telemetry.html) - adds instrumentation points so Phoenix can log the request path, status code and request time by default.
+
+- [Plug.Parsers](https://hexdocs.pm/plug/Plug.Parsers.html) - parses the request body when a known parser is available. By default parsers parse urlencoded, multipart and json (with `jason`). The request body is left untouched when the request content-type cannot be parsed
+
+- [Plug.MethodOverride](https://hexdocs.pm/plug/Plug.MethodOverride.html) - converts the request method to PUT, PATCH or DELETE for POST requests with a valid `_method` parameter
+
+- [Plug.Head](https://hexdocs.pm/plug/Plug.Head.html) - converts HEAD requests to GET requests and strips the response body
+
+- [Plug.Session](https://hexdocs.pm/plug/Plug.Session.html) - a plug that sets up session management. Note that `fetch_session/2` must still be explicitly called before using the session as this Plug just sets up how the session is fetched
+
+In the middle of the endpoint, there is also a conditional block:
+
+```elixir
+  if code_reloading? do
+    socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
+    plug Phoenix.LiveReloader
+    plug Phoenix.CodeReloader
+    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :demo
+  end
+```
+
+This block is only executed in development. It enables live reloading (if you change a CSS file, they are updated in-browser without refreshing the page), code reloading (so we can see changes to our application without restarting the server), and check repo status (which makes sure our database is up to date, raising readable and actionable error otherwise).
+
+### Router plugs
 
 In the router, we can declare plugs insided pipelines:
 
@@ -148,16 +185,19 @@ defmodule HelloWeb.Router do
     plug :put_secure_browser_headers
     plug HelloWeb.Plugs.Locale, "en"
   end
+
+  scope "/", HelloWeb do
+    pipe_through :browser
+
+    get "/", PageController, :index
+  end
 ```
 
-As we will see in [the Routing guide](routing.html), the pipelines themselves are plugs, which means we can do something like:
+Routes are defined inside scopes and scopes may pipe through multiple pipelines. Once a route matches, Phoenix invokes all plugs defined in all pipelines associated to that route. For example, accessing "/" will pipe through the `:browser` pipeline, consequently invoking all of its plugs.
 
-```elixir
-pipeline :enhanced_browser do
-  plug :browser
-  plug :something_else
-end
-```
+As we will see in [the Routing guide](routing.html), the pipelines themselves are plugs. There we will also discuss all plugs in the `:browser` pipeline.
+
+### Controller plugs
 
 Finally, controllers are plugs too, so we can do:
 
@@ -168,7 +208,7 @@ defmodule HelloWeb.HelloController do
   plug HelloWeb.Plugs.Locale, "en"
 ```
 
-In particular, controller plugs provide an extension that allows us to execute plugs only within certain actions. You can do:
+In particular, controller plugs provide a feature that allows us to execute plugs only within certain actions. For example, you can do:
 
 ```elixir
 defmodule HelloWeb.HelloController do
@@ -253,3 +293,5 @@ end
 To make this all work, we converted the nested blocks of code and used `halt(conn)` whenever we reached a failure path. The `halt(conn)` functionality is essential here: it tells Plug that the next plug should not invoked.
 
 At the end of the day, by replacing the nested blocks of code with a flattened series of plug transformations, we are able to achieve the same functionality in a much more composable, clear, and reusable way.
+
+To learn more about Plugs, see the documentation for [the Plug project](https://hexdocs.pm/plug), which provides many built-in plugs and functionalities.

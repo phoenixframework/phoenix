@@ -195,7 +195,7 @@ defmodule HelloWeb.Endpoint do
 end
 ```
 
-In `lib/hello_web/channels/user_socket.ex`, the `HelloWeb.UserSocket` we pointed to in our endpoint has already been created when we generated our application. We need to make sure messages get routed to the correct channel. To do that, we'll uncomment the "room:*" channel definition:
+In `lib/hello_web/channels/user_socket.ex`, the `HelloWeb.UserSocket` we pointed to in our endpoint has already been created when we generated our application. We need to make sure messages get routed to the correct channel. To do that, we'll uncomment the `"room:*"` channel definition:
 
 ```elixir
 defmodule HelloWeb.UserSocket do

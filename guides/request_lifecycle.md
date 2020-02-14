@@ -147,9 +147,9 @@ which is what renders our template into the layout before the HTML is sent off t
 
 As we built our first page, we could start to understand how the request life-cycle is put together. Now let's take a more holistic look at it.
 
-All HTTP requests start in our application endpoint. You can find it as a module named `HelloWeb.Endpoint` in `lib/hello_web/endpoint.ex`. Once you open up the endpoint file, you will that, similar to the router, the endpoint also has many calls to `plug`. `Plug` is a library and specification for stiching web applications together. It is an essential part of how Phoenix handle requests and we will discuss it in detail [in the Plug guide](plug.html).
+All HTTP requests start in our application endpoint. You can find it as a module named `HelloWeb.Endpoint` in `lib/hello_web/endpoint.ex`. Once you open up the endpoint file, you will see that, similar to the router, the endpoint has many calls to `plug`. `Plug` is a library and specification for stiching web applications together. It is an essential part of how Phoenix handle requests and we will discuss it in detail [in the Plug guide](plug.html) coming next.
 
-For now, it suffices to say that each Plug defines a slice of request processing. For example, by skimming the endpoint, we can have a rough look on what the endpoint does to a request:
+For now, it suffices to say that each Plug defines a slice of request processing. In the endpoint you will find a skeleton roughly like this:
 
 ```elixir
 defmodule HelloWeb.Endpoint do
@@ -161,43 +161,22 @@ defmodule HelloWeb.Endpoint do
   plug Plug.Parsers, ...
   plug Plug.MethodOverride
   plug Plug.Head
-  plug Plug.Session
+  plug Plug.Session, ...
   plug HelloWeb.Router
 end
 ```
 
-We can see that it serves static files, provides some measurements through telemetry, parses complex requests, and more.
+Each of these plugs have a specific responsibility that we will learn later. The last plug is precisely the `HelloWeb.Router` module. This allows the endpoint to delegate all further request processing to the router. As we now know, its main responsibility is to map verb/path pairs to controllers. The controllers then tells a view to render a template.
 
-In the middle of the endpoint, there is also a conditional block:
+At this moment, you may be thinking this can be a lot of steps to simply render a page. However, as our application grows in complexity, we will see that each layer serves a distinct purpose:
 
-```elixir
-  if code_reloading? do
-    socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
-    plug Phoenix.LiveReloader
-    plug Phoenix.CodeReloader
-    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :demo
-  end
-```
+  * endpoint (`Phoenix.Endpoint`) - the endpoint contains the common and initial path that all requests go through. If you want something to happen on all requests, it goes to the endpoint
 
-This block is only executed in development, when code reloading is enabled, and this is exactly what provides the hot code reloading we saw in the previous section. We can see changes to our application without restarting the server.
+  * router (`Phoenix.Router`) - the router is responsible for dispatching verb/patch to controllers. The router also allows us to scope functionality. For example, some pages in your application may require user authentication, others may not
 
-Finally, note that the last call in the endpoint is exactly to our router:
+  * controller (`Phoenix.Controller`) - the job of the controller is to retrieve request information, talk to your business domain, and prepare data for the presentation layer
 
-```elixir
-  plug HelloWeb.Router
-```
-
-As we now know, the router maps the verb/path pair to a controller which then dispatches to a view.
-
-At this moment, you may be thinking this can be a lot of steps to simply render a page. However, as our application grows in complexity, each component serves a distinct purpose:
-
-  * endpoint ([Phoenix.Endpoint](Phoenix.Endpoint.html)) - the endpoint contains the common and initial path that all requests go through. If you want something to happen on all requests, it goes to the endpoint
-
-  * router ([Phoenix.Router](Phoenix.Router.html)) - the router is responsible for dispatching verb/patch to controllers. The router also allows us to scope functionality. For example, some pages in your application may require user authentication, others may not
-
-  * controller ([Phoenix.Controller](Phoenix.Controller.html)) - the job of the controller is to retrieve request information, talk to your business domain, and prepare data for the presentation layer
-
-  * view  ([Phoenix.View](Phoenix.View.html)) - the view handles the structured data from the controller and converts it to a presentation to be shown to users
+  * view  (`Phoenix.View`) - the view handles the structured data from the controller and converts it to a presentation to be shown to users
 
 Let's do a quick recap and how the last three components work together by adding another page.
 

@@ -1,16 +1,14 @@
 # Custom Error Pages
 
-Phoenix provides an `ErrorView`, `lib/hello_web/views/error_view.ex`, to render errors in our applications. The full module name will include the name of our application, as in `Hello.ErrorView`.
+Phoenix has a view called the `ErrorView` which lives in `lib/hello_web/views/error_view.ex`. The purpose of the `ErrorView` is to handle errors in a general way, from one centralized location.
 
-Phoenix will detect any 400 or 500 status level errors in our application and use the `render/2` function in our `ErrorView` to render an appropriate error template. Any errors which don't match an existing clause of `render/2` will be caught by `template_not_found/2`.
+## The ErrorView
 
-We can also customize the implementation of any of these functions however we like.
-
-Here's what the `ErrorView` looks like.
+For new applications, the ErrorView looks like this:
 
 ```elixir
-defmodule Hello.ErrorView do
-  use Hello.Web, :view
+defmodule HelloWeb.ErrorView do
+  use HelloWeb, :view
 
   # If you want to customize a particular status code
   # for a certain format, you may uncomment below.
@@ -27,72 +25,132 @@ defmodule Hello.ErrorView do
 end
 ```
 
-> NOTE: In the development environment, this behavior will be overridden. Instead, we will get a really great debugging page. In order to see the `ErrorView` in action, we'll need to set `debug_errors:` to `false` in `config/dev.exs`. The server must be restarted for the changes to become effective.
+Before we dive into this, let's see what the rendered `404 not found` message looks like in a browser. In the development environment, Phoenix will debug errors by default, showing us a very informative debugging page. What we want here, however, is to see what page the application would serve in production. In order to do that we need to set `debug_errors: false` in `config/dev.exs`.
 
 ```elixir
+use Mix.Config
+
 config :hello, HelloWeb.Endpoint,
   http: [port: 4000],
   debug_errors: false,
   code_reloader: true,
-  cache_static_lookup: false,
-  watchers: [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development", "--watch-stdin",
-                    cd: Path.expand("../assets", __DIR__)]]
+  . . .
 ```
 
-To learn more about custom error pages, please see [The Error View](views.html#the-errorview) section of the View Guide.
+After modifying our config file, we need to restart our server in order for this change to take effect. After restarting the server, let's go to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) for a running local application and see what we get.
 
-#### Custom Errors
+Ok, that's not very exciting. We get the bare string "Not Found", displayed without any markup or styling.
+
+The first question is, where does that error string come from? The answer is right in the `ErrorView`.
+
+```elixir
+def template_not_found(template, _assigns) do
+  Phoenix.Controller.status_message_from_template(template)
+end
+```
+
+Great, so we have this `template_not_found/2` function that takes a template and an `assigns` map, which we ignore. The `template_not_found/2` is invoked whenever a Phoenix.View attempts to render a template bu tno template is found.
+
+In order words, to provide custom error pages, we could simply define a the proper `render/2` function clause in `HelloWeb.ErrorView`.
+
+```elixir
+def render("404.html", _assigns) do
+  "Page Not Found"
+end
+```
+
+But we can do even better.
+
+Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web/templates/error` directory. Let's create one now. Inside our new directory, let's add a template, `404.html.eex` and give it some markup - a mixture of our application layout and a new `div` with our message to the user.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Welcome to Phoenix!</title>
+    <link rel="stylesheet" href="/css/app.css">
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+        </ul>
+        <span class="logo"></span>
+      </div>
+
+      <div class="phx-hero">
+        <p>Sorry, the page you are looking for does not exist.</p>
+      </div>
+
+      <div class="footer">
+        <p><a href="http://phoenixframework.org">phoenixframework.org</a></p>
+      </div>
+
+    </div> <!-- /container -->
+    <script src="/js/app.js"></script>
+  </body>
+</html>
+```
+
+Now when we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see a much nicer error page. It is worth noting that we did not render our `404.html.eex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. This is to avoid circular errors. For example, what happens if our application failed due to an error in the layout? Attempting to render the layout again will just trigger another error. So ideally we want to minimize the amount of dependencies and logic in our error templates, sharing only what is necessary.
+
+## Custom Exceptions
 
 Elixir provides a macro called `defexception` for defining custom exceptions. Exceptions are represented as structs, and structs need to be defined inside of modules.
 
-In order to create a custom error, we need to define a new module. Conventionally this will have "Error" in the name. Inside of that module, we need to define a new exception with `defexception`.
-
-We can also define a module within a module to provide a namespace for the inner module.
-
-Here's an example from the [Phoenix.Router](https://github.com/phoenixframework/phoenix/blob/master/lib/phoenix/router.ex) which demonstrates all of these ideas.
+In order to create a custom exception, we need to define a new module. Conventionally this will have "Error" in the name. Inside of that module, we need to define a new exception with `defexception`.
 
 ```elixir
-defmodule Phoenix.Router do
-  defmodule NoRouteError do
-    @moduledoc """
-    Exception raised when no route is found.
-    """
-    defexception plug_status: 404, message: "no route found", conn: nil, router: nil
-
-    def exception(opts) do
-      conn   = Keyword.fetch!(opts, :conn)
-      router = Keyword.fetch!(opts, :router)
-      path   = "/" <> Enum.join(conn.path_info, "/")
-
-      %NoRouteError{message: "no route found for #{conn.method} #{path} (#{inspect router})",
-      conn: conn, router: router}
-    end
-  end
-. . .
+defmodule MyApp.SomethingNotFoundError do
+  defexception [:message]
 end
 ```
 
-Plug provides a protocol called `Plug.Exception` where we are able to customize the status and add actions that exception structs can returns on the debug error page.
-
-If we wanted to supply a status of 404 for an `Ecto.NoResultsError`, we could do it by defining an implementation for the `Plug.Exception` protocol like this:
+You can raise your new exception like this:
 
 ```elixir
-defimpl Plug.Exception, for: Ecto.NoResultsError do
+raise MyApp.SomethingNotFoundError, "oops"
+```
+
+By default, Plug and Phoenix will treat all exceptions as 500 errors. However, Plug provides a protocol called `Plug.Exception` where we are able to customize the status and add actions that exception structs can returns on the debug error page.
+
+If we wanted to supply a status of 404 for an `MyApp.SomethingNotFoundError`, we could do it by defining an implementation for the `Plug.Exception` protocol like this:
+
+```elixir
+defimpl Plug.Exception, for: MyApp.SomethingNotFoundError do
   def status(_exception), do: 404
+  def actions(_exception), do: []
 end
 ```
 
-Note that this is just an example: Phoenix [already does this](https://github.com/phoenixframework/phoenix_ecto/blob/master/lib/phoenix_ecto/plug.ex) for `Ecto.NoResultsError`, so you don't have to.
+Alternatively, you could define a `plug_status` field directly in the exception struct:
 
-#### Actions
+```elixir
+defmodule MyApp.SomethingNotFoundError do
+  defexception [:message, plug_status: 404]
+end
+```
 
-Actions are functions that can be triggered by the error page, it is basically a list of maps defining a `label` and a `handler` to be executed.
+However, implementing the `Plug.Exception` protocol by hand can be convenient in certain occasions, such as when providing Actionable ERrors.
+
+## Actionable Errors
+
+Exception actions are functions that can be triggered by the error page, it is basically a list of maps defining a `label` and a `handler` to be executed.
+
 It is rendered in the error page as a collection of buttons and follows the format of: `[%{label: String.t(), handler: {module(), function :: atom(), args :: []}}]`.
 
-If we wanted to return some actions for an `Ecto.NoResultsError` we would implement `Plug.Exception` like this:
+If we wanted to return some actions for an `MyApp.SomethingNotFoundError` we would implement `Plug.Exception` like this:
 
 ```elixir
-defimpl Plug.Exception, for: Ecto.NoResultsError do
+defimpl Plug.Exception, for: MyApp.SomethingNotFoundError do
   def status(_exception), do: 404
   def actions(_exception), do: [%{
       label: "Run seeds",
