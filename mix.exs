@@ -119,6 +119,7 @@ defmodule Phoenix.MixProject do
       "guides/introduction/up_and_running.md",
       "guides/introduction/community.md",
 
+      "guides/directory_structure.md",
       "guides/request_lifecycle.md",
       "guides/routing.md",
       "guides/plug.md",

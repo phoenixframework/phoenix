@@ -1,13 +1,13 @@
 # Mix Tasks
 
-There are currently a number of built-in Phoenix-specific and ecto-specific mix tasks available to us within a newly-generated application. We can also create our own application specific tasks.
+There are currently a number of built-in Phoenix-specific and Ecto-specific mix tasks available to us within a newly-generated application. We can also create our own application specific tasks.
 
-> Note to learn more about `mix` read the [Introduction to Mix](https://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html).
+> Note to learn more about `mix`, you can read Elixir's official [Introduction to Mix](https://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html).
 
 ## Phoenix tasks
 
 ```console
-➜ mix help | grep -i phx
+➜ mix help --search "phx"
 mix local.phx          # Updates the Phoenix project generator locally
 mix phx                # Prints Phoenix help information
 mix phx.digest         # Digests and compresses static files
@@ -30,7 +30,7 @@ mix phx.server         # Starts applications and their servers
 
 We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea.
 
-We will cover all Phoenix Mix tasks, except `new`, `new.ecto`, `new.web`, which are part of the Phoenix installer. You can learn more about them or any other task by calling `mix help TASK`.
+We will cover all Phoenix Mix tasks, except `phx.new`, `phx.new.ecto`, and `phx.new.web`, which are part of the Phoenix installer. You can learn more about them or any other task by calling `mix help TASK`.
 
 ### `mix phx.gen.html`
 
@@ -333,18 +333,23 @@ Check your digested files at 'www/public'.
 Newly generated Phoenix applications now include ecto and postgrex as dependencies by default (which is to say, unless we use `mix phx.new` with the `--no-ecto` flag). With those dependencies come mix tasks to take care of common ecto operations. Let's see which tasks we get out of the box.
 
 ```console
-$ mix help | grep -i ecto
-mix ecto.create          # Create the storage for the repo
-mix ecto.drop            # Drop the storage for the repo
-mix ecto.gen.migration   # Generate a new migration for the repo
-mix ecto.gen.repo        # Generates a new repository
-mix ecto.migrate         # Runs migrations up on a repo
-mix ecto.rollback        # Reverts migrations down on a repo
+$ mix help --search "ecto"
+mix ecto               # Prints Ecto help information
+mix ecto.create        # Creates the repository storage
+mix ecto.drop          # Drops the repository storage
+mix ecto.dump          # Dumps the repository database structure
+mix ecto.gen.migration # Generates a new migration for the repo
+mix ecto.gen.repo      # Generates a new repository
+mix ecto.load          # Loads previously dumped database structure
+mix ecto.migrate       # Runs the repository migrations
+mix ecto.migrations    # Displays the repository migration status
+mix ecto.rollback      # Rolls back the repository migrations
 ```
 
 Note: We can run any of the tasks above with the `--no-start` flag to execute the task without starting the application.
 
 ### `mix ecto.create`
+
 This task will create the database specified in our repo. By default it will look for the repo named after our application (the one generated with our app unless we opted out of ecto), but we can pass in another repo if we want.
 
 Here's what it looks like in action.
@@ -442,7 +447,11 @@ $ mix ecto.gen.repo -r OurCustom.Repo
 Don't forget to add your new repo to your supervision tree
 (typically in lib/hello.ex):
 
-worker(OurCustom.Repo, [])
+    children = [
+      ...,
+      OurCustom.Repo,
+      ...
+    ]
 ```
 
 Notice that this task has updated `config/config.exs`. If we take a look, we'll see this extra configuration block for our new repo.
@@ -450,10 +459,10 @@ Notice that this task has updated `config/config.exs`. If we take a look, we'll 
 ```elixir
 . . .
 config :hello, OurCustom.Repo,
-database: "hello_repo",
-username: "user",
-password: "pass",
-hostname: "localhost"
+  database: "hello_repo",
+  username: "user",
+  password: "pass",
+  hostname: "localhost"
 . . .
 ```
 
@@ -466,12 +475,10 @@ We certainly should follow the instructions and add our new repo to our supervis
 children = [
   # Start the Ecto repository
   Hello.Repo,
+  # Our custom repo
+  OurCustom.Repo,
   # Start the endpoint when the application starts
   HelloWeb.Endpoint,
-  # Starts a worker by calling: Hello.Worker.start_link(arg)
-  # {Hello.Worker, arg},
-  # Here you could define other workers and supervisors as children
-  OurCustom.Repo
 ]
 . . .
 ```
@@ -480,7 +487,7 @@ children = [
 
 Migrations are a programmatic, repeatable way to affect changes to a database schema. Migrations are also just modules, and we can create them with the `ecto.gen.migration` task. Let's walk through the steps to create a migration for a new comments table.
 
-We simply need to invoke the task with a snake_case version of the module name that we want. Preferably, the name will describe what we want the migration to do.
+We simply need to invoke the task with a `snake_case` version of the module name that we want. Preferably, the name will describe what we want the migration to do.
 
 ```console
 mix ecto.gen.migration add_comments_table
@@ -524,6 +531,7 @@ $ mix ecto.gen.migration -r OurCustom.Repo add_users
 * creating priv/repo/migrations
 * creating priv/repo/migrations/20150318172927_add_users.exs
 ```
+
 For more information on how to modify your database schema please refer to the
 ecto's migration dsl [ecto migration docs](https://hexdocs.pm/ecto_sql/Ecto.Migration.html).
 For example, to alter an existing schema see the documentation on ecto’s
@@ -548,8 +556,8 @@ Here's what the `schema_migrations` table looks like.
 
 ```console
 hello_dev=# select * from schema_migrations;
-version     |     inserted_at
-----------------+---------------------
+version        |     inserted_at
+---------------+---------------------
 20150317170448 | 2015-03-17 21:07:26
 20150318001628 | 2015-03-18 01:45:00
 (2 rows)
@@ -621,7 +629,7 @@ defmodule Mix.Tasks.Hello.Greeting do
   @shortdoc "Sends a greeting to us from Hello Phoenix"
 
   @moduledoc """
-    This is where we would put any long form documentation or doctests.
+  This is where we would put any long form documentation or doctests.
   """
 
   def run(_args) do
@@ -634,16 +642,16 @@ end
 
 Let's take a quick look at the moving parts involved in a working mix task.
 
-The first thing we need to do is name our module. In order to properly namespace it, we begin with `Mix.Tasks`. We'd like to invoke this as `mix hello.greeting`, so we complete the module name with
+The first thing we need to do is name our module. All tasks must be defined in `Mix.Tasks` namespace. We'd like to invoke this as `mix hello.greeting`, so we complete the module name with
 `Hello.Greeting`.
 
-The `use Mix.Task` line clearly brings in functionality from mix that makes this module behave as a mix task.
+The `use Mix.Task` line brings in functionality from Mix that makes this module behave as a mix task.
 
 The `@shortdoc` module attribute holds a string which will describe our task when users invoke `mix help`.
 
 `@moduledoc` serves the same function that it does in any module. It's where we can put long-form documentation and doctests, if we have any.
 
-The `run/1` function is the critical heart of any mix task. It's the function that does all the work when users invoke our task. In ours, all we do is send a greeting from our app, but we can implement our `run/1` function to do whatever we need it to. Note that `Mix.shell().info/1` is the preferred way to print text back out to the user.
+The `run/1` function is the critical heart of any Mix task. It's the function that does all the work when users invoke our task. In ours, all we do is send a greeting from our app, but we can implement our `run/1` function to do whatever we need it to. Note that `Mix.shell().info/1` is the preferred way to print text back out to the user.
 
 Of course, our task is just a module, so we can define other private functions as needed to support our `run/1` function.
 
@@ -658,7 +666,7 @@ Generated hello.app
 Now our new task should be visible to `mix help`.
 
 ```console
-$ mix help | grep hello
+$ mix help --search hello
 mix hello.greeting # Sends a greeting to us from Hello Phoenix
 ```
 
