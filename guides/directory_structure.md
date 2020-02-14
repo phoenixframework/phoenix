@@ -107,4 +107,4 @@ By looking at `templates` and `views` directories, we can see Phoenix provides f
 
 Besides the directories mentioned, `lib/hello_web` has three files at its root. `lib/hello_web/endpoint.ex` is the entry-point for HTTP requests. Once the browser accesses `http://localhost:4000`, the endpoint starts processing the data, eventually leading to the router, which is defined in `lib/hello_web/router.ex`. The router defines the rules to dispatch requests to "controllers", which then uses "views" and "templates" to render HTML pages back to clients. We explore these layers in length in other guides, starting with the "Request life-cycle" guide coming next.
 
-Finally, there is a `lib/hello_web/gettext.ex` file which provides internationalization. If you are not worried about internationalization, you can safely skip this file and its contents.
+Finally, there is a `lib/hello_web/gettext.ex` file which provides internationalization through [Gettext](https://hexdocs.com/gettext/). If you are not worried about internationalization, you can safely skip this file and its contents.

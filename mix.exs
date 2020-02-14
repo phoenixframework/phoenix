@@ -121,8 +121,8 @@ defmodule Phoenix.MixProject do
 
       "guides/directory_structure.md",
       "guides/request_lifecycle.md",
-      "guides/routing.md",
       "guides/plug.md",
+      "guides/routing.md",
       "guides/controllers.md",
       "guides/views.md",
       "guides/templates.md",

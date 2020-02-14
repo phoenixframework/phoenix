@@ -1,5 +1,9 @@
 # Routing
 
+> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+
+> **Requirement**: This guide expects that you have gone through [the Request life-cycle guide](request_lifecycle.html).
+
 Routers are the main hubs of Phoenix applications. They match HTTP requests to controller actions, wire up real-time channel handlers, and define a series of pipeline transformations for scoping middleware to sets of routes.
 
 The router file that Phoenix generates, `lib/hello_web/router.ex`, will look something like this one:
@@ -32,6 +36,7 @@ defmodule HelloWeb.Router do
   # end
 end
 ```
+
 Both the router and controller module names will be prefixed with the name you gave your application instead of `HelloWeb`.
 
 The first line of this module, `use HelloWeb, :router`, simply makes Phoenix router functions available in our particular router.
