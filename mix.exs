@@ -123,7 +123,6 @@ defmodule Phoenix.MixProject do
       "guides/request_lifecycle.md",
       "guides/routing.md",
       "guides/plug.md",
-      "guides/endpoint.md",
       "guides/controllers.md",
       "guides/views.md",
       "guides/templates.md",
@@ -143,7 +142,8 @@ defmodule Phoenix.MixProject do
       "guides/deployment/releases.md",
       "guides/deployment/heroku.md",
 
-      "guides/howto/custom_error_pages.md"
+      "guides/howto/custom_error_pages.md",
+      "guides/howto/using_ssl.md",
     ]
   end
 

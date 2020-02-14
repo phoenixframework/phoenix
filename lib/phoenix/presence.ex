@@ -22,8 +22,9 @@ defmodule Phoenix.Presence do
   holds your configuration, as well as the `:pubsub_server`.
 
       defmodule MyApp.Presence do
-        use Phoenix.Presence, otp_app: :my_app,
-                              pubsub_server: MyApp.PubSub
+        use Phoenix.Presence,
+          otp_app: :my_app,
+          pubsub_server: MyApp.PubSub
       end
 
   The `:pubsub_server` must point to an existing pubsub server
@@ -53,10 +54,11 @@ defmodule Phoenix.Presence do
         end
 
         def handle_info(:after_join, socket) do
-          push(socket, "presence_state", Presence.list(socket))
           {:ok, _} = Presence.track(socket, socket.assigns.user_id, %{
             online_at: inspect(System.system_time(:second))
           })
+
+          push(socket, "presence_state", Presence.list(socket))
           {:noreply, socket}
         end
       end

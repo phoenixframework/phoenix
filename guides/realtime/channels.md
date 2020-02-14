@@ -1,6 +1,9 @@
 # Channels
 
+> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+
 Channels are an exciting part of Phoenix that enable soft real-time communication with and between millions of connected clients.
+
 Some possible use cases include:
 
 - Chat rooms and APIs for messaging apps
@@ -180,6 +183,7 @@ Phoenix ships with a JavaScript client that is available when generating a new P
   - [GodotPhoenixChannels](https://github.com/alfredbaudisch/GodotPhoenixChannels)
 
 ## Tying it all together
+
 Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](https://hexdocs.pm/phoenix/up_and_running.html) we'll see that the endpoint is already set up for us in `lib/hello_web/endpoint.ex`:
 
 ```elixir
@@ -317,6 +321,7 @@ export default socket
 We listen for the `"new_msg"` event using `channel.on`, and then append the message body to the DOM. Now let's handle the incoming and outgoing events on the server to complete the picture.
 
 ### Incoming Events
+
 We handle incoming events with `handle_in/3`. We can pattern match on the event names, like `"new_msg"`, and then grab the payload that the client passed over the channel. For our chat application, we simply need to notify all other `room:lobby` subscribers of the new message with `broadcast!/3`.
 
 ```elixir
@@ -339,7 +344,8 @@ end
 
 `broadcast!/3` will notify all joined clients on this `socket`'s topic and invoke their `handle_out/3` callbacks. `handle_out/3` isn't a required callback, but it allows us to customize and filter broadcasts before they reach each client. By default, `handle_out/3` is implemented for us and simply pushes the message on to the client, just like our definition. We included it here because hooking into outgoing events allows for powerful message customization and filtering. Let's see how.
 
-#### Intercepting Outgoing Events
+### Intercepting Outgoing Events
+
 We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this where we explicitly tell Phoenix which outgoing event we want to intercept and then define a `handle_out/3` callback for those events. (Of course, this assumes that we have a `Accounts` context with an `ignoring_user?/2` function, and that we pass a user in via the `assigns` map). It is important to note that the `handle_out/3` callback will be called for every recipient of a message, so more expensive operations like hitting the database should be considered carefully before being included in `handle_out/3`.
 
 ```elixir
@@ -357,17 +363,7 @@ end
 
 That's all there is to our basic chat app. Fire up multiple browser tabs and you should see your messages being pushed and broadcasted to all windows!
 
-#### Socket Assigns
-
-Similar to connection structs, `%Plug.Conn{}`, it is possible to assign values to a channel socket. `Phoenix.Socket.assign/3` is conveniently imported into a channel module as `assign/3`:
-
-```elixir
-socket = assign(socket, :user, msg["user"])
-```
-
-Sockets store assigned values as a map in `socket.assigns`.
-
-#### Using Token Authentication
+## Using Token Authentication
 
 When we connect, we'll often need to authenticate the client. Fortunately, this is a 4-step process with [Phoenix.Token](https://hexdocs.pm/phoenix/Phoenix.Token.html).
 
@@ -449,7 +445,7 @@ export default socket
 
 Note that token authentication is preferable since it's transport agnostic and well-suited for long running-connections like channels, as opposed to using sessions or authentication approaches.
 
-#### Fault Tolerance and Reliability Guarantees
+## Fault Tolerance and Reliability Guarantees
 
 Servers restart, networks split, and clients lose connectivity. In order to design robust systems, we need to understand how Phoenix responds to these events and what guarantees it offers.
 
@@ -465,12 +461,8 @@ Channel clients queue outgoing messages into a `PushBuffer`, and send them to th
 
 Phoenix uses an at-most-once strategy when sending messages to clients. If the client is offline and misses the message, Phoenix won't resend it. Phoenix doesn't persist messages on the server. If the server restarts, unsent messages will be gone. If our application needs stronger guarantees around message delivery, we'll need to write that code ourselves. Common approaches involve persisting messages on the server and having clients request missing messages. For an example, see Chris McCord's Phoenix training: [client code](https://github.com/chrismccord/elixirconf_training/blob/master/web/static/js/app.js#L38-L39) and [server code](https://github.com/chrismccord/elixirconf_training/blob/master/web/channels/document_channel.ex#L13-L19).
 
+## Example Application
 
-### Presence
-
-Phoenix ships with a way of handling online users that is built on top of Phoenix.PubSub and Phoenix channels. The usage of presence is covered in the [presence guide](presence.html).
-
-#### Example Application
 To see an example of the application we just built, checkout the project [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
 
 You can also see a live demo at <http://phoenixchat.herokuapp.com/>.

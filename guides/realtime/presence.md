@@ -1,5 +1,9 @@
 # Presence
 
+> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+
+> **Requirement**: This guide expects that you have gone through [the channels guide](channels.html).
+
 Phoenix Presence is a feature which allows you to register process information on a topic and replicate it transparently across a cluster. It's a combination of both a server-side and client-side library which makes it simple to implement. A simple use-case would be showing which users are currently online in an application.
 
 Phoenix Presence is special for a number of reasons. It has no single point of failure, no single source of truth, relies entirely on the standard library with no operational dependencies and self heals. This is all handled with a conflict-free replicated data type (CRDT) protocol.
@@ -25,8 +29,9 @@ http://hexdocs.pm/phoenix/Phoenix.Presence.html
 If we open up the `lib/hello_web/channels/presence.ex` file, we will see the following line:
 
 ```elixir
-use Phoenix.Presence, otp_app: :hello,
-                      pubsub_server: Hello.PubSub
+use Phoenix.Presence,
+  otp_app: :hello,
+  pubsub_server: Hello.PubSub
 ```
 
 This sets up the module for presence, defining the functions we require for tracking presences. As mentioned in the generator task, we should add this module to our supervision tree in
@@ -86,10 +91,11 @@ defmodule HelloWeb.RoomChannel do
   end
 
   def handle_info(:after_join, socket) do
-    push(socket, "presence_state", Presence.list(socket))
     {:ok, _} = Presence.track(socket, socket.assigns.user_id, %{
       online_at: inspect(System.system_time(:second))
     })
+
+    push(socket, "presence_state", Presence.list(socket))
     {:noreply, socket}
   end
 end
