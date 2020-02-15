@@ -359,13 +359,6 @@ $ mix ecto.create
 The database for Hello.Repo has been created.
 ```
 
-If we happen to have another repo called `OurCustom.Repo` that we want to create the database for, we can run this.
-
-```console
-$ mix ecto.create -r OurCustom.Repo
-The database for OurCustom.Repo has been created.
-```
-
 There are a few things that can go wrong with `ecto.create`. If our Postgres database doesn't have a "postgres" role (user), we'll get an error like this one.
 
 ```console
@@ -416,6 +409,13 @@ $ mix ecto.create
 ```
 
 To fix this, we can change the password in the environment specific configuration file. For the development environment the password used can be found at the bottom of the `config/dev.exs` file.
+
+Finally, if we happen to have another repo called `OurCustom.Repo` that we want to create the database for, we can run this.
+
+```console
+$ mix ecto.create -r OurCustom.Repo
+The database for OurCustom.Repo has been created.
+```
 
 ### `mix ecto.drop`
 
