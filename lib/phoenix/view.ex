@@ -314,7 +314,8 @@ defmodule Phoenix.View do
 
   """
   def render_existing(module, template, assigns \\ []) do
-    render(module, template, put_in(assigns[:__phx_render_existing__], {module, template}))
+    assigns = assigns |> Map.new() |> Map.put(:__phx_render_existing__, {module, template})
+    render(module, template, assigns)
   end
 
   @doc """
