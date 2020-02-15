@@ -73,15 +73,42 @@ defmodule Phoenix.ViewTest do
     end
   end
 
+  test "supports deprecated layout calling convention" do
+    assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
+      html = render(MyApp.UserView, "message.html",
+        title: "Test",
+        layout: {MyApp.LayoutView, "deprecated.html"}
+      )
+
+      assert html ==
+             {:safe, ["<html>\n  <title>", "Test", "</title>\n", "message sent", "</html>\n"]}
+
+      assert_received :message_sent
+      refute_received :message_sent
+    end) =~ "<%= @inner_content %>"
+  end
+
   test "converts assigns to maps and removes :layout" do
     html = render_to_iodata(MyApp.UserView, "edit.html",
       title: "Test",
       layout: {MyApp.LayoutView, "app.html"}
     )
 
-    assert html ==
-           ["<html>\n  <title>", "Test", "</title>\n", "EDIT - Test", "</html>\n"]
+    assert html == ["<html>\n  <title>", "Test", "</title>\n", "EDIT - Test", "</html>\n"]
   end
+
+  # render layout
+
+  test "renders layout directly" do
+    html =
+      render_layout(MyApp.LayoutView, "app.html", title: "Test") do
+        "Hello World"
+      end
+
+    assert html == {:safe, ["<html>\n  <title>", "Test", "</title>\n", "Hello World", "</html>\n"]}
+  end
+
+  # render_to_*
 
   test "renders views to iodata/string using encoders" do
     assert render_to_iodata(MyApp.UserView, "index.html", title: "Hello world") ==
@@ -172,6 +199,8 @@ defmodule Phoenix.ViewTest do
     assert render_one(user, MyApp.UserView, "data.text", as: :data) == "show data: name"
   end
 
+  # render_existing
+
   test "renders_existing/3 renders template if it exists" do
     assert render_existing(MyApp.UserView, "index.html", title: "Test") ==
            {:safe, ["Test"]}
@@ -185,6 +214,8 @@ defmodule Phoenix.ViewTest do
     assert render_existing(MyApp.UserView, "existing.html", []) ==
       "rendered existing"
   end
+
+  # Misc.
 
   test "render_template can be called from overridden render/2" do
     assert render_to_string(MyApp.UserView, "render_template.html", name: "eric") ==
