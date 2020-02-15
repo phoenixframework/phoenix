@@ -175,6 +175,16 @@ defmodule Phoenix.ChannelTest do
 
   @doc false
   defmacro __using__(_) do
+    IO.warn """
+    Using Phoenix.ChannelTest is deprecated, instead of:
+
+        use Phoenix.ChannelTest
+
+    do:
+
+        import Phoenix.ChannelTest
+    """, Macro.Env.stacktrace(__CALLER__)
+
     quote do
       import Phoenix.ChannelTest
     end

@@ -186,6 +186,10 @@ defmodule Phx.New.Generator do
 
     config_inject project_path, "config/test.exs", """
     # Configure your database
+    #
+    # The MIX_TEST_PARTITION environment variable can be used
+    # to provide built-in test partitioning in CI environment.
+    # Run `mix help test` for more information.
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config adapter_config[:test]}
     """
 
@@ -224,7 +228,7 @@ defmodule Phx.New.Generator do
   defp db_config(app, module, user, pass) do
     [dev:  [username: user, password: pass, database: "#{app}_dev", hostname: "localhost",
             show_sensitive_data_on_connection_error: true],
-     test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
+     test: [username: user, password: pass, database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|}, hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
      test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, :manual)",
      test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{inspect module}.Repo)",
@@ -232,8 +236,9 @@ defmodule Phx.New.Generator do
   end
 
   defp kw_to_config(kw) do
-    Enum.map(kw, fn {k, v} ->
-      ",\n  #{k}: #{inspect v}"
+    Enum.map(kw, fn
+      {k, {:literal, v}} -> ",\n  #{k}: #{v}"
+      {k, v} -> ",\n  #{k}: #{inspect v}"
     end)
   end
 

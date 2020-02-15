@@ -128,12 +128,13 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/dev.exs", config
       assert_file "phx_blog/config/test.exs", config
       assert_file "phx_blog/config/prod.secret.exs", config
+      assert_file "phx_blog/config/test.exs", ~R/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
       assert_file "phx_blog/lib/phx_blog/repo.ex", ~r"defmodule PhxBlog.Repo"
+      assert_file "phx_blog/lib/phx_blog_web.ex", ~r"defmodule PhxBlogWeb"
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r"plug Phoenix.Ecto.CheckRepoStatus, otp_app: :phx_blog"
       assert_file "phx_blog/priv/repo/seeds.exs", ~r"PhxBlog.Repo.insert!"
       assert_file "phx_blog/test/support/data_case.ex", ~r"defmodule PhxBlog.DataCase"
-      assert_file "phx_blog/lib/phx_blog_web.ex", ~r"defmodule PhxBlogWeb"
       assert_file "phx_blog/priv/repo/migrations/.formatter.exs", ~r"import_deps: \[:ecto_sql\]"
-      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r"plug Phoenix.Ecto.CheckRepoStatus, otp_app: :phx_blog"
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
@@ -183,15 +184,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ "plug Phoenix.Ecto.CheckRepoStatus, otp_app: :phx_blog"
       end
 
-      # No gettext
-      refute_file "phx_blog/lib/phx_blog_web/gettext.ex"
-      refute_file "phx_blog/priv/gettext/en/LC_MESSAGES/errors.po"
-      refute_file "phx_blog/priv/gettext/errors.pot"
-      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":gettext")
-      assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"import AmsMockWeb.Gettext")
-      assert_file "phx_blog/lib/phx_blog_web/views/error_helpers.ex", &refute(&1 =~ ~r"gettext")
-      assert_file "phx_blog/config/dev.exs", &refute(&1 =~ ~r"gettext")
-
       assert_file "phx_blog/.formatter.exs", fn file ->
         assert file =~ "import_deps: [:phoenix]"
         assert file =~ "inputs: [\"*.{ex,exs}\", \"{config,lib,test}/**/*.{ex,exs}\"]"
@@ -212,6 +204,15 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/test.exs", &refute(&1 =~ config)
       assert_file "phx_blog/config/prod.secret.exs", &refute(&1 =~ config)
       assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
+
+      # No gettext
+      refute_file "phx_blog/lib/phx_blog_web/gettext.ex"
+      refute_file "phx_blog/priv/gettext/en/LC_MESSAGES/errors.po"
+      refute_file "phx_blog/priv/gettext/errors.pot"
+      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":gettext")
+      assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"import AmsMockWeb.Gettext")
+      assert_file "phx_blog/lib/phx_blog_web/views/error_helpers.ex", &refute(&1 =~ ~r"gettext")
+      assert_file "phx_blog/config/dev.exs", &refute(&1 =~ ~r"gettext")
 
       # No HTML
       assert File.exists?("phx_blog/test/phx_blog_web/controllers")
