@@ -51,10 +51,10 @@ defmodule Phoenix.Endpoint.EndpointTest do
     endpoint_id = Endpoint.config(:endpoint_id)
     assert Endpoint.config(:url) == [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api"]
     assert Endpoint.config(:static_url) == [host: "static.example.com"]
-    assert Endpoint.url == "https://example.com"
+    assert Endpoint.url() == "https://example.com"
     assert Endpoint.path("/") == "/api/"
-    assert Endpoint.static_url == "https://static.example.com"
-    assert Endpoint.struct_url == %URI{scheme: "https", host: "example.com", port: 443}
+    assert Endpoint.static_url() == "https://static.example.com"
+    assert Endpoint.struct_url() == %URI{scheme: "https", host: "example.com", port: 443}
 
     config =
       @config
@@ -67,10 +67,10 @@ defmodule Phoenix.Endpoint.EndpointTest do
            [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api", port: 1234]
     assert Enum.sort(Endpoint.config(:static_url)) ==
            [host: "static.example.com", port: 456]
-    assert Endpoint.url == "https://example.com:1234"
+    assert Endpoint.url() == "https://example.com:1234"
     assert Endpoint.path("/") == "/api/"
-    assert Endpoint.static_url == "https://static.example.com:456"
-    assert Endpoint.struct_url == %URI{scheme: "https", host: "example.com", port: 1234}
+    assert Endpoint.static_url() == "https://static.example.com:456"
+    assert Endpoint.struct_url() == %URI{scheme: "https", host: "example.com", port: 1234}
   end
 
   test "sets script name when using path" do
