@@ -29,6 +29,11 @@ defmodule MyApp.UserView do
     {:safe, Plug.HTML.html_escape(title)}
   end
 
+  def render("message.html", _assigns) do
+    send(self(), :message_sent)
+    "message sent"
+  end
+
   def render("show.text", %{user: user, prefix: prefix}) do
     "show user: " <> prefix <> user.name
   end
