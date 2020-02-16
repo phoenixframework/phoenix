@@ -20,8 +20,6 @@ defmodule Phoenix.Router.HelpersTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  alias Phoenix.Router.Helpers
-
   defmodule Router do
     use Phoenix.Router
 
@@ -85,7 +83,7 @@ defmodule Phoenix.Router.HelpersTest do
   alias Router.Helpers
 
   test "defines a __helpers__ function" do
-    assert Router.__helpers__ == Router.Helpers
+    assert Router.__helpers__() == Router.Helpers
   end
 
   test "root helper" do
@@ -163,14 +161,6 @@ defmodule Phoenix.Router.HelpersTest do
           #{helper}(conn_or_endpoint, :show, id, params \\\\ [])
 
       """ |> String.trim
-    end
-
-    assert_raise UndefinedFunctionError, fn ->
-      Helpers.post_path(__MODULE__, :skip)
-    end
-
-    assert_raise UndefinedFunctionError, fn ->
-      Helpers.post_url(__MODULE__, :skip)
     end
 
     assert_raise ArgumentError, error_message.("post_path", 3), fn ->

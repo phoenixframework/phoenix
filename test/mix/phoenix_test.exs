@@ -4,15 +4,15 @@ defmodule Mix.PhoenixTest do
   doctest Mix.Phoenix, import: true
 
   test "base/0 returns the module base based on the Mix application" do
-    assert Mix.Phoenix.base == "Phoenix"
+    assert Mix.Phoenix.base() == "Phoenix"
     Application.put_env(:phoenix, :namespace, Phoenix.Sample.App)
-    assert Mix.Phoenix.base == "Phoenix.Sample.App"
+    assert Mix.Phoenix.base() == "Phoenix.Sample.App"
   after
     Application.delete_env(:phoenix, :namespace)
   end
 
   test "modules/0 returns all modules in project" do
-    assert Phoenix.Router in Mix.Phoenix.modules
+    assert Phoenix.Router in Mix.Phoenix.modules()
   end
 
   test "attrs/1 defaults each type" do

@@ -7,7 +7,7 @@ defmodule Phoenix.TemplateTest do
   @templates Path.expand("../fixtures/templates", __DIR__)
 
   test "engines/0" do
-    assert is_map Template.engines
+    assert is_map Template.engines()
   end
 
   test "template_path_to_name/2" do
@@ -124,7 +124,7 @@ defmodule Phoenix.TemplateTest do
   end
 
   test "generates __phoenix_recompile__? function" do
-    refute View.__phoenix_recompile__?
+    refute View.__phoenix_recompile__?()
   end
 
   defmodule CustomEngineView do
