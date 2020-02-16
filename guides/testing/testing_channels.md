@@ -1,5 +1,9 @@
 # Testing Channels
 
+> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+
+> **Requirement**: This guide expects that you have gone through [the Introduction to Testing guide](testing.html).
+
 As developers we typically value tests since they help to 'future-proof' our applications by
 minimizing regression and provide updated documentation. Phoenix recognizes this and helps
 make it easier to write tests by providing conveniences for testing its different parts,

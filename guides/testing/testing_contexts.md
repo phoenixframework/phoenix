@@ -96,7 +96,7 @@ defmodule Hello.DataCase do
 
   using do
     quote do
-      alias Demo.Repo
+      alias Hello.Repo
 
       import Ecto
       import Ecto.Changeset
