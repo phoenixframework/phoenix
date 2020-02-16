@@ -128,8 +128,22 @@ defmodule Phoenix.Token do
       Defaults to `System.system_time(:second)`
 
   """
-  def encrypt(context, secret, salt, data, opts \\ [])
-      when is_binary(secret) and is_binary(salt) do
+  def encrypt(context, secret, data, opts \\ [])
+
+  def encrypt(context, secret, data, opts) when is_binary(secret) and is_list(opts) do
+    encrypt(context, secret, nil, data, opts)
+  end
+
+  def encrypt(context, secret, salt, data) when is_binary(secret) and is_binary(salt) do
+    encrypt(context, secret, salt, data, [])
+  end
+
+  @doc false
+  def encrypt(context, secret, salt, data, opts) do
+    if is_binary(salt) do
+      IO.warn "Passing a salt to Phoenix.Token.encrypt/4 is deprecated"
+    end
+
     key_base = get_key_base(context)
 
     data
@@ -228,10 +242,22 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256`
 
   """
-  def decrypt(context, secret, salt, token, opts \\ [])
+  def decrypt(context, secret, token, opts \\ [])
 
-  def decrypt(context, secret, salt, token, opts)
-      when is_binary(secret) and is_binary(salt) and is_binary(token) do
+  def decrypt(context, secret, token, opts) when is_binary(secret) and is_list(opts) do
+    decrypt(context, secret, nil, token, opts)
+  end
+
+  def decrypt(context, secret, salt, token) when is_binary(secret) and is_binary(salt) do
+    decrypt(context, secret, salt, token, [])
+  end
+
+  @doc false
+  def decrypt(context, secret, salt, token, opts) when is_binary(token) do
+    if is_binary(salt) do
+      IO.warn "Passing a salt to Phoenix.Token.decrypt/4 is deprecated"
+    end
+
     key_base = context |> get_key_base()
     secret = get_secret(key_base, secret, opts)
     salt = get_secret(key_base, salt, opts)
@@ -242,7 +268,7 @@ defmodule Phoenix.Token do
     end
   end
 
-  def decrypt(_context, secret, salt, nil, _opts) when is_binary(secret) and is_binary(salt) do
+  def decrypt(_context, _secret, _salt, nil, _opts) do
     {:error, :missing}
   end
 
@@ -283,6 +309,10 @@ defmodule Phoenix.Token do
   end
 
   # Gathers configuration and generates the key secrets and signing secrets.
+  defp get_secret(_secret_key_base, nil, _opts) do
+    ""
+  end
+
   defp get_secret(secret_key_base, salt, opts) do
     iterations = Keyword.get(opts, :key_iterations, 1000)
     length = Keyword.get(opts, :key_length, 32)
