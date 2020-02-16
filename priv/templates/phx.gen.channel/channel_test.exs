@@ -3,10 +3,11 @@ defmodule <%= module %>ChannelTest do
 
   setup do
     {:ok, _, socket} =
-      socket(<%= web_module %>.UserSocket, "user_id", %{some: :assign})
+      <%= web_module %>.UserSocket
+      |> socket("user_id", %{some: :assign})
       |> subscribe_and_join(<%= module %>Channel, "<%= singular %>:lobby")
 
-    {:ok, socket: socket}
+    %{socket: socket}
   end
 
   test "ping replies with status ok", %{socket: socket} do

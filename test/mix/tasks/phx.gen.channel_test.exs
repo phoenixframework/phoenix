@@ -32,8 +32,8 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
       assert_file "test/phoenix_web/channels/room_channel_test.exs", fn file ->
         assert file =~ ~S|defmodule PhoenixWeb.RoomChannelTest|
         assert file =~ ~S|use PhoenixWeb.ChannelCase|
-        assert file =~ ~S|socket(PhoenixWeb.UserSocket, "user_id", %{some: :assign}|
-        assert file =~ ~S|subscribe_and_join(PhoenixWeb.RoomChannel|
+        assert file =~ ~S|> socket("user_id", %{some: :assign}|
+        assert file =~ ~S|> subscribe_and_join(PhoenixWeb.RoomChannel|
 
         assert file =~ ~S|test "ping replies with status ok"|
         assert file =~ ~S|ref = push socket, "ping", %{"hello" => "there"}|
