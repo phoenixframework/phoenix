@@ -133,7 +133,7 @@ defmodule Phoenix.MixProject do
       "guides/realtime/presence.md",
 
       "guides/testing/testing.md",
-      "guides/testing/testing_schemas.md",
+      "guides/testing/testing_contexts.md",
       "guides/testing/testing_controllers.md",
       "guides/testing/testing_channels.md",
 
