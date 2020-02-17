@@ -237,11 +237,22 @@ defmodule Phoenix.Socket.Transport do
     [connect_info: connect_info] ++ config
   end
 
-  defp init_session(session) do
-    key = Keyword.fetch!(session, :key)
-    store = Plug.Session.Store.get(Keyword.fetch!(session, :store))
-    init = store.init(Keyword.drop(session, [:store, :key]))
+  defp init_session(session_config) when is_list(session_config) do
+    key = Keyword.fetch!(session_config, :key)
+    store = Plug.Session.Store.get(Keyword.fetch!(session_config, :store))
+    init = store.init(Keyword.drop(session_config, [:store, :key]))
     {key, store, init}
+  end
+
+  defp init_session({module, function, arguments})  do
+    case apply(module, function, arguments) do
+      session_config when is_list(session_config) ->
+        init_session(session_config)
+      session_config ->
+        raise ArgumentError,
+          "invalid MFA session_config return #{inspect session_config}. " <>
+            "When session_config is a MFA, it's expected that it will return a keyword list same as the argument given to `Plug.Session`"
+    end
   end
 
   @doc """
