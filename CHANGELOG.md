@@ -33,7 +33,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 ### phx.new installer
 
   * `Phoenix.PubSub` is now started directly in your application supervision tree
-  * `Phoenix.Ecto.CheckRepoReady` is now added to new applications that use Ecto
+  * `Phoenix.Ecto.CheckRepoStatus` is now added to new applications that use Ecto
   * Automatically use `System.get_env("MIX_TEST_PARTITION")` in the database name in the test environemnt for built-in CI test partitioning
 
 ### JavaScript client
