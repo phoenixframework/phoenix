@@ -1280,22 +1280,43 @@ defmodule Phoenix.Controller do
   Fetches the flash storage.
   """
   def fetch_flash(conn, _opts \\ []) do
-    session_flash = get_session(conn, "phoenix_flash")
-    conn = persist_flash(conn, session_flash || %{})
+    if Map.get(conn.private, :phoenix_flash) do
+      conn
+    else
+      session_flash = get_session(conn, "phoenix_flash")
+      conn = persist_flash(conn, session_flash || %{})
 
-    register_before_send conn, fn conn ->
-      flash = conn.private.phoenix_flash
-      flash_size = map_size(flash)
+      register_before_send conn, fn conn ->
+        flash = conn.private.phoenix_flash
+        flash_size = map_size(flash)
 
-      cond do
-        is_nil(session_flash) and flash_size == 0 ->
-          conn
-        flash_size > 0 and conn.status in 300..308 ->
-          put_session(conn, "phoenix_flash", flash)
-        true ->
-          delete_session(conn, "phoenix_flash")
+        cond do
+          is_nil(session_flash) and flash_size == 0 ->
+            conn
+          flash_size > 0 and conn.status in 300..308 ->
+            put_session(conn, "phoenix_flash", flash)
+          true ->
+            delete_session(conn, "phoenix_flash")
+        end
       end
     end
+  end
+
+  @doc """
+  Merges a map into the flash.
+
+  Returns the updated connection.
+
+  ## Examples
+
+      iex> conn = merge_flash(conn, info: "Welcome Back!")
+      iex> get_flash(conn, :info)
+      "Welcome Back!"
+
+  """
+  def merge_flash(conn, enumerable) do
+    map = for {k, v} <- enumerable, into: %{}, do: {flash_key(k), v}
+    persist_flash(conn, Map.merge(get_flash(conn), map))
   end
 
   @doc """
