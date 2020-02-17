@@ -140,7 +140,7 @@ iex(5)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "
 
 ## Sharing views and templates
 
-Now that we have acquainted ourselves with `Phoenix.View.render/3`, we are ready to share views and templates from insided other views and templates.
+Now that we have acquainted ourselves with `Phoenix.View.render/3`, we are ready to share views and templates from inside other views and templates.
 
 For example, if you want to render the "test.html" template from inside our layout, you can invoke `render/3` directly from the layout:
 
