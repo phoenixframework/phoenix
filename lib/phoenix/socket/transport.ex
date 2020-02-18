@@ -248,6 +248,7 @@ defmodule Phoenix.Socket.Transport do
     case apply(module, function, arguments) do
       session_config when is_list(session_config) ->
         init_session(session_config)
+
       session_config ->
         raise ArgumentError,
           "invalid MFA session_config return #{inspect session_config}. " <>

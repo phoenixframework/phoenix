@@ -298,14 +298,13 @@ defmodule Phoenix.Socket.TransportTest do
     end
 
     test "raise exception if MFA is given as session config but it returns anything other than list" do
-
-      assert_raise(ArgumentError, fn ->
+      assert_raise ArgumentError, fn ->
         Transport.load_config([
           connect_info: [
             session: {DummyTransport, :get_incorrect_session_config, []}
           ]
         ], DummyTransport)
-      end)
+      end
     end
   end
 end

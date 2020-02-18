@@ -762,12 +762,9 @@ defmodule Phoenix.Endpoint do
           The `session_config` is an exact copy of the arguments given to `Plug.Session`.
           This requires the "_csrf_token" to be given as request parameter with
           the value of `URI.encode_www_form(Plug.CSRFProtection.get_csrf_token())`
-          when connecting to the socket.
-
-          It can also be a MFA to allow loading config in runtime
-            {:session, [MyAppWeb.Auth, :get_session_config, []]}
-
-          Otherwise the session will be `nil`.
+          when connecting to the socket. It can also be a MFA to allow loading
+          config in runtime `{MyAppWeb.Auth, :get_session_config, []}`. Otherwise
+          the session will be `nil`.
 
       Arbitrary keywords may also appear following the above valid keys, which
       is useful for passing custom connection information to the socket.
