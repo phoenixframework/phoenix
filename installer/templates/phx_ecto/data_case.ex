@@ -15,6 +15,7 @@ defmodule <%= app_module %>.DataCase do
   """
 
   use ExUnit.CaseTemplate
+  <%= adapter_config[:test_alias] %>
 
   using do
     quote do

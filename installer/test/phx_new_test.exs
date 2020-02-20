@@ -324,9 +324,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Postgres"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
-      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
+      assert_file "custom_path/test/support/conn_case.ex", ["alias Ecto.Adapters.SQL.Sandbox", "Sandbox.checkout"]
+      assert_file "custom_path/test/support/channel_case.ex", ["alias Ecto.Adapters.SQL.Sandbox", "Sandbox.checkout"]
+      assert_file "custom_path/test/support/data_case.ex", ["alias Ecto.Adapters.SQL.Sandbox", "Sandbox.checkout"]
     end
   end
 
@@ -341,9 +341,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.MyXQL"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/conn_case.ex", ["alias Ecto.Adapters.SQL.Sandbox", "Sandbox.mode"]
+      assert_file "custom_path/test/support/channel_case.ex", ["alias Ecto.Adapters.SQL.Sandbox", "Sandbox.mode"]
+      assert_file "custom_path/test/support/data_case.ex", ["alias Ecto.Adapters.SQL.Sandbox", "Sandbox.mode"]
     end
   end
 

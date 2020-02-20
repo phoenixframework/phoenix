@@ -16,6 +16,7 @@ defmodule <%= web_namespace %>.ConnCase do
   """
 
   use ExUnit.CaseTemplate
+  <%= adapter_config[:test_alias] %>
 
   using do
     quote do

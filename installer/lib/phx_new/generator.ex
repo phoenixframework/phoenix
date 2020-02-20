@@ -231,8 +231,9 @@ defmodule Phx.New.Generator do
      test: [username: user, password: pass, database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|}, hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
      test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, :manual)",
-     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{inspect module}.Repo)",
-     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, {:shared, self()})"]
+     test_alias: "alias Ecto.Adapters.SQL.Sandbox",
+     test_setup: ":ok = Sandbox.checkout(#{inspect module}.Repo)",
+     test_async: "Sandbox.mode(#{inspect module}.Repo, {:shared, self()})"]
   end
 
   defp kw_to_config(kw) do
