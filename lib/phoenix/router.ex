@@ -358,9 +358,11 @@ defmodule Phoenix.Router do
             conn
         rescue
           e in Plug.Conn.WrapperError ->
+            :telemetry.execute([:phoenix, :router_dispatch, :failure], %{}, %{error: e})
             Plug.Conn.WrapperError.reraise(e)
         catch
           :error, reason ->
+            :telemetry.execute([:phoenix, :router_dispatch, :failure], %{}, %{error: reason})
             Plug.Conn.WrapperError.reraise(piped_conn, :error, reason, System.stacktrace())
         end
     end
