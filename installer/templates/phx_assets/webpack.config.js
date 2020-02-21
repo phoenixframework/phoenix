@@ -19,7 +19,7 @@ module.exports = (env, options) => ({
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, '../priv/static/js'),
-    publicPath: "/js/"
+    publicPath: '/js/'
   },
   devtool: devMode ? 'source-map' : undefined,
   module: {
