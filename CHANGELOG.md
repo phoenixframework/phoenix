@@ -24,7 +24,7 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
-## 1.4.14-dev
+## 1.4.14 (2020-02-20)
 
 ### Deprecations
   * [Token] The `encrypt/5` and `decrypt/5` API added in 1.4.11 accepted more parameters than necessary. The extra parameter has been deprecated
@@ -33,6 +33,7 @@ The old APIs for building transports are also deprecated. The good news is: adap
 
 ### Enhancements
   * [Router] support metadata on `route_info`
+  * [Router] emit telemetry events on router dispatch failure, using `[:phoenix, :router_dispatch, :failure]`
 
 ## 1.4.12 (2020-01-22)
 
