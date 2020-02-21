@@ -18,7 +18,8 @@ module.exports = (env, options) => ({
   },
   output: {
     filename: 'app.js',
-    path: path.resolve(__dirname, '../priv/static/js')
+    path: path.resolve(__dirname, '../priv/static/js'),
+    publicPath: "/js/"
   },
   devtool: devMode ? 'source-map' : undefined,
   module: {
