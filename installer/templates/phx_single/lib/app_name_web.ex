@@ -43,7 +43,33 @@ defmodule <%= web_namespace %> do
       import <%= web_namespace %>.Gettext<% end %>
       alias <%= web_namespace %>.Router.Helpers, as: Routes
     end
+  end<%= if live do %>
+
+  def live_view do
+    quote do
+      use Phoenix.LiveView,
+        layout: {LiveGenWeb.LayoutView, "live.html"}
+
+      use Phoenix.HTML
+
+      import <%= web_namespace %>.ErrorHelpers<%= if gettext do %>
+      import <%= web_namespace %>.Gettext<% end %>
+      import <%= web_namespace %>.LiveHelpers
+      alias <%= web_namespace %>.Router.Helpers, as: Routes
+    end
   end
+
+  def live_component do
+    quote do
+      use Phoenix.LiveComponent
+      use Phoenix.HTML
+
+      import <%= web_namespace %>.ErrorHelpers<%= if gettext do %>
+      import <%= web_namespace %>.Gettext<% end %>
+      import <%= web_namespace %>.LiveHelpers
+      alias <%= web_namespace %>.Router.Helpers, as: Routes
+    end
+  end<% end %>
 
   def router do
     quote do

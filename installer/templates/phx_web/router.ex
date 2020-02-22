@@ -1,10 +1,11 @@
 defmodule <%= web_namespace %>.Router do
   use <%= web_namespace %>, :router<%= if html do %>
-
+  <%= if live do %>import Phoenix.LiveView.Router
+  <% end %>
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug :fetch_flash
+    <%= if live, do %>plug :fetch_live_flash<% else %>plug :fetch_flash<% end %>
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end<% end %>
