@@ -7,7 +7,7 @@ defmodule Phoenix.Controller.RenderTest do
   import Phoenix.Controller
 
   defp conn() do
-    conn(:get, "/") |> put_view(MyApp.UserView) |> fetch_query_params
+    conn(:get, "/") |> put_view(MyApp.UserView) |> fetch_query_params()
   end
 
   defp layout_conn() do
@@ -41,10 +41,32 @@ defmodule Phoenix.Controller.RenderTest do
     assert html_response?(conn)
   end
 
+  test "renders string template with put_root_layout" do
+    conn =
+      conn()
+      |> put_layout({MyApp.LayoutView, "app.html"})
+      |> put_root_layout({MyApp.LayoutView, "root.html"})
+      |> render("index.html", title: "Hello")
+
+    assert conn.resp_body == "ROOTSTART[Hello]<html>\n  <title>Hello</title>\n  Hello\n\n</html>\nROOTEND\n"
+    assert html_response?(conn)
+  end
+
   test "renders atom template with put layout" do
     conn = put_format(layout_conn(), "html")
     conn = render(conn, :index, title: "Hello")
     assert conn.resp_body =~ ~r"<title>Hello</title>"
+    assert html_response?(conn)
+  end
+
+  test "renders atom template with put_root_layout" do
+    conn =
+      conn()
+      |> put_layout({MyApp.LayoutView, "app.html"})
+      |> put_root_layout({MyApp.LayoutView, :root})
+      |> render("index.html", title: "Hello")
+
+    assert conn.resp_body == "ROOTSTART[Hello]<html>\n  <title>Hello</title>\n  Hello\n\n</html>\nROOTEND\n"
     assert html_response?(conn)
   end
 

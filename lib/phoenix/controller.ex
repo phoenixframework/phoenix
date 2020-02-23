@@ -488,25 +488,25 @@ defmodule Phoenix.Controller do
   @spec put_layout(Plug.Conn.t, {atom, binary | atom} | atom | binary | false) :: Plug.Conn.t
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
-      do_put_layout(conn, layout)
+      do_put_layout(conn, :phoenix_layout, layout)
     else
       raise AlreadySentError
     end
   end
 
-  defp do_put_layout(conn, false) do
-    put_private(conn, :phoenix_layout, false)
+  defp do_put_layout(conn, private_key, false) do
+    put_private(conn, private_key, false)
   end
 
-  defp do_put_layout(conn, {mod, layout}) when is_atom(mod) do
-    put_private(conn, :phoenix_layout, {mod, layout})
+  defp do_put_layout(conn, private_key, {mod, layout}) when is_atom(mod) do
+    put_private(conn, private_key, {mod, layout})
   end
 
-  defp do_put_layout(conn, layout) when is_binary(layout) or is_atom(layout) do
+  defp do_put_layout(conn, private_key, layout) when is_binary(layout) or is_atom(layout) do
     update_in conn.private, fn private ->
-      case Map.get(private, :phoenix_layout, false) do
-        {mod, _} -> Map.put(private, :phoenix_layout, {mod, layout})
-        false    -> raise "cannot use put_layout/2 with atom/binary when layout is false, use a tuple instead"
+      case Map.get(private, private_key, false) do
+        {mod, _} -> Map.put(private, private_key, {mod, layout})
+        false    -> raise "cannot use put_layout/2  or put_root_layout/2 with atom/binary when layout is false, use a tuple instead"
       end
     end
   end
@@ -521,6 +521,47 @@ defmodule Phoenix.Controller do
       when (is_tuple(layout) and tuple_size(layout) == 2) or layout == false do
     if state in @unsent do
       update_in conn.private, &Map.put_new(&1, :phoenix_layout, layout)
+    else
+      raise AlreadySentError
+    end
+  end
+
+  @doc """
+  Stores the root layout for rendering.
+
+  Like `put_layout/2`, the layout must be a tuple,
+  specifying the layout view and the layout name, or false.
+
+  In case a previous layout is set, `put_root_layout` also
+  accepts the layout name to be given as a string or as an atom. If a
+  string, it must contain the format. Passing an atom means the layout
+  format will be found at rendering time, similar to the template in
+  `render/3`. It can also be set to `false`. In this case, no layout
+  would be used.
+
+  ## Examples
+
+      iex> root_layout(conn)
+      false
+
+      iex> conn = put_root_layout conn, {AppView, "root.html"}
+      iex> root_layout(conn)
+      {AppView, "root.html"}
+
+      iex> conn = put_root_layout conn, "bare.html"
+      iex> root_layout(conn)
+      {AppView, "bare.html"}
+
+      iex> conn = put_root_layout conn, :bare
+      iex> root_layout(conn)
+      {AppView, :bare}
+
+  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
+  """
+  @spec put_root_layout(Plug.Conn.t, {atom, binary | atom} | atom | binary | false) :: Plug.Conn.t
+  def put_root_layout(%Plug.Conn{state: state} = conn, layout) do
+    if state in @unsent do
+      do_put_layout(conn, :phoenix_root_layout, layout)
     else
       raise AlreadySentError
     end
@@ -561,6 +602,12 @@ defmodule Phoenix.Controller do
   """
   @spec layout(Plug.Conn.t) :: {atom, String.t | atom} | false
   def layout(conn), do: conn.private |> Map.get(:phoenix_layout, false)
+
+  @doc """
+  Retrieves the current root layout.
+  """
+  @spec root_layout(Plug.Conn.t) :: {atom, String.t | atom} | false
+  def root_layout(conn), do: conn.private |> Map.get(:phoenix_root_layout, false)
 
   @doc """
   Render the given template or the default template
@@ -726,7 +773,7 @@ defmodule Phoenix.Controller do
   def __put_render__(conn, view, template, format, assigns) do
     content_type = MIME.type(format)
     conn = prepare_assigns(conn, assigns, template, format)
-    data = Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
+    data = render_with_layouts(conn, view, template, format)
 
     conn
     |> ensure_resp_content_type(content_type)
@@ -735,7 +782,6 @@ defmodule Phoenix.Controller do
 
   defp instrument_render_and_send(conn, format, template, assigns) do
     template = template_name(template, format)
-
     view =
       Map.get(conn.private, :phoenix_view) ||
         raise "a view module was not specified, set one with put_view/2"
@@ -748,6 +794,20 @@ defmodule Phoenix.Controller do
       end)
 
     send_resp(conn)
+  end
+
+  defp render_with_layouts(conn, view, template, format) do
+    render_assigns = Map.put(conn.assigns, :conn, conn)
+
+    case root_layout(conn) do
+      {layout_mod, layout_tpl} ->
+        inner = Phoenix.View.render(view, template, render_assigns)
+        root_assigns = render_assigns |> Map.put(:inner_content, inner) |> Map.delete(:layout)
+        Phoenix.View.render_to_iodata(layout_mod, template_name(layout_tpl, format), root_assigns)
+
+      false ->
+        Phoenix.View.render_to_iodata(view, template, render_assigns)
+    end
   end
 
   defp prepare_assigns(conn, assigns, template, format) do
