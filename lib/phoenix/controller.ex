@@ -550,7 +550,6 @@ defmodule Phoenix.Controller do
     end
   end
 
-
   @doc """
   Stores the root layout for rendering.
 
@@ -591,7 +590,6 @@ defmodule Phoenix.Controller do
       raise AlreadySentError
     end
   end
-
 
   @doc """
   Sets which formats have a layout when rendering.
@@ -634,7 +632,6 @@ defmodule Phoenix.Controller do
   """
   @spec root_layout(Plug.Conn.t) :: {atom, String.t | atom} | false
   def root_layout(conn), do: conn.private |> Map.get(:phoenix_root_layout, false)
-
 
   @doc """
   Render the given template or the default template
