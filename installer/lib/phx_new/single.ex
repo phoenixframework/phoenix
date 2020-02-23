@@ -64,6 +64,21 @@ defmodule Phx.New.Single do
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
   ]
 
+  template :live, [
+    {:eex, "phx_assets/live.js",                             :web, "assets/js/live.js"},
+    {:eex, "phx_live/controllers/page_controller.ex",        :project, "lib/:lib_web_name/controllers/page_controller.ex"},
+    {:eex, "phx_web/templates/layout/app.html.eex",          :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
+    {:eex, "phx_live/templates/page/index.html.eex",         :project, "lib/:lib_web_name/templates/page/index.html.eex"},
+    {:eex, "phx_live/templates/page/hero.html.leex",         :project, "lib/:lib_web_name/templates/page/hero.html.leex"},
+    {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
+    {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:lib_web_name/views/page_view.ex"},
+    {:eex, "phx_live/live/page_live_view.ex",                :project, "lib/:lib_web_name/live/page_live_view.ex"},
+    {:eex, "phx_test/controllers/page_controller_test.exs",  :project, "test/:lib_web_name/controllers/page_controller_test.exs"},
+    {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:lib_web_name/views/layout_view_test.exs"},
+    {:eex, "phx_test/live/page_live_view_test.exs",          :project, "test/:lib_web_name/live/page_live_view_test.exs"},
+    {:eex, "phx_test/views/page_view_test.exs",              :project, "test/:lib_web_name/views/page_view_test.exs"},
+  ]
+
   template :bare, []
 
   template :static, [
@@ -107,7 +122,16 @@ defmodule Phx.New.Single do
     copy_from project, __MODULE__, :new
 
     if Project.ecto?(project), do: gen_ecto(project)
-    if Project.html?(project), do: gen_html(project)
+
+    cond do
+      Project.live?(project) and not Project.html?(project) ->
+        raise "cannot generate --live project with --no-html. LiveView requires HTML"
+
+      Project.live?(project) -> gen_live(project)
+      Project.html?(project) -> gen_html(project)
+      true -> :noop
+    end
+
     if Project.gettext?(project), do: gen_gettext(project)
 
     case {Project.webpack?(project), Project.html?(project)} do
@@ -125,6 +149,10 @@ defmodule Phx.New.Single do
 
   def gen_gettext(project) do
     copy_from project, __MODULE__, :gettext
+  end
+
+  defp gen_live(project) do
+    copy_from project, __MODULE__, :live
   end
 
   def gen_ecto(project) do

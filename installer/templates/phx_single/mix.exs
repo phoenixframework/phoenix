@@ -43,8 +43,14 @@ defmodule <%= app_module %>.MixProject do
       {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
       <%= if live do %>{:phoenix_live_view, "~> 0.8.0"},<% end %>
       {:phoenix_html, "~> 2.11"},
+<<<<<<< HEAD
       {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if gettext do %>
       {:gettext, "~> 0.11"},<% end %>
+=======
+      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if live do %>
+      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view"},<% end %>
+      {:gettext, "~> 0.11"},
+>>>>>>> 71cb98f53c1cb466406730f520c2ca8abec1f5ec
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"}
     ]

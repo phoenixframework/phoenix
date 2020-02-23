@@ -43,6 +43,10 @@ defmodule Phx.New.Project do
     Keyword.fetch!(binding, :gettext)
   end
 
+  def live?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :live)
+  end
+
   def webpack?(%Project{binding: binding}) do
     Keyword.fetch!(binding, :webpack)
   end

@@ -15,3 +15,4 @@ import css from "../css/app.css"
 //
 // Local files can be imported directly using relative paths, for example:
 // import socket from "./socket"
+<%= if live do %>// import liveSocket from "./live"<% end %>

@@ -48,6 +48,21 @@ defmodule Phx.New.Web do
     {:eex,  "phx_test/views/page_view_test.exs",              :web, "test/:web_app/views/page_view_test.exs"},
   ]
 
+  template :live, [
+    {:eex,  "phx_assets/live.js",                             :web, "lib/:web_app/assets/js/live.js"},
+    {:eex,  "phx_live/controllers/page_controller.ex",        :web, "lib/:web_app/controllers/page_controller.ex"},
+    {:eex,  "phx_web/templates/layout/app.html.eex",          :web, "lib/:web_app/templates/layout/app.html.eex"},
+    {:eex,  "phx_live/templates/page/index.html.eex",         :web, "lib/:web_app/templates/page/index.html.eex"},
+    {:eex,  "phx_live/templates/page/hero.html.leex",         :web, "lib/:web_app/templates/page/hero.html.leex"},
+
+    {:eex,  "phx_web/views/layout_view.ex",                   :web, "lib/:web_app/views/layout_view.ex"},
+    {:eex,  "phx_web/views/page_view.ex",                     :web, "lib/:web_app/views/page_view.ex"},
+    {:eex,  "phx_live/live/page_live_view.ex",                :web, "lib/:web_app/live/page_live_view.ex"},
+    {:eex,  "phx_test/controllers/page_controller_test.exs",  :web, "test/:web_app/controllers/page_controller_test.exs"},
+    {:eex,  "phx_test/views/layout_view_test.exs",            :web, "test/:web_app/views/layout_view_test.exs"},
+    {:eex,  "phx_test/views/page_view_test.exs",              :web, "test/:web_app/views/page_view_test.exs"},
+  ]
+
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do
     web_path = Path.expand(project.base_path)
     project_path = Path.dirname(Path.dirname(web_path))
@@ -65,7 +80,15 @@ defmodule Phx.New.Web do
     inject_umbrella_config_defaults(project)
     copy_from project, __MODULE__, :new
 
-    if Project.html?(project), do: gen_html(project)
+    cond do
+      Project.live?(project) and not Project.html?(project) ->
+        raise "cannot generate --live project with --no-html. LiveView requires HTML"
+
+      Project.live?(project) -> gen_live(project)
+      Project.html?(project) -> gen_html(project)
+      true -> :noop
+    end
+
     if Project.gettext?(project), do: gen_gettext(project)
 
     case {Project.webpack?(project), Project.html?(project)} do
@@ -83,5 +106,9 @@ defmodule Phx.New.Web do
 
   defp gen_gettext(%Project{} = project) do
     copy_from project, __MODULE__, :gettext
+  end
+
+  defp gen_live(%Project{} = project) do
+    copy_from project, __MODULE__, :live
   end
 end
