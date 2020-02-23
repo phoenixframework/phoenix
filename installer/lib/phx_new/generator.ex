@@ -110,6 +110,7 @@ defmodule Phx.New.Generator do
     db           = Keyword.get(opts, :database, "postgres")
     ecto         = Keyword.get(opts, :ecto, true)
     html         = Keyword.get(opts, :html, true)
+    live         = Keyword.get(opts, :live, false)
     gettext      = Keyword.get(opts, :gettext, true)
     webpack      = Keyword.get(opts, :webpack, true)
     dev          = Keyword.get(opts, :dev, false)
@@ -156,6 +157,7 @@ defmodule Phx.New.Generator do
       webpack: webpack,
       ecto: ecto,
       html: html,
+      live: live,
       gettext: gettext,
       adapter_app: adapter_app,
       adapter_module: adapter_module,
