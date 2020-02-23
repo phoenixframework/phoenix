@@ -83,6 +83,31 @@ defmodule Phoenix.Controller.ControllerTest do
     end
   end
 
+  test "put_root_layout/2 and root_layout/1" do
+    conn = conn(:get, "/")
+    assert root_layout(conn) == false
+
+    conn = put_root_layout(conn, {AppView, "root.html"})
+    assert root_layout(conn) == {AppView, "root.html"}
+
+    conn = put_root_layout(conn, "bare.html")
+    assert root_layout(conn) == {AppView, "bare.html"}
+
+    conn = put_root_layout(conn, :print)
+    assert root_layout(conn) == {AppView, :print}
+
+    conn = put_root_layout(conn, false)
+    assert root_layout(conn) == false
+
+    assert_raise RuntimeError, fn ->
+      put_root_layout(conn, "print")
+    end
+
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_layout sent_conn(), {AppView, :print}
+    end
+  end
+
   test "put_new_layout/2" do
     conn = put_new_layout(conn(:get, "/"), false)
     assert layout(conn) == false
@@ -96,6 +121,22 @@ defmodule Phoenix.Controller.ControllerTest do
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
       put_new_layout sent_conn(), {AppView, "app.html"}
+    end
+  end
+
+  test "put_new_root_layout/2" do
+    conn = put_new_root_layout(conn(:get, "/"), false)
+    assert root_layout(conn) == false
+    conn = put_new_root_layout(conn, {AppView, "root.html"})
+    assert root_layout(conn) == false
+
+    conn = put_new_root_layout(conn(:get, "/"), {AppView, "root.html"})
+    assert root_layout(conn) == {AppView, "root.html"}
+    conn = put_new_root_layout(conn, false)
+    assert root_layout(conn) == {AppView, "root.html"}
+
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_new_root_layout sent_conn(), {AppView, "root.html"}
     end
   end
 
