@@ -124,22 +124,6 @@ defmodule Phoenix.Controller.ControllerTest do
     end
   end
 
-  test "put_new_root_layout/2" do
-    conn = put_new_root_layout(conn(:get, "/"), false)
-    assert root_layout(conn) == false
-    conn = put_new_root_layout(conn, {AppView, "root.html"})
-    assert root_layout(conn) == false
-
-    conn = put_new_root_layout(conn(:get, "/"), {AppView, "root.html"})
-    assert root_layout(conn) == {AppView, "root.html"}
-    conn = put_new_root_layout(conn, false)
-    assert root_layout(conn) == {AppView, "root.html"}
-
-    assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_new_root_layout sent_conn(), {AppView, "root.html"}
-    end
-  end
-
   test "put_view/2 and put_new_view/2" do
     conn = put_new_view(conn(:get, "/"), Hello)
     assert view_module(conn) == Hello

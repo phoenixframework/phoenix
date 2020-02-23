@@ -536,21 +536,6 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Stores the root layout for rendering if one was not stored yet.
-
-  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
-  """
-  @spec put_new_root_layout(Plug.Conn.t, {atom, binary | atom} | false) :: Plug.Conn.t
-  def put_new_root_layout(%Plug.Conn{state: state} = conn, layout)
-      when (is_tuple(layout) and tuple_size(layout) == 2) or layout == false do
-    if state in @unsent do
-      update_in conn.private, &Map.put_new(&1, :phoenix_root_layout, layout)
-    else
-      raise AlreadySentError
-    end
-  end
-
-  @doc """
   Stores the root layout for rendering.
 
   Like `put_layout/2`, the layout must be a tuple,
