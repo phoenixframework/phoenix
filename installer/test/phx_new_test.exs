@@ -152,6 +152,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", &refute(&1 =~ ~s[socket "/live", Phoenix.LiveView.Socket])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :fetch_live_flash])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :put_root_layout])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[HomeLive])
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
@@ -323,6 +324,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web/router.ex", ~s[plug :fetch_live_flash, {PhxBlogWeb.LayoutView, :root}]
       assert_file "phx_blog/lib/phx_blog_web/router.ex", ~s[plug :put_root_layout, {}]
       refute_file "phx_blog/lib/phx_blog_web/router.ex", ~s[plug :fetch_flash]
+      refute_file "phx_blog/lib/phx_blog_web/router.ex", ~s[PageController]
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", ~s[get "/", HomeLive]
     end
   end
 

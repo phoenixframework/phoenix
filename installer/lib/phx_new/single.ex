@@ -47,6 +47,17 @@ defmodule Phx.New.Single do
     {:eex, "phx_test/views/page_view_test.exs",              :project, "test/:lib_web_name/views/page_view_test.exs"},
   ]
 
+  template :live, [
+    {:eex, "phx_live/templates/layout/root.html.leex",       :project, "lib/:lib_web_name/templates/layout/root.html.leex"},
+    {:eex, "phx_web/templates/layout/app.html.eex",          :project, "lib/:lib_web_name/templates/layout/app.html.leex"},
+    {:eex, "phx_live/templates/page/home.html.leex",         :project, "lib/:lib_web_name/templates/page/home.html.leex"},
+    {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
+    {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:lib_web_name/views/page_view.ex"},
+    {:eex, "phx_live/live/home_live.ex",                     :project, "lib/:lib_web_name/live/home_live.ex"},
+    {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:lib_web_name/views/layout_view_test.exs"},
+    {:eex, "phx_test/live/home_live_test.exs",               :project, "test/:lib_web_name/live/home_live_test.exs"},
+  ]
+
   template :ecto, [
     {:eex,  "phx_ecto/repo.ex",              :app, "lib/:app/repo.ex"},
     {:keep, "phx_ecto/priv/repo/migrations", :app, "priv/repo/migrations"},
@@ -62,21 +73,6 @@ defmodule Phx.New.Single do
     {:eex,  "phx_assets/socket.js",         :web, "assets/js/socket.js"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
-  ]
-
-  template :live, [
-    {:eex, "phx_assets/live.js",                             :web, "assets/js/live.js"},
-    {:eex, "phx_live/controllers/page_controller.ex",        :project, "lib/:lib_web_name/controllers/page_controller.ex"},
-    {:eex, "phx_web/templates/layout/app.html.eex",          :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
-    {:eex, "phx_live/templates/page/index.html.eex",         :project, "lib/:lib_web_name/templates/page/index.html.eex"},
-    {:eex, "phx_live/templates/page/hero.html.leex",         :project, "lib/:lib_web_name/templates/page/hero.html.leex"},
-    {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
-    {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:lib_web_name/views/page_view.ex"},
-    {:eex, "phx_live/live/page_live_view.ex",                :project, "lib/:lib_web_name/live/page_live_view.ex"},
-    {:eex, "phx_test/controllers/page_controller_test.exs",  :project, "test/:lib_web_name/controllers/page_controller_test.exs"},
-    {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:lib_web_name/views/layout_view_test.exs"},
-    {:eex, "phx_test/live/page_live_view_test.exs",          :project, "test/:lib_web_name/live/page_live_view_test.exs"},
-    {:eex, "phx_test/views/page_view_test.exs",              :project, "test/:lib_web_name/views/page_view_test.exs"},
   ]
 
   template :bare, []
