@@ -305,14 +305,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "PhxUmbWeb.HomeLive"
       end
 
-      assert_file web_path(@app, "lib/#{@app}_web/live/modal.ex"), fn file ->
-        assert file =~ "PhxUmbWeb.Modal"
-      end
-
-      assert_file web_path(@app, "lib/#{@app}_web/live/live_helpers.ex"), fn file ->
-        assert file =~ "PhxUmbWeb.LiveHelpers"
-      end
-
       assert_file web_path(@app, "lib/#{@app}_web/templates/page/home.html.leex"), fn file ->
         assert file =~ ~s[Welcome]
       end

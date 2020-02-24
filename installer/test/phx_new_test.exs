@@ -291,14 +291,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "PhxBlogWeb.HomeLive"
       end
 
-      assert_file "phx_blog/lib/phx_blog_web/live/modal.ex", fn file ->
-        assert file =~ "PhxBlogWeb.Modal"
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web/live/live_helpers.ex", fn file ->
-        assert file =~ "PhxBlogWeb.LiveHelpers"
-      end
-
       assert_file "phx_blog/lib/phx_blog_web/templates/page/home.html.leex", fn file ->
         assert file =~ ~s[Welcome]
       end

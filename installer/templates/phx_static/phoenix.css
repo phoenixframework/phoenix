@@ -76,6 +76,9 @@ select {
 .phx-hero p {
   margin: 0;
 }
+.phx-hero input {
+  background: #ffffff;
+}
 .phx-logo {
   min-width: 300px;
   margin: 1rem;

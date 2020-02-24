@@ -6,26 +6,32 @@ defmodule <%= web_namespace %>.HomeLive do
   end
 
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, query: "", results: %{})}
   end
 
-  def handle_params(_params, _uri, socket) do
-    {:noreply, socket}
-  end
-end
-
-defmodule <%= web_namespace %>.HomeLive.DepsCheck do
-  use <%= web_namespace %>, :live_component
-
-  def render(assigns) do
-    ~L"""
-    <h2>Results of <code>mix hex.outdated</code></h2>
-    <pre><%%= @deps %></pre>
-    """
+  def handle_event("suggest", %{"q" => query}, socket) do
+    {:noreply, assign(socket, results: search(query), query: query)}
   end
 
-  def update(_assigns, socket) do
-    {deps, _} = System.cmd("mix", ["hex.outdated"])
-    {:ok, assign(socket, deps: deps)}
+  def handle_event("search", %{"q" => query}, socket) do
+    new_socket =
+      case search(query) do
+        %{^query => app} -> redirect(socket, external: "https://hexdocs.pm/#{app}/#{query}.html")
+        _ -> assign(socket, results: %{}, query: query)
+      end
+
+    {:noreply, new_socket}
+  end
+
+  defp search(query) do
+    if not <%= web_namespace %>.Endpoint.config(:code_reloader) do
+      raise "action disabled when not in development"
+    end
+
+    for {app, _, _} <- Application.started_applications(),
+      module <- Application.spec(app, :modules),
+      module |> Atom.to_string() |> String.starts_with?("Elixir." <> query),
+      into: %{},
+      do: {inspect(module), app}
   end
 end

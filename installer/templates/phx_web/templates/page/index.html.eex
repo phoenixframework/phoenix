@@ -1,7 +1,21 @@
 <section class="phx-hero"><%= if gettext do %>
   <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
   <h1>Welcome to Phoenix!</h1><% end %>
-  <p>A productive web framework that<br/>does not compromise speed or maintainability.</p>
+  <p>A productive web framework that<br/>does not compromise speed or maintainability.</p><%= if live do %>
+
+  <br/>
+  <h2>Live Hex module doc search</h2>
+  <form phx-change="suggest" phx-submit="search">
+    <input type="text" name="q" value="<%%= @query %>" placeholder="Module..." list="results" autocomplete="off"/>
+    <%%= if Enum.empty?(@results) and @query !== "" do %>
+      No modules found
+    <%% end %>
+    <datalist id="results">
+      <%%= for {module, _app} <- @results do %>
+        <option value="<%%= module %>"><%%= module %></option>
+      <%% end %>
+    </datalist>
+  </form><% end %>
 </section>
 
 <section class="row">
