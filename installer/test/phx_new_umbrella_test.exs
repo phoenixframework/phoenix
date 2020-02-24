@@ -299,38 +299,57 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     in_tmp "new with live", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--live"])
 
-      assert_file web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex"), fn file ->
-        assert file =~ ~r/defmodule PhxUmbWeb.PageController/
-        assert file =~ ~s[render(conn, "index.html")]
+      refute_file web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex")
+
+      assert_file web_path(@app, "lib/#{@app}_web/live/home_live.ex"), fn file ->
+        assert file =~ "PhxUmbWeb.HomeLive"
       end
 
-      assert_file web_path(@app, "lib/#{@app}_web/live/page_live_view.ex")
-
-      assert_file web_path(@app, "lib/#{@app}_web/templates/page/index.html.eex"), fn file ->
-        assert file =~ ~s[<%= live_render(@conn, PhxUmbWeb.PageLiveView) %>]
+      assert_file web_path(@app, "lib/#{@app}_web/live/modal.ex"), fn file ->
+        assert file =~ "PhxUmbWeb.Modal"
       end
 
-      assert_file web_path(@app, "lib/#{@app}_web/templates/page/hero.html.leex")
+      assert_file web_path(@app, "lib/#{@app}_web/live/live_helpers.ex"), fn file ->
+        assert file =~ "PhxUmbWeb.LiveHelpers"
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/templates/page/home.html.leex"), fn file ->
+        assert file =~ ~s[Welcome]
+      end
 
       assert_file web_path(@app, "mix.exs"), &assert(&1 =~ ~r":phoenix_live_view")
 
       assert_file web_path(@app, "assets/package.json"),
                   ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
 
+      assert_file web_path(@app, "assets/js/app.js"), fn file ->
+        assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
+      end
+
+      assert_file web_path(@app, "assets/css/app.css"), fn file ->
+        assert file =~ ~s[@import "../node_modules/nprogress/nprogress.css";]
+        assert file =~ ~s[.phx-click-loading]
+      end
+
       assert_file root_path(@app, "config/config.exs"), fn file ->
-        assert file =~ "config :phoenix, template_engines: [leex: Phoenix.LiveView.Engine]"
-        assert file =~ ~s[live_view: []
-        assert file =~ ~s[signing_salt:]
+        assert file =~ "live_view:"
+        assert file =~ "signing_salt:"
       end
 
       assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
-        assert file =~ "import Phoenix.LiveView, only: [live_render: 2, live_render: 3]"
-        assert file =~ ~s[import Phoenix.LiveView.Router]
-        assert file =~ "import Phoenix.LiveView.Controller, only: [live_render: 3]"
+        assert file =~ "import Phoenix.LiveView.Helpers"
+        assert file =~ "def live_view do"
+        assert file =~ "def live_component do"
       end
 
       assert_file web_path(@app, "lib/phx_umb_web/endpoint.ex"), ~s[socket "/live", Phoenix.LiveView.Socket]
-      assert_file web_path(@app, "lib/phx_umb_web/router.ex"), ~s[plug Phoenix.LiveView.Flash]
+      assert_file web_path(@app, "lib/phx_umb_web/router.ex"), fn file ->
+        assert file =~ ~s[plug :fetch_live_flash]
+        assert file =~ ~s[plug :put_root_layout, {PhxUmbWeb.LayoutView, :root}]
+        assert file =~ ~s[live "/", HomeLive]
+        refute file =~ ~s[plug :fetch_flash]
+        refute file =~ ~s[PageController]
+      end
     end
   end
 

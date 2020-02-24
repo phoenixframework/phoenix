@@ -20,6 +20,7 @@ defmodule <%= web_namespace %> do
   def controller do
     quote do
       use Phoenix.Controller, namespace: <%= web_namespace %>
+
       import Plug.Conn<%= if gettext do %>
       import <%= web_namespace %>.Gettext<% end %>
       alias <%= web_namespace %>.Router.Helpers, as: Routes
@@ -36,7 +37,7 @@ defmodule <%= web_namespace %> do
       import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]<%= if live do %>
 
       # Import convenience functions for LiveView rendering
-      import Phoenix.LiveView, only: [live_render: 2, live_render: 3]<%end %><%= if html do %>
+      import Phoenix.LiveView.Helpers<% end %><%= if html do %>
 
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML<% end %>
@@ -45,7 +46,33 @@ defmodule <%= web_namespace %> do
       import <%= web_namespace %>.Gettext<% end %>
       alias <%= web_namespace %>.Router.Helpers, as: Routes
     end
+  end<%= if live do %>
+
+  def live_view do
+    quote do
+      use Phoenix.LiveView,
+        layout: {<%= web_namespace %>.LayoutView, "live.html"}
+
+      use Phoenix.HTML
+
+      import <%= web_namespace %>.ErrorHelpers<%= if gettext do %>
+      import <%= web_namespace %>.Gettext<% end %>
+      import <%= web_namespace %>.LiveHelpers
+      alias <%= web_namespace %>.Router.Helpers, as: Routes
+    end
   end
+
+  def live_component do
+    quote do
+      use Phoenix.LiveComponent
+      use Phoenix.HTML
+
+      import <%= web_namespace %>.ErrorHelpers<%= if gettext do %>
+      import <%= web_namespace %>.Gettext<% end %>
+      import <%= web_namespace %>.LiveHelpers
+      alias <%= web_namespace %>.Router.Helpers, as: Routes
+    end
+  end<% end %>
 
   def router do
     quote do
