@@ -29,9 +29,9 @@ defmodule <%= web_namespace %>.HomeLive do
     end
 
     for {app, _, _} <- Application.started_applications(),
-      module <- Application.spec(app, :modules),
-      module |> Atom.to_string() |> String.starts_with?("Elixir." <> query),
-      into: %{},
-      do: {inspect(module), app}
+        module <- Application.spec(app, :modules),
+        module |> Atom.to_string() |> String.starts_with?("Elixir." <> query),
+        into: %{},
+        do: {inspect(module), app}
   end
 end
