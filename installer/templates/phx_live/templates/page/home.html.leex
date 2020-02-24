@@ -2,7 +2,7 @@
   <%%= live_modal @socket, DemoWeb.HomeLive.DepsCheck,
     id: "deps",
     redirect_path: Routes.home_path(@socket, :index) %>
-<% end %>
+<%% end %>
 
 <section class="phx-hero"><%= if gettext do %>
   <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>

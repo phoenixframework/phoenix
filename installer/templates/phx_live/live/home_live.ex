@@ -20,7 +20,7 @@ defmodule <%= web_namespace %>.HomeLive.DepsCheck do
   def render(assigns) do
     ~L"""
     <h2>Results of <code>mix hex.outdated</code></h2>
-    <pre><%= @deps %></pre>
+    <pre><%%= @deps %></pre>
     """
   end
 
