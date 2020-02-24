@@ -1,7 +1,16 @@
+<%%= if @live_view_action in [:deps] do %>
+  <%%= live_modal @socket, DemoWeb.HomeLive.DepsCheck,
+    id: "deps",
+    redirect_path: Routes.home_path(@socket, :index) %>
+<% end %>
+
 <section class="phx-hero"><%= if gettext do %>
   <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
   <h1>Welcome to Phoenix!</h1><% end %>
   <p>A productive web framework that<br/>does not compromise speed or maintainability.</p>
+  <%%= live_patch "Check if your deps are up to date!",
+    to: Routes.home_path(@socket, :deps),
+    phx_disable_with: "Contacting hex.pm..." %>
 </section>
 
 <section class="row">

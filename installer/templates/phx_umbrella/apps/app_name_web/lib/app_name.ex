@@ -37,7 +37,8 @@ defmodule <%= web_namespace %> do
       import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]<%= if live do %>
 
       # Import convenience functions for LiveView rendering
-      import Phoenix.LiveView.Helpers<% end %><%= if html do %>
+      import Phoenix.LiveView.Helpers
+      import <%= web_namespace %>.LiveHelpers<% end %><%= if html do %>
 
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML<% end %>
