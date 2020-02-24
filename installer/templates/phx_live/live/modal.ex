@@ -7,7 +7,7 @@ defmodule <%= web_namespace %>.Modal do
 
   ## Example Usage
 
-  <%= live_modal @socket, <%= web_namespace %>.PostLive.Form,
+  <%%= live_modal @socket, <%= web_namespace %>.PostLive.Form,
     id: @post.id,
     action: @live_view_action,
     post: @post,
@@ -18,11 +18,11 @@ defmodule <%= web_namespace %>.Modal do
 
   def render(assigns) do
     ~L"""
-    <div id="<%= @id %>" class="phx-modal"
+    <div id="<%%= @id %>" class="phx-modal"
       phx-capture-click="close"
       phx-window-keydown="close"
       phx-key="escape"
-      phx-target="#<%= @id %>"
+      phx-target="#<%%= @id %>"
       phx-page-loading>
 
       <div class="phx-modal-content">

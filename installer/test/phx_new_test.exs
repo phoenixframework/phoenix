@@ -311,11 +311,13 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/assets/package.json",
                   ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
 
-      assert_file "phx_blog/assets/js/live.js", fn file ->
+      assert_file "phx_blog/assets/js/app.js", fn file ->
         assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
-        assert file =~ ~s[let liveSocket = new LiveSocket("/live")]
-        assert file =~ ~s[liveSocket.connect()]
-        assert file =~ ~s[export default liveSocket]
+      end
+
+      assert_file "phx_blog/assets/css/app.css", fn file ->
+        assert file =~ ~s[@import "../node_modules/nprogress/nprogress.css";]
+        assert file =~ ~s[.phx-click-loading]
       end
 
       assert_file "phx_blog/config/config.exs", fn file ->

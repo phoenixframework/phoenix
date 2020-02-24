@@ -49,7 +49,8 @@ defmodule Phx.New.Single do
 
   template :live, [
     {:eex, "phx_live/templates/layout/root.html.leex",       :project, "lib/:lib_web_name/templates/layout/root.html.leex"},
-    {:eex, "phx_web/templates/layout/app.html.eex",          :project, "lib/:lib_web_name/templates/layout/app.html.leex"},
+    {:eex, "phx_live/templates/layout/app.html.leex",        :project, "lib/:lib_web_name/templates/layout/app.html.leex"},
+    {:eex, "phx_live/templates/layout/live.html.leex",       :project, "lib/:lib_web_name/templates/layout/live.html.leex"},
     {:eex, "phx_live/templates/page/home.html.leex",         :project, "lib/:lib_web_name/templates/page/home.html.leex"},
     {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
     {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:lib_web_name/views/page_view.ex"},
@@ -72,6 +73,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
     {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
+    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
     {:eex,  "phx_assets/socket.js",         :web, "assets/js/socket.js"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
@@ -81,6 +83,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
     {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
+    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
   ]
@@ -177,7 +180,6 @@ defmodule Phx.New.Single do
     end
 
     statics = %{
-      "phx_static/app.css" => "assets/css/app.css",
       "phx_static/phoenix.css" => "assets/css/phoenix.css",
       "phx_static/robots.txt" => "assets/static/robots.txt",
       "phx_static/phoenix.png" => "assets/static/images/phoenix.png",

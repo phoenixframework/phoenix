@@ -1,6 +1,7 @@
 defmodule <%= web_namespace %>.Router do
   use <%= web_namespace %>, :router<%= if html do %>
-  <%= if live do %>import Phoenix.LiveView.Router
+  <%= if live do %>
+  import Phoenix.LiveView.Router
   <% end %>
   pipeline :browser do
     plug :accepts, ["html"]

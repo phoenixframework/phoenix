@@ -1,6 +1,7 @@
 defmodule <%= web_namespace %>.HomeLiveTest do
   use <%= web_namespace %>.ConnCase, async: true
 
+  import Phoenix.LiveViewTest
 
   test "disconnected and connected render", %{conn: conn} do
     {:ok, home_live, disconneted_html} = live(conn, "/")

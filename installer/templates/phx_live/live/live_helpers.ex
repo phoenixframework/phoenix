@@ -7,7 +7,13 @@ defmodule <%= web_namespace %>.LiveHelpers do
 
   def live_modal(socket, component, opts) do
     path = Keyword.fetch!(opts, :redirect_path)
-    live_component(socket, <%= web_namespace %>.Modal, id: :modal, redirect_path: path, component: component, opts: opts)
+
+    live_component(socket, <%= web_namespace %>.Modal,
+      id: :modal,
+      redirect_path: path,
+      component: component,
+      opts: opts
+    )
   end
 
   def compute_title(title), do: "<%= web_namespace %> – #{title}"

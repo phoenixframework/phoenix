@@ -12,11 +12,11 @@ defmodule <%= endpoint_module %> do
 
   socket "/socket", <%= web_namespace %>.UserSocket,
     websocket: true,
-    longpoll: false<% if live do %>
+    longpoll: false<%= if live do %>
 
-  socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [session: @session_options]]
-<% end %>  # Serve at "/" the static files from "priv/static" directory.
+  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]<% end %>
+
+  # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phx.digest
   # when deploying your static files in production.

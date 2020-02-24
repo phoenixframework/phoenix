@@ -51,7 +51,7 @@ defmodule <%= web_namespace %> do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {LiveGenWeb.LayoutView, "live.html"}
+        layout: {<%= web_namespace %>.LayoutView, "live.html"}
 
       use Phoenix.HTML
 
