@@ -285,16 +285,13 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([@app_name, "--live"])
       assert_file "phx_blog/mix.exs", &assert(&1 =~ ~r":phoenix_live_view")
 
-      assert_file "phx_blog/lib/phx_blog_web/controllers/page_controller.ex", fn file ->
-        assert file =~ ~r/defmodule PhxBlogWeb.PageController/
-        assert file =~ ~s[render(conn, "index.html")]
-      end
+      refute_file "phx_blog/lib/phx_blog_web/controllers/page_controller.ex"
 
       assert_file "phx_blog/lib/phx_blog_web/live/home_live.ex", fn file ->
         assert file =~ "PhxBlogWeb.HomeLive"
       end
 
-      assert_file "phx_blog/lib/phx_blog_web/live/modal_live.ex", fn file ->
+      assert_file "phx_blog/lib/phx_blog_web/live/modal.ex", fn file ->
         assert file =~ "PhxBlogWeb.Modal"
       end
 
@@ -302,11 +299,9 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "PhxBlogWeb.LiveHelpers"
       end
 
-      assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.eex", fn file ->
-        assert file =~ ~s[<%= live_render(@conn, PhxBlogWeb.PageLiveView) %>]
+      assert_file "phx_blog/lib/phx_blog_web/templates/page/home.html.leex", fn file ->
+        assert file =~ ~s[Welcome]
       end
-
-      assert_file "phx_blog/lib/phx_blog_web/templates/page/hero.html.leex"
 
       assert_file "phx_blog/assets/package.json",
                   ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
@@ -332,11 +327,13 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~s[socket "/live", Phoenix.LiveView.Socket]
-      assert_file "phx_blog/lib/phx_blog_web/router.ex", ~s[plug :fetch_live_flash, {PhxBlogWeb.LayoutView, :root}]
-      assert_file "phx_blog/lib/phx_blog_web/router.ex", ~s[plug :put_root_layout, {}]
-      refute_file "phx_blog/lib/phx_blog_web/router.ex", ~s[plug :fetch_flash]
-      refute_file "phx_blog/lib/phx_blog_web/router.ex", ~s[PageController]
-      assert_file "phx_blog/lib/phx_blog_web/router.ex", ~s[get "/", HomeLive]
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->
+        assert file =~ ~s[plug :fetch_live_flash]
+        assert file =~ ~s[plug :put_root_layout, {PhxBlogWeb.LayoutView, :root}]
+        assert file =~ ~s[live "/", HomeLive]
+        refute file =~ ~s[plug :fetch_flash]
+        refute file =~ ~s[PageController]
+      end
     end
   end
 

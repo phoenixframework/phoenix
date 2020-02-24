@@ -10,7 +10,7 @@ import css from "../css/app.css"
 // Import deps with the dep name or local files with a relative path, for example:
 //
 //     import {Socket} from "phoenix"
-//     import myLocal from "./my_local"
+//     import socket from "./socket"
 //
 <%= if html do %>import "phoenix_html"<% end %><%= if live do %>
 import {Socket} from "phoenix"
