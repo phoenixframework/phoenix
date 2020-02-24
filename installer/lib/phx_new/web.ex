@@ -83,9 +83,6 @@ defmodule Phx.New.Web do
     copy_from project, __MODULE__, :new
 
     cond do
-      Project.live?(project) and not Project.html?(project) ->
-        raise "cannot generate --live project with --no-html. LiveView requires HTML"
-
       Project.live?(project) -> gen_live(project)
       Project.html?(project) -> gen_html(project)
       true -> :noop
