@@ -55,6 +55,8 @@ defmodule Phx.New.Web do
     {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:web_app/views/layout_view.ex"},
     {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:web_app/views/page_view.ex"},
     {:eex, "phx_live/live/home_live.ex",                     :project, "lib/:web_app/live/home_live.ex"},
+    {:eex, "phx_live/live/live_helpers.ex",                  :project, "lib/:web_app/live/live_helpers.ex"},
+    {:eex, "phx_live/live/modal.ex",                         :project, "lib/:web_app/live/modal.ex"},
     {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:web_app/views/layout_view_test.exs"},
     {:eex, "phx_test/live/home_live_test.exs",               :project, "test/:web_app/live/home_live_test.exs"},
   ]
@@ -74,6 +76,9 @@ defmodule Phx.New.Web do
 
   def generate(%Project{} = project) do
     inject_umbrella_config_defaults(project)
+
+    if Project.live?(project), do: Phx.New.Single.assert_live_switches!(project)
+
     copy_from project, __MODULE__, :new
 
     cond do

@@ -290,7 +290,17 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s[render(conn, "index.html")]
       end
 
-      assert_file "phx_blog/lib/phx_blog_web/live/page_live_view.ex"
+      assert_file "phx_blog/lib/phx_blog_web/live/home_live.ex", fn file ->
+        assert file =~ "PhxBlogWeb.HomeLive"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/live/modal_live.ex", fn file ->
+        assert file =~ "PhxBlogWeb.Modal"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/live/live_helpers.ex", fn file ->
+        assert file =~ "PhxBlogWeb.LiveHelpers"
+      end
 
       assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.eex", fn file ->
         assert file =~ ~s[<%= live_render(@conn, PhxBlogWeb.PageLiveView) %>]
@@ -314,8 +324,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
-        assert file =~ "import Phoenix.LiveView, only: [live_render: 2, live_render: 3]"
-        assert file =~ "import Phoenix.LiveView.Controller, only: [live_render: 3]"
+        assert file =~ "import Phoenix.LiveView.Helpers"
         assert file =~ "def live_view do"
         assert file =~ "def live_component do"
       end
