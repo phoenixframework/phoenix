@@ -12,6 +12,9 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Options
 
+    * `--live` - include Phoenix LiveView to make it easier than ever
+      to build interactive, real-time applications
+
     * `--umbrella` - generate an umbrella project,
       with one application for your domain, and
       a second application for the web interface.
@@ -39,8 +42,6 @@ defmodule Mix.Tasks.Phx.New do
     * `--no-html` - do not generate HTML views.
 
     * `--no-gettext` - do not generate gettext files.
-
-    * `--live` - include Phoenix LiveView.
 
     * `--binary-id` - use `binary_id` as primary key type
       in Ecto schemas
