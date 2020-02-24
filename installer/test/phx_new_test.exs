@@ -146,13 +146,13 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/assets/js/app.js", fn file -> refute file =~ "LiveSocket" end
 
       assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
-        refute file =~ "import Phoenix.LiveView"
-        refute file =~ "live_render: 3"
+        refute file =~ "Phoenix.LiveView"
       end
-      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", &refute(&1 =~ ~s[socket "/live", Phoenix.LiveView.Socket])
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", &refute(&1 =~ ~s[Phoenix.LiveView])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :fetch_live_flash])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :put_root_layout])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[HomeLive])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &assert(&1 =~ ~s[PageController])
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
