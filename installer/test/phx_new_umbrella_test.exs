@@ -301,8 +301,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       refute_file web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex")
 
-      assert_file web_path(@app, "lib/#{@app}_web/live/page/index.ex"), fn file ->
-        assert file =~ "PhxUmbWeb.PageLive.Index"
+      assert_file web_path(@app, "lib/#{@app}_web/live/page_live.ex"), fn file ->
+        assert file =~ "defmodule PhxUmbWeb.PageLive do"
       end
 
       assert_file web_path(@app, "lib/#{@app}_web/templates/page/index.html.leex"), fn file ->

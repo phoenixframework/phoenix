@@ -54,7 +54,7 @@ defmodule Phx.New.Single do
     {:eex, "phx_web/templates/page/index.html.eex",          :project, "lib/:lib_web_name/templates/page/index.html.leex"},
     {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
     {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:lib_web_name/views/page_view.ex"},
-    {:eex, "phx_live/live/page/index.ex",                    :project, "lib/:lib_web_name/live/page/index.ex"},
+    {:eex, "phx_live/live/page_live.ex",                     :project, "lib/:lib_web_name/live/page_live.ex"},
     {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:lib_web_name/views/layout_view_test.exs"},
     {:eex, "phx_test/live/home_live_test.exs",               :project, "test/:lib_web_name/live/home_live_test.exs"},
   ]

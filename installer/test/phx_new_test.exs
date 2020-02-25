@@ -287,8 +287,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       refute_file "phx_blog/lib/phx_blog_web/controllers/page_controller.ex"
 
-      assert_file "phx_blog/lib/phx_blog_web/live/page/index.ex", fn file ->
-        assert file =~ "PhxBlogWeb.PageLive.Index"
+      assert_file "phx_blog/lib/phx_blog_web/live/page_live.ex", fn file ->
+        assert file =~ "defmodule PhxBlogWeb.PageLive do"
       end
 
       assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.leex", fn file ->

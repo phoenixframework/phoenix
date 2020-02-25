@@ -1,4 +1,4 @@
-defmodule <%= web_namespace %>.PageLive.Index do
+defmodule <%= web_namespace %>.PageLive do
   use <%= web_namespace %>, :live_view
 
   def render(assigns) do
