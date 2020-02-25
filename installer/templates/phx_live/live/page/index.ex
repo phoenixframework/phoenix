@@ -1,8 +1,8 @@
-defmodule <%= web_namespace %>.HomeLive do
+defmodule <%= web_namespace %>.PageLive.Index do
   use <%= web_namespace %>, :live_view
 
   def render(assigns) do
-    <%= web_namespace %>.PageView.render("home.html", assigns)
+    <%= web_namespace %>.PageView.render("index.html", assigns)
   end
 
   def mount(_params, _session, socket) do

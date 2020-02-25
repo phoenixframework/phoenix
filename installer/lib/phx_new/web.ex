@@ -52,10 +52,10 @@ defmodule Phx.New.Web do
     {:eex, "phx_live/templates/layout/root.html.leex", :web, "lib/:web_app/templates/layout/root.html.leex"},
     {:eex, "phx_live/templates/layout/app.html.leex",  :web, "lib/:web_app/templates/layout/app.html.leex"},
     {:eex, "phx_live/templates/layout/live.html.leex", :web, "lib/:web_app/templates/layout/live.html.leex"},
-    {:eex, "phx_web/templates/page/index.html.eex",    :web, "lib/:web_app/templates/page/home.html.leex"},
+    {:eex, "phx_web/templates/page/index.html.eex",    :web, "lib/:web_app/templates/page/index.html.leex"},
     {:eex, "phx_web/views/layout_view.ex",             :web, "lib/:web_app/views/layout_view.ex"},
     {:eex, "phx_web/views/page_view.ex",               :web, "lib/:web_app/views/page_view.ex"},
-    {:eex, "phx_live/live/home_live.ex",               :web, "lib/:web_app/live/home_live.ex"},
+    {:eex, "phx_live/live/page/index.ex",              :web, "lib/:web_app/live/page/index.ex"},
     {:eex, "phx_test/views/layout_view_test.exs",      :web, "test/:web_app/views/layout_view_test.exs"},
     {:eex, "phx_test/live/home_live_test.exs",         :web, "test/:web_app/live/home_live_test.exs"},
   ]

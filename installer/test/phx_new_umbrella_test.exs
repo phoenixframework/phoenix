@@ -301,11 +301,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       refute_file web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex")
 
-      assert_file web_path(@app, "lib/#{@app}_web/live/home_live.ex"), fn file ->
-        assert file =~ "PhxUmbWeb.HomeLive"
+      assert_file web_path(@app, "lib/#{@app}_web/live/page/index.ex"), fn file ->
+        assert file =~ "PhxUmbWeb.PageLive.Index"
       end
 
-      assert_file web_path(@app, "lib/#{@app}_web/templates/page/home.html.leex"), fn file ->
+      assert_file web_path(@app, "lib/#{@app}_web/templates/page/index.html.leex"), fn file ->
         assert file =~ ~s[Welcome]
       end
 
@@ -338,7 +338,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "lib/phx_umb_web/router.ex"), fn file ->
         assert file =~ ~s[plug :fetch_live_flash]
         assert file =~ ~s[plug :put_root_layout, {PhxUmbWeb.LayoutView, :root}]
-        assert file =~ ~s[live "/", HomeLive]
+        assert file =~ ~s[live "/", PageLive.Index]
         refute file =~ ~s[plug :fetch_flash]
         refute file =~ ~s[PageController]
       end
