@@ -600,7 +600,7 @@ defmodule Phoenix.Endpoint do
             Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, config(:render_errors))
         catch
           kind, reason ->
-            stack = System.stacktrace()
+            stack = __STACKTRACE__
             Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, config(:render_errors))
         end
       end

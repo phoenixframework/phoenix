@@ -92,7 +92,7 @@ defmodule Phoenix.Controller.Pipeline do
           :error, reason ->
             Phoenix.Controller.Pipeline.__catch__(
               var!(conn_before), reason, __MODULE__,
-              var!(conn_before).private.phoenix_action, System.stacktrace()
+              var!(conn_before).private.phoenix_action, __STACKTRACE__
             )
         end
       end

@@ -78,7 +78,7 @@ defmodule Phoenix.CodeReloader.Server do
             :error
 
           kind, reason ->
-            IO.puts(Exception.format(kind, reason, System.stacktrace()))
+            IO.puts(Exception.format(kind, reason, __STACKTRACE__))
             :error
         end
       end)

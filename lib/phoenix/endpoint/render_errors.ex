@@ -46,7 +46,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
             unquote(__MODULE__).__catch__(conn, kind, reason, stack, @phoenix_render_errors)
         catch
           kind, reason ->
-            stack = System.stacktrace()
+            stack = __STACKTRACE__
             unquote(__MODULE__).__catch__(conn, kind, reason, stack, @phoenix_render_errors)
         end
       end

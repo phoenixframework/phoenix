@@ -359,15 +359,15 @@ defmodule Phoenix.Router do
         rescue
           e in Plug.Conn.WrapperError ->
             measurements = %{duration: System.monotonic_time() - start}
-            metadata = %{kind: :error, error: e, stacktrace: System.stacktrace()}
+            metadata = %{kind: :error, error: e, stacktrace: __STACKTRACE__}
             :telemetry.execute([:phoenix, :router_dispatch, :failure], measurements, metadata)
             Plug.Conn.WrapperError.reraise(e)
         catch
           :error, reason ->
             measurements = %{duration: System.monotonic_time() - start}
-            metadata = %{kind: :error, error: reason, stacktrace: System.stacktrace()}
+            metadata = %{kind: :error, error: reason, stacktrace: __STACKTRACE__}
             :telemetry.execute([:phoenix, :router_dispatch, :failure], measurements, metadata)
-            Plug.Conn.WrapperError.reraise(piped_conn, :error, reason, System.stacktrace())
+            Plug.Conn.WrapperError.reraise(piped_conn, :error, reason, __STACKTRACE__)
         end
     end
   end
@@ -638,7 +638,7 @@ defmodule Phoenix.Router do
               Plug.Conn.WrapperError.reraise(e)
           catch
             :error, reason ->
-              Plug.Conn.WrapperError.reraise(unquote(conn), :error, reason, System.stacktrace())
+              Plug.Conn.WrapperError.reraise(unquote(conn), :error, reason, __STACKTRACE__)
           end
         end
         @phoenix_pipeline nil

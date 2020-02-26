@@ -267,7 +267,7 @@ defmodule Phoenix.Socket.TransportTest do
     end
 
     test "return default_config from Transport module provided when true is given as config argument" do
-      assert DummyTransport.default_config == Transport.load_config(true, DummyTransport)
+      assert DummyTransport.default_config() == Transport.load_config(true, DummyTransport)
     end
 
     test "config passed will orverride default config from Transport module provided" do
