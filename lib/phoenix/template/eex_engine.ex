@@ -6,7 +6,8 @@ defmodule Phoenix.Template.EExEngine do
   @behaviour Phoenix.Template.Engine
 
   def compile(path, name) do
-    EEx.compile_file(path, engine: engine_for(name), line: 1, trim: true)
+    trim = Application.get_env(:phoenix, :trim_on_html_eex_engine, true)
+    EEx.compile_file(path, engine: engine_for(name), line: 1, trim: trim)
   end
 
   defp engine_for(name) do

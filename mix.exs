@@ -51,7 +51,8 @@ defmodule Phoenix.MixProject do
         format_encoders: [],
         filter_parameters: ["password"],
         serve_endpoints: false,
-        gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf)
+        gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf),
+        trim_on_html_eex_engine: true
       ]
     ]
   end
