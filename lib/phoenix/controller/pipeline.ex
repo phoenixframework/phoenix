@@ -164,7 +164,23 @@ defmodule Phoenix.Controller.Pipeline do
 
   defp plug(plug, opts, guards) do
     quote do
-      @plugs {unquote(plug), unquote(opts), unquote(Macro.escape(guards))}
+      @plugs {unquote(plug), unquote(opts), unquote(escape_guards(guards))}
     end
   end
+
+  defp escape_guards({pre_expanded, _, [_ | _]} = node)
+       when pre_expanded in [:@, :__aliases__],
+       do: node
+
+  defp escape_guards({left, meta, right}),
+    do: {:{}, [], [escape_guards(left), meta, escape_guards(right)]}
+
+  defp escape_guards({left, right}),
+    do: {escape_guards(left), escape_guards(right)}
+
+  defp escape_guards([_ | _] = list),
+    do: Enum.map(list, &escape_guards/1)
+
+  defp escape_guards(node),
+    do: node
 end

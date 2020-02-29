@@ -7,9 +7,14 @@ defmodule Phoenix.Controller.PipelineTest do
   defmodule MyController do
     use Phoenix.Controller
 
+    @secret_actions [:secret]
+
     plug :prepend, :before1 when action in [:show, :create, :secret]
     plug :prepend, :before2
-    plug :do_halt when action in [:secret]
+    plug :do_halt when action in @secret_actions
+
+    # Delete the attribute to verify attributes in guards are expanded at call time
+    Module.delete_attribute(__MODULE__, :secret_actions)
 
     def show(conn, _) do
       prepend(conn, :action)
