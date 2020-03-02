@@ -65,7 +65,8 @@ locals_without_parens = [
 
   # Phoenix.LiveView.Router
   live: 2,
-  live: 3
+  live: 3,
+  live: 4
 ]
 
 [
