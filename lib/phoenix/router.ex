@@ -480,6 +480,8 @@ defmodule Phoenix.Router do
     * `:assigns` - a map of data to merge into the connection when a route matches
     * `:metadata` - a map of metadata used by the telemetry events and returned by
       `route_info/4`
+    * `:trailing_slash` - a boolean to flag whether or not the helper functions
+      append a trailing slash. Defaults to `false`.
 
   ## Examples
 
@@ -753,6 +755,8 @@ defmodule Phoenix.Router do
     * `:assigns` - a map of data to merge into the connection when a route matches
     * `:log` - the level to log the route dispatching under,
       may be set to false. Defaults to `:debug`
+    * `:trailing_slash` - whether or not the helper functions append a trailing
+      slash. Defaults to `false`.
 
   """
   defmacro scope(options, do: context) do
