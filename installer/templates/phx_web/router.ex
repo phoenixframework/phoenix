@@ -18,7 +18,7 @@ defmodule <%= web_namespace %>.Router do
   scope "/", <%= web_namespace %> do
     pipe_through :browser
 
-    <%= if live do %>live "/", PageLive.Index, :index<% else %>get "/", PageController, :index<% end %>
+    <%= if live do %>live "/", PageLive, :index<% else %>get "/", PageController, :index<% end %>
   end
 
   # Other scopes may use custom stacks.

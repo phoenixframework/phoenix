@@ -338,7 +338,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "lib/phx_umb_web/router.ex"), fn file ->
         assert file =~ ~s[plug :fetch_live_flash]
         assert file =~ ~s[plug :put_root_layout, {PhxUmbWeb.LayoutView, :root}]
-        assert file =~ ~s[live "/", PageLive.Index]
+        assert file =~ ~s[live "/", PageLive]
         refute file =~ ~s[plug :fetch_flash]
         refute file =~ ~s[PageController]
       end

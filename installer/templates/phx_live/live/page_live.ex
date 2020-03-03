@@ -14,13 +14,16 @@ defmodule <%= web_namespace %>.PageLive do
   end
 
   def handle_event("search", %{"q" => query}, socket) do
-    new_socket =
-      case search(query) do
-        %{^query => app} -> redirect(socket, external: "https://hexdocs.pm/#{app}/#{query}.html")
-        _ -> assign(socket, results: %{}, query: query)
-      end
+    case search(query) do
+      %{^query => vsn} ->
+        {:noreply, redirect(socket, external: "https://hexdocs.pm/#{query}/#{vsn}")}
 
-    {:noreply, new_socket}
+      _ ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "No dependencies found matching \"#{query}\"")
+         |> assign(results: %{}, query: query)}
+    end
   end
 
   defp search(query) do
@@ -28,10 +31,10 @@ defmodule <%= web_namespace %>.PageLive do
       raise "action disabled when not in development"
     end
 
-    for {app, _, _} <- Application.started_applications(),
-        module <- Application.spec(app, :modules),
-        module |> Atom.to_string() |> String.starts_with?("Elixir." <> query),
+    for {app, desc, vsn} <- Application.started_applications(),
+        app = to_string(app),
+        String.starts_with?(app, query) and not List.starts_with?(desc, ~c"ERTS"),
         into: %{},
-        do: {inspect(module), app}
+        do: {app, vsn}
   end
 end
