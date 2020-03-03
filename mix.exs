@@ -20,9 +20,10 @@ defmodule Phoenix.MixProject do
       consolidate_protocols: Mix.env() != :test,
       xref: [
         exclude: [
+          {IEx, :started?, 0},
           Ecto.Type,
           :ranch,
-          {:cowboy_req, :compact, 1},
+          :cowboy_req,
           Plug.Adapters.Cowboy.Conn,
           Plug.Cowboy.Conn,
           Plug.Cowboy
