@@ -42,7 +42,7 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp "bootstrap", fn ->
       project_path = Path.join(File.cwd!(), "phx_blog")
       try do
-        Mix.Tasks.Phx.New.run(["phx_blog", "--no-webpack", "--no-ecto"])
+        Mix.Tasks.Phx.New.run(["phx_blog", "--no-webpack", "--no-ecto", "--no-live"])
 
         in_project :phx_blog, project_path, fn _ ->
           Mix.Task.clear()

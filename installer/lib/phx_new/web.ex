@@ -48,6 +48,18 @@ defmodule Phx.New.Web do
     {:eex,  "phx_test/views/page_view_test.exs",              :web, "test/:web_app/views/page_view_test.exs"},
   ]
 
+  template :live, [
+    {:eex, "phx_live/templates/layout/root.html.leex", :web, "lib/:web_app/templates/layout/root.html.leex"},
+    {:eex, "phx_live/templates/layout/app.html.leex",  :web, "lib/:web_app/templates/layout/app.html.leex"},
+    {:eex, "phx_live/templates/layout/live.html.leex", :web, "lib/:web_app/templates/layout/live.html.leex"},
+    {:eex, "phx_web/templates/page/index.html.eex",    :web, "lib/:web_app/templates/page/index.html.leex"},
+    {:eex, "phx_web/views/layout_view.ex",             :web, "lib/:web_app/views/layout_view.ex"},
+    {:eex, "phx_web/views/page_view.ex",               :web, "lib/:web_app/views/page_view.ex"},
+    {:eex, "phx_live/live/page_live.ex",               :web, "lib/:web_app/live/page_live.ex"},
+    {:eex, "phx_test/views/layout_view_test.exs",      :web, "test/:web_app/views/layout_view_test.exs"},
+    {:eex, "phx_test/live/home_live_test.exs",         :web, "test/:web_app/live/home_live_test.exs"},
+  ]
+
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do
     web_path = Path.expand(project.base_path)
     project_path = Path.dirname(Path.dirname(web_path))
@@ -63,9 +75,17 @@ defmodule Phx.New.Web do
 
   def generate(%Project{} = project) do
     inject_umbrella_config_defaults(project)
+
+    if Project.live?(project), do: Phx.New.Single.assert_live_switches!(project)
+
     copy_from project, __MODULE__, :new
 
-    if Project.html?(project), do: gen_html(project)
+    cond do
+      Project.live?(project) -> gen_live(project)
+      Project.html?(project) -> gen_html(project)
+      true -> :noop
+    end
+
     if Project.gettext?(project), do: gen_gettext(project)
 
     case {Project.webpack?(project), Project.html?(project)} do
@@ -83,5 +103,9 @@ defmodule Phx.New.Web do
 
   defp gen_gettext(%Project{} = project) do
     copy_from project, __MODULE__, :gettext
+  end
+
+  defp gen_live(%Project{} = project) do
+    copy_from project, __MODULE__, :live
   end
 end

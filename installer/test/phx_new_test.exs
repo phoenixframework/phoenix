@@ -136,6 +136,24 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/test/support/data_case.ex", ~r"defmodule PhxBlog.DataCase"
       assert_file "phx_blog/priv/repo/migrations/.formatter.exs", ~r"import_deps: \[:ecto_sql\]"
 
+      # LiveView (disabled by default)
+      refute_file "phx_blog/lib/phx_blog_web/live/page_live_view.ex"
+      refute_file "phx_blog/assets/js/live.js"
+      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_view")
+      assert_file "phx_blog/assets/package.json",
+                  &refute(&1 =~ ~s["phoenix_live_view": "file:../deps/phoenix_live_view"])
+
+      assert_file "phx_blog/assets/js/app.js", fn file -> refute file =~ "LiveSocket" end
+
+      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
+        refute file =~ "Phoenix.LiveView"
+      end
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", &refute(&1 =~ ~s[Phoenix.LiveView])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :fetch_live_flash])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :put_root_layout])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[HomeLive])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &assert(&1 =~ ~s[PageController])
+
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
@@ -259,6 +277,55 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--binary-id"])
       assert_file "phx_blog/config/config.exs", ~r/generators: \[binary_id: true\]/
+    end
+  end
+
+  test "new with live" do
+    in_tmp "new with live", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--live"])
+      assert_file "phx_blog/mix.exs", &assert(&1 =~ ~r":phoenix_live_view")
+
+      refute_file "phx_blog/lib/phx_blog_web/controllers/page_controller.ex"
+
+      assert_file "phx_blog/lib/phx_blog_web/live/page_live.ex", fn file ->
+        assert file =~ "defmodule PhxBlogWeb.PageLive do"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.leex", fn file ->
+        assert file =~ ~s[Welcome]
+      end
+
+      assert_file "phx_blog/assets/package.json",
+                  ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
+
+      assert_file "phx_blog/assets/js/app.js", fn file ->
+        assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
+      end
+
+      assert_file "phx_blog/assets/css/app.css", fn file ->
+        assert file =~ ~s[@import "../node_modules/nprogress/nprogress.css";]
+        assert file =~ ~s[.phx-click-loading]
+      end
+
+      assert_file "phx_blog/config/config.exs", fn file ->
+        assert file =~ "live_view:"
+        assert file =~ "signing_salt:"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
+        assert file =~ "import Phoenix.LiveView.Helpers"
+        assert file =~ "def live_view do"
+        assert file =~ "def live_component do"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~s[socket "/live", Phoenix.LiveView.Socket]
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->
+        assert file =~ ~s[plug :fetch_live_flash]
+        assert file =~ ~s[plug :put_root_layout, {PhxBlogWeb.LayoutView, :root}]
+        assert file =~ ~s[live "/", PageLive]
+        refute file =~ ~s[plug :fetch_flash]
+        refute file =~ ~s[PageController]
+      end
     end
   end
 

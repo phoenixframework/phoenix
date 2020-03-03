@@ -47,6 +47,18 @@ defmodule Phx.New.Single do
     {:eex, "phx_test/views/page_view_test.exs",              :project, "test/:lib_web_name/views/page_view_test.exs"},
   ]
 
+  template :live, [
+    {:eex, "phx_live/templates/layout/root.html.leex",       :project, "lib/:lib_web_name/templates/layout/root.html.leex"},
+    {:eex, "phx_live/templates/layout/app.html.leex",        :project, "lib/:lib_web_name/templates/layout/app.html.leex"},
+    {:eex, "phx_live/templates/layout/live.html.leex",       :project, "lib/:lib_web_name/templates/layout/live.html.leex"},
+    {:eex, "phx_web/templates/page/index.html.eex",          :project, "lib/:lib_web_name/templates/page/index.html.leex"},
+    {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
+    {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:lib_web_name/views/page_view.ex"},
+    {:eex, "phx_live/live/page_live.ex",                     :project, "lib/:lib_web_name/live/page_live.ex"},
+    {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:lib_web_name/views/layout_view_test.exs"},
+    {:eex, "phx_test/live/home_live_test.exs",               :project, "test/:lib_web_name/live/home_live_test.exs"},
+  ]
+
   template :ecto, [
     {:eex,  "phx_ecto/repo.ex",              :app, "lib/:app/repo.ex"},
     {:keep, "phx_ecto/priv/repo/migrations", :app, "priv/repo/migrations"},
@@ -59,7 +71,17 @@ defmodule Phx.New.Single do
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
     {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
+    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
     {:eex,  "phx_assets/socket.js",         :web, "assets/js/socket.js"},
+    {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
+    {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
+  ]
+
+  template :webpack_live, [
+    {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
+    {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
+    {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
+    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
   ]
@@ -104,10 +126,18 @@ defmodule Phx.New.Single do
   end
 
   def generate(%Project{} = project) do
+    if Project.live?(project), do: assert_live_switches!(project)
+
     copy_from project, __MODULE__, :new
 
     if Project.ecto?(project), do: gen_ecto(project)
-    if Project.html?(project), do: gen_html(project)
+
+    cond do
+      Project.live?(project) -> gen_live(project)
+      Project.html?(project) -> gen_html(project)
+      true -> :noop
+    end
+
     if Project.gettext?(project), do: gen_gettext(project)
 
     case {Project.webpack?(project), Project.html?(project)} do
@@ -127,6 +157,10 @@ defmodule Phx.New.Single do
     copy_from project, __MODULE__, :gettext
   end
 
+  defp gen_live(project) do
+    copy_from project, __MODULE__, :live
+  end
+
   def gen_ecto(project) do
     copy_from project, __MODULE__, :ecto
     gen_ecto_config(project)
@@ -137,10 +171,13 @@ defmodule Phx.New.Single do
   end
 
   def gen_webpack(%Project{web_path: web_path} = project) do
-    copy_from project, __MODULE__, :webpack
+    if Project.live?(project) do
+      copy_from project, __MODULE__, :webpack_live
+    else
+      copy_from project, __MODULE__, :webpack
+    end
 
     statics = %{
-      "phx_static/app.css" => "assets/css/app.css",
       "phx_static/phoenix.css" => "assets/css/phoenix.css",
       "phx_static/robots.txt" => "assets/static/robots.txt",
       "phx_static/phoenix.png" => "assets/static/images/phoenix.png",
@@ -154,5 +191,11 @@ defmodule Phx.New.Single do
 
   def gen_bare(%Project{} = project) do
     copy_from project, __MODULE__, :bare
+  end
+
+  def assert_live_switches!(project) do
+    unless Project.html?(project) and Project.webpack?(project) do
+      raise "cannot generate --live project with --no-html or --no-webpack. LiveView requires HTML and webpack"
+    end
   end
 end

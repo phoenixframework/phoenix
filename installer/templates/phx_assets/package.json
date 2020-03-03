@@ -8,7 +8,9 @@
   },
   "dependencies": {
     "phoenix": "file:<%= phoenix_webpack_path %>"<%= if html do %>,
-    "phoenix_html": "file:<%= phoenix_html_webpack_path %>"<% end %>
+    "phoenix_html": "file:<%= phoenix_html_webpack_path %>"<% end %><%= if live do %>,
+    "phoenix_live_view": "file:../deps/phoenix_live_view",
+    "nprogress": "^0.2.0"<% end %>
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",

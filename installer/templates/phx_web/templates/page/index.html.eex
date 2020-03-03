@@ -1,7 +1,18 @@
 <section class="phx-hero"><%= if gettext do %>
   <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
   <h1>Welcome to Phoenix!</h1><% end %>
-  <p>A productive web framework that<br/>does not compromise speed or maintainability.</p>
+  <p>Peace of mind from prototype to production</p><%= if live do %>
+
+  <br/>
+  <form phx-change="suggest" phx-submit="search">
+    <input type="text" name="q" value="<%%= @query %>" placeholder="Live dependency search" list="results" autocomplete="off"/>
+    <datalist id="results">
+      <%%= for {app, _vsn} <- @results do %>
+        <option value="<%%= app %>"><%%= app %></option>
+      <%% end %>
+    </datalist>
+    <button type="submit" phx-disable-with="Searching...">Go to Hexdocs</button>
+  </form><% end %>
 </section>
 
 <section class="row">

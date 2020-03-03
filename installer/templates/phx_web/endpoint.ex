@@ -12,7 +12,10 @@ defmodule <%= endpoint_module %> do
 
   socket "/socket", <%= web_namespace %>.UserSocket,
     websocket: true,
-    longpoll: false
+    longpoll: false<%= if live do %>
+
+  socket "/live", Phoenix.LiveView.Socket,
+    websocket: [connect_info: [session: @session_options]]<% end %>
 
   # Serve at "/" the static files from "priv/static" directory.
   #
