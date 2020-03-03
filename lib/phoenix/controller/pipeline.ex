@@ -164,9 +164,9 @@ defmodule Phoenix.Controller.Pipeline do
   """
   defmacro plug(plug)
 
-  defmacro plug({:when, _, [plug, guards]}), do: plug(plug, [], guards)
+  defmacro plug({:when, _, [plug, guards]}), do: plug(plug, [], guards, __CALLER__)
 
-  defmacro plug(plug), do: plug(plug, [], true)
+  defmacro plug(plug), do: plug(plug, [], true, __CALLER__)
 
   @doc """
   Stores a plug with the given options to be executed as part of
@@ -174,11 +174,13 @@ defmodule Phoenix.Controller.Pipeline do
   """
   defmacro plug(plug, opts)
 
-  defmacro plug(plug, {:when, _, [opts, guards]}), do: plug(plug, opts, guards)
+  defmacro plug(plug, {:when, _, [opts, guards]}), do: plug(plug, opts, guards, __CALLER__)
 
-  defmacro plug(plug, opts), do: plug(plug, opts, true)
+  defmacro plug(plug, opts), do: plug(plug, opts, true, __CALLER__)
 
-  defp plug(plug, opts, guards) do
+  defp plug(plug, opts, guards, caller) do
+    plug = Macro.expand(plug, %{caller | function: {:init, 1}})
+
     quote do
       @plugs {unquote(plug), unquote(opts), unquote(escape_guards(guards))}
     end
