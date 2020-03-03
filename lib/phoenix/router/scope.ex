@@ -6,7 +6,7 @@ defmodule Phoenix.Router.Scope do
   @pipes :phoenix_pipeline_scopes
   @top :phoenix_top_scopes
 
-  defstruct path: [], alias: [], as: [], pipes: [], host: nil, private: %{}, assigns: %{}, log: :debug
+  defstruct path: [], alias: [], as: [], pipes: [], host: nil, private: %{}, assigns: %{}, log: :debug, trailing_slash?: false
 
   @doc """
   Initializes the scope.
@@ -26,6 +26,7 @@ defmodule Phoenix.Router.Scope do
     assigns = Keyword.get(opts, :assigns, %{})
     as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
     alias?  = Keyword.get(opts, :alias, true)
+    trailing_slash? = Keyword.get(opts, :trailing_slash, get_top(module).trailing_slash?) == true
 
     if to_string(as) == "static"  do
       raise ArgumentError, "`static` is a reserved route prefix generated from #{inspect plug} or `:as` option"
@@ -39,7 +40,7 @@ defmodule Phoenix.Router.Scope do
       |> Keyword.get(:metadata, %{})
       |> Map.put(:log, Keyword.get(opts, :log, log))
 
-    Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns, metadata)
+    Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns, metadata, trailing_slash?)
   end
 
   @doc """
@@ -113,7 +114,8 @@ defmodule Phoenix.Router.Scope do
       pipes: top.pipes,
       private: Map.merge(top.private, private),
       assigns: Map.merge(top.assigns, assigns),
-      log: Keyword.get(opts, :log, top.log)
+      log: Keyword.get(opts, :log, top.log),
+      trailing_slash?: Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
     })
   end
 
