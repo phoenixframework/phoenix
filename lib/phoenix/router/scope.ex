@@ -21,26 +21,27 @@ defmodule Phoenix.Router.Scope do
   Builds a route based on the top of the stack.
   """
   def route(line, module, kind, verb, path, plug, plug_opts, opts) do
+    top = get_top(module)
     path    = validate_path(path)
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
     as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
     alias?  = Keyword.get(opts, :alias, true)
-    trailing_slash? = Keyword.get(opts, :trailing_slash, get_top(module).trailing_slash?) == true
+    trailing_slash? = Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
 
     if to_string(as) == "static"  do
       raise ArgumentError, "`static` is a reserved route prefix generated from #{inspect plug} or `:as` option"
     end
 
-    {path, host, alias, as, pipes, private, assigns, log} =
-      join(module, path, plug, alias?, as, private, assigns)
+    {path, alias, as, private, assigns} =
+      join(top, path, plug, alias?, as, private, assigns)
 
     metadata =
       opts
       |> Keyword.get(:metadata, %{})
-      |> Map.put(:log, Keyword.get(opts, :log, log))
+      |> Map.put(:log, Keyword.get(opts, :log, top.log))
 
-    Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns, metadata, trailing_slash?)
+    Phoenix.Router.Route.build(line, kind, verb, path, top.host, alias, plug_opts, as, top.pipes, private, assigns, metadata, trailing_slash?)
   end
 
   @doc """
@@ -152,9 +153,7 @@ defmodule Phoenix.Router.Scope do
     join_alias(get_top(module), alias)
   end
 
-  defp join(module, path, alias, alias?, as, private, assigns) do
-    top = get_top(module)
-
+  defp join(top, path, alias, alias?, as, private, assigns) do
     joined_alias =
       if alias? do
         join_alias(top, alias)
@@ -162,8 +161,8 @@ defmodule Phoenix.Router.Scope do
         alias
       end
 
-    {join_path(top, path), top.host, joined_alias, join_as(top, as), top.pipes,
-     Map.merge(top.private, private), Map.merge(top.assigns, assigns), top.log}
+    {join_path(top, path), joined_alias, join_as(top, as),
+     Map.merge(top.private, private), Map.merge(top.assigns, assigns)}
   end
 
   defp join_path(top, path) do
