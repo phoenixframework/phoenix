@@ -312,7 +312,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "mix.exs"), &assert(&1 =~ ~r":phoenix_live_view")
 
       assert_file web_path(@app, "assets/package.json"),
-                  ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
+                  ~s["phoenix_live_view": "file:../../../deps/phoenix_live_view"]
 
       assert_file web_path(@app, "assets/js/app.js"), fn file ->
         assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
