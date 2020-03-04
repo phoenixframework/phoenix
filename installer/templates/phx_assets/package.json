@@ -9,7 +9,7 @@
   "dependencies": {
     "phoenix": "file:<%= phoenix_webpack_path %>"<%= if html do %>,
     "phoenix_html": "file:<%= phoenix_html_webpack_path %>"<% end %><%= if live do %>,
-    "phoenix_live_view": "file:../deps/phoenix_live_view",
+    "phoenix_live_view": "file:<%= phoenix_live_view_webpack_path %>",
     "nprogress": "^0.2.0"<% end %>
   },
   "devDependencies": {
