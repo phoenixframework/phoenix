@@ -123,6 +123,7 @@ defmodule Phoenix.MixProject do
       "guides/ecto.md",
       "guides/contexts.md",
       "guides/mix_tasks.md",
+      "guides/telemetry.md",
       "guides/realtime/channels.md",
       "guides/realtime/presence.md",
       "guides/testing/testing.md",
