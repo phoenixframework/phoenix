@@ -41,7 +41,8 @@ defmodule <%= app_module %>.MixProject do
       {:phoenix_ecto, "~> 4.1"},
       {:ecto_sql, "~> 3.1"},
       {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %><%= if live do %>
-      {:phoenix_live_view, "~> 0.8.1"},<% end %>
+      {:phoenix_live_view, "~> 0.8.1"},
+      {:floki, ">= 0.0.0", only: :test},<% end %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if gettext do %>
       {:gettext, "~> 0.11"},<% end %>

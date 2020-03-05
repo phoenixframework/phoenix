@@ -140,6 +140,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file "phx_blog/lib/phx_blog_web/live/page_live_view.ex"
       refute_file "phx_blog/assets/js/live.js"
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_view")
+      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":floki")
       assert_file "phx_blog/assets/package.json",
                   &refute(&1 =~ ~s["phoenix_live_view": "file:../deps/phoenix_live_view"])
 
@@ -284,6 +285,7 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp "new with live", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--live"])
       assert_file "phx_blog/mix.exs", &assert(&1 =~ ~r":phoenix_live_view")
+      assert_file "phx_blog/mix.exs", &assert(&1 =~ ~r":floki")
 
       refute_file "phx_blog/lib/phx_blog_web/controllers/page_controller.ex"
 

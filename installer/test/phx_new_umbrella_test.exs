@@ -244,6 +244,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # No LiveView (in web_path)
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_view")
+      assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":floki")
       refute File.exists?(web_path(@app, "lib/#{@app}_web/templates/page/hero.html.leex"))
 
       refute_file web_path(@app, "assets/js/live.js")
@@ -310,6 +311,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file web_path(@app, "mix.exs"), &assert(&1 =~ ~r":phoenix_live_view")
+      assert_file web_path(@app, "mix.exs"), &assert(&1 =~ ~r":floki")
 
       assert_file web_path(@app, "assets/package.json"),
                   ~s["phoenix_live_view": "file:../../../deps/phoenix_live_view"]
