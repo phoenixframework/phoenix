@@ -23,7 +23,6 @@ defmodule Phx.New.MixProject do
         links: %{github: @url},
         files: ~w(lib templates mix.exs README.md)
       ],
-
       source_url: @url,
       docs: docs(),
       homepage_url: "https://www.phoenixframework.org",
@@ -36,21 +35,22 @@ defmodule Phx.New.MixProject do
     ]
   end
 
+  def application do
+    [
+      extra_applications: [:eex, :crypto]
+    ]
+  end
 
   def deps do
-    [{:ex_doc, "~> 0.19.1", only: :docs}]
+    [
+      {:ex_doc, "~> 0.19.1", only: :docs}
+    ]
   end
 
   defp docs do
     [
-      source_url_pattern: "https://github.com/#{@github_path}/blob/v#{@version}/installer/%{path}#L%{line}"
+      source_url_pattern:
+        "https://github.com/#{@github_path}/blob/v#{@version}/installer/%{path}#L%{line}"
     ]
-  end
-
-  # Configuration for the OTP application
-  #
-  # Type `mix help compile.app` for more information
-  def application do
-    [extra_applications: []]
   end
 end
