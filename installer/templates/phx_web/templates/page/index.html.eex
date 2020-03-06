@@ -3,7 +3,6 @@
   <h1>Welcome to Phoenix!</h1><% end %>
   <p>Peace-of-mind from prototype to production</p><%= if live do %>
 
-  <br/>
   <form phx-change="suggest" phx-submit="search">
     <input type="text" name="q" value="<%%= @query %>" placeholder="Live dependency search" list="results" autocomplete="off"/>
     <datalist id="results">
