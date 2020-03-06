@@ -1,7 +1,7 @@
 <section class="phx-hero"><%= if gettext do %>
   <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
   <h1>Welcome to Phoenix!</h1><% end %>
-  <p>Peace of mind from prototype to production</p><%= if live do %>
+  <p>Peace-of-mind from prototype to production</p><%= if live do %>
 
   <br/>
   <form phx-change="suggest" phx-submit="search">
