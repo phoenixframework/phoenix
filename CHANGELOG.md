@@ -24,6 +24,15 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.15 (2020-03-06)
+
+### Enhancements
+  - [Router] Add `:trailing_slash` option to `scope` and `match` macros for trailing slash generation on Route helpers
+  - [View] Add `:trim_on_html_eex_engine` configuration to enable/disable trim mode on the HTML EEx engine
+
+### Bug Fixes
+  - [Controller] Fix plug guard escaping causing module attributes to be expanded too late
+
 ## 1.4.14 (2020-02-20)
 
 ### Deprecations
