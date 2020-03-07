@@ -592,16 +592,32 @@ defmodule Phoenix.Endpoint do
         conn = put_in conn.script_name, script_name()
         conn = Plug.Conn.put_private(conn, :phoenix_endpoint, __MODULE__)
 
+        start = System.monotonic_time()
+        measures = %{time: System.system_time()}
+        meta = %{conn: conn, options: opts}
+        :telemetry.execute([:phoenix, :endpoint, :start], measures, meta)
         try do
           super(conn, opts)
         rescue
           e in Plug.Conn.WrapperError ->
             %{conn: conn, kind: kind, reason: reason, stack: stack} = e
+            measures = %{duration: System.monotonic_time() - start}
+            meta = %{kind: kind, error: reason, stacktrace: stack}
+            :telemetry.execute([:phoenix, :endpoint, :failure], measures, meta)
             Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, config(:render_errors))
         catch
           kind, reason ->
             stack = __STACKTRACE__
+            measures = %{duration: System.monotonic_time() - start}
+            meta = %{kind: kind, error: reason, stacktrace: stack}
+            :telemetry.execute([:phoenix, :endpoint, :failure], measures, meta)
             Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, config(:render_errors))
+        else
+          conn ->
+            measures = %{duration: System.monotonic_time() - start}
+            meta = %{conn: conn, options: opts}
+            :telemetry.execute([:phoenix, :endpoint, :stop], measures, meta)
+            conn
         end
       end
 
