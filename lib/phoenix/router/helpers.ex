@@ -104,14 +104,19 @@ defmodule Phoenix.Router.Helpers do
   def define(env, routes) do
     # Ignore any route without helper or forwards.
     routes =
-      Enum.filter(routes, fn {route, _exprs} ->
-        (not is_nil(route.helper) and not (route.kind == :forward))
+      Enum.reject(routes, fn {route, _exprs} ->
+        is_nil(route.helper) or route.kind == :forward
       end)
 
+    trailing_slash? = Enum.any?(routes, fn {route, _} -> route.trailing_slash? end)
+
     groups = Enum.group_by(routes, fn {route, _exprs} -> route.helper end)
-    impls = for {_helper, group} <- groups,
-	                {route, exprs} <- Enum.sort_by(group, fn {_, exprs} -> length(exprs.binding) end),
-	                do: defhelper(route, exprs)
+
+    impls =
+      for {_helper, group} <- groups,
+          {route, exprs} <- Enum.sort_by(group, fn {_, exprs} -> length(exprs.binding) end),
+          do: defhelper(route, exprs)
+
     catch_all = Enum.map(groups, &defhelper_catch_all/1)
 
     defhelper = quote @anno do
@@ -122,7 +127,7 @@ defmodule Phoenix.Router.Helpers do
 
         def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(Macro.escape(opts)), unquote_splicing(vars), params)
             when is_list(params) or is_map(params) do
-          path(conn_or_endpoint, segments(unquote(segs), params, unquote(bins), unquote(Macro.escape(trailing_slash?)),
+          path(conn_or_endpoint, segments(unquote(segs), params, unquote(bins), unquote(trailing_slash?),
                 {unquote(helper), unquote(Macro.escape(opts)), unquote(Enum.map(vars, &Macro.to_string/1))}))
         end
 
@@ -165,8 +170,14 @@ defmodule Phoenix.Router.Helpers do
         end
 
         defp raise_route_error(unquote(helper), suffix, arity, action, params) do
-          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_#{suffix}",
-                                                   arity, action, unquote(Macro.escape(routes)), params)
+          Phoenix.Router.Helpers.raise_route_error(
+            __MODULE__,
+            "#{unquote(helper)}_#{suffix}",
+            arity,
+            action,
+            unquote(Macro.escape(routes)),
+            params
+          )
         end
       end
     end
@@ -277,8 +288,11 @@ defmodule Phoenix.Router.Helpers do
         end
       end
 
-      defp maybe_append_slash("/", _), do: "/"
-      defp maybe_append_slash(path, _trailing_slash? = true), do: path <> "/"
+      if unquote(trailing_slash?) do
+        defp maybe_append_slash("/", _), do: "/"
+        defp maybe_append_slash(path, true), do: path <> "/"
+      end
+
       defp maybe_append_slash(path, _), do: path
     end
 
