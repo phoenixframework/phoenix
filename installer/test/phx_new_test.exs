@@ -250,6 +250,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_html")
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_reload")
+      assert_file "phx_blog/lib/phx_blog_web.ex",
+                  &assert(&1 =~ "defp view_helpers do")
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex",
                   &refute(&1 =~ ~r"Phoenix.LiveReloader")
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex",
