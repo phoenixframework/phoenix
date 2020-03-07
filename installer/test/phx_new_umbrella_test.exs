@@ -264,6 +264,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_html")
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_reload")
+      assert_file web_path(@app, "lib/#{@app}_web.ex"),
+                  &assert(&1 =~ "defp view_helpers do")
       assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"),
                   &refute(&1 =~ ~r"Phoenix.LiveReloader")
       assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"),
