@@ -324,8 +324,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->
         assert file =~ ~s[plug :fetch_live_flash]
         assert file =~ ~s[plug :put_root_layout, {PhxBlogWeb.LayoutView, :root}]
-        assert file =~ ~s[plug :put_live_layout, {PhxBlogWeb.LayoutView, :live}]
-        assert file =~ ~s[plug :put_layout, {PhxBlogWeb.LayoutView, :app}]
         assert file =~ ~s[live "/", PageLive]
         refute file =~ ~s[plug :fetch_flash]
         refute file =~ ~s[PageController]

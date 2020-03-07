@@ -43,7 +43,8 @@ defmodule <%= web_namespace %> do
 
   def live_view do
     quote do
-      use Phoenix.LiveView
+      use Phoenix.LiveView,
+        layout: {<%= web_namespace %>.LayoutView, "live.html"}
 
       unquote(view_helpers())
     end

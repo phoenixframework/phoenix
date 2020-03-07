@@ -5,9 +5,7 @@ defmodule <%= web_namespace %>.Router do
     plug :accepts, ["html"]
     plug :fetch_session<%= if live do %>
     plug :fetch_live_flash
-    plug :put_root_layout, {<%= web_namespace %>.LayoutView, :root}
-    plug :put_live_layout, {<%= web_namespace %>.LayoutView, :live}
-    plug :put_layout, {<%= web_namespace %>.LayoutView, :app}<% else %>
+    plug :put_root_layout, {<%= web_namespace %>.LayoutView, :root}<% else %>
     plug :fetch_flash<% end %>
     plug :protect_from_forgery
     plug :put_secure_browser_headers
