@@ -155,6 +155,25 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[HomeLive])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &assert(&1 =~ ~s[PageController])
 
+      # Telemetry
+      assert_file "phx_blog/mix.exs", fn file ->
+        assert file =~ "{:telemetry_metrics, \"~> 0.4\"}"
+        assert file =~ "{:telemetry_poller, \"~> 0.4\"}"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/telemetry.ex", fn file ->
+        assert file =~ "defmodule PhxBlogWeb.Telemetry do"
+        assert file =~ "{:telemetry_poller, measurements: periodic_measurements()"
+        assert file =~ "defp periodic_measurements do"
+        assert file =~ "# {PhxBlogWeb, :count_users, []}"
+        assert file =~ "defp metrics do"
+        assert file =~ "summary(\"phoenix.endpoint.stop.duration\","
+        assert file =~ "summary(\"phoenix.router_dispatch.stop.duration\","
+        assert file =~ "summary(\"phx_blog.repo.query.total_time\","
+        assert file =~ "defp tag_method_and_request_path"
+        assert file =~ "defp tag_controller_action"
+      end
+
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
@@ -201,6 +220,10 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute File.exists?("phx_blog/lib/phx_blog/repo.ex")
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
         refute file =~ "plug Phoenix.Ecto.CheckRepoStatus, otp_app: :phx_blog"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/telemetry.ex", fn file ->
+        refute file =~ "summary(\"phx_blog.repo.query.total_time\","
       end
 
       assert_file "phx_blog/.formatter.exs", fn file ->

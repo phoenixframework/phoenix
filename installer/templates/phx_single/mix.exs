@@ -44,7 +44,9 @@ defmodule <%= app_module %>.MixProject do
       {:phoenix_live_view, "~> 0.9.0"},
       {:floki, ">= 0.0.0", only: :test},<% end %>
       {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if gettext do %>
+      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %>
+      {:telemetry_metrics, "~> 0.4"},
+      {:telemetry_poller, "~> 0.4"},<%= if gettext do %>
       {:gettext, "~> 0.11"},<% end %>
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"}
