@@ -169,6 +169,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "defp metrics do"
         assert file =~ "summary(\"phoenix.endpoint.stop.duration\","
         assert file =~ "summary(\"phoenix.router_dispatch.stop.duration\","
+        assert file =~ "# Database Metrics"
         assert file =~ "summary(\"phx_blog.repo.query.total_time\","
         assert file =~ "defp tag_method_and_request_path"
         assert file =~ "defp tag_controller_action"
@@ -223,6 +224,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/lib/phx_blog_web/telemetry.ex", fn file ->
+        refute file =~ "# Database Metrics"
         refute file =~ "summary(\"phx_blog.repo.query.total_time\","
       end
 
