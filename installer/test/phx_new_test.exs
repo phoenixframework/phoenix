@@ -171,8 +171,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "summary(\"phoenix.router_dispatch.stop.duration\","
         assert file =~ "# Database Metrics"
         assert file =~ "summary(\"phx_blog.repo.query.total_time\","
-        assert file =~ "defp tag_method_and_request_path"
-        assert file =~ "defp tag_controller_action"
       end
 
       # Install dependencies?
