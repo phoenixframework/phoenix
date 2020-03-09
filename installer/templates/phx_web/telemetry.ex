@@ -22,14 +22,8 @@ defmodule <%= web_namespace %>.Telemetry do
       summary("phoenix.endpoint.stop.duration",
         unit: {:native, :millisecond}
       ),
-      summary("phoenix.endpoint.stop.duration",
-        tags: [:method, :request_path],
-        tag_values: &tag_method_and_request_path/1,
-        unit: {:native, :millisecond}
-      ),
       summary("phoenix.router_dispatch.stop.duration",
-        tags: [:controller_action],
-        tag_values: &tag_controller_action/1,
+        tags: [:route],
         unit: {:native, :millisecond}
       ),<%= if ecto do %>
 
@@ -54,19 +48,5 @@ defmodule <%= web_namespace %>.Telemetry do
       # This function must call :telemetry.execute/3 and a metric must be added above.
       # {<%= web_namespace %>, :count_users, []}
     ]
-  end
-
-  # Extracts labels like "GET /"
-  defp tag_method_and_request_path(%{conn: conn}) do
-    Map.take(conn, [:method, :request_path])
-  end
-
-  # Extracts controller#action from route dispatch
-  defp tag_controller_action(%{plug: plug, plug_opts: plug_opts}) when is_atom(plug_opts) do
-    %{controller_action: "#{inspect(plug)}##{plug_opts}"}
-  end
-
-  defp tag_controller_action(%{plug: plug}) do
-    %{controller_action: inspect(plug)}
   end
 end
