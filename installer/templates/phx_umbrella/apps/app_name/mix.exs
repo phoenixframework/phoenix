@@ -36,11 +36,11 @@ defmodule <%= app_module %>.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix_pubsub, "~> 2.0"}<%= if ecto do %>,
+      {:phoenix_pubsub, "~> 2.0-dev", github: "phoenixframework/phoenix_pubsub"}<%= if ecto do %>,
       {:ecto_sql, "~> 3.1"},
       {:<%= adapter_app %>, ">= 0.0.0"},
-      {:jason, "~> 1.0"}
-    <% end %>]
+      {:jason, "~> 1.0"}<% end %>
+    ]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.<%= if ecto do %>
