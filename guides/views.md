@@ -27,13 +27,13 @@ All of the imports and aliases we make in our view will also be available in our
 Open up our application layout template, `lib/hello_web/templates/layout/app.html.eex`, and change this line,
 
 ```html
-<title><%= assigns[:page_title] || "<%= app_module %> · Phoenix Framework" %></title>
+<title>Hello · Phoenix Framework</title>
 ```
 
 to call a `title/0` function, like this.
 
 ```html
-<title><%= title(assigns) %></title>
+<title><%= title() %></title>
 ```
 
 Now let's add a `title/0` function to our `LayoutView`.
@@ -42,13 +42,13 @@ Now let's add a `title/0` function to our `LayoutView`.
 defmodule HelloWeb.LayoutView do
   use HelloWeb, :view
 
-  def title(assigns) do
-    assigns[:page_title] || "Awesome New Title!"
+  def title() do
+    "Awesome New Title!"
   end
 end
 ```
 
-When we reload our home page, we should see our new title. Since templates are compiled inside the view, we could invoke the view function simply as `title(assigns)`, otherwise we would have to type `HelloWeb.LayoutView.title(assigns)`.
+When we reload our home page, we should see our new title. Since templates are compiled inside the view, we could invoke the view function simply as `title()`, otherwise we would have to type `HelloWeb.LayoutView.title()`.
 
 As you may recall, Elixir templates use Embedded Elixir, known as `EEx`. We use `<%= expression %>` to execute Elixir expressions. The result of the expression is interpolated into the template. You can use pretty much use any Elixir expression. For example, in order to have conditionals:
 
