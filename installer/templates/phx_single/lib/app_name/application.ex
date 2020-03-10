@@ -9,6 +9,8 @@ defmodule <%= app_module %>.Application do
     children = [<%= if ecto do %>
       # Start the Ecto repository
       <%= app_module %>.Repo,<% end %>
+      # Start the Telemetry supervisor
+      <%= web_namespace %>.Telemetry,
       # Start the PubSub system
       {Phoenix.PubSub, name: <%= app_module %>.PubSub},
       # Start the Endpoint (http/https)

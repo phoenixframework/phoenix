@@ -80,6 +80,8 @@ defmodule Phoenix.MixProject do
 
       # Test dependencies
       {:gettext, "~> 0.15.0", only: :test},
+      {:telemetry_poller, "~> 0.4", only: :test},
+      {:telemetry_metrics, "~> 0.4", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
     ]
   end

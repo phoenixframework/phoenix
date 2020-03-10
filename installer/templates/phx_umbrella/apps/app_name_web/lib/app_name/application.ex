@@ -7,6 +7,8 @@ defmodule <%= web_namespace %>.Application do
 
   def start(_type, _args) do
     children = [
+      # Start the Telemetry supervisor
+      <%= web_namespace %>.Telemetry,
       # Start the Endpoint (http/https)
       <%= endpoint_module %>
       # Start a worker by calling: <%= web_namespace %>.Worker.start_link(arg)

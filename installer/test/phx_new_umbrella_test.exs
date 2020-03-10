@@ -185,6 +185,24 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file app_path(@app, "test/support/data_case.ex"), ~r"defmodule PhxUmb.DataCase"
       assert_file app_path(@app, "priv/repo/migrations/.formatter.exs"), ~r"import_deps: \[:ecto_sql\]"
 
+      # Telemetry
+      assert_file web_path(@app, "mix.exs"), fn file ->
+        assert file =~ "{:telemetry_metrics, \"~> 0.4\"}"
+        assert file =~ "{:telemetry_poller, \"~> 0.4\"}"
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/telemetry.ex"), fn file ->
+        assert file =~ "defmodule PhxUmbWeb.Telemetry do"
+        assert file =~ "{:telemetry_poller, measurements: periodic_measurements()"
+        assert file =~ "defp periodic_measurements do"
+        assert file =~ "# {PhxUmbWeb, :count_users, []}"
+        assert file =~ "defp metrics do"
+        assert file =~ "summary(\"phoenix.endpoint.stop.duration\","
+        assert file =~ "summary(\"phoenix.router_dispatch.stop.duration\","
+        assert file =~ "# Database Metrics"
+        assert file =~ "summary(\"phx_umb.repo.query.total_time\","
+      end
+
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
@@ -237,6 +255,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file root_path(@app, "config/config.exs"), fn file ->
         refute file =~ "config :phx_blog_web, :generators"
         refute file =~ "ecto_repos:"
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/telemetry.ex"), fn file ->
+        refute file =~ "# Database Metrics"
+        refute file =~ "summary(\"phx_umb.repo.query.total_time\","
       end
 
       assert_file root_path(@app, "config/dev.exs"), &refute(&1 =~ config)
