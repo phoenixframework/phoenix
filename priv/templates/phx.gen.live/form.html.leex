@@ -1,0 +1,12 @@
+<%%= f = form_for @changeset, "#",
+  id: "form-#{@id}",
+  phx_target: "#form-#{@id}",
+  phx_change: "validate",
+  phx_submit: "save" %>
+<%= for {label, input, error} <- inputs, input do %>
+  <%= label %>
+  <%= input %>
+  <%= error %>
+<% end %>
+  <%%= submit "Save", phx_disable_with:  "Saving..." %>
+</form>
