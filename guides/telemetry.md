@@ -1,21 +1,27 @@
 # Telemetry
 
+In this guide, we will walk you how to instrument and report
+on `:telemetry` events in your Phoenix application.
+
 > `te·lem·e·try` - the process of recording and transmitting
 the readings of an instrument.
+
+As you follow along with this guide, you will be introduced
+to the building blocks of Telemetry (events and metrics),
+you will initialize a reporter that can show you events as
+they occur within your application, and we will guide you
+through the steps to properly instrument your own functions
+using `:telemetry`. However before we can do that, we need
+to get a better idea of what makes up a telemetry event.
+Let's take a closer look.
+
+## Telemetry Events
 
 Many Elixir libraries (including Phoenix) are already using
 the `:telemetry` package (http://hexdocs.pm/telemetry) as a
 way to give users more insight into the behavior of their
 applications, by emitting events at key moments in the
 application lifecycle.
-
-This guide provides more specific information about some
-of the features detailed in the Phoenix
-[LiveDashboard Metrics](https://hexdocs.pm/phoenix_live_dashboard/metrics.html)
-guide. While some parts of this guide are geared specifically
-towards users of the dashboard, it may also serve as a
-general introduction to reporting metrics from any
-Elixir/Phoenix application.
 
 ### A Phoenix Example
 
@@ -30,27 +36,18 @@ Here is an example of a telemetry event from
 
   * Metadata: `%{conn: Plug.Conn.t}`
 
-To get a better understanding of what this means, search
-for `Plug.Telemetry` in your application's Endpoint (usually
-in `lib/my_app_web/endpoint.ex`), and you
-should see something like this:
-
-```elixir
-plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
-```
-
-> Note: For older Phoenix apps, this is Step #1 for
-integrating Telemetry Metrics into Phoenix. Be sure
-`Plug.Telemetry` is present in your Endpoint, otherwise you
-will not receive any of the `"phoenix.endpoint.*"` events
-that will be discussed throughout this guide.
-
-After each request, `Plug.Telemetry` will emit the stop event,
-with a measurement of how long it took to get the response:
+This means that after each request, Phoenix, via telemetry,
+will emit a "stop" event, with a measurement of how long it
+took to get the response:
 
 ```elixir
 :telemetry.execute([:phoenix, :endpoint, :stop], %{duration: duration}, %{conn: conn})
 ```
+
+## Telemetry.Metrics
+
+> Metrics are aggregations of Telemetry events with a specific name,
+providing a view of the system's behaviour over time. -- _`Telemetry.Metrics`_
 
 Using `Telemetry.Metrics`, you can define a counter metric,
 which counts how many HTTP requests were completed:
@@ -106,68 +103,103 @@ Events" section of the
 documentation, as well as in the [Ecto Metrics](#ecto-metrics)
 section later in this guide.
 
-## LiveMetrics Dashboard
+So far we have seen some of the Telemetry events common to
+Phoenix applications, along with some examples of their
+various measurements and metadata. With all of this data
+just waiting to be consumed, let's talk about reporters.
 
-`Telemetry.Metrics` relies on reporters to subscribe to
-events, and LiveDashboard is simply one such reporter: it
-attaches to the `:telemetry` events matching the metrics you
-specify, and renders the aggregate data as beautiful,
-real-time charts on the dashboard.
+## Reporters
 
-However there are numerous reporters available within the
-Elixir ecosystem for tools like StatsD, Prometheus, etc.
-Using `Telemetry.Metrics` means you can write your metrics
-definitions once, and by utilizing different reporters, they
-can be sent to multiple destinations simultaneously.
+Reporters can subscribe to the Telemetry events you define,
+and use the common interface provided by `Telemetry.Metrics`,
+along with the measurements and metadata emitted in Telemetry
+events, to provide information meaningful to your
+application.
+
+### Phoenix.LiveDashboard
+
+For developers interested in real-time visualizations for
+their Telemetry metrics, you may be interested in installing
+[`Phoenix.LiveDashboard`](https://github.com/phoenixframework/phoenix_live_dashboard).
+Among other things, LiveDashboard provides a reporter to
+render your metrics as beautiful, real-time charts on the
+dashboard.
+
+### Telemetry.Metrics.ConsoleReporter
+
+`Telemetry.Metrics` ships with a `ConsoleReporter` that can
+be used to print events and metrics to the terminal. You can
+use this reporter to experiment with the metrics discussed in
+this guide.
+
+Add the following to this list of children in your Telemetry
+supervision tree (usually in `lib/my_app_web/telemetry.ex`):
+
+```elixir
+{Telemetry.Metrics.ConsoleReporter, metrics: metrics()}
+```
+
+> There are numerous reporters available, for services like
+> StatsD, Prometheus, and more. You can find them by
+> searching for "telemetry_metrics" on https://hex.pm.
 
 ## Phoenix Metrics
 
-As mentioned previously, the Phoenix framework comes with
-numerous built-in telemetry events that you can visualize
-with LiveDashboard.
+Earlier we looked at the stop event emitted by
+`Phoenix.Endpoint`, and used it to count the number of HTTP
+requests. In reality, it's only somewhat helpful to be
+able to see just the total number of requests. What if you
+wanted to see the number of requests per route, or per route
+_and_ method?
 
-You can start rendering simple charts by defining a list of
-metrics in the `metrics/0` function of your Telemetry
-supervisor (usually in `lib/my_app_web/telemetry.ex`):
+Let's take a look at another event emitted during the HTTP
+request lifecycle, this time from `Phoenix.Router`:
+
+* `[:phoenix, :router_dispatch, :stop]` - dispatched by
+  Phoenix.Router after successfully dispatching to a matched
+  route
+
+  * Measurement: `%{duration: native_time}`
+
+  * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom]}`
+
+Let's start by grouping these events by route. Add the
+following (if it does not already exist) to the `metrics/0`
+function of your Telemetry supervisor (usually in
+`lib/my_app_web/telemetry.ex`):
 
 ```elixir
 # lib/my_app_web/telemetry.ex
 defp metrics do
   [
-    # Phoenix Metrics
-    counter("phoenix.endpoint.stop.duration")
-    summary("phoenix.endpoint.stop.duration", unit: {:native, :millisecond})
+    ...metrics...
+    summary("phoenix.router_dispatch.stop.duration",
+      tags: [:route],
+      unit: {:native, :millisecond}
+    )
   ]
 end
 ```
 
-Restart your server. When LiveDashboard reconnects, you
-should see two new charts rendered on the dashboard:
+Restart your server, and then make requests to a page or two.
+In your terminal, you should see the ConsoleReporter print
+logs for the Telemetry events it received as a result of
+the metrics definitions you provided.
 
-* A `Doughnut` chart with a single value, increasing by
-   1 for each completed request;
+The log line for each request contains the specific route
+for that request. This is due to specifying the `:tags`
+option for the summary metric, which takes care of our first
+requirement; we can use `:tags` to group metrics by route.
+Note that reporters will necessarily handle tags differently
+depending on the underlying service in use.
 
-* A `Line` chart for a timeseries of the duration of each
-  completed request;
+Looking more closely at the Router stop event, you can see
+that the `Plug.Conn` struct representing the request is
+present in the metadata, but how do you access the
+properties in `conn`?
 
-In reality, it's only _somewhat_ helpful to be able to see
-the total number of requests. What if you wanted to see the
-number of requests per page, or even per Controller action?
-
-To visualize, let's look at two different examples of
-grouping HTTP requests: one will group events by HTTP method
-and request path, resulting in x-axis labels such as
-`"GET /"`, while the other will group by Phoenix Controller
-and action, resulting in labels such as
-`"IndexController:show"`.
-
-Looking at the Endpoint stop event, you can see that the
-`Plug.Conn` struct representing the request is present in
-the metadata, but how do you access the properties in
-`conn`?
-
-Fortunately, `Telemetry.Metrics` comes with options to help
-you with this:
+Fortunately, `Telemetry.Metrics` provides the following
+options to help you classify your events:
 
 * `:tags` - A list of metadata keys for grouping;
 
@@ -179,120 +211,42 @@ you with this:
 > Learn about all the available metrics options in the
 `Telemetry.Metrics` module documentation.
 
-Let's find out how to tag events that include a `conn` in
-their metadata.
+Let's find out how to extract more tags from events that
+include a `conn` in their metadata.
 
-### Tagging Endpoint events by method and request path
+### Extracting tag values from Plug.Conn
 
-Let's take another look at one of current metrics, the
-request `counter`:
-
-```elixir
-counter("phoenix.endpoint.stop.duration")
-```
-
-You are going to modify this metric to add a new chart that
-will group data by HTTP method and request path. It will be
-rendered on the LiveDashboard as a segmented `Doughnut`
-chart, with data labels such as `"GET /home"` and
-`"POST /users/new"`.
-
-To do so, you need to provide the `:tags` option to the
-metric, which LiveDashboard will use to extract values from
-the metadata, in order to generate the desired labels.
-
-You can add a new `counter` to your list of metrics:
+Let's add another metric for the route event, this time to
+group by route and method:
 
 ```elixir
-# lib/my_app_web/telemetry.ex
-defp metrics do
-  [
-    ...metrics...
-    counter("phoenix.endpoint.stop.duration",
-      tags: [:method, :request_path],
-      tag_values: &tag_method_and_request_path/1
-    )
-  ]
-end
+summary("phoenix.router_dispatch.stop.duration",
+  tags: [:method, :route],
+  unit: {:native, :millisecond}
+  tag_values: &lift_conn_method/1
+)
 ```
 
-Then you also need to define a function for `:tag_values` that
-can extract the desired metadata from `Plug.Conn`.
+We've introduced the `:tag_values` option here, because we
+need to perform a transformation on the event metadata in
+order to get to the values we need.
 
-Add this private function to your Telemetry module:
+Add the following private function to your Telemetry module
+to lift the `:method` value from the `Plug.Conn` struct:
 
 ```elixir
 # lib/my_app_web/telemetry.ex
-defp tag_method_and_request_path(metadata) do
-  %{conn: %Plug.Conn{} = conn} = metadata
-
-  Map.merge(metadata, Map.take(conn, [:method, :request_path]))
+defp lift_conn_method(%{conn: conn} = metadata) do
+  Map.put(metadata, :method, conn.method)
 end
 ```
 
-Restart your server and you should see the new chart appear
-on the dashboard. Visit some other pages on your site, and
-you should begin to see new sections appear on your counter
-Doughnut chart.
+Restart your server and make some more requests. You should
+begin to see logs with tags for both the HTTP method and the
+route.
 
-The `:tags` and `:tag_values` options apply to all
-`Telemetry.Metrics` types, so they will work with all
-LiveDashboard chart types, too.
-
-### Tagging Endpoint events by controller and action
-
-Now that you've seen how to group by metadata, and how to
-transform metadata into any desired shape, you can probably
-guess where we are going next. Grouping by Controller action
-isn't any different than grouping by method and path -
-you can utilize built-in Phoenix functions within your
-`:tag_values` callback to generate the relevant values.
-
-Now add _another_ counter, this time grouping by Controller
-action:
-
-```elixir
-# lib/my_app_web/telemetry.ex
-defp metrics do
-  [
-    ...metrics...
-    counter("phoenix.endpoint.stop.duration",
-      tags: [:label],
-      tag_values: &tag_controller_action_label/1
-    )
-  ]
-end
-```
-
-Notice we are recommending a single tag,
-`:label`, instead of keeping `:controller` and `:action`
-separate. In some situations, such as rendering a LiveView,
-you may not have two separate values, so it's better to
-treat them as a single label.
-
-Add the private `conn_to_controller_action_label/2` function to
-your Telemetry module:
-
-```elixir
-# lib/my_app_web/telemetry.ex
-import Phoenix.Controller, only: [controller_module: 1, action_name: 1]
-
-defp tag_controller_action_label(metadata) do
-  %{conn: %Plug.Conn{} = conn} = metadata
-
-  label =
-    try do
-      # TODO: identify a LiveView
-      "#{controller_module(conn)}:#{action_name(conn)}"
-    rescue
-      _ ->
-        "LiveView, probably"
-    end
-
-  Map.put(metadata, :label, label)
-end
-```
-
+Note the `:tags` and `:tag_values` options can be applied to
+all `Telemetry.Metrics` types.
 
 ## Ecto Metrics
 
@@ -339,8 +293,7 @@ events will become available:
   lengths for CPU and IO schedulers. It contains the
   `total`, `cpu` and `io` measurements;
 
-You can add VM metrics to LiveDashboard by modifying your
-`telemetry.ex` file.
+You can add VM metrics by modifying your `telemetry.ex` file.
 
 Update your `metrics/0` function to include some VM metrics:
 
@@ -430,7 +383,7 @@ defp metrics do
 end
 ```
 
-> We'll implement MyApp.Worker in the
+> You will implement MyApp.Worker in the
 [Custom Events](#custom-events) section.
 
 ## Libraries using Telemetry
@@ -447,6 +400,7 @@ their own (in alphabetical order, please):
 * [Ecto](https://hexdocs.pm/ecto) - [Events](https://hexdocs.pm/ecto/Ecto.Repo.html#module-telemetry-events)
 * [Oban](https://hexdocs.pm/oban) - [Events](https://hexdocs.pm/oban/Oban.Telemetry.html)
 * [Phoenix](https://hexdocs.pm/phoenix) - [Events](https://hexdocs.pm/phoenix/Phoenix.Endpoint.html#module-instrumentation)
+* [Plug](https://hexdocs.pm/plug) - [Events](https://hexdocs.pm/plug/Plug.Telemetry.html)
 * [Tesla](https://hexdocs.pm/tesla) - [Events](https://hexdocs.pm/tesla/Tesla.Middleware.Telemetry.html)
 
 ## Custom Events
