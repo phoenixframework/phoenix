@@ -16,7 +16,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
-    # TODO add change_[...]/2 to phoenix context generator?
     changeset =
       socket.assigns.<%= schema.singular %>
       |> <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>_params)
