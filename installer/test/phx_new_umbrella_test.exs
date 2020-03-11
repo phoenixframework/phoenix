@@ -120,7 +120,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(@app, "lib/#{@app}_web/router.ex"), "defmodule PhxUmbWeb.Router"
       assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.eex"),
-                  "<title><%= assigns[:page_title] || \"PhxUmb · Phoenix Framework\" %></title>"
+                  "<title>PhxUmb · Phoenix Framework</title>"
 
       assert_file web_path(@app, "test/#{@app}_web/views/page_view_test.exs"),
                   "defmodule PhxUmbWeb.PageViewTest"
@@ -587,7 +587,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/lib/another/router.ex", "defmodule Another.Router"
         assert_file "another/lib/another.ex", "defmodule Another"
         assert_file "another/lib/another/templates/layout/app.html.eex",
-                    "<title><%= assigns[:page_title] || \"Another · Phoenix Framework\" %></title>"
+                    "<title>Another · Phoenix Framework</title>"
 
         # webpack
         assert_file "another/.gitignore", "/assets/node_modules"

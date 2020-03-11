@@ -77,7 +77,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web/router.ex", "defmodule PhxBlogWeb.Router"
       assert_file "phx_blog/lib/phx_blog_web.ex", "defmodule PhxBlogWeb"
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex",
-                  "<title><%= assigns[:page_title] || \"PhxBlog · Phoenix Framework\" %></title>"
+                  "<title>PhxBlog · Phoenix Framework</title>"
       assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.eex", fn file ->
         version = Application.spec(:phx_new, :vsn) |> to_string() |> Version.parse!()
         changelog_vsn = "v#{version.major}.#{version.minor}"
@@ -316,6 +316,10 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/lib/phx_blog_web/live/page_live.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb.PageLive do"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
+        assert file =~ ~s|<%= live_title_tag assigns[:page_title]|
       end
 
       assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.leex", fn file ->

@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title><%%= assigns[:page_title] || "<%= app_module %> · Phoenix Framework" %></title>
+    <%%= live_title_tag assigns[:page_title] || <%= app_module %>, postfix: " · Phoenix Framework" %>
     <link rel="stylesheet" href="<%%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <%%= csrf_meta_tag() %>
   </head>
