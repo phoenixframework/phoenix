@@ -11,7 +11,7 @@ defmodule <%= inspect context.web_module %>.Modal do
       phx-page-loading>
 
       <div class="phx-modal-content">
-        <%%= live_patch raw("&times;"), to: @redirect_path, id: "close", class: "phx-modal-close" %>
+        <%%= live_patch raw("&times;"), to: @redirect_path, class: "phx-modal-close" %>
         <%%= live_component @socket, @component, @opts %>
       </div>
     </div>
