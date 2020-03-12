@@ -360,14 +360,14 @@ defmodule Phoenix.Router do
           e in Plug.Conn.WrapperError ->
             measurements = %{duration: System.monotonic_time() - start}
             metadata = %{kind: :error, error: e, stacktrace: __STACKTRACE__}
-            :telemetry.execute([:phoenix, :router_dispatch, :failure], measurements, metadata)
+            :telemetry.execute([:phoenix, :router_dispatch, :exception], measurements, metadata)
             Plug.Conn.WrapperError.reraise(e)
         catch
-          :error, reason ->
+          kind, reason ->
             measurements = %{duration: System.monotonic_time() - start}
-            metadata = %{kind: :error, error: reason, stacktrace: __STACKTRACE__}
-            :telemetry.execute([:phoenix, :router_dispatch, :failure], measurements, metadata)
-            Plug.Conn.WrapperError.reraise(piped_conn, :error, reason, __STACKTRACE__)
+            metadata = %{kind: kind, error: reason, stacktrace: __STACKTRACE__}
+            :telemetry.execute([:phoenix, :router_dispatch, :exception], measurements, metadata)
+            Plug.Conn.WrapperError.reraise(piped_conn, kind, reason, __STACKTRACE__)
         end
     end
   end

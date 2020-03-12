@@ -27,8 +27,14 @@ defmodule Phoenix.Logger do
       * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
       * Disable logging: Pass `log: false` to the router macro, for example: `get("/page", PageController, :index, log: false)`
 
+    * `[:phoenix, :router_dispatch, :exception]` - dispatched by `Phoenix.Router`
+      after exceptions on dispatching a route
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{kind: :throw | :error | :exit, reason: term(), stacktrace: Exception.stacktrace()}`
+      * Disable logging: This event is not logged
+
     * `[:phoenix, :router_dispatch, :stop]` - dispatched by `Phoenix.Router`
-      after successfully dispatching to a matched route
+      after successfully dispatching a matched route
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
       * Disable logging: This event is not logged
