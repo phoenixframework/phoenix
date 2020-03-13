@@ -166,7 +166,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "{:telemetry_poller, measurements: periodic_measurements()"
         assert file =~ "defp periodic_measurements do"
         assert file =~ "# {PhxBlogWeb, :count_users, []}"
-        assert file =~ "defp metrics do"
+        assert file =~ "def metrics do"
         assert file =~ "summary(\"phoenix.endpoint.stop.duration\","
         assert file =~ "summary(\"phoenix.router_dispatch.stop.duration\","
         assert file =~ "# Database Metrics"

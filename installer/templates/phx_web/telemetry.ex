@@ -16,7 +16,7 @@ defmodule <%= web_namespace %>.Telemetry do
     Supervisor.init(children, strategy: :one_for_one)
   end
 
-  defp metrics do
+  def metrics do
     [
       # Phoenix Metrics
       summary("phoenix.endpoint.stop.duration",
