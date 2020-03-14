@@ -53,6 +53,10 @@ defmodule Phoenix.Router.HelpersTest do
 
     scope "/admin/new", alias: Admin, as: "admin" do
       resources "/messages", MessageController
+
+      scope "/unscoped", as: false do
+        resources "/messages", MessageController, as: :my_admin_message
+      end
     end
 
     scope "/trails", trailing_slash: true do
@@ -383,6 +387,13 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.admin_message_path(__MODULE__, :index) == "/admin/new/messages"
     assert Helpers.admin_message_path(__MODULE__, :show, 1, []) == "/admin/new/messages/1"
     assert Helpers.admin_message_path(__MODULE__, :show, 1) == "/admin/new/messages/1"
+  end
+
+  test "scoped route helpers generated unscoped :as options" do
+    assert Helpers.my_admin_message_path(__MODULE__, :index, []) == "/admin/new/unscoped/messages"
+    assert Helpers.my_admin_message_path(__MODULE__, :index) == "/admin/new/unscoped/messages"
+    assert Helpers.my_admin_message_path(__MODULE__, :show, 1, []) == "/admin/new/unscoped/messages/1"
+    assert Helpers.my_admin_message_path(__MODULE__, :show, 1) == "/admin/new/unscoped/messages/1"
   end
 
   test "scoped route helpers generated with trailing slashes" do
