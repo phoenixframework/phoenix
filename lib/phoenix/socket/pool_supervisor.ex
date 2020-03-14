@@ -27,6 +27,7 @@ defmodule Phoenix.Socket.PoolSupervisor do
   end
 
   defmodule WorkerSupervisor do
+    @moduledoc false
     @behaviour :supervisor
 
     def start_link(worker, ref, i) do
