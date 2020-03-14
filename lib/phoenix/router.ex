@@ -544,7 +544,10 @@ defmodule Phoenix.Router do
 
   ## Options
 
-    * `:as` - configures the named helper exclusively
+    * `:as` - configures the named helper exclusively. If false, does not generate
+      a helper.
+    * `:alias` - configure if the scope alias should be applied to the route.
+      Defaults to true, disables scoping if false.
     * `:log` - the level to log the route dispatching under,
       may be set to false. Defaults to `:debug`
     * `:host` - a string containing the host scope, or prefix host scope,
@@ -818,11 +821,11 @@ defmodule Phoenix.Router do
 
   The supported options are:
 
-    * `:path` - a string containing the path scope
-    * `:as` - a string or atom containing the named helper scope
-    * `:alias` - an alias (atom) containing the controller scope.
-      When set, this value may be overridden per route by passing `alias: false`
-      to route definitions, such as `get`, `post`, etc.
+    * `:path` - a string containing the path scope.
+    * `:as` - a string or atom containing the named helper scope. When set to
+      false, it resets the nested helper scopes.
+    * `:alias` - an alias (atom) containing the controller scope. When set to
+      false, it resets all nested aliases.
     * `:host` - a string containing the host scope, or prefix host scope,
       ie `"foo.bar.com"`, `"foo."`
     * `:private` - a map of private data to merge into the connection when a route matches

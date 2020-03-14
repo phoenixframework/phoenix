@@ -91,6 +91,8 @@ defmodule Phoenix.Router.Scope do
   end
 
   def push(module, opts) when is_list(opts) do
+    top = get_top(module)
+
     path =
       if path = Keyword.get(opts, :path) do
         path |> validate_path() |> String.split("/", trim: true)
@@ -98,19 +100,18 @@ defmodule Phoenix.Router.Scope do
         []
       end
 
-    alias = Keyword.get(opts, :alias) |> List.wrap() |> Enum.map(&Atom.to_string/1)
-    as = Keyword.get(opts, :as) |> List.wrap()
+    alias = append_unless_false(top, opts, :alias, &Atom.to_string(&1))
+    as = append_unless_false(top, opts, :as, & &1)
     host = Keyword.get(opts, :host)
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
 
-    top = get_top(module)
     update_stack(module, fn stack -> [top | stack] end)
 
     put_top(module, %Scope{
       path: top.path ++ path,
-      alias: top.alias ++ alias,
-      as: top.as ++ as,
+      alias: alias,
+      as: as,
       host: host || top.host,
       pipes: top.pipes,
       private: Map.merge(top.private, private),
@@ -118,6 +119,14 @@ defmodule Phoenix.Router.Scope do
       log: Keyword.get(opts, :log, top.log),
       trailing_slash?: Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
     })
+  end
+
+  defp append_unless_false(top, opts, key, fun) do
+    case opts[key] do
+      false -> []
+      nil -> Map.fetch!(top, key)
+      other -> Map.fetch!(top, key) ++ [fun.(other)]
+    end
   end
 
   @doc """
