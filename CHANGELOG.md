@@ -24,6 +24,15 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.16 (2020-03-15)
+
+### Enhancements
+  - [Router] Allow aliases and helpers to be disabled via `scope`
+  - [Controller] Add root layout support with `put_root_layout/2`
+
+### Bug Fixes
+  - [Router] Fix bug causing dialyzer warning
+
 ## 1.4.15 (2020-03-06)
 
 ### Enhancements
