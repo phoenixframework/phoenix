@@ -1,7 +1,7 @@
 defmodule Phoenix.Logger do
   @moduledoc """
   Instrumenter to handle logging of various instrumentation events.
-  
+
   ## Instrumentation
 
   Phoenix uses the `:telemetry` library for instrumentation. The following events
@@ -53,7 +53,7 @@ defmodule Phoenix.Logger do
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{params: term, socket: Phoenix.Socket.t}`
       * Disable logging: This event cannot be disabled
-  
+
     * `[:phoenix, :channel_handled_in]` - dispatched at the end of a channel handle in
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{event: binary, params: term, socket: Phoenix.Socket.t}`
@@ -248,7 +248,6 @@ defmodule Phoenix.Logger do
       %{
         transport: transport,
         params: params,
-        connect_info: connect_info,
         user_socket: user_socket,
         result: result,
         serializer: serializer
@@ -263,8 +262,6 @@ defmodule Phoenix.Logger do
         inspect(transport),
         "\n  Serializer: ",
         inspect(serializer),
-        "\n  Connect Info: ",
-        inspect(connect_info),
         "\n  Parameters: ",
         inspect(filter_values(params))
       ]
