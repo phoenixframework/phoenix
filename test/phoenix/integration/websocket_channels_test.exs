@@ -346,7 +346,6 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
         assert log =~ "CONNECTED TO Phoenix.Integration.WebSocketChannelsTest.UserSocket in "
         assert log =~ "  Transport: :websocket"
-        assert log =~ "  Connect Info: %{}"
         assert log =~ "  Serializer: #{inspect @serializer}"
         assert log =~ "  Parameters: %{\"logging\" => \"enabled\", \"vsn\" => #{inspect(@vsn)}}"
       end

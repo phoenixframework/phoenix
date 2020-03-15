@@ -191,7 +191,6 @@ defmodule Phoenix.Logger do
       %{
         transport: transport,
         params: params,
-        connect_info: connect_info,
         user_socket: user_socket,
         result: result,
         serializer: serializer
@@ -206,8 +205,6 @@ defmodule Phoenix.Logger do
         inspect(transport),
         "\n  Serializer: ",
         inspect(serializer),
-        "\n  Connect Info: ",
-        inspect(connect_info),
         "\n  Parameters: ",
         inspect(filter_values(params))
       ]
