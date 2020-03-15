@@ -9,7 +9,7 @@ defmodule <%= app_module %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",<% end %>
-      elixir: "~> 1.6",
+      elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix<%= if gettext do %>, :gettext<% end %>] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,<%= if ecto do %>
@@ -40,9 +40,13 @@ defmodule <%= app_module %>.MixProject do
       <%= phoenix_dep %>,<%= if ecto do %>
       {:phoenix_ecto, "~> 4.1"},
       {:ecto_sql, "~> 3.1"},
-      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
+      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %><%= if live do %>
+      {:phoenix_live_view, "~> 0.9.0"},
+      {:floki, ">= 0.0.0", only: :test},<% end %>
       {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if gettext do %>
+      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %>
+      {:telemetry_metrics, "~> 0.4"},
+      {:telemetry_poller, "~> 0.4"},<%= if gettext do %>
       {:gettext, "~> 0.11"},<% end %>
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"}

@@ -77,7 +77,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web/router.ex", "defmodule PhxBlogWeb.Router"
       assert_file "phx_blog/lib/phx_blog_web.ex", "defmodule PhxBlogWeb"
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex",
-                  "<title><%= assigns[:page_title] || \"PhxBlog · Phoenix Framework\" %></title>"
+                  "<title>PhxBlog · Phoenix Framework</title>"
       assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.eex", fn file ->
         version = Application.spec(:phx_new, :vsn) |> to_string() |> Version.parse!()
         changelog_vsn = "v#{version.major}.#{version.minor}"
@@ -128,12 +128,50 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/dev.exs", config
       assert_file "phx_blog/config/test.exs", config
       assert_file "phx_blog/config/prod.secret.exs", config
+      assert_file "phx_blog/config/test.exs", ~R/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
       assert_file "phx_blog/lib/phx_blog/repo.ex", ~r"defmodule PhxBlog.Repo"
+      assert_file "phx_blog/lib/phx_blog_web.ex", ~r"defmodule PhxBlogWeb"
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r"plug Phoenix.Ecto.CheckRepoStatus, otp_app: :phx_blog"
       assert_file "phx_blog/priv/repo/seeds.exs", ~r"PhxBlog.Repo.insert!"
       assert_file "phx_blog/test/support/data_case.ex", ~r"defmodule PhxBlog.DataCase"
-      assert_file "phx_blog/lib/phx_blog_web.ex", ~r"defmodule PhxBlogWeb"
       assert_file "phx_blog/priv/repo/migrations/.formatter.exs", ~r"import_deps: \[:ecto_sql\]"
-      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r"plug Phoenix.Ecto.CheckRepoStatus, otp_app: :phx_blog"
+
+      # LiveView (disabled by default)
+      refute_file "phx_blog/lib/phx_blog_web/live/page_live_view.ex"
+      refute_file "phx_blog/assets/js/live.js"
+      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_view")
+      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":floki")
+      assert_file "phx_blog/assets/package.json",
+                  &refute(&1 =~ ~s["phoenix_live_view": "file:../deps/phoenix_live_view"])
+
+      assert_file "phx_blog/assets/js/app.js", fn file -> refute file =~ "LiveSocket" end
+
+      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
+        refute file =~ "Phoenix.LiveView"
+      end
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", &refute(&1 =~ ~s[Phoenix.LiveView])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :fetch_live_flash])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :put_root_layout])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[HomeLive])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &assert(&1 =~ ~s[PageController])
+
+      # Telemetry
+      assert_file "phx_blog/mix.exs", fn file ->
+        assert file =~ "{:telemetry_metrics, \"~> 0.4\"}"
+        assert file =~ "{:telemetry_poller, \"~> 0.4\"}"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/telemetry.ex", fn file ->
+        assert file =~ "defmodule PhxBlogWeb.Telemetry do"
+        assert file =~ "{:telemetry_poller, measurements: periodic_measurements()"
+        assert file =~ "defp periodic_measurements do"
+        assert file =~ "# {PhxBlogWeb, :count_users, []}"
+        assert file =~ "def metrics do"
+        assert file =~ "summary(\"phoenix.endpoint.stop.duration\","
+        assert file =~ "summary(\"phoenix.router_dispatch.stop.duration\","
+        assert file =~ "# Database Metrics"
+        assert file =~ "summary(\"phx_blog.repo.query.total_time\","
+      end
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
@@ -183,14 +221,10 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ "plug Phoenix.Ecto.CheckRepoStatus, otp_app: :phx_blog"
       end
 
-      # No gettext
-      refute_file "phx_blog/lib/phx_blog_web/gettext.ex"
-      refute_file "phx_blog/priv/gettext/en/LC_MESSAGES/errors.po"
-      refute_file "phx_blog/priv/gettext/errors.pot"
-      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":gettext")
-      assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"import AmsMockWeb.Gettext")
-      assert_file "phx_blog/lib/phx_blog_web/views/error_helpers.ex", &refute(&1 =~ ~r"gettext")
-      assert_file "phx_blog/config/dev.exs", &refute(&1 =~ ~r"gettext")
+      assert_file "phx_blog/lib/phx_blog_web/telemetry.ex", fn file ->
+        refute file =~ "# Database Metrics"
+        refute file =~ "summary(\"phx_blog.repo.query.total_time\","
+      end
 
       assert_file "phx_blog/.formatter.exs", fn file ->
         assert file =~ "import_deps: [:phoenix]"
@@ -213,6 +247,15 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/prod.secret.exs", &refute(&1 =~ config)
       assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
 
+      # No gettext
+      refute_file "phx_blog/lib/phx_blog_web/gettext.ex"
+      refute_file "phx_blog/priv/gettext/en/LC_MESSAGES/errors.po"
+      refute_file "phx_blog/priv/gettext/errors.pot"
+      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":gettext")
+      assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"import AmsMockWeb.Gettext")
+      assert_file "phx_blog/lib/phx_blog_web/views/error_helpers.ex", &refute(&1 =~ ~r"gettext")
+      assert_file "phx_blog/config/dev.exs", &refute(&1 =~ ~r"gettext")
+
       # No HTML
       assert File.exists?("phx_blog/test/phx_blog_web/controllers")
 
@@ -230,6 +273,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_html")
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_reload")
+      assert_file "phx_blog/lib/phx_blog_web.ex",
+                  &assert(&1 =~ "defp view_helpers do")
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex",
                   &refute(&1 =~ ~r"Phoenix.LiveReloader")
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex",
@@ -258,6 +303,60 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--binary-id"])
       assert_file "phx_blog/config/config.exs", ~r/generators: \[binary_id: true\]/
+    end
+  end
+
+  test "new with live" do
+    in_tmp "new with live", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--live"])
+      assert_file "phx_blog/mix.exs", &assert(&1 =~ ~r":phoenix_live_view")
+      assert_file "phx_blog/mix.exs", &assert(&1 =~ ~r":floki")
+
+      refute_file "phx_blog/lib/phx_blog_web/controllers/page_controller.ex"
+
+      assert_file "phx_blog/lib/phx_blog_web/live/page_live.ex", fn file ->
+        assert file =~ "defmodule PhxBlogWeb.PageLive do"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
+        assert file =~ ~s|<%= live_title_tag assigns[:page_title]|
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.leex", fn file ->
+        assert file =~ ~s[Welcome]
+      end
+
+      assert_file "phx_blog/assets/package.json",
+                  ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
+
+      assert_file "phx_blog/assets/js/app.js", fn file ->
+        assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
+      end
+
+      assert_file "phx_blog/assets/css/app.css", fn file ->
+        assert file =~ ~s[@import "../node_modules/nprogress/nprogress.css";]
+        assert file =~ ~s[.phx-click-loading]
+      end
+
+      assert_file "phx_blog/config/config.exs", fn file ->
+        assert file =~ "live_view:"
+        assert file =~ "signing_salt:"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
+        assert file =~ "import Phoenix.LiveView.Helpers"
+        assert file =~ "def live_view do"
+        assert file =~ "def live_component do"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~s[socket "/live", Phoenix.LiveView.Socket]
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->
+        assert file =~ ~s[plug :fetch_live_flash]
+        assert file =~ ~s[plug :put_root_layout, {PhxBlogWeb.LayoutView, :root}]
+        assert file =~ ~s[live "/", PageLive]
+        refute file =~ ~s[plug :fetch_flash]
+        refute file =~ ~s[PageController]
+      end
     end
   end
 

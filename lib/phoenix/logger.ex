@@ -1,7 +1,7 @@
 defmodule Phoenix.Logger do
   @moduledoc """
   Instrumenter to handle logging of various instrumentation events.
-  
+
   ## Instrumentation
 
   Phoenix uses the `:telemetry` library for instrumentation. The following events
@@ -23,12 +23,18 @@ defmodule Phoenix.Logger do
 
     * `[:phoenix, :router_dispatch, :start]` - dispatched by `Phoenix.Router`
       before dispatching to a matched route
-      * Measurement: `%{time: System.monotonic_time}`
+      * Measurement: `%{system_time: System.system_time}`
       * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
       * Disable logging: Pass `log: false` to the router macro, for example: `get("/page", PageController, :index, log: false)`
 
+    * `[:phoenix, :router_dispatch, :exception]` - dispatched by `Phoenix.Router`
+      after exceptions on dispatching a route
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{kind: :throw | :error | :exit, reason: term(), stacktrace: Exception.stacktrace()}`
+      * Disable logging: This event is not logged
+
     * `[:phoenix, :router_dispatch, :stop]` - dispatched by `Phoenix.Router`
-      after successfully dispatching to a matched route
+      after successfully dispatching a matched route
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
       * Disable logging: This event is not logged
@@ -47,7 +53,7 @@ defmodule Phoenix.Logger do
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{params: term, socket: Phoenix.Socket.t}`
       * Disable logging: This event cannot be disabled
-  
+
     * `[:phoenix, :channel_handled_in]` - dispatched at the end of a channel handle in
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{event: binary, params: term, socket: Phoenix.Socket.t}`
@@ -242,7 +248,6 @@ defmodule Phoenix.Logger do
       %{
         transport: transport,
         params: params,
-        connect_info: connect_info,
         user_socket: user_socket,
         result: result,
         serializer: serializer
@@ -257,8 +262,6 @@ defmodule Phoenix.Logger do
         inspect(transport),
         "\n  Serializer: ",
         inspect(serializer),
-        "\n  Connect Info: ",
-        inspect(connect_info),
         "\n  Parameters: ",
         inspect(filter_values(params))
       ]

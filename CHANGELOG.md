@@ -6,6 +6,10 @@ Phoenix.PubSub 2.0 has been released with a more flexible and powerful fastlane 
 
 Then once you start an application, you will get a warning about the `:pubsub` key in your endpoint being deprecated. Follow the steps in the warning and you are good to go!
 
+## Guides revamped
+
+Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
+
 ## 1.5.0-dev
 
 ### Enhancements
@@ -20,13 +24,17 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 ### Deprecations
 
+  * [ChannelTest] `use Phoenix.ChannelTest` is deprecated in favor of `import Phoenix.ChannelTest`
+  * [ConnTest] `use Phoenix.ConnTest` is deprecated in favor of `import Plug.Conn; import Phoenix.ConnTest`
   * [Endpoint] The outdated `Phoenix.Endpoint.CowboyAdapter` for Cowboy 1 is deprecated. Please make sure `{:plug_cowboy, "~> 2.1"}` or later is listed in your `mix.exs`
   * [Endpoint] `subscribe` and `unsubscribe` via the endpoint is deprecated, please use `Phoenix.PubSub` directly instead
+  * [Layout] Use `<%= @inner_content %>` instead of `<%= render @view_module, @view_template, assigns %>` for rendering the child layout
 
 ### phx.new installer
 
   * `Phoenix.PubSub` is now started directly in your application supervision tree
-  * `Phoenix.Ecto.CheckRepoReady` is now added to new applications that use Ecto
+  * `Phoenix.Ecto.CheckRepoStatus` is now added to new applications that use Ecto
+  * Automatically use `System.get_env("MIX_TEST_PARTITION")` in the database name in the test environemnt for built-in CI test partitioning
 
 ### JavaScript client
 

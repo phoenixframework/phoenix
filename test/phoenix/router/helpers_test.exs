@@ -5,6 +5,8 @@ modules = [
   CommentController,
   FileController,
   ProductController,
+  TrailController,
+  VistaController,
   Admin.MessageController,
   SubPlug
 ]
@@ -19,8 +21,6 @@ end
 defmodule Phoenix.Router.HelpersTest do
   use ExUnit.Case, async: true
   use RouterHelper
-
-  alias Phoenix.Router.Helpers
 
   defmodule Router do
     use Phoenix.Router
@@ -51,7 +51,24 @@ defmodule Phoenix.Router.HelpersTest do
 
     scope "/admin/new", alias: Admin, as: "admin" do
       resources "/messages", MessageController
+
+      scope "/unscoped", as: false do
+        resources "/messages", MessageController, as: :my_admin_message
+      end
     end
+
+    scope "/trails", trailing_slash: true do
+      get "/", TrailController, :index
+      get "/open", TrailController, :open, trailing_slash: false
+
+      resources "/vistas", VistaController
+
+      scope "/nested" do
+        get "/path", TrailController, :nested_path
+      end
+    end
+
+    get "/trails/top", TrailController, :top, trailing_slash: true
 
     get "/", PostController, :root, as: :page
     get "/products/:id", ProductController, :show
@@ -85,7 +102,7 @@ defmodule Phoenix.Router.HelpersTest do
   alias Router.Helpers
 
   test "defines a __helpers__ function" do
-    assert Router.__helpers__ == Router.Helpers
+    assert Router.__helpers__() == Router.Helpers
   end
 
   test "root helper" do
@@ -165,14 +182,6 @@ defmodule Phoenix.Router.HelpersTest do
       """ |> String.trim
     end
 
-    assert_raise UndefinedFunctionError, fn ->
-      Helpers.post_path(__MODULE__, :skip)
-    end
-
-    assert_raise UndefinedFunctionError, fn ->
-      Helpers.post_url(__MODULE__, :skip)
-    end
-
     assert_raise ArgumentError, error_message.("post_path", 3), fn ->
       Helpers.post_path(__MODULE__, :skip, 5)
     end
@@ -212,6 +221,13 @@ defmodule Phoenix.Router.HelpersTest do
       "/posts/file/%3D%3Dd--%2B/%3AO.jpg"
     assert Helpers.post_path(__MODULE__, :file, ["==d--+", ":O.jpg"], xx: "/=+/") ==
       "/posts/file/%3D%3Dd--%2B/%3AO.jpg?xx=%2F%3D%2B%2F"
+  end
+
+  test "top-level named routes with trailing slashes" do
+    assert Helpers.trail_path(__MODULE__, :top) == "/trails/top/"
+    assert Helpers.trail_path(__MODULE__, :top, id: 5) == "/trails/top/?id=5"
+    assert Helpers.trail_path(__MODULE__, :top, %{"id" => "foo"}) == "/trails/top/?id=foo"
+    assert Helpers.trail_path(__MODULE__, :top, %{"id" => "foo bar"}) == "/trails/top/?id=foo+bar"
   end
 
   test "resources generates named routes for :index, :edit, :show, :new" do
@@ -361,6 +377,55 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.admin_message_path(__MODULE__, :index) == "/admin/new/messages"
     assert Helpers.admin_message_path(__MODULE__, :show, 1, []) == "/admin/new/messages/1"
     assert Helpers.admin_message_path(__MODULE__, :show, 1) == "/admin/new/messages/1"
+  end
+
+  test "scoped route helpers generated unscoped :as options" do
+    assert Helpers.my_admin_message_path(__MODULE__, :index, []) == "/admin/new/unscoped/messages"
+    assert Helpers.my_admin_message_path(__MODULE__, :index) == "/admin/new/unscoped/messages"
+    assert Helpers.my_admin_message_path(__MODULE__, :show, 1, []) == "/admin/new/unscoped/messages/1"
+    assert Helpers.my_admin_message_path(__MODULE__, :show, 1) == "/admin/new/unscoped/messages/1"
+  end
+
+  test "scoped route helpers generated with trailing slashes" do
+    assert Helpers.trail_path(__MODULE__, :index) == "/trails/"
+    assert Helpers.trail_path(__MODULE__, :index, id: 5) == "/trails/?id=5"
+    assert Helpers.trail_path(__MODULE__, :index, %{"id" => "foo"}) == "/trails/?id=foo"
+    assert Helpers.trail_path(__MODULE__, :index, %{"id" => "foo bar"}) == "/trails/?id=foo+bar"
+  end
+
+  test "scoped route helpers generated with trailing slashes overridden" do
+    assert Helpers.trail_path(__MODULE__, :open) == "/trails/open"
+    assert Helpers.trail_path(__MODULE__, :open, id: 5) == "/trails/open?id=5"
+    assert Helpers.trail_path(__MODULE__, :open, %{"id" => "foo"}) == "/trails/open?id=foo"
+    assert Helpers.trail_path(__MODULE__, :open, %{"id" => "foo bar"}) == "/trails/open?id=foo+bar"
+  end
+
+  test "scoped route helpers generated with trailing slashes for resource" do
+    assert Helpers.vista_path(__MODULE__, :index) == "/trails/vistas/"
+    assert Helpers.vista_path(__MODULE__, :index, []) == "/trails/vistas/"
+    assert Helpers.vista_path(__MODULE__, :index, id: 5) == "/trails/vistas/?id=5"
+    assert Helpers.vista_path(__MODULE__, :index, %{"id" => "foo"}) == "/trails/vistas/?id=foo"
+
+    assert Helpers.vista_path(__MODULE__, :new) == "/trails/vistas/new/"
+    assert Helpers.vista_path(__MODULE__, :new, []) == "/trails/vistas/new/"
+    assert Helpers.vista_path(__MODULE__, :create) == "/trails/vistas/"
+    assert Helpers.vista_path(__MODULE__, :create, []) == "/trails/vistas/"
+    assert Helpers.vista_path(__MODULE__, :show, 2) == "/trails/vistas/2/"
+    assert Helpers.vista_path(__MODULE__, :show, 2, []) == "/trails/vistas/2/"
+    assert Helpers.vista_path(__MODULE__, :edit, 2) == "/trails/vistas/2/edit/"
+    assert Helpers.vista_path(__MODULE__, :edit, 2, []) == "/trails/vistas/2/edit/"
+    assert Helpers.vista_path(__MODULE__, :update, 2) == "/trails/vistas/2/"
+    assert Helpers.vista_path(__MODULE__, :update, 2, []) == "/trails/vistas/2/"
+    assert Helpers.vista_path(__MODULE__, :delete, 2) == "/trails/vistas/2/"
+    assert Helpers.vista_path(__MODULE__, :delete, 2, []) == "/trails/vistas/2/"
+  end
+
+  test "scoped route helpers generated within scoped routes with trailing slashes" do
+    assert Helpers.trail_path(__MODULE__, :nested_path) == "/trails/nested/path/"
+    assert Helpers.trail_path(__MODULE__, :nested_path, []) == "/trails/nested/path/"
+    assert Helpers.trail_path(__MODULE__, :nested_path, [id: 5]) == "/trails/nested/path/?id=5"
+    assert Helpers.trail_path(__MODULE__, :nested_path, %{"id" => "foo"}) == "/trails/nested/path/?id=foo"
+    assert Helpers.trail_path(__MODULE__, :nested_path, %{"id" => "foo bar"}) == "/trails/nested/path/?id=foo+bar"
   end
 
   test "can pass an {m, f, a} tuple as a plug argument" do

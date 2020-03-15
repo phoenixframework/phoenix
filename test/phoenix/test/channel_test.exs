@@ -172,7 +172,7 @@ defmodule Phoenix.Test.ChannelTest do
 
   @endpoint Endpoint
   @moduletag :capture_log
-  use Phoenix.ChannelTest
+  import Phoenix.ChannelTest
 
   setup_all do
     start_supervised! @endpoint

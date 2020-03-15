@@ -84,6 +84,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   defp create_<%= schema.singular %>(_) do
     <%= schema.singular %> = fixture(:<%= schema.singular %>)
-    {:ok, <%= schema.singular %>: <%= schema.singular %>}
+    %{<%= schema.singular %>: <%= schema.singular %>}
   end
 end

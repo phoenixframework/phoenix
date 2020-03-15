@@ -27,7 +27,7 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
         # Although we are not performing a call, we are using the call
         # function for now so it is properly handled in error reports.
         mfa = {module, :call, [conn, args]}
-        {:upgrade, :protocol, __MODULE__, req, {:error, mfa, kind, reason, System.stacktrace()}}
+        {:upgrade, :protocol, __MODULE__, req, {:error, mfa, kind, reason, __STACKTRACE__}}
     after
       receive do
         @already_sent -> :ok

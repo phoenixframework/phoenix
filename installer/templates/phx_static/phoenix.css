@@ -15,6 +15,7 @@ h3{font-size: 2.2rem; letter-spacing: -.08rem; line-height: 1.35}
 h4{font-size: 1.8rem; letter-spacing: -.05rem; line-height: 1.5}
 h5{font-size: 1.6rem; letter-spacing: 0; line-height: 1.4}
 h6{font-size: 1.4rem; letter-spacing: 0; line-height: 1.2}
+pre{padding: 1em;}
 
 .container{
   margin: 0 auto;
@@ -27,53 +28,19 @@ select {
   width: auto;
 }
 
-/* Alerts and form errors */
-.alert {
-  padding: 15px;
-  margin-bottom: 20px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-}
-.alert-info {
-  color: #31708f;
-  background-color: #d9edf7;
-  border-color: #bce8f1;
-}
-.alert-warning {
-  color: #8a6d3b;
-  background-color: #fcf8e3;
-  border-color: #faebcc;
-}
-.alert-danger {
-  color: #a94442;
-  background-color: #f2dede;
-  border-color: #ebccd1;
-}
-.alert p {
-  margin-bottom: 0;
-}
-.alert:empty {
-  display: none;
-}
-.help-block {
-  color: #a94442;
-  display: block;
-  margin: -1rem 0 2rem;
-}
-
 /* Phoenix promo and logo */
 .phx-hero {
   text-align: center;
   border-bottom: 1px solid #e3e3e3;
   background: #eee;
   border-radius: 6px;
-  padding: 3em;
+  padding: 3em 3em 1em;
   margin-bottom: 3rem;
   font-weight: 200;
   font-size: 120%;
 }
-.phx-hero p {
-  margin: 0;
+.phx-hero input {
+  background: #ffffff;
 }
 .phx-logo {
   min-width: 300px;

@@ -3,8 +3,10 @@ defmodule <%= web_namespace %>.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_flash
+    plug :fetch_session<%= if live do %>
+    plug :fetch_live_flash
+    plug :put_root_layout, {<%= web_namespace %>.LayoutView, :root}<% else %>
+    plug :fetch_flash<% end %>
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end<% end %>
@@ -16,7 +18,7 @@ defmodule <%= web_namespace %>.Router do
   scope "/", <%= web_namespace %> do
     pipe_through :browser
 
-    get "/", PageController, :index
+    <%= if live do %>live "/", PageLive, :index<% else %>get "/", PageController, :index<% end %>
   end
 
   # Other scopes may use custom stacks.

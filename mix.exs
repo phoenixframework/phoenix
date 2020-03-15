@@ -6,7 +6,7 @@ defmodule Phoenix.MixProject do
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
   # installer is ahead of Phoenix itself.
-  @elixir_requirement "~> 1.6"
+  @elixir_requirement "~> 1.7"
 
   def project do
     [
@@ -20,9 +20,10 @@ defmodule Phoenix.MixProject do
       consolidate_protocols: Mix.env() != :test,
       xref: [
         exclude: [
+          {IEx, :started?, 0},
           Ecto.Type,
           :ranch,
-          {:cowboy_req, :compact, 1},
+          :cowboy_req,
           Plug.Adapters.Cowboy.Conn,
           Plug.Cowboy.Conn,
           Plug.Cowboy
@@ -55,7 +56,8 @@ defmodule Phoenix.MixProject do
         format_encoders: [],
         filter_parameters: ["password"],
         serve_endpoints: false,
-        gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf)
+        gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf),
+        trim_on_html_eex_engine: true
       ]
     ]
   end
@@ -78,6 +80,8 @@ defmodule Phoenix.MixProject do
 
       # Test dependencies
       {:gettext, "~> 0.15.0", only: :test},
+      {:telemetry_poller, "~> 0.4", only: :test},
+      {:telemetry_metrics, "~> 0.4", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
     ]
   end
@@ -133,7 +137,7 @@ defmodule Phoenix.MixProject do
       "guides/realtime/presence.md",
 
       "guides/testing/testing.md",
-      "guides/testing/testing_schemas.md",
+      "guides/testing/testing_contexts.md",
       "guides/testing/testing_controllers.md",
       "guides/testing/testing_channels.md",
 

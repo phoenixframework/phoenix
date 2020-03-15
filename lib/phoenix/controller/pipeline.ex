@@ -19,9 +19,13 @@ defmodule Phoenix.Controller.Pipeline do
 
       @doc false
       def call(conn, action) when is_atom(action) do
-        conn = update_in conn.private,
-                 &(&1 |> Map.put(:phoenix_controller, __MODULE__)
-                      |> Map.put(:phoenix_action, action))
+        conn =
+          update_in(
+            conn.private,
+            &(&1
+              |> Map.put(:phoenix_controller, __MODULE__)
+              |> Map.put(:phoenix_action, action))
+          )
 
         phoenix_controller_pipeline(conn, action)
       end
@@ -31,7 +35,7 @@ defmodule Phoenix.Controller.Pipeline do
         apply(__MODULE__, action, [conn, conn.params])
       end
 
-      defoverridable [init: 1, call: 2, action: 2]
+      defoverridable init: 1, call: 2, action: 2
     end
   end
 
@@ -39,9 +43,10 @@ defmodule Phoenix.Controller.Pipeline do
   def __action_fallback__(plug) do
     quote bind_quoted: [plug: plug] do
       @phoenix_fallback Phoenix.Controller.Pipeline.validate_fallback(
-        plug,
-        __MODULE__,
-        Module.get_attribute(__MODULE__, :phoenix_fallback))
+                          plug,
+                          __MODULE__,
+                          Module.get_attribute(__MODULE__, :phoenix_fallback)
+                        )
     end
   end
 
@@ -51,19 +56,20 @@ defmodule Phoenix.Controller.Pipeline do
       fallback == nil ->
         raise """
         action_fallback can only be called when using Phoenix.Controller.
-        Add `use Phoenix.Controller` to #{inspect module}
+        Add `use Phoenix.Controller` to #{inspect(module)}
         """
 
       fallback != :unregistered ->
         raise "action_fallback can only be called a single time per controller."
 
       not is_atom(plug) ->
-        raise ArgumentError, "expected action_fallback to be a module or function plug, got #{inspect plug}"
+        raise ArgumentError,
+              "expected action_fallback to be a module or function plug, got #{inspect(plug)}"
 
       fallback == :unregistered ->
         case Atom.to_charlist(plug) do
           ~c"Elixir." ++ _ -> {:module, plug}
-          _                -> {:function, plug}
+          _ -> {:function, plug}
         end
     end
   end
@@ -71,10 +77,13 @@ defmodule Phoenix.Controller.Pipeline do
   @doc false
   defmacro __before_compile__(env) do
     action = {:action, [], true}
-    plugs  = [action|Module.get_attribute(env.module, :plugs)]
-    {conn, body} = Plug.Builder.compile(env, plugs,
-      log_on_halt: :debug,
-      init_mode: Phoenix.plug_init_mode())
+    plugs = [action | Module.get_attribute(env.module, :plugs)]
+
+    {conn, body} =
+      Plug.Builder.compile(env, plugs,
+        log_on_halt: :debug,
+        init_mode: Phoenix.plug_init_mode()
+      )
 
     fallback_ast =
       env.module
@@ -82,7 +91,7 @@ defmodule Phoenix.Controller.Pipeline do
       |> build_fallback()
 
     quote do
-      defoverridable [action: 2]
+      defoverridable action: 2
 
       def action(var!(conn_before), opts) do
         try do
@@ -91,8 +100,11 @@ defmodule Phoenix.Controller.Pipeline do
         catch
           :error, reason ->
             Phoenix.Controller.Pipeline.__catch__(
-              var!(conn_before), reason, __MODULE__,
-              var!(conn_before).private.phoenix_action, System.stacktrace()
+              var!(conn_before),
+              reason,
+              __MODULE__,
+              var!(conn_before).private.phoenix_action,
+              __STACKTRACE__
             )
         end
       end
@@ -112,6 +124,7 @@ defmodule Phoenix.Controller.Pipeline do
   defp build_fallback(:unregistered) do
     quote do: var!(conn_after)
   end
+
   defp build_fallback({:module, plug}) do
     quote bind_quoted: binding() do
       case var!(conn_after) do
@@ -120,6 +133,7 @@ defmodule Phoenix.Controller.Pipeline do
       end
     end
   end
+
   defp build_fallback({:function, plug}) do
     quote do
       case var!(conn_after) do
@@ -130,11 +144,17 @@ defmodule Phoenix.Controller.Pipeline do
   end
 
   @doc false
-  def __catch__(%Plug.Conn{}, :function_clause, controller, action,
-      [{controller, action, [%Plug.Conn{} | _] = action_args, _loc} | _] = stack) do
+  def __catch__(
+        %Plug.Conn{},
+        :function_clause,
+        controller,
+        action,
+        [{controller, action, [%Plug.Conn{} | _] = action_args, _loc} | _] = stack
+      ) do
     args = [module: controller, function: action, arity: length(action_args), args: action_args]
     reraise Phoenix.ActionClauseError, args, stack
   end
+
   def __catch__(%Plug.Conn{} = conn, reason, _controller, _action, stack) do
     Plug.Conn.WrapperError.reraise(conn, :error, reason, stack)
   end
@@ -144,11 +164,9 @@ defmodule Phoenix.Controller.Pipeline do
   """
   defmacro plug(plug)
 
-  defmacro plug({:when, _, [plug, guards]}), do:
-    plug(plug, [], guards)
+  defmacro plug({:when, _, [plug, guards]}), do: plug(plug, [], guards, __CALLER__)
 
-  defmacro plug(plug), do:
-    plug(plug, [], true)
+  defmacro plug(plug), do: plug(plug, [], true, __CALLER__)
 
   @doc """
   Stores a plug with the given options to be executed as part of
@@ -156,15 +174,31 @@ defmodule Phoenix.Controller.Pipeline do
   """
   defmacro plug(plug, opts)
 
-  defmacro plug(plug, {:when, _, [opts, guards]}), do:
-    plug(plug, opts, guards)
+  defmacro plug(plug, {:when, _, [opts, guards]}), do: plug(plug, opts, guards, __CALLER__)
 
-  defmacro plug(plug, opts), do:
-    plug(plug, opts, true)
+  defmacro plug(plug, opts), do: plug(plug, opts, true, __CALLER__)
 
-  defp plug(plug, opts, guards) do
+  defp plug(plug, opts, guards, caller) do
+    plug = Macro.expand(plug, %{caller | function: {:init, 1}})
+
     quote do
-      @plugs {unquote(plug), unquote(opts), unquote(Macro.escape(guards))}
+      @plugs {unquote(plug), unquote(opts), unquote(escape_guards(guards))}
     end
   end
+
+  defp escape_guards({pre_expanded, _, [_ | _]} = node)
+       when pre_expanded in [:@, :__aliases__],
+       do: node
+
+  defp escape_guards({left, meta, right}),
+    do: {:{}, [], [escape_guards(left), meta, escape_guards(right)]}
+
+  defp escape_guards({left, right}),
+    do: {escape_guards(left), escape_guards(right)}
+
+  defp escape_guards([_ | _] = list),
+    do: Enum.map(list, &escape_guards/1)
+
+  defp escape_guards(node),
+    do: node
 end

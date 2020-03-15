@@ -136,10 +136,10 @@ Now that we've got the route, controller, view, and template, we should be able 
 There are a couple of interesting things to notice about what we just did. We didn't need to stop and re-start the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.eex` file consisted of only a single `div` tag, the page we get is a full HTML document. Our index template is rendered into the application layout - `lib/hello_web/templates/layout/app.html.eex`. If you open it, you'll see a line that looks like this:
 
 ```html
-<%= render @view_module, @view_template, assigns %>
+<%= @inner_content %>
 ```
 
-which is what renders our template into the layout before the HTML is sent off to the browser.
+which injects our template into the layout before the HTML is sent off to the browser.
 
 > A note on hot code reloading: Some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the discussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
 

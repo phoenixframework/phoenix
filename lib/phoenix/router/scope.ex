@@ -6,7 +6,7 @@ defmodule Phoenix.Router.Scope do
   @pipes :phoenix_pipeline_scopes
   @top :phoenix_top_scopes
 
-  defstruct path: [], alias: [], as: [], pipes: [], host: nil, private: %{}, assigns: %{}, log: :debug
+  defstruct path: [], alias: [], as: [], pipes: [], host: nil, private: %{}, assigns: %{}, log: :debug, trailing_slash?: false
 
   @doc """
   Initializes the scope.
@@ -21,25 +21,27 @@ defmodule Phoenix.Router.Scope do
   Builds a route based on the top of the stack.
   """
   def route(line, module, kind, verb, path, plug, plug_opts, opts) do
+    top = get_top(module)
     path    = validate_path(path)
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
     as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
     alias?  = Keyword.get(opts, :alias, true)
+    trailing_slash? = Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
 
     if to_string(as) == "static"  do
       raise ArgumentError, "`static` is a reserved route prefix generated from #{inspect plug} or `:as` option"
     end
 
-    {path, host, alias, as, pipes, private, assigns, log} =
-      join(module, path, plug, alias?, as, private, assigns)
+    {path, alias, as, private, assigns} =
+      join(top, path, plug, alias?, as, private, assigns)
 
     metadata =
       opts
       |> Keyword.get(:metadata, %{})
-      |> Map.put(:log, Keyword.get(opts, :log, log))
+      |> Map.put(:log, Keyword.get(opts, :log, top.log))
 
-    Phoenix.Router.Route.build(line, kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns, metadata)
+    Phoenix.Router.Route.build(line, kind, verb, path, top.host, alias, plug_opts, as, top.pipes, private, assigns, metadata, trailing_slash?)
   end
 
   @doc """
@@ -89,6 +91,8 @@ defmodule Phoenix.Router.Scope do
   end
 
   def push(module, opts) when is_list(opts) do
+    top = get_top(module)
+
     path =
       if path = Keyword.get(opts, :path) do
         path |> validate_path() |> String.split("/", trim: true)
@@ -96,25 +100,33 @@ defmodule Phoenix.Router.Scope do
         []
       end
 
-    alias = Keyword.get(opts, :alias) |> List.wrap() |> Enum.map(&Atom.to_string/1)
-    as = Keyword.get(opts, :as) |> List.wrap()
+    alias = append_unless_false(top, opts, :alias, &Atom.to_string(&1))
+    as = append_unless_false(top, opts, :as, & &1)
     host = Keyword.get(opts, :host)
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
 
-    top = get_top(module)
     update_stack(module, fn stack -> [top | stack] end)
 
     put_top(module, %Scope{
       path: top.path ++ path,
-      alias: top.alias ++ alias,
-      as: top.as ++ as,
+      alias: alias,
+      as: as,
       host: host || top.host,
       pipes: top.pipes,
       private: Map.merge(top.private, private),
       assigns: Map.merge(top.assigns, assigns),
-      log: Keyword.get(opts, :log, top.log)
+      log: Keyword.get(opts, :log, top.log),
+      trailing_slash?: Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
     })
+  end
+
+  defp append_unless_false(top, opts, key, fun) do
+    case opts[key] do
+      false -> []
+      nil -> Map.fetch!(top, key)
+      other -> Map.fetch!(top, key) ++ [fun.(other)]
+    end
   end
 
   @doc """
@@ -150,9 +162,7 @@ defmodule Phoenix.Router.Scope do
     join_alias(get_top(module), alias)
   end
 
-  defp join(module, path, alias, alias?, as, private, assigns) do
-    top = get_top(module)
-
+  defp join(top, path, alias, alias?, as, private, assigns) do
     joined_alias =
       if alias? do
         join_alias(top, alias)
@@ -160,8 +170,8 @@ defmodule Phoenix.Router.Scope do
         alias
       end
 
-    {join_path(top, path), top.host, joined_alias, join_as(top, as), top.pipes,
-     Map.merge(top.private, private), Map.merge(top.assigns, assigns), top.log}
+    {join_path(top, path), joined_alias, join_as(top, as),
+     Map.merge(top.private, private), Map.merge(top.assigns, assigns)}
   end
 
   defp join_path(top, path) do

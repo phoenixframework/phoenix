@@ -18,7 +18,10 @@ defmodule Phoenix.Template.EExEngine do
                   "adding phoenix_html as a dependency as it provides XSS protection."
         end
 
-        [engine: Phoenix.HTML.Engine, trim: true]
+        [
+          engine: Phoenix.HTML.Engine,
+          trim: Application.get_env(:phoenix, :trim_on_html_eex_engine, true)
+        ]
 
       _ ->
         [engine: EEx.SmartEngine]

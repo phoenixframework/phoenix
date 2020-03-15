@@ -112,6 +112,17 @@ defmodule Phoenix.ConnTest do
 
   @doc false
   defmacro __using__(_) do
+    IO.warn """
+    Using Phoenix.ConnTest is deprecated, instead of:
+
+        use Phoenix.ConnTest
+
+    do:
+
+        import Plug.Conn
+        import Phoenix.ConnTest
+    """, Macro.Env.stacktrace(__CALLER__)
+
     quote do
       import Plug.Conn
       import Phoenix.ConnTest
@@ -654,7 +665,7 @@ defmodule Phoenix.ConnTest do
     try do
       {:ok, func.()}
     catch
-      kind, error -> {:error, {kind, error, System.stacktrace()}}
+      kind, error -> {:error, {kind, error, __STACKTRACE__}}
     end
   end
 end

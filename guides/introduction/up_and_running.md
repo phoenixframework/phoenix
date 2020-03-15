@@ -76,6 +76,8 @@ Generated hello app
 The database for Hello.Repo has been created
 ```
 
+In case the database could not be created, see the guides for the [`mix ecto.create`](mix_tasks.html#mix-ecto-create) for general trouble-shooting.
+
 > Note: if this is the first time you are running this command, Phoenix may also ask to install Rebar. Go ahead with the installation as Rebar is used to build Erlang packages.
 
 And finally, we'll start the Phoenix server:

@@ -400,6 +400,6 @@ defmodule Phoenix.DigesterTest do
   end
 
   defp now do
-    :calendar.datetime_to_gregorian_seconds(:calendar.universal_time)
+    :calendar.datetime_to_gregorian_seconds(:calendar.universal_time())
   end
 end

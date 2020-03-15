@@ -1013,7 +1013,7 @@ export class Socket {
   off(refs) {
     for(let key in this.stateChangeCallbacks){
       this.stateChangeCallbacks[key] = this.stateChangeCallbacks[key].filter(([ref]) => {
-        return !refs.includes(ref)
+        return refs.indexOf(ref) === -1
       })
     }
   }
@@ -1163,6 +1163,10 @@ export class LongPoll {
           this.readyState = SOCKET_STATES.open
           this.onopen()
           this.poll()
+          break
+        case 403:
+          this.onerror()
+          this.close()
           break
         case 0:
         case 500:

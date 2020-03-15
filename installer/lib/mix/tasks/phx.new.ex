@@ -12,6 +12,9 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Options
 
+    * `--live` - include Phoenix LiveView to make it easier than ever
+      to build interactive, real-time applications
+
     * `--umbrella` - generate an umbrella project,
       with one application for your domain, and
       a second application for the web interface.
@@ -95,7 +98,8 @@ defmodule Mix.Tasks.Phx.New do
   @switches [dev: :boolean, webpack: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
-             gettext: :boolean, umbrella: :boolean, verbose: :boolean]
+             gettext: :boolean, umbrella: :boolean, verbose: :boolean,
+             live: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell().info("Phoenix v#{@version}")
@@ -332,8 +336,8 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    unless Version.match?(System.version(), "~> 1.6") do
-      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.6.\n " <>
+    unless Version.match?(System.version(), "~> 1.7") do
+      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.7.\n " <>
                 "You have #{System.version()}. Please update accordingly"
     end
   end

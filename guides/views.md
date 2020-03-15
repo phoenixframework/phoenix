@@ -27,13 +27,13 @@ All of the imports and aliases we make in our view will also be available in our
 Open up our application layout template, `lib/hello_web/templates/layout/app.html.eex`, and change this line,
 
 ```html
-<title><%= assigns[:page_title] || "<%= app_module %> · Phoenix Framework" %></title>
+<title>Hello · Phoenix Framework</title>
 ```
 
 to call a `title/0` function, like this.
 
 ```html
-<title><%= title(assigns) %></title>
+<title><%= title() %></title>
 ```
 
 Now let's add a `title/0` function to our `LayoutView`.
@@ -42,13 +42,13 @@ Now let's add a `title/0` function to our `LayoutView`.
 defmodule HelloWeb.LayoutView do
   use HelloWeb, :view
 
-  def title(assigns) do
-    assigns[:page_title] || "Awesome New Title!"
+  def title() do
+    "Awesome New Title!"
   end
 end
 ```
 
-When we reload our home page, we should see our new title. Since templates are compiled inside the view, we could invoke the view function simply as `title(assigns)`, otherwise we would have to type `HelloWeb.LayoutView.title(assigns)`.
+When we reload our home page, we should see our new title. Since templates are compiled inside the view, we could invoke the view function simply as `title()`, otherwise we would have to type `HelloWeb.LayoutView.title()`.
 
 As you may recall, Elixir templates use Embedded Elixir, known as `EEx`. We use `<%= expression %>` to execute Elixir expressions. The result of the expression is interpolated into the template. You can use pretty much use any Elixir expression. For example, in order to have conditionals:
 
@@ -138,17 +138,23 @@ iex(5)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "
 "This is the message: Hello from IEx!"
 ```
 
-## Layouts and sharing views
+## Sharing views and templates
 
-Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/templates/layout/app.html.eex`, just about in the middle of the `<body>`, we will see this.
+Now that we have acquainted ourselves with `Phoenix.View.render/3`, we are ready to share views and templates from inside other views and templates.
+
+For example, if you want to render the "test.html" template from inside our layout, you can invoke `render/3` directly from the layout:
 
 ```html
-<%= render(@view_module, @view_template, assigns) %>
+<%= Phoenix.View.render(HelloWeb.PageView, "test.html", message: "Hello from layout!") %>
 ```
 
-This code will effectively call `Phoenix.View.render(HelloWeb.PageView, "test.html", assigns)`, pretty much like we did in our IEx session and return the template results.
+If you visit the Welcome page, you should see the message from the layout.
 
-The `render/3` function can always be used to invoke other views, from any template. For example, you can invoke `render(HelloWeb.PageView, "test.html", message: "Hello from template!")` from any view or template to render the given view and template.
+Since `Phoenix.View` is automatically imported into our templates, we could even skip the `Phoenix.View` module name and simply invoke `render(...)` directly:
+
+```html
+<%= render(HelloWeb.PageView, "test.html", message: "Hello from layout!") %>
+```
 
 If you want to render a template within the same view, you can skip the view name, and simply call `render("test.html", message: "Hello from sibling template!")` instead. For example, open up `lib/hello_web/templates/page/index.html.eex` and at this at the top:
 
@@ -157,6 +163,16 @@ If you want to render a template within the same view, you can skip the view nam
 ```
 
 Now if you visit the Welcome page, you see the template results also shown.
+
+## Layouts
+
+Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/templates/layout/app.html.eex`, just about in the middle of the `<body>`, we will see this.
+
+```html
+<%= @inner_content %>
+```
+
+In other words, the inner template is placed in the `@inner_content` assign. You can also find which module and template where used to render the inner content by introspecting the `@view_module` and `@view_template` assigns.
 
 ## Rendering JSON
 

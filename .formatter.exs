@@ -63,9 +63,12 @@ locals_without_parens = [
   # Phoenix.ConnTest
   assert_error_sent: 2,
 
-  # Phoenix.LiveView.Router
+  # Phoenix.Live{Dashboard,View}.Router
   live: 2,
-  live: 3
+  live: 3,
+  live: 4,
+  live_dashboard: 1,
+  live_dashboard: 2
 ]
 
 [

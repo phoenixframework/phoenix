@@ -1,26 +1,21 @@
 # Ecto
 
+> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+
 Most web applications today need some form of data validation and persistence. In the Elixir ecosystem, we have Ecto to enable this. Before we jump into building database-backed web features, we're going to focus on the finer details of Ecto to give a solid base to build our web features on top of. Let's get started!
 
-Ecto has out of the box support for the following databases:
+Phoenix uses Ecto to provide builtin support to the following databases:
 
 * PostgreSQL (via [`postgrex`](https://github.com/elixir-ecto/postgrex))
 * MySQL (via [`myxql`](https://github.com/elixir-ecto/myxql))
 
-Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default (you can pass the `--no-ecto` flag to exclude this).
+Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default. You can pass the `--database` option to change or `--no-ecto` flag to exclude this.
 
-For a thorough, general guide for Ecto, check out the [Ecto getting started guide](https://hexdocs.pm/ecto/getting-started.html). For an overview of all Ecto specific mix tasks for Phoenix, see the [mix tasks guide](mix_tasks.html#ecto-specific-mix-tasks).
+Ecto also provides support for other databases and it has many learning resources available. Please check out [Ecto's README](https://github.com/elixir-ecto/ecto) for general information.
 
-This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. For instructions on switching to MySQL, please see the [Using MySQL](#using-mysql) section.
+This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. The introductory guides cover how to get your first application up and running. For instructions on switching to MySQL, please see the [Using MySQL](#using-mysql) section.
 
-The default Postgres configuration has a superuser account with username 'postgres' and the password 'postgres'. If you take a look at the file `config/dev.exs`, you'll see that Phoenix works off this assumption. If you don't have this account already setup on your machine, you can connect to your postgres instance by typing `psql` and then entering the following commands:
-
-```sql
-CREATE USER postgres;
-ALTER USER postgres PASSWORD 'postgres';
-ALTER USER postgres WITH SUPERUSER;
-\q
-```
+## Using the schema and migration generator
 
 Now that we have Ecto and Postgres installed and configured, the easiest way to use Ecto is to generate an Ecto *schema* through the `phx.gen.schema` task. Ecto schemas are a way for us to specify how Elixir data types map to and from external sources, such as database tables. Let's generate a `User` schema with `name`, `email`, `bio`, and `number_of_pets` fields.
 
@@ -38,7 +33,7 @@ Remember to update your repository by running migrations:
 
 A couple of files were generated with this task. First, we have a `user.ex` file, containing our Ecto schema with our schema definition of the fields we passed to the task. Next, a migration file was generated inside `priv/repo/migrations` which will create our database table that our schema maps to.
 
-With our files in place, let's follow the instructions and run our migration. If the repo hasn't been created yet, run the `mix ecto.create` task. Next we can run:
+With our files in place, let's follow the instructions and run our migration:
 
 ```console
 $ mix ecto.migrate
@@ -52,7 +47,7 @@ Generated hello app
 [info]  == Migrated in 0.0s
 ```
 
-Mix assumes that we are in the development environment unless we tell it otherwise with `MIX_ENV=another_environment mix some_task`. Our Ecto task will get its environment from Mix, and that's how we get the correct suffix to our database name.
+Mix assumes that we are in the development environment unless we tell it otherwise with `MIX_ENV=prod mix ecto.migrate`.
 
 If we log in to our database server, and connect to our `hello_dev` database, we should see our `users` table. Ecto assumes that we want an integer column called `id` as our primary key, so we should see a sequence generated for that as well.
 
@@ -114,7 +109,7 @@ Indexes:
 
 Notice that we do get an `id` column as our primary key by default, even though it isn't listed as a field in our migration.
 
-## The Repo
+## Repo configuration
 
 Our `Hello.Repo` module is the foundation we need to work with databases in a Phoenix application. Phoenix generated it for us in `lib/hello/repo.ex`, and this is what it looks like.
 
@@ -193,9 +188,11 @@ def changeset(%User{} = user, attrs) do
 end
 ```
 
-Right now, we have two transformations in our pipeline. In the first call, we invoke `Ecto.Changeset`'s `cast/3`, passing in our external parameters and marking which fields are required for validation.
+Right now, we have two transformations in our pipeline. In the first call, we invoke [`Ecto.Changeset.cast/3`](https://hexdocs.pm/ecto/Ecto.Changeset.html#cast/3), passing in our external parameters and marking which fields are required for validation.
+
 `cast/3` first takes a struct, then the parameters (the proposed updates), and then the final field is the list of columns to be updated. `cast/3` also will only take fields that exist in the schema.
-Next, `validate_required/3` checks that this list of fields is present in the changeset that `cast/3` returns. By default with the generator, all fields are required.
+
+Next, [`validate_required/3`](https://hexdocs.pm/ecto/Ecto.Changeset.html#validate_required/3) checks that this list of fields is present in the changeset that `cast/3` returns. By default with the generator, all fields are required.
 
 We can verify this functionality in iex. Let's fire up our application inside `iex` by running `iex -S mix`. In order to minimize typing and make this easier to read, let's alias our `Hello.User` struct.
 
@@ -359,13 +356,16 @@ There are many more validations and transformations we can perform in a changese
 
 ## Data Persistence
 
-We've talked a lot about migrations and data-storage, but we haven't yet persisted any of our schemas or changesets. We briefly looked at our repo module in `lib/hello/repo.ex` earlier, now it's time to put it to use. Ecto Repos are the interface into a storage system, be it a Database like PostgreSQL or an external service like a RESTful API. The Repo module's purpose is to take care of the finer details of persistence and data querying for us. As the caller, we only care about fetching and persisting data. The Repo takes care of the underlying Database adapter communication, connection pooling, and error translation for database constraint violations.
+We've explored migrations and schemas, but we haven't yet persisted any of our schemas or changesets. We briefly looked at our repo module in `lib/hello/repo.ex` earlier, now it's time to put it to use.
+
+Ecto Repos are the interface into a storage system, be it a Database like PostgreSQL or an external service like a RESTful API. The Repo module's purpose is to take care of the finer details of persistence and data querying for us. As the caller, we only care about fetching and persisting data. The Repo takes care of the underlying Database adapter communication, connection pooling, and error translation for database constraint violations.
 
 Let's head back over to IEx with `iex -S mix`, and insert a couple of users into the database.
 
 ```elixir
 iex> alias Hello.{Repo, User}
 [Hello.Repo, Hello.User]
+
 iex> Repo.insert(%User{email: "user1@example.com"})
 [debug] QUERY OK db=4.6ms
 INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user1@example.com", {{2017, 5, 23}, {19, 6, 4, 822044}}, {{2017, 5, 23}, {19, 6, 4, 822055}}]
@@ -480,7 +480,7 @@ defmodule HelloPhoenix.MixProject do
 end
 ```
 
-Next, we need to configure our new adapter. Let's open up our `config/dev.exs` file and do that.
+Next, we need to configure our adapter to use the default MySQL credentials. Let's open up our `config/dev.exs` file and do that.
 
 ```elixir
 config :hello_phoenix, HelloPhoenix.Repo,
@@ -517,6 +517,6 @@ $ mix ecto.migrate
 
 ## Other options
 
-While Phoenix uses [the Ecto project](https://hexdocs.pm/ecto) to interact with the data access layer, there are many other data access options, some built into the Erlang standard library. [ETS](http://www.erlang.org/doc/man/ets.html) and [DETS](http://www.erlang.org/doc/man/dets.html) are key value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
+While Phoenix uses [the Ecto project](https://hexdocs.pm/ecto) to interact with the data access layer, there are many other data access options, some even built into the Erlang standard library. [ETS](http://www.erlang.org/doc/man/ets.html) and [DETS](http://www.erlang.org/doc/man/dets.html) are key value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
 
 The data world is your oyster, but we won't be covering these options in these guides.

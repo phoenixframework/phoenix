@@ -75,7 +75,7 @@ $ mix phx.server
 Compiling 17 files (.ex)
 
 warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
-  lib/hello_web/controllers/post_controller.ex:22: 
+  lib/hello_web/controllers/post_controller.ex:22:
 ```
 
 If we don't want to create a context or schema for our resource we can use the `--no-context` flag. Note that this still requires a context module name as a parameter.
@@ -359,13 +359,6 @@ $ mix ecto.create
 The database for Hello.Repo has been created.
 ```
 
-If we happen to have another repo called `OurCustom.Repo` that we want to create the database for, we can run this.
-
-```console
-$ mix ecto.create -r OurCustom.Repo
-The database for OurCustom.Repo has been created.
-```
-
 There are a few things that can go wrong with `ecto.create`. If our Postgres database doesn't have a "postgres" role (user), we'll get an error like this one.
 
 ```console
@@ -416,6 +409,13 @@ $ mix ecto.create
 ```
 
 To fix this, we can change the password in the environment specific configuration file. For the development environment the password used can be found at the bottom of the `config/dev.exs` file.
+
+Finally, if we happen to have another repo called `OurCustom.Repo` that we want to create the database for, we can run this.
+
+```console
+$ mix ecto.create -r OurCustom.Repo
+The database for OurCustom.Repo has been created.
+```
 
 ### `mix ecto.drop`
 

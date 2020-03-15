@@ -7,7 +7,7 @@ defmodule Phoenix.TemplateTest do
   @templates Path.expand("../fixtures/templates", __DIR__)
 
   test "engines/0" do
-    assert is_map Template.engines
+    assert is_map Template.engines()
   end
 
   test "template_path_to_name/2" do
@@ -60,17 +60,12 @@ defmodule Phoenix.TemplateTest do
     end
   end
 
-  test "render eex templates only trim html" do
-    assert {:safe, ["123", "456" | _]} = View.render("trim.html", %{})
-    assert "123\n456\n789\n" = View.render("no_trim.text", %{})
-  end
-
   test "render eex templates sanitizes against xss by default" do
     assert View.render("show.html", %{message: ""}) ==
-           {:safe, ["<div>Show! ", [], "</div>\n"]}
+           {:safe, ["<div>Show! ", [], "</div>\n", "\n"]}
 
     assert View.render("show.html", %{message: "<script>alert('xss');</script>"}) ==
-           {:safe, ["<div>Show! ", [[[[[[[] | "&lt;"], "script" | "&gt;"], "alert(" | "&#39;"], "xss" | "&#39;"], ");" | "&lt;"], "/script" | "&gt;"], "</div>\n"]}
+           {:safe, ["<div>Show! ", [[[[[[[] | "&lt;"], "script" | "&gt;"], "alert(" | "&#39;"], "xss" | "&#39;"], ");" | "&lt;"], "/script" | "&gt;"], "</div>\n", "\n"]}
   end
 
   test "render eex templates allows raw data to be injected" do
@@ -80,7 +75,7 @@ defmodule Phoenix.TemplateTest do
 
   test "compiles templates from path" do
     assert View.render("show.html", %{message: "hello!"}) ==
-           {:safe, ["<div>Show! ", "hello!", "</div>\n"]}
+           {:safe, ["<div>Show! ", "hello!", "</div>\n", "\n"]}
   end
 
   test "adds catch-all render_template/2 that raises UndefinedError" do
@@ -124,7 +119,7 @@ defmodule Phoenix.TemplateTest do
   end
 
   test "generates __phoenix_recompile__? function" do
-    refute View.__phoenix_recompile__?
+    refute View.__phoenix_recompile__?()
   end
 
   defmodule CustomEngineView do

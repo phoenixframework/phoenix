@@ -16,7 +16,7 @@ defmodule Phoenix.ViewTest do
 
   test "renders views defined on root" do
     assert render(MyApp.View, "show.html", message: "Hello world") ==
-           {:safe, ["<div>Show! ", "Hello world", "</div>\n"]}
+           {:safe, ["<div>Show! ", "Hello world", "</div>\n", "\n"]}
   end
 
   test "renders views without assigns" do
@@ -29,7 +29,7 @@ defmodule Phoenix.ViewTest do
     catch
       _, _ ->
         info = [file: 'test/fixtures/templates/show.html.eex', line: 1]
-        assert {MyApp.View, :"show.html", 1, info} in System.stacktrace()
+        assert {MyApp.View, :"show.html", 1, info} in __STACKTRACE__
     else
       _ ->
         flunk "expected rendering to raise"
@@ -38,7 +38,7 @@ defmodule Phoenix.ViewTest do
 
   test "renders subviews with helpers" do
     assert render(MyApp.UserView, "index.html", title: "Hello world") ==
-           {:safe, ["Hello world"]}
+           {:safe, ["Hello world", "\n"]}
 
     assert render(MyApp.UserView, "show.json", []) ==
            %{foo: "bar"}
@@ -60,7 +60,7 @@ defmodule Phoenix.ViewTest do
     )
 
     assert html ==
-           {:safe, ["<html>\n  <title>", "Test", "</title>\n", ["<div>Show! ", "Hello world", "</div>\n"], "</html>\n"]}
+           {:safe, ["<html>\n  <title>", "Test", "</title>\n  ", ["<div>Show! ", "Hello world", "</div>\n", "\n"], "\n</html>\n"]}
   end
 
   test "validates explicitly passed layout" do
@@ -73,25 +73,52 @@ defmodule Phoenix.ViewTest do
     end
   end
 
+  test "supports deprecated layout calling convention" do
+    assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
+      html = render(MyApp.UserView, "message.html",
+        title: "Test",
+        layout: {MyApp.LayoutView, "deprecated.html"}
+      )
+
+      assert html ==
+             {:safe, ["<html>\n  <title>", "Test", "</title>\n  ", "message sent", "\n</html>\n"]}
+
+      assert_received :message_sent
+      refute_received :message_sent
+    end) =~ "<%= @inner_content %>"
+  end
+
   test "converts assigns to maps and removes :layout" do
     html = render_to_iodata(MyApp.UserView, "edit.html",
       title: "Test",
       layout: {MyApp.LayoutView, "app.html"}
     )
 
-    assert html ==
-           ["<html>\n  <title>", "Test", "</title>\n", "EDIT - Test", "</html>\n"]
+    assert html == ["<html>\n  <title>", "Test", "</title>\n  ", "EDIT - Test", "\n</html>\n"]
   end
+
+  # render layout
+
+  test "renders layout directly" do
+    html =
+      render_layout(MyApp.LayoutView, "app.html", title: "Test") do
+        "Hello World"
+      end
+
+    assert html == {:safe, ["<html>\n  <title>", "Test", "</title>\n  ", "Hello World", "\n</html>\n"]}
+  end
+
+  # render_to_*
 
   test "renders views to iodata/string using encoders" do
     assert render_to_iodata(MyApp.UserView, "index.html", title: "Hello world") ==
-           ["Hello world"]
+           ["Hello world", "\n"]
 
     assert render_to_iodata(MyApp.UserView, "show.json", []) ==
            ["{\"", [[], "foo"], "\":", [34, [], "bar", 34], 125]
 
     assert render_to_string(MyApp.UserView, "index.html", title: "Hello world") ==
-           "Hello world"
+           "Hello world\n"
 
     assert render_to_string(MyApp.UserView, "show.json", []) ==
            "{\"foo\":\"bar\"}"
@@ -108,7 +135,7 @@ defmodule Phoenix.ViewTest do
     )
 
     assert html ==
-           ["<html>\n  <title>", "Test", "</title>\n", ["<div>Show! ", "Hello world", "</div>\n"], "</html>\n"]
+           ["<html>\n  <title>", "Test", "</title>\n  ", ["<div>Show! ", "Hello world", "</div>\n", "\n"], "\n</html>\n"]
 
     html = render_to_string(MyApp.View, "show.html",
       title: "Test",
@@ -117,7 +144,7 @@ defmodule Phoenix.ViewTest do
     )
 
     assert html ==
-           "<html>\n  <title>Test</title>\n<div>Show! Hello world</div>\n</html>\n"
+           "<html>\n  <title>Test</title>\n  <div>Show! Hello world</div>\n\n\n</html>\n"
 
     html = render_to_string(MyApp.UserView, "to_iodata.html",
       title: "Test",
@@ -127,7 +154,7 @@ defmodule Phoenix.ViewTest do
     )
 
     assert html ==
-           "<html>\n  <title>Test</title>\n123</html>\n"
+           "<html>\n  <title>Test</title>\n  123\n</html>\n"
   end
 
   ## render_many
@@ -172,9 +199,11 @@ defmodule Phoenix.ViewTest do
     assert render_one(user, MyApp.UserView, "data.text", as: :data) == "show data: name"
   end
 
+  # render_existing
+
   test "renders_existing/3 renders template if it exists" do
     assert render_existing(MyApp.UserView, "index.html", title: "Test") ==
-           {:safe, ["Test"]}
+           {:safe, ["Test", "\n"]}
   end
 
   test "renders_existing/3 returns nil if template does not exist" do
@@ -185,6 +214,8 @@ defmodule Phoenix.ViewTest do
     assert render_existing(MyApp.UserView, "existing.html", []) ==
       "rendered existing"
   end
+
+  # Misc.
 
   test "render_template can be called from overridden render/2" do
     assert render_to_string(MyApp.UserView, "render_template.html", name: "eric") ==

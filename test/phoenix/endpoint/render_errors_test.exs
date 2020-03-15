@@ -53,7 +53,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
         try do
           raise "oops"
         rescue
-          _ -> System.stacktrace()
+          _ -> __STACKTRACE__
         end
 
       reason = ArgumentError.exception("oops")
@@ -153,7 +153,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
           throw :hello
         catch
           kind, reason ->
-            stack = System.stacktrace()
+            stack = __STACKTRACE__
             opts = [view: __MODULE__, accepts: ~w(html)]
             Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, opts)
         else
@@ -179,7 +179,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
         func.()
       catch
         kind, reason ->
-          stack = System.stacktrace()
+          stack = __STACKTRACE__
           Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, opts)
       else
         _ -> flunk "function should have failed"
