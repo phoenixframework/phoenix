@@ -830,7 +830,8 @@ export class Socket {
   disconnect(callback, code, reason){
     this.closeWasClean = true
     this.reconnectTimer.reset()
-    this.teardown(callback, code, reason)
+
+    return this.teardown(callback, code, reason)
   }
 
   /**
@@ -939,12 +940,50 @@ export class Socket {
   }
 
   teardown(callback, code, reason){
-    if(this.conn){
-      this.conn.onclose = function(){} // noop
-      if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
-      this.conn = null
+    if (!this.conn) {
+      return callback && callback()
     }
-    callback && callback()
+
+    return new Promise(resolve => {
+      return new Promise(innerResolve => {
+        this.waitForBufferDone(() => {
+          if (this.conn) {
+            if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
+          }
+          innerResolve()
+        })
+      }).then(() => {
+        this.waitForSocketClosed(() => {
+          if (this.conn) {
+            this.conn.onclose = function(){} // noop
+            this.conn = null
+          }
+
+          callback && callback()
+          resolve()
+        })
+      })
+    })
+  }
+
+  waitForBufferDone(callback, tries = 1) {
+    if (tries === 5 || !this.conn || (this.conn.bufferedAmount && this.conn.bufferedAmount === 0)) {
+      callback()
+    }
+
+    setTimeout(() => {
+      this.waitForBufferDone(callback, tries + 1);
+    }, Math.ceil(Math.random() * 100) * tries)
+  }
+
+  waitForSocketClosed(callback, tries = 1) {
+    if (tries === 5 || !this.conn || this.conn.readyState === SOCKET_STATES.closed) {
+      callback();
+    }
+
+    setTimeout(() => {
+      this.waitForSocketClosed(callback, tries + 1);
+    }, Math.ceil(Math.random() * 100) * tries)
   }
 
   onConnClose(event){
