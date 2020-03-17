@@ -12,8 +12,8 @@ defmodule <%= app_module %>.MixProject do
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix<%= if gettext do %>, :gettext<% end %>] ++ Mix.compilers(),
-      start_permanent: Mix.env() == :prod,<%= if ecto do %>
-      aliases: aliases(),<% end %>
+      start_permanent: Mix.env() == :prod,
+      aliases: aliases(),
       deps: deps()
     ]
   end
@@ -52,19 +52,20 @@ defmodule <%= app_module %>.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"}
     ]
-  end<%= if ecto do %>
+  end
 
   # Aliases are shortcuts or tasks specific to the current project.
-  # For example, to create, migrate and run the seeds file at once:
+  # For example, to install project dependencies and perform other setup tasks, run:
   #
-  #     $ mix ecto.setup
+  #     $ mix setup
   #
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
+      setup: ["deps.get"<%= if ecto do %>, "ecto.setup"<% end %><%= if webpack do %>, "cmd npm install --prefix assets"<% end %>]<%= if ecto do %>,
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate", "test"]
+      test: ["ecto.create --quiet", "ecto.migrate", "test"]<% end %>
     ]
-  end<% end %>
+  end
 end
