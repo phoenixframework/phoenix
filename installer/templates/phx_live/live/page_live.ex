@@ -1,10 +1,6 @@
 defmodule <%= web_namespace %>.PageLive do
   use <%= web_namespace %>, :live_view
 
-  def render(assigns) do
-    <%= web_namespace %>.PageView.render("index.html", assigns)
-  end
-
   def mount(_params, _session, socket) do
     {:ok, assign(socket, query: "", results: %{})}
   end

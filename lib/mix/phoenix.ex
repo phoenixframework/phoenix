@@ -319,7 +319,11 @@ defmodule Mix.Phoenix do
   Prompts to continue if any files exist.
   """
   def prompt_for_conflicts(generator_files) do
-    file_paths = Enum.map(generator_files, fn {_, _, path} -> path end)
+    file_paths =
+      Enum.flat_map(generator_files, fn
+        {:new_eex, _, _path} -> []
+        {_kind, _, path} -> [path]
+      end)
 
     case Enum.filter(file_paths, &File.exists?(&1)) do
       [] -> :ok
