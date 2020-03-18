@@ -21,7 +21,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       |> <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, changeset: changeset)}
+    {:noreply, assign(socket, :changeset, changeset)}
   end
 
   def handle_event("save", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
