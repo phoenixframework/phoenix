@@ -5,7 +5,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect schema.module %>
 
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :page_title, "Listing <%= schema.human_plural %>")}
+    {:ok, socket}
   end
 
   def handle_params(params, _url, socket) do
@@ -14,18 +14,21 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   defp handle_action(:edit, %{"id" => id}, socket) do
     socket
+    |> assign(:page_title, "Edit <%= schema.human_singular %>")
     |> assign(:<%= schema.singular %>, <%= inspect context.alias %>.get_<%= schema.singular %>!(id))
     |> assign_new(:<%= schema.plural %>, &fetch_<%= schema.plural %>/0)
   end
 
   defp handle_action(:new, _params, socket) do
     socket
+    |> assign(:page_title, "New <%= schema.human_singular %>")
     |> assign(:<%= schema.singular %>, %<%= inspect schema.alias %>{})
     |> assign_new(:<%= schema.plural %>, &fetch_<%= schema.plural %>/0)
   end
 
   defp handle_action(:index, _params, socket) do
     socket
+    |> assign(:page_title, "Listing <%= schema.human_plural %>")
     |> assign(:<%= schema.singular %>, nil)
     |> assign(:<%= schema.plural %>, fetch_<%= schema.plural %>())
   end

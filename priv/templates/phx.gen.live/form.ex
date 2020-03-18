@@ -9,11 +9,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(changeset: changeset, title: title(assigns.action))}
+     |> assign(:changeset, changeset)}
   end
-
-  defp title(:new), do: "New <%= schema.human_singular %>"
-  defp title(:edit), do: "Edit <%= schema.human_singular %>"
 
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
     changeset =
