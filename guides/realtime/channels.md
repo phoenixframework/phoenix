@@ -176,7 +176,6 @@ Phoenix ships with a JavaScript client that is available when generating a new P
   - [JavaPhoenixClient](https://github.com/dsrees/JavaPhoenixClient)
 + C#
   - [PhoenixSharp](https://github.com/Mazyod/PhoenixSharp)
-  - [dn-phoenix](https://github.com/jfis/dn-phoenix)
 + Elixir
   - [phoenix_gen_socket_client](https://github.com/Aircloak/phoenix_gen_socket_client)
 + GDScript (Godot Game Engine)
