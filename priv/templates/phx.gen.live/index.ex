@@ -4,40 +4,40 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect context.module %>
   alias <%= inspect schema.module %>
 
-  def render(assigns) do
-    Phoenix.View.render(<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>View, "index.html", assigns)
-  end
-
   def mount(_params, _session, socket) do
-    {:ok,
-     socket
-     |> assign(page_title: gettext("Listing <%= schema.human_plural %>"))
-     |> assign(<%= schema.singular %>: nil)}
+    {:ok, assign(socket, :page_title, "Listing <%= schema.human_plural %>")}
   end
 
-  def handle_params(params, _, socket) do
-    <%= schema.singular %> =
-      case socket.assigns.live_view_action do
-        :edit -> <%= inspect context.alias %>.get_<%= schema.singular %>!(params["id"])
-        :new -> %<%= inspect schema.alias %>{}
-        :index -> nil
-      end
-
-    {:noreply, fetch(assign(socket, <%= schema.singular %>: <%= schema.singular %>))}
+  def handle_params(params, _url, socket) do
+    {:noreply, handle_action(socket.assigns.live_view_action, params, socket)}
   end
 
-  def handle_event("edit", %{"id" => id}, socket) do
-    {:noreply, assign(socket, <%= schema.singular %>_id: id)}
+  defp handle_action(:edit, %{"id" => id}, socket) do
+    socket
+    |> assign(:<%= schema.singular %>, <%= inspect context.alias %>.get_<%= schema.singular %>!(id))
+    |> assign_new(:<%= schema.plural %>, &fetch_<%= schema.plural %>/0)
+  end
+
+  defp handle_action(:new, _params, socket) do
+    socket
+    |> assign(:<%= schema.singular %>, %<%= inspect schema.alias %>{})
+    |> assign_new(:<%= schema.plural %>, &fetch_<%= schema.plural %>/0)
+  end
+
+  defp handle_action(:index, _params, socket) do
+    socket
+    |> assign(:<%= schema.singular %>, nil)
+    |> assign(:<%= schema.plural %>, fetch_<%= schema.plural %>())
   end
 
   def handle_event("delete", %{"id" => id}, socket) do
     <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
     {:ok, _} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
 
-    {:noreply, fetch(socket)}
+    {:noreply, assign(socket, :<%= schema.plural %>, fetch_<%=schema.plural %>())}
   end
 
-  defp fetch(socket) do
-    assign(socket, <%= schema.plural %>: <%= inspect context.alias %>.list_<%= schema.plural %>())
+  defp fetch_<%= schema.plural %> do
+    <%= inspect context.alias %>.list_<%= schema.plural %>()
   end
 end

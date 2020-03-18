@@ -5,7 +5,7 @@
     id: @<%= schema.singular %>.id || :new,
     action: @live_view_action,
     <%= schema.singular %>: @<%= schema.singular %>,
-    redirect_path: Routes.<%= schema.singular %>_index_path(@socket, :index) %>
+    return_to: Routes.<%= schema.singular %>_index_path(@socket, :index) %>
 <%% end %>
 
 <table>
@@ -19,7 +19,7 @@
   <tbody>
     <%%= for <%= schema.singular %> <- @<%= schema.plural %> do %>
       <tr>
-<%= for {k, _} <- schema.attrs do %>      <td><%%= <%= schema.singular %>.<%= k %> %></td>
+<%= for {k, _} <- schema.attrs do %>        <td><%%= <%= schema.singular %>.<%= k %> %></td>
 <% end %>
         <td>
           <span><%%= live_redirect "Show", to: Routes.<%= schema.singular %>_show_path(@socket, :show, <%= schema.singular %>) %></span>

@@ -93,19 +93,15 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ "create unique_index(:posts, [:slug])"
       end
 
-      assert_file "lib/phoenix_web/views/post_view.ex", fn file ->
-        assert file =~ "defmodule PhoenixWeb.PostView"
-      end
-
-      assert_file "lib/phoenix_web/templates/post/index.html.leex", fn file ->
+      assert_file "lib/phoenix_web/live/post_live/index.html.leex", fn file ->
         assert file =~ " Routes.post_index_path(@socket, :index)"
       end
 
-      assert_file "lib/phoenix_web/templates/post/show.html.leex", fn file ->
+      assert_file "lib/phoenix_web/live/post_live/show.html.leex", fn file ->
         assert file =~ " Routes.post_index_path(@socket, :index)"
       end
 
-      assert_file "lib/phoenix_web/templates/post/form.html.leex", fn file ->
+      assert_file "lib/phoenix_web/live/post_live/form.html.leex", fn file ->
         assert file =~ ~s(<%= text_input f, :title %>)
         assert file =~ ~s(<%= number_input f, :votes %>)
         assert file =~ ~s(<%= number_input f, :cost, step: "any" %>)
@@ -205,19 +201,15 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ "add :title, :string"
       end
 
-      assert_file "lib/phoenix_web/views/blog/post_view.ex", fn file ->
-        assert file =~ "defmodule PhoenixWeb.Blog.PostView"
-      end
-
-      assert_file "lib/phoenix_web/templates/blog/post/index.html.leex", fn file ->
+      assert_file "lib/phoenix_web/live/blog/post_live/index.html.leex", fn file ->
         assert file =~ " Routes.post_index_path(@socket, :index)"
       end
 
-      assert_file "lib/phoenix_web/templates/blog/post/show.html.leex", fn file ->
+      assert_file "lib/phoenix_web/live/blog/post_live/show.html.leex", fn file ->
         assert file =~ " Routes.post_index_path(@socket, :index)"
       end
 
-      assert_file "lib/phoenix_web/templates/blog/post/form.html.leex"
+      assert_file "lib/phoenix_web/live/blog/post_live/form.html.leex"
 
       assert_receive {:mix_shell, :info, ["""
 
@@ -249,15 +241,14 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "lib/phoenix_web/live/post_live/index.ex"
       assert_file "lib/phoenix_web/live/post_live/show.ex"
       assert_file "lib/phoenix_web/live/post_live/form.ex"
-      assert_file "lib/phoenix_web/views/post_view.ex"
 
       assert_file "lib/phoenix_web/live/modal.ex", fn file ->
         assert file =~ "defmodule PhoenixWeb.Modal"
       end
 
-      assert_file "lib/phoenix_web/templates/post/index.html.leex"
-      assert_file "lib/phoenix_web/templates/post/show.html.leex"
-      assert_file "lib/phoenix_web/templates/post/form.html.leex"
+      assert_file "lib/phoenix_web/live/post_live/index.html.leex"
+      assert_file "lib/phoenix_web/live/post_live/show.html.leex"
+      assert_file "lib/phoenix_web/live/post_live/form.html.leex"
       assert_file "test/phoenix_web/live/post_live_test.exs"
     end
   end
@@ -273,12 +264,11 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "lib/phoenix_web/live/post_live/index.ex"
       assert_file "lib/phoenix_web/live/post_live/show.ex"
       assert_file "lib/phoenix_web/live/post_live/form.ex"
-      assert_file "lib/phoenix_web/views/post_view.ex"
       assert_file "lib/phoenix_web/live/modal.ex"
 
-      assert_file "lib/phoenix_web/templates/post/index.html.leex"
-      assert_file "lib/phoenix_web/templates/post/show.html.leex"
-      assert_file "lib/phoenix_web/templates/post/form.html.leex"
+      assert_file "lib/phoenix_web/live/post_live/index.html.leex"
+      assert_file "lib/phoenix_web/live/post_live/show.html.leex"
+      assert_file "lib/phoenix_web/live/post_live/form.html.leex"
       assert_file "test/phoenix_web/live/post_live_test.exs"
     end
   end
@@ -309,14 +299,10 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
           assert file =~ "use PhoenixWeb, :live_component"
         end
 
-        assert_file "lib/phoenix_web/templates/user/form.html.leex"
+        assert_file "lib/phoenix_web/live/user_live/form.html.leex"
 
         assert_file "lib/phoenix_web/live/modal.ex", fn file ->
           assert file =~ "defmodule PhoenixWeb.Modal"
-        end
-
-        assert_file "lib/phoenix_web/views/user_view.ex", fn file ->
-          assert file =~ "defmodule PhoenixWeb.UserView"
         end
 
         assert_file "test/phoenix_web/live/user_live_test.exs", fn file ->
@@ -366,11 +352,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
           assert file =~ "defmodule Phoenix.Modal"
         end
 
-        assert_file "lib/phoenix/templates/user/form.html.leex"
-
-        assert_file "lib/phoenix/views/user_view.ex", fn file ->
-          assert file =~ "defmodule Phoenix.UserView"
-        end
+        assert_file "lib/phoenix/live/user_live/form.html.leex"
 
         assert_file "test/phoenix/live/user_live_test.exs", fn file ->
           assert file =~ "defmodule Phoenix.UserLiveTest"

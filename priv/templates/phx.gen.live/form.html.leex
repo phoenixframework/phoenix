@@ -1,3 +1,5 @@
+<h2><%%= @title %></h2>
+
 <%%= f = form_for @changeset, "#",
   id: "form-#{@id}",
   phx_target: "#form-#{@id}",
@@ -8,5 +10,5 @@
   <%= input %>
   <%= error %>
 <% end %>
-  <%%= submit "Save", phx_disable_with:  "Saving..." %>
+  <%%= submit "Save", phx_disable_with: "Saving..." %>
 </form>

@@ -3,23 +3,23 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   alias <%= inspect context.module %>
 
-  def render(assigns) do
-    Phoenix.View.render(<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>View, "form.html", assigns)
-  end
-
   def update(%{<%= schema.singular %>: <%= schema.singular %>} = assigns, socket) do
-    changeset = socket.assigns[:changeset] || <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)
+
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(changeset: changeset)}
+     |> assign(changeset: changeset, title: title(assigns.action))}
   end
+
+  defp title(:new), do: "New <%= schema.human_singular %>"
+  defp title(:edit), do: "Edit <%= schema.human_singular %>"
 
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
     changeset =
       socket.assigns.<%= schema.singular %>
       |> <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>_params)
-      |> Map.put(:action, :update)
+      |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, changeset: changeset)}
   end
@@ -33,8 +33,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, _<%= schema.singular %>} ->
         {:noreply,
          socket
-         |> put_flash(:info, "<%= schema.human_singular %> saved successfully")
-         |> push_redirect(to: socket.assigns.redirect_path)}
+         |> put_flash(:info, "<%= schema.human_singular %> updated successfully")
+         |> push_redirect(to: socket.assigns.return_to)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}
@@ -47,7 +47,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> created successfully")
-         |> push_redirect(to: socket.assigns.redirect_path)}
+         |> push_redirect(to: socket.assigns.return_to)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}

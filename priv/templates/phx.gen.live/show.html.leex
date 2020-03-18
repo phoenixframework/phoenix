@@ -5,7 +5,7 @@
     id: @<%= schema.singular %>.id,
     action: @live_view_action,
     <%= schema.singular %>: @<%= schema.singular %>,
-    redirect_path: Routes.<%= schema.singular %>_show_path(@socket, :show, @<%= schema.singular %>) %>
+    return_to: Routes.<%= schema.singular %>_show_path(@socket, :show, @<%= schema.singular %>) %>
 <%% end %>
 
 <ul>

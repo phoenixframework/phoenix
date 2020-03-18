@@ -3,16 +3,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   alias <%= inspect context.module %>
 
-  def render(assigns) do
-    Phoenix.View.render(<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>View, "show.html", assigns)
+  def mount(_params, _session, socket) do
+    {:ok, assign(socket, :page_title, "Showing <%= schema.human_singular %>")}
   end
 
-  def mount(%{"id" => id}, _session, socket) do
-    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
-    {:ok, assign(socket, page_title: gettext("Showing <%= schema.human_singular %>"), id: id, <%= schema.singular %>: <%= schema.singular %>)}
-  end
-
-  def handle_params(_params, _, socket) do
-    {:noreply, socket}
+  def handle_params(%{"id" => id}, _, socket) do
+    {:noreply, assign(socket, :<%= schema.singular %>, <%= inspect context.alias %>.get_<%= schema.singular %>!(id))}
   end
 end

@@ -14,6 +14,11 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   Therefore, if the context already exists, it will be augmented with
   functions for the given resource.
 
+  When this command is run for the first time, a `ModalComponent` and
+  `LiveHelpers` module will be created, along with the resource level
+  LiveViews and components, including an `IndexLive`, `ShowLive`, `FormComponent`
+  for the new resource.
+
   > Note: A resource may also be split
   > over distinct contexts (such as `Accounts.User` and `Payments.User`).
 
@@ -27,10 +32,11 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     * a context module in `lib/app/accounts.ex` for the accounts API
     * a schema in `lib/app/accounts/user.ex`, with an `users` table
     * a view in `lib/app_web/views/user_view.ex`
-    * a LiveView in `lib/app_web/live/user_live/show.ex`
-    * a LiveView in `lib/app_web/live/user_live/index.ex`
-    * a LiveComponent in `lib/app_web/live/user_live/form.ex`
-    * default CRUD templates in `lib/app_web/templates/user`
+    * a LiveView in `lib/app_web/live/user_live/show_live.ex`
+    * a LiveView in `lib/app_web/live/user_live/index_live.ex`
+    * a LiveComponent in `lib/app_web/live/user_live/form_component.ex`
+    * a LiveComponent in `lib/app_web/live/modal_component.ex`
+    * a helpers modules in `lib/app_web/live/live_helpers.ex`
 
   ## The context app
 
@@ -123,10 +129,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       {:eex, "show.ex",         Path.join([web_prefix, "live", web_path, live_subdir, "show.ex"])},
       {:eex, "index.ex",        Path.join([web_prefix, "live", web_path, live_subdir, "index.ex"])},
       {:eex, "form.ex",         Path.join([web_prefix, "live", web_path, live_subdir, "form.ex"])},
-      {:eex, "form.html.leex",  Path.join([web_prefix, "templates", web_path, schema.singular, "form.html.leex"])},
-      {:eex, "index.html.leex", Path.join([web_prefix, "templates", web_path, schema.singular, "index.html.leex"])},
-      {:eex, "show.html.leex",  Path.join([web_prefix, "templates", web_path, schema.singular, "show.html.leex"])},
-      {:eex, "view.ex",         Path.join([web_prefix, "views", web_path, "#{schema.singular}_view.ex"])},
+      {:eex, "form.html.leex",  Path.join([web_prefix, "live", web_path, live_subdir, "form.html.leex"])},
+      {:eex, "index.html.leex", Path.join([web_prefix, "live", web_path, live_subdir, "index.html.leex"])},
+      {:eex, "show.html.leex",  Path.join([web_prefix, "live", web_path, live_subdir, "show.html.leex"])},
       {:eex, "live_test.exs",   Path.join([test_prefix, "live", web_path, "#{schema.singular}_live_test.exs"])},
       {:new_eex, "modal.ex",        Path.join([web_prefix, "live", "modal.ex"])},
       {:new_eex, "live_helpers.ex", Path.join([web_prefix, "live", "live_helpers.ex"])},
@@ -185,21 +190,19 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
+    prefix = Module.concat(context.web_module, schema.web_namespace)
+    web_path = Mix.Phoenix.web_path(ctx_app)
+
     if schema.web_namespace do
       Mix.shell().info """
 
-      Add the live routes to your #{schema.web_namespace} :browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
+      Add the live routes to your #{schema.web_namespace} :browser scope in #{web_path}/router.ex:
 
-          scope "/#{schema.web_path}", #{inspect Module.concat(context.web_module, schema.web_namespace)}, as: :#{schema.web_path} do
+          scope "/#{schema.web_path}", #{inspect prefix}, as: :#{schema.web_path} do
             pipe_through :browser
             ...
 
-            live "/#{schema.plural}", #{inspect(schema.alias)}Live.Index, :index
-            live "/#{schema.plural}/new", #{inspect(schema.alias)}Live.Index, :new
-            live "/#{schema.plural}/:id/edit", #{inspect(schema.alias)}Live.Index, :edit
-
-            live "/#{schema.plural}/:id", #{inspect(schema.alias)}Live.Show, :show
-            live "/#{schema.plural}/:id/show/edit", #{inspect(schema.alias)}Live.Show, :edit
+      #{for line <- live_route_instructions(schema), do: "      #{line}"}
           end
       """
     else
@@ -207,14 +210,19 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
       Add the live routes to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          live "/#{schema.plural}", #{inspect(schema.alias)}Live.Index, :index
-          live "/#{schema.plural}/new", #{inspect(schema.alias)}Live.Index, :new
-          live "/#{schema.plural}/:id/edit", #{inspect(schema.alias)}Live.Index, :edit
-
-          live "/#{schema.plural}/:id", #{inspect(schema.alias)}Live.Show, :show
-          live "/#{schema.plural}/:id/show/edit", #{inspect(schema.alias)}Live.Show, :edit
+      #{for line <- live_route_instructions(schema), do: "    #{line}"}
       """
     end
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
+  end
+
+  defp live_route_instructions(schema) do
+    [
+      ~s|live "/#{schema.plural}", #{inspect(schema.alias)}Live.Index, :index\n|,
+      ~s|live "/#{schema.plural}/new", #{inspect(schema.alias)}Live.Index, :new\n|,
+      ~s|live "/#{schema.plural}/:id/edit", #{inspect(schema.alias)}Live.Index, :edit\n\n|,
+      ~s|live "/#{schema.plural}/:id", #{inspect(schema.alias)}Live.Show, :show\n|,
+      ~s|live "/#{schema.plural}/:id/show/edit", #{inspect(schema.alias)}Live.Show, :edit|
+    ]
   end
 end
