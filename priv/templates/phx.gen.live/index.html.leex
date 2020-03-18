@@ -1,10 +1,10 @@
 <h1>Listing <%= schema.human_plural %></h1>
 
-<%%= if @live_view_action in [:new, :edit] do %>
+<%%= if @live_action in [:new, :edit] do %>
   <%%= live_modal @socket, <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.Form,
     id: @<%= schema.singular %>.id || :new,
     title: @page_title,
-    action: @live_view_action,
+    action: @live_action,
     <%= schema.singular %>: @<%= schema.singular %>,
     return_to: Routes.<%= schema.singular %>_index_path(@socket, :index) %>
 <%% end %>

@@ -9,7 +9,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def handle_params(params, _url, socket) do
-    {:noreply, handle_action(socket.assigns.live_view_action, params, socket)}
+    {:noreply, handle_action(socket.assigns.live_action, params, socket)}
   end
 
   defp handle_action(:edit, %{"id" => id}, socket) do

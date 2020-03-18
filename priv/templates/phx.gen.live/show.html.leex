@@ -1,10 +1,10 @@
 <h1>Show <%= schema.human_singular %></h1>
 
-<%%= if @live_view_action in [:edit] do %>
+<%%= if @live_action in [:edit] do %>
   <%%= live_modal @socket, <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.Form,
     id: @<%= schema.singular %>.id,
     title: @page_title,
-    action: @live_view_action,
+    action: @live_action,
     <%= schema.singular %>: @<%= schema.singular %>,
     return_to: Routes.<%= schema.singular %>_show_path(@socket, :show, @<%= schema.singular %>) %>
 <%% end %>

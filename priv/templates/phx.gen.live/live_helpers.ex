@@ -11,7 +11,7 @@ defmodule <%= inspect context.web_module %>.LiveHelpers do
 
       <%%= live_modal @socket, <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.Form,
         id: @<%= schema.singular %>.id || :new,
-        action: @live_view_action,
+        action: @live_action,
         <%= schema.singular %>: @<%= schema.singular %>,
         return_to: Routes.<%= schema.singular %>_index_path(@socket, :index) %>
   """
