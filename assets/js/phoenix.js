@@ -1239,9 +1239,7 @@ export class Ajax {
       let req = new XDomainRequest() // IE8, IE9
       this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
     } else {
-      let req = global.XMLHttpRequest ?
-                  new global.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
-                  new ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
+      let req = new global.XMLHttpRequest(); // IE7+, Firefox, Chrome, Opera, Safari
       this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
     }
   }
