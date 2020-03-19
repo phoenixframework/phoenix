@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-live` - do not include Phoenix.LiveView
 
-    * `--no-dashboard` - do not include Phoenix.LiveDashbaord
+    * `--no-dashboard` - do not include Phoenix.LiveDashboard
 
     * `--binary-id` - use `binary_id` as primary key type
       in Ecto schemas
