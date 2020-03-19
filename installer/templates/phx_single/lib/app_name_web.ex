@@ -64,7 +64,8 @@ defmodule <%= web_namespace %> do
 
       import Plug.Conn
       import Phoenix.Controller<%= if live do %>
-      import Phoenix.LiveView.Router<% end %>
+      import Phoenix.LiveView.Router<% end %><%= if dashboard do %>
+      import Phoenix.LiveDashboard.Router<% end %>
     end
   end
 

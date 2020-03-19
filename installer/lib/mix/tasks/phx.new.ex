@@ -12,8 +12,11 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Options
 
-    * `--live` - include Phoenix LiveView to make it easier than ever
+    * `--live` - include Phoenix.LiveView to make it easier than ever
       to build interactive, real-time applications
+
+    * `--dashboard` - include Phoenix.LiveDashboard which provides
+      real-time performance monitoring and debugging tools for developers.
 
     * `--umbrella` - generate an umbrella project,
       with one application for your domain, and
@@ -42,6 +45,10 @@ defmodule Mix.Tasks.Phx.New do
     * `--no-html` - do not generate HTML views.
 
     * `--no-gettext` - do not generate gettext files.
+
+    * `--no-live` - do not include Phoenix.LiveView
+
+    * `--no-dashboard` - do not include Phoenix.LiveDashbaord
 
     * `--binary-id` - use `binary_id` as primary key type
       in Ecto schemas
@@ -99,7 +106,7 @@ defmodule Mix.Tasks.Phx.New do
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
              gettext: :boolean, umbrella: :boolean, verbose: :boolean,
-             live: :boolean]
+             live: :boolean, dashboard: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell().info("Phoenix v#{@version}")

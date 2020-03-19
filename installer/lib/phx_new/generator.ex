@@ -111,6 +111,7 @@ defmodule Phx.New.Generator do
     ecto         = Keyword.get(opts, :ecto, true)
     html         = Keyword.get(opts, :html, true)
     live         = Keyword.get(opts, :live, false)
+    dashboard    = Keyword.get(opts, :dashboard, true)
     gettext      = Keyword.get(opts, :gettext, true)
     webpack      = Keyword.get(opts, :webpack, true)
     dev          = Keyword.get(opts, :dev, false)
@@ -159,6 +160,7 @@ defmodule Phx.New.Generator do
       ecto: ecto,
       html: html,
       live: live,
+      dashboard: dashboard,
       gettext: gettext,
       adapter_app: adapter_app,
       adapter_module: adapter_module,
