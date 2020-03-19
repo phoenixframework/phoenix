@@ -37,6 +37,9 @@ Then load dependencies to compile code and assets:
 $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 
+# Install / update  JavaScript dependencies
+$ npm install --prefix ./assets
+
 # Compile assets
 $ npm run deploy --prefix ./assets
 $ mix phx.digest
