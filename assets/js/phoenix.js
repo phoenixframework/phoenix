@@ -606,7 +606,7 @@ export class Channel {
     let eventBindings = this.bindings.filter(bind => bind.event === event)
 
     for (let i = 0; i < eventBindings.length; i++) {
-      const bind = eventBindings[i]
+      let bind = eventBindings[i]
       bind.callback(handledPayload, ref, joinRef || this.joinRef())
     }
   }
