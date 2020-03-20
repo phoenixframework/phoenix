@@ -27,7 +27,7 @@ defmodule <%= web_namespace %>.Router do
   # it behind authentication and allow only admins to access it.
   # If your application does not have an admins-only section yet,
   # you can use Plug.BasicAuth to set up some basic authentication
-  # as long as you are also using SSL (which you should anyway)
+  # as long as you are also using SSL (which you should anyway).
   if Mix.env() == :dev do
     scope "/" do
       pipe_through :browser
