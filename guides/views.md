@@ -86,7 +86,7 @@ Then let's add a line with a link back to the same page. (The objective is to se
   <h1><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1>
   <p>A productive web framework that<br/>does not compromise speed or maintainability.</p>
   <p><a href="<%= Routes.page_path(@conn, :index) %>">Link back to this page</a></p>
-</div>
+</section>
 ```
 
 Now we can reload the page and view source to see what we have.
