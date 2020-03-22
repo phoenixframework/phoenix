@@ -19,7 +19,7 @@
     "growl": "~> 1.10.0",
     "jsdom": "9.8.3",
     "jsdom-global": "2.1.0",
-    "mocha": "^7.1.1",
+    "mocha": "^6.0.0",
     "mock-socket": "^9.0.0",
     "sinon": "^9.0.1",
     "webpack": "^4.42.0",
