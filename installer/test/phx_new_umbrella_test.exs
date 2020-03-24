@@ -461,6 +461,24 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
+  test "new with mssql adapter" do
+    in_tmp "new with mssql adapter", fn ->
+      app = "custom_path"
+      project_path = Path.join(File.cwd!(), app)
+      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mssql"])
+
+      assert_file app_path(app, "mix.exs"), ":tds"
+      assert_file app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.Tds"
+
+      assert_file root_path(app, "config/dev.exs"), [~r/username: "sa"/, ~r/password: "some!Password"/]
+      assert_file root_path(app, "config/test.exs"), [~r/username: "sa"/, ~r/password: "some!Password"/]
+      assert_file root_path(app, "config/prod.secret.exs"), [~r/url: database_url/]
+
+      assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
+      assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.checkout"
+    end
+  end
+
   test "new with invalid database adapter" do
     in_tmp "new with invalid database adapter", fn ->
       project_path = Path.join(File.cwd!(), "custom_path")

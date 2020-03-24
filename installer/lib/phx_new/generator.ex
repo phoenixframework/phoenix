@@ -218,6 +218,9 @@ defmodule Phx.New.Generator do
     |> Module.concat(PubSub)
   end
 
+  defp get_ecto_adapter("mssql", app, module) do
+    {:tds, Ecto.Adapters.Tds, db_config(app, module, "sa", "some!Password")}
+  end
   defp get_ecto_adapter("mysql", app, module) do
     {:myxql, Ecto.Adapters.MyXQL, db_config(app, module, "root", "")}
   end

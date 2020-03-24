@@ -25,8 +25,9 @@ defmodule Mix.Tasks.Phx.New.Ecto do
 
     * `--database` - specify the database adapter for Ecto. One of:
 
-        * `postgres` - https://github.com/elixir-ecto/postgrex
-        * `mysql` - https://github.com/elixir-ecto/myxql
+        * `postgres` - via https://github.com/elixir-ecto/postgrex
+        * `mysql` - via https://github.com/elixir-ecto/myxql
+        * `mssql` - via https://github.com/livehelpnow/tds
 
       Please check the driver docs for more information
       and requirements. Defaults to "postgres".

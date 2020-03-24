@@ -445,6 +445,23 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
+  test "new with mssql adapter" do
+    in_tmp "new with mssql adapter", fn ->
+      project_path = Path.join(File.cwd!(), "custom_path")
+      Mix.Tasks.Phx.New.run([project_path, "--database", "mssql"])
+
+      assert_file "custom_path/mix.exs", ":tds"
+      assert_file "custom_path/config/dev.exs", [~r/username: "sa"/, ~r/password: "some!Password"/]
+      assert_file "custom_path/config/test.exs", [~r/username: "sa"/, ~r/password: "some!Password"/]
+      assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
+      assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Tds"
+
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+    end
+  end
+
   test "new with invalid database adapter" do
     in_tmp "new with invalid database adapter", fn ->
       project_path = Path.join(File.cwd!(), "custom_path")
