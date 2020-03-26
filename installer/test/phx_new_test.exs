@@ -78,17 +78,13 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb.Router"
         assert file =~ "live_dashboard"
+        assert file =~ "import Phoenix.LiveDashboard.Router"
       end
 
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
         assert file =~ ~s|defmodule PhxBlogWeb.Endpoint|
         assert file =~ ~s|socket "/live"|
         assert file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
-        assert file =~ "defmodule PhxBlogWeb"
-        assert file =~ "import Phoenix.LiveDashboard.Router"
       end
 
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex",
@@ -304,9 +300,6 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->
         refute file =~ "live_dashboard"
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
         refute file =~ "import Phoenix.LiveDashboard.Router"
       end
     end

@@ -15,9 +15,6 @@ defmodule Mix.Tasks.Phx.New do
     * `--live` - include Phoenix.LiveView to make it easier than ever
       to build interactive, real-time applications
 
-    * `--dashboard` - include Phoenix.LiveDashboard which provides
-      real-time performance monitoring and debugging tools for developers.
-
     * `--umbrella` - generate an umbrella project,
       with one application for your domain, and
       a second application for the web interface.
@@ -45,8 +42,6 @@ defmodule Mix.Tasks.Phx.New do
     * `--no-html` - do not generate HTML views.
 
     * `--no-gettext` - do not generate gettext files.
-
-    * `--no-live` - do not include Phoenix.LiveView
 
     * `--no-dashboard` - do not include Phoenix.LiveDashboard
 
