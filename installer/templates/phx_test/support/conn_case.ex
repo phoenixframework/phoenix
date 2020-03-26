@@ -22,6 +22,8 @@ defmodule <%= web_namespace %>.ConnCase do
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
+      import <%= web_namespace %>.ConnCase
+
       alias <%= web_namespace %>.Router.Helpers, as: Routes
 
       # The default endpoint for testing
