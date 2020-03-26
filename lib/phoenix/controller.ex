@@ -1272,6 +1272,12 @@ defmodule Phoenix.Controller do
     end
   end
 
+  # If the accept header is empty, we treat it as */* and
+  # we use the first format specified in the accepts list.
+  defp parse_header_accept(conn, [], [], [first|_]) do
+    put_format(conn, first)
+  end
+
   defp parse_header_accept(conn, [], acc, accepted) do
     acc
     |> Enum.sort()

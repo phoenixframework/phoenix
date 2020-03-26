@@ -355,6 +355,16 @@ defmodule Phoenix.Controller.ControllerTest do
       assert conn.params["_format"] == nil
     end
 
+    test "treats empty accept header as any" do
+      conn = accepts with_accept(""), ~w(html)
+      assert get_format(conn) == "html"
+      assert conn.params["_format"] == nil
+
+      conn = accepts with_accept(" "), ~w(json)
+      assert get_format(conn) == "json"
+      assert conn.params["_format"] == nil
+    end
+
     test "ignores invalid media types" do
       conn = accepts with_accept("foo/bar, bar baz, application/json"), ~w(html json)
       assert get_format(conn) == "json"
