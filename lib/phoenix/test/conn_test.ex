@@ -247,6 +247,12 @@ defmodule Phoenix.ConnTest do
   defp from_set_to_sent(conn), do: conn
 
   @doc """
+  Inits a session used exclusively for testing.
+  """
+  @spec init_test_session(Conn.t, map | keyword) :: Conn.t
+  defdelegate init_test_session(conn, session), to: Plug.Test
+
+  @doc """
   Puts a request cookie.
   """
   @spec put_req_cookie(Conn.t, binary, binary) :: Conn.t

@@ -12,7 +12,7 @@ defmodule <%= endpoint_module %> do
 
   socket "/socket", <%= web_namespace %>.UserSocket,
     websocket: true,
-    longpoll: false<%= if live do %>
+    longpoll: false<%= if live || dashboard do %>
 
   socket "/live", Phoenix.LiveView.Socket,
     websocket: [connect_info: [session: @session_options]]<% end %>
@@ -34,7 +34,11 @@ defmodule <%= endpoint_module %> do
     plug Phoenix.LiveReloader<% end %>
     plug Phoenix.CodeReloader<%= if ecto do %>
     plug Phoenix.Ecto.CheckRepoStatus, otp_app: :<%= web_app_name %><% end %>
-  end
+  end<%= if dashboard do %>
+
+  plug Phoenix.LiveDashboard.RequestLogger,
+    param_key: "request_logger",
+    cookie_key: "request_logger"<% end %>
 
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
