@@ -341,6 +341,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
         assert file =~ ~s|<%= live_title_tag assigns[:page_title]|
+        assert file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
       end
 
       assert_file "phx_blog/lib/phx_blog_web/live/page_live.html.leex", fn file ->
@@ -377,6 +378,19 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s[live "/", PageLive]
         refute file =~ ~s[plug :fetch_flash]
         refute file =~ ~s[PageController]
+      end
+    end
+  end
+
+  test "new with live without dashboard" do
+    in_tmp "new with live without dashboard", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--live", "--no-dashboard"])
+
+      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard")
+
+      # No Dashboard
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
+        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
       end
     end
   end
