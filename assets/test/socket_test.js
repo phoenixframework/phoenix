@@ -11,10 +11,12 @@ let socket
 describe("with transports", done =>{
   before(() => {
     window.WebSocket = WebSocket
+    window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
   })
 
   after((done) => {
     window.WebSocket = null
+    window.XMLHttpRequest = null
     done()
   })
 
@@ -406,14 +408,6 @@ describe("with transports", done =>{
   describe("push", () => {
     const data = {topic: "topic", event: "event", payload: "payload", ref: "ref"}
     const json = encode(data)
-
-    before(() => {
-      window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
-    })
-
-    after(() => {
-      window.XMLHttpRequest = null
-    })
 
     beforeEach(() => {
       socket = new Socket("/socket")
