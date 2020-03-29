@@ -297,14 +297,6 @@ describe("with transports", done =>{
   })
 
   describe("connectionState", () => {
-    before(() => {
-      window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
-    })
-
-    after(() => {
-      window.XMLHttpRequest = null
-    })
-
     beforeEach(() => {
       socket = new Socket("/socket")
     })
@@ -465,14 +457,6 @@ describe("with transports", done =>{
   })
 
   describe("sendHeartbeat", () => {
-    before(() => {
-      window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
-    })
-
-    after(() => {
-      window.XMLHttpRequest = null
-    })
-
     beforeEach(() => {
       socket = new Socket("/socket")
       socket.connect()
@@ -511,14 +495,6 @@ describe("with transports", done =>{
   })
 
   describe("flushSendBuffer", () => {
-    before(() => {
-      window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
-    })
-
-    after(() => {
-      window.XMLHttpRequest = null
-    })
-
     beforeEach(() => {
       socket = new Socket("/socket")
       socket.connect()
