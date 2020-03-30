@@ -14,7 +14,7 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/register": "^7.0.0",
     "babel-loader": "^8.0.0",
-    "documentation": "^9.0.0-alpha.0",
+    "documentation": "^9.0.0",
     "expose-loader": "^0.7.5",
     "growl": "~> 1.10.0",
     "jsdom": "9.8.3",
