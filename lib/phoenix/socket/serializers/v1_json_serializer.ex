@@ -4,11 +4,13 @@ defmodule Phoenix.Socket.V1.JSONSerializer do
 
   alias Phoenix.Socket.{Broadcast, Message, Reply}
 
+  @impl true
   def fastlane!(%Broadcast{} = msg) do
     map = %Message{topic: msg.topic, event: msg.event, payload: msg.payload}
     {:socket_push, :text, encode_v1_fields_only(map)}
   end
 
+  @impl true
   def encode!(%Reply{} = reply) do
     map = %Message{
       topic: reply.topic,
@@ -24,6 +26,7 @@ defmodule Phoenix.Socket.V1.JSONSerializer do
     {:socket_push, :text, encode_v1_fields_only(map)}
   end
 
+  @impl true
   def decode!(message, _opts) do
     message
     |> Phoenix.json_library().decode!()
