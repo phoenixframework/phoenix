@@ -19,7 +19,7 @@ $ elixir -v
 
 If you are not familiar with Elixir releases yet, we recommend you to read [Elixir's excellent docs](https://hexdocs.pm/mix/Mix.Tasks.Release.html) before continuing.
 
-Once that is done, you can assemble a release by going through all of the steps in our general [deployment guide](deployment.html) with `mix release` at the end. Let's recap.
+Once that is done, you can assemble a release by going through all of the steps in our general [deployment guide](https://hexdocs.pm/phoenix/deployment.html) with `mix release` at the end. Let's recap.
 
 First set the environment variables:
 
