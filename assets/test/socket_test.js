@@ -11,10 +11,12 @@ let socket
 describe("with transports", done =>{
   before(() => {
     window.WebSocket = WebSocket
+    window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
   })
 
   after((done) => {
     window.WebSocket = null
+    window.XMLHttpRequest = null
     done()
   })
 
@@ -286,8 +288,8 @@ describe("with transports", done =>{
       socket.connect()
       const spy = sinon.spy(socket.conn, "close")
 
-      socket.disconnect(null, "code", "reason").then(() => {
-        assert(spy.calledWith("code", "reason"))
+      socket.disconnect(null, 1000, "reason").then(() => {
+        assert(spy.calledWith(1000, "reason"))
         done()
       })
     })
@@ -300,14 +302,6 @@ describe("with transports", done =>{
   })
 
   describe("connectionState", () => {
-    before(() => {
-      window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
-    })
-
-    after(() => {
-      window.XMLHttpRequest = null
-    })
-
     beforeEach(() => {
       socket = new Socket("/socket")
     })
@@ -412,14 +406,6 @@ describe("with transports", done =>{
     const data = {topic: "topic", event: "event", payload: "payload", ref: "ref"}
     const json = encode(data)
 
-    before(() => {
-      window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
-    })
-
-    after(() => {
-      window.XMLHttpRequest = null
-    })
-
     beforeEach(() => {
       socket = new Socket("/socket")
     })
@@ -476,14 +462,6 @@ describe("with transports", done =>{
   })
 
   describe("sendHeartbeat", () => {
-    before(() => {
-      window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
-    })
-
-    after(() => {
-      window.XMLHttpRequest = null
-    })
-
     beforeEach(() => {
       socket = new Socket("/socket")
       socket.connect()
@@ -492,7 +470,7 @@ describe("with transports", done =>{
     it("closes socket when heartbeat is not ack'd within heartbeat window", () => {
       let closed = false
       socket.conn.readyState = 1 // open
-      socket.conn.onclose = () => closed = true
+      socket.conn.close = () => closed = true
       socket.sendHeartbeat()
       assert.equal(closed, false)
 
@@ -522,14 +500,6 @@ describe("with transports", done =>{
   })
 
   describe("flushSendBuffer", () => {
-    before(() => {
-      window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
-    })
-
-    after(() => {
-      window.XMLHttpRequest = null
-    })
-
     beforeEach(() => {
       socket = new Socket("/socket")
       socket.connect()

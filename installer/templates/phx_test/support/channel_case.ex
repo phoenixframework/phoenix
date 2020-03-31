@@ -21,6 +21,7 @@ defmodule <%= web_namespace %>.ChannelCase do
     quote do
       # Import conveniences for testing with channels
       import Phoenix.ChannelTest
+      import <%= web_namespace %>.ChannelCase
 
       # The default endpoint for testing
       @endpoint <%= endpoint_module %>
