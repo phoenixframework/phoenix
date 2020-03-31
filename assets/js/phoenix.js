@@ -1059,7 +1059,8 @@ export class Socket {
     return this.ref.toString()
   }
 
-  sendHeartbeat(){ if(!this.isConnected()){ return }
+  sendHeartbeat(){
+    if(!this.isConnected()){ return }
     if(this.pendingHeartbeatRef){
       this.pendingHeartbeatRef = null
       if (this.hasLogger()) this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
