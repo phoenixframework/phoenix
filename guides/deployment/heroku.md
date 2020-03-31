@@ -228,11 +228,9 @@ Our project is now ready to be deployed on Heroku.
 Let's commit all our changes:
 
 ```console
-$ git add config/prod.exs
 $ git add elixir_buildpack.config
 $ git add phoenix_static_buildpack.config
-$ git add lib/hello_web/endpoint.ex
-$ git commit -m "Use production config from Heroku ENV variables and decrease socket timeout"
+$ git commit -a -m "Use production config from Heroku ENV variables and decrease socket timeout"
 ```
 
 And deploy:
