@@ -227,13 +227,14 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     Mix.raise """
     #{msg}
 
-    mix phx.gen.html, phx.gen.json and phx.gen.context expect a
-    context module name, followed by singular and plural names of
-    the generated resource, ending with any number of attributes.
+    mix phx.gen.html, phx.gen.json, phx.gen.live, and phx.gen.context
+    expect a context module name, followed by singular and plural names
+    of the generated resource, ending with any number of attributes.
     For example:
 
         mix phx.gen.html Accounts User users name:string
         mix phx.gen.json Accounts User users name:string
+        mix phx.gen.live Accounts User users name:string
         mix phx.gen.context Accounts User users name:string
 
     The context serves as the API boundary for the given resource.
