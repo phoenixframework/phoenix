@@ -945,24 +945,18 @@ export class Socket {
       return callback && callback()
     }
 
-    return new Promise(resolve => {
-      return new Promise(innerResolve => {
-        this.waitForBufferDone(() => {
-          if (this.conn) {
-            if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
-          }
-          innerResolve()
-        })
-      }).then(() => {
-        this.waitForSocketClosed(() => {
-          if (this.conn) {
-            this.conn.onclose = function(){} // noop
-            this.conn = null
-          }
+    this.waitForBufferDone(() => {
+      if (this.conn) {
+        if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
+      }
 
-          callback && callback()
-          resolve()
-        })
+      this.waitForSocketClosed(() => {
+        if (this.conn) {
+          this.conn.onclose = function(){} // noop
+          this.conn = null
+        }
+
+        callback && callback()
       })
     })
   }
@@ -970,6 +964,7 @@ export class Socket {
   waitForBufferDone(callback, tries = 1) {
     if (tries === 5 || !this.conn || (this.conn.bufferedAmount && this.conn.bufferedAmount === 0)) {
       callback()
+      return
     }
 
     setTimeout(() => {
@@ -980,6 +975,7 @@ export class Socket {
   waitForSocketClosed(callback, tries = 1) {
     if (tries === 5 || !this.conn || this.conn.readyState === SOCKET_STATES.closed) {
       callback();
+      return
     }
 
     setTimeout(() => {
