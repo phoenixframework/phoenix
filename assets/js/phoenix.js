@@ -968,7 +968,7 @@ export class Socket {
 
     setTimeout(() => {
       this.waitForBufferDone(callback, tries + 1)
-    }, 100 * tries)
+    }, 150 * tries)
   }
 
   waitForSocketClosed(callback, tries = 1) {
@@ -979,7 +979,7 @@ export class Socket {
 
     setTimeout(() => {
       this.waitForSocketClosed(callback, tries + 1)
-    }, 100 * tries)
+    }, 150 * tries)
   }
 
   onConnClose(event){
