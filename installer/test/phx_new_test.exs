@@ -487,7 +487,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "custom_path/mix.exs", ":tds"
       assert_file "custom_path/config/dev.exs", [~r/username: "sa"/, ~r/password: "some!Password"/]
-      assert_file "custom_path/config/test.exs", [~r/username: "sa"/, ~r/password: "some!Password"/]
+      assert_file "custom_path/config/test.exs", [~r/username: "sa"/, ~r/password: "some!Password"/, ~r/set_allow_snapshot_isolation: :on/]
       assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Tds"
 

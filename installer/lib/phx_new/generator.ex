@@ -221,7 +221,14 @@ defmodule Phx.New.Generator do
   end
 
   defp get_ecto_adapter("mssql", app, module) do
-    {:tds, Ecto.Adapters.Tds, db_config(app, module, "sa", "some!Password")}
+    config =
+      app
+      |> db_config(module, "sa", "some!Password")
+      |> Keyword.update!(:test, fn test_settings ->
+        test_settings ++ [set_allow_snapshot_isolation: :on]
+      end)
+
+    {:tds, Ecto.Adapters.Tds, config}
   end
   defp get_ecto_adapter("mysql", app, module) do
     {:myxql, Ecto.Adapters.MyXQL, db_config(app, module, "root", "")}
