@@ -115,7 +115,17 @@ Buildpack added. Next release on mysterious-meadow-6277 will use:
   2. https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
 ```
 
-This Phoenix Static buildpack pack can be configured to change the node version and the options for asset compilation. Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
+The Phoenix Static buildpack uses a predefined Node and NPM version but to avoid surprises when deploying, it is best to explicitly list the Node and NPM version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `phoenix_static_buildpack.config` in the root directory of your project with your target version of Node and NPM:
+
+```
+# Node version
+node_version=10.15.3
+
+# NPM version
+npm_version=6.14.2
+```
+
+Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
 
 The Phoenix Static buildpack also configures Heroku to use the proper command to start your application. The Elixir Buildpack runs by default `mix run --no-halt`, which will not start your Phoenix server. The Phoenix Static buildpack changes it to the proper `mix phx.server`. If you don't want to use the Phoenix Static buildpack, then you must manually define a `Procfile` at the root of your application with the proper command:
 
@@ -218,11 +228,9 @@ Our project is now ready to be deployed on Heroku.
 Let's commit all our changes:
 
 ```console
-$ git add config/prod.exs
 $ git add elixir_buildpack.config
 $ git add phoenix_static_buildpack.config
-$ git add lib/hello_web/endpoint.ex
-$ git commit -m "Use production config from Heroku ENV variables and decrease socket timeout"
+$ git commit -a -m "Use production config from Heroku ENV variables and decrease socket timeout"
 ```
 
 And deploy:

@@ -13,7 +13,8 @@
       <section class="container">
         <nav role="navigation">
           <ul>
-            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li><%= if live and dashboard do %>
+            <li><%%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li><% end %>
           </ul>
         </nav>
         <a href="https://phoenixframework.org/" class="phx-logo">
