@@ -37,7 +37,7 @@ defmodule <%= app_module %>.MixProject do
   defp deps do
     [
       {:phoenix_pubsub, "~> 2.0-dev", github: "phoenixframework/phoenix_pubsub"}<%= if ecto do %>,
-      {:ecto_sql, "~> 3.1"},
+      {:ecto_sql, "~> 3.4"},
       {:<%= adapter_app %>, ">= 0.0.0"},
       {:jason, "~> 1.0"}<% end %>
     ]

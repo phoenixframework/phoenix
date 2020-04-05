@@ -15,12 +15,13 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 ### Enhancements
 
   * [Channel] Do not block the channel supervisor on join
+  * [ConnTest] Add `init_test_session` to Phoenix.ConnTest
   * [Controller] Support `:disposition` option in `send_download/3`
   * [Endpoint] Allow named params to be used when defining socket paths
   * [Endpoint] Raise if `force_ssl` has changed from compile time to runtime
+  * [Generator] Add `mix phx.gen.live`
   * [PubSub] Migrate to PubSub 2.0 with a more flexible fastlaning mechanism
-
-### Bug Fixes
+  * [View] Add `render_layout` which makes it easy to work with nested layouts
 
 ### Deprecations
 
@@ -32,12 +33,16 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 
 ### phx.new installer
 
+  * Built-in support for MSSQL databases via the `tds` adapter
   * `Phoenix.PubSub` is now started directly in your application supervision tree
   * `Phoenix.Ecto.CheckRepoStatus` is now added to new applications that use Ecto
   * Automatically use `System.get_env("MIX_TEST_PARTITION")` in the database name in the test environemnt for built-in CI test partitioning
+  * Generate a `MyApp.Telemetry` module with examples of Telemetry Metrics you may want to track in your app
+  * Support the `--live` flag for generating apps with out-of-the-box LiveView support
 
 ### JavaScript client
 
+  * Ensure all channel event listeners are called
 
 ## v1.4
 

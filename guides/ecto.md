@@ -8,6 +8,7 @@ Phoenix uses Ecto to provide builtin support to the following databases:
 
 * PostgreSQL (via [`postgrex`](https://github.com/elixir-ecto/postgrex))
 * MySQL (via [`myxql`](https://github.com/elixir-ecto/myxql))
+* MSSQL (via [`tds`](https://github.com/livehelpnow/tds))
 
 Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default. You can pass the `--database` option to change or `--no-ecto` flag to exclude this.
 
@@ -447,8 +448,8 @@ If we are about to create a new application, configuring our application to use 
 
 ```console
 $ mix phx.new hello_phoenix --database mysql
-
 ```
+
 This will set up all the correct dependencies and configuration for us automatically. Once we install those dependencies with `mix deps.get`, we'll be ready to begin working with Ecto in our application.
 
 If we have an existing application, all we need to do is switch adapters and make some small configuration changes.
@@ -469,7 +470,7 @@ defmodule HelloPhoenix.MixProject do
     [
       {:phoenix, "~> 1.4.0"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.1"},
+      {:ecto_sql, "~> 3.4"},
       {:myxql, ">= 0.0.0"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
@@ -489,7 +490,7 @@ password: "",
 database: "hello_phoenix_dev"
 ```
 
-If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. We also need to configure the correct values in the `config/test.exs` and `config/prod.secret.exs` files as well.
+If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. You also need to configure the correct values in the `config/test.exs` and `config/prod.secret.exs` files as well.
 
 The last change is to open up `lib/hello_phoenix/repo.ex` and make sure to set the `:adapter` to `Ecto.Adapters.MyXQL`.
 
