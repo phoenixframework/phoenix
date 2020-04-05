@@ -54,12 +54,13 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/mix.exs", fn file ->
         assert file =~ "mod: {PhxBlog.Application, []}"
         assert file =~ "{:jason, \"~> 1.0\"}"
+        assert file =~ "{:phoenix_live_dashboard,"
       end
+
       assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb do"
         assert file =~ "use Phoenix.View,\n        root: \"lib/phx_blog_web/templates\""
       end
-      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r/defmodule PhxBlogWeb.Endpoint do/
 
       assert_file "phx_blog/test/phx_blog_web/controllers/page_controller_test.exs"
       assert_file "phx_blog/test/phx_blog_web/views/page_view_test.exs"
@@ -74,8 +75,18 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web/views/page_view.ex",
                   ~r/defmodule PhxBlogWeb.PageView/
 
-      assert_file "phx_blog/lib/phx_blog_web/router.ex", "defmodule PhxBlogWeb.Router"
-      assert_file "phx_blog/lib/phx_blog_web.ex", "defmodule PhxBlogWeb"
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->
+        assert file =~ "defmodule PhxBlogWeb.Router"
+        assert file =~ "live_dashboard"
+        assert file =~ "import Phoenix.LiveDashboard.Router"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
+        assert file =~ ~s|defmodule PhxBlogWeb.Endpoint|
+        assert file =~ ~s|socket "/live"|
+        assert file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
+      end
+
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex",
                   "<title>PhxBlog · Phoenix Framework</title>"
       assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.eex", fn file ->
@@ -149,7 +160,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
         refute file =~ "Phoenix.LiveView"
       end
-      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", &refute(&1 =~ ~s[Phoenix.LiveView])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :fetch_live_flash])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :put_root_layout])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[HomeLive])
@@ -199,7 +209,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto", "--no-gettext"])
+      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto", "--no-gettext", "--no-dashboard"])
 
       # No webpack
       refute File.read!("phx_blog/.gitignore") |> String.contains?("/assets/node_modules/")
@@ -281,6 +291,17 @@ defmodule Mix.Tasks.Phx.NewTest do
                   &refute(&1 =~ ~r"Phoenix.LiveReloader.Socket")
       assert_file "phx_blog/lib/phx_blog_web/views/error_view.ex", ~r".json"
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~r"pipeline :browser")
+
+      # No Dashboard
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
+        refute file =~ ~s|socket "/live"|
+        refute file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->
+        refute file =~ "live_dashboard"
+        refute file =~ "import Phoenix.LiveDashboard.Router"
+      end
     end
   end
 
@@ -320,6 +341,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
         assert file =~ ~s|<%= live_title_tag assigns[:page_title]|
+        assert file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
       end
 
       assert_file "phx_blog/lib/phx_blog_web/live/page_live.html.leex", fn file ->
@@ -356,6 +378,19 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s[live "/", PageLive]
         refute file =~ ~s[plug :fetch_flash]
         refute file =~ ~s[PageController]
+      end
+    end
+  end
+
+  test "new with live without dashboard" do
+    in_tmp "new with live without dashboard", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--live", "--no-dashboard"])
+
+      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard")
+
+      # No Dashboard
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
+        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
       end
     end
   end
@@ -438,6 +473,23 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/test.exs", [~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.MyXQL"
+
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+    end
+  end
+
+  test "new with mssql adapter" do
+    in_tmp "new with mssql adapter", fn ->
+      project_path = Path.join(File.cwd!(), "custom_path")
+      Mix.Tasks.Phx.New.run([project_path, "--database", "mssql"])
+
+      assert_file "custom_path/mix.exs", ":tds"
+      assert_file "custom_path/config/dev.exs", [~r/username: "sa"/, ~r/password: "some!Password"/]
+      assert_file "custom_path/config/test.exs", [~r/username: "sa"/, ~r/password: "some!Password"/]
+      assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
+      assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Tds"
 
       assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
       assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"

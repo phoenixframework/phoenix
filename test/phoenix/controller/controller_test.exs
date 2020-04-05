@@ -579,7 +579,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
   test "protect_from_forgery/2 sets token" do
     conn(:get, "/")
-    |> with_session
+    |> init_test_session(%{})
     |> protect_from_forgery([])
 
     assert is_binary get_csrf_token()
