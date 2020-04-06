@@ -51,7 +51,7 @@ defmodule Phx.New.Web do
 
   template :live, [
     {:eex, "phx_live/templates/layout/root.html.leex", :web, "lib/:web_app/templates/layout/root.html.leex"},
-    {:eex, "phx_live/templates/layout/app.html.leex",  :web, "lib/:web_app/templates/layout/app.html.leex"},
+    {:eex, "phx_live/templates/layout/app.html.leex",  :web, "lib/:web_app/templates/layout/app.html.eex"},
     {:eex, "phx_live/templates/layout/live.html.leex", :web, "lib/:web_app/templates/layout/live.html.leex"},
     {:eex, "phx_web/views/layout_view.ex",             :web, "lib/:web_app/views/layout_view.ex"},
     {:eex, "phx_live/live/page_live.ex",               :web, "lib/:web_app/live/page_live.ex"},
