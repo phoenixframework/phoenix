@@ -12,14 +12,14 @@ defmodule Phoenix.Logger do
       * Measurement: `%{time: System.monotonic_time}`
       * Metadata: `%{conn: Plug.Conn.t, options: Keyword.t}`
       * Options: `%{log: Logger.level | false}`
-      * Disable logging: In your endpoint `plug Plug.Telemetry, ..., options: [log: false]`
+      * Disable logging: In your endpoint `plug Plug.Telemetry, ..., log: Logger.level | false`
 
     * `[:phoenix, :endpoint, :stop]` - dispatched by `Plug.Telemetry` in your
       endpoint whenever the response is sent
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{conn: Plug.Conn.t, options: Keyword.t}`
       * Options: `%{log: Logger.level | false}`
-      * Disable logging: In your endpoint `plug Plug.Telemetry, ..., options: [log: false]`
+      * Disable logging: In your endpoint `plug Plug.Telemetry, ..., log: Logger.level | false`
 
     * `[:phoenix, :router_dispatch, :start]` - dispatched by `Phoenix.Router`
       before dispatching to a matched route
@@ -168,22 +168,30 @@ defmodule Phoenix.Logger do
   ## Event: [:phoenix, :endpoint, *]
 
   defp phoenix_endpoint_start(_, _, %{conn: conn} = metadata, _) do
-    level = metadata[:options][:log] || :info
+    case metadata[:options][:log] do
+      false ->
+        :ok
 
-    Logger.log(level, fn ->
-      %{method: method, request_path: request_path} = conn
-      [method, ?\s, request_path]
-    end)
+      level ->
+        Logger.log(level || :info, fn ->
+          %{method: method, request_path: request_path} = conn
+          [method, ?\s, request_path]
+        end)
+    end
   end
 
   defp phoenix_endpoint_stop(_, %{duration: duration}, %{conn: conn} = metadata, _) do
-    level = metadata[:options][:log] || :info
+    case metadata[:options][:log] do
+      false ->
+        :ok
 
-    Logger.log(level, fn ->
-      %{status: status, state: state} = conn
-      status = Integer.to_string(status)
-      [connection_type(state), ?\s, status, " in ", duration(duration)]
-    end)
+      level ->
+        Logger.log(level || :info, fn ->
+          %{status: status, state: state} = conn
+          status = Integer.to_string(status)
+          [connection_type(state), ?\s, status, " in ", duration(duration)]
+        end)
+    end
   end
 
   defp connection_type(:set_chunked), do: "Chunked"
