@@ -5,32 +5,29 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect schema.module %>
 
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, :<%= schema.plural %>, fetch_<%= schema.plural %>())}
   end
 
   def handle_params(params, _url, socket) do
-    {:noreply, handle_action(socket.assigns.live_action, params, socket)}
+    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  defp handle_action(:edit, %{"id" => id}, socket) do
+  defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit <%= schema.human_singular %>")
     |> assign(:<%= schema.singular %>, <%= inspect context.alias %>.get_<%= schema.singular %>!(id))
-    |> assign_new(:<%= schema.plural %>, &fetch_<%= schema.plural %>/0)
   end
 
-  defp handle_action(:new, _params, socket) do
+  defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New <%= schema.human_singular %>")
     |> assign(:<%= schema.singular %>, %<%= inspect schema.alias %>{})
-    |> assign_new(:<%= schema.plural %>, &fetch_<%= schema.plural %>/0)
   end
 
-  defp handle_action(:index, _params, socket) do
+  defp apply_action(socket, :index, _params) do
     socket
     |> assign(:page_title, "Listing <%= schema.human_plural %>")
     |> assign(:<%= schema.singular %>, nil)
-    |> assign(:<%= schema.plural %>, fetch_<%= schema.plural %>())
   end
 
   def handle_event("delete", %{"id" => id}, socket) do
