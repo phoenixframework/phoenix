@@ -370,10 +370,9 @@ defmodule Phoenix.Socket do
   defp tear_alias(other), do: other
 
   @doc false
+  @deprecated "transport/3 in Phoenix.Socket is deprecated and has no effect"
   defmacro transport(_name, _module, _config \\ []) do
-    quote do
-      IO.warn "transport/3 in Phoenix.Socket is deprecated and has no effect"
-    end
+    :ok
   end
 
   defmacro __before_compile__(env) do
