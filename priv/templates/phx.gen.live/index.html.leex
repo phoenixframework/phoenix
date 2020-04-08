@@ -19,7 +19,7 @@
   </thead>
   <tbody id="<%= schema.plural %>">
     <%%= for <%= schema.singular %> <- @<%= schema.plural %> do %>
-      <tr id="<%= schema.singular %>-<%%= post.id %>">
+      <tr id="<%= schema.singular %>-<%%= <%= schema.singular %>.id %>">
 <%= for {k, _} <- schema.attrs do %>        <td><%%= <%= schema.singular %>.<%= k %> %></td>
 <% end %>
         <td>
