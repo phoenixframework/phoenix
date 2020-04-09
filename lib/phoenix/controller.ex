@@ -1402,7 +1402,7 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Returns a message from flash by `key`.
+  Returns a message from flash by `key` (or `nil` if no message is available for `key`).
 
   ## Examples
 
