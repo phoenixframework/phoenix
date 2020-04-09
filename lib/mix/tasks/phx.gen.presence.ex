@@ -2,17 +2,16 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
   @shortdoc "Generates a Presence tracker"
 
   @moduledoc """
-  Generates a Presence tracker for your application.
+  Generates a Presence tracker.
 
       mix phx.gen.presence
-
       mix phx.gen.presence MyPresence
 
-  The only argument is the module name of the Presence tracker,
-  which defaults to Presence.
+  The argument, which defaults to `Presence`, defines the module name of the
+  Presence tracker.
 
-  A new file will be generated in `lib/my_app_web/channels/presence.ex`,
-  where `my_app_web` is the snake cased version of the module name provided.
+  Generates a new file, `lib/my_app_web/channels/my_presence.ex`, where
+  `my_presence` is the snake-cased version of the provided module name.
   """
   use Mix.Task
 

@@ -115,14 +115,11 @@ Buildpack added. Next release on mysterious-meadow-6277 will use:
   2. https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
 ```
 
-The Phoenix Static buildpack uses a predefined Node and NPM version but to avoid surprises when deploying, it is best to explicitly list the Node and NPM version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `phoenix_static_buildpack.config` in the root directory of your project with your target version of Node and NPM:
+The Phoenix Static buildpack uses a predefined Node version but to avoid surprises when deploying, it is best to explicitly list the Node version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `phoenix_static_buildpack.config` in the root directory of your project with your target version of Node:
 
 ```
 # Node version
-node_version=10.15.3
-
-# NPM version
-npm_version=6.14.2
+node_version=10.19.0
 ```
 
 Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).

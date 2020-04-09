@@ -29,6 +29,8 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * [ConnTest] `use Phoenix.ConnTest` is deprecated in favor of `import Plug.Conn; import Phoenix.ConnTest`
   * [Endpoint] The outdated `Phoenix.Endpoint.CowboyAdapter` for Cowboy 1 is deprecated. Please make sure `{:plug_cowboy, "~> 2.1"}` or later is listed in your `mix.exs`
   * [Endpoint] `subscribe` and `unsubscribe` via the endpoint is deprecated, please use `Phoenix.PubSub` directly instead
+  * [Endpoint] `Phoenix.Endpoint.instrument/4` is deprecated and has no effect. Use `:telemetry` instead. See `Phoenix.Logger` for more information
+  * [Endpoint] The `:pubsub` key for endpoint is deprecated. Once you start your app, you will see step-by-step instructions on how to use the new PubSub config
   * [Layout] Use `<%= @inner_content %>` instead of `<%= render @view_module, @view_template, assigns %>` for rendering the child layout
 
 ### phx.new installer

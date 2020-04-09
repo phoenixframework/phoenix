@@ -34,7 +34,7 @@ defmodule Phoenix.MixProject do
       docs: docs(),
       aliases: aliases(),
       source_url: "https://github.com/phoenixframework/phoenix",
-      homepage_url: "http://www.phoenixframework.org",
+      homepage_url: "https://www.phoenixframework.org",
       description: """
       Productive. Reliable. Fast. A productive web framework that
       does not compromise speed or maintainability.

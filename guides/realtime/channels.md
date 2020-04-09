@@ -38,7 +38,7 @@ Currently, that's either Websockets or long polling, but other transports may be
 
 Unlike stateless HTTP connections, Channels support long-lived connections, each backed by a lightweight BEAM process, working in parallel and maintaining its own state.
 
-This architecture scales well; Phoenix Channels [can support millions of subscribers with reasonable latency on a single box](http://phoenixframework.org/blog/the-road-to-2-million-websocket-connections), passing hundreds of thousands of messages per second.
+This architecture scales well; Phoenix Channels [can support millions of subscribers with reasonable latency on a single box](https://phoenixframework.org/blog/the-road-to-2-million-websocket-connections), passing hundreds of thousands of messages per second.
 And that capacity can be multiplied by adding more nodes to the cluster.
 
 ## The Moving Parts

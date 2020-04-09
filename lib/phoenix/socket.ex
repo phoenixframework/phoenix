@@ -13,12 +13,12 @@ defmodule Phoenix.Socket do
   By default, Phoenix supports both websockets and longpoll when invoking
   `Phoenix.Endpoint.socket/3` in your endpoint:
 
-      socket "/socket", MyApp.Socket, websocket: true, longpoll: false
+      socket "/socket", MyAppWeb.Socket, websocket: true, longpoll: false
 
   The command above means incoming socket connections can be made via
   a WebSocket connection. Events are routed by topic to channels:
 
-      channel "room:lobby", MyApp.LobbyChannel
+      channel "room:lobby", MyAppWeb.LobbyChannel
 
   See `Phoenix.Channel` for more information on channels.
 
@@ -36,10 +36,10 @@ defmodule Phoenix.Socket do
 
   ## Examples
 
-      defmodule MyApp.UserSocket do
+      defmodule MyAppWeb.UserSocket do
         use Phoenix.Socket
 
-        channel "room:*", MyApp.RoomChannel
+        channel "room:*", MyAppWeb.RoomChannel
 
         def connect(params, socket, _connect_info) do
           {:ok, assign(socket, :user_id, params["user_id"])}
@@ -49,7 +49,7 @@ defmodule Phoenix.Socket do
       end
 
       # Disconnect all user's socket connections and their multiplexed channels
-      MyApp.Endpoint.broadcast("users_socket:" <> user.id, "disconnect", %{})
+      MyAppWeb.Endpoint.broadcast("users_socket:" <> user.id, "disconnect", %{})
 
   ## Socket fields
 
@@ -57,8 +57,8 @@ defmodule Phoenix.Socket do
     * `:assigns` - The map of socket assigns, default: `%{}`
     * `:channel` - The current channel module
     * `:channel_pid` - The channel pid
-    * `:endpoint` - The endpoint module where this socket originated, for example: `MyApp.Endpoint`
-    * `:handler` - The socket module where this socket originated, for example: `MyApp.UserSocket`
+    * `:endpoint` - The endpoint module where this socket originated, for example: `MyAppWeb.Endpoint`
+    * `:handler` - The socket module where this socket originated, for example: `MyAppWeb.UserSocket`
     * `:joined` - If the socket has effectively joined the channel
     * `:join_ref` - The ref sent by the client when joining
     * `:ref` - The latest ref sent by the client
@@ -216,7 +216,7 @@ defmodule Phoenix.Socket do
   Would allow you to broadcast a `"disconnect"` event and terminate
   all active sockets and channels for a given user:
 
-      MyApp.Endpoint.broadcast("users_socket:" <> user.id, "disconnect", %{})
+      MyAppWeb.Endpoint.broadcast("users_socket:" <> user.id, "disconnect", %{})
 
   Returning `nil` makes this socket anonymous.
   """
@@ -328,7 +328,7 @@ defmodule Phoenix.Socket do
 
     * `topic_pattern` - The string pattern, for example `"room:*"`, `"users:*"`,
       or `"system"`
-    * `module` - The channel module handler, for example `MyApp.RoomChannel`
+    * `module` - The channel module handler, for example `MyAppWeb.RoomChannel`
     * `opts` - The optional list of options, see below
 
   ## Options
@@ -370,10 +370,9 @@ defmodule Phoenix.Socket do
   defp tear_alias(other), do: other
 
   @doc false
+  @deprecated "transport/3 in Phoenix.Socket is deprecated and has no effect"
   defmacro transport(_name, _module, _config \\ []) do
-    quote do
-      IO.warn "transport/3 in Phoenix.Socket is deprecated and has no effect"
-    end
+    :ok
   end
 
   defmacro __before_compile__(env) do

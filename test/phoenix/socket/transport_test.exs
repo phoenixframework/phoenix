@@ -8,13 +8,35 @@ defmodule Phoenix.Socket.TransportTest do
 
   alias Phoenix.Socket.Transport
 
+  @secret_key_base String.duplicate("abcdefgh", 8)
+
   Application.put_env :phoenix, __MODULE__.Endpoint,
     force_ssl: [],
     url: [host: {:system, "TRANSPORT_TEST_HOST"}],
-    check_origin: ["//endpoint.com"]
+    check_origin: ["//endpoint.com"],
+    secret_key_base: @secret_key_base
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
+
+    @session_config [
+      store: :cookie,
+      key: "_hello_key",
+      signing_salt: "change_me"
+    ]
+
+    def session_config, do: @session_config
+
+    plug Plug.Session, @session_config
+    plug :fetch_session
+    plug Plug.CSRFProtection
+    plug :put_session
+
+    defp put_session(conn, _) do
+      conn
+      |> put_session(:from_session, "123")
+      |> send_resp(200, Plug.CSRFProtection.get_csrf_token())
+    end
   end
 
   setup_all do
@@ -238,73 +260,24 @@ defmodule Phoenix.Socket.TransportTest do
     end
   end
 
-  describe "load_config/2" do
-    defmodule DummyTransport do
-      def default_config() do
-        [
-          window_ms: 10_000,
-          path: "/longpoll",
-          pubsub_timeout_ms: 2_000,
-          serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
-          transport_log: false,
-          crypto: [max_age: 1_209_600]
-        ]
-      end
-
-      def get_correct_session_config() do
-        send(self(), :get_correct_session_config)
-        [
-          store: :cookie,
-          encryption_salt: "encryption_salt",
-          key: "_session_key",
-          signing_salt: "signing_salt",
-        ]
-      end
-
-      def get_incorrect_session_config() do
-        %{}
-      end
+  describe "connect_info/3" do
+    defp load_connect_info(connect_info) do
+      [connect_info: connect_info] = Transport.load_config(connect_info: connect_info)
+      connect_info
     end
 
-    test "return default_config from Transport module provided when true is given as config argument" do
-      assert DummyTransport.default_config() == Transport.load_config(true, DummyTransport)
-    end
+    test "loads the session from MFA" do
+      conn = conn(:get, "https://foo.com/") |> Endpoint.call([])
+      csrf_token = conn.resp_body
+      session_cookie = conn.cookies["_hello_key"]
 
-    test "config passed will orverride default config from Transport module provided" do
-      window_ms = 5_000
-      config = Transport.load_config([window_ms: window_ms], DummyTransport)
-      assert Keyword.get(config, :window_ms) == window_ms
-    end
+      connect_info = load_connect_info(session: {Endpoint, :session_config, []})
 
-    test "support MFA session config" do
-      config = Transport.load_config([
-          connect_info: [
-            session: {DummyTransport, :get_correct_session_config, []}
-          ]
-        ], DummyTransport)
-
-      %{
-        encryption_salt: encryption_salt,
-        key: session_key,
-        signing_salt: signing_salt,
-      } = DummyTransport.get_correct_session_config() |> Enum.into(%{})
-
-      assert {^session_key, Plug.Session.COOKIE, %{
-        encryption_salt: ^encryption_salt,
-        signing_salt: ^signing_salt,
-      }} = get_in(config, [:connect_info, :session])
-
-      assert_received :get_correct_session_config
-    end
-
-    test "raise exception if MFA is given as session config but it returns anything other than list" do
-      assert_raise ArgumentError, fn ->
-        Transport.load_config([
-          connect_info: [
-            session: {DummyTransport, :get_incorrect_session_config, []}
-          ]
-        ], DummyTransport)
-      end
+      assert %{session: %{"from_session" => "123"}} =
+               conn(:get, "https://foo.com/", _csrf_token: csrf_token)
+               |> put_req_cookie("_hello_key", session_cookie)
+               |> fetch_query_params()
+               |> Transport.connect_info(Endpoint, connect_info)
     end
   end
 end

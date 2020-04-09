@@ -757,19 +757,7 @@ defmodule Phoenix.Controller do
     render(conn, view, template, [])
   end
 
-  @doc """
-  WARNING: This function is deprecated in favor of `render/3` + `put_view/2`.
-
-  A shortcut that renders the given template in the given view.
-
-  Equivalent to:
-
-      conn
-      |> put_view(view)
-      |> render(template, assigns)
-
-  """
-  @spec render(Plug.Conn.t, atom, atom | binary, Keyword.t | map) :: Plug.Conn.t
+  @doc false
   def render(conn, view, template, assigns)
       when is_atom(view) and (is_binary(template) or is_atom(template)) do
     IO.warn "#{__MODULE__}.render/4 with a view is deprecated, see the documentation for render/3 for an alternative"
@@ -1414,7 +1402,7 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Returns a message from flash by `key`.
+  Returns a message from flash by `key` (or `nil` if no message is available for `key`).
 
   ## Examples
 

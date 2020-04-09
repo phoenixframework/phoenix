@@ -15,8 +15,8 @@ defmodule Phoenix.Token do
   the id from a database. For example:
 
       iex> user_id = 1
-      iex> token = Phoenix.Token.sign(MyApp.Endpoint, "user salt", user_id)
-      iex> Phoenix.Token.verify(MyApp.Endpoint, "user salt", token, max_age: 86400)
+      iex> token = Phoenix.Token.sign(MyApp.Endpoint, "user auth", user_id)
+      iex> Phoenix.Token.verify(MyApp.Endpoint, "user auth", token, max_age: 86400)
       {:ok, 1}
 
   In that example we have a user's id, we generate a token and
@@ -38,8 +38,9 @@ defmodule Phoenix.Token do
 
   The second argument is a [cryptographic salt](https://en.wikipedia.org/wiki/Salt_(cryptography))
   which must be the same in both calls to `sign/4` and `verify/4`.
-  For instance, it may be called "user auth" when generating a token
-  that will be used to authenticate users on channels or on your APIs.
+  For instance, it may be called "user auth" and treated as namespace
+  when generating a token that will be used to authenticate users on
+  channels or on your APIs.
 
   The third argument can be any term (string, int, list, etc.)
   that you wish to codify into the token. Upon valid verification,
@@ -52,14 +53,14 @@ defmodule Phoenix.Token do
   One is via the meta tag:
 
       <%= tag :meta, name: "channel_token",
-                     content: Phoenix.Token.sign(@conn, "user salt", @current_user.id) %>
+                     content: Phoenix.Token.sign(@conn, "user auth", @current_user.id) %>
 
   Or an endpoint that returns it:
 
       def create(conn, params) do
         user = User.create(params)
         render(conn, "user.json",
-               %{token: Phoenix.Token.sign(conn, "user salt", user.id), user: user})
+               %{token: Phoenix.Token.sign(conn, "user auth", user.id), user: user})
       end
 
   Once the token is sent, the client may now send it back to the server
@@ -70,7 +71,7 @@ defmodule Phoenix.Token do
         use Phoenix.Socket
 
         def connect(%{"token" => token}, socket, _connect_info) do
-          case Phoenix.Token.verify(socket, "user salt", token, max_age: 86400) do
+          case Phoenix.Token.verify(socket, "user auth", token, max_age: 86400) do
             {:ok, user_id} ->
               socket = assign(socket, :user, Repo.get!(User, user_id))
               {:ok, socket}
@@ -145,8 +146,8 @@ defmodule Phoenix.Token do
 
       iex> user_id    = 99
       iex> secret     = "kjoy3o1zeidquwy1398juxzldjlksahdk3"
-      iex> user_salt  = "user salt"
-      iex> token      = Phoenix.Token.sign(secret, user_salt, user_id)
+      iex> namespace  = "user auth"
+      iex> token      = Phoenix.Token.sign(secret, namespace, user_id)
 
   The mechanism for passing the token to the client is typically through a
   cookie, a JSON response body, or HTTP header. For now, assume the client has
@@ -155,7 +156,7 @@ defmodule Phoenix.Token do
   When the server receives a request, it can use `verify/4` to determine if it
   should provide the requested resources to the client:
 
-      iex> Phoenix.Token.verify(secret, user_salt, token, max_age: 86400)
+      iex> Phoenix.Token.verify(secret, namespace, token, max_age: 86400)
       {:ok, 99}
 
   In this example, we know the client sent a valid token because `verify/4`
@@ -165,10 +166,10 @@ defmodule Phoenix.Token do
   However, if the client had sent an expired or otherwise invalid token
   `verify/4` would have returned an error instead:
 
-      iex> Phoenix.Token.verify(secret, user_salt, expired, max_age: 86400)
+      iex> Phoenix.Token.verify(secret, namespace, expired, max_age: 86400)
       {:error, :expired}
 
-      iex> Phoenix.Token.verify(secret, user_salt, invalid, max_age: 86400)
+      iex> Phoenix.Token.verify(secret, namespace, invalid, max_age: 86400)
       {:error, :invalid}
 
   ## Options
