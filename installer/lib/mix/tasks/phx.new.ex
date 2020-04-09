@@ -52,8 +52,8 @@ defmodule Mix.Tasks.Phx.New do
     * `--verbose` - use verbose output
 
   When passing the `--no-ecto` flag, Phoenix generators such as
-  `phx.gen.html`, `phx.gen.json` and `phx.gen.context` may no
-  longer work as expected as they generate context files that rely
+  `phx.gen.html`, `phx.gen.json`, `phx.gen.live`, and `phx.gen.context`
+  may no longer work as expected as they generate context files that rely
   on Ecto for the database access. In those cases, you can pass the
   `--no-context` flag to generate most of the HTML and JSON files
   but skip the context, allowing you to fill in the blanks as desired.

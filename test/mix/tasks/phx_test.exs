@@ -11,6 +11,7 @@ defmodule Mix.Tasks.Phx.Test do
     assert_received {:mix_shell, :info, ["mix phx.gen.embedded" <> _]}
     assert_received {:mix_shell, :info, ["mix phx.gen.html" <> _]}
     assert_received {:mix_shell, :info, ["mix phx.gen.json" <> _]}
+    assert_received {:mix_shell, :info, ["mix phx.gen.live" <> _]}
   end
 
   test "expects no arguments" do
