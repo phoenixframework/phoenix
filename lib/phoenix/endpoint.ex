@@ -831,10 +831,8 @@ defmodule Phoenix.Endpoint do
   end
 
   @doc false
+  @deprecated "Phoenix.Endpoint.instrument/4 is deprecated and has no effect. Use :telemetry instead"
   defmacro instrument(_endpoint_or_conn_or_socket, _event, _runtime, _fun) do
-    IO.warn "Phoenix.Endpoint.instrument/4 is deprecated and has no effect. Use :telemetry instead",
-            Macro.Env.stacktrace(__CALLER__)
-
     :ok
   end
 

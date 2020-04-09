@@ -241,14 +241,14 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc false
+  @deprecated "Phoenix.ChannelTest.socket/0 is deprecated, please call socket/1 instead"
   defmacro socket() do
-    IO.warn "Phoenix.ChannelTest.socket/0 is deprecated, please call socket/1 instead"
     build_socket(nil, nil, [], __CALLER__)
   end
 
   @doc false
+  @deprecated "Phoenix.ChannelTest.socket/2 is deprecated, please call socket/3 instead"
   defmacro socket(id, assigns) do
-    IO.warn "Phoenix.ChannelTest.socket/2 is deprecated, please call socket/3 instead"
     build_socket(nil, id, assigns, __CALLER__)
   end
 

@@ -91,7 +91,7 @@ Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web
       </div>
 
       <div class="footer">
-        <p><a href="http://phoenixframework.org">phoenixframework.org</a></p>
+        <p><a href="https://phoenixframework.org">phoenixframework.org</a></p>
       </div>
 
     </div> <!-- /container -->

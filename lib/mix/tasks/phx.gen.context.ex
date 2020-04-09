@@ -100,11 +100,11 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
-  def build(args) do
+  def build(args, help \\ __MODULE__) do
     {opts, parsed, _} = parse_opts(args)
-    [context_name, schema_name, plural | schema_args] = validate_args!(parsed)
+    [context_name, schema_name, plural | schema_args] = validate_args!(parsed, help)
     schema_module = inspect(Module.concat(context_name, schema_name))
-    schema = Gen.Schema.build([schema_module, plural | schema_args], opts, __MODULE__)
+    schema = Gen.Schema.build([schema_module, plural | schema_args], opts, help)
     context = Context.new(context_name, schema, opts)
     {context, schema}
   end
@@ -200,25 +200,25 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
   end
 
-  defp validate_args!([context, schema, _plural | _] = args) do
+  defp validate_args!([context, schema, _plural | _] = args, help) do
     cond do
       not Context.valid?(context) ->
-        raise_with_help "Expected the context, #{inspect context}, to be a valid module name"
+        help.raise_with_help "Expected the context, #{inspect context}, to be a valid module name"
       not Schema.valid?(schema) ->
-        raise_with_help "Expected the schema, #{inspect schema}, to be a valid module name"
+        help.raise_with_help "Expected the schema, #{inspect schema}, to be a valid module name"
       context == schema ->
-        raise_with_help "The context and schema should have different names"
+        help.raise_with_help "The context and schema should have different names"
       context == Mix.Phoenix.base() ->
-        raise_with_help "Cannot generate context #{context} because it has the same name as the application"
+        help.raise_with_help "Cannot generate context #{context} because it has the same name as the application"
       schema == Mix.Phoenix.base() ->
-        raise_with_help "Cannot generate schema #{schema} because it has the same name as the application"
+        help.raise_with_help "Cannot generate schema #{schema} because it has the same name as the application"
       true ->
         args
     end
   end
 
-  defp validate_args!(_) do
-    raise_with_help "Invalid arguments"
+  defp validate_args!(_, help) do
+    help.raise_with_help "Invalid arguments"
   end
 
   @doc false
@@ -227,13 +227,14 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     Mix.raise """
     #{msg}
 
-    mix phx.gen.html, phx.gen.json and phx.gen.context expect a
-    context module name, followed by singular and plural names of
-    the generated resource, ending with any number of attributes.
+    mix phx.gen.html, phx.gen.json, phx.gen.live, and phx.gen.context
+    expect a context module name, followed by singular and plural names
+    of the generated resource, ending with any number of attributes.
     For example:
 
         mix phx.gen.html Accounts User users name:string
         mix phx.gen.json Accounts User users name:string
+        mix phx.gen.live Accounts User users name:string
         mix phx.gen.context Accounts User users name:string
 
     The context serves as the API boundary for the given resource.
