@@ -14,8 +14,10 @@
       <section class="container">
         <nav role="navigation">
           <ul>
-            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li><%= if live and dashboard do %>
-            <li><%%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li><% end %>
+            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+            <%= if dashboard do %><%%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
+              <li><%%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>
+            <%% end %><% end %>
           </ul>
         </nav>
         <a href="https://phoenixframework.org/" class="phx-logo">
