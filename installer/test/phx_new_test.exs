@@ -340,8 +340,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->
         refute file =~ ~s|pipeline :browser|
-        assert file =~ ~s|defdelegate fetch_live_flash(conn, opts), to: Phoenix.LiveView.Router|
-        assert file =~ ~s|pipe_through [:fetch_session, :fetch_live_flash, :protect_from_forgery]|
+        assert file =~ ~s|pipe_through [:fetch_session, :protect_from_forgery]|
       end
     end
   end
