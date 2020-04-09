@@ -11,15 +11,15 @@ defmodule Phoenix.Logger do
       endpoint at the beginning of every request.
       * Measurement: `%{time: System.monotonic_time}`
       * Metadata: `%{conn: Plug.Conn.t, options: Keyword.t}`
-      * Options: `%{log: Logger.level | false}`
-      * Disable logging: In your endpoint `plug Plug.Telemetry, ..., options: [log: false]`
+      * Options: `%{log: Logger.level}`
+      * Disable logging: Remove `plug Plug.Telemetry, ...` from your endpoint.ex
 
     * `[:phoenix, :endpoint, :stop]` - dispatched by `Plug.Telemetry` in your
       endpoint whenever the response is sent
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{conn: Plug.Conn.t, options: Keyword.t}`
-      * Options: `%{log: Logger.level | false}`
-      * Disable logging: In your endpoint `plug Plug.Telemetry, ..., options: [log: false]`
+      * Options: `%{log: Logger.level}`
+      * Disable logging: Remove `plug Plug.Telemetry, ...` from your endpoint.ex
 
     * `[:phoenix, :router_dispatch, :start]` - dispatched by `Phoenix.Router`
       before dispatching to a matched route
