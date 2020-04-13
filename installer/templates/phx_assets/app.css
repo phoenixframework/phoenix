@@ -9,7 +9,7 @@
   margin: -1rem 0 2rem;
 }
 
-.phx-hide-error-for.invalid-feedback, .phx-hide-error-for .invalid-feedback {
+.phx-no-feedback.invalid-feedback, .phx-no-feedback .invalid-feedback {
   display: none;
 }
 
