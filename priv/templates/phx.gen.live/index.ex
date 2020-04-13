@@ -4,10 +4,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect context.module %>
   alias <%= inspect schema.module %>
 
+  @impl true
   def mount(_params, _session, socket) do
     {:ok, assign(socket, :<%= schema.plural %>, fetch_<%= schema.plural %>())}
   end
 
+  @impl true
   def handle_params(params, _url, socket) do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
@@ -30,6 +32,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     |> assign(:<%= schema.singular %>, nil)
   end
 
+  @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
     {:ok, _} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
