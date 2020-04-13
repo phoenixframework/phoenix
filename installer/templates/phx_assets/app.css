@@ -3,6 +3,16 @@
 @import "../node_modules/nprogress/nprogress.css";
 
 /* LiveView specific classes for your customizations */
+.invalid-feedback {
+  color: #a94442;
+  display: block;
+  margin: -1rem 0 2rem;
+}
+
+.phx-no-feedback.invalid-feedback, .phx-no-feedback .invalid-feedback {
+  display: none;
+}
+
 .phx-click-loading {
   opacity: 0.5;
   transition: opacity 1s ease-out;
@@ -78,9 +88,4 @@
 }
 .alert:empty {
   display: none;
-}
-.help-block {
-  color: #a94442;
-  display: block;
-  margin: -1rem 0 2rem;
 }
