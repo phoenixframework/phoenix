@@ -1,7 +1,7 @@
 <h1>Listing <%= schema.human_plural %></h1>
 
 <%%= if @live_action in [:new, :edit] do %>
-  <%%= live_modal @socket, <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.Form,
+  <%%= live_modal @socket, <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent,
     id: @<%= schema.singular %>.id || :new,
     title: @page_title,
     action: @live_action,
