@@ -50,9 +50,9 @@ defmodule Phoenix.Socket.Transport do
 
   ## Example
 
-  Here is a simple pong socket implementation:
+  Here is a simple echo socket implementation:
 
-      defmodule PingSocket do
+      defmodule EchoSocket do
         @behaviour Phoenix.Socket.Transport
 
         def child_spec(opts) do
@@ -71,8 +71,8 @@ defmodule Phoenix.Socket.Transport do
           {:ok, state}
         end
 
-        def handle_in({"ping", _opts}, state) do
-          {:reply, :ok, {:text, "pong"}, state}
+        def handle_in({text, _opts}, state) do
+          {:reply, :ok, {:text, text}, state}
         end
 
         def handle_info(_, state) do
@@ -86,7 +86,7 @@ defmodule Phoenix.Socket.Transport do
 
   It can be mounted in your endpoint like any other socket:
 
-      socket "/socket", PingSocket, websocket: true, longpoll: true
+      socket "/socket", EchoSocket, websocket: true, longpoll: true
 
   You can now interact with the socket under `/socket/websocket`
   and `/socket/longpoll`.
