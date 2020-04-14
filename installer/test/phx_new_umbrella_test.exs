@@ -91,7 +91,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file app_path(@app, "lib/#{@app}.ex"), ~r/defmodule PhxUmb do/
       assert_file app_path(@app, "mix.exs"), fn file ->
         assert file =~ "mod: {PhxUmb.Application, []}"
-        assert file =~ "{:phoenix_pubsub, \"~> 2.0-dev\", github: \"phoenixframework/phoenix_pubsub\"}"
+        assert file =~ "{:phoenix_pubsub, \"~> 2.0\"}"
       end
       assert_file app_path(@app, "test/test_helper.exs")
 

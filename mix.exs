@@ -67,7 +67,7 @@ defmodule Phoenix.MixProject do
       {:plug, "~> 1.10"},
       {:plug_crypto, "~> 1.1.2 or ~> 1.2"},
       {:telemetry, "~> 0.4"},
-      {:phoenix_pubsub, "~> 2.0-dev", github: "phoenixframework/phoenix_pubsub"},
+      {:phoenix_pubsub, "~> 2.0"},
 
       # Optional deps
       {:plug_cowboy, "~> 1.0 or ~> 2.1", optional: true},
