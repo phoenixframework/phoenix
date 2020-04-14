@@ -27,18 +27,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       connected_html = render(index_live)
 
       assert disconnected_html =~ "Listing <%= schema.human_plural %>"
-      assert connected_html =~ "Listing <%= schema.human_plural %>"
+      assert connected_html =~ "Listing <%= schema.human_plural %>"<%= if schema.string_attr do %>
 
-      <%= if schema.string_attr do %>assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
-      <%= if schema.string_attr do %>assert connected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
+      assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %>
+      assert connected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
     end
 
     test "renders new <%= schema.singular %> form", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       {:ok, index_live, disconnected_html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :new))
-      connected_html = render(index_live)
+      connected_html = render(index_live)<%= if schema.string_attr do %>
 
-      <%= if schema.string_attr do %>assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
-      <%= if schema.string_attr do %>assert connected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
+      assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %>
+      assert connected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
+
       assert disconnected_html =~ "New <%= schema.human_singular %>"
       assert connected_html =~ "New <%= schema.human_singular %>"
     end
@@ -48,7 +49,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     setup [:create_<%= schema.singular %>]
 
     test "shows <%= schema.singular %>", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, show_live, disconnected_html} = live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>))
+      {:ok, show_live, disconnected_html} =
+        live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>))
+
       connected_html = render(show_live)
 
       assert disconnected_html =~ "Show <%= schema.human_singular %>"
@@ -56,22 +59,26 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "renders edit <%= schema.singular %> form", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, show_live, disconnected_html} = live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :edit, <%= schema.singular %>))
+      {:ok, show_live, disconnected_html} =
+        live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :edit, <%= schema.singular %>))
+
       assert disconnected_html =~ "Edit <%= schema.human_singular %>"
-      assert render(show_live) =~ "Edit <%= schema.human_singular %>"
-      <%= if schema.string_attr do %>assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
-      <%= if schema.string_attr do %>assert render(show_live) =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
+      assert render(show_live) =~ "Edit <%= schema.human_singular %>"<%= if schema.string_attr do %>
+      assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %><%= if schema.string_attr do %>
+      assert render(show_live) =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
 
       assert render_submit([show_live, "form"], "save", %{"<%= schema.singular %>" => @invalid_attrs}) =~
-               "Edit <%= schema.human_singular %>"
+               "Edit <%= schema.human_singular %>"<%= if schema.string_attr do %>
 
-      <%= if schema.string_attr do %>assert {:error, {:redirect, path}} =
-               render_submit([show_live, "form"], "save", %{"<%= schema.singular %>" => @update_attrs})
+      redirected_path = Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>)
+      render_submit([show_live, "form"], "save", %{"<%= schema.singular %>" => @update_attrs})
+      assert_redirect(show_live, redirected_path)
 
-      {:ok, _show_live, disconnected_html} = live(conn, path)
+      {:ok, _show_live, disconnected_html} = live(conn, redirected_path)
       assert disconnected_html =~ "some updated <%= schema.string_attr %>"<% else %>
-      assert {:error, {:redirect, _path}} =
-               render_submit([show_live, "form"], "save", %{"<%= schema.singular %>" => @update_attrs})<% end %>
+
+      render_submit([show_live, "form"], "save", %{"<%= schema.singular %>" => @update_attrs})
+      assert_redirect(show_live, Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>))<% end %>
     end
   end
 end
