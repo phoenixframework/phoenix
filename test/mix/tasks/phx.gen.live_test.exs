@@ -202,14 +202,26 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       end
 
       assert_file "lib/phoenix_web/live/blog/post_live/index.html.leex", fn file ->
-        assert file =~ " Routes.post_index_path(@socket, :index)"
+        assert file =~ " Routes.blog_post_index_path(@socket, :index)"
+        assert file =~ " Routes.blog_post_index_path(@socket, :edit, post)"
+        assert file =~ " Routes.blog_post_index_path(@socket, :new)"
+        assert file =~ " Routes.blog_post_show_path(@socket, :show, post)"
       end
 
       assert_file "lib/phoenix_web/live/blog/post_live/show.html.leex", fn file ->
-        assert file =~ " Routes.post_index_path(@socket, :index)"
+        assert file =~ " Routes.blog_post_index_path(@socket, :index)"
+        assert file =~ " Routes.blog_post_show_path(@socket, :show, @post)"
+        assert file =~ " Routes.blog_post_show_path(@socket, :edit, @post)"
       end
 
       assert_file "lib/phoenix_web/live/blog/post_live/form_component.html.leex"
+
+      assert_file "test/phoenix_web/live/blog/post_live_test.exs", fn file ->
+        assert file =~ " Routes.blog_post_index_path(conn, :index)"
+        assert file =~ " Routes.blog_post_index_path(conn, :new)"
+        assert file =~ " Routes.blog_post_show_path(conn, :show, post)"
+        assert file =~ " Routes.blog_post_show_path(conn, :edit, post)"
+      end
 
       assert_receive {:mix_shell, :info, ["""
 
