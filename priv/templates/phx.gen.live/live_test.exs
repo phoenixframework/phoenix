@@ -71,7 +71,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, _show_live, disconnected_html} = live(conn, path)
       assert disconnected_html =~ "some updated <%= schema.string_attr %>"<% else %>
       assert {:error, {:redirect, _path}} =
-               render_submit([show_live, "form-#{<%= schema.singular %>.id}"], "save", %{"<%= schema.singular %>" => @update_attrs})<%end %>
+               render_submit([show_live, "form"], "save", %{"<%= schema.singular %>" => @update_attrs})<% end %>
     end
   end
 end
