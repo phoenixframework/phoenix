@@ -133,6 +133,13 @@ defmodule Phoenix.Integration.WebSocketTest do
     assert_receive {:text, ~s(%{"key" => "value"})}
   end
 
+  test "ignores control frames when handle_control/2 is not defined" do
+    assert {:ok, client} = WebsocketClient.start_link(self(), @path, :noop)
+    WebsocketClient.send_control_frame(client, :ping)
+    WebsocketClient.send_message(client, "ping")
+    assert_receive {:text, "pong"}
+  end
+
   test "returns pong from async request" do
     assert {:ok, client} = WebsocketClient.start_link(self(), "#{@path}?key=value", :noop)
     WebsocketClient.send_message(client, "ping")
