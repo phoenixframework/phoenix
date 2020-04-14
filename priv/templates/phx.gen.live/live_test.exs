@@ -62,16 +62,16 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <%= if schema.string_attr do %>assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
       <%= if schema.string_attr do %>assert render(show_live) =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
 
-      assert render_submit([show_live, "#form-#{<%= schema.singular %>.id}"], "save", %{"<%= schema.singular %>" => @invalid_attrs}) =~
+      assert render_submit([show_live, "form"], "save", %{"<%= schema.singular %>" => @invalid_attrs}) =~
                "Edit <%= schema.human_singular %>"
 
       <%= if schema.string_attr do %>assert {:error, {:redirect, path}} =
-               render_submit([show_live, "#form-#{<%= schema.singular %>.id}"], "save", %{"<%= schema.singular %>" => @update_attrs})
+               render_submit([show_live, "form"], "save", %{"<%= schema.singular %>" => @update_attrs})
 
       {:ok, _show_live, disconnected_html} = live(conn, path)
       assert disconnected_html =~ "some updated <%= schema.string_attr %>"<% else %>
       assert {:error, {:redirect, _path}} =
-               render_submit([show_live, "#form-#{<%= schema.singular %>.id}"], "save", %{"<%= schema.singular %>" => @update_attrs})<%end %>
+               render_submit([show_live, "form-#{<%= schema.singular %>.id}"], "save", %{"<%= schema.singular %>" => @update_attrs})<%end %>
     end
   end
 end
