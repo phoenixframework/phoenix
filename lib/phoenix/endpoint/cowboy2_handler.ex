@@ -109,6 +109,18 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
 
   defp handle_reply(handler, {:stop, _reason, state}), do: {:stop, [handler | state]}
 
+  defp handle_control_frame(payload_with_opts, handler_state) do
+    [handler | state] = handler_state
+    reply =
+      if function_exported?(handler, :handle_control, 2) do
+        handler.handle_control(payload_with_opts, state)
+      else
+        {:ok, state}
+      end
+
+    handle_reply(handler, reply)
+  end
+
   ## Websocket callbacks
 
   def websocket_init([handler | state]) do
@@ -118,6 +130,14 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
 
   def websocket_handle({opcode, payload}, [handler | state]) when opcode in [:text, :binary] do
     handle_reply(handler, handler.handle_in({payload, opcode: opcode}, state))
+  end
+
+  def websocket_handle({opcode, payload}, handler_state) when opcode in [:ping, :pong] do
+    handle_control_frame({payload, opcode: opcode}, handler_state)
+  end
+
+  def websocket_handle(opcode, handler_state) when opcode in [:ping, :pong] do
+    handle_control_frame({nil, opcode: opcode}, handler_state)
   end
 
   def websocket_handle(_other, handler_state) do

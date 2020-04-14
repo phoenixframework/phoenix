@@ -57,6 +57,29 @@ defmodule Phoenix.Integration.WebSocketTest do
     end
   end
 
+  defmodule PingSocket do
+    @behaviour Phoenix.Socket.Transport
+
+    def child_spec(_opts), do: Supervisor.child_spec({Task, fn -> :ok end}, [id: :ping])
+    def connect(_), do: {:ok, %{}}
+    def init(state), do: {:ok, state}
+
+    def handle_in({"ping:start", _}, state) do
+      {:reply, :ok, :ping, state}
+    end
+    def handle_in({"ping:start:" <> payload, _}, state) do
+      {:reply, :ok, {:ping, payload}, state}
+    end
+    def handle_info(_, state), do: {:ok, state}
+
+    def handle_control({payload, opts}, state) do
+      opcode = Keyword.fetch!(opts, :opcode)
+      {:push, {:text, "#{opcode}:#{payload}"}, state}
+    end
+
+    def terminate(_reason, _state), do: :ok
+  end
+
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
@@ -71,6 +94,9 @@ defmodule Phoenix.Integration.WebSocketTest do
     socket "/custom/:socket_var", UserSocket,
       websocket: [path: ":path_var/path", check_origin: ["//example.com"], timeout: 200],
       custom: :value
+
+    socket "/ws/ping", PingSocket,
+      websocket: true
   end
 
   setup_all do
@@ -127,5 +153,26 @@ defmodule Phoenix.Integration.WebSocketTest do
     assert params =~ ~s("key" => "value")
     assert params =~ ~s("socket_var" => "123")
     assert params =~ ~s(path_var" => "456")
+  end
+
+  @tag :cowboy2
+  test "allows using control frames with a payload" do
+    path = "ws://127.0.0.1:#{@port}/ws/ping/websocket"
+    assert {:ok, client} = WebsocketClient.start_link(self(), path, :noop)
+    WebsocketClient.send_control_frame(client, :ping)
+    assert_receive({:control, :pong, ""})
+    assert_receive({:text, "ping:"})
+
+    WebsocketClient.send_control_frame(client, :ping, "123")
+    assert_receive({:control, :pong, "123"})
+    assert_receive({:text, "ping:123"})
+
+    WebsocketClient.send_message(client, "ping:start")
+    assert_receive({:control, :ping, ""})
+    assert_receive({:text, "pong:"})
+
+    WebsocketClient.send_message(client, "ping:start:123")
+    assert_receive({:control, :ping, "123"})
+    assert_receive({:text, "pong:123"})
   end
 end
