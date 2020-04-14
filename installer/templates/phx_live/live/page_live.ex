@@ -1,14 +1,17 @@
 defmodule <%= web_namespace %>.PageLive do
   use <%= web_namespace %>, :live_view
 
+  @impl true
   def mount(_params, _session, socket) do
     {:ok, assign(socket, query: "", results: %{})}
   end
 
+  @impl true
   def handle_event("suggest", %{"q" => query}, socket) do
     {:noreply, assign(socket, results: search(query), query: query)}
   end
 
+  @impl true
   def handle_event("search", %{"q" => query}, socket) do
     case search(query) do
       %{^query => vsn} ->
