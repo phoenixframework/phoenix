@@ -34,7 +34,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "renders new <%= schema.singular %> form", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, index_live, disconnected_html} = live(conn, Routes.<%= schema.singular %>_index_path(conn, :new))
+      {:ok, index_live, disconnected_html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :new))
       connected_html = render(index_live)
 
       <%= if schema.string_attr do %>assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
@@ -48,7 +48,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     setup [:create_<%= schema.singular %>]
 
     test "shows <%= schema.singular %>", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, show_live, disconnected_html} = live(conn, Routes.<%= schema.singular %>_show_path(conn, :show, <%= schema.singular %>))
+      {:ok, show_live, disconnected_html} = live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>))
       connected_html = render(show_live)
 
       assert disconnected_html =~ "Show <%= schema.human_singular %>"
@@ -56,7 +56,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "renders edit <%= schema.singular %> form", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, show_live, disconnected_html} = live(conn, Routes.<%= schema.singular %>_show_path(conn, :edit, <%= schema.singular %>))
+      {:ok, show_live, disconnected_html} = live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :edit, <%= schema.singular %>))
       assert disconnected_html =~ "Edit <%= schema.human_singular %>"
       assert render(show_live) =~ "Edit <%= schema.human_singular %>"
       <%= if schema.string_attr do %>assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
