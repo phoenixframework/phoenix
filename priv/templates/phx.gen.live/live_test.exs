@@ -94,7 +94,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "updates <%= schema.singular %> within modal", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       {:ok, show_live, _html} = live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>))
 
-      assert show_live |> element("a", "Edit") |> render_click() =~ "Edit <%= schema.human_singular %>"
+      assert show_live |> element("a", "Edit") |> render_click() =~
+        "Edit <%= schema.human_singular %>"
+
       assert_patch(show_live, Routes.<%= schema.route_helper %>_show_path(conn, :edit, <%= schema.singular %>))
 
       assert show_live
