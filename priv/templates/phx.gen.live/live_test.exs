@@ -19,66 +19,92 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{<%= schema.singular %>: <%= schema.singular %>}
   end
 
-  describe "index" do
+  describe "Index" do
     setup [:create_<%= schema.singular %>]
 
     test "lists all <%= schema.plural %>", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, index_live, disconnected_html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :index))
-      connected_html = render(index_live)
+      {:ok, _index_live, html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :index))
 
-      assert disconnected_html =~ "Listing <%= schema.human_plural %>"
-      assert connected_html =~ "Listing <%= schema.human_plural %>"<%= if schema.string_attr do %>
-
-      assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %>
-      assert connected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
+      assert html =~ "Listing <%= schema.human_plural %>"<%= if schema.string_attr do %>
+      assert html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
     end
 
-    test "renders new <%= schema.singular %> form", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, index_live, disconnected_html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :new))
-      connected_html = render(index_live)<%= if schema.string_attr do %>
+    test "saves new <%= schema.singular %>", %{conn: conn} do
+      {:ok, index_live, _html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :index))
 
-      assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %>
-      assert connected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
+      assert index_live |> element("a", "New <%= schema.human_singular %>") |> render_click() =~ "New <%= schema.human_singular %>"
 
-      assert disconnected_html =~ "New <%= schema.human_singular %>"
-      assert connected_html =~ "New <%= schema.human_singular %>"
+      assert_patch(index_live, Routes.<%= schema.route_helper %>_index_path(conn, :new))
+
+      assert index_live
+             |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)
+             |> render_change() =~ "can&apos;t be blank"
+
+      {:ok, _, html} =
+        index_live
+        |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @create_attrs)
+        |> render_submit()
+        |> follow_redirect(conn, Routes.<%= schema.route_helper %>_index_path(conn, :index))
+
+      assert html =~ "<%= schema.human_singular %> created successfully"<%= if schema.string_attr do %>
+      assert html =~ "some <%= schema.string_attr %>"<% end %>
+    end
+
+    test "updates <%= schema.singular %> in listing", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      {:ok, index_live, _html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :index))
+      assert index_live |> element("#<%= schema.singular %>-#{<%= schema.singular %>.id} a", "Edit") |> render_click() =~ "Edit <%= schema.human_singular %>"
+      assert_patch(index_live, Routes.<%= schema.route_helper %>_index_path(conn, :edit, <%= schema.singular %>))
+
+      assert index_live
+             |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)
+             |> render_change() =~ "can&apos;t be blank"
+
+      {:ok, _, html} =
+        index_live
+        |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @update_attrs)
+        |> render_submit()
+        |> follow_redirect(conn, Routes.<%= schema.route_helper %>_index_path(conn, :index))
+
+      assert html =~ "<%= schema.human_singular %> updated successfully"<%= if schema.string_attr do %>
+      assert html =~ "some updated <%= schema.string_attr %>"<% end %>
+    end
+
+    test "deletes <%= schema.singular %> in listing", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      {:ok, index_live, _html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :index))
+
+      assert index_live |> element("#<%= schema.singular %>-#{<%= schema.singular %>.id} a", "Delete") |> render_click()
+      refute has_element?(index_live, "#<%= schema.singular %>-#{<%= schema.singular %>.id}")
     end
   end
 
-  describe "show" do
+  describe "Show" do
     setup [:create_<%= schema.singular %>]
 
-    test "shows <%= schema.singular %>", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, show_live, disconnected_html} =
-        live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>))
+    test "displays <%= schema.singular %>", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      {:ok, _show_live, html} = live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>))
 
-      connected_html = render(show_live)
-
-      assert disconnected_html =~ "Show <%= schema.human_singular %>"
-      assert connected_html =~ "Show <%= schema.human_singular %>"
+      assert html =~ "Show <%= schema.human_singular %>"<%= if schema.string_attr do %>
+      assert html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
     end
 
-    test "renders edit <%= schema.singular %> form", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, show_live, disconnected_html} =
-        live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :edit, <%= schema.singular %>))
+    test "updates <%= schema.singular %> within modal", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      {:ok, show_live, _html} = live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>))
 
-      assert disconnected_html =~ "Edit <%= schema.human_singular %>"
-      assert render(show_live) =~ "Edit <%= schema.human_singular %>"<%= if schema.string_attr do %>
-      assert disconnected_html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %><%= if schema.string_attr do %>
-      assert render(show_live) =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
+      assert show_live |> element("a", "Edit") |> render_click() =~ "Edit <%= schema.human_singular %>"
+      assert_patch(show_live, Routes.<%= schema.route_helper %>_show_path(conn, :edit, <%= schema.singular %>))
 
-      assert render_submit([show_live, "form"], "save", %{"<%= schema.singular %>" => @invalid_attrs}) =~
-               "Edit <%= schema.human_singular %>"<%= if schema.string_attr do %>
+      assert show_live
+             |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)
+             |> render_change() =~ "can&apos;t be blank"
 
-      redirected_path = Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>)
-      render_submit([show_live, "form"], "save", %{"<%= schema.singular %>" => @update_attrs})
-      assert_redirect(show_live, redirected_path)
+      {:ok, _, html} =
+        show_live
+        |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @update_attrs)
+        |> render_submit()
+        |> follow_redirect(conn, Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>))
 
-      {:ok, _show_live, disconnected_html} = live(conn, redirected_path)
-      assert disconnected_html =~ "some updated <%= schema.string_attr %>"<% else %>
-
-      render_submit([show_live, "form"], "save", %{"<%= schema.singular %>" => @update_attrs})
-      assert_redirect(show_live, Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>))<% end %>
+      assert html =~ "<%= schema.human_singular %> updated successfully"<%= if schema.string_attr do %>
+      assert html =~ "some updated <%= schema.string_attr %>"<% end %>
     end
   end
 end
