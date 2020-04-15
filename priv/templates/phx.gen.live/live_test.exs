@@ -32,7 +32,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "saves new <%= schema.singular %>", %{conn: conn} do
       {:ok, index_live, _html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :index))
 
-      assert index_live |> element("a", "New <%= schema.human_singular %>") |> render_click() =~ "New <%= schema.human_singular %>"
+      assert index_live |> element("a", "New <%= schema.human_singular %>") |> render_click() =~
+        "New <%= schema.human_singular %>"
 
       assert_patch(index_live, Routes.<%= schema.route_helper %>_index_path(conn, :new))
 
