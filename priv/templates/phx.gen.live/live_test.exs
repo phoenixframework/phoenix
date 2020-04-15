@@ -53,7 +53,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "updates <%= schema.singular %> in listing", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       {:ok, index_live, _html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :index))
-      assert index_live |> element("#<%= schema.singular %>-#{<%= schema.singular %>.id} a", "Edit") |> render_click() =~ "Edit <%= schema.human_singular %>"
+
+      assert index_live |> element("#<%= schema.singular %>-#{<%= schema.singular %>.id} a", "Edit") |> render_click() =~
+        "Edit <%= schema.human_singular %>"
+
       assert_patch(index_live, Routes.<%= schema.route_helper %>_index_path(conn, :edit, <%= schema.singular %>))
 
       assert index_live
