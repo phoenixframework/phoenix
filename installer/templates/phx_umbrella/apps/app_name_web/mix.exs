@@ -53,11 +53,13 @@ defmodule <%= web_namespace %>.MixProject do
     ]
   end
 
-  # Aliases are shortcuts or tasks specific to the current project.<%= if ecto do %>
-  # For example, we extend the test task to create and migrate the database.<% end %>
+  # Aliases are shortcuts or tasks specific to the current project.
   #
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
-    [<%= if ecto do %>test: ["ecto.create --quiet", "ecto.migrate", "test"]<% end %>]
+    [
+      setup: ["deps.get"<%= if webpack do %>, "cmd npm install --prefix assets"<% end %>]<%= if ecto do %>,
+      test: ["ecto.create --quiet", "ecto.migrate", "test"]<% end %>
+    ]
   end
 end
