@@ -41,15 +41,18 @@ defmodule Phoenix.Socket.Transport do
   `c:handle_in/2` on the socket. For each informational message the
   transport receives, it should call `c:handle_info/2` on the socket.
 
+  Transports can optionally implement `c:handle_control/2` for handling
+  control frames such as `:ping` and `:pong`.
+
   On termination, `c:terminate/2` must be called. A special atom with
   reason `:closed` can be used to specify that the client terminated
   the connection.
 
   ## Example
 
-  Here is a simple pong socket implementation:
+  Here is a simple echo socket implementation:
 
-      defmodule PingSocket do
+      defmodule EchoSocket do
         @behaviour Phoenix.Socket.Transport
 
         def child_spec(opts) do
@@ -68,8 +71,8 @@ defmodule Phoenix.Socket.Transport do
           {:ok, state}
         end
 
-        def handle_in({"ping", _opts}, state) do
-          {:reply, :ok, {:text, "pong"}, state}
+        def handle_in({text, _opts}, state) do
+          {:reply, :ok, {:text, text}, state}
         end
 
         def handle_info(_, state) do
@@ -83,7 +86,7 @@ defmodule Phoenix.Socket.Transport do
 
   It can be mounted in your endpoint like any other socket:
 
-      socket "/socket", PingSocket, websocket: true, longpoll: true
+      socket "/socket", EchoSocket, websocket: true, longpoll: true
 
   You can now interact with the socket under `/socket/websocket`
   and `/socket/longpoll`.
@@ -178,6 +181,29 @@ defmodule Phoenix.Socket.Transport do
               | {:stop, reason :: term, state}
 
   @doc """
+  Handles incoming control frames.
+
+  The message is represented as `{payload, options}`. It must
+  return one of:
+
+    * `{:ok, state}` - continues the socket with no reply
+    * `{:reply, status, reply, state}` - continues the socket with reply
+    * `{:stop, reason, state}` - stops the socket
+
+  Control frames only supported when using websockets.
+
+  The `options` contains an `opcode` key, this will be either `:ping` or
+  `:pong`.
+
+  If a control frame doesn't have a payload, then the payload value
+  will be `nil`.
+  """
+  @callback handle_control({message :: term, opts :: keyword}, state) ::
+              {:ok, state}
+              | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
+              | {:stop, reason :: term, state}
+
+  @doc """
   Handles info messages.
 
   The message is a term. It must return one of:
@@ -204,6 +230,8 @@ defmodule Phoenix.Socket.Transport do
   exit. See `Process.exit/2` for more details on exit signals.
   """
   @callback terminate(reason :: term, state) :: :ok
+
+  @optional_callbacks handle_control: 2
 
   require Logger
 

@@ -39,6 +39,13 @@ defmodule Phoenix.Integration.WebsocketClient do
   end
 
   @doc """
+  Sends a control frame to the client.
+  """
+  def send_control_frame(server_pid, opcode, msg \\ :none) do
+    send(server_pid, {:control, opcode, msg})
+  end
+
+  @doc """
   Sends a heartbeat event
   """
   def send_heartbeat(server_pid) do
@@ -77,9 +84,23 @@ defmodule Phoenix.Integration.WebsocketClient do
     {:ok, state}
   end
 
+  # The websocket client always sends a payload, even when none is explictly set
+  # on the frame.
+  def websocket_handle({opcode, msg}, _conn_state, state) when opcode in [:ping, :pong] do
+    send(state.sender, {:control, opcode, msg})
+    {:ok, state}
+  end
+
   @doc false
   def websocket_info({:send, msg}, _conn_state, %{serializer: :noop} = state) do
     {:reply, {:text, msg}, state}
+  end
+
+  def websocket_info({:control, opcode, msg}, _conn_state, %{serializer: :noop} = state) do
+    case msg do
+      :none -> {:reply, opcode, state}
+      _ -> {:reply, {opcode, msg}, state}
+    end
   end
 
   def websocket_info({:send, %Message{} = msg}, _conn_state, %{ref: ref} = state) do
