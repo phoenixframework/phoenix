@@ -149,6 +149,19 @@ describe("with transport", () => {
       assert.equal(joinPush.timeout, newTimeout)
     })
 
+    it("leaves existings duplicate topic on new join", (done) => {
+      channel.join()
+        .receive("ok", () => {
+          let newChannel = socket.channel("topic")
+          assert.equal(channel.isJoined(), true)
+          newChannel.join()
+          assert.equal(channel.isJoined(), false)
+          done()
+        })
+
+      channel.joinPush.trigger("ok", {})
+    })
+
     describe("timeout behavior", () => {
       let clock, joinPush
 

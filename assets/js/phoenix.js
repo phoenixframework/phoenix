@@ -598,16 +598,10 @@ export class Channel {
   /**
    * @private
    */
-  sendJoin(timeout){
+  rejoin(timeout = this.timeout){ if(this.isLeaving()){ return }
+    this.socket.leaveOpenTopic(this.topic)
     this.state = CHANNEL_STATES.joining
     this.joinPush.resend(timeout)
-  }
-
-  /**
-   * @private
-   */
-  rejoin(timeout = this.timeout){ if(this.isLeaving()){ return }
-    this.sendJoin(timeout)
   }
 
   /**
@@ -920,7 +914,7 @@ export class Socket {
    * @private
    */
   onConnOpen(){
-    if (this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
+    if(this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
     this.unloaded = false
     this.closeWasClean = false
     this.flushSendBuffer()
@@ -1135,6 +1129,14 @@ export class Socket {
         callback(msg)
       }
     })
+  }
+
+  leaveOpenTopic(topic){
+    let dupChannel = this.channels.find(c => c.topic === topic && (c.isJoined() || c.isJoining()))
+    if(dupChannel){
+      if(this.hasLogger()) this.log("transport", `leaving duplicate topic "${topic}"`)
+      dupChannel.leave()
+    }
   }
 }
 
