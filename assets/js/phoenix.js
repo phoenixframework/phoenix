@@ -940,12 +940,46 @@ export class Socket {
   }
 
   teardown(callback, code, reason){
-    if(this.conn){
-      this.conn.onclose = function(){} // noop
-      if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
-      this.conn = null
+    if (!this.conn) {
+      return callback && callback()
     }
-    callback && callback()
+
+    this.waitForBufferDone(() => {
+      if (this.conn) {
+        if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
+      }
+
+      this.waitForSocketClosed(() => {
+        if (this.conn) {
+          this.conn.onclose = function(){} // noop
+          this.conn = null
+        }
+
+        callback && callback()
+      })
+    })
+  }
+
+  waitForBufferDone(callback, tries = 1) {
+    if (tries === 5 || !this.conn || (this.conn.bufferedAmount && this.conn.bufferedAmount === 0)) {
+      callback()
+      return
+    }
+
+    setTimeout(() => {
+      this.waitForBufferDone(callback, tries + 1)
+    }, 150 * tries)
+  }
+
+  waitForSocketClosed(callback, tries = 1) {
+    if (tries === 5 || !this.conn || this.conn.readyState === SOCKET_STATES.closed) {
+      callback()
+      return
+    }
+
+    setTimeout(() => {
+      this.waitForSocketClosed(callback, tries + 1)
+    }, 150 * tries)
   }
 
   onConnClose(event){

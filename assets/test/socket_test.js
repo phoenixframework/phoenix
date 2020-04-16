@@ -265,28 +265,33 @@ describe("with transports", done =>{
       socket = new Socket("/socket")
     })
 
-    it("removes existing connection", () => {
+    it("removes existing connection", (done) => {
       socket.connect()
       socket.disconnect()
-
-      assert.equal(socket.conn, null)
+      socket.disconnect(() => {
+        assert.equal(socket.conn, null)
+        done()
+      })
     })
 
-    it("calls callback", () => {
+    it("calls callback", (done) => {
       let count = 0
       socket.connect()
-      socket.disconnect(() => count++)
-
-      assert.equal(count, 1)
+      socket.disconnect(() => {
+        count++
+        assert.equal(count, 1)
+        done()
+      })
     })
 
-    it("calls connection close callback", () => {
+    it("calls connection close callback", (done) => {
       socket.connect()
       const spy = sinon.spy(socket.conn, "close")
 
-      socket.disconnect(null, 1000, "reason")
-
-      assert(spy.calledWith(1000, "reason"))
+      socket.disconnect(() => {
+          assert(spy.calledWith(1000, "reason"))
+          done()
+        }, 1000, "reason")
     })
 
     it("does not throw when no connection", () => {
@@ -620,17 +625,19 @@ describe("with transports", done =>{
       assert.ok(spy.calledOnce)
     })
 
-    it('schedules reconnectTimer timeout if connection cannot be made after a previous clean disconnect', () => {
+    it('schedules reconnectTimer timeout if connection cannot be made after a previous clean disconnect', (done) => {
       const spy = sinon.spy(socket.reconnectTimer, 'scheduleTimeout')
 
-      socket.disconnect();
-      socket.connect();
+      socket.disconnect(() => {
+        socket.connect();
 
-      const event = { code: 1001 }
+        const event = { code: 1001 }
 
-      socket.onConnClose(event)
+        socket.onConnClose(event)
 
-      assert.ok(spy.calledOnce)
+        assert.ok(spy.calledOnce)
+        done()
+      });
     })
 
     it("triggers onClose callback", () => {
