@@ -19,9 +19,10 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * [Controller] Support `:disposition` option in `send_download/3`
   * [Endpoint] Allow named params to be used when defining socket paths
   * [Endpoint] Raise if `force_ssl` has changed from compile time to runtime
-  * [Generator] Add `mix phx.gen.live`
+  * [Generator] Add `mix phx.gen.live` for LiveView CRUD generation
   * [PubSub] Migrate to PubSub 2.0 with a more flexible fastlaning mechanism
   * [View] Add `render_layout` which makes it easy to work with nested layouts
+  * [Transport] Transports can now optionally implement `handle_control/2` for handling control frames such as `:ping` and `:pong`
 
 ### Deprecations
 
@@ -45,6 +46,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 ### JavaScript client
 
   * Ensure all channel event listeners are called
+  * Fix rejoining channels after explicit disconnect following be immediate reconnect
 
 ## v1.4
 
