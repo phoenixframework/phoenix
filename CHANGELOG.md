@@ -19,6 +19,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * [Channel] Do not block the channel supervisor on join
   * [ConnTest] Add `init_test_session` to Phoenix.ConnTest
   * [Controller] Support `:disposition` option in `send_download/3`
+  * [Endpoint] Automatically perform connection draining when shutting down the VM
   * [Endpoint] Allow named params to be used when defining socket paths
   * [Endpoint] Raise if `force_ssl` has changed from compile time to runtime
   * [Generator] Add `mix phx.gen.live` for LiveView CRUD generation
