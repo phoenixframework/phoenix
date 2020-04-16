@@ -47,6 +47,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 
   * Ensure all channel event listeners are called
   * Fix rejoining channels after explicit disconnect following be immediate reconnect
+  * Prevent duplicate join race conditions by immediately leaving duplicate channel on client
 
 ## v1.4
 
