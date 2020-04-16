@@ -299,8 +299,8 @@ defmodule Phx.New.Generator do
   defp phoenix_live_view_webpack_path(%Project{in_umbrella?: false}),
     do: "../deps/phoenix_live_view"
 
-  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> #{@phoenix_version}"}]
-  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
+  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> #{@phoenix_version}", override: true}]
+  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 
   defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"

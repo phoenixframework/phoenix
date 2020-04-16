@@ -1,5 +1,7 @@
 # Changelog for v1.5
 
+See the [upgrade guides](https://gist.github.com/chrismccord/e53e79ef8b34adf5d8122a47db44d22f) to bring your Phoenix 1.4.x apps up to speed
+
 ## Phoenix.PubSub 2.0 released
 
 Phoenix.PubSub 2.0 has been released with a more flexible and powerful fastlane mechanism. We use this opportunity to also move Phoenix.PubSub out of the endpoint and explicitly into your supervision tree. To update, you will need to remove or update the `{:phoenix_pubsub, "~> 1.x"}` entry in your `mix.exs` to at least "2.0".
@@ -10,7 +12,7 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
-## 1.5.0-dev
+## 1.5.0 (2020-04-16)
 
 ### Enhancements
 

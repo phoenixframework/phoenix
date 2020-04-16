@@ -1,7 +1,7 @@
 defmodule Phoenix.MixProject do
   use Mix.Project
 
-  @version "1.5.0-dev"
+  @version "1.5.0-rc.0"
 
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
