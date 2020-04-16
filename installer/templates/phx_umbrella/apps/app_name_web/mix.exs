@@ -41,7 +41,7 @@ defmodule <%= web_namespace %>.MixProject do
       {:phoenix_ecto, "~> 4.0"},<% end %><%= if html do %><%= if live do %>
       {:phoenix_live_view, "~> 0.12.0"},
       {:floki, ">= 0.0.0", only: :test},<% end %><%= if dashboard do %>
-      {:phoenix_live_dashboard, github: "phoenixframework/phoenix_live_dashboard"},<% end %>
+      {:phoenix_live_dashboard, "~> 0.1.0"},<% end %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %>
       {:telemetry_metrics, "~> 0.4"},
