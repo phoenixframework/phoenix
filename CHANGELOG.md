@@ -42,7 +42,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * Built-in support for MSSQL databases via the `tds` adapter
   * `Phoenix.PubSub` is now started directly in your application supervision tree
   * `Phoenix.Ecto.CheckRepoStatus` is now added to new applications that use Ecto
-  * Automatically use `System.get_env("MIX_TEST_PARTITION")` in the database name in the test environemnt for built-in CI test partitioning
+  * Automatically use `System.get_env("MIX_TEST_PARTITION")` in the database name in the test environment for built-in CI test partitioning
   * Generate a `MyApp.Telemetry` module with examples of Telemetry Metrics you may want to track in your app
   * Support the `--live` flag for generating apps with out-of-the-box LiveView support
 
