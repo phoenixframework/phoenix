@@ -85,13 +85,15 @@ and database layers using the same tools.
 For instance, you might want to graph query execution time:
 
 ```elixir
-summary("my_app.repo.query.query_time", unit: {:native, :millisecond})
+Telemetry.Metrics.summary("my_app.repo.query.query_time",
+  unit: {:native, :millisecond}
+)
 ```
 
 or view how long queries spend queued:
 
 ```elixir
-distribution("my_app.repo.query.queue_time",
+Telemetry.Metrics.distribution("my_app.repo.query.queue_time",
   unit: {:native, :millisecond},
   buckets: [10, 50, 100]
 )
@@ -330,8 +332,8 @@ defp periodic_measurements do
   [
     {MyApp, :measure_users, []},
     {:process_info,
-      event: [:my_app, :worker],
-      name: MyApp.Worker,
+      event: [:my_app, :my_server],
+      name: MyApp.MyServer,
       keys: [:message_queue_len, :memory]}
   ]
 end
@@ -358,13 +360,15 @@ def metrics do
     ...metrics...
     # MyApp Metrics
     last_value("my_app.users.total"),
-    last_value("my_app.worker.memory", unit: :byte),
-    last_value("my_app.worker.message_queue_len")
+    last_value("my_app.my_server.memory", unit: :byte),
+    last_value("my_app.my_server.message_queue_len")
+    summary("my_app.my_server.call.stop.duration"),
+    counter("my_app.my_server.call.exception)
   ]
 end
 ```
 
-> You will implement MyApp.Worker in the
+> You will implement MyApp.MyServer in the
 [Custom Events](#custom-events) section.
 
 ## Libraries using Telemetry
@@ -391,4 +395,114 @@ application, you can utilize the `:telemetry` package
 (https://hexdocs.pm/telemetry) just like your favorite
 frameworks and libraries.
 
-_TODO_
+Here is an example of a simple GenServer that emits telemetry
+events. Create this file in your app at `lib/my_app/my_server.ex`:
+
+```elixir
+defmodule MyApp.MyServer do
+  @moduledoc """
+  An example GenServer that emits telemetry events when called.
+  """
+  use GenServer
+
+  def start_link(arg) do
+    GenServer.start_link(__MODULE__, arg, name: __MODULE__)
+  end
+
+  @doc """
+  Changes the function that this server will call.
+
+  ## Example
+
+      iex> MyApp.MyServer.become fn -> "Hello, world!" end
+      iex> :ok
+
+      iex> MyApp.MyServer.call!
+      "Hello, world!"
+  """
+  def become(fun) when is_function(fun, 0) do
+    GenServer.call(__MODULE__, {:become, fun})
+  end
+
+  @doc """
+  Calls the function contained within this server.
+  """
+  def call!, do: GenServer.call(__MODULE__, :called)
+
+  @impl true
+  def init(opts) do
+    fun = if is_function(opts[:fun]), do: opts[:fun], else: fn -> nil end
+    {:ok, %{fun: fun}}
+  end
+
+  @impl true
+  def handle_call({:become, fun}, _from, state) when is_function(fun) do
+    {:reply, :ok, %{state | fun: fun}}
+  end
+
+  def handle_call(:called, _from, state) do
+    start_time = emit_start()
+
+    result =
+      try do
+        state.fun.()
+      catch
+        kind, reason ->
+          stacktrace = System.stacktrace()
+          duration = System.monotonic_time() - start_time
+          emit_exception(duration, kind, reason, stacktrace)
+          :erlang.raise(kind, reason, stacktrace)
+      else
+        result ->
+          duration = System.monotonic_time() - start_time
+          emit_stop(duration)
+          result
+      end
+
+    {:reply, result, state}
+  end
+
+  defp emit_start do
+    start_time_mono = System.monotonic_time()
+
+    :telemetry.execute(
+      [:my_app, :my_server, :call, :start],
+      %{system_time: System.system_time()},
+      %{}
+    )
+
+    start_time_mono
+  end
+
+  defp emit_stop(duration) do
+    :telemetry.execute(
+      [:my_app, :my_server, :call, :stop],
+      %{duration: duration},
+      %{}
+    )
+  end
+
+  defp emit_exception(duration, kind, reason, stacktrace) do
+    :telemetry.execute(
+      [:my_app, :my_server, :call, :exception],
+      %{duration: duration},
+      %{
+        kind: kind,
+        reason: reason,
+        stacktrace: stacktrace
+      }
+    )
+  end
+end
+```
+
+and add it to your application's supervisor tree (usually in
+`lib/my_app/application.ex`):
+
+```elixir
+# lib/my_app/application.ex
+children = [
+  # Start the example server
+  MyApp.MyServer,
+]
+```
