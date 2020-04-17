@@ -1,6 +1,6 @@
 # Telemetry
 
-In this guide, we will walk you how to instrument and report
+In this guide, we will show you how to instrument and report
 on `:telemetry` events in your Phoenix application.
 
 > `te·lem·e·try` - the process of recording and transmitting
@@ -100,8 +100,7 @@ distribution("my_app.repo.query.queue_time",
 > You can learn more about Ecto Telemetry in the "Telemetry
 Events" section of the
 [`Ecto.Repo`](https://hexdocs.pm/ecto/Ecto.Repo.html) module
-documentation, as well as in the [Ecto Metrics](#ecto-metrics)
-section later in this guide.
+documentation.
 
 So far we have seen some of the Telemetry events common to
 Phoenix applications, along with some examples of their
@@ -120,10 +119,9 @@ application.
 
 For developers interested in real-time visualizations for
 their Telemetry metrics, you may be interested in installing
-[`Phoenix.LiveDashboard`](https://github.com/phoenixframework/phoenix_live_dashboard).
-Among other things, LiveDashboard provides a reporter to
-render your metrics as beautiful, real-time charts on the
-dashboard.
+[`LiveDashboard`](https://hexdocs.pm/phoenix_live_dashboard).
+LiveDashboard acts as a Telemetry.Metrics reporter to render
+your data as beautiful, real-time charts on the dashboard.
 
 ### Telemetry.Metrics.ConsoleReporter
 
@@ -170,7 +168,7 @@ function of your Telemetry supervisor (usually in
 
 ```elixir
 # lib/my_app_web/telemetry.ex
-defp metrics do
+def metrics do
   [
     ...metrics...
     summary("phoenix.router_dispatch.stop.duration",
@@ -223,7 +221,7 @@ group by route and method:
 summary("phoenix.router_dispatch.stop.duration",
   tags: [:method, :route],
   unit: {:native, :millisecond}
-  tag_values: &lift_conn_method/1
+  tag_values: &get_and_put_http_method/1
 )
 ```
 
@@ -236,8 +234,8 @@ to lift the `:method` value from the `Plug.Conn` struct:
 
 ```elixir
 # lib/my_app_web/telemetry.ex
-defp lift_conn_method(%{conn: conn} = metadata) do
-  Map.put(metadata, :method, conn.method)
+defp get_and_put_http_method(%{conn: %{method: method}} = metadata) do
+  Map.put(metadata, :method, method)
 end
 ```
 
@@ -248,42 +246,25 @@ route.
 Note the `:tags` and `:tag_values` options can be applied to
 all `Telemetry.Metrics` types.
 
-## Ecto Metrics
+## VM metrics and periodic measurements
 
-_TODO_
-
-```elixir
-defp metrics do
-  [
-    ...metrics...
-    # Ecto Metrics
-    summary("my_app.repo.query.total_time", unit: {:native, :millisecond}),
-    summary("my_app.repo.query.decode_time", unit: {:native, :millisecond}),
-    summary("my_app.repo.query.query_time", unit: {:native, :millisecond}),
-    summary("my_app.repo.query.queue_time", unit: {:native, :millisecond}),
-  ]
-end
-```
-
-## VM Metrics
-
-`Telemetry.Metrics` doesn't have a special treatment for the
-VM metrics - they need to be based on the events like all
-other metrics.
+You might want to periodically measure key values within
+your application.
 
 The `:telemetry_poller` package
-(http://hexdocs.pm/telemetry_poller) exposes a bunch of
+(http://hexdocs.pm/telemetry_poller) exposes numerous
 VM-related metrics and also provides custom periodic
-measurements. You can add telemetry poller as a dependency:
+measurements. You can add `:telemetry_poller` as a
+dependency:
 
 ```elixir
   {:telemetry_poller, "~> 0.4"}
 ```
 
-### Built-in Measurements
+### Built-in measurements
 
 By simply adding `:telemetry_poller` as a dependency, two
-events will become available:
+events become available:
 
 * `[:vm, :memory]` - contains the total memory, as well as
   the memory used for binaries, processes, etc. See
@@ -299,7 +280,7 @@ Update your `metrics/0` function to include some VM metrics:
 
 ```elixir
 # lib/my_app_web/telemetry.ex
-defp metrics do
+def metrics do
   [
     ...metrics...
     # VM Metrics
@@ -320,7 +301,7 @@ Or disable it completely with:
 
     config :telemetry_poller, :default, false
 
-### Custom Periodic Measurements
+### Custom periodic measurements
 
 The `:telemetry_poller` package also allows you to run your
 own poller, which is useful to retrieve process information
@@ -372,7 +353,7 @@ events above:
 
 ```elixir
 # lib/my_app_web/telemetry.ex
-defp metrics do
+def metrics do
   [
     ...metrics...
     # MyApp Metrics
