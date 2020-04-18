@@ -290,6 +290,16 @@ defmodule Phoenix.Endpoint do
   """
   @callback static_lookup(path :: String.t) :: {String.t, String.t} | {String.t, nil}
 
+  @doc """
+  Returns the script name from the :url configuration.
+  """
+  @callback script_name() :: [String.t]
+
+  @doc """
+  Returns the host from the :url configuration.
+  """
+  @callback host() :: String.t
+
   # Channels
 
   @doc """

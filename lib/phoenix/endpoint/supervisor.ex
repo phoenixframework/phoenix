@@ -410,9 +410,9 @@ defmodule Phoenix.Endpoint.Supervisor do
   Invoked to warm up caches on start and config change.
   """
   def warmup(endpoint) do
-    endpoint.host
+    endpoint.host()
+    endpoint.script_name()
     endpoint.path("/")
-    endpoint.script_name
     warmup_url(endpoint)
     warmup_static(endpoint)
     :ok
