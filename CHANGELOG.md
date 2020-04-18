@@ -39,7 +39,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 
 ### phx.new installer
 
-  * Built-in support for MSSQL databases via the `tds` adapter
+  * Built-in support for MSSQL databases via [`Ecto.Adapters.Tds`](https://hexdocs.pm/ecto_sql/Ecto.Adapters.Tds.html)
   * `Phoenix.PubSub` is now started directly in your application supervision tree
   * `Phoenix.Ecto.CheckRepoStatus` is now added to new applications that use Ecto
   * Automatically use `System.get_env("MIX_TEST_PARTITION")` in the database name in the test environment for built-in CI test partitioning
