@@ -954,6 +954,8 @@ defmodule Phoenix.Router do
   @doc """
   Returns the compile-time route info and runtime path params for a request.
 
+  The `path` can be either a string or the `path_info` segments.
+
   A map of metadata is returned with the following keys:
 
     * `:log` - the configured log level. For example `:debug`
@@ -978,8 +980,12 @@ defmodule Phoenix.Router do
       iex> Phoenix.Router.route_info(MyRouter, "GET", "/not-exists", "myhost")
       :error
   """
-  def route_info(router, method, path, host) do
+  def route_info(router, method, path, host) when is_binary(path) do
     split_path = for segment <- String.split(path, "/"), segment != "", do: segment
+    route_info(router, method, split_path, host)
+  end
+
+  def route_info(router, method, split_path, host) when is_list(split_path) do
     case router.__match_route__(method, split_path, host) do
       {%{} = metadata, _prepare, _pipeline, {_plug, _opts}} -> Map.delete(metadata, :conn)
       :error -> :error

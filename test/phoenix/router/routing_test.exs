@@ -254,4 +254,15 @@ defmodule Phoenix.Router.RoutingTest do
 
     assert Phoenix.Router.route_info(Router, "POST", "/not-exists", "host") == :error
   end
+
+  test "route_info returns route string, path params and more for split path" do
+    assert Phoenix.Router.route_info(Router, "GET", ~w(foo bar baz), nil) == %{
+             log: :debug,
+             path_params: %{"path" => ["foo", "bar", "baz"]},
+             pipe_through: [],
+             plug: Phoenix.Router.RoutingTest.UserController,
+             plug_opts: :not_found,
+             route: "/*path"
+           }
+  end
 end
