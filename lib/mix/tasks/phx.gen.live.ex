@@ -171,19 +171,16 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     else
       Mix.shell().info """
 
-      Add your #{inspect(context.web_module)}.LiveHelpers import to your view_helpers block in #{file_path}:
+      Could not find Phoenix.LiveView.Helpers imported in #{file_path}.
 
-          defp view_helpers do
-            quote do
-              # Use all HTML functionality (forms, tags, etc)
-              use Phoenix.HTML
+      This is typically happens because your application was not generated
+      with the --live flag:
 
-              # Import convenience functions for LiveView rendering
-              import Phoenix.LiveView.Helpers
-              #{inject}
-              ...
-            end
-          end
+          mix phx.new my_app --live
+
+      Please make sure LiveView is installed and that #{inspect(context.web_module)}
+      defines both `live_view/0` and `live_component/0` functions,
+      and that both functions import #{inspect(context.web_module)}.LiveHelpers.
       """
     end
   end
