@@ -80,9 +80,12 @@ defmodule <%= web_namespace %> do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML<%= if live do %>
 
-      # Import convenience functions for LiveView rendering
+      # Import LiveView helpers (live_render, live_component, live_patch, etc)
       import Phoenix.LiveView.Helpers<% end %>
 <% end %>
+      # Import basic rendering functionality (render, render_layout, etc)
+      import Phoenix.View
+
       import <%= web_namespace %>.ErrorHelpers<%= if gettext do %>
       import <%= web_namespace %>.Gettext<% end %>
       alias <%= web_namespace %>.Router.Helpers, as: Routes
