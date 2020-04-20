@@ -301,6 +301,46 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
+  test "new with no_dashboard" do
+    in_tmp "new with no_dashboard", fn ->
+      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-dashboard"])
+
+      assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_dashboard")
+
+      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.eex"), fn file ->
+        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), fn file ->
+        assert file =~ ~s|defmodule PhxUmbWeb.Endpoint|
+        refute file =~ ~s|socket "/live"|
+        refute file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
+      end
+    end
+  end
+
+  test "new with no_html" do
+    in_tmp "new with no_html", fn ->
+      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-html"])
+
+      assert_file web_path(@app, "mix.exs"), fn file ->
+        refute file =~ ~s|:phoenix_live_view|
+        assert file =~ ~s|:phoenix_live_dashboard|
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), fn file ->
+        assert file =~ ~s|defmodule PhxUmbWeb.Endpoint|
+        assert file =~ ~s|socket "/live"|
+        assert file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/router.ex"), fn file ->
+        refute file =~ ~s|pipeline :browser|
+        assert file =~ ~s|pipe_through [:fetch_session, :protect_from_forgery]|
+      end
+    end
+  end
+
   test "new with no_webpack" do
     in_tmp "new with no_webpack", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-webpack"])
@@ -321,6 +361,24 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--binary-id"])
       assert_file root_path(@app, "config/config.exs"),
                   ~r/generators: \[context_app: :phx_umb, binary_id: true\]/
+    end
+  end
+
+  test "new with live no_dashboard" do
+    in_tmp "new with live no_dashboard", fn ->
+      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--live", "--no-dashboard"])
+
+      assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_dashboard")
+
+      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.leex"), fn file ->
+        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), fn file ->
+        assert file =~ ~s|defmodule PhxUmbWeb.Endpoint|
+        assert file =~ ~s|socket "/live"|
+        refute file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
+      end
     end
   end
 
