@@ -281,7 +281,7 @@ defmodule Phoenix.Logger do
 
   ## Event: [:phoenix, :channel_joined]
 
-  def phoenix_channel_joined(_, %{duration: duration}, %{socket: socket} = metadata, _) do
+  defp phoenix_channel_joined(_, %{duration: duration}, %{socket: socket} = metadata, _) do
     channel_log(:log_join, socket, fn ->
       %{result: result, params: params} = metadata
 
@@ -301,7 +301,7 @@ defmodule Phoenix.Logger do
 
   ## Event: [:phoenix, :channel_handle_in]
 
-  def phoenix_channel_handled_in(_, %{duration: duration}, %{socket: socket} = metadata, _) do
+  defp phoenix_channel_handled_in(_, %{duration: duration}, %{socket: socket} = metadata, _) do
     channel_log(:log_handle_in, socket, fn ->
       %{event: event, params: params} = metadata
 
