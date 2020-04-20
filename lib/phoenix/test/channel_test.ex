@@ -281,7 +281,7 @@ defmodule Phoenix.ChannelTest do
     map = %{
       endpoint: endpoint,
       transport: :channel_test,
-      options: [serializer: [{NoopSerializer, "~> 1.0.0"}]],
+      options: [serializer: [{NoopSerializer, ">= 1.0.0"}]],
       params: __stringify__(params),
       connect_info: connect_info
     }
