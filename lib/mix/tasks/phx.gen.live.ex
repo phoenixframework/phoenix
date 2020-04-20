@@ -173,7 +173,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
       Could not find Phoenix.LiveView.Helpers imported in #{file_path}.
 
-      This is typically happens because your application was not generated
+      This typically happens because your application was not generated
       with the --live flag:
 
           mix phx.new my_app --live
