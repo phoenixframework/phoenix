@@ -352,7 +352,7 @@ build:
 
 ### Setup releases and Dockerfile
 
-Now we need to define a `Dockerfile` at the root folder of your project that contains your application. We recommend to use releases when doing so, as the release will allow us to build a container with only the parts of Erlang and Elixir we actually use. Follow [the releases docs](/releases.html). At the end of the guide, there is a sample Dockerfile file you can use.
+Now we need to define a `Dockerfile` at the root folder of your project that contains your application. We recommend to use releases when doing so, as the release will allow us to build a container with only the parts of Erlang and Elixir we actually use. Follow [the releases docs](releases.html). At the end of the guide, there is a sample Dockerfile file you can use.
 
 Once you have the image definition setup, you can push your app to heroku and you can see it starts building the image and deploy it.
 
