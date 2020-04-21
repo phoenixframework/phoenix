@@ -7,9 +7,27 @@ defmodule Phoenix.Logger do
   Phoenix uses the `:telemetry` library for instrumentation. The following events
   are published by Phoenix with the following measurements and metadata:
 
-    * `[:phoenix, :endpoint, :start]` - dispatched by `Plug.Telemetry` in your
-      endpoint at the beginning of every request.
-      * Measurement: `%{time: System.monotonic_time}`
+    * `[:plug_adapter, :call, :start]` - dispatched by Phoenix integration with Cowboy,
+      this includes all requests, such as assets and web socket connections
+      * Measurement: `%{system_time: system_time}`
+      * Metadata: `%{conn: Plug.Conn.t, plug: endpoint}`
+      * Disable logging: not logged by default
+
+    * `[:plug_adapter, :call, :stop]` - dispatched by Phoenix integration with Cowboy,
+      whenever your endpoint finishes processing successfully
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{conn: Plug.Conn.t, plug: endpoint}`
+      * Disable logging: not logged by default
+
+    * `[:plug_adapter, :call, :exception]` - dispatched by Phoenix integration with Cowboy,
+      whenever there are errors
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{conn: Plug.Conn.t, plug: endpoint, kind: kind, reason: reason, stacktrace: stacktrace}`
+      * Disable logging: not logged by default
+
+    * `[:phoenix, :endpoint, :start]` - dispatched by `Plug.Telemetry` in your endpoint,
+      usually after code reloading
+      * Measurement: `%{system_time: system_time}`
       * Metadata: `%{conn: Plug.Conn.t, options: Keyword.t}`
       * Options: `%{log: Logger.level | false}`
       * Disable logging: In your endpoint `plug Plug.Telemetry, ..., log: Logger.level | false`
