@@ -70,7 +70,7 @@ defmodule Phoenix.MixProject do
       {:phoenix_pubsub, "~> 2.0"},
 
       # Optional deps
-      {:plug_cowboy, "~> 1.0 or ~> 2.1", optional: true},
+      {:plug_cowboy, "~> 1.0 or ~> 2.2", optional: true},
       {:jason, "~> 1.0", optional: true},
       {:phoenix_html, "~> 2.13", optional: true},
 

@@ -8,6 +8,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
 
   @connection Plug.Cowboy.Conn
   @already_sent {:plug_conn, :sent}
+  @adapter :phoenix_cowboy
 
   # Note we keep the websocket state as [handler | state]
   # to avoid conflicts with {endpoint, opts}.
@@ -16,51 +17,92 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
   end
 
   defp init(conn, endpoint, opts, retry?) do
-    case endpoint.__handler__(conn, opts) do
-      {:websocket, conn, handler, opts} ->
-        case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
-          {:ok, %Plug.Conn{adapter: {@connection, req}} = conn, state} ->
-            cowboy_opts =
-              opts
-              |> Enum.flat_map(fn
-                {:timeout, timeout} -> [idle_timeout: timeout]
-                {:compress, _} = opt -> [opt]
-                {:max_frame_size, _} = opt -> [opt]
-                _other -> []
-              end)
-              |> Map.new()
+    start = System.monotonic_time()
 
-            {:cowboy_websocket, copy_resp_headers(conn, req), [handler | state], cowboy_opts}
+    :telemetry.execute(
+      [:plug_adapter, :call, :start],
+      %{system_time: System.system_time()},
+      %{adapter: @adapter, conn: conn, plug: endpoint}
+    )
 
-          {:error, %Plug.Conn{adapter: {@connection, req}} = conn} ->
-            {:ok, copy_resp_headers(conn, req), {handler, opts}}
-        end
+    try do
+      case endpoint.__handler__(conn, opts) do
+        {:websocket, conn, handler, opts} ->
+          case Phoenix.Transports.WebSocket.connect(conn, endpoint, handler, opts) do
+            {:ok, %Plug.Conn{adapter: {@connection, req}} = conn, state} ->
+              cowboy_opts =
+                opts
+                |> Enum.flat_map(fn
+                  {:timeout, timeout} -> [idle_timeout: timeout]
+                  {:compress, _} = opt -> [opt]
+                  {:max_frame_size, _} = opt -> [opt]
+                  _other -> []
+                end)
+                |> Map.new()
 
-      {:plug, conn, handler, opts} ->
-        %{adapter: {@connection, req}} =
-          conn
-          |> handler.call(opts)
-          |> maybe_send(handler)
+              :telemetry.execute(
+                [:plug_adapter, :call, :stop],
+                %{duration: System.monotonic_time() - start},
+                %{adapter: @adapter, conn: conn, plug: endpoint}
+              )
 
-        {:ok, req, {handler, opts}}
-    end
-  catch
-    kind, reason ->
-      case __STACKTRACE__ do
-        # Maybe the handler is not available because the code is being recompiled.
-        # Sync with the code reloader and retry once.
-        [{^endpoint, :__handler__, _, _} | _] when reason == :undef and retry? ->
-          Phoenix.CodeReloader.Server.sync()
-          init(conn, endpoint, opts, false)
+              {:cowboy_websocket, copy_resp_headers(conn, req), [handler | state], cowboy_opts}
 
-        stacktrace ->
-          exit_on_error(kind, reason, stacktrace, {endpoint, :call, [conn, opts]})
+            {:error, %Plug.Conn{adapter: {@connection, req}} = conn} ->
+              :telemetry.execute(
+                [:plug_adapter, :call, :stop],
+                %{duration: System.monotonic_time() - start},
+                %{adapter: @adapter, conn: conn, plug: endpoint}
+              )
+
+              {:ok, copy_resp_headers(conn, req), {handler, opts}}
+          end
+
+        {:plug, conn, handler, opts} ->
+          %{adapter: {@connection, req}} =
+            conn
+            |> handler.call(opts)
+            |> maybe_send(handler)
+
+          :telemetry.execute(
+            [:plug_adapter, :call, :stop],
+            %{duration: System.monotonic_time() - start},
+            %{adapter: @adapter, conn: conn, plug: endpoint}
+          )
+
+          {:ok, req, {handler, opts}}
       end
-  after
-    receive do
-      @already_sent -> :ok
+    catch
+      kind, reason ->
+        :telemetry.execute(
+          [:plug_adapter, :call, :exception],
+          %{duration: System.monotonic_time() - start},
+          %{
+            kind: kind,
+            reason: reason,
+            stacktrace: __STACKTRACE__,
+            adapter: @adapter,
+            conn: conn,
+            plug: endpoint
+          }
+        )
+
+        case __STACKTRACE__ do
+          # Maybe the handler is not available because the code is being recompiled.
+          # Sync with the code reloader and retry once.
+          [{^endpoint, :__handler__, _, _} | _] when reason == :undef and retry? ->
+            Phoenix.CodeReloader.Server.sync()
+            init(conn, endpoint, opts, false)
+
+          stacktrace ->
+            exit_on_error(kind, reason, stacktrace, {endpoint, :call, [conn, opts]})
+        end
     after
-      0 -> :ok
+      receive do
+        @already_sent -> :ok
+      after
+        0 -> :ok
+      end
     end
   end
 
