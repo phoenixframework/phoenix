@@ -148,6 +148,7 @@ defmodule Phoenix.Integration.EndpointTest do
     end
   end
 
+  @tag :cowboy2
   test "adapters starts on configured port and serves requests and stops for prod" do
     attach_telemetry()
 
