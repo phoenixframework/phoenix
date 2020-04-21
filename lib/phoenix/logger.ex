@@ -62,7 +62,6 @@ defmodule Phoenix.Logger do
   To see an example of how Phoenix LiveDashboard uses these events to create
   metrics, visit <https://hexdocs.pm/phoenix_live_dashboard/metrics.html>.
 
-
   ## Parameter filtering
 
   When logging parameters, Phoenix can filter out sensitive parameters
