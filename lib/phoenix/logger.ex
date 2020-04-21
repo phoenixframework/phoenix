@@ -59,6 +59,8 @@ defmodule Phoenix.Logger do
       * Metadata: `%{event: binary, params: term, socket: Phoenix.Socket.t}`
       * Disable logging: This event cannot be disabled
 
+  To see an example of how Phoenix LiveDashboard uses these events to create
+  metrics, visit <https://hexdocs.pm/phoenix_live_dashboard/metrics.html>.
 
   ## Parameter filtering
 
