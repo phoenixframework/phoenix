@@ -116,7 +116,6 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     assert resp.body["messages"] == [~s(%{"hello" => "world"})]
   end
 
-  @tag :cowboy2
   test "allows a path with variables" do
     path = "custom/123/456/path"
     resp = poll(:get, path, %{"key" => "value"}, nil)

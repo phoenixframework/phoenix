@@ -714,8 +714,6 @@ defmodule Phoenix.Endpoint do
       socket "/ws/:user_id", MyApp.UserSocket,
         websocket: [path: "/project/:project_id"]
 
-  Note: This feature is not supported with the Cowboy 1 adapter.
-
   ## Common configuration
 
   The configuration below can be given to both `:websocket` and
@@ -800,8 +798,8 @@ defmodule Phoenix.Endpoint do
     * `:timeout` - the timeout for keeping websocket connections
       open after it last received data, defaults to 60_000ms
 
-    * `:max_frame_size` - the maximum allowed frame size in bytes.
-      Supported from Cowboy 2.3 onwards, defaults to "infinity"
+    * `:max_frame_size` - the maximum allowed frame size in bytes,
+      defaults to "infinity"
 
     * `:compress` - whether to enable per message compression on
       all data frames, defaults to false

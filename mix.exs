@@ -15,7 +15,6 @@ defmodule Phoenix.MixProject do
       elixir: @elixir_requirement,
       deps: deps(),
       package: package(),
-      lockfile: lockfile(),
       preferred_cli_env: [docs: :docs],
       consolidate_protocols: Mix.env() != :test,
       xref: [
@@ -24,7 +23,6 @@ defmodule Phoenix.MixProject do
           Ecto.Type,
           :ranch,
           :cowboy_req,
-          Plug.Adapters.Cowboy.Conn,
           Plug.Cowboy.Conn,
           Plug.Cowboy
         ]
@@ -86,19 +84,13 @@ defmodule Phoenix.MixProject do
     ]
   end
 
-  defp lockfile() do
-    case System.get_env("COWBOY_VERSION") do
-      "1" <> _ -> "mix-cowboy1.lock"
-      _ -> "mix.lock"
-    end
-  end
-
   defp package do
     [
       maintainers: ["Chris McCord", "José Valim", "Gary Rennie", "Jason Stiebs"],
       licenses: ["MIT"],
       links: %{github: "https://github.com/phoenixframework/phoenix"},
-      files: ~w(assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
+      files:
+        ~w(assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
     ]
   end
 
@@ -122,7 +114,6 @@ defmodule Phoenix.MixProject do
       "guides/introduction/installation.md",
       "guides/introduction/up_and_running.md",
       "guides/introduction/community.md",
-
       "guides/directory_structure.md",
       "guides/request_lifecycle.md",
       "guides/plug.md",
@@ -132,31 +123,27 @@ defmodule Phoenix.MixProject do
       "guides/ecto.md",
       "guides/contexts.md",
       "guides/mix_tasks.md",
-
       "guides/realtime/channels.md",
       "guides/realtime/presence.md",
-
       "guides/testing/testing.md",
       "guides/testing/testing_contexts.md",
       "guides/testing/testing_controllers.md",
       "guides/testing/testing_channels.md",
-
       "guides/deployment/deployment.md",
       "guides/deployment/releases.md",
       "guides/deployment/heroku.md",
-
       "guides/howto/custom_error_pages.md",
-      "guides/howto/using_ssl.md",
+      "guides/howto/using_ssl.md"
     ]
   end
 
   defp groups_for_extras do
     [
-      "Introduction": ~r/guides\/introduction\/.?/,
-      "Guides": ~r/guides\/[^\/]+\.md/,
+      Introduction: ~r/guides\/introduction\/.?/,
+      Guides: ~r/guides\/[^\/]+\.md/,
       "Real-time components": ~r/guides\/realtime\/.?/,
-      "Testing": ~r/guides\/testing\/.?/,
-      "Deployment": ~r/guides\/deployment\/.?/,
+      Testing: ~r/guides\/testing\/.?/,
+      Deployment: ~r/guides\/deployment\/.?/,
       "How-to's": ~r/guides\/howto\/.?/
     ]
   end
@@ -177,17 +164,14 @@ defmodule Phoenix.MixProject do
     # Phoenix.View
 
     [
-      "Testing": [
+      Testing: [
         Phoenix.ChannelTest,
-        Phoenix.ConnTest,
+        Phoenix.ConnTest
       ],
-
       "Adapters and Plugs": [
         Phoenix.CodeReloader,
-        Phoenix.Endpoint.CowboyAdapter,
         Phoenix.Endpoint.Cowboy2Adapter
       ],
-
       "Socket and Transport": [
         Phoenix.Socket,
         Phoenix.Socket.Broadcast,
@@ -196,13 +180,12 @@ defmodule Phoenix.MixProject do
         Phoenix.Socket.Serializer,
         Phoenix.Socket.Transport
       ],
-
-      "Templating": [
+      Templating: [
         Phoenix.Template,
         Phoenix.Template.EExEngine,
         Phoenix.Template.Engine,
-        Phoenix.Template.ExsEngine,
-      ],
+        Phoenix.Template.ExsEngine
+      ]
     ]
   end
 
@@ -213,7 +196,7 @@ defmodule Phoenix.MixProject do
   end
 
   def generate_js_docs(_) do
-    Mix.Task.run "app.start"
+    Mix.Task.run("app.start")
     System.cmd("npm", ["run", "docs"], cd: "assets")
   end
 end
