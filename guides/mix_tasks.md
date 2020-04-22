@@ -294,7 +294,7 @@ And then `assets/` which should look similar to this:
 
 ```console
 ├── css
-│   └── app.css
+│   └── app.scss
 ├── js
 │   └── app.js
 ├── vendor

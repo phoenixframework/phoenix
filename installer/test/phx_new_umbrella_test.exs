@@ -133,7 +133,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "assets/.babelrc"), "env"
       assert_file web_path(@app, "assets/static/favicon.ico")
       assert_file web_path(@app, "assets/static/images/phoenix.png")
-      assert_file web_path(@app, "assets/css/app.css")
+      assert_file web_path(@app, "assets/css/app.scss")
       assert_file web_path(@app, "assets/css/phoenix.css")
       assert_file web_path(@app, "assets/js/app.js"),
                   ~s[import socket from "./socket"]
@@ -406,7 +406,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
       end
 
-      assert_file web_path(@app, "assets/css/app.css"), fn file ->
+      assert_file web_path(@app, "assets/css/app.scss"), fn file ->
         assert file =~ ~s[@import "../node_modules/nprogress/nprogress.css";]
         assert file =~ ~s[.phx-click-loading]
       end
@@ -672,7 +672,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/assets/.babelrc", "env"
         assert_file "another/assets/static/favicon.ico"
         assert_file "another/assets/static/images/phoenix.png"
-        assert_file "another/assets/css/app.css"
+        assert_file "another/assets/css/app.scss"
         assert_file "another/assets/css/phoenix.css"
         assert_file "another/assets/js/app.js",
                     ~s[import socket from "./socket"]
