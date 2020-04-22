@@ -1157,6 +1157,14 @@ defmodule Phoenix.Controller do
   "_format" parameter is available, this function will parse
   the "accept" header and find a matching format accordingly.
 
+  This function is useful when you may want to serve different
+  content-types (such as JSON and HTML) from the same routes.
+  However, if you always have distinct routes, you can also
+  disable content negotiation and simply hardcode your format
+  of choice in your route pipelines:
+
+      plug :put_format, "html"
+
   It is important to notice that browsers have historically
   sent bad accept headers. For this reason, this function will
   default to "html" format whenever:
