@@ -214,7 +214,7 @@ In particular, controller plugs provide a feature that allows us to execute plug
 defmodule HelloWeb.HelloController do
   use HelloWeb, :controller
 
-  plug HelloWeb.Plugs.Locale, "en" when action_name in [:index]
+  plug HelloWeb.Plugs.Locale, "en" when action in [:index]
 ```
 
 And the plug will only be executed for the `index` action.
