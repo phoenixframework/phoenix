@@ -103,6 +103,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
       |> maybe_fetch_query_params()
       |> maybe_fetch_format(opts)
       |> Plug.Conn.put_status(status)
+      |> Controller.put_root_layout(opts[:root_layout] || false)
       |> Controller.put_layout(opts[:layout] || false)
       |> Controller.put_view(view)
 

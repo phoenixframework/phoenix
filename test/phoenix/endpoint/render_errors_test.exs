@@ -7,8 +7,8 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   import ExUnit.CaptureLog
   view = __MODULE__
 
-  def render("app.html", %{view_template: view_template} = assigns) do
-    "Layout: " <> render(view_template, assigns)
+  def render("app.html", assigns) do
+    "Layout: " <> assigns.inner_content
   end
 
   def render("404.html", %{kind: kind, reason: _reason, stack: _stack, status: 404, conn: conn}) do
@@ -55,6 +55,12 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
         rescue
           _ -> __STACKTRACE__
         end
+
+      # Those are always ignored and must be explicitly opted-in.
+      conn =
+        conn
+        |> Phoenix.Controller.put_layout({Unknown, "layout"})
+        |> Phoenix.Controller.put_root_layout({Unknown, "root"})
 
       reason = ArgumentError.exception("oops")
       raise Plug.Conn.WrapperError, conn: conn, kind: :error, stack: stack, reason: reason
@@ -246,6 +252,14 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
 
   test "exception page with layout" do
     body = assert_render(500, conn(:get, "/"), [layout: {__MODULE__, :app}], fn ->
+      throw :hello
+    end)
+
+    assert body == "Layout: Got 500 from throw with GET"
+  end
+
+  test "exception page with root layout" do
+    body = assert_render(500, conn(:get, "/"), [root_layout: {__MODULE__, :app}], fn ->
       throw :hello
     end)
 
