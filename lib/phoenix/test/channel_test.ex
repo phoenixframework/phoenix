@@ -252,7 +252,6 @@ defmodule Phoenix.ChannelTest do
     build_socket(nil, id, assigns, __CALLER__)
   end
 
-  # TODO: Remove this when Cowboy 1 adapter is removed
   defp first_socket!(endpoint) do
     case endpoint.__sockets__ do
       [] -> raise ArgumentError, "#{inspect endpoint} has no socket declaration"

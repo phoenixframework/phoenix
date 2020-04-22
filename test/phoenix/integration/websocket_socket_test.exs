@@ -151,7 +151,6 @@ defmodule Phoenix.Integration.WebSocketTest do
     assert {:ok, _} = WebsocketClient.start_link(self(), "#{path}?key=value", :noop)
   end
 
-  @tag :cowboy2
   test "allows a path with variables" do
     path = "ws://127.0.0.1:#{@port}/custom/123/456/path"
     assert {:ok, client} = WebsocketClient.start_link(self(), "#{path}?key=value", :noop)
@@ -162,7 +161,6 @@ defmodule Phoenix.Integration.WebSocketTest do
     assert params =~ ~s(path_var" => "456")
   end
 
-  @tag :cowboy2
   test "allows using control frames with a payload" do
     path = "ws://127.0.0.1:#{@port}/ws/ping/websocket"
     assert {:ok, client} = WebsocketClient.start_link(self(), path, :noop)

@@ -5,7 +5,6 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   require Logger
   use Supervisor
-  alias Phoenix.Endpoint.{CowboyAdapter, Cowboy2Adapter}
 
   @doc """
   Starts the endpoint supervision tree.
@@ -148,58 +147,12 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp server_children(mod, config, server?) do
     if server? do
-      user_adapter = user_adapter(mod, config)
-      autodetected_adapter = cowboy_version_adapter()
-      warn_on_different_adapter_version(user_adapter, autodetected_adapter, mod)
-      (user_adapter || autodetected_adapter).child_specs(mod, config)
+      adapter = config[:adapter] || Phoenix.Endpoint.Cowboy2Adapter
+      adapter.child_specs(mod, config)
     else
       []
     end
   end
-
-  defp user_adapter(endpoint, config) do
-    case config[:handler] do
-      nil ->
-        config[:adapter]
-
-      Phoenix.Endpoint.CowboyHandler ->
-        Logger.warn "Phoenix.Endpoint.CowboyHandler is deprecated, please use Phoenix.Endpoint.CowboyAdapter instead"
-        CowboyAdapter
-
-      other ->
-        Logger.warn "The :handler option in #{inspect endpoint} is deprecated, please use :adapter instead"
-        other
-    end
-  end
-
-  defp cowboy_version_adapter() do
-    case Application.spec(:cowboy, :vsn) do
-      [?1 | _] -> CowboyAdapter
-      _ -> Cowboy2Adapter
-    end
-  end
-
-  defp warn_on_different_adapter_version(CowboyAdapter, Cowboy2Adapter, endpoint) do
-    Logger.error("""
-    You have specified #{inspect CowboyAdapter} for Cowboy v1.x \
-    in the :adapter configuration of your Phoenix endpoint #{inspect endpoint} \
-    but your mix.exs has fetched Cowboy v2.x.
-
-    If you wish to use Cowboy 1, please update mix.exs to point to the \
-    correct Cowboy version:
-
-        {:plug_cowboy, "~> 1.0"}
-
-    If you want to use Cowboy 2, then please remove the :adapter option \
-    in your config.exs file or set it to:
-
-        adapter: Phoenix.Endpoint.Cowboy2Adapter
-
-    """)
-
-    raise "aborting due to adapter mismatch"
-  end
-  defp warn_on_different_adapter_version(_user, _autodetected, _endpoint), do: :ok
 
   defp watcher_children(_mod, conf, server?) do
     if server? do
