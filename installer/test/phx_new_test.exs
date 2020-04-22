@@ -109,7 +109,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
       assert_file "phx_blog/assets/static/favicon.ico"
       assert_file "phx_blog/assets/static/images/phoenix.png"
-      assert_file "phx_blog/assets/css/app.css"
+      assert_file "phx_blog/assets/css/app.scss"
       assert_file "phx_blog/assets/css/phoenix.css"
       assert_file "phx_blog/assets/js/app.js",
                   ~s[import socket from "./socket"]
@@ -121,7 +121,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s["file:../deps/phoenix_html"]
       end
 
-      refute File.exists? "phx_blog/priv/static/css/app.css"
+      refute File.exists? "phx_blog/priv/static/css/app.scss"
       refute File.exists? "phx_blog/priv/static/css/phoenix.css"
       refute File.exists? "phx_blog/priv/static/js/phoenix.js"
       refute File.exists? "phx_blog/priv/static/js/app.js"
@@ -395,7 +395,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
       end
 
-      assert_file "phx_blog/assets/css/app.css", fn file ->
+      assert_file "phx_blog/assets/css/app.scss", fn file ->
         assert file =~ ~s[@import "../node_modules/nprogress/nprogress.css";]
         assert file =~ ~s[.phx-click-loading]
       end

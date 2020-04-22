@@ -71,7 +71,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
     {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
+    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"},
     {:eex,  "phx_assets/socket.js",         :web, "assets/js/socket.js"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
@@ -81,7 +81,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
     {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
+    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
   ]

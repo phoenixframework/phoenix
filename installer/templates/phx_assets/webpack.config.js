@@ -34,16 +34,12 @@ module.exports = (env, options) => {
           }
         },
         {
-          test: /\.css$/,
+          test: /\.[s]?css$/,
           use: [
             MiniCssExtractPlugin.loader,
-            {
-              loader: 'css-loader',
-              options: {
-                sourceMap: devMode
-              }
-            }
-          ]
+            'css-loader',
+            'sass-loader',
+          ],
         }
       ]
     },
