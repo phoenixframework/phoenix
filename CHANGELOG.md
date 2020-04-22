@@ -45,6 +45,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * Automatically use `System.get_env("MIX_TEST_PARTITION")` in the database name in the test environment for built-in CI test partitioning
   * Generate a `MyApp.Telemetry` module with examples of Telemetry Metrics you may want to track in your app
   * Support the `--live` flag for generating apps with out-of-the-box LiveView support
+  * Include scss support by default when using webpack
 
 ### JavaScript client
 
