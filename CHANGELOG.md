@@ -24,6 +24,14 @@ Note the websocket/longpoll configuration given to socket/3 will only apply afte
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.17 (2020-04-23)
+
+### Bug Fixes
+  - [Endpoint] Ignore the root layout on error pages unless explicity opted into
+
+### Enhancements
+  - [Router] Accept a split path on `route_info`, in addition to string path
+
 ## 1.4.16 (2020-03-15)
 
 ### Enhancements
