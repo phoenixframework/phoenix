@@ -26,7 +26,7 @@ defmodule Phoenix do
     * [Gettext](https://hexdocs.pm/gettext) - Internationalization and
       localization through [`gettext`](https://www.gnu.org/software/gettext/)
 
-  To get started, see our [overview guides](/overview.html).
+  To get started, see our [overview guides](overview.html).
   """
   use Application
 
