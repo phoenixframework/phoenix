@@ -12,6 +12,11 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+## 1.5.1 (2020-04-23)
+
+### Bug Fixes
+  * [Endpoint] Ignore the root layout on error pages unless explicitly set
+
 ## 1.5.0 (2020-04-22)
 
 ### Enhancements
