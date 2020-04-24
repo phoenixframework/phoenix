@@ -24,7 +24,7 @@ Let's use these ideas to build out our web application. Our goal is to build a u
 
 User accounts are often wide-reaching across a platform so it's important to think upfront about writing a well-defined interface. With that in mind, our goal is to build an accounts API that handles creating, updating, and deleting user accounts, as well as authenticating user credentials. We'll start off with basic features, but as we add authentication later, we'll see how starting with a solid foundation allows us to grow our application naturally as we add functionality.
 
-Phoenix includes the `phx.gen.html`, `phx.gen.json`, `phx.gen.live`, and `phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new user accounts context.
+Phoenix includes the `mix phx.gen.html`, `mix phx.gen.json`, `mix phx.gen.live`, and `mix phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new user accounts context.
 
 In order to run the context generators, we need to come up with a module name that groups the related functionality that we're building. In the [Ecto guide](ecto.html), we saw how we can use Changesets and Repos to validate and persist user schemas, but we didn't integrate this with our application at large. In fact, we didn't think about where a "user" in our application should live at all. Let's take a step back and think about the different parts of our system. We know that we'll have users of our product. Along with users comes things like account login credentials and user registration. An `Accounts` context in our system is a natural place for our user functionality to live.
 
@@ -48,7 +48,7 @@ The database for Hello.Repo has been created
 14:38:37.418 [info]  Already up
 ```
 
-Now we're ready to create our accounts context. We'll use the `phx.gen.html` task which creates a context module that wraps up Ecto access for creating, updating, and deleting users, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
+Now we're ready to create our accounts context. We'll use `mix phx.gen.html` which creates a context module that wraps up Ecto access for creating, updating, and deleting users, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
 
 ```console
 $ mix phx.gen.html Accounts User users name:string \
@@ -125,7 +125,7 @@ If we follow the "Back" link, we get a list of all users, which should contain t
 
 ## Starting With Generators
 
-That little `phx.gen.html` command packed a surprising punch. We got a lot of functionality out-of-the-box for creating, updating, and deleting users. This is far from a full-featured app, but remember, generators are first and foremost learning tools and a starting point for you to begin building real features. Code generation can't solve all your problems, but it will teach you the ins and outs of Phoenix and nudge you towards the proper mind-set when designing your application.
+That little `mix phx.gen.html` command packed a surprising punch. We got a lot of functionality out-of-the-box for creating, updating, and deleting users. This is far from a full-featured app, but remember, generators are first and foremost learning tools and a starting point for you to begin building real features. Code generation can't solve all your problems, but it will teach you the ins and outs of Phoenix and nudge you towards the proper mind-set when designing your application.
 
 Let's first check out the `UserController` that was generated in `lib/hello_web/controllers/user_controller.ex`:
 
@@ -246,7 +246,7 @@ defmodule Hello.Accounts.User do
 end
 ```
 
-This is just what we saw before when we ran the `mix phx.gen.schema` task, except here we see a `@doc false` above our `changeset/2` function. This tells us that while this function is publicly callable, it's not part of the public context API. Callers that build changesets do so via the context API. For example, `Accounts.create_user/1` calls into our `User.changeset/2` to build the changeset from user input. Callers, such as our controller actions, do not access `User.changeset/2` directly. All interaction with our user changesets is done through the public `Accounts` context.
+This is just what we saw before when we ran `mix phx.gen.schema`, except here we see a `@doc false` above our `changeset/2` function. This tells us that while this function is publicly callable, it's not part of the public context API. Callers that build changesets do so via the context API. For example, `Accounts.create_user/1` calls into our `User.changeset/2` to build the changeset from user input. Callers, such as our controller actions, do not access `User.changeset/2` directly. All interaction with our user changesets is done through the public `Accounts` context.
 
 ## In-context Relationships
 
@@ -270,7 +270,7 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-This time around, we used the `phx.gen.context` task, which is just like `phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing users, we can integrate the new credential features into our existing web form.
+This time around, we used `mix phx.gen.context`, which is just like `mix phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing users, we can integrate the new credential features into our existing web form.
 
 We can see from the output that Phoenix generated an `accounts/credential.ex` file for our `Accounts.Credential` schema, as well as a migration. Notably, phoenix said it was `* injecting` code into the existing `accounts.ex` context file and test file. Since our `Accounts` module already exists, Phoenix knows to inject our code here.
 
@@ -683,7 +683,7 @@ Generated hello app
 
 Now, let's fire up the server with `mix phx.server` and visit [http://localhost:4000/cms/pages](http://localhost:4000/cms/pages). If we haven't logged in yet, we'll be redirected to the home page with a flash error message telling us to sign in. Let's sign in at [http://localhost:4000/sessions/new](http://localhost:4000/sessions/new), then re-visit [http://localhost:4000/cms/pages](http://localhost:4000/cms/pages). Now that we're authenticated, we should see a familiar resource listing for pages, with a `New Page` link.
 
-Before we create any pages, we need page authors. Let's run the `phx.gen.context` generator to generate an `Author` schema along with injected context functions:
+Before we create any pages, we need page authors. Let's run the `mix phx.gen.context` generator to generate an `Author` schema along with injected context functions:
 
 ```
 $ mix phx.gen.context CMS Author authors bio:text role:string \
