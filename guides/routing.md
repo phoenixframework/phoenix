@@ -53,7 +53,7 @@ get "/", PageController, :index
 
 ## Examining Routes
 
-Phoenix provides a great tool for investigating routes in an application, the mix task `phx.routes`.
+Phoenix provides a great tool for investigating routes in an application: `mix phx.routes`.
 
 Let's see how this works. Go to the root of a newly-generated Phoenix application and run `mix phx.routes`. You should see something like the following, generated with all routes you currently have:
 
@@ -165,7 +165,7 @@ Using path helpers makes it easy to ensure our controllers, views and templates 
 
 ### More on Path Helpers
 
-When we ran the `phx.routes` task for our user resource, it listed the `user_path` as the path helper function for each line of output. Here is what that translates to for each action:
+When we ran `mix phx.routes` for our user resource, it listed the `user_path` as the path helper function for each line of output. Here is what that translates to for each action:
 
 ```elixir
 iex> alias HelloWeb.Router.Helpers, as: Routes

@@ -232,7 +232,7 @@ Finished in 0.6 seconds
 Randomized with seed 618478
 ```
 
-You may have noticed that this time the scaffold controller has generated fewer tests. Previously it generated 16 (we went from 3 to 19) and now it generated 14 (we went from 19 to 33). That's because JSON APIs do not need to expose the `new` and `edit` actions. We can see this is the case in the resource we have added to the router at the end of the `phx.gen.json` command:
+You may have noticed that this time the scaffold controller has generated fewer tests. Previously it generated 16 (we went from 3 to 19) and now it generated 14 (we went from 19 to 33). That's because JSON APIs do not need to expose the `new` and `edit` actions. We can see this is the case in the resource we have added to the router at the end of the `mix phx.gen.json` command:
 
 ```elixir
 resources "/articles", ArticleController, except: [:new, :edit]
