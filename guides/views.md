@@ -50,7 +50,7 @@ end
 
 When we reload our home page, we should see our new title. Since templates are compiled inside the view, we could invoke the view function simply as `title()`, otherwise we would have to type `HelloWeb.LayoutView.title()`.
 
-As you may recall, Elixir templates use Embedded Elixir, known as `EEx`. We use `<%= expression %>` to execute Elixir expressions. The result of the expression is interpolated into the template. You can use pretty much use any Elixir expression. For example, in order to have conditionals:
+As you may recall, Elixir templates use Embedded Elixir, known as `EEx`. We use `<%= expression %>` to execute Elixir expressions. The result of the expression is interpolated into the template. You can use pretty much any Elixir expression. For example, in order to have conditionals:
 
 ```html
 <%= if some_condition? do %>
