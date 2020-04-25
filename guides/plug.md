@@ -171,7 +171,7 @@ This block is only executed in development. It enables live reloading (if you ch
 
 ### Router plugs
 
-In the router, we can declare plugs insided pipelines:
+In the router, we can declare plugs inside pipelines:
 
 ```elixir
 defmodule HelloWeb.Router do
