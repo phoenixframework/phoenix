@@ -537,7 +537,7 @@ Let's say that the request matches our first route: a GET to `/`. The router wil
 
 Conversely, if the request matches any of the routes defined by the `resources/2` macro, the router will pipe it through the `:api` pipeline - which currently does nothing - before it dispatches further to the correct action of the `HelloWeb.ReviewController`.
 
-If no route matches, no pipeline is invoked and a 404 error is rasied.
+If no route matches, no pipeline is invoked and a 404 error is raised.
 
 Let's stretch these ideas out a little bit more. What if we need to pipe requests through both `:browser` and one or more custom pipelines? We simply `pipe_through` a list of pipelines, and Phoenix will invoke them in order.
 
