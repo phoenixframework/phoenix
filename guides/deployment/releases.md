@@ -175,10 +175,9 @@ Here is an example Docker file to run at the root of your application covering a
 FROM elixir:1.9.0-alpine AS build
 
 # install build dependencies
-RUN apk add --update build-base npm git
+RUN apk add --no-cache build-base npm git python
 
 # prepare build dir
-RUN mkdir /app
 WORKDIR /app
 
 # install hex + rebar
@@ -191,35 +190,38 @@ ENV MIX_ENV=prod
 # install mix dependencies
 COPY mix.exs mix.lock ./
 COPY config config
-RUN mix deps.get
-RUN mix deps.compile
+RUN mix do deps.get, deps.compile
 
 # build assets
-COPY assets assets
+COPY assets/package.json assets/package-lock.json ./assets/
+RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
+
 COPY priv priv
-RUN cd assets && npm install && npm run deploy
+COPY assets assets
+RUN npm run --prefix ./assets deploy
 RUN mix phx.digest
 
-# build project
+# compile and build release
 COPY lib lib
-RUN mix compile
-
-# build release (uncomment COPY if rel/ exists)
+# uncomment COPY if rel/ exists
 # COPY rel rel
-RUN mix release
+RUN mix do compile, release
 
 # prepare release image
 FROM alpine:3.9 AS app
-RUN apk add --update bash openssl
+RUN apk add --no-cache openssl ncurses-libs
 
-RUN mkdir /app
 WORKDIR /app
 
-COPY --from=build /app/_build/prod/rel/my_app ./
-RUN chown -R nobody: /app
-USER nobody
+RUN chown nobody:nobody /app
+
+USER nobody:nobody
+
+COPY --from=build --chown=nobody:nobody /app/_build/prod/rel/my_app ./
 
 ENV HOME=/app
+
+CMD ["bin/my_app", "start"]
 ```
 
 At the end, you will have an application in `/app` ready to run as `bin/my_app start`.
