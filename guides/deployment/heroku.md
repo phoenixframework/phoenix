@@ -119,7 +119,7 @@ The Phoenix Static buildpack uses a predefined Node version but to avoid surpris
 
 ```
 # Node version
-node_version=10.19.0
+node_version=10.20.1
 ```
 
 Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
