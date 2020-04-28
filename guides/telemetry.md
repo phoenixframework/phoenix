@@ -156,7 +156,7 @@ supervision tree (usually in `lib/my_app_web/telemetry.ex`):
 
 > There are numerous reporters available, for services like
 > StatsD, Prometheus, and more. You can find them by
-> searching for "telemetry_metrics" on https://hex.pm.
+> searching for "telemetry_metrics" on [hex.pm](https://hex.pm/packages?search=telemetry_metrics).
 
 ## Phoenix Metrics
 
@@ -416,7 +416,7 @@ events. Create this file in your app at `lib/my_app/my_server.ex`:
 ```elixir
 defmodule MyApp.MyServer do
   @moduledoc """
-  An example GenServer that emits telemetry events when called.
+  An example GenServer that runs arbitrary functions and emits telemetry events when called.
   """
   use GenServer
 
