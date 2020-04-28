@@ -6,14 +6,12 @@ on `:telemetry` events in your Phoenix application.
 > `te·lem·e·try` - the process of recording and transmitting
 the readings of an instrument.
 
-As you follow along with this guide, you will be introduced
-to the building blocks of Telemetry (events and metrics),
-you will initialize a reporter that can show you events as
-they occur within your application, and we will guide you
-through the steps to properly instrument your own functions
-using `:telemetry`. However before we can do that, we need
-to get a better idea of what makes up a telemetry event.
-Let's take a closer look.
+As you follow along with this guide, we will introduce you to
+the core concepts of Telemetry, you will initialize a
+reporter to capture your application's events as they occur,
+and we will guide you through the steps to properly
+instrument your own functions using `:telemetry`. Let's take
+a closer look what makes up a telemetry event.
 
 ## Telemetry Events
 
