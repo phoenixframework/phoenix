@@ -11,7 +11,7 @@ the core concepts of Telemetry, you will initialize a
 reporter to capture your application's events as they occur,
 and we will guide you through the steps to properly
 instrument your own functions using `:telemetry`. Let's take
-a closer look what makes up a telemetry event.
+a closer look at what makes up a telemetry event.
 
 ## Telemetry Events
 
