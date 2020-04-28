@@ -160,7 +160,7 @@ supervision tree (usually in `lib/my_app_web/telemetry.ex`):
 
 ## Phoenix Metrics
 
-Earlier we looked at the stop event emitted by
+Earlier we looked at the "stop" event emitted by
 `Plug.Telemetry`, and used it to count the number of HTTP
 requests. In reality, it's only somewhat helpful to be
 able to see just the total number of requests. What if you
@@ -208,7 +208,7 @@ requirement; we can use `:tags` to group metrics by route.
 Note that reporters will necessarily handle tags differently
 depending on the underlying service in use.
 
-Looking more closely at the Router stop event, you can see
+Looking more closely at the Router "stop" event, you can see
 that the `Plug.Conn` struct representing the request is
 present in the metadata, but how do you access the
 properties in `conn`?
