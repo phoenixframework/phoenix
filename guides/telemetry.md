@@ -127,11 +127,10 @@ just waiting to be consumed, let's talk about reporters.
 
 ## Reporters
 
-Reporters can subscribe to the Telemetry events you define,
-and use the common interface provided by `Telemetry.Metrics`,
-along with the measurements and metadata emitted in Telemetry
-events, to provide information meaningful to your
-application.
+Reporters subscribe to Telemetry events using the common
+interface provided by `Telemetry.Metrics`. They then
+aggregate the measurements (data) into metrics to provide
+meaningful information about your application.
 
 ### Phoenix.LiveDashboard
 
