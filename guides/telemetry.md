@@ -34,7 +34,7 @@ A Telemetry event is made up of the following:
 
 ### A Phoenix Example
 
-Here is an example of an event from `Phoenix.Endpoint`:
+Here is an example of an event from your endpoint:
 
 * `[:phoenix, :endpoint, :stop]` - dispatched by
   `Plug.Telemetry` in your endpoint whenever the response is
@@ -89,7 +89,7 @@ guide.
 
 > The full list of `:telemetry` events emitted from Phoenix,
 along with their measurements and metadata, is available in
-the "Instrumentation" section of `Phoenix.Endpoint` module
+the "Instrumentation" section of `Phoenix.Logger` module
 documentation.
 
 ### An Ecto Example
@@ -161,7 +161,7 @@ supervision tree (usually in `lib/my_app_web/telemetry.ex`):
 ## Phoenix Metrics
 
 Earlier we looked at the stop event emitted by
-`Phoenix.Endpoint`, and used it to count the number of HTTP
+`Plug.Telemetry`, and used it to count the number of HTTP
 requests. In reality, it's only somewhat helpful to be
 able to see just the total number of requests. What if you
 wanted to see the number of requests per route, or per route
@@ -399,7 +399,7 @@ their own (in alphabetical order, please):
 * [Broadway](https://hexdocs.pm/broadway) - [Events](https://hexdocs.pm/broadway/Broadway.html#module-telemetry)
 * [Ecto](https://hexdocs.pm/ecto) - [Events](https://hexdocs.pm/ecto/Ecto.Repo.html#module-telemetry-events)
 * [Oban](https://hexdocs.pm/oban) - [Events](https://hexdocs.pm/oban/Oban.Telemetry.html)
-* [Phoenix](https://hexdocs.pm/phoenix) - [Events](https://hexdocs.pm/phoenix/Phoenix.Endpoint.html#module-instrumentation)
+* [Phoenix](https://hexdocs.pm/phoenix) - [Events](https://hexdocs.pm/phoenix/Phoenix.Logger.html#module-instrumentation)
 * [Plug](https://hexdocs.pm/plug) - [Events](https://hexdocs.pm/plug/Plug.Telemetry.html)
 * [Tesla](https://hexdocs.pm/tesla) - [Events](https://hexdocs.pm/tesla/Tesla.Middleware.Telemetry.html)
 
