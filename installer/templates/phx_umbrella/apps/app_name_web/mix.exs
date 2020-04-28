@@ -59,7 +59,7 @@ defmodule <%= web_namespace %>.MixProject do
   defp aliases do
     [
       setup: ["deps.get"<%= if webpack do %>, "cmd npm install --prefix assets"<% end %>]<%= if ecto do %>,
-      test: ["ecto.create --quiet", "ecto.migrate", "test"]<% end %>
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %>
     ]
   end
 end
