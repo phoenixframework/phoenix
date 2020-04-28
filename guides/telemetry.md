@@ -52,10 +52,18 @@ took to get the response:
 :telemetry.execute([:phoenix, :endpoint, :stop], %{duration: duration}, %{conn: conn})
 ```
 
-## Telemetry.Metrics
+## Metrics
 
-> Metrics are aggregations of Telemetry events with a specific name,
-providing a view of the system's behaviour over time. -- _`Telemetry.Metrics`_
+> Metrics are aggregations of Telemetry events with a
+> specific name, providing a view of the system's behaviour
+> over time.
+>
+> &#x2015; `Telemetry.Metrics`
+
+The Telemetry.Metrics package provides a common interface
+for defining metrics. What this means is that the package
+does not perform any aggregation of the measurements itself,
+but instead relies on reporters to do so.
 
 Using `Telemetry.Metrics`, you can define a counter metric,
 which counts how many HTTP requests were completed:
