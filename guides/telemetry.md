@@ -60,6 +60,71 @@ took to get the response:
 >
 > &#x2015; `Telemetry.Metrics`
 
+Since v1.5, new Phoenix applications are generated with a
+Telemetry supervisor. If you are coming from an older version
+of Phoenix, install the `:telemetry_metrics` and
+`:telemetry_poller` packages, and then create the following
+at `lib/my_app_web/telemetry.ex`:
+
+```elixir
+defmodule MyAppWeb.Telemetry do
+  use Supervisor
+  import Telemetry.Metrics
+
+  def start_link(arg) do
+    Supervisor.start_link(__MODULE__, arg, name: __MODULE__)
+  end
+
+  def init(_arg) do
+    children = [
+      {:telemetry_poller, measurements: periodic_measurements(), period: 10_000}
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one)
+  end
+
+  def metrics do
+    [
+      # Phoenix Metrics
+      summary("phoenix.endpoint.stop.duration",
+        unit: {:native, :millisecond}
+      ),
+      summary("phoenix.router_dispatch.stop.duration",
+        tags: [:route],
+        unit: {:native, :millisecond}
+      ),
+      # VM Metrics
+      summary("vm.memory.total", unit: {:byte, :kilobyte}),
+      summary("vm.total_run_queue_lengths.total"),
+      summary("vm.total_run_queue_lengths.cpu"),
+      summary("vm.total_run_queue_lengths.io")
+    ]
+  end
+
+  defp periodic_measurements do
+    [
+      # A module, function and arguments to be invoked periodically.
+      # This function must call :telemetry.execute/3 and a metric must be added above.
+      # {MyApp, :count_users, []}
+    ]
+  end
+end
+```
+
+Make sure to replace MyApp by your actual application name.
+
+Then add to your main application's supervision tree
+(usually in `lib/my_app/application.ex`):
+
+```elixir
+children = [
+  MyApp.Repo,
+  MyAppWeb.Telemetry,
+  MyAppWeb.Endpoint,
+  ...
+]
+```
+
 The Telemetry.Metrics package provides a common interface
 for defining metrics. What this means is that the package
 does not perform any aggregation of the measurements itself,
