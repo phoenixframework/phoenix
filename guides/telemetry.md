@@ -378,7 +378,7 @@ def metrics do
     last_value("my_app.my_server.memory", unit: :byte),
     last_value("my_app.my_server.message_queue_len")
     summary("my_app.my_server.call.stop.duration"),
-    counter("my_app.my_server.call.exception)
+    counter("my_app.my_server.call.exception")
   ]
 end
 ```
@@ -414,74 +414,76 @@ Here is an example of a simple GenServer that emits telemetry
 events. Create this file in your app at `lib/my_app/my_server.ex`:
 
 ```elixir
+# lib/my_app/my_server.ex
 defmodule MyApp.MyServer do
   @moduledoc """
   An example GenServer that runs arbitrary functions and emits telemetry events when called.
   """
   use GenServer
 
-  def start_link(arg) do
-    GenServer.start_link(__MODULE__, arg, name: __MODULE__)
+  # A common prefix for :telemetry events
+  @prefix [:my_app, :my_server, :call]
+
+  def start_link(fun) do
+    GenServer.start_link(__MODULE__, fun, name: __MODULE__)
   end
 
   @doc """
-  Changes the function that this server will call.
+  Runs the function contained within this server.
 
-  ## Example
+  ## Events
 
-      iex> MyApp.MyServer.become fn -> "Hello, world!" end
-      iex> :ok
+  The following events may be emitted:
 
-      iex> MyApp.MyServer.call!
-      "Hello, world!"
-  """
-  def become(fun) when is_function(fun, 0) do
-    GenServer.call(__MODULE__, {:become, fun})
-  end
+    * `[:my_app, :my_server, :call, :start]` - Emitted
+      immediately before invoking the function. This event
+      is always emitted.
 
-  @doc """
-  Calls the function contained within this server.
+    * `[:my_app, :my_server, :call, :stop]` - Emitted
+      immediately after successfully invoking the function.
+
+    * `[:my_app, :my_server, :call, :exception]` - Emitted
+      immediately after invoking the function, in the event
+      the function throws or raises.
   """
   def call!, do: GenServer.call(__MODULE__, :called)
 
   @impl true
-  def init(opts) do
-    fun = if is_function(opts[:fun]), do: opts[:fun], else: fn -> nil end
-    {:ok, %{fun: fun}}
-  end
+  def init(fun) when is_function(fun, 0), do: {:ok, fun}
 
   @impl true
-  def handle_call({:become, fun}, _from, state) when is_function(fun) do
-    {:reply, :ok, %{state | fun: fun}}
+  def handle_call(:called, _from, fun) do
+    # Wrap the function invocation in a "span"
+    result = telemetry_span(fun)
+
+    {:reply, result, fun}
   end
 
-  def handle_call(:called, _from, state) do
+  # Emits telemetry events related to invoking the function
+  defp telemetry_span(fun) do
     start_time = emit_start()
 
-    result =
-      try do
-        state.fun.()
-      catch
-        kind, reason ->
-          stacktrace = System.stacktrace()
-          duration = System.monotonic_time() - start_time
-          emit_exception(duration, kind, reason, stacktrace)
-          :erlang.raise(kind, reason, stacktrace)
-      else
-        result ->
-          duration = System.monotonic_time() - start_time
-          emit_stop(duration)
-          result
-      end
-
-    {:reply, result, state}
+    try do
+      fun.()
+    catch
+      kind, reason ->
+        stacktrace = System.stacktrace()
+        duration = System.monotonic_time() - start_time
+        emit_exception(duration, kind, reason, stacktrace)
+        :erlang.raise(kind, reason, stacktrace)
+    else
+      result ->
+        duration = System.monotonic_time() - start_time
+        emit_stop(duration)
+        result
+    end
   end
 
   defp emit_start do
     start_time_mono = System.monotonic_time()
 
     :telemetry.execute(
-      [:my_app, :my_server, :call, :start],
+      @prefix ++ [:start],
       %{system_time: System.system_time()},
       %{}
     )
@@ -491,7 +493,7 @@ defmodule MyApp.MyServer do
 
   defp emit_stop(duration) do
     :telemetry.execute(
-      [:my_app, :my_server, :call, :stop],
+      @prefix ++ [:stop],
       %{duration: duration},
       %{}
     )
@@ -499,7 +501,7 @@ defmodule MyApp.MyServer do
 
   defp emit_exception(duration, kind, reason, stacktrace) do
     :telemetry.execute(
-      [:my_app, :my_server, :call, :exception],
+      @prefix ++ [:exception],
       %{duration: duration},
       %{
         kind: kind,
@@ -512,12 +514,34 @@ end
 ```
 
 and add it to your application's supervisor tree (usually in
-`lib/my_app/application.ex`):
+`lib/my_app/application.ex`), giving it a function to invoke
+when called:
 
 ```elixir
 # lib/my_app/application.ex
 children = [
-  # Start the example server
-  MyApp.MyServer,
+  # Start a server that greets the world
+  {MyApp.MyServer, fn -> "Hello, world!" end},
 ]
+```
+
+Now start an IEx session and call the server:
+
+```elixir
+iex(1)> MyApp.MyServer.call!
+```
+
+and you should see something like the following output:
+
+```elixir
+[Telemetry.Metrics.ConsoleReporter] Got new event!
+Event name: my_app.my_server.call.stop
+All measurements: %{duration: 4000}
+All metadata: %{}
+
+Metric measurement: #Function<2.111777250/1 in Telemetry.Metrics.maybe_convert_measurement/2> (summary)
+With value: 0.004 millisecond
+Tag values: %{}
+
+"Hello, world!"
 ```
