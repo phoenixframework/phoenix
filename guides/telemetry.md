@@ -21,10 +21,20 @@ way to give users more insight into the behavior of their
 applications, by emitting events at key moments in the
 application lifecycle.
 
+A Telemetry event is made up of the following:
+
+  * `name` - A string (e.g. `"my_app.worker.stop"`) or a
+    list of atoms that uniquely identifies the event.
+
+  * `measurements` - A map of atom keys (e.g. `:duration`)
+    and numeric values.
+
+  * `metadata` - A map of key/value pairs that can be used
+    for tagging metrics.
+
 ### A Phoenix Example
 
-Here is an example of a telemetry event from
-`Phoenix.Endpoint`:
+Here is an example of an event from `Phoenix.Endpoint`:
 
 * `[:phoenix, :endpoint, :stop]` - dispatched by
   `Plug.Telemetry` in your endpoint whenever the response is
@@ -34,7 +44,7 @@ Here is an example of a telemetry event from
 
   * Metadata: `%{conn: Plug.Conn.t}`
 
-This means that after each request, Phoenix, via telemetry,
+This means that after each request, `Plug`, via `:telemetry`,
 will emit a "stop" event, with a measurement of how long it
 took to get the response:
 
