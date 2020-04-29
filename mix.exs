@@ -79,7 +79,7 @@ defmodule Phoenix.MixProject do
       # Test dependencies
       {:gettext, "~> 0.15.0", only: :test},
       {:telemetry_poller, "~> 0.4", only: :test},
-      {:telemetry_metrics, "~> 0.4", only: :test},
+      {:telemetry_metrics, "~> 0.4", only: [:docs, :test]},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
     ]
   end
@@ -123,6 +123,7 @@ defmodule Phoenix.MixProject do
       "guides/ecto.md",
       "guides/contexts.md",
       "guides/mix_tasks.md",
+      "guides/telemetry.md",
       "guides/realtime/channels.md",
       "guides/realtime/presence.md",
       "guides/testing/testing.md",
