@@ -22,11 +22,10 @@ defines a `metrics/0` function, which returns a list of
 [`Telemetry.Metrics`](https://hexdocs.pm/telemetry_metrics)
 that you define for your application.
 
-By default, the supervisor also includes the
-[`:telemetry_poller`](http://hexdocs.pm/telemetry_poller)
-package. By simply adding `:telemetry_poller` as a
-dependency, you can receive VM-related events on a specified
-interval.
+By default, the supervisor also starts
+[`:telemetry_poller`](http://hexdocs.pm/telemetry_poller).
+By simply adding `:telemetry_poller` as a dependency, you
+can receive VM-related events on a specified interval.
 
 If you are coming from an older version of Phoenix, install
 the `:telemetry_metrics` and `:telemetry_poller` packages:
@@ -353,83 +352,19 @@ route.
 Note the `:tags` and `:tag_values` options can be applied to
 all `Telemetry.Metrics` types.
 
-## VM metrics and periodic measurements
+## Periodic measurements
 
 You might want to periodically measure key values within
-your application.
+your application. Fortunately the
+[`:telemetry_poller`](http://hexdocs.pm/telemetry_poller)
+package provides a mechanism for custom measurements,
+which is useful for retrieving process information or for
+performing custom measurements periodically.
 
-The `:telemetry_poller` package
-(http://hexdocs.pm/telemetry_poller) exposes numerous
-VM-related metrics and also provides custom periodic
-measurements. You can add `:telemetry_poller` as a
-dependency:
-
-```elixir
-  {:telemetry_poller, "~> 0.4"}
-```
-
-### Built-in measurements
-
-By simply adding `:telemetry_poller` as a dependency, two
-events become available:
-
-* `[:vm, :memory]` - contains the total memory, as well as
-  the memory used for binaries, processes, etc. See
-  `erlang:memory/0` for all keys;
-
-* `[:vm, :total_run_queue_lengths]` - returns the run queue
-  lengths for CPU and IO schedulers. It contains the
-  `total`, `cpu` and `io` measurements;
-
-You can add VM metrics by modifying your `telemetry.ex` file.
-
-Update your `metrics/0` function to include some VM metrics:
-
-```elixir
-# lib/my_app_web/telemetry.ex
-def metrics do
-  [
-    ...metrics...
-    # VM Metrics
-    last_value("vm.memory.total", unit: :byte),
-    summary("vm.total_run_queue_lengths.total"),
-    summary("vm.total_run_queue_lengths.cpu"),
-    summary("vm.total_run_queue_lengths.io")
-  ]
-end
-```
-
-If you want to change the frequency of those measurements, you can set the
-following configuration in your config file:
-
-    config :telemetry_poller, :default, period: 5_000 # the default
-
-Or disable it completely with:
-
-    config :telemetry_poller, :default, false
-
-### Custom periodic measurements
-
-The `:telemetry_poller` package also allows you to run your
-own poller, which is useful to retrieve process information
-or perform custom measurements periodically.
-
-Add `:telemetry_poller` to your telemetry supervision tree:
-
-```elixir
-# lib/my_app_web/telemetry.ex
-children = [
-  # Start the telemetry poller
-  {:telemetry_poller, measurements: periodic_measurements(), period: 10_000},
-  ...reporters...
-]
-
-Supervisor.init(children, strategy: :one_for_one)
-```
-
-Next you'll need to define `periodic_measurements/0`, which
-is a private function that returns a list of measurements to
-take on the specified interval.
+Add the following to the list in your Telemetry supervisor's
+`periodic_measurements/0` function, which is a private
+function that returns a list of measurements to take on a
+specified interval.
 
 ```elixir
 # lib/my_app_web/telemetry.ex
