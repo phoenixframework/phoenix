@@ -78,7 +78,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       end
 
     extra_conf = [
-      endpoint_id: :crypto.strong_rand_bytes(16) |> Base.encode64,
+      endpoint_id: :crypto.strong_rand_bytes(16) |> Base.encode64(padding: false),
       # TODO: Remove this once :pubsub is removed
       pubsub_server: secret_conf[:pubsub_server] || secret_conf[:pubsub][:name]
     ]
@@ -431,7 +431,9 @@ defmodule Phoenix.Endpoint.Supervisor do
     endpoint.static_path("/")
   end
 
-  defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests}) do
+  defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests} = manifest) do
+    Phoenix.Config.put_new(endpoint, :cache_static_manifest_hash, manifest["hash"])
+
     Enum.each(latest, fn {key, _} ->
       Phoenix.Config.cache(endpoint, {:__phoenix_static__, "/" <> key}, fn _ ->
         {:cache, static_cache(digests, Map.get(latest, key))}

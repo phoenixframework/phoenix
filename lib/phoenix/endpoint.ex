@@ -99,9 +99,13 @@ defmodule Phoenix.Endpoint do
     * `:cache_static_manifest` - a path to a json manifest file that contains
       static files and their digested version. This is typically set to
       "priv/static/cache_manifest.json" which is the file automatically generated
-      by `mix phx.digest`.
-      It can be either: a string containing a file system path or a tuple containing
-      the application name and the path within that application.
+      by `mix phx.digest`. It can be either: a string containing a file system path
+      or a tuple containing the application name and the path within that application.
+
+    * `:cache_static_manifest_hash` - the hash of the cache static manifest.
+      This is automatically loaded from `cache_static_manifest` on boot.
+      However, if you have your own static handling mechanism, you may want to
+      set this value explicitly.
 
     * `:check_origin` - configure the default `:check_origin` setting for
       transports. See `socket/3` for options. Defaults to `true`.
