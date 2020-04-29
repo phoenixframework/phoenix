@@ -18,6 +18,13 @@ defmodule Phoenix.Config do
   end
 
   @doc """
+  Puts a given key-value in config.
+  """
+  def put_new(module, key, value) do
+    :ets.insert_new(module, {key, value})
+  end
+
+  @doc """
   Adds permanent configuration.
 
   Permanent configuration is not deleted on hot code reload.
@@ -115,7 +122,7 @@ defmodule Phoenix.Config do
   def init({module, config, permanent}) do
     :ets.new(module, [:named_table, :public, read_concurrency: true])
     update(module, config, [])
-    :ets.insert(module, __config__: self())
+    :ets.insert(module, {:__config__, self()})
     {:ok, {module, [:__config__ | permanent]}}
   end
 
