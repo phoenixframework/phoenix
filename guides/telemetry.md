@@ -11,7 +11,95 @@ the core concepts of Telemetry, you will initialize a
 reporter to capture your application's events as they occur,
 and we will guide you through the steps to properly
 instrument your own functions using `:telemetry`. Let's take
-a closer look at what makes up a telemetry event.
+a closer look at how Telemetry works in your application.
+
+## The Telemetry supervisor
+
+Since v1.5, new Phoenix applications are generated with a
+Telemetry supervisor. This module is responsible for
+managing the lifecycle of your Telemetry processes. It also
+defines a `metrics/0` function, which returns a list of
+[`Telemetry.Metrics`](https://hexdocs.pm/telemetry_metrics)
+that you define for your application.
+
+By default, the supervisor also includes the
+[`:telemetry_poller`](http://hexdocs.pm/telemetry_poller)
+package. By simply adding `:telemetry_poller` as a
+dependency, you can receive VM-related events on a specified
+interval.
+
+If you are coming from an older version of Phoenix, install
+the `:telemetry_metrics` and `:telemetry_poller` packages:
+
+```elixir
+{:telemetry_metrics, "~> 0.4"},
+{:telemetry_poller, "~> 0.4"}
+```
+
+and create your Telemetry supervisor at
+`lib/my_app_web/telemetry.ex`:
+
+```elixir
+# lib/my_app_web/telemetry.ex
+defmodule MyAppWeb.Telemetry do
+  use Supervisor
+  import Telemetry.Metrics
+
+  def start_link(arg) do
+    Supervisor.start_link(__MODULE__, arg, name: __MODULE__)
+  end
+
+  def init(_arg) do
+    children = [
+      {:telemetry_poller, measurements: periodic_measurements(), period: 10_000}
+      # Add reporters as children of your supervision tree.
+      # {Telemetry.Metrics.ConsoleReporter, metrics: metrics()}
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one)
+  end
+
+  def metrics do
+    [
+      # Phoenix Metrics
+      summary("phoenix.endpoint.stop.duration",
+        unit: {:native, :millisecond}
+      ),
+      summary("phoenix.router_dispatch.stop.duration",
+        tags: [:route],
+        unit: {:native, :millisecond}
+      ),
+      # VM Metrics
+      summary("vm.memory.total", unit: {:byte, :kilobyte}),
+      summary("vm.total_run_queue_lengths.total"),
+      summary("vm.total_run_queue_lengths.cpu"),
+      summary("vm.total_run_queue_lengths.io")
+    ]
+  end
+
+  defp periodic_measurements do
+    [
+      # A module, function and arguments to be invoked periodically.
+      # This function must call :telemetry.execute/3 and a metric must be added above.
+      # {MyApp, :count_users, []}
+    ]
+  end
+end
+```
+
+Make sure to replace MyApp by your actual application name.
+
+Then add to your main application's supervision tree
+(usually in `lib/my_app/application.ex`):
+
+```elixir
+children = [
+  MyApp.Repo,
+  MyAppWeb.Telemetry,
+  MyAppWeb.Endpoint,
+  ...
+]
+```
 
 ## Telemetry Events
 
@@ -60,75 +148,11 @@ took to get the response:
 >
 > &#x2015; `Telemetry.Metrics`
 
-Since v1.5, new Phoenix applications are generated with a
-Telemetry supervisor. If you are coming from an older version
-of Phoenix, install the `:telemetry_metrics` and
-`:telemetry_poller` packages, and then create the following
-at `lib/my_app_web/telemetry.ex`:
-
-```elixir
-defmodule MyAppWeb.Telemetry do
-  use Supervisor
-  import Telemetry.Metrics
-
-  def start_link(arg) do
-    Supervisor.start_link(__MODULE__, arg, name: __MODULE__)
-  end
-
-  def init(_arg) do
-    children = [
-      {:telemetry_poller, measurements: periodic_measurements(), period: 10_000}
-    ]
-
-    Supervisor.init(children, strategy: :one_for_one)
-  end
-
-  def metrics do
-    [
-      # Phoenix Metrics
-      summary("phoenix.endpoint.stop.duration",
-        unit: {:native, :millisecond}
-      ),
-      summary("phoenix.router_dispatch.stop.duration",
-        tags: [:route],
-        unit: {:native, :millisecond}
-      ),
-      # VM Metrics
-      summary("vm.memory.total", unit: {:byte, :kilobyte}),
-      summary("vm.total_run_queue_lengths.total"),
-      summary("vm.total_run_queue_lengths.cpu"),
-      summary("vm.total_run_queue_lengths.io")
-    ]
-  end
-
-  defp periodic_measurements do
-    [
-      # A module, function and arguments to be invoked periodically.
-      # This function must call :telemetry.execute/3 and a metric must be added above.
-      # {MyApp, :count_users, []}
-    ]
-  end
-end
-```
-
-Make sure to replace MyApp by your actual application name.
-
-Then add to your main application's supervision tree
-(usually in `lib/my_app/application.ex`):
-
-```elixir
-children = [
-  MyApp.Repo,
-  MyAppWeb.Telemetry,
-  MyAppWeb.Endpoint,
-  ...
-]
-```
-
 The Telemetry.Metrics package provides a common interface
 for defining metrics. What this means is that the package
 does not perform any aggregation of the measurements itself,
-but instead relies on reporters to do so.
+but instead relies on reporters to do so. We will discuss
+reporters in the next section.
 
 Using `Telemetry.Metrics`, you can define a counter metric,
 which counts how many HTTP requests were completed:
@@ -154,7 +178,7 @@ guide.
 
 > The full list of `:telemetry` events emitted from Phoenix,
 along with their measurements and metadata, is available in
-the "Instrumentation" section of `Phoenix.Logger` module
+the "Instrumentation" section of the `Phoenix.Logger` module
 documentation.
 
 ### An Ecto Example
@@ -212,8 +236,9 @@ be used to print events and metrics to the terminal. You can
 use this reporter to experiment with the metrics discussed in
 this guide.
 
-Add the following to this list of children in your Telemetry
-supervision tree (usually in `lib/my_app_web/telemetry.ex`):
+Uncomment or add the following to this list of children in
+your Telemetry supervision tree (usually in
+`lib/my_app_web/telemetry.ex`):
 
 ```elixir
 {Telemetry.Metrics.ConsoleReporter, metrics: metrics()}
@@ -302,8 +327,8 @@ group by route and method:
 ```elixir
 summary("phoenix.router_dispatch.stop.duration",
   tags: [:method, :route],
+  tag_values: &get_and_put_http_method/1,
   unit: {:native, :millisecond}
-  tag_values: &get_and_put_http_method/1
 )
 ```
 
