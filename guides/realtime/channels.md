@@ -14,8 +14,12 @@ Some possible use cases include:
 - Notifying a browser that a page's CSS or JavaScript has changed (this is handy in development)
 
 Conceptually, Channels are pretty simple.
-Clients connect and subscribe to one or more topics, whether that's `public_chat` or `updates:user1`.
-Any message sent on a topic, whether from the server or from a client, is sent to all clients subscribed to that topic (including the sender, if it's subscribed), like this:
+
+First, clients connect to the server using some transport, like WebSocket. Once connected, they join one or more topics. For example, to interact with a public chat room clients may join a topic called `public_chat`, and to receive updates from a product with ID 7, they may need to join a topic called `product_updates:7`.
+
+Clients can push messages to the topics they've joined, and can also receive messages from them. The other way around, Channel servers receive messages from their connected clients, and can push messages to them too.
+
+Servers are able to broadcast messages to all clients subscribed to a certain topic. This is illustrated in the following diagram:
 
 ```plaintext
                                                                   +----------------+
@@ -30,6 +34,8 @@ Any message sent on a topic, whether from the server or from a client, is sent t
                                                      +--Topic X-->|   IoT Client   |
                                                                   +----------------+
 ```
+
+Broadcasts work even if the application runs on several nodes/computers. That is, if two clients have their socket connected to different application nodes and are subscribed to the same topic `T`, both of them will receive messages broadcasted to `T`. That is possible thanks to an internal PubSub mechanism.
 
 Channels can support any kind of client: a browser, native app, smart watch, embedded device, or anything else that can connect to a network.
 All the client needs is a suitable library; see the [Client Libraries](#client-libraries) section below.
