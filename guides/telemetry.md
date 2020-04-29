@@ -414,8 +414,8 @@ end
 ## Libraries using Telemetry
 
 Telemetry is quickly becoming the de-facto standard for
-instrumenting events in Elixir. Here is a list of libraries
-currently emitting `:telemetry` events.
+package instrumentation in Elixir. Here is a list of
+libraries currently emitting `:telemetry` events.
 
 Library authors are actively encouraged to send a PR adding
 their own (in alphabetical order, please):
@@ -436,7 +436,8 @@ application, you can utilize the `:telemetry` package
 frameworks and libraries.
 
 Here is an example of a simple GenServer that emits telemetry
-events. Create this file in your app at `lib/my_app/my_server.ex`:
+events. Create this file in your app at
+`lib/my_app/my_server.ex`:
 
 ```elixir
 # lib/my_app/my_server.ex
