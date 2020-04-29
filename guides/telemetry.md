@@ -461,16 +461,28 @@ defmodule MyApp.MyServer do
 
   The following events may be emitted:
 
-    * `[:my_app, :my_server, :call, :start]` - Emitted
+    * `[:my_app, :my_server, :call, :start]` - Dispatched
       immediately before invoking the function. This event
       is always emitted.
 
-    * `[:my_app, :my_server, :call, :stop]` - Emitted
+      * Measurement: `%{system_time: system_time}`
+
+      * Metadata: `%{}`
+
+    * `[:my_app, :my_server, :call, :stop]` - Dispatched
       immediately after successfully invoking the function.
 
-    * `[:my_app, :my_server, :call, :exception]` - Emitted
+      * Measurement: `%{duration: native_time}`
+
+      * Metadata: `%{}`
+
+    * `[:my_app, :my_server, :call, :exception]` - Dispatched
       immediately after invoking the function, in the event
       the function throws or raises.
+
+      * Measurement: `%{duration: native_time}`
+
+      * Metadata: `%{kind: kind, reason: reason, stacktrace: stacktrace}`
   """
   def call!, do: GenServer.call(__MODULE__, :called)
 
