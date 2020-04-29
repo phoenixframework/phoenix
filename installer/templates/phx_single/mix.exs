@@ -65,7 +65,7 @@ defmodule <%= app_module %>.MixProject do
       setup: ["deps.get"<%= if ecto do %>, "ecto.setup"<% end %><%= if webpack do %>, "cmd npm install --prefix assets"<% end %>]<%= if ecto do %>,
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate", "test"]<% end %>
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %>
     ]
   end
 end
