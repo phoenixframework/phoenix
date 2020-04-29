@@ -186,7 +186,7 @@ defmodule Phoenix.DigesterTest do
       assert :ok = Phoenix.Digester.compile(input_path, input_path)
       json2 = Path.join(input_path, "cache_manifest.json") |> json_read!()
 
-      assert json1 == json2
+      assert json1["hash"] == json2["hash"]
       output_files = assets_files(input_path)
       refute "file.js.gz.gz" in output_files
       refute "cache_manifest.json.gz" in output_files
