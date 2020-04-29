@@ -7,11 +7,13 @@ defmodule Mix.Tasks.Phx.Gen.SecretTest do
   test "generates a secret" do
     run []
     assert_receive {:mix_shell, :info, [secret]} when byte_size(secret) == 64
+    assert String.printable?(secret)
   end
 
   test "generates a secret with custom length" do
     run ["32"]
     assert_receive {:mix_shell, :info, [secret]} when byte_size(secret) == 32
+    assert String.printable?(secret)
   end
 
   test "raises on invalid args" do
