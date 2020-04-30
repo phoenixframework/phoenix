@@ -20,7 +20,8 @@ defmodule Phoenix.View do
             use Phoenix.View, root: "lib/your_app_web/templates", namespace: "web"
 
             # Import convenience functions from controllers
-            import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]
+            import Phoenix.Controller,
+              only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
 
             # Use all HTML functionality (forms, tags, etc)
             use Phoenix.HTML
@@ -335,8 +336,9 @@ defmodule Phoenix.View do
   Renders a template only if it exists.
 
   Same as `render/3`, but returns `nil` instead of raising.
-  Useful for dynamically rendering templates in the layout that may or
-  may not be implemented by the `@view_module` view.
+  This is often used with `Phoenix.Controller.view_module/1`
+  and `Phoenix.Controller.view_template/1`, which must be
+  imported into your views. See the "Examples" section below.
 
   ## Examples
 
@@ -345,10 +347,10 @@ defmodule Phoenix.View do
   may wish to inject certain scripts, while others will not.
 
       <head>
-        <%= render_existing @view_module, "scripts.html", assigns %>
+        <%= render_existing view_module(@conn), "scripts.html", assigns %>
       </head>
 
-  Then the module for the `@view_module` view can decide to provide scripts with
+  Then the module under `view_module(@conn)` can decide to provide scripts with
   either a precompiled template, or by implementing the function directly, ie:
 
       def render("scripts.html", _assigns) do
@@ -366,7 +368,7 @@ defmodule Phoenix.View do
   `render_existing/3` for per-template based content, ie:
 
       <head>
-        <%= render_existing @view_module, "scripts." <> @view_template, assigns %>
+        <%= render_existing view_module(@conn), "scripts." <> view_template(@conn), assigns %>
       </head>
 
       def render("scripts.show.html", _assigns) do
