@@ -100,6 +100,7 @@ lib/hello_web
 ├── endpoint.ex
 ├── gettext.ex
 ├── router.ex
+└── telemetry.ex
 ```
 
 All of the files which are currently in the `controllers`, `templates`, and `views` directories are there to create the "Welcome to Phoenix!" page we saw in the "Up and running" guide. 
