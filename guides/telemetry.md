@@ -13,6 +13,14 @@ and we will guide you through the steps to properly
 instrument your own functions using `:telemetry`. Let's take
 a closer look at how Telemetry works in your application.
 
+## Overview
+
+The `[:telemetry]` library allows us to emit events at various stages of an application's lifecycle. It allows us to respond to these events by, among other things, aggregating them as metrics and reporting them for visualization.
+
+Telemetry stores events by their name in an ETS table, along with the handler for each event. Then, when a given event is executed, Telemetry looks up its handler and invokes it.
+
+Phoenix's Telemetry tooling provides us with a supervisor that uses `Telemetry.Metrics` to define the list of Telemetry events to handle and how to handle those events, i.e. how to structure them as a certain type of metric. This supervisor works together with a Telemetry reporter to respond to the specified Telemetry events by aggregating them as the appropriate metric and sending them to the correct reporting destination. 
+
 ## The Telemetry supervisor
 
 Since v1.5, new Phoenix applications are generated with a
