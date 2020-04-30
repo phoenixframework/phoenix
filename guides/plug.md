@@ -134,7 +134,7 @@ Endpoints organize all the plugs common to every request, and apply them before 
 defmodule HelloWeb.Endpoint do
   ...
 
-  plug :instrospect
+  plug :introspect
   plug HelloWeb.Router
 ```
 
