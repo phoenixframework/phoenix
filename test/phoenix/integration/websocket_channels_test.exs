@@ -165,7 +165,14 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
       websocket: [
         check_origin: ["//example.com"],
         timeout: 200,
-        connect_info: [:x_headers, :peer_data, :uri, session: @session_config, signing_salt: "salt"]
+        connect_info: [
+          :x_headers,
+          :peer_data,
+          :uri,
+          :user_agent,
+          session: @session_config,
+          signing_salt: "salt"
+        ]
       ]
 
     plug Plug.Session, @session_config
@@ -294,6 +301,28 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
                                       "query" => "vsn=#{@vsn}",
                                       "scheme" => "http",
                                       "port" => 80}}}}
+      end
+
+      test "transport user agent is extracted to the socket connect_info" do
+        extra_headers = [{"user-agent", "foo/1.0"}]
+
+        {:ok, sock} =
+          WebsocketClient.start_link(
+            self(),
+            "ws://127.0.0.1:#{@port}/ws/connect_info/websocket?vsn=#{@vsn}",
+            @serializer,
+            extra_headers
+          )
+        WebsocketClient.join(sock, lobby(), %{})
+
+        assert_receive %Message{
+          event: "joined",
+          payload: %{
+            "connect_info" => %{
+              "user_agent" => "foo/1.0"
+            }
+          }
+        }
       end
 
       test "transport session is extracted to the socket connect_info" do

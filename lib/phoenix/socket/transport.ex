@@ -248,7 +248,7 @@ defmodule Phoenix.Socket.Transport do
 
     connect_info =
       Enum.map(connect_info, fn
-        key when key in [:peer_data, :uri, :x_headers] ->
+        key when key in [:peer_data, :uri, :user_agent, :x_headers] ->
           key
 
         {:session, session} ->
@@ -431,8 +431,12 @@ defmodule Phoenix.Socket.Transport do
   The supported keys are:
 
     * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
+
     * `:x_headers` - a list of all request headers that have an "x-" prefix
+
     * `:uri` - a `%URI{}` derived from the conn
+
+    * `:user_agent` - the value of the "user-agent" request header
 
   """
   def connect_info(conn, endpoint, keys) do
@@ -446,6 +450,9 @@ defmodule Phoenix.Socket.Transport do
 
         :uri ->
           {:uri, fetch_uri(conn)}
+
+        :user_agent ->
+          {:user_agent, fetch_user_agent(conn)}
 
         {:session, session} ->
           {:session, connect_session(conn, endpoint, session)}
@@ -519,15 +526,21 @@ defmodule Phoenix.Socket.Transport do
         do: pair
   end
 
-  defp fetch_uri(%{host: host, scheme: scheme, query_string: query_string, port: port, request_path: request_path}) do
+  defp fetch_uri(conn) do
     %URI{
-      scheme: to_string(scheme),
-      query: query_string,
-      port: port,
-      host: host,
-      authority: host,
-      path: request_path,
+      scheme: to_string(conn.scheme),
+      query: conn.query_string,
+      port: conn.port,
+      host: conn.host,
+      authority: conn.host,
+      path: conn.request_path
     }
+  end
+
+  defp fetch_user_agent(conn) do
+    with {_, value} <- List.keyfind(conn.req_headers, "user-agent", 0) do
+      value
+    end
   end
 
   defp check_origin_config(handler, endpoint, opts) do
