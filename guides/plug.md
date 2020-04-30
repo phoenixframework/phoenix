@@ -38,7 +38,7 @@ Pretty simple, right? Let's see this function in action by adding it to our endp
 defmodule HelloWeb.Endpoint do
   ...
 
-  plug :instrospect
+  plug :introspect
   plug HelloWeb.Router
 
   def introspect(conn, _opts) do
