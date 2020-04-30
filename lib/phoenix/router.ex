@@ -450,10 +450,13 @@ defmodule Phoenix.Router do
       def __helpers__, do: __MODULE__.Helpers
 
       defp prepare(conn) do
-        update_in conn.private,
-          &(&1
-            |> Map.put(:phoenix_router, __MODULE__)
-            |> Map.put(__MODULE__, {conn.script_name, @phoenix_forwards}))
+        merge_private(
+          conn,
+          [
+            {:phoenix_router, __MODULE__},
+            {__MODULE__, {conn.script_name, @phoenix_forwards}}
+          ]
+        )
       end
 
       unquote(matches)
