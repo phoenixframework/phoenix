@@ -98,7 +98,7 @@ end
 Now if you fire up the server with `mix phx.server` and visit `http://localhost:4000`, you should see the following text below your layout header instead of the main template page:
 
 ```console
-rendering with assigns [:conn, :view_module, :view_template]
+rendering with assigns [:conn]
 ```
 
 By defining our own clause in `render`, it takes higher priority than the template, but the template is still there, which you can verify by simply removing the newly added clause.
@@ -172,7 +172,7 @@ Layouts are just templates. They have a view, just like other templates. In a ne
 <%= @inner_content %>
 ```
 
-In other words, the inner template is placed in the `@inner_content` assign. You can also find which module and template where used to render the inner content by introspecting the `@view_module` and `@view_template` assigns.
+In other words, the inner template is placed in the `@inner_content` assign.
 
 ## Rendering JSON
 

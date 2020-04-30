@@ -70,7 +70,7 @@ defmodule Phoenix.MixProject do
       # Optional deps
       {:plug_cowboy, "~> 2.2", optional: true},
       {:jason, "~> 1.0", optional: true},
-      {:phoenix_html, "~> 2.13", optional: true},
+      {:phoenix_html, "~> 2.14.2 or ~> 2.15", optional: true},
 
       # Docs dependencies
       {:ex_doc, "~> 0.20", only: :docs},

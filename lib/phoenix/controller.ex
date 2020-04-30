@@ -460,9 +460,7 @@ defmodule Phoenix.Controller do
   Retrieves the current view.
   """
   @spec view_module(Plug.Conn.t) :: atom
-  def view_module(conn) do
-    conn.private.phoenix_view
-  end
+  def view_module(conn), do: conn.private.phoenix_view
 
   @doc """
   Stores the layout for rendering.
@@ -796,6 +794,7 @@ defmodule Phoenix.Controller do
 
   defp prepare_assigns(conn, assigns, template, format) do
     assigns = to_map(assigns)
+
     layout =
       case layout(conn, assigns, format) do
         {mod, layout} -> {mod, template_name(layout, format)}

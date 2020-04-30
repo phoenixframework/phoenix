@@ -73,21 +73,6 @@ defmodule Phoenix.ViewTest do
     end
   end
 
-  test "supports deprecated layout calling convention" do
-    assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
-      html = render(MyApp.UserView, "message.html",
-        title: "Test",
-        layout: {MyApp.LayoutView, "deprecated.html"}
-      )
-
-      assert html ==
-             {:safe, ["<html>\n  <title>", "Test", "</title>\n  ", "message sent", "\n</html>\n"]}
-
-      assert_received :message_sent
-      refute_received :message_sent
-    end) =~ "<%= @inner_content %>"
-  end
-
   test "converts assigns to maps and removes :layout" do
     html = render_to_iodata(MyApp.UserView, "edit.html",
       title: "Test",

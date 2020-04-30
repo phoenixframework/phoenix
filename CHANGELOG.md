@@ -7,6 +7,7 @@
 ### Deprecations
 
   * [Endpoint] Phoenix now requires Cowboy v2.7+
+  * [View] `@view_module` is deprecated in favor of `Phoenix.Controller.view_module/1` and `@view_template` is deprecated in favor of `Phoenix.Controller.view_template/1`
 
 ## v1.5
 
