@@ -58,6 +58,8 @@ defmodule Mix.Tasks.Phx.New.WebTest do
       assert msg =~ "$ cd phx_web"
       assert msg =~ "$ mix deps.get"
 
+      assert_received {:mix_shell, :info, ["Your web app requires a PubSub server to be running." <> _]}
+
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
     end
   end

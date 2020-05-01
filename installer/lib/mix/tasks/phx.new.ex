@@ -147,8 +147,8 @@ defmodule Mix.Tasks.Phx.New do
     project
   end
 
-  defp prompt_to_install_deps(%Project{} = project, generator, path) do
-    path = Map.fetch!(project, path)
+  defp prompt_to_install_deps(%Project{} = project, generator, path_key) do
+    path = Map.fetch!(project, path_key)
     install? = Mix.shell().yes?("\nFetch and install dependencies?")
     cd_step = ["$ cd #{relative_app_path(path)}"]
 
@@ -172,6 +172,17 @@ defmodule Mix.Tasks.Phx.New do
 
       if Project.ecto?(project) do
         print_ecto_info(generator)
+      end
+
+      if path_key == :web_path do
+        Mix.shell().info("""
+        Your web app requires a PubSub server to be running.
+        The PubSub server is typically defined in a `mix phx.gen.ecto` app.
+        If you don't plan to define an Ecto app, you must explicitly start
+        the PubSub in your supervision tree as:
+
+            {Phoenix.PubSub, name: #{inspect(project.app_mod)}.PubSub}}
+        """)
       end
 
       print_mix_info(generator)
