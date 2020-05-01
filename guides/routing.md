@@ -291,7 +291,7 @@ scope "/admin", HelloWeb.Admin do
 end
 ```
 
-We define a new scope where all routes a prefixed with "/admin" and all controllers are under the `HelloWeb.Admin` namespace.
+We define a new scope where all routes are prefixed with "/admin" and all controllers are under the `HelloWeb.Admin` namespace.
 
 Running `mix phx.routes` again, in addition to the previous set of routes we get the following:
 
