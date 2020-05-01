@@ -32,6 +32,8 @@ There are a number of places to connect with community members at all experience
 
 ## Screencasts/Courses
 
+  * [Phoenix LiveView Free Course (The Pragmatic Studio - May 2020)](https://pragmaticstudio.com/courses/phoenix-liveview)
+
   * [The Complete Elixir and Phoenix Bootcamp Master Functional Programming Techniques with Elixir and Phoenix while Learning to Build Compelling Web Applications (Udemy - Jun 2017)](https://www.udemy.com/the-complete-elixir-and-phoenix-bootcamp-and-tutorial/)
 
   * [Discover Elixir & Phoenix (Mar 2017)](https://www.ludu.co/course/discover-elixir-phoenix)
