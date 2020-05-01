@@ -19,15 +19,12 @@ defmodule Phoenix.Controller.Pipeline do
 
       @doc false
       def call(conn, action) when is_atom(action) do
-        conn =
-          update_in(
-            conn.private,
-            &(&1
-              |> Map.put(:phoenix_controller, __MODULE__)
-              |> Map.put(:phoenix_action, action))
-          )
-
-        phoenix_controller_pipeline(conn, action)
+        conn
+        |> merge_private(
+          phoenix_controller: __MODULE__,
+          phoenix_action: action
+        )
+        |> phoenix_controller_pipeline(action)
       end
 
       @doc false
