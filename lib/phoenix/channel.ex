@@ -402,7 +402,7 @@ defmodule Phoenix.Channel do
       @phoenix_shutdown Keyword.get(opts, :shutdown, 5000)
 
       import unquote(__MODULE__)
-      import Phoenix.Socket, only: [assign: 3]
+      import Phoenix.Socket, only: [assign: 3, assign: 2]
 
       def child_spec(init_arg) do
         %{
