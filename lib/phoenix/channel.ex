@@ -339,7 +339,7 @@ defmodule Phoenix.Channel do
   @doc """
   Handle regular Elixir process messages.
 
-  See `GenServer.handle_info/2`.
+  See `c:GenServer.handle_info/2`.
   """
   @callback handle_info(msg :: term, socket :: Socket.t()) ::
               {:noreply, Socket.t()}
@@ -348,7 +348,7 @@ defmodule Phoenix.Channel do
   @doc """
   Handle regular GenServer call messages.
 
-  See `GenServer.handle_call/3`.
+  See `c:GenServer.handle_call/3`.
   """
   @callback handle_call(msg :: term, from :: {pid, tag :: term}, socket :: Socket.t()) ::
               {:reply, response :: term, Socket.t()}
@@ -358,7 +358,7 @@ defmodule Phoenix.Channel do
   @doc """
   Handle regular GenServer cast messages.
 
-  See `GenServer.handle_cast/2`.
+  See `c:GenServer.handle_cast/2`.
   """
   @callback handle_cast(msg :: term, socket :: Socket.t()) ::
               {:noreply, Socket.t()}
@@ -373,7 +373,7 @@ defmodule Phoenix.Channel do
   @doc """
   Invoked when the channel process is about to exit.
 
-  See `GenServer.terminate/2`.
+  See `c:GenServer.terminate/2`.
   """
   @callback terminate(
               reason :: :normal | :shutdown | {:shutdown, :left | :closed | term},
