@@ -33,7 +33,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, index_live, _html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :index))
 
       assert index_live |> element("a", "New <%= schema.human_singular %>") |> render_click() =~
-        "New <%= schema.human_singular %>"
+               "New <%= schema.human_singular %>"
 
       assert_patch(index_live, Routes.<%= schema.route_helper %>_index_path(conn, :new))
 
@@ -55,7 +55,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, index_live, _html} = live(conn, Routes.<%= schema.route_helper %>_index_path(conn, :index))
 
       assert index_live |> element("#<%= schema.singular %>-#{<%= schema.singular %>.id} a", "Edit") |> render_click() =~
-        "Edit <%= schema.human_singular %>"
+               "Edit <%= schema.human_singular %>"
 
       assert_patch(index_live, Routes.<%= schema.route_helper %>_index_path(conn, :edit, <%= schema.singular %>))
 
@@ -95,7 +95,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, show_live, _html} = live(conn, Routes.<%= schema.route_helper %>_show_path(conn, :show, <%= schema.singular %>))
 
       assert show_live |> element("a", "Edit") |> render_click() =~
-        "Edit <%= schema.human_singular %>"
+               "Edit <%= schema.human_singular %>"
 
       assert_patch(show_live, Routes.<%= schema.route_helper %>_show_path(conn, :edit, <%= schema.singular %>))
 
