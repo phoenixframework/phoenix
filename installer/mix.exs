@@ -10,7 +10,7 @@ defmodule Phx.New.MixProject do
       app: :phx_new,
       start_permanent: Mix.env() == :prod,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.9",
       deps: deps(),
       package: [
         maintainers: [

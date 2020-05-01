@@ -18,7 +18,7 @@ config :<%= app_name %>, <%= endpoint_module %>,
   ],
   secret_key_base: secret_key_base
 
-# ## Using releases (Elixir v1.9+)
+# ## Using releases
 #
 # If you are doing OTP releases, you need to instruct Phoenix
 # to start each relevant endpoint:

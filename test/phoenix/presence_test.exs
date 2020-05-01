@@ -20,7 +20,7 @@ defmodule Phoenix.PresenceTest do
 
   setup_all do
     start_supervised! {Phoenix.PubSub, name: PresPub, pool_size: 1}
-    assert {:ok, _pid} = MyPresence.start_link([])
+    start_supervised! MyPresence
     {:ok, pubsub: PresPub}
   end
 
@@ -76,7 +76,7 @@ defmodule Phoenix.PresenceTest do
 
     pid = spawn(fn -> :timer.sleep(:infinity) end)
     Phoenix.PubSub.subscribe(config.pubsub, topic)
-    {:ok, _pid} = DefaultPresence.start_link(pubsub_server: config.pubsub)
+    start_supervised! {DefaultPresence, pubsub_server: config.pubsub}
     DefaultPresence.track(pid, topic, "u1", %{name: "u1"})
 
     assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{

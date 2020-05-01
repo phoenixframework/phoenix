@@ -1,8 +1,14 @@
 # Changelog for v1.6
 
+Phoenix v1.6 requires Elixir v1.9+.
+
 ## 1.6.0-dev
 
 ### Enhancements
+
+### Bug fixes
+
+  * [mix phx.gen.live] Fix a bug where tests with `utc_datetime` fields did not pass out of the box
 
 ### Deprecations
 

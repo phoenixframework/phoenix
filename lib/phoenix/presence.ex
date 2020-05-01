@@ -286,12 +286,6 @@ defmodule Phoenix.Presence do
         }
       end
 
-      # TODO: Remove this on the next Phoenix version as we require v1.6
-      # and this will only be called by outdated child specs.
-      def start_link(opts \\ []) do
-        Phoenix.Presence.start_link(__MODULE__, Keyword.merge(@opts, opts))
-      end
-
       # API
 
       def track(%Phoenix.Socket{} = socket, key, meta) do

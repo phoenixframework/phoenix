@@ -180,8 +180,6 @@ defmodule Mix.Phoenix.Schema do
     |> inspect_value(value)
   end
   defp inspect_value(:decimal, value), do: "Decimal.new(\"#{value}\")"
-  defp inspect_value(:utc_datetime, value), do: "DateTime.from_naive!(~N[#{value}], \"Etc/UTC\")"
-  defp inspect_value(:utc_datetime_usec, value), do: "DateTime.from_naive!(~N[#{value}], \"Etc/UTC\")"
   defp inspect_value(_type, value), do: inspect(value)
 
   defp drop_unique(info) do
@@ -207,12 +205,12 @@ defmodule Mix.Phoenix.Schema do
         :boolean        -> true
         :map            -> %{}
         :text           -> "some #{key}"
-        :date           -> %Date{year: 2010, month: 4, day: 17}
-        :time           -> %Time{hour: 14, minute: 0, second: 0}
-        :time_usec      -> %Time{hour: 14, minute: 0, second: 0, microsecond: {0, 6}}
+        :date           -> ~D[2010-04-17]
+        :time           -> ~T[14:00:00]
+        :time_usec      -> ~T[14:00:00.000000]
         :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
-        :utc_datetime   -> "2010-04-17T14:00:00Z"
-        :utc_datetime_usec -> "2010-04-17T14:00:00.000000Z"
+        :utc_datetime   -> ~U[2010-04-17T14:00:00Z]
+        :utc_datetime_usec -> ~U[2010-04-17T14:00:00.000000Z]
         :naive_datetime -> ~N[2010-04-17 14:00:00]
         :naive_datetime_usec -> ~N[2010-04-17 14:00:00.000000]
         _               -> "some #{key}"
@@ -227,12 +225,12 @@ defmodule Mix.Phoenix.Schema do
         :boolean        -> false
         :map            -> %{}
         :text           -> "some updated #{key}"
-        :date           -> %Date{year: 2011, month: 5, day: 18}
-        :time           -> %Time{hour: 15, minute: 1, second: 1}
-        :time_usec      -> %Time{hour: 15, minute: 1, second: 1, microsecond: {0, 6}}
+        :date           -> ~D[2011-05-18]
+        :time           -> ~T[15:01:01]
+        :time_usec      -> ~T[15:01:01.000000]
         :uuid           -> "7488a646-e31f-11e4-aace-600308960668"
-        :utc_datetime   -> "2011-05-18T15:01:01Z"
-        :utc_datetime_usec   -> "2011-05-18T15:01:01.000000Z"
+        :utc_datetime   -> ~U[2011-05-18T15:01:01Z]
+        :utc_datetime_usec   -> ~U[2011-05-18T15:01:01.000000Z]
         :naive_datetime -> ~N[2011-05-18 15:01:01]
         :naive_datetime_usec -> ~N[2011-05-18 15:01:01.000000]
         _               -> "some updated #{key}"

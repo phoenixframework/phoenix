@@ -97,11 +97,11 @@ The buildpack uses a predefined Elixir and Erlang version but to avoid surprises
 
 ```
 # Elixir version
-elixir_version=1.8.1
+elixir_version=1.10.3
 
 # Erlang version
 # available versions https://github.com/HashNuke/heroku-buildpack-elixir-otp-builds/blob/master/otp-versions
-erlang_version=21.2.5
+erlang_version=22.2.8
 ```
 
 ### Adding the Phoenix Server and Assets Buildpack
