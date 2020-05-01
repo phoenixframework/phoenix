@@ -404,7 +404,7 @@ defmodule Phoenix.ChannelTest do
 
   """
   @spec push(Socket.t, String.t, map()) :: reference()
-  def push(socket, event, payload \\ %{}) do
+  def push(%Socket{} = socket, event, payload \\ %{}) do
     ref = make_ref()
     send(socket.channel_pid,
          %Message{event: event, topic: socket.topic, ref: ref, payload: __stringify__(payload)})
@@ -415,7 +415,7 @@ defmodule Phoenix.ChannelTest do
   Emulates the client leaving the channel.
   """
   @spec leave(Socket.t) :: reference()
-  def leave(socket) do
+  def leave(%Socket{} = socket) do
     push(socket, "phx_leave", %{})
   end
 
@@ -425,7 +425,7 @@ defmodule Phoenix.ChannelTest do
   Closing socket is synchronous and has a default timeout
   of 5000 milliseconds.
   """
-  def close(socket, timeout \\ 5000) do
+  def close(%Socket{} = socket, timeout \\ 5000) do
     Server.close(socket.channel_pid, timeout)
   end
 
@@ -441,7 +441,7 @@ defmodule Phoenix.ChannelTest do
       :ok
 
   """
-  def broadcast_from(socket, event, message) do
+  def broadcast_from(%Socket{} = socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket
     Server.broadcast_from pubsub_server, transport_pid, topic, event, message
   end
@@ -449,7 +449,7 @@ defmodule Phoenix.ChannelTest do
   @doc """
   Same as `broadcast_from/3`, but raises if broadcast fails.
   """
-  def broadcast_from!(socket, event, message) do
+  def broadcast_from!(%Socket{} = socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket
     Server.broadcast_from! pubsub_server, transport_pid, topic, event, message
   end
