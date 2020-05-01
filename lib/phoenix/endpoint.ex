@@ -770,8 +770,13 @@ defmodule Phoenix.Endpoint do
       The valid keys are:
 
         * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
+
         * `:x_headers` - all request headers that have an "x-" prefix
+
         * `:uri` - a `%URI{}` with information from the conn
+
+        * `:user_agent` - the value of the "user-agent" request header
+
         * `{:session, session_config}` - the session information from `Plug.Conn`.
           The `session_config` is an exact copy of the arguments given to `Plug.Session`.
           This requires the "_csrf_token" to be given as request parameter with
