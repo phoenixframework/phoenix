@@ -15,7 +15,7 @@ When we use `mix phx.new` to generates a new Phoenix application, it builds a to
 │   └── hello_web
 │   └── hello_web.ex
 ├── priv
-├── test
+└── test
 ```
 
 We will go over those directories one by one:
@@ -41,7 +41,7 @@ The `lib/hello` directory hosts all of your business domain. Since our project d
 ```console
 lib/hello
 ├── application.ex
-├── repo.ex
+└── repo.ex
 ```
 
 The `lib/hello/application.ex` file defines an Elixir application named `Hello.Application`. That's because at the end of the day Phoenix applications are simply Elixir applications. The `Hello.Application` module defines which services are part of our application:
@@ -50,6 +50,8 @@ The `lib/hello/application.ex` file defines an Elixir application named `Hello.A
 children = [
   # Start the Ecto repository
   Hello.Repo,
+  # Start the Telemetry supervisor
+  HelloWeb.Telemetry,
   # Start the PubSub system
   {Phoenix.PubSub, name: Hello.PubSub},
   # Start the Endpoint (http/https)
@@ -90,7 +92,7 @@ lib/hello_web
 │   │   └── app.html.eex
 │   └── page
 │       └── index.html.eex
-└── views
+├── views
 │   ├── error_helpers.ex
 │   ├── error_view.ex
 │   ├── layout_view.ex
@@ -98,6 +100,7 @@ lib/hello_web
 ├── endpoint.ex
 ├── gettext.ex
 ├── router.ex
+└── telemetry.ex
 ```
 
 All of the files which are currently in the `controllers`, `templates`, and `views` directories are there to create the "Welcome to Phoenix!" page we saw in the "Up and running" guide. 
@@ -105,6 +108,8 @@ The `channels` directory is where we will add code related to building real-time
 
 By looking at `templates` and `views` directories, we can see Phoenix provides features for handling layouts and error pages out of the box.
 
-Besides the directories mentioned, `lib/hello_web` has three files at its root. `lib/hello_web/endpoint.ex` is the entry-point for HTTP requests. Once the browser accesses `http://localhost:4000`, the endpoint starts processing the data, eventually leading to the router, which is defined in `lib/hello_web/router.ex`. The router defines the rules to dispatch requests to "controllers", which then uses "views" and "templates" to render HTML pages back to clients. We explore these layers in length in other guides, starting with the "Request life-cycle" guide coming next.
+Besides the directories mentioned, `lib/hello_web` has four files at its root. `lib/hello_web/endpoint.ex` is the entry-point for HTTP requests. Once the browser accesses `http://localhost:4000`, the endpoint starts processing the data, eventually leading to the router, which is defined in `lib/hello_web/router.ex`. The router defines the rules to dispatch requests to "controllers", which then uses "views" and "templates" to render HTML pages back to clients. We explore these layers in length in other guides, starting with the "Request life-cycle" guide coming next.
+
+Through _telemetry_, Phoenix is able to collect metrics and send monitoring events of your application. The `lib/hello_web/telemetry.ex` file defines the supervisor responsible for managing the telemetry processes. You can find more information on this topic in the [Telemetry guide](telemetry.html).
 
 Finally, there is a `lib/hello_web/gettext.ex` file which provides internationalization through [Gettext](https://hexdocs.pm/gettext/Gettext.html). If you are not worried about internationalization, you can safely skip this file and its contents.
