@@ -6,7 +6,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :<%= schema.plural %>, fetch_<%= schema.plural %>())}
+    {:ok, assign(socket, :<%= schema.collection %>, list_<%= schema.plural %>())}
   end
 
   @impl true
@@ -37,10 +37,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
     {:ok, _} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
 
-    {:noreply, assign(socket, :<%= schema.plural %>, fetch_<%=schema.plural %>())}
+    {:noreply, assign(socket, :<%= schema.collection %>, list_<%=schema.plural %>())}
   end
 
-  defp fetch_<%= schema.plural %> do
+  defp list_<%= schema.plural %> do
     <%= inspect context.alias %>.list_<%= schema.plural %>()
   end
 end

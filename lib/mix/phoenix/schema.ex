@@ -6,6 +6,7 @@ defmodule Mix.Phoenix.Schema do
   defstruct module: nil,
             repo: nil,
             table: nil,
+            collection: nil,
             embedded?: false,
             generate?: true,
             opts: [],
@@ -83,6 +84,8 @@ defmodule Mix.Phoenix.Schema do
       |> Module.split()
       |> List.last()
       |> Phoenix.Naming.underscore()
+
+    collection = if schema_plural == singular, do: singular <> "_collection", else: schema_plural
     string_attr = string_attr(types)
     create_params = params(attrs, :create)
     default_params_key =
@@ -103,6 +106,7 @@ defmodule Mix.Phoenix.Schema do
       attrs: attrs,
       plural: schema_plural,
       singular: singular,
+      collection: collection,
       assocs: assocs,
       types: types,
       defaults: schema_defaults(attrs),

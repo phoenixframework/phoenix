@@ -171,7 +171,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
     end
   end
 
-  test "with --web namespace generates namedspaced web modules and directories", config do
+  test "with --web namespace generates namespaced web modules and directories", config do
     in_tmp_live_project config.test, fn ->
       Gen.Live.run(~w(Blog Post posts title:string --web Blog))
 
@@ -282,6 +282,32 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "lib/phoenix_web/live/post_live/show.html.leex"
       assert_file "lib/phoenix_web/live/post_live/form_component.html.leex"
       assert_file "test/phoenix_web/live/post_live_test.exs"
+    end
+  end
+
+
+  test "with same singular and plural", config do
+    in_tmp_live_project config.test, fn ->
+      Gen.Live.run(~w(Tracker Series series value:integer))
+
+      assert_file "lib/phoenix/tracker.ex"
+      assert_file "lib/phoenix/tracker/series.ex"
+
+      assert_file "lib/phoenix_web/live/series_live/index.ex", fn file ->
+        assert file =~ "assign(socket, :series_collection, list_series())"
+      end
+
+      assert_file "lib/phoenix_web/live/series_live/show.ex"
+      assert_file "lib/phoenix_web/live/series_live/form_component.ex"
+      assert_file "lib/phoenix_web/live/modal_component.ex"
+
+      assert_file "lib/phoenix_web/live/series_live/index.html.leex", fn file ->
+        assert file =~ "for series <- @series_collection do"
+      end
+
+      assert_file "lib/phoenix_web/live/series_live/show.html.leex"
+      assert_file "lib/phoenix_web/live/series_live/form_component.html.leex"
+      assert_file "test/phoenix_web/live/series_live_test.exs"
     end
   end
 
