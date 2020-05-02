@@ -32,6 +32,7 @@ defmodule Phoenix.Transports.WebSocket do
         case handler.connect(config) do
           {:ok, state} -> {:ok, conn, state}
           :error -> {:error, Plug.Conn.send_resp(conn, 403, "")}
+          {:error, status, body} -> {:error, Plug.Conn.send_resp(conn, status, body)}
         end
     end
   end
