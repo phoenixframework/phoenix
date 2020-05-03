@@ -384,8 +384,8 @@ defmodule Phoenix.Endpoint.Supervisor do
     endpoint.static_path("/")
   end
 
-  defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests} = manifest) do
-    Phoenix.Config.put_new(endpoint, :cache_static_manifest_hash, manifest["hash"])
+  defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests}) do
+    Phoenix.Config.put_new(endpoint, :cache_static_manifest_latest, latest)
 
     Enum.each(latest, fn {key, _} ->
       Phoenix.Config.cache(endpoint, {:__phoenix_static__, "/" <> key}, fn _ ->

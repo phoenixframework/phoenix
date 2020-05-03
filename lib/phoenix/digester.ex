@@ -24,12 +24,10 @@ defmodule Phoenix.Digester do
 
       files = filter_files(input_path)
       latest = generate_latest(files)
-      hash = latest_hash(latest)
-
       digests = load_compile_digests(output_path)
-      digested_files = Enum.map(files, &digested_contents(&1, latest, hash))
+      digested_files = Enum.map(files, &digested_contents(&1, latest))
 
-      save_manifest(digested_files, latest, hash, digests, output_path)
+      save_manifest(digested_files, latest, digests, output_path)
       Enum.each(digested_files, &write_to_disk(&1, output_path))
     else
       {:error, :invalid_path}
@@ -75,33 +73,25 @@ defmodule Phoenix.Digester do
   defp migrate_manifest(%{"version" => @manifest_version} = manifest, _output_path), do: manifest
   defp migrate_manifest(_latest, _output_path), do: @empty_manifest
 
-  defp save_manifest(files, latest, hash, old_digests, output_path) do
+  defp save_manifest(files, latest, old_digests, output_path) do
     old_digests_that_still_exist =
       old_digests
       |> Enum.filter(fn {file, _} -> File.exists?(Path.join(output_path, file)) end)
       |> Map.new()
 
     digests = Map.merge(old_digests_that_still_exist, generate_digests(files))
-    write_manifest(latest, digests, hash, output_path)
+    write_manifest(latest, digests, output_path)
   end
 
-  defp write_manifest(latest, digests, hash, output_path) do
+  defp write_manifest(latest, digests, output_path) do
     json = %{
       "latest" => latest,
       "version" => @manifest_version,
-      "digests" => digests,
-      "hash" => hash
+      "digests" => digests
     }
 
     manifest_content = Phoenix.json_library().encode!(json)
     File.write!(Path.join(output_path, "cache_manifest.json"), manifest_content)
-  end
-
-  defp latest_hash(latest) do
-    [@manifest_version, latest]
-    |> :erlang.term_to_binary()
-    |> :erlang.md5()
-    |> Base.url_encode64(padding: false)
   end
 
   defp generate_digests(files) do
@@ -182,14 +172,8 @@ defmodule Phoenix.Digester do
     Path.extname(file.filename) in Application.fetch_env!(:phoenix, :gzippable_exts)
   end
 
-  defp digested_contents(file, latest, hash) do
+  defp digested_contents(file, latest) do
     ext = Path.extname(file.filename)
-
-    file =
-      case ext do
-        ".js" -> %{file | content: digest_javascript_contents(file, hash)}
-        _ -> file
-      end
 
     digested_content =
       case ext do
@@ -200,14 +184,6 @@ defmodule Phoenix.Digester do
       end
 
     %{file | digested_content: digested_content}
-  end
-
-  @javascript_cache_manifest_hash_regex ~r{["'](PHOENIX_CACHE_STATIC_MANIFEST_HASH)["']}
-
-  defp digest_javascript_contents(file, hash) do
-    Regex.replace(@javascript_cache_manifest_hash_regex, file.content, fn _, _ ->
-      "\"#{hash}\""
-    end)
   end
 
   @stylesheet_url_regex ~r{(url\(\s*)(\S+?)(\s*\))}
@@ -305,7 +281,7 @@ defmodule Phoenix.Digester do
       %{"latest" => latest, "digests" => digests} = load_manifest(path)
       files = files_to_clean(latest, digests, now - age, keep)
       remove_files(files, path)
-      write_manifest(latest, Map.drop(digests, files), latest_hash(latest), path)
+      write_manifest(latest, Map.drop(digests, files), path)
       :ok
     else
       {:error, :invalid_path}
