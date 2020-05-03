@@ -102,10 +102,11 @@ defmodule Phoenix.Endpoint do
       by `mix phx.digest`. It can be either: a string containing a file system path
       or a tuple containing the application name and the path within that application.
 
-    * `:cache_static_manifest_hash` - the hash of the cache static manifest.
-      This is automatically loaded from `cache_static_manifest` on boot.
-      However, if you have your own static handling mechanism, you may want to
-      set this value explicitly.
+    * `:cache_static_manifest_latest` - a map of the static files pointing to their
+      digest version. This is automatically loaded from `cache_static_manifest` on
+      boot. However, if you have your own static handling mechanism, you may want to
+      set this value explicitly. This is used by projects such as `LiveView` to
+      detect if the client is running on the latest version of all assets
 
     * `:check_origin` - configure the default `:check_origin` setting for
       transports. See `socket/3` for options. Defaults to `true`.

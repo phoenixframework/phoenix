@@ -17,16 +17,8 @@ import {Socket} from "phoenix"
 import NProgress from "nprogress"
 import {LiveSocket} from "phoenix_live_view"
 
-// The _csrf_token is necessary to load the current session into the LiveView.
-// The _cache_static_manifest_hash is used to detect whenever there is a new
-// deploy and trigger a reload of the assets. The "PHOENIX_CACHE_STATIC_MANIFEST_HASH"
-// will be automatically replaced by a hash by running `mix phx.digest` in prod.
-let params = {
-  _csrf_token: document.querySelector("meta[name='csrf-token']").getAttribute("content"),
-  _cache_static_manifest_hash: "PHOENIX_CACHE_STATIC_MANIFEST_HASH"
-}
-
-let liveSocket = new LiveSocket("/live", Socket, {params: params})
+let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
 
 // Show progress bar on live navigation and form submits
 window.addEventListener("phx:page-loading-start", info => NProgress.start())

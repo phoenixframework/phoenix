@@ -35,7 +35,6 @@ defmodule Phoenix.DigesterTest do
       json = Path.join(@output_path, "cache_manifest.json") |> json_read!()
       assert json["latest"]["phoenix.png"] =~ ~r"phoenix-#{@hash_regex}.png"
       assert json["version"] == 1
-      assert byte_size(json["hash"]) == 22
     end
 
     test "includes existing digests in new cache manifest" do
@@ -131,7 +130,6 @@ defmodule Phoenix.DigesterTest do
 
       json = Path.join(input_path, "cache_manifest.json") |> json_read!()
       assert json["digests"] == %{}
-      assert byte_size(json["hash"]) == 22
     end
 
     test "digests and compress nested files" do
@@ -169,8 +167,6 @@ defmodule Phoenix.DigesterTest do
 
       json2 = Path.join(@output_path, "cache_manifest.json") |> json_read!()
       assert Enum.count(json2["digests"]) == 2
-
-      assert json1["hash"] != json2["hash"]
     end
 
     test "doesn't duplicate files when digesting and compressing twice" do
@@ -182,11 +178,8 @@ defmodule Phoenix.DigesterTest do
       File.write!(input_file, "console.log('test');")
 
       assert :ok = Phoenix.Digester.compile(input_path, input_path)
-      json1 = Path.join(input_path, "cache_manifest.json") |> json_read!()
       assert :ok = Phoenix.Digester.compile(input_path, input_path)
-      json2 = Path.join(input_path, "cache_manifest.json") |> json_read!()
 
-      assert json1["hash"] == json2["hash"]
       output_files = assets_files(input_path)
       refute "file.js.gz.gz" in output_files
       refute "cache_manifest.json.gz" in output_files
@@ -239,7 +232,6 @@ defmodule Phoenix.DigesterTest do
     test "digests sourceMappingURL asset paths found within javascript source files" do
       input_path = "test/fixtures/digest/priv/static/"
       assert :ok = Phoenix.Digester.compile(input_path, @output_path)
-      json = Path.join(@output_path, "cache_manifest.json") |> json_read!()
 
       digested_js_map_filename =
         assets_files(@output_path)
@@ -252,12 +244,10 @@ defmodule Phoenix.DigesterTest do
       digested_js = Path.join(@output_path, digested_js_filename) |> File.read!()
       refute digested_js =~ "app.js.map"
       assert digested_js =~ "#{digested_js_map_filename}"
-      assert digested_js =~ "var digest = \"#{json["hash"]}\";"
 
       js = Path.join(@output_path, "app.js") |> File.read!()
       assert js =~ "app.js.map"
       refute js =~ "#{digested_js_map_filename}"
-      assert js =~ "var digest = \"#{json["hash"]}\";"
     end
 
     test "digests file url paths found within javascript mapping files" do
