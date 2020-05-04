@@ -251,7 +251,7 @@ interface provided by `Telemetry.Metrics`. They then
 aggregate the measurements (data) into metrics to provide
 meaningful information about your application.
 
-For example, if the following `Telemetry.Metrics.summary/2` call is added to the `metrics/0` function of your Telemetry Supervisor:
+For example, if the following `Telemetry.Metrics.summary/2` call is added to the `metrics/0` function of your Telemetry supervisor:
 
 ```elixir
 summary("phoenix.endpoint.stop.duration",
