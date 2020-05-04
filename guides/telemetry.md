@@ -158,8 +158,7 @@ took to get the response:
 The Telemetry.Metrics package provides a common interface
 for defining metrics. It exposes a set of [five metric type functions](https://hexdocs.pm/telemetry_metrics/0.4.1/Telemetry.Metrics.html#module-metrics) that are responsible for structuring a given Telemetry event as a particular measurement.
 
-The package
-does not perform any aggregation of the measurements itself. Instead, it provides a reporter with the Telemetry event-as-measurement definition and the reporter uses that definition to perform aggregations and report them.
+The package does not perform any aggregation of the measurements itself. Instead, it provides a reporter with the Telemetry event-as-measurement definition and the reporter uses that definition to perform aggregations and report them.
 
 We will discuss
 reporters in the next section.
