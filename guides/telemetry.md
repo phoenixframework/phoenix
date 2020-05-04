@@ -259,7 +259,7 @@ summary("phoenix.endpoint.stop.duration",
 )
 ```
 
-Then the reporter will attach a listener for the `"phoenix.endpoint.stop.duration"` Telemetry event and will respond to this event by calculating a summary metric with the given event metadata and reporting on that metric to the appropriate source.
+Then the reporter will attach a listener for the `"phoenix.endpoint.stop.duration"` event and will respond to this event by calculating a summary metric with the given event metadata and reporting on that metric to the appropriate source.
 
 ### Phoenix.LiveDashboard
 
