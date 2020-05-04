@@ -12,6 +12,16 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+## 1.5.2-dev
+
+### Enhancements
+  * [Channel] import `assigns:` 2 on channels
+  * [Endpoint] Track latest static in `config(:cache_static_manifest_latest)`
+  * [Endpoint] Allow `:user_agent` on `connect_info`
+
+### Bug fixes
+  * [Endpoint] Undeprecate `subscribe` and `unsubscribe` in the endpoint
+
 ## 1.5.1 (2020-04-23)
 
 ### Bug Fixes
