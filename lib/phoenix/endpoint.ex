@@ -379,12 +379,10 @@ defmodule Phoenix.Endpoint do
 
   defp pubsub() do
     quote do
-      @deprecated "#{inspect(__MODULE__)}.subscribe/2 is deprecated, please call Phoenix.PubSub directly instead"
       def subscribe(topic, opts \\ []) when is_binary(topic) do
-        Phoenix.PubSub.subscribe(pubsub_server!(), topic, [])
+        Phoenix.PubSub.subscribe(pubsub_server!(), topic, opts)
       end
 
-      @deprecated "#{inspect(__MODULE__)}.unsubscribe/1 is deprecated, please call Phoenix.PubSub directly instead"
       def unsubscribe(topic) do
         Phoenix.PubSub.unsubscribe(pubsub_server!(), topic)
       end
