@@ -19,7 +19,7 @@ The `[:telemetry]` library allows you to emit events at various stages of an app
 
 Telemetry stores events by their name in an ETS table, along with the handler for each event. Then, when a given event is executed, Telemetry looks up its handler and invokes it.
 
-Phoenix's Telemetry tooling provides us with a supervisor that uses `Telemetry.Metrics` to define the list of Telemetry events to handle and how to handle those events, i.e. how to structure them as a certain type of metric. This supervisor works together with a Telemetry reporter to respond to the specified Telemetry events by aggregating them as the appropriate metric and sending them to the correct reporting destination. 
+Phoenix's Telemetry tooling provides you with a supervisor that uses `Telemetry.Metrics` to define the list of Telemetry events to handle and how to handle those events, i.e. how to structure them as a certain type of metric. This supervisor works together with Telemetry reporters to respond to the specified Telemetry events by aggregating them as the appropriate metric and sending them to the correct reporting destination.
 
 ## The Telemetry supervisor
 
