@@ -15,7 +15,7 @@ a closer look at how Telemetry works in your application.
 
 ## Overview
 
-The `[:telemetry]` library allows us to emit events at various stages of an application's lifecycle. It allows us to respond to these events by, among other things, aggregating them as metrics and reporting them for visualization.
+The `[:telemetry]` library allows you to emit events at various stages of an application's lifecycle. You can then respond to these events by, among other things, aggregating them as metrics and sending the metrics data to a reporting destination.
 
 Telemetry stores events by their name in an ETS table, along with the handler for each event. Then, when a given event is executed, Telemetry looks up its handler and invokes it.
 
