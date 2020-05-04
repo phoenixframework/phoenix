@@ -11,14 +11,14 @@ defmodule Mix.Tasks.Compile.Phoenix do
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
     case touch() do
-      [] -> :noop
-      _  -> :ok
+      [] -> {:noop, []}
+      _  -> {:ok, []}
     end
   end
 
   @doc false
   def touch do
-    Mix.Phoenix.modules
+    Mix.Phoenix.modules()
     |> modules_for_recompilation
     |> modules_to_file_paths
     |> Stream.map(&touch_if_exists(&1))
@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Compile.Phoenix do
     Stream.filter modules, fn mod ->
       Code.ensure_loaded?(mod) and
         function_exported?(mod, :__phoenix_recompile__?, 0) and
-        mod.__phoenix_recompile__?
+        mod.__phoenix_recompile__?()
     end
   end
 

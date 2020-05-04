@@ -1,25 +1,26 @@
 language: elixir
+elixir:
+  - 1.10
+otp_release:
+  - 22.0
 matrix:
   include:
-    - otp_release: 18.3
-      elixir: 1.3.2
-    - otp_release: 19.0
-      elixir: 1.3.2
-    - otp_release: 18.3
-      elixir: 1.4.0-rc.1
-    - otp_release: 19.0
-      elixir: 1.4.0-rc.1
-services:
-  - redis-server
+    - elixir: 1.9
+      otp_release: 21.0
 sudo: false
+env:
+  global:
+    - ELIXIR_ASSERT_TIMEOUT=2000
 before_script:
-  - mix deps.get --only test
-  - nvm install 6.2 && nvm use 6.2
+  - mix deps.get
+  - nvm install 12.16 && nvm use 12.16
 script:
   - mix test
-  - cd installer && mix test
-  - cd ../ && npm install && npm test
+  - cd installer && elixir -S mix test
+  - cd ../assets && npm install && npm test
 after_script:
   - cd $TRAVIS_BUILD_DIR
-  - mix deps.get --only docs
   - MIX_ENV=docs mix inch.report
+cache:
+  directories:
+  - assets/node_modules

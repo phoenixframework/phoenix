@@ -23,7 +23,7 @@ defmodule Phoenix.MissingParamError do
   This exception is raised by `Phoenix.Controller.scrub_params/2` which:
 
     * Checks to see if the required_key is present (can be empty)
-    * Changes all empty parameters to nils ("" -> nil).
+    * Changes all empty parameters to nils ("" -> nil)
 
   If you are seeing this error, you should handle the error and surface it
   to the end user. It means that there is a parameter missing from the request.
@@ -39,20 +39,32 @@ defmodule Phoenix.MissingParamError do
 end
 
 defmodule Phoenix.ActionClauseError do
-  defexception [message: nil, plug_status: 400]
+  exception_keys =
+    FunctionClauseError.__struct__()
+    |> Map.keys()
+    |> Kernel.--([:__exception__, :__struct__])
 
-  def exception(opts) do
-    controller = Keyword.fetch!(opts, :controller)
-    action = Keyword.fetch!(opts, :action)
-    params = Keyword.fetch!(opts, :params)
-    msg = """
-    could not find a matching #{inspect controller}.#{action} clause
-    to process request. This typically happens when there is a
-    parameter mismatch but may also happen when any of the other
-    action arguments do not match. The request parameters are:
+  defexception exception_keys
 
-      #{inspect params}
-    """
-    %Phoenix.ActionClauseError{message: msg}
+  def message(exception) do
+    exception
+    |> Map.put(:__struct__, FunctionClauseError)
+    |> FunctionClauseError.message()
   end
+
+  def blame(exception, stacktrace) do
+    {exception, stacktrace} =
+      exception
+      |> Map.put(:__struct__, FunctionClauseError)
+      |> FunctionClauseError.blame(stacktrace)
+
+    exception = Map.put(exception, :__struct__, __MODULE__)
+
+    {exception, stacktrace}
+  end
+end
+
+defimpl Plug.Exception, for: Phoenix.ActionClauseError do
+  def status(_), do: 400
+  def actions(_), do: []
 end

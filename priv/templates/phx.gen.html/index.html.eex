@@ -1,0 +1,26 @@
+<h1>Listing <%= schema.human_plural %></h1>
+
+<table>
+  <thead>
+    <tr>
+<%= for {k, _} <- schema.attrs do %>      <th><%= Phoenix.Naming.humanize(Atom.to_string(k)) %></th>
+<% end %>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%%= for <%= schema.singular %> <- @<%= schema.plural %> do %>
+    <tr>
+<%= for {k, _} <- schema.attrs do %>      <td><%%= <%= schema.singular %>.<%= k %> %></td>
+<% end %>
+      <td>
+        <span><%%= link "Show", to: Routes.<%= schema.route_helper %>_path(@conn, :show, <%= schema.singular %>) %></span>
+        <span><%%= link "Edit", to: Routes.<%= schema.route_helper %>_path(@conn, :edit, <%= schema.singular %>) %></span>
+        <span><%%= link "Delete", to: Routes.<%= schema.route_helper %>_path(@conn, :delete, <%= schema.singular %>), method: :delete, data: [confirm: "Are you sure?"] %></span>
+      </td>
+    </tr>
+<%% end %>
+  </tbody>
+</table>
+
+<span><%%= link "New <%= schema.human_singular %>", to: Routes.<%= schema.route_helper %>_path(@conn, :new) %></span>

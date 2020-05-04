@@ -10,8 +10,9 @@ defmodule Phoenix.Channel do
   Every time you join a channel, you need to choose which particular topic you
   want to listen to. The topic is just an identifier, but by convention it is
   often made of two parts: `"topic:subtopic"`. Using the `"topic:subtopic"`
-  approach pairs nicely with the `Phoenix.Socket.channel/2` allowing you to
-  match on all topics starting with a given prefix:
+  approach pairs nicely with the `Phoenix.Socket.channel/3` allowing you to
+  match on all topics starting with a given prefix by using a splat (the `*`
+  character) as the last character in the topic pattern:
 
       channel "room:*", MyApp.RoomChannel
 
@@ -20,12 +21,12 @@ defmodule Phoenix.Channel do
   matched in your channels' `join/3` callback to pluck out the scoped pattern:
 
       # handles the special `"lobby"` subtopic
-      def join("room:lobby", _auth_message, socket) do
+      def join("room:lobby", _payload, socket) do
         {:ok, socket}
       end
 
       # handles any other subtopic as the room ID, for example `"room:12"`, `"room:34"`
-      def join("room:" <> room_id, auth_message, socket) do
+      def join("room:" <> room_id, _payload, socket) do
         {:ok, socket}
       end
 
@@ -52,15 +53,15 @@ defmodule Phoenix.Channel do
   and broadcasting the message to all topic subscribers for this socket.
 
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
-        broadcast! socket, "new_msg", %{uid: uid, body: body}
+        broadcast!(socket, "new_msg", %{uid: uid, body: body})
         {:noreply, socket}
       end
 
   You can also push a message directly down the socket:
 
       # client asks for their current rank, push sent directly as a new event.
-      def handle_in("current_rank", socket) do
-        push socket, "current_rank", %{val: Game.get_rank(socket.assigns[:user])}
+      def handle_in("current_rank", _, socket) do
+        push(socket, "current_rank", %{val: Game.get_rank(socket.assigns[:user])})
         {:noreply, socket}
       end
 
@@ -78,11 +79,11 @@ defmodule Phoenix.Channel do
 
         if changeset.valid? do
           post = Repo.insert!(changeset)
-          {:reply, {:ok, MyApp.PostView.render("show.json", 
-            %{post: post}), socket}
+          response = MyApp.PostView.render("show.json", %{post: post})
+          {:reply, {:ok, response}, socket}
         else
-          {:reply,{:error, MyApp.ChangesetView.render("errors.json",
-            %{changeset: changeset}), socket}
+          response = MyApp.ChangesetView.render("errors.json", %{changeset: changeset})
+          {:reply, {:error, response}, socket}
         end
       end
 
@@ -113,9 +114,9 @@ defmodule Phoenix.Channel do
       # for every socket subscribing to this topic, append an `is_editable`
       # value for client metadata.
       def handle_out("new_msg", msg, socket) do
-        push socket, "new_msg", Map.merge(msg,
+        push(socket, "new_msg", Map.merge(msg,
           %{is_editable: User.can_edit_message?(socket.assigns[:user], msg)}
-        )
+        ))
         {:noreply, socket}
       end
 
@@ -123,7 +124,7 @@ defmodule Phoenix.Channel do
       # is ignoring the user who joined.
       def handle_out("user_joined", msg, socket) do
         unless User.ignoring?(socket.assigns[:user], msg.user_id) do
-          push socket, "user_joined", msg
+          push(socket, "user_joined", msg)
         end
         {:noreply, socket}
       end
@@ -138,18 +139,18 @@ defmodule Phoenix.Channel do
       # within channel
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         ...
-        broadcast_from! socket, "new_msg", %{uid: uid, body: body}
-        MyApp.Endpoint.broadcast_from! self(), "room:superadmin",
-          "new_msg", %{uid: uid, body: body}
+        broadcast_from!(socket, "new_msg", %{uid: uid, body: body})
+        MyApp.Endpoint.broadcast_from!(self(), "room:superadmin",
+          "new_msg", %{uid: uid, body: body})
         {:noreply, socket}
       end
 
       # within controller
       def create(conn, params) do
         ...
-        MyApp.Endpoint.broadcast! "room:" <> rid, "new_msg", %{uid: uid, body: body}
-        MyApp.Endpoint.broadcast! "room:superadmin", "new_msg", %{uid: uid, body: body}
-        redirect conn, to: "/"
+        MyApp.Endpoint.broadcast!("room:" <> rid, "new_msg", %{uid: uid, body: body})
+        MyApp.Endpoint.broadcast!("room:superadmin", "new_msg", %{uid: uid, body: body})
+        redirect(conn, to: "/")
       end
 
   ## Terminate
@@ -184,22 +185,20 @@ defmodule Phoenix.Channel do
 
   You have three options to choose from when shutting down a channel:
 
-    * `:normal` - in such cases, the exit won't be logged, there is no restart
-      in transient mode, and linked processes do not exit
+    * `:normal` - in such cases, the exit won't be logged and linked processes
+      do not exit
 
     * `:shutdown` or `{:shutdown, term}` - in such cases, the exit won't be
-      logged, there is no restart in transient mode, and linked processes exit
-      with the same reason unless they're trapping exits
+      logged and linked processes exit with the same reason unless they're
+      trapping exits
 
-    * any other term - in such cases, the exit will be logged, there are
-      restarts in transient mode, and linked processes exit with the same reason
-      unless they're trapping exits
-
+    * any other term - in such cases, the exit will be logged and linked
+      processes exit with the same reason unless they're trapping exits
 
   ## Subscribing to external topics
 
   Sometimes you may need to programmatically subscribe a socket to external
-  topics in addition to the the internal `socket.topic`. For example,
+  topics in addition to the internal `socket.topic`. For example,
   imagine you have a bidding system where a remote client dynamically sets
   preferences on products they want to receive bidding notifications on.
   Instead of requiring a unique channel process and topic per
@@ -244,10 +243,29 @@ defmodule Phoenix.Channel do
   simply relay the `%Phoenix.Socket.Broadcast{}` event and payload:
 
       alias Phoenix.Socket.Broadcast
-      def handle_info(%Broadcast{topic: _, event: ev, payload: payload}, socket) do
-        push socket, ev, payload
+      def handle_info(%Broadcast{topic: _, event: event, payload: payload}, socket) do
+        push(socket, event, payload)
         {:noreply, socket}
       end
+
+  ## Hibernation
+
+  From Erlang/OTP 20, channels automatically hibernate to save memory
+  after 15_000 milliseconds of inactivity. This can be customized by
+  passing the `:hibernate_after` option to `use Phoenix.Channel`:
+
+      use Phoenix.Channel, hibernate_after: 60_000
+
+  You can also set it to `:infinity` to fully disable it.
+
+  ## Shutdown
+
+  You can configure the shutdown of each channel used when your application
+  is shutting down by setting the `:shutdown` value on use:
+
+      use Phoenix.Channel, shutdown: 5_000
+
+  It defaults to 5_000.
 
   ## Logging
 
@@ -259,37 +277,117 @@ defmodule Phoenix.Channel do
   incoming events:
 
       use Phoenix.Channel, log_join: :info, log_handle_in: false
+
   """
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
 
   @type reply :: status :: atom | {status :: atom, response :: map}
-  @type socket_ref :: {transport_pid :: Pid, serializer :: module,
-                       topic :: binary, ref :: binary}
+  @type socket_ref ::
+          {transport_pid :: Pid, serializer :: module, topic :: binary, ref :: binary,
+           join_ref :: binary}
 
+  @doc """
+  Handle channel joins by `topic`.
 
-  @callback code_change(old_vsn, Socket.t, extra :: term) ::
-              {:ok, Socket.t} |
-              {:error, reason :: term} when old_vsn: term | {:down, term}
+  To authorize a socket, return `{:ok, socket}` or `{:ok, reply, socket}`. To
+  refuse authorization, return `{:error, reason}`.
 
-  @callback join(topic :: binary, auth_msg :: map, Socket.t) ::
-              {:ok, Socket.t} |
-              {:ok, map, Socket.t} |
-              {:error, map}
+  ## Example
 
-  @callback handle_in(event :: String.t, msg :: map, Socket.t) ::
-              {:noreply, Socket.t} |
-              {:reply, reply, Socket.t} |
-              {:stop, reason :: term, Socket.t} |
-              {:stop, reason :: term, reply, Socket.t}
+      def join("room:lobby", payload, socket) do
+        if authorized?(payload) do
+          {:ok, socket}
+        else
+          {:error, %{reason: "unauthorized"}}
+        end
+      end
 
-  @callback handle_info(term, Socket.t) ::
-              {:noreply, Socket.t} |
-              {:stop, reason :: term, Socket.t}
+  """
+  @callback join(topic :: binary, payload :: map, socket :: Socket.t()) ::
+              {:ok, Socket.t()}
+              | {:ok, reply :: map, Socket.t()}
+              | {:error, reason :: map}
 
-  @callback terminate(msg :: map, Socket.t) ::
-              {:shutdown, :left | :closed} |
+  @doc """
+  Handle incoming `event`s.
+
+  ## Example
+
+      def handle_in("ping", payload, socket) do
+        {:reply, {:ok, payload}, socket}
+      end
+
+  """
+  @callback handle_in(event :: String.t(), payload :: map, socket :: Socket.t()) ::
+              {:noreply, Socket.t()}
+              | {:noreply, Socket.t(), timeout | :hibernate}
+              | {:reply, reply, Socket.t()}
+              | {:stop, reason :: term, Socket.t()}
+              | {:stop, reason :: term, reply, Socket.t()}
+
+  @doc """
+  Intercepts outgoing `event`s.
+
+  See `intercept/1`.
+  """
+  @callback handle_out(event :: String.t(), payload :: map, socket :: Socket.t()) ::
+              {:noreply, Socket.t()}
+              | {:noreply, Socket.t(), timeout | :hibernate}
+              | {:stop, reason :: term, Socket.t()}
+
+  @doc """
+  Handle regular Elixir process messages.
+
+  See `c:GenServer.handle_info/2`.
+  """
+  @callback handle_info(msg :: term, socket :: Socket.t()) ::
+              {:noreply, Socket.t()}
+              | {:stop, reason :: term, Socket.t()}
+
+  @doc """
+  Handle regular GenServer call messages.
+
+  See `c:GenServer.handle_call/3`.
+  """
+  @callback handle_call(msg :: term, from :: {pid, tag :: term}, socket :: Socket.t()) ::
+              {:reply, response :: term, Socket.t()}
+              | {:noreply, Socket.t()}
+              | {:stop, reason :: term, Socket.t()}
+
+  @doc """
+  Handle regular GenServer cast messages.
+
+  See `c:GenServer.handle_cast/2`.
+  """
+  @callback handle_cast(msg :: term, socket :: Socket.t()) ::
+              {:noreply, Socket.t()}
+              | {:stop, reason :: term, Socket.t()}
+
+  @doc false
+  @callback code_change(old_vsn, Socket.t(), extra :: term) ::
+              {:ok, Socket.t()}
+              | {:error, reason :: term}
+            when old_vsn: term | {:down, term}
+
+  @doc """
+  Invoked when the channel process is about to exit.
+
+  See `c:GenServer.terminate/2`.
+  """
+  @callback terminate(
+              reason :: :normal | :shutdown | {:shutdown, :left | :closed | term},
+              Socket.t()
+            ) ::
               term
+
+  @optional_callbacks handle_in: 3,
+                      handle_out: 3,
+                      handle_info: 2,
+                      handle_call: 3,
+                      handle_cast: 2,
+                      code_change: 3,
+                      terminate: 2
 
   defmacro __using__(opts \\ []) do
     quote do
@@ -300,28 +398,30 @@ defmodule Phoenix.Channel do
       @phoenix_intercepts []
       @phoenix_log_join Keyword.get(opts, :log_join, :info)
       @phoenix_log_handle_in Keyword.get(opts, :log_handle_in, :debug)
+      @phoenix_hibernate_after Keyword.get(opts, :hibernate_after, 15_000)
+      @phoenix_shutdown Keyword.get(opts, :shutdown, 5000)
 
       import unquote(__MODULE__)
-      import Phoenix.Socket, only: [assign: 3]
+      import Phoenix.Socket, only: [assign: 3, assign: 2]
+
+      def child_spec(init_arg) do
+        %{
+          id: __MODULE__,
+          start: {__MODULE__, :start_link, [init_arg]},
+          shutdown: @phoenix_shutdown,
+          restart: :temporary
+        }
+      end
+
+      def start_link(triplet) do
+        GenServer.start_link(Phoenix.Channel.Server, triplet,
+          hibernate_after: @phoenix_hibernate_after
+        )
+      end
 
       def __socket__(:private) do
-        %{log_join: @phoenix_log_join,
-          log_handle_in: @phoenix_log_handle_in}
+        %{log_join: @phoenix_log_join, log_handle_in: @phoenix_log_handle_in}
       end
-
-      def code_change(_old, socket, _extra), do: {:ok, socket}
-
-      def handle_in(_event, _message, socket) do
-        {:noreply, socket}
-      end
-
-      def handle_info(message, state) do
-        Phoenix.Channel.Server.unhandled_handle_info(message, state)
-      end
-
-      def terminate(_reason, _socket), do: :ok
-
-      defoverridable code_change: 3, handle_info: 2, handle_in: 3, terminate: 2
     end
   end
 
@@ -348,15 +448,16 @@ defmodule Phoenix.Channel do
       intercept ["new_msg"]
 
       def handle_out("new_msg", payload, socket) do
-        push socket, "new_msg", Map.merge(payload,
+        push(socket, "new_msg", Map.merge(payload,
           is_editable: User.can_edit_message?(socket.assigns[:user], payload)
-        )
+        ))
         {:noreply, socket}
       end
 
   `handle_out/3` callbacks must return one of:
 
       {:noreply, Socket.t} |
+      {:noreply, Socket.t, timeout | :hibernate} |
       {:stop, reason :: term, Socket.t}
 
   """
@@ -368,15 +469,18 @@ defmodule Phoenix.Channel do
 
   @doc false
   def __on_definition__(env, :def, :handle_out, [event, _payload, _socket], _, _)
-    when is_binary(event) do
-
+      when is_binary(event) do
     unless event in Module.get_attribute(env.module, :phoenix_intercepts) do
-      IO.write "#{Path.relative_to(env.file, File.cwd!)}:#{env.line}: [warning] " <>
-               "An intercept for event \"#{event}\" has not yet been defined in #{env.module}.handle_out/3. " <>
-               "Add \"#{event}\" to your list of intercepted events with intercept/1"
+      IO.write(
+        "#{Path.relative_to(env.file, File.cwd!())}:#{env.line}: [warning] " <>
+          "An intercept for event \"#{event}\" has not yet been defined in #{env.module}.handle_out/3. " <>
+          "Add \"#{event}\" to your list of intercepted events with intercept/1"
+      )
     end
   end
+
   def __on_definition__(_env, _kind, _name, _args, _guards, _body) do
+    :ok
   end
 
   @doc """
@@ -386,13 +490,13 @@ defmodule Phoenix.Channel do
 
   ## Examples
 
-      iex> broadcast socket, "new_message", %{id: 1, content: "hello"}
+      iex> broadcast(socket, "new_message", %{id: 1, content: "hello"})
       :ok
 
   """
   def broadcast(socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic} = assert_joined!(socket)
-    Server.broadcast pubsub_server, topic, event, message
+    Server.broadcast(pubsub_server, topic, event, message)
   end
 
   @doc """
@@ -400,7 +504,7 @@ defmodule Phoenix.Channel do
   """
   def broadcast!(socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic} = assert_joined!(socket)
-    Server.broadcast! pubsub_server, topic, event, message
+    Server.broadcast!(pubsub_server, topic, event, message)
   end
 
   @doc """
@@ -411,21 +515,25 @@ defmodule Phoenix.Channel do
 
   ## Examples
 
-      iex> broadcast_from socket, "new_message", %{id: 1, content: "hello"}
+      iex> broadcast_from(socket, "new_message", %{id: 1, content: "hello"})
       :ok
 
   """
   def broadcast_from(socket, event, message) do
-    %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} = assert_joined!(socket)
-    Server.broadcast_from pubsub_server, channel_pid, topic, event, message
+    %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} =
+      assert_joined!(socket)
+
+    Server.broadcast_from(pubsub_server, channel_pid, topic, event, message)
   end
 
   @doc """
   Same as `broadcast_from/3`, but raises if broadcast fails.
   """
   def broadcast_from!(socket, event, message) do
-    %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} = assert_joined!(socket)
-    Server.broadcast_from! pubsub_server, channel_pid, topic, event, message
+    %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} =
+      assert_joined!(socket)
+
+    Server.broadcast_from!(pubsub_server, channel_pid, topic, event, message)
   end
 
   @doc """
@@ -435,7 +543,7 @@ defmodule Phoenix.Channel do
 
   ## Examples
 
-      iex> push socket, "new_message", %{id: 1, content: "hello"}
+      iex> push(socket, "new_message", %{id: 1, content: "hello"})
       :ok
 
   """
@@ -467,14 +575,18 @@ defmodule Phoenix.Channel do
       end
 
       def handle_info({:work_complete, result, ref}, socket) do
-        reply ref, {:ok, result}
+        reply(ref, {:ok, result})
         {:noreply, socket}
       end
 
   """
   @spec reply(socket_ref, reply) :: :ok
-  def reply({transport_pid, serializer, topic, ref}, {status, payload}) do
-    Server.reply(transport_pid, ref, topic, {status, payload}, serializer)
+  def reply(socket_ref, status) when is_atom(status) do
+    reply(socket_ref, {status, %{}})
+  end
+
+  def reply({transport_pid, serializer, topic, ref, join_ref}, {status, payload}) do
+    Server.reply(transport_pid, join_ref, ref, topic, {status, payload}, serializer)
   end
 
   @doc """
@@ -482,13 +594,14 @@ defmodule Phoenix.Channel do
 
   See `reply/2` for example usage.
   """
-  @spec socket_ref(Socket.t) :: socket_ref
+  @spec socket_ref(Socket.t()) :: socket_ref
   def socket_ref(%Socket{joined: true, ref: ref} = socket) when not is_nil(ref) do
-    {socket.transport_pid, socket.serializer, socket.topic, ref}
+    {socket.transport_pid, socket.serializer, socket.topic, ref, socket.join_ref}
   end
+
   def socket_ref(_socket) do
     raise ArgumentError, """
-    Socket refs can only be generated for a socket that has joined with a push ref
+    socket refs can only be generated for a socket that has joined with a push ref
     """
   end
 
@@ -498,8 +611,8 @@ defmodule Phoenix.Channel do
 
   defp assert_joined!(%Socket{joined: false}) do
     raise """
-    `push`, `reply`, and `broadcast` can only be called after the socket has finished joining.
-    To push a message on join, send to self and handle in handle_info/2, ie:
+    push/3, reply/2, and broadcast/3 can only be called after the socket has finished joining.
+    To push a message on join, send to self and handle in handle_info/2. For example:
 
         def join(topic, auth_msg, socket) do
           ...
@@ -508,9 +621,10 @@ defmodule Phoenix.Channel do
         end
 
         def handle_info(:after_join, socket) do
-          push socket, "feed", %{list: feed_items(socket)}
+          push(socket, "feed", %{list: feed_items(socket)})
           {:noreply, socket}
         end
+
     """
   end
 end

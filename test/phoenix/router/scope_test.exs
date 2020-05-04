@@ -11,6 +11,15 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     def edit(conn, _params), do: text(conn, "api v1 users edit")
     def foo_host(conn, _params), do: text(conn, "foo request from #{conn.host}")
     def baz_host(conn, _params), do: text(conn, "baz request from #{conn.host}")
+    def proxy(conn, _) do
+      {controller, action} = conn.private.proxy_to
+      controller.call(conn, controller.init(action))
+    end
+  end
+
+  defmodule Api.V1.VenueController do
+    def init(opts), do: opts
+    def call(conn, _opts), do: conn
   end
 
   defmodule Router do
@@ -42,6 +51,15 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
       scope "/v1", alias: V1 do
         resources "/users", UserController, only: [:delete], private: %{private_token: "baz"}
+
+        get "/noalias", Api.V1.UserController, :proxy,
+          private: %{proxy_to: {scoped_alias(__MODULE__, UserController), :show}},
+          alias: false
+
+        scope "/scoped", alias: false do
+          get "/noalias", Api.V1.UserController, :proxy,
+          private: %{proxy_to: {scoped_alias(__MODULE__, Api.V1.UserController), :show}}
+        end
       end
     end
 
@@ -188,6 +206,38 @@ defmodule Phoenix.Router.ScopedRoutingTest do
         get "/foo", Router, []
         scope "/another" do
           resources '/bar', Router, []
+        end
+      end
+    end
+  end
+
+  test "alias false with expanded scoped alias via option" do
+    conn = call(Router, :get, "/api/v1/noalias")
+    assert conn.status == 200
+    assert conn.resp_body == "api v1 users show"
+  end
+
+  test "alias false with expanded scoped alias via scope" do
+    conn = call(Router, :get, "/api/v1/scoped/noalias")
+    assert conn.status == 200
+    assert conn.resp_body == "api v1 users show"
+  end
+
+  test "raises for reserved prefixes" do
+    assert_raise ArgumentError, ~r/`static` is a reserved route prefix/, fn ->
+      defmodule ErrorRouter do
+        use Phoenix.Router
+        scope "/" do
+          get "/", StaticController, :index
+        end
+      end
+    end
+
+    assert_raise ArgumentError, ~r/`static` is a reserved route prefix/, fn ->
+      defmodule ErrorRouter do
+        use Phoenix.Router
+        scope "/" do
+          get "/", Api.V1.UserController, :show, as: :static
         end
       end
     end

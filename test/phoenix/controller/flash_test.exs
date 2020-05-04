@@ -9,6 +9,30 @@ defmodule Phoenix.Controller.FlashTest do
     :ok
   end
 
+  @session Plug.Session.init(
+    store: :cookie,
+    key: "_app",
+    encryption_salt: "yadayada",
+    signing_salt: "yadayada"
+  )
+
+  def with_session(conn) do
+    conn
+    |> Map.put(:secret_key_base, String.duplicate("abcdefgh", 8))
+    |> Plug.Session.call(@session)
+    |> Plug.Conn.fetch_session()
+  end
+
+  test "does not fetch flash twice" do
+    assert conn(:get, "/")
+           |> with_session()
+           |> put_session("phoenix_flash", %{"foo" => "bar"})
+           |> fetch_flash()
+           |> put_session("phoenix_flash", %{"foo" => "baz"})
+           |> fetch_flash()
+           |> get_flash() == %{"foo" => "bar"}
+  end
+
   test "flash is persisted when status is a redirect" do
     for status <- 300..308 do
       conn = conn(:get, "/") |> with_session |> fetch_flash()
@@ -31,9 +55,34 @@ defmodule Phoenix.Controller.FlashTest do
     end
   end
 
-  test "flash does not write to session when it is empty" do
-    conn = conn(:get, "/") |> with_session |> fetch_flash() |> send_resp(200, "ok")
+  test "flash does not write to session when it is empty and no session exists" do
+    conn =
+      conn(:get, "/")
+      |> with_session()
+      |> fetch_flash()
+      |> clear_flash()
+      |> send_resp(302, "ok")
+
     assert get_resp_header(conn, "set-cookie") == []
+  end
+
+  test "flash writes to session when it is empty and a previous session exists" do
+    persisted_flash_conn =
+      conn(:get, "/")
+      |> with_session()
+      |> fetch_flash()
+      |> put_flash(:info, "existing")
+      |> send_resp(302, "ok")
+
+    conn =
+      conn(:get, "/")
+      |> Plug.Test.recycle_cookies(persisted_flash_conn)
+      |> with_session()
+      |> fetch_flash()
+      |> clear_flash()
+      |> send_resp(200, "ok")
+
+    assert ["_app=" <> _] = get_resp_header(conn, "set-cookie")
   end
 
   test "get_flash/1 raises ArgumentError when flash not previously fetched" do
@@ -90,6 +139,19 @@ defmodule Phoenix.Controller.FlashTest do
     refute get_flash(conn) == %{}
     conn = clear_flash(conn)
     assert get_flash(conn) == %{}
+  end
+
+  test "merge_flash/2 adds kv-pairs to the flash" do
+    conn =
+      conn(:get, "/")
+      |> with_session
+      |> fetch_flash([])
+      |> merge_flash(error: "oh noes!", notice: "false alarm!")
+
+    assert get_flash(conn, :error) == "oh noes!"
+    assert get_flash(conn, "error") == "oh noes!"
+    assert get_flash(conn, :notice) == "false alarm!"
+    assert get_flash(conn, "notice") == "false alarm!"
   end
 
   test "fetch_flash/2 raises ArgumentError when session not previously fetched" do

@@ -1,17 +1,21 @@
 ![phoenix logo](https://raw.githubusercontent.com/phoenixframework/phoenix/master/priv/static/phoenix.png)
 > ### Productive. Reliable. Fast.
-> A productive web framework that does not compromise speed and maintainability.
+> A productive web framework that does not compromise speed or maintainability.
 
-[![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg)](https://travis-ci.org/phoenixframework/phoenix)
+[![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg?branch=master)](https://travis-ci.org/phoenixframework/phoenix)
 [![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
 
 ## Getting started
 
-See the official site at http://www.phoenixframework.org/
+See the official site at https://www.phoenixframework.org/
+
+Install the latest version of Phoenix by following the instructions at https://hexdocs.pm/phoenix/installation.html#phoenix
 
 ## Documentation
 
 API documentation is available at [https://hexdocs.pm/phoenix](https://hexdocs.pm/phoenix)
+
+Phoenix.js documentation is available at [https://hexdocs.pm/phoenix/js](https://hexdocs.pm/phoenix/js)
 
 ## Contributing
 
@@ -19,37 +23,54 @@ We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_O
 
 ### Generating a Phoenix project from unreleased versions
 
-In order to create a new project using the latest Phoenix source installer (the `phoenix.new` Mix task) you will need to ensure two things.
+You can create a new project using the latest Phoenix source installer (the `phx.new` Mix task) with the following steps:
 
-1. Remove any previously installed `phoenix_new` archives so that Mix will pick up the local source code. This can be done with `mix archive.uninstall phoenix_new.ez` or by simply deleting the file, which is usually in `~/.mix/archives/`.
-2. Run the command from within the `installer` directory and provide a subdirectory within the installer to generate your dev project. The command below will create a new project using your current Phoenix checkout, thanks to the `--dev` flag.
+1. Remove any previously installed `phx_new` archives so that Mix will pick up the local source code. This can be done with `mix archive.uninstall phx_new` or by simply deleting the file, which is usually in `~/.mix/archives/`.
+2. Copy this repo via `git clone https://github.com/phoenixframework/phoenix` or by downloading it
+3. Run the `phx.new` mix task from within the `installer` directory, for example:
 
 ```bash
 $ cd installer
-$ mix phoenix.new dev_app --dev
+$ mix phx.new dev_app --dev
 ```
 
-This will produce a new project that has `:phoenix` configured as a relative dependency:
+The `--dev` flag will configure your new project's `:phoenix` dep as a relative path dependency, pointing to your local Phoenix checkout:
 
-```
+```elixir
 defp deps do
   [{:phoenix, path: "../..", override: true},
 ```
 
-The command must be run from the `installer` directory. See the discussion in [PR 1224](https://github.com/phoenixframework/phoenix/pull/1224) for more information.
+To create projects outside of the `installer/` directory, add the latest archive to your machine by following the instructions in [installer/README.md](https://github.com/phoenixframework/phoenix/blob/master/installer/README.md)
+
+To build the documentation from source:
+
+```bash
+$ npm install --prefix assets
+$ MIX_ENV=docs mix docs
+```
+
+To build Phoenix from source:
+
+```bash
+$ mix deps.get
+$ mix compile
+```
+
+To build the Phoenix installer from source:
+
+```bash
+$ mix deps.get
+$ mix compile
+$ mix archive.build
+```
 
 ### Building phoenix.js
 
 ```bash
+$ cd assets
 $ npm install
-$ npm install -g brunch
-$ brunch watch
-```
-
-### Building docs from source
-
-```bash
-$ MIX_ENV=docs mix docs
+$ npm run watch
 ```
 
 ## Important links
@@ -57,15 +78,16 @@ $ MIX_ENV=docs mix docs
 * [#elixir-lang][1] on [Freenode][2] IRC
 * [elixir-lang slack channel][3]
 * [Issue tracker][4]
-* [phoenix-talk Mailing list (questions)][5]
+* [Phoenix Forum (questions)][5]
 * [phoenix-core Mailing list (development)][6]
+* Visit Phoenix's sponsor, DockYard, for expert [phoenix consulting](https://dockyard.com/phoenix-consulting)
 * Privately disclose security vulnerabilities to phoenix-security@googlegroups.com
 
   [1]: https://webchat.freenode.net/?channels=#elixir-lang
   [2]: http://www.freenode.net/
   [3]: https://elixir-slackin.herokuapp.com/
   [4]: https://github.com/phoenixframework/phoenix/issues
-  [5]: http://groups.google.com/group/phoenix-talk
+  [5]: https://elixirforum.com/c/phoenix-forum
   [6]: http://groups.google.com/group/phoenix-core
 
 ## Copyright and License

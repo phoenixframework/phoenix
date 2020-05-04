@@ -1,58 +1,32 @@
+modules = [
+  PostController,
+  ChatController,
+  UserController,
+  CommentController,
+  FileController,
+  ProductController,
+  TrailController,
+  VistaController,
+  Admin.MessageController,
+  SubPlug
+]
+
+for module <- modules do
+  defmodule module do
+    def init(opts), do: opts
+    def call(conn, _opts), do: conn
+  end
+end
+
 defmodule Phoenix.Router.HelpersTest do
   use ExUnit.Case, async: true
   use RouterHelper
-
-  alias Phoenix.Router.Helpers
-
-  ## Unit tests
-
-  test "defhelper with :identifiers" do
-    route = build(:match, :get, "/foo/:bar", nil, Hello, :world, "hello_world")
-
-    assert extract_defhelper(route, 0) == String.trim """
-    def(hello_world_path(conn_or_endpoint, :world, bar)) do
-      hello_world_path(conn_or_endpoint, :world, bar, [])
-    end
-    """
-
-    assert extract_defhelper(route, 1) == String.trim """
-    def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, ["bar"]))
-    end
-    """
-  end
-
-  test "defhelper with *identifiers" do
-    route = build(:match, :get, "/foo/*bar", nil, Hello, :world, "hello_world")
-
-    assert extract_defhelper(route, 0) == String.trim """
-    def(hello_world_path(conn_or_endpoint, :world, bar)) do
-      hello_world_path(conn_or_endpoint, :world, bar, [])
-    end
-    """
-
-    assert extract_defhelper(route, 1) == String.trim """
-    def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, ["bar"]))
-    end
-    """
-  end
-
-  defp build(kind, verb, path, host, controller, action, helper) do
-    Phoenix.Router.Route.build(kind, verb, path, host, controller, action, helper, [], %{}, %{})
-  end
-
-  defp extract_defhelper(route, pos) do
-    {:__block__, _, block} = Helpers.defhelper(route, Phoenix.Router.Route.exprs(route))
-    Enum.fetch!(block, pos) |> Macro.to_string()
-  end
-
-  ## Integration tests
 
   defmodule Router do
     use Phoenix.Router
 
     get "/posts/top", PostController, :top, as: :top
+    get "/posts/bottom/:order/:count", PostController, :bottom, as: :bottom
     get "/posts/:id", PostController, :show
     get "/posts/file/*file", PostController, :file
     get "/posts/skip", PostController, :skip, as: nil
@@ -68,7 +42,7 @@ defmodule Phoenix.Router.HelpersTest do
     resources "/files", FileController
 
     resources "/account", UserController, as: :account, singleton: true do
-      resources "/page", PagesController, as: :page, only: [:show], singleton: true
+      resources "/page", PostController, as: :page, only: [:show], singleton: true
     end
 
     scope "/admin", alias: Admin do
@@ -77,9 +51,32 @@ defmodule Phoenix.Router.HelpersTest do
 
     scope "/admin/new", alias: Admin, as: "admin" do
       resources "/messages", MessageController
+
+      scope "/unscoped", as: false do
+        resources "/messages", MessageController, as: :my_admin_message
+      end
     end
 
-    get "/", PageController, :root, as: :page
+    scope "/trails", trailing_slash: true do
+      get "/", TrailController, :index
+      get "/open", TrailController, :open, trailing_slash: false
+
+      resources "/vistas", VistaController
+
+      scope "/nested" do
+        get "/path", TrailController, :nested_path
+      end
+    end
+
+    get "/trails/top", TrailController, :top, trailing_slash: true
+
+    get "/", PostController, :root, as: :page
+    get "/products/:id", ProductController, :show
+    get "/products", ProductController, :show
+    get "/products/:id/:sort", ProductController, :show
+    get "/products/:id/:sort/:page", ProductController, :show
+
+    get "/mfa_path", SubPlug, func: {M, :f, [10]}
   end
 
   # Emulate regular endpoint functions
@@ -100,10 +97,12 @@ defmodule Phoenix.Router.HelpersTest do
     path
   end
 
+  def static_integrity(_path), do: nil
+
   alias Router.Helpers
 
   test "defines a __helpers__ function" do
-    assert Router.__helpers__ == Router.Helpers
+    assert Router.__helpers__() == Router.Helpers
   end
 
   test "root helper" do
@@ -136,6 +135,20 @@ defmodule Phoenix.Router.HelpersTest do
     end
   end
 
+  test "url helper shows an error if an id is accidentally passed" do
+    error_suggestion = ~r/bottom_path\(conn, :bottom, order, count, page: 5, per_page: 10\)/
+
+    assert_raise ArgumentError, error_suggestion, fn ->
+      Helpers.bottom_path(__MODULE__, :bottom, :asc, 8, {:not, :enumerable})
+    end
+
+    error_suggestion = ~r/top_path\(conn, :top, page: 5, per_page: 10\)/
+
+    assert_raise ArgumentError, error_suggestion, fn ->
+      Helpers.top_path(__MODULE__, :top, "invalid")
+    end
+  end
+
   test "top-level named route" do
     assert Helpers.post_path(__MODULE__, :show, 5) == "/posts/5"
     assert Helpers.post_path(__MODULE__, :show, 5, []) == "/posts/5"
@@ -161,20 +174,12 @@ defmodule Phoenix.Router.HelpersTest do
 
     error_message = fn helper, arity ->
       """
-      No function clause for #{inspect Helpers}.#{helper}/#{arity} and action :skip. The following actions/clauses are supported:
+      no action :skip for #{inspect Helpers}.#{helper}/#{arity}. The following actions/clauses are supported:
 
-          #{helper}(conn_or_endpoint, :file, file, opts \\\\ [])
-          #{helper}(conn_or_endpoint, :show, id, opts \\\\ [])
+          #{helper}(conn_or_endpoint, :file, file, params \\\\ [])
+          #{helper}(conn_or_endpoint, :show, id, params \\\\ [])
 
       """ |> String.trim
-    end
-
-    assert_raise UndefinedFunctionError, fn ->
-      Helpers.post_path(__MODULE__, :skip)
-    end
-
-    assert_raise UndefinedFunctionError, fn ->
-      Helpers.post_url(__MODULE__, :skip)
     end
 
     assert_raise ArgumentError, error_message.("post_path", 3), fn ->
@@ -216,6 +221,13 @@ defmodule Phoenix.Router.HelpersTest do
       "/posts/file/%3D%3Dd--%2B/%3AO.jpg"
     assert Helpers.post_path(__MODULE__, :file, ["==d--+", ":O.jpg"], xx: "/=+/") ==
       "/posts/file/%3D%3Dd--%2B/%3AO.jpg?xx=%2F%3D%2B%2F"
+  end
+
+  test "top-level named routes with trailing slashes" do
+    assert Helpers.trail_path(__MODULE__, :top) == "/trails/top/"
+    assert Helpers.trail_path(__MODULE__, :top, id: 5) == "/trails/top/?id=5"
+    assert Helpers.trail_path(__MODULE__, :top, %{"id" => "foo"}) == "/trails/top/?id=foo"
+    assert Helpers.trail_path(__MODULE__, :top, %{"id" => "foo bar"}) == "/trails/top/?id=foo+bar"
   end
 
   test "resources generates named routes for :index, :edit, :show, :new" do
@@ -265,43 +277,15 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.user_comment_path(__MODULE__, :new, 88, []) == "/users/88/comments/new"
     assert Helpers.user_comment_path(__MODULE__, :new, 88) == "/users/88/comments/new"
 
-    error_message = fn helper, arity ->
-      """
-      No function clause for #{inspect Helpers}.#{helper}/#{arity} and action :skip. The following actions/clauses are supported:
-
-          user_comment_file_path(conn_or_endpoint, :create, user_id, comment_id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :delete, user_id, comment_id, id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :edit, user_id, comment_id, id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :index, user_id, comment_id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :new, user_id, comment_id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :show, user_id, comment_id, id, opts \\\\ [])
-          user_comment_file_path(conn_or_endpoint, :update, user_id, comment_id, id, opts \\\\ [])
-      """ |> String.trim
-    end
-
-    assert_raise ArgumentError, error_message.("user_comment_file_path", 4), fn ->
+    assert_raise ArgumentError, ~r/no action :skip/, fn ->
       Helpers.user_comment_file_path(__MODULE__, :skip, 123, 456)
     end
 
-    assert_raise ArgumentError, error_message.("user_comment_file_path", 5), fn ->
+    assert_raise ArgumentError, ~r/no action :skip/, fn ->
       Helpers.user_comment_file_path(__MODULE__, :skip, 123, 456, foo: "bar")
     end
 
-    arity_error_message =
-      """
-      No action :show for helper #{inspect Helpers}.user_comment_path/3. The following actions/clauses are supported:
-
-          user_comment_path(conn_or_endpoint, :create, user_id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :delete, user_id, id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :edit, user_id, id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :index, user_id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :new, user_id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :show, user_id, id, opts \\\\ [])
-          user_comment_path(conn_or_endpoint, :update, user_id, id, opts \\\\ [])
-
-      """ |> String.trim
-
-    assert_raise ArgumentError, arity_error_message, fn ->
+    assert_raise ArgumentError, ~r/no function clause for Phoenix.Router.HelpersTest.Router.Helpers.user_comment_path\/3 and action :show/, fn ->
       Helpers.user_comment_path(__MODULE__, :show, 123)
     end
   end
@@ -395,6 +379,59 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.admin_message_path(__MODULE__, :show, 1) == "/admin/new/messages/1"
   end
 
+  test "scoped route helpers generated unscoped :as options" do
+    assert Helpers.my_admin_message_path(__MODULE__, :index, []) == "/admin/new/unscoped/messages"
+    assert Helpers.my_admin_message_path(__MODULE__, :index) == "/admin/new/unscoped/messages"
+    assert Helpers.my_admin_message_path(__MODULE__, :show, 1, []) == "/admin/new/unscoped/messages/1"
+    assert Helpers.my_admin_message_path(__MODULE__, :show, 1) == "/admin/new/unscoped/messages/1"
+  end
+
+  test "scoped route helpers generated with trailing slashes" do
+    assert Helpers.trail_path(__MODULE__, :index) == "/trails/"
+    assert Helpers.trail_path(__MODULE__, :index, id: 5) == "/trails/?id=5"
+    assert Helpers.trail_path(__MODULE__, :index, %{"id" => "foo"}) == "/trails/?id=foo"
+    assert Helpers.trail_path(__MODULE__, :index, %{"id" => "foo bar"}) == "/trails/?id=foo+bar"
+  end
+
+  test "scoped route helpers generated with trailing slashes overridden" do
+    assert Helpers.trail_path(__MODULE__, :open) == "/trails/open"
+    assert Helpers.trail_path(__MODULE__, :open, id: 5) == "/trails/open?id=5"
+    assert Helpers.trail_path(__MODULE__, :open, %{"id" => "foo"}) == "/trails/open?id=foo"
+    assert Helpers.trail_path(__MODULE__, :open, %{"id" => "foo bar"}) == "/trails/open?id=foo+bar"
+  end
+
+  test "scoped route helpers generated with trailing slashes for resource" do
+    assert Helpers.vista_path(__MODULE__, :index) == "/trails/vistas/"
+    assert Helpers.vista_path(__MODULE__, :index, []) == "/trails/vistas/"
+    assert Helpers.vista_path(__MODULE__, :index, id: 5) == "/trails/vistas/?id=5"
+    assert Helpers.vista_path(__MODULE__, :index, %{"id" => "foo"}) == "/trails/vistas/?id=foo"
+
+    assert Helpers.vista_path(__MODULE__, :new) == "/trails/vistas/new/"
+    assert Helpers.vista_path(__MODULE__, :new, []) == "/trails/vistas/new/"
+    assert Helpers.vista_path(__MODULE__, :create) == "/trails/vistas/"
+    assert Helpers.vista_path(__MODULE__, :create, []) == "/trails/vistas/"
+    assert Helpers.vista_path(__MODULE__, :show, 2) == "/trails/vistas/2/"
+    assert Helpers.vista_path(__MODULE__, :show, 2, []) == "/trails/vistas/2/"
+    assert Helpers.vista_path(__MODULE__, :edit, 2) == "/trails/vistas/2/edit/"
+    assert Helpers.vista_path(__MODULE__, :edit, 2, []) == "/trails/vistas/2/edit/"
+    assert Helpers.vista_path(__MODULE__, :update, 2) == "/trails/vistas/2/"
+    assert Helpers.vista_path(__MODULE__, :update, 2, []) == "/trails/vistas/2/"
+    assert Helpers.vista_path(__MODULE__, :delete, 2) == "/trails/vistas/2/"
+    assert Helpers.vista_path(__MODULE__, :delete, 2, []) == "/trails/vistas/2/"
+  end
+
+  test "scoped route helpers generated within scoped routes with trailing slashes" do
+    assert Helpers.trail_path(__MODULE__, :nested_path) == "/trails/nested/path/"
+    assert Helpers.trail_path(__MODULE__, :nested_path, []) == "/trails/nested/path/"
+    assert Helpers.trail_path(__MODULE__, :nested_path, [id: 5]) == "/trails/nested/path/?id=5"
+    assert Helpers.trail_path(__MODULE__, :nested_path, %{"id" => "foo"}) == "/trails/nested/path/?id=foo"
+    assert Helpers.trail_path(__MODULE__, :nested_path, %{"id" => "foo bar"}) == "/trails/nested/path/?id=foo+bar"
+  end
+
+  test "can pass an {m, f, a} tuple as a plug argument" do
+    assert Helpers.sub_plug_path(__MODULE__, func: {M, :f, [10]}) == "/mfa_path"
+  end
+
   ## Others
 
   defp conn_with_endpoint do
@@ -436,6 +473,12 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.path(uri(), "/") == "/"
   end
 
+  test "helpers module generates a static_integrity helper" do
+    assert is_nil(Helpers.static_integrity(__MODULE__, "/images/foo.png"))
+    assert is_nil(Helpers.static_integrity(conn_with_endpoint(), "/images/foo.png"))
+    assert is_nil(Helpers.static_integrity(socket_with_endpoint(), "/images/foo.png"))
+  end
+
   test "helpers module generates named routes url helpers" do
     url = "https://example.com/admin/new/messages/1"
     assert Helpers.admin_message_url(__MODULE__, :show, 1) == url
@@ -446,6 +489,22 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.admin_message_url(socket_with_endpoint(), :show, 1, []) == url
     assert Helpers.admin_message_url(uri(), :show, 1) == url
     assert Helpers.admin_message_url(uri(), :show, 1, []) == url
+  end
+
+  test "helpers properly encode named and query string params" do
+    assert Router.Helpers.post_path(__MODULE__, :show, "my path", foo: "my param") ==
+      "/posts/my%20path?foo=my+param"
+  end
+
+  test "duplicate helpers with unique arities" do
+    assert Helpers.product_path(__MODULE__, :show) == "/products"
+    assert Helpers.product_path(__MODULE__, :show, foo: "bar") == "/products?foo=bar"
+    assert Helpers.product_path(__MODULE__, :show, 123) == "/products/123"
+    assert Helpers.product_path(__MODULE__, :show, 123, foo: "bar") == "/products/123?foo=bar"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc") == "/products/123/asc"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc", foo: "bar") == "/products/123/asc?foo=bar"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc", 1) == "/products/123/asc/1"
+    assert Helpers.product_path(__MODULE__, :show, 123, "asc", 1, foo: "bar") == "/products/123/asc/1?foo=bar"
   end
 
   ## Script name
@@ -490,8 +549,8 @@ defmodule Phoenix.Router.HelpersTest do
   test "urls use script name" do
     assert Helpers.page_url(ScriptName, :root) ==
            "https://example.com/api/"
-    assert Helpers.page_url(conn_with_script_name(), :root) ==
-           "https://example.com/api/"
+    assert Helpers.page_url(conn_with_script_name(~w(foo)), :root) ==
+           "https://example.com/foo/"
     assert Helpers.page_url(uri_with_script_name(), :root) ==
            "https://example.com:123/api/"
 
@@ -499,11 +558,13 @@ defmodule Phoenix.Router.HelpersTest do
            "https://example.com/api/posts/5"
     assert Helpers.post_url(conn_with_script_name(), :show, 5) ==
            "https://example.com/api/posts/5"
+    assert Helpers.post_url(conn_with_script_name(~w(foo)), :show, 5) ==
+           "https://example.com/foo/posts/5"
     assert Helpers.post_url(uri_with_script_name(), :show, 5) ==
            "https://example.com:123/api/posts/5"
   end
 
-  test "static does not use script name" do
+  test "static use endpoint script name only" do
     assert Helpers.static_path(conn_with_script_name(~w(foo)), "/images/foo.png") ==
            "/api/images/foo.png"
 
@@ -511,8 +572,61 @@ defmodule Phoenix.Router.HelpersTest do
            "https://static.example.com/api/images/foo.png"
   end
 
-  test "helpers properly encode named and query string params" do
-    assert Router.Helpers.post_path(__MODULE__, :show, "my path", foo: "my param") ==
-      "/posts/my%20path?foo=my+param"
+  ## Dynamics
+
+  test "phoenix_router_url with string takes precedence over endpoint" do
+    url = "https://phoenixframework.org"
+    conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), url)
+
+    assert Helpers.url(conn) == url
+    assert Helpers.admin_message_url(conn, :show, 1) ==
+      url <> "/admin/new/messages/1"
+  end
+
+  test "phoenix_router_url with URI takes precedence over endpoint" do
+    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123, path: "/path"}
+    conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), uri)
+
+    assert Helpers.url(conn) == "https://phoenixframework.org:123/path"
+    assert Helpers.admin_message_url(conn, :show, 1) ==
+      "https://phoenixframework.org:123/path/admin/new/messages/1"
+  end
+
+  test "phoenix_static_url with string takes precedence over endpoint" do
+    url = "https://phoenixframework.org"
+    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), url)
+    assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
+
+    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), url)
+    assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
+  end
+
+  test "phoenix_static_url set to string with path results in static url with that path" do
+    url = "https://phoenixframework.org/path"
+    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), url)
+    assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
+
+    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), url)
+    assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
+  end
+
+  test "phoenix_static_url with URI takes precedence over endpoint" do
+    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123}
+
+    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), uri)
+    assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/images/foo.png"
+
+    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), uri)
+    assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/images/foo.png"
+  end
+
+  test "phoenix_static_url set to URI with path results in static url with that path" do
+    uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123, path: "/path"}
+
+    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), uri)
+    assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/path/images/foo.png"
+
+    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), uri)
+    assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/path/images/foo.png"
   end
 end

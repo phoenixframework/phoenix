@@ -1,6 +1,6 @@
 {
   "name": "phoenix",
-  "version": "1.2.1",
+  "version": "1.5.0",
   "description": "The official JavaScript client for the Phoenix web framework.",
   "license": "MIT",
   "main": "./priv/static/phoenix.js",
@@ -8,19 +8,12 @@
     "type": "git",
     "url": "git://github.com/phoenixframework/phoenix.git"
   },
-  "author": "Chris McCord <chris@chrismccord.com> (http://www.phoenixframework.org)",
-  "devDependencies": {
-    "babel-brunch": "~6.0.0",
-    "brunch": "~2.6.5",
-    "jsdom": "9.8.3",
-    "jsdom-global": "2.1.0",
-    "mocha": "~2.4.4",
-    "mock-socket": "^6.0.1",
-    "sinon": "^1.17.6",
-    "uglify-js-brunch": "~2.0.1"
-  },
-  "files": ["README.md", "LICENSE.md", "package.json", "priv/static/phoenix.js", "web/static/js/phoenix.js"],
-  "scripts": {
-    "test": "./node_modules/.bin/mocha ./web/test/**/*.js --compilers js:babel-register -r jsdom-global/register"
-  }
+  "author": "Chris McCord <chris@chrismccord.com> (https://www.phoenixframework.org)",
+  "files": [
+    "README.md",
+    "LICENSE.md",
+    "package.json",
+    "priv/static/phoenix.js",
+    "assets/js/phoenix.js"
+  ]
 }

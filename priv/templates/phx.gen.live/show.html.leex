@@ -1,0 +1,22 @@
+<h1>Show <%= schema.human_singular %></h1>
+
+<%%= if @live_action in [:edit] do %>
+  <%%= live_modal @socket, <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent,
+    id: @<%= schema.singular %>.id,
+    title: @page_title,
+    action: @live_action,
+    <%= schema.singular %>: @<%= schema.singular %>,
+    return_to: Routes.<%= schema.route_helper %>_show_path(@socket, :show, @<%= schema.singular %>) %>
+<%% end %>
+
+<ul>
+<%= for {k, _} <- schema.attrs do %>
+  <li>
+    <strong><%= Phoenix.Naming.humanize(Atom.to_string(k)) %>:</strong>
+    <%%= @<%= schema.singular %>.<%= k %> %>
+  </li>
+<% end %>
+</ul>
+
+<span><%%= live_patch "Edit", to: Routes.<%= schema.route_helper %>_show_path(@socket, :edit, @<%= schema.singular %>), class: "button" %></span>
+<span><%%= live_redirect "Back", to: Routes.<%= schema.route_helper %>_index_path(@socket, :index) %></span>

@@ -12,16 +12,16 @@ defmodule Phoenix.Router.Resource do
   @doc """
   The `Phoenix.Router.Resource` struct. It stores:
 
-    * :path - the path as string (not normalized)
-    * :param - the param to be used in routes (not normalized)
-    * :controller - the controller as an atom
-    * :actions - a list of actions as atoms
-    * :route - the context for resource routes
-    * :member - the context for member routes
-    * :collection - the context for collection routes
+    * `:path` - the path as string (not normalized)
+    * `:param` - the param to be used in routes (not normalized)
+    * `:controller` - the controller as an atom
+    * `:actions` - a list of actions as atoms
+    * `:route` - the context for resource routes
+    * `:member` - the context for member routes
+    * `:collection` - the context for collection routes
 
   """
-  defstruct [:path, :actions, :param, :route, :controller, :route, :member, :collection, :singleton]
+  defstruct [:path, :actions, :param, :route, :controller, :member, :collection, :singleton]
   @type t :: %Resource{}
 
   @doc """
@@ -49,13 +49,36 @@ defmodule Phoenix.Router.Resource do
   end
 
   defp extract_actions(opts, singleton) do
-    if only = Keyword.get(opts, :only) do
-      @actions -- (@actions -- only)
-    else
-      default_actions(singleton) -- Keyword.get(opts, :except, [])
+    only = Keyword.get(opts, :only)
+    except = Keyword.get(opts, :except)
+
+    cond do
+      only ->
+        supported_actions = validate_actions(:only, singleton, only)
+        supported_actions -- (supported_actions -- only)
+
+      except ->
+        supported_actions = validate_actions(:except, singleton, except)
+        supported_actions -- except
+
+      true -> default_actions(singleton)
     end
   end
 
-  defp default_actions(true),  do: @actions -- [:index]
-  defp default_actions(false), do: @actions
+  defp validate_actions(type, singleton, actions) do
+    supported_actions = default_actions(singleton)
+
+    unless actions -- supported_actions == [], do: raise ArgumentError, """
+    invalid :#{type} action(s) passed to resources.
+
+    supported#{if singleton, do: " singleton", else: ""} actions: #{inspect(supported_actions)}
+
+    got: #{inspect(actions)}
+    """
+
+    supported_actions
+  end
+
+  defp default_actions(true = _singleton),  do: @actions -- [:index]
+  defp default_actions(false = _singleton), do: @actions
 end

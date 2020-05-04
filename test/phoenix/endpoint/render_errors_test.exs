@@ -1,27 +1,29 @@
 defmodule Phoenix.Endpoint.RenderErrorsTest do
   use ExUnit.Case, async: true
   use RouterHelper
-  import ExUnit.CaptureLog
 
+  Application.put_env(:phoenix, __MODULE__.Endpoint, [])
+
+  import ExUnit.CaptureLog
   view = __MODULE__
 
-  def render("app.html", %{view_template: view_template} = assigns) do
-    "Layout: " <> render(view_template, assigns)
+  def render("app.html", assigns) do
+    "Layout: " <> assigns.inner_content
   end
 
-  def render("404.html", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
+  def render("404.html", %{kind: kind, reason: _reason, stack: _stack, status: 404, conn: conn}) do
     "Got 404 from #{kind} with #{conn.method}"
   end
 
-  def render("404.json", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
+  def render("404.json", %{kind: kind, reason: _reason, stack: _stack, status: 404, conn: conn}) do
     %{error: "Got 404 from #{kind} with #{conn.method}"}
   end
 
-  def render("415.html", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
+  def render("415.html", %{kind: kind, reason: _reason, stack: _stack, status: 415, conn: conn}) do
     "Got 415 from #{kind} with #{conn.method}"
   end
 
-  def render("500.html", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
+  def render("500.html", %{kind: kind, reason: _reason, stack: _stack, status: 500, conn: conn}) do
     "Got 500 from #{kind} with #{conn.method}"
   end
 
@@ -47,14 +49,35 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     end
 
     get "/send_and_wrapped" do
-      raise Plug.Conn.WrapperError, conn: conn,
-        kind: :error, stack: System.stacktrace,
-        reason: ArgumentError.exception("oops")
+      stack =
+        try do
+          raise "oops"
+        rescue
+          _ -> __STACKTRACE__
+        end
+
+      # Those are always ignored and must be explicitly opted-in.
+      conn =
+        conn
+        |> Phoenix.Controller.put_layout({Unknown, "layout"})
+        |> Phoenix.Controller.put_root_layout({Unknown, "root"})
+
+      reason = ArgumentError.exception("oops")
+      raise Plug.Conn.WrapperError, conn: conn, kind: :error, stack: stack, reason: reason
     end
 
     match _ do
       raise Phoenix.Router.NoRouteError, conn: conn, router: __MODULE__
     end
+  end
+
+  defmodule Endpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+  end
+
+  setup do
+    Logger.disable(self())
+    :ok
   end
 
   test "call/2 is overridden" do
@@ -109,125 +132,175 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     assert_received {:plug_conn, :sent}
   end
 
-  defp render(conn, opts, fun) do
+  test "logs converted errors if response has not yet been sent" do
+    Logger.enable(self())
+    conn = put_endpoint(conn(:get, "/"))
+
+    assert capture_log(fn ->
+      assert_render(500, conn, [], fn -> throw :hello end)
+    end) =~ "Converted throw :hello to 500"
+
+    assert capture_log(fn ->
+      assert_render(500, conn, [], fn -> raise "boom" end)
+    end) =~ "Converted error RuntimeError to 500"
+
+    assert capture_log(fn ->
+      assert_render(500, conn, [], fn -> exit(:timeout) end)
+    end) =~ "Converted exit :timeout to 500"
+  end
+
+  test "does not log converted errors if response already sent" do
+    conn = put_endpoint(conn(:get, "/"))
+
+    assert capture_log(fn ->
+      try do
+        try do
+          Plug.Conn.send_resp(conn, 200, "hello")
+          throw :hello
+        catch
+          kind, reason ->
+            stack = __STACKTRACE__
+            opts = [view: __MODULE__, accepts: ~w(html)]
+            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, opts)
+        else
+          _ -> flunk "function should have failed"
+        end
+      catch :throw, :hello -> :ok
+      end
+    end) == ""
+  end
+
+  defp put_endpoint(conn) do
+    Plug.Conn.put_private(conn, :phoenix_endpoint, Endpoint)
+  end
+
+  defp assert_render(status, conn, opts, func) do
     opts =
       opts
       |> Keyword.put_new(:view, __MODULE__)
       |> Keyword.put_new(:accepts, ~w(html))
 
-    try do
-      fun.()
-    catch
-      kind, error ->
-        Phoenix.Endpoint.RenderErrors.render(conn, kind, error, System.stacktrace, opts)
-    else
-      _ -> flunk "function should have failed"
-    end
+    {^status, _, body} = Phoenix.ConnTest.assert_error_sent(status, fn ->
+      try do
+        func.()
+      catch
+        kind, reason ->
+          stack = __STACKTRACE__
+          Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, opts)
+      else
+        _ -> flunk "function should have failed"
+      end
+    end)
+
+    body
   end
 
   test "exception page for throws" do
-    conn = render(conn(:get, "/"), [], fn ->
+    body = assert_render(500, conn(:get, "/"), [], fn ->
       throw :hello
     end)
 
-    assert conn.status == 500
-    assert conn.resp_body == "Got 500 from throw with GET"
+    assert body == "Got 500 from throw with GET"
   end
 
   test "exception page for errors" do
-    conn = render(conn(:get, "/"), [], fn ->
+    body = assert_render(500, conn(:get, "/"), [], fn ->
       :erlang.error :badarg
     end)
 
-    assert conn.status == 500
-    assert conn.resp_body == "Got 500 from error with GET"
+    assert body == "Got 500 from error with GET"
   end
 
   test "exception page for exceptions" do
-    conn = render(conn(:get, "/"), [], fn ->
+    body = assert_render(415, conn(:get, "/"), [], fn ->
       raise Plug.Parsers.UnsupportedMediaTypeError, media_type: "foo/bar"
     end)
 
-    assert conn.status == 415
-    assert conn.resp_body == "Got 415 from error with GET"
+    assert body == "Got 415 from error with GET"
   end
 
   test "exception page for exits" do
-    conn = render(conn(:get, "/"), [], fn ->
+    body = assert_render(500, conn(:get, "/"), [], fn ->
       exit {:timedout, {GenServer, :call, [:foo, :bar]}}
     end)
 
-    assert conn.status == 500
-    assert conn.resp_body == "Got 500 from exit with GET"
+    assert body == "Got 500 from exit with GET"
   end
 
-  test "exception page with params _format" do
-    conn = render(conn(:get, "/", [_format: "text"]), [accepts: ["text", "html"]], fn ->
+  test "exception page ignores params _format" do
+    conn = conn(:get, "/", _format: "text")
+    body = assert_render(500, conn, [accepts: ["html", "text"]], fn ->
       throw :hello
     end)
 
-    assert conn.status == 500
-    assert conn.resp_body == "500 in TEXT"
+    assert body == "500 in TEXT"
+  end
+
+  test "exception page uses stored _format" do
+    conn = conn(:get, "/") |> put_private(:phoenix_format, "text")
+    body = assert_render(500, conn, [accepts: ["html", "text"]], fn -> throw :hello end)
+    assert body == "500 in TEXT"
   end
 
   test "exception page with custom format" do
-    conn = render(conn(:get, "/"), [accepts: ~w(text)], fn ->
+    body = assert_render(500, conn(:get, "/"), [accepts: ~w(text)], fn ->
       throw :hello
     end)
 
-    assert conn.status == 500
-    assert conn.resp_body == "500 in TEXT"
+    assert body == "500 in TEXT"
   end
 
   test "exception page with layout" do
-    conn =
-      conn(:get, "/")
-      |> render([layout: {__MODULE__, :app}], fn -> throw :hello end)
+    body = assert_render(500, conn(:get, "/"), [layout: {__MODULE__, :app}], fn ->
+      throw :hello
+    end)
 
-    assert conn.status == 500
-    assert conn.resp_body == "Layout: Got 500 from throw with GET"
+    assert body == "Layout: Got 500 from throw with GET"
   end
 
-  @tag :capture_log
-  test "exception page is shown even with invalid format" do
-    conn =
-      conn(:get, "/")
-      |> put_req_header("accept", "unknown/unknown")
-      |> render([], fn -> throw :hello end)
+  test "exception page with root layout" do
+    body = assert_render(500, conn(:get, "/"), [root_layout: {__MODULE__, :app}], fn ->
+      throw :hello
+    end)
 
-    assert conn.status == 500
-    assert conn.resp_body == "Got 500 from throw with GET"
+    assert body == "Layout: Got 500 from throw with GET"
+  end
+
+  test "exception page is shown even with invalid format" do
+    conn = conn(:get, "/") |> put_req_header("accept", "unknown/unknown")
+    body = assert_render(500, conn, [], fn -> throw :hello end)
+    assert body == "Got 500 from throw with GET"
   end
 
   test "exception page is shown even with invalid query parameters" do
-    conn =
-      conn(:get, "/?q=%{")
-      |> render([], fn -> throw :hello end)
+    body = assert_render(500, conn(:get, "/?q=%{"), [], fn -> throw :hello end)
 
-    assert conn.status == 500
-    assert conn.resp_body == "Got 500 from throw with GET"
+    assert body == "Got 500 from throw with GET"
   end
 
   test "captures warning when format is not supported" do
+    Logger.enable(self())
+
     assert capture_log(fn ->
-      conn(:get, "/")
-      |> put_req_header("accept", "unknown/unknown")
-      |> render([], fn -> throw :hello end)
+      conn = conn(:get, "/") |> put_req_header("accept", "unknown/unknown")
+      assert_render(500, conn, [], fn -> throw :hello end)
     end) =~ "Could not render errors due to no supported media type in accept header"
   end
 
   test "captures warning when format does not match error view" do
+    Logger.enable(self())
+
     assert capture_log(fn ->
-      conn(:get, "/?_format=unknown")
-      |> render([], fn -> throw :hello end)
+      conn = conn(:get, "/?_format=unknown")
+      assert_render(500, conn, [], fn -> throw :hello end)
     end) =~ "Could not render errors due to unknown format \"unknown\""
   end
 
-  test "does not capture warning when format does match ErrorView" do
-    assert capture_log(fn ->
-      conn(:get, "/")
-      |> put_req_header("accept", "text/html")
-      |> render([], fn -> throw :hello end)
-    end) == ""
+  test "exception page for NoRouteError with plug_status 404" do
+    body = assert_render(404, conn(:get, "/"), [], fn ->
+      raise Phoenix.Router.NoRouteError, conn: conn(:get, "/"), router: nil, plug_status: 404
+    end)
+
+    assert body == "Got 404 from error with GET"
   end
 end

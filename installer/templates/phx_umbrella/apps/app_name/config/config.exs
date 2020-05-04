@@ -1,7 +1,4 @@
-use Mix.Config
-
-<%= if ecto do %>config :<%= app_name %>, ecto_repos: [<%= app_module %>.Repo]<% end %>
-
-<%= generator_config %>
-
-import_config "#{Mix.env}.exs"
+<%= if namespaced? || ecto do %># Configure Mix tasks and generators
+config :<%= app_name %><%= if namespaced? do %>,
+  namespace: <%= app_module %><% end %><%= if ecto do %>,
+  ecto_repos: [<%= app_module %>.Repo]<% end %><% end %>

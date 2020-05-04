@@ -2,39 +2,28 @@ defmodule Phoenix.ConfigTest do
   use ExUnit.Case, async: true
   import Phoenix.Config
 
-  setup meta do
-    config = [parsers: false, custom: true, otp_app: :phoenix_config]
-    Application.put_env(:config_app, meta.test, config)
-    :ok
-  end
-
   @defaults [static: [at: "/"]]
+  @config [parsers: false, custom: true, otp_app: :phoenix_config]
+  @all @config ++ @defaults
 
   test "reads configuration from env", meta do
+    Application.put_env(:config_app, meta.test, @config)
     config = from_env(:config_app, meta.test, [static: true])
     assert config[:parsers] == false
     assert config[:custom]  == true
     assert config[:static]  == true
-
-    assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
-      assert from_env(:unknown_app, meta.test, [static: true]) ==
-            [static: true]
-    end) =~ "no endpoint configuration"
   end
 
   test "starts an ets table as part of the module", meta do
-    {:ok, _pid} = start_link(:config_app, meta.test, @defaults)
+    {:ok, _pid} = start_link({meta.test, @all, @defaults, []})
     assert :ets.info(meta.test, :name) == meta.test
     assert :ets.lookup(meta.test, :parsers) == [parsers: false]
     assert :ets.lookup(meta.test, :static)  == [static: [at: "/"]]
     assert :ets.lookup(meta.test, :custom)  == [custom: true]
-
-    assert stop(meta.test) == :ok
-    assert :ets.info(meta.test, :name) == :undefined
   end
 
   test "can change configuration", meta do
-    {:ok, _pid} = start_link(:config_app, meta.test, @defaults)
+    {:ok, _pid} = start_link({meta.test, @all, @defaults, []})
 
     # Nothing changed
     config_change(meta.test, [], [])
@@ -54,7 +43,7 @@ defmodule Phoenix.ConfigTest do
   end
 
   test "can cache", meta do
-    {:ok, _pid} = start_link(:config_app, meta.test, @defaults)
+    {:ok, _pid} = start_link({meta.test, @all, @defaults, []})
 
     assert cache(meta.test, :__hello__, fn _ -> {:nocache, 1} end) == 1
     assert cache(meta.test, :__hello__, fn _ -> {:cache, 2} end) == 2

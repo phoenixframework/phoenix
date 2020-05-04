@@ -1,12 +1,23 @@
-use Mix.Config
+secret_key_base =
+  System.get_env("SECRET_KEY_BASE") ||
+    raise """
+    environment variable SECRET_KEY_BASE is missing.
+    You can generate one by calling: mix phx.gen.secret
+    """
 
-# In this file, we keep production configuration that
-# you likely want to automate and keep it away from
-# your version control system.
-#
-# You should document the content of this
-# file or create a script for recreating it, since it's
-# kept out of version control and might be hard to recover
-# or recreate for your teammates (or you later on).
 config :<%= web_app_name %>, <%= endpoint_module %>,
-  secret_key_base: "<%= prod_secret_key_base %>"
+  http: [
+    port: String.to_integer(System.get_env("PORT") || "4000"),
+    transport_options: [socket_opts: [:inet6]]
+  ],
+  secret_key_base: secret_key_base
+
+# ## Using releases
+#
+# If you are doing OTP releases, you need to instruct Phoenix
+# to start each relevant endpoint:
+#
+#     config :<%= web_app_name %>, <%= endpoint_module %>, server: true
+#
+# Then you can assemble a release by calling `mix release`.
+# See `mix help release` for more information.
