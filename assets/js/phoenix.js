@@ -955,7 +955,7 @@ export class Socket {
   }
 
   waitForBufferDone(callback, tries = 1) {
-    if (tries === 5 || !this.conn || (this.conn.bufferedAmount && this.conn.bufferedAmount === 0)) {
+    if (tries === 5 || !this.conn || !this.conn.bufferedAmount) {
       callback()
       return
     }
