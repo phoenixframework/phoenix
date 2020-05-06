@@ -202,7 +202,7 @@ defmodule Phoenix.Endpoint do
 
     * `:drainer` - a drainer process that triggers when your application is
       shutting to wait for any on-going request to finish. It accepts all
-      options as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.httml).
+      options as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.html).
       Defaults to `[]` and can be disabled by setting it to false.
 
   ## Endpoint API
