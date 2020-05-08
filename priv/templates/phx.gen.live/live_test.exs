@@ -2,20 +2,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   use <%= inspect context.web_module %>.ConnCase
 
   import Phoenix.LiveViewTest
-
-  alias <%= inspect context.module %>
+  import <%= inspect context.module %>Fixtures
 
   @create_attrs <%= inspect schema.params.create %>
   @update_attrs <%= inspect schema.params.update %>
   @invalid_attrs <%= inspect for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %>
 
-  defp fixture(:<%= schema.singular %>) do
-    {:ok, <%= schema.singular %>} = <%= inspect context.alias %>.create_<%= schema.singular %>(@create_attrs)
-    <%= schema.singular %>
-  end
-
   defp create_<%= schema.singular %>(_) do
-    <%= schema.singular %> = fixture(:<%= schema.singular %>)
+    <%= schema.singular %> = <%= schema.singular %>_fixture()
     %{<%= schema.singular %>: <%= schema.singular %>}
   end
 
