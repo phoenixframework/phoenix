@@ -1,7 +1,8 @@
 defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ControllerTest do
   use <%= inspect context.web_module %>.ConnCase
 
-  alias <%= inspect context.module %>
+  import <%= inspect context.module %>Fixtures
+
   alias <%= inspect schema.module %>
 
   @create_attrs %{
@@ -11,11 +12,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 <%= schema.params.update |> Enum.map(fn {key, val} -> "    #{key}: #{inspect(val)}" end) |> Enum.join(",\n") %>
   }
   @invalid_attrs <%= inspect for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %>
-
-  def fixture(:<%= schema.singular %>) do
-    {:ok, <%= schema.singular %>} = <%= inspect context.alias %>.create_<%= schema.singular %>(@create_attrs)
-    <%= schema.singular %>
-  end
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -82,7 +78,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   defp create_<%= schema.singular %>(_) do
-    <%= schema.singular %> = fixture(:<%= schema.singular %>)
+    <%= schema.singular %> = <%= schema.singular %>_fixture()
     %{<%= schema.singular %>: <%= schema.singular %>}
   end
 end
