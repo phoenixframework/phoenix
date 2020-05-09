@@ -129,9 +129,14 @@ defmodule Phoenix.Socket do
   ## Custom channels
 
   You can list any module as a channel as long as it implements
-  a `start_link/1` function that receives a tuple with three elements:
+  a `child_spec/1` function. The `child_spec/1` function receives
+  the caller as argument and it must return a child spec that
+  initializes a process.
 
-      {auth_payload, from, socket}
+  Once the process is initialized, it will receive the following
+  message:
+
+      {Phoenix.Channel, auth_payload, from, socket}
 
   A custom channel implementation MUST invoke
   `GenServer.reply(from, {:ok | :error, reply_payload})` during its
@@ -174,11 +179,6 @@ defmodule Phoenix.Socket do
   Custom channel implementations cannot be tested with `Phoenix.ChannelTest`
   and are currently considered experimental. The underlying API may be
   changed at any moment.
-
-  **Note:** in future Phoenix versions we will require custom channels
-  to provide a custom `child_spec/1` function instead of `start_link/1`.
-  Since the default behaviour of `child_spec/1` is to invoke `start_link/1`,
-  this behaviour should be backwards compatible in almost all cases.
   """
 
   require Logger
