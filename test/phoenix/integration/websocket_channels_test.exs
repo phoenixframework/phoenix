@@ -64,20 +64,24 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
   defmodule CustomChannel do
     use GenServer, restart: :temporary
 
-    def start_link(triplet) do
-      GenServer.start_link(__MODULE__, triplet)
+    def start_link(from) do
+      GenServer.start_link(__MODULE__, from)
     end
 
-    def init({payload, from, socket}) do
+    def init({_, _}) do
+      {:ok, :init}
+    end
+
+    def handle_info({Phoenix.Channel, payload, from, socket}, :init) do
       case payload["action"] do
         "ok" ->
           GenServer.reply(from, {:ok, %{"action" => "ok"}})
-          {:ok, socket}
+          {:noreply, socket}
 
         "ignore" ->
           GenServer.reply(from, {:error, %{"action" => "ignore"}})
           send(self(), :stop)
-          {:ok, socket}
+          {:noreply, socket}
 
         "error" ->
           raise "oops"
