@@ -69,7 +69,7 @@ defmodule Phoenix.Logger do
 
     * `[:phoenix, :channel_joined]` - dispatched at the end of a channel join
       * Measurement: `%{duration: native_time}`
-      * Metadata: `%{params: term, socket: Phoenix.Socket.t}`
+      * Metadata: `%{result: :ok | :error, params: term, socket: Phoenix.Socket.t}`
       * Disable logging: This event cannot be disabled
 
     * `[:phoenix, :channel_handled_in]` - dispatched at the end of a channel handle in
