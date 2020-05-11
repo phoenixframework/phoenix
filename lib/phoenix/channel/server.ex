@@ -136,7 +136,7 @@ defmodule Phoenix.Channel.Server do
   The message is encoded as `Phoenix.Socket.Broadcast`.
   """
   def broadcast(pubsub_server, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -153,7 +153,7 @@ defmodule Phoenix.Channel.Server do
   Raises in case of crashes.
   """
   def broadcast!(pubsub_server, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -170,7 +170,7 @@ defmodule Phoenix.Channel.Server do
   The message is encoded as `Phoenix.Socket.Broadcast`.
   """
   def broadcast_from(pubsub_server, from, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -187,7 +187,7 @@ defmodule Phoenix.Channel.Server do
   Raises in case of crashes.
   """
   def broadcast_from!(pubsub_server, from, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -204,7 +204,7 @@ defmodule Phoenix.Channel.Server do
   The message is encoded as `Phoenix.Socket.Broadcast`.
   """
   def local_broadcast(pubsub_server, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -221,7 +221,7 @@ defmodule Phoenix.Channel.Server do
   The message is encoded as `Phoenix.Socket.Broadcast`.
   """
   def local_broadcast_from(pubsub_server, from, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -236,7 +236,7 @@ defmodule Phoenix.Channel.Server do
   to the given process.
   """
   def push(pid, topic, event, payload, serializer)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     message = %Message{topic: topic, event: event, payload: payload}
     send(pid, serializer.encode!(message))
     :ok
@@ -246,7 +246,7 @@ defmodule Phoenix.Channel.Server do
   Replies to a given ref to the transport process.
   """
   def reply(pid, join_ref, ref, topic, {status, payload}, serializer)
-      when is_binary(topic) and is_map(payload) do
+      when is_binary(topic) do
     reply = %Reply{topic: topic, join_ref: join_ref, ref: ref, status: status, payload: payload}
     send(pid, serializer.encode!(reply))
     :ok
@@ -389,8 +389,8 @@ defmodule Phoenix.Channel.Server do
         channel #{inspect(socket.channel)}.join/3 is expected to return one of:
 
             {:ok, Socket.t} |
-            {:ok, reply :: map, Socket.t} |
-            {:error, reply :: map}
+            {:ok, reply :: any, Socket.t} |
+            {:error, reply :: any}
 
         got #{inspect(other)}
         """
@@ -443,7 +443,7 @@ defmodule Phoenix.Channel.Server do
 
         {:noreply, Socket.t} |
         {:noreply, Socket.t, timeout | :hibernate} |
-        {:reply, {status :: atom, response :: map}, Socket.t} |
+        {:reply, {status :: atom, response :: any}, Socket.t} |
         {:reply, status :: atom, Socket.t} |
         {:stop, reason :: term, Socket.t} |
         {:stop, reason :: term, {status :: atom, response :: map}, Socket.t} |
@@ -485,7 +485,7 @@ defmodule Phoenix.Channel.Server do
     handle_result(other, :handle_in)
   end
 
-  defp handle_reply(socket, {status, payload}) when is_atom(status) and is_map(payload) do
+  defp handle_reply(socket, {status, payload}) when is_atom(status) do
     reply(
       socket.transport_pid,
       socket.join_ref,
@@ -505,7 +505,7 @@ defmodule Phoenix.Channel.Server do
     Channel replies from handle_in/3 are expected to be one of:
 
         status :: atom
-        {status :: atom, response :: map}
+        {status :: atom, response :: any}
 
     for example:
 
