@@ -74,7 +74,7 @@ defmodule Phoenix.Logger do
 
     * `[:phoenix, :channel_handled_in]` - dispatched at the end of a channel handle in
       * Measurement: `%{duration: native_time}`
-      * Metadata: `%{result: :ok | :error, event: binary, params: term, socket: Phoenix.Socket.t}`
+      * Metadata: `%{event: binary, params: term, socket: Phoenix.Socket.t}`
       * Disable logging: This event cannot be disabled
 
   To see an example of how Phoenix LiveDashboard uses these events to create
