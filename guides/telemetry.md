@@ -13,6 +13,14 @@ and we will guide you through the steps to properly
 instrument your own functions using `:telemetry`. Let's take
 a closer look at how Telemetry works in your application.
 
+## Overview
+
+The `[:telemetry]` library allows you to emit events at various stages of an application's lifecycle. You can then respond to these events by, among other things, aggregating them as metrics and sending the metrics data to a reporting destination.
+
+Telemetry stores events by their name in an ETS table, along with the handler for each event. Then, when a given event is executed, Telemetry looks up its handler and invokes it.
+
+Phoenix's Telemetry tooling provides you with a supervisor that uses `Telemetry.Metrics` to define the list of Telemetry events to handle and how to handle those events, i.e. how to structure them as a certain type of metric. This supervisor works together with Telemetry reporters to respond to the specified Telemetry events by aggregating them as the appropriate metric and sending them to the correct reporting destination.
+
 ## The Telemetry supervisor
 
 Since v1.5, new Phoenix applications are generated with a
@@ -103,7 +111,7 @@ children = [
 ## Telemetry Events
 
 Many Elixir libraries (including Phoenix) are already using
-the `:telemetry` package (http://hexdocs.pm/telemetry) as a
+the [`:telemetry`](http://hexdocs.pm/telemetry) package as a
 way to give users more insight into the behavior of their
 applications, by emitting events at key moments in the
 application lifecycle.
@@ -124,7 +132,7 @@ A Telemetry event is made up of the following:
 Here is an example of an event from your endpoint:
 
 * `[:phoenix, :endpoint, :stop]` - dispatched by
-  `Plug.Telemetry` in your endpoint whenever the response is
+  `Plug.Telemetry`, one of the default plugs in your endpoint, whenever the response is
   sent
 
   * Measurement: `%{duration: native_time}`
@@ -148,10 +156,14 @@ took to get the response:
 > &#x2015; `Telemetry.Metrics`
 
 The Telemetry.Metrics package provides a common interface
-for defining metrics. What this means is that the package
-does not perform any aggregation of the measurements itself,
-but instead relies on reporters to do so. We will discuss
+for defining metrics. It exposes a set of [five metric type functions](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#module-metrics) that are responsible for structuring a given Telemetry event as a particular measurement.
+
+The package does not perform any aggregation of the measurements itself. Instead, it provides a reporter with the Telemetry event-as-measurement definition and the reporter uses that definition to perform aggregations and report them.
+
+We will discuss
 reporters in the next section.
+
+Let's take a look at some examples.
 
 Using `Telemetry.Metrics`, you can define a counter metric,
 which counts how many HTTP requests were completed:
@@ -182,11 +194,30 @@ documentation.
 
 ### An Ecto Example
 
-Like Phoenix, Ecto ships with built-in telemetry events.
+Like Phoenix, Ecto ships with built-in Telemetry events.
 This means that you can gain introspection into your web
 and database layers using the same tools.
 
-For instance, you might want to graph query execution time:
+Here is an example of a Telemetry event executed by Ecto when an Ecto repository starts:
+
+* `[:ecto, :repo, :init]` - dispatched by
+  `Ecto.Repo.Supervisor`
+
+  * Measurement: `%{system_time: native_time}`
+
+  * Metadata: `%{repo: Ecto.Repo, opts: Keyword.t()}`
+
+This means that whenever the `Ecto.Repo.Supervisor` starts, it will emit an event, via `:telemetry`,
+with a measurement of the time at start-up.
+
+```elixir
+:telemetry.execute([:ecto, :repo, :init], %{system_time: System.system_time()}, %{repo: repo, opts: opts})
+```
+
+Additional Telemetry events are executed by Ecto adapters.
+
+One such adapter-specific event is the `[:my_app, :repo, :query]` event.
+For instance, if you want to graph query execution time, you can use the `Telemetry.Metrics.summary/2` function to instruct your reporter to calculate statistics of the `[:my_app, :repo, :query]` event, like maximum, mean, percentiles etc.:
 
 ```elixir
 Telemetry.Metrics.summary("my_app.repo.query.query_time",
@@ -194,7 +225,7 @@ Telemetry.Metrics.summary("my_app.repo.query.query_time",
 )
 ```
 
-or view how long queries spend queued:
+Or you could use the `Telemetry.Metrics.distribution/2` function to define a histogram for another adapter-specific event: `[:my_app, :repo, :query, :queue_time]`, thus visualizing how long queries spend queued:
 
 ```elixir
 Telemetry.Metrics.distribution("my_app.repo.query.queue_time",
@@ -219,6 +250,16 @@ Reporters subscribe to Telemetry events using the common
 interface provided by `Telemetry.Metrics`. They then
 aggregate the measurements (data) into metrics to provide
 meaningful information about your application.
+
+For example, if the following `Telemetry.Metrics.summary/2` call is added to the `metrics/0` function of your Telemetry supervisor:
+
+```elixir
+summary("phoenix.endpoint.stop.duration",
+  unit: {:native, :millisecond}
+)
+```
+
+Then the reporter will attach a listener for the `"phoenix.endpoint.stop.duration"` event and will respond to this event by calculating a summary metric with the given event metadata and reporting on that metric to the appropriate source.
 
 ### Phoenix.LiveDashboard
 
