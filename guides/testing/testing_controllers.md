@@ -47,11 +47,11 @@ def index(conn, _params) do
 end
 ```
 
-It gets all posts and renders the "index.html" template. The template can be found in "lib/hello_web/templates/page/index.html.eex".
+It gets all posts and renders the "index.html" template. The template can be found in `lib/hello_web/templates/page/index.html.eex`.
 
 The test looks like this:
 
-```elixi
+```elixir
 describe "index" do
   test "lists all posts", %{conn: conn} do
     conn = get(conn, Routes.post_path(conn, :index))
