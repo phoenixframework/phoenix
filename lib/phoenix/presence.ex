@@ -97,7 +97,7 @@ defmodule Phoenix.Presence do
   information to include any additional information. For example:
 
       def fetch(_topic, presences) do
-        users = entries |> Map.keys() |> Accounts.get_users_map()
+        users = presences |> Map.keys() |> Accounts.get_users_map()
 
         for {key, %{metas: metas}} <- presences, into: %{} do
           {key, %{metas: metas, user: users[key]}}
