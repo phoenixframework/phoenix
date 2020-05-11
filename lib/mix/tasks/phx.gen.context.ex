@@ -137,6 +137,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     if schema.generate?, do: Gen.Schema.copy_new_files(schema, paths, binding)
     inject_schema_access(context, paths, binding)
     inject_tests(context, paths, binding)
+    inject_test_fixture(context, paths, binding)
 
     context
   end
@@ -163,6 +164,16 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/test_cases.exs", binding)
     |> inject_eex_before_final_end(test_file, binding)
+  end
+
+  defp inject_test_fixture(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
+    unless Context.pre_existing_test_fixtures?(context) do
+      Mix.Generator.create_file(test_fixtures_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/fixtures_module.ex", binding))
+    end
+
+    paths
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/fixtures.ex", binding)
+    |> inject_eex_before_final_end(test_fixtures_file, binding)
   end
 
   defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
