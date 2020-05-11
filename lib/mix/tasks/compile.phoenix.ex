@@ -10,9 +10,11 @@ defmodule Mix.Tasks.Compile.Phoenix do
   def run(_args) do
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
-    case touch() do
-      [] -> {:noop, []}
-      _  -> {:ok, []}
+    if Mix.env() == :dev do
+      case touch() do
+        [] -> {:noop, []}
+        _  -> {:ok, []}
+      end
     end
   end
 
