@@ -21,3 +21,6 @@ erl_crash.dump
 
 # Ignore package tarball (built via "mix hex.build").
 <%= app_name %>-*.tar
+
+# The Elixir Language Service caches data here if you're using it.
+/.elixir_ls/

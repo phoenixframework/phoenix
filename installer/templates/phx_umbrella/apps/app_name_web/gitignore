@@ -32,3 +32,6 @@ npm-debug.log
 # we ignore priv/static. You may want to comment
 # this depending on your deployment strategy.
 /priv/static/
+
+# The Elixir Language Service caches data here if you're using it.
+/.elixir_ls/
