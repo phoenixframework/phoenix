@@ -45,6 +45,8 @@ $ npm run deploy --prefix ./assets
 $ mix phx.digest
 ```
 
+*Note:* the `--prefix` flag on `npm` may not work on Windows. If so, replace the first command by `cd assets && npm run deply && cd ..`.
+
 And now run `mix release`:
 
 ```console

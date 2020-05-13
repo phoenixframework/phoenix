@@ -47,13 +47,13 @@ defmodule Phoenix.Endpoint.Watcher do
       !System.find_executable("node") ->
         Logger.error "Could not start watcher because \"node\" is not available. Your Phoenix " <>
                      "application is still running, however assets won't be compiled. " <>
-                     "You may fix this by installing \"node\" and then running \"npm install --prefix assets\"."
+                     "You may fix this by installing \"node\" and then running \"npm install\" inside the \"assets\" directory."
         exit(:shutdown)
 
       not File.exists?(script_path) ->
         Logger.error "Could not start node watcher because script #{inspect script_path} does not " <>
                      "exist. Your Phoenix application is still running, however assets " <>
-                     "won't be compiled. You may fix this by running \"npm install --prefix assets\"."
+                     "won't be compiled. You may fix this by running \"npm install\" inside the \"assets\" directory."
         exit(:shutdown)
 
       true -> :ok

@@ -52,6 +52,8 @@ $ mix phx.digest
 Check your digested files at "priv/static".
 ```
 
+*Note:* the `--prefix` flag on `npm` may not work on Windows. If so, replace the first command by `cd assets && npm run deply && cd ..`.
+
 And that is it! The first command builds the assets and the second generates digests as well as a cache manifest file so Phoenix can quickly serve assets in production.
 
 Keep in mind that, if you by any chance forget to run the steps above, Phoenix will show an error message:
