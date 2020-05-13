@@ -688,12 +688,12 @@ defmodule Phoenix.Endpoint do
 
     * `:websocket` - controls the websocket configuration.
       Defaults to `true`. May be false or a keyword list
-      of options. See "Shared configuration" and
+      of options. See "Common configuration" and
       "WebSocket configuration" for the whole list
 
     * `:longpoll` - controls the longpoll configuration.
       Defaults to `false`. May be true or a keyword list
-      of options. See "Shared configuration" and
+      of options. See "Common configuration" and
       "Longpoll configuration" for the whole list
 
   If your socket is implemented using `Phoenix.Socket`,
