@@ -167,11 +167,15 @@ defmodule Phoenix.Channel do
 
   `terminate/2`, however, won't be invoked in case of errors nor in
   case of exits. This is the same behaviour as you find in Elixir
-  abstractions like `GenServer` and others. Typically speaking, if you
-  want to clean something up, it is better to monitor your channel
-  process and do the clean up from another process.  Similar to GenServer,
+  abstractions like `GenServer` and others. Similar to `GenServer`,
   it would also be possible `:trap_exit` to guarantee that `terminate/2`
   is invoked. This practice is not encouraged though.
+
+  Typically speaking, if you want to clean something up, it is better to
+  monitor your channel process and do the clean up from another process.
+  All channel callbacks including `join/3` are called from within the
+  channel process. Therefore, `self()` in any of them returns the PID to
+  be monitored.
 
   ## Exit reasons when stopping a channel
 
