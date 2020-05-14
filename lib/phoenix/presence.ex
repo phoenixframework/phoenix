@@ -73,8 +73,8 @@ defmodule Phoenix.Presence do
   The diff structure will be a map of `:joins` and `:leaves` of the form:
 
       %{
-        joins: %{"123" => %{metas: [%{status: "away", phx_ref: ...}]},
-        leaves: %{"456" => %{metas: [%{status: "online", phx_ref: ...}]
+        joins: %{"123" => %{metas: [%{status: "away", phx_ref: ...}]}},
+        leaves: %{"456" => %{metas: [%{status: "online", phx_ref: ...}]}}
       },
 
   See `c:list/2` for more information on the presence data structure.
