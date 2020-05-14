@@ -28,12 +28,7 @@ defmodule <%= app_module %>.DataCase do
   end
 
   setup tags do
-    <%= adapter_config[:test_setup] %>
-
-    unless tags[:async] do
-      <%= adapter_config[:test_async] %>
-    end
-
+<%= adapter_config[:test_setup] %>
     :ok
   end
 

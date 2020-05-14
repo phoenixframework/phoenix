@@ -502,9 +502,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Postgres"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
-      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
     end
   end
 
@@ -519,9 +519,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.MyXQL"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
     end
   end
 
@@ -536,9 +536,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Tds"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
     end
   end
 

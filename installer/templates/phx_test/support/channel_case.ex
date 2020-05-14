@@ -29,12 +29,7 @@ defmodule <%= web_namespace %>.ChannelCase do
   end<%= if ecto do %>
 
   setup tags do
-    <%= adapter_config[:test_setup] %>
-
-    unless tags[:async] do
-      <%= adapter_config[:test_async] %>
-    end
-
+<%= adapter_config[:test_setup] %>
     :ok
   end<% else %>
 

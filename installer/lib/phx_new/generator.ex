@@ -233,15 +233,29 @@ defmodule Phx.New.Generator do
     Mix.raise "Unknown database #{inspect db}"
   end
 
-  defp db_config(app, module, user, pass) do
-    [dev:  [username: user, password: pass, database: "#{app}_dev", hostname: "localhost",
-            show_sensitive_data_on_connection_error: true],
-     test: [username: user, password: pass, database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|}, hostname: "localhost",
-            pool: Ecto.Adapters.SQL.Sandbox],
-     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, :manual)",
-     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{inspect module}.Repo)",
-     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, {:shared, self()})"]
-  end
+defp db_config(app, module, user, pass) do
+  [
+    dev: [
+      username: user,
+      password: pass,
+      database: "#{app}_dev",
+      hostname: "localhost",
+      show_sensitive_data_on_connection_error: true
+    ],
+    test: [
+      username: user,
+      password: pass,
+      database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|},
+      hostname: "localhost",
+      pool: Ecto.Adapters.SQL.Sandbox
+    ],
+    test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect(module)}.Repo, :manual)",
+    test_setup: """
+        pid = Ecto.Adapters.SQL.Sandbox.start_owner!(#{inspect(module)}.Repo, shared: not tags[:async])
+        on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)\
+    """
+  ]
+end
 
   defp kw_to_config(kw) do
     Enum.map(kw, fn
