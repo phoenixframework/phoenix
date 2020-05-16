@@ -8,19 +8,23 @@ We have used the opportunity of writing the new Cowboy 2 adapter to do an overha
 
 This overhaul means that the `transport/3` macro in `Phoenix.Socket` is deprecated. Instead of defining transports in your socket.ex file:
 
-    transport :websocket, Phoenix.Transport.Websocket,
-      key1: value1, key2: value2, key3: value3
+```elixir
+transport :websocket, Phoenix.Transport.Websocket,
+  key1: value1, key2: value2, key3: value3
 
-    transport :longpoll, Phoenix.Transport.LongPoll,
-      key1: value1, key2: value2, key3: value3
+transport :longpoll, Phoenix.Transport.LongPoll,
+  key1: value1, key2: value2, key3: value3
+```
 
 Configurations must be applied directly in your endpoint file via the `Phoenix.Endpoint.socket/3` macro:
 
-    socket "/socket", MyApp.UserSocket,
-      websocket: [key1: value1, key2: value2, key3: value3],
-      longpoll: [key1: value1, key2: value2, key3: value3]
+```elixir
+socket "/socket", MyApp.UserSocket,
+  websocket: [key1: value1, key2: value2, key3: value3],
+  longpoll: [key1: value1, key2: value2, key3: value3]
+```
 
-Note the websocket/longpoll configuration given to socket/3 will only apply after you remove all `transport/3` calls from your socket definition. If you have explicitly upgraded to Cowboy 2, any transport defined with the `transport/3` macro will be ignored.
+Note the `:websocket`/`:longpoll` configuration given to `socket/3` will only apply after you remove all `transport/3` calls from your socket definition. If you have explicitly upgraded to Cowboy 2, any transport defined with the `transport/3` macro will be ignored.
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
@@ -39,12 +43,12 @@ The old APIs for building transports are also deprecated. The good news is: adap
   - [Controller] Add root layout support with `put_root_layout/2`
 
 ### Bug Fixes
-  - [Router] Fix bug causing dialyzer warning
+  - [Router] Fix bug causing Dialyzer warning
 
 ## 1.4.15 (2020-03-06)
 
 ### Enhancements
-  - [Router] Add `:trailing_slash` option to `scope` and `match` macros for trailing slash generation on Route helpers
+  - [Router] Add `:trailing_slash` option to `scope` and `match` macros for trailing slash generation on router helpers
   - [View] Add `:trim_on_html_eex_engine` configuration to enable/disable trim mode on the HTML EEx engine
 
 ### Bug Fixes
@@ -58,8 +62,8 @@ The old APIs for building transports are also deprecated. The good news is: adap
 ## 1.4.13 (2020-02-12)
 
 ### Enhancements
-  * [Router] support metadata on `route_info`
-  * [Router] emit telemetry events on router dispatch failure, using `[:phoenix, :router_dispatch, :failure]`
+  * [Router] Support metadata on `route_info`
+  * [Router] Emit telemetry events on router dispatch failure, using `[:phoenix, :router_dispatch, :failure]`
 
 ## 1.4.12 (2020-01-22)
 
@@ -68,15 +72,15 @@ The old APIs for building transports are also deprecated. The good news is: adap
   * [Generator] Allow a custom migration module to be given to the migration generator
   * [Controller] Allow filename encoding to be disabled in `send_download/3`
   * [Channel] Allow using a keyword list/map for socket assigns
-  * [Endpoint] Support Websocket subprotocols
+  * [Endpoint] Support WebSocket subprotocols
   * [Endpoint] Allow cache manifest to be loaded from specified application
   * [Endpoint] Allow disabling logger via application configuration
   * [ConnTest] Allow passing a custom set of headers to copy when recycling a connection
 
 ### Bug Fixes
-  * [Channel] Fix error handling when joining a channel using LongPoll
+  * [Channel] Fix error handling when joining a channel using `LongPoll`
   * [Controller] Fix blame in `Phoenix.ActionClauseError`
-  * [Router] Escape plug options in Router helpers
+  * [Router] Escape plug options in router helpers
 
 ### JavaScript Client Enhancements
   * Teardown connection on `unload` instead of `beforeunload` to support cancellable unloads by userland scripts
@@ -96,24 +100,24 @@ The old APIs for building transports are also deprecated. The good news is: adap
 ## 1.4.10 (2019-09-05)
 
 ### Enhancements
-  * [Socket] support assigning multiple key/value pairs with keyword list or map with `assign/2`.
+  * [Socket] Support assigning multiple key/value pairs with keyword list or map with `assign/2`.
 
 ### Bug Fixes
-  * [Endpoint] Fix match error in failed websocket handshake
+  * [Endpoint] Fix match error in failed WebSocket handshake
 
 
 ## JavaScript client enhancements
-  * support `vsn` option for customizing serializer protocol version
+  * Support `vsn` option for customizing serializer protocol version
 
 
 ## 1.4.9 (2019-07-03)
 
 ### Enhancements
-  * [local.phx] Use hex for fetching the latest `phx_new` package
+  * [local.phx] Use Hex for fetching the latest `phx_new` package
   * [phx.new] Use Ecto v3.1 and MyXQL for new apps
 
 ### Bug Fixes
-  * [Endpoint] Fix bug causing headers to be dropped for cowboy adapters on WebSocket upgrade
+  * [Endpoint] Fix bug causing headers to be dropped for Cowboy adapters on WebSocket upgrade
   * [ConnTest] Fix issue causing loss of connection information when using `bypass_through`
 
 ## 1.4.8 (2019-06-12)
@@ -163,34 +167,34 @@ The old APIs for building transports are also deprecated. The good news is: adap
 ## 1.4.3 (2019-03-29)
 
 ### JavaScript client enhancements
-  * add `binaryType` option to socket constructor, with `arraybuffer` default for binary messages
-  * use more aggressive socket reconnect for faster connection recovery
-  * rejoin channels as soon as socket reconnects for faster rejoins
-  * decouple channel rejoin backoffs with new `rejoinAfterMs` option
-  * optimize reconnects when browser restores from back/forward cache
-    by listening for window beforeunload
+  * Add `binaryType` option to socket constructor, with `arraybuffer` default for binary messages
+  * Use more aggressive socket reconnect for faster connection recovery
+  * Rejoin channels as soon as socket reconnects for faster rejoins
+  * Decouple channel rejoin backoffs with new `rejoinAfterMs` option
+  * Optimize reconnects when browser restores from back/forward cache
+    by listening for window `beforeunload`
   * Expose default `Serializer` for public use
 
 ### JavaScript client bug fixes
-  * fix bug causing socket to never reconnect when hearbeats timeouts
+  * Fix bug causing socket to never reconnect when heartbeats timeouts
     are encountered on the client, often experienced with backgrounded
     browser tabs
 
 ## 1.4.2 (2019-03-13)
 
 ### Enhancements
-  * [Router] add `scoped_alias` to return the full alias with the current scope's aliased prefix
-  * [Router] add `alias: false` option to router definitions to to disable scope prefix on case by case basis
-  * [Router] Support any struct with :endpoint key in path/url helpers
+  * [Router] Add `scoped_alias` to return the full alias with the current scope's aliased prefix
+  * [Router] Add `alias: false` option to router definitions to to disable scope prefix on case by case basis
+  * [Router] Support any struct with `:endpoint` key in path/url helpers
   * [Channel] Optimize channel join through non-blocking callback init
-  * [Endpoint] Log Web access URLs for HTTP and HTTPS configurations
-  * [phx.routes] Show socket paths for websocket and longpoll transports
+  * [Endpoint] Log web access URLs for HTTP and HTTPS configurations
+  * [phx.routes] Show socket paths for `:websocket` and `:longpoll` transports
   * [phx.new] Add `--verbose` flag for verbose installer output
   * [phx.gen.schema] Allow the app configuration to specify a custom migration module for the generated migration code
 
 ### Bug Fixes
-  * [phx.gen.json] Fix invalid map fields for generated json tests
-  * [phx.gen.html|json|context|schema] prohibit context or schema creation with the same name as the application causing incorrect aliases to be generated
+  * [phx.gen.json] Fix invalid map fields for generated JSON tests
+  * [phx.gen.html|json|context|schema] Prohibit context or schema creation with the same name as the application causing incorrect aliases to be generated
 
 ## 1.4.1 (2019-02-12)
 
@@ -252,8 +256,8 @@ The old APIs for building transports are also deprecated. The good news is: adap
   * Elixir 1.3 is no longer supported, Elixir 1.4+ is required
   * [Controller] Passing a view in `render/3` and `render/4` is deprecated in favor of `put_view/2`
   * [Endpoint] The `:handler` option in the endpoint is deprecated in favor of `:adapter`
-  * [Socket] `transport/3` is deprecated. The transport is now specified in the endpoint
-  * [Transport] The transport system has seen an overhaul and been drastically simplified. The previous mechanism for building transports is still supported but it is deprecated. Please see `Phoenix.Socket.Transport` for more information
+  * [Socket] `transport/3` is deprecated. The transport is now specified in the endpoint.
+  * [Transport] The transport system has seen an overhaul and been drastically simplified. The previous mechanism for building transports is still supported but it is deprecated. Please see `Phoenix.Socket.Transport` for more information.
 
 ### JavaScript client
   * Add new instance-based Presence API with simplified synchronization callbacks
