@@ -119,7 +119,7 @@ defmodule Phoenix.Digester do
 
   defp compiled_file?(file_path) do
     Regex.match?(@digested_file_regex, Path.basename(file_path)) ||
-      Path.extname(file_path) == ".gz" ||
+      Path.extname(file_path) in ~w(.gz .br) ||
       Path.basename(file_path) == "cache_manifest.json"
   end
 
