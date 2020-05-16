@@ -4,7 +4,7 @@ See the [upgrade guides](https://gist.github.com/chrismccord/e53e79ef8b34adf5d81
 
 ## Phoenix.PubSub 2.0 released
 
-Phoenix.PubSub 2.0 has been released with a more flexible and powerful fastlane mechanism. We use this opportunity to also move Phoenix.PubSub out of the endpoint and explicitly into your supervision tree. To update, you will need to remove or update the `{:phoenix_pubsub, "~> 1.x"}` entry in your `mix.exs` to at least "2.0".
+Phoenix.PubSub 2.0 has been released with a more flexible and powerful fastlane mechanism. We use this opportunity to also move Phoenix.PubSub out of the endpoint and explicitly into your supervision tree. To update, you will need to remove or update the `{:phoenix_pubsub, "~> 1.x"}` entry in your `mix.exs` to at least `2.0`.
 
 Then once you start an application, you will get a warning about the `:pubsub` key in your endpoint being deprecated. Follow the steps in the warning and you are good to go!
 
@@ -15,7 +15,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 ## 1.5.2-dev
 
 ### Enhancements
-  * [Channel] import `assigns:` 2 on channels
+  * [Channel] Import `assigns: 2` on channels
   * [Endpoint] Track latest static in `config(:cache_static_manifest_latest)`
   * [Endpoint] Allow `:user_agent` on `connect_info`
 
@@ -46,9 +46,9 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 
   * [ChannelTest] `use Phoenix.ChannelTest` is deprecated in favor of `import Phoenix.ChannelTest`
   * [ConnTest] `use Phoenix.ConnTest` is deprecated in favor of `import Plug.Conn; import Phoenix.ConnTest`
-  * [Endpoint] The outdated `Phoenix.Endpoint.CowboyAdapter` for Cowboy 1 is deprecated. Please make sure `{:plug_cowboy, "~> 2.1"}` or later is listed in your `mix.exs`
-  * [Endpoint] `Phoenix.Endpoint.instrument/4` is deprecated and has no effect. Use `:telemetry` instead. See `Phoenix.Logger` for more information
-  * [Endpoint] The `:pubsub` key for endpoint is deprecated. Once you start your app, you will see step-by-step instructions on how to use the new PubSub config
+  * [Endpoint] The outdated `Phoenix.Endpoint.CowboyAdapter` for Cowboy 1 is deprecated. Please make sure `{:plug_cowboy, "~> 2.1"}` or later is listed in your `mix.exs`.
+  * [Endpoint] `Phoenix.Endpoint.instrument/4` is deprecated and has no effect. Use `:telemetry` instead. See `Phoenix.Logger` for more information.
+  * [Endpoint] The `:pubsub` key for endpoint is deprecated. Once you start your app, you will see step-by-step instructions on how to use the new PubSub config.
   * [Layout] Use `<%= @inner_content %>` instead of `<%= render @view_module, @view_template, assigns %>` for rendering the child layout
 
 ### phx.new installer
@@ -59,7 +59,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * Automatically use `System.get_env("MIX_TEST_PARTITION")` in the database name in the test environment for built-in CI test partitioning
   * Generate a `MyApp.Telemetry` module with examples of Telemetry Metrics you may want to track in your app
   * Support the `--live` flag for generating apps with out-of-the-box LiveView support
-  * Include scss support by default when using webpack
+  * Include SCSS support by default when using webpack
 
 ### JavaScript client
 
