@@ -84,6 +84,19 @@ defmodule Phoenix.DigesterTest do
                "93pY5dBa8nHHi0Zfj75O/vXCBXb+UvEVCyU7Yd3pzOJ7o1wkYBWbvs3pVXhBChEmo8MDANT11vsggo2+bnYqoQ=="
     end
 
+    test "excludes compiled files" do
+      input_path = "test/fixtures/digest/priv/static/"
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      output_files = assets_files(@output_path)
+
+      json = Path.join(@output_path, "cache_manifest.json") |> json_read!()
+      refute json["latest"]["precompressed.js.gz"]
+      refute json["latest"]["precompressed.js.br"]
+
+      assert :ok = Phoenix.Digester.compile(@output_path, @output_path)
+      assert output_files == assets_files(@output_path)
+    end
+
     test "old versions maintain their mtime" do
       source_path = "test/fixtures/digest/priv/static/"
       input_path = "tmp/digest/static"
