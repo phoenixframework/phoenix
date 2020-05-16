@@ -8,7 +8,7 @@ Let's get on with our first new Phoenix page!
 
 ## Adding a new page
 
-When your browser accesses [http://localhost:4000/](http://localhost:4000/), it sends a HTTP request to whatever service is running on that address, in this our Phoenix application. The HTTP request is made of a verb and a path. For example, the following browser requests translate into:
+When your browser accesses [http://localhost:4000/](http://localhost:4000/), it sends a HTTP request to whatever service is running on that address, in this case our Phoenix application. The HTTP request is made of a verb and a path. For example, the following browser requests translate into:
 
 | Browser address bar                | Verb | Path          |
 |:-----------------------------------|:-----|:--------------|
