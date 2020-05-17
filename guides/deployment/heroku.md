@@ -35,7 +35,7 @@ Let's separate this process into a few steps so we can keep track of where we ar
 - Initialize Git repository
 - Sign up for Heroku
 - Install the Heroku Toolbelt
-- Create and setup Heroku application
+- Create and set up Heroku application
 - Make our project ready for Heroku
 - Deploy time!
 - Useful Heroku commands
@@ -68,9 +68,9 @@ Once we have signed up, we can download the correct version of the Heroku Toolbe
 
 The Heroku CLI, part of the Toolbelt, is useful to create Heroku applications, list currently running dynos for an existing application, tail logs or run one-off commands (mix tasks for instance).
 
-## Create and Setup Heroku Application
+## Create and Set Up Heroku Application
 
-There are two different ways to deploy a Phoenix app on Heroku. We could use Heroku buildpacks or their container stack. The difference between these two approaches is in how we tell Heroku to treat our build. In buildpack case, we need to update our apps configuration on Heroku to use Phoenix/Elixir specific buildpacks. On container approach, we have more control on how we want to setup our app and we can define our container image using `Dockerfile` and `heroku.yml`. This section will explore the buildpack approach. In order to use Dockerfile, it is often recommended to convert our app to use releases, which we will describe later on.
+There are two different ways to deploy a Phoenix app on Heroku. We could use Heroku buildpacks or their container stack. The difference between these two approaches is in how we tell Heroku to treat our build. In buildpack case, we need to update our apps configuration on Heroku to use Phoenix/Elixir specific buildpacks. On container approach, we have more control on how we want to set up our app and we can define our container image using `Dockerfile` and `heroku.yml`. This section will explore the buildpack approach. In order to use Dockerfile, it is often recommended to convert our app to use releases, which we will describe later on.
 
 ### Create Application
 
@@ -350,11 +350,11 @@ build:
     DATABASE_URL: $DATABASE_URL
 ```
 
-### Setup releases and Dockerfile
+### Set up releases and Dockerfile
 
 Now we need to define a `Dockerfile` at the root folder of your project that contains your application. We recommend to use releases when doing so, as the release will allow us to build a container with only the parts of Erlang and Elixir we actually use. Follow [the releases docs](releases.html). At the end of the guide, there is a sample Dockerfile file you can use.
 
-Once you have the image definition setup, you can push your app to heroku and you can see it starts building the image and deploy it.
+Once you have the image definition set up, you can push your app to heroku and you can see it starts building the image and deploy it.
 
 ## Useful Heroku Commands
 
