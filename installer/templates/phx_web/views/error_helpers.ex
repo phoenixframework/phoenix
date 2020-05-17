@@ -8,11 +8,14 @@ defmodule <%= web_namespace %>.ErrorHelpers do
   @doc """
   Generates tag for inlined form input errors.
   """
-  def error_tag(form, field) do
+  def error_tag(form, field, attrs \\ []) do
     Enum.map(Keyword.get_values(form.errors, field), fn error ->
-      content_tag(:span, translate_error(error),
-        class: "invalid-feedback",
-        phx_feedback_for: input_id(form, field)
+      content_tag(
+        :span,
+        translate_error(error),
+        attrs
+        |> Keyword.put_new(:class, "invalid-feedback")
+        |> Keyword.put(:phx_feedback_for, input_id(form, field))
       )
     end)
   end<% end %><%= if gettext do %>
