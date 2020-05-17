@@ -60,6 +60,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
 
         {:plug, conn, handler, opts} ->
           %{adapter: {@connection, req}} =
+            conn =
             conn
             |> handler.call(opts)
             |> maybe_send(handler)
