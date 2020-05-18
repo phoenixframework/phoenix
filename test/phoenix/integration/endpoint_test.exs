@@ -161,7 +161,7 @@ defmodule Phoenix.Integration.EndpointTest do
       assert_receive {:event, [:plug_adapter, :call, :stop], %{duration: _},
                       %{
                         adapter: :phoenix_cowboy,
-                        conn: %{request_path: "/"},
+                        conn: %{request_path: "/", status: 200},
                         plug: ProdEndpoint
                       }}
 
