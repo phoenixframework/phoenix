@@ -32,12 +32,7 @@ defmodule <%= web_namespace %>.ConnCase do
   end<%= if ecto do %>
 
   setup tags do
-    <%= adapter_config[:test_setup] %>
-
-    unless tags[:async] do
-      <%= adapter_config[:test_async] %>
-    end
-
+<%= adapter_config[:test_setup] %>
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end<% else %>
 
