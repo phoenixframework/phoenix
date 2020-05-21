@@ -12,7 +12,7 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
-## 1.5.2-dev
+## 1.5.2 (2020-05-21)
 
 ### Enhancements
   * [Channel] Import `assigns: 2` on channels
