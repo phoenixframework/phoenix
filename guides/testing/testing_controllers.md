@@ -34,7 +34,7 @@ defmodule HelloWeb.PostControllerTest do
   ...
 ```
 
-Similar to the `PageControllerTest` that shops with our application, this controller tests uses `use HelloWeb.ConnCase` to setup the testing structure. Then, as usual, it defines some aliases, some module attributes to use throughout testing, and then it starts a series of `describe` blocks, each of them to test a different controller action.
+Similar to the `PageControllerTest` that ships with our application, this controller tests uses `use HelloWeb.ConnCase` to setup the testing structure. Then, as usual, it defines some aliases, some module attributes to use throughout testing, and then it starts a series of `describe` blocks, each of them to test a different controller action.
 
 ### The index action
 
