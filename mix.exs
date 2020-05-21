@@ -75,7 +75,7 @@ defmodule Phoenix.MixProject do
       {:phoenix_html, "~> 2.13", optional: true},
 
       # Docs dependencies
-      {:ex_doc, "~> 0.20", only: :docs},
+      {:ex_doc, "~> 0.22", only: :docs},
       {:inch_ex, "~> 0.2", only: :docs},
 
       # Test dependencies
