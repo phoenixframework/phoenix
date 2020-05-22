@@ -56,7 +56,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
   test "warns if host is invalid" do
     assert ExUnit.CaptureLog.capture_log(fn ->
       InvalidEndpoint.start_link()
-    end) =~ "host \"http://example.com\" is invalid"
+    end) =~ ":host configuration value \"http://example.com\" for Phoenix.Endpoint.EndpointTest.InvalidEndpoint is invalid"
   end
 
   test "has reloadable configuration" do
