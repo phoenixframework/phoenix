@@ -303,6 +303,10 @@ defmodule Phoenix.Endpoint.Supervisor do
     host   = host_to_binary(url[:host] || "localhost")
     port   = port_to_integer(url[:port] || port)
 
+    if host =~ ~r/\:/ do
+      Logger.warn("host #{inspect(host)} is invalid")
+    end
+
     %URI{scheme: scheme, port: port, host: host}
   end
 

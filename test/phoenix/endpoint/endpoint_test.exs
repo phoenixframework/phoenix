@@ -10,7 +10,9 @@ defmodule Phoenix.Endpoint.EndpointTest do
            force_ssl: [subdomains: true],
            cache_static_manifest: "../../../../test/fixtures/digest/compile/cache_manifest.json",
            pubsub_server: :endpoint_pub]
+
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
+  Application.put_env(:phoenix, __MODULE__.InvalidEndpoint, put_in(@config[:url][:host], "http://example.com"))
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
@@ -23,6 +25,10 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   defmodule NoConfigEndpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+  end
+
+  defmodule InvalidEndpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
 
@@ -45,6 +51,12 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert ExUnit.CaptureLog.capture_log(fn ->
       NoConfigEndpoint.start_link()
     end) =~ "no configuration"
+  end
+
+  test "warns if host is invalid" do
+    assert ExUnit.CaptureLog.capture_log(fn ->
+      InvalidEndpoint.start_link()
+    end) =~ "host \"http://example.com\" is invalid"
   end
 
   test "has reloadable configuration" do
