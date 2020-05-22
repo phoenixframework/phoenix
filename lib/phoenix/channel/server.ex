@@ -399,8 +399,21 @@ defmodule Phoenix.Channel.Server do
 
   defp init_join(socket, channel, topic) do
     %{transport_pid: transport_pid, serializer: serializer, pubsub_server: pubsub_server} = socket
-    Process.monitor(transport_pid)
 
+    unless pubsub_server do
+      raise """
+      The :pubsub_server was not configured for endpoint #{inspect(socket.endpoint)}.
+      Make sure to start a PubSub proccess in your application supervision tree:
+
+          {Phoenix.PubSub, [name: YOURAPP.PubSub, adapter: Phoenix.PubSub.PG2]}
+
+      And then list it your endpoint config:
+
+          pubsub_server: YOURAPP.PubSub
+      """
+    end
+
+    Process.monitor(transport_pid)
     fastlane = {:fastlane, transport_pid, serializer, channel.__intercepts__()}
     PubSub.subscribe(pubsub_server, topic, metadata: fastlane)
 
