@@ -46,7 +46,7 @@ defmodule Phoenix.MixProject do
   def application do
     [
       mod: {Phoenix, []},
-      extra_applications: [:logger, :eex, :crypto],
+      extra_applications: [:logger, :eex, :crypto, :public_key],
       env: [
         logger: true,
         stacktrace_depth: nil,
