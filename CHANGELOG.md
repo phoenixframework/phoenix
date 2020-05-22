@@ -12,6 +12,11 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+## 1.5.3 (2020-05-21)
+
+### Bug fixes
+  * [phx.new] - Fix incompatible LiveView version for newly generated projects
+
 ## 1.5.2 (2020-05-21)
 
 ### Enhancements
