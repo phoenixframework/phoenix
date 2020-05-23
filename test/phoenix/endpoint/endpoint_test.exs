@@ -10,6 +10,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
            force_ssl: [subdomains: true],
            cache_static_manifest: "../../../../test/fixtures/digest/compile/cache_manifest.json",
            pubsub_server: :endpoint_pub]
+
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
   defmodule Endpoint do
