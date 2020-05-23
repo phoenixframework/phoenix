@@ -285,10 +285,9 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp build_url(endpoint, url) do
-    build_url(endpoint.config(:https), endpoint.config(:http), url)
-  end
+    https = endpoint.config(:https)
+    http  = endpoint.config(:http)
 
-  defp build_url(https, http, url) do
     {scheme, port} =
       cond do
         https ->
@@ -302,6 +301,10 @@ defmodule Phoenix.Endpoint.Supervisor do
     scheme = url[:scheme] || scheme
     host   = host_to_binary(url[:host] || "localhost")
     port   = port_to_integer(url[:port] || port)
+
+    if host =~ ":" do
+      Logger.warn("url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid")
+    end
 
     %URI{scheme: scheme, port: port, host: host}
   end
