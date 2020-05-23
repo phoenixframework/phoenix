@@ -49,7 +49,7 @@ def template_not_found(template, _assigns) do
 end
 ```
 
-Great, so we have this `template_not_found/2` function that takes a template and an `assigns` map, which we ignore. The `template_not_found/2` is invoked whenever a Phoenix.View attempts to render a template bu tno template is found.
+Great, so we have this `template_not_found/2` function that takes a template and an `assigns` map, which we ignore. The `template_not_found/2` is invoked whenever a Phoenix.View attempts to render a template but no template is found.
 
 In order words, to provide custom error pages, we could simply define a the proper `render/2` function clause in `HelloWeb.ErrorView`.
 
