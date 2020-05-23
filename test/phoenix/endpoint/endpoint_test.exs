@@ -12,7 +12,6 @@ defmodule Phoenix.Endpoint.EndpointTest do
            pubsub_server: :endpoint_pub]
 
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
-  Application.put_env(:phoenix, __MODULE__.InvalidEndpoint, put_in(@config[:url][:host], "http://example.com"))
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
@@ -25,10 +24,6 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   defmodule NoConfigEndpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
-  end
-
-  defmodule InvalidEndpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
 
@@ -51,12 +46,6 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert ExUnit.CaptureLog.capture_log(fn ->
       NoConfigEndpoint.start_link()
     end) =~ "no configuration"
-  end
-
-  test "warns if host is invalid" do
-    assert ExUnit.CaptureLog.capture_log(fn ->
-      InvalidEndpoint.start_link()
-    end) =~ ":host configuration value \"http://example.com\" for Phoenix.Endpoint.EndpointTest.InvalidEndpoint is invalid"
   end
 
   test "has reloadable configuration" do
