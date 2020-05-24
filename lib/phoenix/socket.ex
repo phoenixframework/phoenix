@@ -198,10 +198,8 @@ defmodule Phoenix.Socket do
 
       {:ok, assign(socket, :user_id, verified_user_id)}
 
-  To deny connection, return `:error`. An empty 403 response will be
-  returned since browsers do not allow accessing the server response
-  due to security reasons. However, if you want to send a custom error response
-  to non-browser clients, return a {:error, status_code, headers, body} tuple.
+  To deny connection, return `:error` or `{:error, reason}`.
+  TBD
 
   See `Phoenix.Token` documentation for examples in
   performing token verification on connect.
@@ -593,16 +591,13 @@ defmodule Phoenix.Socket do
             :error
         end
 
-      {:error, status_code, headers, body} = err when is_number(status_code) and is_list(headers) and is_binary(body) ->
-        err
-
       :error ->
         :error
 
       invalid ->
         connect_arity = if function_exported?(handler, :connect, 3), do: "connect/3", else: "connect/2"
         Logger.error "#{inspect handler}. #{connect_arity} returned invalid value #{inspect invalid}. " <>
-                     "Expected {:ok, socket}, {:error, status_code, headers, body} or :error"
+                     "Expected {:ok, socket} or :error"
         :error
     end
   end
