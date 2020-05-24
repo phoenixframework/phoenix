@@ -62,7 +62,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       address = Tuple.to_list(connect_info.peer_data.address) |> Enum.join(".")
       uri = Map.from_struct(connect_info.uri)
       x_headers = Enum.into(connect_info.x_headers, %{})
-      
+
       connect_info =
         connect_info
         |> update_in([:peer_data], &Map.put(&1, :address, address))
@@ -89,6 +89,10 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
     def connect(%{"reject" => "true"}, _socket) do
       :error
+    end
+
+    def connect(%{"ratelimit" => "true"}, _socket) do
+      {:error, 429, [{"x-ratelimit-limit", "10"}], %{"error" => "Too many requests"}}
     end
 
     def connect(params, socket) do
@@ -380,6 +384,11 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     describe "with #{vsn} serializer #{inspect serializer}" do
       test "refuses connects that error with 403 response" do
         resp = poll :get, "/ws", @vsn, %{"reject" => "true"}, %{}
+        assert resp.body["status"] == 403
+      end
+
+      test "refuses connects that error with custom error response" do
+        resp = poll :get, "/ws", @vsn, %{"ratelimit" => "true"}, %{}
         assert resp.body["status"] == 403
       end
 
