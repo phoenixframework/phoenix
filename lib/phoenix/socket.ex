@@ -203,8 +203,8 @@ defmodule Phoenix.Socket do
   See `Phoenix.Token` documentation for examples in
   performing token verification on connect.
   """
-  @callback connect(params :: map, Socket.t) :: {:ok, Socket.t} | :error
-  @callback connect(params :: map, Socket.t, connect_info :: map) :: {:ok, Socket.t} | :error
+  @callback connect(params :: map, Socket.t) :: {:ok, Socket.t} | {:error, integer, [{binary, binary}], String.t} | :error
+  @callback connect(params :: map, Socket.t, connect_info :: map) :: {:ok, Socket.t} | {:error, integer, [{binary, binary}], String.t} | :error
 
   @doc ~S"""
   Identifies the socket connection.
@@ -456,6 +456,7 @@ defmodule Phoenix.Socket do
 
   defp result({:ok, _}), do: :ok
   defp result(:error), do: :error
+  defp result({:error, _, _, _}), do: :error
 
   def __init__({state, %{id: id, endpoint: endpoint} = socket}) do
     _ = id && endpoint.subscribe(id, link: true)
@@ -589,13 +590,16 @@ defmodule Phoenix.Socket do
             :error
         end
 
+      {:error, status_code, headers, body} = err when is_number(status_code) and is_list(headers) and is_binary(body) ->
+        err
+
       :error ->
         :error
 
       invalid ->
         connect_arity = if function_exported?(handler, :connect, 3), do: "connect/3", else: "connect/2"
         Logger.error "#{inspect handler}. #{connect_arity} returned invalid value #{inspect invalid}. " <>
-                     "Expected {:ok, socket} or :error"
+                     "Expected {:ok, socket}, {:error, status_code, headers, body} or :error"
         :error
     end
   end

@@ -31,13 +31,19 @@ defmodule Phoenix.Transports.WebSocket do
 
         case handler.connect(config) do
           {:ok, state} -> {:ok, conn, state}
-          :error -> {:error, Plug.Conn.send_resp(conn, 403, "")}
-          {:error, status, body} -> {:error, Plug.Conn.send_resp(conn, status, body)}
+          :error -> {:error, resp(conn, 403, [], "")}
+          {:error, status, headers, body} -> {:error, resp(conn, status, headers, body)}
         end
     end
   end
 
   def connect(conn, _, _, _) do
-    {:error, Plug.Conn.send_resp(conn, 400, "")}
+    {:error, resp(conn, 400, [], "")}
+  end
+
+  defp resp(conn, status, headers, body) do
+    headers
+    |> Enum.reduce(conn, fn ({k, v}, conn) -> Plug.Conn.put_req_header(conn, k, v) end)
+    |> Plug.Conn.send_resp(status, body)
   end
 end
