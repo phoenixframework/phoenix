@@ -43,7 +43,7 @@ defmodule <%= web_namespace %>.MixProject do
       {:floki, ">= 0.0.0", only: :test},<% end %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.2.0"},<% end %>
+      {:phoenix_live_dashboard, "~> 0.2"},<% end %>
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},<%= if gettext do %>
       {:gettext, "~> 0.11"},<% end %><%= if app_name != web_app_name do %>
