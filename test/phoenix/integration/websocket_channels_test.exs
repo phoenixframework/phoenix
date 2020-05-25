@@ -133,7 +133,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     end
 
     def connect(%{"ratelimit" => "true"}, _socket) do
-      {:error, 429, [{"x-ratelimit-limit", "10"}], "Too many requests"}
+      {:error, :rate_limit}
     end
 
     def connect(params, socket) do
@@ -146,6 +146,11 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     end
   end
 
+  defmodule CustomConnectionErrorHandler do
+    def handle(conn, {:error, :rate_limit}), do: {:error, Plug.Conn.send_resp(conn, 429, "Too many requests")}
+    defdelegate handle(conn, error), to: Phoenix.Transports.WebSocket.ConnectionErrorHandler
+  end
+
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
@@ -156,7 +161,8 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     socket "/ws", UserSocket,
       websocket: [
         check_origin: ["//example.com"],
-        timeout: 200
+        timeout: 200,
+        connection_error_handler: &CustomConnectionErrorHandler.handle/2
       ]
 
     socket "/ws/admin", UserSocket,

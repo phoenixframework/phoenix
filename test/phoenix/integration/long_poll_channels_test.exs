@@ -91,10 +91,6 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       :error
     end
 
-    def connect(%{"ratelimit" => "true"}, _socket) do
-      {:error, 429, [{"x-ratelimit-limit", "10"}], %{"error" => "Too many requests"}}
-    end
-
     def connect(params, socket) do
       unless params["logging"] == "enabled", do: Logger.disable(self())
       {:ok, assign(socket, :user_id, params["user_id"])}
@@ -384,11 +380,6 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     describe "with #{vsn} serializer #{inspect serializer}" do
       test "refuses connects that error with 403 response" do
         resp = poll :get, "/ws", @vsn, %{"reject" => "true"}, %{}
-        assert resp.body["status"] == 403
-      end
-
-      test "refuses connects that error with custom error response" do
-        resp = poll :get, "/ws", @vsn, %{"ratelimit" => "true"}, %{}
         assert resp.body["status"] == 403
       end
 

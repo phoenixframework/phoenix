@@ -457,7 +457,7 @@ defmodule Phoenix.Socket do
 
   defp result({:ok, _}), do: :ok
   defp result(:error), do: :error
-  defp result({:error, _, _, _}), do: :error
+  defp result({:error, _}), do: :error
 
   def __init__({state, %{id: id, endpoint: endpoint} = socket}) do
     _ = id && endpoint.subscribe(id, link: true)
@@ -590,6 +590,9 @@ defmodule Phoenix.Socket do
                            "#{inspect invalid}. Expected nil or a string."
             :error
         end
+
+      {:error, _reason} = err ->
+        err
 
       :error ->
         :error
