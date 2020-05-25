@@ -132,6 +132,7 @@ defmodule Phoenix.MixProject do
       "guides/testing/testing_channels.md",
       "guides/deployment/deployment.md",
       "guides/deployment/releases.md",
+      "guides/deployment/gigalixir.md",
       "guides/deployment/heroku.md",
       "guides/howto/custom_error_pages.md",
       "guides/howto/using_ssl.md"

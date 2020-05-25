@@ -10,7 +10,7 @@ When preparing an application for deployment, there are three main steps:
 
 In this guide, we will learn how to get the production environment running locally. You can use the same techniques in this guide to run your application in production, but depending on your deployment infrastructure, extra steps will be necessary.
 
-As an example of deploying to other infrastructures, we also discuss two different approaches in our guides: using [Elixir's releases with `mix release`](releases.html) and [by using Heroku](heroku.html). The release guide also has a sample Docker file you can use if you prefer to deploy with container technologies.
+As an example of deploying to other infrastructures, we also discuss three different approaches in our guides: using [Elixir's releases](releases.html) with `mix release`, [using Gigalixir](gigalixir.html), and [using Heroku](heroku.html). The release guide also has a sample Docker file you can use if you prefer to deploy with container technologies.
 
 Let's explore those steps above one by one.
 
@@ -112,4 +112,4 @@ $ MIX_ENV=prod mix ecto.migrate
 $ PORT=4001 MIX_ENV=prod mix phx.server
 ```
 
-And that's it. Next you can learn [how to deploy Phoenix with Elixir's releases](releases.html) and [how to deploy to Heroku](heroku.html).
+And that's it. Next you can learn how to deploy [with Elixir's releases](releases.html), [to Gigalixir](gigalixir.html), and [to Heroku](heroku.html).
