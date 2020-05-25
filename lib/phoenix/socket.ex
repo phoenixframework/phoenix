@@ -198,8 +198,7 @@ defmodule Phoenix.Socket do
 
       {:ok, assign(socket, :user_id, verified_user_id)}
 
-  To deny connection, return `:error` or `{:error, reason}`.
-  TBD
+  To deny connection, return `:error`.
 
   See `Phoenix.Token` documentation for examples in
   performing token verification on connect.
