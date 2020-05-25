@@ -528,7 +528,7 @@ defmodule Phoenix.Router do
 
   defp build_pipes(name, pipe_through) do
     plugs = pipe_through |> Enum.reverse |> Enum.map(&{&1, [], true})
-    {conn, body} = Plug.Builder.compile(__ENV__, plugs, init_mode: Phoenix.plug_init_mode())
+    {conn, body} = Plug.Builder.compile(__ENV__, plugs, init_mode: Phoenix.plug_init_mode(), log_on_halt: :debug)
 
     quote do
       defp unquote(name)(unquote(conn)), do: unquote(body)
