@@ -18,7 +18,7 @@ before_script:
 script:
   - MIX_ENV=test mix coveralls.json
   - cd installer && MIX_ENV=test elixir -S mix coveralls.json
-  - cd ../assets && npm install && npm test:coverage
+  - cd ../assets && npm install && npm run test:coverage
   - cd .. && bash <(curl -s https://codecov.io/bash)
 after_script:
   - cd $TRAVIS_BUILD_DIR
