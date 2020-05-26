@@ -13,11 +13,12 @@ env:
     - ELIXIR_ASSERT_TIMEOUT=2000
 before_script:
   - mix deps.get
-  - nvm install 12.16 && nvm use 12.16
+  - cd installer && mix deps.get
+  - cd .. && nvm install 12.16 && nvm use 12.16
 script:
   - MIX_ENV=test mix coveralls.json
   - cd installer && MIX_ENV=test elixir -S mix coveralls.json
-  - cd ../assets && npm install && npm test
+  - cd ../assets && npm install && npm test:coverage
   - cd .. && bash <(curl -s https://codecov.io/bash)
 after_script:
   - cd $TRAVIS_BUILD_DIR
