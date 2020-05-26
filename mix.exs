@@ -15,6 +15,7 @@ defmodule Phoenix.MixProject do
       elixir: @elixir_requirement,
       deps: deps(),
       package: package(),
+      test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [docs: :docs],
       consolidate_protocols: Mix.env() != :test,
       xref: [
@@ -80,7 +81,8 @@ defmodule Phoenix.MixProject do
       {:gettext, "~> 0.15.0", only: :test},
       {:telemetry_poller, "~> 0.4", only: :test},
       {:telemetry_metrics, "~> 0.4", only: [:docs, :test]},
-      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
+      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
+      {:excoveralls, "~> 0.10", only: :test}
     ]
   end
 

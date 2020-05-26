@@ -3,12 +3,16 @@
 /doc
 /tmp
 /node_modules
+/cover
 
 /assets/node_modules
+/assets/coverage
+/assets/.nyc_output
 
 /installer/_build
 /installer/tmp
 /installer/doc
 /installer/deps
+/installer/cover
 
 erl_crash.dump

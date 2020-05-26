@@ -12,6 +12,7 @@ defmodule Phx.New.MixProject do
       version: @version,
       elixir: "~> 1.9",
       deps: deps(),
+      test_coverage: [tool: ExCoveralls],
       package: [
         maintainers: [
           "Chris McCord",
@@ -43,7 +44,10 @@ defmodule Phx.New.MixProject do
 
   def deps do
     [
-      {:ex_doc, "~> 0.19.1", only: :docs}
+      {:ex_doc, "~> 0.19.1", only: :docs},
+
+      # Test dependencies
+      {:excoveralls, "~> 0.10", only: :test}
     ]
   end
 

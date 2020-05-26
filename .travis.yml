@@ -15,9 +15,10 @@ before_script:
   - mix deps.get
   - nvm install 12.16 && nvm use 12.16
 script:
-  - mix test
-  - cd installer && elixir -S mix test
+  - MIX_ENV=test mix coveralls.json
+  - cd installer && MIX_ENV=test elixir -S mix coveralls.json
   - cd ../assets && npm install && npm test
+  - cd .. && bash <(curl -s https://codecov.io/bash)
 after_script:
   - cd $TRAVIS_BUILD_DIR
   - MIX_ENV=docs mix inch.report
