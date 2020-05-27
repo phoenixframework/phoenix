@@ -139,6 +139,26 @@ defmodule Phoenix.Integration.EndpointTest do
     end
   end
 
+  test ":exception inspect totally fails" do
+    test = self()
+    {:ok, _} = ProdEndpoint.start_link()
+
+    :telemetry.attach(
+      :plug_adapter_exception,
+      [:plug_adapter, :call, :exception],
+      fn event, measurements, metadata, :none ->
+        # IO.inspect {measurements, metadata}
+        send(test, {:event, event, measurements, metadata})
+      end,
+      :none
+    )
+
+    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})
+    assert resp.status == 500
+
+    assert_receive {:event, [:plug_adapter, :call, :exception], %{duration: _}, _}
+  end
+
   test "adapters starts on configured port and serves requests and stops for prod" do
     attach_telemetry()
 
