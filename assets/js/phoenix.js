@@ -511,7 +511,7 @@ export class Channel {
    * @example
    * channel.push("event")
    *   .receive("ok", payload => { console.log("phoenix replied:", payload) })
-   *   .receive("error", err => { console.log("phoenix errored", err) })
+   *   .receive("error", err => console.log("phoenix errored", err))
    *   .receive("timeout", () => console.log("timed out pushing"))
    * @param {string} event
    * @param {Object} payload
