@@ -144,6 +144,7 @@ defmodule Phoenix.MixProject do
 
       "guides/deployment/deployment.md",
       "guides/deployment/releases.md",
+      "guides/deployment/gigalixir.md",
       "guides/deployment/heroku.md",
 
       "guides/howto/custom_error_pages.md",
