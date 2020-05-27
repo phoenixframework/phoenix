@@ -14,7 +14,7 @@ This gave us a number of modules for free, including a PostController and the as
 
 ## HTML controller tests
 
-If you open up "test/hello_web/controllers/post_controller.exs", you will find the following:
+If you open up "test/hello_web/controllers/post_controller_test.exs", you will find the following:
 
 ```elixir
 defmodule HelloWeb.PostControllerTest do
