@@ -147,7 +147,7 @@ defmodule Phoenix.Integration.EndpointTest do
       :plug_adapter_exception,
       [:plug_adapter, :call, :exception],
       fn event, measurements, metadata, :none ->
-        # IO.inspect {measurements, metadata}
+        IO.inspect {measurements, metadata}
         send(test, {:event, event, measurements, metadata})
       end,
       :none
