@@ -201,10 +201,3 @@ For custom domains, scaling, jobs and other features, see the [Gigalixir Documen
 See [Troubleshooting](https://gigalixir.readthedocs.io/en/latest/main.html#troubleshooting)
 
 Also, don't hesitate to email [help@gigalixir.com](mailto:help@gigalixir.com) or [request an invitation](https://elixir-slackin.herokuapp.com/) and join the #gigalixir channel on [Slack](https://elixir-lang.slack.com).
-
-
-
-
-
-
-
