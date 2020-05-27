@@ -203,8 +203,8 @@ defmodule Phoenix.Socket do
   See `Phoenix.Token` documentation for examples in
   performing token verification on connect.
   """
-  @callback connect(params :: map, Socket.t) :: {:ok, Socket.t} | {:error, integer, [{binary, binary}], String.t} | :error
-  @callback connect(params :: map, Socket.t, connect_info :: map) :: {:ok, Socket.t} | {:error, integer, [{binary, binary}], String.t} | :error
+  @callback connect(params :: map, Socket.t) :: {:ok, Socket.t} | {:error, term}
+  @callback connect(params :: map, Socket.t, connect_info :: map) :: {:ok, Socket.t} | {:error, term}
 
   @doc ~S"""
   Identifies the socket connection.
@@ -450,12 +450,11 @@ defmodule Phoenix.Socket do
         result
 
       :error ->
-        :error
+        {:error, :undefined}
     end
   end
 
   defp result({:ok, _}), do: :ok
-  defp result(:error), do: :error
   defp result({:error, _}), do: :error
 
   def __init__({state, %{id: id, endpoint: endpoint} = socket}) do
@@ -587,20 +586,20 @@ defmodule Phoenix.Socket do
           invalid ->
             Logger.error "#{inspect handler}.id/1 returned invalid identifier " <>
                            "#{inspect invalid}. Expected nil or a string."
-            :error
+            {:error, :undefined}
         end
 
       {:error, _reason} = err ->
         err
 
       :error ->
-        :error
+        {:error, :undefined}
 
       invalid ->
         connect_arity = if function_exported?(handler, :connect, 3), do: "connect/3", else: "connect/2"
         Logger.error "#{inspect handler}. #{connect_arity} returned invalid value #{inspect invalid}. " <>
                      "Expected {:ok, socket} or :error"
-        :error
+        {:error, :undefined}
     end
   end
 

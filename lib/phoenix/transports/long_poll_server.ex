@@ -36,8 +36,8 @@ defmodule Phoenix.Transports.LongPoll.Server do
         schedule_inactive_shutdown(state.window_ms)
         {:ok, state}
 
-    :error ->
-      :ignore
+      {:error, :undefined} ->
+        :ignore
     end
   end
 

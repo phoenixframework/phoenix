@@ -2,20 +2,16 @@ defmodule Phoenix.Transports.WebSocket do
   @moduledoc false
   alias Phoenix.Socket.{V1, V2, Transport}
 
-  defmodule ConnectionErrorHandler do
-    def handle(conn, {:error, :wrong_method}) do
-      {:error, Plug.Conn.send_resp(conn, 400, "")}
-    end
-    def handle(conn, _error) do
-      {:error, Plug.Conn.send_resp(conn, 403, "")}
-    end
+  defmodule ErrorHandler do
+    def handle(conn, :wrong_method), do: Plug.Conn.send_resp(conn, 400, "")
+    def handle(conn, _reason), do: Plug.Conn.send_resp(conn, 403, "")
   end
 
   def default_config() do
     [
       path: "/websocket",
       serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
-      connection_error_handler: &__MODULE__.ConnectionErrorHandler.handle/2,
+      error_handler: {ErrorHandler, :handle, []},
       timeout: 60_000,
       transport_log: false,
       compress: false
@@ -41,10 +37,15 @@ defmodule Phoenix.Transports.WebSocket do
 
         case handler.connect(config) do
           {:ok, state} -> {:ok, conn, state}
-          err -> opts[:connection_error_handler].(conn, err)
+          {:error, reason} ->
+            {m, f, args} = opts[:error_handler]
+            {:error, apply(m, f, [conn, reason | args])}
         end
     end
   end
 
-  def connect(conn, _, _, opts), do: opts[:connection_error_handler].(conn, {:error, :wrong_method})
+  def connect(conn, _, _, opts) do
+    {m, f, args} = opts[:error_handler]
+    {:error, apply(m, f, [conn, :wrong_method | args])}
+  end
 end
