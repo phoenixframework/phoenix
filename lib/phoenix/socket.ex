@@ -203,8 +203,8 @@ defmodule Phoenix.Socket do
   See `Phoenix.Token` documentation for examples in
   performing token verification on connect.
   """
-  @callback connect(params :: map, Socket.t) :: {:ok, Socket.t} | {:error, term}
-  @callback connect(params :: map, Socket.t, connect_info :: map) :: {:ok, Socket.t} | {:error, term}
+  @callback connect(params :: map, Socket.t) :: {:ok, Socket.t} | {:error, term} | :error
+  @callback connect(params :: map, Socket.t, connect_info :: map) :: {:ok, Socket.t} | {:error, term} | :error
 
   @doc ~S"""
   Identifies the socket connection.
