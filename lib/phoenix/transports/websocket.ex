@@ -2,16 +2,11 @@ defmodule Phoenix.Transports.WebSocket do
   @moduledoc false
   alias Phoenix.Socket.{V1, V2, Transport}
 
-  defmodule ErrorHandler do
-    def handle(conn, :wrong_method), do: Plug.Conn.send_resp(conn, 400, "")
-    def handle(conn, _reason), do: Plug.Conn.send_resp(conn, 403, "")
-  end
-
   def default_config() do
     [
       path: "/websocket",
       serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
-      error_handler: {ErrorHandler, :handle, []},
+      error_handler: {__MODULE__, :handle_error, []},
       timeout: 60_000,
       transport_log: false,
       compress: false
@@ -48,4 +43,7 @@ defmodule Phoenix.Transports.WebSocket do
     {m, f, args} = opts[:error_handler]
     {:error, apply(m, f, [conn, :wrong_method | args])}
   end
+
+  def handle_error(conn, :wrong_method), do: Plug.Conn.send_resp(conn, 400, "")
+  def handle_error(conn, _reason), do: Plug.Conn.send_resp(conn, 403, "")
 end
