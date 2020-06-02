@@ -83,7 +83,7 @@ $ gigalixir account
 
 ## Creating and setting up our Gigalixir application
 
-There are three different ways to deploy a Phoenix app on Gigalixir: with mix, with Elixir's releases, or with Distillery. In this guide, we'll be using Mix because it is the easiest to get up and running, but you won't be able to connect a remote observer or hot upgrade. For more information, see [Mix vs Distillery vs Elixir Releases](https://gigalixir.readthedocs.io/en/latest/main.html#deploy-types). If you want to deploy with another method, follow the [Getting Started Guide](https://gigalixir.readthedocs.io/en/latest/main.html#getting-started-guide).
+There are three different ways to deploy a Phoenix app on Gigalixir: with mix, with Elixir's releases, or with Distillery. In this guide, we'll be using Mix because it is the easiest to get up and running, but you won't be able to connect a remote observer or hot upgrade. For more information, see [Mix vs Distillery vs Elixir Releases](https://gigalixir.readthedocs.io/en/latest/modify-app/index.html#mix-vs-distillery-vs-elixir-releases). If you want to deploy with another method, follow the [Getting Started Guide](https://gigalixir.readthedocs.io/en/latest/getting-started-guide.html).
 
 ### Creating a Gigalixir application
 
@@ -188,16 +188,16 @@ $ gigalixir account:ssh_keys:add "$(cat ~/.ssh/id_rsa.pub)"
 $ gigalixir ps:remote_console
 ```
 
-To open a remote observer, see [Remote Observer](https://gigalixir.readthedocs.io/en/latest/main.html#observer)
+To open a remote observer, see [Remote Observer](https://gigalixir.readthedocs.io/en/latest/runtime.html#how-to-launch-a-remote-observer)
 
-To set up clustering, see [Clustering Nodes](https://gigalixir.readthedocs.io/en/latest/main.html#clustering)
+To set up clustering, see [Clustering Nodes](https://gigalixir.readthedocs.io/en/latest/cluster.html)
 
-To hot upgrade, see [Hot Upgrades](https://gigalixir.readthedocs.io/en/latest/main.html#hot-upgrade)
+To hot upgrade, see [Hot Upgrades](https://gigalixir.readthedocs.io/en/latest/deploy.html#how-to-hot-upgrade-an-app)
 
 For custom domains, scaling, jobs and other features, see the [Gigalixir Documentation](https://gigalixir.readthedocs.io/)
 
 ## Troubleshooting
 
-See [Troubleshooting](https://gigalixir.readthedocs.io/en/latest/main.html#troubleshooting)
+See [Troubleshooting](https://gigalixir.readthedocs.io/en/latest/troubleshooting.html)
 
 Also, don't hesitate to email [help@gigalixir.com](mailto:help@gigalixir.com) or [request an invitation](https://elixir-slackin.herokuapp.com/) and join the #gigalixir channel on [Slack](https://elixir-lang.slack.com).
