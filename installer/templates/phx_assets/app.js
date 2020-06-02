@@ -24,7 +24,7 @@ let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToke
 window.addEventListener("phx:page-loading-start", info => NProgress.start())
 window.addEventListener("phx:page-loading-stop", info => NProgress.done())
 
-// Connect if there are any LiveViews on the page
+// connect if there are any LiveViews on the page
 liveSocket.connect()
 
 // Expose liveSocket on window for web console debug logs and latency simulation:
