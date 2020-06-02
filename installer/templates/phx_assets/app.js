@@ -27,7 +27,7 @@ window.addEventListener("phx:page-loading-stop", info => NProgress.done())
 // connect if there are any LiveViews on the page
 liveSocket.connect()
 
-// Expose liveSocket on window for web console debug logs and latency simulation:
+// expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()
 // >> liveSocket.enableLatencySim(1000)
 // Call disableLatencySim() to disable:
