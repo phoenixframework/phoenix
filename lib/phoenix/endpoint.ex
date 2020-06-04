@@ -823,6 +823,14 @@ defmodule Phoenix.Endpoint do
     * `:error_handler` - custom error handler for connection errors,
       MFA tuple called with a Plug.Conn and an error reason, returning a Plug.Conn
 
+      For example:
+
+          error_handler: {MySocket, :handle_error, []}
+
+      And then in `MySocket`:
+
+          def handle_error(conn, :rate_limit), do: Plug.Conn.send_resp(conn, 429, "Too many requests")
+
   ## Longpoll configuration
 
   The following configuration applies only to `:longpoll`:
