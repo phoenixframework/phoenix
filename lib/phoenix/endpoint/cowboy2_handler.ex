@@ -8,7 +8,6 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
 
   @connection Plug.Cowboy.Conn
   @already_sent {:plug_conn, :sent}
-  @adapter :phoenix_cowboy
 
   # Note we keep the websocket state as [handler | state]
   # to avoid conflicts with {endpoint, opts}.
@@ -17,14 +16,6 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
   end
 
   defp init(conn, endpoint, opts, retry?) do
-    start = System.monotonic_time()
-
-    :telemetry.execute(
-      [:plug_adapter, :call, :start],
-      %{system_time: System.system_time()},
-      %{adapter: @adapter, conn: conn, plug: endpoint}
-    )
-
     try do
       case endpoint.__handler__(conn, opts) do
         {:websocket, conn, handler, opts} ->
@@ -40,54 +31,22 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
                 end)
                 |> Map.new()
 
-              :telemetry.execute(
-                [:plug_adapter, :call, :stop],
-                %{duration: System.monotonic_time() - start},
-                %{adapter: @adapter, conn: conn, plug: endpoint}
-              )
-
               {:cowboy_websocket, copy_resp_headers(conn, req), [handler | state], cowboy_opts}
 
             {:error, %Plug.Conn{adapter: {@connection, req}} = conn} ->
-              :telemetry.execute(
-                [:plug_adapter, :call, :stop],
-                %{duration: System.monotonic_time() - start},
-                %{adapter: @adapter, conn: conn, plug: endpoint}
-              )
-
               {:ok, copy_resp_headers(conn, req), {handler, opts}}
           end
 
         {:plug, conn, handler, opts} ->
           %{adapter: {@connection, req}} =
-            conn =
-              conn
-              |> handler.call(opts)
-              |> maybe_send(handler)
-
-          :telemetry.execute(
-            [:plug_adapter, :call, :stop],
-            %{duration: System.monotonic_time() - start},
-            %{adapter: @adapter, conn: conn, plug: endpoint}
-          )
+            conn
+            |> handler.call(opts)
+            |> maybe_send(handler)
 
           {:ok, req, {handler, opts}}
       end
     catch
       kind, reason ->
-        :telemetry.execute(
-          [:plug_adapter, :call, :exception],
-          %{duration: System.monotonic_time() - start},
-          %{
-            kind: kind,
-            reason: reason,
-            stacktrace: __STACKTRACE__,
-            adapter: @adapter,
-            conn: conn,
-            plug: endpoint
-          }
-        )
-
         case __STACKTRACE__ do
           # Maybe the handler is not available because the code is being recompiled.
           # Sync with the code reloader and retry once.
