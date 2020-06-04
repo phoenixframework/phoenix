@@ -38,6 +38,9 @@ defmodule Phoenix.Transports.LongPoll.Server do
 
       :error ->
         :ignore
+
+      {:error, _reason} ->
+        :ignore
     end
   end
 
