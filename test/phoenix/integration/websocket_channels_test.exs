@@ -146,7 +146,6 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     end
 
     def handle_error(conn, :rate_limit), do: Plug.Conn.send_resp(conn, 429, "Too many requests")
-    defdelegate handle_error(conn, error), to: Phoenix.Transports.WebSocket
   end
 
   defmodule Endpoint do
