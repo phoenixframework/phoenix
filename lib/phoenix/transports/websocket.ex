@@ -32,6 +32,7 @@ defmodule Phoenix.Transports.WebSocket do
 
         case handler.connect(config) do
           {:ok, state} -> {:ok, conn, state}
+          :error -> {:error, Plug.Conn.send_resp(conn, 403, "")}
           {:error, reason} ->
             {m, f, args} = opts[:error_handler]
             {:error, apply(m, f, [conn, reason | args])}
@@ -39,11 +40,9 @@ defmodule Phoenix.Transports.WebSocket do
     end
   end
 
-  def connect(conn, _, _, opts) do
-    {m, f, args} = opts[:error_handler]
-    {:error, apply(m, f, [conn, :wrong_method | args])}
+  def connect(conn, _, _, _) do
+    {:error, Plug.Conn.send_resp(conn, 400, "")}
   end
 
-  def handle_error(conn, :wrong_method), do: Plug.Conn.send_resp(conn, 400, "")
   def handle_error(conn, _reason), do: Plug.Conn.send_resp(conn, 403, "")
 end

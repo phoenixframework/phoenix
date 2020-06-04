@@ -320,7 +320,7 @@ defmodule Phoenix.Test.ChannelTest do
   end
 
   test "connects and joins topics directly" do
-    {:error, :undefined} = connect(UserSocket, %{"reject" => true})
+    :error = connect(UserSocket, %{"reject" => true})
     {:ok, socket} = connect(UserSocket, %{})
     socket = subscribe_and_join!(socket, "foo:ok")
     push(socket, "broadcast", %{"foo" => "bar"})
@@ -349,7 +349,7 @@ defmodule Phoenix.Test.ChannelTest do
   end
 
   test "connects with atom parameter keys as strings" do
-    {:error, :undefined} = connect(UserSocket, %{reject: true})
+    :error = connect(UserSocket, %{reject: true})
   end
 
   ## handle_out
