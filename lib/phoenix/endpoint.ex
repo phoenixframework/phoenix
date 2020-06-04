@@ -820,6 +820,9 @@ defmodule Phoenix.Endpoint do
 
           subprotocols: ["sip", "mqtt"]
 
+    * `:error_handler` - custom error handler for connection errors,
+      MFA tuple called with a Plug.Conn and an error reason, returning a Plug.Conn
+
   ## Longpoll configuration
 
   The following configuration applies only to `:longpoll`:
