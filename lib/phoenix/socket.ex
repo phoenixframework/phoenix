@@ -599,7 +599,7 @@ defmodule Phoenix.Socket do
       invalid ->
         connect_arity = if function_exported?(handler, :connect, 3), do: "connect/3", else: "connect/2"
         Logger.error "#{inspect handler}. #{connect_arity} returned invalid value #{inspect invalid}. " <>
-                     "Expected {:ok, socket} or :error"
+                     "Expected {:ok, socket}, {:error, reason} or :error"
         :error
     end
   end
