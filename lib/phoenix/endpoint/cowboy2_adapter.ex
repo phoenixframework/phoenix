@@ -15,9 +15,10 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
       to `false`
 
     * `:drainer` - a drainer process that triggers when your application is
-      shutting to wait for any on-going request to finish. It accepts all
+      shutting down to wait for any on-going request to finish. It accepts all
       options as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.html).
-      Defaults to `[]` and can be disabled by setting it to false.
+      Defaults to `[]`, which will start a drainer process for each configured endpoint,
+      but can be disabled by setting it to `false`.
 
   ## Custom dispatch options
 
