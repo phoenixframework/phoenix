@@ -820,14 +820,15 @@ defmodule Phoenix.Endpoint do
 
           subprotocols: ["sip", "mqtt"]
 
-    * `:error_handler` - custom error handler for connection errors,
-      MFA tuple called with a Plug.Conn and an error reason, returning a Plug.Conn
-
-      For example:
+    * `:error_handler` - custom error handler for connection errors.
+      If `c:Phoenix.Socket.connect/3` returns an `{:error, reason}` tuple,
+      the error handler will be called with the error reason. For WebSockets,
+      the error handler must be a MFA tuple that receives a `Plug.Conn`, the
+      error reason, and returns a `Plug.Conn` with a response. For example:
 
           error_handler: {MySocket, :handle_error, []}
 
-      And then in `MySocket`:
+      and a `{:error, :rate_limit}` return may be handled on `MySocket` as:
 
           def handle_error(conn, :rate_limit), do: Plug.Conn.send_resp(conn, 429, "Too many requests")
 
