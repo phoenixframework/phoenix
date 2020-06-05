@@ -100,7 +100,7 @@ defmodule Phoenix.Transports.LongPoll do
       "phx:lp:"
       <> Base.encode64(:crypto.strong_rand_bytes(16))
       <> (System.system_time(:millisecond) |> Integer.to_string)
-      
+
     keys = Keyword.get(opts, :connect_info, [])
     connect_info = Transport.connect_info(conn, endpoint, keys)
     arg = {endpoint, handler, opts, conn.params, priv_topic, connect_info}
