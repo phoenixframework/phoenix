@@ -88,7 +88,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     channel "room:*", RoomChannel
 
     def connect(%{"reject" => "true"}, _socket) do
-      :error_logger_tty_h
+      :error
     end
 
     def connect(%{"custom_error" => "true"}, _socket) do
