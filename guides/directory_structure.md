@@ -61,7 +61,7 @@ children = [
 ]
 ```
 
-If it is your first time with Phoenix, you don't need to worry about the details right now. For now, suffices to say our application starts a database repository, a pubsub system for sharing messages across processes and nodes, and the application endpoint, which effectively serves HTTP requests. These services are started in the order they are defined and, whenever shutting down your application, they are stopped in the reverse order.
+If it is your first time with Phoenix, you don't need to worry about the details right now. For now, suffice it to say our application starts a database repository, a pubsub system for sharing messages across processes and nodes, and the application endpoint, which effectively serves HTTP requests. These services are started in the order they are defined and, whenever shutting down your application, they are stopped in the reverse order.
 
 You can learn more about applications in [Elixir's official docs for Application](https://hexdocs.pm/elixir/Application.html).
 
