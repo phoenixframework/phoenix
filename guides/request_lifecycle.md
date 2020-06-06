@@ -147,7 +147,7 @@ which injects our template into the layout before the HTML is sent off to the br
 
 As we built our first page, we could start to understand how the request life-cycle is put together. Now let's take a more holistic look at it.
 
-All HTTP requests start in our application endpoint. You can find it as a module named `HelloWeb.Endpoint` in `lib/hello_web/endpoint.ex`. Once you open up the endpoint file, you will see that, similar to the router, the endpoint has many calls to `plug`. `Plug` is a library and specification for stitching web applications together. It is an essential part of how Phoenix handle requests and we will discuss it in detail [in the Plug guide](plug.html) coming next.
+All HTTP requests start in our application endpoint. You can find it as a module named `HelloWeb.Endpoint` in `lib/hello_web/endpoint.ex`. Once you open up the endpoint file, you will see that, similar to the router, the endpoint has many calls to `plug`. `Plug` is a library and specification for stitching web applications together. It is an essential part of how Phoenix handles requests and we will discuss it in detail [in the Plug guide](plug.html) coming next.
 
 For now, it suffices to say that each Plug defines a slice of request processing. In the endpoint you will find a skeleton roughly like this:
 
