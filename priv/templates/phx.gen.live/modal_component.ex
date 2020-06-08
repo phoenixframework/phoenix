@@ -9,6 +9,9 @@ defmodule <%= inspect context.web_module %>.ModalComponent do
       phx-window-keydown="close"
       phx-key="escape"
       phx-target="#<%%= @id %>"
+      phx-hook="TrapFokus"
+      role="dialog"
+      aria-modal="true"
       phx-page-loading>
 
       <div class="phx-modal-content">
