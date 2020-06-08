@@ -540,7 +540,7 @@ export class Channel {
    *
    * Triggers onClose() hooks
    *
-   * To receive leave acknowledgements, use the a `receive`
+   * To receive leave acknowledgements, use the `receive`
    * hook to bind to the server ack, ie:
    *
    * @example
