@@ -147,6 +147,10 @@ took to get the response:
 :telemetry.execute([:phoenix, :endpoint, :stop], %{duration: duration}, %{conn: conn})
 ```
 
+### Phoenix Telemetry Events
+
+A full list of all Phoenix telemetry events can be found in `Phoenix.Logger`
+
 ## Metrics
 
 > Metrics are aggregations of Telemetry events with a
