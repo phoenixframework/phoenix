@@ -17,8 +17,36 @@ import {Socket} from "phoenix"
 import NProgress from "nprogress"
 import {LiveSocket} from "phoenix_live_view"
 
+let Hooks = {}
+function handle_modal_keydown(e) {
+  if (e.key === 'Tab') {
+    // trap focus
+    const nodes = this.el.querySelectorAll('*');
+    const tabbable = Array.from(nodes).filter(n => n.tabIndex >= 0);
+
+    let index = tabbable.indexOf(document.activeElement);
+    if (index === -1 && e.shiftKey) index = 0;
+
+    index += tabbable.length + (e.shiftKey ? -1 : 1);
+    index %= tabbable.length;
+
+    tabbable[index].focus();
+    e.preventDefault();
+  }
+}
+Hooks.TrapFokus = {
+  mounted() {
+    this.previously_focused = typeof document !== 'undefined' && document.activeElement;
+    this.handler = handle_modal_keydown.bind(this)
+    window.addEventListener("keydown", this.handler)
+  },
+  beforeDestroy() {
+    window.removeEventListener("keydown", this.handler)
+  }
+}
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
 
 // Show progress bar on live navigation and form submits
 window.addEventListener("phx:page-loading-start", info => NProgress.start())
