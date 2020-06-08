@@ -60,9 +60,9 @@ defmodule Phoenix.Socket.Transport do
           %{id: Task, start: {Task, :start_link, [fn -> :ok end]}, restart: :transient}
         end
 
-        def connect(map) do
+        def connect(state) do
           # Callback to retrieve relevant data from the connection.
-          # The map contains options, params, transport and endpoint keys.
+          # The `state` map contains options, params, transport and endpoint keys.
           {:ok, state}
         end
 
