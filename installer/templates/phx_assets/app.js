@@ -21,26 +21,27 @@ let Hooks = {}
 function handle_modal_keydown(e) {
   if (e.key === 'Tab') {
     // trap focus
-    const nodes = this.el.querySelectorAll('*');
-    const tabbable = Array.from(nodes).filter(n => n.tabIndex >= 0);
+    const nodes = this.el.querySelectorAll('*')
+    const tabbable = Array.from(nodes).filter(n => n.tabIndex >= 0)
 
-    let index = tabbable.indexOf(document.activeElement);
-    if (index === -1 && e.shiftKey) index = 0;
+    let index = tabbable.indexOf(document.activeElement)
+    if (index === -1 && e.shiftKey) index = 0
 
-    index += tabbable.length + (e.shiftKey ? -1 : 1);
-    index %= tabbable.length;
+    index += tabbable.length + (e.shiftKey ? -1 : 1)
+    index %= tabbable.length
 
-    tabbable[index].focus();
-    e.preventDefault();
+    tabbable[index].focus()
+    e.preventDefault()
   }
 }
 Hooks.TrapFokus = {
   mounted() {
-    this.previously_focused = typeof document !== 'undefined' && document.activeElement;
+    this.previously_focused = typeof document !== 'undefined' && document.activeElement
     this.handler = handle_modal_keydown.bind(this)
     window.addEventListener("keydown", this.handler)
   },
   beforeDestroy() {
+    this.previously_focused.focus()
     window.removeEventListener("keydown", this.handler)
   }
 }
