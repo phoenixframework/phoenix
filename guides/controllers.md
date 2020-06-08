@@ -194,7 +194,7 @@ def index(conn, _params) do
 end
 ```
 
-After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or css styling at all.
+After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or CSS styling at all.
 
 Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `app.html.eex` to a new file `admin.html.eex` in the same directory `lib/hello_web/templates/layout`. Then let's remove the line in `admin.html.eex` that displays the logo.
 
