@@ -24,7 +24,7 @@
 <% end %>
         <td>
           <span><%%= live_redirect "Show", to: Routes.<%= schema.route_helper %>_show_path(@socket, :show, <%= schema.singular %>) %></span>
-          <span><%%= live_patch "Edit", to: Routes.<%= schema.route_helper %>_index_path(@socket, :edit, <%= schema.singular %>) %></span>
+          <span><%%= live_patch "Edit", to: Routes.<%= schema.route_helper %>_index_path(@socket, :edit, <%= schema.singular %>), aria_haspopup: "dialog" %></span>
           <span><%%= link "Delete", to: "#", phx_click: "delete", phx_value_id: <%= schema.singular %>.id, data: [confirm: "Are you sure?"] %></span>
         </td>
       </tr>
@@ -32,4 +32,4 @@
   </tbody>
 </table>
 
-<span><%%= live_patch "New <%= schema.human_singular %>", to: Routes.<%= schema.route_helper %>_index_path(@socket, :new) %></span>
+<span><%%= live_patch "New <%= schema.human_singular %>", to: Routes.<%= schema.route_helper %>_index_path(@socket, :new), aria_haspopup: "dialog" %></span>
