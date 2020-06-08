@@ -30,7 +30,7 @@ defmodule Phoenix.Logger do
     * `[:phoenix, :router_dispatch, :exception]` - dispatched by `Phoenix.Router`
       after exceptions on dispatching a route
       * Measurement: `%{duration: native_time}`
-      * Metadata: `%{kind: :throw | :error | :exit, reason: term(), stacktrace: Exception.stacktrace()}`
+      * Metadata: `%{kind: :throw | :error | :exit, error: term(), stacktrace: Exception.stacktrace()}`
       * Disable logging: This event is not logged
 
     * `[:phoenix, :router_dispatch, :stop]` - dispatched by `Phoenix.Router`
