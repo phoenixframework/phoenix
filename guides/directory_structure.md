@@ -28,7 +28,7 @@ We will go over those directories one by one:
 
   * `deps` - a directory with all of our Mix dependencies. You can find all dependencies listed in the `mix.exs` file, inside the `def deps do` function definition. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to download all deps from scratch
 
-  * `lib` - a directory that holds your application source code. This directory is broken into two subdirectories, `lib/hello` and `lib/hello_web`. The `lib/hello` directory will be responsible to host all of your business logic and business domain. It typically interacts directly with the database - it is the "Model" in Model-View-Controller (MVC) architecture. `lib/hello_web` is responsible for exposing your business domain to the world, in this case, though a web application. It holds both the View and Controller from MVC. We will discuss the contents of these directories with more detail in the next sections
+  * `lib` - a directory that holds your application source code. This directory is broken into two subdirectories, `lib/hello` and `lib/hello_web`. The `lib/hello` directory will be responsible to host all of your business logic and business domain. It typically interacts directly with the database - it is the "Model" in Model-View-Controller (MVC) architecture. `lib/hello_web` is responsible for exposing your business domain to the world, in this case, through a web application. It holds both the View and Controller from MVC. We will discuss the contents of these directories with more detail in the next sections
 
   * `priv` - a directory that keeps all assets that are necessary in production but are not directly part of your source code. You typically keep database scripts, translation files, and more in here
 
@@ -61,7 +61,7 @@ children = [
 ]
 ```
 
-If it is your first time with Phoenix, you don't need to worry about the details right now. For now, suffices to say our application starts a database repository, a pubsub system for sharing messages across processes and nodes, and the application endpoint, which effectively serves HTTP requests. These services are started in the order they are defined and, whenever shutting down your application, they are stopped in the reverse order.
+If it is your first time with Phoenix, you don't need to worry about the details right now. For now, suffice it to say our application starts a database repository, a pubsub system for sharing messages across processes and nodes, and the application endpoint, which effectively serves HTTP requests. These services are started in the order they are defined and, whenever shutting down your application, they are stopped in the reverse order.
 
 You can learn more about applications in [Elixir's official docs for Application](https://hexdocs.pm/elixir/Application.html).
 
