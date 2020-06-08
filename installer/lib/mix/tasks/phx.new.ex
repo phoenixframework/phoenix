@@ -181,7 +181,7 @@ defmodule Mix.Tasks.Phx.New do
         If you don't plan to define an Ecto app, you must explicitly start
         the PubSub in your supervision tree as:
 
-            {Phoenix.PubSub, name: #{inspect(project.app_mod)}.PubSub}}
+            {Phoenix.PubSub, name: #{inspect(project.app_mod)}.PubSub}
         """)
       end
 
