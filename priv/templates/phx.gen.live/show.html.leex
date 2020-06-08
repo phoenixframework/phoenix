@@ -18,5 +18,5 @@
 <% end %>
 </ul>
 
-<span><%%= live_patch "Edit", to: Routes.<%= schema.route_helper %>_show_path(@socket, :edit, @<%= schema.singular %>), class: "button" %></span>
+<span><%%= live_patch "Edit", to: Routes.<%= schema.route_helper %>_show_path(@socket, :edit, @<%= schema.singular %>), class: "button", aria_haspopup: "dialog" %></span>
 <span><%%= live_redirect "Back", to: Routes.<%= schema.route_helper %>_index_path(@socket, :index) %></span>
