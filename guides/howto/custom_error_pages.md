@@ -25,7 +25,7 @@ defmodule HelloWeb.ErrorView do
 end
 ```
 
-Before we dive into this, let's see what the rendered `404 not found` message looks like in a browser. In the development environment, Phoenix will debug errors by default, showing us a very informative debugging page. What we want here, however, is to see what page the application would serve in production. In order to do that we need to set `debug_errors: false` in `config/dev.exs`.
+Before we dive into this, let's see what the rendered `404 Not Found` message looks like in a browser. In the development environment, Phoenix will debug errors by default, showing us a very informative debugging page. What we want here, however, is to see what page the application would serve in production. In order to do that we need to set `debug_errors: false` in `config/dev.exs`.
 
 ```elixir
 use Mix.Config
@@ -51,7 +51,7 @@ end
 
 Great, so we have this `template_not_found/2` function that takes a template and an `assigns` map, which we ignore. The `template_not_found/2` is invoked whenever a Phoenix.View attempts to render a template but no template is found.
 
-In order words, to provide custom error pages, we could simply define a the proper `render/2` function clause in `HelloWeb.ErrorView`.
+In other words, to provide custom error pages, we could simply define a proper `render/2` function clause in `HelloWeb.ErrorView`.
 
 ```elixir
 def render("404.html", _assigns) do
@@ -61,7 +61,7 @@ end
 
 But we can do even better.
 
-Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web/templates/error` directory. Let's create one now. Inside our new directory, let's add a template, `404.html.eex` and give it some markup - a mixture of our application layout and a new `div` with our message to the user.
+Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web/templates/error` directory. Let's create one now. Inside our new directory, let's add a template, `404.html.eex` and give it some markup – a mixture of our application layout and a new `div` with our message to the user.
 
 ```html
 <!DOCTYPE html>
@@ -120,7 +120,7 @@ You can raise your new exception like this:
 raise MyApp.SomethingNotFoundError, "oops"
 ```
 
-By default, Plug and Phoenix will treat all exceptions as 500 errors. However, Plug provides a protocol called `Plug.Exception` where we are able to customize the status and add actions that exception structs can returns on the debug error page.
+By default, Plug and Phoenix will treat all exceptions as 500 errors. However, Plug provides a protocol called `Plug.Exception` where we are able to customize the status and add actions that exception structs can return on the debug error page.
 
 If we wanted to supply a status of 404 for an `MyApp.SomethingNotFoundError`, we could do it by defining an implementation for the `Plug.Exception` protocol like this:
 
@@ -139,13 +139,13 @@ defmodule MyApp.SomethingNotFoundError do
 end
 ```
 
-However, implementing the `Plug.Exception` protocol by hand can be convenient in certain occasions, such as when providing Actionable ERrors.
+However, implementing the `Plug.Exception` protocol by hand can be convenient in certain occasions, such as when providing Actionable Errors.
 
 ## Actionable Errors
 
-Exception actions are functions that can be triggered by the error page, it is basically a list of maps defining a `label` and a `handler` to be executed.
+Exception actions are functions that can be triggered by the error page, and they're basically a list of maps defining a `label` and a `handler` to be executed.
 
-It is rendered in the error page as a collection of buttons and follows the format of: `[%{label: String.t(), handler: {module(), function :: atom(), args :: []}}]`.
+They are rendered in the error page as a collection of buttons and follow the format of: `[%{label: String.t(), handler: {module(), function :: atom(), args :: []}}]`.
 
 If we wanted to return some actions for an `MyApp.SomethingNotFoundError` we would implement `Plug.Exception` like this:
 
