@@ -20,6 +20,7 @@
     "css-loader": "^3.4.2",
     "sass-loader": "^8.0.2",
     "node-sass": "^4.13.1",
+    "hard-source-webpack-plugin": "^0.13.1",
     "mini-css-extract-plugin": "^0.9.0",
     "optimize-css-assets-webpack-plugin": "^5.0.1",
     "terser-webpack-plugin": "^2.3.2",
