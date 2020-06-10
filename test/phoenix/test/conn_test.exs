@@ -1,6 +1,19 @@
 defmodule Phoenix.Test.ConnTest.CatchAll do
+  defmodule ConnError do
+    defexception [message: "hello", plug_status: 500]
+  end
+
   def init(opts), do: opts
-  def call(conn, :stat), do: conn.params["action"].(conn)
+
+  def call(conn, :stat) do
+    case conn.params["action"] do
+      "conn_404" -> raise ConnError, plug_status: 404
+      "conn_400" -> raise ConnError, plug_status: 400
+      "runtime" -> raise RuntimeError
+      "send_400" -> Plug.Conn.send_resp(conn, 400, "")
+    end
+  end
+
   def call(conn, _opts), do: Plug.Conn.assign(conn, :catch_all, true)
 end
 
@@ -42,10 +55,6 @@ defmodule Phoenix.Test.ConnTest do
   alias Phoenix.Test.ConnTest.{Router, RedirRouter}
 
   @moduletag :capture_log
-
-  defmodule ConnError do
-    defexception [message: nil, plug_status: 500]
-  end
 
   Application.put_env(:phoenix, Phoenix.Test.ConnTest.Endpoint, [])
 
@@ -520,12 +529,12 @@ defmodule Phoenix.Test.ConnTest do
 
   test "assert_error_sent/2 with expected error response" do
     response = assert_error_sent :not_found, fn ->
-      get(build_conn(), "/stat", action: fn _ -> raise ConnError, plug_status: 404 end)
+      get(build_conn(), "/stat", action: "conn_404")
     end
     assert {404, [_h | _t], "404.html from Phoenix.ErrorView"} = response
 
     response = assert_error_sent 400, fn ->
-      get(build_conn(), "/stat", action: fn _ -> raise ConnError, plug_status: 400 end)
+      get(build_conn(), "/stat", action: "conn_400")
     end
     assert {400, [_h | _t], "400.html from Phoenix.ErrorView"} = response
   end
@@ -533,7 +542,7 @@ defmodule Phoenix.Test.ConnTest do
   test "assert_error_sent/2 with status mismatch assertion" do
     assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 400 status, but got 500 from.*RuntimeError/s, fn ->
       assert_error_sent 400, fn ->
-        get(build_conn(), "/stat", action: fn _conn -> raise RuntimeError end)
+        get(build_conn(), "/stat", action: "runtime")
       end
     end
   end
@@ -553,7 +562,7 @@ defmodule Phoenix.Test.ConnTest do
   test "assert_error_sent/2 with response but no error" do
     assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 400 status, but response sent 400 without error/, fn ->
       assert_error_sent :bad_request, fn ->
-        get(build_conn(), "/stat", action: fn conn -> Plug.Conn.send_resp(conn, 400, "") end)
+        get(build_conn(), "/stat", action: "send_400")
       end
     end
   end

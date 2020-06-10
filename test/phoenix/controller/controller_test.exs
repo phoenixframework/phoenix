@@ -569,7 +569,7 @@ defmodule Phoenix.Controller.ControllerTest do
     end
 
     test "keeps structs intact" do
-      conn = conn(:get, "/", %{"foo" => %{"bar" => %Plug.Upload{}}})
+      conn = conn(:post, "/", %{"foo" => %{"bar" => %Plug.Upload{}}})
       |> fetch_query_params
       |> scrub_params("foo")
 
