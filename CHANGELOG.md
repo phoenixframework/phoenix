@@ -6,6 +6,11 @@ Phoenix v1.6 requires Elixir v1.9+.
 
 ### Enhancements
 
+  * [Endpoint] Allow custom error response from socket handler
+  * [Endpoint] Do not require a pubsub server in the socket (only inside channels)
+  * [mix phx.new] Add description to Ecto telemetry metrics
+  * [mix phx.new] Use `Ecto.Adapters.SQL.Sandbox.start_owner!/2` in generators - this approach provides proper shutdown semantics for apps using LiveView and Presence
+
 ### Bug fixes
 
   * [mix phx.gen.live] Fix a bug where tests with `utc_datetime` fields did not pass out of the box
