@@ -72,7 +72,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
     status = status(kind, reason)
     conn = error_conn(conn, kind, reason)
     start = System.monotonic_time()
-    metadata = %{status: status, kind: kind, reason: reason, stacktrace: stack, log: level}
+    metadata = %{conn: conn, status: status, kind: kind, reason: reason, stacktrace: stack, log: level}
 
     try do
       render(conn, status, kind, reason, stack, opts)
