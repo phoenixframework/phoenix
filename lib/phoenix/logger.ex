@@ -41,7 +41,7 @@ defmodule Phoenix.Logger do
 
     * `[:phoenix, :error_rendered]` - dispatched at the end of an error view being rendered
       * Measurement: `%{duration: native_time}`
-      * Metadata: `%{status: Plug.Conn.status, kind: Exception.kind, reason: term, stacktrace: Exception.stacktrace}`
+      * Metadata: `%{conn: Plug.Conn.t, status: Plug.Conn.status, kind: Exception.kind, reason: term, stacktrace: Exception.stacktrace}`
       * Disable logging: Set `render_errors: [log: false]` on your endpoint configuration
 
     * `[:phoenix, :socket_connected]` - dispatched by `Phoenix.Socket`, at the end of a socket connection
