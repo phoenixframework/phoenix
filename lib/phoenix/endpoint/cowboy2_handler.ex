@@ -127,15 +127,15 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
 
   defp exit_on_error(:error, value, stack, call) do
     exception = Exception.normalize(:error, value, stack)
-    exit({{exception, stack}, call})
+    :erlang.raise(:exit, {{exception, stack}, call}, [])
   end
 
   defp exit_on_error(:throw, value, stack, call) do
-    exit({{{:nocatch, value}, stack}, call})
+    :erlang.raise(:exit, {{{:nocatch, value}, stack}, call}, [])
   end
 
   defp exit_on_error(:exit, value, _stack, call) do
-    exit({value, call})
+    :erlang.raise(:exit, {value, call}, [])
   end
 
   defp copy_resp_headers(%Plug.Conn{} = conn, req) do
