@@ -77,7 +77,7 @@ defmodule Phoenix.Presence do
         leaves: %{"456" => %{metas: [%{status: "online", phx_ref: ...}]}}
       },
 
-  See `c:list/2` for more information on the presence data structure.
+  See `c:list/1` for more information on the presence data structure.
 
   ## Fetching Presence Information
 
@@ -86,7 +86,7 @@ defmodule Phoenix.Presence do
   More detailed information, such as user details that need to be fetched
   from the database, can be achieved by overriding the `c:fetch/2` function.
 
-  The `c:fetch/2` callback is triggered when using `c:list/2` and on
+  The `c:fetch/2` callback is triggered when using `c:list/1` and on
   every update, and it serves as a mechanism to fetch presence information
   a single time, before broadcasting the information to all channel subscribers.
   This prevents N query problems and gives you a single place to group
@@ -220,7 +220,7 @@ defmodule Phoenix.Presence do
 
   ## Examples
 
-  Uses the same data format as `c:list/2`, but only
+  Uses the same data format as `c:list/1`, but only
   returns metadata for the presences under a topic and key pair. For example,
   a user with key `"user1"`, connected to the same chat room `"room:1"` from two
   devices, could return:
@@ -228,7 +228,7 @@ defmodule Phoenix.Presence do
       iex> MyPresence.get_by_key("room:1", "user1")
       [%{name: "User 1", metas: [%{device: "Desktop"}, %{device: "Mobile"}]}]
 
-  Like `c:list/2`, the presence metadata is passed to the `fetch`
+  Like `c:list/1`, the presence metadata is passed to the `fetch`
   callback of your presence module to fetch any additional information.
   """
   @callback get_by_key(Phoenix.Socket.t | topic, key :: String.t) :: presences
@@ -236,7 +236,7 @@ defmodule Phoenix.Presence do
   @doc """
   Extend presence information with additional data.
 
-  When `c:list/2` is used to list all presences of the given `topic`, this
+  When `c:list/1` is used to list all presences of the given `topic`, this
   callback is triggered once to modify the result before it is broadcasted to
   all channel subscribers. This avoids N query problems and provides a single
   place to extend presence metadata. You must return a map of data matching the
