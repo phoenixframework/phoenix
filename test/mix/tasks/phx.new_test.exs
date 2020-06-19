@@ -1,3 +1,8 @@
+# Remove archive to avoid conflicts
+with list when is_list(list) <- :code.lib_dir(:phx_new) do
+  :code.del_path(:filename.join(list, 'ebin'))
+end
+
 _ = Kernel.ParallelCompiler.compile Path.wildcard("installer/lib/**/*.ex")
 Code.require_file("installer/test/mix_helper.exs")
 
