@@ -68,7 +68,7 @@ Our test files simply define modules. At the top of each module, you will find a
 use HelloWeb.ConnCase
 ```
 
-If you were to write an Elixir library, outside of Phoenix, instead of `use HelloWeb.ConnCase`, you would write `use ExUnit.Case` instead. However, Phoenix already ships with a bunch of functionality for testing controllers and `HelloWeb.ConnCase` builds on top of `ExUnit.Case` to bring these functionalities in. We will the `HelloWeb.ConnCase` module soon.
+If you were to write an Elixir library, outside of Phoenix, instead of `use HelloWeb.ConnCase`, you would write `use ExUnit.Case` instead. However, Phoenix already ships with a bunch of functionality for testing controllers and `HelloWeb.ConnCase` builds on top of `ExUnit.Case` to bring these functionalities in. We will explore the `HelloWeb.ConnCase` module soon.
 
 Then we define each test using the `test/3` macro. The `test/3` macro receives three arguments: the test name, the testing context that we are pattern matching on, and the contents of the test. In this test, we access the root page of our application by a "GET" HTTP request on the path "/" with the `get/2` macro. Then we **assert** that the rendered page contains the string "Welcome to Phoenix!".
 
