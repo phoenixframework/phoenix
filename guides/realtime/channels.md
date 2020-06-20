@@ -156,7 +156,7 @@ The `Phoenix.Socket.Message` module defines a struct with the following keys whi
 PubSub consists of the `Phoenix.PubSub` module and a variety of modules for different adapters and their `GenServer`s.
 These modules contain functions which are the nuts and bolts of organizing Channel communication - subscribing to topics, unsubscribing from topics, and broadcasting messages on a topic.
 PubSub is used internally by Phoenix.
-It's also useful in application development in any case where you want to notify interested processes of an event; for instance, letting all connected [live views](https://github.com/phoenixframework/phoenix_live_view) know that a new comment has been added to a post.
+It's also useful in application development in any case where you want to notify interested processes of an event; for instance, letting all connected [live views](https://github.com/phoenixframework/phoenix_live_view) to know that a new comment has been added to a post.
 
 The PubSub system takes care of getting messages from one node to another so that they can be sent to all subscribers across the cluster.
 By default, this is done using [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), which uses native BEAM messaging.
@@ -439,7 +439,7 @@ socket.connect()
 
 Now that we are connected, we can join channels with a topic:
 
-```elixir
+```javascript
 let channel = socket.channel("topic:subtopic", {})
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
