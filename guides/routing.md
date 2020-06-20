@@ -318,6 +318,8 @@ scope "/", HelloWeb do
 end
 
 scope "/admin", HelloWeb.Admin do
+  pipe_through :browser
+
   resources "/reviews", ReviewController
 end
 ```
@@ -352,6 +354,8 @@ We can fix this problem by adding an `as: :admin` option to our admin scope:
 ```elixir
 
 scope "/admin", HelloWeb.Admin, as: :admin do
+  pipe_through :browser
+
   resources "/reviews", ReviewController
 end
 ```
