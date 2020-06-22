@@ -33,31 +33,7 @@ $ git commit -m "Initial commit"
 
 ## Installing the Gigalixir CLI
 
-The Gigalixir command-line interface is installed through `pip`, which is most likely already installed on your system. If it isn't, here are the [pip installation instructions](https://pip.pypa.io/en/stable/installing/)
-
-Let's install the CLI
-
-```console
-$ pip3 install gigalixir --ignore-installed six
-```
-
-Next, let's make sure the executable is in your path, if it isn't already
-
-```console
-$ echo 'export PATH=~/.local/bin:$PATH' >> ~/.bash_profile
-```
-
-Reload your profile
-
-```console
-$ source ~/.bash_profile
-```
-
-And verify it works
-
-```console
-$ gigalixir --help
-```
+Follow the instructions [here](https://gigalixir.readthedocs.io/en/latest/getting-started-guide.html#install-the-command-line-interface) to install the command-line interface for your platform.
 
 ## Signing up for Gigalixir
 
