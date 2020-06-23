@@ -28,7 +28,7 @@ end
 Before we dive into this, let's see what the rendered `404 Not Found` message looks like in a browser. In the development environment, Phoenix will debug errors by default, showing us a very informative debugging page. What we want here, however, is to see what page the application would serve in production. In order to do that we need to set `debug_errors: false` in `config/dev.exs`.
 
 ```elixir
-use Mix.Config
+import Config
 
 config :hello, HelloWeb.Endpoint,
   http: [port: 4000],

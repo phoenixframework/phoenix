@@ -7,7 +7,7 @@ The configuration consists of a new `https:` key for our endpoint whose value is
 Here's an example configuration from `config/prod.exs`.
 
 ```elixir
-use Mix.Config
+import Config
 
 config :hello, HelloWeb.Endpoint,
   http: [port: {:system, "PORT"}],

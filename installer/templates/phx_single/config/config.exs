@@ -5,7 +5,7 @@
 # is restricted to this project.
 
 # General application configuration
-use Mix.Config<%= if namespaced? || ecto || generators do %>
+import Config<%= if namespaced? || ecto || generators do %>
 
 config :<%= app_name %><%= if namespaced? do %>,
   namespace: <%= app_module %><% end %><%= if ecto do %>,

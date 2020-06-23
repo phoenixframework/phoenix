@@ -71,7 +71,7 @@ defmodule Phx.New.Generator do
     contents =
       case File.read(file) do
         {:ok, bin} -> bin
-        {:error, _} -> "use Mix.Config\n"
+        {:error, _} -> "import Config\n"
       end
 
     with :error <- split_with_self(contents, "use Mix.Config\n"),
