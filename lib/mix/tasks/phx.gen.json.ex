@@ -141,7 +141,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
       Add the resource to your #{schema.web_namespace} :api scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          scope "/#{schema.web_path}", #{inspect Module.concat(context.web_module, schema.web_namespace)} do
+          scope "/#{schema.web_path}", #{inspect Module.concat(context.web_module, schema.web_namespace)}, as: :#{schema.web_path} do
             pipe_through :api
             ...
             resources "/#{schema.plural}", #{inspect schema.alias}Controller

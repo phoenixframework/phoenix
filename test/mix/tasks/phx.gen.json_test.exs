@@ -131,7 +131,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
       Add the resource to your Blog :api scope in lib/phoenix_web/router.ex:
 
-          scope "/blog", PhoenixWeb.Blog do
+          scope "/blog", PhoenixWeb.Blog, as: :blog do
             pipe_through :api
             ...
             resources "/posts", PostController
