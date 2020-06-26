@@ -20,7 +20,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * [Phoenix.Router] Log when router plugs halt
 
 ### Bug fixes
-  * [Phoenix.Router] Rename the `[:phoenix, :router_dispatch, :exception]` metadata from `:error` to `:reason` to match the documentation and the telemetry specification
+  * [Phoenix.Router] Rename the `[:phoenix, :router_dispatch, :exception]` metadata from `:error` to `:reason` to match the documentation and the telemetry specification (`:error` is still emitted for compatibility but it will be fully removed on v1.6)
 
 ## 1.5.3 (2020-05-21)
 
