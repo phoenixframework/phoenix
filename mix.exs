@@ -55,6 +55,7 @@ defmodule Phoenix.MixProject do
         filter_parameters: ["password"],
         serve_endpoints: false,
         gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf),
+        static_compressors: [Phoenix.Digester.Gzip],
         trim_on_html_eex_engine: true
       ]
     ]
