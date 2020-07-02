@@ -247,7 +247,7 @@ defmodule Phoenix.Router.Helpers do
       end
 
       def static_url(endpoint, path) when is_atom(endpoint) do
-        endpoint.static_url <> endpoint.static_path(path)
+        endpoint.static_url() <> endpoint.static_path(path)
       end
 
       @doc """
