@@ -377,9 +377,9 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warmup_url(endpoint) do
-    endpoint.url
-    endpoint.static_url
-    endpoint.struct_url
+    endpoint.url()
+    endpoint.static_url()
+    endpoint.struct_url()
   end
 
   defp warmup_static(endpoint) do
