@@ -996,7 +996,7 @@ And it works! We now have two isolated contexts responsible for user accounts an
 
 ## Adding CMS functions
 
-Just like we extended our `Accounts` context with new application-specific functions like `Accounts.authenticate_by_email_password/2`, let's extend our generated `CMS` context with new functionality. For any CMS system, the ability to track how many times a page has been viewed is essential for popularity ranks. While we could try to use the existing `CMS.update_page` function, along the lines of `CMS.update_page(user, page, %{views: page.views + 1})`, this would not only be prone to race conditions, but it would also require the caller to know too much about our CMS system. To see why the race condition exists, let's walk through the possible execution of events:
+Just like we extended our `Accounts` context with new application-specific functions like `Accounts.authenticate_by_email_password/2`, let's extend our generated `CMS` context with new functionality. For any CMS system, the ability to track how many times a page has been viewed is essential for popularity ranks. While we could try to use the existing `CMS.update_page` function, along the lines of `CMS.update_page(page, %{views: page.views + 1})`, this would not only be prone to race conditions, but it would also require the caller to know too much about our CMS system. To see why the race condition exists, let's walk through the possible execution of events:
 
 Intuitively, you would assume the following events:
 

@@ -68,7 +68,7 @@ Our test files simply define modules. At the top of each module, you will find a
 use HelloWeb.ConnCase
 ```
 
-If you were to write an Elixir library, outside of Phoenix, instead of `use HelloWeb.ConnCase`, you would write `use ExUnit.Case` instead. However, Phoenix already ships with a bunch of functionality for testing controllers and `HelloWeb.ConnCase` builds on top of `ExUnit.Case` to bring these functionalities in. We will explore the `HelloWeb.ConnCase` module soon.
+If you were to write an Elixir library, outside of Phoenix, instead of `use HelloWeb.ConnCase` you would write `use ExUnit.Case`. However, Phoenix already ships with a bunch of functionality for testing controllers and `HelloWeb.ConnCase` builds on top of `ExUnit.Case` to bring these functionalities in. We will explore the `HelloWeb.ConnCase` module soon.
 
 Then we define each test using the `test/3` macro. The `test/3` macro receives three arguments: the test name, the testing context that we are pattern matching on, and the contents of the test. In this test, we access the root page of our application by a "GET" HTTP request on the path "/" with the `get/2` macro. Then we **assert** that the rendered page contains the string "Welcome to Phoenix!".
 
@@ -113,7 +113,7 @@ There is a lot to unpack here.
 
 The second line says this is a case template. This is a ExUnit feature that allows developers to replace the built-in `use ExUnit.Case` by their own case. This line is pretty much what allows us to write `use HelloWeb.ConnCase` at the top of our controller tests.
 
-Now that we have made this module a case template, when can define callbacks that are invoked on certain occasions. The `using` callback defines code to be injected on every module that calls `use HelloWeb.ConnCase`. In this case, we import [`Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html), so all of the connection helpers available in controllers are also available in tests, and then imports [`Phoenix.ConnTest`](https://hexdocs.pm/phoenix/Phoenix.ConnTest.html). You can consult these modules to learn all functionality available.
+Now that we have made this module a case template, we can define callbacks that are invoked on certain occasions. The `using` callback defines code to be injected on every module that calls `use HelloWeb.ConnCase`. In this case, we import [`Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html), so all of the connection helpers available in controllers are also available in tests, and then imports [`Phoenix.ConnTest`](https://hexdocs.pm/phoenix/Phoenix.ConnTest.html). You can consult these modules to learn all functionality available.
 
 Then it aliases the module with all path helpers, so we can easily generate URLs in our tests. Finally, it sets the `@endpoint` module attribute with the name of our endpoint.
 
@@ -528,7 +528,7 @@ Remember to update your repository by running migrations:
 
 Now let's follow the directions and add the new resources route to our `lib/hello_web/router.ex` file and run the migrations.
 
-When we run `mix test` again, we see that we now have twenty tests!
+When we run `mix test` again, we see that we now have nineteen tests!
 
 ```console
 $ mix test

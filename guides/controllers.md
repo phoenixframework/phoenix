@@ -427,7 +427,7 @@ The flash functionality is handy when mixed with redirects. Perhaps you want to 
   end
 ```
 
-Now if you reload the Welcome page, you will be redirect and the flash messages will be shown once more.
+Now if you reload the Welcome page, you will be redirected and the flash messages will be shown once more.
 
 Besides `put_flash/3` and `get_flash/2`, the `Phoenix.Controller` module has another useful function worth knowing about. `clear_flash/1` takes only `conn` and removes any flash messages which might be stored in the session.
 
