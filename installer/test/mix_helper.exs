@@ -62,7 +62,7 @@ defmodule MixHelper do
       File.mkdir_p!(config_path)
       File.touch!(Path.join(path, "mix.exs"))
       for file <- ~w(config.exs dev.exs test.exs prod.exs prod.secret.exs) do
-        File.write!(Path.join(config_path, file), "use Mix.Config\n")
+        File.write!(Path.join(config_path, file), "import Config\n")
       end
       File.cd!(apps_path, function)
     after

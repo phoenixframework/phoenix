@@ -97,9 +97,7 @@ However, in many cases, we don't want to set the values for `SECRET_KEY_BASE` an
 
 1. Rename `config/prod.secret.exs` to `config/releases.exs`
 
-2. Change `use Mix.Config` inside the new `config/releases.exs` file to `import Config` (if you want, you can replace all uses of `use Mix.Config` by `import Config`, as the latter replaces the former)
-
-3. Change `config/prod.exs` to no longer call `import_config "prod.secret.exs"` at the bottom
+2. Change `config/prod.exs` to no longer call `import_config "prod.secret.exs"` at the bottom
 
 Now if you assemble another release, you should see this:
 

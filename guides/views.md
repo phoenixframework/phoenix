@@ -131,7 +131,7 @@ iex(2)> Phoenix.View.render(HelloWeb.PageView, "test.html", message: "<script>ba
 {:safe, ["This is the message: ", "&lt;script&gt;badThings();&lt;/script&gt;"]}
 ```
 
-If we need only the rendered string, without the whole tuple, we can use the `render_to_string/3`.
+If we need only the rendered string, without the whole tuple, we can use `render_to_string/3`.
 
 ```elixir
 iex(5)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "Hello from IEx!")
