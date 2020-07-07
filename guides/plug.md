@@ -228,17 +228,16 @@ defmodule HelloWeb.MessageController do
   use HelloWeb, :controller
 
   def show(conn, params) do
-    case authenticate(conn) do
+    case Authenticator.find_user(conn) do
       {:ok, user} ->
         case find_message(params["id"]) do
           nil ->
             conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/")
           message ->
-            case authorize_message(conn, params["id"]) do
-              :ok ->
-                render(conn, :show, page: find_message(params["id"]))
-              :error ->
-                conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/")
+            if Authorizer.can_access?(user, message) do
+              render(conn, :show, page: message)
+            else
+              conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/")
             end
         end
       :error ->
@@ -259,7 +258,7 @@ defmodule HelloWeb.MessageController do
   plug :authorize_message
 
   def show(conn, params) do
-    render(conn, :show, page: find_message(params["id"]))
+    render(conn, :show, page: conn.assigns[:message])
   end
 
   defp authenticate(conn, _) do
