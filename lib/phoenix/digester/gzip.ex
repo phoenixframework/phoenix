@@ -4,8 +4,8 @@ defmodule Phoenix.Digester.Gzip do
     :zlib.gzip(content)
   end
 
-  def file_extension do
-    ".gz"
+  def file_extensions do
+    [".gz"]
   end
 
   def compress_file?(file_path, _content, _digested_content) do
