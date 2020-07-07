@@ -45,7 +45,7 @@ Generated hello app
 The database for Hello.Repo has been dropped
 The database for Hello.Repo has been created
 
-14:38:37.418 [info]  Already up
+14:38:37.418 [info]  Migrations already up
 ```
 
 Now we're ready to create our accounts context. We'll use `mix phx.gen.html` which creates a context module that wraps up Ecto access for creating, updating, and deleting users, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
