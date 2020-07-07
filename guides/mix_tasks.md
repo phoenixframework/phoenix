@@ -585,13 +585,7 @@ The `--step` option will behave the same way.
 mix ecto.migrate --step 2
 ```
 
-We can also specify an individual migration we would like to run with the `-v` option.
-
-```console
-mix ecto.migrate -v 20150317170448
-```
-
-The `--to` option will behave the same way.
+The `--to` option will run all migrations up to and including given version.
 
 ```console
 mix ecto.migrate --to 20150317170448
