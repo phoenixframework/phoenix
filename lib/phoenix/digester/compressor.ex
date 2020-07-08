@@ -1,5 +1,4 @@
 defmodule Phoenix.Digester.Compressor do
-  @callback compress(binary()) :: binary()
+  @callback compress_file(Path.t(), binary()) :: {:ok, binary()} | :error
   @callback file_extensions() :: nonempty_list(String.t())
-  @callback compress_file?(Path.t(), binary(), binary()) :: bool()
 end

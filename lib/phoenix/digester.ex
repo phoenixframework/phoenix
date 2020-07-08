@@ -154,16 +154,16 @@ defmodule Phoenix.Digester do
     compressors = Application.fetch_env!(:phoenix, :static_compressors)
 
     Enum.each(compressors, fn(compressor) ->
-      if compressor.compress_file?(file.absolute_path, file.content, file.digested_content) do
-        compressed_digested = compressor.compress(file.digested_content)
-        compressed = compressor.compress(file.content)
-        [file_extension | _] = compressor.file_extensions
+      [file_extension | _] = compressor.file_extensions
 
+      with {:ok, compressed_digested} <- compressor.compress_file(file.digested_filename, file.digested_content) do
         File.write!(
           Path.join(path, file.digested_filename <> file_extension),
           compressed_digested
         )
+      end
 
+      with {:ok, compressed} <- compressor.compress_file(file.filename, file.content) do
         File.write!(
           Path.join(path, file.filename <> file_extension),
           compressed
