@@ -273,13 +273,13 @@ defmodule Phoenix.ConnTest do
   @doc """
   Gets the whole flash storage.
   """
-  @spec get_flash(Conn.t) :: Conn.t
+  @spec get_flash(Conn.t) :: map
   defdelegate get_flash(conn), to: Phoenix.Controller
 
   @doc """
   Gets the given key from the flash storage.
   """
-  @spec get_flash(Conn.t, term) :: Conn.t
+  @spec get_flash(Conn.t, term) :: term
   defdelegate get_flash(conn, key), to: Phoenix.Controller
 
   @doc """
