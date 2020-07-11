@@ -107,7 +107,7 @@ Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.eex` templa
 
 ### Manually rendering templates
 
-So far, Phoenix has taken care of putting every in place and rendering views for us. However, we can also render views directly.
+So far, Phoenix has taken care of putting everything in place and rendering views for us. However, we can also render views directly.
 
 Let's create a new template to play around with, `lib/hello_web/templates/page/test.html.eex`:
 
