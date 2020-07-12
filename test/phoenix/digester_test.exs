@@ -91,7 +91,6 @@ defmodule Phoenix.DigesterTest do
 
       json = Path.join(@output_path, "cache_manifest.json") |> json_read!()
       refute json["latest"]["precompressed.js.gz"]
-      refute json["latest"]["precompressed.js.br"]
 
       assert :ok = Phoenix.Digester.compile(@output_path, @output_path)
       assert output_files == assets_files(@output_path)

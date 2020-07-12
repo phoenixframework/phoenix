@@ -118,8 +118,11 @@ defmodule Phoenix.Digester do
   defp manifest_join(path, filename), do: Path.join(path, filename)
 
   defp compiled_file?(file_path) do
+    compressors = Application.fetch_env!(:phoenix, :static_compressors)
+    compressed_extensions = Enum.flat_map(compressors, &(&1.file_extensions))
+
     Regex.match?(@digested_file_regex, Path.basename(file_path)) ||
-      Path.extname(file_path) in ~w(.gz .br) ||
+      Path.extname(file_path) in compressed_extensions ||
       Path.basename(file_path) == "cache_manifest.json"
   end
 
@@ -148,28 +151,31 @@ defmodule Phoenix.Digester do
     path = Path.join(output_path, file.relative_path)
     File.mkdir_p!(path)
 
-    # compressed files
-    if compress_file?(file) do
-      File.write!(
-        Path.join(path, file.digested_filename <> ".gz"),
-        :zlib.gzip(file.digested_content)
-      )
+    compressors = Application.fetch_env!(:phoenix, :static_compressors)
 
-      File.write!(
-        Path.join(path, file.filename <> ".gz"),
-        :zlib.gzip(file.content)
-      )
-    end
+    Enum.each(compressors, fn(compressor) ->
+      [file_extension | _] = compressor.file_extensions
+
+      with {:ok, compressed_digested} <- compressor.compress_file(file.digested_filename, file.digested_content) do
+        File.write!(
+          Path.join(path, file.digested_filename <> file_extension),
+          compressed_digested
+        )
+      end
+
+      with {:ok, compressed} <- compressor.compress_file(file.filename, file.content) do
+        File.write!(
+          Path.join(path, file.filename <> file_extension),
+          compressed
+        )
+      end
+    end)
 
     # uncompressed files
     File.write!(Path.join(path, file.digested_filename), file.digested_content)
     File.write!(Path.join(path, file.filename), file.content)
 
     file
-  end
-
-  defp compress_file?(file) do
-    Path.extname(file.filename) in Application.fetch_env!(:phoenix, :gzippable_exts)
   end
 
   defp digested_contents(file, latest) do
