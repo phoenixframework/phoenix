@@ -397,6 +397,61 @@ route.
 Note the `:tags` and `:tag_values` options can be applied to
 all `Telemetry.Metrics` types.
 
+### Renaming value labels using tag values
+
+Sometimes when displaying a metric, the value label may need to be transformed
+to improve readability. Take for example the following metric that displays the
+duration of the each LiveView's `mount/3` callback by `connected?` status.
+
+```elixir
+summary("phoenix.live_view.mount.stop.duration",
+  unit: {:native, :millisecond},
+  tags: [:view, :connected?],
+  tag_values: &live_view_metric_tag_values/1
+)
+```
+
+The following function lifts `metadata.socket.view` and
+`metadata.socket.connected?` to be top-level keys on `metadata`, as we did in
+the previous example.
+
+```elixir
+# lib/my_app_web/telemetry.ex
+defp live_view_metric_tag_values(metadata) do
+  metadata
+  |> Map.put(:view, metadata.socket.view)
+  |> Map.put(:connected?, metadata.socket.connected?)
+end
+```
+
+However, when rendering these metrics in LiveDashboard, the value label is
+output as `"Elixir.Phoenix.LiveDashboard.MetricsLive true"`.
+
+To make the value label easier to read, we can update our private function to
+generate more user friendly names. We'll run the value of the `:view` through
+`inspect/1` to remove the `Elixir.` prefix and call another private function to
+convert the `connected?` boolean into human readable text.
+
+```elixir
+# lib/my_app_web/telemetry.ex
+defp live_view_metric_tag_values(metadata) do
+  metadata
+  |> Map.put(:view, inspect(metadata.socket.view))
+  |> Map.put(:connected?, get_connection_status(metadata.socket))
+end
+
+defp get_connection_status(%{connected?: true}), do: "Connected"
+defp get_connection_status(%{connected?: false}), do: "Disconnected"
+```
+
+Now the value label will be rendered like `"Phoenix.LiveDashboard.MetricsLive
+Connected"`.
+
+Hopefully, this gives you some inspiration on how to use the `:tag_values`
+option. Just remember to keep this function fast since it is called on every
+event.
+
+
 ## Periodic measurements
 
 You might want to periodically measure key values within
