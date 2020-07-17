@@ -119,4 +119,5 @@ And that's it. Next you can use one of our official guides to deploy:
   * and [to Heroku](heroku.html), one of the most popular PaaS.
 
 ## Community Deployment Guides
+
 * [Render](https://render.com) has first class support for Phoenix applications, with no connection limits, no forced restarts and full support for Elixir clusters. Check out their guides for hosting Phoenix with [Mix releases](https://render.com/docs/deploy-phoenix), [Distillery](https://render.com/docs/deploy-phoenix-distillery), and as a [Distributed Elixir Cluster](https://render.com/docs/deploy-elixir-cluster).
