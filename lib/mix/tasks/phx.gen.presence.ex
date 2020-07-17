@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
   end
   def run([alias_name]) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.presence can only be run inside an application directory"
+      Mix.raise "mix phx.gen.presence must be invoked from within your *_web application root directory"
     end
     context_app = Mix.Phoenix.context_app()
     otp_app = Mix.Phoenix.otp_app()

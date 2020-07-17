@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.channel can only be run inside an application directory"
+      Mix.raise "mix phx.gen.channel must be invoked from within your *_web application root directory"
     end
     [channel_name] = validate_args!(args)
     context_app = Mix.Phoenix.context_app()

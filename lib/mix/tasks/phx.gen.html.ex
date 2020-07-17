@@ -81,7 +81,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.html can only be run inside an application directory"
+      Mix.raise "mix phx.gen.html must be invoked from within your *_web application root directory"
     end
 
     {context, schema} = Gen.Context.build(args)
