@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.embedded can only be run inside an application directory"
+      Mix.raise "mix phx.gen.embedded must be invoked from within your *_web application root directory"
     end
 
     schema = build(args)
