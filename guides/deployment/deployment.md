@@ -10,7 +10,7 @@ When preparing an application for deployment, there are three main steps:
 
 In this guide, we will learn how to get the production environment running locally. You can use the same techniques in this guide to run your application in production, but depending on your deployment infrastructure, extra steps will be necessary.
 
-As an example of deploying to other infrastructures, we also discuss three different approaches in our guides: using [Elixir's releases](releases.html) with `mix release`, [using Gigalixir](gigalixir.html), and [using Heroku](heroku.html). The release guide also has a sample Docker file you can use if you prefer to deploy with container technologies.
+As an example of deploying to other infrastructures, we also discuss three different approaches in our guides: using [Elixir's releases](releases.html) with `mix release`, [using Gigalixir](gigalixir.html), and [using Heroku](heroku.html). We've also included links to deploying Phoenix on other platforms under [Community Deployment Guides](#community-deployment-guides). Finally, the release guide has a sample Dockerfile you can use if you prefer to deploy with container technologies.
 
 Let's explore those steps above one by one.
 
@@ -116,4 +116,8 @@ And that's it. Next you can use one of our official guides to deploy:
 
   * [with Elixir's releases](releases.html)
   * [to Gigalixir](gigalixir.html), an Elixir-centric Platform as a Service (PaaS)
-  * and [to Heroku](heroku.html), one of the most popular PaaS
+  * and [to Heroku](heroku.html), one of the most popular PaaS.
+
+## Community Deployment Guides
+
+  * [Render](https://render.com) has first class support for Phoenix applications. There are guides for hosting Phoenix with [Mix releases](https://render.com/docs/deploy-phoenix), [Distillery](https://render.com/docs/deploy-phoenix-distillery), and as a [Distributed Elixir Cluster](https://render.com/docs/deploy-elixir-cluster).
