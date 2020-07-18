@@ -77,9 +77,9 @@ defmodule Phoenix.MixProject do
       {:ex_doc, "~> 0.22", only: :docs},
       {:inch_ex, "~> 0.2", only: :docs},
 
-      # Test dependencies
-      {:gettext, "~> 0.15.0", only: :test},
-      {:telemetry_poller, "~> 0.4", only: :test},
+      # Test dependencies (some also include :docs for cross references)
+      {:gettext, "~> 0.15.0", only: [:docs, :test]},
+      {:telemetry_poller, "~> 0.4", only: [:docs, :test]},
       {:telemetry_metrics, "~> 0.4", only: [:docs, :test]},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
     ]
