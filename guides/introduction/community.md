@@ -49,3 +49,8 @@ There are a number of places to connect with community members at all experience
   * [Build Real-Time Web Apps with Phoenix (Oct 2016)](https://pragprog.com/screencast/v-bhphnx/build-real-time-web-apps-with-phoenix)
 
   * [LearnPhoenix.io: Build Scalable, Real-Time Apps with Phoenix, React, and React Native (Aug 2016)](https://www.learnphoenix.io/)
+  
+  * [Groxio LiveView: Self Study Program. 20 videos plus a book. (Bruce Tate: July 2020)](https://grox.io/language/liveview/course)
+
+  * [QuadBlock: Tetris-inspired video series teaching layered LiveView design concepts. 16 videos. (Bruce Tate: June 2020)]
+(https://grox.io/series/quad)
