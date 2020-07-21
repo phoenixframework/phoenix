@@ -20,35 +20,31 @@ There are a number of places to connect with community members at all experience
 
 ## Books
 
-  * [Programming Phoenix 1.4 (by Bruce Tate and Phoenix core team members Chris McCord and José Valim - Dec 2019)](https://pragprog.com/book/phoenix14/programming-phoenix-1-4)
-
   * [Real-Time Phoenix - Build Highly Scalable Systems with Channels (by Stephen Bussey - 2020)](https://pragprog.com/book/sbsockets/real-time-phoenix)
 
-  * [Phoenix Inside Out - Book Series (by Shankar Dhanasekaran - July 2017)](https://shankardevy.com/phoenix-book/)
+  * [Programming Phoenix 1.4 (by Bruce Tate and Phoenix core team members Chris McCord and José Valim - 2019)](https://pragprog.com/book/phoenix14/programming-phoenix-1-4)
 
-  * [Functional Web Development with Elixir, OTP, and Phoenix Rethink the Modern Web App (by Lance Halvorsen - Oct 2017)](https://pragprog.com/book/lhelph/functional-web-development-with-elixir-otp-and-phoenix)
+  * [Phoenix in Action (by Geoffrey Lessel - 2019)](https://manning.com/books/phoenix-in-action)
 
-  * [Phoenix in Action (by Geoffrey Lessel - 2017)](https://manning.com/books/phoenix-in-action)
+  * [Phoenix Inside Out - Book Series (by Shankar Dhanasekaran - 2017)](https://shankardevy.com/phoenix-book/)
+
+  * [Functional Web Development with Elixir, OTP, and Phoenix Rethink the Modern Web App (by Lance Halvorsen - 2017)](https://pragprog.com/book/lhelph/functional-web-development-with-elixir-otp-and-phoenix)
 
 ## Screencasts/Courses
 
-  * [Phoenix LiveView Free Course (The Pragmatic Studio - May 2020)](https://pragmaticstudio.com/courses/phoenix-liveview)
+  * [Phoenix LiveView Free Course (by The Pragmatic Studio - 2020)](https://pragmaticstudio.com/courses/phoenix-liveview)
 
-  * [The Complete Elixir and Phoenix Bootcamp Master Functional Programming Techniques with Elixir and Phoenix while Learning to Build Compelling Web Applications (Udemy - Jun 2017)](https://www.udemy.com/the-complete-elixir-and-phoenix-bootcamp-and-tutorial/)
+  * [Groxio LiveView: Self Study Program (by Bruce Tate - 2020)](https://grox.io/language/liveview/course)
 
-  * [Discover Elixir & Phoenix (Mar 2017)](https://www.ludu.co/course/discover-elixir-phoenix)
+  * [The Complete Elixir and Phoenix Bootcamp Master Functional Programming Techniques with Elixir and Phoenix while Learning to Build Compelling Web Applications (by Stephen Grider - 2017)](https://www.udemy.com/the-complete-elixir-and-phoenix-bootcamp-and-tutorial/)
 
-  * [Getting Started with Phoenix and Elixir (ElixirCasts - Mar 2017)](https://www.youtube.com/watch?v=THUG8J3xSYw&list=PLtTtLKRL6UYGxOHToRYnXBynon5plZ7Jd)
+  * [Discover Elixir & Phoenix (by Tristan Edwards
+ - 2017)](https://www.ludu.co/course/discover-elixir-phoenix)
 
-  * [Phoenix Framework Tutorial (Tensor Programming - Mar 2017)](https://www.youtube.com/watch?v=irDC1nWKhZ8&index=6&list=PLJbE2Yu2zumAgKjSPyFtvYjP5LqgzafQq)
+  * [Phoenix Framework Tutorial (by Tensor Programming - 2017)](https://www.youtube.com/watch?v=irDC1nWKhZ8&index=6&list=PLJbE2Yu2zumAgKjSPyFtvYjP5LqgzafQq)
 
-  * [Getting Started with Phoenix (Pluralsight - Feb 2017)](https://www.pluralsight.com/courses/phoenix-getting-started)
+  * [Getting Started with Phoenix (by Pluralsight - 2017)](https://www.pluralsight.com/courses/phoenix-getting-started)
 
-  * [LearnPhoenix.tv: Learn how to Build Fast, Dependable Web Apps with Phoenix (Feb 2017)](https://www.learnphoenix.tv/)
+  * [LearnPhoenix.tv: Learn how to Build Fast, Dependable Web Apps with Phoenix (2017)](https://www.learnphoenix.tv/)
 
-  * [LearnPhoenix.io: Build Scalable, Real-Time Apps with Phoenix, React, and React Native (Aug 2016)](https://www.learnphoenix.io/)
-  
-  * [Groxio LiveView: Self Study Program. 20 videos plus a book. (Bruce Tate: July 2020)](https://grox.io/language/liveview/course)
-
-  * [QuadBlock: Tetris-inspired video series teaching layered LiveView design concepts. 16 videos. (Bruce Tate: June 2020)]
-(https://grox.io/series/quad)
+  * [LearnPhoenix.io: Build Scalable, Real-Time Apps with Phoenix, React, and React Native (2016)](https://www.learnphoenix.io/)
