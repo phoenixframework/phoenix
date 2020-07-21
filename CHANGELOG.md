@@ -12,12 +12,13 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
-### 1.5.4-dev
+### 1.5.4 (2020-07-21)
 
 ### Enhancements
   * [Phoenix.Endpoint] Include `:conn` in `[:phoenix, :error_rendered]` event
   * [Phoenix.Endpoint] Warn if the `url.host` provided for the endpoint is invalid
   * [Phoenix.Router] Log when router plugs halt
+  * Fix warnings on Elixir v1.11
 
 ### Bug fixes
   * [Phoenix.Router] Rename the `[:phoenix, :router_dispatch, :exception]` metadata from `:error` to `:reason` to match the documentation and the telemetry specification (`:error` is still emitted for compatibility but it will be fully removed on v1.6)
