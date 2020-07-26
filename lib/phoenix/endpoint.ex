@@ -768,6 +768,8 @@ defmodule Phoenix.Endpoint do
 
         * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
 
+        * `:trace_context_headers` - a list of all trace context headers
+
         * `:x_headers` - all request headers that have an "x-" prefix
 
         * `:uri` - a `%URI{}` with information from the conn
