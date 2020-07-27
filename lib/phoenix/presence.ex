@@ -21,7 +21,7 @@ defmodule Phoenix.Presence do
   which uses `Phoenix.Presence` and provide the `:otp_app` which
   holds your configuration, as well as the `:pubsub_server`.
 
-      defmodule MyApp.Presence do
+      defmodule MyAppWeb.Presence do
         use Phoenix.Presence,
           otp_app: :my_app,
           pubsub_server: MyApp.PubSub
