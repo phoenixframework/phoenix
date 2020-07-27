@@ -14,7 +14,7 @@ This gave us a number of modules for free, including a PostController and the as
 
 ## HTML controller tests
 
-If you open up "test/hello_web/controllers/post_controller_test.exs", you will find the following:
+If you open up `test/hello_web/controllers/post_controller_test.exs`, you will find the following:
 
 ```elixir
 defmodule HelloWeb.PostControllerTest do
@@ -246,7 +246,7 @@ With the differences in hand, let's take a look at the controller tests.
 
 ### The index action
 
-Open up "test/hello_web/controllers/article_controller_test.exs". The initial structure is quite similar to "post_controller_test.exs". So let's take a look at the tests for the `index` action. The `index` action itself is implemented in "lib/hello_web/controllers/article_controller.ex" like this:
+Open up `test/hello_web/controllers/article_controller_test.exs`. The initial structure is quite similar to `post_controller_test.exs`. So let's take a look at the tests for the `index` action. The `index` action itself is implemented in `lib/hello_web/controllers/article_controller.ex` like this:
 
 ```elixir
 def index(conn, _params) do
@@ -255,7 +255,7 @@ def index(conn, _params) do
 end
 ```
 
-The action gets all articles and renders "index.json". Since we are talking about JSON, we don't have a "index.json.eex" template. Instead, the code that converts "articles" into JSON can be found directly in the ArticleView module, defined at "lib/hello_web/views/article_view.ex" like this:
+The action gets all articles and renders "index.json". Since we are talking about JSON, we don't have a "index.json.eex" template. Instead, the code that converts "articles" into JSON can be found directly in the ArticleView module, defined at `lib/hello_web/views/article_view.ex` like this:
 
 ```elixir
 defmodule HelloWeb.ArticleView do
@@ -291,7 +291,7 @@ describe "index" do
 end
 ```
 
-It simples access the `index` path, asserts we got a JSON response with status 200 and that it contains a "data" key with an empty list, as we have no articles to return.
+It simply accesses the `index` path, asserts we got a JSON response with status 200 and that it contains a "data" key with an empty list, as we have no articles to return.
 
 That was quite boring. Let's look at something more interesting.
 
@@ -339,7 +339,7 @@ def create(conn, %{"article" => article_params}) do
   with {:ok, %Article{} = article} <- News.create_article(article_params) do
 ```
 
-The `with` special form that ships as part of Elixir allows us to check explicitly for the happy paths. In this case, we are interested only in the scenarios where `News.create_article(article_params)` return `{:ok, article}`, if it returns anything else, the other value will simply be returned directly and none of the contents inside the `do/end` block will be executed. In other words, if `News.create_article/1` returns `{:error, changeset}`, we will simply return `{:error, changeset}` from the action.
+The `with` special form that ships as part of Elixir allows us to check explicitly for the happy paths. In this case, we are interested only in the scenarios where `News.create_article(article_params)` returns `{:ok, article}`, if it returns anything else, the other value will simply be returned directly and none of the contents inside the `do/end` block will be executed. In other words, if `News.create_article/1` returns `{:error, changeset}`, we will simply return `{:error, changeset}` from the action.
 
 However, this introduces an issue. Our actions do not know how to handle the `{:error, changeset}` result by default. Luckily, we can teach Phoenix Controllers to handle it with the Action Fallback controller. At the top of the `ArticleController`, you will find:
 
