@@ -37,7 +37,7 @@ defmodule Phoenix.Presence do
 
       children = [
         ...
-        MyAppWeb.PubSub,
+        {Phoenix.PubSub, name: MyApp.PubSub},
         MyAppWeb.Presence,
         MyAppWeb.Endpoint
       ]
