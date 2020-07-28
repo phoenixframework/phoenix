@@ -1,0 +1,36 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  test-elixir:
+    runs-on: ubuntu-latest
+    container:
+      image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-alpine-3.12.0
+      env:
+        ELIXIR_ASSERT_TIMEOUT: 2000
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - elixir: 1.9.4
+            otp: 20.3.8.26
+          - elixir: 1.10.4
+            otp: 21.3.8.17
+          - elixir: 1.10.4
+            otp: 23.0.3
+    steps:
+      - uses: actions/checkout@v2.3.1
+      - name: Install Dependencies
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          apk add --no-progress --update git bash wget nodejs npm
+          wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+          nvm install 12.16 && nvm use 12.16
+          mix deps.get
+      - run: mix test
+      - run: cd installer && elixir -S mix test
+      - run: cd assets && npm install && npm test
+      - run: MIX_ENV=docs mix inch.report
