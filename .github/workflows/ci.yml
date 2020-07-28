@@ -33,4 +33,4 @@ jobs:
       - run: mix test
       - run: cd installer && elixir -S mix test
       - run: cd assets && npm install && npm test
-      - run: MIX_ENV=docs mix inch.report
+      # - run: MIX_ENV=docs mix inch.report
