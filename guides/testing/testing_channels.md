@@ -132,7 +132,7 @@ We notice that we access the same `socket` that is from the setup block. How han
 
 Since the `handle_in/3` callback for the `"shout"` event just broadcasts the same event and payload, all subscribers in the `"room:lobby"` should receive the message. To check that, we do `assert_broadcast "shout", %{"hello" => "all"}`.
 
-**NOTE:** `assert_broadcast/3` tests that the message was broadcast in the PubSub system. For testing if a client receives a message, use `assert_push/3`
+**NOTE:** `assert_broadcast/3` tests that the message was broadcast in the PubSub system. For testing if a client receives a message, use `assert_push/3`.
 
 ### Testing an asynchronous push from the server
 
