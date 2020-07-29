@@ -407,7 +407,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file web_path(@app, "assets/css/app.scss"), fn file ->
-        assert file =~ ~s[@import "../node_modules/nprogress/nprogress.css";]
+        assert file =~ ~s[@import "~nprogress/nprogress.css";]
         assert file =~ ~s[.phx-click-loading]
       end
 
