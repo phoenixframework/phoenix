@@ -60,12 +60,14 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     def connect(params, socket, connect_info) do
       unless params["logging"] == "enabled", do: Logger.disable(self())
       address = Tuple.to_list(connect_info.peer_data.address) |> Enum.join(".")
+      trace_context_headers = Enum.into(connect_info.trace_context_headers, %{})
       uri = Map.from_struct(connect_info.uri)
       x_headers = Enum.into(connect_info.x_headers, %{})
       
       connect_info =
         connect_info
         |> update_in([:peer_data], &Map.put(&1, :address, address))
+        |> Map.put(:trace_context_headers, trace_context_headers)
         |> Map.put(:uri, uri)
         |> Map.put(:x_headers, x_headers)
 
@@ -123,7 +125,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         window_ms: 200,
         pubsub_timeout_ms: 200,
         check_origin: ["//example.com"],
-        connect_info: [:x_headers, :peer_data, :uri]
+        connect_info: [:trace_context_headers, :x_headers, :peer_data, :uri]
       ]
   end
 
@@ -277,6 +279,23 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       assert %{"connect_info" =>
                %{"x_headers" =>
                  %{"x-application" => "Phoenix"}}} = status_msg.payload
+    end
+
+    test "#{@mode}: transport trace_context_headers are extracted to the socket connect_info" do
+      ctx_headers =
+        %{"traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "tracestate" => "congo=t61rcWkgMz"}
+      session = join("/ws/connect_info", "room:lobby", @vsn, @mode, %{}, %{}, ctx_headers)
+
+      # pull messages
+      resp = poll(:get, "/ws/connect_info", @vsn, session)
+      assert resp.body["status"] == 200
+
+      [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
+
+      assert %{"connect_info" =>
+        %{"trace_context_headers" =>
+           ctx_headers}} = status_msg.payload
     end
 
     test "#{@mode}: transport peer_data is extracted to the socket connect_info" do
