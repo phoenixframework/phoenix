@@ -67,6 +67,8 @@ Ok, let's give it a try. First, we'll `cd` into the `hello/` directory we've jus
 $ cd hello
 ```
 
+> If you followed the [Installation Guide](installation.html) and opted to add `{:cowboy, "~> 2.7.0"}` to your mix.exs, go ahead and do that now and run `mix deps.get`.
+
 Now we'll create our database:
 
 ```console
