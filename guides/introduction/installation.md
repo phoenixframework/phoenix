@@ -27,6 +27,8 @@ Elixir code compiles to Erlang byte code to run on the Erlang virtual machine. W
 
 When we install Elixir using instructions from the Elixir [Installation Page](https://elixir-lang.org/install.html),  we will usually get Erlang too. If Erlang was not installed along with Elixir, please see the [Erlang Instructions](https://elixir-lang.org/install.html#installing-erlang) section of the Elixir Installation Page for instructions.
 
+> A note about Erlang and Phoenix: while Phoenix itself only requires Erlang 20 or later, one of Phoenix's dependencies, [cowboy](https://github.com/ninenines/cowboy), depends on Erlang 22 or later since cowboy 2.8.0. It is recommended to either install Erlang 22 or add `{:cowboy, "~> 2.7.0"}` to your mix.exs once your app has been created.
+
 ## Phoenix
 
 To check that we are on Elixir 1.6 and Erlang 20 or later, run:
