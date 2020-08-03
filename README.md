@@ -2,7 +2,7 @@
 > ### Productive. Reliable. Fast.
 > A productive web framework that does not compromise speed or maintainability.
 
-[![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg?branch=master)](https://travis-ci.org/phoenixframework/phoenix)
+[![Build Status](https://github.com/phoenixframework/phoenix/workflows/CI/badge.svg)](https://github.com/phoenixframework/phoenix/actions?query=workflow%3ACI)
 [![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
 
 ## Getting started
