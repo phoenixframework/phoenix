@@ -24,11 +24,7 @@ jobs:
         run: |
           mix local.rebar --force
           mix local.hex --force
-          apk add --no-progress --update git bash wget nodejs npm
-          wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-          nvm install 12.16 && nvm use 12.16
+          apk add --no-progress --update git
           mix deps.get
       - run: mix test
       # - run: MIX_ENV=docs mix inch.report
