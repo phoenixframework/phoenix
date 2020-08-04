@@ -163,7 +163,7 @@ warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
   lib/hello_web/controllers/post_controller.ex:18
 ```
 
-`mix phx.new.json` also supports `--no-context`, `--no-schema`, and others, as in `mix phx.new.html`.
+`mix phx.gen.json` also supports `--no-context`, `--no-schema`, and others, as in `mix phx.gen.html`.
 
 ### `mix phx.gen.context`
 
