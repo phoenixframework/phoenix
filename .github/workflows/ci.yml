@@ -1,98 +1,51 @@
 name: CI
-
-on:
-  pull_request:
-  push:
-    branches:
-      - master
-
+on: [push, pull_request]
 jobs:
-  mix_test:
-    name: mix test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}} | Cowboy ${{matrix.cowboy}})
+  test-elixir:
+    runs-on: ubuntu-latest
+    container:
+      image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-alpine-3.12.0
+      env:
+        ELIXIR_ASSERT_TIMEOUT: 2000
+
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - elixir: '1.7.4'
-            otp: '21.3'
-            cowboy: '2'
-          - elixir: '1.8.2'
-            otp: '21.3'
-            cowboy: '2'
-          - elixir: '1.9.4'
-            otp: '22.3'
-            cowboy: '2'
-          - elixir: '1.10.2'
-            cowboy: '1'
-            otp: '22.3'
-          - elixir: '1.7.4'
-            otp: '21.3'
-            cowboy: '1'
-          - elixir: '1.8.2'
-            otp: '21.3'
-            cowboy: '1'
-          - elixir: '1.9.4'
-            otp: '22.3'
-            cowboy: '1'
-          - elixir: '1.10.2'
-            otp: '22.3'
-            cowboy: '2'
-    runs-on: ubuntu-latest
+          - elixir: 1.9.4
+            otp: 20.3.8.26
+          - elixir: 1.10.4
+            otp: 21.3.8.17
+          - elixir: 1.10.4
+            otp: 23.0.3
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-elixir@v1
-        with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
+      - uses: actions/checkout@v2.3.1
       - name: Install Dependencies
-        env:
-          COWBOY_VERSION: ${{matrix.cowboy}}
         run: |
           mix local.rebar --force
           mix local.hex --force
+          apk add --no-progress --update git
           mix deps.get
-      - name: Run Tests
-        env:
-          ELIXIR_ASSERT_TIMEOUT: 2000
-          COWBOY_VERSION: ${{matrix.cowboy}}
-        run: mix test && cd installer && elixir -S mix test
-
-  inch:
-    name: inch report
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-elixir@v1
-        with:
-          otp-version: 22.3
-          elixir-version: 1.10.2
-      - name: Install Dependencies
-        run: |
-          mix local.rebar --force
-          mix local.hex --force
-          MIX_ENV=docs mix deps.get
-      - name: Compile
-        run: MIX_ENV=docs mix compile --docs
-      - name: Run Inch Report
-        run: MIX_ENV=docs mix inch.report
+      - run: mix test
+      # - run: MIX_ENV=docs mix inch.report
 
   npm_test:
-    name: npm test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-elixir@v1
+      - uses: actions/checkout@v2.3.1
+      - uses: actions/setup-elixir@v1.3.0
         with:
-          otp-version: 22.3
-          elixir-version: 1.10.2
+          otp-version: 23.0.3
+          elixir-version: 1.10.4
       - name: Install Dependencies
         run: |
           mix local.rebar --force
           mix local.hex --force
           mix deps.get
       - name: Setup Node.js 6.2
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2.1.1
         with:
-          node-version: 6.2
+          node-version: 12.16
       - name: npm install and test
         run: |
           cd assets
