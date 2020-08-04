@@ -768,6 +768,12 @@ defmodule Phoenix.Endpoint do
 
         * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
 
+        * `:trace_context_headers` - a list of all trace context headers. Supported
+          headers are defined by the [W3C Trace Context Specification](https://www.w3.org/TR/trace-context-1/).
+          These headers are necessary for libraries such as [OpenTelemetry](https://opentelemetry.io/) to extract
+          trace propagation information to know this request is part of a larger trace
+          in progress.
+
         * `:x_headers` - all request headers that have an "x-" prefix
 
         * `:uri` - a `%URI{}` with information from the conn
@@ -789,7 +795,7 @@ defmodule Phoenix.Endpoint do
 
           socket "/socket", AppWeb.UserSocket,
             websocket: [
-              connect_info: [:peer_data, :x_headers, :uri, session: [store: :cookie]]
+              connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri, session: [store: :cookie]]
             ]
 
       With arbitrary keywords:

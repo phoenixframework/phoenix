@@ -110,6 +110,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
       connect_info =
         connect_info
         |> Map.update!(:peer_data, &Map.put(&1, :address, address))
+        |> Map.update!(:trace_context_headers, &Map.new/1)
         |> Map.update!(:uri, &Map.from_struct/1)
         |> Map.update!(:x_headers, &Map.new/1)
 
@@ -177,6 +178,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         check_origin: ["//example.com"],
         timeout: 200,
         connect_info: [
+          :trace_context_headers,
           :x_headers,
           :peer_data,
           :uri,
@@ -275,6 +277,27 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
                                 payload: %{"connect_info" =>
                                   %{"x_headers" =>
                                     %{"x-application" => "Phoenix"}}}}
+      end
+
+      test "transport trace_context_headers are extracted to the socket connect_info" do
+        extra_headers = [
+          {"traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"},
+          {"tracestate", "congo=t61rcWkgMzE"}]
+        {:ok, sock} =
+          WebsocketClient.start_link(
+            self(),
+            "ws://127.0.0.1:#{@port}/ws/connect_info/websocket?vsn=#{@vsn}",
+            @serializer,
+            extra_headers
+          )
+
+        WebsocketClient.join(sock, lobby(), %{})
+
+        assert_receive %Message{event: "joined",
+                                payload: %{"connect_info" =>
+                                  %{"trace_context_headers" =>
+                                     %{"traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+                                       "tracestate" => "congo=t61rcWkgMzE"}}}}
       end
 
       test "transport peer_data is extracted to the socket connect_info" do

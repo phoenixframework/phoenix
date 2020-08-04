@@ -248,7 +248,7 @@ defmodule Phoenix.Socket.Transport do
 
     connect_info =
       Enum.map(connect_info, fn
-        key when key in [:peer_data, :uri, :user_agent, :x_headers] ->
+        key when key in [:peer_data, :trace_context_headers, :uri, :user_agent, :x_headers] ->
           key
 
         {:session, session} ->
@@ -259,7 +259,7 @@ defmodule Phoenix.Socket.Transport do
 
         other ->
           raise ArgumentError,
-                ":connect_info keys are expected to be one of :peer_data, :x_headers, :uri, or {:session, config}, " <>
+                ":connect_info keys are expected to be one of :peer_data, :trace_context_headers, :x_headers, :uri, or {:session, config}, " <>
                   "optionally followed by custom keyword pairs, got: #{inspect(other)}"
       end)
 
@@ -432,6 +432,8 @@ defmodule Phoenix.Socket.Transport do
 
     * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
 
+    * `:trace_context_headers` - a list of all trace context headers
+
     * `:x_headers` - a list of all request headers that have an "x-" prefix
 
     * `:uri` - a `%URI{}` derived from the conn
@@ -444,6 +446,9 @@ defmodule Phoenix.Socket.Transport do
       case key do
         :peer_data ->
           {:peer_data, Plug.Conn.get_peer_data(conn)}
+
+        :trace_context_headers ->
+          {:trace_context_headers, fetch_trace_context_headers(conn)}
 
         :x_headers ->
           {:x_headers, fetch_x_headers(conn)}
@@ -524,6 +529,12 @@ defmodule Phoenix.Socket.Transport do
     for {header, _} = pair <- conn.req_headers,
         String.starts_with?(header, "x-"),
         do: pair
+  end
+
+  defp fetch_trace_context_headers(conn) do
+    for {header, _} = pair <- conn.req_headers,
+      header in ["traceparent", "tracestate"],
+      do: pair
   end
 
   defp fetch_uri(conn) do
