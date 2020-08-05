@@ -68,7 +68,7 @@ However, if you are just getting started with Phoenix, we recommend you to insta
 
 ## inotify-tools (for linux users)
 
-Phoenix provides a very handy feature called Live Reloading. As you changed your views or your assets, it automatically reloads the page in the browser. In order for this functionality to work, you need a filesystem watcher.
+Phoenix provides a very handy feature called Live Reloading. As you change your views or your assets, it automatically reloads the page in the browser. In order for this functionality to work, you need a filesystem watcher.
 
 Mac OS X and Windows users already have a filesystem watcher but Linux users must install inotify-tools. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
 
