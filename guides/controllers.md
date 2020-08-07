@@ -118,14 +118,14 @@ def show(conn, %{"messenger" => messenger}) do
         <title>Passing a Messenger</title>
      </head>
      <body>
-       <p>From messenger #{messenger}</p>
+       <p>From messenger #{Plug.HTML.html_escape(messenger)}</p>
      </body>
    </html>
   """)
 end
 ```
 
-Hitting `/hello/Frank` now renders the HTML string we defined in the `show` action. Note that what we wrote in the action is not an `eex` template. It's a multi-line string, so we interpolate the `messenger` variable like this `#{messenger}`, instead of this `<%= messenger %>`.
+Hitting `/hello/Frank` now renders the HTML string we defined in the `show` action. Note that what we wrote in the action is not an `eex` template. It's a multi-line string, so we interpolate the `messenger` variable like this `#{Plug.HTML.html_escape(messenger)}`, instead of this `<%= messenger %>`.
 
 It is worth noting that the `text/2`, `json/2`, and `html/2` functions require neither a Phoenix view, nor a template to render.
 
