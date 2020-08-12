@@ -46,7 +46,7 @@ module.exports = (env, options) => {
     },
     plugins: [
       new MiniCssExtractPlugin({ filename: '../css/[name].css' }),
-      new CopyWebpackPlugin([{ from: 'static/', to: '../' }])
+      new CopyWebpackPlugin({ patterns: [{ from: 'static/', to: '../' }] })
     ]
     .concat(devMode ? [new HardSourceWebpackPlugin()] : [])
   }
