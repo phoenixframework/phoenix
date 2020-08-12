@@ -299,7 +299,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
       assert %{"connect_info" =>
         %{"trace_context_headers" =>
-           ctx_headers}} = status_msg.payload
+           ^ctx_headers}} = status_msg.payload
     end
 
     test "#{@mode}: transport peer_data is extracted to the socket connect_info" do
