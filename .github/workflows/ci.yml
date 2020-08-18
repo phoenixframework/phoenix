@@ -27,6 +27,9 @@ jobs:
           apk add --no-progress --update git
           mix deps.get
       - run: mix test
+      - name: Run installer tests
+        run: mix test
+        working-directory: installer
       # - run: MIX_ENV=docs mix inch.report
 
   npm_test:
