@@ -177,7 +177,7 @@ defmodule Mix.Tasks.Phx.New do
       if path_key == :web_path do
         Mix.shell().info("""
         Your web app requires a PubSub server to be running.
-        The PubSub server is typically defined in a `mix phx.gen.ecto` app.
+        The PubSub server is typically defined in a `mix phx.new.ecto` app.
         If you don't plan to define an Ecto app, you must explicitly start
         the PubSub in your supervision tree as:
 
