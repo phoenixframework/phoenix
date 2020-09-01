@@ -81,10 +81,10 @@ defmodule Phoenix.Socket.TransportTest do
     test "wildcard subdomains" do
       origins = ["https://*.ex.com", "http://*.ex.com"]
 
-      conn = check_origin("http://org1.ex.com", check_origin: origins)
-      refute conn.halted
-      conn = check_origin("https://org1.ex.com", check_origin: origins)
-      refute conn.halted
+      refute check_origin("http://org1.ex.com", check_origin: origins).halted
+      refute check_origin("HTTP://ORG1.EX.COM", check_origin: origins).halted
+      refute check_origin("https://org1.ex.com", check_origin: origins).halted
+      refute check_origin("HTTPS://ORG1.EX.COM", check_origin: origins).halted
     end
 
     test "nested wildcard subdomains" do
@@ -148,9 +148,12 @@ defmodule Phoenix.Socket.TransportTest do
       # Only host match
       refute check_origin("http://example.com/", check_origin: origins).halted
       refute check_origin("https://example.com/", check_origin: origins).halted
+      refute check_origin("HTTP://EXAMpLE.com/", check_origin: origins).halted
+      refute check_origin("HTTPs://EXAMpLE.com/", check_origin: origins).halted
 
       # Scheme + host match (checks port due to scheme)
       refute check_origin("http://scheme.com/", check_origin: origins).halted
+      refute check_origin("HTTP://SCHEME.Com/", check_origin: origins).halted
 
       conn = check_origin("https://scheme.com/", check_origin: origins)
       assert conn.halted
@@ -162,6 +165,7 @@ defmodule Phoenix.Socket.TransportTest do
 
       # Scheme + host + port match
       refute check_origin("http://port.com:81/", check_origin: origins).halted
+      refute check_origin("HTTP://PORT.Com:81/", check_origin: origins).halted
 
       conn = check_origin("http://port.com:82/", check_origin: origins)
       assert conn.halted

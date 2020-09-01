@@ -614,9 +614,9 @@ defmodule Phoenix.Socket.Transport do
   defp compare_host?(_request_host, nil),
     do: true
   defp compare_host?(request_host, "*." <> allowed_host),
-    do: String.ends_with?(request_host, allowed_host)
+    do: String.ends_with?(String.downcase(request_host), String.downcase(allowed_host))
   defp compare_host?(request_host, allowed_host),
-    do: request_host == allowed_host
+    do: String.downcase(request_host) == String.downcase(allowed_host)
 
   # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
