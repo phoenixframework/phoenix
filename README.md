@@ -1,6 +1,5 @@
 ![phoenix logo](https://raw.githubusercontent.com/phoenixframework/phoenix/master/priv/static/phoenix.png)
-> ### Productive. Reliable. Fast.
-> A productive web framework that does not compromise speed or maintainability.
+> Peace of mind from prototype to production.
 
 [![Build Status](https://github.com/phoenixframework/phoenix/workflows/CI/badge.svg)](https://github.com/phoenixframework/phoenix/actions?query=workflow%3ACI)
 [![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
