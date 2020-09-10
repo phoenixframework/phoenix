@@ -363,7 +363,7 @@ When we reload our [Welcome Page](http://localhost:4000), we see that we've been
 
 If we care to, we can open up our developer tools, click on the network tab, and visit our root route again. We see two main requests for this page - a get to `/` with a status of `302`, and a get to `/redirect_test` with a status of `200`.
 
-Notice that the redirect function takes `conn` as well as a string representing a relative path within our application. For security reasons, the `:to` helper can only redirect for paths within your appplication. If you want to redirect to a fully-qualified path or an external URL, you should use `:external` instead:
+Notice that the redirect function takes `conn` as well as a string representing a relative path within our application. For security reasons, the `:to` helper can only redirect for paths within your application. If you want to redirect to a fully-qualified path or an external URL, you should use `:external` instead:
 
 ```elixir
 def index(conn, _params) do
