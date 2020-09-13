@@ -17,6 +17,7 @@ config :<%= app_name %>, <%= endpoint_module %>,
       "--mode",
       "development",
       "--watch-stdin",
+      "--colors",
       cd: Path.expand("../assets", __DIR__)
     ]
   ]<% else %>[]<% end %>
