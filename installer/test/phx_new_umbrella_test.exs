@@ -71,8 +71,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(@app, "config/prod.exs"), fn file ->
         assert file =~ "port: 80"
-        assert file =~ ":inet6"
+        assert file =~ "import_config \"prod.secret.exs\""
       end
+
+      assert_file root_path(@app, "config/prod.secret.exs"), ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
 
       assert_file app_path(@app, ".formatter.exs"), fn file ->
         assert file =~ "import_deps: [:ecto]"
@@ -638,9 +640,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
         assert_file "../config/prod.exs", fn file ->
           assert file =~ "port: 80"
-          assert file =~ ":inet6"
           assert file =~ "import_config \"prod.secret.exs\""
         end
+
+        assert_file "../config/prod.secret.exs", ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
 
         assert_file "another/lib/another/application.ex", ~r/defmodule Another.Application do/
         assert_file "another/mix.exs", ~r/mod: {Another.Application, \[\]}/
