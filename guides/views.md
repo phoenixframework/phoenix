@@ -156,7 +156,7 @@ Since `Phoenix.View` is automatically imported into our templates, we could even
 <%= render(HelloWeb.PageView, "test.html", message: "Hello from layout!") %>
 ```
 
-If you want to render a template within the same view, you can skip the view name, and simply call `render("test.html", message: "Hello from sibling template!")` instead. For example, open up `lib/hello_web/templates/page/index.html.eex` and at this at the top:
+If you want to render a template within the same view, you can skip the view name, and simply call `render("test.html", message: "Hello from sibling template!")` instead. For example, open up `lib/hello_web/templates/page/index.html.eex` and add this at the top:
 
 ```html
 <%= render("test.html", message: "Hello from sibling template!") %>
