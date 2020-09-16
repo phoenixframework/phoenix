@@ -85,7 +85,7 @@ Release created at _build/prod/rel/my_app!
     _build/prod/rel/my_app/bin/my_app start
 ```
 
-And starting the release now should also successfully start the web server! Now you can get all of the files under the `_build/prod/rel/my_app` directory, package it, and run it in any production machine with the same OS and archictecture as the one that assembled the release. For more details, check the [docs for `mix release`](https://hexdocs.pm/mix/Mix.Tasks.Release.html).
+And starting the release now should also successfully start the web server! Now you can get all of the files under the `_build/prod/rel/my_app` directory, package it, and run it in any production machine with the same OS and architecture as the one that assembled the release. For more details, check the [docs for `mix release`](https://hexdocs.pm/mix/Mix.Tasks.Release.html).
 
 But before we finish this guide, there are two features from releases most Phoenix applications will use, so let's talk about those.
 

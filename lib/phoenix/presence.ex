@@ -165,7 +165,7 @@ defmodule Phoenix.Presence do
     {:error, reason :: term()}
 
   @doc """
-  Track an arbitary process as a presence.
+  Track an arbitrary process as a presence.
 
   Same with `track/3`, except track any process by `topic` and `key`.
   """
@@ -196,7 +196,7 @@ defmodule Phoenix.Presence do
   @doc """
   Update a process presence's metadata.
 
-  Same as `update/3`, but with an arbitary process.
+  Same as `update/3`, but with an arbitrary process.
   """
   @callback update(pid, topic, key :: String.t, meta :: map() | (map() -> map())) ::
     {:ok, ref :: binary()} |
