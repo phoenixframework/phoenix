@@ -84,7 +84,7 @@ defmodule Phoenix.Integration.WebsocketClient do
     {:ok, state}
   end
 
-  # The websocket client always sends a payload, even when none is explictly set
+  # The websocket client always sends a payload, even when none is explicitly set
   # on the frame.
   def websocket_handle({opcode, msg}, _conn_state, state) when opcode in [:ping, :pong] do
     send(state.sender, {:control, opcode, msg})
