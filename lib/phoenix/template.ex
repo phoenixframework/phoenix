@@ -23,10 +23,8 @@ defmodule Phoenix.Template do
       end
 
   `Phoenix.Template` will define a private function named `render_template/2`
-  with one clause per file system template. We expose this private function
-  via `render/2`, which can be invoked as:
-
-      Templates.render("foo.html", %{name: "John Doe"})
+  with one clause per file system template. You are responsible to expose
+  it appropriately, as shown above.
 
   In practice, developers rarely use `Phoenix.Template` directly.
   Instead they use `Phoenix.View` which wraps the template functionality
