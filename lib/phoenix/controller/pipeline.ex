@@ -40,7 +40,8 @@ defmodule Phoenix.Controller.Pipeline do
   end
 
   @doc false
-  def __action_fallback__(plug) do
+  def __action_fallback__(plug, caller) do
+    plug = Macro.expand(plug, %{caller | function: {:init, 1}})
     quote bind_quoted: [plug: plug] do
       @phoenix_fallback Phoenix.Controller.Pipeline.validate_fallback(
                           plug,

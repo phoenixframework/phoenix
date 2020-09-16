@@ -232,7 +232,7 @@ defmodule Phoenix.Controller do
       end
   """
   defmacro action_fallback(plug) do
-    Phoenix.Controller.Pipeline.__action_fallback__(plug)
+    Phoenix.Controller.Pipeline.__action_fallback__(plug, __CALLER__)
   end
 
   @doc """
