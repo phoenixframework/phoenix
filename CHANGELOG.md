@@ -18,6 +18,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * [Phoenix.Logger] Add :conn to `[:phoenix, :router_dispatch, :exception]` events
   * [Phoenix.Endpoint] Use regex to detect invalid hosts for IPv6 configurations
   * [Phoenix.Controller] Don't create compile-time references when using `action_fallback` to speed up compilation
+  * [Phoenix.Endpoint] Expose trace context headers in websockets and long polling
 
 ### 1.5.4 (2020-07-21)
 
