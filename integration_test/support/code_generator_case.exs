@@ -7,12 +7,6 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
 
   using do
     quote do
-      setup_all do
-        # Get Mix output sent to the current
-        # process to avoid polluting tests.
-        Mix.shell(Mix.Shell.Process)
-      end
-
       import unquote(__MODULE__)
     end
   end
