@@ -13,7 +13,7 @@ jobs:
       matrix:
         include:
           - elixir: 1.9.4
-            otp: 21.2.7
+            otp: 20.3.8.26
           - elixir: 1.10.4
             otp: 21.3.8.17
           - elixir: 1.10.4
@@ -43,6 +43,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Can't run integration tests before OTP 20.2 due to incompatiblity with cowlib.
+          #
+          # See https://github.com/phoenixframework/phoenix/issues/3903
           - elixir: 1.9.4
             otp: 21.2.7
           - elixir: 1.10.4
