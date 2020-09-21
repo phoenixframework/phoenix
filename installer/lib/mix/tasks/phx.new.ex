@@ -49,6 +49,14 @@ defmodule Mix.Tasks.Phx.New do
     * `--binary-id` - use `binary_id` as primary key type
       in Ecto schemas
 
+    * Skipping prompts
+
+      * `--install` - fetch and install dependencies
+        while generating this project.
+
+      * `--no-install` - do not fetch and install dependencies
+        while generating this project.
+
     * `--verbose` - use verbose output
 
   When passing the `--no-ecto` flag, Phoenix generators such as
@@ -102,7 +110,7 @@ defmodule Mix.Tasks.Phx.New do
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
              gettext: :boolean, umbrella: :boolean, verbose: :boolean,
-             live: :boolean, dashboard: :boolean]
+             live: :boolean, dashboard: :boolean, install: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell().info("Phoenix v#{@version}")
@@ -149,7 +157,12 @@ defmodule Mix.Tasks.Phx.New do
 
   defp prompt_to_install_deps(%Project{} = project, generator, path_key) do
     path = Map.fetch!(project, path_key)
-    install? = Mix.shell().yes?("\nFetch and install dependencies?")
+
+    install? =
+      Keyword.get_lazy(project.opts, :install, fn ->
+        Mix.shell().yes?("\nFetch and install dependencies?")
+      end)
+
     cd_step = ["$ cd #{relative_app_path(path)}"]
 
     maybe_cd(path, fn ->

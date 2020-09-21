@@ -491,6 +491,23 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
+  test "new with --no-install" do
+    in_tmp "new with no install", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--no-install"])
+
+      # Does not prompt to install dependencies
+      refute_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
+
+      # Instructions
+      assert_received {:mix_shell, :info, ["\nWe are almost there" <> _ = msg]}
+      assert msg =~ "$ cd phx_blog"
+      assert msg =~ "$ mix deps.get"
+
+      assert_received {:mix_shell, :info, ["Then configure your database in config/dev.exs" <> _]}
+      assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
+    end
+  end
+
   test "new defaults to pg adapter" do
     in_tmp "new defaults to pg adapter", fn ->
       project_path = Path.join(File.cwd!(), "custom_path")
