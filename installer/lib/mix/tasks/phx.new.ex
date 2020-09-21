@@ -49,13 +49,8 @@ defmodule Mix.Tasks.Phx.New do
     * `--binary-id` - use `binary_id` as primary key type
       in Ecto schemas
 
-    * Skipping prompts
-
-      * `--install` - fetch and install dependencies
-        while generating this project.
-
-      * `--no-install` - do not fetch and install dependencies
-        while generating this project.
+    * `--no-install` - do not fetch and install dependencies
+      while generating this project
 
     * `--verbose` - use verbose output
 
