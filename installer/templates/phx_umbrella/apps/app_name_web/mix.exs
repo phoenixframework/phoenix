@@ -39,7 +39,7 @@ defmodule <%= web_namespace %>.MixProject do
     [
       <%= phoenix_dep %>,<%= if ecto do %>
       {:phoenix_ecto, "~> 4.0"},<% end %><%= if html do %><%= if live do %>
-      {:phoenix_live_view, "~> 0.14.5"},
+      {:phoenix_live_view, "~> 0.14.6"},
       {:floki, ">= 0.27.0", only: :test},<% end %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if dashboard do %>
