@@ -115,7 +115,7 @@ defmodule Phoenix.ViewTest do
            ["Hello world", "\n"]
 
     assert render_to_iodata(MyApp.UserView, "show.json", []) ==
-           ["{\"", [[], "foo"], "\":", [34, [], "bar", 34], 125]
+           ["{\"", [[] | "foo"], "\":", [34, [[] | "bar"], 34], 125]
 
     assert render_to_string(MyApp.UserView, "index.html", title: "Hello world") ==
            "Hello world\n"
