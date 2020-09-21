@@ -12,13 +12,13 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
-### 1.5.5 (2020-09-20)
+### 1.5.5 (2020-09-21)
 
 ### Enhancements
   * [Phoenix.Logger] Add :conn to `[:phoenix, :router_dispatch, :exception]` events
   * [Phoenix.Endpoint] Use regex to detect invalid hosts for IPv6 configurations
   * [Phoenix.Controller] Don't create compile-time references when using `action_fallback` to speed up compilation
-  * [Phoenix.Endpoint] Expose trace context headers in websockets and long polling
+  * [Phoenix.Endpoint] Expose `:connect_info` `:trace_context_headers` in websockets and long polling
 
 ### 1.5.4 (2020-07-21)
 
