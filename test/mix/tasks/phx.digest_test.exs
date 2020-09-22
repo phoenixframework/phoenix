@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Phx.DigestTest do
   test "digests and compress files" do
     in_tmp @output_path, fn ->
       File.mkdir_p!("priv/static")
-      Mix.Tasks.Phx.Digest.run(["priv/static", "-o", @output_path, "--no-deps-check"])
+      Mix.Tasks.Phx.Digest.run(["priv/static", "-o", @output_path, "--no-deps-check", "--no-compile"])
       assert_received {:mix_shell, :info, ["Check your digested files at \"mix_phoenix_digest\""]}
     end
   end
@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Phx.DigestTest do
   test "digests and compress files without the input path" do
     in_tmp @output_path, fn ->
       File.mkdir_p!("priv/static")
-      Mix.Tasks.Phx.Digest.run(["-o", @output_path, "--no-deps-check"])
+      Mix.Tasks.Phx.Digest.run(["-o", @output_path, "--no-deps-check", "--no-compile"])
       assert_received {:mix_shell, :info, ["Check your digested files at \"mix_phoenix_digest_no_input\""]}
     end
   end
@@ -31,7 +31,7 @@ defmodule Mix.Tasks.Phx.DigestTest do
   test "uses the input path as output path when no output path is given" do
     in_tmp @input_path, fn ->
       File.mkdir_p!(@input_path)
-      Mix.Tasks.Phx.Digest.run([@input_path, "--no-deps-check"])
+      Mix.Tasks.Phx.Digest.run([@input_path, "--no-deps-check", "--no-compile"])
       assert_received {:mix_shell, :info, ["Check your digested files at \"input_path\""]}
     end
   end

@@ -3,6 +3,12 @@ with list when is_list(list) <- :code.lib_dir(:phx_new) do
   :code.del_path(:filename.join(list, 'ebin'))
 end
 
+# Mock live reloading for testing the generated application.
+defmodule Phoenix.LiveReloader do
+  def init(opts), do: opts
+  def call(conn, _), do: conn
+end
+
 _ = Kernel.ParallelCompiler.compile Path.wildcard("installer/lib/**/*.ex")
 Code.require_file("installer/test/mix_helper.exs")
 
@@ -55,14 +61,6 @@ defmodule Mix.Tasks.Phx.NewTest do
           assert_received {:mix_shell, :info, ["Generated phx_blog app"]}
           refute_received {:mix_shell, :info, ["Generated phoenix app"]}
           Mix.shell().flush()
-
-          # Adding a new template touches file (through mix)
-          File.touch! "lib/phx_blog_web/views/layout_view.ex", @epoch
-          File.write! "lib/phx_blog_web/templates/layout/another.html.eex", "oops"
-
-          Mix.Task.clear()
-          Mix.Task.run "compile", ["--no-deps-check"]
-          assert File.stat!("lib/phx_blog_web/views/layout_view.ex").mtime > @epoch
 
           # Adding a new template triggers recompilation (through request)
           File.touch! "lib/phx_blog_web/views/page_view.ex", @epoch
