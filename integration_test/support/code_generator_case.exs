@@ -17,9 +17,8 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
     installer_root = Path.expand("../../installer", __DIR__)
     app_root_path = get_app_root_path(tmp_dir, app_name, opts)
 
-    MixTaskRunner.run!(["phx.new", app_path, "--dev"] ++ opts,
-      cd: installer_root,
-      prompt_responses: :no_to_all
+    MixTaskRunner.run!(["phx.new", app_path, "--dev", "--no-install"] ++ opts,
+      cd: installer_root
     )
 
     MixTaskRunner.run!(~w(deps.get), cd: app_root_path)
