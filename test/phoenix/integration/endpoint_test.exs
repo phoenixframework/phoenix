@@ -1,21 +1,30 @@
 Code.require_file "../../support/http_client.exs", __DIR__
+Code.require_file "../../support/endpoint_helper.exs", __DIR__
 
 defmodule Phoenix.Integration.EndpointTest do
   use ExUnit.Case
   import ExUnit.CaptureLog
 
+  import Phoenix.Integration.EndpointHelper
+
   alias Phoenix.Integration.AdapterTest.ProdEndpoint
   alias Phoenix.Integration.AdapterTest.DevEndpoint
   alias Phoenix.Integration.AdapterTest.ProdInet6Endpoint
 
+  # Find available ports to use for this test
+  [dev, prod, prod_inet6] = get_unused_port_numbers(3)
+  @dev dev
+  @prod prod
+  @prod_inet6 prod_inet6
+
   Application.put_env(:endpoint_int, ProdEndpoint,
-    http: [port: "4807"], url: [host: "example.com"], server: true, drainer: false,
+    http: [port: @prod], url: [host: "example.com"], server: true, drainer: false,
     render_errors: [accepts: ~w(html json)])
   Application.put_env(:endpoint_int, DevEndpoint,
-    http: [port: "4808"], debug_errors: true, drainer: false)
+    http: [port: @dev], debug_errors: true, drainer: false)
 
   Application.put_env(:endpoint_int, ProdInet6Endpoint,
-    http: [port: "4806", transport_options: [socket_opts: [:inet6]]],
+    http: [port: @prod_inet6, transport_options: [socket_opts: [:inet6]]],
     url: [host: "example.com"],
     server: true)
 
@@ -99,9 +108,6 @@ defmodule Phoenix.Integration.EndpointTest do
       end
     end
   end
-
-  @prod 4807
-  @dev  4808
 
   alias Phoenix.Integration.HTTPClient
 
