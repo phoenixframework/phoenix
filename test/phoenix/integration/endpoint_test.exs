@@ -11,13 +11,11 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.AdapterTest.DevEndpoint
   alias Phoenix.Integration.AdapterTest.ProdInet6Endpoint
 
-  # Set up the following module variables containing
-  # port numbers for use in the rest of the module.
-  @port_names [:dev, :prod, :prod_inet6]
-
-  for {port_name, port_number} <- Enum.zip(@port_names, get_unused_port_numbers(length(@port_names))) do
-    Module.put_attribute(__MODULE__, port_name, port_number)
-  end
+  # Find available ports to use for this test
+  [dev, prod, prod_inet6] = get_unused_port_numbers(3)
+  @dev dev
+  @prod prod
+  @prod_inet6 prod_inet6
 
   Application.put_env(:endpoint_int, ProdEndpoint,
     http: [port: @prod], url: [host: "example.com"], server: true, drainer: false,
