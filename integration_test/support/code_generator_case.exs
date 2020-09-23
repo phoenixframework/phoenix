@@ -1,9 +1,5 @@
-Code.require_file("./mix_task_runner.exs", __DIR__)
-
 defmodule Phoenix.Integration.CodeGeneratorCase do
   use ExUnit.CaseTemplate
-
-  alias Phoenix.Integration.MixTaskRunner
 
   using do
     quote do
@@ -17,29 +13,45 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
     installer_root = Path.expand("../../installer", __DIR__)
     app_root_path = get_app_root_path(tmp_dir, app_name, opts)
 
-    MixTaskRunner.run!(["phx.new", app_path, "--dev", "--no-install"] ++ opts,
-      cd: installer_root
-    )
+    mix_run!(["phx.new", app_path, "--dev", "--no-install"] ++ opts, installer_root)
 
-    MixTaskRunner.run!(~w(deps.get), cd: app_root_path)
+    mix_run!(~w(deps.get), app_root_path)
 
     app_root_path
   end
 
-  def mix_deps_get(app_path) do
-    MixTaskRunner.run!(~w(deps.get), cd: app_path)
+  def mix_run!(args, app_path, opts \\ [])
+      when is_list(args) and is_binary(app_path) and is_list(opts) do
+    case mix_run(args, app_path, opts) do
+      {output, 0} ->
+        output
+
+      {output, exit_code} ->
+        raise """
+        mix command failed with exit code: #{inspect(exit_code)}
+
+        mix #{Enum.join(args, " ")}
+
+        #{output}
+
+        Options
+        cd: #{Path.expand(app_path)}
+        env: #{opts |> Keyword.get(:env, []) |> inspect()}
+        """
+    end
   end
 
-  def mix_run!(app_path, args) when is_list(args) do
-    MixTaskRunner.run!(args, cd: app_path)
+  def mix_run(args, app_path, opts \\ [])
+      when is_list(args) and is_binary(app_path) and is_list(opts) do
+    System.cmd("mix", args, [stderr_to_stdout: true, cd: Path.expand(app_path)] ++ opts)
   end
 
   def assert_passes_formatter_check(app_path) do
-    MixTaskRunner.run!(~w(format --check-formatted), cd: app_path)
+    mix_run!(~w(format --check-formatted), app_path)
   end
 
   def assert_no_compilation_warnings(app_path) do
-    MixTaskRunner.run!(["do", "clean,", "compile", "--warnings-as-errors"], cd: app_path)
+    mix_run!(["do", "clean,", "compile", "--warnings-as-errors"], app_path)
   end
 
   def with_installer_tmp(name, opts \\ [], function)
