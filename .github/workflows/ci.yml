@@ -32,6 +32,37 @@ jobs:
         working-directory: installer
       # - run: MIX_ENV=docs mix inch.report
 
+  integration-test-elixir:
+    runs-on: ubuntu-latest
+    container:
+      image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-alpine-3.12.0
+      env:
+        ELIXIR_ASSERT_TIMEOUT: 2000
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Can't run integration tests before OTP 20.2 due to incompatiblity with cowlib.
+          #
+          # See https://github.com/phoenixframework/phoenix/issues/3903
+          - elixir: 1.9.4
+            otp: 21.2.7
+          - elixir: 1.10.4
+            otp: 21.3.8.17
+          - elixir: 1.10.4
+            otp: 23.0.3
+    steps:
+      - uses: actions/checkout@v2.3.1
+      - name: Install Dependencies
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          apk add --no-progress --update git
+          mix deps.get
+      - name: Run integration tests
+        run: mix test.integration
+
   npm_test:
     runs-on: ubuntu-latest
     steps:

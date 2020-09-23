@@ -28,6 +28,7 @@ defmodule Phoenix.MixProject do
         ]
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
+      test_paths: test_paths(System.get_env("TEST_SUITE")),
       name: "Phoenix",
       docs: docs(),
       aliases: aliases(),
@@ -194,12 +195,35 @@ defmodule Phoenix.MixProject do
 
   defp aliases do
     [
-      docs: ["docs", &generate_js_docs/1]
+      docs: ["docs", &generate_js_docs/1],
+      "test.integration": [&start_integration_test/1]
     ]
   end
 
   def generate_js_docs(_) do
     Mix.Task.run("app.start")
     System.cmd("npm", ["run", "docs"], cd: "assets")
+  end
+
+  defp test_paths("integration"), do: ["integration_test"]
+  defp test_paths(_), do: ["test"]
+
+  defp start_integration_test(args) do
+    mix_cmd_with_status_check(
+      ["test", ansi_option() | args],
+      env: [{"TEST_SUITE", "integration"}]
+    )
+  end
+
+  defp ansi_option do
+    if IO.ANSI.enabled?(), do: "--color", else: "--no-color"
+  end
+
+  defp mix_cmd_with_status_check(args, opts) when is_list(opts) do
+    {_, res} = System.cmd("mix", args, [into: IO.binstream(:stdio, :line)] ++ opts)
+
+    if res > 0 do
+      System.at_exit(fn _ -> exit({:shutdown, 1}) end)
+    end
   end
 end
