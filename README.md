@@ -2,7 +2,8 @@
 > Peace of mind from prototype to production.
 
 [![Build Status](https://github.com/phoenixframework/phoenix/workflows/CI/badge.svg)](https://github.com/phoenixframework/phoenix/actions?query=workflow%3ACI)
-[![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
+[![Hex Version](https://img.shields.io/hexpm/v/phoenix.svg)](https://hex.pm/packages/phoenix)
+[![docs](https://img.shields.io/badge/docs-hexpm-blue.svg)](https://hexdocs.pm/phoenix/)
 
 ## Getting started
 
