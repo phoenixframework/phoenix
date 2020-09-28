@@ -331,6 +331,20 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
     end
   end
 
+  test "when more than 50 attributes are given", config do
+    in_tmp_live_project config.test, fn ->
+      long_attribute_list = 0..55 |> Enum.map(&("attribute#{&1}:string")) |> Enum.join(" ")
+      Gen.Live.run(~w(Blog Post posts title #{long_attribute_list}))
+
+      assert_file "test/phoenix/blog_test.exs", fn file ->
+        refute file =~ "...}"
+      end
+      assert_file "test/phoenix_web/live/post_live_test.exs", fn file ->
+        refute file =~ "...}"
+      end
+    end
+  end
+
   describe "inside umbrella" do
     test "without context_app generators config uses web dir", config do
       in_tmp_live_umbrella_project config.test, fn ->

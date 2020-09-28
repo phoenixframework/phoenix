@@ -4,7 +4,7 @@
 
     import <%= inspect context.module %>Fixtures
 
-    @invalid_attrs <%= inspect for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %>
+    @invalid_attrs <%= inspect (for {key, _} <- schema.params.create, into: %{}, do: {key, nil}), limit: :infinity %>
 
     test "list_<%= schema.plural %>/0 returns all <%= schema.plural %>" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
@@ -17,7 +17,7 @@
     end
 
     test "create_<%= schema.singular %>/1 with valid data creates a <%= schema.singular %>" do
-      valid_attrs = <%= inspect schema.params.create %>
+      valid_attrs = <%= inspect schema.params.create, limit: :infinity %>
 
       assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.create_<%= schema.singular %>(valid_attrs)<%= for {field, value} <- schema.params.create do %>
       assert <%= schema.singular %>.<%= field %> == <%= Mix.Phoenix.Schema.value(schema, field, value) %><% end %>
@@ -29,7 +29,7 @@
 
     test "update_<%= schema.singular %>/2 with valid data updates the <%= schema.singular %>" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
-      update_attrs = <%= inspect schema.params.update %>
+      update_attrs = <%= inspect schema.params.update, limit: :infinity %>
 
       assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, update_attrs)<%= for {field, value} <- schema.params.update do %>
       assert <%= schema.singular %>.<%= field %> == <%= Mix.Phoenix.Schema.value(schema, field, value) %><% end %>
