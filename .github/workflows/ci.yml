@@ -38,6 +38,8 @@ jobs:
       image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-alpine-3.12.0
       env:
         ELIXIR_ASSERT_TIMEOUT: 2000
+    env:
+      CACHE_VERSION: 1
 
     strategy:
       fail-fast: false
@@ -55,11 +57,23 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.1
       - name: Install Dependencies
+        # Tar needs to be installed so actions/cache works properly
         run: |
           mix local.rebar --force
           mix local.hex --force
-          apk add --no-progress --update git
+          apk add --no-progress --update git tar
           mix deps.get
+      # This is used with the next step to ensure a cache is stored each time
+      - name: Get timestamp for cache key
+        id: timestamp-for-cache-key
+        run: |
+          echo "::set-output name=timestamp::$(/bin/date -u "+%s")"
+      - uses: actions/cache@v2
+        with:
+          path: tmp/integration_cache/build
+          key: ${{ env.CACHE_VERSION }}-integration_cache-${{ matrix.otp }}-${{ matrix.elixir }}-${{ steps.timestamp-for-cache-key.outputs.timestamp }}
+          restore-keys: |
+            ${{ env.CACHE_VERSION }}-integration_cache-${{ matrix.otp }}-${{ matrix.elixir }}-
       - name: Run integration tests
         run: mix test.integration
 

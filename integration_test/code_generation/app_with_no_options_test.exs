@@ -1,5 +1,3 @@
-Code.require_file("../support/code_generator_case.exs", __DIR__)
-
 defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
   use Phoenix.Integration.CodeGeneratorCase, async: true
 

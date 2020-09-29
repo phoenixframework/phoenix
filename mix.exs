@@ -42,6 +42,13 @@ defmodule Phoenix.MixProject do
   end
 
   defp elixirc_paths(:docs), do: ["lib", "installer/lib"]
+  defp elixirc_paths(:test) do
+    if System.get_env("TEST_SUITE") == "integration" do
+      ["lib", "integration_test/support"]
+    else
+      ["lib"]
+    end
+  end
   defp elixirc_paths(_), do: ["lib"]
 
   def application do

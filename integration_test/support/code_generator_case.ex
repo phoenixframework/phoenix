@@ -1,6 +1,8 @@
 defmodule Phoenix.Integration.CodeGeneratorCase do
   use ExUnit.CaseTemplate
 
+  alias Phoenix.Integration.DepsCompiler
+
   using do
     quote do
       import unquote(__MODULE__)
@@ -16,6 +18,8 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
     mix_run!(["phx.new", app_path, "--dev", "--no-install"] ++ opts, installer_root)
 
     mix_run!(~w(deps.get), app_root_path)
+
+    DepsCompiler.compile_deps(app_root_path)
 
     app_root_path
   end
