@@ -25,12 +25,16 @@ config :logger, level: :info
 #       ...
 #       url: [host: "example.com", port: 443],
 #       https: [
+#         ip: {0, 0, 0, 0},
 #         port: 443,
 #         cipher_suite: :strong,
 #         keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
 #         certfile: System.get_env("SOME_APP_SSL_CERT_PATH"),
 #         transport_options: [socket_opts: [:inet6]]
 #       ]
+#
+# If you intend to run Phoenix behind a reverse proxy, consider
+# changing `ip` to `{127, 0, 0, 1}` to prevent direct access.
 #
 # The `cipher_suite` is set to `:strong` to support only the
 # latest and more secure SSL ciphers. This means old browsers
