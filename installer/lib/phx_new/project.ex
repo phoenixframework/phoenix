@@ -23,12 +23,14 @@ defmodule Phx.New.Project do
     app = opts[:app] || Path.basename(project_path)
     app_mod = Module.concat([opts[:module] || Macro.camelize(app)])
 
-    %Project{base_path: project_path,
-             app: app,
-             app_mod: app_mod,
-             root_app: app,
-             root_mod: app_mod,
-             opts: opts}
+    %Project{
+      base_path: project_path,
+      app: app,
+      app_mod: app_mod,
+      root_app: app,
+      root_mod: app_mod,
+      opts: opts
+    }
   end
 
   def ecto?(%Project{binding: binding}) do
@@ -45,6 +47,10 @@ defmodule Phx.New.Project do
 
   def live?(%Project{binding: binding}) do
     Keyword.fetch!(binding, :live)
+  end
+
+  def mix_release?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :mix_release)
   end
 
   def dashboard?(%Project{binding: binding}) do
@@ -69,8 +75,12 @@ defmodule Phx.New.Project do
   end
 
   defp expand_path_with_bindings(path, %Project{} = project) do
-    Regex.replace(Regex.recompile!(~r/:[a-zA-Z0-9_]+/), path, fn ":" <> key, _ ->
-        project |> Map.fetch!(:"#{key}") |> to_string()
+    ~r/:[a-zA-Z0-9_]+/
+    |> Regex.recompile!()
+    |> Regex.replace(path, fn ":" <> key, _ ->
+      project
+      |> Map.fetch!(:"#{key}")
+      |> to_string()
     end)
   end
 end

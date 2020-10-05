@@ -33,6 +33,10 @@ defmodule Mix.Tasks.Phx.New do
       Please check the driver docs for more information
       and requirements. Defaults to "postgres".
 
+    * `--mix-release` - leverage Mix Releases for the
+      generated project as opposed to the default `prod.secret.exs`
+      deployment strategy.
+
     * `--no-webpack` - do not generate webpack files
       for static asset building. When choosing this
       option, you will need to manually handle
@@ -104,11 +108,24 @@ defmodule Mix.Tasks.Phx.New do
   @version Mix.Project.config()[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application"
 
-  @switches [dev: :boolean, webpack: :boolean, ecto: :boolean,
-             app: :string, module: :string, web_module: :string,
-             database: :string, binary_id: :boolean, html: :boolean,
-             gettext: :boolean, umbrella: :boolean, verbose: :boolean,
-             live: :boolean, dashboard: :boolean, install: :boolean]
+  @switches [
+    dev: :boolean,
+    webpack: :boolean,
+    ecto: :boolean,
+    app: :string,
+    module: :string,
+    web_module: :string,
+    database: :string,
+    binary_id: :boolean,
+    mix_release: :boolean,
+    html: :boolean,
+    gettext: :boolean,
+    umbrella: :boolean,
+    verbose: :boolean,
+    live: :boolean,
+    dashboard: :boolean,
+    install: :boolean
+  ]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell().info("Phoenix v#{@version}")
@@ -209,6 +226,7 @@ defmodule Mix.Tasks.Phx.New do
         Mix.raise "Invalid option: " <> switch_to_string(switch)
     end
   end
+
   defp switch_to_string({name, nil}), do: name
   defp switch_to_string({name, val}), do: name <> "=" <> val
 

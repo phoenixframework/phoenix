@@ -10,5 +10,6 @@
 /installer/tmp
 /installer/doc
 /installer/deps
+/installer/phx_new-*.ez
 
 erl_crash.dump

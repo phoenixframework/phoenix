@@ -7,7 +7,6 @@ defmodule Phx.New.Single do
     {:eex,  "phx_single/config/config.exs",             :project, "config/config.exs"},
     {:eex,  "phx_single/config/dev.exs",                :project, "config/dev.exs"},
     {:eex,  "phx_single/config/prod.exs",               :project, "config/prod.exs"},
-    {:eex,  "phx_single/config/prod.secret.exs",        :project, "config/prod.secret.exs"},
     {:eex,  "phx_single/config/test.exs",               :project, "config/test.exs"},
     {:eex,  "phx_single/lib/app_name/application.ex",   :project, "lib/:app/application.ex"},
     {:eex,  "phx_single/lib/app_name.ex",               :project, "lib/:app.ex"},
@@ -29,6 +28,17 @@ defmodule Phx.New.Single do
     {:keep, "phx_test/channels",                        :project, "test/:lib_web_name/channels"},
     {:keep, "phx_test/controllers",                     :project, "test/:lib_web_name/controllers"},
     {:eex,  "phx_test/views/error_view_test.exs",       :project, "test/:lib_web_name/views/error_view_test.exs"},
+  ]
+
+  template :default_release, [
+    {:eex, "phx_single/config/prod.secret.exs", :project, "config/prod.secret.exs"}
+  ]
+
+  template :mix_release, [
+    {:eex, "phx_mix_release/config/releases.exs", :project, "config/releases.exs"},
+    {:eex, "phx_mix_release/rel/env.bat.eex",     :project, "rel/env.bat.eex"},
+    {:eex, "phx_mix_release/rel/env.sh.eex",      :project, "rel/env.sh.eex"},
+    {:eex, "phx_mix_release/rel/vm.args.eex",     :project, "rel/vm.args.eex"}
   ]
 
   template :gettext, [
@@ -140,6 +150,12 @@ defmodule Phx.New.Single do
 
     if Project.gettext?(project), do: gen_gettext(project)
 
+    if Project.mix_release?(project) do
+      gen_mix_release(project)
+    else
+      gen_default_release(project)
+    end
+
     case {Project.webpack?(project), Project.html?(project)} do
       {true, _}      -> gen_webpack(project)
       {false, true}  -> gen_static(project)
@@ -151,6 +167,14 @@ defmodule Phx.New.Single do
 
   def gen_html(project) do
     copy_from project, __MODULE__, :html
+  end
+
+  def gen_mix_release(project) do
+    copy_from(project, __MODULE__, :mix_release)
+  end
+
+  def gen_default_release(project) do
+    copy_from(project, __MODULE__, :default_release)
   end
 
   def gen_gettext(project) do

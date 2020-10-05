@@ -115,6 +115,7 @@ defmodule Phx.New.Generator do
     gettext      = Keyword.get(opts, :gettext, true)
     webpack      = Keyword.get(opts, :webpack, true)
     dev          = Keyword.get(opts, :dev, false)
+    mix_release  = Keyword.get(opts, :mix_release, false)
     phoenix_path = phoenix_path(project, dev)
 
     # We lowercase the database name because according to the
@@ -160,13 +161,14 @@ defmodule Phx.New.Generator do
       ecto: ecto,
       html: html,
       live: live,
+      mix_release: mix_release,
       dashboard: dashboard,
       gettext: gettext,
       adapter_app: adapter_app,
       adapter_module: adapter_module,
       adapter_config: adapter_config,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
-      namespaced?: namespaced?(project),
+      namespaced?: namespaced?(project)
     ]
 
     %Project{project | binding: binding}
@@ -180,7 +182,7 @@ defmodule Phx.New.Generator do
     Macro.camelize(project.app) != inspect(project.app_mod)
   end
 
-  def gen_ecto_config(%Project{project_path: project_path, binding: binding}) do
+  def gen_ecto_config(%Project{project_path: project_path, binding: binding} = project) do
     adapter_config = binding[:adapter_config]
 
     config_inject project_path, "config/dev.exs", """
@@ -198,19 +200,21 @@ defmodule Phx.New.Generator do
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config adapter_config[:test]}
     """
 
-    config_inject project_path, "config/prod.secret.exs", """
-    database_url =
-      System.get_env("DATABASE_URL") ||
-        raise \"""
-        environment variable DATABASE_URL is missing.
-        For example: ecto://USER:PASS@HOST/DATABASE
-        \"""
+    unless Project.mix_release?(project) do
+      config_inject project_path, "config/prod.secret.exs", """
+      database_url =
+        System.get_env("DATABASE_URL") ||
+          raise \"""
+          environment variable DATABASE_URL is missing.
+          For example: ecto://USER:PASS@HOST/DATABASE
+          \"""
 
-    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-      # ssl: true,
-      url: database_url,
-      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
-    """
+      config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
+        # ssl: true,
+        url: database_url,
+        pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+      """
+    end
   end
 
   defp get_pubsub_server(module) do
