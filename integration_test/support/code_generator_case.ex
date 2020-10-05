@@ -88,6 +88,6 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
   end
 
   defp random_string(len) do
-    len |> :crypto.strong_rand_bytes() |> Base.encode64() |> binary_part(0, len)
+    len |> :crypto.strong_rand_bytes() |> Base.url_encode64() |> binary_part(0, len)
   end
 end
