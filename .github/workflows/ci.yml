@@ -39,7 +39,7 @@ jobs:
       env:
         ELIXIR_ASSERT_TIMEOUT: 2000
     env:
-      CACHE_VERSION: 1
+      CACHE_VERSION: 2
 
     strategy:
       fail-fast: false
