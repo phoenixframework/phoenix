@@ -1,5 +1,3 @@
-Code.require_file("../support/code_generator_case.exs", __DIR__)
-
 defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
   use Phoenix.Integration.CodeGeneratorCase, async: true
 

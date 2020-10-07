@@ -11,4 +11,7 @@
 /installer/doc
 /installer/deps
 
+/integration_test/_build
+/integration_test/deps
+
 erl_crash.dump
