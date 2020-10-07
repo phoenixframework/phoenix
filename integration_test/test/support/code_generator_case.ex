@@ -10,12 +10,17 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
   def generate_phoenix_app(tmp_dir, app_name, opts \\ [])
       when is_binary(app_name) and is_list(opts) do
     app_path = Path.expand(app_name, tmp_dir)
-    installer_root = Path.expand("../../installer", __DIR__)
+    integration_test_root_path = Path.expand("../../", __DIR__)
     app_root_path = get_app_root_path(tmp_dir, app_name, opts)
 
-    mix_run!(["phx.new", app_path, "--dev", "--no-install"] ++ opts, installer_root)
+    mix_run!(["phx.new", app_path, "--dev", "--no-install"] ++ opts, integration_test_root_path)
 
-    mix_run!(~w(deps.get), app_root_path)
+    for path <- ~w(mix.lock deps _build) do
+      File.cp_r!(
+        Path.join(integration_test_root_path, path),
+        Path.join(app_root_path, path)
+      )
+    end
 
     app_root_path
   end
@@ -69,7 +74,7 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
   end
 
   defp installer_tmp_path do
-    Path.expand("../../installer/tmp", __DIR__)
+    Path.expand("../../../installer/tmp", __DIR__)
   end
 
   defp get_app_root_path(tmp_dir, app_name, opts) do
