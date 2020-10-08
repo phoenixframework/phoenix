@@ -292,7 +292,6 @@ defmodule Mix.Phoenix.Schema do
 
   defp string_attr(types) do
     Enum.find_value(types, fn
-      {key, {_col, :string}} -> key
       {key, :string} -> key
       _ -> false
     end)
