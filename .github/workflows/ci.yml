@@ -15,9 +15,7 @@ jobs:
           - elixir: 1.9.4
             otp: 20.3.8.26
           - elixir: 1.10.4
-            otp: 21.3.8.17
-          - elixir: 1.10.4
-            otp: 23.0.3
+            otp: 23.1.1
           - elixir: 1.11.0
             otp: 21.3.8.18
           - elixir: 1.11.0
@@ -54,8 +52,6 @@ jobs:
             otp: 21.2.7
           - elixir: 1.10.4
             otp: 21.3.8.17
-          - elixir: 1.10.4
-            otp: 23.0.3
           - elixir: 1.11.0
             otp: 21.3.8.18
           - elixir: 1.11.0
