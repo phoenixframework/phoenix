@@ -4,9 +4,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   import Phoenix.LiveViewTest
   import <%= inspect context.module %>Fixtures
 
-  @create_attrs <%= inspect schema.params.create %>
-  @update_attrs <%= inspect schema.params.update %>
-  @invalid_attrs <%= inspect for {key, value} <- schema.params.create, into: %{}, do: if is_list(value), do: {key, []}, else: {key, nil} %>
+  @create_attrs <%= inspect for {key, value} <- schema.params.create, into: %{}, do: {key, Mix.Phoenix.Schema.live_form_value(value)} %>
+  @update_attrs <%= inspect for {key, value} <- schema.params.update, into: %{}, do: {key, Mix.Phoenix.Schema.live_form_value(value)} %>
+  @invalid_attrs <%= inspect for {key, value} <- schema.params.create, into: %{}, do: {key, value |> Mix.Phoenix.Schema.live_form_value() |> Mix.Phoenix.Schema.invalid_form_value()} %>
 
   defp create_<%= schema.singular %>(_) do
     <%= schema.singular %> = <%= schema.singular %>_fixture()

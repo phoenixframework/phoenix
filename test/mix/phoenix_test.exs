@@ -76,14 +76,76 @@ defmodule Mix.PhoenixTest do
       admin: true,
       meta: %{},
       name: "some name",
-      date_of_birth: ~D[2010-04-17],
+      date_of_birth: Date.add(Date.utc_today(), -1),
       happy_hour: ~T[14:00:00],
       happy_hour_usec: ~T[14:00:00.000000],
-      joined: ~N[2010-04-17 14:00:00],
-      joined_utc: ~U[2010-04-17 14:00:00Z],
-      joined_utc_usec: ~U[2010-04-17 14:00:00.000000Z],
+      joined: NaiveDateTime.truncate(build_utc_naive_datetime(), :second),
+      joined_utc: DateTime.truncate(build_utc_datetime(), :second),
+      joined_utc_usec: build_utc_datetime(),
       token: "7488a646-e31f-11e4-aace-600308960662",
       other: "some other"
     }
+  end
+
+  @one_day_in_seconds 24 * 3600
+
+  defp build_utc_datetime, 
+    do: DateTime.add(%{DateTime.utc_now() | second: 0, microsecond: {0, 6}}, -@one_day_in_seconds)
+
+  defp build_utc_naive_datetime, 
+    do: NaiveDateTime.add(%{NaiveDateTime.utc_now() | second: 0, microsecond: {0, 6}}, -@one_day_in_seconds)
+
+  test "live_form_value/1" do
+    assert Mix.Phoenix.Schema.live_form_value(~D[2020-10-09]) == %{day: 9, month: 10, year: 2020}
+    assert Mix.Phoenix.Schema.live_form_value(~T[14:00:00]) == %{hour: 14, minute: 00}
+    assert Mix.Phoenix.Schema.live_form_value(~N[2020-10-09 14:00:00]) == %{
+             day: 9,
+             month: 10,
+             year: 2020,
+             hour: 14,
+             minute: 00
+           }
+
+    assert Mix.Phoenix.Schema.live_form_value(~U[2020-10-09T14:00:00Z]) == %{
+             day: 9,
+             month: 10,
+             year: 2020,
+             hour: 14,
+             minute: 00
+           }
+
+    assert Mix.Phoenix.Schema.live_form_value(:value) == :value 
+  end
+
+  test "invalid_form_value/1" do
+    assert ~D[2020-10-09]
+           |> Mix.Phoenix.Schema.live_form_value()
+           |> Mix.Phoenix.Schema.invalid_form_value() == %{day: 9, month: 10, year: 2020}
+
+    assert ~T[14:00:00]
+           |> Mix.Phoenix.Schema.live_form_value()
+           |> Mix.Phoenix.Schema.invalid_form_value() == %{hour: 14, minute: 00}
+
+    assert ~N[2020-10-09 14:00:00]
+           |> Mix.Phoenix.Schema.live_form_value()
+           |> Mix.Phoenix.Schema.invalid_form_value() == %{
+             day: 9,
+             month: 10,
+             year: 2020,
+             hour: 14,
+             minute: 00
+           }
+
+    assert ~U[2020-10-09T14:00:00Z]
+           |> Mix.Phoenix.Schema.live_form_value()
+           |> Mix.Phoenix.Schema.invalid_form_value() == %{
+             day: 9,
+             month: 10,
+             year: 2020,
+             hour: 14,
+             minute: 00
+           }
+
+    assert Mix.Phoenix.Schema.invalid_form_value(:value) == nil
   end
 end
