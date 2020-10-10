@@ -35,6 +35,16 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
   end
 
   test "generates json resource", config do
+    one_day_in_seconds = 24 * 3600
+
+    naive_datetime =
+      %{NaiveDateTime.utc_now() | second: 0, microsecond: {0, 6}}
+      |> NaiveDateTime.add(-one_day_in_seconds)
+
+    datetime = 
+      %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
+      |> DateTime.add(-one_day_in_seconds)
+
     in_tmp_project config.test, fn ->
      Gen.Json.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
                      tags:array:text popular:boolean drafted_at:datetime
@@ -58,20 +68,19 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
         assert file =~ "defmodule PhoenixWeb.PostControllerTest"
         assert file =~ """
-
               assert %{
                        "id" => id,
                        "alarm" => "14:00:00",
                        "alarm_usec" => "14:00:00.000000",
-                       "announcement_date" => "2010-04-17",
+                       "announcement_date" => "#{Date.add(Date.utc_today(), -1)}",
                        "cost" => "120.5",
-                       "deleted_at" => "2010-04-17T14:00:00",
-                       "deleted_at_usec" => "2010-04-17T14:00:00.000000",
-                       "drafted_at" => "2010-04-17T14:00:00",
+                       "deleted_at" => "#{naive_datetime |> NaiveDateTime.truncate(:second) |> NaiveDateTime.to_iso8601()}",
+                       "deleted_at_usec" => "#{NaiveDateTime.to_iso8601(naive_datetime)}",
+                       "drafted_at" => "#{datetime |> NaiveDateTime.truncate(:second) |> NaiveDateTime.to_iso8601()}",
                        "params" => %{},
                        "popular" => true,
-                       "published_at" => "2010-04-17T14:00:00Z",
-                       "published_at_usec" => "2010-04-17T14:00:00.000000Z",
+                       "published_at" => "#{datetime |> DateTime.truncate(:second) |> DateTime.to_iso8601()}",
+                       "published_at_usec" => "#{DateTime.to_iso8601(datetime)}",
                        "secret" => "7488a646-e31f-11e4-aace-600308960662",
                        "slug" => "some slug",
                        "tags" => [],
