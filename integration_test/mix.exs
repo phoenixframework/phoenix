@@ -35,7 +35,7 @@ defmodule Phoenix.Integration.MixProject do
       {:floki, ">= 0.27.0"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2"},
-      {:phoenix_live_dashboard, "~> 0.2"},
+      {:phoenix_live_dashboard, "~> 0.3 or ~> 0.2.9"},
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},
       {:gettext, "~> 0.11"},
