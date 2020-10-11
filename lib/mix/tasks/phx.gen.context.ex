@@ -254,6 +254,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     """
   end
 
+  def prompt_for_code_injection(%Context{generate?: false}), do: :ok
   def prompt_for_code_injection(%Context{} = context) do
     if Context.pre_existing?(context) do
       function_count = Context.function_count(context)
