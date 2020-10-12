@@ -190,7 +190,7 @@ ENV MIX_ENV=prod
 # install mix dependencies
 COPY mix.exs mix.lock ./
 COPY config config
-RUN mix do deps.get, deps.compile
+RUN mix do deps.get --only $MIX_ENV, deps.compile
 
 # build assets
 COPY assets/package.json assets/package-lock.json ./assets/
