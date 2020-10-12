@@ -12,6 +12,14 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+### 1.5.6 (2020-10-12)
+
+### Enhancements
+  * [phx.new] Add --install and --no-install options to phx.new
+
+### Bug fixes
+  * [phx.new] Update `phoenix_live_dashboard` requirement to fix version conflicts
+
 ### 1.5.5 (2020-09-21)
 
 ### Enhancements
