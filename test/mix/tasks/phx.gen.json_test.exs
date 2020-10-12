@@ -172,6 +172,31 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     end
   end
 
+  test "with --no-context no warning is emitted when context exists", config do
+    in_tmp_project config.test, fn ->
+      Gen.Json.run(~w(Blog Post posts title:string))
+
+      assert_file "lib/phoenix/blog.ex"
+      assert_file "lib/phoenix/blog/post.ex"
+
+      Gen.Json.run(~w(Blog Comment comments title:string --no-context))
+      refute_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}
+
+      assert_file "test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentControllerTest"
+      end
+
+      assert_file "lib/phoenix_web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentController"
+        assert file =~ "use PhoenixWeb, :controller"
+      end
+
+      assert_file "lib/phoenix_web/views/comment_view.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentView"
+      end
+    end
+  end
+
   test "with --no-schema skips schema file generation", config do
     in_tmp_project config.test, fn ->
       Gen.Json.run(~w(Blog Comment comments title:string --no-schema))
