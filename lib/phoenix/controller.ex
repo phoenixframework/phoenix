@@ -1464,13 +1464,17 @@ defmodule Phoenix.Controller do
       "/users/123?existing=param"
 
   See `current_path/2` to override the default parameters.
+
+  The path is normalized based on the `conn.script_name` and
+  `conn.path_info`. For example, "/foo//bar/" will become "/foo/bar".
+  If you want the original path, use `conn.request_path` instead.
   """
   def current_path(%Plug.Conn{query_string: ""} = conn) do
-    conn.request_path
+    normalized_request_path(conn)
   end
 
   def current_path(%Plug.Conn{query_string: query_string} = conn) do
-    conn.request_path <> "?" <> query_string
+    normalized_request_path(conn) <> "?" <> query_string
   end
 
   @doc """
@@ -1493,12 +1497,19 @@ defmodule Phoenix.Controller do
       iex> current_path(conn, %{})
       "/users/123"
 
+  The path is normalized based on the `conn.script_name` and
+  `conn.path_info`. For example, "/foo//bar/" will become "/foo/bar".
+  If you want the original path, use `conn.request_path` instead.
   """
   def current_path(%Plug.Conn{} = conn, params) when params == %{} do
-    conn.request_path
+    normalized_request_path(conn)
   end
   def current_path(%Plug.Conn{} = conn, params) do
-    conn.request_path <> "?" <> Plug.Conn.Query.encode(params)
+    normalized_request_path(conn) <> "?" <> Plug.Conn.Query.encode(params)
+  end
+
+  defp normalized_request_path(%{path_info: info, script_name: script}) do
+    "/" <> Enum.join(script ++ info, "/")
   end
 
   @doc """
