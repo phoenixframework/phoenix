@@ -3,9 +3,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   import <%= inspect context.module %>Fixtures
 
-  @create_attrs <%= inspect schema.params.create, limit: :infinity %>
-  @update_attrs <%= inspect schema.params.update, limit: :infinity %>
-  @invalid_attrs <%= inspect (for {key, _} <- schema.params.create, into: %{}, do: {key, nil}), limit: :infinity %>
+  @create_attrs <%= Mix.Phoenix.to_text schema.params.create %>
+  @update_attrs <%= Mix.Phoenix.to_text schema.params.update %>
+  @invalid_attrs <%= Mix.Phoenix.to_text (for {key, _} <- schema.params.create, into: %{}, do: {key, nil}) %>
 
   describe "index" do
     test "lists all <%= schema.plural %>", %{conn: conn} do
