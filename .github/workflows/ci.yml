@@ -40,7 +40,26 @@ jobs:
       image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-alpine-3.12.0
       env:
         ELIXIR_ASSERT_TIMEOUT: 2000
-
+    services:
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+      mysql:
+        image: mysql
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: some!Password
+        ports:
+          - 1433:1433
     strategy:
       fail-fast: false
       matrix:
@@ -62,12 +81,17 @@ jobs:
         run: |
           mix local.rebar --force
           mix local.hex --force
-          apk add --no-progress --update git
+          apk add --no-progress --update git socat
+      - name: Set up local proxies
+        run: |
+          socat TCP-LISTEN:5432,fork TCP-CONNECT:postgres:5432&
+          socat TCP-LISTEN:3306,fork TCP-CONNECT:mysql:3306&
+          socat TCP-LISTEN:1433,fork TCP-CONNECT:mssql:1433&
       - name: Install dependencies
         run: mix deps.get
         working-directory: integration_test
       - name: Run integration tests
-        run: mix test
+        run: mix test --include database
         working-directory: integration_test
 
   npm_test:

@@ -1,20 +1,25 @@
-defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
+defmodule Phoenix.Integration.CodeGeneration.AppWithMySqlAdapterTest do
   use Phoenix.Integration.CodeGeneratorCase, async: true
 
   describe "new with defaults" do
     test "has no compilation or formatter warnings" do
-      with_installer_tmp("new with defaults", fn tmp_dir ->
-        {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
+      with_installer_tmp("app_with_mysql_adapter", fn tmp_dir ->
+        {app_root_path, _} =
+          generate_phoenix_app(tmp_dir, "mysql_app", [
+            "--database",
+            "mysql"
+          ])
 
         assert_no_compilation_warnings(app_root_path)
         assert_passes_formatter_check(app_root_path)
       end)
     end
 
-    @tag database: :postgresql
+    @tag database: :mysql
     test "has a passing test suite" do
       with_installer_tmp("app_with_defaults", fn tmp_dir ->
-        {app_root_path, _} = generate_phoenix_app(tmp_dir, "default_app")
+        {app_root_path, _} =
+          generate_phoenix_app(tmp_dir, "default_mysql_app", ["--database", "mysql"])
 
         drop_test_database(app_root_path)
         assert_tests_pass(app_root_path)
@@ -24,8 +29,12 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
 
   describe "phx.gen.html" do
     test "has no compilation or formatter warnings" do
-      with_installer_tmp("app_with_defaults", fn tmp_dir ->
-        {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
+      with_installer_tmp("app_with_mysql_adapter", fn tmp_dir ->
+        {app_root_path, _} =
+          generate_phoenix_app(tmp_dir, "phx_blog", [
+            "--database",
+            "mysql"
+          ])
 
         mix_run!(~w(phx.gen.html Blog Post posts title:unique body:string), app_root_path)
 
@@ -34,17 +43,18 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
       end)
     end
 
-    @tag database: :postgresql
+    @tag database: :mysql
     test "has a passing test suite" do
       with_installer_tmp("app_with_defaults", fn tmp_dir ->
-        {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
+        {app_root_path, _} =
+          generate_phoenix_app(tmp_dir, "default_mysql_app", ["--database", "mysql"])
 
         mix_run!(~w(phx.gen.html Blog Post posts title body:string), app_root_path)
 
-        modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
+        modify_file(Path.join(app_root_path, "lib/default_mysql_app_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
-            scope "/", PhxBlogWeb do
+            scope "/", DefaultMysqlAppWeb do
               pipe_through [:browser]
 
               resources "/posts", PostController
@@ -60,8 +70,12 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
 
   describe "phx.gen.json" do
     test "has no compilation or formatter warnings" do
-      with_installer_tmp("app_with_defaults", fn tmp_dir ->
-        {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
+      with_installer_tmp("app_with_mysql_adapter", fn tmp_dir ->
+        {app_root_path, _} =
+          generate_phoenix_app(tmp_dir, "phx_blog", [
+            "--database",
+            "mysql"
+          ])
 
         mix_run!(~w(phx.gen.json Blog Post posts title:unique body:string), app_root_path)
 
@@ -70,17 +84,18 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
       end)
     end
 
-    @tag database: :postgresql
+    @tag database: :mysql
     test "has a passing test suite" do
       with_installer_tmp("app_with_defaults", fn tmp_dir ->
-        {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
+        {app_root_path, _} =
+          generate_phoenix_app(tmp_dir, "default_mysql_app", ["--database", "mysql"])
 
         mix_run!(~w(phx.gen.json Blog Post posts title body:string), app_root_path)
 
-        modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
+        modify_file(Path.join(app_root_path, "lib/default_mysql_app_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
-            scope "/", PhxBlogWeb do
+            scope "/", DefaultMysqlAppWeb do
               pipe_through [:api]
 
               resources "/posts", PostController, except: [:new, :edit]
@@ -96,8 +111,13 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
 
   describe "phx.gen.live" do
     test "has no compilation or formatter warnings" do
-      with_installer_tmp("app_with_defaults", fn tmp_dir ->
-        {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog", ["--live"])
+      with_installer_tmp("app_with_mysql_adapter", fn tmp_dir ->
+        {app_root_path, _} =
+          generate_phoenix_app(tmp_dir, "phx_blog", [
+            "--database",
+            "mysql",
+            "--live"
+          ])
 
         mix_run!(~w(phx.gen.live Blog Post posts title:unique body:string), app_root_path)
 
@@ -106,17 +126,18 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
       end)
     end
 
-    @tag database: :postgresql
+    @tag database: :mysql
     test "has a passing test suite" do
       with_installer_tmp("app_with_defaults", fn tmp_dir ->
-        {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog", ["--live"])
+        {app_root_path, _} =
+          generate_phoenix_app(tmp_dir, "default_mysql_app", ["--database", "mysql", "--live"])
 
         mix_run!(~w(phx.gen.live Blog Post posts title body:string), app_root_path)
 
-        modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
+        modify_file(Path.join(app_root_path, "lib/default_mysql_app_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
-            scope "/", PhxBlogWeb do
+            scope "/", DefaultMysqlAppWeb do
               pipe_through [:browser]
 
               live "/posts", PostLive.Index, :index

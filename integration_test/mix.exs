@@ -31,6 +31,8 @@ defmodule Phoenix.Integration.MixProject do
       {:phoenix_ecto, "~> 4.1"},
       {:ecto_sql, "~> 3.4.4"},
       {:postgrex, ">= 0.0.0"},
+      {:myxql, ">= 0.0.0"},
+      {:tds, ">= 0.0.0"},
       {:phoenix_live_view, "~> 0.14.0"},
       {:floki, ">= 0.27.0"},
       {:phoenix_html, "~> 2.11"},
