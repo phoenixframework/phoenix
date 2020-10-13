@@ -117,6 +117,17 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     end
   end
 
+  test "when more than 50 arguments are given", config do
+    in_tmp_project config.test, fn ->
+      long_attribute_list = 0..55 |> Enum.map(&("attribute#{&1}:string")) |> Enum.join(" ")
+      Gen.Json.run(~w(Blog Post posts #{long_attribute_list}))
+
+      assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+        refute file =~ "...}"
+      end
+    end
+  end
+
   test "with json --web namespace generates namedspaced web modules and directories", config do
     in_tmp_project config.test, fn ->
       Gen.Json.run(~w(Blog Post posts title:string --web Blog))
