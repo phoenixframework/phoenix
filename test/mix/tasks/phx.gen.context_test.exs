@@ -209,6 +209,18 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
     end
   end
 
+  test "when more than 50 attributes are given", config do
+    in_tmp_project config.test, fn ->
+      long_attribute_list = 0..55 |> Enum.map(&("attribute#{&1}:string")) |> Enum.join(" ")
+      Gen.Context.run(~w(Blog Post posts title #{long_attribute_list}))
+
+      assert_file "test/phoenix/blog_test.exs", fn file ->
+        refute file =~ "...}"
+      end
+    end
+  end
+
+
   test "generates context with no schema", config do
     in_tmp_project config.test, fn ->
       Gen.Context.run(~w(Blog Post posts title:string --no-schema))

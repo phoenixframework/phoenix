@@ -351,4 +351,8 @@ defmodule Mix.Phoenix do
       Module.concat(["#{base}Web"])
     end
   end
+
+  def to_text(data) do
+    inspect data, limit: :infinity, printable_limit: :infinity
+  end
 end

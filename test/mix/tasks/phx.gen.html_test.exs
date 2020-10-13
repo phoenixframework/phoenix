@@ -308,6 +308,17 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end
   end
 
+  test "when more than 50 arguments are given", config do
+    in_tmp_project config.test, fn ->
+      long_attribute_list = 0..55 |> Enum.map(&("attribute#{&1}:string")) |> Enum.join(" ")
+      Gen.Html.run(~w(Blog Post posts #{long_attribute_list}))
+
+      assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+        refute file =~ "...}"
+      end
+    end
+  end
+
   describe "inside umbrella" do
     test "without context_app generators config uses web dir", config do
       in_tmp_umbrella_project config.test, fn ->
