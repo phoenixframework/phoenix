@@ -45,7 +45,7 @@ defmodule <%= app_module %>.MixProject do
       {:floki, ">= 0.27.0", only: :test},<% end %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.3 or ~> 0.2.9"},<% end %>
+      {:phoenix_live_dashboard, "~> 0.3"},<% end %>
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},<%= if gettext do %>
       {:gettext, "~> 0.11"},<% end %>
