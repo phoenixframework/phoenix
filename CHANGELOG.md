@@ -12,6 +12,14 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+### 1.5.7
+
+### Enhancements
+  * [Channel] - Add binary serialization support to default serializers
+
+### JavaScript client
+  * Add binary serialization support to default serializers for ability to push `ArrayBuffer` objects as binary WebSocket frames
+
 ### 1.5.6 (2020-10-12)
 
 ### Enhancements
