@@ -57,11 +57,21 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-  You can also push a message directly down the socket:
+  General message payloads are received as maps, and binary data payloads are
+  passed as a `{:binary, data}` tuple:
+
+      def handle_in("file_chunk", {:binary, chunk}, socket) do
+        ...
+        {:reply, :ok, socket}
+      end
+
+  You can also push a message directly down the socket, in the form of a map,
+  or a tagged `{:binary, data}` tuple:
 
       # client asks for their current rank, push sent directly as a new event.
       def handle_in("current_rank", _, socket) do
         push(socket, "current_rank", %{val: Game.get_rank(socket.assigns[:user])})
+        push(socket, "photo", {:binary, File.read!(socket.assigns.photo_path)})
         {:noreply, socket}
       end
 
@@ -99,6 +109,10 @@ defmodule Phoenix.Channel do
           {:reply, :error, socket}
         end
       end
+
+  Like binary pushes, binary data is also supported with replies via a `{:binary, data}` tuple:
+
+      {:reply, {:ok, {:binary, bin}}, socket}
 
   ## Intercepting Outgoing Events
 
@@ -553,7 +567,7 @@ defmodule Phoenix.Channel do
   """
   def push(socket, event, message) do
     %{transport_pid: transport_pid, topic: topic} = assert_joined!(socket)
-    Server.push(transport_pid, topic, event, message, socket.serializer)
+    Server.push(transport_pid, socket.join_ref, topic, event, message, socket.serializer)
   end
 
   @doc """
