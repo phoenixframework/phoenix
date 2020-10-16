@@ -2,7 +2,7 @@
 
 > **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
 
-When we use `mix phx.new` to generates a new Phoenix application, it builds a top-level directory structure like this:
+When we use `mix phx.new` to generate a new Phoenix application, it builds a top-level directory structure like this:
 
 ```console
 ├── _build
