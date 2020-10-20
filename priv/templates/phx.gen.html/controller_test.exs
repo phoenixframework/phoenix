@@ -71,6 +71,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "deletes chosen <%= schema.singular %>", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn = delete(conn, Routes.<%= schema.route_helper %>_path(conn, :delete, <%= schema.singular %>))
       assert redirected_to(conn) == Routes.<%= schema.route_helper %>_path(conn, :index)
+
       assert_error_sent 404, fn ->
         get(conn, Routes.<%= schema.route_helper %>_path(conn, :show, <%= schema.singular %>))
       end
