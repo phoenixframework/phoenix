@@ -48,7 +48,7 @@ Compilation of static assets happens in two steps:
 
 ```console
 $ npm run deploy --prefix ./assets
-$ mix phx.digest
+$ MIX_ENV=prod mix phx.digest
 Check your digested files at "priv/static".
 ```
 
@@ -103,7 +103,7 @@ $ MIX_ENV=prod mix compile
 
 # Compile assets
 $ npm run deploy --prefix ./assets
-$ mix phx.digest
+$ MIX_ENV=prod mix phx.digest
 
 # Custom tasks (like DB migrations)
 $ MIX_ENV=prod mix ecto.migrate
