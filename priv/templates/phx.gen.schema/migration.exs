@@ -9,7 +9,7 @@ defmodule <%= inspect schema.repo %>.Migrations.Create<%= Macro.camelize(schema.
 <% end %>
       timestamps()
     end
-<%= for index <- schema.indexes do %>
+<%= if Enum.any?(schema.indexes) do %><%= for index <- schema.indexes do %>
     <%= index %><% end %>
-  end
+<% end %>  end
 end
