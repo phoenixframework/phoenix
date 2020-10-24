@@ -271,7 +271,7 @@ defmodule Phoenix.View do
   option. `:layout` accepts a tuple of the form
   `{LayoutModule, "template.extension"}`.
 
-  To template that goes inside the layout will be placed in the `@inner_content`
+  The template that goes inside the layout will be placed in the `@inner_content`
   assign:
 
       <%= @inner_content %>
