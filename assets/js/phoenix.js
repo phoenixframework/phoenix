@@ -1243,7 +1243,7 @@ export class Socket {
 
   leaveOpenTopic(topic) {
     let ver = getInternetExplorerVersion()
-    let dupChannelArrowExpr = c => c.topic === topic && (c.isJoined() || c.isJoining()))
+    let dupChannelArrowExpr = c => c.topic === topic && (c.isJoined() || c.isJoining())
     let dupChannel
     if(ver>=11.0 && ver<12.0) {
       dupChannel = Array.prototype.filter(dupChannelArrowExpr)[0]
