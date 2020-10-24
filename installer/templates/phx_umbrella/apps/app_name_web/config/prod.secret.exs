@@ -7,6 +7,8 @@ secret_key_base =
 
 config :<%= web_app_name %>, <%= endpoint_module %>,
   http: [
+    # Enable IPv6 and bind on all interfaces.
+    # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
     ip: {0, 0, 0, 0, 0, 0, 0, 0},
     port: String.to_integer(System.get_env("PORT") || "4000")
   ],
