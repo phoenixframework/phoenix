@@ -1241,12 +1241,33 @@ export class Socket {
     })
   }
 
-  leaveOpenTopic(topic){
-    let dupChannel = this.channels.find(c => c.topic === topic && (c.isJoined() || c.isJoining()))
+  leaveOpenTopic(topic) {
+    let ver = getInternetExplorerVersion()
+    let dupChannelArrowExpr = c => c.topic === topic && (c.isJoined() || c.isJoining()))
+    let dupChannel
+    if(ver>=11.0 && ver<12.0) {
+      dupChannel = Array.prototype.filter(dupChannelArrowExpr)[0]
+    }
+    else {
+      dupChannel = this.channels.find(dupChannelArrowExpr)
+    }
     if(dupChannel){
       if(this.hasLogger()) this.log("transport", `leaving duplicate topic "${topic}"`)
       dupChannel.leave()
     }
+  }
+
+  // Returns the version of Windows Internet Explorer or a -1
+  // (indicating the use of another browser).
+  getInternetExplorerVersion() {
+    var rv = -1; // Return value assumes failure.
+    if (navigator.appName == 'Microsoft Internet Explorer') {
+      var ua = navigator.userAgent;
+      var re  = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})")
+      if (re.exec(ua) != null)
+         rv = parseFloat(RegExp.$1)
+    }
+    return rv;
   }
 }
 
