@@ -7,8 +7,8 @@ secret_key_base =
 
 config :<%= web_app_name %>, <%= endpoint_module %>,
   http: [
-    port: String.to_integer(System.get_env("PORT") || "4000"),
-    transport_options: [socket_opts: [:inet6]]
+    ip: {0, 0, 0, 0, 0, 0, 0, 0},
+    port: String.to_integer(System.get_env("PORT") || "4000")
   ],
   secret_key_base: secret_key_base
 

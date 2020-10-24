@@ -17,14 +17,14 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
 # to the previous section and set your `:url` port to 443:
 #
 #     config :<%= web_app_name %>, <%= endpoint_module %>,
-#       ...
+#       ...,
 #       url: [host: "example.com", port: 443],
 #       https: [
+#         ...,
 #         port: 443,
 #         cipher_suite: :strong,
 #         keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
-#         certfile: System.get_env("SOME_APP_SSL_CERT_PATH"),
-#         transport_options: [socket_opts: [:inet6]]
+#         certfile: System.get_env("SOME_APP_SSL_CERT_PATH")
 #       ]
 #
 # The `cipher_suite` is set to `:strong` to support only the
