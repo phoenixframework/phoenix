@@ -198,7 +198,7 @@ defmodule Phx.New.Generator do
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config adapter_config[:test]}
     """
 
-    config_inject project_path, "config/prod.secret.exs", """
+    config_inject project_path, "config/runtime.exs", """
     database_url =
       System.get_env("DATABASE_URL") ||
         raise \"""

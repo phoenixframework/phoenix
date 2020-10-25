@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Phx.New.EctoTest do
 
   test "new with barebones umbrella" do
     in_tmp_umbrella_project "new with barebones umbrella", fn ->
-      files = ~w[../config/dev.exs ../config/test.exs ../config/prod.exs ../config/prod.secret.exs]
+      files = ~w[../config/dev.exs ../config/test.exs ../config/prod.exs ../config/runtime.exs]
       Enum.each(files, &File.rm/1)
 
       assert_file "../config/config.exs", &refute(&1 =~ ~S[import_config "#{Mix.env()}.exs"])

@@ -50,6 +50,6 @@ config :logger, level: :info
 #
 # Check `Plug.SSL` for all available options in `force_ssl`.
 
-# Finally import the config/prod.secret.exs which loads secrets
+# Finally import the config/runtime.exs which loads secrets
 # and configuration from environment variables.
-import_config "prod.secret.exs"
+import_config "runtime.exs"

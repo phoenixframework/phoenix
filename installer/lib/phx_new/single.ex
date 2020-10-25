@@ -7,7 +7,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_single/config/config.exs",             :project, "config/config.exs"},
     {:eex,  "phx_single/config/dev.exs",                :project, "config/dev.exs"},
     {:eex,  "phx_single/config/prod.exs",               :project, "config/prod.exs"},
-    {:eex,  "phx_single/config/prod.secret.exs",        :project, "config/prod.secret.exs"},
+    {:eex,  "phx_single/config/runtime.exs",            :project, "config/runtime.exs"},
     {:eex,  "phx_single/config/test.exs",               :project, "config/test.exs"},
     {:eex,  "phx_single/lib/app_name/application.ex",   :project, "lib/:app/application.ex"},
     {:eex,  "phx_single/lib/app_name.ex",               :project, "lib/:app.ex"},

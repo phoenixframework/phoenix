@@ -10,7 +10,7 @@ defmodule Phx.New.Umbrella do
     {:eex,    "phx_umbrella/config/dev.exs",          :project, "config/dev.exs"},
     {:eex,    "phx_umbrella/config/test.exs",         :project, "config/test.exs"},
     {:eex,    "phx_umbrella/config/prod.exs",         :project, "config/prod.exs"},
-    {:eex,    "phx_umbrella/config/prod.secret.exs",  :project, "config/prod.secret.exs"},
+    {:eex,    "phx_umbrella/config/runtime.exs",      :project, "config/runtime.exs"},
     {:eex,    "phx_umbrella/mix.exs",                 :project, "mix.exs"},
     {:eex,    "phx_umbrella/README.md",               :project, "README.md"},
     {:eex,    "phx_umbrella/formatter.exs",           :project, ".formatter.exs"},
