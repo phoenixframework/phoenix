@@ -4,7 +4,6 @@ import Config
 # although such is generally not recommended and you have to
 # remember to add this file to your .gitignore.
 if config_env() == :prod do
-
   secret_key_base =
     System.get_env("SECRET_KEY_BASE") ||
       raise """
