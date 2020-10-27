@@ -48,10 +48,6 @@ jobs:
           # Can't run integration tests before OTP 21 due to incompatiblity with cowlib.
           #
           # See https://github.com/phoenixframework/phoenix/issues/3903
-          - elixir: 1.9.4
-            otp: 21.3.8.17
-          - elixir: 1.10.4
-            otp: 21.3.8.17
           - elixir: 1.11.0
             otp: 21.3.8.18
           - elixir: 1.11.0
