@@ -71,7 +71,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(@app, "config/prod.exs"), fn file ->
         assert file =~ "port: 80"
-        assert file =~ "import_config \"runtime.exs\""
       end
 
       assert_file root_path(@app, "config/runtime.exs"), ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
@@ -640,7 +639,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
         assert_file "../config/prod.exs", fn file ->
           assert file =~ "port: 80"
-          assert file =~ "import_config \"runtime.exs\""
         end
 
         assert_file "../config/runtime.exs", ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/

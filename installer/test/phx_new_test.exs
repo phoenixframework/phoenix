@@ -46,7 +46,6 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/config/prod.exs", fn file ->
         assert file =~ "port: 80"
-        assert file =~ "import_config \"runtime.exs\""
       end
 
       assert_file "phx_blog/config/runtime.exs", ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
