@@ -83,6 +83,28 @@ defmodule Phx.New.Generator do
     end
   end
 
+  def prod_only_config_inject(path, file, to_inject) do
+    file = Path.join(path, file)
+
+    contents =
+      case File.read(file) do
+        {:ok, bin} -> bin
+        {:error, _} -> """
+          import Config
+
+          if config_env() == :prod do
+        """
+      end
+
+    case split_with_self(contents, "if config_env() == :prod do") do
+      [left, middle, right] ->
+        File.write!(file, [left, middle, ?\n, String.trim_trailing(to_inject), ?\n, right])
+
+      :error ->
+        Mix.raise ~s[Could not find "if config_env() == :prod do" in #{inspect(file)}]
+    end
+  end
+
   def inject_umbrella_config_defaults(project) do
     unless File.exists?(Project.join_path(project, :project, "config/dev.exs")) do
       path = Project.join_path(project, :project, "config/config.exs")
@@ -198,18 +220,18 @@ defmodule Phx.New.Generator do
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config adapter_config[:test]}
     """
 
-    config_inject project_path, "config/runtime.exs", """
-    database_url =
-      System.get_env("DATABASE_URL") ||
-        raise \"""
-        environment variable DATABASE_URL is missing.
-        For example: ecto://USER:PASS@HOST/DATABASE
-        \"""
+    prod_only_config_inject project_path, "config/runtime.exs", """
+      database_url =
+        System.get_env("DATABASE_URL") ||
+          raise \"""
+          environment variable DATABASE_URL is missing.
+          For example: ecto://USER:PASS@HOST/DATABASE
+          \"""
 
-    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-      # ssl: true,
-      url: database_url,
-      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+      config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
+        # ssl: true,
+        url: database_url,
+        pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
     """
   end
 
