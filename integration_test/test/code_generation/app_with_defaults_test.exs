@@ -29,6 +29,17 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
 
         mix_run!(~w(phx.gen.html Blog Post posts title:unique body:string), app_root_path)
 
+        modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
+          inject_before_final_end(file, """
+
+            scope "/", PhxBlogWeb do
+              pipe_through [:browser]
+
+              resources "/posts", PostController
+            end
+          """)
+        end)
+
         assert_no_compilation_warnings(app_root_path)
         assert_passes_formatter_check(app_root_path)
       end)
