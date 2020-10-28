@@ -8,9 +8,23 @@ To install dependencies, run:
 
     $ mix deps.get
 
-Then run the tests with:
+Then run the basic test suite (no dependencies on the database) with:
 
     $ mix test
+
+To run the test suite with tests that test a specific database, run:
+
+    $ mix test --include database:postgresql
+    $ mix test --include database:mysql
+    $ mix test --include database:mssql
+
+For convenience, there is also a `docker-compose.yml` file that allows for starting up all of the supported databases locally.
+
+    $ docker-compose up
+
+This allows all tests to be run with the following command
+
+    $ mix test --include database
 
 ## How tests are written
 
