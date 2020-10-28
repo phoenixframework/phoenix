@@ -31,33 +31,6 @@ jobs:
       - run: mix test
       # - run: MIX_ENV=docs mix inch.report
 
-  test-installer:
-    runs-on: ubuntu-latest
-    container:
-      image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-alpine-3.12.0
-      env:
-        ELIXIR_ASSERT_TIMEOUT: 2000
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - elixir: 1.11.0
-            otp: 21.3.8.18
-          - elixir: 1.11.0
-            otp: 23.1.1
-    steps:
-      - uses: actions/checkout@v2.3.1
-      - name: Install Dependencies
-        run: |
-          mix local.rebar --force
-          mix local.hex --force
-          apk add --no-progress --update git
-          mix deps.get
-      - name: Run installer tests
-        run: mix test
-        working-directory: installer
-
   integration-test-elixir:
     runs-on: ubuntu-latest
     container:
@@ -83,6 +56,9 @@ jobs:
           mix local.rebar --force
           mix local.hex --force
           apk add --no-progress --update git
+      - name: Run installer tests
+        run: mix test
+        working-directory: installer
       - name: Install dependencies
         run: mix deps.get
         working-directory: integration_test
