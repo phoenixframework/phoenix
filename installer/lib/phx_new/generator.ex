@@ -93,6 +93,7 @@ defmodule Phx.New.Generator do
           import Config
 
           if config_env() == :prod do
+          end
         """
       end
 
