@@ -3,3 +3,6 @@
 # although such is generally not recommended and you have to
 # remember to add this file to your .gitignore.
 import Config
+
+if config_env() == :prod do
+end

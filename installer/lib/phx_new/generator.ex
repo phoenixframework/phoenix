@@ -58,6 +58,9 @@ defmodule Phx.New.Generator do
         :config ->
           contents = EEx.eval_string(mod.render(name, source), project.binding, file: source)
           config_inject(Path.dirname(target), Path.basename(target), contents)
+        :prod_config ->
+          contents = EEx.eval_string(mod.render(name, source), project.binding, file: source)
+          prod_only_config_inject(Path.dirname(target), Path.basename(target), contents)
         :eex  ->
           contents = EEx.eval_string(mod.render(name, source), project.binding, file: source)
           create_file(target, contents)
@@ -99,7 +102,10 @@ defmodule Phx.New.Generator do
 
     case split_with_self(contents, "if config_env() == :prod do") do
       [left, middle, right] ->
-        File.write!(file, [left, middle, ?\n, String.trim_trailing(to_inject), ?\n, right])
+        formatted_contents =
+          IO.iodata_to_binary([left, middle, ?\n, to_inject, ?\n, right])
+          |> Code.format_string!()
+        File.write!(file, [formatted_contents, ?\n])
 
       :error ->
         Mix.raise ~s[Could not find "if config_env() == :prod do" in #{inspect(file)}]
@@ -222,17 +228,17 @@ defmodule Phx.New.Generator do
     """
 
     prod_only_config_inject project_path, "config/runtime.exs", """
-      database_url =
-        System.get_env("DATABASE_URL") ||
-          raise \"""
-          environment variable DATABASE_URL is missing.
-          For example: ecto://USER:PASS@HOST/DATABASE
-          \"""
+    database_url =
+      System.get_env("DATABASE_URL") ||
+        raise \"""
+        environment variable DATABASE_URL is missing.
+        For example: ecto://USER:PASS@HOST/DATABASE
+        \"""
 
-      config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-        # ssl: true,
-        url: database_url,
-        pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
+      # ssl: true,
+      url: database_url,
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
     """
   end
 
