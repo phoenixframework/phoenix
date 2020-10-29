@@ -32,7 +32,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = get(conn, Routes.<%= schema.route_helper %>_path(conn, :show, id))
 
       assert %{
-               "id" => id<%= for {key, val} <- schema.params.create |> Phoenix.json_library().encode!() |> Phoenix.json_library().decode!() do %>,
+               "id" => ^id<%= for {key, val} <- schema.params.create |> Phoenix.json_library().encode!() |> Phoenix.json_library().decode!() do %>,
                "<%= key %>" => <%= inspect(val) %><% end %>
              } = json_response(conn, 200)["data"]
     end
@@ -53,7 +53,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = get(conn, Routes.<%= schema.route_helper %>_path(conn, :show, id))
 
       assert %{
-               "id" => id<%= for {key, val} <- schema.params.update |> Phoenix.json_library().encode!() |> Phoenix.json_library().decode!() do %>,
+               "id" => ^id<%= for {key, val} <- schema.params.update |> Phoenix.json_library().encode!() |> Phoenix.json_library().decode!() do %>,
                "<%= key %>" => <%= inspect(val) %><% end %>
              } = json_response(conn, 200)["data"]
     end

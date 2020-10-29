@@ -69,7 +69,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ "defmodule PhoenixWeb.PostControllerTest"
         assert file =~ """
               assert %{
-                       "id" => id,
+                       "id" => ^id,
                        "alarm" => "14:00:00",
                        "alarm_usec" => "14:00:00.000000",
                        "announcement_date" => "#{Date.add(Date.utc_today(), -1)}",
