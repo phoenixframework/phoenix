@@ -82,7 +82,7 @@ defmodule Phx.New.Generator do
       Mix.raise ~s[Could not find "use Mix.Config" or "import Config" in #{inspect(file)}]
     else
       [left, middle, right] ->
-        File.write!(file, [left, middle, ?\n, String.trim(to_inject), ?\n, right])
+        write_formatted!(file, [left, middle, ?\n, to_inject, ?\n, right])
     end
   end
 
@@ -102,14 +102,16 @@ defmodule Phx.New.Generator do
 
     case split_with_self(contents, "if config_env() == :prod do") do
       [left, middle, right] ->
-        formatted_contents =
-          IO.iodata_to_binary([left, middle, ?\n, to_inject, ?\n, right])
-          |> Code.format_string!()
-        File.write!(file, [formatted_contents, ?\n])
+        write_formatted!(file, [left, middle, ?\n, to_inject, ?\n, right])
 
       :error ->
         Mix.raise ~s[Could not find "if config_env() == :prod do" in #{inspect(file)}]
     end
+  end
+
+  defp write_formatted!(file, contents) do
+    formatted = contents |> IO.iodata_to_binary() |> Code.format_string!()
+    File.write!(file, [formatted, ?\n])
   end
 
   def inject_umbrella_config_defaults(project) do
