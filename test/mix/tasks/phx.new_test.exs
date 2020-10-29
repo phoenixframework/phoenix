@@ -91,12 +91,5 @@ if Version.match?(System.version(), ">= 1.11.0") do
         end
       end
     end
-
-    test "assets are in sync with installer" do
-      for file <- ~w(favicon.ico phoenix.js phoenix.png) do
-        assert File.read!("priv/static/#{file}") ==
-          File.read!("installer/templates/phx_static/#{file}")
-      end
-    end
   end
 end

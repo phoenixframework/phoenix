@@ -14,6 +14,13 @@ defmodule Mix.Tasks.Phx.NewTest do
     :ok
   end
 
+  test "assets are in sync with installer" do
+    for file <- ~w(favicon.ico phoenix.js phoenix.png) do
+      assert File.read!("../priv/static/#{file}") ==
+        File.read!("templates/phx_static/#{file}")
+    end
+  end
+
   test "returns the version" do
     Mix.Tasks.Phx.New.run(["-v"])
     assert_received {:mix_shell, :info, ["Phoenix v" <> _]}
