@@ -43,7 +43,7 @@ defmodule Phx.New.MixProject do
 
   def deps do
     [
-      {:ex_doc, "~> 0.19.1", only: :docs}
+      {:ex_doc, "~> 0.23", only: :docs}
     ]
   end
 

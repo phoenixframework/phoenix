@@ -27,9 +27,8 @@ jobs:
           mix local.rebar --force
           mix local.hex --force
           apk add --no-progress --update git
-          mix deps.get
+          mix deps.get --only test
       - run: mix test
-      # - run: MIX_ENV=docs mix inch.report
 
   integration-test-elixir:
     runs-on: ubuntu-latest
