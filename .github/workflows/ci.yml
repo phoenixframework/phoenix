@@ -29,9 +29,6 @@ jobs:
           apk add --no-progress --update git
           mix deps.get
       - run: mix test
-      - name: Run installer tests
-        run: mix test
-        working-directory: installer
       # - run: MIX_ENV=docs mix inch.report
 
   integration-test-elixir:
@@ -80,6 +77,9 @@ jobs:
           socat TCP-LISTEN:5432,fork TCP-CONNECT:postgres:5432&
           socat TCP-LISTEN:3306,fork TCP-CONNECT:mysql:3306&
           socat TCP-LISTEN:1433,fork TCP-CONNECT:mssql:1433&
+      - name: Run installer tests
+        run: mix test
+        working-directory: installer
       - name: Install dependencies
         run: mix deps.get
         working-directory: integration_test

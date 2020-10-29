@@ -16,7 +16,7 @@ Let's explore those steps above one by one.
 
 ## Handling of your application secrets
 
-All Phoenix applications have data that must be kept secure, for example, the username and password for your production database, and the secret Phoenix uses to sign and encrypt important information. The general recommendation is to keep those in environment variables and load them into your application. This is done in `config/prod.secret.exs`, which is responsible for loading secrets and configuration from environment variables.
+All Phoenix applications have data that must be kept secure, for example, the username and password for your production database, and the secret Phoenix uses to sign and encrypt important information. The general recommendation is to keep those in environment variables and load them into your application. This is done in `config/runtime.exs` (formerly `config/prod.secret.exs`), which is responsible for loading secrets and configuration from environment variables.
 
 Therefore, you need to make sure the proper relevant variables are set in production:
 
@@ -29,7 +29,7 @@ $ export DATABASE_URL=ecto://USER:PASS@HOST/database
 
 Do not copy those values directly, set `SECRET_KEY_BASE` according to the result of `mix phx.gen.secret` and `DATABASE_URL` according to your database address.
 
-If for some reason you do not want to rely on environment variables, you can hard code the secrets in your `config/prod.secret.exs`, but make sure not to check the file into your version control system.
+If for some reason you do not want to rely on environment variables, you can hard code the secrets in your `config/runtime.exs` (formerly `config/prod.secret.exs`), but make sure not to check the file into your version control system.
 
 With your secret information properly secured, it is time to configure assets!
 

@@ -136,7 +136,7 @@ Finally, note that since we are using multiple buildpacks, you might run into an
 
 ## Making our Project ready for Heroku
 
-Every new Phoenix project ships with a config file `config/prod.secret.exs` which loads configuration and secrets from [environment variables](https://devcenter.heroku.com/articles/config-vars). This aligns well with Heroku best practices, so the only work left for us to do is to configure URLs and SSL.
+Every new Phoenix project ships with a config file `config/runtime.exs` (formerly `config/prod.secret.exs`) which loads configuration and secrets from [environment variables](https://devcenter.heroku.com/articles/config-vars). This aligns well with Heroku best practices, so the only work left for us to do is to configure URLs and SSL.
 
 First let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Also, bind to the port requested by Heroku in the [`$PORT` environment variable](https://devcenter.heroku.com/articles/runtime-principles#web-servers). Find the url line in your `config/prod.exs`:
 
@@ -152,7 +152,7 @@ url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
 force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
 
-Then open up your `config/prod.secret.exs` and uncomment the `# ssl: true,` line in your repository configuration. It will look like this:
+Then open up your `config/runtime.xs` (formerly `config/prod.secret.exs`) and uncomment the `# ssl: true,` line in your repository configuration. It will look like this:
 
 ```elixir
 config :hello, Hello.Repo,

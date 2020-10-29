@@ -9,7 +9,7 @@ defmodule <%= web_namespace %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.9",
+      elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix<%= if gettext do %>, :gettext<% end %>] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,

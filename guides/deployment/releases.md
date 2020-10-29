@@ -65,7 +65,7 @@ Release created at _build/prod/rel/my_app!
 
 You can start the release by calling `_build/prod/rel/my_app/bin/my_app start`, where you have to replace `my_app` by your current application name. If you do so, your application should start but you will notice your web server does not actually run! That's because we need to tell Phoenix to start the web servers. When using `mix phx.server`, the `phx.server` command does that for us, but in a release we don't have Mix (which is a *build* tool), so we have to do it ourselves.
 
-Open up `config/prod.secret.exs` and you should find a section about "Using releases" with a configuration to set. Go ahead and uncomment that line or manually add the line below, adapted to your application names:
+Open up `config/runtime.exs` (formerly `config/prod.secret.exs`) and you should find a section about "Using releases" with a configuration to set. Go ahead and uncomment that line or manually add the line below, adapted to your application names:
 
 ```elixir
 config :my_app, MyApp.Endpoint, server: true
@@ -95,9 +95,9 @@ You may have noticed that, in order to assemble our release, we had to set both 
 
 However, in many cases, we don't want to set the values for `SECRET_KEY_BASE` and `DATABASE_URL` when assembling the release but only when starting the system in production. In particular, you may not even have those values easily accessible, and you may have to reach out to another system to retrieve those. Luckily, for such use cases, `mix release` provides runtime configuration, which we can enable in three steps:
 
-1. Rename `config/prod.secret.exs` to `config/releases.exs`
+1. Rename `config/runtime.exs` (formerly `config/prod.secret.exs`) to `config/releases.exs`
 
-2. Change `config/prod.exs` to no longer call `import_config "prod.secret.exs"` at the bottom
+2. Change `config/prod.exs` to no longer call `import_config "runtime.exs"` (formerly `prod.secret.exs`) at the bottom
 
 Now if you assemble another release, you should see this:
 

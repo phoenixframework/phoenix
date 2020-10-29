@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file root_path(@app, "config/config.exs"), fn file ->
-        assert file =~ ~S[import_config "#{Mix.env()}.exs"]
+        assert file =~ ~S[import_config "#{config_env()}.exs"]
         assert file =~ "config :phoenix, :json_library, Jason"
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmbWeb.Endpoint"
@@ -71,10 +71,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(@app, "config/prod.exs"), fn file ->
         assert file =~ "port: 80"
-        assert file =~ "import_config \"prod.secret.exs\""
       end
 
-      assert_file root_path(@app, "config/prod.secret.exs"), ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
+      assert_file root_path(@app, "config/runtime.exs"), ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
 
       assert_file app_path(@app, ".formatter.exs"), fn file ->
         assert file =~ "import_deps: [:ecto]"
@@ -173,7 +172,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       config = ~r/config :phx_umb, PhxUmb.Repo,/
       assert_file root_path(@app, "config/dev.exs"), config
       assert_file root_path(@app, "config/test.exs"), config
-      assert_file root_path(@app, "config/prod.secret.exs"), config
+      assert_file root_path(@app, "config/runtime.exs"), config
 
       assert_file app_path(@app, "mix.exs"), fn file ->
         assert file =~ "aliases: aliases()"
@@ -266,7 +265,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(@app, "config/dev.exs"), &refute(&1 =~ config)
       assert_file root_path(@app, "config/test.exs"), &refute(&1 =~ config)
-      assert_file root_path(@app, "config/prod.secret.exs"), &refute(&1 =~ config)
+      assert_file root_path(@app, "config/runtime.exs"), &refute(&1 =~ config)
 
       assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/Supervisor.start_link\(/
 
@@ -496,7 +495,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(app, "config/dev.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
       assert_file root_path(app, "config/test.exs"), [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
-      assert_file root_path(app, "config/prod.secret.exs"), [~r/url: database_url/]
+      assert_file root_path(app, "config/runtime.exs"), [~r/url: database_url/]
 
       assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
       assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
@@ -514,7 +513,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(app, "config/dev.exs"), [~r/username: "root"/, ~r/password: ""/]
       assert_file root_path(app, "config/test.exs"), [~r/username: "root"/, ~r/password: ""/]
-      assert_file root_path(app, "config/prod.secret.exs"), [~r/url: database_url/]
+      assert_file root_path(app, "config/runtime.exs"), [~r/url: database_url/]
 
       assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
       assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
@@ -532,7 +531,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(app, "config/dev.exs"), [~r/username: "sa"/, ~r/password: "some!Password"/]
       assert_file root_path(app, "config/test.exs"), [~r/username: "sa"/, ~r/password: "some!Password"/]
-      assert_file root_path(app, "config/prod.secret.exs"), [~r/url: database_url/]
+      assert_file root_path(app, "config/runtime.exs"), [~r/url: database_url/]
 
       assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
       assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
@@ -640,10 +639,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
         assert_file "../config/prod.exs", fn file ->
           assert file =~ "port: 80"
-          assert file =~ "import_config \"prod.secret.exs\""
         end
 
-        assert_file "../config/prod.secret.exs", ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
+        assert_file "../config/runtime.exs", ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
 
         assert_file "another/lib/another/application.ex", ~r/defmodule Another.Application do/
         assert_file "another/mix.exs", ~r/mod: {Another.Application, \[\]}/

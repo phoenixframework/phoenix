@@ -9,7 +9,7 @@ defmodule Phx.New.Web do
     {:config, "#{@pre}/config/config.exs",            :project, "config/config.exs"},
     {:config, "#{@pre}/config/dev.exs",               :project, "config/dev.exs"},
     {:config, "#{@pre}/config/prod.exs",              :project, "config/prod.exs"},
-    {:config, "#{@pre}/config/prod.secret.exs",       :project, "config/prod.secret.exs"},
+    {:prod_config, "#{@pre}/config/runtime.exs",      :project, "config/runtime.exs"},
     {:config, "#{@pre}/config/test.exs",              :project, "config/test.exs"},
     {:eex,  "#{@pre}/lib/app_name.ex",                :web, "lib/:web_app.ex"},
     {:eex,  "#{@pre}/lib/app_name/application.ex",    :web, "lib/:web_app/application.ex"},
