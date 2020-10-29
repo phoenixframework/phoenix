@@ -352,9 +352,9 @@ defmodule Phoenix.Router do
           plug.call(piped_conn, plug.init(opts))
         else
           conn ->
-            duration = System.monotonic_time() - start
+            measurements = %{duration: System.monotonic_time() - start}
             metadata = %{metadata | conn: conn}
-            :telemetry.execute([:phoenix, :router_dispatch, :stop], %{duration: duration}, metadata)
+            :telemetry.execute([:phoenix, :router_dispatch, :stop], measurements, metadata)
             conn
         rescue
           e in Plug.Conn.WrapperError ->
