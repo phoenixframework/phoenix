@@ -33,7 +33,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert index_live
              |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)
-             |> render_change() =~ "can&apos;t be blank"
+             |> render_change() =~ "<%= Mix.Phoenix.Schema.failed_render_change_message(schema) %>"
 
       {:ok, _, html} =
         index_live
@@ -55,7 +55,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert index_live
              |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)
-             |> render_change() =~ "can&apos;t be blank"
+             |> render_change() =~ "<%= Mix.Phoenix.Schema.failed_render_change_message(schema) %>"
 
       {:ok, _, html} =
         index_live
@@ -95,7 +95,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert show_live
              |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)
-             |> render_change() =~ "can&apos;t be blank"
+             |> render_change() =~ "<%= Mix.Phoenix.Schema.failed_render_change_message(schema) %>"
 
       {:ok, _, html} =
         show_live
