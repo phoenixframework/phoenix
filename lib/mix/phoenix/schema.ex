@@ -209,12 +209,29 @@ defmodule Mix.Phoenix.Schema do
   Build an invalid value for `@invalid_attrs` which is nil by default.
 
   * In case the value is a list, this will return an empty array.
-  * In case the value is date, datetime, naive_datetime or time, the value.
+  * In case the value is date, datetime, naive_datetime or time, this will return an invalid date.
   """
   def invalid_form_value(value) when is_list(value), do: []
-  def invalid_form_value(%{day: _day, month: _month, year: _year} = value), do: value
+
+  def invalid_form_value(%{day: _day, month: _month, year: _year} = date),
+    do: %{date | day: 30, month: 02}
+
   def invalid_form_value(%{hour: _hour, minute: _minute} = value), do: value
   def invalid_form_value(_value), do: nil
+
+  @doc """
+  Generates an invalid error message according to the params present in the schema.
+  """
+  def failed_render_change_message(schema) do
+    if schema.params.create |> Map.values() |> Enum.any?(&date_value?/1) do
+      "is invalid"
+    else
+      "can&apos;t be blank"
+    end
+  end
+
+  defp date_value?(%{day: _day, month: _month, year: _year}), do: true
+  defp date_value?(_value), do: false
 
   @doc """
   Returns the string value for use in EEx templates.
