@@ -128,7 +128,7 @@ $ gigalixir config
 Our project is now ready to be deployed on Gigalixir.
 
 ```console
-$ git push gigalixir master
+$ git push gigalixir
 ```
 
 Check the status of your deploy and wait until the app is `Healthy`
