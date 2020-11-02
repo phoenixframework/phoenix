@@ -16,7 +16,8 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
       "node_modules/webpack/bin/webpack.js",
       "--mode",
       "development",
-      "--watch-stdin",
+      "--watch",
+      "--watch-options-stdin",
       cd: Path.expand("../apps/<%= @web_app_name %>/assets", __DIR__)
     ]
   ]<% else %>[]<% end %>
