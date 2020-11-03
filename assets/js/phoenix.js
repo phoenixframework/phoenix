@@ -1244,7 +1244,7 @@ export class Socket {
   leaveOpenTopic(topic) {
     let dupChannelArrowExpr = c => c.topic === topic && (c.isJoined() || c.isJoining())
 
-    // When IE11 support is removed, update to use this.channel.find(dupChannelArrowExpr) instead
+    // When IE11 support is removed, update to use this.channels.find(dupChannelArrowExpr) instead
     let dupChannel = Array.prototype.filter(dupChannelArrowExpr)[0]
     if(dupChannel){
       if(this.hasLogger()) this.log("transport", `leaving duplicate topic "${topic}"`)
