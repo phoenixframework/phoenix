@@ -168,8 +168,14 @@ defmodule Phoenix.CodeReloader.Server do
   end
 
   defp mix_compile({:module, Mix.Task}, compilers, apps_to_reload) do
-    mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers)
-    mix_compile_project(Mix.Project.config()[:app], apps_to_reload, compilers)
+    config = Mix.Project.config()
+    path = Mix.Project.consolidation_path(config)
+    purge = fn -> purge_consolidated(path) end
+
+    purge = mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers, purge)
+    mix_compile_project(config[:app], apps_to_reload, compilers, purge)
+    Code.prepend_path(path)
+    :ok
   end
 
   defp mix_compile({:error, _reason}, _, _) do
@@ -179,33 +185,37 @@ defmodule Phoenix.CodeReloader.Server do
             "in such environments"
   end
 
-  defp mix_compile_deps(deps, apps_to_reload, compilers) do
-    for dep <- deps, dep.app in apps_to_reload do
-      Mix.Dep.in_dependency(dep, fn _ ->
-        mix_compile_unless_stale_config(compilers)
-      end)
-    end
-
-    :ok
+  defp mix_compile_deps(deps, apps_to_reload, compilers, purge) do
+    Enum.reduce(deps, purge, fn dep, purge ->
+      if dep.app in apps_to_reload do
+        Mix.Dep.in_dependency(dep, fn _ ->
+          mix_compile_unless_stale_config(compilers, purge)
+        end)
+      else
+        purge
+      end
+    end)
   end
 
-  defp mix_compile_project(nil, _, _), do: :ok
+  defp mix_compile_project(nil, _, _, _), do: :ok
 
-  defp mix_compile_project(app, apps_to_reload, compilers) do
+  defp mix_compile_project(app, apps_to_reload, compilers, purge) do
     if app in apps_to_reload do
-      mix_compile_unless_stale_config(compilers)
+      mix_compile_unless_stale_config(compilers, purge)
+    else
+      purge
     end
-
-    :ok
   end
 
-  defp mix_compile_unless_stale_config(compilers) do
+  defp mix_compile_unless_stale_config(compilers, purge) do
     manifests = Mix.Tasks.Compile.Elixir.manifests()
     configs = Mix.Project.config_files()
 
     case Mix.Utils.extract_stale(configs, manifests) do
       [] ->
+        purge = purge.()
         mix_compile(compilers)
+        purge
 
       files ->
         raise """
@@ -220,7 +230,8 @@ defmodule Phoenix.CodeReloader.Server do
   end
 
   defp mix_compile(compilers) do
-    all = Mix.Project.config()[:compilers] || Mix.compilers()
+    config = Mix.Project.config()
+    all = config[:compilers] || Mix.compilers()
 
     compilers =
       for compiler <- compilers, compiler in all do
@@ -230,7 +241,7 @@ defmodule Phoenix.CodeReloader.Server do
 
     # We call build_structure mostly for Windows so new
     # assets in priv are copied to the build directory.
-    Mix.Project.build_structure()
+    Mix.Project.build_structure(config)
     results = Enum.map(compilers, &Mix.Task.run("compile.#{&1}", []))
 
     # Results are either {:ok, _} | {:error, _}, {:noop, _} or
@@ -239,7 +250,7 @@ defmodule Phoenix.CodeReloader.Server do
       :proplists.get_value(:error, results, false) ->
         exit({:shutdown, 1})
 
-      :proplists.get_value(:ok, results, false) && consolidate_protocols?() ->
+      :proplists.get_value(:ok, results, false) && config[:consolidate_protocols] ->
         Mix.Task.reenable("compile.protocols")
         Mix.Task.run("compile.protocols", [])
         :ok
@@ -249,8 +260,24 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  defp consolidate_protocols? do
-    Mix.Project.config()[:consolidate_protocols]
+  defp purge_consolidated(path) do
+    with {:ok, beams} <- File.ls(path) do
+      Enum.map(beams, & &1 |> Path.rootname(".beam") |> String.to_atom() |> purge_module())
+    end
+
+    Code.delete_path(path)
+
+    # Now return a stub for the next calls
+    recursive_fun()
+  end
+
+  defp purge_module(module) do
+    :code.purge(module)
+    :code.delete(module)
+  end
+
+  defp recursive_fun() do
+    fn -> recursive_fun() end
   end
 
   defp proxy_io(fun) do
