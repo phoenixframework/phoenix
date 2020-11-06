@@ -172,10 +172,10 @@ Elixir releases work well with container technologies, such as Docker. The idea 
 Here is an example Docker file to run at the root of your application covering all of the steps above:
 
 ```docker
-FROM elixir:1.9.0-alpine AS build
+FROM hexpm/elixir:1.11.2-erlang-23.1.2-alpine-3.12.1 as build
 
 # install build dependencies
-RUN apk add --no-cache build-base npm git python
+RUN apk add --no-cache build-base npm git python3
 
 # prepare build dir
 WORKDIR /app
@@ -189,26 +189,36 @@ ENV MIX_ENV=prod
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
-COPY config config
-RUN mix do deps.get --only $MIX_ENV, deps.compile
+RUN mix deps.get --only $MIX_ENV
+RUN mkdir config
+# if our compile-time config changes, we may need to
+# recompile dependencies
+COPY config/config.exs config/prod.exs config/
+run mix deps.compile
 
 # build assets
 COPY assets/package.json assets/package-lock.json ./assets/
+# install all npm dependencies from scratch
 RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
 
 COPY priv priv
 COPY assets assets
+# use webpack to compile npm dependencies - https://www.npmjs.com/package/webpack-deploy
 RUN npm run --prefix ./assets deploy
 RUN mix phx.digest
 
-# compile and build release
+# compile and build the release
 COPY lib lib
+RUN mix compile
+# changes to config/runtime.exs don't require recompiling the code
+COPY config/runtime.exs config/
 # uncomment COPY if rel/ exists
 # COPY rel rel
-RUN mix do compile, release
+RUN mix release
 
-# prepare release image
-FROM alpine:3.9 AS app
+# Start a new build stage so that the final image will only contain
+# the compiled release and other runtime necessities
+FROM alpine:3.12.1 AS app
 RUN apk add --no-cache openssl ncurses-libs
 
 WORKDIR /app
@@ -221,7 +231,13 @@ COPY --from=build --chown=nobody:nobody /app/_build/prod/rel/my_app ./
 
 ENV HOME=/app
 
-CMD ["bin/my_app", "start"]
+ENTRYPOINT ["bin/my_app"]
+CMD ["start"]
 ```
 
 At the end, you will have an application in `/app` ready to run as `bin/my_app start`.
+
+A few points about configuring a containerized application:
+
+- If you run your app in a container, the endpoint needs to listen on a "public" IP address like `0.0.0.0` so that the app can be reached from outside the container. Whether the host should publish the container's ports to its own public IP or to localhost depends on your needs.
+- The more configuration you can provide at runtime (using `config/runtime.exs`), the more reusable your images will be across environments. In particular, secrets like database credentials and your endpoint's `:secret_key_base` should not be compiled into the image, but rather should be provided when creating containers based on that image.
