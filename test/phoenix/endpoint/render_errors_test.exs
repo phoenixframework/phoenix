@@ -152,22 +152,21 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   test "does not log converted errors if response already sent" do
     conn = put_endpoint(conn(:get, "/"))
 
-    assert capture_log(fn ->
+    try do
       try do
-        try do
-          Plug.Conn.send_resp(conn, 200, "hello")
-          throw :hello
-        catch
-          kind, reason ->
-            stack = __STACKTRACE__
-            opts = [view: __MODULE__, accepts: ~w(html)]
-            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, opts)
-        else
-          _ -> flunk "function should have failed"
-        end
-      catch :throw, :hello -> :ok
+        Plug.Conn.send_resp(conn, 200, "hello")
+        throw :hello
+      catch
+        kind, reason ->
+          stack = __STACKTRACE__
+          opts = [view: __MODULE__, accepts: ~w(html)]
+          Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, opts)
+      else
+        _ -> flunk "function should have failed"
       end
-    end) == ""
+    catch
+      :throw, :hello -> :ok
+    end
   end
 
   defp put_endpoint(conn) do

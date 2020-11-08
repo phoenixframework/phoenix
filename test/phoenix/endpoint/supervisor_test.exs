@@ -84,6 +84,7 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     assert Supervisor.compile_config_keys() == [:force_ssl]
   end
 
+  @tag :capture_log
   test "init/1 fails when force_ssl check fails" do
     Application.put_env(:phoenix, ForceSslEndpoint, force_ssl: [hsts: true])
 
