@@ -202,6 +202,11 @@ COPY assets/package.json assets/package-lock.json ./assets/
 RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
 
 COPY priv priv
+
+# Note: if your project uses a tool like https://purgecss.com/,
+# which customizes asset compilation based on what it finds in
+# your Elixir templates, you will need to move the asset compilation step
+# down so that `lib` is available.
 COPY assets assets
 # use webpack to compile npm dependencies - https://www.npmjs.com/package/webpack-deploy
 RUN npm run --prefix ./assets deploy
