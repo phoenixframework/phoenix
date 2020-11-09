@@ -194,7 +194,7 @@ RUN mkdir config
 # if our compile-time config changes, we may need to
 # recompile dependencies
 COPY config/config.exs config/prod.exs config/
-run mix deps.compile
+RUN mix deps.compile
 
 # build assets
 COPY assets/package.json assets/package-lock.json ./assets/
