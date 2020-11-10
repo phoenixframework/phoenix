@@ -26,9 +26,22 @@ defmodule Phx.New.Generator do
       for {name, mappings} <- Module.get_attribute(env.module, :templates) do
         for {format, source, _, _} <- mappings, format != :keep do
           path = Path.join(root, source)
-          quote do
-            @external_resource unquote(path)
-            def render(unquote(name), unquote(source)), do: unquote(File.read!(path))
+
+          if format in [:config, :prod_config, :eex] do
+            compiled = EEx.compile_file(path)
+
+            quote do
+              @external_resource unquote(path)
+              def render(unquote(name), unquote(source), assigns) do
+                {result, _} = Code.eval_quoted(unquote(Macro.escape(compiled)), [assigns: assigns], [file: unquote(path)])
+                result
+              end
+            end
+          else
+            quote do
+              @external_resource unquote(path)
+              def render(unquote(name), unquote(source), _assigns), do: unquote(File.read!(path))
+            end
           end
         end
       end
@@ -54,15 +67,15 @@ defmodule Phx.New.Generator do
         :keep ->
           File.mkdir_p!(target)
         :text ->
-          create_file(target, mod.render(name, source))
+          create_file(target, mod.render(name, source, project.binding))
         :config ->
-          contents = EEx.eval_string(mod.render(name, source), project.binding, file: source)
+          contents = mod.render(name, source, project.binding)
           config_inject(Path.dirname(target), Path.basename(target), contents)
         :prod_config ->
-          contents = EEx.eval_string(mod.render(name, source), project.binding, file: source)
+          contents = mod.render(name, source, project.binding)
           prod_only_config_inject(Path.dirname(target), Path.basename(target), contents)
         :eex  ->
-          contents = EEx.eval_string(mod.render(name, source), project.binding, file: source)
+          contents = mod.render(name, source, project.binding)
           create_file(target, contents)
       end
     end
@@ -117,7 +130,7 @@ defmodule Phx.New.Generator do
   def inject_umbrella_config_defaults(project) do
     unless File.exists?(Project.join_path(project, :project, "config/dev.exs")) do
       path = Project.join_path(project, :project, "config/config.exs")
-      extra = Phx.New.Umbrella.render(:new, "phx_umbrella/config/extra_config.exs")
+      extra = Phx.New.Umbrella.render(:new, "phx_umbrella/config/extra_config.exs", project.binding)
       File.write(path, [File.read!(path), extra])
     end
   end

@@ -1,12 +1,12 @@
-defmodule <%= web_namespace %> do
+defmodule <%= @web_namespace %> do
   @moduledoc """
   The entrypoint for defining your web interface, such
   as controllers, views, channels and so on.
 
   This can be used in your application as:
 
-      use <%= web_namespace %>, :controller
-      use <%= web_namespace %>, :view
+      use <%= @web_namespace %>, :controller
+      use <%= @web_namespace %>, :view
 
   The definitions below will be executed for every view,
   controller, etc, so keep them short and clean, focused
@@ -19,19 +19,19 @@ defmodule <%= web_namespace %> do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: <%= web_namespace %>
+      use Phoenix.Controller, namespace: <%= @web_namespace %>
 
-      import Plug.Conn<%= if gettext do %>
-      import <%= web_namespace %>.Gettext<% end %>
-      alias <%= web_namespace %>.Router.Helpers, as: Routes
+      import Plug.Conn<%= if @gettext do %>
+      import <%= @web_namespace %>.Gettext<% end %>
+      alias <%= @web_namespace %>.Router.Helpers, as: Routes
     end
   end
 
   def view do
     quote do
       use Phoenix.View,
-        root: "lib/<%= web_app_name %>/templates",
-        namespace: <%= web_namespace %>
+        root: "lib/<%= @web_app_name %>/templates",
+        namespace: <%= @web_namespace %>
 
       # Import convenience functions from controllers
       import Phoenix.Controller,
@@ -40,12 +40,12 @@ defmodule <%= web_namespace %> do
       # Include shared imports and aliases for views
       unquote(view_helpers())
     end
-  end<%= if live do %>
+  end<%= if @live do %>
 
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {<%= web_namespace %>.LayoutView, "live.html"}
+        layout: {<%= @web_namespace %>.LayoutView, "live.html"}
 
       unquote(view_helpers())
     end
@@ -64,22 +64,22 @@ defmodule <%= web_namespace %> do
       use Phoenix.Router
 
       import Plug.Conn
-      import Phoenix.Controller<%= if live do %>
+      import Phoenix.Controller<%= if @live do %>
       import Phoenix.LiveView.Router<% end %>
     end
   end
 
   def channel do
     quote do
-      use Phoenix.Channel<%= if gettext do %>
-      import <%= web_namespace %>.Gettext<% end %>
+      use Phoenix.Channel<%= if @gettext do %>
+      import <%= @web_namespace %>.Gettext<% end %>
     end
   end
 
   defp view_helpers do
-    quote do<%= if html do %>
+    quote do<%= if @html do %>
       # Use all HTML functionality (forms, tags, etc)
-      use Phoenix.HTML<%= if live do %>
+      use Phoenix.HTML<%= if @live do %>
 
       # Import LiveView helpers (live_render, live_component, live_patch, etc)
       import Phoenix.LiveView.Helpers<% end %>
@@ -87,9 +87,9 @@ defmodule <%= web_namespace %> do
       # Import basic rendering functionality (render, render_layout, etc)
       import Phoenix.View
 
-      import <%= web_namespace %>.ErrorHelpers<%= if gettext do %>
-      import <%= web_namespace %>.Gettext<% end %>
-      alias <%= web_namespace %>.Router.Helpers, as: Routes
+      import <%= @web_namespace %>.ErrorHelpers<%= if @gettext do %>
+      import <%= @web_namespace %>.Gettext<% end %>
+      alias <%= @web_namespace %>.Router.Helpers, as: Routes
     end
   end
 

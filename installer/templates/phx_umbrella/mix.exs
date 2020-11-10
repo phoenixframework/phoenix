@@ -1,4 +1,4 @@
-defmodule <%= root_app_module %>.MixProject do
+defmodule <%= @root_app_module %>.MixProject do
   use Mix.Project
 
   def project do

@@ -185,7 +185,7 @@ defmodule Phx.New.Single do
     }
 
     for {source, target} <- statics do
-      create_file Path.join(web_path, target), render(:static, source)
+      create_file Path.join(web_path, target), render(:static, source, project.binding)
     end
   end
 

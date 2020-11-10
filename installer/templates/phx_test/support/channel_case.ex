@@ -1,4 +1,4 @@
-defmodule <%= web_namespace %>.ChannelCase do
+defmodule <%= @web_namespace %>.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -11,7 +11,7 @@ defmodule <%= web_namespace %>.ChannelCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use <%= web_namespace %>.ChannelCase, async: true`, although
+  by setting `use <%= @web_namespace %>.ChannelCase, async: true`, although
   this option is not recommended for other databases.
   """
 
@@ -21,15 +21,15 @@ defmodule <%= web_namespace %>.ChannelCase do
     quote do
       # Import conveniences for testing with channels
       import Phoenix.ChannelTest
-      import <%= web_namespace %>.ChannelCase
+      import <%= @web_namespace %>.ChannelCase
 
       # The default endpoint for testing
-      @endpoint <%= endpoint_module %>
+      @endpoint <%= @endpoint_module %>
     end
-  end<%= if ecto do %>
+  end<%= if @ecto do %>
 
   setup tags do
-<%= adapter_config[:test_setup] %>
+<%= @adapter_config[:test_setup] %>
     :ok
   end<% else %>
 

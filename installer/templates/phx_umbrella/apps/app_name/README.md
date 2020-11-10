@@ -1,3 +1,3 @@
-# <%= app_module %>
+# <%= @app_module %>
 
 **TODO: Add description**
