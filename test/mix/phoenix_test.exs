@@ -152,6 +152,7 @@ defmodule Mix.PhoenixTest do
              minute: 00
            }
 
-    assert Mix.Phoenix.Schema.invalid_form_value(:value) == nil
+    assert Mix.Phoenix.Schema.invalid_form_value(true) == false
+    assert Mix.Phoenix.Schema.invalid_form_value(:anything) == nil
   end
 end

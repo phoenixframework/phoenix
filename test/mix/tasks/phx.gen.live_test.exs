@@ -130,6 +130,14 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         refute file =~ ~s(<%= number_input f, :user_id)
       end
 
+      assert_file "test/phoenix_web/live/post_live_test.exs", fn file ->
+        assert file =~ ~r"@invalid_attrs.*popular: false"
+        assert file =~ " Routes.post_index_path(conn, :index)"
+        assert file =~ " Routes.post_index_path(conn, :new)"
+        assert file =~ " Routes.post_show_path(conn, :show, post)"
+        assert file =~ " Routes.post_show_path(conn, :edit, post)"
+      end
+
       send self(), {:mix_shell_input, :yes?, true}
       Gen.Live.run(~w(Blog Comment comments title:string))
       assert_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}

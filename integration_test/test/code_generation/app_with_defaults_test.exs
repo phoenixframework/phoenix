@@ -110,7 +110,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
       with_installer_tmp("app_with_defaults", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog", ["--live"])
 
-        mix_run!(~w(phx.gen.live Blog Post posts title:unique body:string), app_root_path)
+        mix_run!(~w(phx.gen.live Blog Post posts title:unique body:string public:boolean), app_root_path)
 
         modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
           inject_before_final_end(file, """
@@ -138,7 +138,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
       with_installer_tmp("app_with_defaults", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog", ["--live"])
 
-        mix_run!(~w(phx.gen.live Blog Post posts title body:string), app_root_path)
+        mix_run!(~w(phx.gen.live Blog Post posts title body:string public:boolean), app_root_path)
 
         modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
           inject_before_final_end(file, """

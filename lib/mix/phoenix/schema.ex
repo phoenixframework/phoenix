@@ -210,6 +210,7 @@ defmodule Mix.Phoenix.Schema do
 
   * In case the value is a list, this will return an empty array.
   * In case the value is date, datetime, naive_datetime or time, this will return an invalid date.
+  * In case it is a boolean, we keep it as false
   """
   def invalid_form_value(value) when is_list(value), do: []
 
@@ -217,6 +218,7 @@ defmodule Mix.Phoenix.Schema do
     do: %{date | day: 30, month: 02}
 
   def invalid_form_value(%{hour: _hour, minute: _minute} = value), do: value
+  def invalid_form_value(true), do: false
   def invalid_form_value(_value), do: nil
 
   @doc """
