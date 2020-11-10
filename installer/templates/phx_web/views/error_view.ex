@@ -1,7 +1,7 @@
-defmodule <%= web_namespace %>.ErrorView do
-  use <%= web_namespace %>, :view
+defmodule <%= @web_namespace %>.ErrorView do
+  use <%= @web_namespace %>, :view
 
-  <%= if html do %># If you want to customize a particular status code
+  <%= if @html do %># If you want to customize a particular status code
   # for a certain format, you may uncomment below.
   # def render("500.html", _assigns) do
   #   "Internal Server Error"

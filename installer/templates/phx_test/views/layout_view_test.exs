@@ -1,5 +1,5 @@
-defmodule <%= web_namespace %>.LayoutViewTest do
-  use <%= web_namespace %>.ConnCase, async: true
+defmodule <%= @web_namespace %>.LayoutViewTest do
+  use <%= @web_namespace %>.ConnCase, async: true
 
   # When testing helpers, you may want to import Phoenix.HTML and
   # use functions such as safe_to_string() to convert the helper

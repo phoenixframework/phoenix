@@ -6,12 +6,12 @@ import Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
-config :<%= app_name %>, <%= endpoint_module %>,
+config :<%= @app_name %>, <%= @endpoint_module %>,
   http: [port: 4000],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  watchers: <%= if webpack do %>[
+  watchers: <%= if @webpack do %>[
     node: [
       "node_modules/webpack/bin/webpack.js",
       "--mode",
@@ -43,16 +43,16 @@ config :<%= app_name %>, <%= endpoint_module %>,
 #
 # If desired, both `http:` and `https:` keys can be
 # configured to run both http and https servers on
-# different ports.<%= if html do %>
+# different ports.<%= if @html do %>
 
 # Watch static and templates for browser reloading.
-config :<%= app_name %>, <%= endpoint_module %>,
+config :<%= @app_name %>, <%= @endpoint_module %>,
   live_reload: [
     patterns: [
-      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",<%= if gettext do %>
+      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
       ~r"priv/gettext/.*(po)$",<% end %>
-      ~r"lib/<%= lib_web_name %>/(live|views)/.*(ex)$",
-      ~r"lib/<%= lib_web_name %>/templates/.*(eex)$"
+      ~r"lib/<%= @lib_web_name %>/(live|views)/.*(ex)$",
+      ~r"lib/<%= @lib_web_name %>/templates/.*(eex)$"
     ]
   ]<% end %>
 

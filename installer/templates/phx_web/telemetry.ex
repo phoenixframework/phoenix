@@ -1,4 +1,4 @@
-defmodule <%= web_namespace %>.Telemetry do
+defmodule <%= @web_namespace %>.Telemetry do
   use Supervisor
   import Telemetry.Metrics
 
@@ -28,26 +28,26 @@ defmodule <%= web_namespace %>.Telemetry do
       summary("phoenix.router_dispatch.stop.duration",
         tags: [:route],
         unit: {:native, :millisecond}
-      ),<%= if ecto do %>
+      ),<%= if @ecto do %>
 
       # Database Metrics
-      summary("<%= app_name %>.repo.query.total_time",
+      summary("<%= @app_name %>.repo.query.total_time",
         unit: {:native, :millisecond},
         description: "The sum of the other measurements"
       ),
-      summary("<%= app_name %>.repo.query.decode_time",
+      summary("<%= @app_name %>.repo.query.decode_time",
         unit: {:native, :millisecond},
         description: "The time spent decoding the data received from the database"
       ),
-      summary("<%= app_name %>.repo.query.query_time",
+      summary("<%= @app_name %>.repo.query.query_time",
         unit: {:native, :millisecond},
         description: "The time spent executing the query"
       ),
-      summary("<%= app_name %>.repo.query.queue_time",
+      summary("<%= @app_name %>.repo.query.queue_time",
         unit: {:native, :millisecond},
         description: "The time spent waiting for a database connection"
       ),
-      summary("<%= app_name %>.repo.query.idle_time",
+      summary("<%= @app_name %>.repo.query.idle_time",
         unit: {:native, :millisecond},
         description:
           "The time the connection spent waiting before being checked out for the query"
@@ -65,7 +65,7 @@ defmodule <%= web_namespace %>.Telemetry do
     [
       # A module, function and arguments to be invoked periodically.
       # This function must call :telemetry.execute/3 and a metric must be added above.
-      # {<%= web_namespace %>, :count_users, []}
+      # {<%= @web_namespace %>, :count_users, []}
     ]
   end
 end

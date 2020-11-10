@@ -1,8 +1,8 @@
-defmodule <%= web_namespace %>.UserSocket do
+defmodule <%= @web_namespace %>.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", <%= web_namespace %>.RoomChannel
+  # channel "room:*", <%= @web_namespace %>.RoomChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
@@ -27,7 +27,7 @@ defmodule <%= web_namespace %>.UserSocket do
   # Would allow you to broadcast a "disconnect" event and terminate
   # all active sockets and channels for a given user:
   #
-  #     <%= endpoint_module %>.broadcast("user_socket:#{user.id}", "disconnect", %{})
+  #     <%= @endpoint_module %>.broadcast("user_socket:#{user.id}", "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
   @impl true

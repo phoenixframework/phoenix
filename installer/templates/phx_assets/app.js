@@ -12,7 +12,7 @@ import "../css/app.scss"
 //     import {Socket} from "phoenix"
 //     import socket from "./socket"
 //
-<%= if html do %>import "phoenix_html"<% end %><%= if live do %>
+<%= if @html do %>import "phoenix_html"<% end %><%= if @live do %>
 import {Socket} from "phoenix"
 import NProgress from "nprogress"
 import {LiveSocket} from "phoenix_live_view"

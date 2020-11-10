@@ -20,4 +20,4 @@ erl_crash.dump
 *.ez
 
 # Ignore package tarball (built via "mix hex.build").
-<%= app_name %>-*.tar
+<%= @app_name %>-*.tar
