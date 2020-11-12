@@ -308,6 +308,18 @@ defmodule Phoenix.Endpoint do
   # Channels
 
   @doc """
+  Subscribes the caller to the given topic.
+
+  See `Phoenix.PubSub.subscribe/3` for options.
+  """
+  @callback subscribe(topic, opts :: Keyword.t) :: :ok | {:error, term}
+
+  @doc """
+  Unsubscribes the caller from the given topic.
+  """
+  @callback unsubscribe(topic) :: :ok | {:error, term}
+
+  @doc """
   Broadcasts a `msg` as `event` in the given `topic` to all nodes.
   """
   @callback broadcast(topic, event, msg) :: :ok | {:error, term}
