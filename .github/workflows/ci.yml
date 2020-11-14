@@ -71,7 +71,7 @@ jobs:
         run: |
           mix local.rebar --force
           mix local.hex --force
-          apk add --no-progress --update git socat
+          apk add --no-progress --update git socat make gcc libc-dev
       - name: Set up local proxies
         run: |
           socat TCP-LISTEN:5432,fork TCP-CONNECT:postgres:5432&

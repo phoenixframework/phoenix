@@ -1,0 +1,27 @@
+<h1>Log in</h1>
+
+<%%= form_for @conn, Routes.<%= schema.route_helper %>_session_path(@conn, :create), [as: :<%= schema.singular %>], fn f -> %>
+  <%%= if @error_message do %>
+    <div class="alert alert-danger">
+      <p><%%= @error_message %></p>
+    </div>
+  <%% end %>
+
+  <%%= label f, :email %>
+  <%%= email_input f, :email, required: true %>
+
+  <%%= label f, :password %>
+  <%%= password_input f, :password, required: true %>
+
+  <%%= label f, :remember_me, "Keep me logged in for 60 days" %>
+  <%%= checkbox f, :remember_me %>
+
+  <div>
+    <%%= submit "Log in" %>
+  </div>
+<%% end %>
+
+<p>
+  <%%= link "Register", to: Routes.<%= schema.route_helper %>_registration_path(@conn, :new) %> |
+  <%%= link "Forgot your password?", to: Routes.<%= schema.route_helper %>_reset_password_path(@conn, :new) %>
+</p>
