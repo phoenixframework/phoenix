@@ -1,13 +1,13 @@
 name: CI
 on: [push, pull_request]
 jobs:
-  test-elixir:
+  test:
+    name: test
     runs-on: ubuntu-latest
-    container:
-      image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-alpine-3.12.0
-      env:
-        ELIXIR_ASSERT_TIMEOUT: 2000
-
+    env:
+      GIT_URL_INSTEAD_OF: "https://github.com/=git@github.com:"
+      FORCE_COLOR: 1
+    
     strategy:
       fail-fast: false
       matrix:
@@ -21,41 +21,18 @@ jobs:
           - elixir: 1.11.0
             otp: 23.1.1
     steps:
-      - uses: actions/checkout@v2.3.1
-      - name: Install Dependencies
-        run: |
-          mix local.rebar --force
-          mix local.hex --force
-          apk add --no-progress --update git
-          mix deps.get --only test
-      - run: mix test
-
-  integration-test-elixir:
+      - uses: actions/checkout@v2
+      - name: Download released earth
+        run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/latest/download/earth-linux-amd64 -O /usr/local/bin/earth && chmod +x /usr/local/bin/earth'"
+      - name: Execute tests
+        run: earth --build-arg ELIXIR=${{ matrix.elixir }}  --build-arg OTP=${{ matrix.otp }} +test
+  itest:
+    name: integration test
     runs-on: ubuntu-latest
-    container:
-      image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-alpine-3.12.0
-      env:
-        ELIXIR_ASSERT_TIMEOUT: 2000
-    services:
-      postgres:
-        image: postgres
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_PASSWORD: postgres
-      mysql:
-        image: mysql
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2019-latest
-        env:
-          ACCEPT_EULA: Y
-          SA_PASSWORD: some!Password
-        ports:
-          - 1433:1433
+    env:
+      GIT_URL_INSTEAD_OF: "https://github.com/=git@github.com:"
+      FORCE_COLOR: 1
+    
     strategy:
       fail-fast: false
       matrix:
@@ -65,46 +42,17 @@ jobs:
           - elixir: 1.11.1
             otp: 23.1.1
     steps:
-      - uses: actions/checkout@v2.3.1
-      - name: Install Dependencies
-        run: |
-          mix local.rebar --force
-          mix local.hex --force
-          apk add --no-progress --update git socat
-      - name: Set up local proxies
-        run: |
-          socat TCP-LISTEN:5432,fork TCP-CONNECT:postgres:5432&
-          socat TCP-LISTEN:3306,fork TCP-CONNECT:mysql:3306&
-          socat TCP-LISTEN:1433,fork TCP-CONNECT:mssql:1433&
-      - name: Run installer tests
-        run: mix test
-        working-directory: installer
-      - name: Install dependencies
-        run: mix deps.get
-        working-directory: integration_test
-      - name: Run integration tests
-        run: mix test --include database
-        working-directory: integration_test
-
-  npm_test:
+      - uses: actions/checkout@v2
+      - name: Download released earth
+        run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/latest/download/earth-linux-amd64 -O /usr/local/bin/earth && chmod +x /usr/local/bin/earth'"
+      - name: Execute tests
+        run: earth -P --build-arg ELIXIR=${{ matrix.elixir }}  --build-arg OTP=${{ matrix.otp }} +integration-test
+  npm:
+    name: npm
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.1
-      - uses: actions/setup-elixir@v1.3.0
-        with:
-          otp-version: 23.0.3
-          elixir-version: 1.10.4
-      - name: Install Dependencies
-        run: |
-          mix local.rebar --force
-          mix local.hex --force
-          mix deps.get
-      - name: Setup Node.js
-        uses: actions/setup-node@v2.1.1
-        with:
-          node-version: 12.16
-      - name: npm install and test
-        run: |
-          cd assets
-          npm install
-          npm test
+      - uses: actions/checkout@v2
+      - name: Download released earth
+        run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/latest/download/earth-linux-amd64 -O /usr/local/bin/earth && chmod +x /usr/local/bin/earth'"
+      - name: Execute tests
+        run: earth --build-arg +npm
