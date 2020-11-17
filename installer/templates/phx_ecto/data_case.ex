@@ -18,12 +18,12 @@ defmodule <%= @app_module %>.DataCase do
 
   using do
     quote do
-      alias <%= @app_module %>.Repo
-
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
       import <%= @app_module %>.DataCase
+
+      alias <%= @app_module %>.Repo
     end
   end
 
