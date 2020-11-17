@@ -96,12 +96,12 @@ defmodule Hello.DataCase do
 
   using do
     quote do
-      alias Hello.Repo
-
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
       import Hello.DataCase
+      
+      alias Hello.Repo
     end
   end
 
