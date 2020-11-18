@@ -35,6 +35,8 @@ integration-test:
     END 
 
 npm:
+    ARG ELIXIR=1.10.4
+    ARG OTP=23.0.3
     FROM node:12
     COPY +npm-setup/assets /assets
     WORKDIR assets
@@ -47,12 +49,12 @@ npm-setup:
     SAVE ARTIFACT assets
 
 setup:
-   ARG ELIXIR=1.10.4
-   ARG OTP=23.0.3
+   ARG ELIXIR
+   ARG OTP
    FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.12.0
    WORKDIR /src
    RUN apk add --no-progress --update git
-   ENV ELIXIR_ASSERT_TIMEOUT=90000
+   ENV ELIXIR_ASSERT_TIMEOUT=2000
    COPY mix.exs .
    COPY mix.lock .
    COPY .formatter.exs .

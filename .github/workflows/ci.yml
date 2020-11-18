@@ -1,8 +1,7 @@
 name: CI
 on: [push, pull_request]
 jobs:
-  test:
-    name: test
+  test-elixir:
     runs-on: ubuntu-latest
     env:
       GIT_URL_INSTEAD_OF: "https://github.com/=git@github.com:"
@@ -26,8 +25,7 @@ jobs:
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/latest/download/earth-linux-amd64 -O /usr/local/bin/earth && chmod +x /usr/local/bin/earth'"
       - name: Execute tests
         run: earth --build-arg ELIXIR=${{ matrix.elixir }}  --build-arg OTP=${{ matrix.otp }} +test
-  itest:
-    name: integration test
+  integration-test-elixir:
     runs-on: ubuntu-latest
     env:
       GIT_URL_INSTEAD_OF: "https://github.com/=git@github.com:"
@@ -47,7 +45,7 @@ jobs:
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/latest/download/earth-linux-amd64 -O /usr/local/bin/earth && chmod +x /usr/local/bin/earth'"
       - name: Execute tests
         run: earth -P --build-arg ELIXIR=${{ matrix.elixir }}  --build-arg OTP=${{ matrix.otp }} +integration-test
-  npm:
+  npm_test:
     name: npm
     runs-on: ubuntu-latest
     steps:
@@ -55,4 +53,4 @@ jobs:
       - name: Download released earth
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/latest/download/earth-linux-amd64 -O /usr/local/bin/earth && chmod +x /usr/local/bin/earth'"
       - name: Execute tests
-        run: earth --build-arg +npm
+        run: earth --build-arg ELIXIR=1.10.4  --build-arg OTP=23.0.3 +npm
