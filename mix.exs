@@ -50,13 +50,10 @@ defmodule Phoenix.MixProject do
       env: [
         logger: true,
         stacktrace_depth: nil,
-        template_engines: [],
-        format_encoders: [],
         filter_parameters: ["password"],
         serve_endpoints: false,
         gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf),
-        static_compressors: [Phoenix.Digester.Gzip],
-        trim_on_html_eex_engine: true
+        static_compressors: [Phoenix.Digester.Gzip]
       ]
     ]
   end
@@ -71,6 +68,7 @@ defmodule Phoenix.MixProject do
       # Optional deps
       {:plug_cowboy, "~> 2.2", optional: true},
       {:jason, "~> 1.0", optional: true},
+      {:phoenix_view, git: "https://github.com/phoenixframework/phoenix_view.git"},
       {:phoenix_html, "~> 2.14.2 or ~> 2.15", optional: true},
 
       # Docs dependencies (some for cross references)
