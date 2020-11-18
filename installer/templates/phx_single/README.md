@@ -5,7 +5,7 @@ To start your Phoenix server:
   * Install dependencies with `mix deps.get`<%= if @ecto do %>
   * Create and migrate your database with `mix ecto.setup`<% end %><%= if @webpack do %>
   * Install Node.js dependencies with `npm install` inside the `assets` directory<% end %>
-  * Start Phoenix endpoint with `mix phx.server`
+  * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
