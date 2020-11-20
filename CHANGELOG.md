@@ -12,7 +12,7 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
-### 1.5.7
+### 1.5.7 (2020-11-20)
 
 ### Enhancements
   * [Channel] - Add binary serialization support to default serializers
