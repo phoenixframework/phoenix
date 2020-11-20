@@ -63,7 +63,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       trace_context_headers = Enum.into(connect_info.trace_context_headers, %{})
       uri = Map.from_struct(connect_info.uri)
       x_headers = Enum.into(connect_info.x_headers, %{})
-      
+
       connect_info =
         connect_info
         |> update_in([:peer_data], &Map.put(&1, :address, address))
@@ -295,7 +295,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
       assert %{"connect_info" =>
         %{"trace_context_headers" =>
-           ctx_headers}} = status_msg.payload
+           _ctx_headers}} = status_msg.payload
     end
 
     test "#{@mode}: transport peer_data is extracted to the socket connect_info" do
