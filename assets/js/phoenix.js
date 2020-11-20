@@ -1024,7 +1024,7 @@ export class Socket {
    * @private
    */
   onConnOpen(){
-    if(this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
+    if(this.hasLogger()) this.log("transport", `connected to ${this.conn.url || this.endPointURL()}`)
     this.unloaded = false
     this.closeWasClean = false
     this.flushSendBuffer()
@@ -1276,6 +1276,10 @@ export class LongPoll {
 
   endpointURL(){
     return Ajax.appendParams(this.pollEndpoint, {token: this.token})
+  }
+
+  get url() {
+    return this.endpointURL();
   }
 
   closeAndRetry(){
