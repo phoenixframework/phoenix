@@ -43,9 +43,7 @@ integration-test:
     COPY integration_test/config/config.exs  ./config/config.exs
     # RUN mix deps.get
     WITH DOCKER --compose docker-compose.yml
-        RUN for i in {1..30}; do nc -z localhost 3306 && break; sleep 1; done; \
-            for i in {1..30}; do nc -z localhost 5423 && break; sleep 1; done; \
-            for i in {1..30}; do nc -z localhost 1433 && break; sleep 1; done; \
+        RUN for i in {1..60}; do nc -z localhost 1433 && break; sleep 1; done; \
             mix test --include database
     END 
 
