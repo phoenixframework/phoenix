@@ -29,7 +29,7 @@ integration-test:
     COPY /integration_test/mix.exs ./integration_test/mix.exs
     COPY /integration_test/mix.lock ./integration_test/mix.lock
     COPY /integration_test/config/config.exs ./integration_test/config/config.exs
-    WORKDIR /src/integration_test 
+    WORKDIR /src/integration_test
     RUN mix local.hex --force
     RUN mix deps.get
 
@@ -37,15 +37,18 @@ integration-test:
     COPY --dir assets config installer lib test priv /src
     RUN mix local.rebar --force
     RUN MIX_ENV=test mix deps.compile
-    
+
     #run integration tests
     COPY integration_test/test  ./test
     COPY integration_test/config/config.exs  ./config/config.exs
     # RUN mix deps.get
     WITH DOCKER --compose docker-compose.yml
-        RUN while ! nc -z localhost 1433; do sleep 1; done; \
-            mix test --include database
-    END 
+        # wait for all databases to respond before running the test
+        RUN while ! nc -z localhost 3306; do sleep 1; done; \
+            while ! nc -z localhost 1433; do sleep 1; done; \
+            while ! nc -z localhost 5432; do sleep 1; done; \
+            mix test --include database;
+    END
 
 npm:
     ARG ELIXIR=1.10.4
@@ -66,7 +69,7 @@ setup-base:
    ARG OTP=23.1.1
    FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.12.0
    RUN apk add --no-progress --update git docker docker-compose
-   ENV ELIXIR_ASSERT_TIMEOUT=2000
+   ENV ELIXIR_ASSERT_TIMEOUT=10000
    WORKDIR /src
 
 test-setup:
