@@ -75,6 +75,7 @@ defmodule Phoenix.MixProject do
 
       # Docs dependencies (some for cross references)
       {:ex_doc, "~> 0.22", only: :docs},
+      {:ecto, ">= 3.0.0", only: :docs},
       {:gettext, "~> 0.15.0", only: :docs},
       {:telemetry_poller, "~> 0.4", only: :docs},
       {:telemetry_metrics, "~> 0.4", only: :docs},
