@@ -39,11 +39,11 @@ defmodule <%= @web_namespace %>.MixProject do
     [
       <%= @phoenix_dep %>,<%= if @ecto do %>
       {:phoenix_ecto, "~> 4.1"},<% end %><%= if @html do %><%= if @live do %>
-      {:phoenix_live_view, "~> 0.14.0"},
+      {:phoenix_live_view, "~> 0.15.0"},
       {:floki, ">= 0.27.0", only: :test},<% end %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if @dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.3"},<% end %>
+      {:phoenix_live_dashboard, "~> 0.4"},<% end %>
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},<%= if @gettext do %>
       {:gettext, "~> 0.11"},<% end %><%= if @app_name != @web_app_name do %>

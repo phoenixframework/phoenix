@@ -8,12 +8,17 @@ Phoenix v1.6 requires Elixir v1.9+.
 
   * [Endpoint] Allow custom error response from socket handler
   * [Endpoint] Do not require a pubsub server in the socket (only inside channels)
+  * [Controller] Do not create compile-time dependency for `action_fallback`
+  * [mix phx.new] Replace deprecated node-sass with sass library
+  * [mix phx.new] Update `mix phx.new` to require Elixir v1.11 and use the new `config/runtime.exs`
   * [mix phx.new] Add description to Ecto telemetry metrics
   * [mix phx.new] Use `Ecto.Adapters.SQL.Sandbox.start_owner!/2` in generators - this approach provides proper shutdown semantics for apps using LiveView and Presence
+  * [mix phx.new] Add `--install` and `--no-install` options to `phx.new`
 
 ### Bug fixes
 
-  * [mix phx.gen.live] Fix a bug where tests with `utc_datetime` fields did not pass out of the box
+  * [Controller] Return normalized paths in `current_path/1` and `current_path/2`
+  * [mix phx.gen.live] Fix a bug where tests with `utc_datetime` and `boolean` fields did not pass out of the box
 
 ### Deprecations
 
