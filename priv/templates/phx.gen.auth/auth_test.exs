@@ -140,7 +140,7 @@ defmodule <%= inspect auth_module %>Test do
 
     test "stores the path to redirect to on GET", %{conn: conn} do
       halted_conn =
-        %{conn | request_path: "/foo", query_string: ""}
+        %{conn | path_info: ["foo"], query_string: ""}
         |> fetch_flash()
         |> <%= inspect schema.alias %>Auth.require_authenticated_<%= schema.singular %>([])
 
@@ -148,7 +148,7 @@ defmodule <%= inspect auth_module %>Test do
       assert get_session(halted_conn, :<%= schema.singular %>_return_to) == "/foo"
 
       halted_conn =
-        %{conn | request_path: "/foo", query_string: "bar=baz"}
+        %{conn | path_info: ["foo"], query_string: "bar=baz"}
         |> fetch_flash()
         |> <%= inspect schema.alias %>Auth.require_authenticated_<%= schema.singular %>([])
 
@@ -156,7 +156,7 @@ defmodule <%= inspect auth_module %>Test do
       assert get_session(halted_conn, :<%= schema.singular %>_return_to) == "/foo?bar=baz"
 
       halted_conn =
-        %{conn | request_path: "/foo?bar", method: "POST"}
+        %{conn | path_info: ["foo"], query_string: "bar", method: "POST"}
         |> fetch_flash()
         |> <%= inspect schema.alias %>Auth.require_authenticated_<%= schema.singular %>([])
 
