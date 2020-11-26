@@ -1,0 +1,15 @@
+<h1>Resend confirmation instructions</h1>
+
+<%%= form_for :<%= schema.singular %>, Routes.<%= schema.route_helper %>_confirmation_path(@conn, :create), fn f -> %>
+  <%%= label f, :email %>
+  <%%= email_input f, :email, required: true %>
+
+  <div>
+    <%%= submit "Resend confirmation instructions" %>
+  </div>
+<%% end %>
+
+<p>
+  <%%= link "Register", to: Routes.<%= schema.route_helper %>_registration_path(@conn, :new) %> |
+  <%%= link "Log in", to: Routes.<%= schema.route_helper %>_session_path(@conn, :new) %>
+</p>
