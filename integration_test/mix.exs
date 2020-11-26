@@ -29,7 +29,7 @@ defmodule Phoenix.Integration.MixProject do
       {:phx_new, path: "../installer"},
       {:phoenix, path: "../", override: true},
       {:phoenix_ecto, "~> 4.1"},
-      {:ecto_sql, "~> 3.4.4"},
+      {:ecto_sql, "~> 3.5.0"},
       {:postgrex, ">= 0.0.0"},
       {:myxql, ">= 0.0.0"},
       {:tds, ">= 0.0.0"},
