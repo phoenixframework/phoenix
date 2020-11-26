@@ -31,17 +31,26 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_raise Mix.Error, ~r/Invalid arguments/, fn ->
         Gen.Html.run(~w(Blog Post))
       end
+
+      assert_raise Mix.Error, ~r/Enum type requires at least two values/, fn ->
+        Gen.Html.run(~w(Blog Post posts status:enum))
+      end
+
+      assert_raise Mix.Error, ~r/Enum type requires at least two values/, fn ->
+        Gen.Html.run(~w(Blog Post posts status:enum:new))
+      end
     end
   end
 
   test "generates html resource and handles existing contexts", config do
     one_day_in_seconds = 24 * 3600
-    naive_datetime = %{NaiveDateTime.utc_now() | second: 0, microsecond: {0, 6}} 
+    naive_datetime = %{NaiveDateTime.utc_now() | second: 0, microsecond: {0, 6}}
     datetime = %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
 
     in_tmp_project config.test, fn ->
       Gen.Html.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
                       tags:array:text popular:boolean drafted_at:datetime
+                      status:enum:unpublished:published:deleted
                       published_at:utc_datetime
                       published_at_usec:utc_datetime_usec
                       deleted_at:naive_datetime
@@ -63,6 +72,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "published_at: #{datetime |> DateTime.add(-one_day_in_seconds) |> DateTime.truncate(:second) |> inspect()}"
         assert file =~ "published_at_usec: #{datetime |> DateTime.add(-one_day_in_seconds) |> inspect()}"
         assert file =~ "weight: 120.5"
+        assert file =~ "status: :published"
 
         assert file =~ "assert post.announcement_date == #{inspect(Date.utc_today())}"
         assert file =~ "assert post.deleted_at == #{naive_datetime |> NaiveDateTime.truncate(:second) |> inspect()}"
@@ -73,6 +83,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "assert post.alarm_usec == ~T[15:01:01.000000]"
         assert file =~ "assert post.cost == Decimal.new(\"120.5\")"
         assert file =~ "assert post.weight == 120.5"
+        assert file =~ "assert post.status == :published"
       end
 
       assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
@@ -84,6 +95,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_file path, fn file ->
         assert file =~ "create table(:posts)"
         assert file =~ "add :title, :string"
+        assert file =~ "add :status, :string"
         assert file =~ "create unique_index(:posts, [:slug])"
       end
 
@@ -131,6 +143,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ ~s(<%= date_select f, :announcement_date %>)
         assert file =~ ~s(<%= time_select f, :alarm %>)
         assert file =~ ~s(<%= text_input f, :secret %>)
+        assert file =~ ~s|<%= select f, :status, Ecto.Enum.values(Phoenix.Blog.Post, :status), prompt: "Choose a value" %>|
 
         assert file =~ ~s(<%= label f, :title %>)
         assert file =~ ~s(<%= label f, :votes %>)
@@ -143,6 +156,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ ~s(<%= label f, :announcement_date %>)
         assert file =~ ~s(<%= label f, :alarm %>)
         assert file =~ ~s(<%= label f, :secret %>)
+        assert file =~ ~s(<%= label f, :status %>)
 
         refute file =~ ~s(<%= label f, :user_id)
         refute file =~ ~s(<%= number_input f, :user_id)

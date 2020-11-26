@@ -223,6 +223,22 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
+  test "generates schema with enum", config do
+    in_tmp_project config.test, fn ->
+      Gen.Schema.run(~w(Blog.Comment comments title:string status:enum:unpublished:published:deleted))
+
+      assert_file "lib/phoenix/blog/comment.ex", fn file ->
+        assert file =~ "field :status, Ecto.Enum, values: [:unpublished, :published, :deleted]"
+      end
+
+      assert [path] = Path.wildcard("priv/repo/migrations/*_create_comments.exs")
+      assert_file path, fn file ->
+        assert file =~ "create table(:comments)"
+        assert file =~ "add :status, :string"
+      end
+    end
+  end
+
   test "generates migration with binary_id", config do
     in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post posts title user_id:references:users --binary-id))
@@ -274,11 +290,11 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     in_tmp_project config.test, fn ->
       try do
         Application.put_env(:ecto_sql, :migration_module, MyCustomApp.MigrationModule)
-  
-        Gen.Schema.run(~w(Blog.Post posts))        
-  
+
+        Gen.Schema.run(~w(Blog.Post posts))
+
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
-  
+
         assert_file migration, fn file ->
           assert file =~ "use MyCustomApp.MigrationModule"
           assert file =~ "create table(:posts) do"

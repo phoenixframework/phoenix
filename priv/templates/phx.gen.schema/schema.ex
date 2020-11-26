@@ -5,7 +5,7 @@ defmodule <%= inspect schema.module %> do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id<% end %>
   schema <%= inspect schema.table %> do
-<%= for {k, v} <- schema.types do %>    field <%= inspect k %>, <%= inspect v %><%= schema.defaults[k] %>
+<%= for {k, v} <- schema.types do %>    field <%= inspect k %>, <%= Mix.Phoenix.Schema.type_and_opts_for_schema(v) %><%= schema.defaults[k] %>
 <% end %><%= for {_, k, _, _} <- schema.assocs do %>    field <%= inspect k %>, <%= if schema.binary_id do %>:binary_id<% else %>:id<% end %>
 <% end %>
     timestamps()
