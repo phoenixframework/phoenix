@@ -420,7 +420,7 @@ def connect(%{"token" => token}, socket, _connect_info) do
 end
 ```
 
-In our JavaScript, we can use the token set previously when to pass the token when constructing the Socket:
+In our JavaScript, we can use the token set previously when constructing the Socket:
 
 ```javascript
 let socket = new Socket("/socket", {params: {token: window.userToken}})
