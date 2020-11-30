@@ -15,7 +15,8 @@ services:
   mssql:
     image: mcr.microsoft.com/mssql/server:2019-latest
     environment:
-      ACCEPT_EULA: Y
-      SA_PASSWORD: some!Password
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: some!Password
+      MSSQL_PID: developer
     ports:
       - "1433:1433"
