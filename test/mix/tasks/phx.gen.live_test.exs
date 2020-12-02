@@ -57,6 +57,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
     in_tmp_live_project config.test, fn ->
       Gen.Live.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
                       tags:array:text popular:boolean drafted_at:datetime
+                      status:enum:unpublished:published:deleted
                       published_at:utc_datetime
                       published_at_usec:utc_datetime_usec
                       deleted_at:naive_datetime
@@ -108,6 +109,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ ~s(<%= multiple_select f, :tags, ["Option 1": "option1", "Option 2": "option2"] %>)
         assert file =~ ~s(<%= checkbox f, :popular %>)
         assert file =~ ~s(<%= datetime_select f, :drafted_at %>)
+        assert file =~ ~s|<%= select f, :status, Ecto.Enum.values(Phoenix.Blog.Post, :status), prompt: "Choose a value" %>|
         assert file =~ ~s(<%= datetime_select f, :published_at %>)
         assert file =~ ~s(<%= datetime_select f, :deleted_at %>)
         assert file =~ ~s(<%= date_select f, :announcement_date %>)

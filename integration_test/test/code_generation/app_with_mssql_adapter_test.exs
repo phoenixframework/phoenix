@@ -8,7 +8,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithMSSQLAdapterTest do
         {app_root_path, _} =
           generate_phoenix_app(tmp_dir, "default_mssql_app", ["--database", "mssql"])
 
-        mix_run!(~w(phx.gen.html Blog Post posts title body:string), app_root_path)
+        mix_run!(~w(phx.gen.html Blog Post posts title body:string status:enum:unpublished:published:deleted), app_root_path)
 
         modify_file(Path.join(app_root_path, "lib/default_mssql_app_web/router.ex"), fn file ->
           inject_before_final_end(file, """
@@ -34,7 +34,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithMSSQLAdapterTest do
         {app_root_path, _} =
           generate_phoenix_app(tmp_dir, "default_mssql_app", ["--database", "mssql"])
 
-        mix_run!(~w(phx.gen.json Blog Post posts title body:string), app_root_path)
+        mix_run!(~w(phx.gen.json Blog Post posts title body:string status:enum:unpublished:published:deleted), app_root_path)
 
         modify_file(Path.join(app_root_path, "lib/default_mssql_app_web/router.ex"), fn file ->
           inject_before_final_end(file, """
@@ -60,7 +60,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithMSSQLAdapterTest do
         {app_root_path, _} =
           generate_phoenix_app(tmp_dir, "default_mssql_app", ["--database", "mssql", "--live"])
 
-        mix_run!(~w(phx.gen.live Blog Post posts title body:string), app_root_path)
+        mix_run!(~w(phx.gen.live Blog Post posts title body:string status:enum:unpublished:published:deleted), app_root_path)
 
         modify_file(Path.join(app_root_path, "lib/default_mssql_app_web/router.ex"), fn file ->
           inject_before_final_end(file, """
