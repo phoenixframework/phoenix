@@ -1,6 +1,4 @@
 {
-  "repository": {},
-  "description": " ",
   "private": true,
   "scripts": {
     "deploy": "webpack --mode production",
