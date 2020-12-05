@@ -125,6 +125,7 @@ defmodule Phoenix.MixProject do
       "guides/contexts.md",
       "guides/mix_tasks.md",
       "guides/telemetry.md",
+      "guides/authentication/mix_phx_gen_auth.md",
       "guides/realtime/channels.md",
       "guides/realtime/presence.md",
       "guides/testing/testing.md",
@@ -144,6 +145,7 @@ defmodule Phoenix.MixProject do
     [
       Introduction: ~r/guides\/introduction\/.?/,
       Guides: ~r/guides\/[^\/]+\.md/,
+      Authentication: ~r/guides\/authentication\/.?/,
       "Real-time components": ~r/guides\/realtime\/.?/,
       Testing: ~r/guides\/testing\/.?/,
       Deployment: ~r/guides\/deployment\/.?/,
