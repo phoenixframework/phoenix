@@ -35,6 +35,14 @@ defmodule Phx.New.Project do
     Keyword.fetch!(binding, :ecto)
   end
 
+  def tailwind?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :tailwind)
+  end
+
+  def sass?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :sass)
+  end
+
   def html?(%Project{binding: binding}) do
     Keyword.fetch!(binding, :html)
   end

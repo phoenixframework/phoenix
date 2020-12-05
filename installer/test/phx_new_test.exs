@@ -429,6 +429,74 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
+  test "new with tailwind" do
+    in_tmp "new with tailwind", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--tailwind"])
+
+      assert_file "phx_blog/assets/css/app.css",  fn file ->
+        assert file =~ ~s[@import "tailwindcss/base"]
+        assert file =~ ~s[@import "tailwindcss/components"]
+        assert file =~ ~s[@import "tailwindcss/utilities"]
+        refute file =~ ~s[nprogress]
+        refute file =~ ~s[phx-no-feedback]
+      end
+
+      assert_file "phx_blog/assets/webpack.config.js",  fn file ->
+        assert file =~ ~s[test: /\\.css$/,]
+        assert file =~ ~s['postcss-loader']
+        refute file =~ ~s['sass-loader']
+      end
+
+      assert_file "phx_blog/assets/js/app.js",  fn file ->
+        assert file =~ ~s[import "../css/app.css"]
+      end
+
+      assert_file "phx_blog/assets/package.json",  fn file ->
+        assert file =~ ~s["deploy": "NODE_ENV=production webpack --mode production"]
+        assert file =~ ~s["autoprefixer": ]
+        assert file =~ ~s["postcss": ]
+        assert file =~ ~s["postcss-import": ]
+        assert file =~ ~s["postcss-loader": ]
+        assert file =~ ~s["postcss-nested": ]
+        assert file =~ ~s["tailwindcss": ]
+        refute file =~ ~s[sass]
+      end
+
+      assert_file "phx_blog/assets/postcss.config.js",  fn file ->
+        assert file =~ ~s[tailwindcss: {}]
+        assert file =~ ~s[autoprefixer: {}]
+      end
+
+      assert_file "phx_blog/assets/tailwind.config.js",  fn file ->
+        assert file =~ ~s[../lib/phx_blog_web/templates/**/*.eex]
+        assert file =~ ~s[../lib/phx_blog_web/views/**/*.ex]
+        assert file =~ ~s[./js/**/*.js]
+        refute file =~ ~s[leex]
+        refute file =~ ~s[live]
+      end
+    end
+  end
+
+  test "new with tailwind live" do
+    in_tmp "new with tailwind live", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--tailwind", "--live"])
+
+      assert_file "phx_blog/assets/css/app.css",  fn file ->
+        assert file =~ ~s[nprogress]
+        assert file =~ ~s[phx-no-feedback]
+      end
+
+      assert_file "phx_blog/assets/tailwind.config.js",  fn file ->
+        assert file =~ ~s[../lib/phx_blog_web/templates/**/*.eex]
+        assert file =~ ~s[../lib/phx_blog_web/templates/**/*.leex]
+        assert file =~ ~s[../lib/phx_blog_web/live/**/*.leex]
+        assert file =~ ~s[../lib/phx_blog_web/live/**/*.ex]
+        assert file =~ ~s[../lib/phx_blog_web/views/**/*.ex]
+        assert file =~ ~s[./js/**/*.js]
+      end
+    end
+  end
+
   test "new with live no_dashboard" do
     in_tmp "new with live no_dashboard", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--live", "--no-dashboard"])
@@ -598,6 +666,26 @@ defmodule Mix.Tasks.Phx.NewTest do
 
     assert_raise Mix.Error, ~r"Module name \w+ is already taken", fn ->
       Mix.Tasks.Phx.New.run ["valid", "--module", "String"]
+    end
+  end
+
+  test "new --tailwind with invalid args" do
+    assert_raise RuntimeError, "cannot generate --tailwind project with --no-html or --no-webpack. Tailwind CSS requires HTML and Webpack", fn ->
+      Mix.Tasks.Phx.New.run ["valid", "--tailwind", "--no-webpack"]
+    end
+
+    assert_raise RuntimeError, "cannot generate --tailwind project with --no-html or --no-webpack. Tailwind CSS requires HTML and Webpack", fn ->
+      Mix.Tasks.Phx.New.run ["valid", "--tailwind", "--no-html"]
+    end
+  end
+
+  test "new --live with invalid args" do
+    assert_raise RuntimeError, "cannot generate --live project with --no-html or --no-webpack. LiveView requires HTML and Webpack", fn ->
+      Mix.Tasks.Phx.New.run ["valid", "--live", "--no-webpack"]
+    end
+
+    assert_raise RuntimeError, "cannot generate --live project with --no-html or --no-webpack. LiveView requires HTML and Webpack", fn ->
+      Mix.Tasks.Phx.New.run ["valid", "--live", "--no-html"]
     end
   end
 

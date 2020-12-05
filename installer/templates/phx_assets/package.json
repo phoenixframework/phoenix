@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "deploy": "webpack --mode production",
+    "deploy": "<%= if @tailwind, do: "NODE_ENV=production " %>webpack --mode production",
     "watch": "webpack --mode development --watch"
   },
   "dependencies": {
@@ -12,15 +12,21 @@
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",<%= if @tailwind do %>
+    "autoprefixer": "^10.0.4",<% end %>
     "babel-loader": "^8.0.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.4.2",
-    "sass-loader": "^8.0.2",
-    "sass": "^1.27.0",
     "hard-source-webpack-plugin": "^0.13.1",
     "mini-css-extract-plugin": "^0.9.0",
-    "optimize-css-assets-webpack-plugin": "^5.0.1",
+    "optimize-css-assets-webpack-plugin": "^5.0.1",<%= if @tailwind do %>
+    "postcss": "^8.1.10",
+    "postcss-import": "^13.0.0",
+    "postcss-loader": "^4.1.0",
+    "postcss-nested": "^5.0.2",<% end %><%= if @sass do %>
+    "sass-loader": "^8.0.2",
+    "sass": "^1.27.0",<% end %><%= if @tailwind do %>
+    "tailwindcss": "^2.0.1",<% end %>
     "terser-webpack-plugin": "^2.3.2",
     "webpack": "4.41.5",
     "webpack-cli": "^3.3.2"

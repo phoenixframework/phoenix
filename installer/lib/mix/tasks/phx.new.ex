@@ -33,6 +33,10 @@ defmodule Mix.Tasks.Phx.New do
       Please check the driver docs for more information
       and requirements. Defaults to "postgres".
 
+    * `--tailwind` - include Tailwind CSS instead of Sass. This
+      will include PostCSS and provide Sass-like processing. This
+      option requires Webpack. https://tailwindcss.com/
+
     * `--no-webpack` - do not generate webpack files
       for static asset building. When choosing this
       option, you will need to manually handle
@@ -108,7 +112,8 @@ defmodule Mix.Tasks.Phx.New do
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
              gettext: :boolean, umbrella: :boolean, verbose: :boolean,
-             live: :boolean, dashboard: :boolean, install: :boolean]
+             live: :boolean, dashboard: :boolean, install: :boolean,
+             tailwind: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell().info("Phoenix v#{@version}")

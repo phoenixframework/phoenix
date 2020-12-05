@@ -169,6 +169,8 @@ defmodule Phx.New.Generator do
     dashboard = Keyword.get(opts, :dashboard, true)
     gettext = Keyword.get(opts, :gettext, true)
     webpack = Keyword.get(opts, :webpack, true)
+    tailwind = Keyword.get(opts, :tailwind, false)
+    sass = !tailwind
     dev = Keyword.get(opts, :dev, false)
     phoenix_path = phoenix_path(project, dev)
 
@@ -212,6 +214,8 @@ defmodule Phx.New.Generator do
       lv_signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
       webpack: webpack,
+      tailwind: tailwind,
+      sass: sass,
       ecto: ecto,
       html: html,
       live: live,

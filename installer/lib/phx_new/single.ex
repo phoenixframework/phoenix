@@ -67,11 +67,20 @@ defmodule Phx.New.Single do
     {:eex,  "phx_ecto/data_case.ex",         :app, "test/support/data_case.ex"},
   ]
 
+  template :tailwind, [
+    {:text, "phx_assets/postcss.config.js",  :web, "assets/postcss.config.js"},
+    {:eex,  "phx_assets/tailwind.config.js", :web, "assets/tailwind.config.js"},
+    {:eex,  "phx_assets/app.tailwind.css",   :web, "assets/css/app.css"}
+  ]
+
+  template :sass, [
+    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"}
+  ]
+
   template :webpack, [
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
     {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"},
     {:eex,  "phx_assets/socket.js",         :web, "assets/js/socket.js"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
@@ -81,7 +90,6 @@ defmodule Phx.New.Single do
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
     {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
   ]
@@ -127,6 +135,7 @@ defmodule Phx.New.Single do
 
   def generate(%Project{} = project) do
     if Project.live?(project), do: assert_live_switches!(project)
+    if Project.tailwind?(project), do: assert_tailwind_switches!(project)
 
     copy_from project, __MODULE__, :new
 
@@ -177,6 +186,12 @@ defmodule Phx.New.Single do
       copy_from project, __MODULE__, :webpack
     end
 
+    if Project.tailwind?(project) do
+      copy_from project, __MODULE__, :tailwind
+    else
+      copy_from project, __MODULE__, :sass
+    end
+
     statics = %{
       "phx_static/phoenix.css" => "assets/css/phoenix.css",
       "phx_static/robots.txt" => "assets/static/robots.txt",
@@ -195,7 +210,13 @@ defmodule Phx.New.Single do
 
   def assert_live_switches!(project) do
     unless Project.html?(project) and Project.webpack?(project) do
-      raise "cannot generate --live project with --no-html or --no-webpack. LiveView requires HTML and webpack"
+      raise "cannot generate --live project with --no-html or --no-webpack. LiveView requires HTML and Webpack"
+    end
+  end
+
+  def assert_tailwind_switches!(project) do
+    unless Project.html?(project) and Project.webpack?(project) do
+      raise "cannot generate --tailwind project with --no-html or --no-webpack. Tailwind CSS requires HTML and Webpack"
     end
   end
 end
