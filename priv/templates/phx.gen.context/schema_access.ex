@@ -43,8 +43,8 @@
 
   """
   def create_<%= schema.singular %>(attrs \\ %{}) do
-    %<%= inspect schema.alias %>{}
-    |> <%= inspect schema.alias %>.changeset(attrs)
+    attrs
+    |> <%= inspect schema.alias %>.changeset()
     |> Repo.insert()
   end
 

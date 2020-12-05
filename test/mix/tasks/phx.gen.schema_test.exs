@@ -310,7 +310,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       Gen.Schema.run(~w(Blog.Post posts title))
 
       assert_file "lib/phoenix/blog/post.ex", fn file ->
-        assert file =~ "import Ecto.Changeset\n\n  schema"
+        assert file =~ "import Ecto.Changeset\n\n  alias Phoenix.Blog.Post\n\n  schema"
       end
     end
   end
