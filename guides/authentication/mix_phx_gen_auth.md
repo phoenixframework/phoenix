@@ -28,7 +28,7 @@ And finally, let's start our phoenix server and try it out.
 
 ## Developer Responsibilities
 
-Since phoenix generates this code into your application instead of building these modules into phoenix itself, you now have complete freedom to modify the authentication system so it works best with your use case. The one caveat with using a generated authentication system is it will not be updated after it's been generated. Therefore as improvements are made to the output of `mix phx.gen.auth`, it becomes your responsibility to determine if these changes need to be ported into your application.
+Since phoenix generates this code into your application instead of building these modules into Phoenix itself, you now have complete freedom to modify the authentication system so it works best with your use case. The one caveat with using a generated authentication system is it will not be updated after it's been generated. Therefore as improvements are made to the output of `mix phx.gen.auth`, it becomes your responsibility to determine if these changes need to be ported into your application. Security-related and other important improvements will be explicitly and clearly marked in CHANGELOG and upgrade notes.
 
 ## Generated Code
 
@@ -48,7 +48,7 @@ The generated code ships with an auth module with a handful of plugs that fetch 
 
 ### Confirmation
 
-The generated functionality ships with an account confirmation mechanism, where users have to confirm their account, typically by email. However, the generated code does not forbid users from using the application if their accounts have not yet been confirmed. You can trivially add this functionality by customizing the plugs generated in the Auth module.
+The generated functionality ships with an account confirmation mechanism, where users have to confirm their account, typically by email. However, the generated code does not forbid users from using the application if their accounts have not yet been confirmed. You can add this functionality by customizing the `require_authenticated_user` in the `Auth` module to check for the `confirmed_at` field (and any other property you desire).
 
 ### Notifiers
 
