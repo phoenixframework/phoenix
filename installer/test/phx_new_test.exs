@@ -404,7 +404,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/assets/css/app.scss", fn file ->
-        assert file =~ ~s[@import "../node_modules/nprogress/nprogress.css";]
         assert file =~ ~s[.phx-click-loading]
       end
 
