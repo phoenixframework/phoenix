@@ -24,7 +24,7 @@ defmodule Phoenix.Endpoint do
   generator, an endpoint was automatically generated as
   part of your application:
 
-      defmodule YourApp.Endpoint do
+      defmodule YourAppWeb.Endpoint do
         use Phoenix.Endpoint, otp_app: :your_app
 
         # plug ...
@@ -39,7 +39,7 @@ defmodule Phoenix.Endpoint do
   added to the supervision tree as follows:
 
       children = [
-        YourApp.Endpoint
+        YourAppWeb.Endpoint
       ]
 
   ## Endpoint configuration
@@ -47,7 +47,7 @@ defmodule Phoenix.Endpoint do
   All endpoints are configured in your application environment.
   For example:
 
-      config :your_app, YourApp.Endpoint,
+      config :your_app, YourAppWeb.Endpoint,
         secret_key_base: "kjoy3o1zeidquwy1398juxzldjlksahdk3"
 
   Endpoint configuration is split into two categories. Compile-time
@@ -59,8 +59,8 @@ defmodule Phoenix.Endpoint do
   after your application is started and can be read through the
   `c:config/2` function:
 
-      YourApp.Endpoint.config(:port)
-      YourApp.Endpoint.config(:some_config, :default_value)
+      YourAppWeb.Endpoint.config(:port)
+      YourAppWeb.Endpoint.config(:some_config, :default_value)
 
   ### Dynamic configuration
 
@@ -748,7 +748,7 @@ defmodule Phoenix.Endpoint do
       are allowed, or a function provided as MFA tuple. Defaults to `:check_origin`
       setting at endpoint configuration.
 
-      If `true`, the header is checked against `:host` in `YourApp.Endpoint.config(:url)[:host]`.
+      If `true`, the header is checked against `:host` in `YourAppWeb.Endpoint.config(:url)[:host]`.
 
       If `false`, your app is vulnerable to Cross-Site WebSocket Hijacking (CSWSH)
       attacks. Only use in development, when the host is truly unknown or when
