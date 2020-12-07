@@ -433,7 +433,21 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp log_access_info(otp_app, endpoint) do
     if Phoenix.Endpoint.server?(otp_app, endpoint) do
-      Logger.info("Access #{inspect(endpoint)} at #{endpoint.url()}")
+      config = config(otp_app, endpoint)
+      for {scheme, _} <- [http: 4000, https: 4040], _ = config[scheme] do
+        ref = Module.concat(endpoint, scheme |> Atom.to_string() |> String.upcase())
+        Logger.info("Access #{inspect(endpoint)} at #{scheme}://#{bound_address(scheme, ref)}")
+      end
+    end
+  end
+
+  defp bound_address(scheme, ref) do
+    case :ranch.get_addr(ref) do
+      {:local, unix_path} ->
+        "#{unix_path} (#{scheme}+unix)"
+
+      {addr, port} ->
+        "#{:inet.ntoa(addr)}:#{port} (#{scheme})"
     end
   end
 
