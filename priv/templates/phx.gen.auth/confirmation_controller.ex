@@ -31,7 +31,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     case <%= inspect context.alias %>.confirm_<%= schema.singular %>(token) do
       {:ok, _} ->
         conn
-        |> put_flash(:info, "Account confirmed successfully.")
+        |> put_flash(:info, "<%= schema.human_singular %> confirmed successfully.")
         |> redirect(to: "/")
 
       :error ->
@@ -45,7 +45,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
           %{} ->
             conn
-            |> put_flash(:error, "Account confirmation link is invalid or it has expired.")
+            |> put_flash(:error, "<%= schema.human_singular %> confirmation link is invalid or it has expired.")
             |> redirect(to: "/")
         end
     end
