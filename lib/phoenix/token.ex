@@ -15,8 +15,8 @@ defmodule Phoenix.Token do
   the id from a database. For example:
 
       iex> user_id = 1
-      iex> token = Phoenix.Token.sign(MyApp.Endpoint, "user auth", user_id)
-      iex> Phoenix.Token.verify(MyApp.Endpoint, "user auth", token, max_age: 86400)
+      iex> token = Phoenix.Token.sign(MyAppWeb.Endpoint, "user auth", user_id)
+      iex> Phoenix.Token.verify(MyAppWeb.Endpoint, "user auth", token, max_age: 86400)
       {:ok, 1}
 
   In that example we have a user's id, we generate a token and
@@ -233,7 +233,7 @@ defmodule Phoenix.Token do
       no :secret_key_base configuration found in #{inspect(endpoint)}.
       Ensure your environment has the necessary mix configuration. For example:
 
-          config :my_app, MyApp.Endpoint,
+          config :my_app, MyAppWeb.Endpoint,
               secret_key_base: ...
 
       """

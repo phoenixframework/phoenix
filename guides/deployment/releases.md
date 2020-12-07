@@ -68,7 +68,7 @@ You can start the release by calling `_build/prod/rel/my_app/bin/my_app start`, 
 Open up `config/runtime.exs` (formerly `config/prod.secret.exs`) and you should find a section about "Using releases" with a configuration to set. Go ahead and uncomment that line or manually add the line below, adapted to your application names:
 
 ```elixir
-config :my_app, MyApp.Endpoint, server: true
+config :my_app, MyAppWeb.Endpoint, server: true
 ```
 
 Now assemble the release once again:

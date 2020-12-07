@@ -40,7 +40,7 @@ If you would like to use HTTPS in development, a self-signed certificate can be 
 With your self-signed certificate, your development configuration in `config/dev.exs` can be updated to run an HTTPS endpoint:
 
 ```elixir
-config :my_app, MyApp.Endpoint,
+config :my_app, MyAppWeb.Endpoint,
   ...
   https: [
     port: 4001,
@@ -57,14 +57,14 @@ This can replace your `http` configuration, or you can run HTTP and HTTPS server
 In many cases, you'll want to force all incoming requests to use SSL by redirecting HTTP to HTTPS. This can be accomplished by setting the `:force_ssl` option in your endpoint configuration. It expects a list of options which are forwarded to `Plug.SSL`. By default it sets the "strict-transport-security" header in HTTPS requests, forcing browsers to always use HTTPS. If an unsafe (HTTP) request is sent, it redirects to the HTTPS version using the `:host` specified in the `:url` configuration. For example:
 
 ```elixir
-config :my_app, MyApp.Endpoint,
+config :my_app, MyAppWeb.Endpoint,
   force_ssl: [rewrite_on: [:x_forwarded_proto]]
 ```
 
 To dynamically redirect to the `host` of the current request, set `:host` in the `:force_ssl` configuration to `nil`.
 
 ```elixir
-config :my_app, MyApp.Endpoint,
+config :my_app, MyAppWeb.Endpoint,
   force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil]
 ```
 

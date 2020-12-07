@@ -154,7 +154,7 @@ defmodule Phoenix.Channel do
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         ...
         broadcast_from!(socket, "new_msg", %{uid: uid, body: body})
-        MyApp.Endpoint.broadcast_from!(self(), "room:superadmin",
+        MyAppWeb.Endpoint.broadcast_from!(self(), "room:superadmin",
           "new_msg", %{uid: uid, body: body})
         {:noreply, socket}
       end
@@ -162,8 +162,8 @@ defmodule Phoenix.Channel do
       # within controller
       def create(conn, params) do
         ...
-        MyApp.Endpoint.broadcast!("room:" <> rid, "new_msg", %{uid: uid, body: body})
-        MyApp.Endpoint.broadcast!("room:superadmin", "new_msg", %{uid: uid, body: body})
+        MyAppWeb.Endpoint.broadcast!("room:" <> rid, "new_msg", %{uid: uid, body: body})
+        MyAppWeb.Endpoint.broadcast!("room:superadmin", "new_msg", %{uid: uid, body: body})
         redirect(conn, to: "/")
       end
 
@@ -223,7 +223,7 @@ defmodule Phoenix.Channel do
   preference, a more efficient and simple approach would be to subscribe a
   single channel to relevant notifications via your endpoint. For example:
 
-      defmodule MyApp.Endpoint.NotificationChannel do
+      defmodule MyAppWeb.Endpoint.NotificationChannel do
         use Phoenix.Channel
 
         def join("notification:" <> user_id, %{"ids" => ids}, socket) do
@@ -239,7 +239,7 @@ defmodule Phoenix.Channel do
         end
 
         def handle_in("unwatch", %{"product_id" => id}, socket) do
-          {:reply, :ok, MyApp.Endpoint.unsubscribe("product:#{id}")}
+          {:reply, :ok, MyAppWeb.Endpoint.unsubscribe("product:#{id}")}
         end
 
         defp put_new_topics(socket, topics) do
@@ -248,7 +248,7 @@ defmodule Phoenix.Channel do
             if topic in topics do
               acc
             else
-              :ok = MyApp.Endpoint.subscribe(topic)
+              :ok = MyAppWeb.Endpoint.subscribe(topic)
               assign(acc, :topics, [topic | topics])
             end
           end)

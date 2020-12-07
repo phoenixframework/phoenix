@@ -886,11 +886,11 @@ defmodule Phoenix.Endpoint do
   Checks if Endpoint's web server has been configured to start.
 
     * `otp_app` - The OTP app running the endpoint, for example `:my_app`
-    * `endpoint` - The endpoint module, for example `MyApp.Endpoint`
+    * `endpoint` - The endpoint module, for example `MyAppWeb.Endpoint`
 
   ## Examples
 
-      iex> Phoenix.Endpoint.server?(:my_app, MyApp.Endpoint)
+      iex> Phoenix.Endpoint.server?(:my_app, MyAppWeb.Endpoint)
       true
 
   """
