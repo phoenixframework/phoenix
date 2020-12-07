@@ -37,7 +37,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_gettext/errors.pot",               :project, "priv/gettext/errors.pot"}
   ]
 
-  template :html, [
+  template :html_sass, [
     {:eex, "phx_web/controllers/page_controller.ex",         :project, "lib/:lib_web_name/controllers/page_controller.ex"},
     {:eex, "phx_web/templates/layout/app.html.eex",          :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
     {:eex, "phx_web/templates/page/index.html.eex",          :project, "lib/:lib_web_name/templates/page/index.html.eex"},
@@ -48,7 +48,18 @@ defmodule Phx.New.Single do
     {:eex, "phx_test/views/page_view_test.exs",              :project, "test/:lib_web_name/views/page_view_test.exs"},
   ]
 
-  template :live, [
+  template :html_tailwind, [
+    {:eex, "phx_web/controllers/page_controller.ex",         :project, "lib/:lib_web_name/controllers/page_controller.ex"},
+    {:eex, "phx_web/templates/layout/app.tailwind.html.eex", :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
+    {:eex, "phx_web/templates/page/index.tailwind.html.eex", :project, "lib/:lib_web_name/templates/page/index.html.eex"},
+    {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
+    {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:lib_web_name/views/page_view.ex"},
+    {:eex, "phx_test/controllers/page_controller_test.exs",  :project, "test/:lib_web_name/controllers/page_controller_test.exs"},
+    {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:lib_web_name/views/layout_view_test.exs"},
+    {:eex, "phx_test/views/page_view_test.exs",              :project, "test/:lib_web_name/views/page_view_test.exs"},
+  ]
+
+  template :live_sass, [
     {:eex, "phx_live/templates/layout/root.html.leex",       :project, "lib/:lib_web_name/templates/layout/root.html.leex"},
     {:eex, "phx_live/templates/layout/app.html.leex",        :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
     {:eex, "phx_live/templates/layout/live.html.leex",       :project, "lib/:lib_web_name/templates/layout/live.html.leex"},
@@ -57,6 +68,17 @@ defmodule Phx.New.Single do
     {:eex, "phx_web/templates/page/index.html.eex",          :project, "lib/:lib_web_name/live/page_live.html.leex"},
     {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:lib_web_name/views/layout_view_test.exs"},
     {:eex, "phx_test/live/page_live_test.exs",               :project, "test/:lib_web_name/live/page_live_test.exs"},
+  ]
+
+  template :live_tailwind, [
+    {:eex, "phx_live/templates/layout/root.tailwind.html.leex", :project, "lib/:lib_web_name/templates/layout/root.html.leex"},
+    {:eex, "phx_live/templates/layout/app.tailwind.html.leex",  :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
+    {:eex, "phx_live/templates/layout/live.tailwind.html.leex", :project, "lib/:lib_web_name/templates/layout/live.html.leex"},
+    {:eex, "phx_web/views/layout_view.ex",                      :project, "lib/:lib_web_name/views/layout_view.ex"},
+    {:eex, "phx_live/live/page_live.ex",                        :project, "lib/:lib_web_name/live/page_live.ex"},
+    {:eex, "phx_web/templates/page/index.tailwind.html.eex",    :project, "lib/:lib_web_name/live/page_live.html.leex"},
+    {:eex, "phx_test/views/layout_view_test.exs",               :project, "test/:lib_web_name/views/layout_view_test.exs"},
+    {:eex, "phx_test/live/page_live_test.exs",                  :project, "test/:lib_web_name/live/page_live_test.exs"},
   ]
 
   template :ecto, [
@@ -74,7 +96,9 @@ defmodule Phx.New.Single do
   ]
 
   template :sass, [
-    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"}
+    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"},
+    {:text, "phx_static/phoenix.css",       :web, "assets/css/phoenix.css"},
+    {:text, "phx_static/milligram.css",     :web, "assets/css/milligram.css"}
   ]
 
   template :webpack, [
@@ -92,18 +116,20 @@ defmodule Phx.New.Single do
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
+    {:text, "phx_assets/phoenix_live.css",  :web, "assets/css/phoenix_live.css"}
   ]
 
   template :bare, []
 
   template :static, [
-    {:text, "phx_static/app.js",      :web, "priv/static/js/app.js"},
-    {:text, "phx_static/app.css",     :web, "priv/static/css/app.css"},
-    {:text, "phx_static/phoenix.css", :web, "priv/static/css/phoenix.css"},
-    {:text, "phx_static/robots.txt",  :web, "priv/static/robots.txt"},
-    {:text, "phx_static/phoenix.js",  :web, "priv/static/js/phoenix.js"},
-    {:text, "phx_static/phoenix.png", :web, "priv/static/images/phoenix.png"},
-    {:text, "phx_static/favicon.ico", :web, "priv/static/favicon.ico"}
+    {:text, "phx_static/app.js",        :web, "priv/static/js/app.js"},
+    {:text, "phx_static/app.css",       :web, "priv/static/css/app.css"},
+    {:text, "phx_static/phoenix.css",   :web, "priv/static/css/phoenix.css"},
+    {:text, "phx_static/milligram.css", :web, "priv/static/css/milligram.css"},
+    {:text, "phx_static/robots.txt",    :web, "priv/static/robots.txt"},
+    {:text, "phx_static/phoenix.js",    :web, "priv/static/js/phoenix.js"},
+    {:text, "phx_static/phoenix.png",   :web, "priv/static/images/phoenix.png"},
+    {:text, "phx_static/favicon.ico",   :web, "priv/static/favicon.ico"}
   ]
 
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do
@@ -159,7 +185,11 @@ defmodule Phx.New.Single do
   end
 
   def gen_html(project) do
-    copy_from project, __MODULE__, :html
+    if Project.tailwind?(project) do
+      copy_from project, __MODULE__, :html_tailwind
+    else
+      copy_from project, __MODULE__, :html_sass
+    end
   end
 
   def gen_gettext(project) do
@@ -167,7 +197,11 @@ defmodule Phx.New.Single do
   end
 
   defp gen_live(project) do
-    copy_from project, __MODULE__, :live
+    if Project.tailwind?(project) do
+      copy_from project, __MODULE__, :live_tailwind
+    else
+      copy_from project, __MODULE__, :live_sass
+    end
   end
 
   def gen_ecto(project) do
@@ -193,7 +227,6 @@ defmodule Phx.New.Single do
     end
 
     statics = %{
-      "phx_static/phoenix.css" => "assets/css/phoenix.css",
       "phx_static/robots.txt" => "assets/static/robots.txt",
       "phx_static/phoenix.png" => "assets/static/images/phoenix.png",
       "phx_static/favicon.ico" => "assets/static/favicon.ico"
