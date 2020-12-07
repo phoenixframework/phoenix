@@ -526,6 +526,7 @@ export class Channel {
    * @returns {Push}
    */
   push(event, payload, timeout = this.timeout){
+    payload = payload || {}
     if(!this.joinedOnce){
       throw new Error(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`)
     }
