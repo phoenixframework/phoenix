@@ -12,6 +12,7 @@ mix local.phx          # Updates the Phoenix project generator locally
 mix phx                # Prints Phoenix help information
 mix phx.digest         # Digests and compresses static files
 mix phx.digest.clean   # Removes old versions of static assets.
+mix phx.gen.auth       # Generates authentication logic for a resource
 mix phx.gen.cert       # Generates a self-signed certificate for HTTPS testing
 mix phx.gen.channel    # Generates a Phoenix channel
 mix phx.gen.context    # Generates a context with functions around an Ecto schema
@@ -203,6 +204,73 @@ $ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id
 * creating lib/hello/accounts/credential.ex
 * creating priv/repo/migrations/20170906162013_create_credentials.exs
 ```
+
+### `mix phx.gen.auth`
+
+Phoenix also offers the ability to generate all of the code to stand up a complete authentication system - ecto migration, phoenix context, controllers, templates, etc. This can be a huge timesaver, allowing you to quickly add authentication to your system and shift your focus back to the primary problems your application is trying to solve.
+
+The `mix phx.gen.auth` task takes the following arguments: the module name of the context, the module name of the schema, and a plural version of the schema name used to generate database tables and route helpers.
+
+Here is an example version of the command:
+
+```console
+$ mix phx.gen.auth Accounts User users
+* creating priv/repo/migrations/20201205184926_create_users_auth_tables.exs
+* creating lib/hello/accounts/user_notifier.ex
+* creating lib/hello/accounts/user.ex
+* creating lib/hello/accounts/user_token.ex
+* creating lib/hello_web/controllers/user_auth.ex
+* creating test/hello_web/controllers/user_auth_test.exs
+* creating lib/hello_web/views/user_confirmation_view.ex
+* creating lib/hello_web/templates/user_confirmation/new.html.eex
+* creating lib/hello_web/controllers/user_confirmation_controller.ex
+* creating test/hello_web/controllers/user_confirmation_controller_test.exs
+* creating lib/hello_web/templates/layout/_user_menu.html.eex
+* creating lib/hello_web/templates/user_registration/new.html.eex
+* creating lib/hello_web/controllers/user_registration_controller.ex
+* creating test/hello_web/controllers/user_registration_controller_test.exs
+* creating lib/hello_web/views/user_registration_view.ex
+* creating lib/hello_web/views/user_reset_password_view.ex
+* creating lib/hello_web/controllers/user_reset_password_controller.ex
+* creating test/hello_web/controllers/user_reset_password_controller_test.exs
+* creating lib/hello_web/templates/user_reset_password/edit.html.eex
+* creating lib/hello_web/templates/user_reset_password/new.html.eex
+* creating lib/hello_web/views/user_session_view.ex
+* creating lib/hello_web/controllers/user_session_controller.ex
+* creating test/hello_web/controllers/user_session_controller_test.exs
+* creating lib/hello_web/templates/user_session/new.html.eex
+* creating lib/hello_web/views/user_settings_view.ex
+* creating lib/hello_web/templates/user_settings/edit.html.eex
+* creating lib/hello_web/controllers/user_settings_controller.ex
+* creating test/hello_web/controllers/user_settings_controller_test.exs
+* creating lib/hello/accounts.ex
+* injecting lib/hello/accounts.ex
+* creating test/hello/accounts_test.exs
+* injecting test/hello/accounts_test.exs
+* creating test/support/fixtures/accounts_fixtures.ex
+* injecting test/support/fixtures/accounts_fixtures.ex
+* injecting test/support/conn_case.ex
+* injecting config/test.exs
+* injecting mix.exs
+* injecting lib/hello_web/router.ex
+* injecting lib/hello_web/router.ex - imports
+* injecting lib/hello_web/router.ex - plug
+* injecting lib/hello_web/templates/layout/app.html.eex
+```
+
+When `mix phx.gen.auth` is done creating files, it helpfully tells us that we need to re-fetch our dependencies as well as run our ecto migrations.
+
+```console
+Please re-fetch your dependencies with the following command:
+
+    mix deps.get
+
+Remember to update your repository by running migrations:
+
+  $ mix ecto.migrate
+```
+
+A more complete walk-through of how to get started with this generator is available in the [`mix phx.gen.auth` Guide](mix_phx_gen_auth.html).
 
 ### `mix phx.gen.channel`
 

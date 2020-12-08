@@ -9,6 +9,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   The first argument is the context module followed by the schema module
   and its plural name (used as the schema table name).
 
+  Additional information is available in the
+  [`mix phx.gen.auth` guide](mix_phx_gen_auth.html).
+
   ## Password hashing
 
   The password hashing mechanism defaults to `bcrypt` for
