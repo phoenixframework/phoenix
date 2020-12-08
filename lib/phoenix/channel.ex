@@ -14,10 +14,10 @@ defmodule Phoenix.Channel do
   match on all topics starting with a given prefix by using a splat (the `*`
   character) as the last character in the topic pattern:
 
-      channel "room:*", MyApp.RoomChannel
+      channel "room:*", MyAppWeb.RoomChannel
 
   Any topic coming into the router with the `"room:"` prefix would dispatch
-  to `MyApp.RoomChannel` in the above example. Topics can also be pattern
+  to `MyAppWeb.RoomChannel` in the above example. Topics can also be pattern
   matched in your channels' `join/3` callback to pluck out the scoped pattern:
 
       # handles the special `"lobby"` subtopic
@@ -89,10 +89,10 @@ defmodule Phoenix.Channel do
 
         if changeset.valid? do
           post = Repo.insert!(changeset)
-          response = MyApp.PostView.render("show.json", %{post: post})
+          response = MyAppWeb.PostView.render("show.json", %{post: post})
           {:reply, {:ok, response}, socket}
         else
-          response = MyApp.ChangesetView.render("errors.json", %{changeset: changeset})
+          response = MyAppWeb.ChangesetView.render("errors.json", %{changeset: changeset})
           {:reply, {:error, response}, socket}
         end
       end
