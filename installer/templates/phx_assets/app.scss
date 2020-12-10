@@ -1,4 +1,0 @@
-/* This file is for your main application CSS. */
-@import "./milligram.css";
-@import "./phoenix.css";<%= if @live do %>
-@import "./phoenix_live.css";<% end %>

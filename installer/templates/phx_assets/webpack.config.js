@@ -35,12 +35,11 @@ module.exports = (env, options) => {
           }
         },
         {
-          test: /\.<%= if @sass do %>[s]?<% end %>css$/,
+          test: /\.css$/,
           use: [
             MiniCssExtractPlugin.loader,
-            'css-loader',<%= if @tailwind do %>
-            'postcss-loader'<% end %><%= if @sass do %>
-            'sass-loader',<% end %>
+            'css-loader',
+            'postcss-loader'
           ],
         }
       ]

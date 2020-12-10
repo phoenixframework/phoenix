@@ -11,7 +11,7 @@ defmodule <%= @web_namespace %>.ErrorHelpers do
   def error_tag(form, field) do
     Enum.map(Keyword.get_values(form.errors, field), fn error ->
       content_tag(:span, translate_error(error),
-        class: "invalid-feedback",
+        class: "text-red-500 block mb-4 -mt-2",
         phx_feedback_for: input_id(form, field)
       )
     end)

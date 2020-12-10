@@ -129,27 +129,56 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # webpack
       assert_file web_path(@app, ".gitignore"), "/assets/node_modules/"
       assert_file web_path(@app, ".gitignore"), "#{@app}_web-*.tar"
-      assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
-      assert_file web_path(@app, "assets/webpack.config.js"), "js/app.js"
+      assert_file web_path(@app, ".gitignore"),  ~r/\n$/
       assert_file web_path(@app, "assets/.babelrc"), "env"
       assert_file web_path(@app, "assets/static/favicon.ico")
       assert_file web_path(@app, "assets/static/images/phoenix.png")
-      assert_file web_path(@app, "assets/css/app.scss")
-      assert_file web_path(@app, "assets/css/phoenix.css")
-      assert_file web_path(@app, "assets/js/app.js"),
-                  ~s[import socket from "./socket"]
-      assert_file web_path(@app, "assets/js/socket.js"),
-                  ~s[import {Socket} from "phoenix"]
-
-      assert_file web_path(@app, "assets/package.json"), fn file ->
-        assert file =~ ~s["file:../../../deps/phoenix"]
-        assert file =~ ~s["file:../../../deps/phoenix_html"]
+      assert_file web_path(@app, "assets/js/app.js"),  fn file ->
+        assert file =~ ~s[import "../css/app.css"]
+        assert file =~ ~s[import socket from "./socket"]
       end
+      assert_file web_path(@app, "assets/js/socket.js"),
+      ~s[import {Socket} from "phoenix"]
+      assert_file web_path(@app, "assets/webpack.config.js"),  fn file ->
+        assert file =~ "js/app.js"
+        assert file =~ ~s[test: /\\.css$/,]
+        assert file =~ ~s['postcss-loader']
+        refute file =~ ~s['sass-loader']
+      end
+      assert_file web_path(@app, "assets/package.json"), fn file ->
+        assert file =~ ~s["phoenix": "file:../../../deps/phoenix"]
+        assert file =~ ~s["phoenix_html": "file:../../../deps/phoenix_html"]
+        assert file =~ ~s["deploy": "NODE_ENV=production webpack --mode production"]
+        assert file =~ ~s["autoprefixer": ]
+        assert file =~ ~s["postcss": ]
+        assert file =~ ~s["postcss-import": ]
+        assert file =~ ~s["postcss-loader": ]
+        assert file =~ ~s["postcss-nested": ]
+        assert file =~ ~s["tailwindcss": ]
+        refute file =~ ~s[sass]
+      end
+      refute_file(web_path(@app, "priv/static/js/app.js"))
+      refute_file web_path(@app, "priv/static/js/phoenix.js")
 
-      refute File.exists?(web_path(@app, "priv/static/css/app.css"))
-      refute File.exists?(web_path(@app, "priv/static/css/phoenix.css"))
-      refute File.exists?(web_path(@app, "priv/static/js/phoenix.js"))
-      refute File.exists?(web_path(@app, "priv/static/js/app.js"))
+      assert_file web_path(@app, "assets/css/app.css"), fn file ->
+        assert file =~ ~s[@import "tailwindcss/base"]
+        assert file =~ ~s[@import "tailwindcss/components"]
+        assert file =~ ~s[@import "tailwindcss/utilities"]
+        refute file =~ ~s[phoenix_live.css]
+      end
+      refute_file web_path(@app, "assets/css/phoenix_live.css")
+      refute_file web_path(@app, "priv/static/css/app.css")
+      refute_file web_path(@app, "priv/static/css/phoenix.css")
+
+      assert_file web_path(@app, "assets/tailwind.config.js"), fn file ->
+        assert file =~ ~s[../lib/#{@app}_web/templates/**/*.eex]
+        assert file =~ ~s[../lib/#{@app}_web/views/**/*.ex]
+        assert file =~ ~s[./js/**/*.js]
+
+        refute file =~ ~s[../lib/#{@app}_web/templates/**/*.leex]
+        refute file =~ ~s[../lib/#{@app}_web/live/**/*.leex]
+        refute file =~ ~s[../lib/#{@app}_web/live/**/*.ex]
+      end
 
       assert File.exists?(web_path(@app, "assets/vendor"))
 
@@ -241,7 +270,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # No webpack & No HTML
       refute_file web_path(@app, "priv/static/css/app.css")
-      refute_file web_path(@app, "priv/static/css/phoenix.css")
       refute_file web_path(@app, "priv/static/favicon.ico")
       refute_file web_path(@app, "priv/static/images/phoenix.png")
       refute_file web_path(@app, "priv/static/js/phoenix.js")
@@ -349,7 +377,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, ".gitignore")
       assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
       assert_file web_path(@app, "priv/static/css/app.css")
-      assert_file web_path(@app, "priv/static/css/phoenix.css")
       assert_file web_path(@app, "priv/static/favicon.ico")
       assert_file web_path(@app, "priv/static/images/phoenix.png")
       assert_file web_path(@app, "priv/static/js/phoenix.js")
@@ -407,13 +434,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
       end
 
-      assert_file web_path(@app, "assets/css/app.scss"), fn file ->
-        assert file =~ ~s[@import "./phoenix.css"]
-        assert file =~ ~s[@import "./phoenix_live.css"]
-      end
-
-      assert_file web_path(@app, "assets/css/phoenix.css"), fn file ->
-        assert file =~ ~s[.phx-hero]
+      assert_file web_path(@app, "assets/css/app.css"), fn file ->
+        assert file =~ "tailwindcss"
+        assert file =~ "phoenix_live.css"
       end
 
       assert_file web_path(@app, "assets/css/phoenix_live.css"), fn file ->
@@ -439,71 +462,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         refute file =~ ~s[plug :fetch_flash]
         refute file =~ ~s[PageController]
       end
-    end
-  end
-
-  test "new with tailwind" do
-    in_tmp "new with tailwind", fn ->
-      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--tailwind"])
-
-      assert_file web_path(@app, "assets/js/app.js"),  fn file ->
-        assert file =~ ~s[import "../css/app.css"]
-      end
-
-      assert_file web_path(@app, "assets/webpack.config.js"),  fn file ->
-        assert file =~ ~s[test: /\\.css$/,]
-        assert file =~ ~s['postcss-loader']
-        refute file =~ ~s['sass-loader']
-      end
-
-      assert_file web_path(@app, "assets/package.json"), fn file ->
-        assert file =~ ~s["phoenix_html": "file:../../../deps/phoenix_html"]
-        assert file =~ ~s["deploy": "NODE_ENV=production webpack --mode production"]
-        assert file =~ ~s["autoprefixer": ]
-        assert file =~ ~s["postcss": ]
-        assert file =~ ~s["postcss-import": ]
-        assert file =~ ~s["postcss-loader": ]
-        assert file =~ ~s["postcss-nested": ]
-        assert file =~ ~s["tailwindcss": ]
-        refute file =~ ~s[sass]
-      end
-
-      assert_file web_path(@app, "assets/css/app.css"), fn file ->
-        assert file =~ ~s[@import "tailwindcss/base"]
-        assert file =~ ~s[@import "tailwindcss/components"]
-        assert file =~ ~s[@import "tailwindcss/utilities"]
-        refute file =~ ~s[phoenix_live.css]
-        refute file =~ ~s[phoenix.css]
-      end
-
-      assert_file web_path(@app, "assets/tailwind.config.js"), fn file ->
-        assert file =~ ~s[../lib/#{@app}_web/templates/**/*.eex]
-        assert file =~ ~s[../lib/#{@app}_web/views/**/*.ex]
-        assert file =~ ~s[./js/**/*.js]
-
-        refute file =~ ~s[../lib/#{@app}_web/templates/**/*.leex]
-        refute file =~ ~s[../lib/#{@app}_web/live/**/*.leex]
-        refute file =~ ~s[../lib/#{@app}_web/live/**/*.ex]
-      end
-
-      refute_file web_path(@app, "assets/css/phoenix.css")
-      refute_file web_path(@app, "assets/css/phoenix_live.css")
-    end
-  end
-
-  test "new with tailwind and live" do
-    in_tmp "new with tailwind and live", fn ->
-      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--tailwind", "--live"])
-
-      assert_file web_path(@app, "assets/css/app.css"), fn file ->
-        assert file =~ ~s[phoenix_live.css]
-        refute file =~ ~s[phoenix.css]
-        refute file =~ ~s[milligram.css]
-      end
-
-      assert_file web_path(@app, "assets/css/phoenix_live.css"), fn file ->
-        assert file =~ ~s[phx-no-feedback]
-      end
 
       assert_file web_path(@app, "assets/tailwind.config.js"), fn file ->
         assert file =~ ~s[../lib/#{@app}_web/templates/**/*.eex]
@@ -513,8 +471,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ~s[../lib/#{@app}_web/views/**/*.ex]
         assert file =~ ~s[./js/**/*.js]
       end
-
-      refute_file web_path(@app, "assets/css/phoenix.css")
     end
   end
 
@@ -757,8 +713,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/assets/.babelrc", "env"
         assert_file "another/assets/static/favicon.ico"
         assert_file "another/assets/static/images/phoenix.png"
-        assert_file "another/assets/css/app.scss"
-        assert_file "another/assets/css/phoenix.css"
+        assert_file "another/assets/css/app.css"
         assert_file "another/assets/js/app.js",
                     ~s[import socket from "./socket"]
         assert_file "another/assets/js/socket.js",
@@ -771,7 +726,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
         refute File.exists? "another/priv/static/css/app.css"
         refute File.exists? "another/priv/static/js/phoenix.js"
-        refute File.exists? "another/priv/static/css/phoenix.css"
         refute File.exists? "another/priv/static/js/app.js"
 
         assert File.exists?("another/assets/vendor")

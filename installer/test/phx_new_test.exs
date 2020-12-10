@@ -108,12 +108,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/.gitignore", "/assets/node_modules/"
       assert_file "phx_blog/.gitignore", "phx_blog-*.tar"
       assert_file "phx_blog/.gitignore", ~r/\n$/
-      assert_file "phx_blog/assets/webpack.config.js",  fn file ->
-        assert file =~ ~s|test: /\\.[s]?css$/,|
-        assert file =~ ~s['sass-loader']
-        assert file =~ "js/app.js"
-        refute file =~ ~s['postcss-loader']
-      end
       assert_file "phx_blog/assets/.babelrc", "env"
       assert_file "phx_blog/config/dev.exs", fn file ->
         assert file =~ "watchers: [\n    node:"
@@ -122,10 +116,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
       assert_file "phx_blog/assets/static/favicon.ico"
       assert_file "phx_blog/assets/static/images/phoenix.png"
-      assert_file "phx_blog/assets/css/app.scss"
-      assert_file "phx_blog/assets/css/phoenix.css"
-      assert_file "phx_blog/assets/js/app.js",
-                  ~s[import socket from "./socket"]
       assert_file "phx_blog/assets/js/socket.js",
                   ~s[import {Socket} from "phoenix"]
 
@@ -134,8 +124,66 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s["file:../deps/phoenix_html"]
       end
 
+      assert_file "phx_blog/assets/js/app.js", fn file ->
+        assert file =~ ~s[import socket from "./socket"]
+        assert file =~ ~s[import "../css/app.css"]
+      end
+
+      assert_file "phx_blog/assets/css/app.css",  fn file ->
+        assert file =~ ~s[@import "tailwindcss/base"]
+        assert file =~ ~s[@import "tailwindcss/components"]
+        assert file =~ ~s[@import "tailwindcss/utilities"]
+        refute file =~ ~s[phoenix_live.css]
+      end
+
+      assert_file "phx_blog/assets/webpack.config.js", fn file ->
+        assert file =~ ~s[test: /\\.css$/,]
+        assert file =~ ~s['postcss-loader']
+        refute file =~ ~s['sass-loader']
+      end
+
+      assert_file "phx_blog/assets/package.json", fn file ->
+        assert file =~ ~s["deploy": "NODE_ENV=production webpack --mode production"]
+        assert file =~ ~s["autoprefixer": ]
+        assert file =~ ~s["postcss": ]
+        assert file =~ ~s["postcss-import": ]
+        assert file =~ ~s["postcss-loader": ]
+        assert file =~ ~s["postcss-nested": ]
+        assert file =~ ~s["tailwindcss": ]
+        refute file =~ ~s[sass]
+      end
+
+      assert_file "phx_blog/assets/postcss.config.js", fn file ->
+        assert file =~ ~s[tailwindcss: {}]
+        assert file =~ ~s[autoprefixer: {}]
+      end
+
+      assert_file "phx_blog/assets/tailwind.config.js", fn file ->
+        assert file =~ ~s[../lib/phx_blog_web/templates/**/*.eex]
+        assert file =~ ~s[../lib/phx_blog_web/views/**/*.ex]
+        assert file =~ ~s[./js/**/*.js]
+        refute file =~ ~s[leex]
+        refute file =~ ~s[live]
+      end
+
+      refute_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex"
+      refute_file "phx_blog/lib/phx_blog_web/templates/layout/live.html.leex"
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex", fn file ->
+        assert file =~ "max-w-7xl"
+        assert file =~ "get_flash(@conn"
+        assert file =~ "@inner_content"
+        assert file =~ "<head>"
+        refute file =~ "@flash"
+        refute file =~ ~s[phx-click="lv:clear-flash"]
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.eex", fn file ->
+        assert file =~ "text-blue-500"
+        refute file =~ "</form>"
+      end
+
       refute File.exists? "phx_blog/priv/static/css/app.scss"
-      refute File.exists? "phx_blog/priv/static/css/phoenix.css"
       refute File.exists? "phx_blog/priv/static/css/phoenix_live.css"
       refute File.exists? "phx_blog/priv/static/js/phoenix.js"
       refute File.exists? "phx_blog/priv/static/js/app.js"
@@ -232,7 +280,6 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # No webpack & No HTML
       refute_file "phx_blog/priv/static/css/app.css"
-      refute_file "phx_blog/priv/static/css/phoenix.css"
       refute_file "phx_blog/priv/static/css/phoenix_live.css"
       refute_file "phx_blog/priv/static/favicon.ico"
       refute_file "phx_blog/priv/static/images/phoenix.png"
@@ -370,7 +417,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/.gitignore"
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/priv/static/css/app.css"
-      assert_file "phx_blog/priv/static/css/phoenix.css"
       assert_file "phx_blog/priv/static/favicon.ico"
       assert_file "phx_blog/priv/static/images/phoenix.png"
       assert_file "phx_blog/priv/static/js/phoenix.js"
@@ -403,19 +449,24 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/lib/phx_blog_web/live/page_live.html.leex", fn file ->
-        assert file =~ ~s[Welcome]
+        assert file =~ "Welcome"
+        assert file =~ "text-blue-500"
+        assert file =~ "</form>"
       end
 
       assert_file "phx_blog/assets/package.json",
                   ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
 
       assert_file "phx_blog/assets/js/app.js", fn file ->
+        assert file =~ ~s[import "../css/app.css"]
+        assert file =~ ~s[import socket from "./socket"]
         assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
       end
 
-      assert_file "phx_blog/assets/css/app.scss", fn file ->
-        assert file =~ ~s[@import "./phoenix.css"]
-        assert file =~ ~s[@import "./milligram.css"]
+      assert_file "phx_blog/assets/css/app.css", fn file ->
+        assert file =~ ~s[@import "tailwindcss/base"]
+        assert file =~ ~s[@import "tailwindcss/components"]
+        assert file =~ ~s[@import "tailwindcss/utilities"]
         assert file =~ ~s[@import "./phoenix_live.css"]
       end
 
@@ -442,77 +493,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ ~s[plug :fetch_flash]
         refute file =~ ~s[PageController]
       end
-    end
-  end
-
-  test "new with tailwind" do
-    in_tmp "new with tailwind", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--tailwind"])
-
-      assert_file "phx_blog/assets/css/app.css",  fn file ->
-        assert file =~ ~s[@import "tailwindcss/base"]
-        assert file =~ ~s[@import "tailwindcss/components"]
-        assert file =~ ~s[@import "tailwindcss/utilities"]
-        refute file =~ ~s[phoenix_live.css]
-        refute file =~ ~s[phoenix.css]
-      end
-
-      assert_file "phx_blog/assets/webpack.config.js", fn file ->
-        assert file =~ ~s[test: /\\.css$/,]
-        assert file =~ ~s['postcss-loader']
-        refute file =~ ~s['sass-loader']
-      end
-
-      assert_file "phx_blog/assets/js/app.js", fn file ->
-        assert file =~ ~s[import "../css/app.css"]
-      end
-
-      assert_file "phx_blog/assets/package.json", fn file ->
-        assert file =~ ~s["deploy": "NODE_ENV=production webpack --mode production"]
-        assert file =~ ~s["autoprefixer": ]
-        assert file =~ ~s["postcss": ]
-        assert file =~ ~s["postcss-import": ]
-        assert file =~ ~s["postcss-loader": ]
-        assert file =~ ~s["postcss-nested": ]
-        assert file =~ ~s["tailwindcss": ]
-        refute file =~ ~s[sass]
-      end
-
-      assert_file "phx_blog/assets/postcss.config.js", fn file ->
-        assert file =~ ~s[tailwindcss: {}]
-        assert file =~ ~s[autoprefixer: {}]
-      end
-
-      assert_file "phx_blog/assets/tailwind.config.js", fn file ->
-        assert file =~ ~s[../lib/phx_blog_web/templates/**/*.eex]
-        assert file =~ ~s[../lib/phx_blog_web/views/**/*.ex]
-        assert file =~ ~s[./js/**/*.js]
-        refute file =~ ~s[leex]
-        refute file =~ ~s[live]
-      end
-
-      refute_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex"
-      refute_file "phx_blog/lib/phx_blog_web/templates/layout/live.html.leex"
-
-      assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex", fn file ->
-        assert file =~ "max-w-7xl"
-        assert file =~ "get_flash(@conn"
-        assert file =~ "@inner_content"
-        assert file =~ "<head>"
-        refute file =~ "@flash"
-        refute file =~ ~s[phx-click="lv:clear-flash"]
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.eex", fn file ->
-        assert file =~ "text-blue-500"
-        refute file =~ "</form>"
-      end
-    end
-  end
-
-  test "new with tailwind live" do
-    in_tmp "new with tailwind live", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--tailwind", "--live"])
 
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
         assert file =~ ~s|<%= live_title_tag assigns[:page_title]|
@@ -535,21 +515,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "@inner_content"
         assert file =~ ~s[phx-click="lv:clear-flash"]
         refute file =~ "get_flash(@conn"
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web/live/page_live.html.leex", fn file ->
-        assert file =~ "text-blue-500"
-        assert file =~ "</form>"
-      end
-
-      assert_file "phx_blog/assets/css/app.css", fn file ->
-        assert file =~ ~s[phoenix_live.css]
-        refute file =~ ~s[phoenix.css]
-        refute file =~ ~s[milligram.css]
-      end
-
-      assert_file "phx_blog/assets/css/phoenix_live.css", fn file ->
-        assert file =~ ~s[phx-no-feedback]
       end
 
       assert_file "phx_blog/assets/tailwind.config.js", fn file ->
@@ -732,16 +697,6 @@ defmodule Mix.Tasks.Phx.NewTest do
 
     assert_raise Mix.Error, ~r"Module name \w+ is already taken", fn ->
       Mix.Tasks.Phx.New.run ["valid", "--module", "String"]
-    end
-  end
-
-  test "new --tailwind with invalid args" do
-    assert_raise RuntimeError, "cannot generate --tailwind project with --no-html or --no-webpack. Tailwind CSS requires HTML and Webpack", fn ->
-      Mix.Tasks.Phx.New.run ["valid", "--tailwind", "--no-webpack"]
-    end
-
-    assert_raise RuntimeError, "cannot generate --tailwind project with --no-html or --no-webpack. Tailwind CSS requires HTML and Webpack", fn ->
-      Mix.Tasks.Phx.New.run ["valid", "--tailwind", "--no-html"]
     end
   end
 
