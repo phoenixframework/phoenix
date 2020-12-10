@@ -69,7 +69,7 @@ defmodule Phoenix.MixProject do
       {:plug_cowboy, "~> 2.2", optional: true},
       {:jason, "~> 1.0", optional: true},
       {:phoenix_view, git: "https://github.com/phoenixframework/phoenix_view.git"},
-      {:phoenix_html, "~> 2.14.2 or ~> 2.15", optional: true},
+      {:phoenix_html, "~> 2.14.2 or ~> 3.0", optional: true},
 
       # Docs dependencies (some for cross references)
       {:ex_doc, "~> 0.22", only: :docs},
