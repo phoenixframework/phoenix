@@ -60,7 +60,7 @@ Keep in mind that, if you by any chance forget to run the steps above, Phoenix w
 
 ```console
 $ PORT=4001 MIX_ENV=prod mix phx.server
-10:50:18.732 [info] Running MyApp.Endpoint with Cowboy on http://example.com
+10:50:18.732 [info] Running MyAppWeb.Endpoint with Cowboy on http://example.com
 10:50:18.735 [error] Could not find static manifest at "my_app/_build/prod/lib/foo/priv/static/cache_manifest.json". Run "mix phx.digest" after building your static files or remove the configuration from "config/prod.exs".
 ```
 
@@ -72,7 +72,7 @@ To run Phoenix in production, we need to set the `PORT` and `MIX_ENV` environmen
 
 ```console
 $ PORT=4001 MIX_ENV=prod mix phx.server
-10:59:19.136 [info] Running MyApp.Endpoint with Cowboy on http://example.com
+10:59:19.136 [info] Running MyAppWeb.Endpoint with Cowboy on http://example.com
 ```
 
 To run in detached mode so that the Phoenix server does not stop and continues to run even if you close the terminal:
@@ -87,7 +87,7 @@ You can also run your application inside an interactive shell:
 
 ```console
 $ PORT=4001 MIX_ENV=prod iex -S mix phx.server
-10:59:19.136 [info] Running MyApp.Endpoint with Cowboy on http://example.com
+10:59:19.136 [info] Running MyAppWeb.Endpoint with Cowboy on http://example.com
 ```
 
 ## Putting it all together

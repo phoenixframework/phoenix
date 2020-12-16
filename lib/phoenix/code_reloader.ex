@@ -26,7 +26,7 @@ defmodule Phoenix.CodeReloader do
 
   This is configured in your application environment like:
 
-      config :your_app, YourApp.Endpoint,
+      config :your_app, YourAppWeb.Endpoint,
         reloadable_compilers: [:gettext, :phoenix, :elixir],
         reloadable_apps: [:ui, :backend]
 
