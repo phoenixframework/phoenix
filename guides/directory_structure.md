@@ -10,10 +10,10 @@ When we use `mix phx.new` to generate a new Phoenix application, it builds a top
 ├── config
 ├── deps
 ├── lib
-│   └── hello
-│   └── hello.ex
+│   ├── hello
+│   │   └── hello.ex
 │   └── hello_web
-│   └── hello_web.ex
+│       └── hello_web.ex
 ├── priv
 └── test
 ```

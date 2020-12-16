@@ -355,7 +355,7 @@ First `priv/static` which should look similar to this:
 ```console
 ├── images
 │   └── phoenix.png
-├── robots.txt
+└── robots.txt
 ```
 
 And then `assets/` which should look similar to this:
@@ -365,8 +365,8 @@ And then `assets/` which should look similar to this:
 │   └── app.scss
 ├── js
 │   └── app.js
-├── vendor
-│   └── phoenix.js
+└── vendor
+    └── phoenix.js
 ```
 
 All of these files are our static assets. Now let's run the `mix phx.digest` task.
