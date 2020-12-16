@@ -2,12 +2,13 @@ defmodule Phoenix do
   @moduledoc """
   This is the documentation for the Phoenix project.
 
-  By default, Phoenix applications depend on the following packages:
+  By default, Phoenix applications depend on the following packages
+  across these categories.
+
+  ## General
 
     * [Ecto](https://hexdocs.pm/ecto) - a language integrated query and
       database wrapper
-
-    * [EEx](https://hexdocs.pm/eex) - Elixir's built-in templating language
 
     * [ExUnit](https://hexdocs.pm/ex_unit) - Elixir's built-in test framework
 
@@ -19,6 +20,10 @@ defmodule Phoenix do
 
     * [Phoenix HTML](https://hexdocs.pm/phoenix_html) - conveniences for
       working with HTML in Phoenix
+
+    * [Phoenix View](https://hexdocs.pm/phoenix_view) - a set of functions
+      for building `Phoenix.View` and working with template languages such
+      as Elixir's own `EEx`
 
     * [Plug](https://hexdocs.pm/plug) - a specification and conveniences
       for composable modules in between web applications
