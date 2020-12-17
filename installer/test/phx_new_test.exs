@@ -108,7 +108,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/.gitignore", "/assets/node_modules/"
       assert_file "phx_blog/.gitignore", "phx_blog-*.tar"
       assert_file "phx_blog/.gitignore", ~r/\n$/
-      assert_file "phx_blog/assets/webpack.config.js", "js/app.js"
       assert_file "phx_blog/assets/.babelrc", "env"
       assert_file "phx_blog/config/dev.exs", fn file ->
         assert file =~ "watchers: [\n    node:"
@@ -117,10 +116,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
       assert_file "phx_blog/assets/static/favicon.ico"
       assert_file "phx_blog/assets/static/images/phoenix.png"
-      assert_file "phx_blog/assets/css/app.scss"
-      assert_file "phx_blog/assets/css/phoenix.css"
-      assert_file "phx_blog/assets/js/app.js",
-                  ~s[import socket from "./socket"]
       assert_file "phx_blog/assets/js/socket.js",
                   ~s[import {Socket} from "phoenix"]
 
@@ -129,8 +124,67 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s["file:../deps/phoenix_html"]
       end
 
+      assert_file "phx_blog/assets/js/app.js", fn file ->
+        assert file =~ ~s[import socket from "./socket"]
+        assert file =~ ~s[import "../css/app.css"]
+      end
+
+      assert_file "phx_blog/assets/css/app.css",  fn file ->
+        assert file =~ ~s[@import "tailwindcss/base"]
+        assert file =~ ~s[@import "tailwindcss/components"]
+        assert file =~ ~s[@import "tailwindcss/utilities"]
+        refute file =~ ~s[phoenix_live.css]
+      end
+
+      assert_file "phx_blog/assets/webpack.config.js", fn file ->
+        assert file =~ ~s[test: /\\.css$/,]
+        assert file =~ ~s['postcss-loader']
+        refute file =~ ~s['sass-loader']
+      end
+
+      assert_file "phx_blog/assets/package.json", fn file ->
+        assert file =~ ~s["deploy": "NODE_ENV=production webpack --mode production"]
+        assert file =~ ~s["autoprefixer": ]
+        assert file =~ ~s["postcss": ]
+        assert file =~ ~s["postcss-import": ]
+        assert file =~ ~s["postcss-loader": ]
+        assert file =~ ~s["postcss-nested": ]
+        assert file =~ ~s["tailwindcss": ]
+        refute file =~ ~s[sass]
+      end
+
+      assert_file "phx_blog/assets/postcss.config.js", fn file ->
+        assert file =~ ~s[tailwindcss: {}]
+        assert file =~ ~s[autoprefixer: {}]
+      end
+
+      assert_file "phx_blog/assets/tailwind.config.js", fn file ->
+        assert file =~ ~s[../lib/phx_blog_web/templates/**/*.eex]
+        assert file =~ ~s[../lib/phx_blog_web/views/**/*.ex]
+        assert file =~ ~s[./js/**/*.js]
+        refute file =~ ~s[leex]
+        refute file =~ ~s[live]
+      end
+
+      refute_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex"
+      refute_file "phx_blog/lib/phx_blog_web/templates/layout/live.html.leex"
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex", fn file ->
+        assert file =~ "max-w-7xl"
+        assert file =~ "get_flash(@conn"
+        assert file =~ "@inner_content"
+        assert file =~ "<head>"
+        refute file =~ "@flash"
+        refute file =~ ~s[phx-click="lv:clear-flash"]
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.eex", fn file ->
+        assert file =~ "text-blue-500"
+        refute file =~ "</form>"
+      end
+
       refute File.exists? "phx_blog/priv/static/css/app.scss"
-      refute File.exists? "phx_blog/priv/static/css/phoenix.css"
+      refute File.exists? "phx_blog/priv/static/css/phoenix_live.css"
       refute File.exists? "phx_blog/priv/static/js/phoenix.js"
       refute File.exists? "phx_blog/priv/static/js/app.js"
 
@@ -226,11 +280,14 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # No webpack & No HTML
       refute_file "phx_blog/priv/static/css/app.css"
-      refute_file "phx_blog/priv/static/css/phoenix.css"
+      refute_file "phx_blog/priv/static/css/phoenix_live.css"
       refute_file "phx_blog/priv/static/favicon.ico"
       refute_file "phx_blog/priv/static/images/phoenix.png"
       refute_file "phx_blog/priv/static/js/phoenix.js"
       refute_file "phx_blog/priv/static/js/app.js"
+      refute_file "phx_blog/priv/static/postcss.config.js"
+      refute_file "phx_blog/priv/static/tailwind.config.js"
+      refute_file "phx_blog/priv/static/webpack.config.js"
 
       # No Ecto
       config = ~r/config :phx_blog, PhxBlog.Repo,/
@@ -360,7 +417,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/.gitignore"
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/priv/static/css/app.css"
-      assert_file "phx_blog/priv/static/css/phoenix.css"
       assert_file "phx_blog/priv/static/favicon.ico"
       assert_file "phx_blog/priv/static/images/phoenix.png"
       assert_file "phx_blog/priv/static/js/phoenix.js"
@@ -393,17 +449,28 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/lib/phx_blog_web/live/page_live.html.leex", fn file ->
-        assert file =~ ~s[Welcome]
+        assert file =~ "Welcome"
+        assert file =~ "text-blue-500"
+        assert file =~ "</form>"
       end
 
       assert_file "phx_blog/assets/package.json",
                   ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
 
       assert_file "phx_blog/assets/js/app.js", fn file ->
+        assert file =~ ~s[import "../css/app.css"]
+        assert file =~ ~s[import socket from "./socket"]
         assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
       end
 
-      assert_file "phx_blog/assets/css/app.scss", fn file ->
+      assert_file "phx_blog/assets/css/app.css", fn file ->
+        assert file =~ ~s[@import "tailwindcss/base"]
+        assert file =~ ~s[@import "tailwindcss/components"]
+        assert file =~ ~s[@import "tailwindcss/utilities"]
+        assert file =~ ~s[@import "./phoenix_live.css"]
+      end
+
+      assert_file "phx_blog/assets/css/phoenix_live.css", fn file ->
         assert file =~ ~s[.phx-click-loading]
       end
 
@@ -425,6 +492,38 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s[live "/", PageLive]
         refute file =~ ~s[plug :fetch_flash]
         refute file =~ ~s[PageController]
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
+        assert file =~ ~s|<%= live_title_tag assigns[:page_title]|
+        assert file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
+        assert file =~ "max-w-7xl"
+        assert file =~ "@inner_content"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex", fn file ->
+        assert file =~ "max-w-7xl"
+        assert file =~ "get_flash(@conn"
+        assert file =~ "@inner_content"
+        refute file =~ "@flash"
+        refute file =~ ~s[phx-click="lv:clear-flash"]
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/live.html.leex", fn file ->
+        assert file =~ "max-w-7xl"
+        assert file =~ "@flash"
+        assert file =~ "@inner_content"
+        assert file =~ ~s[phx-click="lv:clear-flash"]
+        refute file =~ "get_flash(@conn"
+      end
+
+      assert_file "phx_blog/assets/tailwind.config.js", fn file ->
+        assert file =~ ~s[../lib/phx_blog_web/templates/**/*.eex]
+        assert file =~ ~s[../lib/phx_blog_web/templates/**/*.leex]
+        assert file =~ ~s[../lib/phx_blog_web/live/**/*.leex]
+        assert file =~ ~s[../lib/phx_blog_web/live/**/*.ex]
+        assert file =~ ~s[../lib/phx_blog_web/views/**/*.ex]
+        assert file =~ ~s[./js/**/*.js]
       end
     end
   end
@@ -598,6 +697,16 @@ defmodule Mix.Tasks.Phx.NewTest do
 
     assert_raise Mix.Error, ~r"Module name \w+ is already taken", fn ->
       Mix.Tasks.Phx.New.run ["valid", "--module", "String"]
+    end
+  end
+
+  test "new --live with invalid args" do
+    assert_raise RuntimeError, "cannot generate --live project with --no-html or --no-webpack. LiveView requires HTML and Webpack", fn ->
+      Mix.Tasks.Phx.New.run ["valid", "--live", "--no-webpack"]
+    end
+
+    assert_raise RuntimeError, "cannot generate --live project with --no-html or --no-webpack. LiveView requires HTML and Webpack", fn ->
+      Mix.Tasks.Phx.New.run ["valid", "--live", "--no-html"]
     end
   end
 

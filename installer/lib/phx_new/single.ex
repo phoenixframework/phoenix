@@ -68,22 +68,27 @@ defmodule Phx.New.Single do
   ]
 
   template :webpack, [
-    {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
-    {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
-    {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"},
-    {:eex,  "phx_assets/socket.js",         :web, "assets/js/socket.js"},
-    {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
-    {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
+    {:eex,  "phx_assets/webpack.config.js",  :web, "assets/webpack.config.js"},
+    {:text, "phx_assets/babelrc",            :web, "assets/.babelrc"},
+    {:eex,  "phx_assets/app.js",             :web, "assets/js/app.js"},
+    {:eex,  "phx_assets/app.css",            :web, "assets/css/app.css"},
+    {:eex,  "phx_assets/socket.js",          :web, "assets/js/socket.js"},
+    {:eex,  "phx_assets/package.json",       :web, "assets/package.json"},
+    {:keep, "phx_assets/vendor",             :web, "assets/vendor"},
+    {:text, "phx_assets/postcss.config.js",  :web, "assets/postcss.config.js"},
+    {:eex,  "phx_assets/tailwind.config.js", :web, "assets/tailwind.config.js"}
   ]
 
   template :webpack_live, [
-    {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
-    {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
-    {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"},
-    {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
-    {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
+    {:eex,  "phx_assets/webpack.config.js",  :web, "assets/webpack.config.js"},
+    {:text, "phx_assets/babelrc",            :web, "assets/.babelrc"},
+    {:eex,  "phx_assets/app.js",             :web, "assets/js/app.js"},
+    {:eex,  "phx_assets/app.css",            :web, "assets/css/app.css"},
+    {:eex,  "phx_assets/package.json",       :web, "assets/package.json"},
+    {:keep, "phx_assets/vendor",             :web, "assets/vendor"},
+    {:text, "phx_assets/phoenix_live.css",   :web, "assets/css/phoenix_live.css"},
+    {:text, "phx_assets/postcss.config.js",  :web, "assets/postcss.config.js"},
+    {:eex,  "phx_assets/tailwind.config.js", :web, "assets/tailwind.config.js"}
   ]
 
   template :bare, []
@@ -91,7 +96,6 @@ defmodule Phx.New.Single do
   template :static, [
     {:text, "phx_static/app.js",      :web, "priv/static/js/app.js"},
     {:text, "phx_static/app.css",     :web, "priv/static/css/app.css"},
-    {:text, "phx_static/phoenix.css", :web, "priv/static/css/phoenix.css"},
     {:text, "phx_static/robots.txt",  :web, "priv/static/robots.txt"},
     {:text, "phx_static/phoenix.js",  :web, "priv/static/js/phoenix.js"},
     {:text, "phx_static/phoenix.png", :web, "priv/static/images/phoenix.png"},
@@ -178,7 +182,6 @@ defmodule Phx.New.Single do
     end
 
     statics = %{
-      "phx_static/phoenix.css" => "assets/css/phoenix.css",
       "phx_static/robots.txt" => "assets/static/robots.txt",
       "phx_static/phoenix.png" => "assets/static/images/phoenix.png",
       "phx_static/favicon.ico" => "assets/static/favicon.ico"
@@ -195,7 +198,7 @@ defmodule Phx.New.Single do
 
   def assert_live_switches!(project) do
     unless Project.html?(project) and Project.webpack?(project) do
-      raise "cannot generate --live project with --no-html or --no-webpack. LiveView requires HTML and webpack"
+      raise "cannot generate --live project with --no-html or --no-webpack. LiveView requires HTML and Webpack"
     end
   end
 end

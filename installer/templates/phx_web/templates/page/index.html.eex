@@ -1,48 +1,48 @@
-<section class="phx-hero"><%= if @gettext do %>
-  <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
-  <h1>Welcome to Phoenix!</h1><% end %>
-  <p>Peace of mind from prototype to production</p><%= if @live do %>
+<section class="text-center border-b-2 border-gray-100 bg-gray-100 rounded-lg mb-8 p-12 text-lg"><%= if @gettext do %>
+  <h1 class="text-4xl font-normal leading-tight tracking-tighter mb-4"><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
+  <h1 class="text-4xl font-normal leading-tight tracking-tighter mb-4">Welcome to Phoenix!</h1><% end %>
+  <p class="mb-4">Peace of mind from prototype to production</p><%= if @live do %>
 
-  <form phx-change="suggest" phx-submit="search">
-    <input type="text" name="q" value="<%%= @query %>" placeholder="Live dependency search" list="results" autocomplete="off"/>
+  <form class="mb-2" phx-change="suggest" phx-submit="search">
+    <input class="mb-4 p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" type="text" name="q" value="<%%= @query %>" placeholder="Live dependency search" list="results" autocomplete="off"/>
     <datalist id="results">
       <%%= for {app, _vsn} <- @results do %>
         <option value="<%%= app %>"><%%= app %></option>
       <%% end %>
     </datalist>
-    <button type="submit" phx-disable-with="Searching...">Go to Hexdocs</button>
-  </form><% end %>
+    <button class="uppercase inline-flex items-center px-6 py-3 border border-transparent text-xs font-bold rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" type="submit" phx-disable-with="Searching...">Go to Hexdocs</button>
+  </form><% end%>
 </section>
 
-<section class="row">
-  <article class="column">
-    <h2>Resources</h2>
-    <ul>
+<section class="flex">
+  <article class="flex-1">
+    <h2 class="text-3xl font-medium tracking-tight mb-4">Resources</h2>
+    <ul class="w-full mb-5 list-inside list-disc space-y-2">
       <li>
-        <a href="https://hexdocs.pm/phoenix/overview.html">Guides &amp; Docs</a>
+        <a class="text-blue-500 hover:text-gray-500" href="https://hexdocs.pm/phoenix/overview.html">Guides &amp; Docs</a>
       </li>
       <li>
-        <a href="https://github.com/phoenixframework/phoenix">Source</a>
+        <a class="text-blue-500 hover:text-gray-500" href="https://github.com/phoenixframework/phoenix">Source</a>
       </li>
       <li>
-        <a href="https://github.com/phoenixframework/phoenix/blob/<%= @phoenix_github_version_tag %>/CHANGELOG.md"><%= @phoenix_github_version_tag %> Changelog</a>
+        <a class="text-blue-500 hover:text-gray-500" href="https://github.com/phoenixframework/phoenix/blob/v1.5/CHANGELOG.md">v1.5 Changelog</a>
       </li>
     </ul>
   </article>
-  <article class="column">
-    <h2>Help</h2>
-    <ul>
+  <article class="flex-1">
+    <h2 class="text-3xl font-medium tracking-tight mb-4">Help</h2>
+    <ul class="mb-5 list-inside list-disc space-y-2">
       <li>
-        <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
+        <a class="text-blue-500 hover:text-gray-500" href="https://elixirforum.com/c/phoenix-forum">Forum</a>
       </li>
       <li>
-        <a href="https://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on Freenode IRC</a>
+        <a class="text-blue-500 hover:text-gray-500" href="https://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on Freenode IRC</a>
       </li>
       <li>
-        <a href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>
+        <a class="text-blue-500 hover:text-gray-500" href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>
       </li>
       <li>
-        <a href="https://elixir-slackin.herokuapp.com/">Elixir on Slack</a>
+        <a class="text-blue-500 hover:text-gray-500" href="https://elixir-slackin.herokuapp.com/">Elixir on Slack</a>
       </li>
     </ul>
   </article>

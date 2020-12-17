@@ -9,19 +9,19 @@
     <link phx-track-static rel="stylesheet" href="<%%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <script defer phx-track-static type="text/javascript" src="<%%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </head>
-  <body>
-    <header>
-      <section class="container">
+  <body class="m-2">
+    <header class="w-full border-b-2 border-gray-100 mb-6">
+      <section class="max-w-7xl px-6 w-full my-0 mx-auto relative flex flex-col-reverse md:flex-row-reverse justify-between items-center">
         <nav role="navigation">
-          <ul>
-            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+          <ul class="block m-3 mt-0 md:mt-3 text-right whitespace-nowrap">
+            <li><a class="text-blue-500 hover:text-gray-500 block" href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
             <%= if @dashboard do %><%%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-              <li><%%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>
+              <li><%%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home), class: "text-blue-500 hover:text-gray-500 block" %></li>
             <%% end %><% end %>
           </ul>
         </nav>
-        <a href="https://phoenixframework.org/" class="phx-logo">
-          <img src="<%%= Routes.static_path(@conn, "/images/phoenix.png") %>" alt="Phoenix Framework Logo"/>
+        <a href="https://phoenixframework.org/" class="my-3 md:my-4 mx-3 block">
+          <img class="max-w-lg" src="<%%= Routes.static_path(@conn, "/images/phoenix.png") %>" alt="Phoenix Framework Logo"/>
         </a>
       </section>
     </header>
