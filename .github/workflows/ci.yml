@@ -24,7 +24,6 @@ jobs:
   integration-test-elixir:
     runs-on: ubuntu-latest
     env:
-      GIT_URL_INSTEAD_OF: "https://github.com/=git@github.com:"
       FORCE_COLOR: 1
     
     strategy:
