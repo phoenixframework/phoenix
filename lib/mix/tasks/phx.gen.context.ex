@@ -63,6 +63,14 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   Read the documentation for `phx.gen.schema` for more information on
   attributes.
+
+  ## Skipping prompts
+
+  This generator will prompt you if there is an existing context with the same
+  name, in order to provide more instructions on how to correctly use phoenix contexts.
+  You can skip this prompt and automatically merge the new schema access functions and tests into the
+  existing context using `--merge-with-existing-context`. To prevent changes to
+  the existing context and exit the generator, use `--no-merge-with-existing-context`.
   """
 
   use Mix.Task
@@ -71,7 +79,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   alias Mix.Tasks.Phx.Gen
 
   @switches [binary_id: :boolean, table: :string, web: :string,
-             schema: :boolean, context: :boolean, context_app: :string]
+             schema: :boolean, context: :boolean, context_app: :string,
+             merge_with_existing_context: :boolean]
 
   @default_opts [schema: true, context: true]
 
@@ -256,11 +265,17 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   def prompt_for_code_injection(%Context{generate?: false}), do: :ok
   def prompt_for_code_injection(%Context{} = context) do
-    if Context.pre_existing?(context) do
+    if Context.pre_existing?(context) && !merge_with_existing_context?(context) do
+      System.halt()
+    end
+  end
+
+  defp merge_with_existing_context?(%Context{} = context) do
+    Keyword.get_lazy(context.opts, :merge_with_existing_context, fn ->
       function_count = Context.function_count(context)
       file_count = Context.file_count(context)
 
-      Mix.shell().info """
+      Mix.shell().info("""
       You are generating into an existing context.
 
       The #{inspect context.module} context currently has #{function_count} functions and \
@@ -276,10 +291,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       to the same context.
 
       If you are not sure, prefer creating a new context over adding to the existing one.
-      """
-      unless Mix.shell().yes?("Would you like to proceed?") do
-        System.halt()
-      end
-    end
+      """)
+
+      Mix.shell().yes?("Would you like to proceed?")
+    end)
   end
 end

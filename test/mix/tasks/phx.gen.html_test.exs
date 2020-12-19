@@ -199,6 +199,34 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end
   end
 
+  test "generates into existing context without prompt with --merge-with-existing-context", config do
+    in_tmp_project config.test, fn ->
+      Gen.Html.run(~w(Blog Post posts title))
+
+      assert_file "lib/phoenix/blog.ex", fn file ->
+        assert file =~ "def get_post!"
+        assert file =~ "def list_posts"
+        assert file =~ "def create_post"
+        assert file =~ "def update_post"
+        assert file =~ "def delete_post"
+        assert file =~ "def change_post"
+      end
+
+      Gen.Html.run(~w(Blog Comment comments message:string --merge-with-existing-context))
+
+      refute_received {:mix_shell, :info, ["You are generating into an existing context" <> _notice]}
+
+      assert_file "lib/phoenix/blog.ex", fn file ->
+        assert file =~ "def get_comment!"
+        assert file =~ "def list_comments"
+        assert file =~ "def create_comment"
+        assert file =~ "def update_comment"
+        assert file =~ "def delete_comment"
+        assert file =~ "def change_comment"
+      end
+    end
+  end
+
   test "with --web namespace generates namedspaced web modules and directories", config do
     in_tmp_project config.test, fn ->
       Gen.Html.run(~w(Blog Post posts title:string --web Blog))
