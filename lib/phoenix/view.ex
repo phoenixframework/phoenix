@@ -293,6 +293,10 @@ defmodule Phoenix.View do
     content
   end
 
+  def render(module, template, %_{} = assigns) do
+    render(module, template, Map.from_struct(assigns))
+  end
+
   def render(module, template, assigns) do
     assigns
     |> Map.new()

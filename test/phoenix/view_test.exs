@@ -52,6 +52,18 @@ defmodule Phoenix.ViewTest do
            %{foo: "bar"}
   end
 
+  defmodule Assigns do
+    defstruct [:user]
+  end
+
+  test "renders structures" do
+    user = %MyApp.User{}
+    assigns = %Assigns{user: user}
+
+    assert render(MyApp.UserView, "show.text", assigns) ==
+      "show user: name"
+  end
+
   test "renders views with layouts" do
     html = render(MyApp.View, "show.html",
       title: "Test",
