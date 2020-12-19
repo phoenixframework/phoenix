@@ -44,7 +44,7 @@ integration-test:
     # Ensure integration_test/mix.lock contains all of the dependencies we need and none we don't
     RUN cp mix.lock mix.lock.orig && \
         mix deps.get && \
-        mix deps.unlock --unused && \
+        mix deps.unlock --check-unused && \
         diff -u mix.lock.orig mix.lock && \
         rm mix.lock.orig
 
