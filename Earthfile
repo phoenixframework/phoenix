@@ -6,7 +6,7 @@ all:
 all-test:
     BUILD --build-arg ELIXIR=1.11.0 --build-arg OTP=21.3.8.18 +test
     BUILD --build-arg ELIXIR=1.11.0 --build-arg OTP=23.1.1 +test
- 
+
 test:
     FROM +test-setup
     COPY --dir assets config installer lib integration_test priv test ./
@@ -30,7 +30,7 @@ integration-test:
         apk del .build-dependencies && rm -f msodbcsql*.sig mssql-tools*.apk
     ENV PATH="/opt/mssql-tools/bin:${PATH}"
 
-    #integration test deps
+    # Integration test deps
     COPY /integration_test/docker-compose.yml ./integration_test/docker-compose.yml
     COPY mix.exs ./
     COPY /.formatter.exs ./
@@ -42,18 +42,18 @@ integration-test:
     RUN mix local.hex --force
     RUN mix deps.get
 
-    #compile phoenix
+    # Compile phoenix
     COPY --dir assets config installer lib test priv /src
     RUN mix local.rebar --force
     # Compiling here improves caching, but slows down GHA speed
     # Removing until this feature exists https://github.com/earthly/earthly/issues/574
-    #RUN MIX_ENV=test mix deps.compile 
+    # RUN MIX_ENV=test mix deps.compile
 
-    #run integration tests
+    # Run integration tests
     COPY integration_test/test  ./test
     COPY integration_test/config/config.exs  ./config/config.exs
-  
-    WITH DOCKER 
+
+    WITH DOCKER
         # Start docker compose
         # In parallel start compiling tests
         # Check for DB to be up x 3
@@ -63,8 +63,8 @@ integration-test:
             while ! sqlcmd -S tcp:localhost,1433 -U sa -P 'some!Password' -Q "SELECT 1" > /dev/null 2>&1; do sleep 1; done; \
             while ! mysqladmin ping --host=localhost --port=3306 --protocol=TCP --silent; do sleep 1; done; \
             while ! pg_isready --host=localhost --port=5432 --quiet; do sleep 1; done; \
-            mix test --include database 
-    END 
+            mix test --include database
+    END
 
 npm:
     ARG ELIXIR=1.10.4
