@@ -40,7 +40,14 @@ integration-test:
     COPY /integration_test/config/config.exs ./integration_test/config/config.exs
     WORKDIR /src/integration_test
     RUN mix local.hex --force
-    RUN mix deps.get
+
+    # Ensure integration_test/mix.lock contains all of the dependencies we need and none we don't
+    RUN cp mix.lock mix.lock.orig && \
+        mix deps.get && \
+        mix deps.unlock --unused && \
+        diff -u mix.lock.orig mix.lock && \
+        rm mix.lock.orig
+
 
     # Compile phoenix
     COPY --dir assets config installer lib test priv /src
