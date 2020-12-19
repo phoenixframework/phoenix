@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       %{NaiveDateTime.utc_now() | second: 0, microsecond: {0, 6}}
       |> NaiveDateTime.add(-one_day_in_seconds)
 
-    datetime = 
+    datetime =
       %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
       |> DateTime.add(-one_day_in_seconds)
 
@@ -55,7 +55,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
                      deleted_at_usec:naive_datetime_usec
                      alarm:time
                      alarm_usec:time_usec
-                     secret:uuid announcement_date:date
+                     secret:uuid:redact announcement_date:date
                      weight:float user_id:references:users))
 
       assert_file "lib/phoenix/blog/post.ex"

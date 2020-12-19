@@ -134,10 +134,11 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "generates context and handles existing contexts", config do
     in_tmp_project config.test, fn ->
-      Gen.Context.run(~w(Blog Post posts slug:unique title:string))
+      Gen.Context.run(~w(Blog Post posts slug:unique secret:redact title:string))
 
       assert_file "lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "field :title, :string"
+        assert file =~ "field :secret, :string, redact: true"
       end
 
       assert_file "lib/phoenix/blog.ex", fn file ->
@@ -165,6 +166,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       assert_file path, fn file ->
         assert file =~ "create table(:posts)"
         assert file =~ "add :title, :string"
+        assert file =~ "add :secret, :string"
         assert file =~ "create unique_index(:posts, [:slug])"
       end
 
