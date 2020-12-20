@@ -57,7 +57,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
                       deleted_at_usec:naive_datetime_usec
                       alarm:time
                       alarm_usec:time_usec
-                      secret:uuid announcement_date:date alarm:time
+                      secret:uuid:redact announcement_date:date alarm:time
                       weight:float user_id:references:users))
 
       assert_file "lib/phoenix/blog/post.ex"

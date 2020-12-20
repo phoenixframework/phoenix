@@ -17,6 +17,7 @@ defmodule Mix.Phoenix.Schema do
             plural: nil,
             singular: nil,
             uniques: [],
+            redacts: [],
             assocs: [],
             types: [],
             indexes: [],
@@ -72,7 +73,7 @@ defmodule Mix.Phoenix.Schema do
     repo      = opts[:repo] || Module.concat([base, "Repo"])
     file      = Mix.Phoenix.context_lib_path(ctx_app, basename <> ".ex")
     table     = opts[:table] || schema_plural
-    uniques   = uniques(cli_attrs)
+    {cli_attrs, uniques, redacts} = extract_attr_flags(cli_attrs)
     {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
     types = types(attrs)
     web_namespace = opts[:web] && Phoenix.Naming.camelize(opts[:web])
@@ -112,6 +113,7 @@ defmodule Mix.Phoenix.Schema do
       types: types,
       defaults: schema_defaults(attrs),
       uniques: uniques,
+      redacts: redacts,
       indexes: indexes(table, assocs, uniques),
       human_singular: Phoenix.Naming.humanize(singular),
       human_plural: Phoenix.Naming.humanize(schema_plural),
@@ -142,14 +144,24 @@ defmodule Mix.Phoenix.Schema do
     |> to_string()
   end
 
-  @doc """
-  Fetches the unique attributes from attrs.
-  """
-  def uniques(attrs) do
-    attrs
-    |> Enum.filter(&String.ends_with?(&1, ":unique"))
-    |> Enum.map(& &1 |> String.split(":", parts: 2) |> hd |> String.to_atom)
+  def extract_attr_flags(cli_attrs) do
+    {attrs, uniques, redacts} = Enum.reduce(cli_attrs, {[], [], []}, fn attr, {attrs, uniques, redacts} ->
+      [attr_name | rest] = String.split(attr, ":")
+      attr_name = String.to_atom(attr_name)
+      split_flags(Enum.reverse(rest), attr_name, attrs, uniques, redacts)
+    end)
+
+    {Enum.reverse(attrs), uniques, redacts}
   end
+
+  defp split_flags(["unique" | rest], name, attrs, uniques, redacts),
+    do: split_flags(rest, name, attrs, [name | uniques], redacts)
+
+  defp split_flags(["redact" | rest], name, attrs, uniques, redacts),
+    do: split_flags(rest, name, attrs, uniques, [name | redacts])
+
+  defp split_flags(rest, name, attrs, uniques, redacts),
+    do: {[Enum.join([name | Enum.reverse(rest)], ":") | attrs ], uniques, redacts}
 
   @doc """
   Parses the attrs as received by generators.
@@ -157,7 +169,6 @@ defmodule Mix.Phoenix.Schema do
   def attrs(attrs) do
     Enum.map(attrs, fn attr ->
       attr
-      |> drop_unique()
       |> String.split(":", parts: 3)
       |> list_to_attr()
       |> validate_attr!()
@@ -239,6 +250,9 @@ defmodule Mix.Phoenix.Schema do
   def type_and_opts_for_schema({:enum, opts}), do: ~s|Ecto.Enum, values: #{inspect Keyword.get(opts, :values)}|
   def type_and_opts_for_schema(other), do: inspect other
 
+  def maybe_redact_field(true), do: ", redact: true"
+  def maybe_redact_field(false), do: ""
+
   defp date_value?(%{day: _day, month: _month, year: _year}), do: true
   defp date_value?(_value), do: false
 
@@ -252,14 +266,6 @@ defmodule Mix.Phoenix.Schema do
   end
   defp inspect_value(:decimal, value), do: "Decimal.new(\"#{value}\")"
   defp inspect_value(_type, value), do: inspect(value)
-
-  defp drop_unique(info) do
-    prefix = byte_size(info) - 7
-    case info do
-      <<attr::size(prefix)-binary, ":unique">> -> attr
-      _ -> info
-    end
-  end
 
   defp list_to_attr([key]), do: {String.to_atom(key), :string}
   defp list_to_attr([key, value]), do: {String.to_atom(key), String.to_atom(value)}
