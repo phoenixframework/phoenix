@@ -1491,7 +1491,7 @@ defmodule Phoenix.Controller do
       iex> current_path(conn, %{new: "param"})
       "/users/123?new=param"
 
-      iex> current_path(conn, %{filter: %{status: ["draft", "published"})
+      iex> current_path(conn, %{filter: %{status: ["draft", "published"]}})
       "/users/123?filter[status][]=draft&filter[status][]=published"
 
       iex> current_path(conn, %{})
