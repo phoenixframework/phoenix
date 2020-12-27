@@ -35,7 +35,7 @@ We will cover all Phoenix Mix tasks, except `phx.new`, `phx.new.ecto`, and `phx.
 
 ### `mix phx.gen.html`
 
-Phoenix offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto context, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
+Phoenix offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto context, controller with all the necessary actions, view, and templates. This can be a tremendous time saver. Let's take a look at how to make this happen.
 
 The `mix phx.gen.html` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
@@ -207,7 +207,7 @@ $ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id
 
 ### `mix phx.gen.auth`
 
-Phoenix also offers the ability to generate all of the code to stand up a complete authentication system - ecto migration, phoenix context, controllers, templates, etc. This can be a huge timesaver, allowing you to quickly add authentication to your system and shift your focus back to the primary problems your application is trying to solve.
+Phoenix also offers the ability to generate all of the code to stand up a complete authentication system - ecto migration, phoenix context, controllers, templates, etc. This can be a huge time saver, allowing you to quickly add authentication to your system and shift your focus back to the primary problems your application is trying to solve.
 
 The `mix phx.gen.auth` task takes the following arguments: the module name of the context, the module name of the schema, and a plural version of the schema name used to generate database tables and route helpers.
 
@@ -576,7 +576,7 @@ defmodule Hello.Repo.Migrations.AddCommentsTable do
 end
 ```
 
-Notice that there is a single function `change/0` which will handle both forward migrations and rollbacks. We'll define the schema changes that we want using ecto's handy dsl, and ecto will figure out what to do depending on whether we are rolling forward or rolling back. Very nice indeed.
+Notice that there is a single function `change/0` which will handle both forward migrations and rollbacks. We'll define the schema changes that we want using Ecto's handy DSL, and Ecto will figure out what to do depending on whether we are rolling forward or rolling back. Very nice indeed.
 
 What we want to do is create a `comments` table with a `body` column, a `word_count` column, and timestamp columns for `inserted_at` and `updated_at`.
 
@@ -601,8 +601,8 @@ $ mix ecto.gen.migration -r OurCustom.Repo add_users
 ```
 
 For more information on how to modify your database schema please refer to the
-ecto's migration dsl [ecto migration docs](https://hexdocs.pm/ecto_sql/Ecto.Migration.html).
-For example, to alter an existing schema see the documentation on ecto’s
+Ecto's migration DSL [ecto migration docs](https://hexdocs.pm/ecto_sql/Ecto.Migration.html).
+For example, to alter an existing schema see the documentation on Ecto’s
 [`alter/2`](https://hexdocs.pm/ecto_sql/Ecto.Migration.html#alter/2) function.
 
 That's it! We're ready to run our migration.

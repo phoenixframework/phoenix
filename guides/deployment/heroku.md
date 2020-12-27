@@ -179,7 +179,7 @@ This ensures that any idle connections are closed by Phoenix before they reach H
 
 ## Creating Environment Variables in Heroku
 
-The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on](https://elements.heroku.com/addons/heroku-postgresql). We can create the database via the heroku toolbelt:
+The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on](https://elements.heroku.com/addons/heroku-postgresql). We can create the database via the Heroku toolbelt:
 
 ```console
 $ heroku addons:create heroku-postgresql:hobby-dev

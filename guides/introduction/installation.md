@@ -66,7 +66,7 @@ In order to talk to databases, Phoenix applications use another Elixir package, 
 
 However, if you are just getting started with Phoenix, we recommend you to install PostgreSQL and make sure it is running. The PostgreSQL wiki has [installation guides](https://wiki.postgresql.org/wiki/Detailed_installation_guides) for a number of different systems.
 
-## inotify-tools (for linux users)
+## inotify-tools (for Linux users)
 
 Phoenix provides a very handy feature called Live Reloading. As you change your views or your assets, it automatically reloads the page in the browser. In order for this functionality to work, you need a filesystem watcher.
 
