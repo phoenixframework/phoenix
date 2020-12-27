@@ -290,7 +290,7 @@ Using Plug functions in this way, we can craft just the response we need.
 
 Analogous to the `_format` query string param, we can render any sort of format we want by modifying the HTTP Content-Type Header and providing the appropriate template.
 
-If we wanted to render an xml version of our `index` action, we might implement the action like this in `lib/hello_web/page_controller.ex`.
+If we wanted to render an XML version of our `index` action, we might implement the action like this in `lib/hello_web/page_controller.ex`.
 
 ```elixir
 def index(conn, _params) do
@@ -300,7 +300,7 @@ def index(conn, _params) do
 end
 ```
 
-We would then need to provide an `index.xml.eex` template which created valid xml, and we would be done.
+We would then need to provide an `index.xml.eex` template which created valid XML, and we would be done.
 
 For a list of valid content mime-types, please see the [mime.types](https://github.com/elixir-plug/mime/blob/master/priv/mime.types) documentation from the mime type library.
 

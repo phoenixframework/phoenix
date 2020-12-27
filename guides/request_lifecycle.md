@@ -238,7 +238,7 @@ And this is what the template should look like:
 </div>
 ```
 
-Our messenger appears as `@messenger`. We call "assigns" the values passed from the controller to views. It is a special bit of metaprogrammed syntax which stands in for `assigns.messenger`. The result is much nicer on the eyes and much easier to work with in a template.
+Our messenger appears as `@messenger`. We call "assigns" the values passed from the controller to views. It is a special bit of meta-programmed syntax which stands in for `assigns.messenger`. The result is much nicer on the eyes and much easier to work with in a template.
 
 We're done. If you point your browser here: [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), you should see a page that looks like this:
 

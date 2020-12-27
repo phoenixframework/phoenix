@@ -148,7 +148,7 @@ The default Endpoint plugs do quite a lot of work. Here they are in order:
 
 - [Plug.Telemetry](https://hexdocs.pm/plug/Plug.Telemetry.html) - adds instrumentation points so Phoenix can log the request path, status code and request time by default.
 
-- [Plug.Parsers](https://hexdocs.pm/plug/Plug.Parsers.html) - parses the request body when a known parser is available. By default parsers parse urlencoded, multipart and json (with `jason`). The request body is left untouched when the request content-type cannot be parsed
+- [Plug.Parsers](https://hexdocs.pm/plug/Plug.Parsers.html) - parses the request body when a known parser is available. By default parsers parse urlencoded, multipart and JSON (with `jason`). The request body is left untouched when the request content-type cannot be parsed
 
 - [Plug.MethodOverride](https://hexdocs.pm/plug/Plug.MethodOverride.html) - converts the request method to PUT, PATCH or DELETE for POST requests with a valid `_method` parameter
 
