@@ -25,8 +25,18 @@ defmodule Phoenix do
       for building `Phoenix.View` and working with template languages such
       as Elixir's own `EEx`
 
+    * [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) - rich,
+      real-time user experiences with server-rendered HTML
+
+    * [Phoenix LiveDashboard](https://hexdocs.pm/phoenix_live_dashboard) -
+      real-time performance monitoring and debugging tools for Phoenix
+      developers
+
     * [Plug](https://hexdocs.pm/plug) - a specification and conveniences
       for composable modules in between web applications
+
+    * [Telemetry Metrics](https://hexdocs.pm/telemetry_metrics) - common
+      interface for defining metrics based on Telemetry events
 
     * [Gettext](https://hexdocs.pm/gettext) - Internationalization and
       localization through [`gettext`](https://www.gnu.org/software/gettext/)
