@@ -99,7 +99,7 @@ $ git commit -m "set elixir, erlang, and node version"
 ```
 ## Making our Project ready for Gigalixir
 
-There's nothing we need to do to get our app running on Giglaixir, but for a production app, you probably want to enforce SSL. To do that, see [Force SSL](https://hexdocs.pm/phoenix/using_ssl.html#force-ssl)
+There's nothing we need to do to get our app running on Gigalixir, but for a production app, you probably want to enforce SSL. To do that, see [Force SSL](https://hexdocs.pm/phoenix/using_ssl.html#force-ssl)
 
 You may also want to use SSL for your database connection. For that, uncomment the line `ssl: true` in your `Repo` config.
 
