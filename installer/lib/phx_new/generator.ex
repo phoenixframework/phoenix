@@ -168,7 +168,7 @@ defmodule Phx.New.Generator do
     live = Keyword.get(opts, :live, false)
     dashboard = Keyword.get(opts, :dashboard, true)
     gettext = Keyword.get(opts, :gettext, true)
-    webpack = Keyword.get(opts, :webpack, true)
+    webpack = Keyword.get(opts, :webpack, html)
     dev = Keyword.get(opts, :dev, false)
     phoenix_path = phoenix_path(project, dev)
 

@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-ecto` - do not generate Ecto files.
 
-    * `--no-html` - do not generate HTML views.
+    * `--no-html` - do not generate HTML views. Implies `--no-webpack`.
 
     * `--no-gettext` - do not generate gettext files.
 
@@ -78,7 +78,7 @@ defmodule Mix.Tasks.Phx.New do
 
   Or without the HTML and JS bits (useful for APIs):
 
-      mix phx.new ~/Workspace/hello_world --no-html --no-webpack
+      mix phx.new ~/Workspace/hello_world --no-html
 
   As an umbrella:
 

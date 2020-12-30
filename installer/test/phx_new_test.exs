@@ -217,7 +217,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto", "--no-gettext", "--no-dashboard"])
+      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-ecto", "--no-gettext", "--no-dashboard"])
 
       # No webpack
       refute File.read!("phx_blog/.gitignore") |> String.contains?("/assets/node_modules/")
