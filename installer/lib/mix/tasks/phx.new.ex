@@ -110,6 +110,7 @@ defmodule Mix.Tasks.Phx.New do
              gettext: :boolean, umbrella: :boolean, verbose: :boolean,
              live: :boolean, dashboard: :boolean, install: :boolean]
 
+  @impl true
   def run([version]) when version in ~w(-v --version) do
     Mix.shell().info("Phoenix v#{@version}")
   end
@@ -126,6 +127,7 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
+  @doc false
   def run(argv, generator, path) do
     elixir_version_check!()
     case parse_opts(argv) do
@@ -134,7 +136,7 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
-  def generate(base_path, generator, path, opts) do
+  defp generate(base_path, generator, path, opts) do
     base_path
     |> Project.new(opts)
     |> generator.prepare_project()
