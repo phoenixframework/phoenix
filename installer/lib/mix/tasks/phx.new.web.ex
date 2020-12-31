@@ -29,9 +29,11 @@ defmodule Mix.Tasks.Phx.New.Web do
 
   use Mix.Task
 
+  @impl true
   def run([]) do
     Mix.Tasks.Help.run(["phx.new.web"])
   end
+
   def run([path | _] = args) do
     unless Phx.New.Generator.in_umbrella?(path) do
       Mix.raise "The web task can only be run within an umbrella's apps directory"
