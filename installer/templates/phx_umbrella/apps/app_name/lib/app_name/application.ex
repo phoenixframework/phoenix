@@ -5,6 +5,7 @@ defmodule <%= @app_module %>.Application do
 
   use Application
 
+  @impl true
   def start(_type, _args) do
     children = [<%= if @ecto do %>
       # Start the Ecto repository
