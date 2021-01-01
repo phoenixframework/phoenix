@@ -129,7 +129,7 @@ defmodule Phoenix.Router do
   If the route contains glob-like patterns, parameters for those have to be given as
   list:
 
-      MyAppWeb.Router.Helpers.pages_path(conn_or_endpoint, :show, ["hello", "world"])
+      MyAppWeb.Router.Helpers.page_path(conn_or_endpoint, :show, ["hello", "world"])
       "/pages/hello/world"
 
   The URL generated in the named URL helpers is based on the configuration for
