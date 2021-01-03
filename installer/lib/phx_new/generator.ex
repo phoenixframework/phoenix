@@ -86,6 +86,25 @@ defmodule Phx.New.Generator do
     end
   end
 
+  def iex_exs_inject(path, file, to_inject) do
+    file = Path.join(path, file)
+
+    contents =
+      case File.read(file) do
+        {:ok, bin} ->
+          bin
+
+        {:error, _} ->
+          """
+          # This Elixir script is run every time you start IEx. It can be used
+          # to do things like automatically alias common modules in your app
+
+          """
+      end
+
+    write_formatted!(file, [contents, to_inject])
+  end
+
   def config_inject(path, file, to_inject) do
     file = Path.join(path, file)
 
@@ -235,7 +254,7 @@ defmodule Phx.New.Generator do
     Macro.camelize(project.app) != inspect(project.app_mod)
   end
 
-  def gen_ecto_config(%Project{project_path: project_path, binding: binding}) do
+  def gen_ecto_config(%Project{project_path: project_path, binding: binding, in_umbrella?: in_umbrella?, app_path: app_path}) do
     adapter_config = binding[:adapter_config]
 
     config_inject(project_path, "config/dev.exs", """
@@ -255,6 +274,17 @@ defmodule Phx.New.Generator do
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{
       kw_to_config(adapter_config[:test])
     }
+    """)
+
+    iex_exs_path = cond do
+      in_umbrella? && project_path == app_path -> Path.expand(Path.join([project_path, "..", ".."]))
+      in_umbrella? -> project_path
+      true -> app_path
+    end
+
+    iex_exs_inject(iex_exs_path, ".iex.exs", """
+    alias #{binding[:app_module]}.Repo
+    IO.puts "alias #{binding[:app_module]}.Repo (from .iex.exs)"
     """)
 
     prod_only_config_inject(project_path, "config/runtime.exs", """

@@ -75,6 +75,15 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(@app, "config/runtime.exs"), ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
 
+      assert_file root_path(@app, ".iex.exs"), fn file ->
+        assert file =~ """
+        alias PhxUmb.Repo
+        IO.puts("alias PhxUmb.Repo (from .iex.exs)")
+        """
+      end
+
+      refute_file app_path(@app, ".iex.exs")
+
       assert_file app_path(@app, ".formatter.exs"), fn file ->
         assert file =~ "import_deps: [:ecto]"
         assert file =~ "inputs: [\"*.{ex,exs}\", \"priv/*/seeds.exs\", \"{config,lib,test}/**/*.{ex,exs}\"]"
@@ -267,6 +276,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file root_path(@app, "config/test.exs"), &refute(&1 =~ config)
       assert_file root_path(@app, "config/runtime.exs"), &refute(&1 =~ config)
 
+      assert_file root_path(@app, ".iex.exs"), fn file ->
+        refute file =~ "alias PhxUmb.Repo"
+      end
+
       assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/Supervisor.start_link\(/
 
       # No LiveView (in web_path)
@@ -450,6 +463,15 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file "phxUmb_umbrella/config/dev.exs", fn file ->
         assert file =~ ~r/config :phxUmb, PhxUmb.Repo,/
         assert file =~ "database: \"phxumb_dev\""
+      end
+
+      refute_file "phxUmb_umbrella/apps/phxUmb/.iex.exs"
+
+      assert_file "phxUmb_umbrella/.iex.exs", fn file ->
+        assert file =~ """
+        alias PhxUmb.Repo
+        IO.puts("alias PhxUmb.Repo (from .iex.exs)")
+        """
       end
     end
   end

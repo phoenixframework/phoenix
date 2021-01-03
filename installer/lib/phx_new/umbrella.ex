@@ -5,6 +5,7 @@ defmodule Phx.New.Umbrella do
 
   template :new, [
     {:eex,    "phx_umbrella/gitignore",               :project, ".gitignore"},
+    {:eex,    "phx_umbrella/iex.exs",                 :project, ".iex.exs"},
     {:eex,    "phx_umbrella/config/config.exs",       :project, "config/config.exs"},
     {:config, "phx_umbrella/config/extra_config.exs", :project, "config/config.exs"},
     {:eex,    "phx_umbrella/config/dev.exs",          :project, "config/dev.exs"},

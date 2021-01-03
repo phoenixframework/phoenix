@@ -55,6 +55,13 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "port: 80"
       end
 
+      assert_file "phx_blog/.iex.exs", fn file ->
+        assert file =~ """
+        alias PhxBlog.Repo
+        IO.puts("alias PhxBlog.Repo (from .iex.exs)")
+        """
+      end
+
       assert_file "phx_blog/config/runtime.exs", ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
 
       assert_file "phx_blog/lib/phx_blog/application.ex", ~r/defmodule PhxBlog.Application do/
@@ -461,6 +468,13 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~r/config :phxBlog, PhxBlog.Repo,/
         assert file =~ "database: \"phxblog_dev\""
       end
+
+      assert_file "phxBlog/.iex.exs", fn file ->
+        assert file =~ """
+        alias PhxBlog.Repo
+        IO.puts("alias PhxBlog.Repo (from .iex.exs)")
+        """
+      end
     end
   end
 
@@ -475,6 +489,14 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/lib/phx_blog_web/endpoint.ex", ~r/app: :phx_blog/
       assert_file "custom_path/config/config.exs", ~r/namespace: PhoteuxBlog/
       assert_file "custom_path/lib/phx_blog_web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlogWeb/
+
+
+      assert_file "custom_path/.iex.exs", fn file ->
+        assert file =~ """
+        alias PhoteuxBlog.Repo
+        IO.puts("alias PhoteuxBlog.Repo (from .iex.exs)")
+        """
+      end
     end
   end
 
@@ -493,6 +515,15 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert_file "phx_blog/assets/package.json", fn file ->
           assert file =~ ~s["file:../../../deps/phoenix"]
           assert file =~ ~s["file:../../../deps/phoenix_html"]
+        end
+
+        refute_file "phx_blog/.iex.exs"
+
+        assert_file "../.iex.exs", fn file ->
+          assert file =~ """
+          alias PhxBlog.Repo
+          IO.puts("alias PhxBlog.Repo (from .iex.exs)")
+          """
         end
       end
     end

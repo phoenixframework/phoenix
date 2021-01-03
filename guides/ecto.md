@@ -204,6 +204,10 @@ iex> alias Hello.User
 Hello.User
 ```
 
+Alternatively, we can add a line with `alias Hello.User` to the `.iex.exs` file at the root of our project. If one does not exist, simply
+create it. All commands in `.iex.exs` are run when IEx is started. Remember to restart IEx after modifying this file so the
+new commands are executed.
+
 Next, let's build a changeset from our schema with an empty `User` struct, and an empty map of parameters.
 
 ```elixir
