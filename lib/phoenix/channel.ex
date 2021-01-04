@@ -574,7 +574,7 @@ defmodule Phoenix.Channel do
       iex> push(socket, "new_message", %{id: 1, content: "hello"})
       :ok
 
-      iex> push(socket, "new_message", {:binary "hello"})
+      iex> push(socket, "new_message", {:binary, "hello"})
       :ok
 
   """
