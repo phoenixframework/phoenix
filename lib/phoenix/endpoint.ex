@@ -226,7 +226,7 @@ defmodule Phoenix.Endpoint do
 
   @type topic :: String.t
   @type event :: String.t
-  @type msg :: map
+  @type msg :: map | {:binary, binary}
 
   require Logger
 
