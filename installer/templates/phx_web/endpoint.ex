@@ -1,4 +1,6 @@
 defmodule <%= @endpoint_module %> do
+  @moduledoc false
+
   use Phoenix.Endpoint, otp_app: :<%= @web_app_name %>
 
   # The session will be stored in the cookie and signed,
