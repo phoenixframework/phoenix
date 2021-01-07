@@ -74,18 +74,16 @@ integration-test:
     END
 
 npm:
-    ARG ELIXIR=1.10.4
-    ARG OTP=23.0.3
-    FROM node:12
-    COPY +npm-setup/assets /assets
-    WORKDIR assets
-    RUN npm install && npm test
-
-npm-setup:
     FROM +test-setup
-    COPY assets assets
-    RUN mix deps.get
-    SAVE ARTIFACT assets
+    # use node 12 + npm
+    RUN apk add "nodejs>12.0" && apk add "npm>12.0"
+    RUN mkdir assets
+    # copy package.json + lockfile separatelly improve caching (js changes dont require `npm install` anymore)
+    COPY assets/package* assets
+    WORKDIR assets
+    RUN npm install
+    COPY assets/ .
+    RUN npm test
 
 setup-base:
    ARG ELIXIR=1.11.2
