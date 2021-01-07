@@ -18,7 +18,7 @@ When your browser accesses [http://localhost:4000/](http://localhost:4000/), it 
 
 There are other HTTP verbs. For example, submitting a form typically uses the POST verb.
 
-Web applications typically handle requests by mapping each verb/path pair into a specific part of your application. This matching in Phoenix is done by the router. For example, we may map "/articles" to a portion of our application that shows all articles. Therefore, to add a new page, our first task is to add new route.
+Web applications typically handle requests by mapping each verb/path pair into a specific part of your application. This matching in Phoenix is done by the router. For example, we may map "/articles" to a portion of our application that shows all articles. Therefore, to add a new page, our first task is to add a new route.
 
 ### A new route
 
