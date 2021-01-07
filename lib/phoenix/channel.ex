@@ -300,7 +300,8 @@ defmodule Phoenix.Channel do
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
 
-  @type reply :: status :: atom | {status :: atom, response :: map}
+  @type payload :: map | {:binary, binary}
+  @type reply :: status :: atom | {status :: atom, response :: payload}
   @type socket_ref ::
           {transport_pid :: Pid, serializer :: module, topic :: binary, ref :: binary,
            join_ref :: binary}
@@ -322,9 +323,9 @@ defmodule Phoenix.Channel do
       end
 
   """
-  @callback join(topic :: binary, payload :: map, socket :: Socket.t()) ::
+  @callback join(topic :: binary, payload :: payload, socket :: Socket.t()) ::
               {:ok, Socket.t()}
-              | {:ok, reply :: map, Socket.t()}
+              | {:ok, reply :: payload, Socket.t()}
               | {:error, reason :: map}
 
   @doc """
@@ -337,7 +338,7 @@ defmodule Phoenix.Channel do
       end
 
   """
-  @callback handle_in(event :: String.t(), payload :: map, socket :: Socket.t()) ::
+  @callback handle_in(event :: String.t(), payload :: payload, socket :: Socket.t()) ::
               {:noreply, Socket.t()}
               | {:noreply, Socket.t(), timeout | :hibernate}
               | {:reply, reply, Socket.t()}
@@ -349,7 +350,7 @@ defmodule Phoenix.Channel do
 
   See `intercept/1`.
   """
-  @callback handle_out(event :: String.t(), payload :: map, socket :: Socket.t()) ::
+  @callback handle_out(event :: String.t(), payload :: payload, socket :: Socket.t()) ::
               {:noreply, Socket.t()}
               | {:noreply, Socket.t(), timeout | :hibernate}
               | {:stop, reason :: term, Socket.t()}
@@ -504,11 +505,15 @@ defmodule Phoenix.Channel do
   @doc """
   Broadcast an event to all subscribers of the socket topic.
 
-  The event's message must be a serializable map.
+  The event's message must be a serializable map or a tagged `{:binary, data}`
+  tuple where `data` is binary data.
 
   ## Examples
 
       iex> broadcast(socket, "new_message", %{id: 1, content: "hello"})
+      :ok
+
+      iex> broadcast(socket, "new_message", {:binary, "hello"})
       :ok
 
   """
@@ -529,11 +534,15 @@ defmodule Phoenix.Channel do
   Broadcast event from pid to all subscribers of the socket topic.
 
   The channel that owns the socket will not receive the published
-  message. The event's message must be a serializable map.
+  message. The event's message must be a serializable map or a tagged
+  `{:binary, data}` tuple where `data` is binary data.
 
   ## Examples
 
       iex> broadcast_from(socket, "new_message", %{id: 1, content: "hello"})
+      :ok
+
+      iex> broadcast_from(socket, "new_message", {:binary, "hello"})
       :ok
 
   """
@@ -557,11 +566,15 @@ defmodule Phoenix.Channel do
   @doc """
   Sends event to the socket.
 
-  The event's message must be a serializable map.
+  The event's message must be a serializable map or a tagged `{:binary, data}`
+  tuple where `data` is binary data.
 
   ## Examples
 
       iex> push(socket, "new_message", %{id: 1, content: "hello"})
+      :ok
+
+      iex> push(socket, "new_message", {:binary, "hello"})
       :ok
 
   """
