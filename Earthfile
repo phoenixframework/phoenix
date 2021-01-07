@@ -75,10 +75,10 @@ integration-test:
 
 npm:
     FROM +test-setup
-    # use node 12 + npm
+    # Use Node 12 + matching NPM
     RUN apk add "nodejs>12.0" && apk add "npm>12.0"
     RUN mkdir assets
-    # copy package.json + lockfile separatelly to improve caching (js changes dont require `npm install` anymore)
+    # Copy package.json + lockfile separatelly to improve caching (JS changes don't trigger `npm install` anymore)
     COPY assets/package* assets
     WORKDIR assets
     RUN npm install
