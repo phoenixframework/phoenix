@@ -78,7 +78,7 @@ npm:
     # use node 12 + npm
     RUN apk add "nodejs>12.0" && apk add "npm>12.0"
     RUN mkdir assets
-    # copy package.json + lockfile separatelly improve caching (js changes dont require `npm install` anymore)
+    # copy package.json + lockfile separatelly to improve caching (js changes dont require `npm install` anymore)
     COPY assets/package* assets
     WORKDIR assets
     RUN npm install
