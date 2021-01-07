@@ -167,7 +167,7 @@ In the middle of the endpoint, there is also a conditional block:
   end
 ```
 
-This block is only executed in development. It enables live reloading (if you change a CSS file, they are updated in-browser without refreshing the page), code reloading (so we can see changes to our application without restarting the server), and check repo status (which makes sure our database is up to date, raising readable and actionable error otherwise).
+This block is only executed in development. It enables live reloading (if you change a CSS file, they are updated in-browser without refreshing the page), code reloading (so we can see changes to our application without restarting the server), and check repo status (which makes sure our database is up to date, raising a readable and actionable error otherwise).
 
 ### Router plugs
 
