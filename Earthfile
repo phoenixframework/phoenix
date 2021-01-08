@@ -9,6 +9,7 @@ all-test:
 
 test:
     FROM +test-setup
+    RUN MIX_ENV=test mix deps.compile
     COPY --dir assets config installer lib integration_test priv test ./
     RUN mix test
 
@@ -74,18 +75,16 @@ integration-test:
     END
 
 npm:
-    ARG ELIXIR=1.10.4
-    ARG OTP=23.0.3
-    FROM node:12
-    COPY +npm-setup/assets /assets
-    WORKDIR assets
-    RUN npm install && npm test
-
-npm-setup:
     FROM +test-setup
-    COPY assets assets
-    RUN mix deps.get
-    SAVE ARTIFACT assets
+    # Use Node 12 + matching NPM
+    RUN apk add "nodejs>12.0" && apk add "npm>12.0"
+    RUN mkdir assets
+    # Copy package.json + lockfile separatelly to improve caching (JS changes don't trigger `npm install` anymore)
+    COPY assets/package* assets
+    WORKDIR assets
+    RUN npm install
+    COPY assets/ .
+    RUN npm test
 
 setup-base:
    ARG ELIXIR=1.11.2
