@@ -492,7 +492,7 @@ Phoenix defines two pipelines by default, `:browser` and `:api`, which can be us
 
 ### The `:browser` and `:api` Pipelines
 
-As their names suggest, the `:browser` pipeline prepares for routes which render requests for a browser. The `:api` pipeline prepares for routes which produce data for an api.
+As their names suggest, the `:browser` pipeline prepares for routes which render requests for a browser, and the `:api` pipeline prepares for routes which produce data for an api.
 
 The `:browser` pipeline has five plugs: `plug :accepts, ["html"]` which defines the request format or formats which will be accepted, `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection, `:fetch_flash` which retrieves any flash messages which may have been set, as well as `:protect_from_forgery` and `:put_secure_browser_headers`, which protects form posts from cross site forgery.
 
