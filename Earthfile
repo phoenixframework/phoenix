@@ -75,9 +75,8 @@ integration-test:
     END
 
 npm:
-    FROM +test-setup
-    # Use Node 12 + matching NPM
-    RUN apk add "nodejs>12.0" && apk add "npm>12.0"
+    FROM node:12-alpine3.12
+    WORKDIR /src
     RUN mkdir assets
     # Copy package.json + lockfile separatelly to improve caching (JS changes don't trigger `npm install` anymore)
     COPY assets/package* assets
