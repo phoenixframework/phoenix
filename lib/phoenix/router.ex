@@ -964,7 +964,7 @@ defmodule Phoenix.Router do
     * `:log` - the configured log level. For example `:debug`
     * `:path_params` - the map of runtime path params
     * `:pipe_through` - the list of pipelines for the route's scope, for example `[:browser]`
-    * `:plug` - the plug to dipatch the route to, for example `AppWeb.PostController`
+    * `:plug` - the plug to dispatch the route to, for example `AppWeb.PostController`
     * `:plug_opts` - the options to pass when calling the plug, for example: `:index`
     * `:route` - the string route pattern, such as `"/posts/:id"`
 

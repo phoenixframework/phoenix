@@ -61,7 +61,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   Which would generate a `lib/app_web/controllers/sales/user_controller.ex` and
   `lib/app_web/views/sales/user_view.ex`.
 
-  ## Customising the context, schema, tables and migrations
+  ## Customizing the context, schema, tables and migrations
 
   In some cases, you may wish to bootstrap JSON views, controllers,
   and controller tests, but leave internal implementation of the context

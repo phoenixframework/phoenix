@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   Unix systems and `pbkdf2` for Windows systems. Both
   systems use [the Comeonin interface](https://hexdocs.pm/comeonin/).
 
-  The password hashing mechanism can be overriden with the
+  The password hashing mechanism can be overridden with the
   `--hashing-lib` option. The following values are supported:
 
     * `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
@@ -273,7 +273,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   defp inject_context_test_fixtures(%Context{} = context, paths, binding) do
     test_fixtures_file = get_test_fixtures_file(context)
 
-    unless pre_exisiting_test_fixtures?(context) do
+    unless pre_existing_test_fixtures?(context) do
       Mix.Generator.create_file(test_fixtures_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.auth/context_fixtures.ex", binding))
     end
 
@@ -572,9 +572,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     end
   end
 
-  # This can be replaced with Context.pre_exisiting_test_fixtures?/1
+  # This can be replaced with Context.pre_existing_test_fixtures?/1
   # in phoenix 1.6
-  defp pre_exisiting_test_fixtures?(%Context{} = context) do
+  defp pre_existing_test_fixtures?(%Context{} = context) do
     context |> get_test_fixtures_file() |> File.exists?()
   end
 
