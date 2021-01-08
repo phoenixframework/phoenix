@@ -7,6 +7,8 @@ There are a number of places to connect with community members at all experience
   * We're on Freenode IRC in the [\#elixir-lang](http://webchat.freenode.net/?channels=elixir-lang) channel.
 
   * [Request an invitation](https://elixir-slackin.herokuapp.com/) and join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
+  
+  * Feel free to join and check out the #phoenix channel on [Discord](https://discord.gg/elixir).
 
   * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/master/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
 
