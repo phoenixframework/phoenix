@@ -10,11 +10,11 @@ Our main goal for this guide is to package your Phoenix application into a self-
 
 ## Releases, assemble!
 
-To assemble a release, you will need Elixir v1.9 or later:
+To assemble a release, you will need at least Elixir v1.9, however this guide assumes you are using Elixir v1.11 or later to take advantage of latest releases improvements:
 
 ```console
 $ elixir -v
-1.9.0
+1.11.0
 ```
 
 If you are not familiar with Elixir releases yet, we recommend you to read [Elixir's excellent docs](https://hexdocs.pm/mix/Mix.Tasks.Release.html) before continuing.
@@ -53,7 +53,7 @@ And now run `mix release`:
 $ MIX_ENV=prod mix release
 Generated my_app app
 * assembling my_app-0.1.0 on MIX_ENV=prod
-* skipping runtime configuration (config/releases.exs not found)
+* using config/runtime.exs to configure the release at runtime
 
 Release created at _build/prod/rel/my_app!
 
@@ -65,7 +65,7 @@ Release created at _build/prod/rel/my_app!
 
 You can start the release by calling `_build/prod/rel/my_app/bin/my_app start`, where you have to replace `my_app` by your current application name. If you do so, your application should start but you will notice your web server does not actually run! That's because we need to tell Phoenix to start the web servers. When using `mix phx.server`, the `phx.server` command does that for us, but in a release we don't have Mix (which is a *build* tool), so we have to do it ourselves.
 
-Open up `config/runtime.exs` (formerly `config/prod.secret.exs`) and you should find a section about "Using releases" with a configuration to set. Go ahead and uncomment that line or manually add the line below, adapted to your application names:
+Open up `config/runtime.exs` (formerly `config/prod.secret.exs` or `config/releases.exs`) and you should find a section about "Using releases" with a configuration to set. Go ahead and uncomment that line or manually add the line below, adapted to your application names:
 
 ```elixir
 config :my_app, MyAppWeb.Endpoint, server: true
@@ -77,7 +77,7 @@ Now assemble the release once again:
 $ MIX_ENV=prod mix release
 Generated my_app app
 * assembling my_app-0.1.0 on MIX_ENV=prod
-* skipping runtime configuration (config/releases.exs not found)
+* using config/runtime.exs to configure the release at runtime
 
 Release created at _build/prod/rel/my_app!
 
@@ -87,32 +87,11 @@ Release created at _build/prod/rel/my_app!
 
 And starting the release now should also successfully start the web server! Now you can get all of the files under the `_build/prod/rel/my_app` directory, package it, and run it in any production machine with the same OS and architecture as the one that assembled the release. For more details, check the [docs for `mix release`](https://hexdocs.pm/mix/Mix.Tasks.Release.html).
 
-But before we finish this guide, there are two features from releases most Phoenix applications will use, so let's talk about those.
-
-## Runtime configuration
-
-You may have noticed that, in order to assemble our release, we had to set both `SECRET_KEY_BASE` and `DATABASE_URL`. That's because `config/config.exs`, `config/prod.exs`, and friends are executed when the release is assembled (or more generally speaking, whenever you run a `mix` command).
-
-However, in many cases, we don't want to set the values for `SECRET_KEY_BASE` and `DATABASE_URL` when assembling the release but only when starting the system in production. In particular, you may not even have those values easily accessible, and you may have to reach out to another system to retrieve those. Luckily, for such use cases, `mix release` provides runtime configuration, which we can enable in three steps:
-
-1. Rename `config/runtime.exs` (formerly `config/prod.secret.exs`) to `config/releases.exs`
-
-2. Change `config/prod.exs` to no longer call `import_config "runtime.exs"` (formerly `prod.secret.exs`) at the bottom
-
-Now if you assemble another release, you should see this:
-
-```console
-$ MIX_ENV=prod mix release
-Generated my_app app
-* assembling my_app-0.1.0 on MIX_ENV=prod
-* using config/releases.exs to configure the release at runtime
-```
-
-Notice how it says you are using runtime configuration. Now you no longer need to set those environment variables when assembling the release, only when you run `_build/prod/rel/my_app/bin/my_app start` and friends.
+But before we finish this guide, there is one more feature from releases that most Phoenix application will use, so let's talk about that.
 
 ## Ecto migrations and custom commands
 
-Another common need in production systems is to execute custom commands required to set up the production environment. One of such commands is precisely migrating the database. Since we don't have `Mix`, a *build* tool, inside releases, which are a production artifact, we need to bring said commands directly into the release.
+A common need in production systems is to execute custom commands required to set up the production environment. One of such commands is precisely migrating the database. Since we don't have `Mix`, a *build* tool, inside releases, which are a production artifact, we need to bring said commands directly into the release.
 
 Our recommendation is to create a new file in your application, such as `lib/my_app/release.ex`, with the following:
 
