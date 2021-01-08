@@ -11,6 +11,12 @@ test:
     FROM +test-setup
     RUN MIX_ENV=test mix deps.compile
     COPY --dir assets config installer lib integration_test priv test ./
+
+    # Run unit tests
+    RUN mix test
+
+    # Run installer tests
+    WORKDIR /src/installer
     RUN mix test
 
 all-integration-test:
