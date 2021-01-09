@@ -245,7 +245,7 @@ defmodule Phoenix.CodeReloader.Server do
     results = Enum.map(compilers, &Mix.Task.run("compile.#{&1}", []))
 
     # Results are either {:ok, _} | {:error, _}, {:noop, _} or
-    # :ok | :error | :noop. So we use proplists to do the unwraping.
+    # :ok | :error | :noop. So we use proplists to do the unwrapping.
     cond do
       :proplists.get_value(:error, results, false) ->
         exit({:shutdown, 1})

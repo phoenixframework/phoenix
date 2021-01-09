@@ -70,7 +70,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   Which would generate a LiveViews inside `lib/app_web/live/sales/user_live/` and a
   view at `lib/app_web/views/sales/user_view.ex`.
 
-  ## Customising the context, schema, tables and migrations
+  ## Customizing the context, schema, tables and migrations
 
   In some cases, you may wish to bootstrap HTML templates, LiveViews,
   and tests, but leave internal implementation of the context or schema

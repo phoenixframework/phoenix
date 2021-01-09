@@ -146,7 +146,7 @@ defmodule Phoenix.Presence do
 
   Tracked presences are grouped by `key`, cast as a string. For example, to
   group each user's channels together, use user IDs as keys. Each presence can
-  be associated with a map of metadata to store small, emphemeral state, such as
+  be associated with a map of metadata to store small, ephemeral state, such as
   a user's online status. To store detailed information, see `c:fetch/2`.
 
   ## Example

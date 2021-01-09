@@ -933,7 +933,7 @@ defmodule Phoenix.Controller do
     * `:content_type` - the content type of the file or binary
       sent as download. It is automatically inferred from the
       filename extension
-    * `:disposition` - specifies dispositon type
+    * `:disposition` - specifies disposition type
       (`:attachment` or `:inline`). If `:attachment` was used,
       user will be prompted to save the file. If `:inline` was used,
       the browser will attempt to open the file.
