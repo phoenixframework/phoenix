@@ -82,7 +82,7 @@ In some cases - often in `index` actions, for instance - we don't care about par
 
 ## Rendering
 
-Controllers have several ways of rendering content. The simplest is to render some plain text using the `text/2` function which Phoenix provides.
+Controllers can render content in several ways. The simplest is to render some plain text using the `text/2` function which Phoenix provides.
 
 For example, let's rewrite the `show` action from `PageController` to return text instead. For that, we could do the following.
 
