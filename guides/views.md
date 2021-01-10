@@ -4,7 +4,7 @@
 
 > **Requirement**: This guide expects that you have gone through [the Request life-cycle guide](request_lifecycle.html).
 
-Phoenix views main job is to render the body of the responses to be sent back to browsers and API clients. Most of the time, we use templates to build said responses, but we can also craft them by hand. We will learn how.
+A Phoenix view's main job is to render the body of the response which gets sent back to browsers and API clients. Most of the time, we use templates to build these responses, but we can also craft them by hand. We will learn how.
 
 ## Rendering Templates
 
