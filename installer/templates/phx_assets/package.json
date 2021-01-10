@@ -24,6 +24,6 @@
     "optimize-css-assets-webpack-plugin": "^5.0.4",
     "terser-webpack-plugin": "^4.2.3",
     "webpack": "^4.45.0",
-    "webpack-cli": "^3.3.2"
+    "webpack-cli": "^3.3.12"
   }
 }
