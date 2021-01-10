@@ -17,7 +17,7 @@
     "@babel/preset-env": "^7.0.0",
     "babel-loader": "^8.0.0",
     "copy-webpack-plugin": "^6.4.1",
-    "css-loader": "^3.4.2",
+    "css-loader": "^5.0.1",
     "sass-loader": "^8.0.2",
     "node-sass": "^4.13.1",
     "hard-source-webpack-plugin": "^0.13.1",
