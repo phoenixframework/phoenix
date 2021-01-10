@@ -54,7 +54,7 @@ Node.js is an optional dependency. Phoenix will use [webpack](https://webpack.js
 
 If we don't have any static assets, or we want to use another build tool, we can pass the `--no-webpack` flag when creating a new application and Node.js won't be required at all.
 
-We can get Node.js from the [download page](https://nodejs.org/en/download/). When selecting a package to download, it's important to note that Phoenix requires version 5.0.0 or greater.
+We can get Node.js from the [download page](https://nodejs.org/en/download/). When selecting a package to download, it's important to note that Phoenix requires version 10.13 or greater.
 
 Mac OS X users can also install Node.js via [homebrew](https://brew.sh/).
 
