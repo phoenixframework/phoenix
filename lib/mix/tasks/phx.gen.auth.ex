@@ -249,9 +249,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   end
 
   defp inject_context_functions(%Context{file: file} = context, paths, binding) do
-    unless Context.pre_existing?(context) do
-      Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
-    end
+    Gen.Context.ensure_context_file_exists(context, paths, binding)
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_functions.ex", binding)
@@ -260,9 +258,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   end
 
   defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
-    unless Context.pre_existing_tests?(context) do
-      Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding))
-    end
+    Gen.Context.ensure_test_file_exists(context, paths, binding)
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/test_cases.exs", binding)
@@ -270,12 +266,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> inject_before_final_end(test_file)
   end
 
-  defp inject_context_test_fixtures(%Context{} = context, paths, binding) do
-    test_fixtures_file = get_test_fixtures_file(context)
-
-    unless pre_existing_test_fixtures?(context) do
-      Mix.Generator.create_file(test_fixtures_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.auth/context_fixtures.ex", binding))
-    end
+  defp inject_context_test_fixtures(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
+    Gen.Context.ensure_test_fixtures_file_exists(context, paths, binding)
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_fixtures_functions.ex", binding)
@@ -570,20 +562,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       {:ok, file} -> {:ok, file}
       {:error, reason} -> {:error, {:file_read_error, reason}}
     end
-  end
-
-  # This can be replaced with Context.pre_existing_test_fixtures?/1
-  # in phoenix 1.6
-  defp pre_existing_test_fixtures?(%Context{} = context) do
-    context |> get_test_fixtures_file() |> File.exists?()
-  end
-
-  # This can be updated to use %Context{test_fixtures_file: _} in
-  # Phoenix 1.6
-  defp get_test_fixtures_file(%Context{name: context_name, context_app: ctx_app}) do
-    basedir = Phoenix.Naming.underscore(context_name)
-    test_fixtures_dir = Mix.Phoenix.context_app_path(ctx_app, "test/support/fixtures")
-    Path.join([test_fixtures_dir, basedir <> "_fixtures.ex"])
   end
 
   defp indent_spaces(string, number_of_spaces) when is_binary(string) and is_integer(number_of_spaces) do

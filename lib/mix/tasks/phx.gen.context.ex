@@ -151,10 +151,15 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     context
   end
 
-  defp inject_schema_access(%Context{file: file} = context, paths, binding) do
+  @doc false
+  def ensure_context_file_exists(%Context{file: file} = context, paths, binding) do
     unless Context.pre_existing?(context) do
       Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
     end
+  end
+
+  defp inject_schema_access(%Context{file: file} = context, paths, binding) do
+    ensure_context_file_exists(context, paths, binding)
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/#{schema_access_template(context)}", binding)
@@ -165,20 +170,30 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     File.write!(file, content)
   end
 
-  defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
+  @doc false
+  def ensure_test_file_exists(%Context{test_file: test_file} = context, paths, binding) do
     unless Context.pre_existing_tests?(context) do
       Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding))
     end
+  end
+
+  defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
+    ensure_test_file_exists(context, paths, binding)
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/test_cases.exs", binding)
     |> inject_eex_before_final_end(test_file, binding)
   end
 
-  defp inject_test_fixture(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
+  @doc false
+  def ensure_test_fixtures_file_exists(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
     unless Context.pre_existing_test_fixtures?(context) do
       Mix.Generator.create_file(test_fixtures_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/fixtures_module.ex", binding))
     end
+  end
+
+  defp inject_test_fixture(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
+    ensure_test_fixtures_file_exists(context, paths, binding)
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/fixtures.ex", binding)
