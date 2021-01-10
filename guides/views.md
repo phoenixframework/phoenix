@@ -245,11 +245,11 @@ And the `render/2` matching `"show.json"`:
 }
 ```
 
-This works because both "index.json" and "show.json" builds themselves on top of an internal "page.json" clause.
+This works because both "index.json" and "show.json" build themselves on top of an internal "page.json" clause.
 
-The `render_many/3` function takes the data we want to respond with (`pages`), a view, and a string to pattern match on the `render/2` function defined on view. It will map over each item in `pages`, and call `PageView.render("page.json", %{page: page})`. `render_one/3` follows, the same signature, ultimately using the `render/2` matching `page.json` to specify what each `page` looks like.
+The `render_many/3` function takes the data we want to respond with (`pages`), a view, and a string to pattern match on the `render/2` function defined on view. It will map over each item in `pages` and call `PageView.render("page.json", %{page: page})`. `render_one/3` follows the same signature, ultimately using the `render/2` matching `page.json` to specify what each `page` looks like.
 
-It's useful to build our views like this so they can be composable. Imagine a situation where our `Page` has a `has_many` relationship with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new `render/2`:
+It's useful to build our views like this so that they are composable. Imagine a situation where our `Page` has a `has_many` relationship with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new `render/2`:
 
 ```elixir
 defmodule HelloWeb.PageView do
