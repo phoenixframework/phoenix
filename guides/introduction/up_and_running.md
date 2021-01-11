@@ -28,9 +28,9 @@ mix phx.new hello
 Fetch and install dependencies? [Yn]
 ```
 
-Phoenix generates the directory structure and all the files we will need for our application. 
+Phoenix generates the directory structure and all the files we will need for our application.
 
-> Phoenix promotes the usage of git as version control software: among the generated files we find a `.gitignore`. We can `git init` our repository, and immediately add and commit all that hasn't been marked ignored. 
+> Phoenix promotes the usage of git as version control software: among the generated files we find a `.gitignore`. We can `git init` our repository, and immediately add and commit all that hasn't been marked ignored.
 
 When it's done, it will ask us if we want it to install our dependencies for us. Let's say yes to that.
 

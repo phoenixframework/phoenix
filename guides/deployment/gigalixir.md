@@ -43,7 +43,7 @@ We can sign up for an account at [gigalixir.com](https://www.gigalixir.com) or w
 $ gigalixir signup
 ```
 
-Gigalixir’s free tier does not require a credit card and comes with 1 app instance and 1 postgresql database for free, but please consider upgrading to a paid plan if you are running a production application.
+Gigalixir’s free tier does not require a credit card and comes with 1 app instance and 1 PostgreSQL database for free, but please consider upgrading to a paid plan if you are running a production application.
 
 Next, let's login
 
