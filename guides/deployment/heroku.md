@@ -168,8 +168,7 @@ defmodule HelloWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :hello
 
   socket "/socket", HelloWeb.UserSocket,
-    websocket: [timeout: 45_000],
-    longpoll: false
+    websocket: [timeout: 45_000]
 
   ...
 end
