@@ -128,7 +128,7 @@ Should we test all of these possible outcomes in our controller tests?
 
 The answer is no. All of the different rules and outcomes should be verified in your context and schema tests. The controller works as the integration layer. In the controller tests we simply want to verify, in broad strokes, that we handle both success and failure scenarios.
 
-The test for `update` follows a similar structure to the test on `create`, so we let's skip to the `delete` test.
+The test for `update` follows a similar structure as `create`, so let's skip to the `delete` test.
 
 ### The delete action
 
