@@ -1391,6 +1391,22 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
+  Persists a value in flash but only if the key does not exist yet.
+
+  Returns the updated connection.
+
+  ## Examples
+
+      iex> conn = put_new_flash(conn, :info, "Welcome Back!")
+      iex> get_flash(conn, :info)
+      "Welcome Back!"
+
+  """
+  def put_new_flash(conn, key, message) do
+    persist_flash(conn, Map.put_new(get_flash(conn), flash_key(key), message))
+  end
+
+  @doc """
   Returns a map of previously set flash messages or an empty map.
 
   ## Examples

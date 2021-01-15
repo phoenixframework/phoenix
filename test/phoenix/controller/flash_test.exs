@@ -128,6 +128,18 @@ defmodule Phoenix.Controller.FlashTest do
     assert get_flash(conn, "notice") == "false alarm!"
   end
 
+  test "put_new_flash/3 only adds key/message if the key does not exist yet" do
+    conn =
+      conn(:get, "/")
+      |> with_session
+      |> fetch_flash([])
+      |> put_new_flash(:error, "oh noes!")
+      |> put_new_flash(:error, "boom!")
+
+    assert get_flash(conn, :error) == "oh noes!"
+    assert get_flash(conn, "error") == "oh noes!"
+  end
+
   test "clear_flash/1 clears the flash messages" do
     conn =
       conn(:get, "/")
