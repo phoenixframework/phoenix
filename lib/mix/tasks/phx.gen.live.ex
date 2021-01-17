@@ -30,7 +30,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   Overall, this generator will add the following files to `lib/`:
 
     * a context module in `lib/app/accounts.ex` for the accounts API
-    * a schema in `lib/app/accounts/user.ex`, with an `users` table
+    * a schema in `lib/app/accounts/user.ex`, with a `users` table
     * a view in `lib/app_web/views/user_view.ex`
     * a LiveView in `lib/app_web/live/user_live/show_live.ex`
     * a LiveView in `lib/app_web/live/user_live/index_live.ex`
