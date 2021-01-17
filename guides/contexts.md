@@ -8,17 +8,17 @@
 
 So far, we've built pages, wired up controller actions through our routers, and learned how Ecto allows data to be validated and persisted. Now it's time to tie it all together by writing web-facing features that interact with our greater Elixir application.
 
-When building a Phoenix project, we are first and foremost building an Elixir application. Phoenix's job is to provide a web interface into our Elixir application. Naturally, we compose our applications with modules and functions, but simply defining a module with a few functions isn't enough when designing an application. It's vital to think about your application design when writing code. Let's find out how.
-
-> How to read this guide: Using the context generators is a great way for beginners and intermediate Elixir programmers alike to get up and running quickly while thoughtfully designing their applications. This guide focuses on those readers. On the other hand, experienced developers may get more mileage from nuanced discussions around application design. For those readers, we include a frequently asked questions (FAQ) section at the end of the guide which brings different perspectives to some design decisions made throughout the guide. Beginners can safely skip the FAQ sections and return later when they're ready to dig deeper.
+When building a Phoenix project, we are first and foremost building an Elixir application. Phoenix's job is to provide a web interface into our Elixir application. Naturally, we compose our applications with modules and functions, but simply defining a module with a few functions isn't enough when designing an application. We need to consider the boundaries between modules and how to group functionality. In other words, it's vital to think about application design when writing code. 
 
 ## Thinking about design
 
 Contexts are dedicated modules that expose and group related functionality. For example, anytime you call Elixir's standard library, be it `Logger.info/1` or `Stream.map/2`, you are accessing different contexts. Internally, Elixir's logger is made of multiple modules, but we never interact with those modules directly. We call the `Logger` module the context, exactly because it exposes and groups all of the logging functionality.
 
-Phoenix projects are structured like Elixir and any other Elixir project – we split our code into contexts. A context will group related functionality, such as posts and comments, often encapsulating patterns such as data access and data validation. By using contexts, we decouple and isolate our systems into manageable, independent parts.
+By giving modules that expose and group related functionality the name **contexts**, we help developers identify these patterns and talk about them. At the end of the day, contexts are just modules, as are your controllers, views, etc.
 
-Let's use these ideas to build out our web application. Our goal is to build a user system as well as a basic content management system for adding and editing page content. Let's get started!
+In Phoenix, contexts often encapsulate data access and data validation. They often talk to a database or APIs. Overall, think of them as boundaries to decouple and isolate our systems into manageable, independent parts. Let's use these ideas to build out our web application. Our goal is to build a user system as well as a basic content management system for adding and editing page content.
+
+> How to read this guide: Using the context generators is a great way for beginners and intermediate Elixir programmers alike to get up and running quickly while thoughtfully designing their applications. This guide focuses on those readers. On the other hand, experienced developers may get more mileage from nuanced discussions around application design. For those readers, we include a frequently asked questions (FAQ) section at the end of the guide which brings different perspectives to some design decisions made throughout the guide. Beginners can safely skip the FAQ sections and return later when they're ready to dig deeper.
 
 ### Adding an Accounts Context
 
