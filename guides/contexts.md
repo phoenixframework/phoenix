@@ -246,7 +246,7 @@ defmodule Hello.Accounts.User do
 end
 ```
 
-This is just what we saw before when we ran `mix phx.gen.schema`, except here we see a `@doc false` above our `changeset/2` function. This tells us that while this function is publicly callable, it's not part of the public context API. Callers that build changesets do so via the context API. For example, `Accounts.create_user/1` calls into our `User.changeset/2` to build the changeset from user input. Callers, such as our controller actions, do not access `User.changeset/2` directly. All interaction with our user changesets is done through the public `Accounts` context.
+This is just what we saw before when we ran `mix phx.gen.html`, except here we see a `@doc false` above our `changeset/2` function. This tells us that while this function is publicly callable, it's not part of the public context API. Callers that build changesets do so via the context API. For example, `Accounts.create_user/1` calls into our `User.changeset/2` to build the changeset from user input. Callers, such as our controller actions, do not access `User.changeset/2` directly. All interaction with our user changesets is done through the public `Accounts` context.
 
 ## In-context Relationships
 
