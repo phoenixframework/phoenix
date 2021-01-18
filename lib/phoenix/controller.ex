@@ -5,7 +5,7 @@ defmodule Phoenix.Controller do
   require Logger
   require Phoenix.Endpoint
 
-  @unsent [:unset, :set]
+  @unsent [:unset, :set, :set_chunked, :set_file]
 
   @moduledoc """
   Controllers are used to group common functionality in the same
