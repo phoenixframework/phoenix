@@ -373,7 +373,7 @@
     end
   end
 
-  describe "confirm_<%= schema.singular %>/2" do
+  describe "confirm_<%= schema.singular %>/1" do
     setup do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
 
