@@ -53,7 +53,7 @@ defmodule HelloWeb.Endpoint do
 end
 ```
 
-Function plugs are plugged by passing the function name as an atom. To try the Plug out, go back to your browser and fetch "http://localhost:4000". You should see something like this printed in your terminal:
+Function plugs are plugged by passing the function name as an atom. To try the Plug out, go back to your browser and fetch [http://localhost:4000](http://localhost:4000). You should see something like this printed in your terminal:
 
 ```console
 Verb: "GET"
@@ -118,7 +118,7 @@ To see the assign in action, go to the layout in "lib/hello_web/templates/layout
   <p>Locale: <%= @locale %></p>
 ```
 
-Go to "http://localhost:4000/" and you should see the locale exhibited. Visit "http://localhost:4000/?locale=fr" and you should see the assign changed to "fr". Someone can use this information alongside [Gettext](https://hexdocs.pm/gettext/Gettext.html) to provide a fully internationalized web application.
+Go to [http://localhost:4000/](http://localhost:4000/) and you should see the locale exhibited. Visit [http://localhost:4000/?locale=fr](http://localhost:4000/?locale=fr) and you should see the assign changed to "fr". Someone can use this information alongside [Gettext](https://hexdocs.pm/gettext/Gettext.html) to provide a fully internationalized web application.
 
 That's all there is to Plug. Phoenix embraces the plug design of composable transformations all the way up and down the stack. Let's see some examples!
 
