@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.Phx.Gen.Auth do
   @shortdoc "Generates authentication logic for a resource"
-
+  IO.puts "I WAS IN Mix.Tasks.Phx.Gen.Auth"
   @moduledoc """
   Generates authentication logic for a resource.
 
@@ -249,6 +249,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   end
 
   defp inject_context_functions(%Context{file: file} = context, paths, binding) do
+    IO.puts "I WAS IN inject_context_functions"
     unless Context.pre_existing?(context) do
       Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
     end
