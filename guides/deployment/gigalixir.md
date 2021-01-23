@@ -83,7 +83,7 @@ $ git remote -v
 
 ### Specifying versions
 
-The buildpacks we use default to Elixir, Erlang, and Nodejs versions that are quite old and it's generally a good idea to run the same version in production as you do in development, so let's do that.
+The buildpacks we use default to Elixir, Erlang, and Node.js versions that are quite old and it's generally a good idea to run the same version in production as you do in development, so let's do that.
 
 ```console
 $ echo "elixir_version=1.10.3" > elixir_buildpack.config

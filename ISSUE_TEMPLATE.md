@@ -12,7 +12,7 @@
 
 * Elixir version (elixir -v):
 * Phoenix version (mix deps):
-* NodeJS version (node -v):
+* Node.js version (node -v):
 * NPM version (npm -v):
 * Operating system:
 

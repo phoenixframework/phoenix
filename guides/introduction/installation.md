@@ -4,7 +4,7 @@ In order to build a Phoenix application, we will need a few dependencies install
 
   * the Erlang VM and the Elixir programming language
   * a database - Phoenix recommends PostgreSQL but you can pick others or not use a database at all
-  * Node.JS for assets - which can be opt-out, especially if you are building APIs
+  * Node.js for assets - which can be opt-out, especially if you are building APIs
   * and other optional packages.
 
 Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.
@@ -48,15 +48,15 @@ $ mix archive.install hex phx_new 1.5.0
 
 The `phx.new` generator is now available to generate new applications in the next guide, called [Up and Running](up_and_running.html). The flags mentioned below are command line options to the generator; see all available options by calling `mix help phx.new`.
 
-## node.js
+## Node.js
 
-Node is an optional dependency. Phoenix will use [webpack](https://webpack.js.org/) to compile static assets (JavaScript, CSS, etc), by default. Webpack uses the node package manager (npm) to install its dependencies, and npm requires node.js.
+Node.js is an optional dependency. Phoenix will use [webpack](https://webpack.js.org/) to compile static assets (JavaScript, CSS, etc), by default. Webpack uses the node package manager (npm) to install its dependencies, and npm requires Node.js.
 
-If we don't have any static assets, or we want to use another build tool, we can pass the `--no-webpack` flag when creating a new application and node won't be required at all.
+If we don't have any static assets, or we want to use another build tool, we can pass the `--no-webpack` flag when creating a new application and Node.js won't be required at all.
 
-We can get node.js from the [download page](https://nodejs.org/en/download/). When selecting a package to download, it's important to note that Phoenix requires version 5.0.0 or greater.
+We can get Node.js from the [download page](https://nodejs.org/en/download/). When selecting a package to download, it's important to note that Phoenix requires version 5.0.0 or greater.
 
-Mac OS X users can also install node.js via [homebrew](https://brew.sh/).
+Mac OS X users can also install Node.js via [homebrew](https://brew.sh/).
 
 ## PostgreSQL
 
@@ -74,4 +74,4 @@ Mac OS X and Windows users already have a filesystem watcher but Linux users mus
 
 ## Summary
 
-At the end of this section, you must have installed Elixir, Hex, Phoenix, PostgreSQL and node.js. Now that we have everything installed, let's create our first Phoenix application and get [up and running](up_and_running.html).
+At the end of this section, you must have installed Elixir, Hex, Phoenix, PostgreSQL and Node.js. Now that we have everything installed, let's create our first Phoenix application and get [up and running](up_and_running.html).

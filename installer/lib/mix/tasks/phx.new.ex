@@ -237,8 +237,8 @@ defmodule Mix.Tasks.Phx.New do
   defp print_webpack_info(_project, _gen) do
     Mix.shell().info """
     Phoenix uses an optional assets build tool called webpack
-    that requires node.js and npm. Installation instructions for
-    node.js, which includes npm, can be found at http://nodejs.org.
+    that requires Node.js and npm. Installation instructions for
+    Node.js, which includes npm, can be found at http://nodejs.org.
 
     The command listed next expect that you have npm available.
     If you don't want webpack, you can re-run this generator

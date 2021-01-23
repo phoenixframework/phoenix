@@ -38,7 +38,7 @@ defmodule Phoenix.Endpoint.Watcher do
     end
   end
 
-  # We specially handle node to make sure we
+  # We specially handle Node.js to make sure we
   # provide a good getting started experience.
   defp validate("node", [script|_], merged_opts) do
     script_path = Path.expand(script, cd(merged_opts))
@@ -51,7 +51,7 @@ defmodule Phoenix.Endpoint.Watcher do
         exit(:shutdown)
 
       not File.exists?(script_path) ->
-        Logger.error "Could not start node watcher because script #{inspect script_path} does not " <>
+        Logger.error "Could not start Node.js watcher because script #{inspect script_path} does not " <>
                      "exist. Your Phoenix application is still running, however assets " <>
                      "won't be compiled. You may fix this by running \"npm install\" inside the \"assets\" directory."
         exit(:shutdown)
