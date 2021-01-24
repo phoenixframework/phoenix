@@ -76,12 +76,12 @@ There are two different ways to deploy a Phoenix app on Heroku. We could use Her
 
 A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient way of packaging framework and/or runtime support. Phoenix requires 2 buildpacks to run on Heroku, the first adds basic Elixir support and the second adds Phoenix specific commands.
 
-With the Toolbelt installed, let's create the Heroku application. We will do so using the latest available version of the [Elixir buildpack](https://github.com/HashNuke/heroku-buildpack-elixir):
+With the Toolbelt installed, let's create the Heroku application. We will do so using the latest available version of the [Elixir buildpack](https://github.com/elixir-buildpack/heroku-buildpack):
 
 ```console
-$ heroku create --buildpack hashnuke/elixir
+$ heroku create --buildpack elixir-buildpack/heroku-elixir
 Creating app... done, ⬢ mysterious-meadow-6277
-Setting buildpack to hashnuke/elixir... done
+Setting buildpack to elixir-buildpack/heroku-elixir... done
 https://mysterious-meadow-6277.herokuapp.com/ | https://git.heroku.com/mysterious-meadow-6277.git
 ```
 
@@ -92,6 +92,8 @@ https://mysterious-meadow-6277.herokuapp.com/ | https://git.heroku.com/mysteriou
 > Note: the URL in the output is the URL to our application. If we open it in our browser now, we will get the default Heroku welcome page.
 
 > Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we wouldn't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
+
+> Note: Previous versions of this guide used the [hashnuke/elixir buildpack](https://github.com/HashNuke/heroku-buildpack-elixir), which supports the Heroku 16 stack. However, [Heroku 16 has since been deprecated](https://devcenter.heroku.com/changelog-items/1958) and the [elixir-buildpack/heroku-elixir buildpack](https://github.com/elixir-buildpack/heroku-buildpack) should be used instead.
 
 The buildpack uses a predefined Elixir and Erlang version but to avoid surprises when deploying, it is best to explicitly list the Elixir and Erlang version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of Elixir and Erlang:
 
