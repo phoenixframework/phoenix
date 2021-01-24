@@ -98,12 +98,27 @@ defmodule MixHelper do
     end
   end
 
-  def with_generator_env(new_env, fun) do
-    Application.put_env(:phoenix, :generators, new_env)
+  def modify_file(path, function) when is_binary(path) and is_function(function, 1) do
+    path
+    |> File.read!()
+    |> function.()
+    |> write_file!(path)
+  end
+
+  defp write_file!(content, path) do
+    File.write!(path, content)
+  end
+
+  def with_generator_env(app_name \\ :phoenix, new_env, fun) do
+    config_before = Application.fetch_env(app_name, :generators)
+    Application.put_env(app_name, :generators, new_env)
     try do
       fun.()
     after
-      Application.delete_env(:phoenix, :generators)
+      case config_before do
+        {:ok, config} -> Application.put_env(app_name, :generators, config)
+        :error -> Application.delete_env(app_name, :generators)
+      end
     end
   end
 
