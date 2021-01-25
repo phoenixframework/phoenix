@@ -101,13 +101,13 @@ We'll save a discussion of `use HelloWeb, :controller` for the [Controllers Guid
 
 All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params`, and we avoid compiler warnings by adding the leading `_`.
 
-The core of this action is `render(conn, "index.html")`. It tells Phoenix to render "index.html". The modules responsible for rendering are called views. By default, Phoenix views are named after the controller, so Phoenix is expecting a `HelloWeb.HelloView` to exist and handle "index.html" for us.
+The core of this action is `render(conn, "index.html")`. It tells Phoenix to render `"index.html"`. The modules responsible for rendering are called views. By default, Phoenix views are named after the controller, so Phoenix is expecting a `HelloWeb.HelloView` to exist and handle `"index.html"` for us.
 
 > Note: Using an atom as the template name also works `render(conn, :index)`. In these cases, the template will be chosen based off the Accept headers, e.g. `"index.html"` or `"index.json"`.
 
 ### A new View
 
-Phoenix views act as the presentation layer. For example, we expect the output of rendering "index.html" to be a complete HTML page. To make our lives easier, we often use templates for creating those HTML pages.
+Phoenix views act as the presentation layer. For example, we expect the output of rendering `"index.html"` to be a complete HTML page. To make our lives easier, we often use templates for creating those HTML pages.
 
 Let's create a new view. Create `lib/hello_web/views/hello_view.ex` and make it look like this:
 
@@ -119,7 +119,7 @@ end
 
 Now in order to add templates to this view, we simply need to add files to the `lib/hello_web/templates/hello` directory. Note the controller name (`HelloController`), the view name (`HelloView`), and the template directory (`hello`) all follow the same naming convention and are named after each other.
 
-A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, we will create a "index.html.eex" file at "lib/hello_web/templates/hello/index.html.eex". ".eex" stands for `EEx`, which is a library for embedding Elixir that ships as part of Elixir itself. Phoenix enhances EEx to include automatic escaping of values. This protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
+A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, we will create a `index.html.eex` file at `lib/hello_web/templates/hello/index.html.eex`. ".eex" stands for `EEx`, which is a library for embedding Elixir that ships as part of Elixir itself. Phoenix enhances EEx to include automatic escaping of values. This protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
 
 Create `lib/hello_web/templates/hello/index.html.eex` and make it look like this:
 
