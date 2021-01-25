@@ -68,7 +68,7 @@ end
 
 ```
 
-For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. We will discuss those in [the Routing guide](routing.html).
+For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. We will discuss those in the [Routing guide](routing.html).
 
 Let's add a new route to the router that maps a `GET` request for `/hello` to the `index` action of a soon-to-be-created `HelloWeb.HelloController` inside the `scope "/" do` block of the router:
 

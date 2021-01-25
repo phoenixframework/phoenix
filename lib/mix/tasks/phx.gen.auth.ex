@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   The password hashing mechanism defaults to `bcrypt` for
   Unix systems and `pbkdf2` for Windows systems. Both
-  systems use [the Comeonin interface](https://hexdocs.pm/comeonin/).
+  systems use the [Comeonin interface](https://hexdocs.pm/comeonin/).
 
   The password hashing mechanism can be overridden with the
   `--hashing-lib` option. The following values are supported:

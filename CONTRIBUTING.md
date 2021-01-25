@@ -8,16 +8,16 @@ Also make sure you read our [Code of Conduct](CODE_OF_CONDUCT.md) that outlines 
 
 Use the issues tracker for:
 
-* [bug reports](#bug-reports)
-* [submitting pull requests](#pull-requests)
+* [Bug reports](#bug-reports)
+* [Submitting pull requests](#pull-requests)
 
 Please **do not** use the issue tracker for personal support requests nor feature requests. Support requests should be sent to:
 
-* [the phoenix-talk mailing list](http://groups.google.com/group/phoenix-talk) (closed in favor of forum, but archive is still online)
+* The [phoenix-talk mailing list](http://groups.google.com/group/phoenix-talk) (closed in favor of forum, but archive is still online)
 * [The Phoenix subforum on the Elixir forum](https://elixirforum.com/c/phoenix-forum)
 * **[#elixir-lang](irc://chat.freenode.net/elixir-lang)** IRC channel on [chat.freenode.net](http://www.freenode.net/)
 
-Development issues can be discussed on [the phoenix-core mailing list](http://groups.google.com/group/phoenix-core).
+Development issues can be discussed on the [phoenix-core mailing list](http://groups.google.com/group/phoenix-core).
 
 We do our best to keep the issue tracker tidy and organized, making it useful
 for everyone. For example, we classify open issues per perceived difficulty,
@@ -65,7 +65,7 @@ Example:
 
 ## Feature requests
 
-Feature requests are welcome and should be discussed on [the phoenix-core mailing list](http://groups.google.com/group/phoenix-core). But take a moment to find
+Feature requests are welcome and should be discussed on the [phoenix-core mailing list](http://groups.google.com/group/phoenix-core). But take a moment to find
 out whether your idea fits with the scope and aims of the project. It's up to *you*
 to make a strong case to convince the community of the merits of this feature.
 Please provide as much detail and context as possible.
