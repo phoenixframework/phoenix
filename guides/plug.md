@@ -202,7 +202,7 @@ As we will see in [the Routing guide](routing.html), the pipelines themselves ar
 Finally, controllers are plugs too, so we can do:
 
 ```elixir
-defmodule HelloWeb.HelloController do
+defmodule HelloWeb.PageController do
   use HelloWeb, :controller
 
   plug HelloWeb.Plugs.Locale, "en"
@@ -211,7 +211,7 @@ defmodule HelloWeb.HelloController do
 In particular, controller plugs provide a feature that allows us to execute plugs only within certain actions. For example, you can do:
 
 ```elixir
-defmodule HelloWeb.HelloController do
+defmodule HelloWeb.PageController do
   use HelloWeb, :controller
 
   plug HelloWeb.Plugs.Locale, "en" when action in [:index]
