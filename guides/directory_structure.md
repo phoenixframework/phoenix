@@ -20,7 +20,7 @@ When we use `mix phx.new` to generate a new Phoenix application, it builds a top
 
 We will go over those directories one by one:
 
-  * `_build` - a directory created by the `mix` command line tool that ships as part of Elixir that holds all compilation artifacts. As we have seen in "Up and Running", `mix` is the main interface to your application. We use Mix to compile our code, create databases, run our server, and more. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to rebuild your application from scratch
+  * `_build` - a directory created by the `mix` command line tool that ships as part of Elixir that holds all compilation artifacts. As we have seen in "[Up and Running](up_and_running.html)", `mix` is the main interface to your application. We use Mix to compile our code, create databases, run our server, and more. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to rebuild your application from scratch
 
   * `assets` - a directory that keeps everything related to front-end assets, such as JavaScript, CSS, static images and more. It is typically handled by the `npm` tool. Phoenix developers typically only need to run `npm install` inside the assets directory. Everything else is managed by Phoenix
 
@@ -65,7 +65,7 @@ If it is your first time with Phoenix, you don't need to worry about the details
 
 You can learn more about applications in [Elixir's official docs for Application](https://hexdocs.pm/elixir/Application.html).
 
-In the same `lib/hello` directory, we will find a `lib/hello/repo.ex`. It defines a `Hello.Repo` module which is our main interface to the database. If you are using Postgres (the default), you will see something like this:
+In the same `lib/hello` directory, we will find a `lib/hello/repo.ex`. It defines a `Hello.Repo` module which is our main interface to the database. If you are using Postgres (the default database), you will see something like this:
 
 ```elixir
 defmodule Hello.Repo do
@@ -103,13 +103,13 @@ lib/hello_web
 └── telemetry.ex
 ```
 
-All of the files which are currently in the `controllers`, `templates`, and `views` directories are there to create the "Welcome to Phoenix!" page we saw in the "Up and running" guide.
+All of the files which are currently in the `controllers`, `templates`, and `views` directories are there to create the "Welcome to Phoenix!" page we saw in the "[Up and running](up_and_running.html)" guide.
 The `channels` directory is where we will add code related to building real-time Phoenix applications.
 
 By looking at `templates` and `views` directories, we can see Phoenix provides features for handling layouts and error pages out of the box.
 
-Besides the directories mentioned, `lib/hello_web` has four files at its root. `lib/hello_web/endpoint.ex` is the entry-point for HTTP requests. Once the browser accesses `http://localhost:4000`, the endpoint starts processing the data, eventually leading to the router, which is defined in `lib/hello_web/router.ex`. The router defines the rules to dispatch requests to "controllers", which then uses "views" and "templates" to render HTML pages back to clients. We explore these layers in length in other guides, starting with the "Request life-cycle" guide coming next.
+Besides the directories mentioned, `lib/hello_web` has four files at its root. `lib/hello_web/endpoint.ex` is the entry-point for HTTP requests. Once the browser accesses [http://localhost:4000](http://localhost:4000), the endpoint starts processing the data, eventually leading to the router, which is defined in `lib/hello_web/router.ex`. The router defines the rules to dispatch requests to "controllers", which then uses "views" and "templates" to render HTML pages back to clients. We explore these layers in length in other guides, starting with the "[Request life-cycle](request_lifecycle.html)" guide coming next.
 
-Through _telemetry_, Phoenix is able to collect metrics and send monitoring events of your application. The `lib/hello_web/telemetry.ex` file defines the supervisor responsible for managing the telemetry processes. You can find more information on this topic in the [Telemetry guide](telemetry.html).
+Through _Telemetry_, Phoenix is able to collect metrics and send monitoring events of your application. The `lib/hello_web/telemetry.ex` file defines the supervisor responsible for managing the telemetry processes. You can find more information on this topic in the [Telemetry guide](telemetry.html).
 
 Finally, there is a `lib/hello_web/gettext.ex` file which provides internationalization through [Gettext](https://hexdocs.pm/gettext/Gettext.html). If you are not worried about internationalization, you can safely skip this file and its contents.
