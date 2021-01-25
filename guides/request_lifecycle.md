@@ -188,7 +188,7 @@ As we did last time, the first thing we'll do is create a new route.
 
 ### Another new Route
 
-For this exercise, we're going to re-use the `HelloController` we just created and just add a new `show` action. We'll add a line just below our last route, like this:
+For this exercise, we're going to reuse the `HelloController` we just created and just add a new `show` action. We'll add a line just below our last route, like this:
 
 ```elixir
 scope "/", HelloWeb do

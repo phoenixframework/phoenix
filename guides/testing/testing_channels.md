@@ -77,7 +77,7 @@ setup do
 end
 ```
 
-The `setup` block sets up a `Phoenix.Socket` based on the `UserSocket` module, which you can find at "lib/hello_web/channels/user_socket.ex". Then it says we want to subscribe and join the `RoomChannel`, accessible as "room:lobby" in the `UserSocket`. At the end of the test, we return the `%{socket: socket}` as metadata, so we can re-use it on every test.
+The `setup` block sets up a `Phoenix.Socket` based on the `UserSocket` module, which you can find at "lib/hello_web/channels/user_socket.ex". Then it says we want to subscribe and join the `RoomChannel`, accessible as "room:lobby" in the `UserSocket`. At the end of the test, we return the `%{socket: socket}` as metadata, so we can reuse it on every test.
 
 In a nutshell, `subscribe_and_join/3` emulates the client joining a channel and subscribes the test process to the given topic. This is a necessary step since clients need to join a channel before they can send and receive events on that channel.
 

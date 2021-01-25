@@ -416,7 +416,7 @@ Fortunately, our application layout, `lib/hello_web/templates/layout/app.html.ee
 
 When we reload the [Welcome Page](http://localhost:4000/), our messages should appear just above "Welcome to Phoenix!"
 
-The flash functionality is handy when mixed with redirects. Perhaps you want to redirect to a page with some extra information. If we re-use the redirect action from the previous section, we can do:
+The flash functionality is handy when mixed with redirects. Perhaps you want to redirect to a page with some extra information. If we reuse the redirect action from the previous section, we can do:
 
 ```elixir
   def index(conn, _params) do
