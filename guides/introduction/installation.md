@@ -56,7 +56,7 @@ If we don't have any static assets, or we want to use another build tool, we can
 
 We can get Node.js from the [download page](https://nodejs.org/en/download/). When selecting a package to download, it's important to note that Phoenix requires version 5.0.0 or greater.
 
-Mac OS X users can also install Node.js via [homebrew](https://brew.sh/).
+macOS users can also install Node.js via [homebrew](https://brew.sh/).
 
 ## PostgreSQL
 
@@ -70,7 +70,7 @@ However, if you are just getting started with Phoenix, we recommend you to insta
 
 Phoenix provides a very handy feature called Live Reloading. As you change your views or your assets, it automatically reloads the page in the browser. In order for this functionality to work, you need a filesystem watcher.
 
-Mac OS X and Windows users already have a filesystem watcher but Linux users must install inotify-tools. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
+macOS and Windows users already have a filesystem watcher but Linux users must install inotify-tools. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
 
 ## Summary
 
