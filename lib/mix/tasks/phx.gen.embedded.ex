@@ -26,6 +26,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
     * `:datetime` - An alias for `:naive_datetime`
   """
   use Mix.Task
+  use Mix.Phoenix.TemplateSource, template_patterns: ["priv/templates/phx.gen.embedded/*.*"]
 
   alias Mix.Phoenix.Schema
 
@@ -39,7 +40,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
 
     schema = build(args)
 
-    paths = Mix.Phoenix.generator_paths()
+    paths = Mix.Phoenix.template_sources()
 
     prompt_for_conflicts(schema)
 

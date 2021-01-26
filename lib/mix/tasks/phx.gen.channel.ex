@@ -22,6 +22,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
   """
   use Mix.Task
+  use Mix.Phoenix.TemplateSource, template_patterns: ["priv/templates/phx.gen.channel/*.*"]
 
   @doc false
   def run(args) do
@@ -37,7 +38,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")
 
-    Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.channel", binding, [
+    Mix.Phoenix.copy_from Mix.Phoenix.template_sources(), "priv/templates/phx.gen.channel", binding, [
       {:eex, "channel.ex",       Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
       {:eex, "channel_test.exs", Path.join(test_prefix, "channels/#{binding[:path]}_channel_test.exs")},
     ]
@@ -65,9 +66,5 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
       raise_with_help()
     end
     args
-  end
-
-  defp paths do
-    [".", :phoenix]
   end
 end

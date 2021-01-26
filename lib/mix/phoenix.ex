@@ -2,21 +2,16 @@ defmodule Mix.Phoenix do
   # Conveniences for Phoenix tasks.
   @moduledoc false
 
+  alias Mix.Phoenix.TemplateSources
+
   @doc """
   Evals EEx files from source dir.
 
   Files are evaluated against EEx according to
   the given binding.
   """
-  def eval_from(apps, source_file_path, binding) do
-    sources = Enum.map(apps, &to_app_source(&1, source_file_path))
-
-    source =
-      Enum.find_value(sources, fn source ->
-        if File.exists?(source), do: source
-      end) || raise "could not find #{source_file_path} in any of the sources"
-
-    EEx.eval_file(source, assigns: binding)
+  def eval_from(template_sources, source_file_path, binding) do
+    render_template!(template_sources, source_file_path, binding)
   end
 
   @doc """
@@ -26,33 +21,40 @@ defmodule Mix.Phoenix do
   Files are evaluated against EEx according to
   the given binding.
   """
-  def copy_from(apps, source_dir, binding, mapping) when is_list(mapping) do
-    roots = Enum.map(apps, &to_app_source(&1, source_dir))
-
+  def copy_from(template_sources, source_dir, binding, mapping) when is_list(mapping) do
     for {format, source_file_path, target} <- mapping do
-      source =
-        Enum.find_value(roots, fn root ->
-          source = Path.join(root, source_file_path)
-          if File.exists?(source), do: source
-        end) || raise "could not find #{source_file_path} in any of the sources"
+      source_file_path = Path.join(source_dir, source_file_path)
 
-      case format do
-        :text -> Mix.Generator.create_file(target, File.read!(source))
-        :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, assigns: binding))
-        :new_eex ->
-          if File.exists?(target) do
-            :ok
-          else
-            Mix.Generator.create_file(target, EEx.eval_file(source, assigns: binding))
-          end
+      if format == :new_eex && File.exists?(target) do
+        :ok
+      else
+        Mix.Generator.create_file(target, render_template!(template_sources, source_file_path, binding))
       end
     end
   end
 
-  defp to_app_source(path, source_dir) when is_binary(path),
-    do: Path.join(path, source_dir)
-  defp to_app_source(app, source_dir) when is_atom(app),
-    do: Application.app_dir(app, source_dir)
+  @doc """
+  Returns a rendered template from the first supported template source.
+  """
+  def render_template(template_sources, template_path, assigns) when is_list(template_sources) do
+    Enum.find_value(template_sources, fn source ->
+      case source.render_template(template_path, assigns) do
+        {:ok, rendered} -> {:ok, rendered}
+        {:error, :not_found} -> false
+      end
+    end) || {:error, :not_found}
+  end
+
+  @doc """
+  Returns a rendered template, raising if `source_file_path` is not found in any
+  of the `template_sources`.
+  """
+  def render_template!(template_sources, source_file_path, binding) do
+    case render_template(template_sources, source_file_path, binding) do
+      {:ok, rendered} -> rendered
+      {:error, :not_found} -> raise "could not find #{source_file_path} in any of the sources"
+    end
+  end
 
   @doc """
   Inflects path, scope, alias and more from the given name.
@@ -171,13 +173,12 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
-  The paths to look for template files for generators.
+  Modules used to find templates for the code generators.
 
-  Defaults to checking the current app's `priv` directory,
-  and falls back to Phoenix's `priv` directory.
+  These modules are in order of priority.
   """
-  def generator_paths do
-    [".", :phoenix]
+  def template_sources do
+    [TemplateSources.LocalApp, TemplateSources.PhoenixCompiled, TemplateSources.Phoenix]
   end
 
   @doc """

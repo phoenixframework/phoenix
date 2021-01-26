@@ -82,6 +82,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   information.
   """
   use Mix.Task
+  use Mix.Phoenix.TemplateSource, template_patterns: ["priv/templates/phx.gen.live/*.*"]
 
   alias Mix.Phoenix.{Context}
   alias Mix.Tasks.Phx.Gen
@@ -96,7 +97,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     Gen.Context.prompt_for_code_injection(context)
 
     binding = [context: context, schema: schema, inputs: Gen.Html.inputs(schema)]
-    paths = Mix.Phoenix.generator_paths()
+    paths = Mix.Phoenix.template_sources()
 
     prompt_for_conflicts(context)
 

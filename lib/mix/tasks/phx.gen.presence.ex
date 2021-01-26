@@ -14,6 +14,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
   `my_presence` is the snake-cased version of the provided module name.
   """
   use Mix.Task
+  use Mix.Phoenix.TemplateSource, template_patterns: ["priv/templates/phx.gen.presence/*.*"]
 
   @doc false
   def run([]) do
@@ -38,7 +39,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
       {:eex, "presence.ex", Path.join(web_prefix, "channels/#{binding[:path]}.ex")},
     ]
 
-    Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.presence", binding, files
+    Mix.Phoenix.copy_from Mix.Phoenix.template_sources(), "priv/templates/phx.gen.presence", binding, files
 
     Mix.shell().info """
 
@@ -53,9 +54,5 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
     You're all set! See the Phoenix.Presence docs for more details:
     http://hexdocs.pm/phoenix/Phoenix.Presence.html
     """
-  end
-
-  defp paths do
-    [".", :phoenix]
   end
 end

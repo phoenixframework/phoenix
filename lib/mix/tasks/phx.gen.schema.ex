@@ -99,6 +99,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   configuration or `--migration` to force generation of the migration.
   """
   use Mix.Task
+  use Mix.Phoenix.TemplateSource, template_patterns: ["priv/templates/phx.gen.schema/*.*"]
 
   alias Mix.Phoenix.Schema
 
@@ -112,7 +113,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     end
 
     schema = build(args, [])
-    paths = Mix.Phoenix.generator_paths()
+    paths = Mix.Phoenix.template_sources()
 
     prompt_for_conflicts(schema)
 

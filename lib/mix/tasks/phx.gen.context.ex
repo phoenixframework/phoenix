@@ -74,6 +74,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   """
 
   use Mix.Task
+  use Mix.Phoenix.TemplateSource, template_patterns: ["priv/templates/phx.gen.context/*.*"]
 
   alias Mix.Phoenix.{Context, Schema}
   alias Mix.Tasks.Phx.Gen
@@ -92,7 +93,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
     {context, schema} = build(args)
     binding = [context: context, schema: schema]
-    paths = Mix.Phoenix.generator_paths()
+    paths = Mix.Phoenix.template_sources()
 
     prompt_for_conflicts(context)
     prompt_for_code_injection(context)

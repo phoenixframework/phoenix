@@ -76,6 +76,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   """
 
   use Mix.Task
+  use Mix.Phoenix.AggregateTemplateSource
 
   alias Mix.Phoenix.{Context, Schema}
   alias Mix.Tasks.Phx.Gen
@@ -84,7 +85,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   @switches [web: :string, binary_id: :boolean, hashing_lib: :string,
              table: :string, merge_with_existing_context: :boolean]
 
-  @doc false
+  @impl true
   def run(args, test_opts \\ []) do
     if Mix.Project.umbrella?() do
       Mix.raise("mix phx.gen.auth can only be run inside an application directory")
@@ -129,7 +130,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       test_case_options: test_case_options(ecto_adapter)
     ]
 
-    paths = generator_paths()
+    paths = Mix.Phoenix.template_sources()
 
     prompt_for_conflicts(context)
 
@@ -143,6 +144,15 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> maybe_inject_router_plug()
     |> maybe_inject_app_layout_menu()
     |> print_shell_instructions()
+  end
+
+  @impl true
+  def template_sources do
+    [
+      Mix.Tasks.Phx.Gen.Auth.TemplateSources.Primary,
+      Mix.Tasks.Phx.Gen.Auth.TemplateSources.ContextFunctions,
+      Mix.Tasks.Phx.Gen.Auth.TemplateSources.TestCases
+    ]
   end
 
   defp web_app_name(%Context{} = context) do
@@ -528,14 +538,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp web_path_prefix(%Schema{web_path: nil}), do: ""
   defp web_path_prefix(%Schema{web_path: web_path}), do: "/" <> web_path
-
-  # The paths to look for template files for generators.
-  #
-  # Defaults to checking the current app's `priv` directory,
-  # and falls back to phx_gen_auth's `priv` directory.
-  defp generator_paths do
-    [".", :phoenix]
-  end
 
   defp inject_before_final_end(content_to_inject, file_path) do
     with {:ok, file} <- read_file(file_path),
