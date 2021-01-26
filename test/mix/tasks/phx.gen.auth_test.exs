@@ -854,7 +854,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       File.mkdir_p!("priv/templates/phx.gen.auth")
       File.write!("priv/templates/phx.gen.auth/_menu.html.eex", """
       <ul>
-        <%%= if @current_<%= schema.singular %> do %>
+        <%%= if @current_<%= @schema.singular %> do %>
           You're logged in
         <%% end %>
       </ul>

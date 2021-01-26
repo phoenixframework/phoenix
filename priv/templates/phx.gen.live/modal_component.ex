@@ -1,5 +1,5 @@
-defmodule <%= inspect context.web_module %>.ModalComponent do
-  use <%= inspect context.web_module %>, :live_component
+defmodule <%= inspect @context.web_module %>.ModalComponent do
+  use <%= inspect @context.web_module %>, :live_component
 
   @impl true
   def render(assigns) do

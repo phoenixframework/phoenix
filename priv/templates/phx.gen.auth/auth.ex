@@ -1,19 +1,19 @@
-defmodule <%= inspect auth_module %> do
+defmodule <%= inspect @auth_module %> do
   import Plug.Conn
   import Phoenix.Controller
 
-  alias <%= inspect context.module %>
-  alias <%= inspect context.web_module %>.Router.Helpers, as: Routes
+  alias <%= inspect @context.module %>
+  alias <%= inspect @context.web_module %>.Router.Helpers, as: Routes
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
-  # the token expiry itself in <%= inspect schema.alias %>Token.
+  # the token expiry itself in <%= inspect @schema.alias %>Token.
   @max_age 60 * 60 * 24 * 60
-  @remember_me_cookie "_<%= web_app_name %>_<%= schema.singular %>_remember_me"
+  @remember_me_cookie "_<%= @web_app_name %>_<%= @schema.singular %>_remember_me"
   @remember_me_options [sign: true, max_age: @max_age, same_site: "Lax"]
 
   @doc """
-  Logs the <%= schema.singular %> in.
+  Logs the <%= @schema.singular %> in.
 
   It renews the session ID and clears the whole session
   to avoid fixation attacks. See the renew_session
@@ -24,16 +24,16 @@ defmodule <%= inspect auth_module %> do
   disconnected on log out. The line can be safely removed
   if you are not using LiveView.
   """
-  def log_in_<%= schema.singular %>(conn, <%= schema.singular %>, params \\ %{}) do
-    token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
-    <%= schema.singular %>_return_to = get_session(conn, :<%= schema.singular %>_return_to)
+  def log_in_<%= @schema.singular %>(conn, <%= @schema.singular %>, params \\ %{}) do
+    token = <%= inspect @context.alias %>.generate_<%= @schema.singular %>_session_token(<%= @schema.singular %>)
+    <%= @schema.singular %>_return_to = get_session(conn, :<%= @schema.singular %>_return_to)
 
     conn
     |> renew_session()
-    |> put_session(:<%= schema.singular %>_token, token)
-    |> put_session(:live_socket_id, "<%= schema.plural %>_sessions:#{Base.url_encode64(token)}")
+    |> put_session(:<%= @schema.singular %>_token, token)
+    |> put_session(:live_socket_id, "<%= @schema.plural %>_sessions:#{Base.url_encode64(token)}")
     |> maybe_write_remember_me_cookie(token, params)
-    |> redirect(to: <%= schema.singular %>_return_to || signed_in_path(conn))
+    |> redirect(to: <%= @schema.singular %>_return_to || signed_in_path(conn))
   end
 
   defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => "true"}) do
@@ -66,16 +66,16 @@ defmodule <%= inspect auth_module %> do
   end
 
   @doc """
-  Logs the <%= schema.singular %> out.
+  Logs the <%= @schema.singular %> out.
 
   It clears all session data for safety. See renew_session.
   """
-  def log_out_<%= schema.singular %>(conn) do
-    <%= schema.singular %>_token = get_session(conn, :<%= schema.singular %>_token)
-    <%= schema.singular %>_token && <%= inspect context.alias %>.delete_session_token(<%= schema.singular %>_token)
+  def log_out_<%= @schema.singular %>(conn) do
+    <%= @schema.singular %>_token = get_session(conn, :<%= @schema.singular %>_token)
+    <%= @schema.singular %>_token && <%= inspect @context.alias %>.delete_session_token(<%= @schema.singular %>_token)
 
     if live_socket_id = get_session(conn, :live_socket_id) do
-      <%= inspect(endpoint_module) %>.broadcast(live_socket_id, "disconnect", %{})
+      <%= inspect(@endpoint_module) %>.broadcast(live_socket_id, "disconnect", %{})
     end
 
     conn
@@ -85,23 +85,23 @@ defmodule <%= inspect auth_module %> do
   end
 
   @doc """
-  Authenticates the <%= schema.singular %> by looking into the session
+  Authenticates the <%= @schema.singular %> by looking into the session
   and remember me token.
   """
-  def fetch_current_<%= schema.singular %>(conn, _opts) do
-    {<%= schema.singular %>_token, conn} = ensure_<%= schema.singular %>_token(conn)
-    <%= schema.singular %> = <%= schema.singular %>_token && <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-    assign(conn, :current_<%= schema.singular %>, <%= schema.singular %>)
+  def fetch_current_<%= @schema.singular %>(conn, _opts) do
+    {<%= @schema.singular %>_token, conn} = ensure_<%= @schema.singular %>_token(conn)
+    <%= @schema.singular %> = <%= @schema.singular %>_token && <%= inspect @context.alias %>.get_<%= @schema.singular %>_by_session_token(<%= @schema.singular %>_token)
+    assign(conn, :current_<%= @schema.singular %>, <%= @schema.singular %>)
   end
 
-  defp ensure_<%= schema.singular %>_token(conn) do
-    if <%= schema.singular %>_token = get_session(conn, :<%= schema.singular %>_token) do
-      {<%= schema.singular %>_token, conn}
+  defp ensure_<%= @schema.singular %>_token(conn) do
+    if <%= @schema.singular %>_token = get_session(conn, :<%= @schema.singular %>_token) do
+      {<%= @schema.singular %>_token, conn}
     else
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
-      if <%= schema.singular %>_token = conn.cookies[@remember_me_cookie] do
-        {<%= schema.singular %>_token, put_session(conn, :<%= schema.singular %>_token, <%= schema.singular %>_token)}
+      if <%= @schema.singular %>_token = conn.cookies[@remember_me_cookie] do
+        {<%= @schema.singular %>_token, put_session(conn, :<%= @schema.singular %>_token, <%= @schema.singular %>_token)}
       else
         {nil, conn}
       end
@@ -109,10 +109,10 @@ defmodule <%= inspect auth_module %> do
   end
 
   @doc """
-  Used for routes that require the <%= schema.singular %> to not be authenticated.
+  Used for routes that require the <%= @schema.singular %> to not be authenticated.
   """
-  def redirect_if_<%= schema.singular %>_is_authenticated(conn, _opts) do
-    if conn.assigns[:current_<%= schema.singular %>] do
+  def redirect_if_<%= @schema.singular %>_is_authenticated(conn, _opts) do
+    if conn.assigns[:current_<%= @schema.singular %>] do
       conn
       |> redirect(to: signed_in_path(conn))
       |> halt()
@@ -122,25 +122,25 @@ defmodule <%= inspect auth_module %> do
   end
 
   @doc """
-  Used for routes that require the <%= schema.singular %> to be authenticated.
+  Used for routes that require the <%= @schema.singular %> to be authenticated.
 
-  If you want to enforce the <%= schema.singular %> email is confirmed before
+  If you want to enforce the <%= @schema.singular %> email is confirmed before
   they use the application at all, here would be a good place.
   """
-  def require_authenticated_<%= schema.singular %>(conn, _opts) do
-    if conn.assigns[:current_<%= schema.singular %>] do
+  def require_authenticated_<%= @schema.singular %>(conn, _opts) do
+    if conn.assigns[:current_<%= @schema.singular %>] do
       conn
     else
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
-      |> redirect(to: Routes.<%= schema.route_helper %>_session_path(conn, :new))
+      |> redirect(to: Routes.<%= @schema.route_helper %>_session_path(conn, :new))
       |> halt()
     end
   end
 
   defp maybe_store_return_to(%{method: "GET"} = conn) do
-    put_session(conn, :<%= schema.singular %>_return_to, current_path(conn))
+    put_session(conn, :<%= @schema.singular %>_return_to, current_path(conn))
   end
 
   defp maybe_store_return_to(conn), do: conn

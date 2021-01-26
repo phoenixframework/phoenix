@@ -11,12 +11,12 @@ defmodule Mix.Phoenix do
   def eval_from(apps, source_file_path, binding) do
     sources = Enum.map(apps, &to_app_source(&1, source_file_path))
 
-    content =
+    source =
       Enum.find_value(sources, fn source ->
-        File.exists?(source) && File.read!(source)
+        if File.exists?(source), do: source
       end) || raise "could not find #{source_file_path} in any of the sources"
 
-    EEx.eval_string(content, binding)
+    EEx.eval_file(source, assigns: binding)
   end
 
   @doc """
@@ -38,12 +38,12 @@ defmodule Mix.Phoenix do
 
       case format do
         :text -> Mix.Generator.create_file(target, File.read!(source))
-        :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+        :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, assigns: binding))
         :new_eex ->
           if File.exists?(target) do
             :ok
           else
-            Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+            Mix.Generator.create_file(target, EEx.eval_file(source, assigns: binding))
           end
       end
     end

@@ -1,8 +1,8 @@
-defmodule <%= module %>Channel do
-  use <%= web_module %>, :channel
+defmodule <%= @module %>Channel do
+  use <%= @web_module %>, :channel
 
   @impl true
-  def join("<%= singular %>:lobby", payload, socket) do
+  def join("<%= @singular %>:lobby", payload, socket) do
     if authorized?(payload) do
       {:ok, socket}
     else
@@ -18,7 +18,7 @@ defmodule <%= module %>Channel do
   end
 
   # It is also common to receive messages from the client and
-  # broadcast to everyone in the current topic (<%= singular %>:lobby).
+  # broadcast to everyone in the current topic (<%= @singular %>:lobby).
   @impl true
   def handle_in("shout", payload, socket) do
     broadcast socket, "shout", payload

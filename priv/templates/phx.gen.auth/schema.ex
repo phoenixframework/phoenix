@@ -1,9 +1,9 @@
-defmodule <%= inspect schema.module %> do
+defmodule <%= inspect @schema.module %> do
   use Ecto.Schema
   import Ecto.Changeset
-<%= if schema.binary_id do %>  @primary_key {:id, :binary_id, autogenerate: true}
+<%= if @schema.binary_id do %>  @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id<% end %>
-  schema <%= inspect schema.table %> do
+  schema <%= inspect @schema.table %> do
     field :email, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
@@ -13,7 +13,7 @@ defmodule <%= inspect schema.module %> do
   end
 
   @doc """
-  A <%= schema.singular %> changeset for registration.
+  A <%= @schema.singular %> changeset for registration.
 
   It is important to validate the length of both email and password.
   Otherwise databases may truncate the email without warnings, which
@@ -29,8 +29,8 @@ defmodule <%= inspect schema.module %> do
       validations on a LiveView form), this option can be set to `false`.
       Defaults to `true`.
   """
-  def registration_changeset(<%= schema.singular %>, attrs, opts \\ []) do
-    <%= schema.singular %>
+  def registration_changeset(<%= @schema.singular %>, attrs, opts \\ []) do
+    <%= @schema.singular %>
     |> cast(attrs, [:email, :password])
     |> validate_email()
     |> validate_password(opts)
@@ -41,7 +41,7 @@ defmodule <%= inspect schema.module %> do
     |> validate_required([:email])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_length(:email, max: 160)
-    |> unsafe_validate_unique(:email, <%= inspect schema.repo %>)
+    |> unsafe_validate_unique(:email, <%= inspect @schema.repo %>)
     |> unique_constraint(:email)
   end
 
@@ -61,7 +61,7 @@ defmodule <%= inspect schema.module %> do
 
     if hash_password? && password && changeset.valid? do
       changeset
-      |> put_change(:hashed_password, <%= inspect hashing_library.module %>.hash_pwd_salt(password))
+      |> put_change(:hashed_password, <%= inspect @hashing_library.module %>.hash_pwd_salt(password))
       |> delete_change(:password)
     else
       changeset
@@ -69,12 +69,12 @@ defmodule <%= inspect schema.module %> do
   end
 
   @doc """
-  A <%= schema.singular %> changeset for changing the email.
+  A <%= @schema.singular %> changeset for changing the email.
 
   It requires the email to change otherwise an error is added.
   """
-  def email_changeset(<%= schema.singular %>, attrs) do
-    <%= schema.singular %>
+  def email_changeset(<%= @schema.singular %>, attrs) do
+    <%= @schema.singular %>
     |> cast(attrs, [:email])
     |> validate_email()
     |> case do
@@ -84,7 +84,7 @@ defmodule <%= inspect schema.module %> do
   end
 
   @doc """
-  A <%= schema.singular %> changeset for changing the password.
+  A <%= @schema.singular %> changeset for changing the password.
 
   ## Options
 
@@ -95,8 +95,8 @@ defmodule <%= inspect schema.module %> do
       validations on a LiveView form), this option can be set to `false`.
       Defaults to `true`.
   """
-  def password_changeset(<%= schema.singular %>, attrs, opts \\ []) do
-    <%= schema.singular %>
+  def password_changeset(<%= @schema.singular %>, attrs, opts \\ []) do
+    <%= @schema.singular %>
     |> cast(attrs, [:password])
     |> validate_confirmation(:password, message: "does not match password")
     |> validate_password(opts)
@@ -105,24 +105,24 @@ defmodule <%= inspect schema.module %> do
   @doc """
   Confirms the account by setting `confirmed_at`.
   """
-  def confirm_changeset(<%= schema.singular %>) do
+  def confirm_changeset(<%= @schema.singular %>) do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-    change(<%= schema.singular %>, confirmed_at: now)
+    change(<%= @schema.singular %>, confirmed_at: now)
   end
 
   @doc """
   Verifies the password.
 
-  If there is no <%= schema.singular %> or the <%= schema.singular %> doesn't have a password, we call
-  `<%= inspect hashing_library.module %>.no_user_verify/0` to avoid timing attacks.
+  If there is no <%= @schema.singular %> or the <%= @schema.singular %> doesn't have a password, we call
+  `<%= inspect @hashing_library.module %>.no_user_verify/0` to avoid timing attacks.
   """
-  def valid_password?(%<%= inspect schema.module %>{hashed_password: hashed_password}, password)
+  def valid_password?(%<%= inspect @schema.module %>{hashed_password: hashed_password}, password)
       when is_binary(hashed_password) and byte_size(password) > 0 do
-    <%= inspect hashing_library.module %>.verify_pass(password, hashed_password)
+    <%= inspect @hashing_library.module %>.verify_pass(password, hashed_password)
   end
 
   def valid_password?(_, _) do
-    <%= inspect hashing_library.module %>.no_user_verify()
+    <%= inspect @hashing_library.module %>.no_user_verify()
     false
   end
 

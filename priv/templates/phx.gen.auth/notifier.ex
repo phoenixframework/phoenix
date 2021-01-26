@@ -1,4 +1,4 @@
-defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Notifier do
+defmodule <%= inspect @context.module %>.<%= inspect @schema.alias %>Notifier do
   # For simplicity, this module simply logs messages to the terminal.
   # You should replace it by a proper email or notification tool, such as:
   #
@@ -14,12 +14,12 @@ defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Notifier do
   @doc """
   Deliver instructions to confirm account.
   """
-  def deliver_confirmation_instructions(<%= schema.singular %>, url) do
-    deliver(<%= schema.singular %>.email, """
+  def deliver_confirmation_instructions(<%= @schema.singular %>, url) do
+    deliver(<%= @schema.singular %>.email, """
 
     ==============================
 
-    Hi #{<%= schema.singular %>.email},
+    Hi #{<%= @schema.singular %>.email},
 
     You can confirm your account by visiting the URL below:
 
@@ -32,14 +32,14 @@ defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Notifier do
   end
 
   @doc """
-  Deliver instructions to reset a <%= schema.singular %> password.
+  Deliver instructions to reset a <%= @schema.singular %> password.
   """
-  def deliver_reset_password_instructions(<%= schema.singular %>, url) do
-    deliver(<%= schema.singular %>.email, """
+  def deliver_reset_password_instructions(<%= @schema.singular %>, url) do
+    deliver(<%= @schema.singular %>.email, """
 
     ==============================
 
-    Hi #{<%= schema.singular %>.email},
+    Hi #{<%= @schema.singular %>.email},
 
     You can reset your password by visiting the URL below:
 
@@ -52,14 +52,14 @@ defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Notifier do
   end
 
   @doc """
-  Deliver instructions to update a <%= schema.singular %> email.
+  Deliver instructions to update a <%= @schema.singular %> email.
   """
-  def deliver_update_email_instructions(<%= schema.singular %>, url) do
-    deliver(<%= schema.singular %>.email, """
+  def deliver_update_email_instructions(<%= @schema.singular %>, url) do
+    deliver(<%= @schema.singular %>.email, """
 
     ==============================
 
-    Hi #{<%= schema.singular %>.email},
+    Hi #{<%= @schema.singular %>.email},
 
     You can change your email by visiting the URL below:
 
