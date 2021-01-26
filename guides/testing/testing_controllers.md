@@ -101,7 +101,7 @@ describe "create post" do
 end
 ```
 
-The first test starts with a `post/2` request. That's because once the form in the "/posts/new" page is submitted, it becomes a POST request to the create action. Because we have supplied valid attributes, the post should have been successfully created and we should have redirected to the show action of the new post. This new page will have an address like "/posts/ID", where ID is the identifier of the post in the database.
+The first test starts with a `post/2` request. That's because once the form in the `/posts/new` page is submitted, it becomes a POST request to the create action. Because we have supplied valid attributes, the post should have been successfully created and we should have redirected to the show action of the new post. This new page will have an address like `/posts/ID`, where ID is the identifier of the post in the database.
 
 We then use `redirected_params(conn)` to get the ID of the post and then match that we indeed redirected to the show action. Finally, we do request a `get` request to the page we redirected to, allowing us to verify that the post was indeed created.
 
@@ -185,7 +185,7 @@ end
   1. An exception was raised
   2. The exception has a status code equivalent to 404 (which stands for Not Found)
 
-This pretty much mimics how Phoenix handles exceptions. For example, when we access "/posts/12345" where 12345 is an ID that does not exist, we will invoke our `show` action:
+This pretty much mimics how Phoenix handles exceptions. For example, when we access `/posts/12345` where `12345` is an ID that does not exist, we will invoke our `show` action:
 
 ```elixir
 def show(conn, %{"id" => id}) do
@@ -255,7 +255,7 @@ def index(conn, _params) do
 end
 ```
 
-The action gets all articles and renders "index.json". Since we are talking about JSON, we don't have a "index.json.eex" template. Instead, the code that converts "articles" into JSON can be found directly in the ArticleView module, defined at `lib/hello_web/views/article_view.ex` like this:
+The action gets all articles and renders `index.json`. Since we are talking about JSON, we don't have a `index.json.eex` template. Instead, the code that converts `articles` into JSON can be found directly in the ArticleView module, defined at `lib/hello_web/views/article_view.ex` like this:
 
 ```elixir
 defmodule HelloWeb.ArticleView do

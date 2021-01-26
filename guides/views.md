@@ -220,7 +220,7 @@ defmodule HelloWeb.PageView do
 end
 ```
 
-In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. The "index.json" and "show.json" are the ones requested directly from the controller. They also match on the assigns sent by the controller. `"index.json"` will respond with JSON like this:
+In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. The `"index.json"` and `"show.json"` are the ones requested directly from the controller. They also match on the assigns sent by the controller. `"index.json"` will respond with JSON like this:
 
 ```javascript
 {
@@ -245,7 +245,7 @@ And the `render/2` matching `"show.json"`:
 }
 ```
 
-This works because both "index.json" and "show.json" build themselves on top of an internal "page.json" clause.
+This works because both `index.json` and `show.json` build themselves on top of an internal `page.json` clause.
 
 The `render_many/3` function takes the data we want to respond with (`pages`), a view, and a string to pattern match on the `render/2` function defined on view. It will map over each item in `pages` and call `PageView.render("page.json", %{page: page})`. `render_one/3` follows the same signature, ultimately using the `render/2` matching `page.json` to specify what each `page` looks like.
 

@@ -72,7 +72,7 @@ Module plugs are another type of Plug that let us define a connection transforma
 - `init/1` which initializes any arguments or options to be passed to `call/2`
 - `call/2` which carries out the connection transformation. `call/2` is just a function plug that we saw earlier
 
-To see this in action, let's write a module plug that puts the `:locale` key and value into the connection assign for downstream use in other plugs, controller actions, and our views. Put the contents above to a file named "lib/hello_web/plugs/locale.ex":
+To see this in action, let's write a module plug that puts the `:locale` key and value into the connection assign for downstream use in other plugs, controller actions, and our views. Put the contents above to a file named `lib/hello_web/plugs/locale.ex`:
 
 ```elixir
 defmodule HelloWeb.Plugs.Locale do
@@ -111,7 +111,7 @@ defmodule HelloWeb.Router do
 
 We are able to add this module plug to our browser pipeline via `plug HelloWeb.Plugs.Locale, "en"`. In the `init/1` callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple `call/2` function heads to validate the locale in the params, and fall back to "en" if there is no match.
 
-To see the assign in action, go to the layout in "lib/hello_web/templates/layout/app.html.eex" and add the following close to the main container:
+To see the assign in action, go to the layout in `lib/hello_web/templates/layout/app.html.eex` and add the following close to the main container:
 
 ```html
 <main role="main" class="container">
