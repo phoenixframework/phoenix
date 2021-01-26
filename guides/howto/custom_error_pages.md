@@ -67,35 +67,31 @@ Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Welcome to Phoenix!</title>
-    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/app.css"/>
+    <script defer type="text/javascript" src="/js/app.js"></script>
   </head>
-
   <body>
-    <div class="container">
-      <div class="header">
-        <ul class="nav nav-pills pull-right">
-          <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
-        </ul>
-        <span class="logo"></span>
-      </div>
-
-      <div class="phx-hero">
+    <header>
+      <section class="container">
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+          </ul>
+        </nav>
+        <a href="https://phoenixframework.org/" class="phx-logo">
+          <img src="/images/phoenix.png" alt="Phoenix Framework Logo"/>
+        </a>
+      </section>
+    </header>
+    <main role="main" class="container">
+      <section class="phx-hero">
         <p>Sorry, the page you are looking for does not exist.</p>
-      </div>
-
-      <div class="footer">
-        <p><a href="https://phoenixframework.org">phoenixframework.org</a></p>
-      </div>
-
-    </div> <!-- /container -->
-    <script src="/js/app.js"></script>
+      </section>
+    </main>
   </body>
 </html>
 ```
