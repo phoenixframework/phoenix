@@ -18,7 +18,7 @@ defmodule Phoenix.Config do
   end
 
   @doc """
-  Puts a given key-value in config.
+  Puts a given key-value pair in config.
   """
   def put_new(module, key, value) do
     :ets.insert_new(module, {key, value})

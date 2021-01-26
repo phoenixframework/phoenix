@@ -243,7 +243,7 @@ iex> HelloWeb.Router.Helpers.user_post_path(Endpoint, :show, 42, 17)
 "/users/42/posts/17"
 ```
 
-Again, if we add a key/value pair to the end of the function call, it is added to the query string.
+Again, if we add a key-value pair to the end of the function call, it is added to the query string.
 
 ```elixir
 iex> HelloWeb.Router.Helpers.user_post_path(Endpoint, :index, 42, active: true)

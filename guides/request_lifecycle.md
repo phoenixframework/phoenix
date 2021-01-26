@@ -212,7 +212,7 @@ def show(conn, %{"messenger" => messenger}) do
 end
 ```
 
-Within the body of the `show` action, we also pass a third argument into the render function, a key/value pair where `:messenger` is the key, and the `messenger` variable is passed as the value.
+Within the body of the `show` action, we also pass a third argument into the render function, a key-value pair where `:messenger` is the key, and the `messenger` variable is passed as the value.
 
 If the body of the action needs access to the full map of parameters bound to the params variable in addition to the bound messenger variable, we could define `show/2` like this:
 
