@@ -1,6 +1,6 @@
 # Testing Channels
 
-> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
 > **Requirement**: This guide expects that you have gone through [the Introduction to Testing guide](testing.html).
 
