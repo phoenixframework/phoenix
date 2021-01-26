@@ -2,7 +2,7 @@
 
 > **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through [the Request life-cycle guide](request_lifecycle.html).
+> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
 
 Plug lives at the heart of Phoenix's HTTP layer, and Phoenix puts Plug front and center. We interact with plugs at every step of the request life-cycle, and the core Phoenix components like Endpoints, Routers, and Controllers are all just Plugs internally. Let's jump in and find out just what makes Plug so special.
 
@@ -195,7 +195,7 @@ defmodule HelloWeb.Router do
 
 Routes are defined inside scopes and scopes may pipe through multiple pipelines. Once a route matches, Phoenix invokes all plugs defined in all pipelines associated to that route. For example, accessing "/" will pipe through the `:browser` pipeline, consequently invoking all of its plugs.
 
-As we will see in [the Routing guide](routing.html), the pipelines themselves are plugs. There we will also discuss all plugs in the `:browser` pipeline.
+As we will see in the [Routing guide](routing.html), the pipelines themselves are plugs. There we will also discuss all plugs in the `:browser` pipeline.
 
 ### Controller plugs
 
@@ -293,4 +293,4 @@ To make this all work, we converted the nested blocks of code and used `halt(con
 
 At the end of the day, by replacing the nested blocks of code with a flattened series of plug transformations, we are able to achieve the same functionality in a much more composable, clear, and reusable way.
 
-To learn more about Plugs, see the documentation for [the Plug project](https://hexdocs.pm/plug), which provides many built-in plugs and functionalities.
+To learn more about Plugs, see the documentation for the [Plug project](https://hexdocs.pm/plug), which provides many built-in plugs and functionalities.

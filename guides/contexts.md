@@ -2,9 +2,9 @@
 
 > **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through [the Request life-cycle guide](request_lifecycle.html).
+> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
 
-> **Requirement**: This guide expects that you have gone through [the Ecto guide](ecto.html).
+> **Requirement**: This guide expects that you have gone through the [Ecto guide](ecto.html).
 
 So far, we've built pages, wired up controller actions through our routers, and learned how Ecto allows data to be validated and persisted. Now it's time to tie it all together by writing web-facing features that interact with our greater Elixir application.
 
@@ -194,7 +194,7 @@ defmodule Hello.Accounts do
 end
 ```
 
-This module will be the public API for all account functionality in our system. For example, in addition to user account management, we may also handle user login credentials, account preferences, and password reset generation. If we look at the `list_users/0` function, we can see the private details of user fetching. And it's super simple. We have a call to `Repo.all(User)`. We saw how Ecto repo queries worked in [the Ecto guide](ecto.html), so this call should look familiar. Our `list_users` function is a generalized function specifying the *intent* of our code – namely to list users. The details of that intent where we use our Repo to fetch the users from our PostgreSQL database is hidden from our callers. This is a common theme we'll see re-iterated as we use the Phoenix generators. Phoenix will push us to think about where we have different responsibilities in our application, and then to wrap up those different areas behind well-named modules and functions that make the intent of our code clear, while encapsulating the details.
+This module will be the public API for all account functionality in our system. For example, in addition to user account management, we may also handle user login credentials, account preferences, and password reset generation. If we look at the `list_users/0` function, we can see the private details of user fetching. And it's super simple. We have a call to `Repo.all(User)`. We saw how Ecto repo queries worked in the [Ecto guide](ecto.html), so this call should look familiar. Our `list_users` function is a generalized function specifying the *intent* of our code – namely to list users. The details of that intent where we use our Repo to fetch the users from our PostgreSQL database is hidden from our callers. This is a common theme we'll see re-iterated as we use the Phoenix generators. Phoenix will push us to think about where we have different responsibilities in our application, and then to wrap up those different areas behind well-named modules and functions that make the intent of our code clear, while encapsulating the details.
 
 Now we know how data is fetched, but how are users persisted? Let's take a look at the `Accounts.create_user/1` function:
 

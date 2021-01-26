@@ -2,9 +2,9 @@
 
 > **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through [the Introduction to Testing guide](testing.html).
+> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.html).
 
-> **Requirement**: This guide expects that you have gone through [the Channels guide](channels.html).
+> **Requirement**: This guide expects that you have gone through the [Channels guide](channels.html).
 
 In the Channels guide, we saw that a "Channel" is a layered system with different components. Given this, there would be cases when writing unit tests for our Channel functions may not be enough. We may want to verify that its different moving parts are working together as we expect. This integration testing would assure us that we correctly defined our channel route, the channel module, and its callbacks; and that the lower-level layers such as the PubSub and Transport are configured correctly and are working as intended.
 

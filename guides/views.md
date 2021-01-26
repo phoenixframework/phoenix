@@ -2,7 +2,7 @@
 
 > **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through [the Request life-cycle guide](request_lifecycle.html).
+> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
 
 A Phoenix view's main job is to render the body of the response which gets sent back to browsers and API clients. Most of the time, we use templates to build these responses, but we can also craft them by hand. We will learn how.
 
@@ -278,4 +278,4 @@ end
 
 ## Error pages
 
-Phoenix has a view called the `ErrorView` which lives in `lib/hello_web/views/error_view.ex`. The purpose of the `ErrorView` is to handle errors in a general way, from one centralized location.  Similar to the views we built in this guide, error views can return both HTML and JSON responses. See [the Custom Error Pages How-To](custom_error_pages.html) for more information.
+Phoenix has a view called the `ErrorView` which lives in `lib/hello_web/views/error_view.ex`. The purpose of the `ErrorView` is to handle errors in a general way, from one centralized location.  Similar to the views we built in this guide, error views can return both HTML and JSON responses. See the [Custom Error Pages How-To](custom_error_pages.html) for more information.
