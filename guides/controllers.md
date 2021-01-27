@@ -131,7 +131,7 @@ It is worth noting that the `text/2`, `json/2`, and `html/2` functions require n
 
 The `json/2` function is obviously useful for writing APIs, and the other two may come in handy, but most of the times we use Phoenix views to build our responses. For this, Phoenix provides the `render/3` function.
 
-Let's rollback our `show` action to what we originally wrote [in the Request life-cycle guide](request_lifecycle.html):
+Let's rollback our `show` action to what we originally wrote in the [Request life-cycle guide](request_lifecycle.html):
 
 ```elixir
 defmodule HelloWeb.HelloController do

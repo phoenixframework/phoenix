@@ -30,4 +30,4 @@ Phoenix v1.6 requires Elixir v1.9+.
 
 ## v1.5
 
-The CHANGELOG for v1.5 releases can be found [in the v1.5 branch](https://github.com/phoenixframework/phoenix/blob/v1.5/CHANGELOG.md).
+The CHANGELOG for v1.5 releases can be found in the [v1.5 branch](https://github.com/phoenixframework/phoenix/blob/v1.5/CHANGELOG.md).
