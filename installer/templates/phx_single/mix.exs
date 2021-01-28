@@ -11,7 +11,7 @@ defmodule <%= @app_module %>.MixProject do
       lockfile: "../../mix.lock",<% end %>
       elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix<%= if @gettext do %>, :gettext<% end %>] ++ Mix.compilers(),
+      compilers: <%= if @gettext do %>[:gettext] ++ <% end %>Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
