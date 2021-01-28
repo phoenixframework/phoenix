@@ -851,12 +851,14 @@ defmodule Phoenix.Router do
 
   ## Examples
 
-      scope "/api/v1", as: :api_v1, alias: API.V1 do
+      scope "/api/v1", as: :api_v1 do
         get "/pages/:id", PageController, :show
       end
 
   """
   defmacro scope(path, options, do: context) do
+    options = Macro.expand(options, %{__CALLER__ | function: {:init, 1}})
+
     options = quote do
       path = unquote(path)
       case unquote(options) do
@@ -884,11 +886,14 @@ defmodule Phoenix.Router do
 
   """
   defmacro scope(path, alias, options, do: context) do
+    alias = Macro.expand(alias, %{__CALLER__ | function: {:init, 1}})
+
     options = quote do
       unquote(options)
       |> Keyword.put(:path, unquote(path))
       |> Keyword.put(:alias, unquote(alias))
     end
+
     do_scope(options, context)
   end
 
@@ -943,6 +948,7 @@ defmodule Phoenix.Router do
 
   """
   defmacro forward(path, plug, plug_opts \\ [], router_opts \\ []) do
+    plug = Macro.expand(plug, %{__CALLER__ | function: {:init, 1}})
     router_opts = Keyword.put(router_opts, :as, nil)
 
     quote unquote: true, bind_quoted: [path: path, plug: plug] do
