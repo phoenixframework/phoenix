@@ -165,12 +165,14 @@ ENV MIX_ENV=prod
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
-RUN mix deps.get --only $MIX_ENV
+RUN --mount=type=cache,target=/root/.hex \
+    mix deps.get --only $MIX_ENV
 
 FROM node:15.7.0-alpine3.10 as assets
 
 # install build dependencies
-RUN apk add --no-cache build-base python
+RUN --mount=type=cache,sharing=locked,target=/var/cache/apk \
+    apk add build-base python
 
 # prepare build dir
 WORKDIR /app
@@ -220,7 +222,8 @@ RUN mix release
 # Start a new build stage so that the final image will only contain
 # the compiled release and other runtime necessities
 FROM alpine:3.12.1 AS app
-RUN apk add --no-cache openssl ncurses-libs
+RUN --mount=type=cache,sharing=locked,target=/var/cache/apk \
+    apk add openssl ncurses-libs
 
 WORKDIR /app
 
