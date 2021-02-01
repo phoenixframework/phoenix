@@ -124,7 +124,7 @@ A Telemetry event is made up of the following:
   * `measurements` - A map of atom keys (e.g. `:duration`)
     and numeric values.
 
-  * `metadata` - A map of key/value pairs that can be used
+  * `metadata` - A map of key-value pairs that can be used
     for tagging metrics.
 
 ### A Phoenix Example
