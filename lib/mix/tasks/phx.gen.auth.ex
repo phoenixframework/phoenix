@@ -475,7 +475,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     file =
       case read_file(file_path) do
         {:ok, file} -> file
-        {:error, {:file_read_error, _}} -> "use Mix.Config\n"
+        {:error, {:file_read_error, _}} -> "import Config\n"
       end
 
     case Injector.test_config_inject(file, hashing_library) do

@@ -281,54 +281,54 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
   end
 
   describe "test_config_inject/2" do
-    test "injects after \"use Mix.Config\" when hashing_library is bcrypt" do
+    test "injects after \"import Config\" when hashing_library is bcrypt" do
       {:ok, hashing_library} = HashingLibrary.build("bcrypt")
 
       input = """
-      use Mix.Config
+      import Config
       """
 
       {:ok, injected} = Injector.test_config_inject(input, hashing_library)
 
       assert injected ==
                """
-               use Mix.Config
+               import Config
 
                # Only in tests, remove the complexity from the password hashing algorithm
                config :bcrypt_elixir, :log_rounds, 1
                """
     end
 
-    test "injects after \"use Mix.Config\" when hashing_library is pbkdf2" do
+    test "injects after \"import Config\" when hashing_library is pbkdf2" do
       {:ok, hashing_library} = HashingLibrary.build("pbkdf2")
 
       input = """
-      use Mix.Config
+      import Config
       """
 
       {:ok, injected} = Injector.test_config_inject(input, hashing_library)
 
       assert injected ==
                """
-               use Mix.Config
+               import Config
 
                # Only in tests, remove the complexity from the password hashing algorithm
                config :pbkdf2_elixir, :rounds, 1
                """
     end
 
-    test "injects after \"use Mix.Config\" when hashing_library is argon2" do
+    test "injects after \"import Config\" when hashing_library is argon2" do
       {:ok, hashing_library} = HashingLibrary.build("argon2")
 
       input = """
-      use Mix.Config
+      import Config
       """
 
       {:ok, injected} = Injector.test_config_inject(input, hashing_library)
 
       assert injected ==
                """
-               use Mix.Config
+               import Config
 
                # Only in tests, remove the complexity from the password hashing algorithm
                config :argon2_elixir,
