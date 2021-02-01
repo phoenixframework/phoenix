@@ -700,7 +700,7 @@ There is a fourth `router_opts` argument that can be passed. These options are o
 Routing is a big topic, and we have covered a lot of ground here. The important points to take away from this guide are:
 
 - Routes which begin with an HTTP verb name expand to a single clause of the match function.
-- Routes which begin with `resources` expand to 8 clauses of the match function.
+- Routes declared with `resources` expand to 8 clauses of the match function.
 - Resources may restrict the number of match function clauses by using the `only:` or `except:` options.
 - Any of these routes may be nested.
 - Any of these routes may be scoped to a given path.
