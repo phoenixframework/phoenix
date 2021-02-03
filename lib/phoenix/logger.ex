@@ -13,7 +13,7 @@ defmodule Phoenix.Logger do
       * Metadata: `%{conn: Plug.Conn.t, options: Keyword.t}`
       * Options: `%{log: Logger.level | false}`
       * Disable logging: In your endpoint `plug Plug.Telemetry, ..., log: Logger.level | false`
-      * Configure logging per request: `plug Plug.Telemetry, ..., log: (Plug.Conn.t -> Logger.level | false) | (Plug.Conn.t, Keyword.t -> Logger.level | false)`
+      * Configure logging per request: `plug Plug.Telemetry, ..., log: (Plug.Conn.t -> Logger.level | false)`
 
     * `[:phoenix, :endpoint, :stop]` - dispatched by `Plug.Telemetry` in your
       endpoint whenever the response is sent
@@ -21,13 +21,14 @@ defmodule Phoenix.Logger do
       * Metadata: `%{conn: Plug.Conn.t, options: Keyword.t}`
       * Options: `%{log: Logger.level | false}`
       * Disable logging: In your endpoint `plug Plug.Telemetry, ..., log: Logger.level | false`
-      * Configure logging per request: `plug Plug.Telemetry, ..., log: (Plug.Conn.t -> Logger.level | false) | (Plug.Conn.t, Keyword.t -> Logger.level | false)`
+      * Configure logging per request: `plug Plug.Telemetry, ..., log: (Plug.Conn.t -> Logger.level | false)`
 
     * `[:phoenix, :router_dispatch, :start]` - dispatched by `Phoenix.Router`
       before dispatching to a matched route
       * Measurement: `%{system_time: System.system_time}`
       * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
       * Disable logging: Pass `log: false` to the router macro, for example: `get("/page", PageController, :index, log: false)`
+      * Configure logging per request: `get("/page", PageController, :index, log: (Plug.Conn.t -> Logger.level | false)`
 
     * `[:phoenix, :router_dispatch, :exception]` - dispatched by `Phoenix.Router`
       after exceptions on dispatching a route
@@ -169,10 +170,13 @@ defmodule Phoenix.Logger do
 
   defp keep_values(_other, _params), do: "[FILTERED]"
 
+  defp log_level(level, _conn) when is_atom(level), do: level
+  defp log_level(level, conn) when is_function(level, 1), do: level.(conn)
+
   ## Event: [:phoenix, :endpoint, *]
 
   defp phoenix_endpoint_start(_, _, %{conn: conn} = metadata, _) do
-    case endpoint_log_level(metadata) do
+    case log_level(metadata[:options][:log], conn) do
       false ->
         :ok
 
@@ -185,7 +189,7 @@ defmodule Phoenix.Logger do
   end
 
   defp phoenix_endpoint_stop(_, %{duration: duration}, %{conn: conn} = metadata, _) do
-    case endpoint_log_level(metadata) do
+    case log_level(metadata[:options][:log], conn) do
       false ->
         :ok
 
@@ -200,15 +204,6 @@ defmodule Phoenix.Logger do
 
   defp connection_type(:set_chunked), do: "Chunked"
   defp connection_type(_), do: "Sent"
-
-  defp endpoint_log_level(%{conn: conn, options: options}) do
-    case options[:log] do
-      level when is_atom(level) -> level
-      level when is_function(level, 1) -> level.(conn)
-      level when is_function(level, 2) -> level.(conn, options)
-      _ -> :info
-    end
-  end
 
   ## Event: [:phoenix, :error_rendered]
 
@@ -236,10 +231,16 @@ defmodule Phoenix.Logger do
   defp phoenix_router_dispatch_start(_, _, %{log: false}, _), do: :ok
 
   defp phoenix_router_dispatch_start(_, _, metadata, _) do
-    %{log: level, conn: conn, pipe_through: pipe_through, plug: plug, plug_opts: plug_opts} =
-      metadata
+    %{log: level, conn: conn} = metadata
+    level = log_level(level, conn)
 
-    Logger.log(level, fn ->
+    Logger.log(level || :info, fn ->
+      %{
+        pipe_through: pipe_through,
+        plug: plug,
+        plug_opts: plug_opts
+      } = metadata
+
       [
         "Processing with ",
         inspect(plug),
