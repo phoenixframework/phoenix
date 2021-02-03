@@ -19,10 +19,10 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
 
   test "format multiple routes" do
     assert draw(RouterTestSingleRoutes) == """
-            page_path  GET     /        RouteFormatter.PageController :index
-    upload_image_path  POST    /images  RouteFormatter.ImageController :upload
-    remove_image_path  DELETE  /images  RouteFormatter.ImageController :delete
-    """
+                   page_path  GET     /        RouteFormatter.PageController :index
+           upload_image_path  POST    /images  RouteFormatter.ImageController :upload
+           remove_image_path  DELETE  /images  RouteFormatter.ImageController :delete
+           """
   end
 
   defmodule RouterTestResources do
@@ -32,15 +32,15 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
 
   test "format resource routes" do
     assert draw(RouterTestResources) == """
-    image_path  GET     /images           RouteFormatter.ImageController :index
-    image_path  GET     /images/:id/edit  RouteFormatter.ImageController :edit
-    image_path  GET     /images/new       RouteFormatter.ImageController :new
-    image_path  GET     /images/:id       RouteFormatter.ImageController :show
-    image_path  POST    /images           RouteFormatter.ImageController :create
-    image_path  PATCH   /images/:id       RouteFormatter.ImageController :update
-                PUT     /images/:id       RouteFormatter.ImageController :update
-    image_path  DELETE  /images/:id       RouteFormatter.ImageController :delete
-    """
+           image_path  GET     /images           RouteFormatter.ImageController :index
+           image_path  GET     /images/:id/edit  RouteFormatter.ImageController :edit
+           image_path  GET     /images/new       RouteFormatter.ImageController :new
+           image_path  GET     /images/:id       RouteFormatter.ImageController :show
+           image_path  POST    /images           RouteFormatter.ImageController :create
+           image_path  PATCH   /images/:id       RouteFormatter.ImageController :update
+                       PUT     /images/:id       RouteFormatter.ImageController :update
+           image_path  DELETE  /images/:id       RouteFormatter.ImageController :delete
+           """
   end
 
   defmodule RouterTestResource do
@@ -52,16 +52,16 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
 
   test "format single resource routes" do
     assert draw(RouterTestResource) == """
-    image_path  GET     /image/edit  RouteFormatter.ImageController :edit
-    image_path  GET     /image/new   RouteFormatter.ImageController :new
-    image_path  GET     /image       RouteFormatter.ImageController :show
-    image_path  POST    /image       RouteFormatter.ImageController :create
-    image_path  PATCH   /image       RouteFormatter.ImageController :update
-                PUT     /image       RouteFormatter.ImageController :update
-    image_path  DELETE  /image       RouteFormatter.ImageController :delete
-                *       /admin       RouteFormatter.PageController []
-                *       /f1          RouteFormatter.ImageController []
-    """
+           image_path  GET     /image/edit  RouteFormatter.ImageController :edit
+           image_path  GET     /image/new   RouteFormatter.ImageController :new
+           image_path  GET     /image       RouteFormatter.ImageController :show
+           image_path  POST    /image       RouteFormatter.ImageController :create
+           image_path  PATCH   /image       RouteFormatter.ImageController :update
+                       PUT     /image       RouteFormatter.ImageController :update
+           image_path  DELETE  /image       RouteFormatter.ImageController :delete
+                       *       /admin       RouteFormatter.PageController []
+                       *       /f1          RouteFormatter.ImageController []
+           """
   end
 
   describe "endpoint sockets" do
@@ -75,22 +75,21 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
 
     test "format with sockets" do
       assert draw(RouterTestSingleRoutes, FormatterEndpoint) == """
-              page_path  GET     /                  RouteFormatter.PageController :index
-      upload_image_path  POST    /images            RouteFormatter.ImageController :upload
-      remove_image_path  DELETE  /images            RouteFormatter.ImageController :delete
-              websocket  WS      /socket/websocket  TestSocket
-               longpoll  GET     /socket/longpoll   TestSocket
-               longpoll  POST    /socket/longpoll   TestSocket
-      """
+                     page_path  GET     /                  RouteFormatter.PageController :index
+             upload_image_path  POST    /images            RouteFormatter.ImageController :upload
+             remove_image_path  DELETE  /images            RouteFormatter.ImageController :delete
+                     websocket  WS      /socket/websocket  TestSocket
+                      longpoll  GET     /socket/longpoll   TestSocket
+                      longpoll  POST    /socket/longpoll   TestSocket
+             """
     end
-
 
     test "format without sockets" do
       assert draw(RouterTestSingleRoutes, __MODULE__) == """
-              page_path  GET     /        RouteFormatter.PageController :index
-      upload_image_path  POST    /images  RouteFormatter.ImageController :upload
-      remove_image_path  DELETE  /images  RouteFormatter.ImageController :delete
-      """
+                     page_path  GET     /        RouteFormatter.PageController :index
+             upload_image_path  POST    /images  RouteFormatter.ImageController :upload
+             remove_image_path  DELETE  /images  RouteFormatter.ImageController :delete
+             """
     end
   end
 

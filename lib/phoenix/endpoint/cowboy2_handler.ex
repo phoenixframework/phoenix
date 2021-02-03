@@ -113,6 +113,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
 
   defp handle_control_frame(payload_with_opts, handler_state) do
     [handler | state] = handler_state
+
     reply =
       if function_exported?(handler, :handle_control, 2) do
         handler.handle_control(payload_with_opts, state)

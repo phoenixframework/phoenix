@@ -86,12 +86,13 @@ defmodule Phoenix.Router.ForwardTest do
   end
 
   test "forward with dynamic segments raises" do
-    router = quote do
-      defmodule BadRouter do
-        use Phoenix.Router
-        forward "/api/:version", ApiRouter
+    router =
+      quote do
+        defmodule BadRouter do
+          use Phoenix.Router
+          forward "/api/:version", ApiRouter
+        end
       end
-    end
 
     assert_raise ArgumentError, ~r{dynamic segment "/api/:version" not allowed}, fn ->
       Code.eval_quoted(router)
@@ -99,30 +100,36 @@ defmodule Phoenix.Router.ForwardTest do
   end
 
   test "forward with non-unique plugs raises" do
-    router = quote do
-      defmodule BadRouter do
-        use Phoenix.Router
-        forward "/api/v1", ApiRouter
-        forward "/api/v2", ApiRouter
+    router =
+      quote do
+        defmodule BadRouter do
+          use Phoenix.Router
+          forward "/api/v1", ApiRouter
+          forward "/api/v2", ApiRouter
+        end
       end
-    end
 
-    assert_raise ArgumentError, ~r{Phoenix.Router.ForwardTest.ApiRouter has already been forwarded}, fn ->
-      Code.eval_quoted(router)
-    end
+    assert_raise ArgumentError,
+                 ~r{Phoenix.Router.ForwardTest.ApiRouter has already been forwarded},
+                 fn ->
+                   Code.eval_quoted(router)
+                 end
   end
 
   test "accumulates phoenix_forwards" do
     conn = call(Router, :get, "admin")
-    assert conn.private[Router] == {[], %{
-      Phoenix.Router.ForwardTest.AdminDashboard => ["admin"],
-      Phoenix.Router.ForwardTest.InitPlug => ["init"],
-      Phoenix.Router.ForwardTest.AssignOptsPlug => ["assign", "opts"],
-      Phoenix.Router.ForwardTest.Controller => []
-    }}
-    assert conn.private[AdminDashboard] ==
-      {["admin"], %{Phoenix.Router.ForwardTest.ApiRouter => ["api-admin"]}}
 
+    assert conn.private[Router] ==
+             {[],
+              %{
+                Phoenix.Router.ForwardTest.AdminDashboard => ["admin"],
+                Phoenix.Router.ForwardTest.InitPlug => ["init"],
+                Phoenix.Router.ForwardTest.AssignOptsPlug => ["assign", "opts"],
+                Phoenix.Router.ForwardTest.Controller => []
+              }}
+
+    assert conn.private[AdminDashboard] ==
+             {["admin"], %{Phoenix.Router.ForwardTest.ApiRouter => ["api-admin"]}}
   end
 
   test "helpers cascade script name across forwards based on main router" do
@@ -162,9 +169,11 @@ defmodule Phoenix.Router.ForwardTest do
 
   test "forwards raises if using the plug to arguments" do
     error_message = ~r/expects a module/
+
     assert_raise(ArgumentError, error_message, fn ->
       defmodule BrokenRouter do
         use Phoenix.Router
+
         scope "/" do
           forward "/health", to: HealthController
         end

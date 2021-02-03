@@ -72,8 +72,8 @@ defmodule Phoenix.Integration.LongPollSocketTest do
   end
 
   setup_all do
-    capture_log(fn -> start_supervised! Endpoint end)
-    start_supervised! {Phoenix.PubSub, name: __MODULE__, pool_size: @pool_size}
+    capture_log(fn -> start_supervised!(Endpoint) end)
+    start_supervised!({Phoenix.PubSub, name: __MODULE__, pool_size: @pool_size})
     :ok
   end
 

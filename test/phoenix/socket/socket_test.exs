@@ -58,7 +58,7 @@ defmodule Phoenix.SocketTest do
     test "merges keyword lists" do
       socket = %Phoenix.Socket{}
       socket = assign(socket, %{foo: :bar, abc: :def})
-      socket = assign(socket, [foo: :baz])
+      socket = assign(socket, foo: :baz)
       assert socket.assigns[:foo] == :baz
       assert socket.assigns[:abc] == :def
     end

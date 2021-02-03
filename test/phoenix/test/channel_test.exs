@@ -175,8 +175,8 @@ defmodule Phoenix.Test.ChannelTest do
   import Phoenix.ChannelTest
 
   setup_all do
-    start_supervised! @endpoint
-    start_supervised! {Phoenix.PubSub, name: Phoenix.Test.ChannelTest.PubSub}
+    start_supervised!(@endpoint)
+    start_supervised!({Phoenix.PubSub, name: Phoenix.Test.ChannelTest.PubSub})
     :ok
   end
 

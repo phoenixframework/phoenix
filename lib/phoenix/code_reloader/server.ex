@@ -262,7 +262,7 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp purge_consolidated(path) do
     with {:ok, beams} <- File.ls(path) do
-      Enum.map(beams, & &1 |> Path.rootname(".beam") |> String.to_atom() |> purge_module())
+      Enum.map(beams, &(&1 |> Path.rootname(".beam") |> String.to_atom() |> purge_module()))
     end
 
     Code.delete_path(path)

@@ -45,7 +45,7 @@ defmodule Phoenix.Controller.PipelineTest do
     defp do_halt(conn, _), do: halt(conn)
 
     defp prepend(conn, val) do
-      update_in conn.private.stack, &[val|&1]
+      update_in(conn.private.stack, &[val | &1])
     end
   end
 
@@ -69,6 +69,7 @@ defmodule Phoenix.Controller.PipelineTest do
     defp function_plug(%Plug.Conn{} = conn, :not_a_conn) do
       Plug.Conn.send_resp(conn, 200, "function fallback")
     end
+
     defp function_plug(%Plug.Conn{}, :bad_fallback), do: :bad_function_fallback
 
     defp put_assign(conn, _), do: assign(conn, :value_before_action, :a_value)
@@ -82,8 +83,7 @@ defmodule Phoenix.Controller.PipelineTest do
     plug :put_assign
 
     def action(conn, _) do
-      apply(__MODULE__, conn.private.phoenix_action, [conn, conn.body_params,
-                                                      conn.query_params])
+      apply(__MODULE__, conn.private.phoenix_action, [conn, conn.body_params, conn.query_params])
     end
 
     def show(conn, _, _), do: text(conn, "show")
@@ -113,36 +113,45 @@ defmodule Phoenix.Controller.PipelineTest do
   end
 
   test "invokes the plug stack" do
-    conn = stack_conn()
-           |> MyController.call(:show)
+    conn =
+      stack_conn()
+      |> MyController.call(:show)
+
     assert conn.private.stack == [:action, :before2, :before1]
   end
 
   test "invokes the plug stack with guards" do
-    conn = stack_conn()
-           |> MyController.call(:create)
+    conn =
+      stack_conn()
+      |> MyController.call(:create)
+
     assert conn.private.stack == [:action, :before2, :before1]
   end
 
   test "halts prevent action from running" do
-    conn = stack_conn()
-           |> MyController.call(:secret)
+    conn =
+      stack_conn()
+      |> MyController.call(:secret)
+
     assert conn.private.stack == [:before2, :before1]
   end
 
   test "does not override previous views/layouts" do
-    conn = stack_conn()
-           |> put_view(Hello)
-           |> put_layout(false)
-           |> MyController.call(:create)
+    conn =
+      stack_conn()
+      |> put_view(Hello)
+      |> put_layout(false)
+      |> MyController.call(:create)
+
     assert view_module(conn) == Hello
     assert layout(conn) == false
   end
 
   test "does not set default view/layout" do
-    conn = stack_conn()
-           |> NoViewsController.call(:show)
-           |> put_new_view(Hello)
+    conn =
+      stack_conn()
+      |> NoViewsController.call(:show)
+      |> put_new_view(Hello)
 
     assert view_module(conn) == Hello
     assert layout(conn) == false

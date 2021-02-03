@@ -249,7 +249,7 @@ defmodule Phoenix.Router.RoutingTest do
              pipe_through: [],
              plug: Phoenix.Router.RoutingTest.UserController,
              plug_opts: :index,
-             route: "/",
+             route: "/"
            }
 
     assert Phoenix.Router.route_info(Router, "POST", "/not-exists", "host") == :error

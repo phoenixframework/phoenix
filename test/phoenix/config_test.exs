@@ -8,18 +8,18 @@ defmodule Phoenix.ConfigTest do
 
   test "reads configuration from env", meta do
     Application.put_env(:config_app, meta.test, @config)
-    config = from_env(:config_app, meta.test, [static: true])
+    config = from_env(:config_app, meta.test, static: true)
     assert config[:parsers] == false
-    assert config[:custom]  == true
-    assert config[:static]  == true
+    assert config[:custom] == true
+    assert config[:static] == true
   end
 
   test "starts an ets table as part of the module", meta do
     {:ok, _pid} = start_link({meta.test, @all, @defaults, []})
     assert :ets.info(meta.test, :name) == meta.test
     assert :ets.lookup(meta.test, :parsers) == [parsers: false]
-    assert :ets.lookup(meta.test, :static)  == [static: [at: "/"]]
-    assert :ets.lookup(meta.test, :custom)  == [custom: true]
+    assert :ets.lookup(meta.test, :static) == [static: [at: "/"]]
+    assert :ets.lookup(meta.test, :custom) == [custom: true]
   end
 
   test "can change configuration", meta do
@@ -28,14 +28,14 @@ defmodule Phoenix.ConfigTest do
     # Nothing changed
     config_change(meta.test, [], [])
     assert :ets.lookup(meta.test, :parsers) == [parsers: false]
-    assert :ets.lookup(meta.test, :static)  == [static: [at: "/"]]
-    assert :ets.lookup(meta.test, :custom)  == [custom: true]
+    assert :ets.lookup(meta.test, :static) == [static: [at: "/"]]
+    assert :ets.lookup(meta.test, :custom) == [custom: true]
 
     # Something changed
     config_change(meta.test, [{meta.test, parsers: true}], [])
     assert :ets.lookup(meta.test, :parsers) == [parsers: true]
-    assert :ets.lookup(meta.test, :static)  == [static: [at: "/"]]
-    assert :ets.lookup(meta.test, :custom)  == []
+    assert :ets.lookup(meta.test, :static) == [static: [at: "/"]]
+    assert :ets.lookup(meta.test, :custom) == []
 
     # Module removed
     config_change(meta.test, [], [meta.test])

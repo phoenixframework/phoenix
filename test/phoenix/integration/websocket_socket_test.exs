@@ -60,16 +60,18 @@ defmodule Phoenix.Integration.WebSocketTest do
   defmodule PingSocket do
     @behaviour Phoenix.Socket.Transport
 
-    def child_spec(_opts), do: Supervisor.child_spec({Task, fn -> :ok end}, [id: :ping])
+    def child_spec(_opts), do: Supervisor.child_spec({Task, fn -> :ok end}, id: :ping)
     def connect(_), do: {:ok, %{}}
     def init(state), do: {:ok, state}
 
     def handle_in({"ping:start", _}, state) do
       {:reply, :ok, :ping, state}
     end
+
     def handle_in({"ping:start:" <> payload, _}, state) do
       {:reply, :ok, {:ping, payload}, state}
     end
+
     def handle_info(_, state), do: {:ok, state}
 
     def handle_control({payload, opts}, state) do
@@ -95,8 +97,7 @@ defmodule Phoenix.Integration.WebSocketTest do
       websocket: [path: ":path_var/path", check_origin: ["//example.com"], timeout: 200],
       custom: :value
 
-    socket "/ws/ping", PingSocket,
-      websocket: true
+    socket "/ws/ping", PingSocket, websocket: true
   end
 
   setup_all do
@@ -116,15 +117,15 @@ defmodule Phoenix.Integration.WebSocketTest do
 
   test "refuses unallowed Websocket subprotocols" do
     assert capture_log(fn ->
-      headers = [{"sec-websocket-protocol", "sip"}]
-      assert {:ok, _} = WebsocketClient.start_link(self(), @path, :noop, headers)
+             headers = [{"sec-websocket-protocol", "sip"}]
+             assert {:ok, _} = WebsocketClient.start_link(self(), @path, :noop, headers)
 
-      headers = []
-      assert {:ok, _} = WebsocketClient.start_link(self(), @path, :noop, headers)
+             headers = []
+             assert {:ok, _} = WebsocketClient.start_link(self(), @path, :noop, headers)
 
-      headers = [{"sec-websocket-protocol", "mqtt"}]
-      assert {:error, {403, _}} = WebsocketClient.start_link(self(), @path, :noop, headers)
-    end) =~ "Could not check Websocket subprotocols"
+             headers = [{"sec-websocket-protocol", "mqtt"}]
+             assert {:error, {403, _}} = WebsocketClient.start_link(self(), @path, :noop, headers)
+           end) =~ "Could not check Websocket subprotocols"
   end
 
   test "returns params with sync request" do

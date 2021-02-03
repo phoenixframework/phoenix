@@ -1,4 +1,4 @@
-Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
+Code.require_file("../../../installer/test/mix_helper.exs", __DIR__)
 
 defmodule PageController do
   def init(opts), do: opts
@@ -25,9 +25,11 @@ defmodule Mix.Tasks.Phx.RoutesTest do
   end
 
   test "prints error when explicit router cannot be found" do
-    assert_raise Mix.Error, "the provided router, Foo.UnknownBar.CantFindBaz, does not exist", fn ->
-      Mix.Tasks.Phx.Routes.run(["Foo.UnknownBar.CantFindBaz"])
-    end
+    assert_raise Mix.Error,
+                 "the provided router, Foo.UnknownBar.CantFindBaz, does not exist",
+                 fn ->
+                   Mix.Tasks.Phx.Routes.run(["Foo.UnknownBar.CantFindBaz"])
+                 end
   end
 
   test "prints error when implicit router cannot be found" do

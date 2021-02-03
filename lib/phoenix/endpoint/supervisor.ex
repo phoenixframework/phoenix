@@ -67,13 +67,16 @@ defmodule Phoenix.Endpoint.Supervisor do
       case mod.init(:supervisor, env_conf) do
         {:ok, init_conf} ->
           if is_nil(Application.get_env(otp_app, mod)) and init_conf == env_conf do
-            Logger.warn("no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}")
+            Logger.warn(
+              "no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}"
+            )
           end
 
           init_conf
 
         other ->
-          raise ArgumentError, "expected init/2 callback to return {:ok, config}, got: #{inspect other}"
+          raise ArgumentError,
+                "expected init/2 callback to return {:ok, config}, got: #{inspect(other)}"
       end
 
     extra_conf = [
@@ -91,7 +94,9 @@ defmodule Phoenix.Endpoint.Supervisor do
     check_compile_configs!(mod, conf)
 
     if conf[:instrumenters] do
-      Logger.warn(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
+      Logger.warn(
+        ":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect"
+      )
     end
 
     if server? and conf[:code_reloader] do
@@ -100,10 +105,10 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     children =
       config_children(mod, secret_conf, default_conf) ++
-      pubsub_children(mod, conf) ++
-      socket_children(mod) ++
-      server_children(mod, conf, server?) ++
-      watcher_children(mod, conf, server?)
+        pubsub_children(mod, conf) ++
+        socket_children(mod) ++
+        server_children(mod, conf, server?) ++
+        watcher_children(mod, conf, server?)
 
     Supervisor.init(children, strategy: :one_for_one)
   end
@@ -112,19 +117,19 @@ defmodule Phoenix.Endpoint.Supervisor do
     pub_conf = conf[:pubsub]
 
     if pub_conf do
-      Logger.warn """
-      The :pubsub key in your #{inspect mod} is deprecated.
+      Logger.warn("""
+      The :pubsub key in your #{inspect(mod)} is deprecated.
 
       You must now start the pubsub in your application supervision tree.
       Go to lib/my_app/application.ex and add the following:
 
-          {Phoenix.PubSub, #{inspect pub_conf}}
+          {Phoenix.PubSub, #{inspect(pub_conf)}}
 
       Now, back in your config files in config/*, you can remove the :pubsub
       key and add the :pubsub_server key, with the PubSub name:
 
-          pubsub_server: #{inspect pub_conf[:name]}
-      """
+          pubsub_server: #{inspect(pub_conf[:name])}
+      """)
     end
 
     if pub_conf[:adapter] do
@@ -188,36 +193,39 @@ defmodule Phoenix.Endpoint.Supervisor do
     |> config(endpoint)
     |> server?()
   end
+
   def server?(conf) when is_list(conf) do
     Keyword.get(conf, :server, Application.get_env(:phoenix, :serve_endpoints, false))
   end
 
   defp defaults(otp_app, module) do
-    [otp_app: otp_app,
+    [
+      otp_app: otp_app,
 
-     # Compile-time config
-     code_reloader: false,
-     debug_errors: false,
-     render_errors: [view: render_errors(module), accepts: ~w(html), layout: false],
+      # Compile-time config
+      code_reloader: false,
+      debug_errors: false,
+      render_errors: [view: render_errors(module), accepts: ~w(html), layout: false],
 
-     # Runtime config
-     cache_static_manifest: nil,
-     check_origin: true,
-     http: false,
-     https: false,
-     reloadable_apps: nil,
-     reloadable_compilers: [:gettext, :phoenix, :elixir],
-     secret_key_base: nil,
-     static_url: nil,
-     url: [host: "localhost", path: "/"],
+      # Runtime config
+      cache_static_manifest: nil,
+      check_origin: true,
+      http: false,
+      https: false,
+      reloadable_apps: nil,
+      reloadable_compilers: [:gettext, :phoenix, :elixir],
+      secret_key_base: nil,
+      static_url: nil,
+      url: [host: "localhost", path: "/"],
 
-     # Supervisor config
-     watchers: []]
+      # Supervisor config
+      watchers: []
+    ]
   end
 
   defp render_errors(module) do
     module
-    |> Module.split
+    |> Module.split()
     |> Enum.at(0)
     |> Module.concat("ErrorView")
   end
@@ -286,24 +294,28 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp build_url(endpoint, url) do
     https = endpoint.config(:https)
-    http  = endpoint.config(:http)
+    http = endpoint.config(:http)
 
     {scheme, port} =
       cond do
         https ->
           {"https", https[:port]}
+
         http ->
           {"http", http[:port]}
+
         true ->
           {"http", 80}
       end
 
     scheme = url[:scheme] || scheme
-    host   = host_to_binary(url[:host] || "localhost")
-    port   = port_to_integer(url[:port] || port)
+    host = host_to_binary(url[:host] || "localhost")
+    port = port_to_integer(url[:port] || port)
 
     if host =~ ~r"[^:]:\d" do
-      Logger.warn("url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid")
+      Logger.warn(
+        "url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid"
+      )
     end
 
     %URI{scheme: scheme, port: port, host: host}
@@ -339,7 +351,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   def static_lookup(_endpoint, "/" <> _ = path) do
     if String.contains?(path, @invalid_local_url_chars) do
-      raise ArgumentError, "unsafe characters detected for path #{inspect path}"
+      raise ArgumentError, "unsafe characters detected for path #{inspect(path)}"
     else
       {:nocache, {path, nil}}
     end
@@ -350,7 +362,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp raise_invalid_path(path) do
-    raise ArgumentError, "expected a path starting with a single / but got #{inspect path}"
+    raise ArgumentError, "expected a path starting with a single / but got #{inspect(path)}"
   end
 
   # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
@@ -398,7 +410,8 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warmup_static(_endpoint, _manifest) do
-    raise ArgumentError, "expected warmup_static/2 to include 'latest' and 'digests' keys in manifest"
+    raise ArgumentError,
+          "expected warmup_static/2 to include 'latest' and 'digests' keys in manifest"
   end
 
   defp static_cache(digests, value) do
@@ -422,9 +435,11 @@ defmodule Phoenix.Endpoint.Supervisor do
       if File.exists?(outer) do
         outer |> File.read!() |> Phoenix.json_library().decode!()
       else
-        Logger.error "Could not find static manifest at #{inspect outer}. " <>
-                     "Run \"mix phx.digest\" after building your static files " <>
-                     "or remove the configuration from \"config/prod.exs\"."
+        Logger.error(
+          "Could not find static manifest at #{inspect(outer)}. " <>
+            "Run \"mix phx.digest\" after building your static files " <>
+            "or remove the configuration from \"config/prod.exs\"."
+        )
       end
     else
       %{}

@@ -1,5 +1,5 @@
-Code.require_file "../../support/http_client.exs", __DIR__
-Code.require_file "../../support/endpoint_helper.exs", __DIR__
+Code.require_file("../../support/http_client.exs", __DIR__)
+Code.require_file("../../support/endpoint_helper.exs", __DIR__)
 
 defmodule Phoenix.Integration.EndpointTest do
   use ExUnit.Case
@@ -18,15 +18,24 @@ defmodule Phoenix.Integration.EndpointTest do
   @prod_inet6 prod_inet6
 
   Application.put_env(:endpoint_int, ProdEndpoint,
-    http: [port: @prod], url: [host: "example.com"], server: true, drainer: false,
-    render_errors: [accepts: ~w(html json)])
+    http: [port: @prod],
+    url: [host: "example.com"],
+    server: true,
+    drainer: false,
+    render_errors: [accepts: ~w(html json)]
+  )
+
   Application.put_env(:endpoint_int, DevEndpoint,
-    http: [port: @dev], debug_errors: true, drainer: false)
+    http: [port: @dev],
+    debug_errors: true,
+    drainer: false
+  )
 
   Application.put_env(:endpoint_int, ProdInet6Endpoint,
     http: [port: @prod_inet6, transport_options: [socket_opts: [:inet6]]],
     url: [host: "example.com"],
-    server: true)
+    server: true
+  )
 
   defmodule Router do
     @moduledoc """
@@ -38,7 +47,7 @@ defmodule Phoenix.Integration.EndpointTest do
     plug :dispatch
 
     get "/" do
-      send_resp conn, 200, "ok"
+      send_resp(conn, 200, "ok")
     end
 
     get "/router/oops" do
@@ -68,7 +77,7 @@ defmodule Phoenix.Integration.EndpointTest do
 
     defmacro __before_compile__(_) do
       quote do
-        defoverridable [call: 2]
+        defoverridable call: 2
 
         def call(conn, opts) do
           # Assert we never have a lingering sent message in the inbox
@@ -81,7 +90,7 @@ defmodule Phoenix.Integration.EndpointTest do
             # either because the router is responding or because the
             # endpoint error layer is kicking in.
             assert_received {:plug_conn, :sent}
-            send self(), {:plug_conn, :sent}
+            send(self(), {:plug_conn, :sent})
           end
         end
       end
@@ -112,7 +121,7 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.HTTPClient
 
   test "starts drainer in supervision tree if configured" do
-    capture_log fn ->
+    capture_log(fn ->
       {:ok, _} = ProdInet6Endpoint.start_link()
       assert List.keyfind(Supervisor.which_children(ProdInet6Endpoint), Plug.Cowboy.Drainer, 0)
       Supervisor.stop(ProdInet6Endpoint)
@@ -120,11 +129,11 @@ defmodule Phoenix.Integration.EndpointTest do
       {:ok, _} = ProdEndpoint.start_link()
       refute List.keyfind(Supervisor.which_children(ProdEndpoint), Plug.Cowboy.Drainer, 0)
       Supervisor.stop(ProdEndpoint)
-    end
+    end)
   end
 
   test "adapters starts on configured port and serves requests and stops for prod" do
-    capture_log fn ->
+    capture_log(fn ->
       # Has server: true
       {:ok, _} = ProdEndpoint.start_link()
 
@@ -137,24 +146,31 @@ defmodule Phoenix.Integration.EndpointTest do
       assert resp.status == 404
       assert resp.body == "404.html from Phoenix.ErrorView"
 
-      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown?_format=json", %{})
+      {:ok, resp} =
+        HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown?_format=json", %{})
+
       assert resp.status == 404
-      assert resp.body |> Phoenix.json_library().decode!() == %{"error" => "Got 404 from error with GET"}
+
+      assert resp.body |> Phoenix.json_library().decode!() == %{
+               "error" => "Got 404 from error with GET"
+             }
 
       assert capture_log(fn ->
-        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})
-        assert resp.status == 500
-        assert resp.body == "500.html from Phoenix.ErrorView"
+               {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})
+               assert resp.status == 500
+               assert resp.body == "500.html from Phoenix.ErrorView"
 
-        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/router/oops", %{})
-        assert resp.status == 500
-        assert resp.body == "500.html from Phoenix.ErrorView"
+               {:ok, resp} =
+                 HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/router/oops", %{})
 
-        Supervisor.stop(ProdEndpoint)
-      end) =~ "** (RuntimeError) oops"
+               assert resp.status == 500
+               assert resp.body == "500.html from Phoenix.ErrorView"
+
+               Supervisor.stop(ProdEndpoint)
+             end) =~ "** (RuntimeError) oops"
 
       {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
-    end
+    end)
   end
 
   test "adapters starts on configured port and serves requests and stops for dev" do
@@ -162,7 +178,7 @@ defmodule Phoenix.Integration.EndpointTest do
     serve_endpoints(true)
     on_exit(fn -> serve_endpoints(false) end)
 
-    capture_log fn ->
+    capture_log(fn ->
       # Has server: false
       {:ok, _} = DevEndpoint.start_link()
 
@@ -176,28 +192,28 @@ defmodule Phoenix.Integration.EndpointTest do
       assert resp.body =~ "NoRouteError at GET /unknown"
 
       assert capture_log(fn ->
-        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/oops", %{})
-        assert resp.status == 500
-        assert resp.body =~ "RuntimeError at GET /oops"
+               {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/oops", %{})
+               assert resp.status == 500
+               assert resp.body =~ "RuntimeError at GET /oops"
 
-        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/router/oops", %{})
-        assert resp.status == 500
-        assert resp.body =~ "RuntimeError at GET /router/oops"
+               {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/router/oops", %{})
+               assert resp.status == 500
+               assert resp.body =~ "RuntimeError at GET /router/oops"
 
-        Supervisor.stop(DevEndpoint)
-      end) =~ "** (RuntimeError) oops"
+               Supervisor.stop(DevEndpoint)
+             end) =~ "** (RuntimeError) oops"
 
       {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
-    end
+    end)
   end
 
   test "adapters starts on configured port and inet6 for prod" do
-    capture_log fn ->
+    capture_log(fn ->
       # Has server: true
       {:ok, _} = ProdInet6Endpoint.start_link()
 
       Supervisor.stop(ProdInet6Endpoint)
-    end
+    end)
   end
 
   defp serve_endpoints(bool) do

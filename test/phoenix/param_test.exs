@@ -26,12 +26,14 @@ defmodule Phoenix.ParamTest do
     defmodule Foo do
       defstruct [:id]
     end
+
     assert to_param(struct(Foo, id: 1)) == "1"
     assert to_param(struct(Foo, id: "foo")) == "foo"
   end
 
   test "to_param for derivable structs without id" do
     msg = ~r"cannot derive Phoenix.Param for struct Phoenix.ParamTest.Bar"
+
     assert_raise ArgumentError, msg, fn ->
       defmodule Bar do
         @derive Phoenix.Param
@@ -48,6 +50,7 @@ defmodule Phoenix.ParamTest do
     assert to_param(struct(Bar, uuid: "foo")) == "foo"
 
     msg = ~r"cannot convert Phoenix.ParamTest.Bar to param, key :uuid contains a nil value"
+
     assert_raise ArgumentError, msg, fn ->
       to_param(struct(Bar, uuid: nil))
     end

@@ -21,26 +21,29 @@ defmodule Phoenix.Integration.HTTPClient do
 
   """
   def request(method, url, headers, body \\ "")
-  def request(method, url, headers, body) when is_map body do
+
+  def request(method, url, headers, body) when is_map(body) do
     request(method, url, headers, URI.encode_query(body))
   end
-  def request(method, url, headers, body) do
-    url     = String.to_charlist(url)
-    headers = headers |> Map.put_new("content-type", "text/html")
-    ct_type = headers["content-type"] |> String.to_charlist
 
-    header = Enum.map headers, fn {k, v} ->
-      {String.to_charlist(k), String.to_charlist(v)}
-    end
+  def request(method, url, headers, body) do
+    url = String.to_charlist(url)
+    headers = headers |> Map.put_new("content-type", "text/html")
+    ct_type = headers["content-type"] |> String.to_charlist()
+
+    header =
+      Enum.map(headers, fn {k, v} ->
+        {String.to_charlist(k), String.to_charlist(v)}
+      end)
 
     # Generate a random profile per request to avoid reuse
-    profile = :crypto.strong_rand_bytes(4) |> Base.encode16 |> String.to_atom
+    profile = :crypto.strong_rand_bytes(4) |> Base.encode16() |> String.to_atom()
     {:ok, pid} = :inets.start(:httpc, profile: profile)
 
     resp =
       case method do
         :get -> :httpc.request(:get, {url, header}, [], [body_format: :binary], pid)
-        _    -> :httpc.request(method, {url, header, ct_type, body}, [], [body_format: :binary], pid)
+        _ -> :httpc.request(method, {url, header, ct_type, body}, [], [body_format: :binary], pid)
       end
 
     :inets.stop(:httpc, pid)
@@ -50,5 +53,6 @@ defmodule Phoenix.Integration.HTTPClient do
   defp format_resp({:ok, {{_http, status, _status_phrase}, headers, body}}) do
     {:ok, %{status: status, headers: headers, body: body}}
   end
+
   defp format_resp({:error, reason}), do: {:error, reason}
 end

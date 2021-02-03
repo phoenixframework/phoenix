@@ -63,7 +63,9 @@ defmodule MyApp.UserView do
 
   def render("inner.html", assigns) do
     """
-    View module is #{view_module(assigns.conn)} and view template is #{view_template(assigns.conn)}
+    View module is #{view_module(assigns.conn)} and view template is #{
+      view_template(assigns.conn)
+    }
     """
   end
 

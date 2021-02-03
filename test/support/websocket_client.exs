@@ -108,7 +108,11 @@ defmodule Phoenix.Integration.WebsocketClient do
     end
   end
 
-  def websocket_info({:send, %Message{payload: {:binary, _}} = msg}, _conn_state, %{ref: ref} = state) do
+  def websocket_info(
+        {:send, %Message{payload: {:binary, _}} = msg},
+        _conn_state,
+        %{ref: ref} = state
+      ) do
     {join_ref, state} = join_ref_for(msg, state)
     msg = Map.merge(msg, %{ref: to_string(ref), join_ref: to_string(join_ref)})
     {:reply, {:binary, binary_encode_push!(msg)}, put_in(state.ref, ref + 1)}
@@ -124,7 +128,10 @@ defmodule Phoenix.Integration.WebsocketClient do
     {:close, <<>>, "done"}
   end
 
-  defp join_ref_for(%{topic: topic, event: "phx_join"}, %{topics: topics, join_ref: join_ref} = state) do
+  defp join_ref_for(
+         %{topic: topic, event: "phx_join"},
+         %{topics: topics, join_ref: join_ref} = state
+       ) do
     topics = Map.put(topics, topic, join_ref)
     {join_ref, %{state | topics: topics, join_ref: join_ref + 1}}
   end

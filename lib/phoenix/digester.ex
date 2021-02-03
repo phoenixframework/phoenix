@@ -119,7 +119,7 @@ defmodule Phoenix.Digester do
 
   defp compiled_file?(file_path) do
     compressors = Application.fetch_env!(:phoenix, :static_compressors)
-    compressed_extensions = Enum.flat_map(compressors, &(&1.file_extensions))
+    compressed_extensions = Enum.flat_map(compressors, & &1.file_extensions)
 
     Regex.match?(@digested_file_regex, Path.basename(file_path)) ||
       Path.extname(file_path) in compressed_extensions ||
@@ -153,10 +153,11 @@ defmodule Phoenix.Digester do
 
     compressors = Application.fetch_env!(:phoenix, :static_compressors)
 
-    Enum.each(compressors, fn(compressor) ->
+    Enum.each(compressors, fn compressor ->
       [file_extension | _] = compressor.file_extensions
 
-      with {:ok, compressed_digested} <- compressor.compress_file(file.digested_filename, file.digested_content) do
+      with {:ok, compressed_digested} <-
+             compressor.compress_file(file.digested_filename, file.digested_content) do
         File.write!(
           Path.join(path, file.digested_filename <> file_extension),
           compressed_digested

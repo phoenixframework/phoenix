@@ -7,7 +7,7 @@ defmodule Phoenix.Integration.EndpointHelper do
   Finds `n` unused network port numbers.
   """
   def get_unused_port_numbers(n) when is_integer(n) and n > 1 do
-    (1..n)
+    1..n
     # Open up `n` sockets at the same time, so we don't get
     # duplicate port numbers
     |> Enum.map(&listen_on_os_assigned_port/1)

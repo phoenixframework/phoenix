@@ -1,4 +1,4 @@
-Code.require_file "../../fixtures/views.exs", __DIR__
+Code.require_file("../../fixtures/views.exs", __DIR__)
 
 defmodule Phoenix.Controller.RenderTest do
   use ExUnit.Case, async: true
@@ -48,7 +48,9 @@ defmodule Phoenix.Controller.RenderTest do
       |> put_root_layout({MyApp.LayoutView, "root.html"})
       |> render("index.html", title: "Hello")
 
-    assert conn.resp_body == "ROOTSTART[Hello]<html>\n  <title>Hello</title>\n  Hello\n\n</html>\nROOTEND\n"
+    assert conn.resp_body ==
+             "ROOTSTART[Hello]<html>\n  <title>Hello</title>\n  Hello\n\n</html>\nROOTEND\n"
+
     assert html_response?(conn)
   end
 
@@ -66,7 +68,9 @@ defmodule Phoenix.Controller.RenderTest do
       |> put_root_layout({MyApp.LayoutView, :root})
       |> render("index.html", title: "Hello")
 
-    assert conn.resp_body == "ROOTSTART[Hello]<html>\n  <title>Hello</title>\n  Hello\n\n</html>\nROOTEND\n"
+    assert conn.resp_body ==
+             "ROOTSTART[Hello]<html>\n  <title>Hello</title>\n  Hello\n\n</html>\nROOTEND\n"
+
     assert html_response?(conn)
   end
 
@@ -90,12 +94,16 @@ defmodule Phoenix.Controller.RenderTest do
 
   test "render with layout sets view_module/template for layout and inner view" do
     conn = render(conn(), "inner.html", title: "Hello", layout: {MyApp.LayoutView, :app})
-    assert conn.resp_body == "<html>\n  <title>Hello</title>\n  View module is Elixir.MyApp.UserView and view template is inner.html\n\n</html>\n"
+
+    assert conn.resp_body ==
+             "<html>\n  <title>Hello</title>\n  View module is Elixir.MyApp.UserView and view template is inner.html\n\n</html>\n"
   end
 
   test "render without layout sets inner view_module/template assigns" do
     conn = render(conn(), "inner.html", [])
-    assert conn.resp_body == "View module is Elixir.MyApp.UserView and view template is inner.html\n"
+
+    assert conn.resp_body ==
+             "View module is Elixir.MyApp.UserView and view template is inner.html\n"
   end
 
   test "renders with conn status code" do
@@ -147,14 +155,14 @@ defmodule Phoenix.Controller.RenderTest do
 
   test "uses action name" do
     conn = put_format(conn(), "html")
-    conn = put_in conn.private[:phoenix_action], :index
+    conn = put_in(conn.private[:phoenix_action], :index)
     conn = render(conn, title: "Hello")
     assert conn.resp_body == "Hello\n"
   end
 
   test "render/2 renders with View and Template with atom for template" do
     conn = put_format(conn(), "json")
-    conn = put_in conn.private[:phoenix_action], :show
+    conn = put_in(conn.private[:phoenix_action], :show)
     conn = put_view(conn, MyApp.UserView)
     conn = render(conn, :show)
     assert conn.resp_body == ~s({"foo":"bar"})
@@ -162,7 +170,7 @@ defmodule Phoenix.Controller.RenderTest do
 
   test "render/2 renders with View and Template" do
     conn = put_format(conn(), "json")
-    conn = put_in conn.private[:phoenix_action], :show
+    conn = put_in(conn.private[:phoenix_action], :show)
     conn = put_view(conn, MyApp.UserView)
     conn = render(conn, "show.json")
     assert conn.resp_body == ~s({"foo":"bar"})

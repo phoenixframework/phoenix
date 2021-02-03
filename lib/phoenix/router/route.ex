@@ -24,9 +24,21 @@ defmodule Phoenix.Router.Route do
     * `:trailing_slash?` - whether or not the helper functions append a trailing slash
   """
 
-  defstruct [:verb, :line, :kind, :path, :host, :plug, :plug_opts,
-             :helper, :private, :pipe_through, :assigns, :metadata,
-             :trailing_slash?]
+  defstruct [
+    :verb,
+    :line,
+    :kind,
+    :path,
+    :host,
+    :plug,
+    :plug_opts,
+    :helper,
+    :private,
+    :pipe_through,
+    :assigns,
+    :metadata,
+    :trailing_slash?
+  ]
 
   @type t :: %Route{}
 
@@ -46,17 +58,56 @@ defmodule Phoenix.Router.Route do
   Receives the verb, path, plug, options and helper
   and returns a `Phoenix.Router.Route` struct.
   """
-  @spec build(non_neg_integer, :match | :forward, atom, String.t, String.t | nil, atom, atom, atom | nil, list(atom), map, map, map, boolean) :: t
-  def build(line, kind, verb, path, host, plug, plug_opts, helper, pipe_through, private, assigns, metadata, trailing_slash?)
+  @spec build(
+          non_neg_integer,
+          :match | :forward,
+          atom,
+          String.t(),
+          String.t() | nil,
+          atom,
+          atom,
+          atom | nil,
+          list(atom),
+          map,
+          map,
+          map,
+          boolean
+        ) :: t
+  def build(
+        line,
+        kind,
+        verb,
+        path,
+        host,
+        plug,
+        plug_opts,
+        helper,
+        pipe_through,
+        private,
+        assigns,
+        metadata,
+        trailing_slash?
+      )
       when is_atom(verb) and (is_binary(host) or is_nil(host)) and
-           is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
-           is_list(pipe_through) and is_map(private) and is_map(assigns) and
-           is_map(metadata) and kind in [:match, :forward] and
-           is_boolean(trailing_slash?) do
-    %Route{kind: kind, verb: verb, path: path, host: host, private: private,
-           plug: plug, plug_opts: plug_opts, helper: helper,
-           pipe_through: pipe_through, assigns: assigns, line: line, metadata: metadata,
-           trailing_slash?: trailing_slash?}
+             is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
+             is_list(pipe_through) and is_map(private) and is_map(assigns) and
+             is_map(metadata) and kind in [:match, :forward] and
+             is_boolean(trailing_slash?) do
+    %Route{
+      kind: kind,
+      verb: verb,
+      path: path,
+      host: host,
+      private: private,
+      plug: plug,
+      plug_opts: plug_opts,
+      helper: helper,
+      pipe_through: pipe_through,
+      assigns: assigns,
+      line: line,
+      metadata: metadata,
+      trailing_slash?: trailing_slash?
+    }
   end
 
   @doc """
@@ -82,23 +133,25 @@ defmodule Phoenix.Router.Route do
   defp build_path_params(binding), do: {:%{}, [], binding}
 
   defp build_path_and_binding(%Route{path: path} = route) do
-    {params, segments} = case route.kind do
-      :forward -> Plug.Router.Utils.build_path_match(path <> "/*_forward_path_info")
-      :match   -> Plug.Router.Utils.build_path_match(path)
-    end
+    {params, segments} =
+      case route.kind do
+        :forward -> Plug.Router.Utils.build_path_match(path <> "/*_forward_path_info")
+        :match -> Plug.Router.Utils.build_path_match(path)
+      end
 
-    binding = for var <- params, var != :_forward_path_info do
-      {Atom.to_string(var), Macro.var(var, nil)}
-    end
+    binding =
+      for var <- params, var != :_forward_path_info do
+        {Atom.to_string(var), Macro.var(var, nil)}
+      end
 
     {segments, binding}
   end
 
   defp build_host(host) do
     cond do
-      is_nil(host)             -> quote do: _
+      is_nil(host) -> quote do: _
       String.last(host) == "." -> quote do: unquote(host) <> _
-      true                     -> host
+      true -> host
     end
   end
 
@@ -140,6 +193,7 @@ defmodule Phoenix.Router.Route do
   end
 
   defp build_prepare_expr(_key, data) when data == %{}, do: {[], []}
+
   defp build_prepare_expr(key, data) do
     var = Macro.var(key, :conn)
     merge = quote(do: Map.merge(unquote(var), unquote(Macro.escape(data))))
@@ -147,6 +201,7 @@ defmodule Phoenix.Router.Route do
   end
 
   defp build_params([]), do: {[], []}
+
   defp build_params(_binding) do
     params = Macro.var(:params, :conn)
     path_params = Macro.var(:path_params, :conn)
@@ -168,11 +223,15 @@ defmodule Phoenix.Router.Route do
     case Plug.Router.Utils.build_path_match(path) do
       {[], path_segments} ->
         if phoenix_forwards[plug] do
-          raise ArgumentError, "#{inspect plug} has already been forwarded to. A module can only be forwarded a single time."
+          raise ArgumentError,
+                "#{inspect(plug)} has already been forwarded to. A module can only be forwarded a single time."
         end
+
         path_segments
+
       _ ->
-        raise ArgumentError, "dynamic segment \"#{path}\" not allowed when forwarding. Use a static path instead."
+        raise ArgumentError,
+              "dynamic segment \"#{path}\" not allowed when forwarding. Use a static path instead."
     end
   end
 end

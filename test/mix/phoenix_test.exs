@@ -29,19 +29,20 @@ defmodule Mix.PhoenixTest do
       "joined:naive_datetime",
       "token:uuid"
     ]
+
     assert Mix.Phoenix.Schema.attrs(attrs) == [
-      logins: {:array, :string},
-      age: :integer,
-      temp: :float,
-      temp_2: :decimal,
-      admin: :boolean,
-      meta: :map,
-      name: :text,
-      date_of_birth: :date,
-      happy_hour: :time,
-      joined: :naive_datetime,
-      token: :uuid
-    ]
+             logins: {:array, :string},
+             age: :integer,
+             temp: :float,
+             temp_2: :decimal,
+             admin: :boolean,
+             meta: :map,
+             name: :text,
+             date_of_birth: :date,
+             happy_hour: :time,
+             joined: :naive_datetime,
+             token: :uuid
+           ]
   end
 
   test "attrs/1 raises with an unknown type" do

@@ -10,11 +10,11 @@ defmodule Phoenix.Controller.FlashTest do
   end
 
   @session Plug.Session.init(
-    store: :cookie,
-    key: "_app",
-    encryption_salt: "yadayada",
-    signing_salt: "yadayada"
-  )
+             store: :cookie,
+             key: "_app",
+             encryption_salt: "yadayada",
+             signing_salt: "yadayada"
+           )
 
   def with_session(conn) do
     conn
@@ -35,8 +35,13 @@ defmodule Phoenix.Controller.FlashTest do
 
   test "flash is persisted when status is a redirect" do
     for status <- 300..308 do
-      conn = conn(:get, "/") |> with_session |> fetch_flash()
-                             |> put_flash(:notice, "elixir") |> send_resp(status, "ok")
+      conn =
+        conn(:get, "/")
+        |> with_session
+        |> fetch_flash()
+        |> put_flash(:notice, "elixir")
+        |> send_resp(status, "ok")
+
       assert get_flash(conn, :notice) == "elixir"
       assert get_resp_header(conn, "set-cookie") != []
       conn = conn(:get, "/") |> recycle_cookies(conn) |> with_session |> fetch_flash()
@@ -46,8 +51,13 @@ defmodule Phoenix.Controller.FlashTest do
 
   test "flash is not persisted when status is not redirect" do
     for status <- [299, 309, 200, 404] do
-      conn = conn(:get, "/") |> with_session |> fetch_flash()
-                             |> put_flash(:notice, "elixir") |> send_resp(status, "ok")
+      conn =
+        conn(:get, "/")
+        |> with_session
+        |> fetch_flash()
+        |> put_flash(:notice, "elixir")
+        |> send_resp(status, "ok")
+
       assert get_flash(conn, :notice) == "elixir"
       assert get_resp_header(conn, "set-cookie") != []
       conn = conn(:get, "/") |> recycle_cookies(conn) |> with_session |> fetch_flash()

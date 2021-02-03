@@ -33,7 +33,7 @@ defmodule Phoenix.Socket.V1.JSONSerializerTest do
 
   test "decode!/2 decodes `Phoenix.Socket.Message` from JSON" do
     assert %Message{topic: "t", event: "e", payload: "m"} ==
-      decode!(@serializer, @v1_msg_json, opcode: :text)
+             decode!(@serializer, @v1_msg_json, opcode: :text)
   end
 
   test "fastlane!/1 encodes a broadcast into a message as JSON" do

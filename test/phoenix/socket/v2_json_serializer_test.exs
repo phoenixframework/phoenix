@@ -225,7 +225,6 @@ defmodule Phoenix.Socket.V2.JSONSerializerTest do
           payload: {:binary, <<101, 102, 103>>}
         })
       end
-
     end
   end
 

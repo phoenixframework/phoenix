@@ -1,6 +1,6 @@
 defmodule Phoenix.Test.ConnTest.CatchAll do
   defmodule ConnError do
-    defexception [message: "hello", plug_status: 500]
+    defexception message: "hello", plug_status: 500
   end
 
   def init(opts), do: opts
@@ -62,6 +62,7 @@ defmodule Phoenix.Test.ConnTest do
     use Phoenix.Endpoint, otp_app: :phoenix
     def init(opts), do: opts
     def call(conn, :set), do: resp(conn, 200, "ok")
+
     def call(conn, opts) do
       put_in(super(conn, opts).private[:endpoint], opts)
       |> Router.call(Router.init([]))
@@ -119,7 +120,9 @@ defmodule Phoenix.Test.ConnTest do
       build_conn()
       |> put_req_header("content-type", "application/json")
       |> post(:hello, "[1, 2, 3]")
-      |> Plug.Parsers.call(Plug.Parsers.init(parsers: [:json], json_decoder: Phoenix.json_library()))
+      |> Plug.Parsers.call(
+        Plug.Parsers.init(parsers: [:json], json_decoder: Phoenix.json_library())
+      )
 
     assert conn.method == "POST"
     assert conn.path_info == []
@@ -131,12 +134,14 @@ defmodule Phoenix.Test.ConnTest do
       build_conn()
       |> put_req_header("hello", "world")
       |> post(:hello)
+
     assert get_req_header(conn, "hello") == ["world"]
 
     conn =
       conn
       |> put_req_header("hello", "skipped")
       |> post(:hello)
+
     assert get_req_header(conn, "hello") == []
 
     conn =
@@ -144,11 +149,12 @@ defmodule Phoenix.Test.ConnTest do
       |> recycle()
       |> put_req_header("hello", "world")
       |> post(:hello)
+
     assert get_req_header(conn, "hello") == ["world"]
   end
 
   test "dispatch/5 with :set state automatically sends" do
-    conn = get build_conn(), :set
+    conn = get(build_conn(), :set)
     assert conn.state == :sent
     assert conn.status == 200
     assert conn.resp_body == "ok"
@@ -176,6 +182,7 @@ defmodule Phoenix.Test.ConnTest do
       conn =
         build_conn(:get, "http://localhost/", nil)
         |> recycle()
+
       assert conn.host == "localhost"
     end
 
@@ -191,17 +198,21 @@ defmodule Phoenix.Test.ConnTest do
         |> delete_resp_cookie("del_cookie")
 
       conn = conn |> recycle() |> fetch_cookies()
-      assert conn.cookies == %{"req_cookie"  => "req_cookie",
-                               "over_cookie" => "pos_cookie",
-                               "resp_cookie" => "resp_cookie"}
+
+      assert conn.cookies == %{
+               "req_cookie" => "req_cookie",
+               "over_cookie" => "pos_cookie",
+               "resp_cookie" => "resp_cookie"
+             }
     end
 
     test "peer data is persisted" do
       peer_data = %{
         address: {127, 0, 0, 1},
-        port: 111317,
+        port: 111_317,
         ssl_cert: <<1, 2, 3, 4>>
       }
+
       conn =
         build_conn()
         |> Plug.Test.put_peer_data(peer_data)
@@ -232,11 +243,13 @@ defmodule Phoenix.Test.ConnTest do
       build_conn()
       |> put_req_header("hello", "world")
       |> ensure_recycled()
+
     assert get_req_header(conn, "hello") == ["world"]
 
     conn =
       put_in(conn.private.phoenix_recycled, false)
       |> ensure_recycled()
+
     assert get_req_header(conn, "hello") == []
   end
 
@@ -273,56 +286,70 @@ defmodule Phoenix.Test.ConnTest do
     assert conn |> send_resp(200, "ok") |> response(:ok) == "ok"
 
     assert_raise RuntimeError,
-                 ~r"expected connection to have a response but no response was set/sent", fn ->
-      build_conn(:get, "/") |> response(200)
-    end
+                 ~r"expected connection to have a response but no response was set/sent",
+                 fn ->
+                   build_conn(:get, "/") |> response(200)
+                 end
 
     assert_raise RuntimeError,
-                 "expected response with status 200, got: 404, with body:\n\"oops\"", fn ->
-      build_conn(:get, "/") |> resp(404, "oops") |> response(200)
-    end
+                 "expected response with status 200, got: 404, with body:\n\"oops\"",
+                 fn ->
+                   build_conn(:get, "/") |> resp(404, "oops") |> response(200)
+                 end
 
     assert_raise RuntimeError,
-                 "expected response with status 200, got: 404, with body:\n<<192>>", fn ->
-      build_conn(:get, "/") |> resp(404, <<192>>) |> response(200)
-    end
+                 "expected response with status 200, got: 404, with body:\n<<192>>",
+                 fn ->
+                   build_conn(:get, "/") |> resp(404, <<192>>) |> response(200)
+                 end
   end
 
   test "html_response/2" do
-    assert build_conn(:get, "/") |> put_resp_content_type("text/html")
-                           |> resp(200, "ok") |> html_response(:ok) == "ok"
+    assert build_conn(:get, "/")
+           |> put_resp_content_type("text/html")
+           |> resp(200, "ok")
+           |> html_response(:ok) == "ok"
 
-    assert_raise RuntimeError,
-                 "no content-type was set, expected a html response", fn ->
+    assert_raise RuntimeError, "no content-type was set, expected a html response", fn ->
       build_conn(:get, "/") |> resp(200, "ok") |> html_response(200)
     end
   end
 
   test "json_response/2" do
-    assert build_conn(:get, "/") |> put_resp_content_type("application/json")
-                           |> resp(200, "{}") |> json_response(:ok) == %{}
+    assert build_conn(:get, "/")
+           |> put_resp_content_type("application/json")
+           |> resp(200, "{}")
+           |> json_response(:ok) == %{}
 
-    assert build_conn(:get, "/") |> put_resp_content_type("application/vnd.api+json")
-                           |> resp(200, "{}") |> json_response(:ok) == %{}
+    assert build_conn(:get, "/")
+           |> put_resp_content_type("application/vnd.api+json")
+           |> resp(200, "{}")
+           |> json_response(:ok) == %{}
 
-    assert build_conn(:get, "/") |> put_resp_content_type("application/vnd.collection+json")
-                           |> resp(200, "{}") |> json_response(:ok) == %{}
+    assert build_conn(:get, "/")
+           |> put_resp_content_type("application/vnd.collection+json")
+           |> resp(200, "{}")
+           |> json_response(:ok) == %{}
 
-    assert build_conn(:get, "/") |> put_resp_content_type("application/vnd.hal+json")
-                           |> resp(200, "{}") |> json_response(:ok) == %{}
+    assert build_conn(:get, "/")
+           |> put_resp_content_type("application/vnd.hal+json")
+           |> resp(200, "{}")
+           |> json_response(:ok) == %{}
 
-    assert build_conn(:get, "/") |> put_resp_content_type("application/ld+json")
-                           |> resp(200, "{}") |> json_response(:ok) == %{}
+    assert build_conn(:get, "/")
+           |> put_resp_content_type("application/ld+json")
+           |> resp(200, "{}")
+           |> json_response(:ok) == %{}
 
-    assert_raise RuntimeError,
-                 "no content-type was set, expected a json response", fn ->
+    assert_raise RuntimeError, "no content-type was set, expected a json response", fn ->
       build_conn(:get, "/") |> resp(200, "ok") |> json_response(200)
     end
 
-    assert_raise Jason.DecodeError,
-                 "unexpected byte at position 0: 0x6F ('o')", fn ->
-      build_conn(:get, "/") |> put_resp_content_type("application/json")
-                      |> resp(200, "ok") |> json_response(200)
+    assert_raise Jason.DecodeError, "unexpected byte at position 0: 0x6F ('o')", fn ->
+      build_conn(:get, "/")
+      |> put_resp_content_type("application/json")
+      |> resp(200, "ok")
+      |> json_response(200)
     end
 
     assert_raise Jason.DecodeError, ~r/unexpected end of input at position 0/, fn ->
@@ -332,20 +359,24 @@ defmodule Phoenix.Test.ConnTest do
       |> json_response(200)
     end
 
-    assert_raise RuntimeError, ~s(expected response with status 200, got: 400, with body:\n) <> inspect(~s({"error": "oh oh"})), fn ->
-      build_conn(:get, "/")
-      |> put_resp_content_type("application/json")
-      |> resp(400, ~s({"error": "oh oh"}))
-      |> json_response(200)
-    end
+    assert_raise RuntimeError,
+                 ~s(expected response with status 200, got: 400, with body:\n) <>
+                   inspect(~s({"error": "oh oh"})),
+                 fn ->
+                   build_conn(:get, "/")
+                   |> put_resp_content_type("application/json")
+                   |> resp(400, ~s({"error": "oh oh"}))
+                   |> json_response(200)
+                 end
   end
 
   test "text_response/2" do
-    assert build_conn(:get, "/") |> put_resp_content_type("text/plain")
-                           |> resp(200, "ok") |> text_response(:ok) == "ok"
+    assert build_conn(:get, "/")
+           |> put_resp_content_type("text/plain")
+           |> resp(200, "ok")
+           |> text_response(:ok) == "ok"
 
-    assert_raise RuntimeError,
-                 "no content-type was set, expected a text response", fn ->
+    assert_raise RuntimeError, "no content-type was set, expected a text response", fn ->
       build_conn(:get, "/") |> resp(200, "ok") |> text_response(200)
     end
   end
@@ -354,21 +385,23 @@ defmodule Phoenix.Test.ConnTest do
     conn = build_conn(:get, "/")
 
     assert put_resp_content_type(conn, "text/html") |> response_content_type(:html) ==
-           "text/html; charset=utf-8"
-    assert put_resp_content_type(conn, "text/plain") |> response_content_type(:text) ==
-           "text/plain; charset=utf-8"
-    assert put_resp_content_type(conn, "application/json") |> response_content_type(:json) ==
-           "application/json; charset=utf-8"
+             "text/html; charset=utf-8"
 
-    assert_raise RuntimeError,
-                 "no content-type was set, expected a html response", fn ->
+    assert put_resp_content_type(conn, "text/plain") |> response_content_type(:text) ==
+             "text/plain; charset=utf-8"
+
+    assert put_resp_content_type(conn, "application/json") |> response_content_type(:json) ==
+             "application/json; charset=utf-8"
+
+    assert_raise RuntimeError, "no content-type was set, expected a html response", fn ->
       conn |> response_content_type(:html)
     end
 
     assert_raise RuntimeError,
-                 "expected content-type for html, got: \"text/plain; charset=utf-8\"", fn ->
-      put_resp_content_type(conn, "text/plain") |> response_content_type(:html)
-    end
+                 "expected content-type for html, got: \"text/plain; charset=utf-8\"",
+                 fn ->
+                   put_resp_content_type(conn, "text/plain") |> response_content_type(:html)
+                 end
   end
 
   test "redirected_to/1" do
@@ -381,14 +414,14 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "redirected_to/2" do
-    Enum.each 300..308, fn(status) ->
+    Enum.each(300..308, fn status ->
       conn =
         build_conn(:get, "/")
         |> put_resp_header("location", "new location")
         |> send_resp(status, "foo")
 
       assert redirected_to(conn, status) == "new location"
-    end
+    end)
   end
 
   test "redirected_to/2 with status atom" do
@@ -401,17 +434,15 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "redirected_to/2 without header" do
-    assert_raise RuntimeError,
-                 "no location header was set on redirected_to", fn ->
+    assert_raise RuntimeError, "no location header was set on redirected_to", fn ->
       assert build_conn(:get, "/")
-      |> send_resp(302, "ok")
-      |> redirected_to()
+             |> send_resp(302, "ok")
+             |> redirected_to()
     end
   end
 
   test "redirected_to/2 without redirection" do
-    assert_raise RuntimeError,
-                 "expected redirection with status 302, got: 200", fn ->
+    assert_raise RuntimeError, "expected redirection with status 302, got: 200", fn ->
       build_conn(:get, "/")
       |> put_resp_header("location", "new location")
       |> send_resp(200, "ok")
@@ -421,10 +452,11 @@ defmodule Phoenix.Test.ConnTest do
 
   test "redirected_to/2 without response" do
     assert_raise RuntimeError,
-                 ~r"expected connection to have redirected but no response was set/sent", fn ->
-      build_conn(:get, "/")
-      |> redirected_to()
-    end
+                 ~r"expected connection to have redirected but no response was set/sent",
+                 fn ->
+                   build_conn(:get, "/")
+                   |> redirected_to()
+                 end
   end
 
   describe "redirected_params/1" do
@@ -451,8 +483,7 @@ defmodule Phoenix.Test.ConnTest do
     end
 
     test "without redirection" do
-      assert_raise RuntimeError,
-                  "expected redirection with status 302, got: 200", fn ->
+      assert_raise RuntimeError, "expected redirection with status 302, got: 200", fn ->
         build_conn(:get, "/")
         |> RedirRouter.call(RedirRouter.init([]))
         |> put_resp_header("location", "new location")
@@ -528,43 +559,55 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "assert_error_sent/2 with expected error response" do
-    response = assert_error_sent :not_found, fn ->
-      get(build_conn(), "/stat", action: "conn_404")
-    end
+    response =
+      assert_error_sent :not_found, fn ->
+        get(build_conn(), "/stat", action: "conn_404")
+      end
+
     assert {404, [_h | _t], "404.html from Phoenix.ErrorView"} = response
 
-    response = assert_error_sent 400, fn ->
-      get(build_conn(), "/stat", action: "conn_400")
-    end
+    response =
+      assert_error_sent 400, fn ->
+        get(build_conn(), "/stat", action: "conn_400")
+      end
+
     assert {400, [_h | _t], "400.html from Phoenix.ErrorView"} = response
   end
 
   test "assert_error_sent/2 with status mismatch assertion" do
-    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 400 status, but got 500 from.*RuntimeError/s, fn ->
-      assert_error_sent 400, fn ->
-        get(build_conn(), "/stat", action: "runtime")
-      end
-    end
+    assert_raise ExUnit.AssertionError,
+                 ~r/expected error to be sent as 400 status, but got 500 from.*RuntimeError/s,
+                 fn ->
+                   assert_error_sent 400, fn ->
+                     get(build_conn(), "/stat", action: "runtime")
+                   end
+                 end
   end
 
   test "assert_error_sent/2 with no error" do
-    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 404 status, but no error happened/, fn ->
-      assert_error_sent 404, fn -> get(build_conn(), "/") end
-    end
+    assert_raise ExUnit.AssertionError,
+                 ~r/expected error to be sent as 404 status, but no error happened/,
+                 fn ->
+                   assert_error_sent 404, fn -> get(build_conn(), "/") end
+                 end
   end
 
   test "assert_error_sent/2 with error but no response" do
-    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 404 status, but got an error with no response from.*RuntimeError/s, fn ->
-      assert_error_sent 404, fn -> raise "oops" end
-    end
+    assert_raise ExUnit.AssertionError,
+                 ~r/expected error to be sent as 404 status, but got an error with no response from.*RuntimeError/s,
+                 fn ->
+                   assert_error_sent 404, fn -> raise "oops" end
+                 end
   end
 
   test "assert_error_sent/2 with response but no error" do
-    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 400 status, but response sent 400 without error/, fn ->
-      assert_error_sent :bad_request, fn ->
-        get(build_conn(), "/stat", action: "send_400")
-      end
-    end
+    assert_raise ExUnit.AssertionError,
+                 ~r/expected error to be sent as 400 status, but response sent 400 without error/,
+                 fn ->
+                   assert_error_sent :bad_request, fn ->
+                     get(build_conn(), "/stat", action: "send_400")
+                   end
+                 end
   end
 
   for method <- [:get, :post, :put, :delete] do

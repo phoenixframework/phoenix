@@ -11,6 +11,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     def edit(conn, _params), do: text(conn, "api v1 users edit")
     def foo_host(conn, _params), do: text(conn, "foo request from #{conn.host}")
     def baz_host(conn, _params), do: text(conn, "baz request from #{conn.host}")
+
     def proxy(conn, _) do
       {controller, action} = conn.private.proxy_to
       controller.call(conn, controller.init(action))
@@ -58,7 +59,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
         scope "/scoped", alias: false do
           get "/noalias", Api.V1.UserController, :proxy,
-          private: %{proxy_to: {scoped_alias(__MODULE__, Api.V1.UserController), :show}}
+            private: %{proxy_to: {scoped_alias(__MODULE__, Api.V1.UserController), :show}}
         end
       end
     end
@@ -204,6 +205,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
       defmodule SomeRouter do
         use Phoenix.Router, otp_app: :phoenix
         get "/foo", Router, []
+
         scope "/another" do
           resources '/bar', Router, []
         end
@@ -227,6 +229,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     assert_raise ArgumentError, ~r/`static` is a reserved route prefix/, fn ->
       defmodule ErrorRouter do
         use Phoenix.Router
+
         scope "/" do
           get "/", StaticController, :index
         end
@@ -236,6 +239,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     assert_raise ArgumentError, ~r/`static` is a reserved route prefix/, fn ->
       defmodule ErrorRouter do
         use Phoenix.Router
+
         scope "/" do
           get "/", Api.V1.UserController, :show, as: :static
         end

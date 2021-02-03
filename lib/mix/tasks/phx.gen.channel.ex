@@ -26,8 +26,11 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.channel must be invoked from within your *_web application root directory"
+      Mix.raise(
+        "mix phx.gen.channel must be invoked from within your *_web application root directory"
+      )
     end
+
     [channel_name] = validate_args!(args)
     context_app = Mix.Phoenix.context_app()
     web_prefix = Mix.Phoenix.web_path(context_app)
@@ -37,33 +40,35 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")
 
-    Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.channel", binding, [
-      {:eex, "channel.ex",       Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
-      {:eex, "channel_test.exs", Path.join(test_prefix, "channels/#{binding[:path]}_channel_test.exs")},
-    ]
+    Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.channel", binding, [
+      {:eex, "channel.ex", Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
+      {:eex, "channel_test.exs",
+       Path.join(test_prefix, "channels/#{binding[:path]}_channel_test.exs")}
+    ])
 
-    Mix.shell().info """
+    Mix.shell().info("""
 
     Add the channel to your `#{Mix.Phoenix.web_path(context_app, "channels/user_socket.ex")}` handler, for example:
 
         channel "#{binding[:singular]}:lobby", #{binding[:module]}Channel
-    """
+    """)
   end
 
   @spec raise_with_help() :: no_return()
   defp raise_with_help do
-    Mix.raise """
+    Mix.raise("""
     mix phx.gen.channel expects just the module name:
 
         mix phx.gen.channel Room
 
-    """
+    """)
   end
 
   defp validate_args!(args) do
     unless length(args) == 1 do
       raise_with_help()
     end
+
     args
   end
 

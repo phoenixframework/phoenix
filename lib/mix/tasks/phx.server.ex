@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Phx.Server do
   @doc false
   def run(args) do
     Application.put_env(:phoenix, :serve_endpoints, true, persistent: true)
-    Mix.Tasks.Run.run run_args() ++ args
+    Mix.Tasks.Run.run(run_args() ++ args)
   end
 
   defp run_args do

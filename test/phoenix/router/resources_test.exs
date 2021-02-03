@@ -38,6 +38,7 @@ defmodule Phoenix.Router.ResourcesTest do
       resources "/comments", CommentController do
         get "/special", CommentController, :special
       end
+
       resources "/files", FileController, except: [:delete]
     end
 
@@ -244,16 +245,18 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.status == 200
     assert conn.params["slug"] == "foo"
     assert conn.resp_body == "show users"
+
     assert Router.Helpers.admin_path(conn, :show, "foo") ==
-           "/admin/foo"
+             "/admin/foo"
 
     conn = call(Router, :get, "admin/bar/comments/the_key")
     assert conn.status == 200
     assert conn.params["admin_slug"] == "bar"
     assert conn.params["key"] == "the_key"
     assert conn.resp_body == "show comments"
+
     assert Router.Helpers.admin_post_path(conn, :show, "bar", "the_key") ==
-           "/admin/bar/comments/the_key"
+             "/admin/bar/comments/the_key"
   end
 
   test "resources with :only sets proper match order for :show and :new" do
@@ -268,29 +271,35 @@ defmodule Phoenix.Router.ResourcesTest do
   end
 
   test "singleton resources declaring an :index route throws an ArgumentError" do
-    assert_raise ArgumentError, ~r/supported singleton actions: \[:edit, :new, :show, :create, :update, :delete\]/, fn ->
-      defmodule SingletonRouter.Router do
-        use Phoenix.Router
-        resources "/", UserController, singleton: true, only: [:index]
-      end
-    end
+    assert_raise ArgumentError,
+                 ~r/supported singleton actions: \[:edit, :new, :show, :create, :update, :delete\]/,
+                 fn ->
+                   defmodule SingletonRouter.Router do
+                     use Phoenix.Router
+                     resources "/", UserController, singleton: true, only: [:index]
+                   end
+                 end
   end
 
   test "resources validates :only actions" do
-    assert_raise ArgumentError, ~r/supported actions: \[:index, :edit, :new, :show, :create, :update, :delete\]/, fn ->
-      defmodule SingletonRouter.Router do
-        use Phoenix.Router
-        resources "/", UserController, only: [:bad_index]
-      end
-    end
+    assert_raise ArgumentError,
+                 ~r/supported actions: \[:index, :edit, :new, :show, :create, :update, :delete\]/,
+                 fn ->
+                   defmodule SingletonRouter.Router do
+                     use Phoenix.Router
+                     resources "/", UserController, only: [:bad_index]
+                   end
+                 end
   end
 
   test "resources validates :except actions" do
-    assert_raise ArgumentError, ~r/supported actions: \[:index, :edit, :new, :show, :create, :update, :delete\]/, fn ->
-      defmodule SingletonRouter.Router do
-        use Phoenix.Router
-        resources "/", UserController, except: [:bad_index]
-      end
-    end
+    assert_raise ArgumentError,
+                 ~r/supported actions: \[:index, :edit, :new, :show, :create, :update, :delete\]/,
+                 fn ->
+                   defmodule SingletonRouter.Router do
+                     use Phoenix.Router
+                     resources "/", UserController, except: [:bad_index]
+                   end
+                 end
   end
 end

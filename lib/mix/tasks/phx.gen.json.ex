@@ -81,7 +81,9 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.json must be invoked from within your *_web application root directory"
+      Mix.raise(
+        "mix phx.gen.json must be invoked from within your *_web application root directory"
+      )
     end
 
     {context, schema} = Gen.Context.build(args)
@@ -103,9 +105,11 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     |> Kernel.++(context_files(context))
     |> Mix.Phoenix.prompt_for_conflicts()
   end
+
   defp context_files(%Context{generate?: true} = context) do
     Gen.Context.files_to_be_generated(context)
   end
+
   defp context_files(%Context{generate?: false}) do
     []
   end
@@ -117,18 +121,21 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     web_path = to_string(schema.web_path)
 
     [
-      {:eex,     "controller.ex",          Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_controller.ex"])},
-      {:eex,     "view.ex",                Path.join([web_prefix, "views", web_path, "#{schema.singular}_view.ex"])},
-      {:eex,     "controller_test.exs",    Path.join([test_prefix, "controllers", web_path, "#{schema.singular}_controller_test.exs"])},
-      {:new_eex, "changeset_view.ex",      Path.join([web_prefix, "views/changeset_view.ex"])},
-      {:new_eex, "fallback_controller.ex", Path.join([web_prefix, "controllers/fallback_controller.ex"])},
+      {:eex, "controller.ex",
+       Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_controller.ex"])},
+      {:eex, "view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_view.ex"])},
+      {:eex, "controller_test.exs",
+       Path.join([test_prefix, "controllers", web_path, "#{schema.singular}_controller_test.exs"])},
+      {:new_eex, "changeset_view.ex", Path.join([web_prefix, "views/changeset_view.ex"])},
+      {:new_eex, "fallback_controller.ex",
+       Path.join([web_prefix, "controllers/fallback_controller.ex"])}
     ]
   end
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
-    Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.json", binding, files
+    Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.json", binding, files)
     if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
 
     context
@@ -137,24 +144,29 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
     if schema.web_namespace do
-      Mix.shell().info """
+      Mix.shell().info("""
 
-      Add the resource to your #{schema.web_namespace} :api scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
+      Add the resource to your #{schema.web_namespace} :api scope in #{
+        Mix.Phoenix.web_path(ctx_app)
+      }/router.ex:
 
-          scope "/#{schema.web_path}", #{inspect Module.concat(context.web_module, schema.web_namespace)}, as: :#{schema.web_path} do
+          scope "/#{schema.web_path}", #{
+        inspect(Module.concat(context.web_module, schema.web_namespace))
+      }, as: :#{schema.web_path} do
             pipe_through :api
             ...
-            resources "/#{schema.plural}", #{inspect schema.alias}Controller
+            resources "/#{schema.plural}", #{inspect(schema.alias)}Controller
           end
-      """
+      """)
     else
-      Mix.shell().info """
+      Mix.shell().info("""
 
       Add the resource to your :api scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          resources "/#{schema.plural}", #{inspect schema.alias}Controller, except: [:new, :edit]
-      """
+          resources "/#{schema.plural}", #{inspect(schema.alias)}Controller, except: [:new, :edit]
+      """)
     end
+
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end
 end

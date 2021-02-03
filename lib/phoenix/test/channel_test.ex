@@ -175,15 +175,18 @@ defmodule Phoenix.ChannelTest do
 
   @doc false
   defmacro __using__(_) do
-    IO.warn """
-    Using Phoenix.ChannelTest is deprecated, instead of:
+    IO.warn(
+      """
+      Using Phoenix.ChannelTest is deprecated, instead of:
 
-        use Phoenix.ChannelTest
+          use Phoenix.ChannelTest
 
-    do:
+      do:
 
-        import Phoenix.ChannelTest
-    """, Macro.Env.stacktrace(__CALLER__)
+          import Phoenix.ChannelTest
+      """,
+      Macro.Env.stacktrace(__CALLER__)
+    )
 
     quote do
       import Phoenix.ChannelTest
@@ -254,7 +257,7 @@ defmodule Phoenix.ChannelTest do
 
   defp first_socket!(endpoint) do
     case endpoint.__sockets__ do
-      [] -> raise ArgumentError, "#{inspect endpoint} has no socket declaration"
+      [] -> raise ArgumentError, "#{inspect(endpoint)} has no socket declaration"
       [{_, socket, _} | _] -> socket
     end
   end
@@ -268,7 +271,12 @@ defmodule Phoenix.ChannelTest do
   defmacro connect(handler, params, connect_info \\ quote(do: %{})) do
     if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
       quote do
-        unquote(__MODULE__).__connect__(unquote(endpoint), unquote(handler), unquote(params), unquote(connect_info))
+        unquote(__MODULE__).__connect__(
+          unquote(endpoint),
+          unquote(handler),
+          unquote(params),
+          unquote(connect_info)
+        )
       end
     else
       raise "module attribute @endpoint not set for socket/2"
@@ -312,7 +320,7 @@ defmodule Phoenix.ChannelTest do
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
     case subscribe_and_join(socket, channel, topic, payload) do
       {:ok, _, socket} -> socket
-      {:error, error}  -> raise "could not join channel, got error: #{inspect(error)}"
+      {:error, error} -> raise "could not join channel, got error: #{inspect(error)}"
     end
   end
 
@@ -387,6 +395,7 @@ defmodule Phoenix.ChannelTest do
       {:ok, reply, pid} ->
         Process.link(pid)
         {:ok, reply, Server.socket(pid)}
+
       {:error, _} = error ->
         error
     end
@@ -403,18 +412,22 @@ defmodule Phoenix.ChannelTest do
       reference
 
   """
-  @spec push(Socket.t, String.t, map()) :: reference()
+  @spec push(Socket.t(), String.t(), map()) :: reference()
   def push(%Socket{} = socket, event, payload \\ %{}) do
     ref = make_ref()
-    send(socket.channel_pid,
-         %Message{event: event, topic: socket.topic, ref: ref, payload: __stringify__(payload)})
+
+    send(
+      socket.channel_pid,
+      %Message{event: event, topic: socket.topic, ref: ref, payload: __stringify__(payload)}
+    )
+
     ref
   end
 
   @doc """
   Emulates the client leaving the channel.
   """
-  @spec leave(Socket.t) :: reference()
+  @spec leave(Socket.t()) :: reference()
   def leave(%Socket{} = socket) do
     push(socket, "phx_leave", %{})
   end
@@ -443,7 +456,7 @@ defmodule Phoenix.ChannelTest do
   """
   def broadcast_from(%Socket{} = socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket
-    Server.broadcast_from pubsub_server, transport_pid, topic, event, message
+    Server.broadcast_from(pubsub_server, transport_pid, topic, event, message)
   end
 
   @doc """
@@ -451,7 +464,7 @@ defmodule Phoenix.ChannelTest do
   """
   def broadcast_from!(%Socket{} = socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket
-    Server.broadcast_from! pubsub_server, transport_pid, topic, event, message
+    Server.broadcast_from!(pubsub_server, transport_pid, topic, event, message)
   end
 
   @doc """
@@ -485,11 +498,17 @@ defmodule Phoenix.ChannelTest do
       # The code above does not assert the payload matches the described map.
 
   """
-  defmacro assert_push(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
+  defmacro assert_push(
+             event,
+             payload,
+             timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)
+           ) do
     quote do
       assert_receive %Phoenix.Socket.Message{
-                        event: unquote(event),
-                        payload: unquote(payload)}, unquote(timeout)
+                       event: unquote(event),
+                       payload: unquote(payload)
+                     },
+                     unquote(timeout)
     end
   end
 
@@ -505,11 +524,17 @@ defmodule Phoenix.ChannelTest do
   timeout value, so use it only when necessary as overuse
   will certainly slow down your test suite.
   """
-  defmacro refute_push(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)) do
+  defmacro refute_push(
+             event,
+             payload,
+             timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)
+           ) do
     quote do
       refute_receive %Phoenix.Socket.Message{
-                        event: unquote(event),
-                        payload: unquote(payload)}, unquote(timeout)
+                       event: unquote(event),
+                       payload: unquote(payload)
+                     },
+                     unquote(timeout)
     end
   end
 
@@ -528,13 +553,21 @@ defmodule Phoenix.ChannelTest do
   The timeout is in milliseconds and defaults to the `:assert_receive_timeout`
   set on the `:ex_unit` application (which defaults to 100ms).
   """
-  defmacro assert_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
+  defmacro assert_reply(
+             ref,
+             status,
+             payload \\ Macro.escape(%{}),
+             timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)
+           ) do
     quote do
       ref = unquote(ref)
+
       assert_receive %Phoenix.Socket.Reply{
-                        ref: ^ref,
-                        status: unquote(status),
-                        payload: unquote(payload)}, unquote(timeout)
+                       ref: ^ref,
+                       status: unquote(status),
+                       payload: unquote(payload)
+                     },
+                     unquote(timeout)
     end
   end
 
@@ -550,13 +583,21 @@ defmodule Phoenix.ChannelTest do
   timeout value, so use it only when necessary as overuse
   will certainly slow down your test suite.
   """
-  defmacro refute_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)) do
+  defmacro refute_reply(
+             ref,
+             status,
+             payload \\ Macro.escape(%{}),
+             timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)
+           ) do
     quote do
       ref = unquote(ref)
+
       refute_receive %Phoenix.Socket.Reply{
-                        ref: ^ref,
-                        status: unquote(status),
-                        payload: unquote(payload)}, unquote(timeout)
+                       ref: ^ref,
+                       status: unquote(status),
+                       payload: unquote(payload)
+                     },
+                     unquote(timeout)
     end
   end
 
@@ -578,10 +619,14 @@ defmodule Phoenix.ChannelTest do
   The timeout is in milliseconds and defaults to the `:assert_receive_timeout`
   set on the `:ex_unit` application (which defaults to 100ms).
   """
-  defmacro assert_broadcast(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
+  defmacro assert_broadcast(
+             event,
+             payload,
+             timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)
+           ) do
     quote do
-      assert_receive %Phoenix.Socket.Broadcast{event: unquote(event),
-                                               payload: unquote(payload)}, unquote(timeout)
+      assert_receive %Phoenix.Socket.Broadcast{event: unquote(event), payload: unquote(payload)},
+                     unquote(timeout)
     end
   end
 
@@ -596,17 +641,21 @@ defmodule Phoenix.ChannelTest do
   timeout value, so use it only when necessary as overuse
   will certainly slow down your test suite.
   """
-  defmacro refute_broadcast(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)) do
+  defmacro refute_broadcast(
+             event,
+             payload,
+             timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)
+           ) do
     quote do
-      refute_receive %Phoenix.Socket.Broadcast{event: unquote(event),
-                                               payload: unquote(payload)}, unquote(timeout)
+      refute_receive %Phoenix.Socket.Broadcast{event: unquote(event), payload: unquote(payload)},
+                     unquote(timeout)
     end
   end
 
   defp match_topic_to_channel!(socket, topic) do
     unless socket.handler do
       raise """
-      no socket handler found to lookup channel for topic #{inspect topic}.
+      no socket handler found to lookup channel for topic #{inspect(topic)}.
       Use connect/3 when calling subscribe_and_join/* (or subscribe_and_join!/*)
       without a channel, for example:
 
@@ -618,15 +667,17 @@ defmodule Phoenix.ChannelTest do
 
     case socket.handler.__channel__(topic) do
       {channel, opts} when is_atom(channel) -> {channel, opts}
-      _ -> raise "no channel found for topic #{inspect topic} in #{inspect socket.handler}"
+      _ -> raise "no channel found for topic #{inspect(topic)} in #{inspect(socket.handler)}"
     end
   end
 
   @doc false
   def __stringify__(%{__struct__: _} = struct),
     do: struct
+
   def __stringify__(%{} = params),
     do: Enum.into(params, %{}, &stringify_kv/1)
+
   def __stringify__(other),
     do: other
 

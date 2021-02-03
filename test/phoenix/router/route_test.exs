@@ -11,7 +11,23 @@ defmodule Phoenix.Router.RouteTest do
   end
 
   test "builds a route based on verb, path, plug, plug options and helper" do
-    route = build(1, :match, :get, "/foo/:bar", nil, Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{log: :debug}, true)
+    route =
+      build(
+        1,
+        :match,
+        :get,
+        "/foo/:bar",
+        nil,
+        Hello,
+        :world,
+        "hello_world",
+        [:foo, :bar],
+        %{foo: "bar"},
+        %{bar: "baz"},
+        %{log: :debug},
+        true
+      )
+
     assert route.kind == :match
     assert route.verb == :get
     assert route.path == "/foo/:bar"
@@ -28,28 +44,111 @@ defmodule Phoenix.Router.RouteTest do
   end
 
   test "builds expressions based on the route" do
-    exprs = build(1, :match, :get, "/foo/:bar", nil, Hello, :world, "hello_world", [], %{}, %{}, %{}, false) |> exprs
+    exprs =
+      build(
+        1,
+        :match,
+        :get,
+        "/foo/:bar",
+        nil,
+        Hello,
+        :world,
+        "hello_world",
+        [],
+        %{},
+        %{},
+        %{},
+        false
+      )
+      |> exprs
+
     assert exprs.verb_match == "GET"
     assert exprs.path == ["foo", {:bar, [], nil}]
     assert exprs.binding == [{"bar", {:bar, [], nil}}]
     assert Macro.to_string(exprs.host) == "_"
 
-    exprs = build(1, :match, :get, "/", "foo.", Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false) |> exprs
+    exprs =
+      build(
+        1,
+        :match,
+        :get,
+        "/",
+        "foo.",
+        Hello,
+        :world,
+        "hello_world",
+        [:foo, :bar],
+        %{foo: "bar"},
+        %{bar: "baz"},
+        %{},
+        false
+      )
+      |> exprs
+
     assert Macro.to_string(exprs.host) == "\"foo.\" <> _"
 
-    exprs = build(1, :match, :get, "/", "foo.com", Hello, :world, "hello_world", [], %{foo: "bar"}, %{bar: "baz"}, %{}, false) |> exprs
+    exprs =
+      build(
+        1,
+        :match,
+        :get,
+        "/",
+        "foo.com",
+        Hello,
+        :world,
+        "hello_world",
+        [],
+        %{foo: "bar"},
+        %{bar: "baz"},
+        %{},
+        false
+      )
+      |> exprs
+
     assert Macro.to_string(exprs.host) == "\"foo.com\""
   end
 
   test "builds a catch-all verb_match for match routes" do
-    route = build(1, :match, :*, "/foo/:bar", nil, __MODULE__, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false)
+    route =
+      build(
+        1,
+        :match,
+        :*,
+        "/foo/:bar",
+        nil,
+        __MODULE__,
+        :world,
+        "hello_world",
+        [:foo, :bar],
+        %{foo: "bar"},
+        %{bar: "baz"},
+        %{},
+        false
+      )
+
     assert route.verb == :*
     assert route.kind == :match
     assert exprs(route).verb_match == {:_verb, [], nil}
   end
 
   test "builds a catch-all verb_match for forwarded routes" do
-    route = build(1, :forward, :*, "/foo/:bar", nil, __MODULE__, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false)
+    route =
+      build(
+        1,
+        :forward,
+        :*,
+        "/foo/:bar",
+        nil,
+        __MODULE__,
+        :world,
+        "hello_world",
+        [:foo, :bar],
+        %{foo: "bar"},
+        %{bar: "baz"},
+        %{},
+        false
+      )
+
     assert route.verb == :*
     assert route.kind == :forward
     assert exprs(route).verb_match == {:_verb, [], nil}
@@ -69,10 +168,28 @@ defmodule Phoenix.Router.RouteTest do
     opts = %{a: ~r/foo/}
     escaped_opts = Macro.escape(opts)
 
-    route = build(1, :match, :*, "/foo", nil, __MODULE__, opts, "hello_world", [], %{}, %{}, %{}, false)
+    route =
+      build(1, :match, :*, "/foo", nil, __MODULE__, opts, "hello_world", [], %{}, %{}, %{}, false)
+
     assert {__MODULE__, escaped_opts} == exprs(route).dispatch
 
-    fwd_route = build(1, :forward, :*, "/foo", nil, __MODULE__, opts, "hello_world", [], %{}, %{}, %{}, false)
+    fwd_route =
+      build(
+        1,
+        :forward,
+        :*,
+        "/foo",
+        nil,
+        __MODULE__,
+        opts,
+        "hello_world",
+        [],
+        %{},
+        %{},
+        %{},
+        false
+      )
+
     assert {_, {:{}, _, [_, __MODULE__, ^escaped_opts]}} = exprs(fwd_route).dispatch
   end
 end

@@ -49,7 +49,9 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
   @doc false
   def run(all_args) do
     if Mix.Project.umbrella?() do
-      Mix.raise("mix phx.gen.cert must be invoked from within your *_web application root directory")
+      Mix.raise(
+        "mix phx.gen.cert must be invoked from within your *_web application root directory"
+      )
     end
 
     {opts, args} =

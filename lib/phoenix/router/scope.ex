@@ -6,7 +6,15 @@ defmodule Phoenix.Router.Scope do
   @pipes :phoenix_pipeline_scopes
   @top :phoenix_top_scopes
 
-  defstruct path: [], alias: [], as: [], pipes: [], host: nil, private: %{}, assigns: %{}, log: :debug, trailing_slash?: false
+  defstruct path: [],
+            alias: [],
+            as: [],
+            pipes: [],
+            host: nil,
+            private: %{},
+            assigns: %{},
+            log: :debug,
+            trailing_slash?: false
 
   @doc """
   Initializes the scope.
@@ -22,49 +30,65 @@ defmodule Phoenix.Router.Scope do
   """
   def route(line, module, kind, verb, path, plug, plug_opts, opts) do
     top = get_top(module)
-    path    = validate_path(path)
+    path = validate_path(path)
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
-    as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
-    alias?  = Keyword.get(opts, :alias, true)
+    as = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
+    alias? = Keyword.get(opts, :alias, true)
     trailing_slash? = Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
 
-    if to_string(as) == "static"  do
-      raise ArgumentError, "`static` is a reserved route prefix generated from #{inspect plug} or `:as` option"
+    if to_string(as) == "static" do
+      raise ArgumentError,
+            "`static` is a reserved route prefix generated from #{inspect(plug)} or `:as` option"
     end
 
-    {path, alias, as, private, assigns} =
-      join(top, path, plug, alias?, as, private, assigns)
+    {path, alias, as, private, assigns} = join(top, path, plug, alias?, as, private, assigns)
 
     metadata =
       opts
       |> Keyword.get(:metadata, %{})
       |> Map.put(:log, Keyword.get(opts, :log, top.log))
 
-    Phoenix.Router.Route.build(line, kind, verb, path, top.host, alias, plug_opts, as, top.pipes, private, assigns, metadata, trailing_slash?)
+    Phoenix.Router.Route.build(
+      line,
+      kind,
+      verb,
+      path,
+      top.host,
+      alias,
+      plug_opts,
+      as,
+      top.pipes,
+      private,
+      assigns,
+      metadata,
+      trailing_slash?
+    )
   end
 
   @doc """
   Validates a path is a string and contains a leading prefix.
   """
   def validate_path("/" <> _ = path), do: path
+
   def validate_path(path) when is_binary(path) do
-    IO.warn """
-    router paths should begin with a forward slash, got: #{inspect path}
+    IO.warn("""
+    router paths should begin with a forward slash, got: #{inspect(path)}
     #{Exception.format_stacktrace()}
-    """
+    """)
 
     "/" <> path
   end
+
   def validate_path(path) do
-    raise ArgumentError, "router paths must be strings, got: #{inspect path}"
+    raise ArgumentError, "router paths must be strings, got: #{inspect(path)}"
   end
 
   @doc """
   Defines the given pipeline.
   """
   def pipeline(module, pipe) when is_atom(pipe) do
-    update_pipes module, &MapSet.put(&1, pipe)
+    update_pipes(module, &MapSet.put(&1, pipe))
   end
 
   @doc """
@@ -74,9 +98,9 @@ defmodule Phoenix.Router.Scope do
     new_pipes = List.wrap(new_pipes)
     %{pipes: pipes} = top = get_top(module)
 
-    if pipe = Enum.find(new_pipes, & &1 in pipes) do
+    if pipe = Enum.find(new_pipes, &(&1 in pipes)) do
       raise ArgumentError,
-            "duplicate pipe_through for #{inspect pipe}. " <>
+            "duplicate pipe_through for #{inspect(pipe)}. " <>
               "A plug may only be used once inside a scoped pipe_through"
     end
 
@@ -152,7 +176,7 @@ defmodule Phoenix.Router.Scope do
   end
 
   def register_forwards(_, _, plug) do
-    raise ArgumentError, "forward expects a module as the second argument, #{inspect plug} given"
+    raise ArgumentError, "forward expects a module as the second argument, #{inspect(plug)} given"
   end
 
   @doc """
@@ -170,8 +194,8 @@ defmodule Phoenix.Router.Scope do
         alias
       end
 
-    {join_path(top, path), joined_alias, join_as(top, as),
-     Map.merge(top.private, private), Map.merge(top.assigns, assigns)}
+    {join_path(top, path), joined_alias, join_as(top, as), Map.merge(top.private, private),
+     Map.merge(top.assigns, assigns)}
   end
 
   defp join_path(top, path) do

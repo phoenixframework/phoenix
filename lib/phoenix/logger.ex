@@ -88,7 +88,7 @@ defmodule Phoenix.Logger do
   ## Disabling
 
   When you are using custom logging system it is not always desirable to enable
-  `#{inspect __MODULE__}` by default. You can always disable this in general by:
+  `#{inspect(__MODULE__)}` by default. You can always disable this in general by:
 
       config :phoenix, :logger, false
   """
