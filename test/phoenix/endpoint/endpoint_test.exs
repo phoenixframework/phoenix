@@ -154,6 +154,10 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert ExUnit.CaptureLog.capture_log(fn ->
       TelemetryEndpoint.call(conn(:get, "/error/404"), [])
     end) =~ "[error] GET /error/404"
+
+    assert ExUnit.CaptureLog.capture_log(fn ->
+      TelemetryEndpoint.call(conn(:get, "/any"), [])
+    end) =~ "[info]  GET /any"
   end
 
   @tag :capture_log
