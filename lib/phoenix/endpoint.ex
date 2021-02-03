@@ -864,12 +864,7 @@ defmodule Phoenix.Endpoint do
 
   """
   defmacro socket(path, module, opts \\ []) do
-    # Tear the alias to simply store the root in the AST.
-    # This will make Elixir unable to track the dependency
-    # between endpoint <-> socket and avoid recompiling the
-    # endpoint (alongside the whole project ) whenever the
-    # socket changes.
-    module = tear_alias(module)
+    module = Macro.expand(module, %{__CALLER__ | function: {:__handler__, 2}})
 
     quote do
       @phoenix_sockets {unquote(path), unquote(module), unquote(opts)}
@@ -897,12 +892,4 @@ defmodule Phoenix.Endpoint do
   def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
     Phoenix.Endpoint.Supervisor.server?(otp_app, endpoint)
   end
-
-  defp tear_alias({:__aliases__, meta, [h|t]}) do
-    alias = {:__aliases__, meta, [h]}
-    quote do
-      Module.concat([unquote(alias)|unquote(t)])
-    end
-  end
-  defp tear_alias(other), do: other
 end

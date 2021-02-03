@@ -74,7 +74,7 @@ $ npm run watch
 ## Important links
 
 * [#elixir-lang][1] on [Freenode][2] IRC
-* [elixir-lang slack channel][3]
+* [elixir-lang Slack channel][3]
 * [Issue tracker][4]
 * [Phoenix Forum (questions)][5]
 * [phoenix-core Mailing list (development)][6]
