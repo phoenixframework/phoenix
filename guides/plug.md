@@ -4,15 +4,19 @@
 
 > **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
 
-Plug lives at the heart of Phoenix's HTTP layer, and Phoenix puts Plug front and center. We interact with plugs at every step of the request life-cycle, and the core Phoenix components like Endpoints, Routers, and Controllers are all just Plugs internally. Let's jump in and find out just what makes Plug so special.
+Plug lives at the heart of Phoenix's HTTP layer, and Phoenix puts Plug front and center. We interact with plugs at every step of the request life-cycle, and the core Phoenix components like endpoints, routers, and controllers are all just plugs internally. Let's jump in and find out just what makes Plug so special.
 
 [Plug](https://github.com/elixir-lang/plug) is a specification for composable modules in between web applications. It is also an abstraction layer for connection adapters of different web servers. The basic idea of Plug is to unify the concept of a "connection" that we operate on. This differs from other HTTP middleware layers such as Rack, where the request and response are separated in the middleware stack.
 
 At the simplest level, the Plug specification comes in two flavors: *function plugs* and *module plugs*.
 
-## Function Plugs
+## Function plugs
 
-In order to act as a Plug, a function needs to accept a connection struct (`%Plug.Conn{}`) and options. It also needs to return a connection struct. Any function that meets those criteria will do. Here's an example.
+In order to act as a plug, a function needs to:
+1. accept a connection struct (`%Plug.Conn{}`) as its first argument, and connection options as its second one;
+2. return a connection struct.
+
+Any function that meets these two criteria will do. Here's an example.
 
 ```elixir
 def introspect(conn, _opts) do
@@ -32,7 +36,7 @@ This function does the following:
   2. It prints some connection information to the terminal
   3. It returns the connection
 
-Pretty simple, right? Let's see this function in action by adding it to our endpoint in `lib/hello_web/endpoint.ex`. We can plug it anywhere, so let's do it before we delegate the request to the router:
+Pretty simple, right? Let's see this function in action by adding it to our endpoint in `lib/hello_web/endpoint.ex`. We can plug it anywhere, so let's do it by inserting `plug :introspect` right before we delegate the request to the router:
 
 ```elixir
 defmodule HelloWeb.Endpoint do
@@ -53,7 +57,7 @@ defmodule HelloWeb.Endpoint do
 end
 ```
 
-Function plugs are plugged by passing the function name as an atom. To try the Plug out, go back to your browser and fetch [http://localhost:4000](http://localhost:4000). You should see something like this printed in your terminal:
+Function plugs are plugged by passing the function name as an atom. To try the plug out, go back to your browser and fetch [http://localhost:4000](http://localhost:4000). You should see something like this printed in your shell terminal:
 
 ```console
 Verb: "GET"
@@ -61,18 +65,18 @@ Host: "localhost"
 Headers: [...]
 ```
 
-Our Plug simply prints information from the connection. Although our initial Plug is very simple, you can virtually do anything you want inside of it. To learn about all fields available in the connection and all of the functionality associated to it, see the [documentation for Plug.Conn](https://hexdocs.pm/plug/Plug.Conn.html).
+Our plug simply prints information from the connection. Although our initial plug is very simple, you can virtually do anything you want inside of it. To learn about all fields available in the connection and all of the functionality associated to it, see the [documentation for `Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html).
 
-Now let's look at the other flavor plugs come in, module plugs.
+Now let's look at the other plug variant, the module plugs.
 
-## Module Plugs
+## Module plugs
 
-Module plugs are another type of Plug that let us define a connection transformation in a module. The module only needs to implement two functions:
+Module plugs are another type of plug that let us define a connection transformation in a module. The module only needs to implement two functions:
 
 - `init/1` which initializes any arguments or options to be passed to `call/2`
 - `call/2` which carries out the connection transformation. `call/2` is just a function plug that we saw earlier
 
-To see this in action, let's write a module plug that puts the `:locale` key and value into the connection assign for downstream use in other plugs, controller actions, and our views. Put the contents above to a file named `lib/hello_web/plugs/locale.ex`:
+To see this in action, let's write a module plug that puts the `:locale` key and value into the connection assign for downstream use in other plugs, controller actions, and our views. Put the contents below in a file named `lib/hello_web/plugs/locale.ex`:
 
 ```elixir
 defmodule HelloWeb.Plugs.Locale do
@@ -92,7 +96,7 @@ defmodule HelloWeb.Plugs.Locale do
 end
 ```
 
-To give it a try, let's add this plug to our router:
+To give it a try, let's add this module plug to our router, by appending `plug HelloWeb.Plugs.Locale, "en"`  to our `:browser` pipeline in `lib/hello_web/router.ex`:
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -109,7 +113,7 @@ defmodule HelloWeb.Router do
   ...
 ```
 
-We are able to add this module plug to our browser pipeline via `plug HelloWeb.Plugs.Locale, "en"`. In the `init/1` callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple `call/2` function heads to validate the locale in the params, and fall back to "en" if there is no match.
+In the `init/1` callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple `call/2` function heads to validate the locale in the params, and fall back to `"en"` if there is no match.
 
 To see the assign in action, go to the layout in `lib/hello_web/templates/layout/app.html.eex` and add the following close to the main container:
 
@@ -118,7 +122,7 @@ To see the assign in action, go to the layout in `lib/hello_web/templates/layout
   <p>Locale: <%= @locale %></p>
 ```
 
-Go to [http://localhost:4000/](http://localhost:4000/) and you should see the locale exhibited. Visit [http://localhost:4000/?locale=fr](http://localhost:4000/?locale=fr) and you should see the assign changed to "fr". Someone can use this information alongside [Gettext](https://hexdocs.pm/gettext/Gettext.html) to provide a fully internationalized web application.
+Go to [http://localhost:4000/](http://localhost:4000/) and you should see the locale exhibited. Visit [http://localhost:4000/?locale=fr](http://localhost:4000/?locale=fr) and you should see the assign changed to `"fr"`. Someone can use this information alongside [Gettext](https://hexdocs.pm/gettext/Gettext.html) to provide a fully internationalized web application.
 
 That's all there is to Plug. Phoenix embraces the plug design of composable transformations all the way up and down the stack. Let's see some examples!
 
@@ -138,23 +142,23 @@ defmodule HelloWeb.Endpoint do
   plug HelloWeb.Router
 ```
 
-The default Endpoint plugs do quite a lot of work. Here they are in order:
+The default endpoint plugs do quite a lot of work. Here they are in order:
 
 - [Plug.Static](https://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes before the logger, serving of static assets is not logged
 
 - [Phoenix.CodeReloader](https://hexdocs.pm/phoenix/Phoenix.CodeReloader.html) - a plug that enables code reloading for all entries in the web directory. It is configured directly in the Phoenix application
 
-- [Plug.RequestId](https://hexdocs.pm/plug/Plug.RequestId.html) - generates a unique request id for each request.
+- [Plug.RequestId](https://hexdocs.pm/plug/Plug.RequestId.html) - generates a unique request ID for each request.
 
 - [Plug.Telemetry](https://hexdocs.pm/plug/Plug.Telemetry.html) - adds instrumentation points so Phoenix can log the request path, status code and request time by default.
 
-- [Plug.Parsers](https://hexdocs.pm/plug/Plug.Parsers.html) - parses the request body when a known parser is available. By default parsers parse urlencoded, multipart and JSON (with `jason`). The request body is left untouched when the request content-type cannot be parsed
+- [Plug.Parsers](https://hexdocs.pm/plug/Plug.Parsers.html) - parses the request body when a known parser is available. By default parsers parse URL-encoded, multipart and JSON (with `jason`). The request body is left untouched when the request content-type cannot be parsed
 
 - [Plug.MethodOverride](https://hexdocs.pm/plug/Plug.MethodOverride.html) - converts the request method to PUT, PATCH or DELETE for POST requests with a valid `_method` parameter
 
 - [Plug.Head](https://hexdocs.pm/plug/Plug.Head.html) - converts HEAD requests to GET requests and strips the response body
 
-- [Plug.Session](https://hexdocs.pm/plug/Plug.Session.html) - a plug that sets up session management. Note that `fetch_session/2` must still be explicitly called before using the session as this Plug just sets up how the session is fetched
+- [Plug.Session](https://hexdocs.pm/plug/Plug.Session.html) - a plug that sets up session management. Note that `fetch_session/2` must still be explicitly called before using the session as this plug just sets up how the session is fetched
 
 In the middle of the endpoint, there is also a conditional block:
 
@@ -163,11 +167,14 @@ In the middle of the endpoint, there is also a conditional block:
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
-    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :demo
+    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :hello
   end
 ```
 
-This block is only executed in development. It enables live reloading (if you change a CSS file, they are updated in-browser without refreshing the page), code reloading (so we can see changes to our application without restarting the server), and check repo status (which makes sure our database is up to date, raising a readable and actionable error otherwise).
+This block is only executed in development. It enables:
+* live reloading - if you change a CSS file, they are updated in-browser without refreshing the page;
+* [code reloading](`Phoenix.CodeReloader`) - so we can see changes to our application without restarting the server;
+* check repo status - which makes sure our database is up to date, raising a readable and actionable error otherwise.
 
 ### Router plugs
 
@@ -195,7 +202,7 @@ defmodule HelloWeb.Router do
 
 Routes are defined inside scopes and scopes may pipe through multiple pipelines. Once a route matches, Phoenix invokes all plugs defined in all pipelines associated to that route. For example, accessing "/" will pipe through the `:browser` pipeline, consequently invoking all of its plugs.
 
-As we will see in the [Routing guide](routing.html), the pipelines themselves are plugs. There we will also discuss all plugs in the `:browser` pipeline.
+As we will see in the [routing guide](routing.html), the pipelines themselves are plugs. There, we will also discuss all plugs in the `:browser` pipeline.
 
 ### Controller plugs
 
@@ -293,4 +300,4 @@ To make this all work, we converted the nested blocks of code and used `halt(con
 
 At the end of the day, by replacing the nested blocks of code with a flattened series of plug transformations, we are able to achieve the same functionality in a much more composable, clear, and reusable way.
 
-To learn more about Plugs, see the documentation for the [Plug project](https://hexdocs.pm/plug), which provides many built-in plugs and functionalities.
+To learn more about plugs, see the documentation for the [Plug project](https://hexdocs.pm/plug), which provides many built-in plugs and functionalities.
