@@ -97,9 +97,9 @@ defmodule Phoenix.Logger do
 
   When invoked, your function should return one of:
 
-      * a valid [`Logger.level()`](`t:Logger.level()/0`)
-      * `false` to disable logging
-      * `true` to use the event's default log level
+    * a valid [`Logger.level()`](`t:Logger.level()/0`)
+    * `false` to disable logging
+    * `true` to use the event's default log level
 
   For example, in your Endpoint you might do something like this:
 
