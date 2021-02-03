@@ -158,6 +158,27 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert ExUnit.CaptureLog.capture_log(fn ->
       TelemetryEndpoint.call(conn(:get, "/any"), [])
     end) =~ "[info]  GET /any"
+
+    stop_supervised!(TelemetryEndpoint)
+
+    defmodule LogOptionsEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+      plug Plug.Telemetry,
+        event_prefix: [:phoenix, :endpoint],
+        log: &__MODULE__.log_level/2,
+        some_key: :some_value
+
+      def log_level(_conn, opts) do
+        assert opts[:some_key] == :some_value
+        :error
+      end
+    end
+
+    ExUnit.CaptureLog.capture_log(fn -> start_supervised! LogOptionsEndpoint end)
+
+    assert ExUnit.CaptureLog.capture_log(fn ->
+      LogOptionsEndpoint.call(conn(:get, "/"), [])
+    end) =~ "[error] GET /"
   end
 
   @tag :capture_log
