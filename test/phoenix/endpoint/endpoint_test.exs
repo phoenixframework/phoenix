@@ -129,14 +129,14 @@ defmodule Phoenix.Endpoint.EndpointTest do
       use Phoenix.Endpoint, otp_app: :phoenix
       plug Plug.Telemetry,
         event_prefix: [:phoenix, :endpoint],
-        log: &__MODULE__.log_level/1
+        log: {__MODULE__, :log_level, []}
 
       def log_level(conn) do
         case conn.path_info do
           [] -> :debug
           ["warn" | _] -> :warn
           ["error" | _] -> :error
-          _ -> nil
+          _ -> true
         end
       end
     end

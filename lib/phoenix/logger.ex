@@ -13,7 +13,7 @@ defmodule Phoenix.Logger do
       * Metadata: `%{conn: Plug.Conn.t, options: Keyword.t}`
       * Options: `%{log: Logger.level | false}`
       * Disable logging: In your endpoint `plug Plug.Telemetry, ..., log: Logger.level | false`
-      * Configure logging per request: `plug Plug.Telemetry, ..., log: (Plug.Conn.t -> Logger.level | false)`
+      * Configure log level dynamically: `plug Plug.Telemetry, ..., log: {Mod, Fun, Args}`
 
     * `[:phoenix, :endpoint, :stop]` - dispatched by `Plug.Telemetry` in your
       endpoint whenever the response is sent
@@ -21,14 +21,14 @@ defmodule Phoenix.Logger do
       * Metadata: `%{conn: Plug.Conn.t, options: Keyword.t}`
       * Options: `%{log: Logger.level | false}`
       * Disable logging: In your endpoint `plug Plug.Telemetry, ..., log: Logger.level | false`
-      * Configure logging per request: `plug Plug.Telemetry, ..., log: (Plug.Conn.t -> Logger.level | false)`
+      * Configure log level dynamically: `plug Plug.Telemetry, ..., log: {Mod, Fun, Args}`
 
     * `[:phoenix, :router_dispatch, :start]` - dispatched by `Phoenix.Router`
       before dispatching to a matched route
       * Measurement: `%{system_time: System.system_time}`
       * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
       * Disable logging: Pass `log: false` to the router macro, for example: `get("/page", PageController, :index, log: false)`
-      * Configure logging per request: `get("/page", PageController, :index, log: (Plug.Conn.t -> Logger.level | false)`
+      * Configure log level dynamically: `get("/page", PageController, :index, log: {Mod, Fun, Args}`
 
     * `[:phoenix, :router_dispatch, :exception]` - dispatched by `Phoenix.Router`
       after exceptions on dispatching a route
@@ -87,6 +87,30 @@ defmodule Phoenix.Logger do
   With the configuration above, Phoenix will filter all parameters,
   except those that match exactly `id` or `order`. If a kept parameter
   matches, all parameters nested under that one will also be kept.
+
+  ## Dynamic log level
+
+  In some cases you may wish to set the log level dynamically
+  on a per-request basis. To do so, set the `:log` option to
+  a tuple, `{Mod, Fun, Args}`. The `Plug.Conn.t()` for the
+  request will be prepended to the provided list of arguments.
+
+  When invoked, your function should return one of:
+
+      * a valid [`Logger.level()`](`t:Logger.level()/0`)
+      * `false` to disable logging
+      * `true` to use the event's default log level
+
+  For example, in your Endpoint you might do something like this:
+
+        # lib/my_app_web/endpoint.ex
+        plug Plug.Telemetry,
+          event_prefix: [:phoenix, :endpoint],
+          log: {__MODULE__, :log_level, []}
+
+        # Disables logging for routes like /status/*
+        def log_level(%{path_info: ["status" | _]}), do: false
+        def log_level(_), do: true
 
   ## Disabling
 
@@ -170,18 +194,25 @@ defmodule Phoenix.Logger do
 
   defp keep_values(_other, _params), do: "[FILTERED]"
 
-  defp log_level(level, _conn) when is_atom(level), do: level
-  defp log_level(level, conn) when is_function(level, 1), do: level.(conn)
+  defp log_level(level, _conn, default) when level == true, do: default
+  defp log_level(level, _conn, _default) when is_atom(level), do: level
+
+  defp log_level({mod, fun, args}, conn, default) when is_atom(mod) and is_atom(fun) and is_list(args) do
+    case apply(mod, fun, [conn | args]) do
+      true -> default
+      level -> level
+    end
+  end
 
   ## Event: [:phoenix, :endpoint, *]
 
   defp phoenix_endpoint_start(_, _, %{conn: conn} = metadata, _) do
-    case log_level(metadata[:options][:log], conn) do
+    case log_level(metadata[:options][:log], conn, :info) do
       false ->
         :ok
 
       level ->
-        Logger.log(level || :info, fn ->
+        Logger.log(level, fn ->
           %{method: method, request_path: request_path} = conn
           [method, ?\s, request_path]
         end)
@@ -189,12 +220,12 @@ defmodule Phoenix.Logger do
   end
 
   defp phoenix_endpoint_stop(_, %{duration: duration}, %{conn: conn} = metadata, _) do
-    case log_level(metadata[:options][:log], conn) do
+    case log_level(metadata[:options][:log], conn, :info) do
       false ->
         :ok
 
       level ->
-        Logger.log(level || :info, fn ->
+        Logger.log(level, fn ->
           %{status: status, state: state} = conn
           status = Integer.to_string(status)
           [connection_type(state), ?\s, status, " in ", duration(duration)]
@@ -232,9 +263,9 @@ defmodule Phoenix.Logger do
 
   defp phoenix_router_dispatch_start(_, _, metadata, _) do
     %{log: level, conn: conn} = metadata
-    level = log_level(level, conn)
+    level = log_level(level, conn, :debug)
 
-    Logger.log(level || :info, fn ->
+    Logger.log(level, fn ->
       %{
         pipe_through: pipe_through,
         plug: plug,

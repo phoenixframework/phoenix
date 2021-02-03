@@ -24,9 +24,9 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   defmodule LogLevel do
-    def log_level(%{params: %{"level" => "debug"}}), do: :debug
+    def log_level(%{params: %{"level" => "info"}}), do: :info
     def log_level(%{params: %{"level" => "warn"}}), do: :warn
-    def log_level(_), do: nil
+    def log_level(_), do: true
   end
 
   defmodule Router do
@@ -54,8 +54,7 @@ defmodule Phoenix.Router.RoutingTest do
     end
 
     get "/no_log", SomePlug, [], log: false
-    get "/none_log", SomePlug, [], log: nil
-    get "/fun_log", SomePlug, [], log: &LogLevel.log_level/1
+    get "/fun_log", SomePlug, [], log: {LogLevel, :log_level, []}
     get "/users/:user_id/files/:id", UserController, :image
     get "/*path", UserController, :not_found
 
@@ -230,23 +229,18 @@ defmodule Phoenix.Router.RoutingTest do
                "Processing with Phoenix.Router.RoutingTest.SomePlug"
     end
 
-    test "logs info level when log is set to nil" do
-      assert capture_log(fn -> call(Router, :get, "/none_log") end) =~
-               "[info]  Processing with Phoenix.Router.RoutingTest.SomePlug"
-    end
-
     test "logs custom level when log is set to a 1-arity function" do
-      assert capture_log(fn -> call(Router, :get, "/fun_log", level: "debug") end) =~
-               "[debug] Processing with Phoenix.Router.RoutingTest.SomePlug"
+      assert capture_log(fn -> call(Router, :get, "/fun_log", level: "info") end) =~
+               "[info]  Processing with Phoenix.Router.RoutingTest.SomePlug"
 
       assert capture_log(fn -> call(Router, :get, "/fun_log", level: "warn") end) =~
                "[warn]  Processing with Phoenix.Router.RoutingTest.SomePlug"
 
       assert capture_log(fn -> call(Router, :get, "/fun_log", level: "yelling") end) =~
-               "[info]  Processing with Phoenix.Router.RoutingTest.SomePlug"
+               "[debug] Processing with Phoenix.Router.RoutingTest.SomePlug"
 
       assert capture_log(fn -> call(Router, :get, "/fun_log") end) =~
-               "[info]  Processing with Phoenix.Router.RoutingTest.SomePlug"
+               "[debug] Processing with Phoenix.Router.RoutingTest.SomePlug"
     end
   end
 
