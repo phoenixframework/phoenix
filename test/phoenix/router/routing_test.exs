@@ -26,7 +26,7 @@ defmodule Phoenix.Router.RoutingTest do
   defmodule LogLevel do
     def log_level(%{params: %{"level" => "info"}}), do: :info
     def log_level(%{params: %{"level" => "warn"}}), do: :warn
-    def log_level(_), do: true
+    def log_level(_), do: :debug
   end
 
   defmodule Router do

@@ -95,11 +95,9 @@ defmodule Phoenix.Logger do
   a tuple, `{Mod, Fun, Args}`. The `Plug.Conn.t()` for the
   request will be prepended to the provided list of arguments.
 
-  When invoked, your function should return one of:
-
-    * a valid [`Logger.level()`](`t:Logger.level()/0`)
-    * `false` to disable logging
-    * `true` to use the event's default log level
+  When invoked, your function must return a
+  [`Logger.level()`](`t:Logger.level()/0`) or `false` to
+  disable logging for the request.
 
   For example, in your Endpoint you might do something like this:
 
@@ -110,7 +108,7 @@ defmodule Phoenix.Logger do
 
         # Disables logging for routes like /status/*
         def log_level(%{path_info: ["status" | _]}), do: false
-        def log_level(_), do: true
+        def log_level(_), do: :info
 
   ## Disabling
 
@@ -194,20 +192,16 @@ defmodule Phoenix.Logger do
 
   defp keep_values(_other, _params), do: "[FILTERED]"
 
-  defp log_level(level, _conn, default) when level == true, do: default
-  defp log_level(level, _conn, _default) when is_atom(level), do: level
+  defp log_level(level, _conn) when is_atom(level), do: level
 
-  defp log_level({mod, fun, args}, conn, default) when is_atom(mod) and is_atom(fun) and is_list(args) do
-    case apply(mod, fun, [conn | args]) do
-      true -> default
-      level -> level
-    end
+  defp log_level({mod, fun, args}, conn) when is_atom(mod) and is_atom(fun) and is_list(args) do
+    apply(mod, fun, [conn | args])
   end
 
   ## Event: [:phoenix, :endpoint, *]
 
   defp phoenix_endpoint_start(_, _, %{conn: conn} = metadata, _) do
-    case log_level(metadata[:options][:log], conn, :info) do
+    case log_level(metadata[:options][:log], conn) do
       false ->
         :ok
 
@@ -220,7 +214,7 @@ defmodule Phoenix.Logger do
   end
 
   defp phoenix_endpoint_stop(_, %{duration: duration}, %{conn: conn} = metadata, _) do
-    case log_level(metadata[:options][:log], conn, :info) do
+    case log_level(metadata[:options][:log], conn) do
       false ->
         :ok
 
@@ -263,7 +257,7 @@ defmodule Phoenix.Logger do
 
   defp phoenix_router_dispatch_start(_, _, metadata, _) do
     %{log: level, conn: conn} = metadata
-    level = log_level(level, conn, :debug)
+    level = log_level(level, conn)
 
     Logger.log(level, fn ->
       %{

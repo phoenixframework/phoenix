@@ -136,7 +136,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
           [] -> :debug
           ["warn" | _] -> :warn
           ["error" | _] -> :error
-          _ -> true
+          _ -> :info
         end
       end
     end
