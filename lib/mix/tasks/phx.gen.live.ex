@@ -16,8 +16,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   When this command is run for the first time, a `ModalComponent` and
   `LiveHelpers` module will be created, along with the resource level
-  LiveViews and components, including an `IndexLive`, `ShowLive`, `FormComponent`
-  for the new resource.
+  LiveViews and components, including a `UserLive.Index`, `UserLive.Show`,
+  and `UserLive.FormComponent` for the new resource.
 
   > Note: A resource may also be split
   > over distinct contexts (such as `Accounts.User` and `Payments.User`).
@@ -31,9 +31,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
     * a context module in `lib/app/accounts.ex` for the accounts API
     * a schema in `lib/app/accounts/user.ex`, with a `users` table
-    * a view in `lib/app_web/views/user_view.ex`
-    * a LiveView in `lib/app_web/live/user_live/show_live.ex`
-    * a LiveView in `lib/app_web/live/user_live/index_live.ex`
+    * a LiveView in `lib/app_web/live/user_live/show.ex`
+    * a LiveView in `lib/app_web/live/user_live/index.ex`
     * a LiveComponent in `lib/app_web/live/user_live/form_component.ex`
     * a LiveComponent in `lib/app_web/live/modal_component.ex`
     * a helpers modules in `lib/app_web/live/live_helpers.ex`
