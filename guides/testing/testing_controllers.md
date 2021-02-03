@@ -278,7 +278,7 @@ defmodule HelloWeb.ArticleView do
 end
 ```
 
-We talked about `render_many` [in the Views and Templates guide](views.html). All we need to know for now is that all JSON replies have a "data" key with either a list of posts (for index) or a single post inside of it.
+We talked about `render_many` in the [Views and templates guide](views.html). All we need to know for now is that all JSON replies have a "data" key with either a list of posts (for index) or a single post inside of it.
 
 Let's take a look at the test for the `index` action then:
 
@@ -382,7 +382,7 @@ end
 
 It simply posts to the `create` path with invalid parameters. This makes it return a JSON response, with status code 422, and a response with a non-empty "errors" key.
 
-The `action_fallback` can be extremely useful to reduce boilerplate when designing APIs. You can learn more about the "Action Fallback" [in the Controllers guide](controllers.html).
+The `action_fallback` can be extremely useful to reduce boilerplate when designing APIs. You can learn more about the "Action Fallback" in the [Controllers guide](controllers.html).
 
 ### The `delete` action
 

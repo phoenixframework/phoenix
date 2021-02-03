@@ -693,7 +693,7 @@ forward "/jobs", BackgroundJob.Plug, name: "Hello Phoenix"
 
 There is a fourth `router_opts` argument that can be passed. These options are outlined in the `Phoenix.Router.scope/2` documentation.
 
-`BackgroundJob.Plug` can be implemented as any module plug discussed in the [Plug guide](plug.html). Note though it is not advised to forward to another Phoenix endpoint. This is because plugs defined by your app and the forwarded endpoint would be invoked twice, which may lead to errors.
+`BackgroundJob.Plug` can be implemented as any Module Plug discussed in the [Plug guide](plug.html). Note though it is not advised to forward to another Phoenix endpoint. This is because plugs defined by your app and the forwarded endpoint would be invoked twice, which may lead to errors.
 
 ## Summary
 
