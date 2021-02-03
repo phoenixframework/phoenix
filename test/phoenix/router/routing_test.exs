@@ -23,6 +23,12 @@ defmodule Phoenix.Router.RoutingTest do
     def any(conn, _params), do: text(conn, "users any")
   end
 
+  defmodule LogLevel do
+    def log_level(%{params: %{"level" => "info"}}), do: :info
+    def log_level(%{params: %{"level" => "warn"}}), do: :warn
+    def log_level(_), do: :debug
+  end
+
   defmodule Router do
     use Phoenix.Router
 
@@ -48,6 +54,7 @@ defmodule Phoenix.Router.RoutingTest do
     end
 
     get "/no_log", SomePlug, [], log: false
+    get "/fun_log", SomePlug, [], log: {LogLevel, :log_level, []}
     get "/users/:user_id/files/:id", UserController, :image
     get "/*path", UserController, :not_found
 
@@ -220,6 +227,20 @@ defmodule Phoenix.Router.RoutingTest do
     test "does not log when log is set to false" do
       refute capture_log(fn -> call(Router, :get, "/no_log", foo: "bar") end) =~
                "Processing with Phoenix.Router.RoutingTest.SomePlug"
+    end
+
+    test "logs custom level when log is set to a 1-arity function" do
+      assert capture_log(fn -> call(Router, :get, "/fun_log", level: "info") end) =~
+               "[info]  Processing with Phoenix.Router.RoutingTest.SomePlug"
+
+      assert capture_log(fn -> call(Router, :get, "/fun_log", level: "warn") end) =~
+               "[warn]  Processing with Phoenix.Router.RoutingTest.SomePlug"
+
+      assert capture_log(fn -> call(Router, :get, "/fun_log", level: "yelling") end) =~
+               "[debug] Processing with Phoenix.Router.RoutingTest.SomePlug"
+
+      assert capture_log(fn -> call(Router, :get, "/fun_log") end) =~
+               "[debug] Processing with Phoenix.Router.RoutingTest.SomePlug"
     end
   end
 

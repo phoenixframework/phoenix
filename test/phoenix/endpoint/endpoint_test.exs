@@ -124,6 +124,42 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert_receive {^pid, :sample}
   end
 
+  test "invokes log level callback from Plug.Telemetry" do
+    defmodule TelemetryEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+      plug Plug.Telemetry,
+        event_prefix: [:phoenix, :endpoint],
+        log: {__MODULE__, :log_level, []}
+
+      def log_level(conn) do
+        case conn.path_info do
+          [] -> :debug
+          ["warn" | _] -> :warn
+          ["error" | _] -> :error
+          _ -> :info
+        end
+      end
+    end
+
+    ExUnit.CaptureLog.capture_log(fn -> start_supervised! TelemetryEndpoint end)
+
+    assert ExUnit.CaptureLog.capture_log(fn ->
+      TelemetryEndpoint.call(conn(:get, "/"), [])
+    end) =~ "[debug] GET /"
+
+    assert ExUnit.CaptureLog.capture_log(fn ->
+      TelemetryEndpoint.call(conn(:get, "/warn"), [])
+    end) =~ "[warn]  GET /warn"
+
+    assert ExUnit.CaptureLog.capture_log(fn ->
+      TelemetryEndpoint.call(conn(:get, "/error/404"), [])
+    end) =~ "[error] GET /error/404"
+
+    assert ExUnit.CaptureLog.capture_log(fn ->
+      TelemetryEndpoint.call(conn(:get, "/any"), [])
+    end) =~ "[info]  GET /any"
+  end
+
   @tag :capture_log
   test "uses url configuration for static path" do
     Application.put_env(:phoenix, __MODULE__.UrlEndpoint, url: [path: "/api"])
@@ -177,7 +213,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
   test "loads cache manifest from specified application" do
     config = put_in(@config[:cache_static_manifest], {:phoenix, "../../../../test/fixtures/digest/compile/cache_manifest.json"})
-    
+
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
   end
