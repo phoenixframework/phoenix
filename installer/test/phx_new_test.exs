@@ -106,6 +106,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # webpack
       assert_file "phx_blog/.gitignore", "/assets/node_modules/"
+      assert_file "phx_blog/.gitignore", "/priv/static/"
       assert_file "phx_blog/.gitignore", "phx_blog-*.tar"
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/assets/webpack.config.js", "js/app.js"
@@ -221,6 +222,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # No webpack
       refute File.read!("phx_blog/.gitignore") |> String.contains?("/assets/node_modules/")
+      refute File.read!("phx_blog/.gitignore") |> String.contains?("/priv/static/")
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/config/dev.exs", ~r/watchers: \[\]/
 

@@ -128,6 +128,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # webpack
       assert_file web_path(@app, ".gitignore"), "/assets/node_modules/"
+      assert_file web_path(@app, ".gitignore"), "/priv/static/"
       assert_file web_path(@app, ".gitignore"), "#{@app}_web-*.tar"
       assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
       assert_file web_path(@app, "assets/webpack.config.js"), "js/app.js"
@@ -235,6 +236,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, ".gitignore"), fn file ->
         assert file =~ ~r/\n$/
         refute file =~ "/assets/node_modules/"
+        refute file =~ "/priv/static/"
       end
 
       assert_file root_path(@app, "config/dev.exs"), ~r/watchers: \[\]/
@@ -666,7 +668,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
                     "<title>Another · Phoenix Framework</title>"
 
         # webpack
-        assert_file "another/.gitignore", "/assets/node_modules"
+        assert_file "another/.gitignore", "/assets/node_modules/"
+        assert_file "another/.gitignore", "/static/priv/"
         assert_file "another/.gitignore",  ~r/\n$/
         assert_file "another/assets/webpack.config.js", "js/app.js"
         assert_file "another/assets/.babelrc", "env"
