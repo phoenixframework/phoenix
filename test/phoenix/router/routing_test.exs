@@ -21,6 +21,8 @@ defmodule Phoenix.Router.RoutingTest do
     def image(conn, _params), do: text(conn, conn.params["path"] || "show files")
     def move(conn, _params), do: text(conn, "users move")
     def any(conn, _params), do: text(conn, "users any")
+    def raise(_conn, _params), do: raise("boom")
+    def exit(_conn, _params), do: exit(:boom)
   end
 
   defmodule LogLevel do
@@ -41,6 +43,7 @@ defmodule Phoenix.Router.RoutingTest do
     get "/files/:user_name/*path", UserController, :image
     get "/backups/*path", UserController, :image
     get "/static/images/icons/*image", UserController, :image
+    get "/exit", UserController, :exit
 
     trace("/trace", UserController, :trace)
     options "/options", UserController, :options
@@ -51,6 +54,7 @@ defmodule Phoenix.Router.RoutingTest do
     scope log: :info do
       pipe_through :noop
       get "/plug", SomePlug, []
+      get "/users/:id/raise", UserController, :raise
     end
 
     get "/no_log", SomePlug, [], log: false
@@ -241,6 +245,144 @@ defmodule Phoenix.Router.RoutingTest do
 
       assert capture_log(fn -> call(Router, :get, "/fun_log") end) =~
                "[debug] Processing with Phoenix.Router.RoutingTest.SomePlug"
+    end
+  end
+
+  describe "telemetry" do
+    @router_start_event [:phoenix, :router_dispatch, :start]
+    @router_stop_event [:phoenix, :router_dispatch, :stop]
+    @router_exception_event [:phoenix, :router_dispatch, :exception]
+    @router_events [
+      @router_start_event,
+      @router_stop_event,
+      @router_exception_event
+    ]
+
+    setup context do
+      test_pid = self()
+      test_name = context.test
+
+      :telemetry.attach_many(
+        test_name,
+        @router_events,
+        fn event, measures, metadata, config ->
+          send(test_pid, {:telemetry_event, event, {measures, metadata, config}})
+        end,
+        nil
+      )
+    end
+
+    test "phoenix.router_dispatch.start and .stop are emitted on success" do
+      call(Router, :get, "users/123")
+      assert_received {:telemetry_event, @router_start_event, _event}
+      assert_received {:telemetry_event, @router_stop_event, _event}
+      refute_received {:telemetry_event, @router_exception_event, _event}
+    end
+
+    test "phoenix.router_dispatch.start and .exception are emitted on crash" do
+      assert_raise Plug.Conn.WrapperError, ~r/UndefinedFunctionError/, fn ->
+        call(Router, :get, "route_that_crashes")
+      end
+
+      assert_received {:telemetry_event, @router_start_event, _event}
+      assert_received {:telemetry_event, @router_exception_event, _event}
+      refute_received {:telemetry_event, @router_stop_event, _event}
+    end
+
+    test "phoenix.router_dispatch.start and .exception are emitted on exit" do
+      catch_exit(call(Router, :get, "exit"))
+
+      assert_received {:telemetry_event, @router_start_event, _event}
+      assert_received {:telemetry_event, @router_exception_event, _event}
+      refute_received {:telemetry_event, @router_stop_event, _event}
+    end
+
+    test "phoenix.router_dispatch.start has supported measurements and metadata" do
+      call(Router, :get, "users/123")
+
+      assert_received {:telemetry_event, @router_start_event, {measures, meta, _config}}
+      assert is_integer(measures.system_time)
+
+      assert %{
+               access: :user,
+               conn: %Plug.Conn{state: :unset},
+               log: :debug,
+               path_params: %{"id" => "123"},
+               pipe_through: [],
+               plug: Phoenix.Router.RoutingTest.UserController,
+               plug_opts: :show,
+               route: "/users/:id"
+             } = meta
+    end
+
+    test "phoenix.router_dispatch.stop has supported measurements and metadata" do
+      call(Router, :get, "users/123")
+
+      assert_received {:telemetry_event, @router_stop_event, {measures, meta, _config}}
+      assert is_integer(measures.duration)
+
+      assert %{
+               access: :user,
+               conn: %Plug.Conn{state: :sent},
+               log: :debug,
+               path_params: %{"id" => "123"},
+               pipe_through: [],
+               plug: Phoenix.Router.RoutingTest.UserController,
+               plug_opts: :show,
+               route: "/users/:id"
+             } = meta
+    end
+
+    test "phoenix.router_dispatch.exception has supported measurements and metadata on crash" do
+      assert_raise Plug.Conn.WrapperError, "** (RuntimeError) boom", fn ->
+        call(Router, :get, "users/123/raise")
+      end
+
+      assert_received {:telemetry_event, @router_exception_event, {measures, meta, _config}}
+      assert is_integer(measures.duration)
+
+      assert %{
+               conn: %Plug.Conn{state: :unset},
+               kind: :error,
+               log: :info,
+               path_params: %{"id" => "123"},
+               pipe_through: [:noop],
+               plug: Phoenix.Router.RoutingTest.UserController,
+               plug_opts: :raise,
+               reason: %Plug.Conn.WrapperError{
+                 conn: %Plug.Conn{state: :unset},
+                 kind: :error,
+                 reason: %RuntimeError{message: "boom"},
+                 stack: wrapped_stacktrace
+               },
+               route: "/users/:id/raise",
+               stacktrace: stacktrace
+             } = meta
+
+      assert is_list(wrapped_stacktrace) && length(wrapped_stacktrace) > 0
+      assert is_list(stacktrace) && length(stacktrace) > 0
+    end
+
+    test "phoenix.router_dispatch.exception has supported measurements and metadata on exit" do
+      catch_exit(call(Router, :get, "exit"))
+
+      assert_received {:telemetry_event, @router_exception_event, {measures, meta, _config}}
+      assert is_integer(measures.duration)
+
+      assert %{
+               conn: %Plug.Conn{state: :unset},
+               kind: :exit,
+               log: :debug,
+               path_params: %{},
+               pipe_through: [],
+               plug: Phoenix.Router.RoutingTest.UserController,
+               plug_opts: :exit,
+               reason: :boom,
+               route: "/exit",
+               stacktrace: stacktrace
+             } = meta
+
+      assert is_list(stacktrace) && length(stacktrace) > 0
     end
   end
 
