@@ -303,9 +303,9 @@ defmodule Phoenix.Socket do
   ## USER API
 
   @doc """
-  Adds key value pairs to socket assigns.
+  Adds key-value pairs to socket assigns.
 
-  A single key value pair may be passed, a keyword list or map
+  A single key-value pair may be passed, a keyword list or map
   of assigns may be provided to be merged into existing socket
   assigns.
 
