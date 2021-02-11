@@ -454,7 +454,7 @@ event.
 
 ## Periodic measurements
 
-You might want to periodically measure key values within
+You might want to periodically measure key-value pairs within
 your application. Fortunately the
 [`:telemetry_poller`](http://hexdocs.pm/telemetry_poller)
 package provides a mechanism for custom measurements,
