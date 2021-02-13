@@ -43,7 +43,7 @@ Elixir 1.6.3
 Once we have Elixir and Erlang, we are ready to install the Phoenix application generator:
 
 ```console
-$ mix archive.install hex phx_new 1.5.0
+$ mix archive.install hex phx_new
 ```
 
 The `phx.new` generator is now available to generate new applications in the next guide, called [Up and Running](up_and_running.html). The flags mentioned below are command line options to the generator; see all available options by calling `mix help phx.new`.
