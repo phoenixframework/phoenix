@@ -200,7 +200,7 @@ defmodule Phx.New.Generator do
       endpoint_module: inspect(Module.concat(project.web_namespace, Endpoint)),
       web_namespace: inspect(project.web_namespace),
       phoenix_github_version_tag: "v#{version.major}.#{version.minor}",
-      phoenix_dep: phoenix_dep(phoenix_path),
+      phoenix_dep: phoenix_dep(phoenix_path, version),
       phoenix_path: phoenix_path,
       phoenix_webpack_path: phoenix_webpack_path(project, dev),
       phoenix_html_webpack_path: phoenix_html_webpack_path(project),
@@ -240,9 +240,7 @@ defmodule Phx.New.Generator do
 
     config_inject(project_path, "config/dev.exs", """
     # Configure your database
-    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{
-      kw_to_config(adapter_config[:dev])
-    },
+    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config(adapter_config[:dev])},
       pool_size: 10
     """)
 
@@ -252,9 +250,7 @@ defmodule Phx.New.Generator do
     # The MIX_TEST_PARTITION environment variable can be used
     # to provide built-in test partitioning in CI environment.
     # Run `mix help test` for more information.
-    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{
-      kw_to_config(adapter_config[:test])
-    }
+    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config(adapter_config[:test])}
     """)
 
     prod_only_config_inject(project_path, "config/runtime.exs", """
@@ -382,10 +378,14 @@ defmodule Phx.New.Generator do
   defp phoenix_live_view_webpack_path(%Project{in_umbrella?: false}),
     do: "../deps/phoenix_live_view"
 
-  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> #{@phoenix_version}"}]
+  defp phoenix_dep("deps/phoenix", %{pre: ["dev"]}),
+    do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
 
-  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
-  defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect(path)}, override: true}]
+  defp phoenix_dep("deps/phoenix", version),
+    do: ~s[{:phoenix, "~> #{version}"}]
+
+  defp phoenix_dep(path, _version),
+    do: ~s[{:phoenix, path: #{inspect(path)}, override: true}]
 
   defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"
   defp phoenix_static_path(path), do: Path.join("..", path)
