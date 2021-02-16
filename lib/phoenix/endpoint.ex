@@ -238,7 +238,7 @@ defmodule Phoenix.Endpoint do
   Starts endpoint's configuration cache and possibly the servers for
   handling requests.
   """
-  @callback start_link() :: Supervisor.on_start
+  @callback start_link(keyword) :: Supervisor.on_start
 
   @doc """
   Access the endpoint configuration given by key.
@@ -472,6 +472,13 @@ defmodule Phoenix.Endpoint do
 
       @doc """
       Starts the endpoint supervision tree.
+
+      ## Options
+
+        * `:log_access_url` - if the access url should be logged
+          once the endpoint starts
+
+      All other options are merged into the endpoint configuration.
       """
       def start_link(opts \\ []) do
         Phoenix.Endpoint.Supervisor.start_link(@otp_app, __MODULE__, opts)

@@ -13,7 +13,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     case Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
       {:ok, _} = ok ->
         warmup(mod)
-        log_access_info(otp_app, mod)
+        log_access_url(otp_app, mod, opts)
         ok
 
       {:error, _} = error ->
@@ -431,8 +431,8 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp log_access_info(otp_app, endpoint) do
-    if Phoenix.Endpoint.server?(otp_app, endpoint) do
+  defp log_access_url(otp_app, endpoint, opts) do
+    if Keyword.get(opts, :log_access_url, true) && Phoenix.Endpoint.server?(otp_app, endpoint) do
       Logger.info("Access #{inspect(endpoint)} at #{endpoint.url()}")
     end
   end
