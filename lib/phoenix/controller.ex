@@ -120,8 +120,8 @@ defmodule Phoenix.Controller do
   invoke the inner action plug that dispatches to the `show/2`
   function in the `UserController`.
 
-  As controllers are plugs, they implement both `init/1` and
-  `call/2`, and it also provides a function named `action/2`
+  As controllers are plugs, they implement both [`init/1`](`c:Plug.init/1`) and
+  [`call/2`](`c:Plug.call/2`), and it also provides a function named `action/2`
   which is responsible for dispatching the appropriate action
   after the plug stack (and is also overridable).
 
