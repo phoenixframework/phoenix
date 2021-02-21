@@ -197,6 +197,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/fixtures.ex", binding)
+    |> Mix.Phoenix.prepend_newline()
     |> inject_eex_before_final_end(test_fixtures_file, binding)
   end
 

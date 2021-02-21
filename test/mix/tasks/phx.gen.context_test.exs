@@ -211,6 +211,48 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
     end
   end
 
+  test "generates with unique fields", config do
+    in_tmp_project config.test, fn ->
+      Gen.Context.run(~w(Blog Post posts
+            slug:string:unique
+            order:integer:unique
+            my_float:float:unique
+            published?:boolean
+            price:decimal:unique
+            author:references:users:unique
+          ))
+
+      assert_file "test/support/fixtures/blog_fixtures.ex", fn file ->
+        assert file =~ ~S|def unique_post_my_float, do: System.unique_integer([:positive]) * 1.0|
+        assert file =~ """
+          def unique_post_price do
+            to_string(System.unique_integer([:positive]) * 1.0)
+          end
+        """
+        assert file =~ ~S|def unique_post_order, do: System.unique_integer([:positive])|
+        assert file =~ ~S|def unique_post_slug, do: "some slug#{System.unique_integer([:positive])}"|
+        refute file =~ ~S|def unique_post_author|
+
+        assert file =~ """
+                my_float: unique_post_my_float(),
+                order: unique_post_order(),
+                price: unique_post_price(),
+                published?: true,
+                slug: unique_post_slug()
+        """
+      end
+
+      assert [path] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
+      assert_file path, fn file ->
+        assert file =~ "create table(:posts)"
+        assert file =~ "create unique_index(:posts, [:price])"
+        assert file =~ "create unique_index(:posts, [:slug])"
+        assert file =~ "create unique_index(:posts, [:order])"
+        assert file =~ "create unique_index(:posts, [:my_float])"
+      end
+    end
+  end
+
   test "generates into existing context without prompt with --merge-with-existing-context", config do
     in_tmp_project config.test, fn ->
       Gen.Context.run(~w(Blog Post posts title))
