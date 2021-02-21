@@ -1,17 +1,19 @@
-/_build
-/deps
-/doc
-/tmp
-/node_modules
+/_build/
+/deps/
+/doc/
+/node_modules/
+/tmp/
 
-/assets/node_modules
+/assets/node_modules/
 
-/installer/_build
-/installer/tmp
-/installer/doc
-/installer/deps
+/installer/_build/
+/installer/assets/
+/installer/deps/
+/installer/doc/
+/installer/phx_new-*.ez
 
-/integration_test/_build
-/integration_test/deps
+/integration_test/_build/
+/integration_test/deps/
 
 erl_crash.dump
+phoenix-*.ez
