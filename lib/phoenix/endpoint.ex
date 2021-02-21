@@ -66,7 +66,7 @@ defmodule Phoenix.Endpoint do
 
   For dynamically configuring the endpoint, such as loading data
   from environment variables or configuration files, Phoenix invokes
-  the `init/2` callback on the endpoint, passing the atom `:supervisor`
+  the `c:init/2` callback on the endpoint, passing the atom `:supervisor`
   as the first argument and the endpoint configuration as second.
 
   All of Phoenix configuration, except the Compile-time configuration
