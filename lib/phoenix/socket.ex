@@ -91,8 +91,7 @@ defmodule Phoenix.Socket do
 
   The encoding of server data and the decoding of client data is done
   according to a serializer, defined in `Phoenix.Socket.Serializer`.
-  By default, JSON encoding is used to broker messages to and from
-  clients with `Phoenix.Socket.V2.JSONSerializer`.
+  By default, JSON encoding is used to broker messages to and from clients.
 
   The serializer `decode!` function must return a `Phoenix.Socket.Message`
   which is forwarded to channels except:

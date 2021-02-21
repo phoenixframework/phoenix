@@ -204,14 +204,13 @@ and database layers using the same tools.
 
 Here is an example of a Telemetry event executed by Ecto when an Ecto repository starts:
 
-* `[:ecto, :repo, :init]` - dispatched by
-  `Ecto.Repo.Supervisor`
+* `[:ecto, :repo, :init]` - dispatched by `Ecto.Repo`
 
   * Measurement: `%{system_time: native_time}`
 
   * Metadata: `%{repo: Ecto.Repo, opts: Keyword.t()}`
 
-This means that whenever the `Ecto.Repo.Supervisor` starts, it will emit an event, via `:telemetry`,
+This means that whenever the `Ecto.Repo` starts, it will emit an event, via `:telemetry`,
 with a measurement of the time at start-up.
 
 ```elixir
