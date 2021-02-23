@@ -12,6 +12,16 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+### 1.5.8 (2021-02-23)
+
+### Enhancements
+  * [Endpoint] - Add `:log_access_url` config to endpoint start
+  * [Router] - Include route information in router_dispatch exception for telemetry events
+  * [Router] - Optimize router code generation to reduce compilation dependencies
+
+### JavaScript client
+  * Default channel `push` payload to empty object for backwards compatibility
+
 ### 1.5.7 (2020-11-20)
 
 ### Enhancements
