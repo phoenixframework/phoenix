@@ -481,72 +481,38 @@ defmodule Mix.Phoenix.Schema do
     |> Enum.filter(&Keyword.has_key?(attrs, &1))
     |> Enum.into(%{}, fn attr ->
       function_name = "unique_#{singular}_#{attr}"
-      type =  Keyword.fetch!(attrs, attr)
-      default = type_to_default(attr, type, :create)
 
-      function_def =
-        case type do
+      {function_def, needs_impl?} =
+        case Keyword.fetch!(attrs, attr) do
           :integer ->
-            """
-              def #{function_name}, do: System.unique_integer([:positive])
-            """
+            function_def =
+              """
+                def #{function_name}, do: System.unique_integer([:positive])
+              """
 
-          :float ->
-            """
-              def #{function_name}, do: System.unique_integer([:positive]) * 1.0
-            """
+            {function_def, false}
 
-          :decimal ->
-            """
-              def #{function_name} do
-                to_string(System.unique_integer([:positive]) * 1.0)
-              end
-            """
+          type when type in [:string, :text] ->
+            function_def =
+              """
+                def #{function_name}, do: "some #{attr}\#{System.unique_integer([:positive])}"
+              """
 
-          type when type in [:naive_datetime, :naive_datetime_usec] ->
-            """
-              def #{function_name} do
-                NaiveDateTime.add(
-                  #{inspect(default)},
-                  System.unique_integer([:positive])
-                )
-              end
-            """
-
-          type when type in [:utc_datetime, :utc_datetime_usec] ->
-            """
-              def #{function_name} do
-                DateTime.add(
-                  #{inspect(default)},
-                  System.unique_integer([:positive])
-                )
-              end
-            """
-
-          type when type in [:time, :time_usec] ->
-            """
-              def #{function_name} do
-                Time.add(
-                  #{inspect(default)},
-                  System.unique_integer([:positive])
-                )
-              end
-            """
+            {function_def, false}
 
           _ ->
-            if is_binary(default) do
+            function_def =
               """
-                def #{function_name}, do: "#{default}\#{System.unique_integer([:positive])}"
+                def #{function_name} do
+                  raise "implement the logic to generate a unique #{singular} #{attr}"
+                end
               """
-            else
-              """
-                def #{function_name}, do: #{inspect(default)}
-              """
-            end
+
+            {function_def, true}
         end
 
 
-      {attr, {function_name, function_def}}
+      {attr, {function_name, function_def, needs_impl?}}
     end)
   end
 
@@ -558,7 +524,7 @@ defmodule Mix.Phoenix.Schema do
     end)
     |> Enum.into(%{}, fn {attr, type} ->
       case Map.fetch(fixture_unique_functions, attr) do
-        {:ok, {function_name, _function_def}} ->
+        {:ok, {function_name, _function_def, _needs_impl?}} ->
           {attr, "#{function_name}()"}
         :error ->
           {attr, inspect(type_to_default(attr, type, :create))}

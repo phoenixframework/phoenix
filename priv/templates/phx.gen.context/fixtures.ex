@@ -1,4 +1,4 @@
-<%= for {attr, {_function_name, function_def}} <- schema.fixture_unique_functions do %>  @doc """
+<%= for {attr, {_function_name, function_def, _needs_impl?}} <- schema.fixture_unique_functions do %>  @doc """
   Generate a unique <%= schema.singular %> <%= attr %>.
   """
 <%= function_def %>

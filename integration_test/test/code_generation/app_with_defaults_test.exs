@@ -8,19 +8,6 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
 
         assert_no_compilation_warnings(app_root_path)
         assert_passes_formatter_check(app_root_path)
-
-        # Test unique fixture generators
-        mix_run!(
-          ~w(
-            phx.gen.context Blog Post posts
-            title:string:unique
-            body:text:unique
-          ),
-          app_root_path
-        )
-
-        assert_no_compilation_warnings(app_root_path)
-        assert_passes_formatter_check(app_root_path)
       end)
     end
 
@@ -30,30 +17,6 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "default_app")
 
         drop_test_database(app_root_path)
-        assert_tests_pass(app_root_path)
-
-        # Test unique fixture generators
-        mix_run!(
-          ~w(
-            phx.gen.context Blog Post posts
-            title:string:unique
-            body:text:unique
-            author_name:string
-            order:integer:unique
-            score:float:unique
-            previous_post:references:posts:unique
-            publish_on:naive_datetime:unique
-            publish_at:utc_datetime:unique
-            publish_on_usec:naive_datetime_usec:unique
-            publish_at_usec:utc_datetime_usec:unique
-            publish_time:time:unique
-            publish_time_usec:time_usec:unique
-            status:enum:draft:published:deleted:unique
-            tags:array:string:unique
-          ),
-          app_root_path
-        )
-
         assert_tests_pass(app_root_path)
       end)
     end
@@ -87,7 +50,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
       with_installer_tmp("app_with_defaults", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
 
-        mix_run!(~w(phx.gen.html Blog Post posts title:unique body:string status:enum:unpublished:published:deleted), app_root_path)
+        mix_run!(~w(phx.gen.html Blog Post posts title:unique body:string status:enum:unpublished:published:deleted order:integer:unique), app_root_path)
 
         modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
           inject_before_final_end(file, """
