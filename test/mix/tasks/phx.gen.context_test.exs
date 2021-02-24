@@ -226,8 +226,9 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
       assert_received {:mix_shell, :info, ["""
 
-        Update the following fixture function(s) in test/support/fixtures/blog_fixtures.ex
-        with new implementations:
+        Some of the generated database columns are unique. Please provide
+        unique implementations for the following fixture function(s) in
+        test/support/fixtures/blog_fixtures.ex:
 
             def unique_post_price do
               raise "implement the logic to generate a unique post price"
@@ -281,10 +282,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
             order:integer:unique
           ))
 
-      refute_received {:mix_shell, :info, ["""
-
-        Update the following fixture function(s) in test/support/fixtures/blog_fixtures.ex
-        """ <> _]}
+      refute_received {:mix_shell, :info, ["\nSome of the generated database columns are unique." <> _]}
     end
   end
 

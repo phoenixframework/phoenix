@@ -217,8 +217,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       Mix.shell.info(
         """
 
-        Update the following fixture function(s) in #{context.test_fixtures_file}
-        with new implementations:
+        Some of the generated database columns are unique. Please provide
+        unique implementations for the following fixture function(s) in
+        #{context.test_fixtures_file}:
 
         #{
           fixture_functions_needing_implementations
