@@ -97,7 +97,7 @@ hello_dev=# \d users
 Table "public.users"
 Column         |            Type             | Modifiers
 ---------------+-----------------------------+----------------------------------------------------
-id             | integer                     | not null default nextval('users_id_seq'::regclass)
+id             | bigint                      | not null default nextval('users_id_seq'::regclass)
 name           | character varying(255)      |
 email          | character varying(255)      |
 bio            | character varying(255)      |
