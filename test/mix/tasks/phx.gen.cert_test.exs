@@ -53,7 +53,7 @@ defmodule Mix.Tasks.Phx.CertTest do
 
         spawn_link(fn ->
           with {:ok, conn} <- :ssl.transport_accept(server, @timeout),
-               :ok <- :ssl.ssl_accept(conn, @timeout) do
+               :ok <- :ssl.handshake(conn, @timeout) do
             :ssl.close(conn)
           end
         end)
