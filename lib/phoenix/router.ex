@@ -346,6 +346,9 @@ defmodule Phoenix.Router do
 
     case pipeline.(conn) do
       %Plug.Conn{halted: true} = halted_conn ->
+        measurements = %{duration: System.monotonic_time() - start}
+        metadata = %{metadata | conn: halted_conn}
+        :telemetry.execute([:phoenix, :router_dispatch, :stop], measurements, metadata)
         halted_conn
       %Plug.Conn{} = piped_conn ->
         try do
