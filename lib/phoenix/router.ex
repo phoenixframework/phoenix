@@ -425,7 +425,7 @@ defmodule Phoenix.Router do
     {matches, _} = Enum.map_reduce(routes_with_exprs, %{}, &build_match/2)
 
     checks =
-      for {%{line: line, plug: plug, plug_opts: plug_opts}, _} <- routes_with_exprs, into: %{} do
+      for %{line: line, plug: plug, plug_opts: plug_opts} <- routes, into: %{} do
         quote line: line do
           {unquote(plug).init(unquote(Macro.escape(plug_opts))), []}
         end
@@ -438,6 +438,9 @@ defmodule Phoenix.Router do
           :error
         end
       end
+
+    keys = [:verb, :path, :plug, :plug_opts, :helper, :metadata]
+    routes = Enum.map(routes, &Map.take(&1, keys))
 
     quote do
       @doc false
@@ -958,6 +961,13 @@ defmodule Phoenix.Router do
       plug = Scope.register_forwards(__MODULE__, path, plug)
       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
     end
+  end
+
+  @doc """
+  Returns all routes information from the given router.
+  """
+  def routes(router) do
+    router.__routes__()
   end
 
   @doc """
