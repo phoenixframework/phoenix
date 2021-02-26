@@ -90,7 +90,7 @@ With the new route in place, Phoenix reminds us to update our repo by running `m
     end
 ```
 
-We modified our price column to specific a precision of 15, scale of 6, along with a not-null constraint. This ensures we store currency with proper precision for any mathematical operations we may perform. Next, we added a default value and not-null constraint to our views count. With our changes in place, we're ready to migrate up our database. Let's do that now:
+We modified our price column to a specific precision of 15, scale of 6, along with a not-null constraint. This ensures we store currency with proper precision for any mathematical operations we may perform. Next, we added a default value and not-null constraint to our views count. With our changes in place, we're ready to migrate up our database. Let's do that now:
 
 ```console
 $ mix ecto.migrate
