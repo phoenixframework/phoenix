@@ -23,7 +23,8 @@ defmodule Phoenix.ConfigTest do
   end
 
   test "can change configuration", meta do
-    {:ok, _pid} = start_link({meta.test, @all, @defaults, []})
+    {:ok, pid} = start_link({meta.test, @all, @defaults, []})
+    ref = Process.monitor(pid)
 
     # Nothing changed
     config_change(meta.test, [], [])
@@ -39,6 +40,8 @@ defmodule Phoenix.ConfigTest do
 
     # Module removed
     config_change(meta.test, [], [meta.test])
+
+    assert_receive {:DOWN, ^ref, :process, ^pid, :normal}
     assert :ets.info(meta.test, :name) == :undefined
   end
 
