@@ -33,7 +33,9 @@ defmodule Mix.Phoenix.Schema do
             web_namespace: nil,
             context_app: nil,
             route_helper: nil,
-            migration_module: nil
+            migration_module: nil,
+            fixture_unique_functions: %{},
+            fixture_params: %{}
 
   @valid_types [
     :integer,
@@ -95,6 +97,7 @@ defmodule Mix.Phoenix.Schema do
         {key, _} -> key
         nil -> :some_field
       end
+    fixture_unique_functions = fixture_unique_functions(singular, uniques, attrs)
 
     %Schema{
       opts: opts,
@@ -131,7 +134,9 @@ defmodule Mix.Phoenix.Schema do
       sample_id: sample_id(opts),
       context_app: ctx_app,
       generate?: generate?,
-      migration_module: migration_module()}
+      migration_module: migration_module(),
+      fixture_unique_functions: fixture_unique_functions,
+      fixture_params: fixture_params(attrs, fixture_unique_functions)}
   end
 
   @doc """
@@ -469,5 +474,61 @@ defmodule Mix.Phoenix.Schema do
       migration_module when is_atom(migration_module) -> migration_module
       other -> Mix.raise "Expected :migration_module to be a module, got: #{inspect(other)}"
     end
+  end
+
+  defp fixture_unique_functions(singular, uniques, attrs) do
+    uniques
+    |> Enum.filter(&Keyword.has_key?(attrs, &1))
+    |> Enum.into(%{}, fn attr ->
+      function_name = "unique_#{singular}_#{attr}"
+
+      {function_def, needs_impl?} =
+        case Keyword.fetch!(attrs, attr) do
+          :integer ->
+            function_def =
+              """
+                def #{function_name}, do: System.unique_integer([:positive])
+              """
+
+            {function_def, false}
+
+          type when type in [:string, :text] ->
+            function_def =
+              """
+                def #{function_name}, do: "some #{attr}\#{System.unique_integer([:positive])}"
+              """
+
+            {function_def, false}
+
+          _ ->
+            function_def =
+              """
+                def #{function_name} do
+                  raise "implement the logic to generate a unique #{singular} #{attr}"
+                end
+              """
+
+            {function_def, true}
+        end
+
+
+      {attr, {function_name, function_def, needs_impl?}}
+    end)
+  end
+
+  defp fixture_params(attrs, fixture_unique_functions) do
+    attrs
+    |> Enum.reject(fn
+      {_, {:references, _}} -> true
+      {_, _} -> false
+    end)
+    |> Enum.into(%{}, fn {attr, type} ->
+      case Map.fetch(fixture_unique_functions, attr) do
+        {:ok, {function_name, _function_def, _needs_impl?}} ->
+          {attr, "#{function_name}()"}
+        :error ->
+          {attr, inspect(type_to_default(attr, type, :create))}
+      end
+    end)
   end
 end
