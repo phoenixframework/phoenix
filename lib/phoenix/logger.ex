@@ -201,7 +201,7 @@ defmodule Phoenix.Logger do
   ## Event: [:phoenix, :endpoint, *]
 
   defp phoenix_endpoint_start(_, _, %{conn: conn} = metadata, _) do
-    case log_level(metadata[:options][:log], conn) do
+    case log_level(metadata[:options][:log] || :info, conn) do
       false ->
         :ok
 
@@ -214,7 +214,7 @@ defmodule Phoenix.Logger do
   end
 
   defp phoenix_endpoint_stop(_, %{duration: duration}, %{conn: conn} = metadata, _) do
-    case log_level(metadata[:options][:log], conn) do
+    case log_level(metadata[:options][:log] || :info, conn) do
       false ->
         :ok
 

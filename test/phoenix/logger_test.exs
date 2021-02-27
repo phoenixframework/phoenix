@@ -1,5 +1,6 @@
 defmodule Phoenix.LoggerTest do
   use ExUnit.Case, async: true
+  use RouterHelper
 
   describe "filter_values/2 with discard strategy" do
     test "in top level map" do
@@ -61,6 +62,48 @@ defmodule Phoenix.LoggerTest do
       assert Phoenix.Logger.filter_values(values, {:keep, []}) ==
             %{"foo" => %{"bar" => "[FILTERED]", "baz" => "[FILTERED]"},
               "ids" => ["[FILTERED]", "[FILTERED]"]}
+    end
+  end
+
+  describe "telemetry" do
+    def log_level(conn) do
+      case conn.path_info do
+        [] -> :debug
+        ["warn" | _] -> :warn
+        ["error" | _] -> :error
+        _ -> :info
+      end
+    end
+
+    test "invokes log level callback from Plug.Telemetry" do
+      opts =
+        Plug.Telemetry.init(
+          event_prefix: [:phoenix, :endpoint],
+          log: {__MODULE__, :log_level, []}
+        )
+
+      assert ExUnit.CaptureLog.capture_log(fn ->
+        Plug.Telemetry.call(conn(:get, "/"), opts)
+      end) =~ "[debug] GET /"
+
+      assert ExUnit.CaptureLog.capture_log(fn ->
+        Plug.Telemetry.call(conn(:get, "/warn"), opts)
+      end) =~ "[warn]  GET /warn"
+
+      assert ExUnit.CaptureLog.capture_log(fn ->
+        Plug.Telemetry.call(conn(:get, "/error/404"), opts)
+      end) =~ "[error] GET /error/404"
+
+      assert ExUnit.CaptureLog.capture_log(fn ->
+        Plug.Telemetry.call(conn(:get, "/any"), opts)
+      end) =~ "[info]  GET /any"
+    end
+
+    test "invokes default log level callback from Plug.Telemetry" do
+      assert ExUnit.CaptureLog.capture_log(fn ->
+        opts = Plug.Telemetry.init(event_prefix: [:phoenix, :endpoint])
+        Plug.Telemetry.call(conn(:get, "/"), opts)
+      end) =~ "[info]  GET /"
     end
   end
 end
