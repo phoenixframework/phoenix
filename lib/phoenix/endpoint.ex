@@ -218,7 +218,7 @@ defmodule Phoenix.Endpoint do
       `c:broadcast_from/4`, `c:broadcast_from!/4`, `c:local_broadcast/3`,
       and `c:local_broadcast_from/4`
 
-    * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`
+    * for configuration: `c:start_link/1`, `c:config/2`, and `c:config_change/2`
 
     * as required by the `Plug` behaviour: `c:Plug.init/1` and `c:Plug.call/2`
 
