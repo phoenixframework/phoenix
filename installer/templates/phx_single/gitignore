@@ -33,5 +33,5 @@ npm-debug.log
 # this depending on your deployment strategy.
 /priv/static/
 
-# Temporary files for e.g. tests
+# Temporary files, for example, from tests.
 /tmp
