@@ -245,7 +245,7 @@ defmodule Mix.Phoenix.Schema do
     if schema.params.create |> Map.values() |> Enum.any?(&date_value?/1) do
       "is invalid"
     else
-      "can&apos;t be blank"
+      "can&#39;t be blank"
     end
   end
 
