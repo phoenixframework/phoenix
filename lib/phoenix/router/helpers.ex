@@ -5,12 +5,6 @@ defmodule Phoenix.Router.Helpers do
   alias Phoenix.Router.Route
   alias Plug.Conn
 
-  @anno (if :erlang.system_info(:otp_release) >= '19' do
-    [generated: true, unquote: false]
-  else
-    [line: -1, unquote: false]
-  end)
-
   @doc """
   Callback invoked by the url generated in each helper module.
   """
@@ -119,7 +113,7 @@ defmodule Phoenix.Router.Helpers do
 
     catch_all = Enum.map(groups, &defhelper_catch_all/1)
 
-    defhelper = quote @anno do
+    defhelper = quote [generated: true, unquote: false] do
       defhelper = fn helper, vars, opts, bins, segs, trailing_slash? ->
         def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(Macro.escape(opts)), unquote_splicing(vars)) do
           unquote(:"#{helper}_path")(conn_or_endpoint, unquote(Macro.escape(opts)), unquote_splicing(vars), [])
@@ -142,7 +136,7 @@ defmodule Phoenix.Router.Helpers do
       end
     end
 
-    defcatch_all = quote @anno do
+    defcatch_all = quote [generated: true, unquote: false] do
       defcatch_all = fn helper, lengths, routes ->
 	      for length <- lengths do
 	        binding = List.duplicate({:_, [], nil}, length)
