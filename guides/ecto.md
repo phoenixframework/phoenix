@@ -368,38 +368,63 @@ iex> alias Hello.{Repo, User}
 [Hello.Repo, Hello.User]
 
 iex> Repo.insert(%User{email: "user1@example.com"})
-[debug] QUERY OK db=4.6ms
-INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user1@example.com", {{2017, 5, 23}, {19, 6, 4, 822044}}, {{2017, 5, 23}, {19, 6, 4, 822055}}]
+[debug] QUERY OK db=6.5ms decode=2.0ms queue=0.5ms idle=1358.3ms
+INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user1@example.com", ~N[2021-02-25 01:58:55], ~N[2021-02-25 01:58:55]]
 {:ok,
- %Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-  bio: nil, email: "user1@example.com", id: 3,
-  inserted_at: ~N[2017-05-23 19:06:04.822044], name: nil, number_of_pets: nil,
-  updated_at: ~N[2017-05-23 19:06:04.822055]}}
-
+ %Hello.User{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+   bio: nil,
+   email: "user1@example.com",
+   id: 1,
+   inserted_at: ~N[2021-02-25 01:58:55],
+   name: nil,
+   number_of_pets: nil,
+   updated_at: ~N[2021-02-25 01:58:55]
+ }}
 iex> Repo.insert(%User{email: "user2@example.com"})
-[debug] QUERY OK db=5.1ms
-INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user2@example.com", {{2017, 5, 23}, {19, 6, 8, 452545}}, {{2017, 5, 23}, {19, 6, 8, 452556}}]
+[debug] QUERY OK db=1.3ms idle=1402.7ms
+INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user2@example.com", ~N[2021-02-25 02:03:28], ~N[2021-02-25 02:03:28]]
 {:ok,
- %Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-  bio: nil, email: "user2@example.com", id: 4,
-  inserted_at: ~N[2017-05-23 19:06:08.452545], name: nil, number_of_pets: nil,
-  updated_at: ~N[2017-05-23 19:06:08.452556]}}
+ %Hello.User{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+   bio: nil,
+   email: "user2@example.com",
+   id: 2,
+   inserted_at: ~N[2021-02-25 02:03:28],
+   name: nil,
+   number_of_pets: nil,
+   updated_at: ~N[2021-02-25 02:03:28]
+ }}
 ```
 
 We started by aliasing our `User` and `Repo` modules for easy access. Next, we called `Repo.insert/1` and passed a user struct. Since we're in the `dev` environment, we can see the debug logs for the query our Repo performed when inserting the underlying `%User{}` data. We received a 2-tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful. With a couple of users inserted, let's fetch them back out of the repo.
 
 ```elixir
 iex> Repo.all(User)
-[debug] QUERY OK source="users" db=2.7ms
+[debug] QUERY OK source="users" db=5.8ms queue=1.4ms idle=1672.0ms
 SELECT u0."id", u0."bio", u0."email", u0."name", u0."number_of_pets", u0."inserted_at", u0."updated_at" FROM "users" AS u0 []
-[%Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-  bio: nil, email: "user1@example.com", id: 3,
-  inserted_at: ~N[2017-05-23 19:06:04.822044], name: nil, number_of_pets: nil,
-  updated_at: ~N[2017-05-23 19:06:04.822055]},
- %Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-  bio: nil, email: "user2@example.com", id: 4,
-  inserted_at: ~N[2017-05-23 19:06:08.452545], name: nil, number_of_pets: nil,
-  updated_at: ~N[2017-05-23 19:06:08.452556]}]
+[
+  %Hello.User{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+    bio: nil,
+    email: "user1@example.com",
+    id: 1,
+    inserted_at: ~N[2021-02-25 01:58:55],
+    name: nil,
+    number_of_pets: nil,
+    updated_at: ~N[2021-02-25 01:58:55]
+  },
+  %Hello.User{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+    bio: nil,
+    email: "user2@example.com",
+    id: 2,
+    inserted_at: ~N[2021-02-25 02:03:28],
+    name: nil,
+    number_of_pets: nil,
+    updated_at: ~N[2021-02-25 02:03:28]
+  }
+]
 ```
 
 That was easy! `Repo.all/1` takes a data source, our `User` schema in this case, and translates that to an underlying SQL query against our database. After it fetches the data, the Repo then uses our Ecto schema to map the database values back into Elixir data-structures according to our `User` schema. We're not just limited to basic querying – Ecto includes a full-fledged query DSL for advanced SQL generation. In addition to a natural Elixir DSL, Ecto's query engine gives us multiple great features, such as SQL injection protection and compile-time optimization of queries. Let's try it out.
@@ -409,7 +434,7 @@ iex> import Ecto.Query
 Ecto.Query
 
 iex> Repo.all(from u in User, select: u.email)
-[debug] QUERY OK source="users" db=2.4ms
+[debug] QUERY OK source="users" db=0.8ms queue=0.9ms idle=1634.0ms
 SELECT u0."email" FROM "users" AS u0 []
 ["user1@example.com", "user2@example.com"]
 ```
