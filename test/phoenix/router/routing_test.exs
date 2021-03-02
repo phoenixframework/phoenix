@@ -274,9 +274,15 @@ defmodule Phoenix.Router.RoutingTest do
 
     test "phoenix.router_dispatch.start and .stop are emitted on success" do
       call(Router, :get, "users/123")
-      assert_received {:telemetry_event, @router_start_event, _event}
-      assert_received {:telemetry_event, @router_stop_event, _event}
-      refute_received {:telemetry_event, @router_exception_event, _event}
+
+      assert_received {:telemetry_event, @router_start_event,
+                       {_, %{route: "/users/:id"}, _}}
+
+      assert_received {:telemetry_event, @router_stop_event,
+                       {_, %{route: "/users/:id"}, _}}
+
+      refute_received {:telemetry_event, @router_exception_event,
+                       {_, %{route: "/users/:id"}, _}}
     end
 
     test "phoenix.router_dispatch.start and .exception are emitted on crash" do
@@ -284,23 +290,35 @@ defmodule Phoenix.Router.RoutingTest do
         call(Router, :get, "route_that_crashes")
       end
 
-      assert_received {:telemetry_event, @router_start_event, _event}
-      assert_received {:telemetry_event, @router_exception_event, _event}
-      refute_received {:telemetry_event, @router_stop_event, _event}
+      assert_received {:telemetry_event, @router_start_event,
+                       {_, %{route: "/route_that_crashes"}, _}}
+
+      assert_received {:telemetry_event, @router_exception_event,
+                       {_, %{route: "/route_that_crashes"}, _}}
+
+      refute_received {:telemetry_event, @router_stop_event,
+                       {_, %{route: "/route_that_crashes"}, _}}
     end
 
     test "phoenix.router_dispatch.start and .exception are emitted on exit" do
       catch_exit(call(Router, :get, "exit"))
 
-      assert_received {:telemetry_event, @router_start_event, _event}
-      assert_received {:telemetry_event, @router_exception_event, _event}
-      refute_received {:telemetry_event, @router_stop_event, _event}
+      assert_received {:telemetry_event, @router_start_event,
+                       {_, %{route: "/exit"}, _}}
+
+      assert_received {:telemetry_event, @router_exception_event,
+                       {_, %{route: "/exit"}, _}}
+
+      refute_received {:telemetry_event, @router_stop_event,
+                       {_, %{route: "/exit"}, _}}
     end
 
     test "phoenix.router_dispatch.start has supported measurements and metadata" do
       call(Router, :get, "users/123")
 
-      assert_received {:telemetry_event, @router_start_event, {measures, meta, _config}}
+      assert_received {:telemetry_event, @router_start_event,
+                       {measures, %{route: "/users/:id"} = meta, _config}}
+
       assert is_integer(measures.system_time)
 
       assert %{
@@ -318,7 +336,9 @@ defmodule Phoenix.Router.RoutingTest do
     test "phoenix.router_dispatch.stop has supported measurements and metadata" do
       call(Router, :get, "users/123")
 
-      assert_received {:telemetry_event, @router_stop_event, {measures, meta, _config}}
+      assert_received {:telemetry_event, @router_stop_event,
+                       {measures, %{route: "/users/:id"} = meta, _config}}
+
       assert is_integer(measures.duration)
 
       assert %{
@@ -338,7 +358,9 @@ defmodule Phoenix.Router.RoutingTest do
         call(Router, :get, "users/123/raise")
       end
 
-      assert_received {:telemetry_event, @router_exception_event, {measures, meta, _config}}
+      assert_received {:telemetry_event, @router_exception_event,
+                       {measures, %{route: "/users/:id/raise"} = meta, _config}}
+
       assert is_integer(measures.duration)
 
       assert %{
@@ -366,7 +388,9 @@ defmodule Phoenix.Router.RoutingTest do
     test "phoenix.router_dispatch.exception has supported measurements and metadata on exit" do
       catch_exit(call(Router, :get, "exit"))
 
-      assert_received {:telemetry_event, @router_exception_event, {measures, meta, _config}}
+      assert_received {:telemetry_event, @router_exception_event,
+                       {measures, %{route: "/exit"} = meta, _config}}
+
       assert is_integer(measures.duration)
 
       assert %{
