@@ -61,7 +61,7 @@ end
 
 But we can do even better.
 
-Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web/templates/error` directory. Let's create one now. Inside our new directory, let's add a template, `404.html.eex` and give it some markup – a mixture of our application layout and a new `div` with our message to the user.
+Phoenix generates an `ErrorView` view for us, but it doesn't give us a `lib/hello_web/templates/error/` directory. Let's create one now. Inside our new directory, let's add a template, `404_page.html.eex` and give it some markup – a mixture of our application layout and a new `<div>` with our message to the user.
 
 ```html
 <!DOCTYPE html>
@@ -70,7 +70,7 @@ Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Welcome to Phoenix!</title>
+    <title><%= @title %><</title>
     <link rel="stylesheet" href="/css/app.css"/>
     <script defer type="text/javascript" src="/js/app.js"></script>
   </head>
@@ -89,12 +89,25 @@ Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web
     </header>
     <main role="main" class="container">
       <section class="phx-hero">
-        <p>Sorry, the page you are looking for does not exist.</p>
+        <p><%= @message %></p>
       </section>
     </main>
   </body>
 </html>
 ```
+
+We also need to update our `render/2` function clause in `HelloWeb.ErrorView`.
+
+```elixir
+def render("404.html", _assigns) do
+  render("404_page.html",
+    title: "Page Not Found",
+    message: "Sorry, the page you are looking for does not exist."
+  )
+end
+```
+
+Please note that our template is named `404_page.html.eex` and not `404.html.eex`, because otherwise `render/2` will recurse infinitely.
 
 Now when we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see a much nicer error page. It is worth noting that we did not render our `404.html.eex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. This is to avoid circular errors. For example, what happens if our application failed due to an error in the layout? Attempting to render the layout again will just trigger another error. So ideally we want to minimize the amount of dependencies and logic in our error templates, sharing only what is necessary.
 
