@@ -4,7 +4,7 @@
 
 > **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
 
-A Phoenix view's main job is to render the body of the response which gets sent back to browsers and API clients. Most of the time, we use templates to build these responses, but we can also craft them by hand. We will learn how.
+The main job of a Phoenix view is to render the body of the response which gets sent back to browsers and to API clients. Most of the time, we use templates to build these responses, but we can also craft them by hand. We will learn how.
 
 ## Rendering templates
 
@@ -95,7 +95,7 @@ defmodule HelloWeb.PageView do
 end
 ```
 
-Now if you fire up the server with `mix phx.server` and visit `http://localhost:4000`, you should see the following text below your layout header instead of the main template page:
+Now if you fire up the server with `mix phx.server` and visit [`http://localhost:4000`](http://localhost:4000), you should see the following text below your layout header instead of the main template page:
 
 ```console
 rendering with assigns [:conn]
@@ -142,7 +142,7 @@ iex(5)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "
 
 Now that we have acquainted ourselves with `Phoenix.View.render/3`, we are ready to share views and templates from inside other views and templates.
 
-For example, if you want to render the `test.html` template from inside our layout, you can invoke [`render/3`] directly from the layout:
+For example, if you want to render the `test.html` template from inside our layout, you can invoke [`render/3`] directly from the layout `lib/hello_web/templates/layout/app.html.eex`:
 
 ```html
 <%= Phoenix.View.render(HelloWeb.PageView, "test.html", message: "Hello from layout!") %>
@@ -176,11 +176,11 @@ In other words, the inner template is placed in the `@inner_content` assign.
 
 ## Rendering JSON
 
-The view's job is not only to render HTML templates. Views are about data presentation. Given a bag of data, the view's purpose is to present that in a meaningful way given some format, be it HTML, JSON, CSV, or others. Many web apps today return JSON to remote clients, and Phoenix Views are *great* for JSON rendering.
+The view's job is not only to render HTML templates. Views are about data presentation. Given a bag of data, the view's purpose is to present that in a meaningful way given some format, be it HTML, JSON, CSV, or others. Many web apps today return JSON to remote clients, and Phoenix views are *great* for JSON rendering.
 
-Phoenix uses [Jason](https://github.com/michalmuskala/jason) to encode JSON, so all we need to do in our views is format the data we'd like to respond with as a list or a map, and Phoenix will do the rest.
+Phoenix uses the [Jason](https://github.com/michalmuskala/jason) library to encode JSON, so all we need to do in our views is to format the data we would like to respond with as a list or a map, and Phoenix will do the rest.
 
-While it is possible to respond with JSON back directly from the controller and skip the view, Phoenix Views provide a much more structured approach for doing  so. Let's take our `PageController`, and see what it might look like when we respond with some static page maps as JSON, instead of HTML.
+While it is possible to respond with JSON back directly from the controller and skip the view, Phoenix views provide a much more structured approach for doing  so. Let's take our `PageController`, and see what it may look like when we respond with some static page maps as JSON, instead of HTML.
 
 ```elixir
 defmodule HelloWeb.PageController do
@@ -249,7 +249,7 @@ This works because both `index.json` and `show.json` build themselves on top of 
 
 The [`render_many/3`] function takes the data we want to respond with (`pages`), a view, and a string to pattern match on the [`render/2`] function defined on view. It will map over each item in `pages` and call `PageView.render("page.json", %{page: page})`. [`render_one/3`] follows the same signature, ultimately using the [`render/2`] matching `page.json` to specify what each `page` looks like.
 
-It's useful to build our views like this so that they are composable. Imagine a situation where our `Page` has a `has_many` relationship with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new [`render/2`]:
+It's useful to build our views like this so that they are composable. Imagine a situation where our `Page` has a `has_many` relationship (#NOTE: We haven't talked about has_many relationship yet#) with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new [`render/2`]:
 
 ```elixir
 defmodule HelloWeb.PageView do
@@ -281,7 +281,7 @@ end
 Phoenix has a view called the `ErrorView` which lives in `lib/hello_web/views/error_view.ex`. The purpose of `ErrorView` is to handle errors in a general way, from one centralized location.  Similar to the views we built in this guide, error views can return both HTML and JSON responses. See the [custom error pages how-to](custom_error_pages.html) for more information.
 
 
-[welcome page]: http://localhost:4000/
+[welcome page]: http://localhost:4000
 [`render/2`]: Phoenix.View.render/3
 [`render/3`]: Phoenix.View.render/3
 [`render_many/3`]: Phoenix.View.render_many/3
