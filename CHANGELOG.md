@@ -90,6 +90,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * [Generator] Add `mix phx.gen.live` for LiveView CRUD generation
   * [PubSub] Migrate to PubSub 2.0 with a more flexible fastlaning mechanism
   * [View] Add `render_layout` which makes it easy to work with nested layouts
+  * [View] Raise if `assigns` argument to functions `render/3`, `render_existing/3`, `render_many/4`, `render_one/4`, `render_layout/4`, `render_to_iodata/3`, `render_to_string/4` is struct.
   * [Transport] Transports can now optionally implement `handle_control/2` for handling control frames such as `:ping` and `:pong`
 
 ### Deprecations
