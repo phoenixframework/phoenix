@@ -23,6 +23,11 @@ defmodule Phoenix.Router.RoutingTest do
     def any(conn, _params), do: text(conn, "users any")
     def raise(_conn, _params), do: raise("boom")
     def exit(_conn, _params), do: exit(:boom)
+    def halt(conn, _params) do
+      conn
+      |> send_resp(401, "Unauthorized")
+      |> halt()
+    end
   end
 
   defmodule LogLevel do
@@ -44,6 +49,7 @@ defmodule Phoenix.Router.RoutingTest do
     get "/backups/*path", UserController, :image
     get "/static/images/icons/*image", UserController, :image
     get "/exit", UserController, :exit
+    get "/halt-controller", UserController, :halt
 
     trace("/trace", UserController, :trace)
     options "/options", UserController, :options
@@ -60,9 +66,18 @@ defmodule Phoenix.Router.RoutingTest do
     get "/no_log", SomePlug, [], log: false
     get "/fun_log", SomePlug, [], log: {LogLevel, :log_level, []}
     get "/users/:user_id/files/:id", UserController, :image
+
+    scope "/halt-plug" do
+      pipe_through :halt
+      get "/", UserController, :raise
+    end
+
     get "/*path", UserController, :not_found
 
     defp noop(conn, _), do: conn
+    defp halt(conn, _) do
+      conn |> Plug.Conn.send_resp(401, "Unauthorized") |> halt()
+    end
   end
 
   setup do
@@ -283,6 +298,38 @@ defmodule Phoenix.Router.RoutingTest do
 
       refute_received {:telemetry_event, @router_exception_event,
                        {_, %{route: "/users/:id"}, _}}
+    end
+
+    test "phoenix.router_dispatch.start and .stop are emitted when conn halted in router" do
+      conn = call(Router, :get, "/halt-plug")
+
+      assert conn.halted
+      assert conn.status == 401
+
+      assert_received {:telemetry_event, @router_start_event,
+                       {_, %{route: "/halt-plug"}, _}}
+
+      assert_received {:telemetry_event, @router_stop_event,
+                       {_, %{route: "/halt-plug"}, _}}
+
+      refute_received {:telemetry_event, @router_exception_event,
+                       {_, %{route: "/halt-plug"}, _}}
+    end
+
+    test "phoenix.router_dispatch.start and .stop are emitted when conn is halted in controller" do
+      conn = call(Router, :get, "/halt-controller")
+
+      assert conn.halted
+      assert conn.status == 401
+
+      assert_received {:telemetry_event, @router_start_event,
+                       {_, %{route: "/halt-controller"}, _}}
+
+      assert_received {:telemetry_event, @router_stop_event,
+                       {_, %{route: "/halt-controller"}, _}}
+
+      refute_received {:telemetry_event, @router_exception_event,
+                       {_, %{route: "/halt-controller"}, _}}
     end
 
     test "phoenix.router_dispatch.start and .exception are emitted on crash" do
