@@ -66,10 +66,12 @@ There are three different ways to deploy a Phoenix app on Gigalixir: with mix, w
 Let's create a Gigalixir application
 
 ```console
-$ gigalixir create
+$ gigalixir create -n "your_app_name"
 ```
 
-Verify it was created
+Note: the app name cannot be changed afterwards. A random name is used if you do not provide one.
+
+Verify the app was created
 
 ```console
 $ gigalixir apps
