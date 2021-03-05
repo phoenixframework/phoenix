@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.Phx.Gen.Context do
+  import Phoenix.Util, only: [singularize: 2]
+
   @shortdoc "Generates a context with functions around an Ecto schema"
 
   @moduledoc """
@@ -338,8 +340,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       Mix.shell().info("""
       You are generating into an existing context.
 
-      The #{inspect context.module} context currently has #{function_count} functions and \
-      #{file_count} files in its directory.
+      The #{inspect(context.module)} context currently has #{singularize(function_count, "functions")} and \
+      #{singularize(file_count, "files")} in its directory.
 
         * It's OK to have multiple resources in the same context as \
       long as they are closely related. But if a context grows too \
