@@ -631,6 +631,14 @@ defmodule Phoenix.Router do
   are appended to the ones previously given.
   """
   defmacro pipeline(plug, do: block) do
+    with true <- is_atom(plug),
+         imports = __CALLER__.macros ++ __CALLER__.functions,
+         {mod, _} <- Enum.find(imports, fn {_, imports} -> {plug, 2} in imports end) do
+      raise ArgumentError,
+            "cannot define pipeline named #{inspect(plug)} " <>
+              "because there is an import from #{inspect(mod)} with the same name"
+    end
+
     block =
       quote do
         plug = unquote(plug)
