@@ -1,6 +1,4 @@
 defmodule Mix.Tasks.Phx.Gen.Context do
-  import Phoenix.Util, only: [singularize: 2]
-
   @shortdoc "Generates a context with functions around an Ecto schema"
 
   @moduledoc """
@@ -358,4 +356,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       Mix.shell().yes?("Would you like to proceed?")
     end)
   end
+
+  defp singularize(1, plural), do: "1 " <> String.trim_trailing(plural, "s")
+  defp singularize(amount, plural), do: "#{amount} #{plural}"
 end
