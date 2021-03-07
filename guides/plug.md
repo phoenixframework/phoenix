@@ -113,7 +113,7 @@ defmodule HelloWeb.Router do
   ...
 ```
 
-In the [`init/1`] callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple [`call/2`] function heads to validate the locale in the params, and fall back to `"en"` if there is no match.
+In the [`init/1`] callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple [`call/2`] function heads to validate the locale in the params, and fall back to `"en"` if there is no match. The [`assign/3`] is a part of the `Plug.Conn` module and it's how we store values in the `conn` data structure.
 
 To see the assign in action, go to the layout in `lib/hello_web/templates/layout/app.html.eex` and add the following close to the main container:
 
