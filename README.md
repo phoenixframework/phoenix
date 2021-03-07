@@ -25,10 +25,10 @@ You can create a new project using the latest Phoenix source installer (the `phx
 
 1. Remove any previously installed `phx_new` archives so that Mix will pick up the local source code. This can be done with `mix archive.uninstall phx_new` or by simply deleting the file, which is usually in `~/.mix/archives/`.
 2. Copy this repo via `git clone https://github.com/phoenixframework/phoenix` or by downloading it
-3. Run the `phx.new` mix task from within the `installer` directory, for example:
+3. Run the `phx.new` Mix task from within the `installer` directory, for example:
 
 ```bash
-$ cd installer
+$ cd phoenix/installer
 $ mix phx.new dev_app --dev
 ```
 

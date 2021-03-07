@@ -2,9 +2,9 @@
 
 Provides `phx.new` installer as an archive.
 
-To install from hex, run:
+To install from Hex, run:
 
-    $ mix archive.install hex phx_new 1.5.0
+    $ mix archive.install hex phx_new
 
 To build and install it locally,
 ensure any previous archive versions are removed:

@@ -1,4 +1,4 @@
-for path <- :code.get_path,
+for path <- :code.get_path(),
     Regex.match?(~r/phx_new\-\d+\.\d+\.\d\/ebin$/, List.to_string(path)) do
   Code.delete_path(path)
 end
@@ -6,7 +6,7 @@ end
 defmodule Phx.New.MixProject do
   use Mix.Project
 
-  @version "1.5.0"
+  @version "1.6.0-dev"
   @github_path "phoenixframework/phoenix"
   @url "https://github.com/#{@github_path}"
 
