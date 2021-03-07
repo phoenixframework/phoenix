@@ -20,7 +20,7 @@ defmodule HelloWeb.LayoutView do
 end
 ```
 
-That's simple enough. There's only one line, `use HelloWeb, :view`. This line calls the `view/0` function we just saw above. (### SAW ABOVE WHERE?####) Besides allowing us to change our template root, `view/0` exercises the `__using__` macro in the `Phoenix.View` module. It also handles any module imports or aliases our application's view modules might need.
+That's simple enough. There's only one line, `use HelloWeb, :view`. This line calls the `view/0` function defined in `HelloWeb` which sets up the basic imports and configuration for our views and templates.
 
 All of the imports and aliases we make in our view will also be available in our templates. That's because templates are effectively compiled into functions inside their respective views. For example, if you define a function in your view, you will be able to invoke it directly from the template. Let's see this in practice.
 
