@@ -2,7 +2,7 @@
 
 > **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
-Most web applications today need some form of data validation and persistence. In the Elixir ecosystem, we have [`Ecto`](https://hexdocs.pm/ecto/) to enable this. Before we jump into building database-backed web features, we're going to focus on the finer details of Ecto to give a solid base to build our web features on top of. Let's get started!
+Most web applications today need some form of data validation and persistence. In the Elixir ecosystem, we have `Ecto` to enable this. Before we jump into building database-backed web features, we're going to focus on the finer details of Ecto to give a solid base to build our web features on top of. Let's get started!
 
 Phoenix uses Ecto to provide builtin support to the following databases:
 
@@ -14,7 +14,7 @@ Phoenix uses Ecto to provide builtin support to the following databases:
 
 Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default. You can pass the `--database` option to change or `--no-ecto` flag to exclude this.
 
-Ecto also provides support for other databases and it has many learning resources available. Please check out [Ecto's README file](https://github.com/elixir-ecto/ecto) for general information.
+Ecto also provides support for other databases and it has many learning resources available. Please check out [Ecto's README](https://github.com/elixir-ecto/ecto) for general information.
 
 This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. The introductory guides cover how to get your first application up and running. For instructions on switching to MySQL, please see the [Using MySQL](#using-mysql) section.
 
