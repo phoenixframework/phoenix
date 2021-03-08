@@ -36,7 +36,7 @@ defmodule Phoenix.Router do
       end
 
   The `get/3` macro above accepts a request to `/pages/hello` and dispatches
-  it to the `PageController`'s `show` action with `%{"page" => "hello"}` in
+  it to `PageController`'s `show` action with `%{"page" => "hello"}` in
   `params`.
 
   Phoenix's router is extremely efficient, as it relies on Elixir

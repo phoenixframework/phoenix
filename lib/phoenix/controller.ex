@@ -118,7 +118,7 @@ defmodule Phoenix.Controller do
 
   which will trigger the plug pipeline and which will eventually
   invoke the inner action plug that dispatches to the `show/2`
-  function in the `UserController`.
+  function in `UserController`.
 
   As controllers are plugs, they implement both [`init/1`](`c:Plug.init/1`) and
   [`call/2`](`c:Plug.call/2`), and it also provides a function named `action/2`
