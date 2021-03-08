@@ -6,21 +6,19 @@ Most web applications today need some form of data validation and persistence. I
 
 Phoenix uses Ecto to provide builtin support to the following databases:
 
-* PostgreSQL (via [`postgrex`](https://hexdocs.pm/postgrex/))
-* MySQL (via [`myxql`](https://hexdocs.pm/myxql/))
-* MSSQL (via [`tds`](https://hexdocs.pm/tds/))
-* ETS (via https://github.com/evadne/etso [`etso`](https://hexdocs.pm/etso/))
+* PostgreSQL (via [`postgrex`](https://github.com/elixir-ecto/postgrex))
+* MySQL (via [`myxql`](https://github.com/elixir-ecto/myxql))
+* MSSQL (via [`tds`](https://github.com/livehelpnow/tds))
+* ETS (via [`etso`](https://github.com/evadne/etso))
 
 
 Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default. You can pass the `--database` option to change or `--no-ecto` flag to exclude this.
 
-Ecto also provides support for other databases and it has many learning resources available. Please check out [Ecto's README file](https://github.com/elixir-ecto/ecto/blob/master/README.md) for general information.
+Ecto also provides support for other databases and it has many learning resources available. Please check out [Ecto's README file](https://github.com/elixir-ecto/ecto) for general information.
 
 This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. The introductory guides cover how to get your first application up and running. For instructions on switching to MySQL, please see the [Using MySQL](#using-mysql) section.
 
 ## Using the schema and migration generator
-
-[NOTE]: # (It will also be good to show two commands.  one to see if Posgresql is installed, and the minimum required version and another one for Ecto)
 
 Once we have Ecto and PostgreSQL installed and configured, the easiest way to use Ecto is to generate an Ecto *schema* through the `phx.gen.schema` task. Ecto schemas are a way for us to specify how Elixir data types map to and from external sources, such as database tables. Let's generate a `User` schema with `name`, `email`, `bio`, and `number_of_pets` fields.
 
@@ -580,23 +578,11 @@ $ mix ecto.migrate
 
 ## Other options
 
-While Phoenix uses the [Ecto project](https://hexdocs.pm/ecto) to interact with the data access layer, there are many other data access options, some even built into the Erlang standard library. [ETS](http://www.erlang.org/doc/man/ets.html) – available in Ecto via [`etso`](https://hexdocs.pm/etso/) – and [DETS](http://www.erlang.org/doc/man/dets.html) are key-value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [Mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
+While Phoenix uses the `Ecto` project to interact with the data access layer, there are many other data access options, some even built into the Erlang standard library. [ETS](http://www.erlang.org/doc/man/ets.html) – available in Ecto via [`etso`](https://hexdocs.pm/etso/) – and [DETS](http://www.erlang.org/doc/man/dets.html) are key-value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [Mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
 
 The data world is your oyster, but we won't be covering these options in these guides.
 
 
-[`timestamps/0`]: https://hexdocs.pm/ecto/Ecto.Schema.html#timestamps/0
-[`Ecto.Changeset.cast/3`]: https://hexdocs.pm/ecto/Ecto.Changeset.html#cast/3
-[`cast/3`]: https://hexdocs.pm/ecto/Ecto.Changeset.html#cast/3
-[`Ecto.Changeset.validate_required/3`]: https://hexdocs.pm/ecto/Ecto.Changeset.html#validate_required/3
-[`Ecto.Changeset.validate_format/3`]: https://hexdocs.pm/ecto/Ecto.Changeset.html#validate_format/3
-[`Ecto.Repo`]: https://hexdocs.pm/ecto/Ecto.Repo.html
-[`Repo.insert/1`]: https://hexdocs.pm/ecto/Ecto.Repo.html#c:insert/2
-[`Repo.one/1`]: https://hexdocs.pm/ecto/Ecto.Repo.html#c:one/2
-[`Repo.update/2`]: https://hexdocs.pm/ecto/Ecto.Repo.html#c:update/2
-[`Repo.delete/2`]: https://hexdocs.pm/ecto/Ecto.Repo.html#c:delete/2
-[`Repo.insert_all/3`]: https://hexdocs.pm/ecto/Ecto.Repo.html#c:insert_all/3
-[`Repo.update_all/3`]: https://hexdocs.pm/ecto/Ecto.Repo.html#c:update_all/3
-[`Repo.delete_all/2`]: https://hexdocs.pm/ecto/Ecto.Repo.html#c:delete_all/2
-[`Ecto.Query`]: https://hexdocs.pm/ecto/Ecto.Query.html
-[`from/2`]: https://hexdocs.pm/ecto/Ecto.Query.html#from/2
+[`cast/3`]: `Ecto.Changeset.cast/3`
+[`from/2`]: `Ecto.Query.from/2`
+[`timestamps/0`]: `Ecto.Schema.html.timestamps/0`
