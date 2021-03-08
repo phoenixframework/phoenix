@@ -15,7 +15,7 @@ defmodule Phoenix.Integration.EndpointHelper do
   end
 
   defp listen_on_os_assigned_port(_) do
-    {:ok, socket} = :gen_tcp.listen(0, [])
+    {:ok, socket} = :gen_tcp.listen(0, so_reuseport())
     socket
   end
 
@@ -23,5 +23,19 @@ defmodule Phoenix.Integration.EndpointHelper do
     {:ok, port_number} = :inet.port(socket)
     :gen_tcp.close(socket)
     port_number
+  end
+
+  @doc """
+  Socket option to allow a port to be reused.
+
+  When provided as a socket option, this allows for a port to be bound to by
+  multiple processes and prevents eaddrinuse errors.
+  """
+  def so_reuseport do
+    case :os.type() do
+      {:unix, :linux} -> [{:raw, 1, 15, <<1::32-native>>}]
+      {:unix, :darwin} -> [{:raw, 65_535, 512, <<1::32-native>>}]
+      _ -> []
+    end
   end
 end
