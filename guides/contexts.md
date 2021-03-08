@@ -127,7 +127,7 @@ If we follow the "Back" link, we get a list of all users, which should contain t
 
 That little `mix phx.gen.html` command packed a surprising punch. We got a lot of functionality out-of-the-box for creating, updating, and deleting users. This is far from a full-featured app, but remember, generators are first and foremost learning tools and a starting point for you to begin building real features. Code generation can't solve all your problems, but it will teach you the ins and outs of Phoenix and nudge you towards the proper mind-set when designing your application.
 
-Let's first check out the `UserController` that was generated in `lib/hello_web/controllers/user_controller.ex`:
+Let's first check out `UserController` which was generated in `lib/hello_web/controllers/user_controller.ex`:
 
 
 ```elixir

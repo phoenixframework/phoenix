@@ -341,13 +341,13 @@ def create(conn, %{"article" => article_params}) do
 
 The `with` special form that ships as part of Elixir allows us to check explicitly for the happy paths. In this case, we are interested only in the scenarios where `News.create_article(article_params)` returns `{:ok, article}`, if it returns anything else, the other value will simply be returned directly and none of the contents inside the `do/end` block will be executed. In other words, if `News.create_article/1` returns `{:error, changeset}`, we will simply return `{:error, changeset}` from the action.
 
-However, this introduces an issue. Our actions do not know how to handle the `{:error, changeset}` result by default. Luckily, we can teach Phoenix Controllers to handle it with the Action Fallback controller. At the top of the `ArticleController`, you will find:
+However, this introduces an issue. Our actions do not know how to handle the `{:error, changeset}` result by default. Luckily, we can teach Phoenix Controllers to handle it with the Action Fallback controller. At the top of `ArticleController`, you will find:
 
 ```elixir
   action_fallback HelloWeb.FallbackController
 ```
 
-This line says: if any action does not return a `%Plug.Conn{}`, we want to invoke the `FallbackController` with the result. You will find `HelloWeb.FallbackController` at `lib/hello_web/controllers/fallback_controller.ex` and it looks like this:
+This line says: if any action does not return a `%Plug.Conn{}`, we want to invoke `FallbackController` with the result. You will find `HelloWeb.FallbackController` at `lib/hello_web/controllers/fallback_controller.ex` and it looks like this:
 
 ```elixir
 defmodule HelloWeb.FallbackController do

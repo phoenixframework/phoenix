@@ -22,7 +22,7 @@ end
 
 The first line below the module definition invokes the `__using__/1` macro of the `HelloWeb` module, which imports some useful modules.
 
-The `PageController` gives us the `index` action to display the Phoenix [welcome page] associated with the default route Phoenix defines in the router.
+`PageController` gives us the `index` action to display the Phoenix [welcome page] associated with the default route Phoenix defines in the router.
 
 ## Actions
 
@@ -40,7 +40,7 @@ to `home`:
 get "/", PageController, :home
 ```
 
-as long as we change the action name in the `PageController` to `home` as well, the [welcome page] will load as before.
+as long as we change the action name in `PageController` to `home` as well, the [welcome page] will load as before.
 
 ```elixir
 defmodule HelloWeb.PageController do
@@ -144,7 +144,7 @@ defmodule HelloWeb.HelloController do
 end
 ```
 
-In order for the [`render/3`] function to work correctly, the controller and view must share the same root name (in this case `Hello`), and it also must have the same root name as the template directory (in this case `hello`) where the `show.html.eex` template lives. In other words, the `HelloController` requires `HelloView`, and `HelloView` requires the existence of the `lib/hello_web/templates/hello` directory, which must contain the `show.html.eex` template.
+In order for the [`render/3`] function to work correctly, the controller and view must share the same root name (in this case `Hello`), and it also must have the same root name as the template directory (in this case `hello`) where the `show.html.eex` template lives. In other words, `HelloController` requires `HelloView`, and `HelloView` requires the existence of the `lib/hello_web/templates/hello` directory, which must contain the `show.html.eex` template.
 
 [`render/3`] will also pass the value which the `show` action received for `messenger` from the parameters as an assign.
 
@@ -179,13 +179,13 @@ Generally speaking, once all assigns are configured, we invoke the view layer. T
 
 Layouts are just a special subset of templates. The live in the `templates/layout` folder (`lib/hello_web/templates/layout`). Phoenix created one for us when we generated our app. The default layout is called `app.html.eex`, and it is the layout into which all templates will be rendered by default.
 
-Since layouts are really just templates, they need a view to render them. This is the `LayoutView` module defined in `lib/hello_web/views/layout_view.ex`. Since Phoenix generated this view for us, we won't have to create a new one as long as we put the layouts we want to render inside the `lib/hello_web/templates/layout` directory.
+Since layouts are really just templates, they need a view to render them. This one is `LayoutView` which is defined in `lib/hello_web/views/layout_view.ex`. Since Phoenix generated this view for us, we won't have to create a new one as long as we put the layouts we want to render inside the `lib/hello_web/templates/layout` directory.
 
 Before we create a new layout, though, let's do the simplest possible thing and render a template with no layout at all.
 
 The `Phoenix.Controller` module provides the `put_layout/2` function for us to switch layouts. This takes `conn` as its first argument and a string for the basename of the layout we want to render. It also accepts `false` to disable the layout altogether.
 
-You can edit the `index` action of the `PageController` module in `lib/hello_web/controllers/page_controller.ex` to look like this.
+You can edit the `index` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this.
 
 ```elixir
 def index(conn, _params) do
@@ -229,7 +229,7 @@ Rendering HTML through a template is fine, but what if we need to change the ren
 
 Phoenix allows us to change formats on the fly with the `_format` query string parameter. To make this happen, Phoenix requires an appropriately named view and an appropriately named template in the correct directory.
 
-As an example, let's take the `PageController` index action from a newly generated app. Out of the box, this has the right view `PageView`, the right templates directory (`lib/hello_web/templates/page`), and the right template for rendering HTML (`index.html.eex`.)
+As an example, let's take `PageController`'s `index` action from a newly generated app. Out of the box, this has the right view `PageView`, the right templates directory (`lib/hello_web/templates/page`), and the right template for rendering HTML (`index.html.eex`.)
 
 ```elixir
 def index(conn, _params) do
@@ -272,7 +272,7 @@ If we go to [`http://localhost:4000/?_format=text`](http://localhost:4000/?_form
 
 If none of the rendering options above quite fits our needs, we can compose our own using some of the functions that Plug gives us. Let's say we want to send a response with a status of "201" and no body whatsoever. We can easily do that with the `Plug.Conn.send_resp/3` function.
 
-Edit the `index` action of the `PageController` module `lib/hello_web/controllers/page_controller.ex` to look like this:
+Edit the `index` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this:
 
 ```elixir
 def index(conn, _params) do
@@ -352,7 +352,7 @@ defmodule HelloWeb.Router do
 end
 ```
 
-Then we'll change the `PageController` `index` action of our controller to do nothing but to redirect to our new route.
+Then we'll change `PageController`'s `index` action of our controller to do nothing but to redirect to our new route.
 
 ```elixir
 defmodule HelloWeb.PageController do
@@ -445,7 +445,7 @@ Phoenix does not enforce which keys are stored in the flash. As long as we are i
 
 Action fallback allows us to centralize error handling code in plugs which are called when a controller action fails to return a [`%Plug.Conn{}`](https://hexdocs.pm/plug/Plug.Conn.html#t:t/0) struct. These plugs receive both the `conn` which was originally passed to the controller action along with the return value of the action.
 
-Let's say we have a `show` action which uses [`with`](`Kernel.SpecialForms.with/1`) to fetch a blog post and then authorize the current user to view that blog post. In this example we might expect `fetch_post/1` to return `{:error, :not_found}` if the post is not found and `authorize_user/3` might return `{:error, :unauthorized}` if the user is unauthorized. We could use the `ErrorView` module that Phoenix generates for every new application to handle these error paths accordingly:
+Let's say we have a `show` action which uses [`with`](`Kernel.SpecialForms.with/1`) to fetch a blog post and then authorize the current user to view that blog post. In this example we might expect `fetch_post/1` to return `{:error, :not_found}` if the post is not found and `authorize_user/3` might return `{:error, :unauthorized}` if the user is unauthorized. We could use `ErrorView` which is generated by Phoenix for every new application to handle these error paths accordingly:
 
 ```elixir
 defmodule HelloWeb.MyController do

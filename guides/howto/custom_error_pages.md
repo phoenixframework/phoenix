@@ -1,6 +1,6 @@
 # Custom Error Pages
 
-Phoenix has a view called the `ErrorView` which lives in `lib/hello_web/views/error_view.ex`. The purpose of `ErrorView` is to handle errors in a general way, from one centralized location.
+Phoenix has a view called `ErrorView` which lives in `lib/hello_web/views/error_view.ex`. The purpose of `ErrorView` is to handle errors in s.)
 
 ## The ErrorView
 
@@ -41,7 +41,7 @@ After modifying our config file, we need to restart our server in order for this
 
 Ok, that's not very exciting. We get the bare string "Not Found", displayed without any markup or styling.
 
-The first question is, where does that error string come from? The answer is right in the `ErrorView`.
+The first question is, where does that error string come from? The answer is right in `ErrorView`.
 
 ```elixir
 def template_not_found(template, _assigns) do

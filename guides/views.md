@@ -8,11 +8,11 @@ The main job of a Phoenix view is to render the body of the response which gets 
 
 ## Rendering templates
 
-Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` controller requires a `PageView` view to render templates in the `lib/hello_web/templates/page/` directory. While all of these can be customizable (see `Phoenix.View` and `Phoenix.Template` for more information), we recommend users stick with Phoenix' convention.
+Phoenix assumes a strong naming convention from controllers to views to the templates they render. `PageController` requires a `PageView` to render templates in the `lib/hello_web/templates/page/` directory. While all of these can be customizable (see `Phoenix.View` and `Phoenix.Template` for more information), we recommend users stick with Phoenix' convention.
 
 A newly generated Phoenix application has three view modules - `ErrorView`, `LayoutView`, and `PageView` -  which are all in the `lib/hello_web/views/` directory.
 
-Let's take a quick look at the `LayoutView` view.
+Let's take a quick look at `LayoutView`.
 
 ```elixir
 defmodule HelloWeb.LayoutView do
@@ -267,7 +267,8 @@ defmodule HelloWeb.PageView do
 end
 ```
 
-The name used in assigns is determined from the view. For example the `PageView` view will use `%{page: page}` and the `AuthorView` view will use `%{author: author}`. This can be overridden with the `as` option. Let's assume that the author view uses `%{writer: writer}` instead of `%{author: author}`:
+The name used in assigns is determined from the view. For example `PageView` will use `%{page: page}` and `AuthorView` will use `%{author: author}`. This can be overridden with the `as` option. Let's assume that the author view uses `%{writer: writer}` instead of `%{author: author}`:
+>>>>>>> ff14fd75 (Fix grammar. Remove article "the" before controllers and views.)
 
 ```elixir
 def render("page_with_authors.json", %{page: page}) do
@@ -278,7 +279,7 @@ end
 
 ## Error pages
 
-Phoenix has a view called the `ErrorView` which lives in `lib/hello_web/views/error_view.ex`. The purpose of `ErrorView` is to handle errors in a general way, from one centralized location.  Similar to the views we built in this guide, error views can return both HTML and JSON responses. See the [custom error pages how-to](custom_error_pages.html) for more information.
+Phoenix has a view called `ErrorView` which lives in `lib/hello_web/views/error_view.ex`. The purpose of `ErrorView` is to handle errors in a general way, from one centralized location.  Similar to the views we built in this guide, error views can return both HTML and JSON responses. See the [Custom Error Pages How-To](custom_error_pages.html) for more information.
 
 
 [welcome page]: http://localhost:4000

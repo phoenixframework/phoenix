@@ -238,7 +238,7 @@ user_post_path  DELETE  /users/:user_id/posts/:id       HelloWeb.PostController 
 ...
 ```
 
-We see that each of these routes scopes the posts to a user ID. For the first one, we will invoke the `PostController` `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
+We see that each of these routes scopes the posts to a user ID. For the first one, we will invoke `PostController`'s `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
 
 When calling path helper functions for nested routes, we will need to pass the IDs in the order they came in the route definition. For the following `show` route, `42` is the `user_id`, and `17` is the `post_id`. Let's remember to alias our `HelloWeb.Endpoint` before we begin.
 
@@ -543,7 +543,7 @@ end
 
 When the server accepts a request, the request will always first pass through the plugs in our endpoint, after which it will attempt to match on the path and HTTP verb.
 
-Let's say that the request matches our first route: a GET to `/`. The router will first pipe that request through the `:browser` pipeline - which will fetch the session data, fetch the flash, and execute forgery protection - before it dispatches the request to the `PageController` `index` action.
+Let's say that the request matches our first route: a GET to `/`. The router will first pipe that request through the `:browser` pipeline - which will fetch the session data, fetch the flash, and execute forgery protection - before it dispatches the request to `PageController`'s `index` action.
 
 Conversely, if the request matches any of the routes defined by the `resources/2` macro, the router will pipe it through the `:api` pipeline — which currently does nothing — before it dispatches further to the correct action of the `HelloWeb.ReviewController`.
 
