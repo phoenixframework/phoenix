@@ -18,24 +18,15 @@ defmodule Phoenix.Integration.EndpointTest do
   @prod_inet6 prod_inet6
 
   Application.put_env(:endpoint_int, ProdEndpoint,
-    http: [port: @prod, transport_options: [socket_opts: so_reuseport()]],
-    url: [host: "example.com"],
-    server: true,
-    drainer: false,
-    render_errors: [accepts: ~w(html json)]
-  )
-
+    http: [port: @prod], url: [host: "example.com"], server: true, drainer: false,
+    render_errors: [accepts: ~w(html json)])
   Application.put_env(:endpoint_int, DevEndpoint,
-    http: [port: @dev, transport_options: [socket_opts: so_reuseport()]],
-    debug_errors: true,
-    drainer: false
-  )
+    http: [port: @dev], debug_errors: true, drainer: false)
 
   Application.put_env(:endpoint_int, ProdInet6Endpoint,
-    http: [port: @prod_inet6, transport_options: [socket_opts: [:inet6] ++ so_reuseport()]],
+    http: [port: @prod_inet6, transport_options: [socket_opts: [:inet6]]],
     url: [host: "example.com"],
-    server: true
-  )
+    server: true)
 
   defmodule Router do
     @moduledoc """
