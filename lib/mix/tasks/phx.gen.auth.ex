@@ -276,6 +276,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_fixtures_functions.ex", binding)
+    |> prepend_newline()
     |> inject_before_final_end(test_fixtures_file)
   end
 

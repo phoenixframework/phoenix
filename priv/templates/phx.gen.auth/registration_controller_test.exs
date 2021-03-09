@@ -25,7 +25,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       conn =
         post(conn, Routes.<%= schema.route_helper %>_registration_path(conn, :create), %{
-          "<%= schema.singular %>" => %{"email" => email, "password" => valid_<%= schema.singular %>_password()}
+          "<%= schema.singular %>" => valid_<%= schema.singular %>_attributes(email: email)
         })
 
       assert get_session(conn, :<%= schema.singular %>_token)

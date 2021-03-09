@@ -81,7 +81,7 @@
 
     test "registers <%= schema.plural %> with a hashed password" do
       email = unique_<%= schema.singular %>_email()
-      {:ok, <%= schema.singular %>} = <%= inspect context.alias %>.register_<%= schema.singular %>(%{email: email, password: valid_<%= schema.singular %>_password()})
+      {:ok, <%= schema.singular %>} = <%= inspect context.alias %>.register_<%= schema.singular %>(valid_<%= schema.singular %>_attributes(email: email))
       assert <%= schema.singular %>.email == email
       assert is_binary(<%= schema.singular %>.hashed_password)
       assert is_nil(<%= schema.singular %>.confirmed_at)
@@ -100,7 +100,10 @@
       password = valid_<%= schema.singular %>_password()
 
       changeset =
-        <%= inspect context.alias %>.change_<%= schema.singular %>_registration(%<%= inspect schema.alias %>{}, %{"email" => email, "password" => password})
+        <%= inspect context.alias %>.change_<%= schema.singular %>_registration(
+          %<%= inspect schema.alias %>{},
+          valid_<%= schema.singular %>_attributes(email: email, password: password)
+        )
 
       assert changeset.valid?
       assert get_change(changeset, :email) == email

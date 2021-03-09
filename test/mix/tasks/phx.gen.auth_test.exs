@@ -217,7 +217,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert_file "lib/my_app/accounts/user_token.ex"
       assert_file "lib/my_app/accounts/user_notifier.ex"
       assert_file "test/my_app/accounts_test.exs"
-      assert_file "test/support/fixtures/accounts_fixtures.ex"
+
+      assert_file "test/support/fixtures/accounts_fixtures.ex", fn file ->
+        assert file =~ ~s|def valid_user_attributes(attrs \\\\ %{}) do|
+      end
 
       assert_file "lib/my_app_web/controllers/warehouse/user_auth.ex", fn file ->
         assert file =~ "defmodule MyAppWeb.Warehouse.UserAuth do"
