@@ -62,6 +62,7 @@ defmodule <%= @app_module %>.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
+      fromat: ["format"],
       setup: ["deps.get"<%= if @ecto do %>, "ecto.setup"<% end %><%= if @webpack do %>, "cmd npm install --prefix assets"<% end %>]<%= if @ecto do %>,
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
