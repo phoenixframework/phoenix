@@ -283,8 +283,8 @@ Phoenix has a view called `ErrorView` which lives in `lib/hello_web/views/error_
 
 
 [welcome page]: http://localhost:4000
-[`render/2`]: Phoenix.View.render/3
-[`render/3`]: Phoenix.View.render/3
-[`render_many/3`]: Phoenix.View.render_many/3
-[`render_one/3`]: Phoenix.View.render_one/3
-[`render_to_string/3`]: Phoenix.View.render_to_string/3
+[`render/2`]: `Phoenix.View.render/3`
+[`render/3`]: `Phoenix.View.render/3`
+[`render_many/3`]: `Phoenix.View.render_many/3`
+[`render_one/3`]: `Phoenix.View.render_one/3`
+[`render_to_string/3`]: `Phoenix.View.render_to_string/3`
