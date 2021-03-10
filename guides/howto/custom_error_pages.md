@@ -96,7 +96,7 @@ Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web
 </html>
 ```
 
-Additionally, lets remove the `render/2` function we previously introduced in `lib/hello_web/views/error_view.ex`.
+After you define the template file, remember to remove the equivalent `render/2` clause for that template, as otherwise the function overrides the template. Let's do so for the 404.html clause we have previously introduced in `lib/hello_web/views/error_view.ex`:
 
 ```diff
 - def render("404.html", _assigns) do
