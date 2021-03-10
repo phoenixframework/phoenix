@@ -67,7 +67,7 @@ defmodule Phx.New.MixProject do
       revision() != "" ->
         revision()
 
-      %{pre: "dev"} = Version.parse!(@version) ->
+      match?(%{pre: "dev"}, Version.parse!(@version)) ->
         @github_default_branch
 
       true ->
