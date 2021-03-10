@@ -54,9 +54,9 @@ Great, so we have this `template_not_found/2` function that takes a template and
 In other words, to provide custom error pages, we could simply define a proper `render/2` function clause in `HelloWeb.ErrorView`.
 
 ```elixir
-def render("404.html", _assigns) do
-  "Page Not Found"
-end
+  def render("404.html", _assigns) do
+    "Page Not Found"
+  end
 ```
 
 But we can do even better.
@@ -94,6 +94,14 @@ Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web
     </main>
   </body>
 </html>
+```
+
+After you define the template file, remember to remove the equivalent `render/2` clause for that template, as otherwise the function overrides the template. Let's do so for the 404.html clause we have previously introduced in `lib/hello_web/views/error_view.ex`:
+
+```diff
+- def render("404.html", _assigns) do
+-  "Page Not Found"
+- end
 ```
 
 Now when we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see a much nicer error page. It is worth noting that we did not render our `404.html.eex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. This is to avoid circular errors. For example, what happens if our application failed due to an error in the layout? Attempting to render the layout again will just trigger another error. So ideally we want to minimize the amount of dependencies and logic in our error templates, sharing only what is necessary.
