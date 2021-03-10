@@ -102,6 +102,7 @@ defmodule Mix.Tasks.Phx.New do
   alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
 
   @version Mix.Project.config()[:version]
+  @revision Mix.Project.config()[:revision]
   @shortdoc "Creates a new Phoenix v#{@version} application"
 
   @switches [dev: :boolean, webpack: :boolean, ecto: :boolean,
@@ -112,7 +113,16 @@ defmodule Mix.Tasks.Phx.New do
 
   @impl true
   def run([version]) when version in ~w(-v --version) do
-    Mix.shell().info("Phoenix v#{@version}")
+    version_and_revision =
+      with revision when revision != "" <- @revision,
+           %{pre: ["dev"]} <- Version.parse!(@version) do
+        "#{@version} (#{@revision})"
+      else
+        _ ->
+          "#{@version}"
+      end
+
+    Mix.shell().info("Phoenix v#{version_and_revision}")
   end
 
   def run(argv) do

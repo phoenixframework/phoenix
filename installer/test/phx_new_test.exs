@@ -21,6 +21,18 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
+  test "version should be valid" do
+   assert {:ok, _} = Version.parse(Mix.Project.config()[:version])
+  end
+
+  test "revision" do
+    case Mix.Project.config()[:revision] do
+      "" -> assert true
+      <<_::8*7>> -> assert true
+      revision -> flunk("Expected as a revision either an empty or a seven-char long string, got: #{inspect(revision)}")
+    end
+  end
+
   test "returns the version" do
     Mix.Tasks.Phx.New.run(["-v"])
     assert_received {:mix_shell, :info, ["Phoenix v" <> _]}

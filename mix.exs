@@ -2,6 +2,9 @@ defmodule Phoenix.MixProject do
   use Mix.Project
 
   @version "1.6.0-dev"
+  @github_default_branch "master"
+  @github_path "phoenixframework/phoenix"
+  @url "https://github.com/#{@github_path}"
 
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
@@ -12,6 +15,7 @@ defmodule Phoenix.MixProject do
     [
       app: :phoenix,
       version: @version,
+      revision: revision(),
       elixir: @elixir_requirement,
       deps: deps(),
       package: package(),
@@ -31,7 +35,7 @@ defmodule Phoenix.MixProject do
       name: "Phoenix",
       docs: docs(),
       aliases: aliases(),
-      source_url: "https://github.com/phoenixframework/phoenix",
+      source_url: @url,
       homepage_url: "https://www.phoenixframework.org",
       description: """
       Productive. Reliable. Fast. A productive web framework that
@@ -88,7 +92,7 @@ defmodule Phoenix.MixProject do
     [
       maintainers: ["Chris McCord", "José Valim", "Gary Rennie", "Jason Stiebs"],
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/phoenixframework/phoenix"},
+      links: %{"GitHub" => @url},
       files:
         ~w(assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
     ]
@@ -96,7 +100,7 @@ defmodule Phoenix.MixProject do
 
   defp docs do
     [
-      source_ref: "v#{@version}",
+      source_ref: source_ref(),
       main: "overview",
       logo: "logo.png",
       extra_section: "GUIDES",
@@ -107,6 +111,40 @@ defmodule Phoenix.MixProject do
       groups_for_extras: groups_for_extras()
     ]
   end
+
+  # NOTE: If this function gets updated, update installer/mix.exs, and viceversa.
+  defp source_ref() do
+    cond do
+      revision() != "" ->
+        revision()
+
+      %{pre: "dev"} = Version.parse!(@version) ->
+        @github_default_branch
+
+      true ->
+        "v" <> @version
+    end
+  end
+
+  # Originally taken from the Elixir Programming Language.
+  # https://github.com/elixir-lang/elixir/blob/6db7b54/lib/elixir/lib/system.ex#L130
+  # NOTE: If this function gets updated, update installer/mix.exs, and viceversa.  
+  #
+  # Tries to run "git rev-parse --short=7 HEAD". In the case of success returns
+  # the short revision hash. If that fails, returns an empty string.
+  defmacrop get_revision do
+    null =
+      case :os.type() do
+        {:win32, _} -> 'NUL'
+        _ -> '/dev/null'
+      end
+
+    ('git rev-parse --short=7 HEAD 2> ' ++ null)
+    |> :os.cmd()
+    |> :re.replace("^[\s\r\n\t]+|[\s\r\n\t]+$", "", [:global, return: :binary])
+  end
+
+  defp revision, do: get_revision()
 
   defp extras do
     [
