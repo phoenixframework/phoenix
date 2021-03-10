@@ -7,8 +7,7 @@ defmodule Phx.New.MixProject do
   use Mix.Project
 
   @version "1.6.0-dev"
-  @github_path "phoenixframework/phoenix"
-  @url "https://github.com/#{@github_path}"
+  @scm_url "https://github.com/phoenixframework/phoenix"
 
   def project do
     [
@@ -25,10 +24,11 @@ defmodule Phx.New.MixProject do
           "Jason Stiebs"
         ],
         licenses: ["MIT"],
-        links: %{github: @url},
+        links: %{"GitHub" => @scm_url},
         files: ~w(lib templates mix.exs README.md)
       ],
-      source_url: @url,
+      preferred_cli_env: [docs: :docs],
+      source_url: @scm_url,
       docs: docs(),
       homepage_url: "https://www.phoenixframework.org",
       description: """
@@ -48,14 +48,13 @@ defmodule Phx.New.MixProject do
 
   def deps do
     [
-      {:ex_doc, "~> 0.23", only: :docs}
+      {:ex_doc, "~> 0.24", only: :docs}
     ]
   end
 
   defp docs do
     [
-      source_url_pattern:
-        "https://github.com/#{@github_path}/blob/v#{@version}/installer/%{path}#L%{line}"
+      source_url_pattern: "#{@scm_url}/blob/v#{@version}/installer/%{path}#L%{line}"
     ]
   end
 end
