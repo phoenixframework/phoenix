@@ -54,7 +54,7 @@ Let's take a look at them.
 
 ### Overview
 
-To start communicating, a client connects to a node (a Phoenix server) using a transport (eg, Websockets or long polling) and joins one or more channels using that single network connection.
+To start communicating, a client connects to a node (a Phoenix server) using a transport (e.g., Websockets or long polling) and joins one or more channels using that single network connection.
 One channel server process is created per client, per topic.
 The appropriate socket handler initializes a `%Phoenix.Socket` for the channel server (possibly after authenticating the client).
 The channel server then holds onto the `%Phoenix.Socket{}` and can maintain any state it needs within its `socket.assigns`.
@@ -351,7 +351,7 @@ end
 
 ### Intercepting Outgoing Events
 
-We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this where we explicitly tell Phoenix which outgoing event we want to intercept and then define a `handle_out/3` callback for those events. (Of course, this assumes that we have a `Accounts` context with an `ignoring_user?/2` function, and that we pass a user in via the `assigns` map). It is important to note that the `handle_out/3` callback will be called for every recipient of a message, so more expensive operations like hitting the database should be considered carefully before being included in `handle_out/3`.
+We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this where we explicitly tell Phoenix which outgoing event we want to intercept and then define a `handle_out/3` callback for those events. (Of course, this assumes that we have an `Accounts` context with an `ignoring_user?/2` function, and that we pass a user in via the `assigns` map). It is important to note that the `handle_out/3` callback will be called for every recipient of a message, so more expensive operations like hitting the database should be considered carefully before being included in `handle_out/3`.
 
 ```elixir
 intercept ["user_joined"]
@@ -456,7 +456,7 @@ Servers restart, networks split, and clients lose connectivity. In order to desi
 
 ### Handling Reconnection
 
-Clients subscribe to topics, and Phoenix stores those subscriptions in an in-memory ETS table. If a channel crashes, the clients will need to reconnect to the topics they had previously subscribed to. Fortunately, the Phoenix JavaScript client knows how to do this. The server will notify all the clients of the crash. This will trigger each client's `Channel.onError` callback. The clients will attempt to reconnect to the server using an exponential back off strategy. Once they reconnect, they'll attempt to rejoin the topics they had previously subscribed to. If they are successful, they'll start receiving messages from those topics as before.
+Clients subscribe to topics, and Phoenix stores those subscriptions in an in-memory ETS table. If a channel crashes, the clients will need to reconnect to the topics they had previously subscribed to. Fortunately, the Phoenix JavaScript client knows how to do this. The server will notify all the clients of the crash. This will trigger each client's `Channel.onError` callback. The clients will attempt to reconnect to the server using an exponential backoff strategy. Once they reconnect, they'll attempt to rejoin the topics they had previously subscribed to. If they are successful, they'll start receiving messages from those topics as before.
 
 ### Resending Client Messages
 
