@@ -222,7 +222,6 @@ RUN \
    -G "${USER}" \
    -h "${HOME}" \
    -D "${USER}" && \
-
   su "${USER}" sh -c "mkdir ${APP_DIR}"
 
 # Everything from this line onwards will run in the context of the unprivileged user.
