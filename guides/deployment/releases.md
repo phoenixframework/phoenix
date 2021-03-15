@@ -225,17 +225,45 @@ FROM alpine:3.12.1 AS app
 RUN --mount=type=cache,sharing=locked,target=/var/cache/apk \
     apk add openssl ncurses-libs
 
-WORKDIR /app
+ENV USER="phoenix"
+ENV HOME=/home/"${USER}"
+ENV APP_DIR="${HOME}/app"
 
-RUN chown nobody:nobody /app
+# Creates an unprivileged user to be used exclusively to run the Phoenix app
+RUN \
+  addgroup \
+   -g 1000 \
+   -S "${USER}" && \
+  adduser \
+   -s /bin/sh \
+   -u 1000 \
+   -G "${USER}" \
+   -h "${HOME}" \
+   -D "${USER}" && \
 
-USER nobody:nobody
+# Everything from this line onwards will run in the context of the unprivileged user.
+USER "${USER}"
+
+WORKDIR "${APP_DIR}"
 
 COPY --from=build --chown=nobody:nobody /app/_build/prod/rel/my_app ./
 
-ENV HOME=/app
-
 ENTRYPOINT ["bin/my_app"]
+
+# Usage:
+#  * build: sudo docker build -t phoenix/my_app .
+#  * shell: sudo docker run --rm -it --entrypoint "" -p 80:4000 -p 443:4040 phoenix/my_app sh
+#  * run:   sudo docker run --rm -it -p 80:4000 -p 443:4040 --name my_app phoenix/my_app
+#  * exec:  sudo docker exec -it my_app sh
+#  * logs:  sudo docker logs --follow --tail 100 my_app
+#
+# Extract the production release to your host machine with:
+#
+# ```
+# mkdir archive
+# sudo docker run --rm -it --entrypoint "" -v "$PWD/archive:/home/phoenix/archive"  phoenix/my_app sh -c "tar zcf /home/phoenix/archive/app.tar.gz ."
+# ls -al archive
+# ````
 CMD ["start"]
 ```
 
