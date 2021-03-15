@@ -151,7 +151,10 @@ Elixir releases work well with container technologies, such as Docker. The idea 
 Here is an example Docker file to run at the root of your application covering all of the steps above:
 
 ```docker
-FROM hexpm/elixir:1.11.2-erlang-23.1.2-alpine-3.12.1 as deps
+FROM hexpm/elixir:1.11.2-erlang-23.1.2-alpine-3.12.1 as build
+
+# install build dependencies
+RUN apk add --no-cache build-base npm git python3
 
 # prepare build dir
 WORKDIR /app
@@ -161,28 +164,23 @@ RUN mix local.hex --force && \
     mix local.rebar --force
 
 # set build ENV
-ENV MIX_ENV=prod
+ENV MIX_ENV=dev
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
-RUN --mount=type=cache,target=/root/.hex \
-    mix deps.get --only $MIX_ENV
-
-FROM node:15.7.0-alpine3.10 as assets
-
-# install build dependencies
-RUN --mount=type=cache,sharing=locked,target=/var/cache/apk \
-    apk add build-base python
-
-# prepare build dir
-WORKDIR /app
+RUN mix deps.get --only $MIX_ENV
+RUN mkdir config
+# Dependencies sometimes use compile-time configuration. Copying
+# these compile-time config files before we compile dependencies
+# ensures that any relevant config changes will trigger the dependencies
+# to be re-compiled.
+COPY config/config.exs config/$MIX_ENV.exs config/
+RUN mix deps.compile
 
 # build assets
 COPY assets/package.json assets/package-lock.json ./assets/
 # install all npm dependencies from scratch
 RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
-
-COPY --from=deps /app/deps ./deps
 
 COPY priv priv
 
@@ -193,21 +191,6 @@ COPY priv priv
 COPY assets assets
 # use webpack to compile npm dependencies - https://www.npmjs.com/package/webpack-deploy
 RUN npm run --prefix ./assets deploy
-
-FROM deps as build
-
-# prepare build dir
-WORKDIR /app
-
-RUN mkdir config
-# Dependencies sometimes use compile-time configuration. Copying
-# these compile-time config files before we compile dependencies
-# ensures that any relevant config changes will trigger the dependencies
-# to be re-compiled.
-COPY config/config.exs config/$MIX_ENV.exs config/
-RUN mix deps.compile
-
-COPY --from=assets /app/priv ./priv
 RUN mix phx.digest
 
 # compile and build the release
@@ -222,8 +205,7 @@ RUN mix release
 # Start a new build stage so that the final image will only contain
 # the compiled release and other runtime necessities
 FROM alpine:3.12.1 AS app
-RUN --mount=type=cache,sharing=locked,target=/var/cache/apk \
-    apk add openssl ncurses-libs
+RUN apk add --no-cache openssl ncurses-libs
 
 ENV USER="phoenix"
 ENV HOME=/home/"${USER}"
@@ -241,12 +223,14 @@ RUN \
    -h "${HOME}" \
    -D "${USER}" && \
 
+  su "${USER}" sh -c "mkdir ${APP_DIR}"
+
 # Everything from this line onwards will run in the context of the unprivileged user.
 USER "${USER}"
 
 WORKDIR "${APP_DIR}"
 
-COPY --from=build --chown=nobody:nobody /app/_build/prod/rel/my_app ./
+COPY --from=build --chown="${USER}":"${USER}" /app/_build/prod/rel/my_app ./
 
 ENTRYPOINT ["bin/my_app"]
 
