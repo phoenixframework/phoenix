@@ -230,7 +230,7 @@ USER "${USER}"
 
 WORKDIR "${APP_DIR}"
 
-COPY --from=build --chown="${USER}":"${USER}" /app/_build/prod/rel/my_app ./
+COPY --from=build --chown="${USER}":"${USER}" /app/_build/dev/rel/my_app ./
 
 ENTRYPOINT ["bin/my_app"]
 
