@@ -118,7 +118,8 @@ Finally, there is a `lib/hello_web/gettext.ex` file which provides international
 
 The `assets` directory contains everything related to front-end assets, such as JavaScript, CSS, static images and more. It is typically handled by the [npm] tool. Phoenix developers typically only need to run `npm install` inside the assets directory. Everything else is managed by Phoenix.
 
-A default Phoenix application includes a `webpack.config.js` capable of processing your front-end assets and staging them in the `priv/static` folder, where they may be served by the [Plug.Static] plug configured in `lib/hello_web/endpoint.ex`.  When running in dev mode (`MIX_ENV=dev`), Phoenix watches for any changes you make in the `assets` directory, and then takes care of updating your front end application in your browser as you work.
+A **default** Phoenix application includes a `webpack.config.js` capable of processing your front-end assets and staging them in the `priv/static` folder, where they may be served by the [Plug.Static] plug configured in `lib/hello_web/endpoint.ex`.  When running in dev mode (`MIX_ENV=dev`), Phoenix watches for any changes you make in the `assets` directory, and then takes care of updating your front end application in your browser as you work.
 
+**NB:** When you first create your Phoenix app using `mix phx.new` it is possible to specify options that will affect the presence and layout of the `assets` directory.  In fact Phoenix apps don't require you have a front-end at all (handy if you're writing an API for example).  For more information you can run `mix help phx.new` or see the documentation in [Mix tasks](mix_tasks.html).
 
 [npm]: https://www.npmjs.com/package/npm
