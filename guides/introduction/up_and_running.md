@@ -38,7 +38,7 @@ When it's done, it will ask us if we want it to install our dependencies for us.
 Fetch and install dependencies? [Yn] Y
 * running mix deps.get
 * running mix deps.compile
-* running cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
+* running cd assets && npm install
 
 We are almost there! The following steps are missing:
 
@@ -101,7 +101,7 @@ We are almost there! The following steps are missing:
 
     $ cd hello
     $ mix deps.get
-    $ cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
+    $ cd assets && npm install
 
 Then configure your database in config/dev.exs and run:
 

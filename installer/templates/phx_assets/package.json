@@ -1,8 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "deploy": "webpack --mode production",
-    "watch": "webpack --mode development --watch"
+    "deploy": "webpack --mode production"
   },
   "dependencies": {
     "phoenix": "file:<%= @phoenix_webpack_path %>"<%= if @html do %>,
@@ -13,6 +12,7 @@
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
+    "@snowpack/plugin-sass": "^1.3.0",
     "babel-loader": "^8.0.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.4.2",
@@ -21,6 +21,7 @@
     "hard-source-webpack-plugin": "^0.13.1",
     "mini-css-extract-plugin": "^0.9.0",
     "optimize-css-assets-webpack-plugin": "^5.0.1",
+    "snowpack": "^3.0.13",
     "terser-webpack-plugin": "^2.3.2",
     "webpack": "4.41.5",
     "webpack-cli": "^3.3.2"

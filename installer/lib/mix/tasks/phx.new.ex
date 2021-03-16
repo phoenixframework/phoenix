@@ -218,7 +218,7 @@ defmodule Mix.Tasks.Phx.New do
     assets_path = Path.join(project.web_path || project.project_path, "assets")
     webpack_config = Path.join(assets_path, "webpack.config.js")
 
-    maybe_cmd(project, "cd #{relative_app_path(assets_path)} && npm install && node node_modules/webpack/bin/webpack.js --mode development",
+    maybe_cmd(project, "cd #{relative_app_path(assets_path)} && npm install",
               File.exists?(webpack_config), install? && System.find_executable("npm"))
   end
 
