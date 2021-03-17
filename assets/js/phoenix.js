@@ -787,9 +787,16 @@ export let Serializer = {
  *                                               `"wss://example.com"`
  *                                               `"/socket"` (inherited host & protocol)
  * @param {Object} [opts] - Optional configuration
- * @param {string} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
+ * @param {Function} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll. Note that it doesn't expect an object.
  *
  * Defaults to WebSocket with automatic LongPoll fallback.
+ * If you want to use LongPoll:
+ *
+ * ```javascript
+ * let socket = new Socket("/socket", {transport: LongPoll, params: {userToken: "123"}})
+ * socket.connect()
+ * ```
+ *
  * @param {Function} [opts.encode] - The function to encode outgoing messages.
  *
  * Defaults to JSON encoder.
