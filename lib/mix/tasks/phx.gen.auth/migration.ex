@@ -24,6 +24,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Migration do
   end
 
   defp column_definition(:email, Ecto.Adapters.Postgres), do: "add :email, :citext, null: false"
+  defp column_definition(:email, Ecto.Adapters.SQLite3), do: "add :email, :string, null: false, collate: :nocase"
   defp column_definition(:email, _), do: "add :email, :string, null: false, size: 160"
 
   defp column_definition(:token, Ecto.Adapters.Postgres), do: "add :token, :binary, null: false"

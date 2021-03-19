@@ -471,7 +471,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
         assert_file migration, fn file ->
           refute file =~ ~r/execute "CREATE EXTENSION IF NOT EXISTS citext", ""$/m
-          assert file =~ ~r/add :email, :string, null: false, size: 160$/m
+          assert file =~ ~r/add :email, :string, null: false, collate: :nocase$/m
         end
 
         assert_file "test/my_app_web/controllers/user_auth_test.exs", fn file ->
