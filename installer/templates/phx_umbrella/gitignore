@@ -21,3 +21,9 @@ erl_crash.dump
 
 # Temporary files, for example, from tests.
 /tmp
+
+<%= if @adapter_app == :ecto_sqlite3 do %>
+# Database files
+*.db
+*.db-*
+<% end %>
