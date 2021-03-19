@@ -33,7 +33,7 @@ npm-debug.log
 # this depending on your deployment strategy.
 /priv/static/
 
-<%= if @adapter_app == ":ecto_sqlite3" do %>
+<%= if @adapter_app == :ecto_sqlite3 do %>
 # Database files
 *.db
 <% end %>
