@@ -557,7 +557,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/mix.exs", ":ecto_sqlite3"
       assert_file "custom_path/config/dev.exs", [~r/database: ".*_dev.db"/]
       assert_file "custom_path/config/test.exs", [~r/database: ".*_test.db"/]
-      #assert_file "custom_path/config/runtime.exs", [~r/url: database_url/]
+      assert_file "custom_path/config/runtime.exs", [~r/database: database_path/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.SQLite3"
 
       assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
