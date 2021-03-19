@@ -288,8 +288,30 @@ defmodule Phx.New.Generator do
     {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
   end
 
+  defp get_ecto_adapter("sqlite3", app, module) do
+    {:ecto_sqlite3, Ecto.Adapters.SQLite3, db_config_sqlite3(app, module)}
+  end
+
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
+  end
+
+  defp db_config_sqlite3(app, module) do
+    [
+      dev: [
+        database: "#{app}_dev.db",
+        show_sensitive_data_on_connection_error: true
+      ],
+      test: [
+        database: "#{app}_test.db",
+        pool: Ecto.Adapters.SQL.Sandbox
+      ],
+      test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect(module)}.Repo, :manual)",
+      test_setup: """
+          pid = Ecto.Adapters.SQL.Sandbox.start_owner!(#{inspect(module)}.Repo, shared: not tags[:async])
+          on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)\
+      """
+    ]
   end
 
   defp db_config(app, module, user, pass) do

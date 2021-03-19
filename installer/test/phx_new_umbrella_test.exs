@@ -519,6 +519,24 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
+  test "new with sqlite3 adapter" do
+    in_tmp "new with sqlite3 adapter", fn ->
+      app = "custom_path"
+      project_path = Path.join(File.cwd!(), app)
+      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "sqlite3"])
+
+      assert_file app_path(app, "mix.exs"), ":ecto_sqlite3"
+      assert_file app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.SQLite3"
+
+      # assert_file root_path(app, "config/dev.exs"), [~r/username: "root"/, ~r/password: ""/]
+      # assert_file root_path(app, "config/test.exs"), [~r/username: "root"/, ~r/password: ""/]
+      # assert_file root_path(app, "config/runtime.exs"), [~r/url: database_url/]
+
+      assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
+    end
+  end
+
   test "new with mssql adapter" do
     in_tmp "new with mssql adapter", fn ->
       app = "custom_path"
