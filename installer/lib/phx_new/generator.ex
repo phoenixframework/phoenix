@@ -291,10 +291,12 @@ defmodule Phx.New.Generator do
     [
       dev: [
         database: "#{app}_dev.db",
+        pool_size: 5
         show_sensitive_data_on_connection_error: true
       ],
       test: [
         database: "#{app}_test.db",
+        pool_size: 5,
         pool: Ecto.Adapters.SQL.Sandbox
       ],
       test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect(module)}.Repo, :manual)",
