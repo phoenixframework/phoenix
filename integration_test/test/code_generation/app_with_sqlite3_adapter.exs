@@ -1,4 +1,4 @@
-defmodule Phoenix.Integration.CodeGeneration.AppWithMySQLite3AdapterTest do
+defmodule Phoenix.Integration.CodeGeneration.AppWithSQLite3AdapterTest do
   use Phoenix.Integration.CodeGeneratorCase, async: true
 
   describe "phx.gen.html" do
