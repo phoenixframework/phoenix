@@ -565,6 +565,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
 
       assert_file "custom_path/.gitignore", "*.db"
+      assert_file "custom_path/.gitignore", "*.db-*"
     end
   end
 

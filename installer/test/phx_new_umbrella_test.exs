@@ -534,6 +534,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
       assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
+
+      assert_file root_path(app, ".gitignore"), "*.db"
+      assert_file root_path(app, ".gitignore"), "*.db-*"
     end
   end
 
