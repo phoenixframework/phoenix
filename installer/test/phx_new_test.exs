@@ -555,8 +555,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([project_path, "--database", "sqlite3"])
 
       assert_file "custom_path/mix.exs", ":ecto_sqlite3"
-      assert_file "custom_path/config/dev.exs", [~r/database: ".*_dev.db"/]
-      assert_file "custom_path/config/test.exs", [~r/database: ".*_test.db"/]
+      assert_file "custom_path/config/dev.exs", [~r/database: .*_dev.db/]
+      assert_file "custom_path/config/test.exs", [~r/database: .*_test.db/]
       assert_file "custom_path/config/runtime.exs", [~r/database: database_path/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.SQLite3"
 

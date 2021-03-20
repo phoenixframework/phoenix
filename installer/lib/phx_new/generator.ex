@@ -290,12 +290,12 @@ defmodule Phx.New.Generator do
   defp db_config(app, module) do
     [
       dev: [
-        database: "#{app}_dev.db",
-        pool_size: 5
+        database: {:literal, ~s|Path.expand("../#{app}_dev.db", __ENV__.file)|},
+        pool_size: 5,
         show_sensitive_data_on_connection_error: true
       ],
       test: [
-        database: "#{app}_test.db",
+        database: {:literal, ~s|Path.expand("../#{app}_test.db", __ENV__.file)|},
         pool_size: 5,
         pool: Ecto.Adapters.SQL.Sandbox
       ],
