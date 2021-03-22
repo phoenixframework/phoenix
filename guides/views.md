@@ -268,7 +268,6 @@ end
 ```
 
 The name used in assigns is determined from the view. For example `PageView` will use `%{page: page}` and `AuthorView` will use `%{author: author}`. This can be overridden with the `as` option. Let's assume that the author view uses `%{writer: writer}` instead of `%{author: author}`:
->>>>>>> ff14fd75 (Fix grammar. Remove article "the" before controllers and views.)
 
 ```elixir
 def render("page_with_authors.json", %{page: page}) do
