@@ -102,7 +102,8 @@ defmodule Phoenix.Template do
   @engines [
     eex: Phoenix.Template.EExEngine,
     exs: Phoenix.Template.ExsEngine,
-    leex: Phoenix.LiveView.Engine
+    leex: Phoenix.LiveView.Engine,
+    heex: Phoenix.LiveView.HTMLEngine
   ]
 
   @default_pattern "*"
