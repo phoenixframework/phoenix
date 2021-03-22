@@ -4,6 +4,11 @@ defmodule Mix.Tasks.Compile.Phoenix do
 
   @moduledoc """
   Compiles Phoenix source files that support code reloading.
+  
+  If you are using Elixir v1.11+ or later, there is no longer
+  a need to use this module as this functionality is now provided
+  by Elixir. Just remember to update `__phoenix_recompile__?` to
+  `__mix_recompile__?` in any module that may define it.
   """
 
   # TODO: Deprecate this module once we require Elixir v1.11+
