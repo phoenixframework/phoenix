@@ -32,8 +32,7 @@ defmodule Mix.Tasks.Phx do
   defp general() do
     Application.ensure_all_started(:phoenix)
     Mix.shell().info "Phoenix v#{Application.spec(:phoenix, :vsn)}"
-    Mix.shell().info "Productive. Reliable. Fast."
-    Mix.shell().info "A productive web framework that does not compromise speed or maintainability."
+    Mix.shell().info "Peace of mind from prototype to production"
     Mix.shell().info "\n## Options\n"
     Mix.shell().info "-v, --version        # Prints Phoenix version\n"
     Mix.Tasks.Help.run(["--search", "phx."])
