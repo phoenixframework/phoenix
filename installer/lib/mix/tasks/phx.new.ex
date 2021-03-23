@@ -51,6 +51,8 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--verbose` - use verbose output
 
+    * `-v`, `--version` - prints the Phoenix installer version
+
   When passing the `--no-ecto` flag, Phoenix generators such as
   `phx.gen.html`, `phx.gen.json`, `phx.gen.live`, and `phx.gen.context`
   may no longer work as expected as they generate context files that rely
@@ -93,10 +95,6 @@ defmodule Mix.Tasks.Phx.New do
 
   You can read more about umbrella projects using the
   official [Elixir guide](http://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-apps.html#umbrella-projects)
-
-  To print the Phoenix installer version, pass `-v` or `--version`, for example:
-
-      mix phx.new -v
   """
   use Mix.Task
   alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
@@ -112,7 +110,7 @@ defmodule Mix.Tasks.Phx.New do
 
   @impl true
   def run([version]) when version in ~w(-v --version) do
-    Mix.shell().info("Phoenix v#{@version}")
+    Mix.shell().info("Phoenix installer v#{@version}")
   end
 
   def run(argv) do
