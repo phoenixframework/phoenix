@@ -2,6 +2,7 @@ defmodule Phoenix.MixProject do
   use Mix.Project
 
   @version "1.6.0-dev"
+  @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
@@ -31,7 +32,7 @@ defmodule Phoenix.MixProject do
       name: "Phoenix",
       docs: docs(),
       aliases: aliases(),
-      source_url: "https://github.com/phoenixframework/phoenix",
+      source_url: @scm_url,
       homepage_url: "https://www.phoenixframework.org",
       description: """
       Productive. Reliable. Fast. A productive web framework that
@@ -72,7 +73,7 @@ defmodule Phoenix.MixProject do
       {:phoenix_html, "~> 2.14.2 or ~> 3.0", optional: true},
 
       # Docs dependencies (some for cross references)
-      {:ex_doc, "~> 0.22", only: :docs},
+      {:ex_doc, "~> 0.24", only: :docs},
       {:ecto, ">= 3.0.0", only: :docs},
       {:ecto_sql, "~> 3.5", only: :docs},
       {:gettext, "~> 0.15.0", only: :docs},
@@ -89,7 +90,7 @@ defmodule Phoenix.MixProject do
     [
       maintainers: ["Chris McCord", "José Valim", "Gary Rennie", "Jason Stiebs"],
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/phoenixframework/phoenix"},
+      links: %{"GitHub" => @scm_url},
       files:
         ~w(assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
     ]
