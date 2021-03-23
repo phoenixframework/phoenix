@@ -20,19 +20,19 @@ When we use `mix phx.new` to generate a new Phoenix application, it builds a top
 
 We will go over those directories one by one:
 
-  * `_build` - a directory created by the `mix` command line tool that ships as part of Elixir that holds all compilation artifacts. As we have seen in "[Up and Running](up_and_running.html)", `mix` is the main interface to your application. We use Mix to compile our code, create databases, run our server, and more. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to rebuild your application from scratch
+  * `_build` - a directory created by the `mix` command line tool that ships as part of Elixir that holds all compilation artifacts. As we have seen in "[Up and Running](up_and_running.html)", `mix` is the main interface to your application. We use Mix to compile our code, create databases, run our server, and more. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to rebuild your application from scratch.
 
-  * `assets` - a directory that keeps everything related to front-end assets, such as JavaScript, CSS, static images and more. It is typically handled by the `npm` tool. Phoenix developers typically only need to run `npm install` inside the assets directory. Everything else is managed by Phoenix
+  * `assets` - a directory that keeps everything related to front-end assets, such as JavaScript, CSS, static images and more. It is typically handled by the `npm` tool. Phoenix developers typically only need to run `npm install` inside the assets directory. Everything else is managed by Phoenix.
 
-  * `config` - a directory that holds your project configuration. The `config/config.exs` file is the main entry point for your configuration. At the end of the `config/config.exs`, it imports environment specific configuration, which can be found in `config/dev.exs`, `config/test.exs`, and `config/prod.exs`
+  * `config` - a directory that holds your project configuration. The `config/config.exs` file is the main entry point for your configuration. At the end of the `config/config.exs`, it imports environment specific configuration, which can be found in `config/dev.exs`, `config/test.exs`, and `config/prod.exs`.
 
-  * `deps` - a directory with all of our Mix dependencies. You can find all dependencies listed in the `mix.exs` file, inside the `def deps do` function definition. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to download all deps from scratch
+  * `deps` - a directory with all of our Mix dependencies. You can find all dependencies listed in the `mix.exs` file, inside the `def deps do` function definition. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to download all deps from scratch.
 
-  * `lib` - a directory that holds your application source code. This directory is broken into two subdirectories, `lib/hello` and `lib/hello_web`. The `lib/hello` directory will be responsible to host all of your business logic and business domain. It typically interacts directly with the database - it is the "Model" in Model-View-Controller (MVC) architecture. `lib/hello_web` is responsible for exposing your business domain to the world, in this case, through a web application. It holds both the View and Controller from MVC. We will discuss the contents of these directories with more detail in the next sections
+  * `lib` - a directory that holds your application source code. This directory is broken into two subdirectories, `lib/hello` and `lib/hello_web`. The `lib/hello` directory will be responsible to host all of your business logic and business domain. It typically interacts directly with the database - it is the "Model" in Model-View-Controller (MVC) architecture. `lib/hello_web` is responsible for exposing your business domain to the world, in this case, through a web application. It holds both the View and Controller from MVC. We will discuss the contents of these directories with more detail in the next sections.
 
-  * `priv` - a directory that keeps all assets that are necessary in production but are not directly part of your source code. You typically keep database scripts, translation files, and more in here
+  * `priv` - a directory that keeps all assets that are necessary in production but are not directly part of your source code. You typically keep database scripts, translation files, and more in here.  Built static assets, sourced from the `assets` directory, are also served from here by default.
 
-  * `test` - a directory with all of our application tests. It often mirrors the same structure found in `lib`
+  * `test` - a directory with all of our application tests. It often mirrors the same structure found in `lib`.
 
 ## The lib/hello directory
 
@@ -113,3 +113,13 @@ Besides the directories mentioned, `lib/hello_web` has four files at its root. `
 Through _Telemetry_, Phoenix is able to collect metrics and send monitoring events of your application. The `lib/hello_web/telemetry.ex` file defines the supervisor responsible for managing the telemetry processes. You can find more information on this topic in the [Telemetry guide](telemetry.html).
 
 Finally, there is a `lib/hello_web/gettext.ex` file which provides internationalization through [Gettext](https://hexdocs.pm/gettext/Gettext.html). If you are not worried about internationalization, you can safely skip this file and its contents.
+
+## The assets directory
+
+The `assets` directory contains everything related to front-end assets, such as JavaScript, CSS, static images and more. It is typically handled by the [npm] tool. Phoenix developers typically only need to run `npm install` inside the assets directory. Everything else is managed by Phoenix.
+
+A **default** Phoenix application includes a `webpack.config.js` capable of processing your front-end assets and staging them in the `priv/static` folder, where they may be served by the [Plug.Static] plug configured in `lib/hello_web/endpoint.ex`.  When running in dev mode (`MIX_ENV=dev`), Phoenix watches for any changes you make in the `assets` directory, and then takes care of updating your front end application in your browser as you work.
+
+**NB:** When you first create your Phoenix app using `mix phx.new` it is possible to specify options that will affect the presence and layout of the `assets` directory.  In fact Phoenix apps don't require you have a front-end at all (handy if you're writing an API for example).  For more information you can run `mix help phx.new` or see the documentation in [Mix tasks](mix_tasks.html).
+
+[npm]: https://www.npmjs.com/package/npm
