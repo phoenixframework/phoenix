@@ -52,7 +52,7 @@ defmodule Phoenix.MixProject do
         stacktrace_depth: nil,
         filter_parameters: ["password"],
         serve_endpoints: false,
-        gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf),
+        gzippable_exts: ~w(.js .map .css .txt .text .html .json .svg .eot .ttf),
         static_compressors: [Phoenix.Digester.Gzip]
       ]
     ]

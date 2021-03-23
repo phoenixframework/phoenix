@@ -24,6 +24,8 @@ defmodule Phoenix.DigesterTest do
       refute "phoenix.png.gz" in output_files
       assert "app.js" in output_files
       assert "app.js.gz" in output_files
+      assert "app.js.map" in output_files
+      assert "app.js.map.gz" in output_files
       assert "css/app.css" in output_files
       assert "css/app.css.gz" in output_files
       assert "manifest.json" in output_files
