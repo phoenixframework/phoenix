@@ -45,7 +45,7 @@ $ npm run deploy --prefix assets
 $ MIX_ENV=prod mix phx.digest
 ```
 
-*Note:* the `--prefix` flag on `npm` may not work on Windows. If so, replace the first command by `cd assets && npm run deploy && cd ..`.
+_Note:_ the `--prefix` flag on `npm` may not work on Windows. If so, replace the first command by `cd assets && npm run deploy && cd ..`.
 
 And now run `mix release`:
 
@@ -63,7 +63,7 @@ Release created at _build/prod/rel/my_app!
 ...
 ```
 
-You can start the release by calling `_build/prod/rel/my_app/bin/my_app start`, where you have to replace `my_app` by your current application name. If you do so, your application should start but you will notice your web server does not actually run! That's because we need to tell Phoenix to start the web servers. When using `mix phx.server`, the `phx.server` command does that for us, but in a release we don't have Mix (which is a *build* tool), so we have to do it ourselves.
+You can start the release by calling `_build/prod/rel/my_app/bin/my_app start`, where you have to replace `my_app` by your current application name. If you do so, your application should start but you will notice your web server does not actually run! That's because we need to tell Phoenix to start the web servers. When using `mix phx.server`, the `phx.server` command does that for us, but in a release we don't have Mix (which is a _build_ tool), so we have to do it ourselves.
 
 Open up `config/runtime.exs` (formerly `config/prod.secret.exs` or `config/releases.exs`) and you should find a section about "Using releases" with a configuration to set. Go ahead and uncomment that line or manually add the line below, adapted to your application names:
 
@@ -91,7 +91,7 @@ But before we finish this guide, there is one more feature from releases that mo
 
 ## Ecto migrations and custom commands
 
-A common need in production systems is to execute custom commands required to set up the production environment. One of such commands is precisely migrating the database. Since we don't have `Mix`, a *build* tool, inside releases, which are a production artifact, we need to bring said commands directly into the release.
+A common need in production systems is to execute custom commands required to set up the production environment. One of such commands is precisely migrating the database. Since we don't have `Mix`, a _build_ tool, inside releases, which are a production artifact, we need to bring said commands directly into the release.
 
 Our recommendation is to create a new file in your application, such as `lib/my_app/release.ex`, with the following:
 
@@ -150,7 +150,7 @@ Elixir releases work well with container technologies, such as Docker. The idea 
 
 Here is an example Docker file to run at the root of your application covering all of the steps above:
 
-```docker
+`````Dockerfile
 FROM hexpm/elixir:1.11.2-erlang-23.1.2-alpine-3.12.1 as build
 
 # install build dependencies
@@ -207,10 +207,9 @@ RUN mix release
 FROM alpine:3.12.1 AS app
 RUN apk add --no-cache openssl ncurses-libs
 
-ENV USER="phoenix"
-ENV HOME=/home/"${USER}"
-ENV APP_DIR="${HOME}/app"
+ENV USER="elixir"
 
+WORKDIR "/home/${USER}/app"
 # Creates an unprivileged user to be used exclusively to run the Phoenix app
 RUN \
   addgroup \
@@ -220,23 +219,22 @@ RUN \
    -s /bin/sh \
    -u 1000 \
    -G "${USER}" \
-   -h "${HOME}" \
+   -h /home/elixir \
    -D "${USER}" && \
-  su "${USER}" sh -c "mkdir ${APP_DIR}"
+  su "${USER}"
 
 # Everything from this line onwards will run in the context of the unprivileged user.
 USER "${USER}"
 
-WORKDIR "${APP_DIR}"
 
 COPY --from=build --chown="${USER}":"${USER}" /app/_build/dev/rel/my_app ./
 
 ENTRYPOINT ["bin/my_app"]
 
 # Usage:
-#  * build: sudo docker build -t phoenix/my_app .
-#  * shell: sudo docker run --rm -it --entrypoint "" -p 80:4000 -p 443:4040 phoenix/my_app sh
-#  * run:   sudo docker run --rm -it -p 80:4000 -p 443:4040 --name my_app phoenix/my_app
+#  * build: sudo docker build -t elixir/my_app .
+#  * shell: sudo docker run --rm -it --entrypoint "" -p 80:4000 -p 443:4040 elixir/my_app sh
+#  * run:   sudo docker run --rm -it -p 80:4000 -p 443:4040 --name my_app elixir/my_app
 #  * exec:  sudo docker exec -it my_app sh
 #  * logs:  sudo docker logs --follow --tail 100 my_app
 #
@@ -248,7 +246,7 @@ ENTRYPOINT ["bin/my_app"]
 # ls -al archive
 # ````
 CMD ["start"]
-```
+`````
 
 At the end, you will have an application in `/app` ready to run as `bin/my_app start`.
 
