@@ -228,7 +228,7 @@ RUN \
 USER "${USER}"
 
 
-COPY --from=build --chown="${USER}":"${USER}" /app/_build/dev/rel/my_app ./
+COPY --from=build --chown="${USER}":"${USER}" /app/_build/"${MIX_ENV}"/rel/my_app ./
 
 ENTRYPOINT ["bin/my_app"]
 
