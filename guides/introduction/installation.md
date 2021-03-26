@@ -9,7 +9,7 @@ In order to build a Phoenix application, we will need a few dependencies install
 
 Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.
 
-## Elixir 1.6 or later
+## Elixir 1.9 or later
 
 Phoenix is written in Elixir, and our application code will also be written in Elixir. We won't get far in a Phoenix app without it! The Elixir site maintains a great [Installation Page](https://elixir-lang.org/install.html) to help.
 
@@ -21,23 +21,23 @@ Here's the command to install Hex (If you have Hex already installed, it will up
 $ mix local.hex
 ```
 
-## Erlang 20 or later
+## Erlang 22 or later
 
 Elixir code compiles to Erlang byte code to run on the Erlang virtual machine. Without Erlang, Elixir code has no virtual machine to run on, so we need to install Erlang as well.
 
 When we install Elixir using instructions from the Elixir [Installation Page](https://elixir-lang.org/install.html),  we will usually get Erlang too. If Erlang was not installed along with Elixir, please see the [Erlang Instructions](https://elixir-lang.org/install.html#installing-erlang) section of the Elixir Installation Page for instructions.
 
-> A note about Erlang and Phoenix: while Phoenix itself only requires Erlang 20 or later, one of Phoenix's dependencies, [cowboy](https://github.com/ninenines/cowboy), depends on Erlang 22 or later since cowboy 2.8.0. It is recommended to either install Erlang 22 or add `{:cowboy, "~> 2.7.0"}` to your mix.exs once your app has been created.
+> A note about Erlang and Phoenix: while Phoenix itself only requires Erlang 21 or later, one of Phoenix's dependencies, [cowboy](https://github.com/ninenines/cowboy), depends on Erlang 22.
 
 ## Phoenix
 
-To check that we are on Elixir 1.6 and Erlang 20 or later, run:
+To check that we are on Elixir 1.9 and Erlang 22 or later, run:
 
 ```console
 elixir -v
-Erlang/OTP 20 [erts-9.3] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
+Erlang/OTP 22 [erts-10.7] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
-Elixir 1.6.3
+Elixir 1.9.1
 ```
 
 Once we have Elixir and Erlang, we are ready to install the Phoenix application generator:

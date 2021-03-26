@@ -7,6 +7,8 @@ defmodule Phoenix.MixProject do
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
   # installer is ahead of Phoenix itself.
+  #
+  # We also need to update guides/introduction/installation.md
   @elixir_requirement "~> 1.9"
 
   def project do
@@ -167,7 +169,6 @@ defmodule Phoenix.MixProject do
     # Phoenix.Presence
     # Phoenix.Router
     # Phoenix.Token
-    # Phoenix.View
 
     [
       Testing: [
@@ -185,12 +186,6 @@ defmodule Phoenix.MixProject do
         Phoenix.Socket.Reply,
         Phoenix.Socket.Serializer,
         Phoenix.Socket.Transport
-      ],
-      Templating: [
-        Phoenix.Template,
-        Phoenix.Template.EExEngine,
-        Phoenix.Template.Engine,
-        Phoenix.Template.ExsEngine
       ]
     ]
   end
