@@ -60,7 +60,7 @@ All sessions and tokens are tracked in a separate table. This allows you to trac
 
 Note that whenever the password changes (either via reset password or directly), all tokens are deleted and the user has to log in again on all devices.
 
-## User Enumeration attacks
+### User Enumeration attacks
 
 A user enumeration attack allows an attacker to enumerate all emails registered in the application. For example, if trying to log in with a registered email and a wrong password returns a different error than trying to log in with an email that was never registered, an attacker could use this discrepency to find out which emails have accounts.
 
