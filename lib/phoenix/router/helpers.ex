@@ -345,7 +345,7 @@ defmodule Phoenix.Router.Helpers do
   """
   def raise_route_error(mod, fun, arity, action, routes, params) do
     cond do
-      not Keyword.has_key?(routes, action) ->
+      is_atom(action) and not Keyword.has_key?(routes, action) ->
         "no action #{inspect action} for #{inspect mod}.#{fun}/#{arity}"
         |> invalid_route_error(fun, routes)
 
