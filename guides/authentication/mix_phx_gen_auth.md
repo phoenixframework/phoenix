@@ -1,36 +1,46 @@
 # mix phx.gen.auth
 
-The `mix phx.gen.auth` command generates a flexible, pre-built authentication system into your phoenix app. This simple generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve.
+The `mix phx.gen.auth` command generates a flexible, pre-built authentication system into your Phoenix app. This simple generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve.
 
-## Getting Started
+## Getting started
 
 Let's start by running the following command from the root of our app (or `apps/my_app_web` in an umbrella app):
 
-    $ mix phx.gen.auth Accounts User users
+```console
+$ mix phx.gen.auth Accounts User users
+```
 
 This creates an `Accounts` context with an `Accounts.User` schema module. The final argument is the plural version of the schema module which is used for generating database table names and route helpers. The `mix phx.gen.auth` generator is similar to `mix phx.gen.html` except it does not accept a list of additional fields to add to the schema and it generates many more context functions.
 
-Since this generator installed additional dependencies in `mix.exs`, let's fetch those dependencies:
+Since this generator installed additional dependencies in `mix.exs`, let's fetch those:
 
-    $ mix deps.get
+```console
+$ mix deps.get
+```
 
 Now we need to verify the database connection details for the development and test environments in `config/` so the migrator and tests can run properly. Then run the following to create the database:
 
-    $ mix ecto.setup
+```console
+$ mix ecto.setup
+```
 
 Let's run the tests to make sure our new authentication system works as expected.
 
-    $ mix test
+```console
+$ mix test
+```
 
-And finally, let's start our phoenix server and try it out.
+And finally, let's start our Phoenix server and try it out.
 
-    $ mix phx.server
+```console
+$ mix phx.server
+```
 
-## Developer Responsibilities
+## Developer responsibilities
 
-Since phoenix generates this code into your application instead of building these modules into Phoenix itself, you now have complete freedom to modify the authentication system so it works best with your use case. The one caveat with using a generated authentication system is it will not be updated after it's been generated. Therefore as improvements are made to the output of `mix phx.gen.auth`, it becomes your responsibility to determine if these changes need to be ported into your application. Security-related and other important improvements will be explicitly and clearly marked in CHANGELOG and upgrade notes.
+Since Phoenix generates this code into your application instead of building these modules into Phoenix itself, you now have complete freedom to modify the authentication system so it works best with your use case. The one caveat with using a generated authentication system is it will not be updated after it's been generated. Therefore as improvements are made to the output of `mix phx.gen.auth`, it becomes your responsibility to determine if these changes need to be ported into your application. Security-related and other important improvements will be explicitly and clearly marked in the `CHANGELOG.md` file and upgrade notes.
 
-## Generated Code
+## Generated code
 
 The following are notes about the generated authentication system.
 
@@ -40,7 +50,7 @@ The password hashing mechanism defaults to `bcrypt` for Unix systems and `pbkdf2
 
 ### Forbidding access
 
-The generated code ships with an auth module with a handful of plugs that fetch the current user, require authentication and so on. For instance, in an app named Demo which had `mix phx.gen.auth Accounts User users` run on it, you will find a module named `DemoWeb.UserAuth` with plugs such as:
+The generated code ships with an authentication module with a handful of plugs that fetch the current user, require authentication and so on. For instance, in an app named Demo which had `mix phx.gen.auth Accounts User users` run on it, you will find a module named `DemoWeb.UserAuth` with plugs such as:
 
   * `fetch_current_user` - fetches the current user information if available
   * `require_authenticated_user` - must be invoked after `fetch_current_user` and requires that a current user exists and is authenticated
@@ -70,11 +80,11 @@ The generated authentication code protects against enumeration attacks on all en
 
 The email lookup is made to be case insensitive. Case insensitive lookups are the default in MySQL and MSSQL but use the [`citext` extension in PostgreSQL](https://www.postgresql.org/docs/current/citext.html).
 
-Note `citext` is part of Postgres itself and is bundled with it in most operating systems and package managers. `mix phx.gen.auth` takes care of creating the extension and no extra work is necessary in the majority of cases. If by any chance your package manager splits `citext` into a separate package, you will get an error while migrating and you can most likely solve it by installing the `postgres-contrib` package.
+Note `citext` is part of PostgreSQL itself and is bundled with it in most operating systems and package managers. `mix phx.gen.auth` takes care of creating the extension and no extra work is necessary in the majority of cases. If by any chance your package manager splits `citext` into a separate package, you will get an error while migrating and you can most likely solve it by installing the `postgres-contrib` package.
 
 ### Concurrent tests
 
-The generated tests run concurrently if you are using a database that supports concurrent tests (Postgres).
+The generated tests run concurrently if you are using a database that supports concurrent tests, which is the case of PostgreSQL.
 
 ## Additional resources
 
@@ -82,8 +92,8 @@ The following links have more information regarding the motivation and design of
 
   * José Valim's blog post - [An upcoming authentication solution for Phoenix](https://dashbit.co/blog/a-new-authentication-solution-for-phoenix)
   * The [original `phx_gen_auth` repo][phx_gen_auth repo] (for Phoenix 1.5 applications) - This is a great resource to see discussions around decisions that have been made in earlier versions of the project.
-  * [Original pull request on bare phoenix app][auth pr]
+  * [Original pull request on bare Phoenix app][auth PR]
   * [Original design spec](https://github.com/dashbitco/mix_phx_gen_auth_demo/blob/auth/README.md)
 
 [phx_gen_auth repo]: https://github.com/aaronrenner/phx_gen_auth
-[auth pr]: https://github.com/dashbitco/mix_phx_gen_auth_demo/pull/1
+[auth PR]: https://github.com/dashbitco/mix_phx_gen_auth_demo/pull/1
