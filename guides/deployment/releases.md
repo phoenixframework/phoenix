@@ -172,7 +172,7 @@ FROM node:15.7.0-alpine3.10 as assets
 
 # install build dependencies
 RUN --mount=type=cache,sharing=locked,target=/var/cache/apk \
-    apk add build-base python
+    apk add build-base python3
 
 # prepare build dir
 WORKDIR /app
