@@ -258,6 +258,21 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
+  test "generates schema and migration with prefix", config do
+    in_tmp_project config.test, fn ->
+      Gen.Schema.run(~w(Blog.Post posts title --prefix cms))
+
+      assert_file "lib/phoenix/blog/post.ex", fn file ->
+        assert file =~ "@schema_prefix :cms"
+      end
+
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
+      assert_file migration, fn file ->
+        assert file =~ "create table(:posts, prefix: :cms) do"
+      end
+    end
+  end
+
   test "skips migration with --no-migration option", config do
     in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post posts --no-migration))
