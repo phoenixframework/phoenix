@@ -160,7 +160,7 @@ This is significant because we can use the `page_path` function in a template to
 <%= link "Welcome Page!", to: Routes.page_path(@conn, :index) %>
 ```
 
-The reason we can use `Routes.page_path` instead of the full `HelloWeb.Router.Helpers.page_path` name is because `HelloWeb.Router.Helpers` is aliased as `Routes` by default in the `view/0` block defined inside `lib/hello_web.ex`. This definition is made available to our templates through `use HelloWeb, :view`.
+The reason we can use `Routes.page_path` instead of the full `HelloWeb.Router.Helpers.page_path` name is because `HelloWeb.Router.Helpers` is aliased as `Routes` by default in the `view_helpers/0` block defined inside `lib/hello_web.ex`. This definition is made available to our templates through `use HelloWeb, :view`.
 
 We can, of course, use `HelloWeb.Router.Helpers.page_path(@conn, :index)` instead, but the convention is to use the aliased version for conciseness. Note that the alias is only set automatically for use in views, controllers and templates - outside these you need either the full name, or to alias it yourself inside the module definition with `alias HelloWeb.Router.Helpers, as: Routes`.
 
