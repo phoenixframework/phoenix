@@ -378,7 +378,8 @@ Next, let's expose our new feature to the web by adding the credentials input to
 +   <% end %>
 + </div>
 
-  <%= submit "Submit" %>
+  <div>
+    <%= submit "Save" %>
 ```
 
 We used `Phoenix.HTML`'s `inputs_for` function to add an associations nested fields within the parent form. Within the nested inputs, we rendered our credential's email field and included the `label` and `error_tag` helpers just like our other inputs.
