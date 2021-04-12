@@ -96,6 +96,13 @@ defmodule Phoenix.Endpoint do
     * `:adapter` - which webserver adapter to use for serving web requests.
       See the "Adapter configuration" section below
 
+    * `:cache_manifest_skip_vsn` - when true, skips the appended query string 
+      "?vsn=d". If set to true it can also be useful to pass the 
+      [`--no-vsn`](https://hexdocs.pm/phoenix/Mix.Tasks.Phx.Digest.html#module-vsn).
+      Recommended to be set to `false` because of the cache mechanisms from
+      [`Plug.Static`](https://hexdocs.pm/plug/Plug.Static.html#module-cache-mechanisms).
+      Defaults to false.
+
     * `:cache_static_manifest` - a path to a json manifest file that contains
       static files and their digested version. This is typically set to
       "priv/static/cache_manifest.json" which is the file automatically generated
