@@ -38,7 +38,7 @@ When it's done, it will ask us if we want it to install our dependencies for us.
 Fetch and install dependencies? [Yn] Y
 * running mix deps.get
 * running mix deps.compile
-* running cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
+* running cd assets && npm install && npm run dev
 
 We are almost there! The following steps are missing:
 
@@ -101,7 +101,7 @@ We are almost there! The following steps are missing:
 
     $ cd hello
     $ mix deps.get
-    $ cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
+    $ cd assets && npm install && npm run dev
 
 Then configure your database in config/dev.exs and run:
 
@@ -127,4 +127,3 @@ To stop it, we hit `ctrl-c` twice.
 Now you are ready to explore the world provided by Phoenix! See [our community page](community.html) for books, screencasts, courses, and more.
 
 Alternatively, you can continue reading these guides to have a quick introduction into all the parts that make your Phoenix application. If that's the case, you can read the guides in any order or start with our guide that explains the [Phoenix directory structure](directory_structure.html).
-
