@@ -461,6 +461,45 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end)
     end
 
+    test "when the database is sqlite3", config do
+      in_tmp_phx_project(config.test, fn ->
+        Gen.Auth.run(
+          ~w(Accounts User users),
+          [ecto_adapter: Ecto.Adapters.SQLite3, validate_dependencies?: false]
+        )
+
+        assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
+        assert_file migration, fn file ->
+          refute file =~ ~r/execute "CREATE EXTENSION IF NOT EXISTS citext", ""$/m
+          assert file =~ ~r/add :email, :string, null: false, collate: :nocase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_auth_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_confirmation_controller_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_registration_controller_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_reset_password_controller_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_session_controller_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_settings_controller_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+      end)
+    end
+
     test "when the database is mssql", config do
       in_tmp_phx_project(config.test, fn ->
         Gen.Auth.run(

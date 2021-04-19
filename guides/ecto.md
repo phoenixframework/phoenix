@@ -10,6 +10,7 @@ Phoenix uses Ecto to provide builtin support to the following databases:
 * MySQL (via [`myxql`](https://github.com/elixir-ecto/myxql))
 * MSSQL (via [`tds`](https://github.com/livehelpnow/tds))
 * ETS (via [`etso`](https://github.com/evadne/etso))
+* SQLite3 (via [`ecto_sqlite3`](https://github.com/elixir-sqlite/ecto_sqlite3))
 
 
 Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default. You can pass the `--database` option to change or `--no-ecto` flag to exclude this.

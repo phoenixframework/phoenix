@@ -60,7 +60,7 @@ macOS users can also install Node.js via [homebrew](https://brew.sh/).
 
 ## PostgreSQL
 
-PostgreSQL is a relational database server. Phoenix configures applications to use it by default, but we can switch to MySQL or MSSQL by passing the `--database` flag when creating a new application.
+PostgreSQL is a relational database server. Phoenix configures applications to use it by default, but we can switch to MySQL, MSSQL, or SQLite3 by passing the `--database` flag when creating a new application.
 
 In order to talk to databases, Phoenix applications use another Elixir package, called [Ecto](https://github.com/elixir-ecto/ecto). If you don't plan to use databases in your application, you can pass the `--no-ecto` flag.
 

@@ -33,6 +33,7 @@ defmodule Phoenix.Integration.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:myxql, ">= 0.0.0"},
       {:tds, ">= 0.0.0"},
+      {:ecto_sqlite3, ">= 0.0.0"},
       {:phoenix_live_view, "~> 0.15.0"},
       {:floki, ">= 0.30.0"},
       {:phoenix_html, "~> 2.11"},

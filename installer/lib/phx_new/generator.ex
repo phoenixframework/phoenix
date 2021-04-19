@@ -240,8 +240,7 @@ defmodule Phx.New.Generator do
 
     config_inject(project_path, "config/dev.exs", """
     # Configure your database
-    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config(adapter_config[:dev])},
-      pool_size: 10
+    config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config(adapter_config[:dev])}
     """)
 
     config_inject(project_path, "config/test.exs", """
@@ -254,18 +253,10 @@ defmodule Phx.New.Generator do
     """)
 
     prod_only_config_inject(project_path, "config/runtime.exs", """
-    database_url =
-      System.get_env("DATABASE_URL") ||
-        raise \"""
-        environment variable DATABASE_URL is missing.
-        For example: ecto://USER:PASS@HOST/DATABASE
-        \"""
+    #{adapter_config[:prod_variables]}
 
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-      # ssl: true,
-      url: database_url,
-      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-      socket_options: [:inet6]
+      #{adapter_config[:prod_config]}
     """)
   end
 
@@ -288,8 +279,44 @@ defmodule Phx.New.Generator do
     {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
   end
 
+  defp get_ecto_adapter("sqlite3", app, module) do
+    {:ecto_sqlite3, Ecto.Adapters.SQLite3, db_config(app, module)}
+  end
+
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
+  end
+
+  defp db_config(app, module) do
+    [
+      dev: [
+        database: {:literal, ~s|Path.expand("../#{app}_dev.db", Path.dirname(__ENV__.file))|},
+        pool_size: 5,
+        show_sensitive_data_on_connection_error: true
+      ],
+      test: [
+        database: {:literal, ~s|Path.expand("../#{app}_test.db", Path.dirname(__ENV__.file))|},
+        pool_size: 5,
+        pool: Ecto.Adapters.SQL.Sandbox
+      ],
+      test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect(module)}.Repo, :manual)",
+      test_setup: """
+          pid = Ecto.Adapters.SQL.Sandbox.start_owner!(#{inspect(module)}.Repo, shared: not tags[:async])
+          on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)\
+      """,
+      prod_variables: """
+      database_path =
+        System.get_env("DATABASE_PATH") ||
+          raise \"""
+          environment variable DATABASE_PATH is missing.
+          For example: /etc/#{app}/#{app}.db
+          \"""
+      """,
+      prod_config: """
+      database: database_path,
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5")
+      """
+    ]
   end
 
   defp db_config(app, module, user, pass) do
@@ -299,19 +326,35 @@ defmodule Phx.New.Generator do
         password: pass,
         database: "#{app}_dev",
         hostname: "localhost",
-        show_sensitive_data_on_connection_error: true
+        show_sensitive_data_on_connection_error: true,
+        pool_size: 10
       ],
       test: [
         username: user,
         password: pass,
         database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|},
         hostname: "localhost",
-        pool: Ecto.Adapters.SQL.Sandbox
+        pool: Ecto.Adapters.SQL.Sandbox,
+        pool_size: 10,
       ],
       test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect(module)}.Repo, :manual)",
       test_setup: """
           pid = Ecto.Adapters.SQL.Sandbox.start_owner!(#{inspect(module)}.Repo, shared: not tags[:async])
           on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)\
+      """,
+      prod_variables: """
+      database_url =
+        System.get_env("DATABASE_URL") ||
+          raise \"""
+          environment variable DATABASE_URL is missing.
+          For example: ecto://USER:PASS@HOST/DATABASE
+          \"""
+      """,
+      prod_config: """
+      # ssl: true,
+      url: database_url,
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+      socket_options: [:inet6]
       """
     ]
   end
