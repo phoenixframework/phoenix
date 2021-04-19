@@ -50,6 +50,6 @@ defmodule <%= @endpoint_module %> do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
-  plug :set_floc, false
+  plug :disable_floc, false
   plug <%= @web_namespace %>.Router
 end
