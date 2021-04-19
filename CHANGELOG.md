@@ -16,6 +16,7 @@ Phoenix v1.6 requires Elixir v1.9+.
   * [mix phx.new] Add description to Ecto telemetry metrics
   * [mix phx.new] Use `Ecto.Adapters.SQL.Sandbox.start_owner!/2` in generators - this approach provides proper shutdown semantics for apps using LiveView and Presence
   * [mix phx.new] Add `--install` and `--no-install` options to `phx.new`
+  * [mix phx.new] Add `--database sqlite3` option to `phx.new`
   * [View] Extracted `Phoenix.View` into its own project to facilitate reuse
 
 ### Bug fixes
