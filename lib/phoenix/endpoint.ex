@@ -905,4 +905,15 @@ defmodule Phoenix.Endpoint do
   def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
     Phoenix.Endpoint.Supervisor.server?(otp_app, endpoint)
   end
+
+  @doc """
+  Disables FLoC on Google Chrome browsers.
+
+  This function adds the HTTP-header `Permission-Policy: interest-cohort=()` to the response,
+  which tells the browser to exclude the page from the the FLoC calculation.
+
+  For more information regarding FLoC, please visit https://web.dev/floc.
+  """
+  def disable_floc(conn, true), do: Plug.Conn.put_resp_header(conn, "permissions-policy", "interest-cohort=()")
+  def disable_floc(conn, false), do: conn
 end
