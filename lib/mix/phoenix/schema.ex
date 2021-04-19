@@ -35,7 +35,8 @@ defmodule Mix.Phoenix.Schema do
             route_helper: nil,
             migration_module: nil,
             fixture_unique_functions: %{},
-            fixture_params: %{}
+            fixture_params: %{},
+            prefix: nil
 
   @valid_types [
     :integer,
@@ -136,7 +137,9 @@ defmodule Mix.Phoenix.Schema do
       generate?: generate?,
       migration_module: migration_module(),
       fixture_unique_functions: fixture_unique_functions,
-      fixture_params: fixture_params(attrs, fixture_unique_functions)}
+      fixture_params: fixture_params(attrs, fixture_unique_functions),
+      prefix: opts[:prefix]
+    }
   end
 
   @doc """

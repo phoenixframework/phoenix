@@ -106,7 +106,8 @@ defmodule Mix.Tasks.Phx.New do
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
              gettext: :boolean, umbrella: :boolean, verbose: :boolean,
-             live: :boolean, dashboard: :boolean, install: :boolean]
+             live: :boolean, dashboard: :boolean, install: :boolean,
+             prefix: :string]
 
   @impl true
   def run([version]) when version in ~w(-v --version) do
