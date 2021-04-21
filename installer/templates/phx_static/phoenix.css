@@ -46,8 +46,8 @@ button,
 input[type='button'],
 input[type='reset'],
 input[type='submit'] {
-  background-color: #9b4dca;
-  border: 0.1rem solid #9b4dca;
+  background-color: #0069d9;
+  border: 0.1rem solid #0069d9;
   border-radius: .4rem;
   color: #fff;
   cursor: pointer;
@@ -97,8 +97,8 @@ input[type='reset'][disabled]:focus,
 input[type='reset'][disabled]:hover,
 input[type='submit'][disabled]:focus,
 input[type='submit'][disabled]:hover {
-  background-color: #9b4dca;
-  border-color: #9b4dca;
+  background-color: #0069d9;
+  border-color: #0069d9;
 }
 
 .button.button-outline,
@@ -107,7 +107,7 @@ input[type='button'].button-outline,
 input[type='reset'].button-outline,
 input[type='submit'].button-outline {
   background-color: transparent;
-  color: #9b4dca;
+  color: #0069d9;
 }
 
 .button.button-outline:focus, .button.button-outline:hover,
@@ -134,7 +134,7 @@ input[type='reset'].button-outline[disabled]:hover,
 input[type='submit'].button-outline[disabled]:focus,
 input[type='submit'].button-outline[disabled]:hover {
   border-color: inherit;
-  color: #9b4dca;
+  color: #0069d9;
 }
 
 .button.button-clear,
@@ -144,7 +144,7 @@ input[type='reset'].button-clear,
 input[type='submit'].button-clear {
   background-color: transparent;
   border-color: transparent;
-  color: #9b4dca;
+  color: #0069d9;
 }
 
 .button.button-clear:focus, .button.button-clear:hover,
@@ -170,7 +170,7 @@ input[type='reset'].button-clear[disabled]:focus,
 input[type='reset'].button-clear[disabled]:hover,
 input[type='submit'].button-clear[disabled]:focus,
 input[type='submit'].button-clear[disabled]:hover {
-  color: #9b4dca;
+  color: #0069d9;
 }
 
 code {
@@ -184,7 +184,7 @@ code {
 
 pre {
   background: #f4f5f6;
-  border-left: 0.3rem solid #9b4dca;
+  border-left: 0.3rem solid #0069d9;
   overflow-y: hidden;
 }
 
@@ -244,7 +244,7 @@ input[type='week']:focus,
 input:not([type]):focus,
 textarea:focus,
 select:focus {
-  border-color: #9b4dca;
+  border-color: #0069d9;
   outline: 0;
 }
 
@@ -254,7 +254,7 @@ select {
 }
 
 select:focus {
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 8" width="30"><path fill="%239b4dca" d="M0,0l6,8l6-8"/></svg>');
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 8" width="30"><path fill="%2#0069d9" d="M0,0l6,8l6-8"/></svg>');
 }
 
 select[multiple] {
@@ -469,7 +469,7 @@ input[type='radio'] {
 }
 
 a {
-  color: #9b4dca;
+  color: #0069d9;
   text-decoration: none;
 }
 
