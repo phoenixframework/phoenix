@@ -18,6 +18,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * [Endpoint] - Add `:log_access_url` config to endpoint start
   * [Router] - Include route information in router_dispatch exception for telemetry events
   * [Router] - Optimize router code generation to reduce compilation dependencies
+  * [phx.new] - Use topbar in new apps with the --live flag
 
 ### JavaScript client
   * Default channel `push` payload to empty object for backwards compatibility
