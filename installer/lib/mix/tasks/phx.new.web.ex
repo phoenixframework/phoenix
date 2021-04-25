@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Phx.New.Web do
   @moduledoc """
   Creates a new Phoenix web project within an umbrella project.
 
-  It expects the name of the otp app as the first argument and
+  It expects the name of the OTP app as the first argument and
   for the command to be run inside your umbrella application's
   apps directory:
 
