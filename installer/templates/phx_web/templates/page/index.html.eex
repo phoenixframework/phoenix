@@ -4,7 +4,7 @@
   <p>Peace of mind from prototype to production</p><%= if @live do %>
 
   <form phx-change="suggest" phx-submit="search">
-    <input type="text" name="q" value="<%%= @query %>" placeholder="Live dependency search" list="results" autocomplete="off"/>
+    <input type="text" name="q" value="<%%= @query %>" placeholder="Live dependency search" list="results" autocomplete="off" autofocus/>
     <datalist id="results">
       <%%= for {app, _vsn} <- @results do %>
         <option value="<%%= app %>"><%%= app %></option>
