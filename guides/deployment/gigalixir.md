@@ -97,7 +97,7 @@ Don't forget to commit
 
 ```console
 $ git add elixir_buildpack.config phoenix_static_buildpack.config
-$ git commit -m "set elixir, erlang, and node version"
+$ git commit -m "Set Elixir, Erlang, and Node version"
 ```
 ## Making our Project ready for Gigalixir
 
