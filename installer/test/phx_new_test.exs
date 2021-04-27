@@ -549,6 +549,26 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
+  test "new with sqlite3 adapter" do
+    in_tmp "new with sqlite3 adapter", fn ->
+      project_path = Path.join(File.cwd!(), "custom_path")
+      Mix.Tasks.Phx.New.run([project_path, "--database", "sqlite3"])
+
+      assert_file "custom_path/mix.exs", ":ecto_sqlite3"
+      assert_file "custom_path/config/dev.exs", [~r/database: .*_dev.db/]
+      assert_file "custom_path/config/test.exs", [~r/database: .*_test.db/]
+      assert_file "custom_path/config/runtime.exs", [~r/database: database_path/]
+      assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.SQLite3"
+
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+
+      assert_file "custom_path/.gitignore", "*.db"
+      assert_file "custom_path/.gitignore", "*.db-*"
+    end
+  end
+
   test "new with mssql adapter" do
     in_tmp "new with mssql adapter", fn ->
       project_path = Path.join(File.cwd!(), "custom_path")

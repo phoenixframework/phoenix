@@ -83,7 +83,7 @@ defmodule Phoenix.Config do
   end
 
   @doc """
-  Reads the configuration for module from the given otp app.
+  Reads the configuration for module from the given OTP app.
 
   Useful to read a particular value at compilation time.
   """

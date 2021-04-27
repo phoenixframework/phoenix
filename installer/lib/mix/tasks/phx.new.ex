@@ -29,6 +29,7 @@ defmodule Mix.Tasks.Phx.New do
         * `postgres` - via https://github.com/elixir-ecto/postgrex
         * `mysql` - via https://github.com/elixir-ecto/myxql
         * `mssql` - via https://github.com/livehelpnow/tds
+        * `sqlite3` - via https://github.com/elixir-sqlite/ecto_sqlite3
 
       Please check the driver docs for more information
       and requirements. Defaults to "postgres".
@@ -106,7 +107,8 @@ defmodule Mix.Tasks.Phx.New do
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
              gettext: :boolean, umbrella: :boolean, verbose: :boolean,
-             live: :boolean, dashboard: :boolean, install: :boolean]
+             live: :boolean, dashboard: :boolean, install: :boolean,
+             prefix: :string]
 
   @impl true
   def run([version]) when version in ~w(-v --version) do

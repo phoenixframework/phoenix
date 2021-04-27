@@ -168,7 +168,7 @@ ARG MIX_ENV="prod"
 ENV MIX_ENV="${MIX_ENV}"
 
 # install mix dependencies
-COPY mix.exs mix.lock ./
+COPY mix.exs mix.lock .
 RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
 # Dependencies sometimes use compile-time configuration. Copying
@@ -227,7 +227,6 @@ RUN \
 # Everything from this line onwards will run in the context of the unprivileged user.
 USER "${USER}"
 
-
 COPY --from=build --chown="${USER}":"${USER}" /app/_build/"${MIX_ENV}"/rel/my_app ./
 
 ENTRYPOINT ["bin/my_app"]
@@ -238,14 +237,6 @@ ENTRYPOINT ["bin/my_app"]
 #  * run:   sudo docker container run --rm -it -p 127.0.0.1:4000:4000 --name my_app elixir/my_app
 #  * exec:  sudo docker container exec -it my_app sh
 #  * logs:  sudo docker container logs --follow --tail 100 my_app
-#
-# Extract the production release to your host machine with:
-#
-# ```
-# mkdir archive
-# sudo docker container run --rm -it --entrypoint "" -v "$PWD/archive:/home/phoenix/archive"  phoenix/my_app sh -c "tar zcf /home/phoenix/archive/app.tar.gz ."
-# ls -al archive
-# ````
 CMD ["start"]
 ```
 
