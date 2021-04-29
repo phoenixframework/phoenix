@@ -96,13 +96,6 @@ defmodule Phoenix.Endpoint do
     * `:adapter` - which webserver adapter to use for serving web requests.
       See the "Adapter configuration" section below
 
-    * `:cache_manifest_skip_vsn` - when true, skips the appended query string 
-      "?vsn=d". If set to true it can also be useful to pass the 
-      [`--no-vsn`](https://hexdocs.pm/phoenix/Mix.Tasks.Phx.Digest.html#module-vsn).
-      Recommended to be set to `false` because of the cache mechanisms from
-      [`Plug.Static`](https://hexdocs.pm/plug/Plug.Static.html#module-cache-mechanisms).
-      Defaults to false.
-
     * `:cache_static_manifest` - a path to a json manifest file that contains
       static files and their digested version. This is typically set to
       "priv/static/cache_manifest.json" which is the file automatically generated
@@ -113,7 +106,15 @@ defmodule Phoenix.Endpoint do
       digest version. This is automatically loaded from `cache_static_manifest` on
       boot. However, if you have your own static handling mechanism, you may want to
       set this value explicitly. This is used by projects such as `LiveView` to
-      detect if the client is running on the latest version of all assets
+      detect if the client is running on the latest version of all assets.
+
+    * `:cache_manifest_skip_vsn` - when true, skips the appended query string 
+      "?vsn=d" when generatic paths to static assets. This query string is used
+      by `Plug.Static` to set long expiry dates, therefore, you should set this
+      option to true only if you are not using `Plug.Static` to serve assets,
+      for example, if you are using a CDN. If you are setting this option, you
+      should also consider passing `--no-vsn` to `mix phx.digest`. Defaults to
+      `false`.
 
     * `:check_origin` - configure the default `:check_origin` setting for
       transports. See `socket/3` for options. Defaults to `true`.
