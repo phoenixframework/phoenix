@@ -210,6 +210,7 @@ defmodule Phoenix.Endpoint.Supervisor do
      secret_key_base: nil,
      static_url: nil,
      url: [host: "localhost", path: "/"],
+     cache_manifest_skip_vsn: false,
 
      # Supervisor config
      watchers: []]
@@ -389,10 +390,11 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests}) do
     Phoenix.Config.put_new(endpoint, :cache_static_manifest_latest, latest)
+    with_vsn? = !endpoint.config(:cache_manifest_skip_vsn)
 
     Enum.each(latest, fn {key, _} ->
       Phoenix.Config.cache(endpoint, {:__phoenix_static__, "/" <> key}, fn _ ->
-        {:cache, static_cache(digests, Map.get(latest, key))}
+        {:cache, static_cache(digests, Map.get(latest, key), with_vsn?)}
       end)
     end)
   end
@@ -401,8 +403,12 @@ defmodule Phoenix.Endpoint.Supervisor do
     raise ArgumentError, "expected warmup_static/2 to include 'latest' and 'digests' keys in manifest"
   end
 
-  defp static_cache(digests, value) do
+  defp static_cache(digests, value, true) do
     {"/#{value}?vsn=d", static_integrity(digests[value]["sha512"])}
+  end
+
+  defp static_cache(digests, value, false) do
+    {"/#{value}", static_integrity(digests[value]["sha512"])}
   end
 
   defp static_integrity(nil), do: nil

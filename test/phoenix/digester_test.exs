@@ -12,12 +12,12 @@ defmodule Phoenix.DigesterTest do
 
   describe "compile" do
     test "fails when the given paths are invalid" do
-      assert {:error, :invalid_path} = Phoenix.Digester.compile("nonexistent path", "/ ?? /path")
+      assert {:error, :invalid_path} = Phoenix.Digester.compile("nonexistent path", "/ ?? /path", true)
     end
 
     test "digests and compress files" do
       input_path = "test/fixtures/digest/priv/static/"
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
       output_files = assets_files(@output_path)
 
       assert "phoenix.png" in output_files
@@ -61,7 +61,7 @@ defmodule Phoenix.DigesterTest do
           Path.join(@output_path, "cache_manifest.json")
         )
 
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
 
       json = Path.join(@output_path, "cache_manifest.json") |> json_read!()
 
@@ -88,13 +88,13 @@ defmodule Phoenix.DigesterTest do
 
     test "excludes compiled files" do
       input_path = "test/fixtures/digest/priv/static/"
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
       output_files = assets_files(@output_path)
 
       json = Path.join(@output_path, "cache_manifest.json") |> json_read!()
       refute json["latest"]["precompressed.js.gz"]
 
-      assert :ok = Phoenix.Digester.compile(@output_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(@output_path, @output_path, true)
       assert output_files == assets_files(@output_path)
     end
 
@@ -119,7 +119,7 @@ defmodule Phoenix.DigesterTest do
 
       File.write!(Path.join(input_path, "foo.css"), ".foo { background-color: blue }")
 
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
       json = Path.join(@output_path, "cache_manifest.json") |> json_read!()
 
       assert json["digests"]["foo-d978852bea6530fcd197b5445ed008fd.css"]["mtime"] == 32_132_171
@@ -140,7 +140,7 @@ defmodule Phoenix.DigesterTest do
           Path.join(input_path, "cache_manifest.json")
         )
 
-      assert :ok = Phoenix.Digester.compile(input_path, input_path)
+      assert :ok = Phoenix.Digester.compile(input_path, input_path, true)
 
       json = Path.join(input_path, "cache_manifest.json") |> json_read!()
       assert json["digests"] == %{}
@@ -148,7 +148,7 @@ defmodule Phoenix.DigesterTest do
 
     test "digests and compress nested files" do
       input_path = "test/fixtures/digest/priv/"
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
 
       output_files = assets_files(@output_path)
 
@@ -171,13 +171,13 @@ defmodule Phoenix.DigesterTest do
       File.mkdir_p!(@output_path)
 
       File.write!(input_file, "console.log('test');")
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
 
       json1 = Path.join(@output_path, "cache_manifest.json") |> json_read!()
       assert Enum.count(json1["digests"]) == 1
 
       File.write!(input_file, "console.log('test2');")
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
 
       json2 = Path.join(@output_path, "cache_manifest.json") |> json_read!()
       assert Enum.count(json2["digests"]) == 2
@@ -191,8 +191,8 @@ defmodule Phoenix.DigesterTest do
       File.mkdir_p!(input_path)
       File.write!(input_file, "console.log('test');")
 
-      assert :ok = Phoenix.Digester.compile(input_path, input_path)
-      assert :ok = Phoenix.Digester.compile(input_path, input_path)
+      assert :ok = Phoenix.Digester.compile(input_path, input_path, true)
+      assert :ok = Phoenix.Digester.compile(input_path, input_path, true)
 
       output_files = assets_files(input_path)
       refute "file.js.gz.gz" in output_files
@@ -200,9 +200,9 @@ defmodule Phoenix.DigesterTest do
       refute Enum.any?(output_files, &(&1 =~ ~r/file-#{@hash_regex}.[\w|\d]*.[-#{@hash_regex}/))
     end
 
-    test "digests only absolute and relative asset paths found within stylesheets" do
+    test "digests only absolute and relative asset paths found within stylesheets with vsn" do
       input_path = "test/fixtures/digest/priv/static/"
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
 
       digested_css_filename =
         assets_files(@output_path)
@@ -221,9 +221,30 @@ defmodule Phoenix.DigesterTest do
       assert digested_css =~ ~r"http://www.phoenixframework.org/absolute.png"
     end
 
+    test "digests only absolute and relative asset paths found within stylesheets without vsn" do
+      input_path = "test/fixtures/digest/priv/static/"
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, false)
+
+      digested_css_filename =
+        assets_files(@output_path)
+        |> Enum.find(&(&1 =~ ~r"app-#{@hash_regex}.css"))
+
+      digested_css =
+        Path.join(@output_path, digested_css_filename)
+        |> File.read!()
+
+      refute digested_css =~ ~r"/phoenix\.png"
+      refute digested_css =~ ~r"\.\./images/relative\.png"
+      assert digested_css =~ ~r"/phoenix-#{@hash_regex}\.png"
+      assert digested_css =~ ~r"\.\./images/relative-#{@hash_regex}\.png"
+
+      refute digested_css =~ ~r"http://www.phoenixframework.org/absolute-#{@hash_regex}.png"
+      assert digested_css =~ ~r"http://www.phoenixframework.org/absolute.png"
+    end
+
     test "sha512 matches content of digested file" do
       input_path = "test/fixtures/digest/priv/static/"
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
 
       digested_css_filename =
         assets_files(@output_path)
@@ -245,7 +266,7 @@ defmodule Phoenix.DigesterTest do
 
     test "digests sourceMappingURL asset paths found within javascript source files" do
       input_path = "test/fixtures/digest/priv/static/"
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
 
       digested_js_map_filename =
         assets_files(@output_path)
@@ -266,7 +287,7 @@ defmodule Phoenix.DigesterTest do
 
     test "digests file url paths found within javascript mapping files" do
       input_path = "test/fixtures/digest/priv/static/"
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
 
       digested_js_map_filename =
         assets_files(@output_path)
@@ -286,7 +307,7 @@ defmodule Phoenix.DigesterTest do
 
     test "does not digest assets within undigested files" do
       input_path = "test/fixtures/digest/priv/static/"
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
 
       undigested_css =
         Path.join(@output_path, "css/app.css")

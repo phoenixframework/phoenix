@@ -112,7 +112,15 @@ defmodule Phoenix.Endpoint do
       digest version. This is automatically loaded from `cache_static_manifest` on
       boot. However, if you have your own static handling mechanism, you may want to
       set this value explicitly. This is used by projects such as `LiveView` to
-      detect if the client is running on the latest version of all assets
+      detect if the client is running on the latest version of all assets.
+
+    * `:cache_manifest_skip_vsn` - when true, skips the appended query string 
+      "?vsn=d" when generatic paths to static assets. This query string is used
+      by `Plug.Static` to set long expiry dates, therefore, you should set this
+      option to true only if you are not using `Plug.Static` to serve assets,
+      for example, if you are using a CDN. If you are setting this option, you
+      should also consider passing `--no-vsn` to `mix phx.digest`. Defaults to
+      `false`.
 
     * `:check_origin` - configure the default `:check_origin` setting for
       transports. See `socket/3` for options. Defaults to `true`.

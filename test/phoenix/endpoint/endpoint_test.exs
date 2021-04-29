@@ -8,6 +8,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
            static_url: [host: "static.example.com"],
            server: false, http: [port: 80], https: [port: 443],
            force_ssl: [subdomains: true],
+           cache_manifest_skip_vsn: false,
            cache_static_manifest: "../../../../test/fixtures/digest/compile/cache_manifest.json",
            pubsub_server: :endpoint_pub]
 
@@ -96,6 +97,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   test "warms up caches on load and config change" do
+    assert Endpoint.config_change([{Endpoint, @config}], []) == :ok
     assert Endpoint.config(:cache_static_manifest_latest) ==
              %{"foo.css" => "foo-d978852bea6530fcd197b5445ed008fd.css"}
 
@@ -107,6 +109,16 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Endpoint.config(:cache_static_manifest_latest) == %{"foo.css" => "foo-ghijkl.css"}
     assert Endpoint.static_path("/foo.css") == "/foo-ghijkl.css?vsn=d"
+  end
+
+  test "uses correct path accordingly to vsn setting" do
+    config = put_in(@config[:cache_manifest_skip_vsn], false)
+    assert Endpoint.config_change([{Endpoint, config}], []) == :ok
+    assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
+
+    config = put_in(@config[:cache_manifest_skip_vsn], true)
+    assert Endpoint.config_change([{Endpoint, config}], []) == :ok
+    assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css"
   end
 
   @tag :capture_log
