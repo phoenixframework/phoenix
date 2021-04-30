@@ -114,7 +114,7 @@ defmodule Phoenix.Endpoint do
       set this value explicitly. This is used by projects such as `LiveView` to
       detect if the client is running on the latest version of all assets.
 
-    * `:cache_manifest_skip_vsn` - when true, skips the appended query string 
+    * `:cache_manifest_skip_vsn` - when true, skips the appended query string
       "?vsn=d" when generatic paths to static assets. This query string is used
       by `Plug.Static` to set long expiry dates, therefore, you should set this
       option to true only if you are not using `Plug.Static` to serve assets,
@@ -162,15 +162,15 @@ defmodule Phoenix.Endpoint do
       the "watch" mode of the webpack build tool when the server starts.
       You can configure it to whatever build tool or command you want:
 
-          [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development",
-              "--watch-stdin"]]
+          [node: ["node_modules/webpack/bin/webpack.js", "--mode=development",
+              "--watch", "--watch-options-stdin"]]
 
       The `:cd` option can be used on a watcher to override the folder from
       which the watcher will run. By default this will be the project's root:
       `File.cwd!()`
 
-          [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development",
-              "--watch-stdin", cd: "my_frontend"]]
+          [node: ["node_modules/webpack/bin/webpack.js", "--mode=development",
+              "--watch", "--watch-options-stdin", cd: "my_frontend"]]
 
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of
