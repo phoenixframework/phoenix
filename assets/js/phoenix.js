@@ -1039,9 +1039,11 @@ export class Socket {
    */
 
   heartbeatTimeout(){
-    this.pendingHeartbeatRef = null
-    if (this.hasLogger()) this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
-    this.abnormalClose("heartbeat timeout")
+    if(this.pendingHeartbeatRef){
+      this.pendingHeartbeatRef = null
+      if (this.hasLogger()) this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
+      this.abnormalClose("heartbeat timeout")
+    }
   }
 
   resetHeartbeat(){ if(this.conn && this.conn.skipHeartbeat){ return }
