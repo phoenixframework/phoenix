@@ -196,7 +196,7 @@ defmodule Phoenix.Endpoint do
 
   Phoenix allows you to choose which webserver adapter to use. The default
   is `Phoenix.Endpoint.Cowboy2Adapter` which can be configured via the
-  following options.
+  following top-level options.
 
     * `:http` - the configuration for the HTTP server. It accepts all options
       as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
@@ -207,9 +207,10 @@ defmodule Phoenix.Endpoint do
       to `false`
 
     * `:drainer` - a drainer process that triggers when your application is
-      shutting to wait for any on-going request to finish. It accepts all
-      options as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.html).
-      Defaults to `[]` and can be disabled by setting it to false.
+      shutting down to wait for any on-going request to finish. It accepts all
+      options as defined by [`Plug.Cowboy.Drainer`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.html).
+      Defaults to `[]`, which will start a drainer process for each configured endpoint,
+      but can be disabled by setting it to `false`.
 
   ## Endpoint API
 
