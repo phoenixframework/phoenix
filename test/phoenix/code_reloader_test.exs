@@ -2,19 +2,14 @@ defmodule Phoenix.CodeReloaderTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  Application.put_env(:phoenix, __MODULE__.Endpoint,
-    root: File.cwd!,
-    code_reloader: true,
-    reloadable_paths: ["web"],
-    live_reload: [url: "ws://localhost:4000", patterns: [~r/some\/path/]])
-
   defmodule Endpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
-  end
+    def config(:reloadable_compilers) do
+      [:gettext, :phoenix, :elixir]
+    end
 
-  setup_all do
-    Endpoint.start_link()
-    :ok
+    def config(:reloadable_apps) do
+      nil
+    end
   end
 
   def reload!(_) do
@@ -22,13 +17,33 @@ defmodule Phoenix.CodeReloaderTest do
   end
 
   test "compile.phoenix tasks touches files" do
-    assert Mix.Tasks.Compile.Phoenix.run([]) == :noop
+    assert Mix.Tasks.Compile.Phoenix.run([]) == {:noop, []}
+  end
+
+  @tag :capture_log
+  test "syncs with code server" do
+    assert Phoenix.CodeReloader.Server.sync() == :ok
+
+    # Suspend so we can monitor the process until we get a reply.
+    # There is an inherent race condition here in that the process
+    # may die before we request but the code should work in both
+    # cases, so we are fine.
+    :sys.suspend(Phoenix.CodeReloader.Server)
+    ref = Process.monitor(Phoenix.CodeReloader.Server)
+
+    Task.start_link(fn ->
+      Phoenix.CodeReloader.Server
+      |> Process.whereis()
+      |> Process.exit(:kill)
+    end)
+
+    assert Phoenix.CodeReloader.Server.sync() == :ok
+    assert_receive {:DOWN, ^ref, _, _, _}
+    wait_until_is_up(Phoenix.CodeReloader.Server)
   end
 
   test "reloads on every request" do
-    children = Supervisor.which_children(Endpoint)
-    assert {Phoenix.CodeReloader.Server, pid, _, _} =
-           List.keyfind(children, Phoenix.CodeReloader.Server, 0)
+    pid = Process.whereis(Phoenix.CodeReloader.Server)
     :erlang.trace(pid, true, [:receive])
 
     opts = Phoenix.CodeReloader.init([])
@@ -37,7 +52,7 @@ defmodule Phoenix.CodeReloaderTest do
            |> Phoenix.CodeReloader.call(opts)
     assert conn.state == :unset
 
-    assert_receive {:trace, ^pid, :receive, {_, _, :reload!}}
+    assert_receive {:trace, ^pid, :receive, {_, _, {:reload!, Endpoint}}}
   end
 
   test "renders compilation error on failure" do
@@ -48,6 +63,16 @@ defmodule Phoenix.CodeReloaderTest do
     assert conn.state  == :sent
     assert conn.status == 500
     assert conn.resp_body =~ "oops"
-    assert conn.resp_body =~ "CompilationError at GET /"
+    assert conn.resp_body =~ "CompileError"
+    assert conn.resp_body =~ "Compilation error"
+  end
+
+  defp wait_until_is_up(process) do
+    if Process.whereis(process) do
+      :ok
+    else
+      Process.sleep(10)
+      wait_until_is_up(process)
+    end
   end
 end

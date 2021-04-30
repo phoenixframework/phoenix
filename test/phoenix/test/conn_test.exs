@@ -1,25 +1,91 @@
+defmodule Phoenix.Test.ConnTest.CatchAll do
+  defmodule ConnError do
+    defexception [message: "hello", plug_status: 500]
+  end
+
+  def init(opts), do: opts
+
+  def call(conn, :stat) do
+    case conn.params["action"] do
+      "conn_404" -> raise ConnError, plug_status: 404
+      "conn_400" -> raise ConnError, plug_status: 400
+      "runtime" -> raise RuntimeError
+      "send_400" -> Plug.Conn.send_resp(conn, 400, "")
+    end
+  end
+
+  def call(conn, _opts), do: Plug.Conn.assign(conn, :catch_all, true)
+end
+
+alias Phoenix.Test.ConnTest.CatchAll
+
+defmodule Phoenix.Test.ConnTest.RedirRouter do
+  use Phoenix.Router
+  get "/", CatchAll, :foo
+  get "/posts/:id", CatchAll, :some_action
+end
+
+defmodule Phoenix.Test.ConnTest.Router do
+  use Phoenix.Router
+
+  pipeline :browser do
+    plug :put_bypass, :browser
+  end
+
+  pipeline :api do
+    plug :put_bypass, :api
+  end
+
+  scope "/" do
+    pipe_through :browser
+    get "/stat", CatchAll, :stat, private: %{route: :stat}
+    forward "/", CatchAll
+  end
+
+  def put_bypass(conn, pipeline) do
+    bypassed = (conn.assigns[:bypassed] || []) ++ [pipeline]
+    Plug.Conn.assign(conn, :bypassed, bypassed)
+  end
+end
+
 defmodule Phoenix.Test.ConnTest do
   use ExUnit.Case, async: true
-  use Phoenix.ConnTest
+  import Plug.Conn
+  import Phoenix.ConnTest
+  alias Phoenix.Test.ConnTest.{Router, RedirRouter}
+
+  @moduletag :capture_log
+
+  Application.put_env(:phoenix, Phoenix.Test.ConnTest.Endpoint, [])
 
   defmodule Endpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
     def init(opts), do: opts
     def call(conn, :set), do: resp(conn, 200, "ok")
-    def call(conn, opts), do: put_in(conn.private[:endpoint], opts)
+    def call(conn, opts) do
+      put_in(super(conn, opts).private[:endpoint], opts)
+      |> Router.call(Router.init([]))
+    end
   end
 
   @endpoint Endpoint
 
-  test "conn/0 returns a new connection" do
-    conn = conn()
+  setup_all do
+    Logger.disable(self())
+    Endpoint.start_link()
+    :ok
+  end
+
+  test "build_conn/0 returns a new connection" do
+    conn = build_conn()
     assert conn.method == "GET"
     assert conn.path_info == []
     assert conn.private.plug_skip_csrf_protection
     assert conn.private.phoenix_recycled
   end
 
-  test "conn/2 returns a new connection" do
-    conn = conn(:post, "/hello")
+  test "build_conn/2 returns a new connection" do
+    conn = build_conn(:post, "/hello")
     assert conn.method == "POST"
     assert conn.path_info == ["hello"]
     assert conn.private.plug_skip_csrf_protection
@@ -27,7 +93,7 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "dispatch/5 with path" do
-    conn = post conn(), "/hello", foo: "bar"
+    conn = post build_conn(), "/hello", foo: "bar"
     assert conn.method == "POST"
     assert conn.path_info == ["hello"]
     assert conn.params == %{"foo" => "bar"}
@@ -36,7 +102,7 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "dispatch/5 with action" do
-    conn = post conn(), :hello, %{foo: "bar"}
+    conn = post build_conn(), :hello, %{foo: "bar"}
     assert conn.method == "POST"
     assert conn.path_info == []
     assert conn.params == %{"foo" => "bar"}
@@ -46,14 +112,14 @@ defmodule Phoenix.Test.ConnTest do
 
   test "dispatch/5 with binary body" do
     assert_raise ArgumentError, fn ->
-      post conn(), :hello, "foo=bar"
+      post build_conn(), :hello, "foo=bar"
     end
 
     conn =
-      conn()
+      build_conn()
       |> put_req_header("content-type", "application/json")
       |> post(:hello, "[1, 2, 3]")
-      |> Plug.Parsers.call(Plug.Parsers.init(parsers: [:json], json_decoder: Poison))
+      |> Plug.Parsers.call(Plug.Parsers.init(parsers: [:json], json_decoder: Phoenix.json_library()))
 
     assert conn.method == "POST"
     assert conn.path_info == []
@@ -62,7 +128,7 @@ defmodule Phoenix.Test.ConnTest do
 
   test "dispatch/5 with recycling" do
     conn =
-      conn()
+      build_conn()
       |> put_req_header("hello", "world")
       |> post(:hello)
     assert get_req_header(conn, "hello") == ["world"]
@@ -82,35 +148,88 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "dispatch/5 with :set state automatically sends" do
-    conn = get conn(), :set
+    conn = get build_conn(), :set
     assert conn.state == :sent
     assert conn.status == 200
     assert conn.resp_body == "ok"
     refute conn.private.phoenix_recycled
   end
 
-  test "recycle/1" do
-    conn =
-      conn()
-      |> get("/")
-      |> put_req_header("hello", "world")
-      |> put_req_cookie("req_cookie", "req_cookie")
-      |> put_req_cookie("del_cookie", "del_cookie")
-      |> put_req_cookie("over_cookie", "pre_cookie")
-      |> put_resp_cookie("over_cookie", "pos_cookie")
-      |> put_resp_cookie("resp_cookie", "resp_cookie")
-      |> delete_resp_cookie("del_cookie")
+  describe "recycle/1" do
+    test "relevant request headers are persisted" do
+      conn =
+        build_conn()
+        |> get("/")
+        |> put_req_header("accept", "text/html")
+        |> put_req_header("accept-language", "ja")
+        |> put_req_header("authorization", "Bearer mytoken")
+        |> put_req_header("hello", "world")
 
-    conn = conn |> recycle() |> fetch_cookies()
-    assert get_req_header(conn, "hello") == []
-    assert conn.cookies == %{"req_cookie"  => "req_cookie",
-                             "over_cookie" => "pos_cookie",
-                             "resp_cookie" => "resp_cookie"}
+      conn = conn |> recycle()
+      assert get_req_header(conn, "accept") == ["text/html"]
+      assert get_req_header(conn, "accept-language") == ["ja"]
+      assert get_req_header(conn, "authorization") == ["Bearer mytoken"]
+      assert get_req_header(conn, "hello") == []
+    end
+
+    test "host is persisted" do
+      conn =
+        build_conn(:get, "http://localhost/", nil)
+        |> recycle()
+      assert conn.host == "localhost"
+    end
+
+    test "cookies are persisted" do
+      conn =
+        build_conn()
+        |> get("/")
+        |> put_req_cookie("req_cookie", "req_cookie")
+        |> put_req_cookie("del_cookie", "del_cookie")
+        |> put_req_cookie("over_cookie", "pre_cookie")
+        |> put_resp_cookie("over_cookie", "pos_cookie")
+        |> put_resp_cookie("resp_cookie", "resp_cookie")
+        |> delete_resp_cookie("del_cookie")
+
+      conn = conn |> recycle() |> fetch_cookies()
+      assert conn.cookies == %{"req_cookie"  => "req_cookie",
+                               "over_cookie" => "pos_cookie",
+                               "resp_cookie" => "resp_cookie"}
+    end
+
+    test "peer data is persisted" do
+      peer_data = %{
+        address: {127, 0, 0, 1},
+        port: 111317,
+        ssl_cert: <<1, 2, 3, 4>>
+      }
+      conn =
+        build_conn()
+        |> Plug.Test.put_peer_data(peer_data)
+
+      conn = conn |> recycle()
+      assert Plug.Conn.get_peer_data(conn) == peer_data
+    end
+  end
+
+  describe "recycle/2" do
+    test "custom request headers are persisted" do
+      conn =
+        build_conn()
+        |> get("/")
+        |> put_req_header("accept", "text/html")
+        |> put_req_header("hello", "world")
+        |> put_req_header("foo", "bar")
+
+      conn = conn |> recycle(~w(hello accept))
+      assert get_req_header(conn, "accept") == ["text/html"]
+      assert get_req_header(conn, "hello") == ["world"]
+      assert get_req_header(conn, "foo") == []
+    end
   end
 
   test "ensure_recycled/1" do
     conn =
-      conn()
+      build_conn()
       |> put_req_header("hello", "world")
       |> ensure_recycled()
     assert get_req_header(conn, "hello") == ["world"]
@@ -122,7 +241,7 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "put_req_header/3 and delete_req_header/3" do
-    conn = conn(:get, "/")
+    conn = build_conn(:get, "/")
     assert get_req_header(conn, "foo") == []
 
     conn = put_req_header(conn, "foo", "bar")
@@ -136,7 +255,7 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "put_req_cookie/3 and delete_req_cookie/2" do
-    conn = conn(:get, "/")
+    conn = build_conn(:get, "/")
     assert get_req_header(conn, "cookie") == []
 
     conn = conn |> put_req_cookie("foo", "bar")
@@ -147,7 +266,7 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "response/2" do
-    conn = conn(:get, "/")
+    conn = build_conn(:get, "/")
 
     assert conn |> resp(200, "ok") |> response(200) == "ok"
     assert conn |> send_resp(200, "ok") |> response(200) == "ok"
@@ -155,53 +274,84 @@ defmodule Phoenix.Test.ConnTest do
 
     assert_raise RuntimeError,
                  ~r"expected connection to have a response but no response was set/sent", fn ->
-      conn(:get, "/") |> response(200)
+      build_conn(:get, "/") |> response(200)
     end
 
     assert_raise RuntimeError,
-                 "expected response with status 200, got: 404", fn ->
-      conn(:get, "/") |> resp(404, "oops") |> response(200)
+                 "expected response with status 200, got: 404, with body:\n\"oops\"", fn ->
+      build_conn(:get, "/") |> resp(404, "oops") |> response(200)
+    end
+
+    assert_raise RuntimeError,
+                 "expected response with status 200, got: 404, with body:\n<<192>>", fn ->
+      build_conn(:get, "/") |> resp(404, <<192>>) |> response(200)
     end
   end
 
   test "html_response/2" do
-    assert conn(:get, "/") |> put_resp_content_type("text/html")
+    assert build_conn(:get, "/") |> put_resp_content_type("text/html")
                            |> resp(200, "ok") |> html_response(:ok) == "ok"
 
     assert_raise RuntimeError,
                  "no content-type was set, expected a html response", fn ->
-      conn(:get, "/") |> resp(200, "ok") |> html_response(200)
+      build_conn(:get, "/") |> resp(200, "ok") |> html_response(200)
     end
   end
 
   test "json_response/2" do
-    assert conn(:get, "/") |> put_resp_content_type("application/json")
+    assert build_conn(:get, "/") |> put_resp_content_type("application/json")
+                           |> resp(200, "{}") |> json_response(:ok) == %{}
+
+    assert build_conn(:get, "/") |> put_resp_content_type("application/vnd.api+json")
+                           |> resp(200, "{}") |> json_response(:ok) == %{}
+
+    assert build_conn(:get, "/") |> put_resp_content_type("application/vnd.collection+json")
+                           |> resp(200, "{}") |> json_response(:ok) == %{}
+
+    assert build_conn(:get, "/") |> put_resp_content_type("application/vnd.hal+json")
+                           |> resp(200, "{}") |> json_response(:ok) == %{}
+
+    assert build_conn(:get, "/") |> put_resp_content_type("application/ld+json")
                            |> resp(200, "{}") |> json_response(:ok) == %{}
 
     assert_raise RuntimeError,
                  "no content-type was set, expected a json response", fn ->
-      conn(:get, "/") |> resp(200, "ok") |> json_response(200)
+      build_conn(:get, "/") |> resp(200, "ok") |> json_response(200)
     end
 
-    assert_raise RuntimeError,
-                 "could not decode JSON body, invalid token \"o\" in body:\n\nok", fn ->
-      conn(:get, "/") |> put_resp_content_type("application/json")
+    assert_raise Jason.DecodeError,
+                 "unexpected byte at position 0: 0x6F ('o')", fn ->
+      build_conn(:get, "/") |> put_resp_content_type("application/json")
                       |> resp(200, "ok") |> json_response(200)
+    end
+
+    assert_raise Jason.DecodeError, ~r/unexpected end of input at position 0/, fn ->
+      build_conn(:get, "/")
+      |> put_resp_content_type("application/json")
+      |> resp(200, "")
+      |> json_response(200)
+    end
+
+    assert_raise RuntimeError, ~s(expected response with status 200, got: 400, with body:\n) <> inspect(~s({"error": "oh oh"})), fn ->
+      build_conn(:get, "/")
+      |> put_resp_content_type("application/json")
+      |> resp(400, ~s({"error": "oh oh"}))
+      |> json_response(200)
     end
   end
 
   test "text_response/2" do
-    assert conn(:get, "/") |> put_resp_content_type("text/plain")
+    assert build_conn(:get, "/") |> put_resp_content_type("text/plain")
                            |> resp(200, "ok") |> text_response(:ok) == "ok"
 
     assert_raise RuntimeError,
                  "no content-type was set, expected a text response", fn ->
-      conn(:get, "/") |> resp(200, "ok") |> text_response(200)
+      build_conn(:get, "/") |> resp(200, "ok") |> text_response(200)
     end
   end
 
   test "response_content_type/2" do
-    conn = conn(:get, "/")
+    conn = build_conn(:get, "/")
 
     assert put_resp_content_type(conn, "text/html") |> response_content_type(:html) ==
            "text/html; charset=utf-8"
@@ -223,7 +373,7 @@ defmodule Phoenix.Test.ConnTest do
 
   test "redirected_to/1" do
     conn =
-      conn(:get, "/")
+      build_conn(:get, "/")
       |> put_resp_header("location", "new location")
       |> send_resp(302, "foo")
 
@@ -233,7 +383,7 @@ defmodule Phoenix.Test.ConnTest do
   test "redirected_to/2" do
     Enum.each 300..308, fn(status) ->
       conn =
-        conn(:get, "/")
+        build_conn(:get, "/")
         |> put_resp_header("location", "new location")
         |> send_resp(status, "foo")
 
@@ -241,10 +391,19 @@ defmodule Phoenix.Test.ConnTest do
     end
   end
 
+  test "redirected_to/2 with status atom" do
+    conn =
+      build_conn(:get, "/")
+      |> put_resp_header("location", "new location")
+      |> send_resp(301, "foo")
+
+    assert redirected_to(conn, :moved_permanently) == "new location"
+  end
+
   test "redirected_to/2 without header" do
     assert_raise RuntimeError,
                  "no location header was set on redirected_to", fn ->
-      assert conn(:get, "/")
+      assert build_conn(:get, "/")
       |> send_resp(302, "ok")
       |> redirected_to()
     end
@@ -253,7 +412,7 @@ defmodule Phoenix.Test.ConnTest do
   test "redirected_to/2 without redirection" do
     assert_raise RuntimeError,
                  "expected redirection with status 302, got: 200", fn ->
-      conn(:get, "/")
+      build_conn(:get, "/")
       |> put_resp_header("location", "new location")
       |> send_resp(200, "ok")
       |> redirected_to()
@@ -263,8 +422,157 @@ defmodule Phoenix.Test.ConnTest do
   test "redirected_to/2 without response" do
     assert_raise RuntimeError,
                  ~r"expected connection to have redirected but no response was set/sent", fn ->
-      conn(:get, "/")
+      build_conn(:get, "/")
       |> redirected_to()
+    end
+  end
+
+  describe "redirected_params/1" do
+    test "with matching route" do
+      conn =
+        build_conn(:get, "/")
+        |> RedirRouter.call(RedirRouter.init([]))
+        |> put_resp_header("location", "/posts/123")
+        |> send_resp(302, "foo")
+
+      assert redirected_params(conn) == %{id: "123"}
+    end
+
+    test "raises Phoenix.Router.NoRouteError for unmatched location" do
+      conn =
+        build_conn(:get, "/")
+        |> RedirRouter.call(RedirRouter.init([]))
+        |> put_resp_header("location", "/unmatched")
+        |> send_resp(302, "foo")
+
+      assert_raise Phoenix.Router.NoRouteError, fn ->
+        redirected_params(conn)
+      end
+    end
+
+    test "without redirection" do
+      assert_raise RuntimeError,
+                  "expected redirection with status 302, got: 200", fn ->
+        build_conn(:get, "/")
+        |> RedirRouter.call(RedirRouter.init([]))
+        |> put_resp_header("location", "new location")
+        |> send_resp(200, "ok")
+        |> redirected_params()
+      end
+    end
+  end
+
+  test "bypass_through/3 bypasses route match and invokes pipeline" do
+    conn = get(build_conn(), "/")
+    assert conn.assigns[:catch_all]
+
+    conn =
+      build_conn()
+      |> bypass_through(Router, :browser)
+      |> get("/stat")
+
+    assert conn.assigns[:bypassed] == [:browser]
+    assert conn.private[:route] == :stat
+    refute conn.assigns[:catch_all]
+
+    conn =
+      build_conn()
+      |> bypass_through(Router, [:api])
+      |> get("/stat")
+
+    assert conn.assigns[:bypassed] == [:api]
+    assert conn.private[:route] == :stat
+    refute conn.assigns[:catch_all]
+
+    conn =
+      build_conn()
+      |> bypass_through(Router, [:browser, :api])
+      |> get("/stat")
+
+    assert conn.assigns[:bypassed] == [:browser, :api]
+    assert conn.private[:route] == :stat
+    refute conn.assigns[:catch_all]
+  end
+
+  test "bypass_through/3 with empty pipeline" do
+    conn =
+      build_conn()
+      |> bypass_through(Router, [])
+      |> get("/stat")
+
+    refute conn.assigns[:bypassed]
+    assert conn.private[:route] == :stat
+    refute conn.assigns[:catch_all]
+  end
+
+  test "bypass_through/2 with route pipeline" do
+    conn =
+      build_conn()
+      |> bypass_through(Router)
+      |> get("/stat")
+
+    assert conn.assigns[:bypassed] == [:browser]
+    assert conn.private[:route] == :stat
+    refute conn.assigns[:catch_all]
+  end
+
+  test "bypass_through/1 without router" do
+    conn =
+      build_conn()
+      |> bypass_through()
+      |> get("/stat")
+
+    refute conn.assigns[:bypassed]
+    assert conn.private[:route] == :stat
+    refute conn.assigns[:catch_all]
+  end
+
+  test "assert_error_sent/2 with expected error response" do
+    response = assert_error_sent :not_found, fn ->
+      get(build_conn(), "/stat", action: "conn_404")
+    end
+    assert {404, [_h | _t], "404.html from Phoenix.ErrorView"} = response
+
+    response = assert_error_sent 400, fn ->
+      get(build_conn(), "/stat", action: "conn_400")
+    end
+    assert {400, [_h | _t], "400.html from Phoenix.ErrorView"} = response
+  end
+
+  test "assert_error_sent/2 with status mismatch assertion" do
+    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 400 status, but got 500 from.*RuntimeError/s, fn ->
+      assert_error_sent 400, fn ->
+        get(build_conn(), "/stat", action: "runtime")
+      end
+    end
+  end
+
+  test "assert_error_sent/2 with no error" do
+    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 404 status, but no error happened/, fn ->
+      assert_error_sent 404, fn -> get(build_conn(), "/") end
+    end
+  end
+
+  test "assert_error_sent/2 with error but no response" do
+    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 404 status, but got an error with no response from.*RuntimeError/s, fn ->
+      assert_error_sent 404, fn -> raise "oops" end
+    end
+  end
+
+  test "assert_error_sent/2 with response but no error" do
+    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 400 status, but response sent 400 without error/, fn ->
+      assert_error_sent :bad_request, fn ->
+        get(build_conn(), "/stat", action: "send_400")
+      end
+    end
+  end
+
+  for method <- [:get, :post, :put, :delete] do
+    @method method
+    test "#{method} helper raises ArgumentError for mismatched conn" do
+      assert_raise ArgumentError, ~r/expected first argument to #{@method} to be/, fn ->
+        unquote(@method)("/foo/bar", %{baz: "baz"})
+      end
     end
   end
 end

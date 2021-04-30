@@ -10,16 +10,16 @@ defprotocol Phoenix.Param do
   Phoenix knows how to extract the `:id` from `@user` thanks
   to this protocol.
 
-  By default, Phoenix implements this protocol for integers,
-  binaries, atoms, maps and structs. For maps and structs, a
-  key `:id` is looked up.
+  By default, Phoenix implements this protocol for integers, binaries, atoms,
+  and structs. For structs, a key `:id` is assumed, but you may provide a
+  specific implementation.
 
   Nil values cannot be converted to param.
 
   ## Custom parameters
 
-  In order to customize the parameter for any model or
-  struct, one can simply implement this protocol.
+  In order to customize the parameter for any struct,
+  one can simply implement this protocol.
 
   However, for convenience, this protocol can also be
   derivable. For example:
@@ -39,6 +39,13 @@ defprotocol Phoenix.Param do
       end
 
   will automatically use `:username` in URLs.
+
+  When using Ecto, you must call `@derive` before
+  your `schema` call:
+
+      @derive {Phoenix.Param, key: :username}
+      schema "users" do
+
   """
 
   @fallback_to_any true
@@ -66,11 +73,6 @@ defimpl Phoenix.Param, for: Atom do
 end
 
 defimpl Phoenix.Param, for: Map do
-  # TODO: Remove this module once we depend only on Elixir 1.1
-  defmacro __deriving__(module, struct, options) do
-    Phoenix.Param.Any.deriving(module, struct, options)
-  end
-
   def to_param(map) do
     raise ArgumentError,
       "maps cannot be converted to_param. A struct was expected, got: #{inspect map}"
@@ -79,10 +81,6 @@ end
 
 defimpl Phoenix.Param, for: Any do
   defmacro __deriving__(module, struct, options) do
-    deriving(module, struct, options)
-  end
-
-  def deriving(module, struct, options) do
     key = Keyword.get(options, :key, :id)
 
     unless Map.has_key?(struct, key) do
@@ -106,7 +104,7 @@ defimpl Phoenix.Param, for: Any do
   end
 
   def to_param(%{id: nil}) do
-    raise ArgumentError, "cannot convert map/struct to param, key :id contains a nil value"
+    raise ArgumentError, "cannot convert struct to param, key :id contains a nil value"
   end
   def to_param(%{id: id}) when is_integer(id), do: Integer.to_string(id)
   def to_param(%{id: id}) when is_binary(id), do: id
@@ -114,8 +112,9 @@ defimpl Phoenix.Param, for: Any do
 
   def to_param(map) when is_map(map) do
     raise ArgumentError,
-      "structs expect an :id key when converting to_param or a custom implementation "
-      "(read Phoenix.Param documentation for more information), got: #{inspect map}"
+      "structs expect an :id key when converting to_param or a custom implementation " <>
+      "of the Phoenix.Param protocol (read Phoenix.Param docs for more information), " <>
+      "got: #{inspect map}"
   end
 
   def to_param(data) do

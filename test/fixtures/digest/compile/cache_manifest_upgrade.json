@@ -1,0 +1,20 @@
+{
+  "digests": {
+    "foo-abcdef.css": {
+      "logical_path": "foo.css",
+      "mtime": 32132171,
+      "size": 369053,
+      "digest": "abcdev"
+    },
+    "foo-ghijkl.css": {
+      "logical_path": "foo.css",
+      "mtime": 32193492,
+      "size": 372059,
+      "digest": "abcdev"
+    }
+  },
+  "latest": {
+    "foo.css": "foo-ghijkl.css"
+  },
+  "version": 1
+}

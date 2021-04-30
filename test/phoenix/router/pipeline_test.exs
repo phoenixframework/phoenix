@@ -5,12 +5,20 @@ defmodule Phoenix.Router.PipelineTest.SampleController do
   use Phoenix.Controller
   def index(conn, _params), do: text(conn, "index")
   def crash(_conn, _params), do: raise "crash!"
+
+  # Let's also define a custom plug that we will
+  # use in our router as part of a pipeline
+  def noop_plug(conn, _opts), do: conn
 end
 
 alias Phoenix.Router.PipelineTest.SampleController
 
 defmodule Phoenix.Router.PipelineTest.Router do
   use Phoenix.Router
+
+  # This should work even if the import comes
+  # after the Phoenix.Router definition
+  import SampleController, only: [noop_plug: 2]
 
   pipeline :browser do
     plug :put_assign, "browser"
@@ -22,6 +30,14 @@ defmodule Phoenix.Router.PipelineTest.Router do
 
   pipeline :params do
     plug :put_params
+  end
+
+  pipeline :halt do
+    plug :stop
+  end
+
+  pipeline :halt_again do
+    plug :stop
   end
 
   get "/root", SampleController, :index
@@ -48,12 +64,21 @@ defmodule Phoenix.Router.PipelineTest.Router do
     get "/root", SampleController, :index
   end
 
+  scope "/stop" do
+    pipe_through [:noop_plug, :halt, :halt_again]
+    get "/", SampleController, :index
+  end
+
+  defp stop(conn, _) do
+    conn |> send_resp(200, "stop") |> halt
+  end
+
   defp put_assign(conn, value) do
-    assign conn, :stack, value
+    assign(conn, :stack, [value | conn.assigns[:stack] || []])
   end
 
   defp put_params(conn, _) do
-    assign conn, :params, conn.params
+    assign(conn, :params, conn.params)
   end
 end
 
@@ -70,26 +95,29 @@ defmodule Phoenix.Router.PipelineTest do
 
   test "does not invoke pipelines at root" do
     conn = call(Router, :get, "/root")
-    assert conn.private[:phoenix_pipelines] == []
     assert conn.assigns[:stack] == nil
   end
 
   test "invokes pipelines per scope" do
     conn = call(Router, :get, "/browser/root")
-    assert conn.private[:phoenix_pipelines] == [:browser]
-    assert conn.assigns[:stack] == "browser"
+    assert conn.assigns[:stack] == ["browser"]
   end
 
   test "invokes pipelines in a nested scope" do
     conn = call(Router, :get, "/browser/api/root")
-    assert conn.private[:phoenix_pipelines] == [:browser, :api]
-    assert conn.assigns[:stack] == "api"
+    assert conn.assigns[:stack] == ["api", "browser"]
   end
 
   test "invokes multiple pipelines" do
     conn = call(Router, :get, "/browser-api/root")
-    assert conn.private[:phoenix_pipelines] == [:browser, :api]
-    assert conn.assigns[:stack] == "api"
+    assert conn.assigns[:stack] == ["api", "browser"]
+  end
+
+  test "halts on pipeline multiple pipelines" do
+    conn = call(Router, :get, "/stop")
+    assert conn.halted
+    assert conn.status == 200
+    assert conn.resp_body == "stop"
   end
 
   test "wraps failures on call" do
@@ -103,18 +131,45 @@ defmodule Phoenix.Router.PipelineTest do
     assert conn.assigns[:params] == %{"id" => "hello"}
   end
 
-  test "invalid pipelines" do
-    assert_raise ArgumentError, ~r"unknown pipeline :unknown", fn ->
-      defmodule ErrorRouter do
-        use Phoenix.Router
-        pipe_through :unknown
+  test "duplicate pipe_through's raises" do
+    assert_raise ArgumentError, ~r{duplicate pipe_through for :browser}, fn ->
+      defmodule DupPipeThroughRouter do
+        use Phoenix.Router, otp_app: :phoenix
+        pipeline :browser do
+        end
+        scope "/" do
+          pipe_through [:browser, :auth]
+          pipe_through [:browser]
+        end
       end
     end
 
-    assert_raise ArgumentError, ~r"the :before pipeline is always piped through", fn ->
-      defmodule ErrorRouter do
-        use Phoenix.Router
-        pipe_through :before
+    assert_raise ArgumentError, ~r{duplicate pipe_through for :browser}, fn ->
+      defmodule DupScopedPipeThroughRouter do
+        use Phoenix.Router, otp_app: :phoenix
+        pipeline :browser do
+        end
+        scope "/" do
+          pipe_through [:browser]
+          scope "/nested" do
+            pipe_through [:browser]
+          end
+        end
+      end
+    end
+  end
+
+  test "pipeline raises on conflict" do
+    assert_raise ArgumentError, ~r{there is an import from Kernel with the same nam}, fn ->
+      defmodule ConflictingPipeline do
+        use Phoenix.Router, otp_app: :phoenix
+        pipeline :raise do
+          plug Plug.Head
+        end
+        scope "/" do
+          pipe_through [:raise]
+          get "/", UnknownController, :index
+        end
       end
     end
   end

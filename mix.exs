@@ -1,53 +1,203 @@
-defmodule Phoenix.Mixfile do
+defmodule Phoenix.MixProject do
   use Mix.Project
 
-  @version "0.15.0-dev"
+  @version "1.6.0-dev"
+  @scm_url "https://github.com/phoenixframework/phoenix"
+
+  # If the elixir requirement is updated, we need to make the installer
+  # use at least the minimum requirement used here. Although often the
+  # installer is ahead of Phoenix itself.
+  #
+  # We also need to update guides/introduction/installation.md
+  @elixir_requirement "~> 1.9"
 
   def project do
-    [app: :phoenix,
-     version: @version,
-     elixir: "~> 1.0.2 or ~> 1.1-dev",
-     deps: deps,
-     package: package,
-     docs: [source_ref: "v#{@version}", main: "overview"],
-     name: "Phoenix",
-     source_url: "https://github.com/phoenixframework/phoenix",
-     homepage_url: "http://www.phoenixframework.org",
-     description: """
-     Productive. Reliable. Fast. Most web frameworks make you choose between
-     speed and a productive environment. Phoenix gives you both.
-     """]
+    [
+      app: :phoenix,
+      version: @version,
+      elixir: @elixir_requirement,
+      deps: deps(),
+      package: package(),
+      preferred_cli_env: [docs: :docs],
+      consolidate_protocols: Mix.env() != :test,
+      xref: [
+        exclude: [
+          {IEx, :started?, 0},
+          Ecto.Type,
+          :ranch,
+          :cowboy_req,
+          Plug.Cowboy.Conn,
+          Plug.Cowboy
+        ]
+      ],
+      elixirc_paths: elixirc_paths(Mix.env()),
+      name: "Phoenix",
+      docs: docs(),
+      aliases: aliases(),
+      source_url: @scm_url,
+      homepage_url: "https://www.phoenixframework.org",
+      description: """
+      Productive. Reliable. Fast. A productive web framework that
+      does not compromise speed or maintainability.
+      """
+    ]
   end
 
+  defp elixirc_paths(:docs), do: ["lib", "installer/lib"]
+  defp elixirc_paths(_), do: ["lib"]
+
   def application do
-    [mod: {Phoenix, []},
-     applications: [:plug, :poison, :logger, :eex],
-     env: [template_engines: [],
-           format_encoders: [],
-           filter_parameters: ["password"],
-           serve_endpoints: false]]
+    [
+      mod: {Phoenix, []},
+      extra_applications: [:logger, :eex, :crypto, :public_key],
+      env: [
+        logger: true,
+        stacktrace_depth: nil,
+        filter_parameters: ["password"],
+        serve_endpoints: false,
+        gzippable_exts: ~w(.js .map .css .txt .text .html .json .svg .eot .ttf),
+        static_compressors: [Phoenix.Digester.Gzip]
+      ]
+    ]
   end
 
   defp deps do
-    [{:cowboy, "~> 1.0", optional: true},
-     {:plug, "~> 0.13 or ~> 1.0"},
-     {:poison, "~> 1.3"},
+    [
+      {:plug, "~> 1.10"},
+      {:plug_crypto, "~> 1.1.2 or ~> 1.2"},
+      {:telemetry, "~> 0.4"},
+      {:phoenix_pubsub, "~> 2.0"},
 
-     # Docs dependencies
-     {:earmark, "~> 0.1", only: :docs},
-     {:ex_doc, "~> 0.7.1", only: :docs},
-     {:inch_ex, "~> 0.2", only: :docs},
+      # Optional deps
+      {:plug_cowboy, "~> 2.2", optional: true},
+      {:jason, "~> 1.0", optional: true},
+      {:phoenix_view, git: "https://github.com/phoenixframework/phoenix_view.git"},
+      {:phoenix_html, "~> 2.14.2 or ~> 3.0", optional: true},
 
-     # Test dependencies
-     {:phoenix_html, "~> 1.2", only: :test},
-     {:websocket_client, github: "jeremyong/websocket_client", only: :test}]
+      # Docs dependencies (some for cross references)
+      {:ex_doc, "~> 0.24", only: :docs},
+      {:ecto, ">= 3.0.0", only: :docs},
+      {:ecto_sql, "~> 3.5", only: :docs},
+      {:gettext, "~> 0.15.0", only: :docs},
+      {:telemetry_poller, "~> 0.4", only: :docs},
+      {:telemetry_metrics, "~> 0.4", only: :docs},
+
+      # Test dependencies
+      {:phx_new, path: "./installer", only: :test},
+      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
+    ]
   end
 
   defp package do
-    [contributors: ["Chris McCord", "Darko Fabijan", "José Valim"],
-     licenses: ["MIT"],
-     links: %{github: "https://github.com/phoenixframework/phoenix"},
-     files: ~w(lib priv test/shared web) ++
-            ~w(brunch-config.js CHANGELOG.md LICENSE mix.exs package.json README.md)]
+    [
+      maintainers: ["Chris McCord", "José Valim", "Gary Rennie", "Jason Stiebs"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => @scm_url},
+      files:
+        ~w(assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
+    ]
+  end
+
+  defp docs do
+    [
+      source_ref: "v#{@version}",
+      main: "overview",
+      logo: "logo.png",
+      extra_section: "GUIDES",
+      assets: "guides/assets",
+      formatters: ["html", "epub"],
+      groups_for_modules: groups_for_modules(),
+      extras: extras(),
+      groups_for_extras: groups_for_extras()
+    ]
+  end
+
+  defp extras do
+    [
+      "guides/introduction/overview.md",
+      "guides/introduction/installation.md",
+      "guides/introduction/up_and_running.md",
+      "guides/introduction/community.md",
+      "guides/directory_structure.md",
+      "guides/request_lifecycle.md",
+      "guides/plug.md",
+      "guides/routing.md",
+      "guides/controllers.md",
+      "guides/views.md",
+      "guides/ecto.md",
+      "guides/contexts.md",
+      "guides/mix_tasks.md",
+      "guides/telemetry.md",
+      "guides/authentication/mix_phx_gen_auth.md",
+      "guides/realtime/channels.md",
+      "guides/realtime/presence.md",
+      "guides/testing/testing.md",
+      "guides/testing/testing_contexts.md",
+      "guides/testing/testing_controllers.md",
+      "guides/testing/testing_channels.md",
+      "guides/deployment/deployment.md",
+      "guides/deployment/releases.md",
+      "guides/deployment/gigalixir.md",
+      "guides/deployment/heroku.md",
+      "guides/howto/custom_error_pages.md",
+      "guides/howto/using_ssl.md"
+    ]
+  end
+
+  defp groups_for_extras do
+    [
+      Introduction: ~r/guides\/introduction\/.?/,
+      Guides: ~r/guides\/[^\/]+\.md/,
+      Authentication: ~r/guides\/authentication\/.?/,
+      "Real-time components": ~r/guides\/realtime\/.?/,
+      Testing: ~r/guides\/testing\/.?/,
+      Deployment: ~r/guides\/deployment\/.?/,
+      "How-to's": ~r/guides\/howto\/.?/
+    ]
+  end
+
+  defp groups_for_modules do
+    # Ungrouped Modules:
+    #
+    # Phoenix
+    # Phoenix.Channel
+    # Phoenix.Controller
+    # Phoenix.Endpoint
+    # Phoenix.Naming
+    # Phoenix.Logger
+    # Phoenix.Param
+    # Phoenix.Presence
+    # Phoenix.Router
+    # Phoenix.Token
+
+    [
+      Testing: [
+        Phoenix.ChannelTest,
+        Phoenix.ConnTest
+      ],
+      "Adapters and Plugs": [
+        Phoenix.CodeReloader,
+        Phoenix.Endpoint.Cowboy2Adapter
+      ],
+      "Socket and Transport": [
+        Phoenix.Socket,
+        Phoenix.Socket.Broadcast,
+        Phoenix.Socket.Message,
+        Phoenix.Socket.Reply,
+        Phoenix.Socket.Serializer,
+        Phoenix.Socket.Transport
+      ]
+    ]
+  end
+
+  defp aliases do
+    [
+      docs: ["docs", &generate_js_docs/1]
+    ]
+  end
+
+  def generate_js_docs(_) do
+    Mix.Task.run("app.start")
+    System.cmd("npm", ["run", "docs"], cd: "assets")
   end
 end

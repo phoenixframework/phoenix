@@ -1,13 +1,24 @@
 {
-  "repository": {
+  "name": "phoenix",
+  "version": "1.5.0",
+  "description": "The official JavaScript client for the Phoenix web framework.",
+  "license": "MIT",
+  "main": "./priv/static/phoenix.js",
+  "module": "./assets/js/phoenix.js",
+  "exports": {
+    "import": "./assets/js/phoenix.js",
+    "require": "./priv/static/phoenix.js"
   },
-  "dependencies": {
-    "brunch": "^1.8.1",
-    "babel-brunch": "^5.1.1",
-    "clean-css-brunch": ">= 1.0 < 1.8",
-    "css-brunch": ">= 1.0 < 1.8",
-    "javascript-brunch": ">= 1.0 < 1.8",
-    "sass-brunch": "^1.8.10",
-    "uglify-js-brunch": ">= 1.0 < 1.8"
-  }
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/phoenixframework/phoenix.git"
+  },
+  "author": "Chris McCord <chris@chrismccord.com> (https://www.phoenixframework.org)",
+  "files": [
+    "README.md",
+    "LICENSE.md",
+    "package.json",
+    "priv/static/phoenix.js",
+    "assets/js/phoenix.js"
+  ]
 }

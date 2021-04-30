@@ -1,4 +1,4 @@
 <html>
-  <title><%= @title || default_title %></title>
-  <%= @inner %>
+  <title><%= @title || default_title() %></title>
+  <%= @inner_content %>
 </html>

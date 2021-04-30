@@ -1,0 +1,26 @@
+{
+  "digests": {
+    "app-1.css": {
+      "logical_path": "app.css",
+      "mtime": 32132171,
+      "size": 369053,
+      "digest": "1"
+    },
+    "app-2.css": {
+      "logical_path": "app.css",
+      "mtime": 32132172,
+      "size": 369053,
+      "digest": "2"
+    },
+    "app-3.css": {
+      "logical_path": "app.css",
+      "mtime": 32132170,
+      "size": 369053,
+      "digest": "3"
+    }
+  },
+  "latest": {
+    "app.css": "app-3.css"
+  },
+  "version": 1
+}
