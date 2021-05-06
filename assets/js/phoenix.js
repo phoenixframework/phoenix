@@ -1215,7 +1215,7 @@ export class Socket {
 
   abnormalClose(reason){
     this.closeWasClean = false
-    if(this.conn.readyState === SOCKET_STATES.open){ this.conn.close(WS_CLOSE_NORMAL, reason) }
+    if(this.isConnected()){ this.conn.close(WS_CLOSE_NORMAL, reason) }
   }
 
   flushSendBuffer(){
