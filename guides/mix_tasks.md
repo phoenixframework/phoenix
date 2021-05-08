@@ -513,13 +513,9 @@ $ mix ecto.gen.repo -r OurCustom.Repo
 * creating lib/our_custom/repo.ex
 * updating config/config.exs
 Don't forget to add your new repo to your supervision tree
-(typically in lib/hello.ex):
+(typically in lib/hello/application.ex):
 
-    children = [
-      ...,
-      OurCustom.Repo,
-      ...
-    ]
+    {OurCustom.Repo, []}
 ```
 
 Notice that this task has updated `config/config.exs`. If we take a look, we'll see this extra configuration block for our new repo.
@@ -536,7 +532,7 @@ config :hello, OurCustom.Repo,
 
 Of course, we'll need to change the login credentials to match what our database expects. We'll also need to change the config for other environments.
 
-We certainly should follow the instructions and add our new repo to our supervision tree. In our `Hello` application, we would open up `lib/hello.ex`, and add our repo as a worker to the `children` list.
+We certainly should follow the instructions and add our new repo to our supervision tree. In our `Hello` application, we would open up `lib/hello/application.ex`, and add our repo as a worker to the `children` list.
 
 ```elixir
 . . .
