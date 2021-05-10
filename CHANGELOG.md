@@ -12,6 +12,11 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+### 1.5.9 (2021-05-10)
+
+### JavaScript client
+  * Bind to `beforeunload` instead of `unload` to solve Firefox connection issues
+
 ### 1.5.8 (2021-02-23)
 
 ### Enhancements
