@@ -868,7 +868,7 @@ export class Socket {
       this.decode = this.defaultDecoder
     }
     if(phxWindow && phxWindow.addEventListener){
-      phxWindow.addEventListener("unload", e => {
+      phxWindow.addEventListener("beforeunload", e => {
         if(this.conn){
           this.unloaded = true
           this.abnormalClose("unloaded")
