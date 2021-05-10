@@ -24,6 +24,9 @@ Phoenix v1.6 requires Elixir v1.9+.
   * [Controller] Return normalized paths in `current_path/1` and `current_path/2`
   * [mix phx.gen.live] Fix a bug where tests with `utc_datetime` and `boolean` fields did not pass out of the box
 
+### JavaScript Client Bug fixes
+  * Bind to `beforeunload` instead of `unload` to solve Firefox connection issues
+
 ### Deprecations
 
   * [Endpoint] Phoenix now requires Cowboy v2.7+
