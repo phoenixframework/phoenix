@@ -1302,7 +1302,29 @@ export class LongPoll {
 
       switch(status){
         case 200:
-          messages.forEach(msg => this.onmessage({data: msg}))
+          messages.forEach(msg => {
+            // Tasks are what things like event handlers, setTimeout callbacks,
+            // promise resolves and more are run within.
+            // In modern browsers, there are two different kinds of tasks,
+            // microtasks and macrotasks.
+            // Microtasks are mainly used for Promises, while macrotasks are
+            // used for everything else.
+            // Microtasks always have priority over macrotasks. If the JS engine
+            // is looking for a task to run, it will always try to empty the
+            // microtask queue before attempting to run anything from the
+            // macrotask queue.
+            //
+            // For the WebSocket transport, messages always arrive in their own
+            // event. This means that if any promises are resolved from within,
+            // their callbacks will always finish execution by the time the
+            // next message event handler is run.
+            //
+            // In order to emulate this behaviour, we need to make sure each
+            // onmessage handler is run within it's own macrotask.
+            setTimeout(() => {
+              this.onmessage({data: msg})
+            }, 0)
+          })
           this.poll()
           break
         case 204:
