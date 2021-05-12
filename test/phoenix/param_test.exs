@@ -7,6 +7,10 @@ defmodule Phoenix.ParamTest do
     assert to_param(1) == "1"
   end
 
+  test "to_param for floats" do
+    assert to_param(3.14) == "3.14"
+  end
+
   test "to_param for binaries" do
     assert to_param("foo") == "foo"
   end
