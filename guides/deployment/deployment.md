@@ -116,6 +116,7 @@ And that's it. Next you can use one of our official guides to deploy:
 
   * [with Elixir's releases](releases.html)
   * [to Gigalixir](gigalixir.html), an Elixir-centric Platform as a Service (PaaS)
+  * [to Fly.io](fly.html), a PaaS that makes clustering and distributed deployments easy
   * and [to Heroku](heroku.html), one of the most popular PaaS.
 
 ## Community Deployment Guides
