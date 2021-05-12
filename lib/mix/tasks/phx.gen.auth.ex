@@ -212,35 +212,35 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     web_path = to_string(schema.web_path)
 
     [
-      {:eex, "migration.ex", Path.join([migrations_prefix, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"])},
-      {:eex, "notifier.ex", Path.join([context.dir, "#{schema.singular}_notifier.ex"])},
-      {:eex, "schema.ex", Path.join([context.dir, "#{schema.singular}.ex"])},
-      {:eex, "schema_token.ex", Path.join([context.dir, "#{schema.singular}_token.ex"])},
-      {:eex, "auth.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_auth.ex"])},
-      {:eex, "auth_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_auth_test.exs"])},
-      {:eex, "confirmation_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_confirmation_view.ex"])},
+      {:eex, "migration.ex.eex", Path.join([migrations_prefix, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"])},
+      {:eex, "notifier.ex.eex", Path.join([context.dir, "#{schema.singular}_notifier.ex"])},
+      {:eex, "schema.ex.eex", Path.join([context.dir, "#{schema.singular}.ex"])},
+      {:eex, "schema_token.ex.eex", Path.join([context.dir, "#{schema.singular}_token.ex"])},
+      {:eex, "auth.ex.eex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_auth.ex"])},
+      {:eex, "auth_test.exs.eex", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_auth_test.exs"])},
+      {:eex, "confirmation_view.ex.eex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_confirmation_view.ex"])},
       {:eex, "confirmation_new.html.eex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_confirmation", "new.html.eex"])},
-      {:eex, "confirmation_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller.ex"])},
-      {:eex, "confirmation_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller_test.exs"])},
+      {:eex, "confirmation_controller.ex.eex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller.ex"])},
+      {:eex, "confirmation_controller_test.exs.eex", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller_test.exs"])},
       {:eex, "_menu.html.eex", Path.join([web_prefix, "templates", "layout", "_#{schema.singular}_menu.html.eex"])},
       {:eex, "registration_new.html.eex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_registration", "new.html.eex"])},
-      {:eex, "registration_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_registration_controller.ex"])},
-      {:eex, "registration_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_registration_controller_test.exs"])},
-      {:eex, "registration_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_registration_view.ex"])},
-      {:eex, "reset_password_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_reset_password_view.ex"])},
-      {:eex, "reset_password_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_reset_password_controller.ex"])},
-      {:eex, "reset_password_controller_test.exs",
+      {:eex, "registration_controller.ex.eex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_registration_controller.ex"])},
+      {:eex, "registration_controller_test.exs.eex", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_registration_controller_test.exs"])},
+      {:eex, "registration_view.ex.eex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_registration_view.ex"])},
+      {:eex, "reset_password_view.ex.eex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_reset_password_view.ex"])},
+      {:eex, "reset_password_controller.ex.eex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_reset_password_controller.ex"])},
+      {:eex, "reset_password_controller_test.exs.eex",
        Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_reset_password_controller_test.exs"])},
       {:eex, "reset_password_edit.html.eex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_reset_password", "edit.html.eex"])},
       {:eex, "reset_password_new.html.eex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_reset_password", "new.html.eex"])},
-      {:eex, "session_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_session_view.ex"])},
-      {:eex, "session_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_session_controller.ex"])},
-      {:eex, "session_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_session_controller_test.exs"])},
+      {:eex, "session_view.ex.eex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_session_view.ex"])},
+      {:eex, "session_controller.ex.eex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_session_controller.ex"])},
+      {:eex, "session_controller_test.exs.eex", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_session_controller_test.exs"])},
       {:eex, "session_new.html.eex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_session", "new.html.eex"])},
-      {:eex, "settings_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_settings_view.ex"])},
+      {:eex, "settings_view.ex.eex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_settings_view.ex"])},
       {:eex, "settings_edit.html.eex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_settings", "edit.html.eex"])},
-      {:eex, "settings_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_settings_controller.ex"])},
-      {:eex, "settings_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_settings_controller_test.exs"])}
+      {:eex, "settings_controller.ex.eex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_settings_controller.ex"])},
+      {:eex, "settings_controller_test.exs.eex", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_settings_controller_test.exs"])}
     ]
   end
 
@@ -258,7 +258,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     Gen.Context.ensure_context_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_functions.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_functions.ex.eex", binding)
     |> prepend_newline()
     |> inject_before_final_end(file)
   end
@@ -267,7 +267,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     Gen.Context.ensure_test_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/test_cases.exs", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/test_cases.exs.eex", binding)
     |> prepend_newline()
     |> inject_before_final_end(test_file)
   end
@@ -276,7 +276,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     Gen.Context.ensure_test_fixtures_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_fixtures_functions.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_fixtures_functions.ex.eex", binding)
     |> prepend_newline()
     |> inject_before_final_end(test_fixtures_file)
   end
@@ -285,7 +285,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     test_file = "test/support/conn_case.ex"
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/conn_case.exs", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/conn_case.exs.eex", binding)
     |> inject_before_final_end(test_file)
 
     context
@@ -296,7 +296,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     file_path = Path.join(web_prefix, "router.ex")
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/routes.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/routes.ex.eex", binding)
     |> inject_before_final_end(file_path)
 
     context

@@ -154,7 +154,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @doc false
   def ensure_context_file_exists(%Context{file: file} = context, paths, binding) do
     unless Context.pre_existing?(context) do
-      Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
+      Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex.eex", binding))
     end
   end
 
@@ -173,7 +173,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @doc false
   def ensure_test_file_exists(%Context{test_file: test_file} = context, paths, binding) do
     unless Context.pre_existing_tests?(context) do
-      Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding))
+      Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs.eex", binding))
     end
   end
 
@@ -181,14 +181,14 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     ensure_test_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/test_cases.exs", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/test_cases.exs.eex", binding)
     |> inject_eex_before_final_end(test_file, binding)
   end
 
   @doc false
   def ensure_test_fixtures_file_exists(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
     unless Context.pre_existing_test_fixtures?(context) do
-      Mix.Generator.create_file(test_fixtures_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/fixtures_module.ex", binding))
+      Mix.Generator.create_file(test_fixtures_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/fixtures_module.ex.eex", binding))
     end
   end
 
@@ -196,7 +196,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     ensure_test_fixtures_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/fixtures.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/fixtures.ex.eex", binding)
     |> Mix.Phoenix.prepend_newline()
     |> inject_eex_before_final_end(test_fixtures_file, binding)
 
@@ -274,9 +274,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   defp schema_access_template(%Context{schema: schema}) do
     if schema.generate? do
-      "schema_access.ex"
+      "schema_access.ex.eex"
     else
-      "access_no_schema.ex"
+      "access_no_schema.ex.eex"
     end
   end
 

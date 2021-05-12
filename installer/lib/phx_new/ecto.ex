@@ -6,14 +6,14 @@ defmodule Phx.New.Ecto do
   @pre "phx_umbrella/apps/app_name"
 
   template :new, [
-    {:config, "#{@pre}/config/config.exs",           :project, "config/config.exs"},
-    {:eex,    "#{@pre}/lib/app_name/application.ex", :app, "lib/:app/application.ex"},
-    {:eex,    "#{@pre}/lib/app_name.ex",             :app, "lib/:app.ex"},
-    {:eex,    "#{@pre}/test/test_helper.exs",        :app, "test/test_helper.exs"},
-    {:eex,    "#{@pre}/README.md",                   :app, "README.md"},
-    {:eex,    "#{@pre}/mix.exs",                     :app, "mix.exs"},
-    {:eex,    "#{@pre}/gitignore",                   :app, ".gitignore"},
-    {:eex,    "#{@pre}/formatter.exs",               :app, ".formatter.exs"},
+    {:config, "#{@pre}/config/config.exs.eex",           :project, "config/config.exs"},
+    {:eex,    "#{@pre}/lib/app_name/application.ex.eex", :app, "lib/:app/application.ex"},
+    {:eex,    "#{@pre}/lib/app_name.ex.eex",             :app, "lib/:app.ex"},
+    {:eex,    "#{@pre}/test/test_helper.exs.eex",        :app, "test/test_helper.exs"},
+    {:eex,    "#{@pre}/README.md",                       :app, "README.md"},
+    {:eex,    "#{@pre}/mix.exs.eex",                     :app, "mix.exs"},
+    {:eex,    "#{@pre}/gitignore",                       :app, ".gitignore"},
+    {:eex,    "#{@pre}/formatter.exs.eex",               :app, ".formatter.exs"},
   ]
 
   def prepare_project(%Project{} = project) do

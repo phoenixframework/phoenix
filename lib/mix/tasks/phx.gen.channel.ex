@@ -38,8 +38,8 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")
 
     Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.channel", binding, [
-      {:eex, "channel.ex",       Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
-      {:eex, "channel_test.exs", Path.join(test_prefix, "channels/#{binding[:path]}_channel_test.exs")},
+      {:eex, "channel.ex.eex",       Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
+      {:eex, "channel_test.exs.eex", Path.join(test_prefix, "channels/#{binding[:path]}_channel_test.exs")},
     ]
 
     Mix.shell().info """

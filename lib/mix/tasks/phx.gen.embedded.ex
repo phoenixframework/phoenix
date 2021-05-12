@@ -95,7 +95,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
 
   @doc false
   def files_to_be_generated(%Schema{} = schema) do
-    [{:eex, "embedded_schema.ex", schema.file}]
+    [{:eex, "embedded_schema.ex.eex", schema.file}]
   end
 
   @doc false

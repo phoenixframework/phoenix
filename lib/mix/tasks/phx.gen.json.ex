@@ -117,11 +117,11 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     web_path = to_string(schema.web_path)
 
     [
-      {:eex,     "controller.ex",          Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_controller.ex"])},
-      {:eex,     "view.ex",                Path.join([web_prefix, "views", web_path, "#{schema.singular}_view.ex"])},
-      {:eex,     "controller_test.exs",    Path.join([test_prefix, "controllers", web_path, "#{schema.singular}_controller_test.exs"])},
-      {:new_eex, "changeset_view.ex",      Path.join([web_prefix, "views/changeset_view.ex"])},
-      {:new_eex, "fallback_controller.ex", Path.join([web_prefix, "controllers/fallback_controller.ex"])},
+      {:eex,     "controller.ex.eex",          Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_controller.ex"])},
+      {:eex,     "view.ex.eex",                Path.join([web_prefix, "views", web_path, "#{schema.singular}_view.ex"])},
+      {:eex,     "controller_test.exs.eex",    Path.join([test_prefix, "controllers", web_path, "#{schema.singular}_controller_test.exs"])},
+      {:new_eex, "changeset_view.ex.eex",      Path.join([web_prefix, "views/changeset_view.ex"])},
+      {:new_eex, "fallback_controller.ex.eex", Path.join([web_prefix, "controllers/fallback_controller.ex"])},
     ]
   end
 
