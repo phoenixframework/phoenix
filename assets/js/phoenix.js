@@ -1041,7 +1041,7 @@ export class Socket {
   heartbeatTimeout(){
     if(this.pendingHeartbeatRef){
       this.pendingHeartbeatRef = null
-      if (this.hasLogger()) this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
+      if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Attempting to re-establish connection") }
       this.abnormalClose("heartbeat timeout")
     }
   }
