@@ -615,9 +615,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   end
 
   @doc false
+  @spec raise_with_help(String.t()) :: no_return
   def raise_with_help(msg) do
     raise_with_help(msg, :general)
   end
+
+  @spec raise_with_help(String.t(), atom) :: no_return
+  defp raise_with_help(msg, help)
 
   defp raise_with_help(msg, :general) do
     Mix.raise("""

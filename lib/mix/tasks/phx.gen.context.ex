@@ -302,7 +302,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
-  @spec raise_with_help(String.t) :: no_return()
+  @spec raise_with_help(String.t()) :: no_return
   def raise_with_help(msg) do
     Mix.raise """
     #{msg}
