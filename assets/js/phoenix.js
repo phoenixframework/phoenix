@@ -787,7 +787,7 @@ export let Serializer = {
  *                                               `"wss://example.com"`
  *                                               `"/socket"` (inherited host & protocol)
  * @param {Object} [opts] - Optional configuration
- * @param {Function} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll. Note that it doesn't expect an object.
+ * @param {Function} [opts.transport] - The Websocket Transport, for example WebSocket or LongPoll. It expects a class to instantiate.
  *
  * Defaults to WebSocket with automatic LongPoll fallback.
  * If you want to use LongPoll:
