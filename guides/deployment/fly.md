@@ -67,9 +67,12 @@ if config_env() == :prod do
     server: true,
     url: [host: "#{app_name}.fly.dev", port: 80],
     http: [
-      port: String.to_integer(System.get_env("PORT") || "4000"),
-      # IMPORTANT: support IPv6 addresses
-      transport_options: [socket_opts: [:inet6]]
+      # Enable IPv6 and bind on all interfaces.
+      # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
+      # See the documentation on https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html
+      # for details about using IPv6 vs IPv4 and loopback vs public addresses.
+      ip: {0, 0, 0, 0, 0, 0, 0, 0},
+      port: String.to_integer(System.get_env("PORT") || "4000")
     ],
     secret_key_base: secret_key_base
 
@@ -91,12 +94,10 @@ end
 The areas to pay attention to are:
 
 * Using `FLY_APP_NAME` for the host in the Endpoint
-* Using `:inet6` for the Endpoint's transport socket options
+* Using an IPv6 binding on the Endpoint
 * Using `:inet6` for the Repo's socket options
 
-The `:inet6` settings are for working nicely with the Fly.io IPv6 network.
-
-Also, you don't need to turn on TLS for connecting to the Postgres instance. Fly private networks operate over an encrypted WireGuard mesh, so traffic between application servers and PostgreSQL is already encrypted and there's no need to TLS.
+Also, you don't need to turn on TLS for connecting to the PostgreSQL instance. Fly private networks operate over an encrypted WireGuard mesh, so traffic between application servers and PostgreSQL is already encrypted and there's no need to TLS.
 
 ### Generate release config files
 
@@ -247,6 +248,226 @@ If everything looks good, open your app on Fly
 $ fly open
 ```
 
+### Getting an IEx shell into a running node
+
+Elixir supports getting a IEx shell into a running production node. We already took the steps to configure `rel/env.sh.eex`, so this step should be pretty easy.
+
+There are a couple prerequisites, we first need to establish an [SSH Shell](https://fly.io/docs/flyctl/ssh/) to our machine on Fly.
+
+This step sets up a root certificate for your account and then issues a certificate.
+
+```console
+$ fly ssh establish
+$ fly ssh issue
+```
+
+With SSH configured, let's open a console.
+
+```console
+$ fly ssh console
+Connecting to my-app-1234.internal... complete
+/ #
+```
+
+If all has gone smoothly, then you have a shell into the machine! Now we just need to launch our remote IEx shell. The deployment Dockerfile was configured to pull our application into `/app`. So our command for the `my_app` app looks like this:
+
+```console
+$ app/bin/my_app remote
+Erlang/OTP 23 [erts-11.2.1] [source] [64-bit] [smp:1:1] [ds:1:1:10] [async-threads:1]
+
+Interactive Elixir (1.11.2) - press Ctrl+C to exit (type h() ENTER for help)
+iex(my_app@fdaa:0:1da8:a7b:ac4:b204:7e29:2)1>
+```
+
+Now we have a running IEx shell into our node. You can safely disconnect using CTRL+C, CTRL+C.
+
+## Clustering your application
+
+Elixir and the BEAM have the incredible ability to be clustered together and pass messages seamlessly between nodes. This portion of the guide walks you through clustering your Elixir application.
+
+There are 2 parts to getting clustering quickly setup on Fly.
+
+- Installing and using `libcluster`
+- Scaling the application to multiple instances
+
+### Adding `libcluster`
+
+The widely adopted library [libcluster](https://github.com/bitwalker/libcluster) helps here.
+
+There are multiple strategies that `libcluster` can use to find and connect with other nodes. The strategy we'll use on Fly is `DNSPoll`.
+
+After installing `libcluster`, add it to the application like this:
+
+```elixir
+defmodule MyApp.Application do
+  use Application
+
+  def start(_type, _args) do
+    topologies = Application.get_env(:libcluster, :topologies) || []
+
+    children = [
+      # ...
+      # setup for clustering
+      {Cluster.Supervisor, [topologies, [name: MyApp.ClusterSupervisor]]}
+    ]
+
+    # ...
+  end
+
+  # ...
+end
+```
+
+Our next step is to add the `topologies` configuration to `config/runtime.exs`.
+
+```elixir
+  app_name =
+    System.get_env("FLY_APP_NAME") ||
+      raise "FLY_APP_NAME not available"
+
+  config :libcluster,
+    topologies: [
+      fly6pn: [
+        strategy: Cluster.Strategy.DNSPoll,
+        config: [
+          polling_interval: 5_000,
+          query: "#{app_name}.internal",
+          node_basename: app_name
+        ]
+      ]
+    ]
+```
+
+This configures `libcluster` to use the `DNSPoll` strategy and look for other deployed apps using the `$FLY_APP_NAME` on the `.internal` private network.
+
+This assumes that your `rel/env.sh.eex` file is configured to name your Elixir node using the `$FLY_APP_NAME`.
+
+Before it can be clustered, we have to have multiple instances. Next we'll add an additional node instance.
+
+### Running multiple instances
+
+There are two ways to run multiple instances.
+
+1. Scale our application to have multiple instances in one region.
+2. Add an instance to another region (multiple regions).
+
+Let's first start with a baseline of our single deployment.
+
+```console
+$ fly status
+...
+Instances
+ID       VERSION REGION DESIRED STATUS  HEALTH CHECKS      RESTARTS CREATED
+f9014bf7 26      sea    run     running 1 total, 1 passing 0        1h8m ago
+```
+
+### Scaling in a single region
+
+Let's scale up to 2 instances in our current region.
+
+```console
+$ fly scale count 2
+Count changed to 2
+```
+
+Checking the status we can see what happened.
+
+```console
+$ fly status
+...
+Instances
+ID       VERSION REGION DESIRED STATUS  HEALTH CHECKS      RESTARTS CREATED
+eb4119d3 27      sea    run     running 1 total, 1 passing 0        39s ago
+f9014bf7 27      sea    run     running 1 total, 1 passing 0        1h13m ago
+```
+
+We now have two instances in the same region.
+
+Let's make sure they are clustered together. We can check the logs:
+
+```console
+$ fly logs
+...
+app[eb4119d3] sea [info] 21:50:21.924 [info] [libcluster:fly6pn] connected to :"my-app-1234@fdaa:0:1da8:a7b:ac2:f901:4bf7:2"
+...
+```
+
+But that's not as rewarding as seeing it from inside a node. From an IEx shell, we can ask the node we're connected to, what other nodes it can see.
+
+```console
+$ fly ssh console
+$ /app/bin/my_app remote
+```
+
+```elixir
+iex(my-app-1234@fdaa:0:1da8:a7b:ac2:f901:4bf7:2)1> Node.list
+[:"my-app-1234@fdaa:0:1da8:a7b:ac4:eb41:19d3:2"]
+```
+
+The IEx prompt is included to help show the IP address of the node we are connected to. Then getting the `Node.list` returns the other node. Our two instances are connected and clustered!
+
+### Scaling to multiple regions
+
+Fly makes it easy to deploy instances closer to your users. Through the magic of DNS, users are directed to the nearest region where your application is located. You can read more about [Fly regions here](https://fly.io/docs/reference/regions/).
+
+Starting back from our baseline of a single instance running in `sea` which is Seattle, Washington (US), Let's add the region `ewr` which is Parsippany, NJ (US). This puts an instance on both coasts of the US.
+
+```console
+$ fly regions add ewr
+Region Pool:
+ewr
+sea
+Backup Region:
+iad
+lax
+sjc
+vin
+```
+
+Looking at the status shows that we're only in 1 region because our count is set to 1.
+
+```console
+$ fly status
+...
+Instances
+ID       VERSION REGION DESIRED STATUS  HEALTH CHECKS      RESTARTS CREATED
+cdf6c422 29      sea    run     running 1 total, 1 passing 0        58s ago
+```
+
+Let's add a 2nd instance and see it deploy to `ewr`.
+
+```console
+$ fly scale count 2
+Count changed to 2
+```
+
+Now the status shows we have two instances spread across 2 regions!
+
+```console
+$ fly status
+...
+Instances
+ID       VERSION REGION DESIRED STATUS  HEALTH CHECKS      RESTARTS CREATED
+0a8e6666 30      ewr    run     running 1 total, 1 passing 0        16s ago
+cdf6c422 30      sea    run     running 1 total, 1 passing 0        6m47s ago
+```
+
+Let's ensure they are clustered together.
+
+```console
+$ fly ssh console
+$ /app/bin/my_app remote
+```
+
+```elixir
+iex(my-app-1234@fdaa:0:1da8:a7b:ac2:cdf6:c422:2)1> Node.list
+[:"my-app-1234@fdaa:0:1da8:a7b:ab2:a8e:6666:2"]
+```
+
+We have two instances of our application deployed to the West and East coasts of the North American continent and they are clustered together! Our users will automatically be directed to the server nearest them.
+
+The Fly platform has built-in distribution support making it easy to cluster distributed Elixir nodes in multiple regions.
+
 ## Helpful Fly commands and resources
 
 Open the Dashboard for your account
@@ -255,18 +476,31 @@ Open the Dashboard for your account
 $ fly dashboard
 ```
 
+Deploy your application
+
+```console
+$ fly deploy
+```
+
+Show the status of your deployed application
+
+```console
+$ fly status
+```
+
+Access and tail the logs
+
+```console
+$ fly logs
+```
+
 Scaling your application up or down
 
 ```console
 $ fly scale count 2
 ```
 
-The [Fly Elixir documentation](https://fly.io/docs/getting-started/elixir) covers things like:
-
-* Connecting to your machine through SSH
-* Getting an IEx shell into a running node
-* Clustering Elixir nodes
-* Scaling to multiple regions while clustered
+Refer to the [Fly Elixir documentation](https://fly.io/docs/getting-started/elixir) for additional information.
 
 [Working with Fly applications](https://fly.io/docs/getting-started/working-with-fly-apps/) covers things like:
 
