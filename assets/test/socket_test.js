@@ -467,15 +467,22 @@ describe("with transports", done =>{
       socket.connect()
     })
 
-    it("closes socket when heartbeat is not ack'd within heartbeat window", () => {
+    it("closes socket when heartbeat is not ack'd within heartbeat window", (done) => {
+      let clock = sinon.useFakeTimers()
       let closed = false
       socket.conn.readyState = 1 // open
       socket.conn.close = () => closed = true
       socket.sendHeartbeat()
-      assert.equal(closed, false)
+      assert.strictEqual(closed, false)
 
-      socket.sendHeartbeat()
-      assert.equal(closed, true)
+      clock.tick(10000)
+      assert.strictEqual(closed, false)
+
+      clock.tick(20010)
+      assert.strictEqual(closed, true)
+
+      clock.restore()
+      done()
     })
 
     it("pushes heartbeat data when connected", () => {
