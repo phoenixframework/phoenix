@@ -12,6 +12,11 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+### 1.5.10-dev
+
+### JavaScript Client Enhancements
+  * Fire each event in a separate task for the LongPoll transport to fix ordering
+
 ### 1.5.9 (2021-05-10)
 
 ### JavaScript client
