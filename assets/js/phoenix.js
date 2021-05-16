@@ -390,11 +390,12 @@ export class Channel {
         if(this.isErrored()){ this.rejoin() }
       })
     )
-    this.joinPush.receive("ok", () => {
+    this.joinPush.receive("ok", (payload) => {
       this.state = CHANNEL_STATES.joined
       this.rejoinTimer.reset()
       this.pushBuffer.forEach( pushEvent => pushEvent.send() )
       this.pushBuffer = []
+      this.trigger(CHANNEL_EVENTS.join, payload)
     })
     this.joinPush.receive("error", () => {
       this.state = CHANNEL_STATES.errored
@@ -440,6 +441,15 @@ export class Channel {
       return this.joinPush
     }
   }
+
+  /**
+   * Hook into channel join
+   * @param {Function} callback
+   */
+  onJoin(callback){
+    this.on(CHANNEL_EVENTS.join, callback)
+  }
+
 
   /**
    * Hook into channel close
