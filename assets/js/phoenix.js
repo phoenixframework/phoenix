@@ -858,8 +858,8 @@ export class Socket {
     this.defaultEncoder       = Serializer.encode.bind(Serializer)
     this.defaultDecoder       = Serializer.decode.bind(Serializer)
     this.closeWasClean        = false
-    this.unloaded             = false
     this.binaryType           = opts.binaryType || "arraybuffer"
+    this.connectClock         = 1
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
@@ -867,11 +867,18 @@ export class Socket {
       this.encode = this.defaultEncoder
       this.decode = this.defaultDecoder
     }
+    let awaitingConnectionOnPageShow = null
     if(phxWindow && phxWindow.addEventListener){
-      phxWindow.addEventListener("beforeunload", e => {
+      phxWindow.addEventListener("pagehide", e => {
         if(this.conn){
-          this.unloaded = true
-          this.abnormalClose("unloaded")
+          this.disconnect()
+          awaitingConnectionOnPageShow = this.connectClock
+        }
+      })
+      phxWindow.addEventListener("pageshow", e => {
+        if(awaitingConnectionOnPageShow === this.connectClock){
+          awaitingConnectionOnPageShow = null
+          this.connect()
         }
       })
     }
@@ -884,7 +891,6 @@ export class Socket {
       }
     }
     this.reconnectAfterMs = (tries) => {
-      if(this.unloaded){ return 100 }
       if(opts.reconnectAfterMs){
         return opts.reconnectAfterMs(tries)
       } else {
@@ -934,6 +940,7 @@ export class Socket {
    * @param {string} reason - A textual description of the reason to disconnect. (Optional)
    */
   disconnect(callback, code, reason){
+    this.connectClock++
     this.closeWasClean = true
     this.reconnectTimer.reset()
     this.teardown(callback, code, reason)
@@ -947,6 +954,7 @@ export class Socket {
    * `new Socket("/socket", {params: {user_id: userToken}})`.
    */
   connect(params){
+    this.connectClock++
     if(params){
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
       this.params = closure(params)
@@ -1026,7 +1034,6 @@ export class Socket {
    */
   onConnOpen(){
     if(this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
-    this.unloaded = false
     this.closeWasClean = false
     this.flushSendBuffer()
     this.reconnectTimer.reset()
