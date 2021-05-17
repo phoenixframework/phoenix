@@ -6,10 +6,21 @@ import Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
+port =
+  case System.fetch_env("PHX_SERVER_PORT") do
+    :error -> 4000
+    {:ok, port1} -> port1 |> String.to_integer
+  end
+
+addr =
+  case System.fetch_env("PHX_SERVER_ADDR") do
+    :error -> {127, 0, 0, 1}
+    {:ok, addr1} -> addr1 |> String.split(".") |> Enum.map(&String.to_integer/1) |> List.to_tuple
+  end
 config :<%= @app_name %>, <%= @endpoint_module %>,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {127, 0, 0, 1}, port: 4000],
+  http: [ip: addr, port: port],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
