@@ -206,7 +206,7 @@ RUN mix release
 # Start a new build stage so that the final image will only contain
 # the compiled release and other runtime necessities
 FROM alpine:3.12.1 AS app
-RUN apk add --no-cache openssl ncurses-libs
+RUN apk add --no-cache libstdc++ openssl ncurses-libs
 
 ENV USER="elixir"
 
