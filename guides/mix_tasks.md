@@ -362,7 +362,7 @@ And then `assets/` which should look similar to this:
 
 ```console
 ├── css
-│   └── app.scss
+│   └── app.css
 ├── js
 │   └── app.js
 └── vendor
@@ -745,7 +745,7 @@ If you want to make your new Mix task to use your application's infrastructure, 
   def run(_args) do
     Mix.Task.run("app.start")
     Mix.shell().info("Now I have access to Repo and other goodies!")
-    Mix.shell().info("Greetings from the Hello Phoenix Application!")    
+    Mix.shell().info("Greetings from the Hello Phoenix Application!")
   end
 ```
 
