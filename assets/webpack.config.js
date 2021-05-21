@@ -1,28 +1,24 @@
 const path = require('path')
 
 module.exports = {
-  entry: './js/phoenix.js',
+  entry: './js/phoenix/index.js',
   output: {
     filename: 'phoenix.js',
     path: path.resolve(__dirname, '../priv/static'),
-    library: 'Phoenix',
-    libraryTarget: 'umd',
+    library: {
+      name: 'phoenix',
+      type: 'umd'
+    },
     globalObject: 'this'
   },
+  devtool: 'source-map',
   module: {
     rules: [
       {
-        test: path.resolve(__dirname, './js/phoenix.js'),
-        use: [{
-          loader: 'expose-loader',
-          options: 'Phoenix'
-        }]
-      },
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader'
+        test: require.resolve('phoenix'),
+        loader: 'expose-loader',
+        options: {
+          exposes: ['Phoenix']
         }
       }
     ]

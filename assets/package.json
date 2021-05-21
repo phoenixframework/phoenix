@@ -3,33 +3,39 @@
   "version": "1.5.0",
   "description": "The official JavaScript client for the Phoenix web framework.",
   "license": "MIT",
-  "main": "./priv/static/phoenix.js",
-  "module": "./assets/js/phoenix.js",
+  "main": "./assets/js/phoenix/index.js",
+  "module": "./assets/js/phoenix/index.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/phoenixframework/phoenix.git"
   },
+  "exports": {
+    ".": "./js/phoenix/index.js",
+    "./": "./js/phoenix/"
+  },
   "author": "Chris McCord <chris@chrismccord.com> (https://www.phoenixframework.org)",
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.0.0",
-    "@babel/register": "^7.0.0",
-    "babel-loader": "^8.0.0",
+    "@babel/cli": "7.14.3",
+    "@babel/core": "7.14.3",
+    "@babel/preset-env": "7.14.2",
+    "@babel/register": "7.13.16",
     "documentation": "^9.0.0",
-    "expose-loader": "^0.7.5",
+    "eslint": "7.27.0",
+    "eslint-plugin-mocha": "9.0.0",
+    "expose-loader": "3.0.0",
     "growl": "~> 1.10.0",
     "jsdom": "9.8.3",
     "jsdom-global": "2.1.0",
     "mocha": "^6.2.2",
     "mock-socket": "^9.0.0",
     "sinon": "^9.0.1",
-    "webpack": "^4.42.0",
-    "webpack-cli": "^3.3.11"
+    "webpack": "5.37.1",
+    "webpack-cli": "^4.7.0"
   },
   "sideEffects": false,
   "scripts": {
     "test": "mocha ./test/**/*.js --exit -r @babel/register -r jsdom-global/register",
-    "docs": "documentation build js/phoenix.js -f html -o ../doc/js",
+    "docs": "documentation build js/index.js -f html -o ../doc/js",
     "build": "webpack --mode production",
     "watch": "webpack --mode development --watch"
   }

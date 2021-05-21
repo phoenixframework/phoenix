@@ -131,7 +131,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, ".gitignore"), "#{@app}_web-*.tar"
       assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
       assert_file web_path(@app, "assets/webpack.config.js"), "js/app.js"
-      assert_file web_path(@app, "assets/.babelrc"), "env"
       assert_file web_path(@app, "assets/static/favicon.ico")
       assert_file web_path(@app, "assets/static/images/phoenix.png")
       assert_file web_path(@app, "assets/css/app.css")

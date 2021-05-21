@@ -1,1 +1,2027 @@
-!function(e,t){"object"==typeof exports&&"object"==typeof module?module.exports=t():"function"==typeof define&&define.amd?define([],t):"object"==typeof exports?exports.Phoenix=t():e.Phoenix=t()}(this,(function(){return function(e){var t={};function n(i){if(t[i])return t[i].exports;var o=t[i]={i:i,l:!1,exports:{}};return e[i].call(o.exports,o,o.exports,n),o.l=!0,o.exports}return n.m=e,n.c=t,n.d=function(e,t,i){n.o(e,t)||Object.defineProperty(e,t,{enumerable:!0,get:i})},n.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},n.t=function(e,t){if(1&t&&(e=n(e)),8&t)return e;if(4&t&&"object"==typeof e&&e&&e.__esModule)return e;var i=Object.create(null);if(n.r(i),Object.defineProperty(i,"default",{enumerable:!0,value:e}),2&t&&"string"!=typeof e)for(var o in e)n.d(i,o,function(t){return e[t]}.bind(null,o));return i},n.n=function(e){var t=e&&e.__esModule?function(){return e.default}:function(){return e};return n.d(t,"a",t),t},n.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},n.p="",n(n.s=0)}([function(e,t,n){(function(t){e.exports=t.Phoenix=n(2)}).call(this,n(1))},function(e,t){var n;n=function(){return this}();try{n=n||new Function("return this")()}catch(e){"object"==typeof window&&(n=window)}e.exports=n},function(e,t,n){"use strict";function i(e){return function(e){if(Array.isArray(e))return a(e)}(e)||function(e){if("undefined"!=typeof Symbol&&Symbol.iterator in Object(e))return Array.from(e)}(e)||s(e)||function(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function o(e){return(o="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}function r(e,t){return function(e){if(Array.isArray(e))return e}(e)||function(e,t){if("undefined"==typeof Symbol||!(Symbol.iterator in Object(e)))return;var n=[],i=!0,o=!1,r=void 0;try{for(var s,a=e[Symbol.iterator]();!(i=(s=a.next()).done)&&(n.push(s.value),!t||n.length!==t);i=!0);}catch(e){o=!0,r=e}finally{try{i||null==a.return||a.return()}finally{if(o)throw r}}return n}(e,t)||s(e,t)||function(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function s(e,t){if(e){if("string"==typeof e)return a(e,t);var n=Object.prototype.toString.call(e).slice(8,-1);return"Object"===n&&e.constructor&&(n=e.constructor.name),"Map"===n||"Set"===n?Array.from(n):"Arguments"===n||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)?a(e,t):void 0}}function a(e,t){(null==t||t>e.length)&&(t=e.length);for(var n=0,i=new Array(t);n<t;n++)i[n]=e[n];return i}function c(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}function u(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}function h(e,t,n){return t&&u(e.prototype,t),n&&u(e,n),e}n.r(t),n.d(t,"Channel",(function(){return _})),n.d(t,"Serializer",(function(){return H})),n.d(t,"Socket",(function(){return U})),n.d(t,"LongPoll",(function(){return D})),n.d(t,"Ajax",(function(){return M})),n.d(t,"Presence",(function(){return N}));var l="undefined"!=typeof self?self:null,f="undefined"!=typeof window?window:null,d=l||f||void 0,p=0,v=1,y=2,m=3,g="closed",k="errored",b="joined",j="joining",C="leaving",T="phx_close",E="phx_error",R="phx_join",w="phx_reply",S="phx_leave",A=[T,E,R,w,S],L="longpoll",x="websocket",O=function(e){if("function"==typeof e)return e;return function(){return e}},P=function(){function e(t,n,i,o){c(this,e),this.channel=t,this.event=n,this.payload=i||function(){return{}},this.receivedResp=null,this.timeout=o,this.timeoutTimer=null,this.recHooks=[],this.sent=!1}return h(e,[{key:"resend",value:function(e){this.timeout=e,this.reset(),this.send()}},{key:"send",value:function(){this.hasReceived("timeout")||(this.startTimeout(),this.sent=!0,this.channel.socket.push({topic:this.channel.topic,event:this.event,payload:this.payload(),ref:this.ref,join_ref:this.channel.joinRef()}))}},{key:"receive",value:function(e,t){return this.hasReceived(e)&&t(this.receivedResp.response),this.recHooks.push({status:e,callback:t}),this}},{key:"reset",value:function(){this.cancelRefEvent(),this.ref=null,this.refEvent=null,this.receivedResp=null,this.sent=!1}},{key:"matchReceive",value:function(e){var t=e.status,n=e.response;e.ref;this.recHooks.filter((function(e){return e.status===t})).forEach((function(e){return e.callback(n)}))}},{key:"cancelRefEvent",value:function(){this.refEvent&&this.channel.off(this.refEvent)}},{key:"cancelTimeout",value:function(){clearTimeout(this.timeoutTimer),this.timeoutTimer=null}},{key:"startTimeout",value:function(){var e=this;this.timeoutTimer&&this.cancelTimeout(),this.ref=this.channel.socket.makeRef(),this.refEvent=this.channel.replyEventName(this.ref),this.channel.on(this.refEvent,(function(t){e.cancelRefEvent(),e.cancelTimeout(),e.receivedResp=t,e.matchReceive(t)})),this.timeoutTimer=setTimeout((function(){e.trigger("timeout",{})}),this.timeout)}},{key:"hasReceived",value:function(e){return this.receivedResp&&this.receivedResp.status===e}},{key:"trigger",value:function(e,t){this.channel.trigger(this.refEvent,{status:e,response:t})}}]),e}(),_=function(){function e(t,n,i){var o=this;c(this,e),this.state=g,this.topic=t,this.params=O(n||{}),this.socket=i,this.bindings=[],this.bindingRef=0,this.timeout=this.socket.timeout,this.joinedOnce=!1,this.joinPush=new P(this,R,this.params,this.timeout),this.pushBuffer=[],this.stateChangeRefs=[],this.rejoinTimer=new J((function(){o.socket.isConnected()&&o.rejoin()}),this.socket.rejoinAfterMs),this.stateChangeRefs.push(this.socket.onError((function(){return o.rejoinTimer.reset()}))),this.stateChangeRefs.push(this.socket.onOpen((function(){o.rejoinTimer.reset(),o.isErrored()&&o.rejoin()}))),this.joinPush.receive("ok",(function(){o.state=b,o.rejoinTimer.reset(),o.pushBuffer.forEach((function(e){return e.send()})),o.pushBuffer=[]})),this.joinPush.receive("error",(function(){o.state=k,o.socket.isConnected()&&o.rejoinTimer.scheduleTimeout()})),this.onClose((function(){o.rejoinTimer.reset(),o.socket.hasLogger()&&o.socket.log("channel","close ".concat(o.topic," ").concat(o.joinRef())),o.state=g,o.socket.remove(o)})),this.onError((function(e){o.socket.hasLogger()&&o.socket.log("channel","error ".concat(o.topic),e),o.isJoining()&&o.joinPush.reset(),o.state=k,o.socket.isConnected()&&o.rejoinTimer.scheduleTimeout()})),this.joinPush.receive("timeout",(function(){o.socket.hasLogger()&&o.socket.log("channel","timeout ".concat(o.topic," (").concat(o.joinRef(),")"),o.joinPush.timeout),new P(o,S,O({}),o.timeout).send(),o.state=k,o.joinPush.reset(),o.socket.isConnected()&&o.rejoinTimer.scheduleTimeout()})),this.on(w,(function(e,t){o.trigger(o.replyEventName(t),e)}))}return h(e,[{key:"join",value:function(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:this.timeout;if(this.joinedOnce)throw new Error("tried to join multiple times. 'join' can only be called a single time per channel instance");return this.timeout=e,this.joinedOnce=!0,this.rejoin(),this.joinPush}},{key:"onClose",value:function(e){this.on(T,e)}},{key:"onError",value:function(e){return this.on(E,(function(t){return e(t)}))}},{key:"on",value:function(e,t){var n=this.bindingRef++;return this.bindings.push({event:e,ref:n,callback:t}),n}},{key:"off",value:function(e,t){this.bindings=this.bindings.filter((function(n){return!(n.event===e&&(void 0===t||t===n.ref))}))}},{key:"canPush",value:function(){return this.socket.isConnected()&&this.isJoined()}},{key:"push",value:function(e,t){var n=arguments.length>2&&void 0!==arguments[2]?arguments[2]:this.timeout;if(t=t||{},!this.joinedOnce)throw new Error("tried to push '".concat(e,"' to '").concat(this.topic,"' before joining. Use channel.join() before pushing events"));var i=new P(this,e,(function(){return t}),n);return this.canPush()?i.send():(i.startTimeout(),this.pushBuffer.push(i)),i}},{key:"leave",value:function(){var e=this,t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:this.timeout;this.rejoinTimer.reset(),this.joinPush.cancelTimeout(),this.state=C;var n=function(){e.socket.hasLogger()&&e.socket.log("channel","leave ".concat(e.topic)),e.trigger(T,"leave")},i=new P(this,S,O({}),t);return i.receive("ok",(function(){return n()})).receive("timeout",(function(){return n()})),i.send(),this.canPush()||i.trigger("ok",{}),i}},{key:"onMessage",value:function(e,t,n){return t}},{key:"isLifecycleEvent",value:function(e){return A.indexOf(e)>=0}},{key:"isMember",value:function(e,t,n,i){return this.topic===e&&(!i||i===this.joinRef()||!this.isLifecycleEvent(t)||(this.socket.hasLogger()&&this.socket.log("channel","dropping outdated message",{topic:e,event:t,payload:n,joinRef:i}),!1))}},{key:"joinRef",value:function(){return this.joinPush.ref}},{key:"rejoin",value:function(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:this.timeout;this.isLeaving()||(this.socket.leaveOpenTopic(this.topic),this.state=j,this.joinPush.resend(e))}},{key:"trigger",value:function(e,t,n,i){var o=this.onMessage(e,t,n,i);if(t&&!o)throw new Error("channel onMessage callbacks must return the payload, modified or unmodified");for(var r=this.bindings.filter((function(t){return t.event===e})),s=0;s<r.length;s++){r[s].callback(o,n,i||this.joinRef())}}},{key:"replyEventName",value:function(e){return"chan_reply_".concat(e)}},{key:"isClosed",value:function(){return this.state===g}},{key:"isErrored",value:function(){return this.state===k}},{key:"isJoined",value:function(){return this.state===b}},{key:"isJoining",value:function(){return this.state===j}},{key:"isLeaving",value:function(){return this.state===C}}]),e}(),H={HEADER_LENGTH:1,META_LENGTH:4,KINDS:{push:0,reply:1,broadcast:2},encode:function(e,t){if(e.payload.constructor===ArrayBuffer)return t(this.binaryEncode(e));var n=[e.join_ref,e.ref,e.topic,e.event,e.payload];return t(JSON.stringify(n))},decode:function(e,t){if(e.constructor===ArrayBuffer)return t(this.binaryDecode(e));var n=r(JSON.parse(e),5);return t({join_ref:n[0],ref:n[1],topic:n[2],event:n[3],payload:n[4]})},binaryEncode:function(e){var t=e.join_ref,n=e.ref,i=e.event,o=e.topic,r=e.payload,s=this.META_LENGTH+t.length+n.length+o.length+i.length,a=new ArrayBuffer(this.HEADER_LENGTH+s),c=new DataView(a),u=0;c.setUint8(u++,this.KINDS.push),c.setUint8(u++,t.length),c.setUint8(u++,n.length),c.setUint8(u++,o.length),c.setUint8(u++,i.length),Array.from(t,(function(e){return c.setUint8(u++,e.charCodeAt(0))})),Array.from(n,(function(e){return c.setUint8(u++,e.charCodeAt(0))})),Array.from(o,(function(e){return c.setUint8(u++,e.charCodeAt(0))})),Array.from(i,(function(e){return c.setUint8(u++,e.charCodeAt(0))}));var h=new Uint8Array(a.byteLength+r.byteLength);return h.set(new Uint8Array(a),0),h.set(new Uint8Array(r),a.byteLength),h.buffer},binaryDecode:function(e){var t=new DataView(e),n=t.getUint8(0),i=new TextDecoder;switch(n){case this.KINDS.push:return this.decodePush(e,t,i);case this.KINDS.reply:return this.decodeReply(e,t,i);case this.KINDS.broadcast:return this.decodeBroadcast(e,t,i)}},decodePush:function(e,t,n){var i=t.getUint8(1),o=t.getUint8(2),r=t.getUint8(3),s=this.HEADER_LENGTH+this.META_LENGTH-1,a=n.decode(e.slice(s,s+i));s+=i;var c=n.decode(e.slice(s,s+o));s+=o;var u=n.decode(e.slice(s,s+r));return s+=r,{join_ref:a,ref:null,topic:c,event:u,payload:e.slice(s,e.byteLength)}},decodeReply:function(e,t,n){var i=t.getUint8(1),o=t.getUint8(2),r=t.getUint8(3),s=t.getUint8(4),a=this.HEADER_LENGTH+this.META_LENGTH,c=n.decode(e.slice(a,a+i));a+=i;var u=n.decode(e.slice(a,a+o));a+=o;var h=n.decode(e.slice(a,a+r));a+=r;var l=n.decode(e.slice(a,a+s));a+=s;var f=e.slice(a,e.byteLength);return{join_ref:c,ref:u,topic:h,event:w,payload:{status:l,response:f}}},decodeBroadcast:function(e,t,n){var i=t.getUint8(1),o=t.getUint8(2),r=this.HEADER_LENGTH+2,s=n.decode(e.slice(r,r+i));r+=i;var a=n.decode(e.slice(r,r+o));return r+=o,{join_ref:null,ref:null,topic:s,event:a,payload:e.slice(r,e.byteLength)}}},U=function(){function e(t){var n=this,i=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};c(this,e),this.stateChangeCallbacks={open:[],close:[],error:[],message:[]},this.channels=[],this.sendBuffer=[],this.ref=0,this.timeout=i.timeout||1e4,this.transport=i.transport||d.WebSocket||D,this.defaultEncoder=H.encode.bind(H),this.defaultDecoder=H.decode.bind(H),this.closeWasClean=!1,this.binaryType=i.binaryType||"arraybuffer",this.connectClock=1,this.transport!==D?(this.encode=i.encode||this.defaultEncoder,this.decode=i.decode||this.defaultDecoder):(this.encode=this.defaultEncoder,this.decode=this.defaultDecoder);var o=null;f&&f.addEventListener&&(f.addEventListener("pagehide",(function(e){n.conn&&(n.disconnect(),o=n.connectClock)})),f.addEventListener("pageshow",(function(e){o===n.connectClock&&(o=null,n.connect())}))),this.heartbeatIntervalMs=i.heartbeatIntervalMs||3e4,this.rejoinAfterMs=function(e){return i.rejoinAfterMs?i.rejoinAfterMs(e):[1e3,2e3,5e3][e-1]||1e4},this.reconnectAfterMs=function(e){return i.reconnectAfterMs?i.reconnectAfterMs(e):[10,50,100,150,200,250,500,1e3,2e3][e-1]||5e3},this.logger=i.logger||null,this.longpollerTimeout=i.longpollerTimeout||2e4,this.params=O(i.params||{}),this.endPoint="".concat(t,"/").concat(x),this.vsn=i.vsn||"2.0.0",this.heartbeatTimer=null,this.pendingHeartbeatRef=null,this.reconnectTimer=new J((function(){n.teardown((function(){return n.connect()}))}),this.reconnectAfterMs)}return h(e,[{key:"protocol",value:function(){return location.protocol.match(/^https/)?"wss":"ws"}},{key:"endPointURL",value:function(){var e=M.appendParams(M.appendParams(this.endPoint,this.params()),{vsn:this.vsn});return"/"!==e.charAt(0)?e:"/"===e.charAt(1)?"".concat(this.protocol(),":").concat(e):"".concat(this.protocol(),"://").concat(location.host).concat(e)}},{key:"disconnect",value:function(e,t,n){this.connectClock++,this.closeWasClean=!0,this.reconnectTimer.reset(),this.teardown(e,t,n)}},{key:"connect",value:function(e){var t=this;this.connectClock++,e&&(console&&console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor"),this.params=O(e)),this.conn||(this.closeWasClean=!1,this.conn=new this.transport(this.endPointURL()),this.conn.binaryType=this.binaryType,this.conn.timeout=this.longpollerTimeout,this.conn.onopen=function(){return t.onConnOpen()},this.conn.onerror=function(e){return t.onConnError(e)},this.conn.onmessage=function(e){return t.onConnMessage(e)},this.conn.onclose=function(e){return t.onConnClose(e)})}},{key:"log",value:function(e,t,n){this.logger(e,t,n)}},{key:"hasLogger",value:function(){return null!==this.logger}},{key:"onOpen",value:function(e){var t=this.makeRef();return this.stateChangeCallbacks.open.push([t,e]),t}},{key:"onClose",value:function(e){var t=this.makeRef();return this.stateChangeCallbacks.close.push([t,e]),t}},{key:"onError",value:function(e){var t=this.makeRef();return this.stateChangeCallbacks.error.push([t,e]),t}},{key:"onMessage",value:function(e){var t=this.makeRef();return this.stateChangeCallbacks.message.push([t,e]),t}},{key:"onConnOpen",value:function(){this.hasLogger()&&this.log("transport","connected to ".concat(this.endPointURL())),this.closeWasClean=!1,this.flushSendBuffer(),this.reconnectTimer.reset(),this.resetHeartbeat(),this.stateChangeCallbacks.open.forEach((function(e){return(0,r(e,2)[1])()}))}},{key:"heartbeatTimeout",value:function(){this.pendingHeartbeatRef&&(this.pendingHeartbeatRef=null,this.hasLogger()&&this.log("transport","heartbeat timeout. Attempting to re-establish connection"),this.abnormalClose("heartbeat timeout"))}},{key:"resetHeartbeat",value:function(){var e=this;this.conn&&this.conn.skipHeartbeat||(this.pendingHeartbeatRef=null,clearTimeout(this.heartbeatTimer),setTimeout((function(){return e.sendHeartbeat()}),this.heartbeatIntervalMs))}},{key:"teardown",value:function(e,t,n){var i=this;if(!this.conn)return e&&e();this.waitForBufferDone((function(){i.conn&&(t?i.conn.close(t,n||""):i.conn.close()),i.waitForSocketClosed((function(){i.conn&&(i.conn.onclose=function(){},i.conn=null),e&&e()}))}))}},{key:"waitForBufferDone",value:function(e){var t=this,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:1;5!==n&&this.conn&&this.conn.bufferedAmount?setTimeout((function(){t.waitForBufferDone(e,n+1)}),150*n):e()}},{key:"waitForSocketClosed",value:function(e){var t=this,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:1;5!==n&&this.conn&&this.conn.readyState!==m?setTimeout((function(){t.waitForSocketClosed(e,n+1)}),150*n):e()}},{key:"onConnClose",value:function(e){this.hasLogger()&&this.log("transport","close",e),this.triggerChanError(),clearTimeout(this.heartbeatTimer),this.closeWasClean||this.reconnectTimer.scheduleTimeout(),this.stateChangeCallbacks.close.forEach((function(t){return(0,r(t,2)[1])(e)}))}},{key:"onConnError",value:function(e){this.hasLogger()&&this.log("transport",e),this.triggerChanError(),this.stateChangeCallbacks.error.forEach((function(t){return(0,r(t,2)[1])(e)}))}},{key:"triggerChanError",value:function(){this.channels.forEach((function(e){e.isErrored()||e.isLeaving()||e.isClosed()||e.trigger(E)}))}},{key:"connectionState",value:function(){switch(this.conn&&this.conn.readyState){case p:return"connecting";case v:return"open";case y:return"closing";default:return"closed"}}},{key:"isConnected",value:function(){return"open"===this.connectionState()}},{key:"remove",value:function(e){this.off(e.stateChangeRefs),this.channels=this.channels.filter((function(t){return t.joinRef()!==e.joinRef()}))}},{key:"off",value:function(e){for(var t in this.stateChangeCallbacks)this.stateChangeCallbacks[t]=this.stateChangeCallbacks[t].filter((function(t){var n=r(t,1)[0];return-1===e.indexOf(n)}))}},{key:"channel",value:function(e){var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},n=new _(e,t,this);return this.channels.push(n),n}},{key:"push",value:function(e){var t=this;if(this.hasLogger()){var n=e.topic,i=e.event,o=e.payload,r=e.ref,s=e.join_ref;this.log("push","".concat(n," ").concat(i," (").concat(s,", ").concat(r,")"),o)}this.isConnected()?this.encode(e,(function(e){return t.conn.send(e)})):this.sendBuffer.push((function(){return t.encode(e,(function(e){return t.conn.send(e)}))}))}},{key:"makeRef",value:function(){var e=this.ref+1;return e===this.ref?this.ref=0:this.ref=e,this.ref.toString()}},{key:"sendHeartbeat",value:function(){var e=this;this.pendingHeartbeatRef&&!this.isConnected()||(this.pendingHeartbeatRef=this.makeRef(),this.push({topic:"phoenix",event:"heartbeat",payload:{},ref:this.pendingHeartbeatRef}),this.heartbeatTimer=setTimeout((function(){return e.heartbeatTimeout()}),this.heartbeatIntervalMs))}},{key:"abnormalClose",value:function(e){this.closeWasClean=!1,this.isConnected()&&this.conn.close(1e3,e)}},{key:"flushSendBuffer",value:function(){this.isConnected()&&this.sendBuffer.length>0&&(this.sendBuffer.forEach((function(e){return e()})),this.sendBuffer=[])}},{key:"onConnMessage",value:function(e){var t=this;this.decode(e.data,(function(e){var n=e.topic,i=e.event,o=e.payload,s=e.ref,a=e.join_ref;s&&s===t.pendingHeartbeatRef&&(clearTimeout(t.heartbeatTimer),t.pendingHeartbeatRef=null,setTimeout((function(){return t.sendHeartbeat()}),t.heartbeatIntervalMs)),t.hasLogger()&&t.log("receive","".concat(o.status||""," ").concat(n," ").concat(i," ").concat(s&&"("+s+")"||""),o);for(var c=0;c<t.channels.length;c++){var u=t.channels[c];u.isMember(n,i,o,a)&&u.trigger(i,o,s,a)}for(var h=0;h<t.stateChangeCallbacks.message.length;h++){(0,r(t.stateChangeCallbacks.message[h],2)[1])(e)}}))}},{key:"leaveOpenTopic",value:function(e){var t=this.channels.find((function(t){return t.topic===e&&(t.isJoined()||t.isJoining())}));t&&(this.hasLogger()&&this.log("transport",'leaving duplicate topic "'.concat(e,'"')),t.leave())}}]),e}(),D=function(){function e(t){c(this,e),this.endPoint=null,this.token=null,this.skipHeartbeat=!0,this.onopen=function(){},this.onerror=function(){},this.onmessage=function(){},this.onclose=function(){},this.pollEndpoint=this.normalizeEndpoint(t),this.readyState=p,this.poll()}return h(e,[{key:"normalizeEndpoint",value:function(e){return e.replace("ws://","http://").replace("wss://","https://").replace(new RegExp("(.*)/"+x),"$1/"+L)}},{key:"endpointURL",value:function(){return M.appendParams(this.pollEndpoint,{token:this.token})}},{key:"closeAndRetry",value:function(){this.close(),this.readyState=p}},{key:"ontimeout",value:function(){this.onerror("timeout"),this.closeAndRetry()}},{key:"poll",value:function(){var e=this;this.readyState!==v&&this.readyState!==p||M.request("GET",this.endpointURL(),"application/json",null,this.timeout,this.ontimeout.bind(this),(function(t){if(t){var n=t.status,i=t.token,o=t.messages;e.token=i}else n=0;switch(n){case 200:o.forEach((function(t){setTimeout((function(){e.onmessage({data:t})}),0)})),e.poll();break;case 204:e.poll();break;case 410:e.readyState=v,e.onopen(),e.poll();break;case 403:e.onerror(),e.close();break;case 0:case 500:e.onerror(),e.closeAndRetry();break;default:throw new Error("unhandled poll status ".concat(n))}}))}},{key:"send",value:function(e){var t=this;M.request("POST",this.endpointURL(),"application/json",e,this.timeout,this.onerror.bind(this,"timeout"),(function(e){e&&200===e.status||(t.onerror(e&&e.status),t.closeAndRetry())}))}},{key:"close",value:function(e,t){this.readyState=m,this.onclose()}}]),e}(),M=function(){function e(){c(this,e)}return h(e,null,[{key:"request",value:function(e,t,n,i,o,r,s){if(d.XDomainRequest){var a=new XDomainRequest;this.xdomainRequest(a,e,t,i,o,r,s)}else{var c=new d.XMLHttpRequest;this.xhrRequest(c,e,t,n,i,o,r,s)}}},{key:"xdomainRequest",value:function(e,t,n,i,o,r,s){var a=this;e.timeout=o,e.open(t,n),e.onload=function(){var t=a.parseJSON(e.responseText);s&&s(t)},r&&(e.ontimeout=r),e.onprogress=function(){},e.send(i)}},{key:"xhrRequest",value:function(e,t,n,i,o,r,s,a){var c=this;e.open(t,n,!0),e.timeout=r,e.setRequestHeader("Content-Type",i),e.onerror=function(){a&&a(null)},e.onreadystatechange=function(){if(e.readyState===c.states.complete&&a){var t=c.parseJSON(e.responseText);a(t)}},s&&(e.ontimeout=s),e.send(o)}},{key:"parseJSON",value:function(e){if(!e||""===e)return null;try{return JSON.parse(e)}catch(t){return console&&console.log("failed to parse JSON response",e),null}}},{key:"serialize",value:function(e,t){var n=[];for(var i in e)if(e.hasOwnProperty(i)){var r=t?"".concat(t,"[").concat(i,"]"):i,s=e[i];"object"===o(s)?n.push(this.serialize(s,r)):n.push(encodeURIComponent(r)+"="+encodeURIComponent(s))}return n.join("&")}},{key:"appendParams",value:function(e,t){if(0===Object.keys(t).length)return e;var n=e.match(/\?/)?"&":"?";return"".concat(e).concat(n).concat(this.serialize(t))}}]),e}();M.states={complete:4};var N=function(){function e(t){var n=this,i=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};c(this,e);var o=i.events||{state:"presence_state",diff:"presence_diff"};this.state={},this.pendingDiffs=[],this.channel=t,this.joinRef=null,this.caller={onJoin:function(){},onLeave:function(){},onSync:function(){}},this.channel.on(o.state,(function(t){var i=n.caller,o=i.onJoin,r=i.onLeave,s=i.onSync;n.joinRef=n.channel.joinRef(),n.state=e.syncState(n.state,t,o,r),n.pendingDiffs.forEach((function(t){n.state=e.syncDiff(n.state,t,o,r)})),n.pendingDiffs=[],s()})),this.channel.on(o.diff,(function(t){var i=n.caller,o=i.onJoin,r=i.onLeave,s=i.onSync;n.inPendingSyncState()?n.pendingDiffs.push(t):(n.state=e.syncDiff(n.state,t,o,r),s())}))}return h(e,[{key:"onJoin",value:function(e){this.caller.onJoin=e}},{key:"onLeave",value:function(e){this.caller.onLeave=e}},{key:"onSync",value:function(e){this.caller.onSync=e}},{key:"list",value:function(t){return e.list(this.state,t)}},{key:"inPendingSyncState",value:function(){return!this.joinRef||this.joinRef!==this.channel.joinRef()}}],[{key:"syncState",value:function(e,t,n,i){var o=this,r=this.clone(e),s={},a={};return this.map(r,(function(e,n){t[e]||(a[e]=n)})),this.map(t,(function(e,t){var n=r[e];if(n){var i=t.metas.map((function(e){return e.phx_ref})),c=n.metas.map((function(e){return e.phx_ref})),u=t.metas.filter((function(e){return c.indexOf(e.phx_ref)<0})),h=n.metas.filter((function(e){return i.indexOf(e.phx_ref)<0}));u.length>0&&(s[e]=t,s[e].metas=u),h.length>0&&(a[e]=o.clone(n),a[e].metas=h)}else s[e]=t})),this.syncDiff(r,{joins:s,leaves:a},n,i)}},{key:"syncDiff",value:function(e,t,n,o){var r=t.joins,s=t.leaves,a=this.clone(e);return n||(n=function(){}),o||(o=function(){}),this.map(r,(function(e,t){var o=a[e];if(a[e]=t,o){var r,s=a[e].metas.map((function(e){return e.phx_ref})),c=o.metas.filter((function(e){return s.indexOf(e.phx_ref)<0}));(r=a[e].metas).unshift.apply(r,i(c))}n(e,o,t)})),this.map(s,(function(e,t){var n=a[e];if(n){var i=t.metas.map((function(e){return e.phx_ref}));n.metas=n.metas.filter((function(e){return i.indexOf(e.phx_ref)<0})),o(e,n,t),0===n.metas.length&&delete a[e]}})),a}},{key:"list",value:function(e,t){return t||(t=function(e,t){return t}),this.map(e,(function(e,n){return t(e,n)}))}},{key:"map",value:function(e,t){return Object.getOwnPropertyNames(e).map((function(n){return t(n,e[n])}))}},{key:"clone",value:function(e){return JSON.parse(JSON.stringify(e))}}]),e}(),J=function(){function e(t,n){c(this,e),this.callback=t,this.timerCalc=n,this.timer=null,this.tries=0}return h(e,[{key:"reset",value:function(){this.tries=0,clearTimeout(this.timer)}},{key:"scheduleTimeout",value:function(){var e=this;clearTimeout(this.timer),this.timer=setTimeout((function(){e.tries=e.tries+1,e.callback()}),this.timerCalc(this.tries+1))}}]),e}()}])}));
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory();
+	else if(typeof define === 'function' && define.amd)
+		define([], factory);
+	else if(typeof exports === 'object')
+		exports["phoenix"] = factory();
+	else
+		root["phoenix"] = factory();
+})(this, function() {
+return /******/ (() => { // webpackBootstrap
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./js/phoenix/ajax.js":
+/*!****************************!*\
+  !*** ./js/phoenix/ajax.js ***!
+  \****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Ajax)
+/* harmony export */ });
+/* harmony import */ var phoenix_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! phoenix/constants */ "./js/phoenix/constants.js");
+
+
+
+
+class Ajax {
+  constructor() {
+    this.states = { complete: 4 }
+  }
+
+  static request(method, endPoint, accept, body, timeout, ontimeout, callback) {
+    if (phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.global.XDomainRequest) {
+      let req = new XDomainRequest() // IE8, IE9
+      this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
+    } else {
+      let req = new phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.global.XMLHttpRequest(); // IE7+, Firefox, Chrome, Opera, Safari
+      this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
+    }
+  }
+
+  static xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback) {
+    req.timeout = timeout
+    req.open(method, endPoint)
+    req.onload = () => {
+      let response = this.parseJSON(req.responseText)
+      callback && callback(response)
+    }
+    if (ontimeout) { req.ontimeout = ontimeout }
+
+    // Work around bug in IE9 that requires an attached onprogress handler
+    req.onprogress = () => { }
+
+    req.send(body)
+  }
+
+  static xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback) {
+    req.open(method, endPoint, true)
+    req.timeout = timeout
+    req.setRequestHeader("Content-Type", accept)
+    req.onerror = () => { callback && callback(null) }
+    req.onreadystatechange = () => {
+      if (req.readyState === this.states.complete && callback) {
+        let response = this.parseJSON(req.responseText)
+        callback(response)
+      }
+    }
+    if (ontimeout) { req.ontimeout = ontimeout }
+
+    req.send(body)
+  }
+
+  static parseJSON(resp) {
+    if (!resp || resp === "") { return null }
+
+    try {
+      return JSON.parse(resp)
+    } catch (e) {
+      console && console.log("failed to parse JSON response", resp)
+      return null
+    }
+  }
+
+  static serialize(obj, parentKey) {
+    let queryStr = []
+    for (var key in obj) {
+      if (!obj.hasOwnProperty(key)) { continue }
+      let paramKey = parentKey ? `${parentKey}[${key}]` : key
+      let paramVal = obj[key]
+      if (typeof paramVal === "object") {
+        queryStr.push(this.serialize(paramVal, paramKey))
+      } else {
+        queryStr.push(encodeURIComponent(paramKey) + "=" + encodeURIComponent(paramVal))
+      }
+    }
+    return queryStr.join("&")
+  }
+
+  static appendParams(url, params) {
+    if (Object.keys(params).length === 0) { return url }
+
+    let prefix = url.match(/\?/) ? "&" : "?"
+    return `${url}${prefix}${this.serialize(params)}`
+  }
+}
+
+
+/***/ }),
+
+/***/ "./js/phoenix/channel.js":
+/*!*******************************!*\
+  !*** ./js/phoenix/channel.js ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Channel)
+/* harmony export */ });
+/* harmony import */ var phoenix_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! phoenix/utils */ "./js/phoenix/utils.js");
+/* harmony import */ var phoenix_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! phoenix/constants */ "./js/phoenix/constants.js");
+/* harmony import */ var phoenix_push__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! phoenix/push */ "./js/phoenix/push.js");
+/* harmony import */ var phoenix_timer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! phoenix/timer */ "./js/phoenix/timer.js");
+
+
+
+
+
+
+/**
+ *
+ * @param {string} topic
+ * @param {(Object|function)} params
+ * @param {Socket} socket
+ */
+class Channel {
+  constructor(topic, params, socket) {
+    this.state = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.closed
+    this.topic = topic
+    this.params = (0,phoenix_utils__WEBPACK_IMPORTED_MODULE_1__.closure)(params || {})
+    this.socket = socket
+    this.bindings = []
+    this.bindingRef = 0
+    this.timeout = this.socket.timeout
+    this.joinedOnce = false
+    this.joinPush = new phoenix_push__WEBPACK_IMPORTED_MODULE_2__.default(this, phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_EVENTS.join, this.params, this.timeout)
+    this.pushBuffer = []
+    this.stateChangeRefs = [];
+
+    this.rejoinTimer = new phoenix_timer__WEBPACK_IMPORTED_MODULE_3__.default(() => {
+      if (this.socket.isConnected()) { this.rejoin() }
+    }, this.socket.rejoinAfterMs)
+    this.stateChangeRefs.push(this.socket.onError(() => this.rejoinTimer.reset()))
+    this.stateChangeRefs.push(this.socket.onOpen(() => {
+      this.rejoinTimer.reset()
+      if (this.isErrored()) { this.rejoin() }
+    })
+    )
+    this.joinPush.receive("ok", () => {
+      this.state = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.joined
+      this.rejoinTimer.reset()
+      this.pushBuffer.forEach(pushEvent => pushEvent.send())
+      this.pushBuffer = []
+    })
+    this.joinPush.receive("error", () => {
+      this.state = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.errored
+      if (this.socket.isConnected()) { this.rejoinTimer.scheduleTimeout() }
+    })
+    this.onClose(() => {
+      this.rejoinTimer.reset()
+      if (this.socket.hasLogger()) this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`)
+      this.state = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.closed
+      this.socket.remove(this)
+    })
+    this.onError(reason => {
+      if (this.socket.hasLogger()) this.socket.log("channel", `error ${this.topic}`, reason)
+      if (this.isJoining()) { this.joinPush.reset() }
+      this.state = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.errored
+      if (this.socket.isConnected()) { this.rejoinTimer.scheduleTimeout() }
+    })
+    this.joinPush.receive("timeout", () => {
+      if (this.socket.hasLogger()) this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
+      let leavePush = new phoenix_push__WEBPACK_IMPORTED_MODULE_2__.default(this, phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_EVENTS.leave, (0,phoenix_utils__WEBPACK_IMPORTED_MODULE_1__.closure)({}), this.timeout)
+      leavePush.send()
+      this.state = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.errored
+      this.joinPush.reset()
+      if (this.socket.isConnected()) { this.rejoinTimer.scheduleTimeout() }
+    })
+    this.on(phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_EVENTS.reply, (payload, ref) => {
+      this.trigger(this.replyEventName(ref), payload)
+    })
+  }
+
+  /**
+   * Join the channel
+   * @param {integer} timeout
+   * @returns {Push}
+   */
+  join(timeout = this.timeout) {
+    if (this.joinedOnce) {
+      throw new Error(`tried to join multiple times. 'join' can only be called a single time per channel instance`)
+    } else {
+      this.timeout = timeout
+      this.joinedOnce = true
+      this.rejoin()
+      return this.joinPush
+    }
+  }
+
+  /**
+   * Hook into channel close
+   * @param {Function} callback
+   */
+  onClose(callback) {
+    this.on(phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_EVENTS.close, callback)
+  }
+
+  /**
+   * Hook into channel errors
+   * @param {Function} callback
+   */
+  onError(callback) {
+    return this.on(phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_EVENTS.error, reason => callback(reason))
+  }
+
+  /**
+   * Subscribes on channel events
+   *
+   * Subscription returns a ref counter, which can be used later to
+   * unsubscribe the exact event listener
+   *
+   * @example
+   * const ref1 = channel.on("event", do_stuff)
+   * const ref2 = channel.on("event", do_other_stuff)
+   * channel.off("event", ref1)
+   * // Since unsubscription, do_stuff won't fire,
+   * // while do_other_stuff will keep firing on the "event"
+   *
+   * @param {string} event
+   * @param {Function} callback
+   * @returns {integer} ref
+   */
+  on(event, callback) {
+    let ref = this.bindingRef++
+    this.bindings.push({ event, ref, callback })
+    return ref
+  }
+
+  /**
+   * Unsubscribes off of channel events
+   *
+   * Use the ref returned from a channel.on() to unsubscribe one
+   * handler, or pass nothing for the ref to unsubscribe all
+   * handlers for the given event.
+   *
+   * @example
+   * // Unsubscribe the do_stuff handler
+   * const ref1 = channel.on("event", do_stuff)
+   * channel.off("event", ref1)
+   *
+   * // Unsubscribe all handlers from event
+   * channel.off("event")
+   *
+   * @param {string} event
+   * @param {integer} ref
+   */
+  off(event, ref) {
+    this.bindings = this.bindings.filter((bind) => {
+      return !(bind.event === event && (typeof ref === "undefined" || ref === bind.ref))
+    })
+  }
+
+  /**
+   * @private
+   */
+  canPush() { return this.socket.isConnected() && this.isJoined() }
+
+  /**
+   * Sends a message `event` to phoenix with the payload `payload`.
+   * Phoenix receives this in the `handle_in(event, payload, socket)`
+   * function. if phoenix replies or it times out (default 10000ms),
+   * then optionally the reply can be received.
+   *
+   * @example
+   * channel.push("event")
+   *   .receive("ok", payload => console.log("phoenix replied:", payload))
+   *   .receive("error", err => console.log("phoenix errored", err))
+   *   .receive("timeout", () => console.log("timed out pushing"))
+   * @param {string} event
+   * @param {Object} payload
+   * @param {number} [timeout]
+   * @returns {Push}
+   */
+  push(event, payload, timeout = this.timeout) {
+    payload = payload || {}
+    if (!this.joinedOnce) {
+      throw new Error(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`)
+    }
+    let pushEvent = new phoenix_push__WEBPACK_IMPORTED_MODULE_2__.default(this, event, function () { return payload }, timeout)
+    if (this.canPush()) {
+      pushEvent.send()
+    } else {
+      pushEvent.startTimeout()
+      this.pushBuffer.push(pushEvent)
+    }
+
+    return pushEvent
+  }
+
+  /** Leaves the channel
+   *
+   * Unsubscribes from server events, and
+   * instructs channel to terminate on server
+   *
+   * Triggers onClose() hooks
+   *
+   * To receive leave acknowledgements, use the `receive`
+   * hook to bind to the server ack, ie:
+   *
+   * @example
+   * channel.leave().receive("ok", () => alert("left!") )
+   *
+   * @param {integer} timeout
+   * @returns {Push}
+   */
+  leave(timeout = this.timeout) {
+    this.rejoinTimer.reset()
+    this.joinPush.cancelTimeout()
+
+    this.state = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.leaving
+    let onClose = () => {
+      if (this.socket.hasLogger()) this.socket.log("channel", `leave ${this.topic}`)
+      this.trigger(phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_EVENTS.close, "leave")
+    }
+    let leavePush = new phoenix_push__WEBPACK_IMPORTED_MODULE_2__.default(this, phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_EVENTS.leave, (0,phoenix_utils__WEBPACK_IMPORTED_MODULE_1__.closure)({}), timeout)
+    leavePush.receive("ok", () => onClose())
+      .receive("timeout", () => onClose())
+    leavePush.send()
+    if (!this.canPush()) { leavePush.trigger("ok", {}) }
+
+    return leavePush
+  }
+
+  /**
+   * Overridable message hook
+   *
+   * Receives all events for specialized message handling
+   * before dispatching to the channel callbacks.
+   *
+   * Must return the payload, modified or unmodified
+   * @param {string} event
+   * @param {Object} payload
+   * @param {integer} ref
+   * @returns {Object}
+   */
+  onMessage(event, payload, ref) { return payload }
+
+  /**
+   * @private
+   */
+  isLifecycleEvent(event) { return phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_LIFECYCLE_EVENTS.indexOf(event) >= 0 }
+
+  /**
+   * @private
+   */
+  isMember(topic, event, payload, joinRef) {
+    if (this.topic !== topic) { return false }
+
+    if (joinRef && joinRef !== this.joinRef() && this.isLifecycleEvent(event)) {
+      if (this.socket.hasLogger()) this.socket.log("channel", "dropping outdated message", { topic, event, payload, joinRef })
+      return false
+    } else {
+      return true
+    }
+  }
+
+  /**
+   * @private
+   */
+  joinRef() { return this.joinPush.ref }
+
+  /**
+   * @private
+   */
+  rejoin(timeout = this.timeout) {
+    if (this.isLeaving()) { return }
+    this.socket.leaveOpenTopic(this.topic)
+    this.state = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.joining
+    this.joinPush.resend(timeout)
+  }
+
+  /**
+   * @private
+   */
+  trigger(event, payload, ref, joinRef) {
+    let handledPayload = this.onMessage(event, payload, ref, joinRef)
+    if (payload && !handledPayload) { throw new Error("channel onMessage callbacks must return the payload, modified or unmodified") }
+
+    let eventBindings = this.bindings.filter(bind => bind.event === event)
+
+    for (let i = 0; i < eventBindings.length; i++) {
+      let bind = eventBindings[i]
+      bind.callback(handledPayload, ref, joinRef || this.joinRef())
+    }
+  }
+
+  /**
+   * @private
+   */
+  replyEventName(ref) { return `chan_reply_${ref}` }
+
+  /**
+   * @private
+   */
+  isClosed() { return this.state === phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.closed }
+
+  /**
+   * @private
+   */
+  isErrored() { return this.state === phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.errored }
+
+  /**
+   * @private
+   */
+  isJoined() { return this.state === phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.joined }
+
+  /**
+   * @private
+   */
+  isJoining() { return this.state === phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.joining }
+
+  /**
+   * @private
+   */
+  isLeaving() { return this.state === phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_STATES.leaving }
+}
+
+/***/ }),
+
+/***/ "./js/phoenix/constants.js":
+/*!*********************************!*\
+  !*** ./js/phoenix/constants.js ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "globalSelf": () => (/* binding */ globalSelf),
+/* harmony export */   "phxWindow": () => (/* binding */ phxWindow),
+/* harmony export */   "global": () => (/* binding */ global),
+/* harmony export */   "DEFAULT_VSN": () => (/* binding */ DEFAULT_VSN),
+/* harmony export */   "SOCKET_STATES": () => (/* binding */ SOCKET_STATES),
+/* harmony export */   "DEFAULT_TIMEOUT": () => (/* binding */ DEFAULT_TIMEOUT),
+/* harmony export */   "WS_CLOSE_NORMAL": () => (/* binding */ WS_CLOSE_NORMAL),
+/* harmony export */   "CHANNEL_STATES": () => (/* binding */ CHANNEL_STATES),
+/* harmony export */   "CHANNEL_EVENTS": () => (/* binding */ CHANNEL_EVENTS),
+/* harmony export */   "CHANNEL_LIFECYCLE_EVENTS": () => (/* binding */ CHANNEL_LIFECYCLE_EVENTS),
+/* harmony export */   "TRANSPORTS": () => (/* binding */ TRANSPORTS)
+/* harmony export */ });
+const globalSelf = typeof self !== "undefined" ? self : null
+const phxWindow = typeof window !== "undefined" ? window : null
+const global = globalSelf || phxWindow || undefined
+const DEFAULT_VSN = "2.0.0"
+const SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 }
+const DEFAULT_TIMEOUT = 10000
+const WS_CLOSE_NORMAL = 1000
+const CHANNEL_STATES = {
+  closed: "closed",
+  errored: "errored",
+  joined: "joined",
+  joining: "joining",
+  leaving: "leaving",
+}
+const CHANNEL_EVENTS = {
+  close: "phx_close",
+  error: "phx_error",
+  join: "phx_join",
+  reply: "phx_reply",
+  leave: "phx_leave"
+}
+const CHANNEL_LIFECYCLE_EVENTS = [
+  CHANNEL_EVENTS.close,
+  CHANNEL_EVENTS.error,
+  CHANNEL_EVENTS.join,
+  CHANNEL_EVENTS.reply,
+  CHANNEL_EVENTS.leave
+]
+const TRANSPORTS = {
+  longpoll: "longpoll",
+  websocket: "websocket"
+}
+
+/***/ }),
+
+/***/ "./js/phoenix/index.js":
+/*!*****************************!*\
+  !*** ./js/phoenix/index.js ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Channel": () => (/* reexport safe */ phoenix_channel__WEBPACK_IMPORTED_MODULE_0__.default),
+/* harmony export */   "LongPoll": () => (/* reexport safe */ phoenix_longpoll__WEBPACK_IMPORTED_MODULE_1__.default),
+/* harmony export */   "Presence": () => (/* reexport safe */ phoenix_presence__WEBPACK_IMPORTED_MODULE_2__.default),
+/* harmony export */   "Serializer": () => (/* reexport safe */ phoenix_serializer__WEBPACK_IMPORTED_MODULE_3__.default),
+/* harmony export */   "Socket": () => (/* reexport safe */ phoenix_socket__WEBPACK_IMPORTED_MODULE_4__.default)
+/* harmony export */ });
+/* harmony import */ var phoenix_channel__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! phoenix/channel */ "./js/phoenix/channel.js");
+/* harmony import */ var phoenix_longpoll__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! phoenix/longpoll */ "./js/phoenix/longpoll.js");
+/* harmony import */ var phoenix_presence__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! phoenix/presence */ "./js/phoenix/presence.js");
+/* harmony import */ var phoenix_serializer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! phoenix/serializer */ "./js/phoenix/serializer.js");
+/* harmony import */ var phoenix_socket__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! phoenix/socket */ "./js/phoenix/socket.js");
+/**
+ * Phoenix Channels JavaScript client
+ *
+ * ## Socket Connection
+ *
+ * A single connection is established to the server and
+ * channels are multiplexed over the connection.
+ * Connect to the server using the `Socket` class:
+ *
+ * ```javascript
+ * let socket = new Socket("/socket", {params: {userToken: "123"}})
+ * socket.connect()
+ * ```
+ *
+ * The `Socket` constructor takes the mount point of the socket,
+ * the authentication params, as well as options that can be found in
+ * the Socket docs, such as configuring the `LongPoll` transport, and
+ * heartbeat.
+ *
+ * ## Channels
+ *
+ * Channels are isolated, concurrent processes on the server that
+ * subscribe to topics and broker events between the client and server.
+ * To join a channel, you must provide the topic, and channel params for
+ * authorization. Here's an example chat room example where `"new_msg"`
+ * events are listened for, messages are pushed to the server, and
+ * the channel is joined with ok/error/timeout matches:
+ *
+ * ```javascript
+ * let channel = socket.channel("room:123", {token: roomToken})
+ * channel.on("new_msg", msg => console.log("Got message", msg) )
+ * $input.onEnter( e => {
+ *   channel.push("new_msg", {body: e.target.val}, 10000)
+ *     .receive("ok", (msg) => console.log("created message", msg) )
+ *     .receive("error", (reasons) => console.log("create failed", reasons) )
+ *     .receive("timeout", () => console.log("Networking issue...") )
+ * })
+ *
+ * channel.join()
+ *   .receive("ok", ({messages}) => console.log("catching up", messages) )
+ *   .receive("error", ({reason}) => console.log("failed join", reason) )
+ *   .receive("timeout", () => console.log("Networking issue. Still waiting..."))
+ *```
+ *
+ * ## Joining
+ *
+ * Creating a channel with `socket.channel(topic, params)`, binds the params to
+ * `channel.params`, which are sent up on `channel.join()`.
+ * Subsequent rejoins will send up the modified params for
+ * updating authorization params, or passing up last_message_id information.
+ * Successful joins receive an "ok" status, while unsuccessful joins
+ * receive "error".
+ *
+ * With the default serializers and WebSocket transport, JSON text frames are
+ * used for pushing a JSON object literal. If an `ArrayBuffer` instance is provided,
+ * binary encoding will be used and the message will be sent with the binary
+ * opcode.
+ *
+ * *Note*: binary messages are only supported on the WebSocket transport.
+ *
+ * ## Duplicate Join Subscriptions
+ *
+ * While the client may join any number of topics on any number of channels,
+ * the client may only hold a single subscription for each unique topic at any
+ * given time. When attempting to create a duplicate subscription,
+ * the server will close the existing channel, log a warning, and
+ * spawn a new channel for the topic. The client will have their
+ * `channel.onClose` callbacks fired for the existing channel, and the new
+ * channel join will have its receive hooks processed as normal.
+ *
+ * ## Pushing Messages
+ *
+ * From the previous example, we can see that pushing messages to the server
+ * can be done with `channel.push(eventName, payload)` and we can optionally
+ * receive responses from the push. Additionally, we can use
+ * `receive("timeout", callback)` to abort waiting for our other `receive` hooks
+ *  and take action after some period of waiting. The default timeout is 10000ms.
+ *
+ *
+ * ## Socket Hooks
+ *
+ * Lifecycle events of the multiplexed connection can be hooked into via
+ * `socket.onError()` and `socket.onClose()` events, ie:
+ *
+ * ```javascript
+ * socket.onError( () => console.log("there was an error with the connection!") )
+ * socket.onClose( () => console.log("the connection dropped") )
+ * ```
+ *
+ *
+ * ## Channel Hooks
+ *
+ * For each joined channel, you can bind to `onError` and `onClose` events
+ * to monitor the channel lifecycle, ie:
+ *
+ * ```javascript
+ * channel.onError( () => console.log("there was an error!") )
+ * channel.onClose( () => console.log("the channel has gone away gracefully") )
+ * ```
+ *
+ * ### onError hooks
+ *
+ * `onError` hooks are invoked if the socket connection drops, or the channel
+ * crashes on the server. In either case, a channel rejoin is attempted
+ * automatically in an exponential backoff manner.
+ *
+ * ### onClose hooks
+ *
+ * `onClose` hooks are invoked only in two cases. 1) the channel explicitly
+ * closed on the server, or 2). The client explicitly closed, by calling
+ * `channel.leave()`
+ *
+ *
+ * ## Presence
+ *
+ * The `Presence` object provides features for syncing presence information
+ * from the server with the client and handling presences joining and leaving.
+ *
+ * ### Syncing state from the server
+ *
+ * To sync presence state from the server, first instantiate an object and
+ * pass your channel in to track lifecycle events:
+ *
+ * ```javascript
+ * let channel = socket.channel("some:topic")
+ * let presence = new Presence(channel)
+ * ```
+ *
+ * Next, use the `presence.onSync` callback to react to state changes
+ * from the server. For example, to render the list of users every time
+ * the list changes, you could write:
+ *
+ * ```javascript
+ * presence.onSync(() => {
+ *   myRenderUsersFunction(presence.list())
+ * })
+ * ```
+ *
+ * ### Listing Presences
+ *
+ * `presence.list` is used to return a list of presence information
+ * based on the local state of metadata. By default, all presence
+ * metadata is returned, but a `listBy` function can be supplied to
+ * allow the client to select which metadata to use for a given presence.
+ * For example, you may have a user online from different devices with
+ * a metadata status of "online", but they have set themselves to "away"
+ * on another device. In this case, the app may choose to use the "away"
+ * status for what appears on the UI. The example below defines a `listBy`
+ * function which prioritizes the first metadata which was registered for
+ * each user. This could be the first tab they opened, or the first device
+ * they came online from:
+ *
+ * ```javascript
+ * let listBy = (id, {metas: [first, ...rest]}) => {
+ *   first.count = rest.length + 1 // count of this user's presences
+ *   first.id = id
+ *   return first
+ * }
+ * let onlineUsers = presence.list(listBy)
+ * ```
+ *
+ * ### Handling individual presence join and leave events
+ *
+ * The `presence.onJoin` and `presence.onLeave` callbacks can be used to
+ * react to individual presences joining and leaving the app. For example:
+ *
+ * ```javascript
+ * let presence = new Presence(channel)
+ *
+ * // detect if user has joined for the 1st time or from another tab/device
+ * presence.onJoin((id, current, newPres) => {
+ *   if(!current){
+ *     console.log("user has entered for the first time", newPres)
+ *   } else {
+ *     console.log("user additional presence", newPres)
+ *   }
+ * })
+ *
+ * // detect if user has left from all tabs/devices, or is still present
+ * presence.onLeave((id, current, leftPres) => {
+ *   if(current.metas.length === 0){
+ *     console.log("user has left from all devices", leftPres)
+ *   } else {
+ *     console.log("user left from a device", leftPres)
+ *   }
+ * })
+ * // receive presence data from server
+ * presence.onSync(() => {
+ *   displayUsers(presence.list())
+ * })
+ * ```
+ * @module phoenix
+ */
+
+
+
+
+
+
+
+
+
+
+/***/ }),
+
+/***/ "./js/phoenix/longpoll.js":
+/*!********************************!*\
+  !*** ./js/phoenix/longpoll.js ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ LongPoll)
+/* harmony export */ });
+/* harmony import */ var phoenix_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! phoenix/constants */ "./js/phoenix/constants.js");
+/* harmony import */ var phoenix_ajax__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! phoenix/ajax */ "./js/phoenix/ajax.js");
+
+
+
+
+class LongPoll {
+
+  constructor(endPoint) {
+    this.endPoint = null
+    this.token = null
+    this.skipHeartbeat = true
+    this.onopen = function () { } // noop
+    this.onerror = function () { } // noop
+    this.onmessage = function () { } // noop
+    this.onclose = function () { } // noop
+    this.pollEndpoint = this.normalizeEndpoint(endPoint)
+    this.readyState = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.SOCKET_STATES.connecting
+
+    this.poll()
+  }
+
+  normalizeEndpoint(endPoint) {
+    return (endPoint
+      .replace("ws://", "http://")
+      .replace("wss://", "https://")
+      .replace(new RegExp("(.*)\/" + phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.TRANSPORTS.websocket), "$1/" + phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.TRANSPORTS.longpoll))
+  }
+
+  endpointURL() {
+    return phoenix_ajax__WEBPACK_IMPORTED_MODULE_1__.default.appendParams(this.pollEndpoint, { token: this.token })
+  }
+
+  closeAndRetry() {
+    this.close()
+    this.readyState = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.SOCKET_STATES.connecting
+  }
+
+  ontimeout() {
+    this.onerror("timeout")
+    this.closeAndRetry()
+  }
+
+  poll() {
+    if (!(this.readyState === phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.SOCKET_STATES.open || this.readyState === phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.SOCKET_STATES.connecting)) { return }
+
+    phoenix_ajax__WEBPACK_IMPORTED_MODULE_1__.default.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), (resp) => {
+      if (resp) {
+        var { status, token, messages } = resp
+        this.token = token
+      } else {
+        var status = 0
+      }
+
+      switch (status) {
+        case 200:
+          messages.forEach(msg => {
+            // Tasks are what things like event handlers, setTimeout callbacks,
+            // promise resolves and more are run within.
+            // In modern browsers, there are two different kinds of tasks,
+            // microtasks and macrotasks.
+            // Microtasks are mainly used for Promises, while macrotasks are
+            // used for everything else.
+            // Microtasks always have priority over macrotasks. If the JS engine
+            // is looking for a task to run, it will always try to empty the
+            // microtask queue before attempting to run anything from the
+            // macrotask queue.
+            //
+            // For the WebSocket transport, messages always arrive in their own
+            // event. This means that if any promises are resolved from within,
+            // their callbacks will always finish execution by the time the
+            // next message event handler is run.
+            //
+            // In order to emulate this behaviour, we need to make sure each
+            // onmessage handler is run within it's own macrotask.
+            setTimeout(() => {
+              this.onmessage({ data: msg })
+            }, 0)
+          })
+          this.poll()
+          break
+        case 204:
+          this.poll()
+          break
+        case 410:
+          this.readyState = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.SOCKET_STATES.open
+          this.onopen()
+          this.poll()
+          break
+        case 403:
+          this.onerror()
+          this.close()
+          break
+        case 0:
+        case 500:
+          this.onerror()
+          this.closeAndRetry()
+          break
+        default: throw new Error(`unhandled poll status ${status}`)
+      }
+    })
+  }
+
+  send(body) {
+    phoenix_ajax__WEBPACK_IMPORTED_MODULE_1__.default.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), (resp) => {
+      if (!resp || resp.status !== 200) {
+        this.onerror(resp && resp.status)
+        this.closeAndRetry()
+      }
+    })
+  }
+
+  close(code, reason) {
+    this.readyState = phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.SOCKET_STATES.closed
+    this.onclose()
+  }
+}
+
+/***/ }),
+
+/***/ "./js/phoenix/presence.js":
+/*!********************************!*\
+  !*** ./js/phoenix/presence.js ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Presence)
+/* harmony export */ });
+/**
+ * Initializes the Presence
+ * @param {Channel} channel - The Channel
+ * @param {Object} opts - The options,
+ *        for example `{events: {state: "state", diff: "diff"}}`
+ */
+class Presence {
+
+  constructor(channel, opts = {}) {
+    let events = opts.events || { state: "presence_state", diff: "presence_diff" }
+    this.state = {}
+    this.pendingDiffs = []
+    this.channel = channel
+    this.joinRef = null
+    this.caller = {
+      onJoin: function () { },
+      onLeave: function () { },
+      onSync: function () { }
+    }
+
+    this.channel.on(events.state, newState => {
+      let { onJoin, onLeave, onSync } = this.caller
+
+      this.joinRef = this.channel.joinRef()
+      this.state = Presence.syncState(this.state, newState, onJoin, onLeave)
+
+      this.pendingDiffs.forEach(diff => {
+        this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave)
+      })
+      this.pendingDiffs = []
+      onSync()
+    })
+
+    this.channel.on(events.diff, diff => {
+      let { onJoin, onLeave, onSync } = this.caller
+
+      if (this.inPendingSyncState()) {
+        this.pendingDiffs.push(diff)
+      } else {
+        this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave)
+        onSync()
+      }
+    })
+  }
+
+  onJoin(callback) { this.caller.onJoin = callback }
+
+  onLeave(callback) { this.caller.onLeave = callback }
+
+  onSync(callback) { this.caller.onSync = callback }
+
+  list(by) { return Presence.list(this.state, by) }
+
+  inPendingSyncState() {
+    return !this.joinRef || (this.joinRef !== this.channel.joinRef())
+  }
+
+  // lower-level public static API
+
+  /**
+   * Used to sync the list of presences on the server
+   * with the client's state. An optional `onJoin` and `onLeave` callback can
+   * be provided to react to changes in the client's local presences across
+   * disconnects and reconnects with the server.
+   *
+   * @returns {Presence}
+   */
+  static syncState(currentState, newState, onJoin, onLeave) {
+    let state = this.clone(currentState)
+    let joins = {}
+    let leaves = {}
+
+    this.map(state, (key, presence) => {
+      if (!newState[key]) {
+        leaves[key] = presence
+      }
+    })
+    this.map(newState, (key, newPresence) => {
+      let currentPresence = state[key]
+      if (currentPresence) {
+        let newRefs = newPresence.metas.map(m => m.phx_ref)
+        let curRefs = currentPresence.metas.map(m => m.phx_ref)
+        let joinedMetas = newPresence.metas.filter(m => curRefs.indexOf(m.phx_ref) < 0)
+        let leftMetas = currentPresence.metas.filter(m => newRefs.indexOf(m.phx_ref) < 0)
+        if (joinedMetas.length > 0) {
+          joins[key] = newPresence
+          joins[key].metas = joinedMetas
+        }
+        if (leftMetas.length > 0) {
+          leaves[key] = this.clone(currentPresence)
+          leaves[key].metas = leftMetas
+        }
+      } else {
+        joins[key] = newPresence
+      }
+    })
+    return this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave)
+  }
+
+  /**
+   *
+   * Used to sync a diff of presence join and leave
+   * events from the server, as they happen. Like `syncState`, `syncDiff`
+   * accepts optional `onJoin` and `onLeave` callbacks to react to a user
+   * joining or leaving from a device.
+   *
+   * @returns {Presence}
+   */
+  static syncDiff(currentState, { joins, leaves }, onJoin, onLeave) {
+    let state = this.clone(currentState)
+    if (!onJoin) { onJoin = function () { } }
+    if (!onLeave) { onLeave = function () { } }
+
+    this.map(joins, (key, newPresence) => {
+      let currentPresence = state[key]
+      state[key] = newPresence
+      if (currentPresence) {
+        let joinedRefs = state[key].metas.map(m => m.phx_ref)
+        let curMetas = currentPresence.metas.filter(m => joinedRefs.indexOf(m.phx_ref) < 0)
+        state[key].metas.unshift(...curMetas)
+      }
+      onJoin(key, currentPresence, newPresence)
+    })
+    this.map(leaves, (key, leftPresence) => {
+      let currentPresence = state[key]
+      if (!currentPresence) { return }
+      let refsToRemove = leftPresence.metas.map(m => m.phx_ref)
+      currentPresence.metas = currentPresence.metas.filter(p => {
+        return refsToRemove.indexOf(p.phx_ref) < 0
+      })
+      onLeave(key, currentPresence, leftPresence)
+      if (currentPresence.metas.length === 0) {
+        delete state[key]
+      }
+    })
+    return state
+  }
+
+  /**
+   * Returns the array of presences, with selected metadata.
+   *
+   * @param {Object} presences
+   * @param {Function} chooser
+   *
+   * @returns {Presence}
+   */
+  static list(presences, chooser) {
+    if (!chooser) { chooser = function (key, pres) { return pres } }
+
+    return this.map(presences, (key, presence) => {
+      return chooser(key, presence)
+    })
+  }
+
+  // private
+
+  static map(obj, func) {
+    return Object.getOwnPropertyNames(obj).map(key => func(key, obj[key]))
+  }
+
+  static clone(obj) { return JSON.parse(JSON.stringify(obj)) }
+}
+
+
+/***/ }),
+
+/***/ "./js/phoenix/push.js":
+/*!****************************!*\
+  !*** ./js/phoenix/push.js ***!
+  \****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Push)
+/* harmony export */ });
+/**
+ * Initializes the Push
+ * @param {Channel} channel - The Channel
+ * @param {string} event - The event, for example `"phx_join"`
+ * @param {Object} payload - The payload, for example `{user_id: 123}`
+ * @param {number} timeout - The push timeout in milliseconds
+ */
+class Push {
+  constructor(channel, event, payload, timeout) {
+    this.channel = channel
+    this.event = event
+    this.payload = payload || function () { return {} }
+    this.receivedResp = null
+    this.timeout = timeout
+    this.timeoutTimer = null
+    this.recHooks = []
+    this.sent = false
+  }
+
+  /**
+   *
+   * @param {number} timeout
+   */
+  resend(timeout) {
+    this.timeout = timeout
+    this.reset()
+    this.send()
+  }
+
+  /**
+   *
+   */
+  send() {
+    if (this.hasReceived("timeout")) { return }
+    this.startTimeout()
+    this.sent = true
+    this.channel.socket.push({
+      topic: this.channel.topic,
+      event: this.event,
+      payload: this.payload(),
+      ref: this.ref,
+      join_ref: this.channel.joinRef()
+    })
+  }
+
+  /**
+   *
+   * @param {*} status
+   * @param {*} callback
+   */
+  receive(status, callback) {
+    if (this.hasReceived(status)) {
+      callback(this.receivedResp.response)
+    }
+
+    this.recHooks.push({ status, callback })
+    return this
+  }
+
+  /**
+   * @private
+   */
+  reset() {
+    this.cancelRefEvent()
+    this.ref = null
+    this.refEvent = null
+    this.receivedResp = null
+    this.sent = false
+  }
+
+  /**
+   * @private
+   */
+  matchReceive({ status, response, ref }) {
+    this.recHooks.filter(h => h.status === status)
+      .forEach(h => h.callback(response))
+  }
+
+  /**
+   * @private
+   */
+  cancelRefEvent() {
+    if (!this.refEvent) { return }
+    this.channel.off(this.refEvent)
+  }
+
+  /**
+   * @private
+   */
+  cancelTimeout() {
+    clearTimeout(this.timeoutTimer)
+    this.timeoutTimer = null
+  }
+
+  /**
+   * @private
+   */
+  startTimeout() {
+    if (this.timeoutTimer) { this.cancelTimeout() }
+    this.ref = this.channel.socket.makeRef()
+    this.refEvent = this.channel.replyEventName(this.ref)
+
+    this.channel.on(this.refEvent, payload => {
+      this.cancelRefEvent()
+      this.cancelTimeout()
+      this.receivedResp = payload
+      this.matchReceive(payload)
+    })
+
+    this.timeoutTimer = setTimeout(() => {
+      this.trigger("timeout", {})
+    }, this.timeout)
+  }
+
+  /**
+   * @private
+   */
+  hasReceived(status) {
+    return this.receivedResp && this.receivedResp.status === status
+  }
+
+  /**
+   * @private
+   */
+  trigger(status, response) {
+    this.channel.trigger(this.refEvent, { status, response })
+  }
+}
+
+/***/ }),
+
+/***/ "./js/phoenix/serializer.js":
+/*!**********************************!*\
+  !*** ./js/phoenix/serializer.js ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var phoenix_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! phoenix/constants */ "./js/phoenix/constants.js");
+/* The default serializer for encoding and decoding messages */
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  HEADER_LENGTH: 1,
+  META_LENGTH: 4,
+  KINDS: { push: 0, reply: 1, broadcast: 2 },
+
+  encode(msg, callback) {
+    if (msg.payload.constructor === ArrayBuffer) {
+      return callback(this.binaryEncode(msg))
+    } else {
+      let payload = [msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload]
+      return callback(JSON.stringify(payload))
+    }
+  },
+
+  decode(rawPayload, callback) {
+    if (rawPayload.constructor === ArrayBuffer) {
+      return callback(this.binaryDecode(rawPayload))
+    } else {
+      let [join_ref, ref, topic, event, payload] = JSON.parse(rawPayload)
+      return callback({ join_ref, ref, topic, event, payload })
+    }
+  },
+
+  // private
+
+  binaryEncode(message) {
+    let { join_ref, ref, event, topic, payload } = message
+    let metaLength = this.META_LENGTH + join_ref.length + ref.length + topic.length + event.length
+    let header = new ArrayBuffer(this.HEADER_LENGTH + metaLength)
+    let view = new DataView(header)
+    let offset = 0
+
+    view.setUint8(offset++, this.KINDS.push) // kind
+    view.setUint8(offset++, join_ref.length)
+    view.setUint8(offset++, ref.length)
+    view.setUint8(offset++, topic.length)
+    view.setUint8(offset++, event.length)
+    Array.from(join_ref, char => view.setUint8(offset++, char.charCodeAt(0)))
+    Array.from(ref, char => view.setUint8(offset++, char.charCodeAt(0)))
+    Array.from(topic, char => view.setUint8(offset++, char.charCodeAt(0)))
+    Array.from(event, char => view.setUint8(offset++, char.charCodeAt(0)))
+
+    var combined = new Uint8Array(header.byteLength + payload.byteLength)
+    combined.set(new Uint8Array(header), 0)
+    combined.set(new Uint8Array(payload), header.byteLength)
+
+    return combined.buffer
+  },
+
+  binaryDecode(buffer) {
+    let view = new DataView(buffer)
+    let kind = view.getUint8(0)
+    let decoder = new TextDecoder()
+    switch (kind) {
+      case this.KINDS.push: return this.decodePush(buffer, view, decoder)
+      case this.KINDS.reply: return this.decodeReply(buffer, view, decoder)
+      case this.KINDS.broadcast: return this.decodeBroadcast(buffer, view, decoder)
+    }
+  },
+
+  decodePush(buffer, view, decoder) {
+    let joinRefSize = view.getUint8(1)
+    let topicSize = view.getUint8(2)
+    let eventSize = view.getUint8(3)
+    let offset = this.HEADER_LENGTH + this.META_LENGTH - 1 // pushes have no ref
+    let joinRef = decoder.decode(buffer.slice(offset, offset + joinRefSize))
+    offset = offset + joinRefSize
+    let topic = decoder.decode(buffer.slice(offset, offset + topicSize))
+    offset = offset + topicSize
+    let event = decoder.decode(buffer.slice(offset, offset + eventSize))
+    offset = offset + eventSize
+    let data = buffer.slice(offset, buffer.byteLength)
+    return { join_ref: joinRef, ref: null, topic: topic, event: event, payload: data }
+  },
+
+  decodeReply(buffer, view, decoder) {
+    let joinRefSize = view.getUint8(1)
+    let refSize = view.getUint8(2)
+    let topicSize = view.getUint8(3)
+    let eventSize = view.getUint8(4)
+    let offset = this.HEADER_LENGTH + this.META_LENGTH
+    let joinRef = decoder.decode(buffer.slice(offset, offset + joinRefSize))
+    offset = offset + joinRefSize
+    let ref = decoder.decode(buffer.slice(offset, offset + refSize))
+    offset = offset + refSize
+    let topic = decoder.decode(buffer.slice(offset, offset + topicSize))
+    offset = offset + topicSize
+    let event = decoder.decode(buffer.slice(offset, offset + eventSize))
+    offset = offset + eventSize
+    let data = buffer.slice(offset, buffer.byteLength)
+    let payload = { status: event, response: data }
+    return { join_ref: joinRef, ref: ref, topic: topic, event: phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_EVENTS.reply, payload: payload }
+  },
+
+  decodeBroadcast(buffer, view, decoder) {
+    let topicSize = view.getUint8(1)
+    let eventSize = view.getUint8(2)
+    let offset = this.HEADER_LENGTH + 2
+    let topic = decoder.decode(buffer.slice(offset, offset + topicSize))
+    offset = offset + topicSize
+    let event = decoder.decode(buffer.slice(offset, offset + eventSize))
+    offset = offset + eventSize
+    let data = buffer.slice(offset, buffer.byteLength)
+
+    return { join_ref: null, ref: null, topic: topic, event: event, payload: data }
+  }
+});
+
+/***/ }),
+
+/***/ "./js/phoenix/socket.js":
+/*!******************************!*\
+  !*** ./js/phoenix/socket.js ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Socket)
+/* harmony export */ });
+/* harmony import */ var phoenix_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! phoenix/utils */ "./js/phoenix/utils.js");
+/* harmony import */ var phoenix_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! phoenix/constants */ "./js/phoenix/constants.js");
+/* harmony import */ var phoenix_ajax__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! phoenix/ajax */ "./js/phoenix/ajax.js");
+/* harmony import */ var phoenix_channel__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! phoenix/channel */ "./js/phoenix/channel.js");
+/* harmony import */ var phoenix_longpoll__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! phoenix/longpoll */ "./js/phoenix/longpoll.js");
+/* harmony import */ var phoenix_serializer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! phoenix/serializer */ "./js/phoenix/serializer.js");
+/* harmony import */ var phoenix_timer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! phoenix/timer */ "./js/phoenix/timer.js");
+/** Initializes the Socket *
+ *
+ * For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
+ *
+ * @param {string} endPoint - The string WebSocket endpoint, ie, `"ws://example.com/socket"`,
+ *                                               `"wss://example.com"`
+ *                                               `"/socket"` (inherited host & protocol)
+ * @param {Object} [opts] - Optional configuration
+ * @param {string} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
+ *
+ * Defaults to WebSocket with automatic LongPoll fallback.
+ * @param {Function} [opts.encode] - The function to encode outgoing messages.
+ *
+ * Defaults to JSON encoder.
+ *
+ * @param {Function} [opts.decode] - The function to decode incoming messages.
+ *
+ * Defaults to JSON:
+ *
+ * ```javascript
+ * (payload, callback) => callback(JSON.parse(payload))
+ * ```
+ *
+ * @param {number} [opts.timeout] - The default timeout in milliseconds to trigger push timeouts.
+ *
+ * Defaults `DEFAULT_TIMEOUT`
+ * @param {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
+ * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millsec
+ * socket reconnect interval.
+ *
+ * Defaults to stepped backoff of:
+ *
+ * ```javascript
+ * function(tries){
+ *   return [10, 50, 100, 150, 200, 250, 500, 1000, 2000][tries - 1] || 5000
+ * }
+ * ````
+ *
+ * @param {number} [opts.rejoinAfterMs] - The optional function that returns the millsec
+ * rejoin interval for individual channels.
+ *
+ * ```javascript
+ * function(tries){
+ *   return [1000, 2000, 5000][tries - 1] || 10000
+ * }
+ * ````
+ *
+ * @param {Function} [opts.logger] - The optional function for specialized logging, ie:
+ *
+ * ```javascript
+ * function(kind, msg, data) {
+ *   console.log(`${kind}: ${msg}`, data)
+ * }
+ * ```
+ *
+ * @param {number} [opts.longpollerTimeout] - The maximum timeout of a long poll AJAX request.
+ *
+ * Defaults to 20s (double the server long poll timer).
+ *
+ * @param {{Object|function)} [opts.params] - The optional params to pass when connecting
+ * @param {string} [opts.binaryType] - The binary type to use for binary WebSocket frames.
+ *
+ * Defaults to "arraybuffer"
+ *
+ * @param {vsn} [opts.vsn] - The serializer's protocol version to send on connect.
+ *
+ * Defaults to DEFAULT_VSN.
+*/
+
+
+
+
+
+
+
+
+
+
+
+class Socket {
+  constructor(endPoint, opts = {}) {
+    this.stateChangeCallbacks = { open: [], close: [], error: [], message: [] }
+    this.channels = []
+    this.sendBuffer = []
+    this.ref = 0
+    this.timeout = opts.timeout || phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.DEFAULT_TIMEOUT
+    this.transport = opts.transport || phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.global.WebSocket || phoenix_longpoll__WEBPACK_IMPORTED_MODULE_1__.default
+    this.defaultEncoder = phoenix_serializer__WEBPACK_IMPORTED_MODULE_2__.default.encode.bind(phoenix_serializer__WEBPACK_IMPORTED_MODULE_2__.default)
+    this.defaultDecoder = phoenix_serializer__WEBPACK_IMPORTED_MODULE_2__.default.decode.bind(phoenix_serializer__WEBPACK_IMPORTED_MODULE_2__.default)
+    this.closeWasClean = false
+    this.unloaded = false
+    this.binaryType = opts.binaryType || "arraybuffer"
+    if (this.transport !== phoenix_longpoll__WEBPACK_IMPORTED_MODULE_1__.default) {
+      this.encode = opts.encode || this.defaultEncoder
+      this.decode = opts.decode || this.defaultDecoder
+    } else {
+      this.encode = this.defaultEncoder
+      this.decode = this.defaultDecoder
+    }
+    if (phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.phxWindow && phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.phxWindow.addEventListener) {
+      phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.phxWindow.addEventListener("beforeunload", e => {
+        if (this.conn) {
+          this.unloaded = true
+          this.abnormalClose("unloaded")
+        }
+      })
+    }
+    this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000
+    this.rejoinAfterMs = (tries) => {
+      if (opts.rejoinAfterMs) {
+        return opts.rejoinAfterMs(tries)
+      } else {
+        return [1000, 2000, 5000][tries - 1] || 10000
+      }
+    }
+    this.reconnectAfterMs = (tries) => {
+      if (this.unloaded) { return 100 }
+      if (opts.reconnectAfterMs) {
+        return opts.reconnectAfterMs(tries)
+      } else {
+        return [10, 50, 100, 150, 200, 250, 500, 1000, 2000][tries - 1] || 5000
+      }
+    }
+    this.logger = opts.logger || null
+    this.longpollerTimeout = opts.longpollerTimeout || 20000
+    this.params = (0,phoenix_utils__WEBPACK_IMPORTED_MODULE_3__.closure)(opts.params || {})
+    this.endPoint = `${endPoint}/${phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.TRANSPORTS.websocket}`
+    this.vsn = opts.vsn || phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.DEFAULT_VSN
+    this.heartbeatTimer = null
+    this.pendingHeartbeatRef = null
+    this.reconnectTimer = new phoenix_timer__WEBPACK_IMPORTED_MODULE_4__.default(() => {
+      this.teardown(() => this.connect())
+    }, this.reconnectAfterMs)
+  }
+
+  /**
+   * Returns the socket protocol
+   *
+   * @returns {string}
+   */
+  protocol() { return location.protocol.match(/^https/) ? "wss" : "ws" }
+
+  /**
+   * The fully qualifed socket url
+   *
+   * @returns {string}
+   */
+  endPointURL() {
+    let uri = phoenix_ajax__WEBPACK_IMPORTED_MODULE_5__.default.appendParams(
+      phoenix_ajax__WEBPACK_IMPORTED_MODULE_5__.default.appendParams(this.endPoint, this.params()), { vsn: this.vsn })
+    if (uri.charAt(0) !== "/") { return uri }
+    if (uri.charAt(1) === "/") { return `${this.protocol()}:${uri}` }
+
+    return `${this.protocol()}://${location.host}${uri}`
+  }
+
+  /**
+   * Disconnects the socket
+   *
+   * See https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes for valid status codes.
+   *
+   * @param {Function} callback - Optional callback which is called after socket is disconnected.
+   * @param {integer} code - A status code for disconnection (Optional).
+   * @param {string} reason - A textual description of the reason to disconnect. (Optional)
+   */
+  disconnect(callback, code, reason) {
+    this.closeWasClean = true
+    this.reconnectTimer.reset()
+    this.teardown(callback, code, reason)
+  }
+
+  /**
+   *
+   * @param {Object} params - The params to send when connecting, for example `{user_id: userToken}`
+   *
+   * Passing params to connect is deprecated; pass them in the Socket constructor instead:
+   * `new Socket("/socket", {params: {user_id: userToken}})`.
+   */
+  connect(params) {
+    if (params) {
+      console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
+      this.params = (0,phoenix_utils__WEBPACK_IMPORTED_MODULE_3__.closure)(params)
+    }
+    if (this.conn) { return }
+    this.closeWasClean = false
+    this.conn = new this.transport(this.endPointURL())
+    this.conn.binaryType = this.binaryType
+    this.conn.timeout = this.longpollerTimeout
+    this.conn.onopen = () => this.onConnOpen()
+    this.conn.onerror = error => this.onConnError(error)
+    this.conn.onmessage = event => this.onConnMessage(event)
+    this.conn.onclose = event => this.onConnClose(event)
+  }
+
+  /**
+   * Logs the message. Override `this.logger` for specialized logging. noops by default
+   * @param {string} kind
+   * @param {string} msg
+   * @param {Object} data
+   */
+  log(kind, msg, data) { this.logger(kind, msg, data) }
+
+  /**
+   * Returns true if a logger has been set on this socket.
+   */
+  hasLogger() { return this.logger !== null }
+
+  /**
+   * Registers callbacks for connection open events
+   *
+   * @example socket.onOpen(function(){ console.info("the socket was opened") })
+   *
+   * @param {Function} callback
+   */
+  onOpen(callback) {
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.open.push([ref, callback])
+    return ref
+  }
+
+  /**
+   * Registers callbacks for connection close events
+   * @param {Function} callback
+   */
+  onClose(callback) {
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.close.push([ref, callback])
+    return ref
+  }
+
+  /**
+   * Registers callbacks for connection error events
+   *
+   * @example socket.onError(function(error){ alert("An error occurred") })
+   *
+   * @param {Function} callback
+   */
+  onError(callback) {
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.error.push([ref, callback])
+    return ref
+  }
+
+  /**
+   * Registers callbacks for connection message events
+   * @param {Function} callback
+   */
+  onMessage(callback) {
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.message.push([ref, callback])
+    return ref
+  }
+
+  /**
+   * @private
+   */
+  onConnOpen() {
+    if (this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
+    this.unloaded = false
+    this.closeWasClean = false
+    this.flushSendBuffer()
+    this.reconnectTimer.reset()
+    this.resetHeartbeat()
+    this.stateChangeCallbacks.open.forEach(([, callback]) => callback())
+  }
+
+  /**
+   * @private
+   */
+
+  heartbeatTimeout() {
+    if (this.pendingHeartbeatRef) {
+      this.pendingHeartbeatRef = null
+      if (this.hasLogger()) { this.log("transport", "heartbeat timeout. Attempting to re-establish connection") }
+      this.abnormalClose("heartbeat timeout")
+    }
+  }
+
+  resetHeartbeat() {
+    if (this.conn && this.conn.skipHeartbeat) { return }
+    this.pendingHeartbeatRef = null
+    clearTimeout(this.heartbeatTimer)
+    setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
+  }
+
+  teardown(callback, code, reason) {
+    if (!this.conn) {
+      return callback && callback()
+    }
+
+    this.waitForBufferDone(() => {
+      if (this.conn) {
+        if (code) { this.conn.close(code, reason || "") } else { this.conn.close() }
+      }
+
+      this.waitForSocketClosed(() => {
+        if (this.conn) {
+          this.conn.onclose = function () { } // noop
+          this.conn = null
+        }
+
+        callback && callback()
+      })
+    })
+  }
+
+  waitForBufferDone(callback, tries = 1) {
+    if (tries === 5 || !this.conn || !this.conn.bufferedAmount) {
+      callback()
+      return
+    }
+
+    setTimeout(() => {
+      this.waitForBufferDone(callback, tries + 1)
+    }, 150 * tries)
+  }
+
+  waitForSocketClosed(callback, tries = 1) {
+    if (tries === 5 || !this.conn || this.conn.readyState === phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.SOCKET_STATES.closed) {
+      callback()
+      return
+    }
+
+    setTimeout(() => {
+      this.waitForSocketClosed(callback, tries + 1)
+    }, 150 * tries)
+  }
+
+  onConnClose(event) {
+    if (this.hasLogger()) this.log("transport", "close", event)
+    this.triggerChanError()
+    clearTimeout(this.heartbeatTimer)
+    if (!this.closeWasClean) {
+      this.reconnectTimer.scheduleTimeout()
+    }
+    this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event))
+  }
+
+  /**
+   * @private
+   */
+  onConnError(error) {
+    if (this.hasLogger()) this.log("transport", error)
+    this.triggerChanError()
+    this.stateChangeCallbacks.error.forEach(([, callback]) => callback(error))
+  }
+
+  /**
+   * @private
+   */
+  triggerChanError() {
+    this.channels.forEach(channel => {
+      if (!(channel.isErrored() || channel.isLeaving() || channel.isClosed())) {
+        channel.trigger(phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.CHANNEL_EVENTS.error)
+      }
+    })
+  }
+
+  /**
+   * @returns {string}
+   */
+  connectionState() {
+    switch (this.conn && this.conn.readyState) {
+      case phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.SOCKET_STATES.connecting: return "connecting"
+      case phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.SOCKET_STATES.open: return "open"
+      case phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.SOCKET_STATES.closing: return "closing"
+      default: return "closed"
+    }
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isConnected() { return this.connectionState() === "open" }
+
+  /**
+   * @private
+   *
+   * @param {Channel}
+   */
+  remove(channel) {
+    this.off(channel.stateChangeRefs)
+    this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
+  }
+
+  /**
+   * Removes `onOpen`, `onClose`, `onError,` and `onMessage` registrations.
+   *
+   * @param {refs} - list of refs returned by calls to
+   *                 `onOpen`, `onClose`, `onError,` and `onMessage`
+   */
+  off(refs) {
+    for (let key in this.stateChangeCallbacks) {
+      this.stateChangeCallbacks[key] = this.stateChangeCallbacks[key].filter(([ref]) => {
+        return refs.indexOf(ref) === -1
+      })
+    }
+  }
+
+  /**
+   * Initiates a new channel for the given topic
+   *
+   * @param {string} topic
+   * @param {Object} chanParams - Parameters for the channel
+   * @returns {Channel}
+   */
+  channel(topic, chanParams = {}) {
+    let chan = new phoenix_channel__WEBPACK_IMPORTED_MODULE_6__.default(topic, chanParams, this)
+    this.channels.push(chan)
+    return chan
+  }
+
+  /**
+   * @param {Object} data
+   */
+  push(data) {
+    if (this.hasLogger()) {
+      let { topic, event, payload, ref, join_ref } = data
+      this.log("push", `${topic} ${event} (${join_ref}, ${ref})`, payload)
+    }
+
+    if (this.isConnected()) {
+      this.encode(data, result => this.conn.send(result))
+    } else {
+      this.sendBuffer.push(() => this.encode(data, result => this.conn.send(result)))
+    }
+  }
+
+  /**
+   * Return the next message ref, accounting for overflows
+   * @returns {string}
+   */
+  makeRef() {
+    let newRef = this.ref + 1
+    if (newRef === this.ref) { this.ref = 0 } else { this.ref = newRef }
+
+    return this.ref.toString()
+  }
+
+  sendHeartbeat() {
+    if (this.pendingHeartbeatRef && !this.isConnected()) { return }
+    this.pendingHeartbeatRef = this.makeRef()
+    this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef })
+    this.heartbeatTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs)
+  }
+
+  abnormalClose(reason) {
+    this.closeWasClean = false
+    if (this.isConnected()) { this.conn.close(phoenix_constants__WEBPACK_IMPORTED_MODULE_0__.WS_CLOSE_NORMAL, reason) }
+  }
+
+  flushSendBuffer() {
+    if (this.isConnected() && this.sendBuffer.length > 0) {
+      this.sendBuffer.forEach(callback => callback())
+      this.sendBuffer = []
+    }
+  }
+
+  onConnMessage(rawMessage) {
+    this.decode(rawMessage.data, msg => {
+      let { topic, event, payload, ref, join_ref } = msg
+      if (ref && ref === this.pendingHeartbeatRef) {
+        clearTimeout(this.heartbeatTimer)
+        this.pendingHeartbeatRef = null
+        setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
+      }
+
+      if (this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
+
+      for (let i = 0; i < this.channels.length; i++) {
+        const channel = this.channels[i]
+        if (!channel.isMember(topic, event, payload, join_ref)) { continue }
+        channel.trigger(event, payload, ref, join_ref)
+      }
+
+      for (let i = 0; i < this.stateChangeCallbacks.message.length; i++) {
+        let [, callback] = this.stateChangeCallbacks.message[i]
+        callback(msg)
+      }
+    })
+  }
+
+  leaveOpenTopic(topic) {
+    let dupChannel = this.channels.find(c => c.topic === topic && (c.isJoined() || c.isJoining()))
+    if (dupChannel) {
+      if (this.hasLogger()) this.log("transport", `leaving duplicate topic "${topic}"`)
+      dupChannel.leave()
+    }
+  }
+}
+
+/***/ }),
+
+/***/ "./js/phoenix/timer.js":
+/*!*****************************!*\
+  !*** ./js/phoenix/timer.js ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Timer)
+/* harmony export */ });
+/**
+ *
+ * Creates a timer that accepts a `timerCalc` function to perform
+ * calculated timeout retries, such as exponential backoff.
+ *
+ * @example
+ * let reconnectTimer = new Timer(() => this.connect(), function(tries){
+ *   return [1000, 5000, 10000][tries - 1] || 10000
+ * })
+ * reconnectTimer.scheduleTimeout() // fires after 1000
+ * reconnectTimer.scheduleTimeout() // fires after 5000
+ * reconnectTimer.reset()
+ * reconnectTimer.scheduleTimeout() // fires after 1000
+ *
+ * @param {Function} callback
+ * @param {Function} timerCalc
+ */
+class Timer {
+  constructor(callback, timerCalc) {
+    this.callback = callback
+    this.timerCalc = timerCalc
+    this.timer = null
+    this.tries = 0
+  }
+
+  reset() {
+    this.tries = 0
+    clearTimeout(this.timer)
+  }
+
+  /**
+   * Cancels any previous scheduleTimeout and schedules callback
+   */
+  scheduleTimeout() {
+    clearTimeout(this.timer)
+
+    this.timer = setTimeout(() => {
+      this.tries = this.tries + 1
+      this.callback()
+    }, this.timerCalc(this.tries + 1))
+  }
+}
+
+/***/ }),
+
+/***/ "./js/phoenix/utils.js":
+/*!*****************************!*\
+  !*** ./js/phoenix/utils.js ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "closure": () => (/* binding */ closure)
+/* harmony export */ });
+// wraps value in closure or returns closure
+let closure = (value) => {
+  if (typeof value === "function") {
+    return value
+  } else {
+    let closure = function () { return value }
+    return closure
+  }
+}
+
+/***/ }),
+
+/***/ "./js/phoenix/index-exposed.js":
+/*!*************************************!*\
+  !*** ./js/phoenix/index-exposed.js ***!
+  \*************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+var ___EXPOSE_LOADER_IMPORT___ = __webpack_require__(/*! -!./index.js */ "./js/phoenix/index.js");
+var ___EXPOSE_LOADER_GET_GLOBAL_THIS___ = __webpack_require__(/*! ../../node_modules/expose-loader/dist/runtime/getGlobalThis.js */ "./node_modules/expose-loader/dist/runtime/getGlobalThis.js");
+var ___EXPOSE_LOADER_GLOBAL_THIS___ = ___EXPOSE_LOADER_GET_GLOBAL_THIS___;
+if (typeof ___EXPOSE_LOADER_GLOBAL_THIS___["Phoenix"] === 'undefined') ___EXPOSE_LOADER_GLOBAL_THIS___["Phoenix"] = ___EXPOSE_LOADER_IMPORT___;
+else throw new Error('[exposes-loader] The "Phoenix" value exists in the global scope, it may not be safe to overwrite it, use the "override" option')
+module.exports = ___EXPOSE_LOADER_IMPORT___;
+
+
+/***/ }),
+
+/***/ "./node_modules/expose-loader/dist/runtime/getGlobalThis.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/expose-loader/dist/runtime/getGlobalThis.js ***!
+  \******************************************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+"use strict";
+
+
+// eslint-disable-next-line func-names
+module.exports = function () {
+  if (typeof globalThis === "object") {
+    return globalThis;
+  }
+
+  var g;
+
+  try {
+    // This works if eval is allowed (see CSP)
+    // eslint-disable-next-line no-new-func
+    g = this || new Function("return this")();
+  } catch (e) {
+    // This works if the window reference is available
+    if (typeof window === "object") {
+      return window;
+    } // This works if the self reference is available
+
+
+    if (typeof self === "object") {
+      return self;
+    } // This works if the global reference is available
+
+
+    if (typeof __webpack_require__.g !== "undefined") {
+      return __webpack_require__.g;
+    }
+  }
+
+  return g;
+}();
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/global */
+/******/ 	(() => {
+/******/ 		__webpack_require__.g = (function() {
+/******/ 			if (typeof globalThis === 'object') return globalThis;
+/******/ 			try {
+/******/ 				return this || new Function('return this')();
+/******/ 			} catch (e) {
+/******/ 				if (typeof window === 'object') return window;
+/******/ 			}
+/******/ 		})();
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __webpack_require__("./js/phoenix/index-exposed.js");
+/******/ 	
+/******/ 	return __webpack_exports__;
+/******/ })()
+;
+});
+//# sourceMappingURL=phoenix.js.map
