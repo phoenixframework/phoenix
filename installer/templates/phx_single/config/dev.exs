@@ -14,11 +14,10 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
   code_reloader: true,
   check_origin: false,
   watchers: <%= if @webpack do %>[
-    node: [
-      "node_modules/webpack/bin/webpack.js",
-      "--mode",
-      "development",
-      "--watch-stdin",
+    # If using yarn, you can use `yarn watch` instead of `npm run watch`
+    npm: [
+      "run",
+      "watch",
       cd: Path.expand("../assets", __DIR__)
     ]
   ]<% else %>[]<% end %>

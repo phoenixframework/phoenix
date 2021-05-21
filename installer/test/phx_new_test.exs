@@ -111,7 +111,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/assets/webpack.config.js", "js/app.js"
       assert_file "phx_blog/assets/.babelrc", "env"
       assert_file "phx_blog/config/dev.exs", fn file ->
-        assert file =~ "watchers: [\n    node:"
+        assert file =~ "watchers: [\n    # If using yarn, you can use `yarn watch` instead of `npm run watch`\n    npm:"
         assert file =~ "lib/phx_blog_web/(live|views)/.*(ex)"
         assert file =~ "lib/phx_blog_web/templates/.*(eex)"
       end
