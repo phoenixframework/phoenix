@@ -95,12 +95,12 @@ defmodule Phx.New.Generator do
         {:error, _} -> "import Config\n"
       end
 
-    with :error <- split_with_self(contents, "use Mix.Config\n"),
-         :error <- split_with_self(contents, "import Config\n") do
+    with :error <- split_with_self(contents, "use Mix.Config"),
+         :error <- split_with_self(contents, "import Config") do
       Mix.raise(~s[Could not find "use Mix.Config" or "import Config" in #{inspect(file)}])
     else
       [left, middle, right] ->
-        write_formatted!(file, [left, middle, ?\n, to_inject, ?\n, right])
+        write_formatted!(file, [left, middle, ?\n, to_inject, right])
     end
   end
 
@@ -114,16 +114,16 @@ defmodule Phx.New.Generator do
 
         {:error, _} ->
           """
-            import Config
+          import Config
 
-            if config_env() == :prod do
-            end
+          if config_env() == :prod do
+          end
           """
       end
 
     case split_with_self(contents, "if config_env() == :prod do") do
       [left, middle, right] ->
-        write_formatted!(file, [left, middle, ?\n, to_inject, ?\n, right])
+        write_formatted!(file, [left, middle, ?\n, to_inject, right])
 
       :error ->
         Mix.raise(~s[Could not find "if config_env() == :prod do" in #{inspect(file)}])
