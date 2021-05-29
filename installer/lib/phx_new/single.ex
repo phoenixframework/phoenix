@@ -78,7 +78,6 @@ defmodule Phx.New.Single do
 
   template :webpack_live, [
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
-    {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
     {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},

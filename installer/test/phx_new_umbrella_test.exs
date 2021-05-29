@@ -689,7 +689,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/.gitignore", "/assets/node_modules"
         assert_file "another/.gitignore",  ~r/\n$/
         assert_file "another/assets/webpack.config.js", "js/app.js"
-        assert_file "another/assets/.babelrc", "env"
         assert_file "another/assets/static/favicon.ico"
         assert_file "another/assets/static/images/phoenix.png"
         assert_file "another/assets/css/app.css"
