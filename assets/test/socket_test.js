@@ -8,7 +8,7 @@ import {Socket, LongPoll} from "../js/phoenix"
 
 let socket
 
-describe("with transports", function(done){
+describe("with transports", function(){
   before(function(){
     window.WebSocket = WebSocket
     window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
