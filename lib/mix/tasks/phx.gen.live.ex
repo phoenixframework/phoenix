@@ -35,14 +35,14 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     * a LiveView in `lib/app_web/live/user_live/index.ex`
     * a LiveComponent in `lib/app_web/live/user_live/form_component.ex`
     * a LiveComponent in `lib/app_web/live/modal_component.ex`
-    * a helpers modules in `lib/app_web/live/live_helpers.ex`
+    * a helpers module in `lib/app_web/live/live_helpers.ex`
 
   ## The context app
 
   A migration file for the repository and test files for the context and
   controller features will also be generated.
 
-  The location of the web files (LiveView's, views, templates, etc) in an
+  The location of the web files (LiveView's, views, templates, etc.) in an
   umbrella application will vary based on the `:context_app` config located
   in your applications `:generators` configuration. When set, the Phoenix
   generators will generate web files directly in your lib and test folders
