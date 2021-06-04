@@ -20,8 +20,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   When this command is run for the first time, a `ModalComponent` and
   `LiveHelpers` module will be created, along with the resource level
-  LiveViews and components, including a `UserLive.Index`, `UserLive.Show`,
-  and `UserLive.FormComponent` for the new resource.
+  LiveViews and components, including `UserLive.Index`, `UserLive.Show`,
+  and `UserLive.FormComponent` modules for the new resource.
 
   > Note: A resource may also be split
   > over distinct contexts (such as `Accounts.User` and `Payments.User`).
