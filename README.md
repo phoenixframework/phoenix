@@ -73,7 +73,7 @@ $ npm run watch
 
 ## Important links
 
-* [#elixir-lang][1] on [Libera][2] IRC
+* [#elixir][1] on [Libera][2] IRC
 * [elixir-lang Slack channel][3]
 * [Issue tracker][4]
 * [Phoenix Forum (questions)][5]
@@ -81,7 +81,7 @@ $ npm run watch
 * Visit Phoenix's sponsor, DockYard, for expert [phoenix consulting](https://dockyard.com/phoenix-consulting)
 * Privately disclose security vulnerabilities to phoenix-security@googlegroups.com
 
-  [1]: https://web.libera.chat/?channels=#elixir-lang
+  [1]: https://web.libera.chat/?channels=#elixir
   [2]: https://libera.chat/
   [3]: https://elixir-slackin.herokuapp.com/
   [4]: https://github.com/phoenixframework/phoenix/issues
