@@ -55,18 +55,18 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
-      mix phx.gen.live Sales User users --context-app warehouse
+      mix phx.gen.live Accounts User users --context-app warehouse
 
   ## Web namespace
 
-  By default, the controller and view will be namespaced by the schema name.
+  By default, the LiveView modules will be namespaced by the web module.
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
-      mix phx.gen.live Sales User users --web Sales
+      mix phx.gen.live Accounts User users --web Sales
 
-  Which would generate a LiveViews inside `lib/app_web/live/sales/user_live/` and a
-  view at `lib/app_web/views/sales/user_view.ex`.
+  Which would generate the LiveViews in `lib/app_web/live/sales/user_live/`,
+  namespaced `AppWeb.Sales.UserLive` instead of `AppWeb.UserLive`.
 
   ## Customizing the context, schema, tables and migrations
 
