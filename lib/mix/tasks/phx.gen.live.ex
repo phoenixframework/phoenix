@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   with their respective names and types. See `mix phx.gen.schema`
   for more information on attributes.
 
-  Overall, this generator will add the following files to `lib/`:
+  Overall, this generator will add the following files:
 
     * a context module in `lib/app/accounts.ex` for the accounts API
     * a schema in `lib/app/accounts/user.ex`, with a `users` table
