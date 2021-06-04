@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   The schema is responsible for mapping the database fields into an
   Elixir struct. It is followed by an optional list of attributes,
-  with their respective names and types. See `mix phx.gen.schema`
+  with their respective names and types. See `mix help phx.gen.schema`
   for more information on attributes.
 
   Overall, this generator will add the following files:
@@ -77,7 +77,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   for file generation control.
 
   You can also change the table name or configure the migrations to
-  use binary ids for primary keys, see `mix phx.gen.schema` for more
+  use binary ids for primary keys, see `mix help phx.gen.schema` for more
   information.
   """
   use Mix.Task
