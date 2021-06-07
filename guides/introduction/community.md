@@ -4,7 +4,7 @@ The Elixir and Phoenix communities are friendly and welcoming. All questions and
 
 There are a number of places to connect with community members at all experience levels.
 
-  * We're on Libera IRC in the [\#elixir-lang](https://web.libera.chat) channel.
+  * We're on Libera IRC in the [\#elixir](https://web.libera.chat/?channels=#elixir) channel.
 
   * [Request an invitation](https://elixir-slackin.herokuapp.com/) and join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
   
