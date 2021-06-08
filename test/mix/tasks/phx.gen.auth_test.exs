@@ -622,9 +622,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         assert_file "config/test.exs", fn file ->
           assert file =~ """
-          config :argon2_elixir,
-            t_cost: 1,
-            m_cost: 8
+          config :argon2_elixir, t_cost: 1, m_cost: 8
           """
         end
 
