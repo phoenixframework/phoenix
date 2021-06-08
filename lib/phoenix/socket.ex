@@ -631,9 +631,13 @@ defmodule Phoenix.Socket do
   end
 
   defp handle_in({pid, ref}, %{event: "phx_join", topic: topic} = message, state, socket) do
-    Logger.debug fn ->
-      "Duplicate channel join for topic \"#{topic}\" in #{inspect(socket.handler)}. " <>
-        "Closing existing channel for new join."
+    receive do
+      {:socket_close, ^pid, _reason} -> :ok
+      after 0 ->
+        Logger.debug fn ->
+          "Duplicate channel join for topic \"#{topic}\" in #{inspect(socket.handler)}. " <>
+            "Closing existing channel for new join."
+        end
     end
 
     :ok = shutdown_duplicate_channel(pid)
