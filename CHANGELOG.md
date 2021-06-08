@@ -19,10 +19,16 @@ Phoenix v1.6 requires Elixir v1.9+.
   * [mix phx.new] Add `--database sqlite3` option to `phx.new`
   * [View] Extracted `Phoenix.View` into its own project to facilitate reuse
 
+### JavaScript Client Enhancements
+  * Fire each event in a separate task for the LongPoll transport to fix ordering
+
 ### Bug fixes
 
   * [Controller] Return normalized paths in `current_path/1` and `current_path/2`
   * [mix phx.gen.live] Fix a bug where tests with `utc_datetime` and `boolean` fields did not pass out of the box
+
+### JavaScript Client Bug fixes
+  * Bind to `beforeunload` instead of `unload` to solve Firefox connection issues
 
 ### Deprecations
 

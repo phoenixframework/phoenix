@@ -32,9 +32,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.HashingLibrary do
       module: Argon2,
       mix_dependency: ~s|{:argon2_elixir, "~> 2.0\"}|,
       test_config: """
-      config :argon2_elixir,
-        t_cost: 1,
-        m_cost: 8
+      config :argon2_elixir, t_cost: 1, m_cost: 8
       """
     }
 

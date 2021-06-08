@@ -6,28 +6,27 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
       mix phx.gen.live Accounts User users name:string age:integer
 
-  The first argument is the context module followed by the schema module
-  and its plural name (used as the schema table name).
+  The first argument is the context module.  The context is an Elixir module
+  that serves as an API boundary for the given resource. A context often holds
+  many related resources.  Therefore, if the context already exists, it will be
+  augmented with functions for the given resource.
 
-  The context is an Elixir module that serves as an API boundary for
-  the given resource. A context often holds many related resources.
-  Therefore, if the context already exists, it will be augmented with
-  functions for the given resource.
+  The second argument is the schema module.  The schema is responsible for
+  mapping the database fields into an Elixir struct.
+
+  The remaining arguments are the schema module plural name (used as the schema
+  table name), and an optional list of attributes as their respective names and
+  types.  See `mix help phx.gen.schema` for more information on attributes.
 
   When this command is run for the first time, a `ModalComponent` and
   `LiveHelpers` module will be created, along with the resource level
-  LiveViews and components, including a `UserLive.Index`, `UserLive.Show`,
-  and `UserLive.FormComponent` for the new resource.
+  LiveViews and components, including `UserLive.Index`, `UserLive.Show`,
+  and `UserLive.FormComponent` modules for the new resource.
 
   > Note: A resource may also be split
   > over distinct contexts (such as `Accounts.User` and `Payments.User`).
 
-  The schema is responsible for mapping the database fields into an
-  Elixir struct. It is followed by an optional list of attributes,
-  with their respective names and types. See `mix phx.gen.schema`
-  for more information on attributes.
-
-  Overall, this generator will add the following files to `lib/`:
+  Overall, this generator will add the following files:
 
     * a context module in `lib/app/accounts.ex` for the accounts API
     * a schema in `lib/app/accounts/user.ex`, with a `users` table
@@ -35,14 +34,14 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     * a LiveView in `lib/app_web/live/user_live/index.ex`
     * a LiveComponent in `lib/app_web/live/user_live/form_component.ex`
     * a LiveComponent in `lib/app_web/live/modal_component.ex`
-    * a helpers modules in `lib/app_web/live/live_helpers.ex`
+    * a helpers module in `lib/app_web/live/live_helpers.ex`
 
   ## The context app
 
   A migration file for the repository and test files for the context and
   controller features will also be generated.
 
-  The location of the web files (LiveView's, views, templates, etc) in an
+  The location of the web files (LiveView's, views, templates, etc.) in an
   umbrella application will vary based on the `:context_app` config located
   in your applications `:generators` configuration. When set, the Phoenix
   generators will generate web files directly in your lib and test folders
@@ -56,18 +55,18 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
-      mix phx.gen.live Sales User users --context-app warehouse
+      mix phx.gen.live Accounts User users --context-app warehouse
 
   ## Web namespace
 
-  By default, the controller and view will be namespaced by the schema name.
+  By default, the LiveView modules will be namespaced by the web module.
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
-      mix phx.gen.live Sales User users --web Sales
+      mix phx.gen.live Accounts User users --web Sales
 
-  Which would generate a LiveViews inside `lib/app_web/live/sales/user_live/` and a
-  view at `lib/app_web/views/sales/user_view.ex`.
+  Which would generate the LiveViews in `lib/app_web/live/sales/user_live/`,
+  namespaced `AppWeb.Sales.UserLive` instead of `AppWeb.UserLive`.
 
   ## Customizing the context, schema, tables and migrations
 
@@ -77,7 +76,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   for file generation control.
 
   You can also change the table name or configure the migrations to
-  use binary ids for primary keys, see `mix phx.gen.schema` for more
+  use binary ids for primary keys, see `mix help phx.gen.schema` for more
   information.
   """
   use Mix.Task
