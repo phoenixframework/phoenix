@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
 
     case split_with_self(mixfile, string_to_split_on) do
       {beginning, splitter, rest} ->
-        new_mixfile = IO.iodata_to_binary([beginning, splitter, "      ", dependency, ?\,, ?\n, rest])
+        new_mixfile = IO.iodata_to_binary([beginning, splitter, "      ", dependency, ?,, ?\n, rest])
         {:ok, new_mixfile}
 
       _ ->
