@@ -487,15 +487,7 @@ defmodule Phoenix.Socket do
   end
 
   def __info__({:socket_close, pid, _reason}, {state, socket}) do
-    case state.channels_inverse do
-      %{^pid => {topic, join_ref}} ->
-        {^pid, monitor_ref} = Map.fetch!(state.channels, topic)
-        state = delete_channel(state, pid, topic, monitor_ref)
-        {:push, encode_close(socket, topic, join_ref), {state, socket}}
-
-      %{} ->
-        {:ok, {state, socket}}
-    end
+    socket_close(pid, {state, socket})
   end
 
   def __info__(:garbage_collect, state) do
@@ -614,20 +606,21 @@ defmodule Phoenix.Socket do
     end
   end
 
-  defp handle_in({pid, ref}, %{event: "phx_join", topic: topic} = message, state, socket) do
+  defp handle_in({pid, _ref}, %{event: "phx_join", topic: topic} = message, state, socket) do
     receive do
       {:socket_close, ^pid, _reason} -> :ok
     after
       0 ->
         Logger.debug(fn ->
           "Duplicate channel join for topic \"#{topic}\" in #{inspect(socket.handler)}. " <>
-            "Closing existing channel for new join."
+          "Closing existing channel for new join."
         end)
     end
 
     :ok = shutdown_duplicate_channel(pid)
-    state = delete_channel(state, pid, topic, ref)
-    handle_in(nil, message, state, socket)
+    {:push, {opcode, payload}, {new_state, new_socket}} = socket_close(pid, {state, socket})
+    send(self(), {:socket_push, opcode, payload})
+    handle_in(nil, message, new_state, new_socket)
   end
 
   defp handle_in({pid, _ref}, message, state, socket) do
@@ -704,6 +697,18 @@ defmodule Phoenix.Socket do
       5_000 ->
         Process.exit(pid, :kill)
         receive do: ({:DOWN, ^ref, _, _, _} -> :ok)
+    end
+  end
+
+  defp socket_close(pid, {state, socket}) do
+    case state.channels_inverse do
+      %{^pid => {topic, join_ref}} ->
+        {^pid, monitor_ref} = Map.fetch!(state.channels, topic)
+        state = delete_channel(state, pid, topic, monitor_ref)
+        {:push, encode_close(socket, topic, join_ref), {state, socket}}
+
+      %{} ->
+        {:ok, {state, socket}}
     end
   end
 end
