@@ -218,6 +218,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       {:eex, "schema_token.ex", Path.join([context.dir, "#{schema.singular}_token.ex"])},
       {:eex, "auth.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_auth.ex"])},
       {:eex, "auth_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_auth_test.exs"])},
+      {:eex, "auth_helpers.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_auth_helpers.ex"])},
       {:eex, "confirmation_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_confirmation_view.ex"])},
       {:eex, "confirmation_new.html.eex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_confirmation", "new.html.eex"])},
       {:eex, "confirmation_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller.ex"])},
