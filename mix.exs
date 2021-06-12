@@ -7,8 +7,6 @@ defmodule Phoenix.MixProject do
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
   # installer is ahead of Phoenix itself.
-  #
-  # We also need to update guides/introduction/installation.md
   @elixir_requirement "~> 1.9"
 
   def project do

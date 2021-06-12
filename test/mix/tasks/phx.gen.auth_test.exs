@@ -3,6 +3,8 @@ Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 defmodule Mix.Tasks.Phx.Gen.AuthTest do
   use ExUnit.Case
 
+  @moduletag :mix_phx_new
+
   import MixHelper
   alias Mix.Tasks.Phx.Gen
 
