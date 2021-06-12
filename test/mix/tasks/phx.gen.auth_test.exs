@@ -90,7 +90,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert_file "lib/my_app/accounts/user_notifier.ex"
       assert_file "test/my_app/accounts_test.exs"
       assert_file "test/support/fixtures/accounts_fixtures.ex"
-      assert_file "lib/my_app_web/live/user_auth_helpers.ex"
+      assert_file "lib/my_app_web/live/user_live_auth.ex"
       assert_file "lib/my_app_web/controllers/user_auth.ex"
       assert_file "test/my_app_web/controllers/user_auth_test.exs"
       assert_file "lib/my_app_web/views/user_confirmation_view.ex"
@@ -223,8 +223,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ ~s|def valid_user_attributes(attrs \\\\ %{}) do|
       end
 
-      assert_file "lib/my_app_web/live/warehouse/user_auth_helpers.ex", fn file ->
-        assert file =~ "defmodule MyAppWeb.Warehouse.UserAuthHelpers do"
+      assert_file "lib/my_app_web/live/warehouse/user_live_auth.ex", fn file ->
+        assert file =~ "defmodule MyAppWeb.Warehouse.UserLiveAuth do"
       end
 
       assert_file "lib/my_app_web/controllers/warehouse/user_auth.ex", fn file ->
@@ -722,7 +722,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert_file "apps/my_app/lib/my_app/accounts/user_notifier.ex"
         assert_file "apps/my_app/test/my_app/accounts_test.exs"
         assert_file "apps/my_app/test/support/fixtures/accounts_fixtures.ex"
-        assert_file "apps/my_app_web/lib/my_app_web/live/user_auth_helpers.ex"
+        assert_file "apps/my_app_web/lib/my_app_web/live/user_live_auth.ex"
         assert_file "apps/my_app_web/lib/my_app_web/controllers/user_auth.ex"
         assert_file "apps/my_app_web/test/my_app_web/controllers/user_auth_test.exs"
         assert_file "apps/my_app_web/lib/my_app_web/views/user_confirmation_view.ex"
