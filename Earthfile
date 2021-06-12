@@ -55,7 +55,6 @@ integration-test:
         diff -u mix.lock.orig mix.lock && \
         rm mix.lock.orig
 
-
     # Compile phoenix
     COPY --dir assets config installer lib test priv /src
     RUN mix local.rebar --force
@@ -81,7 +80,7 @@ integration-test:
     END
 
 npm:
-    FROM node:12-alpine3.13.3
+    FROM node:12-alpine3.13.0
     WORKDIR /src
     RUN mkdir assets
     # Copy package.json + lockfile separatelly to improve caching (JS changes don't trigger `npm install` anymore)
