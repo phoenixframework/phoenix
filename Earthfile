@@ -80,7 +80,7 @@ integration-test:
     END
 
 npm:
-    FROM node:12-alpine3.13.0
+    FROM node:12-alpine3.12
     WORKDIR /src
     RUN mkdir assets
     # Copy package.json + lockfile separatelly to improve caching (JS changes don't trigger `npm install` anymore)
