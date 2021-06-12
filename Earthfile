@@ -4,8 +4,8 @@ all:
     BUILD +npm
 
 all-test:
-    BUILD --build-arg ELIXIR=1.11.0 --build-arg OTP=21.3.8.18 +test
-    BUILD --build-arg ELIXIR=1.11.0 --build-arg OTP=23.1.1 +test
+    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=22.3.4.19 +test
+    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=24.0.2 +test
 
 test:
     FROM +test-setup
@@ -20,8 +20,8 @@ test:
     RUN mix test
 
 all-integration-test:
-    BUILD --build-arg ELIXIR=1.11.1 --build-arg OTP=21.3.8.18 +integration-test
-    BUILD --build-arg ELIXIR=1.11.1 --build-arg OTP=23.1.1 +integration-test
+    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=22.3.4.19 +integration-test
+    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=24.0.2 +integration-test
 
 integration-test:
     FROM +setup-base
@@ -81,7 +81,7 @@ integration-test:
     END
 
 npm:
-    FROM node:12-alpine3.12
+    FROM node:12-alpine3.13.3
     WORKDIR /src
     RUN mkdir assets
     # Copy package.json + lockfile separatelly to improve caching (JS changes don't trigger `npm install` anymore)
@@ -92,9 +92,9 @@ npm:
     RUN npm test
 
 setup-base:
-   ARG ELIXIR=1.11.2
-   ARG OTP=23.1.1
-   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.12.0
+   ARG ELIXIR=1.12.1
+   ARG OTP=24.0.2
+   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.13.3
    RUN apk add --no-progress --update git build-base
    ENV ELIXIR_ASSERT_TIMEOUT=10000
    WORKDIR /src
