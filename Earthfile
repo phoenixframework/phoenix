@@ -15,9 +15,13 @@ test:
     # Run unit tests
     RUN mix test
 
+   IF echo $ELIXIR | version ">=1.12" 
     # Run installer tests
     WORKDIR /src/installer
     RUN mix test
+   ELSE 
+     RUN echo "Skipping Installer Tests" 
+   END
 
 all-integration-test:
     BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=22.3.4.19 +integration-test
@@ -94,12 +98,18 @@ setup-base:
    ARG ELIXIR=1.12.1
    ARG OTP=24.0.2
    FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.13.3
-   RUN apk add --no-progress --update git build-base
+   RUN apk add --no-progress --update git build-base curl
+ 
    ENV ELIXIR_ASSERT_TIMEOUT=10000
    WORKDIR /src
 
+
 test-setup:
    FROM +setup-base
+   # Install Version (to check versions)
+   RUN curl -L https://github.com/ivan-dyachenko/version/releases/download/v1.0.4/version_1.0.4_linux_amd64.tar.gz | tar xz
+   RUN cp ./version_1.0.4_linux_amd64/version /usr/bin/ && rm -rf version_1.0.4_linux_amd64
+
    COPY mix.exs .
    COPY mix.lock .
    COPY .formatter.exs .
