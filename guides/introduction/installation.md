@@ -9,7 +9,7 @@ In order to build a Phoenix application, we will need a few dependencies install
 
 Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.
 
-## Elixir 1.9 or later
+## Elixir 1.12 or later
 
 Phoenix is written in Elixir, and our application code will also be written in Elixir. We won't get far in a Phoenix app without it! The Elixir site maintains a great [Installation Page](https://elixir-lang.org/install.html) to help.
 
@@ -31,13 +31,13 @@ When we install Elixir using instructions from the Elixir [Installation Page](ht
 
 ## Phoenix
 
-To check that we are on Elixir 1.9 and Erlang 22 or later, run:
+To check that we are on Elixir 1.12 and Erlang 22 or later, run:
 
 ```console
 elixir -v
 Erlang/OTP 22 [erts-10.7] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
-Elixir 1.9.1
+Elixir 1.12.1
 ```
 
 Once we have Elixir and Erlang, we are ready to install the Phoenix application generator:

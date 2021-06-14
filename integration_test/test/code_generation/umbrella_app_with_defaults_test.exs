@@ -80,6 +80,17 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
 
         mix_run!(~w(phx.gen.json Blog Post posts title:unique body:string status:enum:unpublished:published:deleted), web_root_path)
 
+        modify_file(Path.join(web_root_path, "lib/rainy_day_web/router.ex"), fn file ->
+          inject_before_final_end(file, """
+
+            scope "/", RainyDayWeb do
+              pipe_through [:api]
+
+              resources "/posts", PostController, except: [:new, :edit]
+            end
+          """)
+        end)
+
         assert_no_compilation_warnings(app_root_path)
         assert_passes_formatter_check(app_root_path)
       end)
@@ -99,7 +110,7 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
             scope "/", RainyDayWeb do
               pipe_through [:api]
 
-              resources "/posts", PostController
+              resources "/posts", PostController, except: [:new, :edit]
             end
           """)
         end)

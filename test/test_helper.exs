@@ -25,4 +25,11 @@ assert_timeout = String.to_integer(
   System.get_env("ELIXIR_ASSERT_TIMEOUT") || "200"
 )
 
-ExUnit.start(assert_receive_timeout: assert_timeout)
+excludes =
+  if Version.match?(System.version(), "~> 1.12") do
+    []
+  else
+    [:mix_phx_new]
+  end
+
+ExUnit.start(assert_receive_timeout: assert_timeout, exclude: excludes)

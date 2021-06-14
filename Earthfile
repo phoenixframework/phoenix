@@ -4,8 +4,8 @@ all:
     BUILD +npm
 
 all-test:
-    BUILD --build-arg ELIXIR=1.11.0 --build-arg OTP=21.3.8.18 +test
-    BUILD --build-arg ELIXIR=1.11.0 --build-arg OTP=23.1.1 +test
+    BUILD --build-arg ELIXIR=1.9.4 --build-arg OTP=21.3.8.24 +test
+    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=24.0.2 --build-arg RUN_INSTALLER_TESTS=1 +test
 
 test:
     FROM +test-setup
@@ -15,13 +15,16 @@ test:
     # Run unit tests
     RUN mix test
 
-    # Run installer tests
-    WORKDIR /src/installer
-    RUN mix test
+    IF [ "$RUN_INSTALLER_TESTS" = "1" ]
+        WORKDIR /src/installer
+        RUN mix test
+    ELSE
+        RUN echo "Skipping installer tests"
+    END
 
 all-integration-test:
-    BUILD --build-arg ELIXIR=1.11.1 --build-arg OTP=21.3.8.18 +integration-test
-    BUILD --build-arg ELIXIR=1.11.1 --build-arg OTP=23.1.1 +integration-test
+    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=22.3.4.19 +integration-test
+    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=24.0.2 +integration-test
 
 integration-test:
     FROM +setup-base
@@ -54,7 +57,6 @@ integration-test:
         mix deps.unlock --check-unused && \
         diff -u mix.lock.orig mix.lock && \
         rm mix.lock.orig
-
 
     # Compile phoenix
     COPY --dir assets config installer lib test priv /src
@@ -92,9 +94,9 @@ npm:
     RUN npm test
 
 setup-base:
-   ARG ELIXIR=1.11.2
-   ARG OTP=23.1.1
-   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.12.0
+   ARG ELIXIR=1.12.1
+   ARG OTP=24.0.2
+   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.13.3
    RUN apk add --no-progress --update git build-base
    ENV ELIXIR_ASSERT_TIMEOUT=10000
    WORKDIR /src
