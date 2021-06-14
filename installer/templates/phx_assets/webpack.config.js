@@ -5,7 +5,6 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = (env, options) => {
   const devMode = options.mode !== 'production';
-  console.log(`CURRENT MODE: ${devMode}`)
 
   return {
     resolve: {
