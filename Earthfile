@@ -15,7 +15,7 @@ test:
     # Run unit tests
     RUN mix test
 
-    IF $RUN_INSTALLER_TESTS == "1"
+    IF [ $RUN_INSTALLER_TESTS = "1" ]
         WORKDIR /src/installer
         RUN mix test
     ELSE
