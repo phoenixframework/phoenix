@@ -4,8 +4,8 @@ all:
     BUILD +npm
 
 all-test:
-    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=22.3.4.19 +test
-    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=24.0.2 +test
+    BUILD --build-arg ELIXIR=1.9.4 --build-arg OTP=21.3.8.24 +test
+    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=24.0.2 --build-arg RUN_INSTALLER_TESTS=1 +test
 
 test:
     FROM +test-setup
@@ -15,9 +15,12 @@ test:
     # Run unit tests
     RUN mix test
 
-    # Run installer tests
-    WORKDIR /src/installer
-    RUN mix test
+    IF $RUN_INSTALLER_TESTS == "1"
+        WORKDIR /src/installer
+        RUN mix test
+    ELSE
+        RUN echo "Skipping installer tests"
+    END
 
 all-integration-test:
     BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=22.3.4.19 +integration-test

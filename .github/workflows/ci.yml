@@ -13,14 +13,16 @@ jobs:
         include:
           - elixir: 1.9.4
             otp: 21.3.8.24
+            run_installer_tests: 0
           - elixir: 1.12.1
             otp: 24.0.2
+            run_installer_tests: 1
     steps:
       - uses: actions/checkout@v2
       - name: Download released earth
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.4.1/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
       - name: Execute tests
-        run: earthly --build-arg ELIXIR=${{ matrix.elixir }} --build-arg OTP=${{ matrix.otp }} +test
+        run: earthly --build-arg ELIXIR=${{ matrix.elixir }} --build-arg OTP=${{ matrix.otp }} --build-arg RUN_INSTALLER_TESTS=${{ matrix.run_installer_tests }} +test
   integration-test-elixir:
     runs-on: ubuntu-latest
     env:
