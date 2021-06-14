@@ -80,7 +80,7 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
 
         mix_run!(~w(phx.gen.json Blog Post posts title:unique body:string status:enum:unpublished:published:deleted), web_root_path)
 
-        modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
+        modify_file(Path.join(web_root_path, "lib/rainy_day_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
             scope "/", PhxBlogWeb do
