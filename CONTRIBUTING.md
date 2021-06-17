@@ -15,7 +15,7 @@ Please **do not** use the issue tracker for personal support requests nor featur
 
 * The [phoenix-talk mailing list](http://groups.google.com/group/phoenix-talk) (closed in favor of forum, but archive is still online)
 * [The Phoenix subforum on the Elixir forum](https://elixirforum.com/c/phoenix-forum)
-* **[#elixir](irc://irc.libera.chat/elixir)** IRC channel on [irc.libera.chat](https://libera.chat/)
+* **[#elixir](irc://irc.libera.chat/elixir)** on [Libera](https://libera.chat/) IRC
 
 Development issues can be discussed on the [phoenix-core mailing list](http://groups.google.com/group/phoenix-core).
 
