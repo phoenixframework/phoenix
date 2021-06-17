@@ -102,6 +102,37 @@ defmodule Phoenix.Socket.Transport do
 
   @type state :: term()
 
+  @type opcode :: :binary | :text
+
+  @typedoc """
+  Specifies a control frame, with opcode of `:ping` or `:pong`.
+
+  When replying from `c:handle_control/2`, a control frame must
+  be used.
+
+  Control frames may optonally be returned in replies from
+  `c:handle_in/2` or pushed to clients from `c:handle_info/2`.
+  This can be used to implement server-side keepalive, for instance.
+  """
+  @type control_frame ::
+          {:ping, message :: term}
+          | {:pong, message :: term}
+
+  @typedoc """
+  A tuple representing the frame type as well as its payload.
+
+  The frame type must be a valid `t:opcode/0` atom, which translates
+  to a specific 4-bit value defined by the WebSocket protocol.
+
+  When replying to a client or pushing a frame, using the tuple
+  `{:close, code, message}` will close the socket after pushing
+  the frame to the client.
+  """
+  @type frame ::
+          {opcode, message :: term}
+          | control_frame
+          | {:close, code :: integer, message :: binary}
+
   @doc """
   Returns a child specification for socket management.
 
@@ -175,9 +206,9 @@ defmodule Phoenix.Socket.Transport do
   `:binary` opcode and the message must be always iodata. Long polling only
   supports text opcode.
   """
-  @callback handle_in({message :: term, opts :: keyword}, state) ::
+  @callback handle_in({message :: term, [opcode: :binary | :text]}, state) ::
               {:ok, state}
-              | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
+              | {:reply, :ok | :error, frame, state}
               | {:stop, reason :: term, state}
 
   @doc """
@@ -198,9 +229,9 @@ defmodule Phoenix.Socket.Transport do
   If a control frame doesn't have a payload, then the payload value
   will be `nil`.
   """
-  @callback handle_control({message :: term, opts :: keyword}, state) ::
+  @callback handle_control({message :: term, [opcode: :ping | :pong]}, state) ::
               {:ok, state}
-              | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
+              | {:reply, :ok | :error, control_frame, state}
               | {:stop, reason :: term, state}
 
   @doc """
@@ -219,7 +250,7 @@ defmodule Phoenix.Socket.Transport do
   """
   @callback handle_info(message :: term, state) ::
               {:ok, state}
-              | {:push, {opcode :: atom, message :: term}, state}
+              | {:push, frame, state}
               | {:stop, reason :: term, state}
 
   @doc """
