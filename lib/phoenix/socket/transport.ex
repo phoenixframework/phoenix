@@ -124,7 +124,7 @@ defmodule Phoenix.Socket.Transport do
 
   means `child_spec([shutdown: 5000])` will be invoked.
   """
-  @callback child_spec(keyword) :: :supervisor.child_spec
+  @callback child_spec(keyword) :: :supervisor.child_spec()
 
   @doc """
   Connects to the socket.
@@ -273,7 +273,7 @@ defmodule Phoenix.Socket.Transport do
     {key, store, init}
   end
 
-  defp init_session({_, _, _} = mfa)  do
+  defp init_session({_, _, _} = mfa) do
     {:mfa, mfa}
   end
 
@@ -312,6 +312,7 @@ defmodule Phoenix.Socket.Transport do
           |> Keyword.put_new(:host, {endpoint, :host, []})
           |> Plug.SSL.init()
         end
+
       {:cache, opts}
     end)
   end
@@ -346,7 +347,7 @@ defmodule Phoenix.Socket.Transport do
 
   def check_origin(conn, handler, endpoint, opts, sender) do
     import Plug.Conn
-    origin       = conn |> get_req_header("origin") |> List.first()
+    origin = conn |> get_req_header("origin") |> List.first()
     check_origin = check_origin_config(handler, endpoint, opts)
 
     cond do
@@ -357,7 +358,7 @@ defmodule Phoenix.Socket.Transport do
         conn
 
       true ->
-        Logger.error """
+        Logger.error("""
         Could not check origin for Phoenix.Socket transport.
 
         Origin of the request: #{origin}
@@ -379,7 +380,8 @@ defmodule Phoenix.Socket.Transport do
                 check_origin: ["https://example.com",
                                "//another.com:888", "//other.com"]
 
-        """
+        """)
+
         resp(conn, :forbidden, "")
         |> sender.()
         |> halt()
@@ -409,7 +411,9 @@ defmodule Phoenix.Socket.Transport do
 
       [subprotocols_header | _] ->
         request_subprotocols = subprotocols_header |> Plug.Conn.Utils.list()
-        subprotocol = Enum.find(subprotocols, fn elem -> Enum.find(request_subprotocols, &(&1 == elem)) end)
+
+        subprotocol =
+          Enum.find(subprotocols, fn elem -> Enum.find(request_subprotocols, &(&1 == elem)) end)
 
         if subprotocol do
           Plug.Conn.put_resp_header(conn, "sec-websocket-protocol", subprotocol)
@@ -475,7 +479,8 @@ defmodule Phoenix.Socket.Transport do
          cookie when is_binary(cookie) <- conn.cookies[key],
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
          {_, session} <- store.get(conn, cookie, store_config),
-         csrf_state when is_binary(csrf_state) <- Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]),
+         csrf_state when is_binary(csrf_state) <-
+           Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]),
          true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
       session
     else
@@ -490,7 +495,7 @@ defmodule Phoenix.Socket.Transport do
 
       other ->
         raise ArgumentError,
-          "the MFA given to `session_config` must return a keyword list, got: #{inspect other}"
+              "the MFA given to `session_config` must return a keyword list, got: #{inspect(other)}"
     end
   end
 
@@ -498,7 +503,7 @@ defmodule Phoenix.Socket.Transport do
     import Plug.Conn
     request_headers = get_req_header(conn, "sec-websocket-protocol")
 
-    Logger.error """
+    Logger.error("""
     Could not check Websocket subprotocols for Phoenix.Socket transport.
 
     Subprotocols of the request: #{inspect(request_headers)}
@@ -518,7 +523,7 @@ defmodule Phoenix.Socket.Transport do
 
       3. remove `websocket` option from your endpoint socket configuration
          if you don't use Websocket subprotocols.
-    """
+    """)
 
     resp(conn, :forbidden, "")
     |> send_resp()
@@ -533,8 +538,8 @@ defmodule Phoenix.Socket.Transport do
 
   defp fetch_trace_context_headers(conn) do
     for {header, _} = pair <- conn.req_headers,
-      header in ["traceparent", "tracestate"],
-      do: pair
+        header in ["traceparent", "tracestate"],
+        do: pair
   end
 
   defp fetch_uri(conn) do
@@ -568,7 +573,8 @@ defmodule Phoenix.Socket.Transport do
             {module, function, arguments}
 
           invalid ->
-            raise ArgumentError, ":check_origin expects a boolean, list of hosts, or MFA tuple, got: #{inspect(invalid)}"
+            raise ArgumentError,
+                  ":check_origin expects a boolean, list of hosts, or MFA tuple, got: #{inspect(invalid)}"
         end
 
       {:cache, check_origin}
@@ -579,9 +585,9 @@ defmodule Phoenix.Socket.Transport do
     case URI.parse(origin) do
       %{host: nil} ->
         raise ArgumentError,
-          "invalid :check_origin option: #{inspect origin}. " <>
-          "Expected an origin with a host that is parsable by URI.parse/1. For example: " <>
-          "[\"https://example.com\", \"//another.com:888\", \"//other.com\"]"
+              "invalid :check_origin option: #{inspect(origin)}. " <>
+                "Expected an origin with a host that is parsable by URI.parse/1. For example: " <>
+                "[\"https://example.com\", \"//another.com:888\", \"//other.com\"]"
 
       %{scheme: scheme, port: port, host: host} ->
         {scheme, host, port}
@@ -590,10 +596,13 @@ defmodule Phoenix.Socket.Transport do
 
   defp origin_allowed?({module, function, arguments}, uri, _endpoint),
     do: apply(module, function, [uri | arguments])
+
   defp origin_allowed?(_check_origin, %{host: nil}, _endpoint),
     do: false
+
   defp origin_allowed?(true, uri, endpoint),
     do: compare?(uri.host, host_to_binary(endpoint.config(:url)[:host]))
+
   defp origin_allowed?(check_origin, uri, _endpoint) when is_list(check_origin),
     do: origin_allowed?(uri, check_origin)
 
@@ -602,8 +611,8 @@ defmodule Phoenix.Socket.Transport do
 
     Enum.any?(allowed_origins, fn {allowed_scheme, allowed_host, allowed_port} ->
       compare?(origin_scheme, allowed_scheme) and
-      compare?(origin_port, allowed_port) and
-      compare_host?(origin_host, allowed_host)
+        compare?(origin_port, allowed_port) and
+        compare_host?(origin_host, allowed_host)
     end)
   end
 
@@ -613,8 +622,10 @@ defmodule Phoenix.Socket.Transport do
 
   defp compare_host?(_request_host, nil),
     do: true
+
   defp compare_host?(request_host, "*." <> allowed_host),
     do: String.ends_with?(request_host, allowed_host)
+
   defp compare_host?(request_host, allowed_host),
     do: request_host == allowed_host
 
