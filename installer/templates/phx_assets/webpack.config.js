@@ -1,7 +1,8 @@
 const path = require('path');
 const glob = require('glob');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CopyPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = (env, options) => {
   const devMode = options.mode !== 'production';
@@ -34,7 +35,12 @@ module.exports = (env, options) => {
       ]
     },
     plugins: [
-      new MiniCssExtractPlugin({ filename: '../css/app.css' })
+      new MiniCssExtractPlugin({ filename: '../css/app.css' }),
+      new CopyPlugin({
+        patterns: [
+          { from: 'static/', to: '../' }
+        ]
+      })
     ]
   }
 };
