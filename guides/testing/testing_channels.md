@@ -1,10 +1,10 @@
 # Testing Channels
 
-> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through [the Introduction to Testing guide](testing.html).
+> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.html).
 
-> **Requirement**: This guide expects that you have gone through [the Channels guide](channels.html).
+> **Requirement**: This guide expects that you have gone through the [Channels guide](channels.html).
 
 In the Channels guide, we saw that a "Channel" is a layered system with different components. Given this, there would be cases when writing unit tests for our Channel functions may not be enough. We may want to verify that its different moving parts are working together as we expect. This integration testing would assure us that we correctly defined our channel route, the channel module, and its callbacks; and that the lower-level layers such as the PubSub and Transport are configured correctly and are working as intended.
 
@@ -57,7 +57,7 @@ defmodule HelloWeb.ChannelCase do
 end
 ```
 
-It is very straight-forward. It sets up a case template that imports all of `Phoenix.ChannelTest` on use. In the `setup` block, it starts the SQL Sandbox, which we discussed [in the Testing Contexts guide](testing_contexts.html).
+It is very straight-forward. It sets up a case template that imports all of `Phoenix.ChannelTest` on use. In the `setup` block, it starts the SQL Sandbox, which we discussed in the [Testing contexts guide](testing_contexts.html).
 
 ## Subscribe and joining
 
@@ -77,7 +77,7 @@ setup do
 end
 ```
 
-The `setup` block sets up a `Phoenix.Socket` based on the `UserSocket` module, which you can find at "lib/hello_web/channels/user_socket.ex". Then it says we want to subscribe and join the `RoomChannel`, accessible as "room:lobby" in the `UserSocket`. At the end of the test, we return the `%{socket: socket}` as metadata, so we can re-use it on every test.
+The `setup` block sets up a `Phoenix.Socket` based on the `UserSocket` module, which you can find at `lib/hello_web/channels/user_socket.ex`. Then it says we want to subscribe and join the `RoomChannel`, accessible as `"room:lobby"` in the `UserSocket`. At the end of the test, we return the `%{socket: socket}` as metadata, so we can reuse it on every test.
 
 In a nutshell, `subscribe_and_join/3` emulates the client joining a channel and subscribes the test process to the given topic. This is a necessary step since clients need to join a channel before they can send and receive events on that channel.
 

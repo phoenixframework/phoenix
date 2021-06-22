@@ -13,7 +13,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     case Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
       {:ok, _} = ok ->
         warmup(mod)
-        log_access_info(otp_app, mod)
+        log_access_url(otp_app, mod, opts)
         ok
 
       {:error, _} = error ->
@@ -210,6 +210,7 @@ defmodule Phoenix.Endpoint.Supervisor do
      secret_key_base: nil,
      static_url: nil,
      url: [host: "localhost", path: "/"],
+     cache_manifest_skip_vsn: false,
 
      # Supervisor config
      watchers: []]
@@ -302,7 +303,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     host   = host_to_binary(url[:host] || "localhost")
     port   = port_to_integer(url[:port] || port)
 
-    if host =~ ":" do
+    if host =~ ~r"[^:]:\d" do
       Logger.warn("url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid")
     end
 
@@ -389,10 +390,11 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests}) do
     Phoenix.Config.put_new(endpoint, :cache_static_manifest_latest, latest)
+    with_vsn? = !endpoint.config(:cache_manifest_skip_vsn)
 
     Enum.each(latest, fn {key, _} ->
       Phoenix.Config.cache(endpoint, {:__phoenix_static__, "/" <> key}, fn _ ->
-        {:cache, static_cache(digests, Map.get(latest, key))}
+        {:cache, static_cache(digests, Map.get(latest, key), with_vsn?)}
       end)
     end)
   end
@@ -401,8 +403,12 @@ defmodule Phoenix.Endpoint.Supervisor do
     raise ArgumentError, "expected warmup_static/2 to include 'latest' and 'digests' keys in manifest"
   end
 
-  defp static_cache(digests, value) do
+  defp static_cache(digests, value, true) do
     {"/#{value}?vsn=d", static_integrity(digests[value]["sha512"])}
+  end
+
+  defp static_cache(digests, value, false) do
+    {"/#{value}", static_integrity(digests[value]["sha512"])}
   end
 
   defp static_integrity(nil), do: nil
@@ -410,7 +416,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp cache_static_manifest(endpoint) do
     if inner = endpoint.config(:cache_static_manifest) do
-      {app, inner} = 
+      {app, inner} =
         case inner do
           {_, _} = inner -> inner
           inner when is_binary(inner) -> {endpoint.config(:otp_app), inner}
@@ -431,15 +437,15 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp log_access_info(otp_app, endpoint) do
-    if Phoenix.Endpoint.server?(otp_app, endpoint) do
+  defp log_access_url(otp_app, endpoint, opts) do
+    if Keyword.get(opts, :log_access_url, true) && Phoenix.Endpoint.server?(otp_app, endpoint) do
       Logger.info("Access #{inspect(endpoint)} at #{endpoint.url()}")
     end
   end
 
   @doc """
   List of keys which we ensure are unchanged from compile time to runtime. For
-  example, the :force_ssl option must be available at compile time in order to 
+  example, the :force_ssl option must be available at compile time in order to
   work properly. We check these keys so we can warn the user that changing the
   option at runtime may lead to undesirable behavior.
   """

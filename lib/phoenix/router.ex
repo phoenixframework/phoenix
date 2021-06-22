@@ -36,7 +36,7 @@ defmodule Phoenix.Router do
       end
 
   The `get/3` macro above accepts a request to `/pages/hello` and dispatches
-  it to the `PageController`'s `show` action with `%{"page" => "hello"}` in
+  it to `PageController`'s `show` action with `%{"page" => "hello"}` in
   `params`.
 
   Phoenix's router is extremely efficient, as it relies on Elixir
@@ -129,7 +129,7 @@ defmodule Phoenix.Router do
   If the route contains glob-like patterns, parameters for those have to be given as
   list:
 
-      MyAppWeb.Router.Helpers.pages_path(conn_or_endpoint, :show, ["hello", "world"])
+      MyAppWeb.Router.Helpers.page_path(conn_or_endpoint, :show, ["hello", "world"])
       "/pages/hello/world"
 
   The URL generated in the named URL helpers is based on the configuration for
@@ -346,26 +346,29 @@ defmodule Phoenix.Router do
 
     case pipeline.(conn) do
       %Plug.Conn{halted: true} = halted_conn ->
+        measurements = %{duration: System.monotonic_time() - start}
+        metadata = %{metadata | conn: halted_conn}
+        :telemetry.execute([:phoenix, :router_dispatch, :stop], measurements, metadata)
         halted_conn
       %Plug.Conn{} = piped_conn ->
         try do
           plug.call(piped_conn, plug.init(opts))
         else
           conn ->
-            duration = System.monotonic_time() - start
+            measurements = %{duration: System.monotonic_time() - start}
             metadata = %{metadata | conn: conn}
-            :telemetry.execute([:phoenix, :router_dispatch, :stop], %{duration: duration}, metadata)
+            :telemetry.execute([:phoenix, :router_dispatch, :stop], measurements, metadata)
             conn
         rescue
           e in Plug.Conn.WrapperError ->
             measurements = %{duration: System.monotonic_time() - start}
-            metadata = %{conn: conn, kind: :error, reason: e, stacktrace: __STACKTRACE__}
+            metadata = Map.merge(metadata, %{conn: conn, kind: :error, reason: e, stacktrace: __STACKTRACE__})
             :telemetry.execute([:phoenix, :router_dispatch, :exception], measurements, metadata)
             Plug.Conn.WrapperError.reraise(e)
         catch
           kind, reason ->
             measurements = %{duration: System.monotonic_time() - start}
-            metadata = %{conn: conn, kind: kind, reason: reason, stacktrace: __STACKTRACE__}
+            metadata = Map.merge(metadata, %{conn: conn, kind: kind, reason: reason, stacktrace: __STACKTRACE__})
             :telemetry.execute([:phoenix, :router_dispatch, :exception], measurements, metadata)
             Plug.Conn.WrapperError.reraise(piped_conn, kind, reason, __STACKTRACE__)
         end
@@ -408,12 +411,6 @@ defmodule Phoenix.Router do
     end
   end
 
-  @anno (if :erlang.system_info(:otp_release) >= '19' do
-    [generated: true]
-  else
-    [line: -1]
-  end)
-
   @doc false
   defmacro __before_compile__(env) do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
@@ -425,19 +422,21 @@ defmodule Phoenix.Router do
     {matches, _} = Enum.map_reduce(routes_with_exprs, %{}, &build_match/2)
 
     checks =
-      for {%{line: line, plug: plug, plug_opts: plug_opts}, _} <- routes_with_exprs, into: %{} do
+      for %{line: line, plug: plug, plug_opts: plug_opts} <- routes, into: %{} do
         quote line: line do
           {unquote(plug).init(unquote(Macro.escape(plug_opts))), []}
         end
       end
 
-    # @anno is used here to avoid warnings if forwarding to root path
     match_404 =
-      quote @anno do
+      quote [generated: true] do
         def __match_route__(_method, _path_info, _host) do
           :error
         end
       end
+
+    keys = [:verb, :path, :plug, :plug_opts, :helper, :metadata]
+    routes = Enum.map(routes, &Map.take(&1, keys))
 
     quote do
       @doc false
@@ -625,6 +624,14 @@ defmodule Phoenix.Router do
   are appended to the ones previously given.
   """
   defmacro pipeline(plug, do: block) do
+    with true <- is_atom(plug),
+         imports = __CALLER__.macros ++ __CALLER__.functions,
+         {mod, _} <- Enum.find(imports, fn {_, imports} -> {plug, 2} in imports end) do
+      raise ArgumentError,
+            "cannot define pipeline named #{inspect(plug)} " <>
+              "because there is an import from #{inspect(mod)} with the same name"
+    end
+
     block =
       quote do
         plug = unquote(plug)
@@ -854,12 +861,14 @@ defmodule Phoenix.Router do
 
   ## Examples
 
-      scope "/api/v1", as: :api_v1, alias: API.V1 do
+      scope "/api/v1", as: :api_v1 do
         get "/pages/:id", PageController, :show
       end
 
   """
   defmacro scope(path, options, do: context) do
+    options = Macro.expand(options, %{__CALLER__ | function: {:init, 1}})
+
     options = quote do
       path = unquote(path)
       case unquote(options) do
@@ -887,11 +896,14 @@ defmodule Phoenix.Router do
 
   """
   defmacro scope(path, alias, options, do: context) do
+    alias = Macro.expand(alias, %{__CALLER__ | function: {:init, 1}})
+
     options = quote do
       unquote(options)
       |> Keyword.put(:path, unquote(path))
       |> Keyword.put(:alias, unquote(alias))
     end
+
     do_scope(options, context)
   end
 
@@ -946,12 +958,20 @@ defmodule Phoenix.Router do
 
   """
   defmacro forward(path, plug, plug_opts \\ [], router_opts \\ []) do
+    plug = Macro.expand(plug, %{__CALLER__ | function: {:init, 1}})
     router_opts = Keyword.put(router_opts, :as, nil)
 
     quote unquote: true, bind_quoted: [path: path, plug: plug] do
       plug = Scope.register_forwards(__MODULE__, path, plug)
       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
     end
+  end
+
+  @doc """
+  Returns all routes information from the given router.
+  """
+  def routes(router) do
+    router.__routes__()
   end
 
   @doc """
@@ -964,7 +984,7 @@ defmodule Phoenix.Router do
     * `:log` - the configured log level. For example `:debug`
     * `:path_params` - the map of runtime path params
     * `:pipe_through` - the list of pipelines for the route's scope, for example `[:browser]`
-    * `:plug` - the plug to dipatch the route to, for example `AppWeb.PostController`
+    * `:plug` - the plug to dispatch the route to, for example `AppWeb.PostController`
     * `:plug_opts` - the options to pass when calling the plug, for example: `:index`
     * `:route` - the string route pattern, such as `"/posts/:id"`
 

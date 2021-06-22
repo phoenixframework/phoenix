@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Phx.New.Web do
   @moduledoc """
   Creates a new Phoenix web project within an umbrella project.
 
-  It expects the name of the otp app as the first argument and
+  It expects the name of the OTP app as the first argument and
   for the command to be run inside your umbrella application's
   apps directory:
 
@@ -29,9 +29,11 @@ defmodule Mix.Tasks.Phx.New.Web do
 
   use Mix.Task
 
+  @impl true
   def run([]) do
     Mix.Tasks.Help.run(["phx.new.web"])
   end
+
   def run([path | _] = args) do
     unless Phx.New.Generator.in_umbrella?(path) do
       Mix.raise "The web task can only be run within an umbrella's apps directory"

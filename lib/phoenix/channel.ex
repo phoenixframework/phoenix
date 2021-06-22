@@ -14,10 +14,10 @@ defmodule Phoenix.Channel do
   match on all topics starting with a given prefix by using a splat (the `*`
   character) as the last character in the topic pattern:
 
-      channel "room:*", MyApp.RoomChannel
+      channel "room:*", MyAppWeb.RoomChannel
 
   Any topic coming into the router with the `"room:"` prefix would dispatch
-  to `MyApp.RoomChannel` in the above example. Topics can also be pattern
+  to `MyAppWeb.RoomChannel` in the above example. Topics can also be pattern
   matched in your channels' `join/3` callback to pluck out the scoped pattern:
 
       # handles the special `"lobby"` subtopic
@@ -57,11 +57,21 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-  You can also push a message directly down the socket:
+  General message payloads are received as maps, and binary data payloads are
+  passed as a `{:binary, data}` tuple:
+
+      def handle_in("file_chunk", {:binary, chunk}, socket) do
+        ...
+        {:reply, :ok, socket}
+      end
+
+  You can also push a message directly down the socket, in the form of a map,
+  or a tagged `{:binary, data}` tuple:
 
       # client asks for their current rank, push sent directly as a new event.
       def handle_in("current_rank", _, socket) do
         push(socket, "current_rank", %{val: Game.get_rank(socket.assigns[:user])})
+        push(socket, "photo", {:binary, File.read!(socket.assigns.photo_path)})
         {:noreply, socket}
       end
 
@@ -79,10 +89,10 @@ defmodule Phoenix.Channel do
 
         if changeset.valid? do
           post = Repo.insert!(changeset)
-          response = MyApp.PostView.render("show.json", %{post: post})
+          response = MyAppWeb.PostView.render("show.json", %{post: post})
           {:reply, {:ok, response}, socket}
         else
-          response = MyApp.ChangesetView.render("errors.json", %{changeset: changeset})
+          response = MyAppWeb.ChangesetView.render("errors.json", %{changeset: changeset})
           {:reply, {:error, response}, socket}
         end
       end
@@ -99,6 +109,10 @@ defmodule Phoenix.Channel do
           {:reply, :error, socket}
         end
       end
+
+  Like binary pushes, binary data is also supported with replies via a `{:binary, data}` tuple:
+
+      {:reply, {:ok, {:binary, bin}}, socket}
 
   ## Intercepting Outgoing Events
 
@@ -140,7 +154,7 @@ defmodule Phoenix.Channel do
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         ...
         broadcast_from!(socket, "new_msg", %{uid: uid, body: body})
-        MyApp.Endpoint.broadcast_from!(self(), "room:superadmin",
+        MyAppWeb.Endpoint.broadcast_from!(self(), "room:superadmin",
           "new_msg", %{uid: uid, body: body})
         {:noreply, socket}
       end
@@ -148,8 +162,8 @@ defmodule Phoenix.Channel do
       # within controller
       def create(conn, params) do
         ...
-        MyApp.Endpoint.broadcast!("room:" <> rid, "new_msg", %{uid: uid, body: body})
-        MyApp.Endpoint.broadcast!("room:superadmin", "new_msg", %{uid: uid, body: body})
+        MyAppWeb.Endpoint.broadcast!("room:" <> rid, "new_msg", %{uid: uid, body: body})
+        MyAppWeb.Endpoint.broadcast!("room:superadmin", "new_msg", %{uid: uid, body: body})
         redirect(conn, to: "/")
       end
 
@@ -209,7 +223,7 @@ defmodule Phoenix.Channel do
   preference, a more efficient and simple approach would be to subscribe a
   single channel to relevant notifications via your endpoint. For example:
 
-      defmodule MyApp.Endpoint.NotificationChannel do
+      defmodule MyAppWeb.Endpoint.NotificationChannel do
         use Phoenix.Channel
 
         def join("notification:" <> user_id, %{"ids" => ids}, socket) do
@@ -225,7 +239,7 @@ defmodule Phoenix.Channel do
         end
 
         def handle_in("unwatch", %{"product_id" => id}, socket) do
-          {:reply, :ok, MyApp.Endpoint.unsubscribe("product:#{id}")}
+          {:reply, :ok, MyAppWeb.Endpoint.unsubscribe("product:#{id}")}
         end
 
         defp put_new_topics(socket, topics) do
@@ -234,7 +248,7 @@ defmodule Phoenix.Channel do
             if topic in topics do
               acc
             else
-              :ok = MyApp.Endpoint.subscribe(topic)
+              :ok = MyAppWeb.Endpoint.subscribe(topic)
               assign(acc, :topics, [topic | topics])
             end
           end)
@@ -286,7 +300,8 @@ defmodule Phoenix.Channel do
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
 
-  @type reply :: status :: atom | {status :: atom, response :: map}
+  @type payload :: map | {:binary, binary}
+  @type reply :: status :: atom | {status :: atom, response :: payload}
   @type socket_ref ::
           {transport_pid :: Pid, serializer :: module, topic :: binary, ref :: binary,
            join_ref :: binary}
@@ -308,9 +323,9 @@ defmodule Phoenix.Channel do
       end
 
   """
-  @callback join(topic :: binary, payload :: map, socket :: Socket.t()) ::
+  @callback join(topic :: binary, payload :: payload, socket :: Socket.t()) ::
               {:ok, Socket.t()}
-              | {:ok, reply :: map, Socket.t()}
+              | {:ok, reply :: payload, Socket.t()}
               | {:error, reason :: map}
 
   @doc """
@@ -323,7 +338,7 @@ defmodule Phoenix.Channel do
       end
 
   """
-  @callback handle_in(event :: String.t(), payload :: map, socket :: Socket.t()) ::
+  @callback handle_in(event :: String.t(), payload :: payload, socket :: Socket.t()) ::
               {:noreply, Socket.t()}
               | {:noreply, Socket.t(), timeout | :hibernate}
               | {:reply, reply, Socket.t()}
@@ -335,7 +350,7 @@ defmodule Phoenix.Channel do
 
   See `intercept/1`.
   """
-  @callback handle_out(event :: String.t(), payload :: map, socket :: Socket.t()) ::
+  @callback handle_out(event :: String.t(), payload :: payload, socket :: Socket.t()) ::
               {:noreply, Socket.t()}
               | {:noreply, Socket.t(), timeout | :hibernate}
               | {:stop, reason :: term, Socket.t()}
@@ -490,11 +505,15 @@ defmodule Phoenix.Channel do
   @doc """
   Broadcast an event to all subscribers of the socket topic.
 
-  The event's message must be a serializable map.
+  The event's message must be a serializable map or a tagged `{:binary, data}`
+  tuple where `data` is binary data.
 
   ## Examples
 
       iex> broadcast(socket, "new_message", %{id: 1, content: "hello"})
+      :ok
+
+      iex> broadcast(socket, "new_message", {:binary, "hello"})
       :ok
 
   """
@@ -515,11 +534,15 @@ defmodule Phoenix.Channel do
   Broadcast event from pid to all subscribers of the socket topic.
 
   The channel that owns the socket will not receive the published
-  message. The event's message must be a serializable map.
+  message. The event's message must be a serializable map or a tagged
+  `{:binary, data}` tuple where `data` is binary data.
 
   ## Examples
 
       iex> broadcast_from(socket, "new_message", %{id: 1, content: "hello"})
+      :ok
+
+      iex> broadcast_from(socket, "new_message", {:binary, "hello"})
       :ok
 
   """
@@ -543,17 +566,21 @@ defmodule Phoenix.Channel do
   @doc """
   Sends event to the socket.
 
-  The event's message must be a serializable map.
+  The event's message must be a serializable map or a tagged `{:binary, data}`
+  tuple where `data` is binary data.
 
   ## Examples
 
       iex> push(socket, "new_message", %{id: 1, content: "hello"})
       :ok
 
+      iex> push(socket, "new_message", {:binary, "hello"})
+      :ok
+
   """
   def push(socket, event, message) do
     %{transport_pid: transport_pid, topic: topic} = assert_joined!(socket)
-    Server.push(transport_pid, topic, event, message, socket.serializer)
+    Server.push(transport_pid, socket.join_ref, topic, event, message, socket.serializer)
   end
 
   @doc """

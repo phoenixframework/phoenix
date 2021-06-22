@@ -16,10 +16,9 @@ defmodule Phoenix.Channel.Server do
   """
   @spec join(Socket.t(), module, Message.t(), keyword) :: {:ok, term, pid} | {:error, term}
   def join(socket, channel, message, opts) do
-    %{topic: topic, payload: payload, ref: join_ref} = message
+    %{topic: topic, payload: payload, ref: ref, join_ref: join_ref} = message
     assigns = Map.merge(socket.assigns, Keyword.get(opts, :assigns, %{}))
-    socket = %{socket | topic: topic, channel: channel, join_ref: join_ref, assigns: assigns}
-
+    socket = %{socket | topic: topic, channel: channel, join_ref: join_ref || ref, assigns: assigns}
     ref = make_ref()
     from = {self(), ref}
     child_spec = channel.child_spec({socket.endpoint, from})
@@ -136,7 +135,7 @@ defmodule Phoenix.Channel.Server do
   The message is encoded as `Phoenix.Socket.Broadcast`.
   """
   def broadcast(pubsub_server, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -153,7 +152,7 @@ defmodule Phoenix.Channel.Server do
   Raises in case of crashes.
   """
   def broadcast!(pubsub_server, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -170,7 +169,7 @@ defmodule Phoenix.Channel.Server do
   The message is encoded as `Phoenix.Socket.Broadcast`.
   """
   def broadcast_from(pubsub_server, from, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -187,7 +186,7 @@ defmodule Phoenix.Channel.Server do
   Raises in case of crashes.
   """
   def broadcast_from!(pubsub_server, from, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -204,7 +203,7 @@ defmodule Phoenix.Channel.Server do
   The message is encoded as `Phoenix.Socket.Broadcast`.
   """
   def local_broadcast(pubsub_server, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -221,7 +220,7 @@ defmodule Phoenix.Channel.Server do
   The message is encoded as `Phoenix.Socket.Broadcast`.
   """
   def local_broadcast_from(pubsub_server, from, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) do
     broadcast = %Broadcast{
       topic: topic,
       event: event,
@@ -235,9 +234,9 @@ defmodule Phoenix.Channel.Server do
   Pushes a message with the given topic, event and payload
   to the given process.
   """
-  def push(pid, topic, event, payload, serializer)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
-    message = %Message{topic: topic, event: event, payload: payload}
+  def push(pid, join_ref, topic, event, payload, serializer)
+      when is_binary(topic) and is_binary(event) do
+    message = %Message{join_ref: join_ref, topic: topic, event: event, payload: payload}
     send(pid, serializer.encode!(message))
     :ok
   end
@@ -246,7 +245,7 @@ defmodule Phoenix.Channel.Server do
   Replies to a given ref to the transport process.
   """
   def reply(pid, join_ref, ref, topic, {status, payload}, serializer)
-      when is_binary(topic) and is_map(payload) do
+      when is_binary(topic) do
     reply = %Reply{topic: topic, join_ref: join_ref, ref: ref, status: status, payload: payload}
     send(pid, serializer.encode!(reply))
     :ok
@@ -500,7 +499,7 @@ defmodule Phoenix.Channel.Server do
     handle_result(other, :handle_in)
   end
 
-  defp handle_reply(socket, {status, payload}) when is_atom(status) and is_map(payload) do
+  defp handle_reply(socket, {status, payload}) when is_atom(status) do
     reply(
       socket.transport_pid,
       socket.join_ref,

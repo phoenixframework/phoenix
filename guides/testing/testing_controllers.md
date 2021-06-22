@@ -1,8 +1,8 @@
 # Testing Controllers
 
-> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through [the Introduction to Testing guide](testing.html).
+> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.html).
 
 At the end of the Introduction to Testing guide, we generated an HTML resource for posts using the following command:
 
@@ -101,7 +101,7 @@ describe "create post" do
 end
 ```
 
-The first test starts with a `post/2` request. That's because once the form in the "/posts/new" page is submitted, it becomes a POST request to the create action. Because we have supplied valid attributes, the post should have been successfully created and we should have redirected to the show action of the new post. This new page will have an address like "/posts/ID", where ID is the identifier of the post in the database.
+The first test starts with a `post/2` request. That's because once the form in the `/posts/new` page is submitted, it becomes a POST request to the create action. Because we have supplied valid attributes, the post should have been successfully created and we should have redirected to the show action of the new post. This new page will have an address like `/posts/ID`, where ID is the identifier of the post in the database.
 
 We then use `redirected_params(conn)` to get the ID of the post and then match that we indeed redirected to the show action. Finally, we do request a `get` request to the page we redirected to, allowing us to verify that the post was indeed created.
 
@@ -128,7 +128,7 @@ Should we test all of these possible outcomes in our controller tests?
 
 The answer is no. All of the different rules and outcomes should be verified in your context and schema tests. The controller works as the integration layer. In the controller tests we simply want to verify, in broad strokes, that we handle both success and failure scenarios.
 
-The test for `update` follows a similar structure to the test on `create`, so we let's skip to the `delete` test.
+The test for `update` follows a similar structure as `create`, so let's skip to the `delete` test.
 
 ### The delete action
 
@@ -185,7 +185,7 @@ end
   1. An exception was raised
   2. The exception has a status code equivalent to 404 (which stands for Not Found)
 
-This pretty much mimics how Phoenix handles exceptions. For example, when we access "/posts/12345" where 12345 is an ID that does not exist, we will invoke our `show` action:
+This pretty much mimics how Phoenix handles exceptions. For example, when we access `/posts/12345` where `12345` is an ID that does not exist, we will invoke our `show` action:
 
 ```elixir
 def show(conn, %{"id" => id}) do
@@ -255,7 +255,7 @@ def index(conn, _params) do
 end
 ```
 
-The action gets all articles and renders "index.json". Since we are talking about JSON, we don't have a "index.json.eex" template. Instead, the code that converts "articles" into JSON can be found directly in the ArticleView module, defined at `lib/hello_web/views/article_view.ex` like this:
+The action gets all articles and renders `index.json`. Since we are talking about JSON, we don't have a `index.json.eex` template. Instead, the code that converts `articles` into JSON can be found directly in the ArticleView module, defined at `lib/hello_web/views/article_view.ex` like this:
 
 ```elixir
 defmodule HelloWeb.ArticleView do
@@ -278,7 +278,7 @@ defmodule HelloWeb.ArticleView do
 end
 ```
 
-We talked about `render_many` [in the Views and Templates guide](views.html). All we need to know for now is that all JSON replies have a "data" key with either a list of posts (for index) or a single post inside of it.
+We talked about `render_many` in the [Views and templates guide](views.html). All we need to know for now is that all JSON replies have a "data" key with either a list of posts (for index) or a single post inside of it.
 
 Let's take a look at the test for the `index` action then:
 
@@ -341,13 +341,13 @@ def create(conn, %{"article" => article_params}) do
 
 The `with` special form that ships as part of Elixir allows us to check explicitly for the happy paths. In this case, we are interested only in the scenarios where `News.create_article(article_params)` returns `{:ok, article}`, if it returns anything else, the other value will simply be returned directly and none of the contents inside the `do/end` block will be executed. In other words, if `News.create_article/1` returns `{:error, changeset}`, we will simply return `{:error, changeset}` from the action.
 
-However, this introduces an issue. Our actions do not know how to handle the `{:error, changeset}` result by default. Luckily, we can teach Phoenix Controllers to handle it with the Action Fallback controller. At the top of the `ArticleController`, you will find:
+However, this introduces an issue. Our actions do not know how to handle the `{:error, changeset}` result by default. Luckily, we can teach Phoenix Controllers to handle it with the Action Fallback controller. At the top of `ArticleController`, you will find:
 
 ```elixir
   action_fallback HelloWeb.FallbackController
 ```
 
-This line says: if any action does not return a `%Plug.Conn{}`, we want to invoke the `FallbackController` with the result. You will find `HelloWeb.FallbackController` at `lib/hello_web/controllers/fallback_controller.ex` and it looks like this:
+This line says: if any action does not return a `%Plug.Conn{}`, we want to invoke `FallbackController` with the result. You will find `HelloWeb.FallbackController` at `lib/hello_web/controllers/fallback_controller.ex` and it looks like this:
 
 ```elixir
 defmodule HelloWeb.FallbackController do
@@ -382,7 +382,7 @@ end
 
 It simply posts to the `create` path with invalid parameters. This makes it return a JSON response, with status code 422, and a response with a non-empty "errors" key.
 
-The `action_fallback` can be extremely useful to reduce boilerplate when designing APIs. You can learn more about the "Action Fallback" [in the Controllers guide](controllers.html).
+The `action_fallback` can be extremely useful to reduce boilerplate when designing APIs. You can learn more about the "Action Fallback" in the [Controllers guide](controllers.html).
 
 ### The `delete` action
 

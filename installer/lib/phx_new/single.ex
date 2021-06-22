@@ -7,7 +7,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_single/config/config.exs",             :project, "config/config.exs"},
     {:eex,  "phx_single/config/dev.exs",                :project, "config/dev.exs"},
     {:eex,  "phx_single/config/prod.exs",               :project, "config/prod.exs"},
-    {:eex,  "phx_single/config/prod.secret.exs",        :project, "config/prod.secret.exs"},
+    {:eex,  "phx_single/config/runtime.exs",            :project, "config/runtime.exs"},
     {:eex,  "phx_single/config/test.exs",               :project, "config/test.exs"},
     {:eex,  "phx_single/lib/app_name/application.ex",   :project, "lib/:app/application.ex"},
     {:eex,  "phx_single/lib/app_name.ex",               :project, "lib/:app.ex"},
@@ -69,9 +69,8 @@ defmodule Phx.New.Single do
 
   template :webpack, [
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
-    {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"},
+    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
     {:eex,  "phx_assets/socket.js",         :web, "assets/js/socket.js"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
@@ -79,9 +78,8 @@ defmodule Phx.New.Single do
 
   template :webpack_live, [
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
-    {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"},
+    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
   ]
@@ -94,6 +92,7 @@ defmodule Phx.New.Single do
     {:text, "phx_static/phoenix.css", :web, "priv/static/css/phoenix.css"},
     {:text, "phx_static/robots.txt",  :web, "priv/static/robots.txt"},
     {:text, "phx_static/phoenix.js",  :web, "priv/static/js/phoenix.js"},
+    {:text, "phx_static/phoenix.js.map",  :web, "priv/static/js/phoenix.js.map"},
     {:text, "phx_static/phoenix.png", :web, "priv/static/images/phoenix.png"},
     {:text, "phx_static/favicon.ico", :web, "priv/static/favicon.ico"}
   ]
@@ -185,7 +184,7 @@ defmodule Phx.New.Single do
     }
 
     for {source, target} <- statics do
-      create_file Path.join(web_path, target), render(:static, source)
+      create_file Path.join(web_path, target), render(:static, source, project.binding)
     end
   end
 

@@ -1,7 +1,7 @@
-defmodule <%= web_namespace %>.ErrorHelpers do
+defmodule <%= @web_namespace %>.ErrorHelpers do
   @moduledoc """
   Conveniences for translating and building error messages.
-  """<%= if html do %>
+  """<%= if @html do %>
 
   use Phoenix.HTML
 
@@ -12,10 +12,10 @@ defmodule <%= web_namespace %>.ErrorHelpers do
     Enum.map(Keyword.get_values(form.errors, field), fn error ->
       content_tag(:span, translate_error(error),
         class: "invalid-feedback",
-        phx_feedback_for: input_id(form, field)
+        phx_feedback_for: input_name(form, field)
       )
     end)
-  end<% end %><%= if gettext do %>
+  end<% end %><%= if @gettext do %>
 
   @doc """
   Translates an error message using gettext.
@@ -39,9 +39,9 @@ defmodule <%= web_namespace %>.ErrorHelpers do
     # should be written to the errors.po file. The :count option is
     # set by Ecto and indicates we should also apply plural rules.
     if count = opts[:count] do
-      Gettext.dngettext(<%= web_namespace %>.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(<%= @web_namespace %>.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(<%= web_namespace %>.Gettext, "errors", msg, opts)
+      Gettext.dgettext(<%= @web_namespace %>.Gettext, "errors", msg, opts)
     end
   end<% else %>
 
@@ -52,7 +52,7 @@ defmodule <%= web_namespace %>.ErrorHelpers do
     # Because the error messages we show in our forms and APIs
     # are defined inside Ecto, we need to translate them dynamically.
     Enum.reduce(opts, msg, fn {key, value}, acc ->
-      String.replace(acc, "%{#{key}}", to_string(value))
+      String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
     end)
   end<% end %>
 end

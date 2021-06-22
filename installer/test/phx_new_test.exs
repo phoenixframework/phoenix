@@ -14,9 +14,16 @@ defmodule Mix.Tasks.Phx.NewTest do
     :ok
   end
 
+  test "assets are in sync with installer" do
+    for file <- ~w(favicon.ico phoenix.js phoenix.js.map phoenix.png) do
+      assert File.read!("../priv/static/#{file}") ==
+        File.read!("templates/phx_static/#{file}")
+    end
+  end
+
   test "returns the version" do
     Mix.Tasks.Phx.New.run(["-v"])
-    assert_received {:mix_shell, :info, ["Phoenix v" <> _]}
+    assert_received {:mix_shell, :info, ["Phoenix installer v" <> _]}
   end
 
   test "new with defaults" do
@@ -46,8 +53,9 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/config/prod.exs", fn file ->
         assert file =~ "port: 80"
-        assert file =~ ":inet6"
       end
+
+      assert_file "phx_blog/config/runtime.exs", ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
 
       assert_file "phx_blog/lib/phx_blog/application.ex", ~r/defmodule PhxBlog.Application do/
       assert_file "phx_blog/lib/phx_blog.ex", ~r/defmodule PhxBlog do/
@@ -101,7 +109,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/.gitignore", "phx_blog-*.tar"
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/assets/webpack.config.js", "js/app.js"
-      assert_file "phx_blog/assets/.babelrc", "env"
       assert_file "phx_blog/config/dev.exs", fn file ->
         assert file =~ "watchers: [\n    node:"
         assert file =~ "lib/phx_blog_web/(live|views)/.*(ex)"
@@ -109,7 +116,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
       assert_file "phx_blog/assets/static/favicon.ico"
       assert_file "phx_blog/assets/static/images/phoenix.png"
-      assert_file "phx_blog/assets/css/app.scss"
+      assert_file "phx_blog/assets/css/app.css"
       assert_file "phx_blog/assets/css/phoenix.css"
       assert_file "phx_blog/assets/js/app.js",
                   ~s[import socket from "./socket"]
@@ -121,9 +128,10 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s["file:../deps/phoenix_html"]
       end
 
-      refute File.exists? "phx_blog/priv/static/css/app.scss"
+      refute File.exists? "phx_blog/priv/static/css/app.css"
       refute File.exists? "phx_blog/priv/static/css/phoenix.css"
       refute File.exists? "phx_blog/priv/static/js/phoenix.js"
+      refute File.exists? "phx_blog/priv/static/js/phoenix.js.map"
       refute File.exists? "phx_blog/priv/static/js/app.js"
 
       assert File.exists?("phx_blog/assets/vendor")
@@ -138,7 +146,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
       assert_file "phx_blog/config/dev.exs", config
       assert_file "phx_blog/config/test.exs", config
-      assert_file "phx_blog/config/prod.secret.exs", config
+      assert_file "phx_blog/config/runtime.exs", config
       assert_file "phx_blog/config/test.exs", ~R/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
       assert_file "phx_blog/lib/phx_blog/repo.ex", ~r"defmodule PhxBlog.Repo"
       assert_file "phx_blog/lib/phx_blog_web.ex", ~r"defmodule PhxBlogWeb"
@@ -222,6 +230,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file "phx_blog/priv/static/favicon.ico"
       refute_file "phx_blog/priv/static/images/phoenix.png"
       refute_file "phx_blog/priv/static/js/phoenix.js"
+      refute_file "phx_blog/priv/static/js/phoenix.js.map"
       refute_file "phx_blog/priv/static/js/app.js"
 
       # No Ecto
@@ -254,7 +263,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "config :phoenix, :plug_init_mode, :runtime"
       end
       assert_file "phx_blog/config/test.exs", &refute(&1 =~ config)
-      assert_file "phx_blog/config/prod.secret.exs", &refute(&1 =~ config)
+      assert_file "phx_blog/config/runtime.exs", &refute(&1 =~ config)
       assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
 
       # No gettext
@@ -356,6 +365,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/priv/static/favicon.ico"
       assert_file "phx_blog/priv/static/images/phoenix.png"
       assert_file "phx_blog/priv/static/js/phoenix.js"
+      assert_file "phx_blog/priv/static/js/phoenix.js.map"
       assert_file "phx_blog/priv/static/js/app.js"
     end
   end
@@ -395,8 +405,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
       end
 
-      assert_file "phx_blog/assets/css/app.scss", fn file ->
-        assert file =~ ~s[@import "../node_modules/nprogress/nprogress.css";]
+      assert_file "phx_blog/assets/css/app.css", fn file ->
         assert file =~ ~s[.phx-click-loading]
       end
 
@@ -491,6 +500,23 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
+  test "new with --no-install" do
+    in_tmp "new with no install", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--no-install"])
+
+      # Does not prompt to install dependencies
+      refute_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
+
+      # Instructions
+      assert_received {:mix_shell, :info, ["\nWe are almost there" <> _ = msg]}
+      assert msg =~ "$ cd phx_blog"
+      assert msg =~ "$ mix deps.get"
+
+      assert_received {:mix_shell, :info, ["Then configure your database in config/dev.exs" <> _]}
+      assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
+    end
+  end
+
   test "new defaults to pg adapter" do
     in_tmp "new defaults to pg adapter", fn ->
       project_path = Path.join(File.cwd!(), "custom_path")
@@ -499,7 +525,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/mix.exs", ":postgrex"
       assert_file "custom_path/config/dev.exs", [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
       assert_file "custom_path/config/test.exs", [~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
-      assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
+      assert_file "custom_path/config/runtime.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Postgres"
 
       assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
@@ -516,12 +542,32 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/mix.exs", ":myxql"
       assert_file "custom_path/config/dev.exs", [~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/test.exs", [~r/username: "root"/, ~r/password: ""/]
-      assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
+      assert_file "custom_path/config/runtime.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.MyXQL"
 
       assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
       assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
       assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+    end
+  end
+
+  test "new with sqlite3 adapter" do
+    in_tmp "new with sqlite3 adapter", fn ->
+      project_path = Path.join(File.cwd!(), "custom_path")
+      Mix.Tasks.Phx.New.run([project_path, "--database", "sqlite3"])
+
+      assert_file "custom_path/mix.exs", ":ecto_sqlite3"
+      assert_file "custom_path/config/dev.exs", [~r/database: .*_dev.db/]
+      assert_file "custom_path/config/test.exs", [~r/database: .*_test.db/]
+      assert_file "custom_path/config/runtime.exs", [~r/database: database_path/]
+      assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.SQLite3"
+
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+
+      assert_file "custom_path/.gitignore", "*.db"
+      assert_file "custom_path/.gitignore", "*.db-*"
     end
   end
 
@@ -533,7 +579,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/mix.exs", ":tds"
       assert_file "custom_path/config/dev.exs", [~r/username: "sa"/, ~r/password: "some!Password"/]
       assert_file "custom_path/config/test.exs", [~r/username: "sa"/, ~r/password: "some!Password"/]
-      assert_file "custom_path/config/prod.secret.exs", [~r/url: database_url/]
+      assert_file "custom_path/config/runtime.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Tds"
 
       assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"

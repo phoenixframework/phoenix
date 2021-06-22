@@ -641,6 +641,9 @@ defmodule Phoenix.Controller.ControllerTest do
 
       conn = build_conn_for_path("/foo?one=1&two=2")
       assert current_path(conn) == "/foo?one=1&two=2"
+
+      conn = build_conn_for_path("/foo//bar/")
+      assert current_path(conn) == "/foo/bar"
     end
 
     test "current_path/2 allows custom query params" do

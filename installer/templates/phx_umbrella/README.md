@@ -1,1 +1,1 @@
-# <%= root_app_module %>
+# <%= @root_app_module %>

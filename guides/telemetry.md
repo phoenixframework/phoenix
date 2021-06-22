@@ -124,7 +124,7 @@ A Telemetry event is made up of the following:
   * `measurements` - A map of atom keys (e.g. `:duration`)
     and numeric values.
 
-  * `metadata` - A map of key/value pairs that can be used
+  * `metadata` - A map of key-value pairs that can be used
     for tagging metrics.
 
 ### A Phoenix Example
@@ -204,14 +204,13 @@ and database layers using the same tools.
 
 Here is an example of a Telemetry event executed by Ecto when an Ecto repository starts:
 
-* `[:ecto, :repo, :init]` - dispatched by
-  `Ecto.Repo.Supervisor`
+* `[:ecto, :repo, :init]` - dispatched by `Ecto.Repo`
 
   * Measurement: `%{system_time: native_time}`
 
   * Metadata: `%{repo: Ecto.Repo, opts: Keyword.t()}`
 
-This means that whenever the `Ecto.Repo.Supervisor` starts, it will emit an event, via `:telemetry`,
+This means that whenever the `Ecto.Repo` starts, it will emit an event, via `:telemetry`,
 with a measurement of the time at start-up.
 
 ```elixir
@@ -454,7 +453,7 @@ event.
 
 ## Periodic measurements
 
-You might want to periodically measure key values within
+You might want to periodically measure key-value pairs within
 your application. Fortunately the
 [`:telemetry_poller`](http://hexdocs.pm/telemetry_poller)
 package provides a mechanism for custom measurements,
@@ -520,7 +519,7 @@ libraries currently emitting `:telemetry` events.
 Library authors are actively encouraged to send a PR adding
 their own (in alphabetical order, please):
 
-* [Absinthe](https://hexdocs.pm/absinthe) - Coming Soon!
+* [Absinthe](https://hexdocs.pm/absinthe) - [Events](https://hexdocs.pm/absinthe/telemetry.html)
 * [Broadway](https://hexdocs.pm/broadway) - [Events](https://hexdocs.pm/broadway/Broadway.html#module-telemetry)
 * [Ecto](https://hexdocs.pm/ecto) - [Events](https://hexdocs.pm/ecto/Ecto.Repo.html#module-telemetry-events)
 * [Oban](https://hexdocs.pm/oban) - [Events](https://hexdocs.pm/oban/Oban.Telemetry.html)

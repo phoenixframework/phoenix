@@ -1,6 +1,6 @@
-defmodule <%= app_module %> do
+defmodule <%= @app_module %> do
   @moduledoc """
-  <%= app_module %> keeps the contexts that define your domain
+  <%= @app_module %> keeps the contexts that define your domain
   and business logic.
 
   Contexts are also responsible for managing your data, regardless

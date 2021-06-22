@@ -36,13 +36,13 @@ defmodule Mix.Tasks.Phx.RoutesTest do
     end
   end
 
-  test "implicit router detection for web namescape" do
+  test "implicit router detection for web namespace" do
     Mix.Tasks.Phx.Routes.run([], PhoenixTest)
     assert_received {:mix_shell, :info, [routes]}
     assert routes =~ "page_path  GET  /  PageController :index"
   end
 
-  test "implicit router detection fallback for old namescape" do
+  test "implicit router detection fallback for old namespace" do
     Mix.Tasks.Phx.Routes.run([], PhoenixTestOld)
     assert_received {:mix_shell, :info, [routes]}
     assert routes =~ "page_path  GET  /old  PageController :index"

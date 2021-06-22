@@ -18,3 +18,12 @@ erl_crash.dump
 
 # Also ignore archive artifacts (built via "mix archive.build").
 *.ez
+
+# Temporary files, for example, from tests.
+/tmp
+
+<%= if @adapter_app == :ecto_sqlite3 do %>
+# Database files
+*.db
+*.db-*
+<% end %>

@@ -1,24 +1,24 @@
 # Contexts
 
-> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through [the Request life-cycle guide](request_lifecycle.html).
+> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
 
-> **Requirement**: This guide expects that you have gone through [the Ecto guide](ecto.html).
+> **Requirement**: This guide expects that you have gone through the [Ecto guide](ecto.html).
 
 So far, we've built pages, wired up controller actions through our routers, and learned how Ecto allows data to be validated and persisted. Now it's time to tie it all together by writing web-facing features that interact with our greater Elixir application.
 
-When building a Phoenix project, we are first and foremost building an Elixir application. Phoenix's job is to provide a web interface into our Elixir application. Naturally, we compose our applications with modules and functions, but simply defining a module with a few functions isn't enough when designing an application. It's vital to think about your application design when writing code. Let's find out how.
-
-> How to read this guide: Using the context generators is a great way for beginners and intermediate Elixir programmers alike to get up and running quickly while thoughtfully designing their applications. This guide focuses on those readers. On the other hand, experienced developers may get more mileage from nuanced discussions around application design. For those readers, we include a frequently asked questions (FAQ) section at the end of the guide which brings different perspectives to some design decisions made throughout the guide. Beginners can safely skip the FAQ sections and return later when they're ready to dig deeper.
+When building a Phoenix project, we are first and foremost building an Elixir application. Phoenix's job is to provide a web interface into our Elixir application. Naturally, we compose our applications with modules and functions, but simply defining a module with a few functions isn't enough when designing an application. We need to consider the boundaries between modules and how to group functionality. In other words, it's vital to think about application design when writing code. 
 
 ## Thinking about design
 
 Contexts are dedicated modules that expose and group related functionality. For example, anytime you call Elixir's standard library, be it `Logger.info/1` or `Stream.map/2`, you are accessing different contexts. Internally, Elixir's logger is made of multiple modules, but we never interact with those modules directly. We call the `Logger` module the context, exactly because it exposes and groups all of the logging functionality.
 
-Phoenix projects are structured like Elixir and any other Elixir project – we split our code into contexts. A context will group related functionality, such as posts and comments, often encapsulating patterns such as data access and data validation. By using contexts, we decouple and isolate our systems into manageable, independent parts.
+By giving modules that expose and group related functionality the name **contexts**, we help developers identify these patterns and talk about them. At the end of the day, contexts are just modules, as are your controllers, views, etc.
 
-Let's use these ideas to build out our web application. Our goal is to build a user system as well as a basic content management system for adding and editing page content. Let's get started!
+In Phoenix, contexts often encapsulate data access and data validation. They often talk to a database or APIs. Overall, think of them as boundaries to decouple and isolate our systems into manageable, independent parts. Let's use these ideas to build out our web application. Our goal is to build a user system as well as a basic content management system for adding and editing page content.
+
+> How to read this guide: Using the context generators is a great way for beginners and intermediate Elixir programmers alike to get up and running quickly while thoughtfully designing their applications. This guide focuses on those readers. On the other hand, experienced developers may get more mileage from nuanced discussions around application design. For those readers, we include a frequently asked questions (FAQ) section at the end of the guide which brings different perspectives to some design decisions made throughout the guide. Beginners can safely skip the FAQ sections and return later when they're ready to dig deeper.
 
 ### Adding an Accounts Context
 
@@ -194,7 +194,7 @@ defmodule Hello.Accounts do
 end
 ```
 
-This module will be the public API for all account functionality in our system. For example, in addition to user account management, we may also handle user login credentials, account preferences, and password reset generation. If we look at the `list_users/0` function, we can see the private details of user fetching. And it's super simple. We have a call to `Repo.all(User)`. We saw how Ecto repo queries worked in [the Ecto guide](ecto.html), so this call should look familiar. Our `list_users` function is a generalized function specifying the *intent* of our code – namely to list users. The details of that intent where we use our Repo to fetch the users from our PostgreSQL database is hidden from our callers. This is a common theme we'll see re-iterated as we use the Phoenix generators. Phoenix will push us to think about where we have different responsibilities in our application, and then to wrap up those different areas behind well-named modules and functions that make the intent of our code clear, while encapsulating the details.
+This module will be the public API for all account functionality in our system. For example, in addition to user account management, we may also handle user login credentials, account preferences, and password reset generation. If we look at the `list_users/0` function, we can see the private details of user fetching. And it's super simple. We have a call to `Repo.all(User)`. We saw how Ecto repo queries worked in the [Ecto guide](ecto.html), so this call should look familiar. Our `list_users` function is a generalized function specifying the *intent* of our code – namely to list users. The details of that intent where we use our Repo to fetch the users from our PostgreSQL database is hidden from our callers. This is a common theme we'll see re-iterated as we use the Phoenix generators. Phoenix will push us to think about where we have different responsibilities in our application, and then to wrap up those different areas behind well-named modules and functions that make the intent of our code clear, while encapsulating the details.
 
 Now we know how data is fetched, but how are users persisted? Let's take a look at the `Accounts.create_user/1` function:
 
@@ -378,7 +378,8 @@ Next, let's expose our new feature to the web by adding the credentials input to
 +   <% end %>
 + </div>
 
-  <%= submit "Submit" %>
+  <div>
+    <%= submit "Save" %>
 ```
 
 We used `Phoenix.HTML`'s `inputs_for` function to add an associations nested fields within the parent form. Within the nested inputs, we rendered our credential's email field and included the `label` and `error_tag` helpers just like our other inputs.
@@ -511,7 +512,7 @@ Next, let's wire up our session routes in `lib/hello_web/router.ex`:
   end
 ```
 
-We used `resources` to generate a set of routes under the `"/session"` path. This is what we've done for other routes, except this time we also passed the `:only` option to limit which routes are generated, since we only need to support `:new`, `:create`, and `:delete` actions. We also used the `singleton: true` option, which defines all the RESTful routes, but does not require a resource ID to be passed along in the URL. We don't need an ID in the URL because our actions are always scoped to the "current" user in the system. The ID is always in the session. Before we finish our router, let's add an authentication plug to the router that will allow us to lock down certain routes after a user has used our new session controller to sign-in. Add the following function to `lib/hello_web/router.ex`:
+We used `resources` to generate a set of routes under the `"/sessions"` path. This is what we've done for other routes, except this time we also passed the `:only` option to limit which routes are generated, since we only need to support `:new`, `:create`, and `:delete` actions. We also used the `singleton: true` option, which defines all the RESTful routes, but does not require a resource ID to be passed along in the URL. We don't need an ID in the URL because our actions are always scoped to the "current" user in the system. The ID is always in the session. Before we finish our router, let's add an authentication plug to the router that will allow us to lock down certain routes after a user has used our new session controller to sign-in. Add the following function to `lib/hello_web/router.ex`:
 
 
 ```elixir
@@ -583,7 +584,7 @@ Let's create a `CMS` context to handle basic CMS duties. Before we write code, l
 
 From the description, it's clear we need a `Page` resource for storing page information. What about our author information? While we could extend our existing `Accounts.User` schema to include information such as bio and role, that would violate the responsibilities we've set up for our contexts. Why should our Account system now be aware of author information? Worse, with a field like "role", the CMS role in the system will likely conflict or be confused with other account roles for our application. There's a better way.
 
-Applications with "users" are naturally heavily user driven. After all, our software is typically designed to be used by human end-users one way or another. Instead of extending our `Accounts.User` struct to track every field and responsibility of our entire platform, it's better to keep those responsibilities with the modules who own that functionality. In our case, we can create a `CMS.Author` struct that holds author specific fields as it relates to a CMS. Now we can place fields like "role" and "bio" here, where they naturally live. Likewise, we also gain specialized datastructures in our application that are suited to the domain that we are operating in, rather than a single `%User{}` in the system that has to be everything to everyone.
+Applications with "users" are naturally heavily user driven. After all, our software is typically designed to be used by human end-users one way or another. Instead of extending our `Accounts.User` struct to track every field and responsibility of our entire platform, it's better to keep those responsibilities with the modules who own that functionality. In our case, we can create a `CMS.Author` struct that holds author specific fields as it relates to a CMS. Now we can place fields like "role" and "bio" here, where they naturally live. Likewise, we also gain specialized data structures in our application that are suited to the domain that we are operating in, rather than a single `%User{}` in the system that has to be everything to everyone.
 
 With our plan set, let's get to work. Run the following command to generate our new context:
 
@@ -866,7 +867,7 @@ defp handle_existing_author({:error, changeset}) do
 end
 ```
 
-There's a bit of a code here, so let's break it down. First, we rewrote the `create_page` function to require a `CMS.Author` struct, which represents the author publishing the post. We then take our changeset and pass it to `Ecto.Changeset.put_change/2` to place the `author_id` association in the changeset. Next, we use `Repo.insert` to insert the new page into the database, containing our associated `author_id`.
+There's a bit of a code here, so let's break it down. First, we rewrote the `create_page` function to require a `CMS.Author` struct, which represents the author publishing the post. We then take our changeset and pass it to `Ecto.Changeset.put_change/3` to place the `author_id` association in the changeset. Next, we use `Repo.insert` to insert the new page into the database, containing our associated `author_id`.
 
 Our CMS system requires an author to exist for any end-user before they publish posts, so we added an `ensure_author_exists` function to programmatically allow authors to be created. Our new function accepts an `Accounts.User` struct and either finds the existing author in the application with that `user.id`, or creates a new author for the user. Our authors table has a unique constraint on the `user_id` foreign key, so we are protected from a race condition allowing duplicate authors. That said, we still need to protect ourselves from racing the insert of another user. To accomplish this, we use a purpose-built changeset with `Ecto.Changeset.change/1` which accepts a new `Author` struct with our `user_id`. The changeset's only purpose is to convert a unique constraint violation into an error we can handle. After attempting to insert the new author with `Repo.insert/1`, we pipe to `handle_existing_author/1` which matches on the success and error cases. For the success case, we are done and simply return the created author, otherwise we use `Repo.get_by!` to fetch the author for the `user_id` that already exists.
 

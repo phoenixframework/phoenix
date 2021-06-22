@@ -1,6 +1,6 @@
 # Introduction to Testing
 
-> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
 Testing has become integral to the software development process, and the ability to easily write meaningful tests is an indispensable feature for any modern web framework. Phoenix takes this seriously, providing support files to make all the major components of the framework easy to test. It also generates test modules with real-world examples alongside any generated modules to help get us going.
 
@@ -496,7 +496,7 @@ That's all you need to do and ExUnit and Phoenix will take care of all rest, inc
 
 While ExUnit is a simple test framework, it provides a really flexible and robust test runner through the `mix test` command. We recommend you to run `mix help test` or [read the docs online](https://hexdocs.pm/mix/Mix.Tasks.Test.html)
 
-We've seen what Phoenix gives us with a newly generated app. Furthermore, whenever you generate a new resource, Phoenix will generate all appropariate tests for that resource too. For example, you can create a complete scaffold with schema, context, controllers, and views by running the following command at the root of your application:
+We've seen what Phoenix gives us with a newly generated app. Furthermore, whenever you generate a new resource, Phoenix will generate all appropriate tests for that resource too. For example, you can create a complete scaffold with schema, context, controllers, and views by running the following command at the root of your application:
 
 ```console
 $ mix phx.gen.html Blog Post posts title body:text

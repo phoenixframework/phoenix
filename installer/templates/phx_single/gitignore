@@ -20,8 +20,8 @@ erl_crash.dump
 *.ez
 
 # Ignore package tarball (built via "mix hex.build").
-<%= app_name %>-*.tar
-<%= if webpack do %>
+<%= @app_name %>-*.tar
+<%= if @webpack do %>
 # If NPM crashes, it generates a log, let's ignore it too.
 npm-debug.log
 
@@ -32,3 +32,12 @@ npm-debug.log
 # we ignore priv/static. You may want to comment
 # this depending on your deployment strategy.
 /priv/static/
+
+# Temporary files, for example, from tests.
+/tmp
+
+<%= if @adapter_app == :ecto_sqlite3 do %>
+# Database files
+*.db
+*.db-*
+<% end %>

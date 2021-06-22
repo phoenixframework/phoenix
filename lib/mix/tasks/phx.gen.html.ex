@@ -62,7 +62,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   Which would generate a `lib/app_web/controllers/sales/user_controller.ex` and
   `lib/app_web/views/sales/user_view.ex`.
 
-  ## Customising the context, schema, tables and migrations
+  ## Customizing the context, schema, tables and migrations
 
   In some cases, you may wish to bootstrap HTML templates, controllers,
   and controller tests, but leave internal implementation of the context
@@ -187,6 +187,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
         {label(key), ~s(<%= multiple_select f, #{inspect(key)}, ["1": 1, "2": 2] %>), error(key)}
       {key, {:array, _}} ->
         {label(key), ~s(<%= multiple_select f, #{inspect(key)}, ["Option 1": "option1", "Option 2": "option2"] %>), error(key)}
+      {key, {:enum, _}}  ->
+        {label(key), ~s|<%= select f, #{inspect(key)}, Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)}), prompt: "Choose a value" %>|, error(key)}
       {key, _}  ->
         {label(key), ~s(<%= text_input f, #{inspect(key)} %>), error(key)}
     end)

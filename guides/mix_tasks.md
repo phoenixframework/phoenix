@@ -1,17 +1,18 @@
-# Mix Tasks
+# Mix tasks
 
-There are currently a number of built-in Phoenix-specific and Ecto-specific mix tasks available to us within a newly-generated application. We can also create our own application specific tasks.
+There are currently a number of built-in Phoenix-specific and Ecto-specific [Mix tasks](`Mix.Task`) available to us within a newly-generated application. We can also create our own application specific tasks.
 
 > Note to learn more about `mix`, you can read Elixir's official [Introduction to Mix](https://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html).
 
 ## Phoenix tasks
 
 ```console
-➜ mix help --search "phx"
+$ mix help --search "phx"
 mix local.phx          # Updates the Phoenix project generator locally
 mix phx                # Prints Phoenix help information
 mix phx.digest         # Digests and compresses static files
 mix phx.digest.clean   # Removes old versions of static assets.
+mix phx.gen.auth       # Generates authentication logic for a resource
 mix phx.gen.cert       # Generates a self-signed certificate for HTTPS testing
 mix phx.gen.channel    # Generates a Phoenix channel
 mix phx.gen.context    # Generates a context with functions around an Ecto schema
@@ -34,7 +35,7 @@ We will cover all Phoenix Mix tasks, except `phx.new`, `phx.new.ecto`, and `phx.
 
 ### `mix phx.gen.html`
 
-Phoenix offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto context, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
+Phoenix offers the ability to generate all the code to stand up a complete HTML resource — Ecto migration, Ecto context, controller with all the necessary actions, view, and templates. This can be a tremendous time saver. Let's take a look at how to make this happen.
 
 The `mix phx.gen.html` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
@@ -56,7 +57,7 @@ $ mix phx.gen.html Blog Post posts body:string word_count:integer
 * injecting test/hello/blog/blog_test.exs
 ```
 
-When `mix phx.gen.html` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
+When `mix phx.gen.html` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our Ecto migrations.
 
 ```console
 Add the resource to your browser scope in lib/hello_web/router.ex:
@@ -100,7 +101,7 @@ Add the resource to your browser scope in lib/hello_web/router.ex:
     resources "/posts", PostController
 ```
 
-Similarly - if we want a context created without a schema for our resource we can use the `--no-schema` flag.
+Similarly, if we want a context created without a schema for our resource we can use the `--no-schema` flag.
 
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-schema
@@ -122,7 +123,7 @@ It will tell us we need to add a line to our router file, but since we skipped t
 
 ### `mix phx.gen.json`
 
-Phoenix also offers the ability to generate all the code to stand up a complete JSON resource - ecto migration, ecto schema, controller with all the necessary actions and view. This command will not create any template for the app.
+Phoenix also offers the ability to generate all the code to stand up a complete JSON resource — Ecto migration, Ecto schema, controller with all the necessary actions and view. This command will not create any template for the app.
 
 The `mix phx.gen.json` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
@@ -141,7 +142,7 @@ $ mix phx.gen.json Blog Post posts title:string content:string
 * injecting test/hello/blog/blog_test.exs
 ```
 
-When `mix phx.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
+When `mix phx.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our Ecto migrations.
 
 ```console
 Add the resource to your :api scope in lib/hello_web/router.ex:
@@ -163,11 +164,11 @@ warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
   lib/hello_web/controllers/post_controller.ex:18
 ```
 
-`mix phx.new.json` also supports `--no-context`, `--no-schema`, and others, as in `mix phx.new.html`.
+`mix phx.gen.json` also supports `--no-context`, `--no-schema`, and others, as in `mix phx.gen.html`.
 
 ### `mix phx.gen.context`
 
-If we don't need a complete HTML/JSON resource and instead are only interested in a context, we can use the `mix phx.gen.context` task. It will generate a context, a schema, a migration and a test case.
+If we don't need a complete HTML/JSON resource and only need a context, we can use the `mix phx.gen.context` task. It will generate a context, a schema, a migration and a test case.
 
 The `mix phx.gen.context` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes.
 
@@ -204,9 +205,76 @@ $ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id
 * creating priv/repo/migrations/20170906162013_create_credentials.exs
 ```
 
+### `mix phx.gen.auth`
+
+Phoenix also offers the ability to generate all of the code to stand up a complete authentication system — Ecto migration, phoenix context, controllers, templates, etc. This can be a huge time saver, allowing you to quickly add authentication to your system and shift your focus back to the primary problems your application is trying to solve.
+
+The `mix phx.gen.auth` task takes the following arguments: the module name of the context, the module name of the schema, and a plural version of the schema name used to generate database tables and route helpers.
+
+Here is an example version of the command:
+
+```console
+$ mix phx.gen.auth Accounts User users
+* creating priv/repo/migrations/20201205184926_create_users_auth_tables.exs
+* creating lib/hello/accounts/user_notifier.ex
+* creating lib/hello/accounts/user.ex
+* creating lib/hello/accounts/user_token.ex
+* creating lib/hello_web/controllers/user_auth.ex
+* creating test/hello_web/controllers/user_auth_test.exs
+* creating lib/hello_web/views/user_confirmation_view.ex
+* creating lib/hello_web/templates/user_confirmation/new.html.eex
+* creating lib/hello_web/controllers/user_confirmation_controller.ex
+* creating test/hello_web/controllers/user_confirmation_controller_test.exs
+* creating lib/hello_web/templates/layout/_user_menu.html.eex
+* creating lib/hello_web/templates/user_registration/new.html.eex
+* creating lib/hello_web/controllers/user_registration_controller.ex
+* creating test/hello_web/controllers/user_registration_controller_test.exs
+* creating lib/hello_web/views/user_registration_view.ex
+* creating lib/hello_web/views/user_reset_password_view.ex
+* creating lib/hello_web/controllers/user_reset_password_controller.ex
+* creating test/hello_web/controllers/user_reset_password_controller_test.exs
+* creating lib/hello_web/templates/user_reset_password/edit.html.eex
+* creating lib/hello_web/templates/user_reset_password/new.html.eex
+* creating lib/hello_web/views/user_session_view.ex
+* creating lib/hello_web/controllers/user_session_controller.ex
+* creating test/hello_web/controllers/user_session_controller_test.exs
+* creating lib/hello_web/templates/user_session/new.html.eex
+* creating lib/hello_web/views/user_settings_view.ex
+* creating lib/hello_web/templates/user_settings/edit.html.eex
+* creating lib/hello_web/controllers/user_settings_controller.ex
+* creating test/hello_web/controllers/user_settings_controller_test.exs
+* creating lib/hello/accounts.ex
+* injecting lib/hello/accounts.ex
+* creating test/hello/accounts_test.exs
+* injecting test/hello/accounts_test.exs
+* creating test/support/fixtures/accounts_fixtures.ex
+* injecting test/support/fixtures/accounts_fixtures.ex
+* injecting test/support/conn_case.ex
+* injecting config/test.exs
+* injecting mix.exs
+* injecting lib/hello_web/router.ex
+* injecting lib/hello_web/router.ex - imports
+* injecting lib/hello_web/router.ex - plug
+* injecting lib/hello_web/templates/layout/app.html.eex
+```
+
+When `mix phx.gen.auth` is done creating files, it helpfully tells us that we need to re-fetch our dependencies as well as run our Ecto migrations.
+
+```console
+Please re-fetch your dependencies with the following command:
+
+    mix deps.get
+
+Remember to update your repository by running migrations:
+
+  $ mix ecto.migrate
+```
+
+A more complete walk-through of how to get started with this generator is available in the [`mix phx.gen.auth` authentication guide](mix_phx_gen_auth.html).
+
 ### `mix phx.gen.channel`
 
-This task will generate a basic Phoenix channel as well a test case for it. It takes the module name for the channel as argument:
+This task will generate a basic Phoenix channel as well a test case for it. It takes the module name for the channel as the only one argument:
 
 ```console
 $ mix phx.gen.channel Room
@@ -224,7 +292,7 @@ Add the channel to your `lib/hello_web/channels/user_socket.ex` handler, for exa
 
 ### `mix phx.gen.presence`
 
-This task will generate a Presence tracker. The module name can be passed as an argument,
+This task will generate a presence tracker. The module name can be passed as an argument,
 `Presence` is used if no module name is passed.
 
 ```console
@@ -234,7 +302,7 @@ $ lib/hello_web/channels/presence.ex
 
 ### `mix phx.routes`
 
-This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [Routing Guide](routing.html).
+This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [routing guide](routing.html).
 
 If we don't specify a router for this task, it will default to the router Phoenix generated for us.
 
@@ -257,13 +325,13 @@ This is the task we use to get our application running. It takes no arguments at
 $ mix phx.server
 [info] Running TaskTesterWeb.Endpoint with Cowboy on port 4000 (http)
 ```
-It silently ignores our `DoesNotExist` argument.
+It will silently ignore our `DoesNotExist` argument:
 
 ```console
 $ mix phx.server DoesNotExist
 [info] Running TaskTesterWeb.Endpoint with Cowboy on port 4000 (http)
 ```
-If we would like to start our application and also have an `iex` session open to it, we can run the mix task within `iex` like this, `iex -S mix phx.server`.
+If we would like to start our application and also have an `IEx` session open to it, we can run the Mix task within `iex` like this, `iex -S mix phx.server`.
 
 ```console
 $ iex -S mix phx.server
@@ -278,27 +346,27 @@ iex(1)>
 
 This task does two things, it creates a digest for our static assets and then compresses them.
 
-"Digest" here refers to an MD5 digest of the contents of an asset which gets added to the filename of that asset. This creates a sort of "fingerprint" for it. If the digest doesn't change, browsers and CDNs will use a cached version. If it does change, they will re-fetch the new version.
+"Digest" here refers to an MD5 digest of the contents of an asset which gets added to the filename of that asset. This creates a sort of fingerprint for it. If the digest doesn't change, browsers and CDNs will use a cached version. If it does change, they will re-fetch the new version.
 
 Before we run this task let's inspect the contents of two directories in our hello application.
 
-First `priv/static` which should look similar to this:
+First `priv/static/` which should look similar to this:
 
 ```console
 ├── images
 │   └── phoenix.png
-├── robots.txt
+└── robots.txt
 ```
 
 And then `assets/` which should look similar to this:
 
 ```console
 ├── css
-│   └── app.scss
+│   └── app.css
 ├── js
 │   └── app.js
-├── vendor
-│   └── phoenix.js
+└── vendor
+    └── phoenix.js
 ```
 
 All of these files are our static assets. Now let's run the `mix phx.digest` task.
@@ -308,7 +376,7 @@ $ mix phx.digest
 Check your digested files at 'priv/static'.
 ```
 
-We can now do as the task suggests and inspect the contents of `priv/static` directory. We'll see that all files from `assets/` have been copied over to `priv/static` and also each file now has a couple of versions. Those versions are:
+We can now do as the task suggests and inspect the contents of `priv/static/` directory. We'll see that all files from `assets/` have been copied over to `priv/static/` and also each file now has a couple of versions. Those versions are:
 
 * the original file
 * a compressed file with gzip
@@ -324,13 +392,13 @@ config :phoenix, :gzippable_exts, ~w(.js .css)
 > Note: We can specify a different output folder where `mix phx.digest` will put processed files. The first argument is the path where the static files are located.
 
 ```console
-$ mix phx.digest priv/static -o www/public
-Check your digested files at 'www/public'.
+$ mix phx.digest priv/static/ -o www/public/
+Check your digested files at 'www/public/'
 ```
 
 ## Ecto tasks
 
-Newly generated Phoenix applications now include ecto and postgrex as dependencies by default (which is to say, unless we use `mix phx.new` with the `--no-ecto` flag). With those dependencies come mix tasks to take care of common ecto operations. Let's see which tasks we get out of the box.
+Newly generated Phoenix applications now include Ecto and Postgrex as dependencies by default (which is to say, unless we use `mix phx.new` with the `--no-ecto` flag). With those dependencies come Mix tasks to take care of common Ecto operations. Let's see which tasks we get out of the box.
 
 ```console
 $ mix help --search "ecto"
@@ -350,7 +418,7 @@ Note: We can run any of the tasks above with the `--no-start` flag to execute th
 
 ### `mix ecto.create`
 
-This task will create the database specified in our repo. By default it will look for the repo named after our application (the one generated with our app unless we opted out of ecto), but we can pass in another repo if we want.
+This task will create the database specified in our repo. By default it will look for the repo named after our application (the one generated with our app unless we opted out of Ecto), but we can pass in another repo if we want.
 
 Here's what it looks like in action.
 
@@ -419,7 +487,7 @@ The database for OurCustom.Repo has been created.
 
 ### `mix ecto.drop`
 
-This task will drop the database specified in our repo. By default it will look for the repo named after our application (the one generated with our app unless we opted out of ecto). It will not prompt us to check if we're sure we want to drop the db, so do exercise caution.
+This task will drop the database specified in our repo. By default it will look for the repo named after our application (the one generated with our app unless we opted out of Ecto). It will not prompt us to check if we're sure we want to drop the database, so do exercise caution.
 
 ```console
 $ mix ecto.drop
@@ -445,13 +513,9 @@ $ mix ecto.gen.repo -r OurCustom.Repo
 * creating lib/our_custom/repo.ex
 * updating config/config.exs
 Don't forget to add your new repo to your supervision tree
-(typically in lib/hello.ex):
+(typically in lib/hello/application.ex):
 
-    children = [
-      ...,
-      OurCustom.Repo,
-      ...
-    ]
+    {OurCustom.Repo, []}
 ```
 
 Notice that this task has updated `config/config.exs`. If we take a look, we'll see this extra configuration block for our new repo.
@@ -468,7 +532,7 @@ config :hello, OurCustom.Repo,
 
 Of course, we'll need to change the login credentials to match what our database expects. We'll also need to change the config for other environments.
 
-We certainly should follow the instructions and add our new repo to our supervision tree. In our `Hello` application, we would open up `lib/hello.ex`, and add our repo as a worker to the `children` list.
+We certainly should follow the instructions and add our new repo to our supervision tree. In our `Hello` application, we would open up `lib/hello/application.ex`, and add our repo as a worker to the `children` list.
 
 ```elixir
 . . .
@@ -485,7 +549,7 @@ children = [
 
 ### `mix ecto.gen.migration`
 
-Migrations are a programmatic, repeatable way to affect changes to a database schema. Migrations are also just modules, and we can create them with the `ecto.gen.migration` task. Let's walk through the steps to create a migration for a new comments table.
+Migrations are a programmatic, repeatable way to affect changes to a database schema. Migrations are also just modules, and we can create them with the [`ecto.gen.migration`](`mix ecto.gen.migration`) task. Let's walk through the steps to create a migration for a new comments table.
 
 We simply need to invoke the task with a `snake_case` version of the module name that we want. Preferably, the name will describe what we want the migration to do.
 
@@ -508,7 +572,7 @@ defmodule Hello.Repo.Migrations.AddCommentsTable do
 end
 ```
 
-Notice that there is a single function `change/0` which will handle both forward migrations and rollbacks. We'll define the schema changes that we want using ecto's handy dsl, and ecto will figure out what to do depending on whether we are rolling forward or rolling back. Very nice indeed.
+Notice that there is a single function `change/0` which will handle both forward migrations and rollbacks. We'll define the schema changes that we want using Ecto's handy DSL, and Ecto will figure out what to do depending on whether we are rolling forward or rolling back. Very nice indeed.
 
 What we want to do is create a `comments` table with a `body` column, a `word_count` column, and timestamp columns for `inserted_at` and `updated_at`.
 
@@ -533,8 +597,8 @@ $ mix ecto.gen.migration -r OurCustom.Repo add_users
 ```
 
 For more information on how to modify your database schema please refer to the
-ecto's migration dsl [ecto migration docs](https://hexdocs.pm/ecto_sql/Ecto.Migration.html).
-For example, to alter an existing schema see the documentation on ecto’s
+[Ecto's migration DSL docs](https://hexdocs.pm/ecto_sql/Ecto.Migration.html).
+For example, to alter an existing schema see the documentation on Ecto’s
 [`alter/2`](https://hexdocs.pm/ecto_sql/Ecto.Migration.html#alter/2) function.
 
 That's it! We're ready to run our migration.
@@ -563,7 +627,7 @@ version        |     inserted_at
 (2 rows)
 ```
 
-When we roll back a migration, `ecto.rollback` will remove the record representing this migration from `schema_migrations`.
+When we roll back a migration, [`ecto.rollback`](#mix-ecto-rollback) will remove the record representing this migration from `schema_migrations`.
 
 By default, `ecto.migrate` will execute all pending migrations. We can exercise more control over which migrations we run by specifying some options when we run the task.
 
@@ -593,7 +657,7 @@ mix ecto.migrate --to 20150317170448
 
 ### `mix ecto.rollback`
 
-The `ecto.rollback` task will reverse the last migration we have run, undoing the schema changes. `ecto.migrate` and `ecto.rollback` are mirror images of each other.
+The [`ecto.rollback`](`mix ecto.rollback`) task will reverse the last migration we have run, undoing the schema changes. [`ecto.migrate`](#mix-ecto-migrate) and `ecto.rollback` are mirror images of each other.
 
 ```console
 $ mix ecto.rollback
@@ -606,12 +670,12 @@ $ mix ecto.rollback
 
 ## Creating our own Mix task
 
-As we've seen throughout this guide, both mix itself and the dependencies we bring in to our application provide a number of really useful tasks for free. Since neither of these could possibly anticipate all our individual application's needs, mix allows us to create our own custom tasks. That's exactly what we are going to do now.
+As we've seen throughout this guide, both Mix itself and the dependencies we bring in to our application provide a number of really useful tasks for free. Since neither of these could possibly anticipate all our individual application's needs, Mix allows us to create our own custom tasks. That's exactly what we are going to do now.
 
-The first thing we need to do is create a `mix/tasks` directory inside of `lib`. This is where any of our application specific mix tasks will go.
+The first thing we need to do is create a `mix/tasks/` directory inside of `lib/`. This is where any of our application specific Mix tasks will go.
 
 ```console
-$ mkdir -p lib/mix/tasks
+$ mkdir -p lib/mix/tasks/
 ```
 
 Inside that directory, let's create a new file, `hello.greeting.ex`, that looks like this.
@@ -623,7 +687,7 @@ defmodule Mix.Tasks.Hello.Greeting do
   @shortdoc "Sends a greeting to us from Hello Phoenix"
 
   @moduledoc """
-  This is where we would put any long form documentation or doctests.
+  This is where we would put any long form documentation and doctests.
   """
 
   def run(_args) do
@@ -634,18 +698,18 @@ defmodule Mix.Tasks.Hello.Greeting do
 end
 ```
 
-Let's take a quick look at the moving parts involved in a working mix task.
+Let's take a quick look at the moving parts involved in a working Mix task.
 
-The first thing we need to do is name our module. All tasks must be defined in `Mix.Tasks` namespace. We'd like to invoke this as `mix hello.greeting`, so we complete the module name with
+The first thing we need to do is name our module. All tasks must be defined in the `Mix.Tasks` namespace. We'd like to invoke this as `mix hello.greeting`, so we complete the module name with
 `Hello.Greeting`.
 
-The `use Mix.Task` line brings in functionality from Mix that makes this module behave as a mix task.
+The `use Mix.Task` line brings in functionality from Mix that makes this module [behave as a Mix task](`Mix.Task`).
 
 The `@shortdoc` module attribute holds a string which will describe our task when users invoke `mix help`.
 
 `@moduledoc` serves the same function that it does in any module. It's where we can put long-form documentation and doctests, if we have any.
 
-The `run/1` function is the critical heart of any Mix task. It's the function that does all the work when users invoke our task. In ours, all we do is send a greeting from our app, but we can implement our `run/1` function to do whatever we need it to. Note that `Mix.shell().info/1` is the preferred way to print text back out to the user.
+The [`run/1`](`c:Mix.Task.run/1`) function is the critical heart of any Mix task. It's the function that does all the work when users invoke our task. In ours, all we do is send a greeting from our app, but we can implement our `run/1` function to do whatever we need it to. Note that [`Mix.shell().info/1`](`Mix.shell/0`) is the preferred way to print text back out to the user.
 
 Of course, our task is just a module, so we can define other private functions as needed to support our `run/1` function.
 
@@ -675,13 +739,13 @@ Greetings from the Hello Phoenix Application!
 
 Indeed it does.
 
-If you want to make your new mix task to use your application's infrastructure, you need to make sure the application is started when mix task is being executed. This is particularly useful if you need to access your database from within the mix task. Thankfully, mix makes it really easy for us:
+If you want to make your new Mix task to use your application's infrastructure, you need to make sure the application is started when Mix task is being executed. This is particularly useful if you need to access your database from within the Mix task. Thankfully, Mix makes it really easy for us:
 
 ```elixir
-  . . .
   def run(_args) do
     Mix.Task.run("app.start")
     Mix.shell().info("Now I have access to Repo and other goodies!")
+    Mix.shell().info("Greetings from the Hello Phoenix Application!")
   end
-  . . .
 ```
+

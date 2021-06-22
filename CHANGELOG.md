@@ -6,14 +6,29 @@ Phoenix v1.6 requires Elixir v1.9+.
 
 ### Enhancements
 
+  * [Controller] Do not create compile-time dependency for `action_fallback`
   * [Endpoint] Allow custom error response from socket handler
   * [Endpoint] Do not require a pubsub server in the socket (only inside channels)
+  * [mix phx.gen.auth] Add `mix phx.gen.auth` generator
+  * [mix phx.gen.context] Support `enum` types and the `redact` option when declaring fields
+  * [mix phx.new] Replace deprecated `node-sass` with `sass` library
+  * [mix phx.new] Update `mix phx.new` to require Elixir v1.11 and use the new `config/runtime.exs`
   * [mix phx.new] Add description to Ecto telemetry metrics
   * [mix phx.new] Use `Ecto.Adapters.SQL.Sandbox.start_owner!/2` in generators - this approach provides proper shutdown semantics for apps using LiveView and Presence
+  * [mix phx.new] Add `--install` and `--no-install` options to `phx.new`
+  * [mix phx.new] Add `--database sqlite3` option to `phx.new`
+  * [View] Extracted `Phoenix.View` into its own project to facilitate reuse
+
+### JavaScript Client Enhancements
+  * Fire each event in a separate task for the LongPoll transport to fix ordering
 
 ### Bug fixes
 
-  * [mix phx.gen.live] Fix a bug where tests with `utc_datetime` fields did not pass out of the box
+  * [Controller] Return normalized paths in `current_path/1` and `current_path/2`
+  * [mix phx.gen.live] Fix a bug where tests with `utc_datetime` and `boolean` fields did not pass out of the box
+
+### JavaScript Client Bug fixes
+  * Bind to `beforeunload` instead of `unload` to solve Firefox connection issues
 
 ### Deprecations
 
@@ -22,4 +37,4 @@ Phoenix v1.6 requires Elixir v1.9+.
 
 ## v1.5
 
-The CHANGELOG for v1.5 releases can be found [in the v1.5 branch](https://github.com/phoenixframework/phoenix/blob/v1.5/CHANGELOG.md).
+The CHANGELOG for v1.5 releases can be found in the [v1.5 branch](https://github.com/phoenixframework/phoenix/blob/v1.5/CHANGELOG.md).

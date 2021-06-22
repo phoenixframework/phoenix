@@ -4,9 +4,11 @@ The Elixir and Phoenix communities are friendly and welcoming. All questions and
 
 There are a number of places to connect with community members at all experience levels.
 
-  * We're on Freenode IRC in the [\#elixir-lang](http://webchat.freenode.net/?channels=elixir-lang) channel.
+  * We're on Libera IRC in the [\#elixir](https://web.libera.chat/?channels=#elixir) channel.
 
   * [Request an invitation](https://elixir-slackin.herokuapp.com/) and join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
+  
+  * Feel free to join and check out the #phoenix channel on [Discord](https://discord.gg/elixir).
 
   * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/master/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
 
@@ -38,8 +40,7 @@ There are a number of places to connect with community members at all experience
 
   * [The Complete Elixir and Phoenix Bootcamp Master Functional Programming Techniques with Elixir and Phoenix while Learning to Build Compelling Web Applications (by Stephen Grider - 2017)](https://www.udemy.com/the-complete-elixir-and-phoenix-bootcamp-and-tutorial/)
 
-  * [Discover Elixir & Phoenix (by Tristan Edwards
- - 2017)](https://www.ludu.co/course/discover-elixir-phoenix)
+  * [Discover Elixir & Phoenix (by Tristan Edwards - 2017)](https://www.ludu.co/course/discover-elixir-phoenix)
 
   * [Phoenix Framework Tutorial (by Tensor Programming - 2017)](https://www.youtube.com/watch?v=irDC1nWKhZ8&index=6&list=PLJbE2Yu2zumAgKjSPyFtvYjP5LqgzafQq)
 

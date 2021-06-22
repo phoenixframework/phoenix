@@ -1,5 +1,5 @@
-defmodule <%= web_namespace %>.PageLive do
-  use <%= web_namespace %>, :live_view
+defmodule <%= @web_namespace %>.PageLive do
+  use <%= @web_namespace %>, :live_view
 
   @impl true
   def mount(_params, _session, socket) do
@@ -26,7 +26,7 @@ defmodule <%= web_namespace %>.PageLive do
   end
 
   defp search(query) do
-    if not <%= web_namespace %>.Endpoint.config(:code_reloader) do
+    if not <%= @web_namespace %>.Endpoint.config(:code_reloader) do
       raise "action disabled when not in development"
     end
 

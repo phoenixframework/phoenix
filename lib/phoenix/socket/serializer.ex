@@ -2,8 +2,8 @@ defmodule Phoenix.Socket.Serializer do
   @moduledoc """
   A behaviour that serializes incoming and outgoing socket messages.
 
-  By default Phoenix provides `Phoenix.Socket.V2.JSONSerializer` that
-  encodes to JSON and decodes JSON messages.
+  By default Phoenix provides a serializer that encodes to JSON and
+  decodes JSON messages.
 
   Custom serializers may be configured in the socket.
   """

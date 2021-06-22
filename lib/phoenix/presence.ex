@@ -63,10 +63,10 @@ defmodule Phoenix.Presence do
         end
       end
 
-  In the example above, the current presence information for
-  the socket's topic is pushed to the client as a `"presence_state"` event.
-  Next, `Presence.track` is used to register this channel's process as a
+  In the example above, `Presence.track` is used to register this channel's process as a
   presence for the socket's user ID, with a map of metadata.
+  Next, the current presence information for
+  the socket's topic is pushed to the client as a `"presence_state"` event.
 
   Finally, a diff of presence join and leave events will be sent to the
   client as they happen in real-time with the "presence_diff" event.
@@ -120,6 +120,21 @@ defmodule Phoenix.Presence do
   information is then extended with a `:user` key of the user's
   information, while maintaining the required `:metas` field from the
   original presence data.
+
+  ## Testing with Presence
+
+  Every time the `fetch` callback is invoked, it is done from a separate
+  process. Given those processes run asynchronously, it is often necessary
+  to guarantee they have been shutdown at the end of every test. This can
+  be done by using ExUnit's `on_exit` hook plus `fetchers_pids` function:
+
+      on_exit(fn ->
+        for pid <- MyAppWeb.Presence.fetchers_pids() do
+          ref = Process.monitor(pid)
+          assert_receive {:DOWN, ^ref, _, _, _}, 1000
+        end
+      end)
+
   """
 
   @type presences :: %{String.t => %{metas: [map()]}}
@@ -131,7 +146,7 @@ defmodule Phoenix.Presence do
 
   Tracked presences are grouped by `key`, cast as a string. For example, to
   group each user's channels together, use user IDs as keys. Each presence can
-  be associated with a map of metadata to store small, emphemeral state, such as
+  be associated with a map of metadata to store small, ephemeral state, such as
   a user's online status. To store detailed information, see `c:fetch/2`.
 
   ## Example
@@ -150,7 +165,7 @@ defmodule Phoenix.Presence do
     {:error, reason :: term()}
 
   @doc """
-  Track an arbitary process as a presence.
+  Track an arbitrary process as a presence.
 
   Same with `track/3`, except track any process by `topic` and `key`.
   """
@@ -181,7 +196,7 @@ defmodule Phoenix.Presence do
   @doc """
   Update a process presence's metadata.
 
-  Same as `update/3`, but with an arbitary process.
+  Same as `update/3`, but with an arbitrary process.
   """
   @callback update(pid, topic, key :: String.t, meta :: map() | (map() -> map())) ::
     {:ok, ref :: binary()} |
@@ -266,6 +281,7 @@ defmodule Phoenix.Presence do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Phoenix.Presence
       @opts opts
+      @task_supervisor Module.concat(__MODULE__, "TaskSupervisor")
 
       _ = opts[:otp_app] || raise "use Phoenix.Presence expects :otp_app to be given"
 
@@ -281,7 +297,7 @@ defmodule Phoenix.Presence do
 
         %{
           id: __MODULE__,
-          start: {Phoenix.Presence, :start_link, [__MODULE__, opts]},
+          start: {Phoenix.Presence, :start_link, [__MODULE__, @task_supervisor, opts]},
           type: :supervisor
         }
       end
@@ -314,6 +330,8 @@ defmodule Phoenix.Presence do
 
       def get_by_key(%Phoenix.Socket{topic: topic}, key), do: get_by_key(topic, key)
       def get_by_key(topic, key), do: Phoenix.Presence.get_by_key(__MODULE__, topic, key)
+
+      def fetchers_pids(), do: Task.Supervisor.children(@task_supervisor)
     end
   end
 
@@ -349,9 +367,8 @@ defmodule Phoenix.Presence do
   end
 
   @doc false
-  def start_link(module, opts) do
+  def start_link(module, task_supervisor, opts) do
     otp_app = opts[:otp_app]
-    task_supervisor = Module.concat(module, "TaskSupervisor")
 
     opts =
       opts

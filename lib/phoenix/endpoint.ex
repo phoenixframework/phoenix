@@ -24,7 +24,7 @@ defmodule Phoenix.Endpoint do
   generator, an endpoint was automatically generated as
   part of your application:
 
-      defmodule YourApp.Endpoint do
+      defmodule YourAppWeb.Endpoint do
         use Phoenix.Endpoint, otp_app: :your_app
 
         # plug ...
@@ -39,7 +39,7 @@ defmodule Phoenix.Endpoint do
   added to the supervision tree as follows:
 
       children = [
-        YourApp.Endpoint
+        YourAppWeb.Endpoint
       ]
 
   ## Endpoint configuration
@@ -47,7 +47,7 @@ defmodule Phoenix.Endpoint do
   All endpoints are configured in your application environment.
   For example:
 
-      config :your_app, YourApp.Endpoint,
+      config :your_app, YourAppWeb.Endpoint,
         secret_key_base: "kjoy3o1zeidquwy1398juxzldjlksahdk3"
 
   Endpoint configuration is split into two categories. Compile-time
@@ -59,14 +59,14 @@ defmodule Phoenix.Endpoint do
   after your application is started and can be read through the
   `c:config/2` function:
 
-      YourApp.Endpoint.config(:port)
-      YourApp.Endpoint.config(:some_config, :default_value)
+      YourAppWeb.Endpoint.config(:port)
+      YourAppWeb.Endpoint.config(:some_config, :default_value)
 
   ### Dynamic configuration
 
   For dynamically configuring the endpoint, such as loading data
   from environment variables or configuration files, Phoenix invokes
-  the `init/2` callback on the endpoint, passing the atom `:supervisor`
+  the `c:init/2` callback on the endpoint, passing the atom `:supervisor`
   as the first argument and the endpoint configuration as second.
 
   All of Phoenix configuration, except the Compile-time configuration
@@ -76,7 +76,13 @@ defmodule Phoenix.Endpoint do
 
     * `:code_reloader` - when `true`, enables code reloading functionality.
       For the list of code reloader configuration options see
-      `Phoenix.CodeReloader.reload!/1`
+      `Phoenix.CodeReloader.reload!/1`. Keep in mind code reloading is
+      based on the file-system, therefore it is not possible to run two
+      instances of the same app at the same time with code reloading in
+      development, as they will race each other and only one will effectively
+      recompile the files. In such cases, tweak your config files so code
+      reloading is enabled in only one of the apps or set the MIX_BUILD
+      environment variable to give them distinct build directories
 
     * `:debug_errors` - when `true`, uses `Plug.Debugger` functionality for
       debugging failures in the application. Recommended to be set to `true`
@@ -106,7 +112,15 @@ defmodule Phoenix.Endpoint do
       digest version. This is automatically loaded from `cache_static_manifest` on
       boot. However, if you have your own static handling mechanism, you may want to
       set this value explicitly. This is used by projects such as `LiveView` to
-      detect if the client is running on the latest version of all assets
+      detect if the client is running on the latest version of all assets.
+
+    * `:cache_manifest_skip_vsn` - when true, skips the appended query string 
+      "?vsn=d" when generatic paths to static assets. This query string is used
+      by `Plug.Static` to set long expiry dates, therefore, you should set this
+      option to true only if you are not using `Plug.Static` to serve assets,
+      for example, if you are using a CDN. If you are setting this option, you
+      should also consider passing `--no-vsn` to `mix phx.digest`. Defaults to
+      `false`.
 
     * `:check_origin` - configure the default `:check_origin` setting for
       transports. See `socket/3` for options. Defaults to `true`.
@@ -190,7 +204,7 @@ defmodule Phoenix.Endpoint do
 
   Phoenix allows you to choose which webserver adapter to use. The default
   is `Phoenix.Endpoint.Cowboy2Adapter` which can be configured via the
-  following options.
+  following top-level options.
 
     * `:http` - the configuration for the HTTP server. It accepts all options
       as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
@@ -201,9 +215,10 @@ defmodule Phoenix.Endpoint do
       to `false`
 
     * `:drainer` - a drainer process that triggers when your application is
-      shutting to wait for any on-going request to finish. It accepts all
-      options as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.html).
-      Defaults to `[]` and can be disabled by setting it to false.
+      shutting down to wait for any on-going request to finish. It accepts all
+      options as defined by [`Plug.Cowboy.Drainer`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.html).
+      Defaults to `[]`, which will start a drainer process for each configured endpoint,
+      but can be disabled by setting it to `false`.
 
   ## Endpoint API
 
@@ -218,7 +233,7 @@ defmodule Phoenix.Endpoint do
       `c:broadcast_from/4`, `c:broadcast_from!/4`, `c:local_broadcast/3`,
       and `c:local_broadcast_from/4`
 
-    * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`
+    * for configuration: `c:start_link/1`, `c:config/2`, and `c:config_change/2`
 
     * as required by the `Plug` behaviour: `c:Plug.init/1` and `c:Plug.call/2`
 
@@ -226,7 +241,7 @@ defmodule Phoenix.Endpoint do
 
   @type topic :: String.t
   @type event :: String.t
-  @type msg :: map
+  @type msg :: map | {:binary, binary}
 
   require Logger
 
@@ -238,7 +253,7 @@ defmodule Phoenix.Endpoint do
   Starts endpoint's configuration cache and possibly the servers for
   handling requests.
   """
-  @callback start_link() :: Supervisor.on_start
+  @callback start_link(keyword) :: Supervisor.on_start
 
   @doc """
   Access the endpoint configuration given by key.
@@ -306,6 +321,18 @@ defmodule Phoenix.Endpoint do
   @callback host() :: String.t
 
   # Channels
+
+  @doc """
+  Subscribes the caller to the given topic.
+
+  See `Phoenix.PubSub.subscribe/3` for options.
+  """
+  @callback subscribe(topic, opts :: Keyword.t) :: :ok | {:error, term}
+
+  @doc """
+  Unsubscribes the caller from the given topic.
+  """
+  @callback unsubscribe(topic) :: :ok | {:error, term}
 
   @doc """
   Broadcasts a `msg` as `event` in the given `topic` to all nodes.
@@ -460,6 +487,13 @@ defmodule Phoenix.Endpoint do
 
       @doc """
       Starts the endpoint supervision tree.
+
+      ## Options
+
+        * `:log_access_url` - if the access url should be logged
+          once the endpoint starts
+
+      All other options are merged into the endpoint configuration.
       """
       def start_link(opts \\ []) do
         Phoenix.Endpoint.Supervisor.start_link(@otp_app, __MODULE__, opts)
@@ -736,7 +770,7 @@ defmodule Phoenix.Endpoint do
       are allowed, or a function provided as MFA tuple. Defaults to `:check_origin`
       setting at endpoint configuration.
 
-      If `true`, the header is checked against `:host` in `YourApp.Endpoint.config(:url)[:host]`.
+      If `true`, the header is checked against `:host` in `YourAppWeb.Endpoint.config(:url)[:host]`.
 
       If `false`, your app is vulnerable to Cross-Site WebSocket Hijacking (CSWSH)
       attacks. Only use in development, when the host is truly unknown or when
@@ -852,12 +886,7 @@ defmodule Phoenix.Endpoint do
 
   """
   defmacro socket(path, module, opts \\ []) do
-    # Tear the alias to simply store the root in the AST.
-    # This will make Elixir unable to track the dependency
-    # between endpoint <-> socket and avoid recompiling the
-    # endpoint (alongside the whole project ) whenever the
-    # socket changes.
-    module = tear_alias(module)
+    module = Macro.expand(module, %{__CALLER__ | function: {:__handler__, 2}})
 
     quote do
       @phoenix_sockets {unquote(path), unquote(module), unquote(opts)}
@@ -874,23 +903,15 @@ defmodule Phoenix.Endpoint do
   Checks if Endpoint's web server has been configured to start.
 
     * `otp_app` - The OTP app running the endpoint, for example `:my_app`
-    * `endpoint` - The endpoint module, for example `MyApp.Endpoint`
+    * `endpoint` - The endpoint module, for example `MyAppWeb.Endpoint`
 
   ## Examples
 
-      iex> Phoenix.Endpoint.server?(:my_app, MyApp.Endpoint)
+      iex> Phoenix.Endpoint.server?(:my_app, MyAppWeb.Endpoint)
       true
 
   """
   def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
     Phoenix.Endpoint.Supervisor.server?(otp_app, endpoint)
   end
-
-  defp tear_alias({:__aliases__, meta, [h|t]}) do
-    alias = {:__aliases__, meta, [h]}
-    quote do
-      Module.concat([unquote(alias)|unquote(t)])
-    end
-  end
-  defp tear_alias(other), do: other
 end

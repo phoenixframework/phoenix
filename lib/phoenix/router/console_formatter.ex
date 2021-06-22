@@ -1,12 +1,11 @@
 defmodule Phoenix.Router.ConsoleFormatter do
   @moduledoc false
-  alias Phoenix.Router.Route
 
   @doc """
   Format the routes for printing.
   """
   def format(router, endpoint \\ nil) do
-    routes = router.__routes__()
+    routes = Phoenix.Router.routes(router)
     column_widths = calculate_column_widths(routes, endpoint)
 
     routes
@@ -63,7 +62,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
 
     widths =
       Enum.reduce(routes, {0, 0, 0}, fn route, acc ->
-        %Route{verb: verb, path: path, helper: helper} = route
+        %{verb: verb, path: path, helper: helper} = route
         verb = verb_name(verb)
         {verb_len, path_len, route_name_len} = acc
         route_name = route_name(helper)
@@ -83,8 +82,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
   end
 
   defp format_route(route, column_widths) do
-    %Route{verb: verb, path: path, plug: plug,
-           plug_opts: plug_opts, helper: helper} = route
+    %{verb: verb, path: path, plug: plug, plug_opts: plug_opts, helper: helper} = route
     verb = verb_name(verb)
     route_name = route_name(helper)
     {verb_len, path_len, route_name_len} = column_widths

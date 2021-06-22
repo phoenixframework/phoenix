@@ -5,7 +5,7 @@ defmodule Phoenix.Controller do
   require Logger
   require Phoenix.Endpoint
 
-  @unsent [:unset, :set]
+  @unsent [:unset, :set, :set_chunked, :set_file]
 
   @moduledoc """
   Controllers are used to group common functionality in the same
@@ -118,10 +118,10 @@ defmodule Phoenix.Controller do
 
   which will trigger the plug pipeline and which will eventually
   invoke the inner action plug that dispatches to the `show/2`
-  function in the `UserController`.
+  function in `UserController`.
 
-  As controllers are plugs, they implement both `init/1` and
-  `call/2`, and it also provides a function named `action/2`
+  As controllers are plugs, they implement both [`init/1`](`c:Plug.init/1`) and
+  [`call/2`](`c:Plug.call/2`), and it also provides a function named `action/2`
   which is responsible for dispatching the appropriate action
   after the plug stack (and is also overridable).
 
@@ -232,7 +232,7 @@ defmodule Phoenix.Controller do
       end
   """
   defmacro action_fallback(plug) do
-    Phoenix.Controller.Pipeline.__action_fallback__(plug)
+    Phoenix.Controller.Pipeline.__action_fallback__(plug, __CALLER__)
   end
 
   @doc """
@@ -933,7 +933,7 @@ defmodule Phoenix.Controller do
     * `:content_type` - the content type of the file or binary
       sent as download. It is automatically inferred from the
       filename extension
-    * `:disposition` - specifies dispositon type
+    * `:disposition` - specifies disposition type
       (`:attachment` or `:inline`). If `:attachment` was used,
       user will be prompted to save the file. If `:inline` was used,
       the browser will attempt to open the file.
@@ -1464,13 +1464,17 @@ defmodule Phoenix.Controller do
       "/users/123?existing=param"
 
   See `current_path/2` to override the default parameters.
+
+  The path is normalized based on the `conn.script_name` and
+  `conn.path_info`. For example, "/foo//bar/" will become "/foo/bar".
+  If you want the original path, use `conn.request_path` instead.
   """
   def current_path(%Plug.Conn{query_string: ""} = conn) do
-    conn.request_path
+    normalized_request_path(conn)
   end
 
   def current_path(%Plug.Conn{query_string: query_string} = conn) do
-    conn.request_path <> "?" <> query_string
+    normalized_request_path(conn) <> "?" <> query_string
   end
 
   @doc """
@@ -1487,18 +1491,25 @@ defmodule Phoenix.Controller do
       iex> current_path(conn, %{new: "param"})
       "/users/123?new=param"
 
-      iex> current_path(conn, %{filter: %{status: ["draft", "published"})
+      iex> current_path(conn, %{filter: %{status: ["draft", "published"]}})
       "/users/123?filter[status][]=draft&filter[status][]=published"
 
       iex> current_path(conn, %{})
       "/users/123"
 
+  The path is normalized based on the `conn.script_name` and
+  `conn.path_info`. For example, "/foo//bar/" will become "/foo/bar".
+  If you want the original path, use `conn.request_path` instead.
   """
   def current_path(%Plug.Conn{} = conn, params) when params == %{} do
-    conn.request_path
+    normalized_request_path(conn)
   end
   def current_path(%Plug.Conn{} = conn, params) do
-    conn.request_path <> "?" <> Plug.Conn.Query.encode(params)
+    normalized_request_path(conn) <> "?" <> Plug.Conn.Query.encode(params)
+  end
+
+  defp normalized_request_path(%{path_info: info, script_name: script}) do
+    "/" <> Enum.join(script ++ info, "/")
   end
 
   @doc """

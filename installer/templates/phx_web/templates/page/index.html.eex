@@ -1,10 +1,10 @@
-<section class="phx-hero"><%= if gettext do %>
+<section class="phx-hero"><%= if @gettext do %>
   <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
   <h1>Welcome to Phoenix!</h1><% end %>
-  <p>Peace of mind from prototype to production</p><%= if live do %>
+  <p>Peace of mind from prototype to production</p><%= if @live do %>
 
   <form phx-change="suggest" phx-submit="search">
-    <input type="text" name="q" value="<%%= @query %>" placeholder="Live dependency search" list="results" autocomplete="off"/>
+    <input type="text" name="q" value="<%%= @query %>" placeholder="Live dependency search" list="results" autocomplete="off" autofocus/>
     <datalist id="results">
       <%%= for {app, _vsn} <- @results do %>
         <option value="<%%= app %>"><%%= app %></option>
@@ -25,7 +25,7 @@
         <a href="https://github.com/phoenixframework/phoenix">Source</a>
       </li>
       <li>
-        <a href="https://github.com/phoenixframework/phoenix/blob/<%= phoenix_github_version_tag %>/CHANGELOG.md"><%= phoenix_github_version_tag %> Changelog</a>
+        <a href="https://github.com/phoenixframework/phoenix/blob/<%= @phoenix_github_version_tag %>/CHANGELOG.md"><%= @phoenix_github_version_tag %> Changelog</a>
       </li>
     </ul>
   </article>
@@ -36,13 +36,16 @@
         <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
       </li>
       <li>
-        <a href="https://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on Freenode IRC</a>
+        <a href="https://web.libera.chat/#elixir">#elixir on Libera Chat (IRC)</a>
       </li>
       <li>
         <a href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>
       </li>
       <li>
         <a href="https://elixir-slackin.herokuapp.com/">Elixir on Slack</a>
+      </li>
+      <li>
+        <a href="https://discord.gg/elixir">Elixir on Discord</a>
       </li>
     </ul>
   </article>

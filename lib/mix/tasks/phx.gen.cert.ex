@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
     * `--name` (`-n`): the Common Name value in certificate's subject
       (default: "#{@default_name}")
 
-  Requires OTP 20 or later.
+  Requires OTP 21.3 or later.
   """
 
   use Mix.Task
