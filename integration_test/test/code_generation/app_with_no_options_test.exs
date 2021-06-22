@@ -47,6 +47,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
 
       # Ensure /priv static files are copied
       assert File.exists?(Path.join(app_root_path, "priv/static/js/phoenix.js"))
+      assert File.exists?(Path.join(app_root_path, "priv/static/js/phoenix.js.map"))
 
       assert_passes_formatter_check(app_root_path)
       assert_tests_pass(app_root_path)

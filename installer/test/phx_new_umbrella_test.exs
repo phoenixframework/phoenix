@@ -148,6 +148,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       refute File.exists?(web_path(@app, "priv/static/css/app.css"))
       refute File.exists?(web_path(@app, "priv/static/css/phoenix.css"))
       refute File.exists?(web_path(@app, "priv/static/js/phoenix.js"))
+      refute File.exists?(web_path(@app, "priv/static/js/phoenix.js.map"))
       refute File.exists?(web_path(@app, "priv/static/js/app.js"))
 
       assert File.exists?(web_path(@app, "assets/vendor"))
@@ -244,6 +245,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       refute_file web_path(@app, "priv/static/favicon.ico")
       refute_file web_path(@app, "priv/static/images/phoenix.png")
       refute_file web_path(@app, "priv/static/js/phoenix.js")
+      refute_file web_path(@app, "priv/static/js/phoenix.js.map")
       refute_file web_path(@app, "priv/static/js/app.js")
 
       # No Ecto
@@ -352,6 +354,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "priv/static/favicon.ico")
       assert_file web_path(@app, "priv/static/images/phoenix.png")
       assert_file web_path(@app, "priv/static/js/phoenix.js")
+      assert_file web_path(@app, "priv/static/js/phoenix.js.map")
       assert_file web_path(@app, "priv/static/js/app.js")
     end
   end
@@ -705,6 +708,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
         refute File.exists? "another/priv/static/css/app.css"
         refute File.exists? "another/priv/static/js/phoenix.js"
+        refute File.exists? "another/priv/static/js/phoenix.js.map"
         refute File.exists? "another/priv/static/css/phoenix.css"
         refute File.exists? "another/priv/static/js/app.js"
 
