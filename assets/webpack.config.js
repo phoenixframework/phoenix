@@ -1,8 +1,6 @@
 const path = require('path')
 
 module.exports = (env, options) => {
-  const devMode = options.mode !== 'production';
-
   return {
     entry: './js/phoenix/index.js',
     output: {
@@ -14,7 +12,7 @@ module.exports = (env, options) => {
       },
       globalObject: 'this'
     },
-    devtool: devMode ? 'source-map' : undefined,
+    devtool: 'source-map',
     module: {
       rules: [
         {
