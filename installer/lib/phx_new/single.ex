@@ -92,6 +92,7 @@ defmodule Phx.New.Single do
     {:text, "phx_static/phoenix.css", :web, "priv/static/css/phoenix.css"},
     {:text, "phx_static/robots.txt",  :web, "priv/static/robots.txt"},
     {:text, "phx_static/phoenix.js",  :web, "priv/static/js/phoenix.js"},
+    {:text, "phx_static/phoenix.js.map",  :web, "priv/static/js/phoenix.js.map"},
     {:text, "phx_static/phoenix.png", :web, "priv/static/images/phoenix.png"},
     {:text, "phx_static/favicon.ico", :web, "priv/static/favicon.ico"}
   ]
