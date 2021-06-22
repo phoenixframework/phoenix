@@ -3,25 +3,25 @@ import assert from "assert"
 import jsdom from "jsdom"
 import sinon from "sinon"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
-import {encode, decode} from "./serializer"
+import {encode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
 
 let socket
 
-describe("with transports", done =>{
-  before(() => {
+describe("with transports", function(){
+  before(function(){
     window.WebSocket = WebSocket
     window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
   })
 
-  after((done) => {
+  after(function(done){
     window.WebSocket = null
     window.XMLHttpRequest = null
     done()
   })
 
-  describe("constructor", () => {
-    it("sets defaults", () => {
+  describe("constructor", function(){
+    it("sets defaults", function(){
       socket = new Socket("/socket")
 
       assert.equal(socket.channels.length, 0)
@@ -38,18 +38,18 @@ describe("with transports", done =>{
       assert.equal(typeof socket.reconnectAfterMs, "function")
     })
 
-    it("supports closure or literal params", () => {
+    it("supports closure or literal params", function(){
       socket = new Socket("/socket", {params: {one: "two"}})
       assert.deepEqual(socket.params(), {one: "two"})
 
-      socket = new Socket("/socket", {params: function(){ return({three: "four"}) }})
+      socket = new Socket("/socket", {params: function(){ return ({three: "four"}) }})
       assert.deepEqual(socket.params(), {three: "four"})
     })
 
-    it("overrides some defaults with options", () => {
-      const customTransport = function transport() {}
-      const customLogger = function logger() {}
-      const customReconnect = function reconnect() {}
+    it("overrides some defaults with options", function(){
+      const customTransport = function transport(){}
+      const customLogger = function logger(){}
+      const customReconnect = function reconnect(){}
 
       socket = new Socket("/socket", {
         timeout: 40000,
@@ -69,88 +69,81 @@ describe("with transports", done =>{
       assert.deepEqual(socket.params(), {one: "two"})
     })
 
-    describe("with Websocket", () => {
-      let mockServer
-
-      before(() => {
+    describe("with Websocket", function(){
+      it("defaults to Websocket transport if available", function(done){
+        let mockServer
         mockServer = new WebSocketServer("wss://example.com/")
-      })
-
-      after((done) => {
-        mockServer.stop(() => done())
-      })
-
-      it("defaults to Websocket transport if available", () => {
         socket = new Socket("/socket")
         assert.equal(socket.transport, WebSocket)
+        mockServer.stop(() => done())
       })
     })
   })
 
-  describe("protocol", () => {
-    beforeEach(() => {
+  describe("protocol", function(){
+    beforeEach(function(){
       socket = new Socket("/socket")
     })
 
-    it("returns wss when location.protocol is https", () => {
-      jsdom.changeURL(window, "https://example.com/");
+    it("returns wss when location.protocol is https", function(){
+      jsdom.changeURL(window, "https://example.com/")
 
       assert.equal(socket.protocol(), "wss")
     })
 
-    it("returns ws when location.protocol is http", () => {
-      jsdom.changeURL(window, "http://example.com/");
+    it("returns ws when location.protocol is http", function(){
+      jsdom.changeURL(window, "http://example.com/")
 
       assert.equal(socket.protocol(), "ws")
     })
   })
 
-  describe("endpointURL", () => {
-    it("returns endpoint for given full url", () => {
-      jsdom.changeURL(window, "https://example.com/");
+  describe("endpointURL", function(){
+    it("returns endpoint for given full url", function(){
+      jsdom.changeURL(window, "https://example.com/")
       socket = new Socket("wss://example.org/chat")
 
       assert.equal(socket.endPointURL(), "wss://example.org/chat/websocket?vsn=2.0.0")
     })
 
-    it("returns endpoint for given protocol-relative url", () => {
-      jsdom.changeURL(window, "https://example.com/");
+    it("returns endpoint for given protocol-relative url", function(){
+      jsdom.changeURL(window, "https://example.com/")
       socket = new Socket("//example.org/chat")
 
       assert.equal(socket.endPointURL(), "wss://example.org/chat/websocket?vsn=2.0.0")
     })
 
-    it("returns endpoint for given path on https host", () => {
-      jsdom.changeURL(window, "https://example.com/");
+    it("returns endpoint for given path on https host", function(){
+      jsdom.changeURL(window, "https://example.com/")
       socket = new Socket("/socket")
 
       assert.equal(socket.endPointURL(), "wss://example.com/socket/websocket?vsn=2.0.0")
     })
 
-    it("returns endpoint for given path on http host", () => {
-      jsdom.changeURL(window, "http://example.com/");
+    it("returns endpoint for given path on http host", function(){
+      jsdom.changeURL(window, "http://example.com/")
       socket = new Socket("/socket")
 
       assert.equal(socket.endPointURL(), "ws://example.com/socket/websocket?vsn=2.0.0")
     })
   })
 
-  describe("connect with WebSocket", () => {
+  describe("connect with WebSocket", function(){
     let mockServer
 
-    before(() => {
+    before(function(){
       mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after((done) => {
+    after(function(done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(() => {
+    beforeEach(function(){
       socket = new Socket("/socket")
     })
 
-    it("establishes websocket connection with endpoint", () => {
+    it("establishes websocket connection with endpoint", function(){
       socket.connect()
 
       let conn = socket.conn
@@ -158,7 +151,7 @@ describe("with transports", done =>{
       assert.equal(conn.url, socket.endPointURL())
     })
 
-    it("sets callbacks for connection", () => {
+    it("sets callbacks for connection", function(){
       let opens = 0
       socket.onOpen(() => ++opens)
       let closes = 0
@@ -179,12 +172,12 @@ describe("with transports", done =>{
       socket.conn.onerror[0]("error")
       assert.equal(lastError, "error")
 
-      const data = {"topic":"topic","event":"event","payload":"payload","status":"ok"}
+      const data = {"topic":"topic", "event":"event", "payload":"payload", "status":"ok"}
       socket.conn.onmessage[0]({data: encode(data)})
       assert.equal(lastMessage, "payload")
     })
 
-    it("is idempotent", () => {
+    it("is idempotent", function(){
       socket.connect()
 
       let conn = socket.conn
@@ -195,12 +188,12 @@ describe("with transports", done =>{
     })
   })
 
-  describe("connect with long poll", () => {
-    beforeEach(() => {
+  describe("connect with long poll", function(){
+    beforeEach(function(){
       socket = new Socket("/socket", {transport: LongPoll})
     })
 
-    it("establishes long poll connection with endpoint", () => {
+    it("establishes long poll connection with endpoint", function(){
       socket.connect()
 
       let conn = socket.conn
@@ -209,7 +202,7 @@ describe("with transports", done =>{
       assert.equal(conn.timeout, 20000)
     })
 
-    it("sets callbacks for connection", () => {
+    it("sets callbacks for connection", function(){
       let opens = 0
       socket.onOpen(() => ++opens)
       let closes = 0
@@ -233,13 +226,13 @@ describe("with transports", done =>{
 
       socket.connect()
 
-      const data = {"topic":"topic","event":"event","payload":"payload","status":"ok"}
+      const data = {"topic":"topic", "event":"event", "payload":"payload", "status":"ok"}
 
       socket.conn.onmessage({data: encode(data)})
       assert.equal(lastMessage, "payload")
     })
 
-    it("is idempotent", () => {
+    it("is idempotent", function(){
       socket.connect()
 
       let conn = socket.conn
@@ -250,22 +243,22 @@ describe("with transports", done =>{
     })
   })
 
-  describe("disconnect", () => {
+  describe("disconnect", function(){
     let mockServer
 
-    before(() => {
-      mockServer = new WebSocketServer('wss://example.com/')
+    before(function(){
+      mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after((done) => {
+    after(function(done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(() => {
+    beforeEach(function(){
       socket = new Socket("/socket")
     })
 
-    it("removes existing connection", (done) => {
+    it("removes existing connection", function(done){
       socket.connect()
       socket.disconnect()
       socket.disconnect(() => {
@@ -274,7 +267,7 @@ describe("with transports", done =>{
       })
     })
 
-    it("calls callback", (done) => {
+    it("calls callback", function(done){
       let count = 0
       socket.connect()
       socket.disconnect(() => {
@@ -284,40 +277,40 @@ describe("with transports", done =>{
       })
     })
 
-    it("calls connection close callback", (done) => {
+    it("calls connection close callback", function(done){
       socket.connect()
       const spy = sinon.spy(socket.conn, "close")
 
       socket.disconnect(() => {
-          assert(spy.calledWith(1000, "reason"))
-          done()
-        }, 1000, "reason")
+        assert(spy.calledWith(1000, "reason"))
+        done()
+      }, 1000, "reason")
     })
 
-    it("does not throw when no connection", () => {
+    it("does not throw when no connection", function(){
       assert.doesNotThrow(() => {
         socket.disconnect()
       })
     })
   })
 
-  describe("connectionState", () => {
-    beforeEach(() => {
+  describe("connectionState", function(){
+    beforeEach(function(){
       socket = new Socket("/socket")
     })
 
-    it("defaults to closed", () => {
+    it("defaults to closed", function(){
       assert.equal(socket.connectionState(), "closed")
     })
 
-    it("returns closed if readyState unrecognized", () => {
+    it("returns closed if readyState unrecognized", function(){
       socket.connect()
 
       socket.conn.readyState = 5678
       assert.equal(socket.connectionState(), "closed")
     })
 
-    it("returns connecting", () => {
+    it("returns connecting", function(){
       socket.connect()
 
       socket.conn.readyState = 0
@@ -325,7 +318,7 @@ describe("with transports", done =>{
       assert.ok(!socket.isConnected(), "is not connected")
     })
 
-    it("returns open", () => {
+    it("returns open", function(){
       socket.connect()
 
       socket.conn.readyState = 1
@@ -333,7 +326,7 @@ describe("with transports", done =>{
       assert.ok(socket.isConnected(), "is connected")
     })
 
-    it("returns closing", () => {
+    it("returns closing", function(){
       socket.connect()
 
       socket.conn.readyState = 2
@@ -341,7 +334,7 @@ describe("with transports", done =>{
       assert.ok(!socket.isConnected(), "is not connected")
     })
 
-    it("returns closed", () => {
+    it("returns closed", function(){
       socket.connect()
 
       socket.conn.readyState = 3
@@ -350,14 +343,14 @@ describe("with transports", done =>{
     })
   })
 
-  describe("channel", () => {
+  describe("channel", function(){
     let channel
 
-    beforeEach(() => {
+    beforeEach(function(){
       socket = new Socket("/socket")
     })
 
-    it("returns channel with given topic and params", () => {
+    it("returns channel with given topic and params", function(){
       channel = socket.channel("topic", {one: "two"})
 
       assert.deepStrictEqual(channel.socket, socket)
@@ -365,7 +358,7 @@ describe("with transports", done =>{
       assert.deepEqual(channel.params(), {one: "two"})
     })
 
-    it("adds channel to sockets channels list", () => {
+    it("adds channel to sockets channels list", function(){
       assert.equal(socket.channels.length, 0)
 
       channel = socket.channel("topic", {one: "two"})
@@ -377,12 +370,9 @@ describe("with transports", done =>{
     })
   })
 
-  describe("remove", () => {
-    beforeEach(() => {
+  describe("remove", function(){
+    it("removes given channel from channels", function(){
       socket = new Socket("/socket")
-    })
-
-    it("removes given channel from channels", () => {
       const channel1 = socket.channel("topic-1")
       const channel2 = socket.channel("topic-2")
 
@@ -402,15 +392,16 @@ describe("with transports", done =>{
     })
   })
 
-  describe("push", () => {
-    const data = {topic: "topic", event: "event", payload: "payload", ref: "ref"}
-    const json = encode(data)
+  describe("push", function(){
+    let data, json
 
-    beforeEach(() => {
+    beforeEach(function(){
+      data = {topic: "topic", event: "event", payload: "payload", ref: "ref"}
+      json = encode(data)
       socket = new Socket("/socket")
     })
 
-    it("sends data to connection when connected", () => {
+    it("sends data to connection when connected", function(){
       socket.connect()
       socket.conn.readyState = 1 // open
 
@@ -421,7 +412,7 @@ describe("with transports", done =>{
       assert.ok(spy.calledWith(json))
     })
 
-    it("buffers data when not connected", () => {
+    it("buffers data when not connected", function(){
       socket.connect()
       socket.conn.readyState = 0 // connecting
 
@@ -440,12 +431,12 @@ describe("with transports", done =>{
     })
   })
 
-  describe("makeRef", () => {
-    beforeEach(() => {
+  describe("makeRef", function(){
+    beforeEach(function(){
       socket = new Socket("/socket")
     })
 
-    it("returns next message ref", () => {
+    it("returns next message ref", function(){
       assert.strictEqual(socket.ref, 0)
       assert.strictEqual(socket.makeRef(), "1")
       assert.strictEqual(socket.ref, 1)
@@ -453,7 +444,7 @@ describe("with transports", done =>{
       assert.strictEqual(socket.ref, 2)
     })
 
-    it("restarts for overflow", () => {
+    it("restarts for overflow", function(){
       socket.ref = Number.MAX_SAFE_INTEGER + 1
 
       assert.strictEqual(socket.makeRef(), "0")
@@ -461,13 +452,13 @@ describe("with transports", done =>{
     })
   })
 
-  describe("sendHeartbeat", () => {
-    beforeEach(() => {
+  describe("sendHeartbeat", function(){
+    beforeEach(function(){
       socket = new Socket("/socket")
       socket.connect()
     })
 
-    it("closes socket when heartbeat is not ack'd within heartbeat window", (done) => {
+    it("closes socket when heartbeat is not ack'd within heartbeat window", function(done){
       let clock = sinon.useFakeTimers()
       let closed = false
       socket.conn.readyState = 1 // open
@@ -485,7 +476,7 @@ describe("with transports", done =>{
       done()
     })
 
-    it("pushes heartbeat data when connected", () => {
+    it("pushes heartbeat data when connected", function(){
       socket.conn.readyState = 1 // open
 
       const spy = sinon.spy(socket.conn, "send")
@@ -495,24 +486,24 @@ describe("with transports", done =>{
       assert.ok(spy.calledWith(data))
     })
 
-    it("no ops when not connected", () => {
+    it("no ops when not connected", function(){
       socket.conn.readyState = 0 // connecting
 
       const spy = sinon.spy(socket.conn, "send")
-      const data = encode({topic: "phoenix", event: "heartbeat", payload: {},ref: "1"})
+      const data = encode({topic: "phoenix", event: "heartbeat", payload: {}, ref: "1"})
 
       socket.sendHeartbeat()
       assert.ok(spy.neverCalledWith(data))
     })
   })
 
-  describe("flushSendBuffer", () => {
-    beforeEach(() => {
+  describe("flushSendBuffer", function(){
+    beforeEach(function(){
       socket = new Socket("/socket")
       socket.connect()
     })
 
-    it("calls callbacks in buffer when connected", () => {
+    it("calls callbacks in buffer when connected", function(){
       socket.conn.readyState = 1 // open
       const spy1 = sinon.spy()
       const spy2 = sinon.spy()
@@ -527,7 +518,7 @@ describe("with transports", done =>{
       assert.equal(spy3.callCount, 0)
     })
 
-    it("empties sendBuffer", () => {
+    it("empties sendBuffer", function(){
       socket.conn.readyState = 1 // open
       socket.sendBuffer.push(() => {})
 
@@ -537,25 +528,25 @@ describe("with transports", done =>{
     })
   })
 
-  describe("onConnOpen", () => {
+  describe("onConnOpen", function(){
     let mockServer
 
-    before(() => {
-      mockServer = new WebSocketServer('wss://example.com/')
+    before(function(){
+      mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after((done) => {
+    after(function(done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(() => {
+    beforeEach(function(){
       socket = new Socket("/socket", {
         reconnectAfterMs: () => 100000
       })
       socket.connect()
     })
 
-    it("flushes the send buffer", () => {
+    it("flushes the send buffer", function(){
       socket.conn.readyState = 1 // open
       const spy = sinon.spy()
       socket.sendBuffer.push(spy)
@@ -565,7 +556,7 @@ describe("with transports", done =>{
       assert.ok(spy.calledOnce)
     })
 
-    it("resets reconnectTimer", () => {
+    it("resets reconnectTimer", function(){
       const spy = sinon.spy(socket.reconnectTimer, "reset")
 
       socket.onConnOpen()
@@ -573,7 +564,7 @@ describe("with transports", done =>{
       assert.ok(spy.calledOnce)
     })
 
-    it("triggers onOpen callback", () => {
+    it("triggers onOpen callback", function(){
       const spy = sinon.spy()
 
       socket.onOpen(spy)
@@ -584,70 +575,68 @@ describe("with transports", done =>{
     })
   })
 
-  describe("onConnClose", () => {
+  describe("onConnClose", function(){
     let mockServer
 
-    before(() => {
-      mockServer = new WebSocketServer('wss://example.com/')
+    before(function(){
+      mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after((done) => {
+    after(function(done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(() => {
+    beforeEach(function(){
       socket = new Socket("/socket", {
         reconnectAfterMs: () => 100000
       })
       socket.connect()
     })
 
-    it('schedules reconnectTimer timeout if normal close', () => {
-      const spy = sinon.spy(socket.reconnectTimer, 'scheduleTimeout')
+    it("schedules reconnectTimer timeout if normal close", function(){
+      const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
 
-      const event = { code: 1000 }
+      const event = {code: 1000}
 
       socket.onConnClose(event)
 
       assert.ok(spy.calledOnce)
     })
 
-    it('does not schedule reconnectTimer timeout if normal close after explicit disconnect', () => {
-      const spy = sinon.spy(socket.reconnectTimer, 'scheduleTimeout')
-
-      const event = { code: 1000 }
+    it("does not schedule reconnectTimer timeout if normal close after explicit disconnect", function(){
+      const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
 
       socket.disconnect()
 
       assert.ok(spy.notCalled)
     })
 
-    it('schedules reconnectTimer timeout if not normal close', () => {
-      const spy = sinon.spy(socket.reconnectTimer, 'scheduleTimeout')
+    it("schedules reconnectTimer timeout if not normal close", function(){
+      const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
 
-      const event = { code: 1001 }
+      const event = {code: 1001}
 
       socket.onConnClose(event)
 
       assert.ok(spy.calledOnce)
     })
 
-    it('schedules reconnectTimer timeout if connection cannot be made after a previous clean disconnect', (done) => {
-      const spy = sinon.spy(socket.reconnectTimer, 'scheduleTimeout')
+    it("schedules reconnectTimer timeout if connection cannot be made after a previous clean disconnect", function(done){
+      const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
 
       socket.disconnect(() => {
-        socket.connect();
+        socket.connect()
 
-        const event = { code: 1001 }
+        const event = {code: 1001}
 
         socket.onConnClose(event)
 
         assert.ok(spy.calledOnce)
         done()
-      });
+      })
     })
 
-    it("triggers onClose callback", () => {
+    it("triggers onClose callback", function(){
       const spy = sinon.spy()
 
       socket.onClose(spy)
@@ -657,7 +646,7 @@ describe("with transports", done =>{
       assert.ok(spy.calledWith("event"))
     })
 
-    it("triggers channel error if joining", () => {
+    it("triggers channel error if joining", function(){
       const channel = socket.channel("topic")
       const spy = sinon.spy(channel, "trigger")
       channel.join()
@@ -668,7 +657,7 @@ describe("with transports", done =>{
       assert.ok(spy.calledWith("phx_error"))
     })
 
-    it("triggers channel error if joined", () => {
+    it("triggers channel error if joined", function(){
       const channel = socket.channel("topic")
       const spy = sinon.spy(channel, "trigger")
       channel.join().trigger("ok", {})
@@ -680,7 +669,7 @@ describe("with transports", done =>{
       assert.ok(spy.calledWith("phx_error"))
     })
 
-    it("does not trigger channel error after leave", () => {
+    it("does not trigger channel error after leave", function(){
       const channel = socket.channel("topic")
       const spy = sinon.spy(channel, "trigger")
       channel.join().trigger("ok", {})
@@ -693,25 +682,25 @@ describe("with transports", done =>{
     })
   })
 
-  describe("onConnError", () => {
+  describe("onConnError", function(){
     let mockServer
 
-    before(() => {
-      mockServer = new WebSocketServer('wss://example.com/')
+    before(function(){
+      mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after((done) => {
+    after(function(done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(() => {
+    beforeEach(function(){
       socket = new Socket("/socket", {
         reconnectAfterMs: () => 100000
       })
       socket.connect()
     })
 
-    it("triggers onClose callback", () => {
+    it("triggers onClose callback", function(){
       const spy = sinon.spy()
 
       socket.onError(spy)
@@ -721,7 +710,7 @@ describe("with transports", done =>{
       assert.ok(spy.calledWith("error"))
     })
 
-    it("triggers channel error if joining", () => {
+    it("triggers channel error if joining", function(){
       const channel = socket.channel("topic")
       const spy = sinon.spy(channel, "trigger")
       channel.join()
@@ -732,7 +721,7 @@ describe("with transports", done =>{
       assert.ok(spy.calledWith("phx_error"))
     })
 
-    it("triggers channel error if joined", () => {
+    it("triggers channel error if joined", function(){
       const channel = socket.channel("topic")
       const spy = sinon.spy(channel, "trigger")
       channel.join().trigger("ok", {})
@@ -744,7 +733,7 @@ describe("with transports", done =>{
       assert.ok(spy.calledWith("phx_error"))
     })
 
-    it("does not trigger channel error after leave", () => {
+    it("does not trigger channel error after leave", function(){
       const channel = socket.channel("topic")
       const spy = sinon.spy(channel, "trigger")
       channel.join().trigger("ok", {})
@@ -757,25 +746,25 @@ describe("with transports", done =>{
     })
   })
 
-  describe("onConnMessage", () => {
+  describe("onConnMessage", function(){
     let mockServer
 
-    before(() => {
-      mockServer = new WebSocketServer('wss://example.com/')
+    before(function(){
+      mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after((done) => {
+    after(function(done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(() => {
+    beforeEach(function(){
       socket = new Socket("/socket", {
         reconnectAfterMs: () => 100000
       })
       socket.connect()
     })
 
-    it("parses raw message and triggers channel event", () => {
+    it("parses raw message and triggers channel event", function(){
       const message = encode({topic: "topic", event: "event", payload: "payload", ref: "ref"})
       const data = {data: message}
 
@@ -792,8 +781,8 @@ describe("with transports", done =>{
       assert.equal(otherSpy.callCount, 0)
     })
 
-    it("triggers onMessage callback", () => {
-      const message = {"topic":"topic","event":"event","payload":"payload","ref":"ref"}
+    it("triggers onMessage callback", function(){
+      const message = {"topic":"topic", "event":"event", "payload":"payload", "ref":"ref"}
       const spy = sinon.spy()
       socket.onMessage(spy)
       socket.onConnMessage({data: encode(message)})
@@ -808,18 +797,18 @@ describe("with transports", done =>{
     })
   })
 
-  describe("custom encoder and decoder", () => {
+  describe("custom encoder and decoder", function(){
 
-    it("encodes to JSON array by default", () => {
+    it("encodes to JSON array by default", function(){
       socket = new Socket("/socket")
       let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
       socket.encode(payload, encoded => {
-        assert.deepStrictEqual(encoded, '["1","2","topic","join",{"foo":"bar"}]')
+        assert.deepStrictEqual(encoded, "[\"1\",\"2\",\"topic\",\"join\",{\"foo\":\"bar\"}]")
       })
     })
 
-    it("allows custom encoding when using WebSocket transport", () => {
+    it("allows custom encoding when using WebSocket transport", function(){
       let encoder = (payload, callback) => callback("encode works")
       socket = new Socket("/socket", {transport: WebSocket, encode: encoder})
 
@@ -828,26 +817,26 @@ describe("with transports", done =>{
       })
     })
 
-    it("forces JSON encoding when using LongPoll transport", () => {
+    it("forces JSON encoding when using LongPoll transport", function(){
       let encoder = (payload, callback) => callback("encode works")
       socket = new Socket("/socket", {transport: LongPoll, encode: encoder})
       let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
       socket.encode(payload, encoded => {
-        assert.deepStrictEqual(encoded, '["1","2","topic","join",{"foo":"bar"}]')
+        assert.deepStrictEqual(encoded, "[\"1\",\"2\",\"topic\",\"join\",{\"foo\":\"bar\"}]")
       })
     })
 
-    it("decodes JSON by default", () => {
+    it("decodes JSON by default", function(){
       socket = new Socket("/socket")
-      let encoded = '["1","2","topic","join",{"foo":"bar"}]'
+      let encoded = "[\"1\",\"2\",\"topic\",\"join\",{\"foo\":\"bar\"}]"
 
       socket.decode(encoded, decoded => {
         assert.deepStrictEqual(decoded, {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}})
       })
     })
 
-    it("allows custom decoding when using WebSocket transport", () => {
+    it("allows custom decoding when using WebSocket transport", function(){
       let decoder = (payload, callback) => callback("decode works")
       socket = new Socket("/socket", {transport: WebSocket, decode: decoder})
 
@@ -856,12 +845,12 @@ describe("with transports", done =>{
       })
     })
 
-    it("forces JSON decoding when using LongPoll transport", () => {
+    it("forces JSON decoding when using LongPoll transport", function(){
       let decoder = (payload, callback) => callback("decode works")
       socket = new Socket("/socket", {transport: LongPoll, decode: decoder})
       let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
-      socket.decode('["1","2","topic","join",{"foo":"bar"}]', decoded => {
+      socket.decode("[\"1\",\"2\",\"topic\",\"join\",{\"foo\":\"bar\"}]", decoded => {
         assert.deepStrictEqual(decoded, payload)
       })
     })
