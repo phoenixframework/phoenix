@@ -1,6 +1,6 @@
 import {
   global
-} from "phoenix/constants"
+} from "./constants"
 
 export default class Ajax {
   constructor(){

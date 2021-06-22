@@ -1,7 +1,7 @@
 /* The default serializer for encoding and decoding messages */
 import {
   CHANNEL_EVENTS
-} from "phoenix/constants"
+} from "./constants"
 
 export default {
   HEADER_LENGTH: 1,

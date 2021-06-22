@@ -192,11 +192,11 @@
  * @module phoenix
  */
 
-import Channel from "phoenix/channel"
-import LongPoll from "phoenix/longpoll"
-import Presence from "phoenix/presence"
-import Serializer from "phoenix/serializer"
-import Socket from "phoenix/socket"
+import Channel from "./channel"
+import LongPoll from "./longpoll"
+import Presence from "./presence"
+import Serializer from "./serializer"
+import Socket from "./socket"
 
 export {
   Channel,

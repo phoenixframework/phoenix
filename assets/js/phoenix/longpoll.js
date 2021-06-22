@@ -1,9 +1,9 @@
 import {
   SOCKET_STATES,
   TRANSPORTS
-} from "phoenix/constants"
+} from "./constants"
 
-import Ajax from "phoenix/ajax"
+import Ajax from "./ajax"
 
 export default class LongPoll {
 

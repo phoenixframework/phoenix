@@ -76,17 +76,17 @@ import {
   SOCKET_STATES,
   TRANSPORTS,
   WS_CLOSE_NORMAL
-} from "phoenix/constants"
+} from "./constants"
 
 import {
   closure
-} from "phoenix/utils"
+} from "./utils"
 
-import Ajax from "phoenix/ajax"
-import Channel from "phoenix/channel"
-import LongPoll from "phoenix/longpoll"
-import Serializer from "phoenix/serializer"
-import Timer from "phoenix/timer"
+import Ajax from "./ajax"
+import Channel from "./channel"
+import LongPoll from "./longpoll"
+import Serializer from "./serializer"
+import Timer from "./timer"
 
 export default class Socket {
   constructor(endPoint, opts = {}){

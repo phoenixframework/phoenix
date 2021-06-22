@@ -1,12 +1,12 @@
-import {closure} from "phoenix/utils"
+import {closure} from "./utils"
 import {
   CHANNEL_EVENTS,
   CHANNEL_LIFECYCLE_EVENTS,
   CHANNEL_STATES,
-} from "phoenix/constants"
+} from "./constants"
 
-import Push from "phoenix/push"
-import Timer from "phoenix/timer"
+import Push from "./push"
+import Timer from "./timer"
 
 /**
  *
