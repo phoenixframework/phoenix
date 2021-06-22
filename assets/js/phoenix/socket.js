@@ -6,7 +6,7 @@
  *                                               `"wss://example.com"`
  *                                               `"/socket"` (inherited host & protocol)
  * @param {Object} [opts] - Optional configuration
- * @param {string} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
+ * @param {Function} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
  *
  * Defaults to WebSocket with automatic LongPoll fallback.
  * @param {Function} [opts.encode] - The function to encode outgoing messages.
