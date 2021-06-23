@@ -151,6 +151,8 @@ Elixir releases work well with container technologies, such as Docker. The idea 
 Here is an example Docker file to run at the root of your application covering all of the steps above:
 
 ```Dockerfile
+ARG MIX_ENV="prod"
+
 FROM hexpm/elixir:1.11.2-erlang-23.1.2-alpine-3.12.1 as build
 
 # install build dependencies
@@ -164,7 +166,7 @@ RUN mix local.hex --force && \
     mix local.rebar --force
 
 # set build ENV
-ARG MIX_ENV="prod"
+ARG MIX_ENV
 ENV MIX_ENV="${MIX_ENV}"
 
 # install mix dependencies
@@ -208,6 +210,7 @@ RUN mix release
 FROM alpine:3.12.1 AS app
 RUN apk add --no-cache libstdc++ openssl ncurses-libs
 
+ARG MIX_ENV
 ENV USER="elixir"
 
 WORKDIR "/home/${USER}/app"
