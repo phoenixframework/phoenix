@@ -50,12 +50,11 @@ The `phx.new` generator is now available to generate new applications in the nex
 
 ## Node.js
 
-Node.js is an optional dependency. Phoenix will use [webpack](https://webpack.js.org/) to compile static assets (JavaScript, CSS, etc), by default. Webpack uses the node package manager (npm) to install its dependencies, and npm requires Node.js.
+Node.js is an optional dependency. Phoenix will use [webpack](https://webpack.js.org) to compile static assets (JavaScript, CSS, etc), by default. Webpack uses the node package manager (npm) to install its dependencies, and npm requires Node.js.
 
 If we don't have any static assets, or we want to use another build tool, we can pass the `--no-webpack` flag when creating a new application and Node.js won't be required at all.
 
-We can get Node.js from the [download page](https://nodejs.org/en/download/). When selecting a package to download, it's important to note that Phoenix requires version 5.0.0 or greater.
-
+We can get Node.js from [nodejs.org](https://nodejs.org).  
 macOS users can also install Node.js via [homebrew](https://brew.sh/).
 
 ## PostgreSQL
