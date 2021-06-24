@@ -2,4 +2,8 @@
 # you can enable the server option below.
 config :<%= @web_app_name %>, <%= @endpoint_module %>,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  server: false
+  server: false<%= if @mailer do %>
+
+# In test we don't send emails.
+config :<%= @web_app_name %>, <%= @web_namespace %>.Mailer,
+  adapter: Swoosh.Adapters.Test<% end %>

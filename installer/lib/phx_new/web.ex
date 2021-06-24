@@ -60,6 +60,14 @@ defmodule Phx.New.Web do
     {:eex, "phx_test/live/page_live_test.exs",         :web, "test/:web_app/live/page_live_test.exs"},
   ]
 
+  template :mailer, [
+    {:eex,  "phx_web/mailer.ex",                   :web, "lib/:web_app/mailer.ex"},
+    {:keep, "phx_web/emails",                      :web, "lib/:web_app/emails"},
+    {:eex,  "phx_web/emails/user_email.ex",        :web, "lib/:web_app/emails/user_email.ex"},
+    {:keep, "phx_test/emails",                     :web, "test/:web_app/emails"},
+    {:eex,  "phx_test/emails/user_email_test.exs", :web, "test/:web_app/emails/user_email_test.exs"}
+  ]
+
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do
     web_path = Path.expand(project.base_path)
     project_path = Path.dirname(Path.dirname(web_path))
@@ -86,6 +94,8 @@ defmodule Phx.New.Web do
       true -> :noop
     end
 
+    if Project.mailer?(project), do: gen_mailer(project)
+
     if Project.gettext?(project), do: gen_gettext(project)
 
     case {Project.webpack?(project), Project.html?(project)} do
@@ -107,5 +117,9 @@ defmodule Phx.New.Web do
 
   defp gen_live(%Project{} = project) do
     copy_from project, __MODULE__, :live
+  end
+
+  def gen_mailer(%Project{} = project) do
+    copy_from project, __MODULE__, :mailer
   end
 end

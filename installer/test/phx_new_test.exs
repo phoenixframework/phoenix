@@ -191,6 +191,42 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "summary(\"phx_blog.repo.query.total_time\","
       end
 
+      # Mailer
+      assert_file "phx_blog/mix.exs", fn file ->
+        assert file =~ "{:swoosh, \"~> 1.3\"}"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/mailer.ex", fn file ->
+        assert file =~ "defmodule PhxBlogWeb.Mailer do"
+        assert file =~ "use Swoosh.Mailer, otp_app: :phx_blog"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/emails/user_email.ex", fn file ->
+        assert file =~ "defmodule PhxBlogWeb.Emails.UserEmail do"
+        assert file =~ "## Examples"
+        assert file =~ "def welcome(user) do"
+      end
+
+      assert_file "phx_blog/test/phx_blog_web/emails/user_email_test.exs", fn file ->
+        assert file =~ "defmodule PhxBlogWeb.Emails.UserEmailTest do"
+        assert file =~ "use ExUnit.Case, async: true"
+        assert file =~ "import Swoosh.TestAssertions"
+        assert file =~ "test \"welcome/1"
+      end
+
+      assert_file "phx_blog/config/config.exs", fn file ->
+        assert file =~ "config :swoosh"
+        assert file =~ "config :phx_blog, PhxBlogWeb.Mailer, adapter: Swoosh.Adapters.SMTP"
+      end
+
+      assert_file "phx_blog/config/test.exs", fn file ->
+        assert file =~ "config :phx_blog, PhxBlogWeb.Mailer, adapter: Swoosh.Adapters.Test"
+      end
+
+      assert_file "phx_blog/config/dev.exs", fn file ->
+        assert file =~ "config :phx_blog, PhxBlogWeb.Mailer, adapter: Swoosh.Adapters.Local"
+      end
+
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
@@ -217,7 +253,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto", "--no-gettext", "--no-dashboard"])
+      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto", "--no-gettext", "--no-dashboard", "--no-mailer"])
 
       # No webpack
       refute File.read!("phx_blog/.gitignore") |> String.contains?("/assets/node_modules/")
@@ -310,6 +346,15 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->
         refute file =~ "live_dashboard"
         refute file =~ "import Phoenix.LiveDashboard.Router"
+      end
+
+      # No mailer or emails
+      refute File.exists? "phx_blog/lib/phx_blog_web/mailer.ex"
+      refute File.exists? "phx_blog/lib/phx_blog_web/emails"
+
+      assert_file "phx_blog/config/config.exs", fn file ->
+        refute file =~ "config :swoosh"
+        refute file =~ "config :phx_blog, PhxBlogWeb.Mailer, adapter: Swoosh.Adapters.SMTP"
       end
     end
   end

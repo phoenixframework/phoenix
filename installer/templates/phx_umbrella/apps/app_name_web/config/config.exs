@@ -10,4 +10,11 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
   secret_key_base: "<%= @secret_key_base %>",
   render_errors: [view: <%= @web_namespace %>.ErrorView, accepts: ~w(<%= if @html do %>html <% end %>json), layout: false],
   pubsub_server: <%= @app_module %>.PubSub,
-  live_view: [signing_salt: "<%= @lv_signing_salt %>"]
+  live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @mailer do %>
+
+# Configures the mailer.
+# Check https://hexdocs.pm/swoosh for different adapters.
+config :<%= @web_app_name %>, <%= @web_namespace %>.Mailer, adapter: Swoosh.Adapters.SMTP
+
+# Swoosh API client is needed for adapters other than SMTP.
+config :swoosh, :api_client, false<% end %>

@@ -204,6 +204,42 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "summary(\"phx_umb.repo.query.total_time\","
       end
 
+      # Mailer
+      assert_file web_path(@app, "mix.exs"), fn file ->
+        assert file =~ "{:swoosh, \"~> 1.3\"}"
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/mailer.ex"), fn file ->
+        assert file =~ "defmodule PhxUmbWeb.Mailer do"
+        assert file =~ "use Swoosh.Mailer, otp_app: :phx_umb_web"
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/emails/user_email.ex"), fn file ->
+        assert file =~ "defmodule PhxUmbWeb.Emails.UserEmail do"
+        assert file =~ "## Examples"
+        assert file =~ "def welcome(user) do"
+      end
+
+      assert_file web_path(@app, "test/#{@app}_web/emails/user_email_test.exs"), fn file ->
+        assert file =~ "defmodule PhxUmbWeb.Emails.UserEmailTest do"
+        assert file =~ "use ExUnit.Case, async: true"
+        assert file =~ "import Swoosh.TestAssertions"
+        assert file =~ "test \"welcome/1"
+      end
+
+      assert_file root_path(@app, "config/config.exs"), fn file ->
+        assert file =~ "config :swoosh"
+        assert file =~ "config :phx_umb_web, PhxUmbWeb.Mailer, adapter: Swoosh.Adapters.SMTP"
+      end
+
+      assert_file root_path(@app, "config/test.exs"), fn file ->
+        assert file =~ "config :phx_umb_web, PhxUmbWeb.Mailer, adapter: Swoosh.Adapters.Test"
+      end
+
+      assert_file root_path(@app, "config/dev.exs"), fn file ->
+        assert file =~ "config :phx_umb_web, PhxUmbWeb.Mailer, adapter: Swoosh.Adapters.Local"
+      end
+
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
@@ -229,7 +265,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-html", "--no-webpack", "--no-ecto", "--no-live"])
+      Mix.Tasks.Phx.New.run([
+        @app, "--umbrella", "--no-html", "--no-webpack", "--no-ecto", "--no-live", "--no-mailer"
+      ])
 
       # No webpack
       assert_file web_path(@app, ".gitignore"), fn file ->
@@ -300,6 +338,27 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
                   &refute(&1 =~ ~r"Phoenix.LiveReloader.Socket")
       assert_file web_path(@app, "lib/#{@app}_web/views/error_view.ex"), ~r".json"
       assert_file web_path(@app, "lib/#{@app}_web/router.ex"), &refute(&1 =~ ~r"pipeline :browser")
+
+      # Without mailer
+      assert_file web_path(@app, "mix.exs"), fn file ->
+        refute file =~ "{:swoosh, \"~> 1.3\"}"
+      end
+
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/mailer.ex"))
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/emails"))
+
+      assert_file root_path(@app, "config/config.exs"), fn file ->
+        refute file =~ "config :swoosh"
+        refute file =~ "config :phx_umb_web, PhxUmbWeb.Mailer, adapter: Swoosh.Adapters.SMTP"
+      end
+
+      assert_file root_path(@app, "config/test.exs"), fn file ->
+        refute file =~ "config :phx_umb_web, PhxUmbWeb.Mailer, adapter: Swoosh.Adapters.Test"
+      end
+
+      assert_file root_path(@app, "config/dev.exs"), fn file ->
+        refute file =~ "config :phx_umb_web, PhxUmbWeb.Mailer, adapter: Swoosh.Adapters.Local"
+      end
     end
   end
 

@@ -57,7 +57,13 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
       ~r"lib/<%= @lib_web_name %>/(live|views)/.*(ex)$",
       ~r"lib/<%= @lib_web_name %>/templates/.*(eex)$"
     ]
-  ]<% end %>
+  ]<% end %><%= if @mailer do %>
+
+# By default, emails will not be sent in localhost.
+# Instead they are available at "/dev/mailbox".
+# Check the application router for details.
+config :<%= @app_name %>, <%= @web_namespace %>.Mailer,
+  adapter: Swoosh.Adapters.Local<% end %>
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"

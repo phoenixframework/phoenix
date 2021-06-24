@@ -55,4 +55,10 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
       ~r"lib/<%= @web_app_name %>/(live|views)/.*(ex)$",
       ~r"lib/<%= @web_app_name %>/templates/.*(eex)$"
     ]
-  ]<% end %>
+  ]<% end %><%= if @mailer do %>
+
+# By default, emails will not be sent in localhost.
+# Instead they are available at "/dev/mailbox".
+# Check the application router for details.
+config :<%= @web_app_name %>, <%= @web_namespace %>.Mailer,
+  adapter: Swoosh.Adapters.Local<% end %>
