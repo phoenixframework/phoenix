@@ -8,16 +8,18 @@
     "phoenix": "file:<%= @phoenix_webpack_path %>"<%= if @html do %>,
     "phoenix_html": "file:<%= @phoenix_html_webpack_path %>"<% end %><%= if @live do %>,
     "phoenix_live_view": "file:<%= @phoenix_live_view_webpack_path %>",
-    "topbar": "^0.1.4"<% end %>
+    "topbar": "^1.0.0"<% end %>
   },
   "devDependencies": {
     "copy-webpack-plugin": "^9.0.0",
     "css-loader": "^5.2.6",
     "css-minimizer-webpack-plugin": "^3.0.0",
-    "expose-loader": "3.0.0",
     "glob": "7.1.7",
     "mini-css-extract-plugin": "^1.6.0",
     "webpack": "5.37.1",
     "webpack-cli": "^4.7.0"
+  },
+  "engines": {
+    "node": ">=14.x"
   }
 }
