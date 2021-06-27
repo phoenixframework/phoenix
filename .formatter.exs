@@ -69,6 +69,9 @@ locals_without_parens = [
   live: 4,
   live_dashboard: 1,
   live_dashboard: 2
+
+  # Phoenix.LiveView
+  on_mount: 1
 ]
 
 [
