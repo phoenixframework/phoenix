@@ -424,7 +424,7 @@ INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) 
 Perfect. Before we integrate categories in the web layer, we need to let our context know how to associate products and categories. First, open up `lib/hello/catalog/product.ex` and add the following association:
 
 
-```elixir
+```diff
 + alias Hello.Catalog.Category
 
   schema "products" do
