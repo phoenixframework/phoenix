@@ -22,7 +22,7 @@ In Phoenix, contexts often encapsulate data access and data validation. They oft
 
 ### Adding a Catalog Context
 
-An ecommerce platform has wide-reaching coupling across a codebase so it's important to think upfront about writing well-defined interfaces. With that in mind, our goal is to build a product catalog API that handles creating, updating, and deleting the products available in our system. We'll start off with the basic features of showcasing our products, but as we add cart features later, we'll see how starting with a solid foundation with isolated boundaries allows us to grow our application naturally as we add functionality.
+An ecommerce platform has wide-reaching coupling across a codebase so it's important to think upfront about writing well-defined interfaces. With that in mind, our goal is to build a product catalog API that handles creating, updating, and deleting the products available in our system. We'll start off with the basic features of showcasing our products, but as we add cart features later. We'll see how starting with a solid foundation with isolated boundaries allows us to grow our application naturally as we add functionality.
 
 Phoenix includes the `mix phx.gen.html`, `mix phx.gen.json`, `mix phx.gen.live`, and `mix phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new product catalog context.
 
