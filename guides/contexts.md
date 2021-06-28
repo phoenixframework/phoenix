@@ -965,8 +965,9 @@ Now that we can calculate price totals, let's try it out! Visit `http://localhos
 Our cart page is almost complete, but submitting the form will yield yet another error.
 
 ```
-UndefinedFunctionError at PUT /cart
-function HelloWeb.CartController.update/2 is undefined or private
+Request: POST /cart
+** (exit) an exception was raised:
+    ** (UndefinedFunctionError) function HelloWeb.CartController.update/2 is undefined or private
 ```
 
 Let's head back to our `CartController` at `lib/hello_web/cart_controller.ex` and implement the update action:
