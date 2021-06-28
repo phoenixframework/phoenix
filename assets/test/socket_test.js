@@ -710,10 +710,24 @@ describe("with transports", function(){
       assert.ok(spy.calledWith("error"))
     })
 
-    it("triggers channel error if joining", function(){
+    it("triggers channel error if joining with open connection", function(){
       const channel = socket.channel("topic")
       const spy = sinon.spy(channel, "trigger")
       channel.join()
+      socket.onConnOpen()
+
+      assert.equal(channel.state, "joining")
+
+      socket.onConnError("error")
+
+      assert.ok(spy.calledWith("phx_error"))
+    })
+
+    it("triggers channel error if joining with no connection", function(){
+      const channel = socket.channel("topic")
+      const spy = sinon.spy(channel, "trigger")
+      channel.join()
+
       assert.equal(channel.state, "joining")
 
       socket.onConnError("error")
@@ -725,11 +739,21 @@ describe("with transports", function(){
       const channel = socket.channel("topic")
       const spy = sinon.spy(channel, "trigger")
       channel.join().trigger("ok", {})
+      socket.onConnOpen()
 
       assert.equal(channel.state, "joined")
 
+      let connectionsCount = null
+      let transport = null
+      socket.onError((error, erroredTransport, conns) => {
+        transport = erroredTransport
+        connectionsCount = conns
+      })
+
       socket.onConnError("error")
 
+      assert.equal(transport, WebSocket)
+      assert.equal(connectionsCount, 1)
       assert.ok(spy.calledWith("phx_error"))
     })
 
@@ -743,6 +767,28 @@ describe("with transports", function(){
       socket.onConnError("error")
 
       assert.ok(!spy.calledWith("phx_error"))
+    })
+
+    it("does not trigger channel error if transport replaced with no previous connection", function(){
+      const channel = socket.channel("topic")
+      const spy = sinon.spy(channel, "trigger")
+      channel.join()
+
+      assert.equal(channel.state, "joining")
+
+      let connectionsCount = null
+      class FakeTransport{
+      }
+
+      socket.onError((error, transport, conns) => {
+        socket.replaceTransport(FakeTransport)
+        connectionsCount = conns
+      })
+      socket.onConnError("error")
+
+      assert.equal(connectionsCount, 0)
+      assert.equal(socket.transport, FakeTransport)
+      assert.equal(spy.calledWith("phx_error"), false)
     })
   })
 

@@ -96,6 +96,7 @@ export default class Socket {
     this.ref = 0
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
     this.transport = opts.transport || global.WebSocket || LongPoll
+    this.establishedConnections = 0
     this.defaultEncoder = Serializer.encode.bind(Serializer)
     this.defaultDecoder = Serializer.decode.bind(Serializer)
     this.closeWasClean = false
@@ -148,6 +149,17 @@ export default class Socket {
     this.reconnectTimer = new Timer(() => {
       this.teardown(() => this.connect())
     }, this.reconnectAfterMs)
+  }
+
+  /**
+   * Disconnects and replaces the active transport
+   *
+   * @param {Function} newTransport - The new transport class to instantiate
+   *
+   */
+  replaceTransport(newTransport){
+    this.disconnect()
+    this.transport = newTransport
   }
 
   /**
@@ -276,6 +288,7 @@ export default class Socket {
   onConnOpen(){
     if(this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
     this.closeWasClean = false
+    this.establishedConnections++
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     this.resetHeartbeat()
@@ -359,8 +372,14 @@ export default class Socket {
    */
   onConnError(error){
     if(this.hasLogger()) this.log("transport", error)
-    this.triggerChanError()
-    this.stateChangeCallbacks.error.forEach(([, callback]) => callback(error))
+    let transportBefore = this.transport
+    let establishedBefore = this.establishedConnections
+    this.stateChangeCallbacks.error.forEach(([, callback]) => {
+      callback(error, transportBefore, establishedBefore)
+    })
+    if(transportBefore === this.transport || establishedBefore > 0){
+      this.triggerChanError()
+    }
   }
 
   /**
