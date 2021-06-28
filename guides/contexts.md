@@ -445,7 +445,7 @@ We used `Ecto.Schema`'s `many_to_many` macro to let Ecto know how to associate o
 With our schema associations set up, we can implement the selection of categories in our product form. To do so, we need to translate the user input of catalog IDs from the front-end to our many-to-many association. Fortunately Ecto makes this a breeze now that our schema is set up. Open up your catalog context and make the following changes:
 
 
-```elixir
+```diff
 - def get_product!(id), do: Repo.get!(Product, id)
 + def get_product!(id) do
 +   Product |> Repo.get(id) |> Repo.preload(:categories)
