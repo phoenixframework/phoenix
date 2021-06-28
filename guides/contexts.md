@@ -506,7 +506,7 @@ We added a new `category_select/2` function which uses `Phoenix.HTML`'s `multipl
 
 With our `category_select` function in place, we can open up `lib/hello_web/templates/product/form.html.eex` and add:
 
-```html
+```diff
   ...
   <%= label f, :views %>
   <%= number_input f, :views %>
