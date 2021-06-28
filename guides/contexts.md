@@ -1264,7 +1264,7 @@ Our new function accepts the cart struct and issues a `Repo.delete_all` which ac
   end
 ```
 
-We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can replace the order show template in `lib/hello_web/templates/orders/show.html.eex`:
+We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can replace the order show template in `lib/hello_web/templates/order/show.html.eex`:
 
 ```eex
 <h1>Thank you for your order!</h1>
