@@ -398,7 +398,7 @@ $ mix ecto.migrate
 18:20:36.562 [info]  == Migrated 20210222231930 in 0.0s
 ```
 
-Now that we have a `Product.Category` schema and a join table to associate products and categories, we're nearly ready to start wiring up our new features. Before we dive in, we first need real categories to select in our web UI. Let's quickly seed some new categories in the application. Add the following code to your seeds file in `priv/repo/seeds.exs`:
+Now that we have a `Catalog.Product` schema and a join table to associate products and categories, we're nearly ready to start wiring up our new features. Before we dive in, we first need real categories to select in our web UI. Let's quickly seed some new categories in the application. Add the following code to your seeds file in `priv/repo/seeds.exs`:
 
 ```elixir
 for title <- ["Fashion", "Power Tools", "Gardening", "Books", "Education"] do
