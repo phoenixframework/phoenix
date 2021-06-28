@@ -1255,7 +1255,7 @@ To close out our order completion, we need to implement the `ShoppingCart.prune_
 
 Our new function accepts the cart struct and issues a `Repo.delete_all` which accepts a query of all items for the provided cart. We return a success result by simply reloading the pruned cart to the caller. With our context complete, we now need to show the user their completed order. Head back to your order controller and modify the `show/2` action:
 
-```elixir
+```diff
   def show(conn, %{"id" => id}) do
 -   order = Orders.get_order!(id)
 +   order = Orders.get_order!(conn.assigns.current_uuid, id)
