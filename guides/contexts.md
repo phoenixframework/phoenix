@@ -846,7 +846,7 @@ We started by implementing  `get_cart_by_user_uuid/1` which fetches our cart and
 
 With our new cart functions in place, we can now expose the "Add to cart" button on the product catalog show page. Open up your template in `lib/hello_web/templates/product/show.html.leex` and make the following changes:
 
-```eex
+```diff
 <h1>Show Product</h1>
 
 +<%= link "Add to cart",
