@@ -1107,7 +1107,7 @@ We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and
 
 With our migration in place, let's wire up our orders and line items associations in `lib/hello/orders/order.ex:`
 
-```elixir
+```diff
   schema "orders" do
     field :total_price, :decimal
     field :user_uuid, Ecto.UUID
