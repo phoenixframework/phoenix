@@ -1312,7 +1312,7 @@ Metaprogramming Elixir (2) - $15.00
 Total price: $30.00
 ```
 
-Nice work! We haven't added payments, but we can already see our how `ShoppingCart` and `Orders` context splitting is driving us towards maintainable solution. With our cart items separate from our order line items, we well equipped in the future to add payment transactions, cart price detection, and more.
+Nice work! We haven't added payments, but we can already see how our `ShoppingCart` and `Orders` context splitting is driving us towards a maintainable solution. With our cart items separated from our order line items, we are well equipped in the future to add payment transactions, cart price detection, and more.
 
 Great work!
 
