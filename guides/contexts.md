@@ -1128,7 +1128,6 @@ We used `has_many :line_items` to associate orders and line items, just like we'
     field :quantity, :integer
 -   field :order_id, :id
 -   field :product_id, :id
-    field :quantity, :integer
 
 +   belongs_to :order, Hello.Orders.Order
 +   belongs_to :product, Hello.Catalog.Product
