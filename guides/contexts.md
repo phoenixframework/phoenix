@@ -1087,7 +1087,7 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and inject supporting functions into our orders context. Like before, let's modify the migration in `priv/repo/migrations/*_create_order_items.exs` and make the following decimal field changes:
+We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and inject supporting functions into our orders context. Like before, let's modify the migration in `priv/repo/migrations/*_create_order_line_items.exs` and make the following decimal field changes:
 
 ```elixir
   def change do
