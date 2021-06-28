@@ -951,8 +951,8 @@ We're almost ready to try out our cart page, but first we need to implement our 
 
   def total_cart_price(%Cart{} = cart) do
     Enum.reduce(cart.items, 0, fn item, acc ->
-      item.product.price
-      |> Decimal.mult(item.quantity)
+      item
+      |> total_item_price()
       |> Decimal.add(acc)
     end)
   end
