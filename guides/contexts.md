@@ -970,7 +970,7 @@ Request: POST /cart
     ** (UndefinedFunctionError) function HelloWeb.CartController.update/2 is undefined or private
 ```
 
-Let's head back to our `CartController` at `lib/hello_web/cart_controller.ex` and implement the update action:
+Let's head back to our `CartController` at `lib/hello_web/controllers/cart_controller.ex` and implement the update action:
 
 ```elixir
   def update(conn, %{"cart" => cart_params}) do
