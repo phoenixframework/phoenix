@@ -1068,7 +1068,7 @@ We generated a `Orders` context along with HTML controllers, views, etc. We adde
 
 Like we did previously, we gave appropriate precision and scale options for our decimal column which will allow us to store currency without precision loss. We also added a not-null constraint to enforce all orders to have a price.
 
-The orders table alone doesn't hold much information, but we know we'll need to store information about all the items in the order. For that, we'll add additional struct for this context named `LineItem`. Run the following command:
+The orders table alone doesn't hold much information, but we know we'll need to store point-in-time product price information of all the items in the order. For that, we'll add additional struct for this context named `LineItem`. Line items will capture the price of the product *at payment transaction time*. Please run the following command:
 
 ```console
 $ mix phx.gen.context Orders LineItem order_line_items \
