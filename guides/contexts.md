@@ -744,7 +744,7 @@ We'll need to implement a cart controller for handling cart operations like view
     get "/", PageController, :index
     resources "/products", ProductController
 
-+   resources "/cart_items", CartItemController, only: [:create]
++   resources "/cart_items", CartItemController, only: [:create, :delete]
 
 +   get "/cart", CartController, :show
 +   put "/cart", CartController, :update
