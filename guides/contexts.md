@@ -1295,7 +1295,7 @@ To show our completed order, we displayed the order's user, followed by the line
 
 Our last addition will be to add the "complete order" button to our cart page to allow completing an order. Add the following button to the bottom of the cart show template in `lib/hello_web/templates/cart/show.html.eex`:
 
-```eex
+```diff
   <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>
 
 + <%= link "complete order", to: Routes.order_path(@conn, :create), method: :post %>
