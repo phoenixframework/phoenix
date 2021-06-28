@@ -82,7 +82,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   alias Mix.Tasks.Phx.Gen.Auth.{HashingLibrary, Injector, Migration}
 
   @switches [web: :string, binary_id: :boolean, hashing_lib: :string,
-             table: :string, merge_with_existing_context: :boolean]
+             table: :string, merge_with_existing_context: :boolean,
+             prefix: :string]
 
   @doc false
   def run(args, test_opts \\ []) do
@@ -276,6 +277,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_fixtures_functions.ex", binding)
+    |> prepend_newline()
     |> inject_before_final_end(test_fixtures_file)
   end
 

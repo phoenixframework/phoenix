@@ -188,7 +188,7 @@ As we did last time, the first thing we'll do is create a new route.
 
 ### Another new route
 
-For this exercise, we're going to reuse the `HelloController` we just created and just add a new `show` action. We'll add a line just below our last route, like this:
+For this exercise, we're going to reuse `HelloController` which was just created and simply add a new `show` action. We'll add a line just below our last route, like this:
 
 ```elixir
 scope "/", HelloWeb do
@@ -226,7 +226,7 @@ It's good to remember that the keys of the `params` map will always be strings, 
 
 ### Another new template
 
-For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of the `HelloController`, it will go into the `lib/hello_web/templates/hello` directory and be called `show.html.eex`. It will look surprisingly like our `index.html.eex` template, except that we will need to display the name of our messenger.
+For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of `HelloController`, it will go into the `lib/hello_web/templates/hello` directory and be called `show.html.eex`. It will look surprisingly like our `index.html.eex` template, except that we will need to display the name of our messenger.
 
 To do that, we'll use the special EEx tags for executing Elixir expressions: `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
 

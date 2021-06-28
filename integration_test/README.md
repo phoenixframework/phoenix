@@ -17,6 +17,7 @@ To run the test suite with tests that test a specific database, run:
     $ mix test --include database:postgresql
     $ mix test --include database:mysql
     $ mix test --include database:mssql
+    $ mix test --include database:sqlite3
 
 For convenience, there is also a `docker-compose.yml` file that allows for starting up all of the supported databases locally.
 

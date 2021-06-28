@@ -22,8 +22,15 @@ defmodule Phoenix.ConfigTest do
     assert :ets.lookup(meta.test, :custom)  == [custom: true]
   end
 
+  test "raises with warning about compile time when table not started" do
+    assert_raise RuntimeError,
+                 "could not find ets table for endpoint Fooz. Make sure your endpoint is started and note you cannot access endpoint functions at compile-time.",
+                 fn -> cache(Fooz, :foo, fn _ -> {:nocache, :bar} end) end
+  end
+
   test "can change configuration", meta do
-    {:ok, _pid} = start_link({meta.test, @all, @defaults, []})
+    {:ok, pid} = start_link({meta.test, @all, @defaults, []})
+    ref = Process.monitor(pid)
 
     # Nothing changed
     config_change(meta.test, [], [])
@@ -39,6 +46,8 @@ defmodule Phoenix.ConfigTest do
 
     # Module removed
     config_change(meta.test, [], [meta.test])
+
+    assert_receive {:DOWN, ^ref, :process, ^pid, :normal}
     assert :ets.info(meta.test, :name) == :undefined
   end
 

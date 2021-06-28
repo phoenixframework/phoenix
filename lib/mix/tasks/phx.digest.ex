@@ -33,19 +33,26 @@ defmodule Mix.Tasks.Phx.Digest do
     * app-eb0a5b9302e8d32828d8a73f137cc8f0.js.gz
     * cache_manifest.json
 
+  ## vsn
+
+  It is possible to digest the stylesheet asset references without the query
+  string "?vsn=d" with the option `--no-vsn`.
   """
+
+  @default_opts [vsn: true]
 
   @doc false
   def run(all_args) do
     Mix.Task.run "compile", all_args
-    {opts, args, _} = OptionParser.parse(all_args, switches: [output: :string], aliases: [o: :output])
+    {opts, args, _} = OptionParser.parse(all_args, switches: [output: :string, vsn: :boolean], aliases: [o: :output])
     input_path = List.first(args) || @default_input_path
     output_path = opts[:output] || input_path
+    with_vsn? = Keyword.merge(@default_opts, opts)[:vsn]
 
     Mix.Task.run "deps.loadpaths", all_args
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
-    case Phoenix.Digester.compile(input_path, output_path) do
+    case Phoenix.Digester.compile(input_path, output_path, with_vsn?) do
       :ok ->
         # We need to call build structure so everything we have
         # generated into priv is copied to _build in case we have

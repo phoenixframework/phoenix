@@ -29,6 +29,7 @@ defmodule Mix.Tasks.Phx.New do
         * `postgres` - via https://github.com/elixir-ecto/postgrex
         * `mysql` - via https://github.com/elixir-ecto/myxql
         * `mssql` - via https://github.com/livehelpnow/tds
+        * `sqlite3` - via https://github.com/elixir-sqlite/ecto_sqlite3
 
       Please check the driver docs for more information
       and requirements. Defaults to "postgres".
@@ -50,6 +51,8 @@ defmodule Mix.Tasks.Phx.New do
       in Ecto schemas
 
     * `--verbose` - use verbose output
+
+    * `-v`, `--version` - prints the Phoenix installer version
 
   When passing the `--no-ecto` flag, Phoenix generators such as
   `phx.gen.html`, `phx.gen.json`, `phx.gen.live`, and `phx.gen.context`
@@ -93,10 +96,6 @@ defmodule Mix.Tasks.Phx.New do
 
   You can read more about umbrella projects using the
   official [Elixir guide](http://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-apps.html#umbrella-projects)
-
-  To print the Phoenix installer version, pass `-v` or `--version`, for example:
-
-      mix phx.new -v
   """
   use Mix.Task
   alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
@@ -108,11 +107,12 @@ defmodule Mix.Tasks.Phx.New do
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
              gettext: :boolean, umbrella: :boolean, verbose: :boolean,
-             live: :boolean, dashboard: :boolean, install: :boolean]
+             live: :boolean, dashboard: :boolean, install: :boolean,
+             prefix: :string]
 
   @impl true
   def run([version]) when version in ~w(-v --version) do
-    Mix.shell().info("Phoenix v#{@version}")
+    Mix.shell().info("Phoenix installer v#{@version}")
   end
 
   def run(argv) do
@@ -363,8 +363,8 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    unless Version.match?(System.version(), "~> 1.11") do
-      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.11.\n " <>
+    unless Version.match?(System.version(), "~> 1.12") do
+      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.12.\n " <>
                 "You have #{System.version()}. Please update accordingly"
     end
   end

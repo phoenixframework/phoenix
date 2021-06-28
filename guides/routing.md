@@ -160,7 +160,7 @@ This is significant because we can use the `page_path` function in a template to
 <%= link "Welcome Page!", to: Routes.page_path(@conn, :index) %>
 ```
 
-The reason we can use `Routes.page_path` instead of the full `HelloWeb.Router.Helpers.page_path` name is because `HelloWeb.Router.Helpers` is aliased as `Routes` by default in the `view/0` block defined inside `lib/hello_web.ex`. This definition is made available to our templates through `use HelloWeb, :view`.
+The reason we can use `Routes.page_path` instead of the full `HelloWeb.Router.Helpers.page_path` name is because `HelloWeb.Router.Helpers` is aliased as `Routes` by default in the `view_helpers/0` block defined inside `lib/hello_web.ex`. This definition is made available to our templates through `use HelloWeb, :view`.
 
 We can, of course, use `HelloWeb.Router.Helpers.page_path(@conn, :index)` instead, but the convention is to use the aliased version for conciseness. Note that the alias is only set automatically for use in views, controllers and templates - outside these you need either the full name, or to alias it yourself inside the module definition with `alias HelloWeb.Router.Helpers, as: Routes`.
 
@@ -238,7 +238,7 @@ user_post_path  DELETE  /users/:user_id/posts/:id       HelloWeb.PostController 
 ...
 ```
 
-We see that each of these routes scopes the posts to a user ID. For the first one, we will invoke the `PostController` `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
+We see that each of these routes scopes the posts to a user ID. For the first one, we will invoke `PostController`'s `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
 
 When calling path helper functions for nested routes, we will need to pass the IDs in the order they came in the route definition. For the following `show` route, `42` is the `user_id`, and `17` is the `post_id`. Let's remember to alias our `HelloWeb.Endpoint` before we begin.
 
@@ -543,7 +543,7 @@ end
 
 When the server accepts a request, the request will always first pass through the plugs in our endpoint, after which it will attempt to match on the path and HTTP verb.
 
-Let's say that the request matches our first route: a GET to `/`. The router will first pipe that request through the `:browser` pipeline - which will fetch the session data, fetch the flash, and execute forgery protection - before it dispatches the request to the `PageController` `index` action.
+Let's say that the request matches our first route: a GET to `/`. The router will first pipe that request through the `:browser` pipeline - which will fetch the session data, fetch the flash, and execute forgery protection - before it dispatches the request to `PageController`'s `index` action.
 
 Conversely, if the request matches any of the routes defined by the `resources/2` macro, the router will pipe it through the `:api` pipeline — which currently does nothing — before it dispatches further to the correct action of the `HelloWeb.ReviewController`.
 
@@ -693,7 +693,7 @@ forward "/jobs", BackgroundJob.Plug, name: "Hello Phoenix"
 
 There is a fourth `router_opts` argument that can be passed. These options are outlined in the `Phoenix.Router.scope/2` documentation.
 
-`BackgroundJob.Plug` can be implemented as any module plug discussed in the [Plug guide](plug.html). Note though it is not advised to forward to another Phoenix endpoint. This is because plugs defined by your app and the forwarded endpoint would be invoked twice, which may lead to errors.
+`BackgroundJob.Plug` can be implemented as any Module Plug discussed in the [Plug guide](plug.html). Note though it is not advised to forward to another Phoenix endpoint. This is because plugs defined by your app and the forwarded endpoint would be invoked twice, which may lead to errors.
 
 ## Summary
 

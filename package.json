@@ -3,7 +3,11 @@
   "version": "1.5.0",
   "description": "The official JavaScript client for the Phoenix web framework.",
   "license": "MIT",
-  "main": "./priv/static/phoenix.js",
+  "main": "priv/static/phoenix.js",
+  "exports": {
+    ".": "./assets/js/phoenix/index.js",
+    "./": "./assets/js/phoenix/"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/phoenixframework/phoenix.git"
@@ -14,6 +18,6 @@
     "LICENSE.md",
     "package.json",
     "priv/static/phoenix.js",
-    "assets/js/phoenix.js"
+    "assets/js/phoenix/*"
   ]
 }

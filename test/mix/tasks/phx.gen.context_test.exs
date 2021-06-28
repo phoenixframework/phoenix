@@ -175,7 +175,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       Gen.Context.run(~w(Blog Comment comments title:string))
 
       assert_received {:mix_shell, :info, ["You are generating into an existing context" <> notice]}
-      assert notice =~ "Phoenix.Blog context currently has 6 functions and 1 files in its directory"
+      assert notice =~ "Phoenix.Blog context currently has 6 functions and 1 file in its directory"
       assert_received {:mix_shell, :yes?, ["Would you like to proceed?"]}
 
       assert_file "lib/phoenix/blog/comment.ex", fn file ->
@@ -208,6 +208,81 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def delete_comment"
         assert file =~ "def change_comment"
       end
+    end
+  end
+
+  test "generates with unique fields", config do
+    in_tmp_project config.test, fn ->
+      Gen.Context.run(~w(Blog Post posts
+            slug:string:unique
+            subject:unique
+            body:text:unique
+            order:integer:unique
+            price:decimal:unique
+            published_at:utc_datetime:unique
+            author:references:users:unique
+            published?:boolean
+          ))
+
+      assert_received {:mix_shell, :info, ["""
+
+        Some of the generated database columns are unique. Please provide
+        unique implementations for the following fixture function(s) in
+        test/support/fixtures/blog_fixtures.ex:
+
+            def unique_post_price do
+              raise "implement the logic to generate a unique post price"
+            end
+
+            def unique_post_published_at do
+              raise "implement the logic to generate a unique post published_at"
+            end
+        """]}
+
+      assert_file "test/support/fixtures/blog_fixtures.ex", fn file ->
+        assert file =~ ~S|def unique_post_order, do: System.unique_integer([:positive])|
+        assert file =~ ~S|def unique_post_slug, do: "some slug#{System.unique_integer([:positive])}"|
+        assert file =~ ~S|def unique_post_body, do: "some body#{System.unique_integer([:positive])}"|
+        assert file =~ ~S|def unique_post_subject, do: "some subject#{System.unique_integer([:positive])}"|
+        refute file =~ ~S|def unique_post_author|
+        assert file =~ """
+          def unique_post_price do
+            raise "implement the logic to generate a unique post price"
+          end
+        """
+
+        assert file =~ """
+                body: unique_post_body(),
+                order: unique_post_order(),
+                price: unique_post_price(),
+                published?: true,
+                published_at: unique_post_published_at(),
+                slug: unique_post_slug(),
+                subject: unique_post_subject()
+        """
+      end
+
+      assert [path] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
+      assert_file path, fn file ->
+        assert file =~ "create table(:posts)"
+        assert file =~ "create unique_index(:posts, [:order])"
+        assert file =~ "create unique_index(:posts, [:price])"
+        assert file =~ "create unique_index(:posts, [:slug])"
+        assert file =~ "create unique_index(:posts, [:subject])"
+      end
+    end
+  end
+
+  test "does not prompt on unimplemented functions with only string, text and integer unique fields", config do
+    in_tmp_project config.test, fn ->
+      Gen.Context.run(~w(Blog Post posts
+            slug:string:unique
+            subject:unique
+            body:text:unique
+            order:integer:unique
+          ))
+
+      refute_received {:mix_shell, :info, ["\nSome of the generated database columns are unique." <> _]}
     end
   end
 

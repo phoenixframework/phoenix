@@ -57,7 +57,7 @@ defmodule HelloWeb.ChannelCase do
 end
 ```
 
-It is very straight-forward. It sets up a case template that imports all of `Phoenix.ChannelTest` on use. In the `setup` block, it starts the SQL Sandbox, which we discussed [in the Testing Contexts guide](testing_contexts.html).
+It is very straight-forward. It sets up a case template that imports all of `Phoenix.ChannelTest` on use. In the `setup` block, it starts the SQL Sandbox, which we discussed in the [Testing contexts guide](testing_contexts.html).
 
 ## Subscribe and joining
 

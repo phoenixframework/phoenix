@@ -3,6 +3,8 @@ Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 defmodule Mix.Tasks.Phx.Gen.AuthTest do
   use ExUnit.Case
 
+  @moduletag :mix_phx_new
+
   import MixHelper
   alias Mix.Tasks.Phx.Gen
 
@@ -217,7 +219,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert_file "lib/my_app/accounts/user_token.ex"
       assert_file "lib/my_app/accounts/user_notifier.ex"
       assert_file "test/my_app/accounts_test.exs"
-      assert_file "test/support/fixtures/accounts_fixtures.ex"
+
+      assert_file "test/support/fixtures/accounts_fixtures.ex", fn file ->
+        assert file =~ ~s|def valid_user_attributes(attrs \\\\ %{}) do|
+      end
 
       assert_file "lib/my_app_web/controllers/warehouse/user_auth.ex", fn file ->
         assert file =~ "defmodule MyAppWeb.Warehouse.UserAuth do"
@@ -458,6 +463,45 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end)
     end
 
+    test "when the database is sqlite3", config do
+      in_tmp_phx_project(config.test, fn ->
+        Gen.Auth.run(
+          ~w(Accounts User users),
+          [ecto_adapter: Ecto.Adapters.SQLite3, validate_dependencies?: false]
+        )
+
+        assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
+        assert_file migration, fn file ->
+          refute file =~ ~r/execute "CREATE EXTENSION IF NOT EXISTS citext", ""$/m
+          assert file =~ ~r/add :email, :string, null: false, collate: :nocase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_auth_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_confirmation_controller_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_registration_controller_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_reset_password_controller_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_session_controller_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/controllers/user_settings_controller_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+      end)
+    end
+
     test "when the database is mssql", config do
       in_tmp_phx_project(config.test, fn ->
         Gen.Auth.run(
@@ -580,9 +624,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         assert_file "config/test.exs", fn file ->
           assert file =~ """
-          config :argon2_elixir,
-            t_cost: 1,
-            m_cost: 8
+          config :argon2_elixir, t_cost: 1, m_cost: 8
           """
         end
 

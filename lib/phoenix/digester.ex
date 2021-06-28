@@ -17,15 +17,15 @@ defmodule Phoenix.Digester do
   Digests and compresses the static files in the given `input_path`
   and saves them in the given `output_path`.
   """
-  @spec compile(String.t(), String.t()) :: :ok | {:error, :invalid_path}
-  def compile(input_path, output_path) do
+  @spec compile(String.t(), String.t(), boolean()) :: :ok | {:error, :invalid_path}
+  def compile(input_path, output_path, with_vsn?) do
     if File.exists?(input_path) do
       File.mkdir_p!(output_path)
 
       files = filter_files(input_path)
       latest = generate_latest(files)
       digests = load_compile_digests(output_path)
-      digested_files = Enum.map(files, &digested_contents(&1, latest))
+      digested_files = Enum.map(files, &digested_contents(&1, latest, with_vsn?))
 
       save_manifest(digested_files, latest, digests, output_path)
       Enum.each(digested_files, &write_to_disk(&1, output_path))
@@ -178,12 +178,12 @@ defmodule Phoenix.Digester do
     file
   end
 
-  defp digested_contents(file, latest) do
+  defp digested_contents(file, latest, with_vsn?) do
     ext = Path.extname(file.filename)
 
     digested_content =
       case ext do
-        ".css" -> digest_stylesheet_asset_references(file, latest)
+        ".css" -> digest_stylesheet_asset_references(file, latest, with_vsn?)
         ".js" -> digest_javascript_asset_references(file, latest)
         ".map" -> digest_javascript_map_asset_references(file, latest)
         _ -> file.content
@@ -195,14 +195,14 @@ defmodule Phoenix.Digester do
   @stylesheet_url_regex ~r{(url\(\s*)(\S+?)(\s*\))}
   @quoted_text_regex ~r{\A(['"])(.+)\1\z}
 
-  defp digest_stylesheet_asset_references(file, latest) do
+  defp digest_stylesheet_asset_references(file, latest, with_vsn?) do
     Regex.replace(@stylesheet_url_regex, file.content, fn _, open, url, close ->
       case Regex.run(@quoted_text_regex, url) do
         [_, quote_symbol, url] ->
-          open <> quote_symbol <> digested_url(url, file, latest, true) <> quote_symbol <> close
+          open <> quote_symbol <> digested_url(url, file, latest, with_vsn?) <> quote_symbol <> close
 
         nil ->
-          open <> digested_url(url, file, latest, true) <> close
+          open <> digested_url(url, file, latest, with_vsn?) <> close
       end
     end)
   end

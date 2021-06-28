@@ -1,3 +1,8 @@
+for path <- :code.get_path(),
+    Regex.match?(~r/phx_new\-\d+\.\d+\.\d\/ebin$/, List.to_string(path)) do
+  Code.delete_path(path)
+end
+
 defmodule Phoenix.Integration.MixProject do
   use Mix.Project
 
@@ -5,7 +10,7 @@ defmodule Phoenix.Integration.MixProject do
     [
       app: :phoenix_integration,
       version: "0.1.0",
-      elixir: "~> 1.9",
+      elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -33,8 +38,9 @@ defmodule Phoenix.Integration.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:myxql, ">= 0.0.0"},
       {:tds, ">= 0.0.0"},
-      {:phoenix_live_view, "~> 0.15.0"},
-      {:floki, ">= 0.27.0"},
+      {:ecto_sqlite3, ">= 0.0.0"},
+      {:phoenix_live_view, "~> 0.15.7"},
+      {:floki, ">= 0.30.0"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2"},
       {:phoenix_live_dashboard, "~> 0.4"},

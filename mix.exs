@@ -2,6 +2,7 @@ defmodule Phoenix.MixProject do
   use Mix.Project
 
   @version "1.6.0-dev"
+  @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
@@ -31,7 +32,7 @@ defmodule Phoenix.MixProject do
       name: "Phoenix",
       docs: docs(),
       aliases: aliases(),
-      source_url: "https://github.com/phoenixframework/phoenix",
+      source_url: @scm_url,
       homepage_url: "https://www.phoenixframework.org",
       description: """
       Productive. Reliable. Fast. A productive web framework that
@@ -52,7 +53,7 @@ defmodule Phoenix.MixProject do
         stacktrace_depth: nil,
         filter_parameters: ["password"],
         serve_endpoints: false,
-        gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf),
+        gzippable_exts: ~w(.js .map .css .txt .text .html .json .svg .eot .ttf),
         static_compressors: [Phoenix.Digester.Gzip]
       ]
     ]
@@ -72,8 +73,9 @@ defmodule Phoenix.MixProject do
       {:phoenix_html, "~> 2.14.2 or ~> 3.0", optional: true},
 
       # Docs dependencies (some for cross references)
-      {:ex_doc, "~> 0.22", only: :docs},
+      {:ex_doc, "~> 0.24", only: :docs},
       {:ecto, ">= 3.0.0", only: :docs},
+      {:ecto_sql, "~> 3.5", only: :docs},
       {:gettext, "~> 0.15.0", only: :docs},
       {:telemetry_poller, "~> 0.4", only: :docs},
       {:telemetry_metrics, "~> 0.4", only: :docs},
@@ -88,7 +90,7 @@ defmodule Phoenix.MixProject do
     [
       maintainers: ["Chris McCord", "José Valim", "Gary Rennie", "Jason Stiebs"],
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/phoenixframework/phoenix"},
+      links: %{"GitHub" => @scm_url},
       files:
         ~w(assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
     ]
@@ -134,6 +136,7 @@ defmodule Phoenix.MixProject do
       "guides/deployment/deployment.md",
       "guides/deployment/releases.md",
       "guides/deployment/gigalixir.md",
+      "guides/deployment/fly.md",
       "guides/deployment/heroku.md",
       "guides/howto/custom_error_pages.md",
       "guides/howto/using_ssl.md"
@@ -165,7 +168,6 @@ defmodule Phoenix.MixProject do
     # Phoenix.Presence
     # Phoenix.Router
     # Phoenix.Token
-    # Phoenix.View
 
     [
       Testing: [
@@ -183,12 +185,6 @@ defmodule Phoenix.MixProject do
         Phoenix.Socket.Reply,
         Phoenix.Socket.Serializer,
         Phoenix.Socket.Transport
-      ],
-      Templating: [
-        Phoenix.Template,
-        Phoenix.Template.EExEngine,
-        Phoenix.Template.Engine,
-        Phoenix.Template.ExsEngine
       ]
     ]
   end

@@ -80,7 +80,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   @switches [binary_id: :boolean, table: :string, web: :string,
              schema: :boolean, context: :boolean, context_app: :string,
-             merge_with_existing_context: :boolean]
+             merge_with_existing_context: :boolean, prefix: :string]
 
   @default_opts [schema: true, context: true]
 
@@ -197,7 +197,52 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/fixtures.ex", binding)
+    |> Mix.Phoenix.prepend_newline()
     |> inject_eex_before_final_end(test_fixtures_file, binding)
+
+    maybe_print_unimplemented_fixture_functions(context)
+  end
+
+  defp maybe_print_unimplemented_fixture_functions(%Context{} = context) do
+    fixture_functions_needing_implementations =
+      Enum.flat_map(
+        context.schema.fixture_unique_functions,
+        fn
+          {_field, {_function_name, function_def, true}} -> [function_def]
+          {_field, {_function_name, _function_def, false}} -> []
+        end
+      )
+
+    if Enum.any?(fixture_functions_needing_implementations) do
+      Mix.shell.info(
+        """
+
+        Some of the generated database columns are unique. Please provide
+        unique implementations for the following fixture function(s) in
+        #{context.test_fixtures_file}:
+
+        #{
+          fixture_functions_needing_implementations
+          |> Enum.map_join(&indent(&1, 2))
+          |> String.trim_trailing()
+        }
+        """
+      )
+    end
+  end
+
+  defp indent(string, spaces) do
+    indent_string = String.duplicate(" ", spaces)
+
+    string
+    |> String.split("\n")
+    |> Enum.map_join(fn line ->
+        if String.trim(line) == "" do
+          "\n"
+        else
+          indent_string <> line <> "\n"
+        end
+    end)
   end
 
   defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
@@ -293,8 +338,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       Mix.shell().info("""
       You are generating into an existing context.
 
-      The #{inspect context.module} context currently has #{function_count} functions and \
-      #{file_count} files in its directory.
+      The #{inspect(context.module)} context currently has #{singularize(function_count, "functions")} and \
+      #{singularize(file_count, "files")} in its directory.
 
         * It's OK to have multiple resources in the same context as \
       long as they are closely related. But if a context grows too \
@@ -311,4 +356,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       Mix.shell().yes?("Would you like to proceed?")
     end)
   end
+
+  defp singularize(1, plural), do: "1 " <> String.trim_trailing(plural, "s")
+  defp singularize(amount, plural), do: "#{amount} #{plural}"
 end

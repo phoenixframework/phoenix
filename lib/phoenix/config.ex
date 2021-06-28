@@ -46,7 +46,18 @@ defmodule Phoenix.Config do
   """
   @spec cache(module, term, (module -> {:cache | :nocache, term})) :: term
   def cache(module, key, fun) do
-    case :ets.lookup(module, key) do
+    try do
+      :ets.lookup(module, key)
+    rescue
+      e ->
+        case :ets.info(module) do
+          :undefined ->
+            raise "could not find ets table for endpoint #{inspect(module)}. Make sure your endpoint is started and note you cannot access endpoint functions at compile-time."
+
+          _ ->
+            reraise e, __STACKTRACE__
+        end
+    else
       [{^key, :cache, val}] ->
         val
 
@@ -72,7 +83,7 @@ defmodule Phoenix.Config do
   end
 
   @doc """
-  Reads the configuration for module from the given otp app.
+  Reads the configuration for module from the given OTP app.
 
   Useful to read a particular value at compilation time.
   """

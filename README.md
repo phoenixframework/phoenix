@@ -17,7 +17,7 @@ Phoenix.js documentation is available at [https://hexdocs.pm/phoenix/js](https:/
 
 ## Contributing
 
-We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs [in the issue tracker][4].
+We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs in the [issue tracker][4].
 
 ### Generating a Phoenix project from unreleased versions
 
@@ -25,10 +25,10 @@ You can create a new project using the latest Phoenix source installer (the `phx
 
 1. Remove any previously installed `phx_new` archives so that Mix will pick up the local source code. This can be done with `mix archive.uninstall phx_new` or by simply deleting the file, which is usually in `~/.mix/archives/`.
 2. Copy this repo via `git clone https://github.com/phoenixframework/phoenix` or by downloading it
-3. Run the `phx.new` mix task from within the `installer` directory, for example:
+3. Run the `phx.new` Mix task from within the `installer` directory, for example:
 
 ```bash
-$ cd installer
+$ cd phoenix/installer
 $ mix phx.new dev_app --dev
 ```
 
@@ -73,7 +73,7 @@ $ npm run watch
 
 ## Important links
 
-* [#elixir-lang][1] on [Freenode][2] IRC
+* [#elixir][1] on [Libera][2] IRC
 * [elixir-lang Slack channel][3]
 * [Issue tracker][4]
 * [Phoenix Forum (questions)][5]
@@ -81,8 +81,8 @@ $ npm run watch
 * Visit Phoenix's sponsor, DockYard, for expert [phoenix consulting](https://dockyard.com/phoenix-consulting)
 * Privately disclose security vulnerabilities to phoenix-security@googlegroups.com
 
-  [1]: https://webchat.freenode.net/?channels=#elixir-lang
-  [2]: http://www.freenode.net/
+  [1]: https://web.libera.chat/?channels=#elixir
+  [2]: https://libera.chat/
   [3]: https://elixir-slackin.herokuapp.com/
   [4]: https://github.com/phoenixframework/phoenix/issues
   [5]: https://elixirforum.com/c/phoenix-forum

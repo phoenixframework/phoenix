@@ -9,7 +9,7 @@ defmodule <%= @app_module %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",<% end %>
-      elixir: "~> 1.11",
+      elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: <%= if @gettext do %>[:gettext] ++ <% end %>Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -41,8 +41,8 @@ defmodule <%= @app_module %>.MixProject do
       {:phoenix_ecto, "~> 4.1"},
       {:ecto_sql, "~> 3.5"},
       {<%= inspect @adapter_app %>, ">= 0.0.0"},<% end %><%= if @html do %><%= if @live do %>
-      {:phoenix_live_view, "~> 0.15.0"},
-      {:floki, ">= 0.27.0", only: :test},<% end %>
+      {:phoenix_live_view, "~> 0.15.7"},
+      {:floki, ">= 0.30.0", only: :test},<% end %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.4"},<% end %>

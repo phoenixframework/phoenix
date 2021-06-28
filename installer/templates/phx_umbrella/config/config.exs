@@ -1,6 +1,6 @@
 # This file is responsible for configuring your umbrella
 # and **all applications** and their dependencies with the
-# help of Mix.Config.
+# help of the Config module.
 #
 # Note that all applications in your umbrella share the
 # same configuration and dependencies, which is why they

@@ -58,6 +58,10 @@ defimpl Phoenix.Param, for: Integer do
   def to_param(int), do: Integer.to_string(int)
 end
 
+defimpl Phoenix.Param, for: Float do
+  def to_param(float), do: Float.to_string(float)
+end
+
 defimpl Phoenix.Param, for: BitString do
   def to_param(bin) when is_binary(bin), do: bin
 end

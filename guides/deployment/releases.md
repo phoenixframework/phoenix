@@ -37,11 +37,11 @@ Then load dependencies to compile code and assets:
 $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 
-# Install / update  JavaScript dependencies
-$ npm install --prefix ./assets
+# Install / update JavaScript dependencies
+$ npm install --prefix assets
 
 # Compile assets
-$ npm run deploy --prefix ./assets
+$ npm run deploy --prefix assets
 $ MIX_ENV=prod mix phx.digest
 ```
 
@@ -150,11 +150,13 @@ Elixir releases work well with container technologies, such as Docker. The idea 
 
 Here is an example Docker file to run at the root of your application covering all of the steps above:
 
-```docker
+```Dockerfile
+ARG MIX_ENV="prod"
+
 FROM hexpm/elixir:1.11.2-erlang-23.1.2-alpine-3.12.1 as build
 
 # install build dependencies
-RUN apk add --no-cache build-base npm git python3
+RUN apk add --no-cache build-base npm git python3 curl
 
 # prepare build dir
 WORKDIR /app
@@ -164,10 +166,11 @@ RUN mix local.hex --force && \
     mix local.rebar --force
 
 # set build ENV
-ENV MIX_ENV=prod
+ARG MIX_ENV
+ENV MIX_ENV="${MIX_ENV}"
 
 # install mix dependencies
-COPY mix.exs mix.lock ./
+COPY mix.exs mix.lock .
 RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
 # Dependencies sometimes use compile-time configuration. Copying
@@ -205,19 +208,38 @@ RUN mix release
 # Start a new build stage so that the final image will only contain
 # the compiled release and other runtime necessities
 FROM alpine:3.12.1 AS app
-RUN apk add --no-cache openssl ncurses-libs
+RUN apk add --no-cache libstdc++ openssl ncurses-libs
 
-WORKDIR /app
+ARG MIX_ENV
+ENV USER="elixir"
 
-RUN chown nobody:nobody /app
+WORKDIR "/home/${USER}/app"
+# Creates an unprivileged user to be used exclusively to run the Phoenix app
+RUN \
+  addgroup \
+   -g 1000 \
+   -S "${USER}" \
+  && adduser \
+   -s /bin/sh \
+   -u 1000 \
+   -G "${USER}" \
+   -h /home/elixir \
+   -D "${USER}" \
+  && su "${USER}"
 
-USER nobody:nobody
+# Everything from this line onwards will run in the context of the unprivileged user.
+USER "${USER}"
 
-COPY --from=build --chown=nobody:nobody /app/_build/prod/rel/my_app ./
-
-ENV HOME=/app
+COPY --from=build --chown="${USER}":"${USER}" /app/_build/"${MIX_ENV}"/rel/my_app ./
 
 ENTRYPOINT ["bin/my_app"]
+
+# Usage:
+#  * build: sudo docker image build -t elixir/my_app .
+#  * shell: sudo docker container run --rm -it --entrypoint "" -p 127.0.0.1:4000:4000 elixir/my_app sh
+#  * run:   sudo docker container run --rm -it -p 127.0.0.1:4000:4000 --name my_app elixir/my_app
+#  * exec:  sudo docker container exec -it my_app sh
+#  * logs:  sudo docker container logs --follow --tail 100 my_app
 CMD ["start"]
 ```
 
@@ -227,3 +249,4 @@ A few points about configuring a containerized application:
 
 - If you run your app in a container, the `Endpoint` needs to be configured to listen on a "public" `:ip` address (like `0.0.0.0.0.0.0.0`) so that the app can be reached from outside the container. Whether the host should publish the container's ports to its own public IP or to localhost depends on your needs.
 - The more configuration you can provide at runtime (using `config/runtime.exs`), the more reusable your images will be across environments. In particular, secrets like database credentials and API keys should not be compiled into the image, but rather should be provided when creating containers based on that image. This is why the `Endpoint`'s `:secret_key_base` is configured in `config/runtime.exs` by default.
+- If possible, any environment variables that are needed at runtime should be read in `config/runtime.exs`, not scattered throughout your code. Having them all visible in one place will make it easier to ensure the containers get what they need, especially if the person doing the infrastructure work does not work on the Elixir code. Libraries in particular should never directly read environment variables; all their configuration should be handed to them by the top-level application, preferably [without using the application environment](https://hexdocs.pm/elixir/library-guidelines.html#avoid-application-configuration).

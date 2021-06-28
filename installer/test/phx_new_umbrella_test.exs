@@ -131,10 +131,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, ".gitignore"), "#{@app}_web-*.tar"
       assert_file( web_path(@app, ".gitignore"),  ~r/\n$/)
       assert_file web_path(@app, "assets/webpack.config.js"), "js/app.js"
-      assert_file web_path(@app, "assets/.babelrc"), "env"
       assert_file web_path(@app, "assets/static/favicon.ico")
       assert_file web_path(@app, "assets/static/images/phoenix.png")
-      assert_file web_path(@app, "assets/css/app.scss")
+      assert_file web_path(@app, "assets/css/app.css")
       assert_file web_path(@app, "assets/css/phoenix.css")
       assert_file web_path(@app, "assets/js/app.js"),
                   ~s[import socket from "./socket"]
@@ -149,6 +148,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       refute File.exists?(web_path(@app, "priv/static/css/app.css"))
       refute File.exists?(web_path(@app, "priv/static/css/phoenix.css"))
       refute File.exists?(web_path(@app, "priv/static/js/phoenix.js"))
+      refute File.exists?(web_path(@app, "priv/static/js/phoenix.js.map"))
       refute File.exists?(web_path(@app, "priv/static/js/app.js"))
 
       assert File.exists?(web_path(@app, "assets/vendor"))
@@ -245,6 +245,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       refute_file web_path(@app, "priv/static/favicon.ico")
       refute_file web_path(@app, "priv/static/images/phoenix.png")
       refute_file web_path(@app, "priv/static/js/phoenix.js")
+      refute_file web_path(@app, "priv/static/js/phoenix.js.map")
       refute_file web_path(@app, "priv/static/js/app.js")
 
       # No Ecto
@@ -353,6 +354,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "priv/static/favicon.ico")
       assert_file web_path(@app, "priv/static/images/phoenix.png")
       assert_file web_path(@app, "priv/static/js/phoenix.js")
+      assert_file web_path(@app, "priv/static/js/phoenix.js.map")
       assert_file web_path(@app, "priv/static/js/app.js")
     end
   end
@@ -407,7 +409,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
       end
 
-      assert_file web_path(@app, "assets/css/app.scss"), fn file ->
+      assert_file web_path(@app, "assets/css/app.css"), fn file ->
         assert file =~ ~s[.phx-click-loading]
       end
 
@@ -516,6 +518,27 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
       assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
+    end
+  end
+
+  test "new with sqlite3 adapter" do
+    in_tmp "new with sqlite3 adapter", fn ->
+      app = "custom_path"
+      project_path = Path.join(File.cwd!(), app)
+      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "sqlite3"])
+
+      assert_file app_path(app, "mix.exs"), ":ecto_sqlite3"
+      assert_file app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.SQLite3"
+
+      assert_file root_path(app, "config/dev.exs"), [~r/database: .*_dev.db/]
+      assert_file root_path(app, "config/test.exs"), [~r/database: .*_test.db/]
+      assert_file root_path(app, "config/runtime.exs"), [~r/database: database_path/]
+
+      assert_file web_path(app, "test/support/conn_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file web_path(app, "test/support/channel_case.ex"), "Ecto.Adapters.SQL.Sandbox.start_owner"
+
+      assert_file root_path(app, ".gitignore"), "*.db"
+      assert_file root_path(app, ".gitignore"), "*.db-*"
     end
   end
 
@@ -669,10 +692,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/.gitignore", "/assets/node_modules"
         assert_file "another/.gitignore",  ~r/\n$/
         assert_file "another/assets/webpack.config.js", "js/app.js"
-        assert_file "another/assets/.babelrc", "env"
         assert_file "another/assets/static/favicon.ico"
         assert_file "another/assets/static/images/phoenix.png"
-        assert_file "another/assets/css/app.scss"
+        assert_file "another/assets/css/app.css"
         assert_file "another/assets/css/phoenix.css"
         assert_file "another/assets/js/app.js",
                     ~s[import socket from "./socket"]
@@ -686,6 +708,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
         refute File.exists? "another/priv/static/css/app.css"
         refute File.exists? "another/priv/static/js/phoenix.js"
+        refute File.exists? "another/priv/static/js/phoenix.js.map"
         refute File.exists? "another/priv/static/css/phoenix.css"
         refute File.exists? "another/priv/static/js/app.js"
 

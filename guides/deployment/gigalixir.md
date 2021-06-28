@@ -66,10 +66,12 @@ There are three different ways to deploy a Phoenix app on Gigalixir: with mix, w
 Let's create a Gigalixir application
 
 ```console
-$ gigalixir create
+$ gigalixir create -n "your_app_name"
 ```
 
-Verify it was created
+Note: the app name cannot be changed afterwards. A random name is used if you do not provide one.
+
+Verify the app was created
 
 ```console
 $ gigalixir apps
@@ -95,7 +97,7 @@ Don't forget to commit
 
 ```console
 $ git add elixir_buildpack.config phoenix_static_buildpack.config
-$ git commit -m "set elixir, erlang, and node version"
+$ git commit -m "Set Elixir, Erlang, and Node version"
 ```
 ## Making our Project ready for Gigalixir
 

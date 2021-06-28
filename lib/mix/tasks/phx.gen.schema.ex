@@ -103,7 +103,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   alias Mix.Phoenix.Schema
 
   @switches [migration: :boolean, binary_id: :boolean, table: :string,
-             web: :string, context_app: :string]
+             web: :string, context_app: :string, prefix: :string]
 
   @doc false
   def run(args) do

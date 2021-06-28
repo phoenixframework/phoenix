@@ -4,7 +4,7 @@
   <p>Peace of mind from prototype to production</p><%= if @live do %>
 
   <form phx-change="suggest" phx-submit="search">
-    <input type="text" name="q" value="<%%= @query %>" placeholder="Live dependency search" list="results" autocomplete="off"/>
+    <input type="text" name="q" value="<%%= @query %>" placeholder="Live dependency search" list="results" autocomplete="off" autofocus/>
     <datalist id="results">
       <%%= for {app, _vsn} <- @results do %>
         <option value="<%%= app %>"><%%= app %></option>
@@ -36,7 +36,7 @@
         <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
       </li>
       <li>
-        <a href="https://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on Freenode IRC</a>
+        <a href="https://web.libera.chat/#elixir">#elixir on Libera Chat (IRC)</a>
       </li>
       <li>
         <a href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>

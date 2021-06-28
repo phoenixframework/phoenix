@@ -9,7 +9,7 @@ In order to build a Phoenix application, we will need a few dependencies install
 
 Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.
 
-## Elixir 1.6 or later
+## Elixir 1.12 or later
 
 Phoenix is written in Elixir, and our application code will also be written in Elixir. We won't get far in a Phoenix app without it! The Elixir site maintains a great [Installation Page](https://elixir-lang.org/install.html) to help.
 
@@ -21,46 +21,45 @@ Here's the command to install Hex (If you have Hex already installed, it will up
 $ mix local.hex
 ```
 
-## Erlang 20 or later
+## Erlang 22 or later
 
 Elixir code compiles to Erlang byte code to run on the Erlang virtual machine. Without Erlang, Elixir code has no virtual machine to run on, so we need to install Erlang as well.
 
 When we install Elixir using instructions from the Elixir [Installation Page](https://elixir-lang.org/install.html),  we will usually get Erlang too. If Erlang was not installed along with Elixir, please see the [Erlang Instructions](https://elixir-lang.org/install.html#installing-erlang) section of the Elixir Installation Page for instructions.
 
-> A note about Erlang and Phoenix: while Phoenix itself only requires Erlang 20 or later, one of Phoenix's dependencies, [cowboy](https://github.com/ninenines/cowboy), depends on Erlang 22 or later since cowboy 2.8.0. It is recommended to either install Erlang 22 or add `{:cowboy, "~> 2.7.0"}` to your mix.exs once your app has been created.
+> A note about Erlang and Phoenix: while Phoenix itself only requires Erlang 21 or later, one of Phoenix's dependencies, [cowboy](https://github.com/ninenines/cowboy), depends on Erlang 22.
 
 ## Phoenix
 
-To check that we are on Elixir 1.6 and Erlang 20 or later, run:
+To check that we are on Elixir 1.12 and Erlang 22 or later, run:
 
 ```console
 elixir -v
-Erlang/OTP 20 [erts-9.3] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
+Erlang/OTP 22 [erts-10.7] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
-Elixir 1.6.3
+Elixir 1.12.1
 ```
 
 Once we have Elixir and Erlang, we are ready to install the Phoenix application generator:
 
 ```console
-$ mix archive.install hex phx_new 1.5.0
+$ mix archive.install hex phx_new
 ```
 
 The `phx.new` generator is now available to generate new applications in the next guide, called [Up and Running](up_and_running.html). The flags mentioned below are command line options to the generator; see all available options by calling `mix help phx.new`.
 
 ## Node.js
 
-Node.js is an optional dependency. Phoenix will use [webpack](https://webpack.js.org/) to compile static assets (JavaScript, CSS, etc), by default. Webpack uses the node package manager (npm) to install its dependencies, and npm requires Node.js.
+Node.js is an optional dependency. Phoenix will use [webpack](https://webpack.js.org) to compile static assets (JavaScript, CSS, etc), by default. Webpack uses the node package manager (npm) to install its dependencies, and npm requires Node.js.
 
 If we don't have any static assets, or we want to use another build tool, we can pass the `--no-webpack` flag when creating a new application and Node.js won't be required at all.
 
-We can get Node.js from the [download page](https://nodejs.org/en/download/). When selecting a package to download, it's important to note that Phoenix requires version 5.0.0 or greater.
-
+We can get Node.js from [nodejs.org](https://nodejs.org).  
 macOS users can also install Node.js via [homebrew](https://brew.sh/).
 
 ## PostgreSQL
 
-PostgreSQL is a relational database server. Phoenix configures applications to use it by default, but we can switch to MySQL or MSSQL by passing the `--database` flag when creating a new application.
+PostgreSQL is a relational database server. Phoenix configures applications to use it by default, but we can switch to MySQL, MSSQL, or SQLite3 by passing the `--database` flag when creating a new application.
 
 In order to talk to databases, Phoenix applications use another Elixir package, called [Ecto](https://github.com/elixir-ecto/ecto). If you don't plan to use databases in your application, you can pass the `--no-ecto` flag.
 

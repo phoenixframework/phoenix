@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   end
 
   test "assets are in sync with installer" do
-    for file <- ~w(favicon.ico phoenix.js phoenix.png) do
+    for file <- ~w(favicon.ico phoenix.js phoenix.js.map phoenix.png) do
       assert File.read!("../priv/static/#{file}") ==
         File.read!("templates/phx_static/#{file}")
     end
@@ -23,7 +23,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "returns the version" do
     Mix.Tasks.Phx.New.run(["-v"])
-    assert_received {:mix_shell, :info, ["Phoenix v" <> _]}
+    assert_received {:mix_shell, :info, ["Phoenix installer v" <> _]}
   end
 
   test "new with defaults" do
@@ -109,7 +109,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/.gitignore", "phx_blog-*.tar"
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/assets/webpack.config.js", "js/app.js"
-      assert_file "phx_blog/assets/.babelrc", "env"
       assert_file "phx_blog/config/dev.exs", fn file ->
         assert file =~ "watchers: [\n    node:"
         assert file =~ "lib/phx_blog_web/(live|views)/.*(ex)"
@@ -117,7 +116,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
       assert_file "phx_blog/assets/static/favicon.ico"
       assert_file "phx_blog/assets/static/images/phoenix.png"
-      assert_file "phx_blog/assets/css/app.scss"
+      assert_file "phx_blog/assets/css/app.css"
       assert_file "phx_blog/assets/css/phoenix.css"
       assert_file "phx_blog/assets/js/app.js",
                   ~s[import socket from "./socket"]
@@ -129,9 +128,10 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s["file:../deps/phoenix_html"]
       end
 
-      refute File.exists? "phx_blog/priv/static/css/app.scss"
+      refute File.exists? "phx_blog/priv/static/css/app.css"
       refute File.exists? "phx_blog/priv/static/css/phoenix.css"
       refute File.exists? "phx_blog/priv/static/js/phoenix.js"
+      refute File.exists? "phx_blog/priv/static/js/phoenix.js.map"
       refute File.exists? "phx_blog/priv/static/js/app.js"
 
       assert File.exists?("phx_blog/assets/vendor")
@@ -230,6 +230,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file "phx_blog/priv/static/favicon.ico"
       refute_file "phx_blog/priv/static/images/phoenix.png"
       refute_file "phx_blog/priv/static/js/phoenix.js"
+      refute_file "phx_blog/priv/static/js/phoenix.js.map"
       refute_file "phx_blog/priv/static/js/app.js"
 
       # No Ecto
@@ -364,6 +365,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/priv/static/favicon.ico"
       assert_file "phx_blog/priv/static/images/phoenix.png"
       assert_file "phx_blog/priv/static/js/phoenix.js"
+      assert_file "phx_blog/priv/static/js/phoenix.js.map"
       assert_file "phx_blog/priv/static/js/app.js"
     end
   end
@@ -403,7 +405,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
       end
 
-      assert_file "phx_blog/assets/css/app.scss", fn file ->
+      assert_file "phx_blog/assets/css/app.css", fn file ->
         assert file =~ ~s[.phx-click-loading]
       end
 
@@ -546,6 +548,26 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
       assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
       assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+    end
+  end
+
+  test "new with sqlite3 adapter" do
+    in_tmp "new with sqlite3 adapter", fn ->
+      project_path = Path.join(File.cwd!(), "custom_path")
+      Mix.Tasks.Phx.New.run([project_path, "--database", "sqlite3"])
+
+      assert_file "custom_path/mix.exs", ":ecto_sqlite3"
+      assert_file "custom_path/config/dev.exs", [~r/database: .*_dev.db/]
+      assert_file "custom_path/config/test.exs", [~r/database: .*_test.db/]
+      assert_file "custom_path/config/runtime.exs", [~r/database: database_path/]
+      assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.SQLite3"
+
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+
+      assert_file "custom_path/.gitignore", "*.db"
+      assert_file "custom_path/.gitignore", "*.db-*"
     end
   end
 

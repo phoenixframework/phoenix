@@ -28,6 +28,7 @@ defmodule Mix.Tasks.Phx.New.Ecto do
         * `postgres` - via https://github.com/elixir-ecto/postgrex
         * `mysql` - via https://github.com/elixir-ecto/myxql
         * `mssql` - via https://github.com/livehelpnow/tds
+        * `sqlite3` - via https://github.com/elixir-sqlite/ecto_sqlite3
 
       Please check the driver docs for more information
       and requirements. Defaults to "postgres".
