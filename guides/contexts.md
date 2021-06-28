@@ -1302,7 +1302,7 @@ Our last addition will be to add the "complete order" button to our cart page to
 <% end %>
 ```
 
-We added a link with `method: :post` to send a POST request to our `OrderController.create` action. If we head back to our cart page at `http://localhost:4000/cart` and complete an order, we'll by greeted by our rendered template:
+We added a link with `method: :post` to send a POST request to our `OrderController.create` action. If we head back to our cart page at `http://localhost:4000/cart` and complete an order, we'll be greeted by our rendered template:
 
 ```
 Thank you for your order!
