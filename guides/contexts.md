@@ -1121,7 +1121,7 @@ With our migration in place, let's wire up our orders and line items association
 
 We used `has_many :line_items` to associate orders and line items, just like we've seen before. Next, we used the `:through` feature of `has_many`, which allows us to instruct ecto how to associate resources across another relationship. In this case, we can associate products of an order by finding all products through associated line items. Next, let's wire up the association in the other direction in `lib/hello/orders/line_item.ex:`
 
-```elixir
+```diff
   schema "order_line_items" do
     field :price, :decimal
     field :quantity, :integer
