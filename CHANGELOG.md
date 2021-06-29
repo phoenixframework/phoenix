@@ -31,6 +31,7 @@ Phoenix v1.6 requires Elixir v1.9+.
 
 ### JavaScript Client Bug fixes
   * Bind to `beforeunload` instead of `unload` to solve Firefox connection issues
+  * Fix presence onJoin including current metadata in new presence
 
 ### Deprecations
 
