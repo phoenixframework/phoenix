@@ -82,21 +82,21 @@ describe("syncState", function(){
   it("onJoins only newly added metas", function(){
     let newState = {u3: {metas: [{id: 3, phx_ref: "3"}, {id: 3, phx_ref: "3.new"}]}}
     let state = {u3: {metas: [{id: 3, phx_ref: "3"}]}}
-    let joined = {}
-    let left = {}
+    let joined = []
+    let left = []
     let onJoin = (key, current, newPres) => {
-      joined[key] = clone({current: current, newPres: newPres})
+      joined.push([key, clone({current: current, newPres: newPres})])
     }
     let onLeave = (key, current, leftPres) => {
-      left[key] = clone({current: current, leftPres: leftPres})
+      left.push([key, clone({current: current, leftPres: leftPres})])
     }
     state = Presence.syncState(state, clone(newState), onJoin, onLeave)
     assert.deepEqual(state, newState)
-    assert.deepEqual(joined, {
-      u3: {current: {metas: [{id: 3, phx_ref: "3"}]},
-        newPres: {metas: [{id: 3, phx_ref: "3"}, {id: 3, phx_ref: "3.new"}]}}
-    })
-    assert.deepEqual(left, {})
+    assert.deepEqual(joined, [
+      ["u3", {current: {metas: [{id: 3, phx_ref: "3"}]},
+        newPres: {metas: [{id: 3, phx_ref: "3.new"}]}}]
+    ])
+    assert.deepEqual(left, [])
   })
 })
 
@@ -234,5 +234,93 @@ describe("instance", function(){
     assert.deepEqual(presence.list(listByFirst), [{id: 1, phx_ref: "1"}])
     channelStub.trigger("the_diff", {joins: {}, leaves: {user1: user1}})
     assert.deepEqual(presence.list(listByFirst), [])
+  })
+
+  it("updates existing meta for a presence update (leave + join)", function(){
+    let presence = new Presence(channelStub)
+    let onJoins = []
+    let onLeaves = []
+
+    // new connection
+    let user1 = {metas: [{id: 1, phx_ref: "1"}]}
+    let user2 = {metas: [{id: 2, name: "chris", phx_ref: "2"}]}
+    let newState = {u1: user1, u2: user2}
+
+    channelStub.trigger("presence_state", clone(newState))
+
+    presence.onJoin((id, current, newPres) => {
+      onJoins.push(clone({id, current, newPres}))
+    })
+    presence.onLeave((id, current, leftPres) => {
+      onLeaves.push(clone({id, current, leftPres}))
+    })
+
+    assert.deepEqual(presence.list((id, {metas: metas}) => metas),
+      [
+        [
+          {
+            "id": 1,
+            "phx_ref": "1"
+          }
+        ],
+        [
+          {
+            "id": 2,
+            "name": "chris",
+            "phx_ref": "2"
+          }
+        ]
+      ]
+    )
+
+    let leaves = {u2: user2}
+    let joins = {u2: {metas: [{id: 2, name: "chris.2", phx_ref: "2.2", phx_ref_prev: "2"}]}}
+    channelStub.trigger("presence_diff", {joins: joins, leaves: leaves})
+
+    assert.deepEqual(presence.list((id, {metas: metas}) => metas),
+      [
+        [
+          {
+            id: 1,
+            phx_ref: '1'
+          }
+        ],
+        [
+          {
+            id: 2,
+            name: 'chris.2',
+            phx_ref: '2.2',
+            phx_ref_prev: '2'
+          }
+        ]
+      ]
+    )
+
+    assert.deepEqual(onJoins,
+      [
+        {
+          "current": {
+            "metas": [
+              {
+                "id": 2,
+                "name": "chris",
+                "phx_ref": "2"
+              }
+            ]
+          },
+          "id": "u2",
+          "newPres": {
+            "metas": [
+              {
+                "id": 2,
+                "name": "chris.2",
+                "phx_ref": "2.2",
+                "phx_ref_prev": "2"
+              }
+            ]
+          }
+        }
+      ]
+    )
   })
 })
