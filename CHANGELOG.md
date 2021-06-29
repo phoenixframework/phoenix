@@ -22,6 +22,7 @@ Phoenix v1.6 requires Elixir v1.9+.
 ### JavaScript Client Enhancements
   * Add new `replaceTransport` function to socket with extended `onError` API to allow simplified LongPoll fallback
   * Fire each event in a separate task for the LongPoll transport to fix ordering
+  * Optimize presence syncing
 
 ### Bug fixes
 
