@@ -2,7 +2,13 @@ import assert from "assert"
 
 import {Presence} from "../js/phoenix"
 
-let clone = (obj) => { return JSON.parse(JSON.stringify(obj)) }
+let clone = (obj) => {
+  let cloned = JSON.parse(JSON.stringify(obj))
+  Object.entries(obj).map(([key, val]) => {
+    if(val === undefined){ cloned[key] = undefined }
+  })
+  return cloned
+}
 
 let fixtures = {
   joins(){
@@ -60,9 +66,6 @@ describe("syncState", function(){
     let onLeave = (key, current, leftPres) => {
       left[key] = {current: current, leftPres: leftPres}
     }
-    let stateBefore = clone(state)
-    Presence.syncState(state, newState, onJoin, onLeave)
-    assert.deepEqual(state, stateBefore)
 
     state = Presence.syncState(state, newState, onJoin, onLeave)
     assert.deepEqual(state, newState)
@@ -82,12 +85,12 @@ describe("syncState", function(){
     let joined = {}
     let left = {}
     let onJoin = (key, current, newPres) => {
-      joined[key] = {current: current, newPres: newPres}
+      joined[key] = clone({current: current, newPres: newPres})
     }
     let onLeave = (key, current, leftPres) => {
-      left[key] = {current: current, leftPres: leftPres}
+      left[key] = clone({current: current, leftPres: leftPres})
     }
-    state = Presence.syncState(state, newState, onJoin, onLeave)
+    state = Presence.syncState(state, clone(newState), onJoin, onLeave)
     assert.deepEqual(state, newState)
     assert.deepEqual(joined, {
       u3: {current: {metas: [{id: 3, phx_ref: "3"}]},
@@ -100,11 +103,7 @@ describe("syncState", function(){
 describe("syncDiff", function(){
   it("syncs empty state", function(){
     let joins = {u1: {metas: [{id: 1, phx_ref: "1"}]}}
-    let state = {}
-    Presence.syncDiff(state, {joins: joins, leaves: {}})
-    assert.deepEqual(state, {})
-
-    state = Presence.syncDiff(state, {
+    let state = Presence.syncDiff({}, {
       joins: joins,
       leaves: {}
     })
@@ -182,10 +181,10 @@ describe("instance", function(){
     let onLeaves = []
 
     presence.onJoin((id, current, newPres) => {
-      onJoins.push({id, current, newPres})
+      onJoins.push(clone({id, current, newPres}))
     })
     presence.onLeave((id, current, leftPres) => {
-      onLeaves.push({id, current, leftPres})
+      onLeaves.push(clone({id, current, leftPres}))
     })
 
     // new connection

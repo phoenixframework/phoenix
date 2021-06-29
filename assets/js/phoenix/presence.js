@@ -106,8 +106,8 @@ export default class Presence {
    *
    * @returns {Presence}
    */
-  static syncDiff(currentState, {joins, leaves}, onJoin, onLeave){
-    let state = this.clone(currentState)
+  static syncDiff(state, diff, onJoin, onLeave){
+    let {joins, leaves} = this.clone(diff)
     if(!onJoin){ onJoin = function (){ } }
     if(!onLeave){ onLeave = function (){ } }
 
