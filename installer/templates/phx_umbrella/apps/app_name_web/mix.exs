@@ -47,8 +47,7 @@ defmodule <%= @web_namespace %>.MixProject do
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},<%= if @gettext do %>
       {:gettext, "~> 0.11"},<% end %><%= if @app_name != @web_app_name do %>
-      {:<%= @app_name %>, in_umbrella: true},<% end %><%= if @mailer do %>
-      {:swoosh, "~> 1.3"},<% end %>
+      {:<%= @app_name %>, in_umbrella: true},<% end %>
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"}
     ]

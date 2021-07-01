@@ -1,7 +1,7 @@
 defmodule Phx.New.Umbrella do
   @moduledoc false
   use Phx.New.Generator
-  alias Phx.New.{Ecto, Web, Project}
+  alias Phx.New.{Ecto, Web, Project, Mailer}
 
   template :new, [
     {:eex,    "phx_umbrella/gitignore",               :project, ".gitignore"},
@@ -58,5 +58,14 @@ defmodule Phx.New.Umbrella do
     project
     |> Web.generate()
     |> Ecto.generate()
+    |> maybe_generate_mailer()
+  end
+
+  defp maybe_generate_mailer(project) do
+    if Project.mailer?(project) do
+      Mailer.generate(project)
+    else
+      project
+    end
   end
 end

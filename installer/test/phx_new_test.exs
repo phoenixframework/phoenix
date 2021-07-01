@@ -196,22 +196,9 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "{:swoosh, \"~> 1.3\"}"
       end
 
-      assert_file "phx_blog/lib/phx_blog_web/mailer.ex", fn file ->
-        assert file =~ "defmodule PhxBlogWeb.Mailer do"
+      assert_file "phx_blog/lib/phx_blog/mailer.ex", fn file ->
+        assert file =~ "defmodule PhxBlog.Mailer do"
         assert file =~ "use Swoosh.Mailer, otp_app: :phx_blog"
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web/emails/user_email.ex", fn file ->
-        assert file =~ "defmodule PhxBlogWeb.Emails.UserEmail do"
-        assert file =~ "## Examples"
-        assert file =~ "def welcome(user) do"
-      end
-
-      assert_file "phx_blog/test/phx_blog_web/emails/user_email_test.exs", fn file ->
-        assert file =~ "defmodule PhxBlogWeb.Emails.UserEmailTest do"
-        assert file =~ "use ExUnit.Case, async: true"
-        assert file =~ "import Swoosh.TestAssertions"
-        assert file =~ "test \"welcome/1"
       end
 
       assert_file "phx_blog/config/config.exs", fn file ->
@@ -349,8 +336,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       # No mailer or emails
-      refute File.exists? "phx_blog/lib/phx_blog_web/mailer.ex"
-      refute File.exists? "phx_blog/lib/phx_blog_web/emails"
+      refute File.exists? "phx_blog/lib/phx_blog/mailer.ex"
 
       assert_file "phx_blog/config/config.exs", fn file ->
         refute file =~ "config :swoosh"

@@ -98,11 +98,7 @@ defmodule Phx.New.Single do
   ]
 
   template :mailer, [
-    {:eex,  "phx_web/mailer.ex",                   :web, "lib/:lib_web_name/mailer.ex"},
-    {:keep, "phx_web/emails",                      :web, "lib/:lib_web_name/emails"},
-    {:eex,  "phx_web/emails/user_email.ex",        :web, "lib/:lib_web_name/emails/user_email.ex"},
-    {:keep, "phx_test/emails",                     :web, "test/:lib_web_name/emails"},
-    {:eex,  "phx_test/emails/user_email_test.exs", :web, "test/:lib_web_name/emails/user_email_test.exs"}
+    {:eex,  "phx_mailer/lib/app_name/mailer.ex", :app, "lib/:app/mailer.ex"}
   ]
 
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do
