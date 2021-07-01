@@ -71,6 +71,10 @@ $ npm install
 $ npm run watch
 ```
 
+## Known issues
+
+There some last versions of NodeJS having issues with `npm install`, they might be resolved using LTS version of NodeJS.
+
 ## Important links
 
 * [#elixir][1] on [Libera][2] IRC
