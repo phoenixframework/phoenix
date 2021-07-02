@@ -4,7 +4,11 @@ import Config
 # you can enable the server option below.
 config :<%= @app_name %>, <%= @endpoint_module %>,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  server: false
+  server: false<%= if @mailer do %>
+
+# In test we don't send emails.
+config :<%= @app_name %>, <%= @web_namespace %>.Mailer,
+  adapter: Swoosh.Adapters.Test<% end %>
 
 # Print only warnings and errors during test
 config :logger, level: :warn

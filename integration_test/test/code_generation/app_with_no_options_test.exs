@@ -11,6 +11,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
           "--no-webpack",
           "--no-ecto",
           "--no-gettext",
+          "--no-mailer",
           "--no-dashboard"
         ])
 
@@ -27,6 +28,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
           "--no-webpack",
           "--no-ecto",
           "--no-gettext",
+          "--no-mailer",
           "--no-dashboard"
         ])
 

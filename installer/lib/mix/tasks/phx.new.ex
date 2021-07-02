@@ -47,6 +47,8 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-dashboard` - do not include Phoenix.LiveDashboard
 
+    * `--no-mailer` - do not generate Swoosh mailer files.
+
     * `--binary-id` - use `binary_id` as primary key type
       in Ecto schemas
 
@@ -108,7 +110,7 @@ defmodule Mix.Tasks.Phx.New do
              database: :string, binary_id: :boolean, html: :boolean,
              gettext: :boolean, umbrella: :boolean, verbose: :boolean,
              live: :boolean, dashboard: :boolean, install: :boolean,
-             prefix: :string]
+             prefix: :string, mailer: :boolean]
 
   @impl true
   def run([version]) when version in ~w(-v --version) do

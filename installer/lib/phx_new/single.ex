@@ -97,6 +97,10 @@ defmodule Phx.New.Single do
     {:text, "phx_static/favicon.ico", :web, "priv/static/favicon.ico"}
   ]
 
+  template :mailer, [
+    {:eex,  "phx_mailer/lib/app_name/mailer.ex", :app, "lib/:app/mailer.ex"}
+  ]
+
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do
     %Project{project | project_path: project.base_path}
     |> put_app()
@@ -136,6 +140,8 @@ defmodule Phx.New.Single do
       Project.html?(project) -> gen_html(project)
       true -> :noop
     end
+
+    if Project.mailer?(project), do: gen_mailer(project)
 
     if Project.gettext?(project), do: gen_gettext(project)
 
@@ -190,6 +196,10 @@ defmodule Phx.New.Single do
 
   def gen_bare(%Project{} = project) do
     copy_from project, __MODULE__, :bare
+  end
+
+  def gen_mailer(%Project{} = project) do
+    copy_from project, __MODULE__, :mailer
   end
 
   def assert_live_switches!(project) do

@@ -45,5 +45,18 @@ defmodule <%= @web_namespace %>.Router do
       pipe_through [:fetch_session, :protect_from_forgery]<% end %>
       live_dashboard "/dashboard", metrics: <%= @web_namespace %>.Telemetry
     end
+  end<% end %><%= if @mailer do %>
+
+  # Enables the Swoosh mailbox preview in development.
+  #
+  # Note that preview only shows emails that were sent by the same
+  # node running the Phoenix server.
+  if Mix.env() == :dev do
+    scope "/dev" do<%= if @html do %>
+      pipe_through :browser<% else %>
+      pipe_through [:fetch_session, :protect_from_forgery]<% end %>
+
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
   end<% end %>
 end
