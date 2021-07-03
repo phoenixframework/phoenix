@@ -7,7 +7,7 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
   server: false<%= if @mailer do %>
 
 # In test we don't send emails.
-config :<%= @app_name %>, <%= @web_namespace %>.Mailer,
+config :<%= @app_name %>, <%= @app_module %>.Mailer,
   adapter: Swoosh.Adapters.Test<% end %>
 
 # Print only warnings and errors during test
