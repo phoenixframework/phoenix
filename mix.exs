@@ -63,7 +63,7 @@ defmodule Phoenix.MixProject do
     [
       {:plug, "~> 1.10"},
       {:plug_crypto, "~> 1.1.2 or ~> 1.2"},
-      {:telemetry, "~> 0.4"},
+      {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.0"},
 
       # Optional deps
