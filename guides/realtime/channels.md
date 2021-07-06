@@ -270,7 +270,7 @@ In `lib/hello_web/templates/page/index.html.eex`, we'll replace the existing cod
 
 ```html
 <div id="messages" role="log" aria-live="polite"></div>
-<input id="chat-input" type="text"></input>
+<input id="chat-input" type="text">
 ```
 
 Now let's add a couple of event listeners to `assets/js/socket.js`:
