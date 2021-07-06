@@ -203,15 +203,11 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/config/config.exs", fn file ->
         assert file =~ "config :swoosh"
-        assert file =~ "config :phx_blog, PhxBlogWeb.Mailer, adapter: Swoosh.Adapters.SMTP"
+        assert file =~ "config :phx_blog, PhxBlog.Mailer, adapter: Swoosh.Adapters.Local"
       end
 
       assert_file "phx_blog/config/test.exs", fn file ->
-        assert file =~ "config :phx_blog, PhxBlogWeb.Mailer, adapter: Swoosh.Adapters.Test"
-      end
-
-      assert_file "phx_blog/config/dev.exs", fn file ->
-        assert file =~ "config :phx_blog, PhxBlogWeb.Mailer, adapter: Swoosh.Adapters.Local"
+        assert file =~ "config :phx_blog, PhxBlog.Mailer, adapter: Swoosh.Adapters.Test"
       end
 
       # Install dependencies?
@@ -340,7 +336,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/config/config.exs", fn file ->
         refute file =~ "config :swoosh"
-        refute file =~ "config :phx_blog, PhxBlogWeb.Mailer, adapter: Swoosh.Adapters.SMTP"
+        refute file =~ "config :phx_blog, PhxBlog.Mailer, adapter: Swoosh.Adapters.Local"
       end
     end
   end
