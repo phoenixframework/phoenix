@@ -11,6 +11,7 @@ defmodule Mix.Phoenix.Context do
             web_module: nil,
             basename: nil,
             file: nil,
+            test_dir: nil,
             test_file: nil,
             test_fixtures_file: nil,
             dir: nil,
@@ -20,6 +21,10 @@ defmodule Mix.Phoenix.Context do
 
   def valid?(context) do
     context =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
+  end
+
+  def new(context_name, opts) do
+    new(context_name, %Schema{}, opts)
   end
 
   def new(context_name, %Schema{} = schema, opts) do
@@ -46,6 +51,7 @@ defmodule Mix.Phoenix.Context do
       web_module: web_module(),
       basename: basename,
       file: file,
+      test_dir: test_dir,
       test_file: test_file,
       test_fixtures_file: test_fixtures_file,
       dir: dir,
