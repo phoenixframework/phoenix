@@ -222,6 +222,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       {:eex, "confirmation_new.html.eex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_confirmation", "new.html.eex"])},
       {:eex, "confirmation_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller.ex"])},
       {:eex, "confirmation_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller_test.exs"])},
+      {:eex, "live_auth.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_live_auth.ex"])},
       {:eex, "_menu.html.eex", Path.join([web_prefix, "templates", "layout", "_#{schema.singular}_menu.html.eex"])},
       {:eex, "registration_new.html.eex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_registration", "new.html.eex"])},
       {:eex, "registration_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_registration_controller.ex"])},
