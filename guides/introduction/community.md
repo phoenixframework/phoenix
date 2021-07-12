@@ -21,6 +21,7 @@ There are a number of places to connect with community members at all experience
   * The source for these guides is [on GitHub](https://github.com/phoenixframework/phoenix/tree/master/guides). To help improve the guides, please report an [issue](https://github.com/phoenixframework/phoenix/issues) or open a [pull request](https://github.com/phoenixframework/phoenix/pulls).
 
 ## Books
+  * [Programming Phoenix LiveView - Interactive Elixir Web Programming Without Writing Any JavaScript - 2021 (by Bruce Tate and Sophie DeBenedetto)](https://pragprog.com/titles/liveview/programming-phoenix-liveview/)
 
   * [Real-Time Phoenix - Build Highly Scalable Systems with Channels (by Stephen Bussey - 2020)](https://pragprog.com/book/sbsockets/real-time-phoenix)
 
