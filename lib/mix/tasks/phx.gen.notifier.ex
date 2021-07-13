@@ -144,10 +144,6 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
     In this example the notifier will be called `UserNotifier` inside
     the Accounts context. The functions `deliver_welcome/1` and
     `reset_password/1` will be created inside this notifier.
-
-    The context serves as the API boundary for the given resource.
-    Multiple resources may belong to a context and a resource may be
-    split over distinct contexts (such as Accounts.User and Payments.User).
     """)
   end
 
