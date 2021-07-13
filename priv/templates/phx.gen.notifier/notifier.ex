@@ -1,4 +1,4 @@
-defmodule <%= inspect context.module %>.<%= inflections[:alias] %>Notifier do
+defmodule <%= inspect context.module %> do
   import Swoosh.Email
   alias <%= inspect context.base_module %>.Mailer<%= for message <- notifier_messages do %>
 

@@ -47,7 +47,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
 
     paths = Mix.Phoenix.generator_paths()
 
-    prompt_for_conflicts(context, binding)
+    prompt_for_conflicts(context)
 
     copy_new_files(context, binding, paths)
   end
@@ -57,8 +57,8 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
     {opts, parsed, _} = parse_opts(args)
     [context_name, notifier_name | notifier_messages] = validate_args!(parsed, help)
 
-    notifier_module = inspect(Module.concat(context_name, notifier_name))
-    context = Context.new(context_name, opts)
+    notifier_module = inspect(Module.concat(context_name, "#{notifier_name}Notifier"))
+    context = Context.new(notifier_module, opts)
 
     {context, notifier_module, notifier_messages}
   end
@@ -145,27 +145,23 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
   end
 
   defp copy_new_files(%Context{} = context, binding, paths) do
-    files = files_to_be_generated(context, binding)
+    files = files_to_be_generated(context)
 
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.notifier", binding, files)
 
     context
   end
 
-  defp files_to_be_generated(%Context{} = context, binding) do
-    singular = binding[:inflections][:singular]
-
-    test_dir = String.replace(context.test_file, "_test.exs", "")
-
+  defp files_to_be_generated(%Context{} = context) do
     [
-      {:eex, "notifier.ex", Path.join([context.dir, "#{singular}_notifier.ex"])},
-      {:eex, "notifier_test.exs", Path.join([test_dir, "#{singular}_notifier_test.exs"])}
+      {:eex, "notifier.ex", context.file},
+      {:eex, "notifier_test.exs", context.test_file}
     ]
   end
 
-  defp prompt_for_conflicts(context, binding) do
+  defp prompt_for_conflicts(context) do
     context
-    |> files_to_be_generated(binding)
+    |> files_to_be_generated()
     |> Mix.Phoenix.prompt_for_conflicts()
   end
 end
