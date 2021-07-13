@@ -155,9 +155,11 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
   defp files_to_be_generated(%Context{} = context, binding) do
     singular = binding[:inflections][:singular]
 
+    test_dir = String.replace(context.test_file, "_test.exs", "")
+
     [
       {:eex, "notifier.ex", Path.join([context.dir, "#{singular}_notifier.ex"])},
-      {:eex, "notifier_test.exs", Path.join([context.test_dir, "#{singular}_notifier_test.exs"])}
+      {:eex, "notifier_test.exs", Path.join([test_dir, "#{singular}_notifier_test.exs"])}
     ]
   end
 
