@@ -27,17 +27,6 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
 
   alias Mix.Phoenix.Context
 
-  defmodule Notifier do
-    def valid?(notifier) do
-      notifier =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
-    end
-
-    # Like a valid function name, but without "?" and "!"
-    def message_valid?(message_name) do
-      message_name =~ ~r/^[a-z]+(\_[a-z0-9]+)*$/
-    end
-  end
-
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
@@ -98,7 +87,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
           "Expected the context, #{inspect(context)}, to be a valid module name"
         )
 
-      not Notifier.valid?(notifier) ->
+      not valid_notifier?(notifier) ->
         help.raise_with_help(
           "Expected the notifier, #{inspect(notifier)}, to be a valid module name"
         )
@@ -113,7 +102,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
           "Cannot generate notifier #{notifier} because it has the same name as the application"
         )
 
-      Enum.any?(messages, &(!Notifier.message_valid?(&1))) ->
+      Enum.any?(messages, &(!valid_message?(&1))) ->
         help.raise_with_help(
           "Cannot generate notifier #{inspect(notifier)} because one of the messages is invalid: #{Enum.map_join(messages, ", ", &inspect/1)}"
         )
@@ -125,6 +114,14 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
 
   defp validate_args!(_, help) do
     help.raise_with_help("Invalid arguments")
+  end
+
+  defp valid_notifier?(notifier) do
+    notifier =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
+  end
+
+  defp valid_message?(message_name) do
+    message_name =~ ~r/^[a-z]+(\_[a-z0-9]+)*$/
   end
 
   @doc false

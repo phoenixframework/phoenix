@@ -20,10 +20,10 @@ defmodule Mix.Tasks.Phx.Gen.NotifierTest do
         assert file =~ ~S|alias Phoenix.Mailer|
 
         assert file =~ ~S|def deliver_welcome_user(%{name: name, email: email}) do|
-        assert file =~ ~S|from({"Phoenix Team", "team@phoenixframework.org"})|
+        assert file =~ ~S|from({"Phoenix Team", "team@example.com"})|
 
         assert file =~ ~S|def deliver_reset_password(%{name: name, email: email}) do|
-        assert file =~ ~S|from({"Phoenix Team", "team@phoenixframework.org"})|
+        assert file =~ ~S|from({"Phoenix Team", "team@example.com"})|
 
         assert file =~ ~S|Mailer.deliver()|
       end)
@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Phx.Gen.NotifierTest do
         assert file =~ ~S|alias Phoenix.Mailer|
 
         assert file =~ ~S|def deliver_account_confirmation(%{name: name, email: email}) do|
-        assert file =~ ~S|from({"Phoenix Team", "team@phoenixframework.org"})|
+        assert file =~ ~S|from({"Phoenix Team", "team@example.com"})|
 
         refute file =~ ~S|def deliver_welcome_user(%{name: name, email: email}) do|
         refute file =~ ~S|def deliver_reset_password(%{name: name, email: email}) do|
@@ -72,10 +72,10 @@ defmodule Mix.Tasks.Phx.Gen.NotifierTest do
         assert file =~ ~S|alias Phoenix.Mailer|
 
         assert file =~ ~S|def deliver_welcome_user(%{name: name, email: email}) do|
-        assert file =~ ~S|from({"Phoenix Team", "team@phoenixframework.org"})|
+        assert file =~ ~S|from({"Phoenix Team", "team@example.com"})|
 
         assert file =~ ~S|def deliver_reset_password(%{name: name, email: email}) do|
-        assert file =~ ~S|from({"Phoenix Team", "team@phoenixframework.org"})|
+        assert file =~ ~S|from({"Phoenix Team", "team@example.com"})|
 
         assert file =~ ~S|Mailer.deliver()|
       end)
