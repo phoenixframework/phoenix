@@ -22,6 +22,10 @@ defmodule Mix.Phoenix.Context do
     context =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
   end
 
+  def new(context_name, opts) do
+    new(context_name, %Schema{}, opts)
+  end
+
   def new(context_name, %Schema{} = schema, opts) do
     ctx_app   = opts[:context_app] || Mix.Phoenix.context_app()
     base      = Module.concat([Mix.Phoenix.context_base(ctx_app)])
