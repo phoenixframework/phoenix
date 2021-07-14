@@ -20,23 +20,21 @@
     "@babel/preset-env": "7.14.2",
     "@babel/register": "7.13.16",
     "documentation": "^9.0.0",
+    "esbuild": "^0.12.15",
     "eslint": "7.27.0",
     "eslint-plugin-mocha": "9.0.0",
-    "expose-loader": "3.0.0",
     "growl": "~> 1.10.0",
     "jsdom": "9.8.3",
     "jsdom-global": "2.1.0",
     "mocha": "^6.2.2",
     "mock-socket": "^9.0.0",
-    "sinon": "^9.0.1",
-    "webpack": "5.37.1",
-    "webpack-cli": "^4.7.0"
+    "sinon": "^9.0.1"
   },
   "sideEffects": false,
   "scripts": {
     "test": "mocha ./test/**/*.js --exit -r @babel/register -r jsdom-global/register",
     "docs": "documentation build js/index.js -f html -o ../doc/js",
-    "build": "webpack --mode production",
-    "watch": "webpack --mode development --watch"
+    "build": "esbuild ./js/phoenix --bundle  --minify --sourcemap --format=esm --outfile=../priv/static/phoenix.js",
+    "watch": "esbuild ./js/phoenix --bundle --sourcemap --format=esm --outfile=../priv/static/phoenix.js --watch"
   }
 }
