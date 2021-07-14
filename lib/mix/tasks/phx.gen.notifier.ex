@@ -1,8 +1,8 @@
 defmodule Mix.Tasks.Phx.Gen.Notifier do
-  @shortdoc "Generates a notifier to send emails using the mailer"
+  @shortdoc "Generates a notifier that delivers emails by default"
 
   @moduledoc """
-  Generates a notifier to send emails using the mailer
+  Generates a notifier that delivers emails by default.
 
       mix phx.gen.notifier Accounts User welcome_user reset_password confirmation_instructions
 
