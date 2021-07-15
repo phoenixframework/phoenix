@@ -192,12 +192,13 @@ COPY priv priv
 # your Elixir templates, you will need to move the asset compilation step
 # down so that `lib` is available.
 COPY assets assets
+COPY lib lib
 # use webpack to compile npm dependencies - https://www.npmjs.com/package/webpack-deploy
 RUN npm run --prefix ./assets deploy
 RUN mix phx.digest
 
 # compile and build the release
-COPY lib lib
+
 RUN mix compile
 # changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/
