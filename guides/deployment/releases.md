@@ -198,7 +198,6 @@ RUN npm run --prefix ./assets deploy
 RUN mix phx.digest
 
 # compile and build the release
-
 RUN mix compile
 # changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/
