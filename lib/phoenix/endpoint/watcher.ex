@@ -14,9 +14,9 @@ defmodule Phoenix.Endpoint.Watcher do
     Task.start_link(__MODULE__, :watch, [to_string(cmd), args])
   end
 
-  def watch(_cmd, args) when is_function(args, 0) do
+  def watch(_cmd, {mod, fun, args}) do
     try do
-      args.()
+      apply(mod, fun, args)
     catch
       kind, reason ->
         # The function returned a non-zero exit code.
