@@ -59,6 +59,12 @@ defmodule Phoenix.Endpoint.Watcher do
 
   # We specially handle Node.js to make sure we
   # provide a good getting started experience.
+  # Although we assume folks know what they're doing
+  # if they are calling `node -r some_required.js ...`
+  defp validate("node", ["-r" | _], _opts) do
+    :ok
+  end
+
   defp validate("node", [script | _], merged_opts) do
     script_path = Path.expand(script, cd(merged_opts))
 
