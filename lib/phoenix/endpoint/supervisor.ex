@@ -203,17 +203,10 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp watcher_children(_mod, conf, server?) do
     if server? do
-      Enum.map(conf[:watchers], fn {cmd, args} ->
-        {Phoenix.Endpoint.Watcher, watcher_args(cmd, args)}
-      end)
+      Enum.map(conf[:watchers], &{Phoenix.Endpoint.Watcher, &1})
     else
       []
     end
-  end
-
-  defp watcher_args(cmd, cmd_args) do
-    {args, opts} = Enum.split_while(cmd_args, &is_binary(&1))
-    {cmd, args, opts}
   end
 
   @doc """
