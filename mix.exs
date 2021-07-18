@@ -85,7 +85,7 @@ defmodule Phoenix.MixProject do
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
 
       # Dev dependencies
-      {:esbuild, github: "phoenixframework/esbuild", only: :dev}
+      {:esbuild, "~> 0.1", path: "../esbuild/", only: :dev}
     ]
   end
 
@@ -195,8 +195,8 @@ defmodule Phoenix.MixProject do
   defp aliases do
     [
       docs: ["docs", &generate_js_docs/1],
-      "assets.build": ["esbuild default --minify"],
-      "assets.watch": ["esbuild default --watch"]
+      "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min"],
+      "assets.watch": "esbuild module --watch"
     ]
   end
 

@@ -1,2 +1,1098 @@
-var C=a=>typeof a=="function"?a:function(){return a};var U=typeof self!="undefined"?self:null,R=typeof window!="undefined"?window:null,S=U||R||void 0,N="2.0.0",p={connecting:0,open:1,closing:2,closed:3},w=1e4,O=1e3,d={closed:"closed",errored:"errored",joined:"joined",joining:"joining",leaving:"leaving"},f={close:"phx_close",error:"phx_error",join:"phx_join",reply:"phx_reply",leave:"phx_leave"},H=[f.close,f.error,f.join,f.reply,f.leave],L={longpoll:"longpoll",websocket:"websocket"};var v=class{constructor(e,t,i,s){this.channel=e,this.event=t,this.payload=i||function(){return{}},this.receivedResp=null,this.timeout=s,this.timeoutTimer=null,this.recHooks=[],this.sent=!1}resend(e){this.timeout=e,this.reset(),this.send()}send(){this.hasReceived("timeout")||(this.startTimeout(),this.sent=!0,this.channel.socket.push({topic:this.channel.topic,event:this.event,payload:this.payload(),ref:this.ref,join_ref:this.channel.joinRef()}))}receive(e,t){return this.hasReceived(e)&&t(this.receivedResp.response),this.recHooks.push({status:e,callback:t}),this}reset(){this.cancelRefEvent(),this.ref=null,this.refEvent=null,this.receivedResp=null,this.sent=!1}matchReceive({status:e,response:t,_ref:i}){this.recHooks.filter(s=>s.status===e).forEach(s=>s.callback(t))}cancelRefEvent(){!this.refEvent||this.channel.off(this.refEvent)}cancelTimeout(){clearTimeout(this.timeoutTimer),this.timeoutTimer=null}startTimeout(){this.timeoutTimer&&this.cancelTimeout(),this.ref=this.channel.socket.makeRef(),this.refEvent=this.channel.replyEventName(this.ref),this.channel.on(this.refEvent,e=>{this.cancelRefEvent(),this.cancelTimeout(),this.receivedResp=e,this.matchReceive(e)}),this.timeoutTimer=setTimeout(()=>{this.trigger("timeout",{})},this.timeout)}hasReceived(e){return this.receivedResp&&this.receivedResp.status===e}trigger(e,t){this.channel.trigger(this.refEvent,{status:e,response:t})}};var j=class{constructor(e,t){this.callback=e,this.timerCalc=t,this.timer=null,this.tries=0}reset(){this.tries=0,clearTimeout(this.timer)}scheduleTimeout(){clearTimeout(this.timer),this.timer=setTimeout(()=>{this.tries=this.tries+1,this.callback()},this.timerCalc(this.tries+1))}};var A=class{constructor(e,t,i){this.state=d.closed,this.topic=e,this.params=C(t||{}),this.socket=i,this.bindings=[],this.bindingRef=0,this.timeout=this.socket.timeout,this.joinedOnce=!1,this.joinPush=new v(this,f.join,this.params,this.timeout),this.pushBuffer=[],this.stateChangeRefs=[],this.rejoinTimer=new j(()=>{this.socket.isConnected()&&this.rejoin()},this.socket.rejoinAfterMs),this.stateChangeRefs.push(this.socket.onError(()=>this.rejoinTimer.reset())),this.stateChangeRefs.push(this.socket.onOpen(()=>{this.rejoinTimer.reset(),this.isErrored()&&this.rejoin()})),this.joinPush.receive("ok",()=>{this.state=d.joined,this.rejoinTimer.reset(),this.pushBuffer.forEach(s=>s.send()),this.pushBuffer=[]}),this.joinPush.receive("error",()=>{this.state=d.errored,this.socket.isConnected()&&this.rejoinTimer.scheduleTimeout()}),this.onClose(()=>{this.rejoinTimer.reset(),this.socket.hasLogger()&&this.socket.log("channel",`close ${this.topic} ${this.joinRef()}`),this.state=d.closed,this.socket.remove(this)}),this.onError(s=>{this.socket.hasLogger()&&this.socket.log("channel",`error ${this.topic}`,s),this.isJoining()&&this.joinPush.reset(),this.state=d.errored,this.socket.isConnected()&&this.rejoinTimer.scheduleTimeout()}),this.joinPush.receive("timeout",()=>{this.socket.hasLogger()&&this.socket.log("channel",`timeout ${this.topic} (${this.joinRef()})`,this.joinPush.timeout),new v(this,f.leave,C({}),this.timeout).send(),this.state=d.errored,this.joinPush.reset(),this.socket.isConnected()&&this.rejoinTimer.scheduleTimeout()}),this.on(f.reply,(s,r)=>{this.trigger(this.replyEventName(r),s)})}join(e=this.timeout){if(this.joinedOnce)throw new Error("tried to join multiple times. 'join' can only be called a single time per channel instance");return this.timeout=e,this.joinedOnce=!0,this.rejoin(),this.joinPush}onClose(e){this.on(f.close,e)}onError(e){return this.on(f.error,t=>e(t))}on(e,t){let i=this.bindingRef++;return this.bindings.push({event:e,ref:i,callback:t}),i}off(e,t){this.bindings=this.bindings.filter(i=>!(i.event===e&&(typeof t=="undefined"||t===i.ref)))}canPush(){return this.socket.isConnected()&&this.isJoined()}push(e,t,i=this.timeout){if(t=t||{},!this.joinedOnce)throw new Error(`tried to push '${e}' to '${this.topic}' before joining. Use channel.join() before pushing events`);let s=new v(this,e,function(){return t},i);return this.canPush()?s.send():(s.startTimeout(),this.pushBuffer.push(s)),s}leave(e=this.timeout){this.rejoinTimer.reset(),this.joinPush.cancelTimeout(),this.state=d.leaving;let t=()=>{this.socket.hasLogger()&&this.socket.log("channel",`leave ${this.topic}`),this.trigger(f.close,"leave")},i=new v(this,f.leave,C({}),e);return i.receive("ok",()=>t()).receive("timeout",()=>t()),i.send(),this.canPush()||i.trigger("ok",{}),i}onMessage(e,t,i){return t}isLifecycleEvent(e){return H.indexOf(e)>=0}isMember(e,t,i,s){return this.topic!==e?!1:s&&s!==this.joinRef()&&this.isLifecycleEvent(t)?(this.socket.hasLogger()&&this.socket.log("channel","dropping outdated message",{topic:e,event:t,payload:i,joinRef:s}),!1):!0}joinRef(){return this.joinPush.ref}rejoin(e=this.timeout){this.isLeaving()||(this.socket.leaveOpenTopic(this.topic),this.state=d.joining,this.joinPush.resend(e))}trigger(e,t,i,s){let r=this.onMessage(e,t,i,s);if(t&&!r)throw new Error("channel onMessage callbacks must return the payload, modified or unmodified");let o=this.bindings.filter(n=>n.event===e);for(let n=0;n<o.length;n++)o[n].callback(r,i,s||this.joinRef())}replyEventName(e){return`chan_reply_${e}`}isClosed(){return this.state===d.closed}isErrored(){return this.state===d.errored}isJoined(){return this.state===d.joined}isJoining(){return this.state===d.joining}isLeaving(){return this.state===d.leaving}};var m=class{constructor(){this.states={complete:4}}static request(e,t,i,s,r,o,n){if(S.XDomainRequest){let h=new S.XDomainRequest;this.xdomainRequest(h,e,t,s,r,o,n)}else{let h=new S.XMLHttpRequest;this.xhrRequest(h,e,t,i,s,r,o,n)}}static xdomainRequest(e,t,i,s,r,o,n){e.timeout=r,e.open(t,i),e.onload=()=>{let h=this.parseJSON(e.responseText);n&&n(h)},o&&(e.ontimeout=o),e.onprogress=()=>{},e.send(s)}static xhrRequest(e,t,i,s,r,o,n,h){e.open(t,i,!0),e.timeout=o,e.setRequestHeader("Content-Type",s),e.onerror=()=>{h&&h(null)},e.onreadystatechange=()=>{if(e.readyState===this.states.complete&&h){let l=this.parseJSON(e.responseText);h(l)}},n&&(e.ontimeout=n),e.send(r)}static parseJSON(e){if(!e||e==="")return null;try{return JSON.parse(e)}catch(t){return console&&console.log("failed to parse JSON response",e),null}}static serialize(e,t){let i=[];for(var s in e){if(!Object.prototype.hasOwnProperty.call(e,s))continue;let r=t?`${t}[${s}]`:s,o=e[s];typeof o=="object"?i.push(this.serialize(o,r)):i.push(encodeURIComponent(r)+"="+encodeURIComponent(o))}return i.join("&")}static appendParams(e,t){if(Object.keys(t).length===0)return e;let i=e.match(/\?/)?"&":"?";return`${e}${i}${this.serialize(t)}`}};var y=class{constructor(e){this.endPoint=null,this.token=null,this.skipHeartbeat=!0,this.onopen=function(){},this.onerror=function(){},this.onmessage=function(){},this.onclose=function(){},this.pollEndpoint=this.normalizeEndpoint(e),this.readyState=p.connecting,this.poll()}normalizeEndpoint(e){return e.replace("ws://","http://").replace("wss://","https://").replace(new RegExp("(.*)/"+L.websocket),"$1/"+L.longpoll)}endpointURL(){return m.appendParams(this.pollEndpoint,{token:this.token})}closeAndRetry(){this.close(),this.readyState=p.connecting}ontimeout(){this.onerror("timeout"),this.closeAndRetry()}poll(){(this.readyState===p.open||this.readyState===p.connecting)&&m.request("GET",this.endpointURL(),"application/json",null,this.timeout,this.ontimeout.bind(this),e=>{if(e){var{status:t,token:i,messages:s}=e;this.token=i}else t=0;switch(t){case 200:s.forEach(r=>{setTimeout(()=>{this.onmessage({data:r})},0)}),this.poll();break;case 204:this.poll();break;case 410:this.readyState=p.open,this.onopen(),this.poll();break;case 403:this.onerror(),this.close();break;case 0:case 500:this.onerror(),this.closeAndRetry();break;default:throw new Error(`unhandled poll status ${t}`)}})}send(e){m.request("POST",this.endpointURL(),"application/json",e,this.timeout,this.onerror.bind(this,"timeout"),t=>{(!t||t.status!==200)&&(this.onerror(t&&t.status),this.closeAndRetry())})}close(e,t){this.readyState=p.closed,this.onclose()}};var g=class{constructor(e,t={}){let i=t.events||{state:"presence_state",diff:"presence_diff"};this.state={},this.pendingDiffs=[],this.channel=e,this.joinRef=null,this.caller={onJoin:function(){},onLeave:function(){},onSync:function(){}},this.channel.on(i.state,s=>{let{onJoin:r,onLeave:o,onSync:n}=this.caller;this.joinRef=this.channel.joinRef(),this.state=g.syncState(this.state,s,r,o),this.pendingDiffs.forEach(h=>{this.state=g.syncDiff(this.state,h,r,o)}),this.pendingDiffs=[],n()}),this.channel.on(i.diff,s=>{let{onJoin:r,onLeave:o,onSync:n}=this.caller;this.inPendingSyncState()?this.pendingDiffs.push(s):(this.state=g.syncDiff(this.state,s,r,o),n())})}onJoin(e){this.caller.onJoin=e}onLeave(e){this.caller.onLeave=e}onSync(e){this.caller.onSync=e}list(e){return g.list(this.state,e)}inPendingSyncState(){return!this.joinRef||this.joinRef!==this.channel.joinRef()}static syncState(e,t,i,s){let r=this.clone(e),o={},n={};return this.map(r,(h,l)=>{t[h]||(n[h]=l)}),this.map(t,(h,l)=>{let u=r[h];if(u){let c=l.metas.map(T=>T.phx_ref),E=u.metas.map(T=>T.phx_ref),_=l.metas.filter(T=>E.indexOf(T.phx_ref)<0),x=u.metas.filter(T=>c.indexOf(T.phx_ref)<0);_.length>0&&(o[h]=l,o[h].metas=_),x.length>0&&(n[h]=this.clone(u),n[h].metas=x)}else o[h]=l}),this.syncDiff(r,{joins:o,leaves:n},i,s)}static syncDiff(e,t,i,s){let{joins:r,leaves:o}=this.clone(t);return i||(i=function(){}),s||(s=function(){}),this.map(r,(n,h)=>{let l=e[n];if(e[n]=this.clone(h),l){let u=e[n].metas.map(E=>E.phx_ref),c=l.metas.filter(E=>u.indexOf(E.phx_ref)<0);e[n].metas.unshift(...c)}i(n,l,h)}),this.map(o,(n,h)=>{let l=e[n];if(!l)return;let u=h.metas.map(c=>c.phx_ref);l.metas=l.metas.filter(c=>u.indexOf(c.phx_ref)<0),s(n,l,h),l.metas.length===0&&delete e[n]}),e}static list(e,t){return t||(t=function(i,s){return s}),this.map(e,(i,s)=>t(i,s))}static map(e,t){return Object.getOwnPropertyNames(e).map(i=>t(i,e[i]))}static clone(e){return JSON.parse(JSON.stringify(e))}};var b={HEADER_LENGTH:1,META_LENGTH:4,KINDS:{push:0,reply:1,broadcast:2},encode(a,e){if(a.payload.constructor===ArrayBuffer)return e(this.binaryEncode(a));{let t=[a.join_ref,a.ref,a.topic,a.event,a.payload];return e(JSON.stringify(t))}},decode(a,e){if(a.constructor===ArrayBuffer)return e(this.binaryDecode(a));{let[t,i,s,r,o]=JSON.parse(a);return e({join_ref:t,ref:i,topic:s,event:r,payload:o})}},binaryEncode(a){let{join_ref:e,ref:t,event:i,topic:s,payload:r}=a,o=this.META_LENGTH+e.length+t.length+s.length+i.length,n=new ArrayBuffer(this.HEADER_LENGTH+o),h=new DataView(n),l=0;h.setUint8(l++,this.KINDS.push),h.setUint8(l++,e.length),h.setUint8(l++,t.length),h.setUint8(l++,s.length),h.setUint8(l++,i.length),Array.from(e,c=>h.setUint8(l++,c.charCodeAt(0))),Array.from(t,c=>h.setUint8(l++,c.charCodeAt(0))),Array.from(s,c=>h.setUint8(l++,c.charCodeAt(0))),Array.from(i,c=>h.setUint8(l++,c.charCodeAt(0)));var u=new Uint8Array(n.byteLength+r.byteLength);return u.set(new Uint8Array(n),0),u.set(new Uint8Array(r),n.byteLength),u.buffer},binaryDecode(a){let e=new DataView(a),t=e.getUint8(0),i=new TextDecoder;switch(t){case this.KINDS.push:return this.decodePush(a,e,i);case this.KINDS.reply:return this.decodeReply(a,e,i);case this.KINDS.broadcast:return this.decodeBroadcast(a,e,i)}},decodePush(a,e,t){let i=e.getUint8(1),s=e.getUint8(2),r=e.getUint8(3),o=this.HEADER_LENGTH+this.META_LENGTH-1,n=t.decode(a.slice(o,o+i));o=o+i;let h=t.decode(a.slice(o,o+s));o=o+s;let l=t.decode(a.slice(o,o+r));o=o+r;let u=a.slice(o,a.byteLength);return{join_ref:n,ref:null,topic:h,event:l,payload:u}},decodeReply(a,e,t){let i=e.getUint8(1),s=e.getUint8(2),r=e.getUint8(3),o=e.getUint8(4),n=this.HEADER_LENGTH+this.META_LENGTH,h=t.decode(a.slice(n,n+i));n=n+i;let l=t.decode(a.slice(n,n+s));n=n+s;let u=t.decode(a.slice(n,n+r));n=n+r;let c=t.decode(a.slice(n,n+o));n=n+o;let E=a.slice(n,a.byteLength),_={status:c,response:E};return{join_ref:h,ref:l,topic:u,event:f.reply,payload:_}},decodeBroadcast(a,e,t){let i=e.getUint8(1),s=e.getUint8(2),r=this.HEADER_LENGTH+2,o=t.decode(a.slice(r,r+i));r=r+i;let n=t.decode(a.slice(r,r+s));r=r+s;let h=a.slice(r,a.byteLength);return{join_ref:null,ref:null,topic:o,event:n,payload:h}}};var k=class{constructor(e,t={}){this.stateChangeCallbacks={open:[],close:[],error:[],message:[]},this.channels=[],this.sendBuffer=[],this.ref=0,this.timeout=t.timeout||w,this.transport=t.transport||S.WebSocket||y,this.establishedConnections=0,this.defaultEncoder=b.encode.bind(b),this.defaultDecoder=b.decode.bind(b),this.closeWasClean=!1,this.binaryType=t.binaryType||"arraybuffer",this.connectClock=1,this.transport!==y?(this.encode=t.encode||this.defaultEncoder,this.decode=t.decode||this.defaultDecoder):(this.encode=this.defaultEncoder,this.decode=this.defaultDecoder);let i=null;R&&R.addEventListener&&(R.addEventListener("pagehide",s=>{this.conn&&(this.disconnect(),i=this.connectClock)}),R.addEventListener("pageshow",s=>{i===this.connectClock&&(i=null,this.connect())})),this.heartbeatIntervalMs=t.heartbeatIntervalMs||3e4,this.rejoinAfterMs=s=>t.rejoinAfterMs?t.rejoinAfterMs(s):[1e3,2e3,5e3][s-1]||1e4,this.reconnectAfterMs=s=>t.reconnectAfterMs?t.reconnectAfterMs(s):[10,50,100,150,200,250,500,1e3,2e3][s-1]||5e3,this.logger=t.logger||null,this.longpollerTimeout=t.longpollerTimeout||2e4,this.params=C(t.params||{}),this.endPoint=`${e}/${L.websocket}`,this.vsn=t.vsn||N,this.heartbeatTimer=null,this.pendingHeartbeatRef=null,this.reconnectTimer=new j(()=>{this.teardown(()=>this.connect())},this.reconnectAfterMs)}replaceTransport(e){this.disconnect(),this.transport=e}protocol(){return location.protocol.match(/^https/)?"wss":"ws"}endPointURL(){let e=m.appendParams(m.appendParams(this.endPoint,this.params()),{vsn:this.vsn});return e.charAt(0)!=="/"?e:e.charAt(1)==="/"?`${this.protocol()}:${e}`:`${this.protocol()}://${location.host}${e}`}disconnect(e,t,i){this.connectClock++,this.closeWasClean=!0,this.reconnectTimer.reset(),this.teardown(e,t,i)}connect(e){this.connectClock++,e&&(console&&console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor"),this.params=C(e)),!this.conn&&(this.closeWasClean=!1,this.conn=new this.transport(this.endPointURL()),this.conn.binaryType=this.binaryType,this.conn.timeout=this.longpollerTimeout,this.conn.onopen=()=>this.onConnOpen(),this.conn.onerror=t=>this.onConnError(t),this.conn.onmessage=t=>this.onConnMessage(t),this.conn.onclose=t=>this.onConnClose(t))}log(e,t,i){this.logger(e,t,i)}hasLogger(){return this.logger!==null}onOpen(e){let t=this.makeRef();return this.stateChangeCallbacks.open.push([t,e]),t}onClose(e){let t=this.makeRef();return this.stateChangeCallbacks.close.push([t,e]),t}onError(e){let t=this.makeRef();return this.stateChangeCallbacks.error.push([t,e]),t}onMessage(e){let t=this.makeRef();return this.stateChangeCallbacks.message.push([t,e]),t}onConnOpen(){this.hasLogger()&&this.log("transport",`connected to ${this.endPointURL()}`),this.closeWasClean=!1,this.establishedConnections++,this.flushSendBuffer(),this.reconnectTimer.reset(),this.resetHeartbeat(),this.stateChangeCallbacks.open.forEach(([,e])=>e())}heartbeatTimeout(){this.pendingHeartbeatRef&&(this.pendingHeartbeatRef=null,this.hasLogger()&&this.log("transport","heartbeat timeout. Attempting to re-establish connection"),this.abnormalClose("heartbeat timeout"))}resetHeartbeat(){this.conn&&this.conn.skipHeartbeat||(this.pendingHeartbeatRef=null,clearTimeout(this.heartbeatTimer),setTimeout(()=>this.sendHeartbeat(),this.heartbeatIntervalMs))}teardown(e,t,i){if(!this.conn)return e&&e();this.waitForBufferDone(()=>{this.conn&&(t?this.conn.close(t,i||""):this.conn.close()),this.waitForSocketClosed(()=>{this.conn&&(this.conn.onclose=function(){},this.conn=null),e&&e()})})}waitForBufferDone(e,t=1){if(t===5||!this.conn||!this.conn.bufferedAmount){e();return}setTimeout(()=>{this.waitForBufferDone(e,t+1)},150*t)}waitForSocketClosed(e,t=1){if(t===5||!this.conn||this.conn.readyState===p.closed){e();return}setTimeout(()=>{this.waitForSocketClosed(e,t+1)},150*t)}onConnClose(e){this.hasLogger()&&this.log("transport","close",e),this.triggerChanError(),clearTimeout(this.heartbeatTimer),this.closeWasClean||this.reconnectTimer.scheduleTimeout(),this.stateChangeCallbacks.close.forEach(([,t])=>t(e))}onConnError(e){this.hasLogger()&&this.log("transport",e);let t=this.transport,i=this.establishedConnections;this.stateChangeCallbacks.error.forEach(([,s])=>{s(e,t,i)}),(t===this.transport||i>0)&&this.triggerChanError()}triggerChanError(){this.channels.forEach(e=>{e.isErrored()||e.isLeaving()||e.isClosed()||e.trigger(f.error)})}connectionState(){switch(this.conn&&this.conn.readyState){case p.connecting:return"connecting";case p.open:return"open";case p.closing:return"closing";default:return"closed"}}isConnected(){return this.connectionState()==="open"}remove(e){this.off(e.stateChangeRefs),this.channels=this.channels.filter(t=>t.joinRef()!==e.joinRef())}off(e){for(let t in this.stateChangeCallbacks)this.stateChangeCallbacks[t]=this.stateChangeCallbacks[t].filter(([i])=>e.indexOf(i)===-1)}channel(e,t={}){let i=new A(e,t,this);return this.channels.push(i),i}push(e){if(this.hasLogger()){let{topic:t,event:i,payload:s,ref:r,join_ref:o}=e;this.log("push",`${t} ${i} (${o}, ${r})`,s)}this.isConnected()?this.encode(e,t=>this.conn.send(t)):this.sendBuffer.push(()=>this.encode(e,t=>this.conn.send(t)))}makeRef(){let e=this.ref+1;return e===this.ref?this.ref=0:this.ref=e,this.ref.toString()}sendHeartbeat(){this.pendingHeartbeatRef&&!this.isConnected()||(this.pendingHeartbeatRef=this.makeRef(),this.push({topic:"phoenix",event:"heartbeat",payload:{},ref:this.pendingHeartbeatRef}),this.heartbeatTimer=setTimeout(()=>this.heartbeatTimeout(),this.heartbeatIntervalMs))}abnormalClose(e){this.closeWasClean=!1,this.isConnected()&&this.conn.close(O,e)}flushSendBuffer(){this.isConnected()&&this.sendBuffer.length>0&&(this.sendBuffer.forEach(e=>e()),this.sendBuffer=[])}onConnMessage(e){this.decode(e.data,t=>{let{topic:i,event:s,payload:r,ref:o,join_ref:n}=t;o&&o===this.pendingHeartbeatRef&&(clearTimeout(this.heartbeatTimer),this.pendingHeartbeatRef=null,setTimeout(()=>this.sendHeartbeat(),this.heartbeatIntervalMs)),this.hasLogger()&&this.log("receive",`${r.status||""} ${i} ${s} ${o&&"("+o+")"||""}`,r);for(let h=0;h<this.channels.length;h++){let l=this.channels[h];!l.isMember(i,s,r,n)||l.trigger(s,r,o,n)}for(let h=0;h<this.stateChangeCallbacks.message.length;h++){let[,l]=this.stateChangeCallbacks.message[h];l(t)}})}leaveOpenTopic(e){let t=this.channels.find(i=>i.topic===e&&(i.isJoined()||i.isJoining()));t&&(this.hasLogger()&&this.log("transport",`leaving duplicate topic "${e}"`),t.leave())}};export{A as Channel,y as LongPoll,g as Presence,b as Serializer,k as Socket};
-//# sourceMappingURL=phoenix.js.map
+var Phoenix = (() => {
+  var __defProp = Object.defineProperty;
+  var __markAsModule = (target) => __defProp(target, "__esModule", { value: true });
+  var __export = (target, all) => {
+    __markAsModule(target);
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
+  // js/phoenix/index.js
+  var phoenix_exports = {};
+  __export(phoenix_exports, {
+    Channel: () => Channel,
+    LongPoll: () => LongPoll,
+    Presence: () => Presence,
+    Serializer: () => serializer_default,
+    Socket: () => Socket
+  });
+
+  // js/phoenix/utils.js
+  var closure = (value) => {
+    if (typeof value === "function") {
+      return value;
+    } else {
+      let closure2 = function() {
+        return value;
+      };
+      return closure2;
+    }
+  };
+
+  // js/phoenix/constants.js
+  var globalSelf = typeof self !== "undefined" ? self : null;
+  var phxWindow = typeof window !== "undefined" ? window : null;
+  var global = globalSelf || phxWindow || void 0;
+  var DEFAULT_VSN = "2.0.0";
+  var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
+  var DEFAULT_TIMEOUT = 1e4;
+  var WS_CLOSE_NORMAL = 1e3;
+  var CHANNEL_STATES = {
+    closed: "closed",
+    errored: "errored",
+    joined: "joined",
+    joining: "joining",
+    leaving: "leaving"
+  };
+  var CHANNEL_EVENTS = {
+    close: "phx_close",
+    error: "phx_error",
+    join: "phx_join",
+    reply: "phx_reply",
+    leave: "phx_leave"
+  };
+  var CHANNEL_LIFECYCLE_EVENTS = [
+    CHANNEL_EVENTS.close,
+    CHANNEL_EVENTS.error,
+    CHANNEL_EVENTS.join,
+    CHANNEL_EVENTS.reply,
+    CHANNEL_EVENTS.leave
+  ];
+  var TRANSPORTS = {
+    longpoll: "longpoll",
+    websocket: "websocket"
+  };
+
+  // js/phoenix/push.js
+  var Push = class {
+    constructor(channel, event, payload, timeout) {
+      this.channel = channel;
+      this.event = event;
+      this.payload = payload || function() {
+        return {};
+      };
+      this.receivedResp = null;
+      this.timeout = timeout;
+      this.timeoutTimer = null;
+      this.recHooks = [];
+      this.sent = false;
+    }
+    resend(timeout) {
+      this.timeout = timeout;
+      this.reset();
+      this.send();
+    }
+    send() {
+      if (this.hasReceived("timeout")) {
+        return;
+      }
+      this.startTimeout();
+      this.sent = true;
+      this.channel.socket.push({
+        topic: this.channel.topic,
+        event: this.event,
+        payload: this.payload(),
+        ref: this.ref,
+        join_ref: this.channel.joinRef()
+      });
+    }
+    receive(status, callback) {
+      if (this.hasReceived(status)) {
+        callback(this.receivedResp.response);
+      }
+      this.recHooks.push({ status, callback });
+      return this;
+    }
+    reset() {
+      this.cancelRefEvent();
+      this.ref = null;
+      this.refEvent = null;
+      this.receivedResp = null;
+      this.sent = false;
+    }
+    matchReceive({ status, response, _ref }) {
+      this.recHooks.filter((h) => h.status === status).forEach((h) => h.callback(response));
+    }
+    cancelRefEvent() {
+      if (!this.refEvent) {
+        return;
+      }
+      this.channel.off(this.refEvent);
+    }
+    cancelTimeout() {
+      clearTimeout(this.timeoutTimer);
+      this.timeoutTimer = null;
+    }
+    startTimeout() {
+      if (this.timeoutTimer) {
+        this.cancelTimeout();
+      }
+      this.ref = this.channel.socket.makeRef();
+      this.refEvent = this.channel.replyEventName(this.ref);
+      this.channel.on(this.refEvent, (payload) => {
+        this.cancelRefEvent();
+        this.cancelTimeout();
+        this.receivedResp = payload;
+        this.matchReceive(payload);
+      });
+      this.timeoutTimer = setTimeout(() => {
+        this.trigger("timeout", {});
+      }, this.timeout);
+    }
+    hasReceived(status) {
+      return this.receivedResp && this.receivedResp.status === status;
+    }
+    trigger(status, response) {
+      this.channel.trigger(this.refEvent, { status, response });
+    }
+  };
+
+  // js/phoenix/timer.js
+  var Timer = class {
+    constructor(callback, timerCalc) {
+      this.callback = callback;
+      this.timerCalc = timerCalc;
+      this.timer = null;
+      this.tries = 0;
+    }
+    reset() {
+      this.tries = 0;
+      clearTimeout(this.timer);
+    }
+    scheduleTimeout() {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
+        this.tries = this.tries + 1;
+        this.callback();
+      }, this.timerCalc(this.tries + 1));
+    }
+  };
+
+  // js/phoenix/channel.js
+  var Channel = class {
+    constructor(topic, params, socket) {
+      this.state = CHANNEL_STATES.closed;
+      this.topic = topic;
+      this.params = closure(params || {});
+      this.socket = socket;
+      this.bindings = [];
+      this.bindingRef = 0;
+      this.timeout = this.socket.timeout;
+      this.joinedOnce = false;
+      this.joinPush = new Push(this, CHANNEL_EVENTS.join, this.params, this.timeout);
+      this.pushBuffer = [];
+      this.stateChangeRefs = [];
+      this.rejoinTimer = new Timer(() => {
+        if (this.socket.isConnected()) {
+          this.rejoin();
+        }
+      }, this.socket.rejoinAfterMs);
+      this.stateChangeRefs.push(this.socket.onError(() => this.rejoinTimer.reset()));
+      this.stateChangeRefs.push(this.socket.onOpen(() => {
+        this.rejoinTimer.reset();
+        if (this.isErrored()) {
+          this.rejoin();
+        }
+      }));
+      this.joinPush.receive("ok", () => {
+        this.state = CHANNEL_STATES.joined;
+        this.rejoinTimer.reset();
+        this.pushBuffer.forEach((pushEvent) => pushEvent.send());
+        this.pushBuffer = [];
+      });
+      this.joinPush.receive("error", () => {
+        this.state = CHANNEL_STATES.errored;
+        if (this.socket.isConnected()) {
+          this.rejoinTimer.scheduleTimeout();
+        }
+      });
+      this.onClose(() => {
+        this.rejoinTimer.reset();
+        if (this.socket.hasLogger())
+          this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`);
+        this.state = CHANNEL_STATES.closed;
+        this.socket.remove(this);
+      });
+      this.onError((reason) => {
+        if (this.socket.hasLogger())
+          this.socket.log("channel", `error ${this.topic}`, reason);
+        if (this.isJoining()) {
+          this.joinPush.reset();
+        }
+        this.state = CHANNEL_STATES.errored;
+        if (this.socket.isConnected()) {
+          this.rejoinTimer.scheduleTimeout();
+        }
+      });
+      this.joinPush.receive("timeout", () => {
+        if (this.socket.hasLogger())
+          this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout);
+        let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), this.timeout);
+        leavePush.send();
+        this.state = CHANNEL_STATES.errored;
+        this.joinPush.reset();
+        if (this.socket.isConnected()) {
+          this.rejoinTimer.scheduleTimeout();
+        }
+      });
+      this.on(CHANNEL_EVENTS.reply, (payload, ref) => {
+        this.trigger(this.replyEventName(ref), payload);
+      });
+    }
+    join(timeout = this.timeout) {
+      if (this.joinedOnce) {
+        throw new Error("tried to join multiple times. 'join' can only be called a single time per channel instance");
+      } else {
+        this.timeout = timeout;
+        this.joinedOnce = true;
+        this.rejoin();
+        return this.joinPush;
+      }
+    }
+    onClose(callback) {
+      this.on(CHANNEL_EVENTS.close, callback);
+    }
+    onError(callback) {
+      return this.on(CHANNEL_EVENTS.error, (reason) => callback(reason));
+    }
+    on(event, callback) {
+      let ref = this.bindingRef++;
+      this.bindings.push({ event, ref, callback });
+      return ref;
+    }
+    off(event, ref) {
+      this.bindings = this.bindings.filter((bind) => {
+        return !(bind.event === event && (typeof ref === "undefined" || ref === bind.ref));
+      });
+    }
+    canPush() {
+      return this.socket.isConnected() && this.isJoined();
+    }
+    push(event, payload, timeout = this.timeout) {
+      payload = payload || {};
+      if (!this.joinedOnce) {
+        throw new Error(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`);
+      }
+      let pushEvent = new Push(this, event, function() {
+        return payload;
+      }, timeout);
+      if (this.canPush()) {
+        pushEvent.send();
+      } else {
+        pushEvent.startTimeout();
+        this.pushBuffer.push(pushEvent);
+      }
+      return pushEvent;
+    }
+    leave(timeout = this.timeout) {
+      this.rejoinTimer.reset();
+      this.joinPush.cancelTimeout();
+      this.state = CHANNEL_STATES.leaving;
+      let onClose = () => {
+        if (this.socket.hasLogger())
+          this.socket.log("channel", `leave ${this.topic}`);
+        this.trigger(CHANNEL_EVENTS.close, "leave");
+      };
+      let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), timeout);
+      leavePush.receive("ok", () => onClose()).receive("timeout", () => onClose());
+      leavePush.send();
+      if (!this.canPush()) {
+        leavePush.trigger("ok", {});
+      }
+      return leavePush;
+    }
+    onMessage(_event, payload, _ref) {
+      return payload;
+    }
+    isLifecycleEvent(event) {
+      return CHANNEL_LIFECYCLE_EVENTS.indexOf(event) >= 0;
+    }
+    isMember(topic, event, payload, joinRef) {
+      if (this.topic !== topic) {
+        return false;
+      }
+      if (joinRef && joinRef !== this.joinRef() && this.isLifecycleEvent(event)) {
+        if (this.socket.hasLogger())
+          this.socket.log("channel", "dropping outdated message", { topic, event, payload, joinRef });
+        return false;
+      } else {
+        return true;
+      }
+    }
+    joinRef() {
+      return this.joinPush.ref;
+    }
+    rejoin(timeout = this.timeout) {
+      if (this.isLeaving()) {
+        return;
+      }
+      this.socket.leaveOpenTopic(this.topic);
+      this.state = CHANNEL_STATES.joining;
+      this.joinPush.resend(timeout);
+    }
+    trigger(event, payload, ref, joinRef) {
+      let handledPayload = this.onMessage(event, payload, ref, joinRef);
+      if (payload && !handledPayload) {
+        throw new Error("channel onMessage callbacks must return the payload, modified or unmodified");
+      }
+      let eventBindings = this.bindings.filter((bind) => bind.event === event);
+      for (let i = 0; i < eventBindings.length; i++) {
+        let bind = eventBindings[i];
+        bind.callback(handledPayload, ref, joinRef || this.joinRef());
+      }
+    }
+    replyEventName(ref) {
+      return `chan_reply_${ref}`;
+    }
+    isClosed() {
+      return this.state === CHANNEL_STATES.closed;
+    }
+    isErrored() {
+      return this.state === CHANNEL_STATES.errored;
+    }
+    isJoined() {
+      return this.state === CHANNEL_STATES.joined;
+    }
+    isJoining() {
+      return this.state === CHANNEL_STATES.joining;
+    }
+    isLeaving() {
+      return this.state === CHANNEL_STATES.leaving;
+    }
+  };
+
+  // js/phoenix/ajax.js
+  var Ajax = class {
+    constructor() {
+      this.states = { complete: 4 };
+    }
+    static request(method, endPoint, accept, body, timeout, ontimeout, callback) {
+      if (global.XDomainRequest) {
+        let req = new global.XDomainRequest();
+        this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
+      } else {
+        let req = new global.XMLHttpRequest();
+        this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback);
+      }
+    }
+    static xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback) {
+      req.timeout = timeout;
+      req.open(method, endPoint);
+      req.onload = () => {
+        let response = this.parseJSON(req.responseText);
+        callback && callback(response);
+      };
+      if (ontimeout) {
+        req.ontimeout = ontimeout;
+      }
+      req.onprogress = () => {
+      };
+      req.send(body);
+    }
+    static xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback) {
+      req.open(method, endPoint, true);
+      req.timeout = timeout;
+      req.setRequestHeader("Content-Type", accept);
+      req.onerror = () => {
+        callback && callback(null);
+      };
+      req.onreadystatechange = () => {
+        if (req.readyState === this.states.complete && callback) {
+          let response = this.parseJSON(req.responseText);
+          callback(response);
+        }
+      };
+      if (ontimeout) {
+        req.ontimeout = ontimeout;
+      }
+      req.send(body);
+    }
+    static parseJSON(resp) {
+      if (!resp || resp === "") {
+        return null;
+      }
+      try {
+        return JSON.parse(resp);
+      } catch (e) {
+        console && console.log("failed to parse JSON response", resp);
+        return null;
+      }
+    }
+    static serialize(obj, parentKey) {
+      let queryStr = [];
+      for (var key in obj) {
+        if (!Object.prototype.hasOwnProperty.call(obj, key)) {
+          continue;
+        }
+        let paramKey = parentKey ? `${parentKey}[${key}]` : key;
+        let paramVal = obj[key];
+        if (typeof paramVal === "object") {
+          queryStr.push(this.serialize(paramVal, paramKey));
+        } else {
+          queryStr.push(encodeURIComponent(paramKey) + "=" + encodeURIComponent(paramVal));
+        }
+      }
+      return queryStr.join("&");
+    }
+    static appendParams(url, params) {
+      if (Object.keys(params).length === 0) {
+        return url;
+      }
+      let prefix = url.match(/\?/) ? "&" : "?";
+      return `${url}${prefix}${this.serialize(params)}`;
+    }
+  };
+
+  // js/phoenix/longpoll.js
+  var LongPoll = class {
+    constructor(endPoint) {
+      this.endPoint = null;
+      this.token = null;
+      this.skipHeartbeat = true;
+      this.onopen = function() {
+      };
+      this.onerror = function() {
+      };
+      this.onmessage = function() {
+      };
+      this.onclose = function() {
+      };
+      this.pollEndpoint = this.normalizeEndpoint(endPoint);
+      this.readyState = SOCKET_STATES.connecting;
+      this.poll();
+    }
+    normalizeEndpoint(endPoint) {
+      return endPoint.replace("ws://", "http://").replace("wss://", "https://").replace(new RegExp("(.*)/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll);
+    }
+    endpointURL() {
+      return Ajax.appendParams(this.pollEndpoint, { token: this.token });
+    }
+    closeAndRetry() {
+      this.close();
+      this.readyState = SOCKET_STATES.connecting;
+    }
+    ontimeout() {
+      this.onerror("timeout");
+      this.closeAndRetry();
+    }
+    poll() {
+      if (!(this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting)) {
+        return;
+      }
+      Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), (resp) => {
+        if (resp) {
+          var { status, token, messages } = resp;
+          this.token = token;
+        } else {
+          status = 0;
+        }
+        switch (status) {
+          case 200:
+            messages.forEach((msg) => {
+              setTimeout(() => {
+                this.onmessage({ data: msg });
+              }, 0);
+            });
+            this.poll();
+            break;
+          case 204:
+            this.poll();
+            break;
+          case 410:
+            this.readyState = SOCKET_STATES.open;
+            this.onopen();
+            this.poll();
+            break;
+          case 403:
+            this.onerror();
+            this.close();
+            break;
+          case 0:
+          case 500:
+            this.onerror();
+            this.closeAndRetry();
+            break;
+          default:
+            throw new Error(`unhandled poll status ${status}`);
+        }
+      });
+    }
+    send(body) {
+      Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), (resp) => {
+        if (!resp || resp.status !== 200) {
+          this.onerror(resp && resp.status);
+          this.closeAndRetry();
+        }
+      });
+    }
+    close(_code, _reason) {
+      this.readyState = SOCKET_STATES.closed;
+      this.onclose();
+    }
+  };
+
+  // js/phoenix/presence.js
+  var Presence = class {
+    constructor(channel, opts = {}) {
+      let events = opts.events || { state: "presence_state", diff: "presence_diff" };
+      this.state = {};
+      this.pendingDiffs = [];
+      this.channel = channel;
+      this.joinRef = null;
+      this.caller = {
+        onJoin: function() {
+        },
+        onLeave: function() {
+        },
+        onSync: function() {
+        }
+      };
+      this.channel.on(events.state, (newState) => {
+        let { onJoin, onLeave, onSync } = this.caller;
+        this.joinRef = this.channel.joinRef();
+        this.state = Presence.syncState(this.state, newState, onJoin, onLeave);
+        this.pendingDiffs.forEach((diff) => {
+          this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave);
+        });
+        this.pendingDiffs = [];
+        onSync();
+      });
+      this.channel.on(events.diff, (diff) => {
+        let { onJoin, onLeave, onSync } = this.caller;
+        if (this.inPendingSyncState()) {
+          this.pendingDiffs.push(diff);
+        } else {
+          this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave);
+          onSync();
+        }
+      });
+    }
+    onJoin(callback) {
+      this.caller.onJoin = callback;
+    }
+    onLeave(callback) {
+      this.caller.onLeave = callback;
+    }
+    onSync(callback) {
+      this.caller.onSync = callback;
+    }
+    list(by) {
+      return Presence.list(this.state, by);
+    }
+    inPendingSyncState() {
+      return !this.joinRef || this.joinRef !== this.channel.joinRef();
+    }
+    static syncState(currentState, newState, onJoin, onLeave) {
+      let state = this.clone(currentState);
+      let joins = {};
+      let leaves = {};
+      this.map(state, (key, presence) => {
+        if (!newState[key]) {
+          leaves[key] = presence;
+        }
+      });
+      this.map(newState, (key, newPresence) => {
+        let currentPresence = state[key];
+        if (currentPresence) {
+          let newRefs = newPresence.metas.map((m) => m.phx_ref);
+          let curRefs = currentPresence.metas.map((m) => m.phx_ref);
+          let joinedMetas = newPresence.metas.filter((m) => curRefs.indexOf(m.phx_ref) < 0);
+          let leftMetas = currentPresence.metas.filter((m) => newRefs.indexOf(m.phx_ref) < 0);
+          if (joinedMetas.length > 0) {
+            joins[key] = newPresence;
+            joins[key].metas = joinedMetas;
+          }
+          if (leftMetas.length > 0) {
+            leaves[key] = this.clone(currentPresence);
+            leaves[key].metas = leftMetas;
+          }
+        } else {
+          joins[key] = newPresence;
+        }
+      });
+      return this.syncDiff(state, { joins, leaves }, onJoin, onLeave);
+    }
+    static syncDiff(state, diff, onJoin, onLeave) {
+      let { joins, leaves } = this.clone(diff);
+      if (!onJoin) {
+        onJoin = function() {
+        };
+      }
+      if (!onLeave) {
+        onLeave = function() {
+        };
+      }
+      this.map(joins, (key, newPresence) => {
+        let currentPresence = state[key];
+        state[key] = this.clone(newPresence);
+        if (currentPresence) {
+          let joinedRefs = state[key].metas.map((m) => m.phx_ref);
+          let curMetas = currentPresence.metas.filter((m) => joinedRefs.indexOf(m.phx_ref) < 0);
+          state[key].metas.unshift(...curMetas);
+        }
+        onJoin(key, currentPresence, newPresence);
+      });
+      this.map(leaves, (key, leftPresence) => {
+        let currentPresence = state[key];
+        if (!currentPresence) {
+          return;
+        }
+        let refsToRemove = leftPresence.metas.map((m) => m.phx_ref);
+        currentPresence.metas = currentPresence.metas.filter((p) => {
+          return refsToRemove.indexOf(p.phx_ref) < 0;
+        });
+        onLeave(key, currentPresence, leftPresence);
+        if (currentPresence.metas.length === 0) {
+          delete state[key];
+        }
+      });
+      return state;
+    }
+    static list(presences, chooser) {
+      if (!chooser) {
+        chooser = function(key, pres) {
+          return pres;
+        };
+      }
+      return this.map(presences, (key, presence) => {
+        return chooser(key, presence);
+      });
+    }
+    static map(obj, func) {
+      return Object.getOwnPropertyNames(obj).map((key) => func(key, obj[key]));
+    }
+    static clone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+  };
+
+  // js/phoenix/serializer.js
+  var serializer_default = {
+    HEADER_LENGTH: 1,
+    META_LENGTH: 4,
+    KINDS: { push: 0, reply: 1, broadcast: 2 },
+    encode(msg, callback) {
+      if (msg.payload.constructor === ArrayBuffer) {
+        return callback(this.binaryEncode(msg));
+      } else {
+        let payload = [msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload];
+        return callback(JSON.stringify(payload));
+      }
+    },
+    decode(rawPayload, callback) {
+      if (rawPayload.constructor === ArrayBuffer) {
+        return callback(this.binaryDecode(rawPayload));
+      } else {
+        let [join_ref, ref, topic, event, payload] = JSON.parse(rawPayload);
+        return callback({ join_ref, ref, topic, event, payload });
+      }
+    },
+    binaryEncode(message) {
+      let { join_ref, ref, event, topic, payload } = message;
+      let metaLength = this.META_LENGTH + join_ref.length + ref.length + topic.length + event.length;
+      let header = new ArrayBuffer(this.HEADER_LENGTH + metaLength);
+      let view = new DataView(header);
+      let offset = 0;
+      view.setUint8(offset++, this.KINDS.push);
+      view.setUint8(offset++, join_ref.length);
+      view.setUint8(offset++, ref.length);
+      view.setUint8(offset++, topic.length);
+      view.setUint8(offset++, event.length);
+      Array.from(join_ref, (char) => view.setUint8(offset++, char.charCodeAt(0)));
+      Array.from(ref, (char) => view.setUint8(offset++, char.charCodeAt(0)));
+      Array.from(topic, (char) => view.setUint8(offset++, char.charCodeAt(0)));
+      Array.from(event, (char) => view.setUint8(offset++, char.charCodeAt(0)));
+      var combined = new Uint8Array(header.byteLength + payload.byteLength);
+      combined.set(new Uint8Array(header), 0);
+      combined.set(new Uint8Array(payload), header.byteLength);
+      return combined.buffer;
+    },
+    binaryDecode(buffer) {
+      let view = new DataView(buffer);
+      let kind = view.getUint8(0);
+      let decoder = new TextDecoder();
+      switch (kind) {
+        case this.KINDS.push:
+          return this.decodePush(buffer, view, decoder);
+        case this.KINDS.reply:
+          return this.decodeReply(buffer, view, decoder);
+        case this.KINDS.broadcast:
+          return this.decodeBroadcast(buffer, view, decoder);
+      }
+    },
+    decodePush(buffer, view, decoder) {
+      let joinRefSize = view.getUint8(1);
+      let topicSize = view.getUint8(2);
+      let eventSize = view.getUint8(3);
+      let offset = this.HEADER_LENGTH + this.META_LENGTH - 1;
+      let joinRef = decoder.decode(buffer.slice(offset, offset + joinRefSize));
+      offset = offset + joinRefSize;
+      let topic = decoder.decode(buffer.slice(offset, offset + topicSize));
+      offset = offset + topicSize;
+      let event = decoder.decode(buffer.slice(offset, offset + eventSize));
+      offset = offset + eventSize;
+      let data = buffer.slice(offset, buffer.byteLength);
+      return { join_ref: joinRef, ref: null, topic, event, payload: data };
+    },
+    decodeReply(buffer, view, decoder) {
+      let joinRefSize = view.getUint8(1);
+      let refSize = view.getUint8(2);
+      let topicSize = view.getUint8(3);
+      let eventSize = view.getUint8(4);
+      let offset = this.HEADER_LENGTH + this.META_LENGTH;
+      let joinRef = decoder.decode(buffer.slice(offset, offset + joinRefSize));
+      offset = offset + joinRefSize;
+      let ref = decoder.decode(buffer.slice(offset, offset + refSize));
+      offset = offset + refSize;
+      let topic = decoder.decode(buffer.slice(offset, offset + topicSize));
+      offset = offset + topicSize;
+      let event = decoder.decode(buffer.slice(offset, offset + eventSize));
+      offset = offset + eventSize;
+      let data = buffer.slice(offset, buffer.byteLength);
+      let payload = { status: event, response: data };
+      return { join_ref: joinRef, ref, topic, event: CHANNEL_EVENTS.reply, payload };
+    },
+    decodeBroadcast(buffer, view, decoder) {
+      let topicSize = view.getUint8(1);
+      let eventSize = view.getUint8(2);
+      let offset = this.HEADER_LENGTH + 2;
+      let topic = decoder.decode(buffer.slice(offset, offset + topicSize));
+      offset = offset + topicSize;
+      let event = decoder.decode(buffer.slice(offset, offset + eventSize));
+      offset = offset + eventSize;
+      let data = buffer.slice(offset, buffer.byteLength);
+      return { join_ref: null, ref: null, topic, event, payload: data };
+    }
+  };
+
+  // js/phoenix/socket.js
+  var Socket = class {
+    constructor(endPoint, opts = {}) {
+      this.stateChangeCallbacks = { open: [], close: [], error: [], message: [] };
+      this.channels = [];
+      this.sendBuffer = [];
+      this.ref = 0;
+      this.timeout = opts.timeout || DEFAULT_TIMEOUT;
+      this.transport = opts.transport || global.WebSocket || LongPoll;
+      this.establishedConnections = 0;
+      this.defaultEncoder = serializer_default.encode.bind(serializer_default);
+      this.defaultDecoder = serializer_default.decode.bind(serializer_default);
+      this.closeWasClean = false;
+      this.binaryType = opts.binaryType || "arraybuffer";
+      this.connectClock = 1;
+      if (this.transport !== LongPoll) {
+        this.encode = opts.encode || this.defaultEncoder;
+        this.decode = opts.decode || this.defaultDecoder;
+      } else {
+        this.encode = this.defaultEncoder;
+        this.decode = this.defaultDecoder;
+      }
+      let awaitingConnectionOnPageShow = null;
+      if (phxWindow && phxWindow.addEventListener) {
+        phxWindow.addEventListener("pagehide", (_e) => {
+          if (this.conn) {
+            this.disconnect();
+            awaitingConnectionOnPageShow = this.connectClock;
+          }
+        });
+        phxWindow.addEventListener("pageshow", (_e) => {
+          if (awaitingConnectionOnPageShow === this.connectClock) {
+            awaitingConnectionOnPageShow = null;
+            this.connect();
+          }
+        });
+      }
+      this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 3e4;
+      this.rejoinAfterMs = (tries) => {
+        if (opts.rejoinAfterMs) {
+          return opts.rejoinAfterMs(tries);
+        } else {
+          return [1e3, 2e3, 5e3][tries - 1] || 1e4;
+        }
+      };
+      this.reconnectAfterMs = (tries) => {
+        if (opts.reconnectAfterMs) {
+          return opts.reconnectAfterMs(tries);
+        } else {
+          return [10, 50, 100, 150, 200, 250, 500, 1e3, 2e3][tries - 1] || 5e3;
+        }
+      };
+      this.logger = opts.logger || null;
+      this.longpollerTimeout = opts.longpollerTimeout || 2e4;
+      this.params = closure(opts.params || {});
+      this.endPoint = `${endPoint}/${TRANSPORTS.websocket}`;
+      this.vsn = opts.vsn || DEFAULT_VSN;
+      this.heartbeatTimer = null;
+      this.pendingHeartbeatRef = null;
+      this.reconnectTimer = new Timer(() => {
+        this.teardown(() => this.connect());
+      }, this.reconnectAfterMs);
+    }
+    replaceTransport(newTransport) {
+      this.disconnect();
+      this.transport = newTransport;
+    }
+    protocol() {
+      return location.protocol.match(/^https/) ? "wss" : "ws";
+    }
+    endPointURL() {
+      let uri = Ajax.appendParams(Ajax.appendParams(this.endPoint, this.params()), { vsn: this.vsn });
+      if (uri.charAt(0) !== "/") {
+        return uri;
+      }
+      if (uri.charAt(1) === "/") {
+        return `${this.protocol()}:${uri}`;
+      }
+      return `${this.protocol()}://${location.host}${uri}`;
+    }
+    disconnect(callback, code, reason) {
+      this.connectClock++;
+      this.closeWasClean = true;
+      this.reconnectTimer.reset();
+      this.teardown(callback, code, reason);
+    }
+    connect(params) {
+      this.connectClock++;
+      if (params) {
+        console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor");
+        this.params = closure(params);
+      }
+      if (this.conn) {
+        return;
+      }
+      this.closeWasClean = false;
+      this.conn = new this.transport(this.endPointURL());
+      this.conn.binaryType = this.binaryType;
+      this.conn.timeout = this.longpollerTimeout;
+      this.conn.onopen = () => this.onConnOpen();
+      this.conn.onerror = (error) => this.onConnError(error);
+      this.conn.onmessage = (event) => this.onConnMessage(event);
+      this.conn.onclose = (event) => this.onConnClose(event);
+    }
+    log(kind, msg, data) {
+      this.logger(kind, msg, data);
+    }
+    hasLogger() {
+      return this.logger !== null;
+    }
+    onOpen(callback) {
+      let ref = this.makeRef();
+      this.stateChangeCallbacks.open.push([ref, callback]);
+      return ref;
+    }
+    onClose(callback) {
+      let ref = this.makeRef();
+      this.stateChangeCallbacks.close.push([ref, callback]);
+      return ref;
+    }
+    onError(callback) {
+      let ref = this.makeRef();
+      this.stateChangeCallbacks.error.push([ref, callback]);
+      return ref;
+    }
+    onMessage(callback) {
+      let ref = this.makeRef();
+      this.stateChangeCallbacks.message.push([ref, callback]);
+      return ref;
+    }
+    onConnOpen() {
+      if (this.hasLogger())
+        this.log("transport", `connected to ${this.endPointURL()}`);
+      this.closeWasClean = false;
+      this.establishedConnections++;
+      this.flushSendBuffer();
+      this.reconnectTimer.reset();
+      this.resetHeartbeat();
+      this.stateChangeCallbacks.open.forEach(([, callback]) => callback());
+    }
+    heartbeatTimeout() {
+      if (this.pendingHeartbeatRef) {
+        this.pendingHeartbeatRef = null;
+        if (this.hasLogger()) {
+          this.log("transport", "heartbeat timeout. Attempting to re-establish connection");
+        }
+        this.abnormalClose("heartbeat timeout");
+      }
+    }
+    resetHeartbeat() {
+      if (this.conn && this.conn.skipHeartbeat) {
+        return;
+      }
+      this.pendingHeartbeatRef = null;
+      clearTimeout(this.heartbeatTimer);
+      setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs);
+    }
+    teardown(callback, code, reason) {
+      if (!this.conn) {
+        return callback && callback();
+      }
+      this.waitForBufferDone(() => {
+        if (this.conn) {
+          if (code) {
+            this.conn.close(code, reason || "");
+          } else {
+            this.conn.close();
+          }
+        }
+        this.waitForSocketClosed(() => {
+          if (this.conn) {
+            this.conn.onclose = function() {
+            };
+            this.conn = null;
+          }
+          callback && callback();
+        });
+      });
+    }
+    waitForBufferDone(callback, tries = 1) {
+      if (tries === 5 || !this.conn || !this.conn.bufferedAmount) {
+        callback();
+        return;
+      }
+      setTimeout(() => {
+        this.waitForBufferDone(callback, tries + 1);
+      }, 150 * tries);
+    }
+    waitForSocketClosed(callback, tries = 1) {
+      if (tries === 5 || !this.conn || this.conn.readyState === SOCKET_STATES.closed) {
+        callback();
+        return;
+      }
+      setTimeout(() => {
+        this.waitForSocketClosed(callback, tries + 1);
+      }, 150 * tries);
+    }
+    onConnClose(event) {
+      if (this.hasLogger())
+        this.log("transport", "close", event);
+      this.triggerChanError();
+      clearTimeout(this.heartbeatTimer);
+      if (!this.closeWasClean) {
+        this.reconnectTimer.scheduleTimeout();
+      }
+      this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event));
+    }
+    onConnError(error) {
+      if (this.hasLogger())
+        this.log("transport", error);
+      let transportBefore = this.transport;
+      let establishedBefore = this.establishedConnections;
+      this.stateChangeCallbacks.error.forEach(([, callback]) => {
+        callback(error, transportBefore, establishedBefore);
+      });
+      if (transportBefore === this.transport || establishedBefore > 0) {
+        this.triggerChanError();
+      }
+    }
+    triggerChanError() {
+      this.channels.forEach((channel) => {
+        if (!(channel.isErrored() || channel.isLeaving() || channel.isClosed())) {
+          channel.trigger(CHANNEL_EVENTS.error);
+        }
+      });
+    }
+    connectionState() {
+      switch (this.conn && this.conn.readyState) {
+        case SOCKET_STATES.connecting:
+          return "connecting";
+        case SOCKET_STATES.open:
+          return "open";
+        case SOCKET_STATES.closing:
+          return "closing";
+        default:
+          return "closed";
+      }
+    }
+    isConnected() {
+      return this.connectionState() === "open";
+    }
+    remove(channel) {
+      this.off(channel.stateChangeRefs);
+      this.channels = this.channels.filter((c) => c.joinRef() !== channel.joinRef());
+    }
+    off(refs) {
+      for (let key in this.stateChangeCallbacks) {
+        this.stateChangeCallbacks[key] = this.stateChangeCallbacks[key].filter(([ref]) => {
+          return refs.indexOf(ref) === -1;
+        });
+      }
+    }
+    channel(topic, chanParams = {}) {
+      let chan = new Channel(topic, chanParams, this);
+      this.channels.push(chan);
+      return chan;
+    }
+    push(data) {
+      if (this.hasLogger()) {
+        let { topic, event, payload, ref, join_ref } = data;
+        this.log("push", `${topic} ${event} (${join_ref}, ${ref})`, payload);
+      }
+      if (this.isConnected()) {
+        this.encode(data, (result) => this.conn.send(result));
+      } else {
+        this.sendBuffer.push(() => this.encode(data, (result) => this.conn.send(result)));
+      }
+    }
+    makeRef() {
+      let newRef = this.ref + 1;
+      if (newRef === this.ref) {
+        this.ref = 0;
+      } else {
+        this.ref = newRef;
+      }
+      return this.ref.toString();
+    }
+    sendHeartbeat() {
+      if (this.pendingHeartbeatRef && !this.isConnected()) {
+        return;
+      }
+      this.pendingHeartbeatRef = this.makeRef();
+      this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef });
+      this.heartbeatTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs);
+    }
+    abnormalClose(reason) {
+      this.closeWasClean = false;
+      if (this.isConnected()) {
+        this.conn.close(WS_CLOSE_NORMAL, reason);
+      }
+    }
+    flushSendBuffer() {
+      if (this.isConnected() && this.sendBuffer.length > 0) {
+        this.sendBuffer.forEach((callback) => callback());
+        this.sendBuffer = [];
+      }
+    }
+    onConnMessage(rawMessage) {
+      this.decode(rawMessage.data, (msg) => {
+        let { topic, event, payload, ref, join_ref } = msg;
+        if (ref && ref === this.pendingHeartbeatRef) {
+          clearTimeout(this.heartbeatTimer);
+          this.pendingHeartbeatRef = null;
+          setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs);
+        }
+        if (this.hasLogger())
+          this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload);
+        for (let i = 0; i < this.channels.length; i++) {
+          const channel = this.channels[i];
+          if (!channel.isMember(topic, event, payload, join_ref)) {
+            continue;
+          }
+          channel.trigger(event, payload, ref, join_ref);
+        }
+        for (let i = 0; i < this.stateChangeCallbacks.message.length; i++) {
+          let [, callback] = this.stateChangeCallbacks.message[i];
+          callback(msg);
+        }
+      });
+    }
+    leaveOpenTopic(topic) {
+      let dupChannel = this.channels.find((c) => c.topic === topic && (c.isJoined() || c.isJoining()));
+      if (dupChannel) {
+        if (this.hasLogger())
+          this.log("transport", `leaving duplicate topic "${topic}"`);
+        dupChannel.leave();
+      }
+    }
+  };
+  return phoenix_exports;
+})();
