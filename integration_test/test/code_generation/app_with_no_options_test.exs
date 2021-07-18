@@ -8,7 +8,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
       {app_root_path, _} =
         generate_phoenix_app(tmp_dir, "phx_blog", [
           "--no-html",
-          "--no-webpack",
+          "--no-assets",
           "--no-ecto",
           "--no-gettext",
           "--no-mailer",
@@ -25,7 +25,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
     with_installer_tmp("development_workflow", fn tmp_dir ->
       {app_root_path, _} =
         generate_phoenix_app(tmp_dir, "phx_blog", [
-          "--no-webpack",
+          "--no-assets",
           "--no-ecto",
           "--no-gettext",
           "--no-mailer",
