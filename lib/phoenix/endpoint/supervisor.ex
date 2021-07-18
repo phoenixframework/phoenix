@@ -199,7 +199,7 @@ defmodule Phoenix.Endpoint.Supervisor do
      http: false,
      https: false,
      reloadable_apps: nil,
-     reloadable_compilers: [:gettext, :phoenix, :elixir],
+     reloadable_compilers: [:gettext, :elixir],
      secret_key_base: nil,
      static_url: nil,
      url: [host: "localhost", path: "/"],
