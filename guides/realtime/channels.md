@@ -237,8 +237,6 @@ To authorize the socket to join a topic, we return `{:ok, socket}` or `{:ok, rep
 
 With our channel in place, let's get the client and server talking.
 
-Phoenix projects come with [webpack](https://webpack.js.org) by default, unless disabled with the `--no-webpack` option when you run `mix phx.new`.
-
 The `assets/js/socket.js` defines a simple client based on the socket implementation that ships with Phoenix.
 
 We can use that library to connect to our socket and join our channel, we just need to set our room name to `"room:lobby"` in that file.

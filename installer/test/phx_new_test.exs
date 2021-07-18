@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   end
 
   test "assets are in sync with installer" do
-    for file <- ~w(favicon.ico phoenix.js phoenix.js.map phoenix.png) do
+    for file <- ~w(favicon.ico phoenix.png) do
       assert File.read!("../priv/static/#{file}") ==
         File.read!("templates/phx_static/#{file}")
     end
@@ -104,37 +104,31 @@ defmodule Mix.Tasks.Phx.NewTest do
           "https://github.com/phoenixframework/phoenix/blob/#{changelog_vsn}/CHANGELOG.md"
       end
 
-      # webpack
-      assert_file "phx_blog/.gitignore", "/assets/node_modules/"
-      assert_file "phx_blog/.gitignore", "phx_blog-*.tar"
-      assert_file "phx_blog/.gitignore", ~r/\n$/
-      assert_file "phx_blog/assets/webpack.config.js", "js/app.js"
+      # assets
+      assert_file "phx_blog/.gitignore", fn file ->
+        assert file =~ "/priv/static/assets/"
+        assert file =~ "phx_blog-*.tar"
+        assert file =~ ~r/\n$/
+      end
+
       assert_file "phx_blog/config/dev.exs", fn file ->
-        assert file =~ "watchers: [\n    node:"
+        assert file =~ "esbuild: {Esbuild,"
         assert file =~ "lib/phx_blog_web/(live|views)/.*(ex)"
         assert file =~ "lib/phx_blog_web/templates/.*(eex)"
       end
-      assert_file "phx_blog/assets/static/favicon.ico"
-      assert_file "phx_blog/assets/static/images/phoenix.png"
+
       assert_file "phx_blog/assets/css/app.css"
       assert_file "phx_blog/assets/css/phoenix.css"
-      assert_file "phx_blog/assets/js/app.js",
-                  ~s[import socket from "./socket"]
-      assert_file "phx_blog/assets/js/socket.js",
-                  ~s[import {Socket} from "phoenix"]
 
-      assert_file "phx_blog/assets/package.json", fn file ->
-        assert file =~ ~s["file:../deps/phoenix"]
-        assert file =~ ~s["file:../deps/phoenix_html"]
+      refute File.exists? "phx_blog/priv/static/assets/app.css"
+      refute File.exists? "phx_blog/priv/static/assets/phoenix.css"
+      refute File.exists? "phx_blog/priv/static/assets/app.js"
+      assert File.exists? "phx_blog/assets/vendor"
+
+      assert_file "phx_blog/config/config.exs", fn file ->
+        assert file =~ "cd: Path.expand(\"../assets\", __DIR__)"
+        assert file =~ "config :esbuild"
       end
-
-      refute File.exists? "phx_blog/priv/static/css/app.css"
-      refute File.exists? "phx_blog/priv/static/css/phoenix.css"
-      refute File.exists? "phx_blog/priv/static/js/phoenix.js"
-      refute File.exists? "phx_blog/priv/static/js/phoenix.js.map"
-      refute File.exists? "phx_blog/priv/static/js/app.js"
-
-      assert File.exists?("phx_blog/assets/vendor")
 
       # Ecto
       config = ~r/config :phx_blog, PhxBlog.Repo,/
@@ -160,9 +154,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file "phx_blog/assets/js/live.js"
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_view")
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":floki")
-      assert_file "phx_blog/assets/package.json",
-                  &refute(&1 =~ ~s["phoenix_live_view": "file:../deps/phoenix_live_view"])
-
       assert_file "phx_blog/assets/js/app.js", fn file -> refute file =~ "LiveSocket" end
 
       assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
@@ -221,12 +212,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_received {:mix_shell, :info, ["Then configure your database in config/dev.exs" <> _]}
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
 
-      # Channels
-      assert File.exists?("phx_blog/lib/phx_blog_web/channels")
-      assert_file "phx_blog/lib/phx_blog_web/channels/user_socket.ex", ~r"defmodule PhxBlogWeb.UserSocket"
-      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r"socket \"/socket\", PhxBlogWeb.UserSocket"
-      assert File.exists?("phx_blog/test/phx_blog_web/channels")
-
       # Gettext
       assert_file "phx_blog/lib/phx_blog_web/gettext.ex", ~r"defmodule PhxBlogWeb.Gettext"
       assert File.exists?("phx_blog/priv/gettext/errors.pot")
@@ -236,21 +221,22 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-webpack", "--no-ecto", "--no-gettext", "--no-dashboard", "--no-mailer"])
+      Mix.Tasks.Phx.New.run([@app_name, "--no-html", "--no-assets", "--no-ecto", "--no-gettext", "--no-dashboard", "--no-mailer"])
 
-      # No webpack
-      refute File.read!("phx_blog/.gitignore") |> String.contains?("/assets/node_modules/")
-      assert_file "phx_blog/.gitignore", ~r/\n$/
+      # No assets
+      assert_file "phx_blog/.gitignore", fn file ->
+        refute file =~ "/priv/static/assets/"
+        assert file =~ ~r/\n$/
+      end
+
       assert_file "phx_blog/config/dev.exs", ~r/watchers: \[\]/
 
-      # No webpack & No HTML
-      refute_file "phx_blog/priv/static/css/app.css"
-      refute_file "phx_blog/priv/static/css/phoenix.css"
+      # No assets & No HTML
+      refute_file "phx_blog/priv/static/assets/app.css"
+      refute_file "phx_blog/priv/static/assets/phoenix.css"
       refute_file "phx_blog/priv/static/favicon.ico"
       refute_file "phx_blog/priv/static/images/phoenix.png"
-      refute_file "phx_blog/priv/static/js/phoenix.js"
-      refute_file "phx_blog/priv/static/js/phoenix.js.map"
-      refute_file "phx_blog/priv/static/js/app.js"
+      refute_file "phx_blog/priv/static/assets/app.js"
 
       # No Ecto
       config = ~r/config :phx_blog, PhxBlog.Repo,/
@@ -273,6 +259,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_ecto")
 
       assert_file "phx_blog/config/config.exs", fn file ->
+        refute file =~ "config :esbuild"
         refute file =~ "config :phx_blog, :generators"
         refute file =~ "ecto_repos:"
       end
@@ -281,6 +268,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ config
         assert file =~ "config :phoenix, :plug_init_mode, :runtime"
       end
+
       assert_file "phx_blog/config/test.exs", &refute(&1 =~ config)
       assert_file "phx_blog/config/runtime.exs", &refute(&1 =~ config)
       assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
@@ -341,7 +329,7 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
-  test "new with no_dashboard" do
+  test "new with --no-dashboard" do
     in_tmp "new with no_dashboard", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--no-dashboard"])
 
@@ -359,7 +347,7 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
-  test "new with no_html" do
+  test "new with --no-html" do
     in_tmp "new with no_html", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--no-html"])
 
@@ -381,19 +369,25 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
-  test "new with no_webpack" do
-    in_tmp "new with no_webpack", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--no-webpack"])
+  test "new with --no-assets" do
+    in_tmp "new no_assets", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--no-assets"])
+
+      assert_file "phx_blog/.gitignore", fn file ->
+        refute file =~ "/priv/static/assets/"
+      end
 
       assert_file "phx_blog/.gitignore"
       assert_file "phx_blog/.gitignore", ~r/\n$/
-      assert_file "phx_blog/priv/static/css/app.css"
-      assert_file "phx_blog/priv/static/css/phoenix.css"
+      assert_file "phx_blog/priv/static/assets/app.css"
+      assert_file "phx_blog/priv/static/assets/phoenix.css"
+      assert_file "phx_blog/priv/static/assets/app.js"
       assert_file "phx_blog/priv/static/favicon.ico"
       assert_file "phx_blog/priv/static/images/phoenix.png"
-      assert_file "phx_blog/priv/static/js/phoenix.js"
-      assert_file "phx_blog/priv/static/js/phoenix.js.map"
-      assert_file "phx_blog/priv/static/js/app.js"
+
+      assert_file "phx_blog/config/config.exs", fn file ->
+        refute file =~ "config :esbuild"
+      end
     end
   end
 
@@ -425,9 +419,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s[Welcome]
       end
 
-      assert_file "phx_blog/assets/package.json",
-                  ~s["phoenix_live_view": "file:../deps/phoenix_live_view"]
-
       assert_file "phx_blog/assets/js/app.js", fn file ->
         assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
       end
@@ -458,7 +449,7 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
-  test "new with live no_dashboard" do
+  test "new with --live --no-dashboard" do
     in_tmp "new with live no_dashboard", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--live", "--no-dashboard"])
 
@@ -517,11 +508,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert_file "phx_blog/mix.exs", fn file ->
           assert file =~ "deps_path: \"../../deps\""
           assert file =~ "lockfile: \"../../mix.lock\""
-        end
-
-        assert_file "phx_blog/assets/package.json", fn file ->
-          assert file =~ ~s["file:../../../deps/phoenix"]
-          assert file =~ ~s["file:../../../deps/phoenix_html"]
         end
       end
     end

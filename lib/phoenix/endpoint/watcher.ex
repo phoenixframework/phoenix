@@ -31,7 +31,6 @@ defmodule Phoenix.Endpoint.Watcher do
   def watch(cmd, args) when is_list(args) do
     {args, opts} = Enum.split_while(args, &is_binary(&1))
     opts = Keyword.merge([into: IO.stream(:stdio, :line), stderr_to_stdout: true], opts)
-    :ok = validate(cmd, args, opts)
 
     try do
       System.cmd(cmd, args, opts)
@@ -55,39 +54,6 @@ defmodule Phoenix.Endpoint.Watcher do
         Process.sleep(2000)
         exit(:watcher_command_error)
     end
-  end
-
-  # We specially handle Node.js to make sure we
-  # provide a good getting started experience.
-  defp validate("node", [script | _], merged_opts) do
-    script_path = Path.expand(script, cd(merged_opts))
-
-    cond do
-      !System.find_executable("node") ->
-        Logger.error(
-          "Could not start watcher because \"node\" is not available. Your Phoenix " <>
-            "application is still running, however assets won't be compiled. " <>
-            "You may fix this by installing \"node\" and then running \"npm install\" inside the \"assets\" directory."
-        )
-
-        exit(:shutdown)
-
-      not File.exists?(script_path) ->
-        Logger.error(
-          "Could not start Node.js watcher because script #{inspect(script_path)} does not " <>
-            "exist. Your Phoenix application is still running, however assets " <>
-            "won't be compiled. You may fix this by running \"npm install\" inside the \"assets\" directory."
-        )
-
-        exit(:shutdown)
-
-      true ->
-        :ok
-    end
-  end
-
-  defp validate(_cmd, _args, _opts) do
-    :ok
   end
 
   defp cd(opts), do: opts[:cd] || File.cwd!()
