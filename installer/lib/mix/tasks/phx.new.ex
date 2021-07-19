@@ -169,7 +169,7 @@ defmodule Mix.Tasks.Phx.New do
     maybe_cd(path, fn ->
       mix_step = install_mix(project, install?)
 
-      if rebar_available?() do
+      if mix_step == [] and rebar_available?() do
         cmd(project, "mix deps.compile")
       end
 
