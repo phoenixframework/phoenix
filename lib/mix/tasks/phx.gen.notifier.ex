@@ -54,8 +54,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
 
     prompt_for_conflicts(context)
 
-    if Keyword.get(test_opts, :compile_app?, true) do
-      # This is needed in order to detect if the mailer is defined in the project.
+    if "--no-compile" not in args do
       Mix.Task.run("compile")
     end
 
@@ -206,9 +205,9 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
             [{:swoosh, "~> 1.4"}]
           end
 
-      An adapter needs to be set in your configuration:
+      Finally, an adapter needs to be set in your configuration:
 
-          use Mix.Config
+          import Config
           config #{inspect(context.context_app)}, #{inspect(mailer_module)}, adapter: Swoosh.Adapters.Local
 
       Check https://hexdocs.pm/swoosh for more details.
