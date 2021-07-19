@@ -37,15 +37,9 @@ Then load dependencies to compile code and assets:
 $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 
-# Install / update JavaScript dependencies
-$ npm install --prefix assets
-
 # Compile assets
-$ npm run deploy --prefix assets
-$ MIX_ENV=prod mix phx.digest
+$ MIX_ENV=prod mix assets.deploy
 ```
-
-*Note:* the `--prefix` flag on `npm` may not work on Windows. If so, replace the first command by `cd assets && npm run deploy && cd ..`.
 
 And now run `mix release`:
 
@@ -156,7 +150,7 @@ ARG MIX_ENV="prod"
 FROM hexpm/elixir:1.11.2-erlang-23.1.2-alpine-3.12.1 as build
 
 # install build dependencies
-RUN apk add --no-cache build-base npm git python3 curl
+RUN apk add --no-cache build-base git python3 curl
 
 # prepare build dir
 WORKDIR /app
@@ -173,6 +167,7 @@ ENV MIX_ENV="${MIX_ENV}"
 COPY mix.exs mix.lock .
 RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
+
 # Dependencies sometimes use compile-time configuration. Copying
 # these compile-time config files before we compile dependencies
 # ensures that any relevant config changes will trigger the dependencies
@@ -180,21 +175,12 @@ RUN mkdir config
 COPY config/config.exs config/$MIX_ENV.exs config/
 RUN mix deps.compile
 
-# build assets
-COPY assets/package.json assets/package-lock.json ./assets/
-# install all npm dependencies from scratch
-RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
-
-COPY priv priv
-
 # Note: if your project uses a tool like https://purgecss.com/,
 # which customizes asset compilation based on what it finds in
-# your Elixir templates, you will need to move the asset compilation step
-# down so that `lib` is available.
+# your Elixir templates, you will need to move the asset compilation
+# step down so that `lib` is available.
 COPY assets assets
-# use webpack to compile npm dependencies - https://www.npmjs.com/package/webpack-deploy
-RUN npm run --prefix ./assets deploy
-RUN mix phx.digest
+RUN mix assets.deploy
 
 # compile and build the release
 COPY lib lib

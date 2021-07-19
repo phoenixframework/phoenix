@@ -1,18 +1,23 @@
-// We need to import the CSS so that webpack will load it.
-// The MiniCssExtractPlugin is used to separate it out into
-// its own CSS file.
+// We import the CSS which is extracted to its own file by esbuild.
+// Remove this line if you add a your own CSS build pipeline (e.g postcss)
 import "../css/app.css"
 
-// webpack automatically bundles all modules in your
-// entry points. Those entry points can be configured
-// in "webpack.config.js".
+// You can include dependencies in two ways.
 //
-// Import deps with the dep name or local files with a relative path, for example:
+// The simplest option is to put them in assets/vendor and
+// import them using relative paths:
 //
-//     import {Socket} from "phoenix"
-//     import socket from "./socket"
+//     import "./vendor/some-package.min.js"
 //
-<%= if @html do %>import "phoenix_html"<% end %><%= if @live do %>
+// Alternatively, you can `npm install some-package` and import
+// them using a path starting with the package name:
+//
+//     import "some-package"
+//
+
+// Include phoenix_html to handle method=PUT/DELETE in forms and buttons
+<%= if @html do %>import "phoenix_html"<% end %>
+<%= if @live do %>
 import {Socket} from "phoenix"
 import topbar from "topbar"
 import {LiveSocket} from "phoenix_live_view"

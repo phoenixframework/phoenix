@@ -8,7 +8,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
       {app_root_path, _} =
         generate_phoenix_app(tmp_dir, "phx_blog", [
           "--no-html",
-          "--no-webpack",
+          "--no-assets",
           "--no-ecto",
           "--no-gettext",
           "--no-mailer",
@@ -25,7 +25,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
     with_installer_tmp("development_workflow", fn tmp_dir ->
       {app_root_path, _} =
         generate_phoenix_app(tmp_dir, "phx_blog", [
-          "--no-webpack",
+          "--no-assets",
           "--no-ecto",
           "--no-gettext",
           "--no-mailer",
@@ -46,11 +46,6 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
       assert response.body =~ "PhxBlog"
 
       assert File.stat!(Path.join(app_root_path, "lib/phx_blog_web/views/page_view.ex")) > @epoch
-
-      # Ensure /priv static files are copied
-      assert File.exists?(Path.join(app_root_path, "priv/static/js/phoenix.js"))
-      assert File.exists?(Path.join(app_root_path, "priv/static/js/phoenix.js.map"))
-
       assert_passes_formatter_check(app_root_path)
       assert_tests_pass(app_root_path)
     end)

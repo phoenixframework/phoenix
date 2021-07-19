@@ -11,7 +11,6 @@ defmodule Phx.New.Single do
     {:eex,  "phx_single/config/test.exs",               :project, "config/test.exs"},
     {:eex,  "phx_single/lib/app_name/application.ex",   :project, "lib/:app/application.ex"},
     {:eex,  "phx_single/lib/app_name.ex",               :project, "lib/:app.ex"},
-    {:eex,  "phx_web/channels/user_socket.ex",          :project, "lib/:lib_web_name/channels/user_socket.ex"},
     {:keep, "phx_web/controllers",                      :project, "lib/:lib_web_name/controllers"},
     {:eex,  "phx_web/views/error_helpers.ex",           :project, "lib/:lib_web_name/views/error_helpers.ex"},
     {:eex,  "phx_web/views/error_view.ex",              :project, "lib/:lib_web_name/views/error_view.ex"},
@@ -67,34 +66,23 @@ defmodule Phx.New.Single do
     {:eex,  "phx_ecto/data_case.ex",         :app, "test/support/data_case.ex"},
   ]
 
-  template :webpack, [
-    {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
-    {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
-    {:eex,  "phx_assets/socket.js",         :web, "assets/js/socket.js"},
-    {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
-    {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
+  template :assets, [
+    {:eex,  "phx_static/phoenix.css", :web, "assets/css/phoenix.css"},
+    {:eex,  "phx_assets/app.css",     :web, "assets/css/app.css"},
+    {:eex,  "phx_assets/app.js",      :web, "assets/js/app.js"},
+    {:keep, "phx_assets/vendor",      :web, "assets/vendor"},
   ]
 
-  template :webpack_live, [
-    {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
-    {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
-    {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
-    {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
+  template :no_assets, [
+    {:text, "phx_static/phoenix.css", :web, "priv/static/assets/phoenix.css"},
+    {:text, "phx_static/app.css",     :web, "priv/static/assets/app.css"},
+    {:text, "phx_static/app.js",      :web, "priv/static/assets/app.js"},
   ]
-
-  template :bare, []
 
   template :static, [
-    {:text, "phx_static/app.js",      :web, "priv/static/js/app.js"},
-    {:text, "phx_static/app.css",     :web, "priv/static/css/app.css"},
-    {:text, "phx_static/phoenix.css", :web, "priv/static/css/phoenix.css"},
     {:text, "phx_static/robots.txt",  :web, "priv/static/robots.txt"},
-    {:text, "phx_static/phoenix.js",  :web, "priv/static/js/phoenix.js"},
-    {:text, "phx_static/phoenix.js.map",  :web, "priv/static/js/phoenix.js.map"},
     {:text, "phx_static/phoenix.png", :web, "priv/static/images/phoenix.png"},
-    {:text, "phx_static/favicon.ico", :web, "priv/static/favicon.ico"}
+    {:text, "phx_static/favicon.ico", :web, "priv/static/favicon.ico"},
   ]
 
   template :mailer, [
@@ -142,15 +130,9 @@ defmodule Phx.New.Single do
     end
 
     if Project.mailer?(project), do: gen_mailer(project)
-
     if Project.gettext?(project), do: gen_gettext(project)
 
-    case {Project.webpack?(project), Project.html?(project)} do
-      {true, _}      -> gen_webpack(project)
-      {false, true}  -> gen_static(project)
-      {false, false} -> gen_bare(project)
-    end
-
+    gen_assets(project)
     project
   end
 
@@ -171,31 +153,12 @@ defmodule Phx.New.Single do
     gen_ecto_config(project)
   end
 
-  def gen_static(%Project{} = project) do
-    copy_from project, __MODULE__, :static
-  end
-
-  def gen_webpack(%Project{web_path: web_path} = project) do
-    if Project.live?(project) do
-      copy_from project, __MODULE__, :webpack_live
-    else
-      copy_from project, __MODULE__, :webpack
+  def gen_assets(%Project{} = project) do
+    if Project.assets?(project) or Project.html?(project) do
+      command = if Project.assets?(project), do: :assets, else: :no_assets
+      copy_from project, __MODULE__, command
+      copy_from project, __MODULE__, :static
     end
-
-    statics = %{
-      "phx_static/phoenix.css" => "assets/css/phoenix.css",
-      "phx_static/robots.txt" => "assets/static/robots.txt",
-      "phx_static/phoenix.png" => "assets/static/images/phoenix.png",
-      "phx_static/favicon.ico" => "assets/static/favicon.ico"
-    }
-
-    for {source, target} <- statics do
-      create_file Path.join(web_path, target), render(:static, source, project.binding)
-    end
-  end
-
-  def gen_bare(%Project{} = project) do
-    copy_from project, __MODULE__, :bare
   end
 
   def gen_mailer(%Project{} = project) do
@@ -203,8 +166,8 @@ defmodule Phx.New.Single do
   end
 
   def assert_live_switches!(project) do
-    unless Project.html?(project) and Project.webpack?(project) do
-      raise "cannot generate --live project with --no-html or --no-webpack. LiveView requires HTML and webpack"
+    unless Project.html?(project) and Project.assets?(project) do
+      raise "cannot generate --live project with --no-html or --no-assets. LiveView requires HTML and assets"
     end
   end
 end

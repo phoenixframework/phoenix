@@ -10,9 +10,7 @@ We can run `mix phx.new` from any directory in order to bootstrap our Phoenix ap
 $ mix phx.new hello
 ```
 
-> A note about [webpack](https://webpack.js.org/) before we begin: Phoenix will use webpack for asset management by default. Webpack's dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `mix phx.new` task. If we say "no" at that point, and if we don't install those dependencies later with `npm install --prefix assets`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use webpack at all, we can simply pass `--no-webpack` to `mix phx.new`.
-
-> A note about [Ecto](ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL, MySQL, and others. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to `mix phx.new`. This flag may also be combined with `--no-webpack` to create a skeleton application.
+> A note about [Ecto](ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL, MySQL, and others. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to `mix phx.new`.
 
 > To learn more about `mix phx.new` you can read the [Mix Tasks Guide](mix_tasks.html#phoenix-specific-mix-tasks).
 
@@ -22,8 +20,6 @@ mix phx.new hello
 * creating hello/config/dev.exs
 * creating hello/config/prod.exs
 ...
-* creating hello/assets/static/images/phoenix.png
-* creating hello/assets/static/favicon.ico
 
 Fetch and install dependencies? [Yn]
 ```
@@ -38,7 +34,6 @@ When it's done, it will ask us if we want it to install our dependencies for us.
 Fetch and install dependencies? [Yn] Y
 * running mix deps.get
 * running mix deps.compile
-* running cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
 
 We are almost there! The following steps are missing:
 
@@ -66,8 +61,6 @@ Ok, let's give it a try. First, we'll `cd` into the `hello/` directory we've jus
 ```console
 $ cd hello
 ```
-
-> If you followed the [Installation Guide](installation.html) and opted to add `{:cowboy, "~> 2.7.0"}` to your mix.exs, go ahead and do that now and run `mix deps.get`.
 
 Now we'll create our database:
 
@@ -101,7 +94,6 @@ We are almost there! The following steps are missing:
 
     $ cd hello
     $ mix deps.get
-    $ cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
 
 Then configure your database in config/dev.exs and run:
 

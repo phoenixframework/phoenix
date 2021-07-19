@@ -168,7 +168,7 @@ defmodule Phx.New.Generator do
     live = Keyword.get(opts, :live, false)
     dashboard = Keyword.get(opts, :dashboard, true)
     gettext = Keyword.get(opts, :gettext, true)
-    webpack = Keyword.get(opts, :webpack, true)
+    assets = Keyword.get(opts, :assets, true)
     mailer = Keyword.get(opts, :mailer, true)
     dev = Keyword.get(opts, :dev, false)
     phoenix_path = phoenix_path(project, dev)
@@ -202,17 +202,12 @@ defmodule Phx.New.Generator do
       web_namespace: inspect(project.web_namespace),
       phoenix_github_version_tag: "v#{version.major}.#{version.minor}",
       phoenix_dep: phoenix_dep(phoenix_path, version),
-      phoenix_path: phoenix_path,
-      phoenix_webpack_path: phoenix_webpack_path(project, dev),
-      phoenix_html_webpack_path: phoenix_html_webpack_path(project),
-      phoenix_live_view_webpack_path: phoenix_live_view_webpack_path(project),
-      phoenix_static_path: phoenix_static_path(phoenix_path),
       pubsub_server: pubsub_server,
       secret_key_base: random_string(64),
       signing_salt: random_string(8),
       lv_signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
-      webpack: webpack,
+      assets: assets,
       mailer: mailer,
       ecto: ecto,
       html: html,
@@ -400,30 +395,6 @@ defmodule Phx.New.Generator do
   defp phoenix_path_prefix(%Project{in_umbrella?: true}), do: "../../../"
   defp phoenix_path_prefix(%Project{in_umbrella?: false}), do: ".."
 
-  defp phoenix_webpack_path(%Project{in_umbrella?: true}, true = _dev),
-    do: "../../../../../"
-
-  defp phoenix_webpack_path(%Project{in_umbrella?: true}, false = _dev),
-    do: "../../../deps/phoenix"
-
-  defp phoenix_webpack_path(%Project{in_umbrella?: false}, true = _dev),
-    do: "../../../"
-
-  defp phoenix_webpack_path(%Project{in_umbrella?: false}, false = _dev),
-    do: "../deps/phoenix"
-
-  defp phoenix_html_webpack_path(%Project{in_umbrella?: true}),
-    do: "../../../deps/phoenix_html"
-
-  defp phoenix_html_webpack_path(%Project{in_umbrella?: false}),
-    do: "../deps/phoenix_html"
-
-  defp phoenix_live_view_webpack_path(%Project{in_umbrella?: true}),
-    do: "../../../deps/phoenix_live_view"
-
-  defp phoenix_live_view_webpack_path(%Project{in_umbrella?: false}),
-    do: "../deps/phoenix_live_view"
-
   defp phoenix_dep("deps/phoenix", %{pre: ["dev"]}),
     do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
 
@@ -433,10 +404,6 @@ defmodule Phx.New.Generator do
   defp phoenix_dep(path, _version),
     do: ~s[{:phoenix, path: #{inspect(path)}, override: true}]
 
-  defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"
-  defp phoenix_static_path(path), do: Path.join("..", path)
-
-  defp random_string(length) do
-    :crypto.strong_rand_bytes(length) |> Base.encode64() |> binary_part(0, length)
-  end
+  defp random_string(length),
+    do: :crypto.strong_rand_bytes(length) |> Base.encode64() |> binary_part(0, length)
 end

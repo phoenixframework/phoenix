@@ -170,7 +170,7 @@ The following libraries exist today, and new ones are always welcome.
 
 #### Official
 
-Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [phoenix.js](https://github.com/phoenixframework/phoenix/blob/v1.4/assets/js/phoenix.js).
+Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [phoenix.js](https://github.com/phoenixframework/phoenix/blob/master/assets/js/phoenix.js).
 
 #### 3rd Party
 
@@ -236,8 +236,6 @@ For our chat app, we'll allow anyone to join the `"room:lobby"` topic, but any o
 To authorize the socket to join a topic, we return `{:ok, socket}` or `{:ok, reply, socket}`. To deny access, we return `{:error, reply}`. More information about authorization with tokens can be found in the [`Phoenix.Token` documentation](https://hexdocs.pm/phoenix/Phoenix.Token.html).
 
 With our channel in place, let's get the client and server talking.
-
-Phoenix projects come with [webpack](https://webpack.js.org) by default, unless disabled with the `--no-webpack` option when you run `mix phx.new`.
 
 The `assets/js/socket.js` defines a simple client based on the socket implementation that ships with Phoenix.
 

@@ -43,7 +43,8 @@ defmodule <%= @web_namespace %>.MixProject do
       {:floki, ">= 0.30.0", only: :test},<% end %>
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if @dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.4"},<% end %>
+      {:phoenix_live_dashboard, "~> 0.4"},<% end %><%= if @assets do %>
+      {:esbuild, "~> 0.1", runtime: Mix.env() == :dev},<% end %>
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},<%= if @gettext do %>
       {:gettext, "~> 0.11"},<% end %><%= if @app_name != @web_app_name do %>
@@ -58,8 +59,9 @@ defmodule <%= @web_namespace %>.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get"<%= if @webpack do %>, "cmd npm install --prefix assets"<% end %>]<%= if @ecto do %>,
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %>
+      setup: ["deps.get"]<%= if @ecto do %>,
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %><%= if @assets do %>,
+      "assets.deploy": ["esbuild default --minify", "phx.digest"]<% end %>
     ]
   end
 end
