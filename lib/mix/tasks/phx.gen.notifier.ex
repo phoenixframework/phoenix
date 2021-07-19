@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
   alias Mix.Phoenix.Context
 
   @doc false
-  def run(args, test_opts \\ []) do
+  def run(args) do
     if Mix.Project.umbrella?() do
       Mix.raise(
         "mix phx.gen.notifier must be invoked from within your *_web application root directory"

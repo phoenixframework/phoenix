@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.Gen.NotifierTest do
 
   test "new notifier", config do
     in_tmp_project(config.test, fn ->
-      Gen.Notifier.run(~w(Accounts User welcome_user reset_password), compile_app?: false)
+      Gen.Notifier.run(~w(Accounts User welcome_user reset_password --no-compile))
 
       assert_file("lib/phoenix/accounts/user_notifier.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Accounts.UserNotifier do|
@@ -39,7 +39,7 @@ defmodule Mix.Tasks.Phx.Gen.NotifierTest do
       send(self(), {:mix_shell_input, :yes?, true})
       send(self(), {:mix_shell_input, :yes?, true})
 
-      Gen.Notifier.run(~w(Accounts User account_confirmation), compile_app?: false)
+      Gen.Notifier.run(~w(Accounts User account_confirmation --no-compile))
 
       assert_received {:mix_shell, :info,
                        ["The following files conflict with new files to be generated:" <> notice]}
@@ -67,7 +67,7 @@ defmodule Mix.Tasks.Phx.Gen.NotifierTest do
 
   test "generates nested notifier", config do
     in_tmp_project(config.test, fn ->
-      Gen.Notifier.run(~w(Admin.Accounts User welcome_user reset_password), compile_app?: false)
+      Gen.Notifier.run(~w(Admin.Accounts User welcome_user reset_password --no-compile))
 
       assert_file("lib/phoenix/admin/accounts/user_notifier.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Admin.Accounts.UserNotifier do|
@@ -88,7 +88,7 @@ defmodule Mix.Tasks.Phx.Gen.NotifierTest do
   test "in an umbrella with a context_app, generates the notifier", config do
     in_tmp_umbrella_project(config.test, fn ->
       Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
-      Gen.Notifier.run(~w(Accounts User welcome_user reset_password), compile_app?: false)
+      Gen.Notifier.run(~w(Accounts User welcome_user reset_password --no-compile))
 
       assert_file("another_app/lib/another_app/accounts/user_notifier.ex", fn file ->
         assert file =~ ~S|defmodule AnotherApp.Accounts.UserNotifier do|
@@ -103,29 +103,29 @@ defmodule Mix.Tasks.Phx.Gen.NotifierTest do
   test "invalid mix arguments", config do
     in_tmp_project(config.test, fn ->
       assert_raise Mix.Error, ~r/Expected the context, "blog", to be a valid module name/, fn ->
-        Gen.Notifier.run(~w(blog Post new_post), compile_app?: false)
+        Gen.Notifier.run(~w(blog Post new_post --no-compile))
       end
 
       assert_raise Mix.Error, ~r/Expected the notifier, "posts", to be a valid module name/, fn ->
-        Gen.Notifier.run(~w(Post posts new_post), compile_app?: false)
+        Gen.Notifier.run(~w(Post posts new_post --no-compile))
       end
 
       assert_raise Mix.Error,
                    ~r/Cannot generate context Phoenix because it has the same name as the application/,
                    fn ->
-                     Gen.Notifier.run(~w(Phoenix Post new_blog_post), compile_app?: false)
+                     Gen.Notifier.run(~w(Phoenix Post new_blog_post --no-compile))
                    end
 
       assert_raise Mix.Error,
                    ~r/Cannot generate notifier Phoenix because it has the same name as the application/,
                    fn ->
-                     Gen.Notifier.run(~w(Blog Phoenix new_blog_post), compile_app?: false)
+                     Gen.Notifier.run(~w(Blog Phoenix new_blog_post --no-compile))
                    end
 
       assert_raise Mix.Error,
                    ~r/Cannot generate notifier "Post" because one of the messages is invalid: "NewPost"/,
                    fn ->
-                     Gen.Notifier.run(~w(Blog Post NewPost), compile_app?: false)
+                     Gen.Notifier.run(~w(Blog Post NewPost --no-compile))
                    end
     end)
   end
