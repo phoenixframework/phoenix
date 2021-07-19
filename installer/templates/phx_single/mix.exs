@@ -40,11 +40,11 @@ defmodule <%= @app_module %>.MixProject do
       <%= @phoenix_dep %>,<%= if @ecto do %>
       {:phoenix_ecto, "~> 4.1"},
       {:ecto_sql, "~> 3.5"},
-      {<%= inspect @adapter_app %>, ">= 0.0.0"},<% end %><%= if @html do %><%= if @live do %>
-      {:phoenix_live_view, "~> 0.15.7"},
-      {:floki, ">= 0.30.0", only: :test},<% end %>
+      {<%= inspect @adapter_app %>, ">= 0.0.0"},<% end %><%= if @html do %>
       {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if @dashboard do %>
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:phoenix_live_view, "~> 0.15.7"},
+      {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.4"},<% end %><%= if @assets do %>
       {:esbuild, "~> 0.1", runtime: Mix.env() == :dev},<% end %><%= if @mailer do %>
       {:swoosh, "~> 1.3"},<% end %>

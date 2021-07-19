@@ -98,14 +98,19 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file app_path(@app, "test/test_helper.exs")
 
       assert_file web_path(@app, "lib/#{@app}_web/application.ex"), ~r/defmodule PhxUmbWeb.Application do/
+
       assert_file web_path(@app, "mix.exs"), fn file ->
         assert file =~ "mod: {PhxUmbWeb.Application, []}"
         assert file =~ "{:jason, \"~> 1.0\"}"
       end
+
       assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
         assert file =~ "defmodule PhxUmbWeb do"
         assert file =~ ~r/use Phoenix.View,\s+root: "lib\/phx_umb_web\/templates"/
+        assert file =~ "use Phoenix.HTML"
+        assert file =~ "Phoenix.LiveView"
       end
+
       assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), ~r/defmodule PhxUmbWeb.Endpoint do/
       assert_file web_path(@app, "test/#{@app}_web/controllers/page_controller_test.exs")
       assert_file web_path(@app, "test/#{@app}_web/views/page_view_test.exs")
@@ -146,7 +151,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "mix.exs"), fn file ->
         assert file =~ "{:phx_umb, in_umbrella: true}"
         assert file =~ "{:phoenix,"
-        refute file =~ "{:phoenix_live_view,"
+        assert file =~ "{:phoenix_live_view,"
         assert file =~ "{:gettext,"
         assert file =~ "{:plug_cowboy,"
       end
@@ -296,12 +301,18 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_html")
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_reload")
-      assert_file web_path(@app, "lib/#{@app}_web.ex"),
-                  &assert(&1 =~ "defp view_helpers do")
-      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"),
-                  &refute(&1 =~ ~r"Phoenix.LiveReloader")
-      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"),
-                  &refute(&1 =~ ~r"Phoenix.LiveReloader.Socket")
+
+      assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
+        assert file =~ "defp view_helpers do"
+        refute file =~ "Phoenix.HTML"
+        refute file =~ "Phoenix.LiveView"
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), fn file ->
+        refute file =~ ~r"Phoenix.LiveReloader"
+        refute file =~ ~r"Phoenix.LiveReloader.Socket"
+      end
+
       assert_file web_path(@app, "lib/#{@app}_web/views/error_view.ex"), ~r".json"
       assert_file web_path(@app, "lib/#{@app}_web/router.ex"), &refute(&1 =~ ~r"pipeline :browser")
 
@@ -354,6 +365,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ~s|defmodule PhxUmbWeb.Endpoint|
         assert file =~ ~s|socket "/live"|
         assert file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
+        refute file =~ ~s|Phoenix.HTML|
+        refute file =~ ~s|Phoenix.LiveView|
       end
 
       assert_file web_path(@app, "lib/#{@app}_web/router.ex"), fn file ->
