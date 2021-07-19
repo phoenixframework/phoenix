@@ -4,7 +4,6 @@ In order to build a Phoenix application, we will need a few dependencies install
 
   * the Erlang VM and the Elixir programming language
   * a database - Phoenix recommends PostgreSQL but you can pick others or not use a database at all
-  * Node.js for assets - which can be opt-out, especially if you are building APIs
   * and other optional packages.
 
 Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.
@@ -27,8 +26,6 @@ Elixir code compiles to Erlang byte code to run on the Erlang virtual machine. W
 
 When we install Elixir using instructions from the Elixir [Installation Page](https://elixir-lang.org/install.html),  we will usually get Erlang too. If Erlang was not installed along with Elixir, please see the [Erlang Instructions](https://elixir-lang.org/install.html#installing-erlang) section of the Elixir Installation Page for instructions.
 
-> A note about Erlang and Phoenix: while Phoenix itself only requires Erlang 21 or later, one of Phoenix's dependencies, [cowboy](https://github.com/ninenines/cowboy), depends on Erlang 22.
-
 ## Phoenix
 
 To check that we are on Elixir 1.12 and Erlang 22 or later, run:
@@ -48,15 +45,6 @@ $ mix archive.install hex phx_new
 
 The `phx.new` generator is now available to generate new applications in the next guide, called [Up and Running](up_and_running.html). The flags mentioned below are command line options to the generator; see all available options by calling `mix help phx.new`.
 
-## Node.js
-
-Node.js is an optional dependency. Phoenix will use [webpack](https://webpack.js.org) to compile static assets (JavaScript, CSS, etc), by default. Webpack uses the node package manager (npm) to install its dependencies, and npm requires Node.js.
-
-If we don't have any static assets, or we want to use another build tool, we can pass the `--no-webpack` flag when creating a new application and Node.js won't be required at all.
-
-We can get Node.js from [nodejs.org](https://nodejs.org).  
-macOS users can also install Node.js via [homebrew](https://brew.sh/).
-
 ## PostgreSQL
 
 PostgreSQL is a relational database server. Phoenix configures applications to use it by default, but we can switch to MySQL, MSSQL, or SQLite3 by passing the `--database` flag when creating a new application.
@@ -73,4 +61,4 @@ macOS and Windows users already have a filesystem watcher but Linux users must i
 
 ## Summary
 
-At the end of this section, you must have installed Elixir, Hex, Phoenix, PostgreSQL and Node.js. Now that we have everything installed, let's create our first Phoenix application and get [up and running](up_and_running.html).
+At the end of this section, you must have installed Elixir, Hex, Phoenix, and PostgreSQL. Now that we have everything installed, let's create our first Phoenix application and get [up and running](up_and_running.html).

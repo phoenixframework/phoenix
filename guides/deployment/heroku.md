@@ -97,16 +97,26 @@ The buildpack uses a predefined Elixir and Erlang version but to avoid surprises
 
 ```
 # Elixir version
-elixir_version=1.10.3
+elixir_version=1.12.2
 
 # Erlang version
 # available versions https://github.com/HashNuke/heroku-buildpack-elixir-otp-builds/blob/master/otp-versions
-erlang_version=22.2.8
+erlang_version=24.0.3
+
+# To compile assets with esbuild
+# Note we nuke the esbuild executable from the image
+hook_post_compile="mix assets.deploy && rm -f _build/esbuild"
 ```
 
-### Adding the Phoenix Server and Assets Buildpack
+Finally, let's tell the build pack how to start our webserver. Create a file named `Procfile` at the root of your project:
 
-To successfully run Phoenix in production, we need to compile assets and start the Phoenix server. The [Phoenix Static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) can take care of that for us, so let's add it now.
+```
+web: mix phx.server
+```
+
+### Optional: Assets Buildpack
+
+By default, Phoenix uses `esbuild` and manages all assets for you. However, if you are using `npm`, `webpack`, `postcss`, or similar tools, you will need to install the [Phoenix Static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) to handle them:
 
 ```console
 $ heroku buildpacks:add https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
@@ -122,15 +132,7 @@ The Phoenix Static buildpack uses a predefined Node.js version but to avoid surp
 node_version=10.20.1
 ```
 
-Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
-
-The Phoenix Static buildpack also configures Heroku to use the proper command to start your application. The Elixir Buildpack runs by default `mix run --no-halt`, which will not start your Phoenix server. The Phoenix Static buildpack changes it to the proper `mix phx.server`. If you don't want to use the Phoenix Static buildpack, then you must manually define a `Procfile` at the root of your application with the proper command:
-
-```
-web: mix phx.server
-```
-
-Heroku will recognize this file and use the command to start your application, ensuring that it also starts the Phoenix server.
+Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile). If using this buildpack, note you may want to remove `hook_post_compile` from `elixir_buildpack.config`.
 
 Finally, note that since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to make sure the Phoenix Static buildpack comes last.
 
@@ -147,7 +149,6 @@ url: [host: "example.com", port: 80],
 ... and replace it with this (don't forget to replace `mysterious-meadow-6277` with your application name):
 
 ```elixir
-http: [port: {:system, "PORT"}],
 url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
 force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
@@ -225,7 +226,6 @@ Let's commit all our changes:
 
 ```console
 $ git add elixir_buildpack.config
-$ git add phoenix_static_buildpack.config
 $ git commit -a -m "Use production config from Heroku ENV variables and decrease socket timeout"
 ```
 
@@ -285,24 +285,6 @@ remote:        [...]
 remote:        Will export the following config vars:
 remote:        * Config vars DATABASE_URL
 remote:        * MIX_ENV=prod
-remote:
-remote: -----> Installing binaries
-remote:        Downloading node 0.12.4...
-remote:        Installing node 0.12.4...
-remote:        Using default npm version
-remote:
-remote: -----> Building dependencies
-remote:        [...]
-remote:               Building Phoenix static assets
-remote:        07 Jul 00:06:22 - info: compiled 3 files into 2 files, copied 3 in 3616ms
-remote:        Check your digested files at 'priv/static'.
-remote:
-remote: -----> Finalizing build
-remote:        Creating runtime environment
-remote:
-remote: -----> Discovering process types
-remote:        Procfile declares types     -> (web)
-remote:        Default types for Multipack -> web
 remote:
 remote: -----> Compressing... done, 82.1MB
 remote: -----> Launching... done, v5

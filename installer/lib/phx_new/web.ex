@@ -13,7 +13,6 @@ defmodule Phx.New.Web do
     {:config, "#{@pre}/config/test.exs",              :project, "config/test.exs"},
     {:eex,  "#{@pre}/lib/app_name.ex",                :web, "lib/:web_app.ex"},
     {:eex,  "#{@pre}/lib/app_name/application.ex",    :web, "lib/:web_app/application.ex"},
-    {:eex,  "phx_web/channels/user_socket.ex",        :web, "lib/:web_app/channels/user_socket.ex"},
     {:keep, "phx_web/controllers",                    :web, "lib/:web_app/controllers"},
     {:eex,  "phx_web/endpoint.ex",                    :web, "lib/:web_app/endpoint.ex"},
     {:eex,  "phx_web/router.ex",                      :web, "lib/:web_app/router.ex"},
@@ -75,9 +74,6 @@ defmodule Phx.New.Web do
 
   def generate(%Project{} = project) do
     inject_umbrella_config_defaults(project)
-
-    if Project.live?(project), do: Phx.New.Single.assert_live_switches!(project)
-
     copy_from project, __MODULE__, :new
 
     cond do
@@ -88,12 +84,7 @@ defmodule Phx.New.Web do
 
     if Project.gettext?(project), do: gen_gettext(project)
 
-    case {Project.webpack?(project), Project.html?(project)} do
-      {true, _}      -> Phx.New.Single.gen_webpack(project)
-      {false, true}  -> Phx.New.Single.gen_static(project)
-      {false, false} -> Phx.New.Single.gen_bare(project)
-    end
-
+    Phx.New.Single.gen_assets(project)
     project
   end
 

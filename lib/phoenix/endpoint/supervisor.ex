@@ -156,17 +156,10 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp watcher_children(_mod, conf, server?) do
     if server? do
-      Enum.map(conf[:watchers], fn {cmd, args} ->
-        {Phoenix.Endpoint.Watcher, watcher_args(cmd, args)}
-      end)
+      Enum.map(conf[:watchers], &{Phoenix.Endpoint.Watcher, &1})
     else
       []
     end
-  end
-
-  defp watcher_args(cmd, cmd_args) do
-    {args, opts} = Enum.split_while(cmd_args, &is_binary(&1))
-    {cmd, args, opts}
   end
 
   @doc """
@@ -206,7 +199,7 @@ defmodule Phoenix.Endpoint.Supervisor do
      http: false,
      https: false,
      reloadable_apps: nil,
-     reloadable_compilers: [:gettext, :phoenix, :elixir],
+     reloadable_compilers: [:gettext, :elixir],
      secret_key_base: nil,
      static_url: nil,
      url: [host: "localhost", path: "/"],

@@ -21,14 +21,15 @@ erl_crash.dump
 
 # Ignore package tarball (built via "mix hex.build").
 <%= @web_app_name %>-*.tar
-<%= if @webpack do %>
-# If NPM crashes, it generates a log, let's ignore it too.
-npm-debug.log
+<%= if @assets do %>
+# Ignore assets that are produced by build tools.
+/priv/static/assets/
 
-# The directory NPM downloads your dependencies sources to.
+# In case you use Node.js/npm, you want to ignore these.
+npm-debug.log
 /assets/node_modules/
+<% end %><%= if @adapter_app == :ecto_sqlite3 do %>
+# Database files
+*.db
+*.db-*
 <% end %>
-# Since we are building assets from assets/,
-# we ignore priv/static. You may want to comment
-# this depending on your deployment strategy.
-/priv/static/

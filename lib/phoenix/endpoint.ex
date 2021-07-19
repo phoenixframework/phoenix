@@ -162,15 +162,24 @@ defmodule Phoenix.Endpoint do
       the "watch" mode of the webpack build tool when the server starts.
       You can configure it to whatever build tool or command you want:
 
-          [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development",
-              "--watch", "--watch-options-stdin"]]
+          [
+            node: [
+              "node_modules/webpack/bin/webpack.js",
+              "--mode",
+              "development",
+              "--watch",
+              "--watch-options-stdin"
+            ]
+          ]
 
-      The `:cd` option can be used on a watcher to override the folder from
-      which the watcher will run. By default this will be the project's root:
-      `File.cwd!()`
+      The `:cd` and `:env` options can be given at the end of the list to customize
+      the watcher:
 
-          [node: ["node_modules/webpack/bin/webpack.js", "--mode", "development",
-              "--watch", "--watch-options-stdin", cd: "my_frontend"]]
+          [node: [..., cd: "assets"]]
+
+      A watcher can also be a module-function-args tuple that will be invoked accordingly:
+
+          [another: {Mod, :fun, [arg1, arg2]}]
 
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of
