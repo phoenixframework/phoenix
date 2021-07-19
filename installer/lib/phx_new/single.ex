@@ -48,6 +48,7 @@ defmodule Phx.New.Single do
   ]
 
   template :live, [
+    {:eex, "phx_live/assets/topbar.js",                      :web,     "assets/vendor/topbar.js"},
     {:eex, "phx_live/templates/layout/root.html.leex",       :project, "lib/:lib_web_name/templates/layout/root.html.leex"},
     {:eex, "phx_live/templates/layout/app.html.leex",        :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
     {:eex, "phx_live/templates/layout/live.html.leex",       :project, "lib/:lib_web_name/templates/layout/live.html.leex"},

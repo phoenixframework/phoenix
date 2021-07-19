@@ -7,7 +7,7 @@ import "../css/app.css"
 // The simplest option is to put them in assets/vendor and
 // import them using relative paths:
 //
-//     import "./vendor/some-package.min.js"
+//     import "./vendor/some-package.js"
 //
 // Alternatively, you can `npm install some-package` and import
 // them using a path starting with the package name:
@@ -20,8 +20,8 @@ import "phoenix_html"
 <%= if @live do %>
 // Establish Phoenix Socket and LiveView configuration.
 import {Socket} from "phoenix"
-import topbar from "topbar"
 import {LiveSocket} from "phoenix_live_view"
+import topbar from "../vendor/topbar"
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
