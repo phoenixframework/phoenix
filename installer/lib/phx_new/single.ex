@@ -118,8 +118,6 @@ defmodule Phx.New.Single do
   end
 
   def generate(%Project{} = project) do
-    if Project.live?(project), do: assert_live_switches!(project)
-
     copy_from project, __MODULE__, :new
 
     if Project.ecto?(project), do: gen_ecto(project)
@@ -164,11 +162,5 @@ defmodule Phx.New.Single do
 
   def gen_mailer(%Project{} = project) do
     copy_from project, __MODULE__, :mailer
-  end
-
-  def assert_live_switches!(project) do
-    unless Project.html?(project) and Project.assets?(project) do
-      raise "cannot generate --live project with --no-html or --no-assets. LiveView requires HTML and assets"
-    end
   end
 end

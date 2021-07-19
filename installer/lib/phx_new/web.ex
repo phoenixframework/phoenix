@@ -74,9 +74,6 @@ defmodule Phx.New.Web do
 
   def generate(%Project{} = project) do
     inject_umbrella_config_defaults(project)
-
-    if Project.live?(project), do: Phx.New.Single.assert_live_switches!(project)
-
     copy_from project, __MODULE__, :new
 
     cond do
