@@ -4,16 +4,17 @@ defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Notifier do
   alias <%= inspect context.base_module %>.Mailer
 
   # Delivers the email using the application mailer.
-  #
-  # The result can be different based on the adapter,
-  # but will be `{:ok, term()} | {:error, term()}`.
-  defp deliver(email, subject, body) do
-    new()
-    |> to(email)
-    |> from({"MyApp", "contact@example.com"})
-    |> subject(subject)
-    |> text_body(body)
-    |> Mailer.deliver()
+  defp deliver(recipient, subject, body) do
+    email =
+      new()
+      |> to(recipient)
+      |> from({"MyApp", "contact@example.com"})
+      |> subject(subject)
+      |> text_body(body)
+
+    with {:ok, _metadata} <- Mailer.deliver(email) do
+      {:ok, email}
+    end
   end
 
   @doc """
