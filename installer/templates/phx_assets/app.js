@@ -2,7 +2,7 @@
 // Remove this line if you add a your own CSS build pipeline (e.g postcss)
 import "../css/app.css"
 
-// You can bring dependencies in two ways.
+// You can include dependencies in two ways.
 //
 // The simplest option is to put them in assets/vendor and
 // import them using relative paths:
@@ -15,7 +15,7 @@ import "../css/app.css"
 //     import "some-package"
 //
 
-// Bring phoenix_html to deal with method=PUT/DELETE in forms and buttons
+// Include phoenix_html to handle method=PUT/DELETE in forms and buttons
 <%= if @html do %>import "phoenix_html"<% end %>
 <%= if @live do %>
 import {Socket} from "phoenix"

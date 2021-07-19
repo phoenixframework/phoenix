@@ -49,7 +49,7 @@ $ MIX_ENV=prod mix assets.deploy
 Check your digested files at "priv/static".
 ```
 
-And that is it! The first command builds the assets and the second generates digests as well as a cache manifest file so Phoenix can quickly serve assets in production.
+And that is it! The Mix task by default builds the assets and then generates digests with a cache manifest file so Phoenix can quickly serve assets in production.
 
 Keep in mind that, if you by any chance forget to run the steps above, Phoenix will show an error message:
 
