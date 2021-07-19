@@ -19,6 +19,6 @@
 
   def extract_<%= schema.singular %>_token(fun) do
     {:ok, captured} = fun.(&"[TOKEN]#{&1}[TOKEN]")
-    [_, token, _] = String.split(captured.body, "[TOKEN]")
+    [_, token | _] = String.split(captured.body, "[TOKEN]")
     token
   end
