@@ -89,7 +89,14 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert_file "lib/my_app/accounts.ex"
       assert_file "lib/my_app/accounts/user.ex"
       assert_file "lib/my_app/accounts/user_token.ex"
-      assert_file "lib/my_app/accounts/user_notifier.ex"
+      assert_file "lib/my_app/accounts/user_notifier.ex", fn file ->
+        assert file =~ "defmodule MyApp.Accounts.UserNotifier do"
+        assert file =~ "import Swoosh.Email"
+        assert file =~ "Mailer.deliver(email)"
+        assert file =~ ~s|deliver(user.email, "Confirmation instructions",|
+        assert file =~ ~s|deliver(user.email, "Reset password instructions",|
+        assert file =~ ~s|deliver(user.email, "Update email instructions",|
+      end
       assert_file "test/my_app/accounts_test.exs"
       assert_file "test/support/fixtures/accounts_fixtures.ex"
       assert_file "lib/my_app_web/controllers/user_auth.ex"
@@ -187,6 +194,14 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         $ mix ecto.migrate
       """]}
+
+      assert_received {:mix_shell, :info, ["Unable to find the \"MyApp.Mailer\"" <> mailer_notice]}
+      assert mailer_notice =~ ~s(A mailer module like the following is expected to be defined)
+      assert mailer_notice =~ ~s(in your application in order to send emails.)
+      assert mailer_notice =~ ~s(defmodule MyApp.Mailer do)
+      assert mailer_notice =~ ~s(use Swoosh.Mailer, otp_app: :my_app)
+      assert mailer_notice =~ ~s(def deps do)
+      assert mailer_notice =~ ~s(https://hexdocs.pm/swoosh)
     end)
   end
 

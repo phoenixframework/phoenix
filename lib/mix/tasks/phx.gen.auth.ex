@@ -143,6 +143,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> maybe_inject_router_import(binding)
     |> maybe_inject_router_plug()
     |> maybe_inject_app_layout_menu()
+    |> Gen.Notifier.maybe_print_mailer_installation_instructions()
     |> print_shell_instructions()
   end
 

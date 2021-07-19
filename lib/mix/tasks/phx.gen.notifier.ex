@@ -11,8 +11,13 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
   are the functions that will be created prefixed by "deliver",
   so the message name should be "snake_case" without punctuation.
 
-  Note that this task expects that you have a mailer defined
-  as "YourApp.Mailer". Check the `mix phx.new` task for more details.
+  Additionaly a context app can be specified with the flag
+  `--context-app`, which is useful if the notifier is being
+  generated in a different app under an umbrella.
+
+      mix phx.gen.notifier Accounts User welcome_user --context-app marketing
+
+  The app "marketing" must exist before the command is executed.
   """
 
   use Mix.Task
@@ -49,12 +54,19 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
 
     prompt_for_conflicts(context)
 
-    copy_new_files(context, binding, paths)
+    if "--no-compile" not in args do
+      Mix.Task.run("compile")
+    end
+
+    context
+    |> copy_new_files(binding, paths)
+    |> maybe_print_mailer_installation_instructions()
   end
 
   @doc false
   def build(args, help \\ __MODULE__) do
     {opts, parsed, _} = parse_opts(args)
+
     [context_name, notifier_name | notifier_messages] = validate_args!(parsed, help)
 
     notifier_module = inspect(Module.concat(context_name, "#{notifier_name}Notifier"))
@@ -163,5 +175,45 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
     context
     |> files_to_be_generated()
     |> Mix.Phoenix.prompt_for_conflicts()
+  end
+
+  @doc """
+  Print mailer instructions if mailer is not defined.
+
+  This is useful for applications there were created without the
+  mailer.
+  """
+  @spec maybe_print_mailer_installation_instructions(%Context{}) :: %Context{}
+  def maybe_print_mailer_installation_instructions(%Context{} = context) do
+    mailer_module = Module.concat([context.base_module, "Mailer"])
+
+    unless Code.ensure_loaded?(mailer_module) do
+      Mix.shell().info("""
+      Unable to find the "#{inspect(mailer_module)}" module defined.
+
+      A mailer module like the following is expected to be defined
+      in your application in order to send emails.
+
+          defmodule #{inspect(mailer_module)} do
+            use Swoosh.Mailer, otp_app: #{inspect(context.context_app)}
+          end
+
+      It is also necessary to add "swoosh" as a dependency in your
+      "mix.exs" file:
+
+          def deps do
+            [{:swoosh, "~> 1.4"}]
+          end
+
+      Finally, an adapter needs to be set in your configuration:
+
+          import Config
+          config #{inspect(context.context_app)}, #{inspect(mailer_module)}, adapter: Swoosh.Adapters.Local
+
+      Check https://hexdocs.pm/swoosh for more details.
+      """)
+    end
+
+    context
   end
 end

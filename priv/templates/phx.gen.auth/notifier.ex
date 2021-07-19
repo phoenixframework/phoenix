@@ -1,21 +1,27 @@
 defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Notifier do
-  # For simplicity, this module simply logs messages to the terminal.
-  # You should replace it by a proper email or notification tool, such as:
-  #
-  #   * Swoosh - https://hexdocs.pm/swoosh
-  #   * Bamboo - https://hexdocs.pm/bamboo
-  #
-  defp deliver(to, body) do
-    require Logger
-    Logger.debug(body)
-    {:ok, %{to: to, body: body}}
+  import Swoosh.Email
+
+  alias <%= inspect context.base_module %>.Mailer
+
+  # Delivers the email using the application mailer.
+  defp deliver(recipient, subject, body) do
+    email =
+      new()
+      |> to(recipient)
+      |> from({"MyApp", "contact@example.com"})
+      |> subject(subject)
+      |> text_body(body)
+
+    with {:ok, _metadata} <- Mailer.deliver(email) do
+      {:ok, email}
+    end
   end
 
   @doc """
   Deliver instructions to confirm account.
   """
   def deliver_confirmation_instructions(<%= schema.singular %>, url) do
-    deliver(<%= schema.singular %>.email, """
+    deliver(<%= schema.singular %>.email, "Confirmation instructions", """
 
     ==============================
 
@@ -35,7 +41,7 @@ defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Notifier do
   Deliver instructions to reset a <%= schema.singular %> password.
   """
   def deliver_reset_password_instructions(<%= schema.singular %>, url) do
-    deliver(<%= schema.singular %>.email, """
+    deliver(<%= schema.singular %>.email, "Reset password instructions", """
 
     ==============================
 
@@ -55,7 +61,7 @@ defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Notifier do
   Deliver instructions to update a <%= schema.singular %> email.
   """
   def deliver_update_email_instructions(<%= schema.singular %>, url) do
-    deliver(<%= schema.singular %>.email, """
+    deliver(<%= schema.singular %>.email, "Update email instructions", """
 
     ==============================
 
