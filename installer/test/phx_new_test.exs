@@ -68,6 +68,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb do"
         assert file =~ "use Phoenix.View,\n        root: \"lib/phx_blog_web/templates\""
+        assert file =~ "use Phoenix.HTML"
+        assert file =~ "Phoenix.LiveView"
       end
 
       assert_file "phx_blog/test/phx_blog_web/controllers/page_controller_test.exs"
@@ -149,16 +151,18 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/test/support/data_case.ex", ~r"defmodule PhxBlog.DataCase"
       assert_file "phx_blog/priv/repo/migrations/.formatter.exs", ~r"import_deps: \[:ecto_sql\]"
 
-      # LiveView (disabled by default)
+      # LiveView
       refute_file "phx_blog/lib/phx_blog_web/live/page_live_view.ex"
-      refute_file "phx_blog/assets/js/live.js"
-      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_view")
-      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":floki")
-      assert_file "phx_blog/assets/js/app.js", fn file -> refute file =~ "LiveSocket" end
 
-      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
-        refute file =~ "Phoenix.LiveView"
+      assert_file "phx_blog/assets/js/app.js", fn file ->
+        refute file =~ "LiveSocket"
       end
+
+      assert_file "phx_blog/mix.exs", fn file ->
+        assert file =~ ~r":phoenix_live_view"
+        assert file =~ ~r":floki"
+      end
+
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :fetch_live_flash])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :put_root_layout])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[HomeLive])
@@ -299,12 +303,18 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_html")
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_reload")
-      assert_file "phx_blog/lib/phx_blog_web.ex",
-                  &assert(&1 =~ "defp view_helpers do")
-      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex",
-                  &refute(&1 =~ ~r"Phoenix.LiveReloader")
-      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex",
-                  &refute(&1 =~ ~r"Phoenix.LiveReloader.Socket")
+
+      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
+        assert file =~ "defp view_helpers do"
+        refute file =~ "Phoenix.HTML"
+        refute file =~ "Phoenix.LiveView"
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
+        refute file =~ ~r"Phoenix.LiveReloader"
+        refute file =~ ~r"Phoenix.LiveReloader.Socket"
+      end
+
       assert_file "phx_blog/lib/phx_blog_web/views/error_view.ex", ~r".json"
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~r"pipeline :browser")
 
@@ -353,6 +363,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/mix.exs", fn file ->
         refute file =~ ~s|:phoenix_live_view|
+        refute file =~ ~s|:phoenix_html|
         assert file =~ ~s|:phoenix_live_dashboard|
       end
 
@@ -360,6 +371,11 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s|defmodule PhxBlogWeb.Endpoint|
         assert file =~ ~s|socket "/live"|
         assert file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
+      end
+
+      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
+        refute file =~ ~s|Phoenix.HTML|
+        refute file =~ ~s|Phoenix.LiveView|
       end
 
       assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->

@@ -38,11 +38,11 @@ defmodule <%= @web_namespace %>.MixProject do
   defp deps do
     [
       <%= @phoenix_dep %>,<%= if @ecto do %>
-      {:phoenix_ecto, "~> 4.1"},<% end %><%= if @html do %><%= if @live do %>
-      {:phoenix_live_view, "~> 0.15.7"},
-      {:floki, ">= 0.30.0", only: :test},<% end %>
+      {:phoenix_ecto, "~> 4.1"},<% end %><%= if @html do %>
       {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if @dashboard do %>
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:phoenix_live_view, "~> 0.15.7"},
+      {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.4"},<% end %><%= if @assets do %>
       {:esbuild, "~> 0.1", runtime: Mix.env() == :dev},<% end %>
       {:telemetry_metrics, "~> 0.4"},
