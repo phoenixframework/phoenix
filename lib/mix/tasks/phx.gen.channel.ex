@@ -42,12 +42,31 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
       {:eex, "channel_test.exs", Path.join(test_prefix, "channels/#{binding[:path]}_channel_test.exs")},
     ]
 
-    Mix.shell().info """
+    user_socket_path = Mix.Phoenix.web_path(context_app, "channels/user_socket.ex")
 
-    Add the channel to your `#{Mix.Phoenix.web_path(context_app, "channels/user_socket.ex")}` handler, for example:
+    instructions =
+      if File.exists?(user_socket_path) do
+        """
 
-        channel "#{binding[:singular]}:lobby", #{binding[:module]}Channel
-    """
+        Add the channel to your `#{user_socket_path}` handler, for example:
+
+            channel "#{binding[:singular]}:lobby", #{binding[:module]}Channel
+        """
+      else
+        """
+
+        The default socket handler - `#{binding[:web_module]}.UserSocket` - was not found
+        in its default location. To create it, please run the mix task:
+
+            mix phx.gen.socket User
+
+        Then add the channel to the newly created file, at `#{user_socket_path}`:
+
+            channel "#{binding[:singular]}:lobby", #{binding[:module]}Channel
+        """
+      end
+
+    Mix.shell().info(instructions)
   end
 
   @spec raise_with_help() :: no_return()
