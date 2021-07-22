@@ -19,6 +19,13 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
 
       assert_file("lib/phoenix_web/channels/user_socket.ex", fn file ->
         assert file =~ ~S|defmodule PhoenixWeb.UserSocket do|
+
+        assert file =~ ~S|# Uncomment the following line to define a "room:*" topic|
+        assert file =~ ~S|# pointing to the `PhoenixWeb.RoomChannel`:|
+        assert file =~ ~S|# channel "room:*", PhoenixWeb.RoomChannel|
+
+        assert file =~ ~S|def connect(_params, socket, _connect_info) do|
+        assert file =~ ~S|def id(_socket), do: nil|
       end)
 
       assert_file("assets/js/user_socket.js", fn file ->
@@ -30,30 +37,46 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
       end)
     end)
 
-    assert_received {:mix_shell, :info, ["""
+    assert_received {:mix_shell, :info,
+                     [
+                       """
 
-      Add the socket handler to your `lib/phoenix_web/endpoint.ex`, for example:
+                       Add the socket handler to your `lib/phoenix_web/endpoint.ex`, for example:
 
-          socket "/socket", PhoenixWeb.UserSocket,
-            websocket: true,
-            longpoll: false
+                           socket "/socket", PhoenixWeb.UserSocket,
+                             websocket: true,
+                             longpoll: false
 
-      After that you can define your `channel` topic in the newly created socket file.
-      In order to create new channel files, you can use channel generator:
+                       After that you can define your `channel` topic in the newly created socket file.
+                       In order to create new channel files, you can use channel generator:
 
-          mix phx.gen.channel Room
+                           mix phx.gen.channel Room
 
-      For the front-end integration, you need to import the `user_socket.js`
-      in your `app.js` file:
+                       For the front-end integration, you need to import the `user_socket.js`
+                       in your `app.js` file:
 
-          import "./user_socket.js"
-      """]}
+                           import "./user_socket.js"
+                       """
+                     ]}
+  end
+
+  test "generates socket with channel declaration" do
+    in_tmp_project("generates socket with channel declaration", fn ->
+      Gen.Socket.run(~w(User Chat))
+
+      assert_file("lib/phoenix_web/channels/user_socket.ex", fn file ->
+        assert file =~ ~S|defmodule PhoenixWeb.UserSocket do|
+
+        refute file =~ ~S|# Uncomment the following line to define a "room:*" topic|
+        assert file =~ ~S|channel "chat:*", PhoenixWeb.ChatChannel|
+      end)
+    end)
   end
 
   test "in an umbrella with a context_app, generates the files" do
     in_tmp_umbrella_project("generates channels", fn ->
       Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
-      Gen.Socket.run(["room"])
+      Gen.Socket.run(["Room"])
 
       assert_file("lib/phoenix/channels/room_socket.ex", fn file ->
         assert file =~ ~S|defmodule PhoenixWeb.RoomSocket do|
@@ -68,24 +91,27 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
       end)
     end)
 
-    assert_received {:mix_shell, :info, ["""
+    assert_received {:mix_shell, :info,
+                     [
+                       """
 
-      Add the socket handler to your `lib/phoenix/endpoint.ex`, for example:
+                       Add the socket handler to your `lib/phoenix/endpoint.ex`, for example:
 
-          socket "/socket", PhoenixWeb.RoomSocket,
-            websocket: true,
-            longpoll: false
+                           socket "/socket", PhoenixWeb.RoomSocket,
+                             websocket: true,
+                             longpoll: false
 
-      After that you can define your `channel` topic in the newly created socket file.
-      In order to create new channel files, you can use channel generator:
+                       After that you can define your `channel` topic in the newly created socket file.
+                       In order to create new channel files, you can use channel generator:
 
-          mix phx.gen.channel Room
+                           mix phx.gen.channel Room
 
-      For the front-end integration, you need to import the `room_socket.js`
-      in your `app.js` file:
+                       For the front-end integration, you need to import the `room_socket.js`
+                       in your `app.js` file:
 
-          import "./room_socket.js"
-      """]}
+                           import "./room_socket.js"
+                       """
+                     ]}
   end
 
   test "generates nested socket" do
@@ -105,29 +131,38 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
       end)
     end)
 
-    assert_received {:mix_shell, :info, ["""
+    assert_received {:mix_shell, :info,
+                     [
+                       """
 
-      Add the socket handler to your `lib/phoenix_web/endpoint.ex`, for example:
+                       Add the socket handler to your `lib/phoenix_web/endpoint.ex`, for example:
 
-          socket "/socket", PhoenixWeb.Admin.UserSocket,
-            websocket: true,
-            longpoll: false
+                           socket "/socket", PhoenixWeb.Admin.UserSocket,
+                             websocket: true,
+                             longpoll: false
 
-      After that you can define your `channel` topic in the newly created socket file.
-      In order to create new channel files, you can use channel generator:
+                       After that you can define your `channel` topic in the newly created socket file.
+                       In order to create new channel files, you can use channel generator:
 
-          mix phx.gen.channel Room
+                           mix phx.gen.channel Room
 
-      For the front-end integration, you need to import the `admin/user_socket.js`
-      in your `app.js` file:
+                       For the front-end integration, you need to import the `admin/user_socket.js`
+                       in your `app.js` file:
 
-          import "./admin/user_socket.js"
-      """]}
+                           import "./admin/user_socket.js"
+                       """
+                     ]}
   end
 
   test "passing no args raises error" do
     assert_raise Mix.Error, fn ->
       Gen.Socket.run([])
+    end
+  end
+
+  test "passing invalid name raises error" do
+    assert_raise Mix.Error, fn ->
+      Gen.Socket.run(["room"])
     end
   end
 

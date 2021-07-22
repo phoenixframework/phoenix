@@ -12,11 +12,13 @@ defmodule Mix.Tasks.Phx.Gen.Socket do
 
   For a regular application:
 
+    * a client in `assets/js`
     * a socket in `lib/my_app_web/channels`
     * a socket test in `test/my_app_web/channels`
 
   For an umbrella application:
 
+    * a client in `apps/my_app_web/assets/js`
     * a socket in `apps/my_app_web/lib/app_name_web/channels`
     * a socket test in `apps/my_app_web/test/my_app_web/channels`
 
@@ -31,17 +33,29 @@ defmodule Mix.Tasks.Phx.Gen.Socket do
       )
     end
 
-    [socket_name] = validate_args!(args)
+    [socket_name, pre_existing_channel] = validate_args!(args)
 
     context_app = Mix.Phoenix.context_app()
     web_prefix = Mix.Phoenix.web_path(context_app)
     binding = Mix.Phoenix.inflect(socket_name)
+
+    existing_channel =
+      if pre_existing_channel do
+        channel_binding = Mix.Phoenix.inflect(pre_existing_channel)
+
+        Keyword.put(
+          channel_binding,
+          :module,
+          "#{channel_binding[:web_module]}.#{channel_binding[:scoped]}"
+        )
+      end
 
     binding =
       binding
       |> Keyword.put(:module, "#{binding[:web_module]}.#{binding[:scoped]}")
       |> Keyword.put(:endpoint_module, Module.concat([binding[:web_module], Endpoint]))
       |> Keyword.put(:web_prefix, web_prefix)
+      |> Keyword.put(:existing_channel, existing_channel)
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Socket")
 
@@ -73,19 +87,37 @@ defmodule Mix.Tasks.Phx.Gen.Socket do
   @spec raise_with_help() :: no_return()
   defp raise_with_help do
     Mix.raise("""
-    mix phx.gen.socket expects just the module name:
+    mix phx.gen.socket expects the module name:
 
         mix phx.gen.socket User
+
+    Alternatively you can also pass the name of an existing channel.
+
+        mix phx.gen.socket User Room
 
     """)
   end
 
-  defp validate_args!(args) do
-    unless length(args) == 1 do
+  defp validate_args!([name, pre_existing_channel] = args) do
+    unless valid_name?(name) and valid_name?(pre_existing_channel) do
       raise_with_help()
     end
 
     args
+  end
+
+  defp validate_args!([name]) do
+    unless valid_name?(name) do
+      raise_with_help()
+    end
+
+    [name, nil]
+  end
+
+  defp validate_args!(_), do: raise_with_help()
+
+  defp valid_name?(name) do
+    name =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
   end
 
   defp paths do

@@ -6,12 +6,15 @@ defmodule <%= module %>Socket do
   # It's possible to control the websocket connection and
   # assign values that can be accessed by your channel topics.
 
-  ## Channels
+  ## Channels<%= if existing_channel do %>
+
+  channel "<%= existing_channel[:singular] %>:*", <%= existing_channel[:module] %>Channel
+<% else %>
   # Uncomment the following line to define a "room:*" topic
   # pointing to the `<%= web_module %>.RoomChannel`:
   #
   # channel "room:*", <%= web_module %>.RoomChannel
-  #
+  #<% end %>
   # To create a channel file, use the mix task:
   #
   #     mix phx.gen.channel Room
