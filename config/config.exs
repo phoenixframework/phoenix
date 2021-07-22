@@ -16,5 +16,5 @@ esbuild_base =  [
 config :esbuild,
   version: "0.12.15",
   module: esbuild_base ++ [args: ~w(./js/phoenix --bundle --format=esm --sourcemap --outfile=../priv/static/phoenix.esm.js)],
-  cdn: esbuild_base ++ [args: ~w(./js/phoenix --bundle --format=iife --global-name=Phoenix --outfile=../priv/static/phoenix.js)],
-  cdn_min: esbuild_base ++ [args: ~w(./js/phoenix --bundle --format=iife --global-name=Phoenix --minify --outfile=../priv/static/phoenix.min.js)]
+  cdn: esbuild_base ++ [args: ~w(./js/phoenix --bundle --target=es2016 --format=iife --global-name=Phoenix --outfile=../priv/static/phoenix.js)],
+  cdn_min: esbuild_base ++ [args: ~w(./js/phoenix --bundle --target=es2016 --format=iife --global-name=Phoenix --minify --outfile=../priv/static/phoenix.min.js)]
