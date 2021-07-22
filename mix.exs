@@ -85,7 +85,7 @@ defmodule Phoenix.MixProject do
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
 
       # Dev dependencies
-      {:esbuild, "~> 0.1", path: "../esbuild/", only: :dev}
+      {:esbuild, "~> 0.1", only: :dev}
     ]
   end
 
