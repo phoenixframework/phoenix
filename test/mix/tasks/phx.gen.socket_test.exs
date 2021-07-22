@@ -29,7 +29,15 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
       end)
 
       assert_file("assets/js/user_socket.js", fn file ->
-        assert file =~ ~S|and connect at the socket path in "lib/phoenix_web/endpoint.ex"|
+        assert file =~ ~S|// NOTE: The contents of this file will only be executed if|
+        assert file =~ ~S|// you uncomment its entry in "assets/js/app.js".|
+
+        assert file =~ ~S|// Bring in Phoenix channels client library:|
+        assert file =~ ~S|import {Socket} from "phoenix"|
+
+        assert file =~ ~S|// And connect to the path in "lib/phoenix_web/endpoint.ex".|
+        assert file =~ ~S|let socket = new Socket("/socket", {params: {token: window.userToken}})|
+
         assert file =~ ~S|In your "lib/phoenix_web/router.ex":|
 
         assert file =~ ~S|let channel = socket.channel("room:42", {})|
@@ -83,7 +91,13 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
       end)
 
       assert_file("assets/js/room_socket.js", fn file ->
-        assert file =~ ~S|and connect at the socket path in "lib/phoenix/endpoint.ex"|
+        assert file =~ ~S|// NOTE: The contents of this file will only be executed if|
+        assert file =~ ~S|// you uncomment its entry in "assets/js/app.js".|
+
+        assert file =~ ~S|// Bring in Phoenix channels client library:|
+        assert file =~ ~S|import {Socket} from "phoenix"|
+
+        assert file =~ ~S|// And connect to the path in "lib/phoenix/endpoint.ex".|
         assert file =~ ~S|In your "lib/phoenix/router.ex":|
 
         assert file =~ ~S|let channel = socket.channel("room:42", {})|
@@ -123,7 +137,15 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
       end)
 
       assert_file("assets/js/admin/user_socket.js", fn file ->
-        assert file =~ ~S|and connect at the socket path in "lib/phoenix_web/endpoint.ex"|
+        assert file =~ ~S|// NOTE: The contents of this file will only be executed if|
+        assert file =~ ~S|// you uncomment its entry in "assets/js/app.js".|
+
+        assert file =~ ~S|// Bring in Phoenix channels client library:|
+        assert file =~ ~S|import {Socket} from "phoenix"|
+
+        assert file =~ ~S|// And connect to the path in "lib/phoenix_web/endpoint.ex".|
+        assert file =~ ~S|let socket = new Socket("/socket", {params: {token: window.userToken}})|
+
         assert file =~ ~S|In your "lib/phoenix_web/router.ex":|
 
         assert file =~ ~S|let channel = socket.channel("room:42", {})|
