@@ -394,6 +394,7 @@ defmodule Phoenix.Router do
         %{method: method, path_info: path_info, host: host} = conn = prepare(conn)
 
         decoded =
+          # TODO: Remove try/catch on Elixir v1.13 as decode no longer raises
           try do
             Enum.map(path_info, &URI.decode/1)
           rescue
