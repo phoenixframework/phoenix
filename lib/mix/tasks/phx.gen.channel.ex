@@ -64,7 +64,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
       """)
 
       if Mix.shell().yes?("Do you want to create it?") do
-        Gen.Socket.run(~w(User #{channel_name}))
+        Gen.Socket.run(~w(User --from-channel #{channel_name}))
       else
         Mix.shell().info("""
 

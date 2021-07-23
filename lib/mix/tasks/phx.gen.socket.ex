@@ -91,19 +91,15 @@ defmodule Mix.Tasks.Phx.Gen.Socket do
 
         mix phx.gen.socket User
 
-    Alternatively you can also pass the name of an existing channel.
-
-        mix phx.gen.socket User Room
-
     """)
   end
 
-  defp validate_args!([name, pre_existing_channel] = args) do
+  defp validate_args!([name, "--from-channel", pre_existing_channel]) do
     unless valid_name?(name) and valid_name?(pre_existing_channel) do
       raise_with_help()
     end
 
-    args
+    [name, pre_existing_channel]
   end
 
   defp validate_args!([name]) do
