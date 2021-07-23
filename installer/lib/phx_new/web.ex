@@ -49,6 +49,7 @@ defmodule Phx.New.Web do
   ]
 
   template :live, [
+    {:eex, "phx_live/assets/topbar.js",                :web, "assets/vendor/topbar.js"},
     {:eex, "phx_live/templates/layout/root.html.leex", :web, "lib/:web_app/templates/layout/root.html.leex"},
     {:eex, "phx_live/templates/layout/app.html.leex",  :web, "lib/:web_app/templates/layout/app.html.eex"},
     {:eex, "phx_live/templates/layout/live.html.leex", :web, "lib/:web_app/templates/layout/live.html.leex"},
