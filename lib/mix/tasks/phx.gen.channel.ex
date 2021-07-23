@@ -59,8 +59,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
     else
       Mix.shell().info("""
 
-      The default socket handler - `#{binding[:web_module]}.UserSocket` - was not found
-      in its default location.
+      The default socket handler - #{binding[:web_module]}.UserSocket - was not found.
       """)
 
       if Mix.shell().yes?("Do you want to create it?") do

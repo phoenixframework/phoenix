@@ -83,8 +83,6 @@ The `lib/hello_web` directory holds the web-related parts of our application. It
 
 ```console
 lib/hello_web
-├── channels
-│   └── user_socket.ex
 ├── controllers
 │   └── page_controller.ex
 ├── templates
@@ -104,7 +102,6 @@ lib/hello_web
 ```
 
 All of the files which are currently in the `controllers`, `templates`, and `views` directories are there to create the "Welcome to Phoenix!" page we saw in the "[Up and running](up_and_running.html)" guide.
-The `channels` directory is where we will add code related to building real-time Phoenix applications.
 
 By looking at `templates` and `views` directories, we can see Phoenix provides features for handling layouts and error pages out of the box.
 

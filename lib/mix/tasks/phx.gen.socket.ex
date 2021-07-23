@@ -14,14 +14,13 @@ defmodule Mix.Tasks.Phx.Gen.Socket do
 
     * a client in `assets/js`
     * a socket in `lib/my_app_web/channels`
-    * a socket test in `test/my_app_web/channels`
 
   For an umbrella application:
 
     * a client in `apps/my_app_web/assets/js`
     * a socket in `apps/my_app_web/lib/app_name_web/channels`
-    * a socket test in `apps/my_app_web/test/my_app_web/channels`
 
+  You can then generated channels with `mix phx.gen.channel`.
   """
   use Mix.Task
 
@@ -72,13 +71,8 @@ defmodule Mix.Tasks.Phx.Gen.Socket do
           websocket: true,
           longpoll: false
 
-    After that you can define your `channel` topic in the newly created socket file.
-    In order to create new channel files, you can use channel generator:
-
-        mix phx.gen.channel Room
-
     For the front-end integration, you need to import the `#{binding[:path]}_socket.js`
-    in your `app.js` file:
+    in your `assets/js/app.js` file:
 
         import "./#{binding[:path]}_socket.js"
     """)

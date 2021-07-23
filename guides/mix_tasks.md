@@ -272,9 +272,9 @@ Remember to update your repository by running migrations:
 
 A more complete walk-through of how to get started with this generator is available in the [`mix phx.gen.auth` authentication guide](mix_phx_gen_auth.html).
 
-### `mix phx.gen.channel`
+### `mix phx.gen.channel` and `mix phx.gen.socket`
 
-This task will generate a basic Phoenix channel as well a test case for it. It takes the module name for the channel as the only one argument:
+This task will generate a basic Phoenix channel, the socket to power the channel (if you haven't created one yet), as well a test case for it. It takes the module name for the channel as the only one argument:
 
 ```console
 $ mix phx.gen.channel Room
@@ -282,13 +282,40 @@ $ mix phx.gen.channel Room
 * creating test/hello_web/channels/room_channel_test.exs
 ```
 
-When `mix phx.gen.channel` is done, it helpfully tells us that we need to add a channel route to our router file.
+If your application does not have a `UserSocket` yet, it will ask if you want to create one:
+
+```console
+The default socket handler - HelloWeb.UserSocket - was not found
+in its default location.
+
+Do you want to create it? [Y/n]
+```
+
+By pressing confirming, a channel will be created, then you need to connect the socket in your endpoint:
+
+```console
+Add the socket handler to your `lib/hello_web/endpoint.ex`, for example:
+
+    socket "/socket", HelloWeb.UserSocket,
+      websocket: true,
+      longpoll: false
+
+For the front-end integration, you need to import the `user_socket.js`
+in your `assets/js/app.js` file:
+
+    import "./#{binding[:path]}_socket.js"
+
+```
+
+In case a `UserSocket` already exists or you decide to not create one, the `channel` generator will tell you to add it to the Socket manually:
 
 ```console
 Add the channel to your `lib/hello_web/channels/user_socket.ex` handler, for example:
 
     channel "rooms:lobby", HelloWeb.RoomChannel
 ```
+
+You can also create a socket any time by invoking `mix phx.gen.socket`.
 
 ### `mix phx.gen.presence`
 

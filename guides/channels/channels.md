@@ -1,4 +1,4 @@
-# Channels
+# Introduction
 
 > **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
@@ -55,9 +55,7 @@ Let's take a look at them.
 ### Overview
 
 To start communicating, a client connects to a node (a Phoenix server) using a transport (e.g., Websockets or long polling) and joins one or more channels using that single network connection.
-One channel server process is created per client, per topic.
-The appropriate socket handler initializes a `%Phoenix.Socket` for the channel server (possibly after authenticating the client).
-The channel server then holds onto the `%Phoenix.Socket{}` and can maintain any state it needs within its `socket.assigns`.
+One channel server lightweight process is created per client, per topic. Each channel holds onto the `%Phoenix.Socket{}` and can maintain any state it needs within its `socket.assigns`.
 
 Once the connection is established, each incoming message from a client is routed, based on its topic, to the correct channel server.
 If the channel server asks to broadcast a message, that message is sent to the local PubSub, which sends it out to any clients connected to the same server and subscribed to that topic.
@@ -116,18 +114,19 @@ Phoenix comes with two default transports: websocket and longpoll. You can confi
 
 ### Socket Handlers
 
-Socket handlers, such as `HelloWeb.UserSocket` in the example above, are called when Phoenix is setting up a channel connection.
-Connections to a given URL will all use the same socket handler, based on your endpoint configuration.
-But that handler can be used for setting up connections on any number of topics.
+On the client side, you will establish a socket connection to the route above:
 
-Within the handler, you can authenticate and identify a socket connection and set default socket assigns.
+```javascript
+let socket = new Socket("/socket", {params: {token: window.userToken}})
+```
+
+On the server, Phoenix will invoke `HelloWeb.UserSocket.connect/2`, passing your parameters and the initial socket state. Within the socket, you can authenticate and identify a socket connection and set default socket assigns. The socket is also where you define your channel routes.
 
 ### Channel Routes
 
-Channel routes are defined in socket handlers, such as `HelloWeb.UserSocket` in the example above.
-They match on the topic string and dispatch matching requests to the given Channel module.
+Channel routes match on the topic string and dispatch matching requests to the given Channel module.
 
-The star character `*` acts as a wildcard matcher, so in the following example route, requests for `room:lobby` and `room:123` would both be dispatched to the `RoomChannel`.
+The star character `*` acts as a wildcard matcher, so in the following example route, requests for `room:lobby` and `room:123` would both be dispatched to the `RoomChannel`. In your `UserSocket`, you would have:
 
 ```elixir
 channel "room:*", HelloWeb.RoomChannel
@@ -153,10 +152,9 @@ The `Phoenix.Socket.Message` module defines a struct with the following keys whi
 
 ### PubSub
 
-PubSub consists of the `Phoenix.PubSub` module and a variety of modules for different adapters and their `GenServer`s.
-These modules contain functions which are the nuts and bolts of organizing Channel communication - subscribing to topics, unsubscribing from topics, and broadcasting messages on a topic.
-PubSub is used internally by Phoenix.
-It's also useful in application development in any case where you want to notify interested processes of an event; for instance, letting all connected [live views](https://github.com/phoenixframework/phoenix_live_view) to know that a new comment has been added to a post.
+PubSub is provided by the `Phoenix.PubSub` module. Interested parties can receive events by subscribing to topics. Other processes can broadcast events to certain topics.
+
+This is useful to broadcast messages on channel and also for application development in general. For instance, letting all connected [live views](https://github.com/phoenixframework/phoenix_live_view) to know that a new comment has been added to a post.
 
 The PubSub system takes care of getting messages from one node to another so that they can be sent to all subscribers across the cluster.
 By default, this is done using [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), which uses native BEAM messaging.
@@ -189,18 +187,33 @@ Phoenix ships with a JavaScript client that is available when generating a new P
 
 ## Tying it all together
 
-Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](https://hexdocs.pm/phoenix/up_and_running.html) we'll see that the endpoint is already set up for us in `lib/hello_web/endpoint.ex`:
+Let's tie all these ideas together by building a simple chat application. Make sure [you created a new Phoenix application](https://hexdocs.pm/phoenix/up_and_running.html) and now we are ready to generate the `UserSocket`.
+
+### Generating a socket
+
+Let's invoke the socket generator to get started:
+
+```console
+$ mix phx.gen.socket User
+```
+
+It will create two files, the client code in `assets/js/user_socket.js` and the server counter-part in `lib/hello_web/channels/user_socket.ex`. After running, the generator will also ask to add the following line to `lib/hello_web/endpoint.ex`:
 
 ```elixir
 defmodule HelloWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :hello
 
-  socket "/socket", HelloWeb.UserSocket
+  socket "/socket", HelloWeb.UserSocket,
+    websocket: true,
+    longpoll: false
+
   ...
 end
 ```
 
-In `lib/hello_web/channels/user_socket.ex`, the `HelloWeb.UserSocket` we pointed to in our endpoint has already been created when we generated our application. We need to make sure messages get routed to the correct channel. To do that, we'll uncomment the `"room:*"` channel definition:
+The generator also asks us to import the client code, we will do that later.
+
+Next, we will configure our socket to ensure messages get routed to the correct channel. To do that, we'll uncomment the `"room:*"` channel definition:
 
 ```elixir
 defmodule HelloWeb.UserSocket do
@@ -233,16 +246,14 @@ end
 For our chat app, we'll allow anyone to join the `"room:lobby"` topic, but any other room will be considered private and special authorization, say from a database, will be required.
 (We won't worry about private chat rooms for this exercise, but feel free to explore after we finish.)
 
-To authorize the socket to join a topic, we return `{:ok, socket}` or `{:ok, reply, socket}`. To deny access, we return `{:error, reply}`. More information about authorization with tokens can be found in the [`Phoenix.Token` documentation](https://hexdocs.pm/phoenix/Phoenix.Token.html).
-
 With our channel in place, let's get the client and server talking.
 
-The `assets/js/socket.js` defines a simple client based on the socket implementation that ships with Phoenix.
+The generated `assets/js/user_socket.js` defines a simple client based on the socket implementation that ships with Phoenix.
 
 We can use that library to connect to our socket and join our channel, we just need to set our room name to `"room:lobby"` in that file.
 
 ```javascript
-// assets/js/socket.js
+// assets/js/user_socket.js
 // ...
 socket.connect()
 
@@ -255,11 +266,11 @@ channel.join()
 export default socket
 ```
 
-After that, we need to make sure `assets/js/socket.js` gets imported into our application JavaScript file. To do that, uncomment the last line in `assets/js/app.js`.
+After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment the last line in `assets/js/app.js`.
 
 ```javascript
 // ...
-import socket from "./socket"
+import socket from "./user_socket"
 ```
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
@@ -271,7 +282,7 @@ In `lib/hello_web/templates/page/index.html.eex`, we'll replace the existing cod
 <input id="chat-input" type="text">
 ```
 
-Now let's add a couple of event listeners to `assets/js/socket.js`:
+Now let's add a couple of event listeners to `assets/js/user_socket.js`:
 
 ```javascript
 // ...
