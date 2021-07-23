@@ -14,7 +14,7 @@ defmodule <%= module %>Socket do
   # pointing to the `<%= web_module %>.RoomChannel`:
   #
   # channel "room:*", <%= web_module %>.RoomChannel
-  #<% end %>
+  #
   # To create a channel file, use the mix task:
   #
   #     mix phx.gen.channel Room
@@ -22,6 +22,7 @@ defmodule <%= module %>Socket do
   # See the [`Channels guide`](https://hexdocs.pm/phoenix/channels.html)
   # for futher details.
 
+<% end %>
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
   # verification, you can put default assigns into
