@@ -101,6 +101,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert_file "test/support/fixtures/accounts_fixtures.ex"
       assert_file "lib/my_app_web/controllers/user_auth.ex"
       assert_file "test/my_app_web/controllers/user_auth_test.exs"
+      assert_file "lib/my_app_web/live/user_live_auth.ex"
+      assert_file "test/my_app_web/live/user_live_auth_test.exs"
       assert_file "lib/my_app_web/views/user_confirmation_view.ex"
       assert_file "lib/my_app_web/templates/user_confirmation/new.html.eex"
       assert_file "lib/my_app_web/controllers/user_confirmation_controller.ex"
@@ -245,6 +247,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file "test/my_app_web/controllers/warehouse/user_auth_test.exs", fn file ->
         assert file =~ "defmodule MyAppWeb.Warehouse.UserAuthTest do"
+      end
+
+      assert_file "lib/my_app_web/live/warehouse/user_live_auth.ex", fn file ->
+        assert file =~ "defmodule MyAppWeb.Warehouse.UserLiveAuth do"
       end
 
       assert_file "lib/my_app_web/views/warehouse/user_confirmation_view.ex", fn file ->
@@ -417,6 +423,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           assert file =~ ~r/use MyAppWeb\.ConnCase, async: true$/m
         end
 
+        assert_file "test/my_app_web/live/user_live_auth_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ChannelCase$/m
+        end
+
         assert_file "test/my_app_web/controllers/user_confirmation_controller_test.exs", fn file ->
           assert file =~ ~r/use MyAppWeb\.ConnCase, async: true$/m
         end
@@ -454,6 +464,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         assert_file "test/my_app_web/controllers/user_auth_test.exs", fn file ->
           assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/live/user_live_auth_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ChannelCase$/m
         end
 
         assert_file "test/my_app_web/controllers/user_confirmation_controller_test.exs", fn file ->
@@ -495,6 +509,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           assert file =~ ~r/use MyAppWeb\.ConnCase$/m
         end
 
+        assert_file "test/my_app_web/live/user_live_auth_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ChannelCase$/m
+        end
+
         assert_file "test/my_app_web/controllers/user_confirmation_controller_test.exs", fn file ->
           assert file =~ ~r/use MyAppWeb\.ConnCase$/m
         end
@@ -532,6 +550,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         assert_file "test/my_app_web/controllers/user_auth_test.exs", fn file ->
           assert file =~ ~r/use MyAppWeb\.ConnCase$/m
+        end
+
+        assert_file "test/my_app_web/live/user_live_auth_test.exs", fn file ->
+          assert file =~ ~r/use MyAppWeb\.ChannelCase$/m
         end
 
         assert_file "test/my_app_web/controllers/user_confirmation_controller_test.exs", fn file ->
@@ -693,6 +715,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert_file "apps/my_app/test/support/fixtures/accounts_fixtures.ex"
         assert_file "apps/my_app/lib/my_app_web/controllers/user_auth.ex"
         assert_file "apps/my_app/test/my_app_web/controllers/user_auth_test.exs"
+        assert_file "apps/my_app/lib/my_app_web/live/user_live_auth.ex"
+        assert_file "apps/my_app/test/my_app_web/live/user_live_auth_test.exs"
         assert_file "apps/my_app/lib/my_app_web/views/user_confirmation_view.ex"
         assert_file "apps/my_app/lib/my_app_web/templates/user_confirmation/new.html.eex"
         assert_file "apps/my_app/lib/my_app_web/controllers/user_confirmation_controller.ex"
@@ -736,6 +760,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert_file "apps/my_app/test/support/fixtures/accounts_fixtures.ex"
         assert_file "apps/my_app_web/lib/my_app_web/controllers/user_auth.ex"
         assert_file "apps/my_app_web/test/my_app_web/controllers/user_auth_test.exs"
+        assert_file "apps/my_app_web/lib/my_app_web/live/user_live_auth.ex"
+        assert_file "apps/my_app_web/test/my_app_web/live/user_live_auth_test.exs"
         assert_file "apps/my_app_web/lib/my_app_web/views/user_confirmation_view.ex"
         assert_file "apps/my_app_web/lib/my_app_web/templates/user_confirmation/new.html.eex"
         assert_file "apps/my_app_web/lib/my_app_web/controllers/user_confirmation_controller.ex"

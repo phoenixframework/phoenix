@@ -125,6 +125,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       web_app_name: web_app_name(context),
       endpoint_module: Module.concat([context.web_module, Endpoint]),
       auth_module: Module.concat([context.web_module, schema.web_namespace, "#{inspect(schema.alias)}Auth"]),
+      live_auth_module: Module.concat([context.web_module, schema.web_namespace, "#{inspect(schema.alias)}LiveAuth"]),
       router_scope: router_scope(context),
       web_path_prefix: web_path_prefix(schema),
       test_case_options: test_case_options(ecto_adapter)
@@ -219,6 +220,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       {:eex, "schema_token.ex", Path.join([context.dir, "#{schema.singular}_token.ex"])},
       {:eex, "auth.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_auth.ex"])},
       {:eex, "auth_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_auth_test.exs"])},
+      {:eex, "live_auth.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_live_auth.ex"])},
+      {:eex, "live_auth_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_live_auth_test.exs"])},
       {:eex, "confirmation_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_confirmation_view.ex"])},
       {:eex, "confirmation_new.html.eex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_confirmation", "new.html.eex"])},
       {:eex, "confirmation_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller.ex"])},
