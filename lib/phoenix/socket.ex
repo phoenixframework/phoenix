@@ -602,6 +602,7 @@ defmodule Phoenix.Socket do
         end
 
       _ ->
+        Logger.warn fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(socket.handler)}" end
         {:reply, :error, encode_ignore(socket, message), {state, socket}}
     end
   end
@@ -641,6 +642,8 @@ defmodule Phoenix.Socket do
   end
 
   defp handle_in(nil, message, state, socket) do
+    # This clause can happen if the server drops the channel
+    # and the client sends a message meanwhile
     {:reply, :error, encode_ignore(socket, message), {state, socket}}
   end
 
@@ -671,8 +674,7 @@ defmodule Phoenix.Socket do
     encode_reply(socket, message)
   end
 
-  defp encode_ignore(%{handler: handler} = socket, %{ref: ref, topic: topic}) do
-    Logger.warn fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(handler)}" end
+  defp encode_ignore(socket, %{ref: ref, topic: topic}) do
     reply = %Reply{ref: ref, topic: topic, status: :error, payload: %{reason: "unmatched topic"}}
     encode_reply(socket, reply)
   end
