@@ -349,9 +349,9 @@ defmodule Phx.New.Generator do
       """,
       prod_config: """
       # ssl: true,
+      # socket_options: [:inet6],
       url: database_url,
-      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-      socket_options: [:inet6]
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
       """
     ]
   end
