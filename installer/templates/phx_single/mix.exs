@@ -46,7 +46,7 @@ defmodule <%= @app_module %>.MixProject do
       {:phoenix_live_view, "~> 0.15.7"},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.4"},<% end %><%= if @assets do %>
-      {:esbuild, "~> 0.1", runtime: Mix.env() == :dev},<% end %><%= if @mailer do %>
+      {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},<% end %><%= if @mailer do %>
       {:swoosh, "~> 1.3"},<% end %>
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},<%= if @gettext do %>
