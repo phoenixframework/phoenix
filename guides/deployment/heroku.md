@@ -100,10 +100,10 @@ The buildpack uses a predefined Elixir and Erlang version but to avoid surprises
 elixir_version=1.12.2
 
 # Erlang version
-# available versions https://github.com/HashNuke/heroku-buildpack-elixir-otp-builds/blob/master/otp-versions
+# https://github.com/HashNuke/heroku-buildpack-elixir-otp-builds/blob/master/otp-versions
 erlang_version=24.0.3
 
-# To compile assets with esbuild
+# Invoke assets.deploy defined in your mix.exs to deploy assets with esbuild
 # Note we nuke the esbuild executable from the image
 hook_post_compile="mix assets.deploy && rm -f _build/esbuild"
 ```
@@ -132,7 +132,7 @@ The Phoenix Static buildpack uses a predefined Node.js version but to avoid surp
 node_version=10.20.1
 ```
 
-Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile). If using this buildpack, note you may want to remove `hook_post_compile` from `elixir_buildpack.config`.
+Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile). If using this buildpack, remove `phx.digest` from the "assets.deploy" hook in your `mix.exs`, as the buildpack will automatically invoke it at the end.
 
 Finally, note that since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to make sure the Phoenix Static buildpack comes last.
 
