@@ -14,6 +14,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       {:ok, _} = ok ->
         warmup(mod)
         log_access_url(otp_app, mod, opts)
+        browser_open(otp_app, mod)
         ok
 
       {:error, _} = error ->
@@ -431,8 +432,23 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp log_access_url(otp_app, endpoint, opts) do
-    if Keyword.get(opts, :log_access_url, true) && Phoenix.Endpoint.server?(otp_app, endpoint) do
+    if Keyword.get(opts, :log_access_url, true) && server?(otp_app, endpoint) do
       Logger.info("Access #{inspect(endpoint)} at #{endpoint.url()}")
+    end
+  end
+
+  defp browser_open(otp_app, endpoint) do
+    if Application.get_env(:phoenix, :browser_open) && server?(otp_app, endpoint) do
+      url = endpoint.url()
+
+      {cmd, args} =
+        case :os.type() do
+          {:win32, _} -> {"cmd", ["/c", "start", url]}
+          {:unix, :darwin} -> {"open", [url]}
+          {:unix, _} -> {"xdg-open", [url]}
+        end
+
+      System.cmd(cmd, args)
     end
   end
 
