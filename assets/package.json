@@ -22,21 +22,16 @@
     "documentation": "^9.0.0",
     "eslint": "7.27.0",
     "eslint-plugin-mocha": "9.0.0",
-    "expose-loader": "3.0.0",
     "growl": "~> 1.10.0",
     "jsdom": "9.8.3",
     "jsdom-global": "2.1.0",
     "mocha": "^6.2.2",
     "mock-socket": "^9.0.0",
-    "sinon": "^9.0.1",
-    "webpack": "5.37.1",
-    "webpack-cli": "^4.7.0"
+    "sinon": "^9.0.1"
   },
   "sideEffects": false,
   "scripts": {
     "test": "mocha ./test/**/*.js --exit -r @babel/register -r jsdom-global/register",
-    "docs": "documentation build js/index.js -f html -o ../doc/js",
-    "build": "webpack --mode production",
-    "watch": "webpack --mode development --watch"
+    "docs": "documentation build js/index.js -f html -o ../doc/js"
   }
 }

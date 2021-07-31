@@ -82,7 +82,10 @@ defmodule Phoenix.MixProject do
       # Test dependencies
       {:phoenix_html, "~> 2.14.2 or ~> 3.0", only: :test},
       {:phx_new, path: "./installer", only: :test},
-      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
+      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
+
+      # Dev dependencies
+      {:esbuild, "~> 0.1", only: :dev}
     ]
   end
 
@@ -191,7 +194,9 @@ defmodule Phoenix.MixProject do
 
   defp aliases do
     [
-      docs: ["docs", &generate_js_docs/1]
+      docs: ["docs", &generate_js_docs/1],
+      "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min"],
+      "assets.watch": "esbuild module --watch"
     ]
   end
 

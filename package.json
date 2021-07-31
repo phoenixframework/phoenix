@@ -3,10 +3,11 @@
   "version": "1.5.0",
   "description": "The official JavaScript client for the Phoenix web framework.",
   "license": "MIT",
-  "main": "priv/static/phoenix.js",
+  "module": "./priv/static/phoenix.esm.js",
+  "unpkg": "./priv/static/phoenix.min.js",
+  "jsdelivr": "./priv/static/phoenix.min.js",
   "exports": {
-    ".": "./assets/js/phoenix/index.js",
-    "./": "./assets/js/phoenix/"
+    "import": "./priv/static/phoenix.esm.js"
   },
   "repository": {
     "type": "git",
@@ -17,7 +18,7 @@
     "README.md",
     "LICENSE.md",
     "package.json",
-    "priv/static/phoenix.js",
+    "priv/static/*",
     "assets/js/phoenix/*"
   ]
 }
