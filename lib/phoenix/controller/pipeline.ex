@@ -177,7 +177,12 @@ defmodule Phoenix.Controller.Pipeline do
   defmacro plug(plug, opts), do: plug(plug, opts, true, __CALLER__)
 
   defp plug(plug, opts, guards, caller) do
-    plug = Macro.expand(plug, %{caller | function: {:init, 1}})
+    plug =
+      if Phoenix.plug_init_mode() == :runtime do
+        Macro.expand(plug, %{caller | function: {:init, 1}})
+      else
+        plug
+      end
 
     quote do
       @plugs {unquote(plug), unquote(opts), unquote(escape_guards(guards))}
