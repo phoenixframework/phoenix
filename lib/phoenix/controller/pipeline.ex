@@ -177,15 +177,17 @@ defmodule Phoenix.Controller.Pipeline do
   defmacro plug(plug, opts), do: plug(plug, opts, true, __CALLER__)
 
   defp plug(plug, opts, guards, caller) do
+    runtime? = Phoenix.plug_init_mode() == :runtime
+
     plug =
-      if Phoenix.plug_init_mode() == :runtime do
+      if runtime? do
         expand_alias(plug, caller)
       else
         plug
       end
 
     opts =
-      if Macro.quoted_literal?(opts) do
+      if runtime? and Macro.quoted_literal?(opts) do
         Macro.prewalk(opts, &expand_alias(&1, caller))
       else
         opts

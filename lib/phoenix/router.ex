@@ -676,15 +676,17 @@ defmodule Phoenix.Router do
   See `pipeline/2` for more information.
   """
   defmacro plug(plug, opts \\ []) do
+    runtime? = Phoenix.plug_init_mode() == :runtime
+
     plug =
-      if Phoenix.plug_init_mode() == :runtime do
+      if runtime? do
         expand_alias(plug, __CALLER__)
       else
         plug
       end
 
     opts =
-      if Macro.quoted_literal?(opts) do
+      if runtime? and Macro.quoted_literal?(opts) do
         Macro.prewalk(opts, &expand_alias(&1, __CALLER__))
       else
         opts
