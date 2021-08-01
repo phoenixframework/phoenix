@@ -665,7 +665,12 @@ defmodule Phoenix.Router do
   See `pipeline/2` for more information.
   """
   defmacro plug(plug, opts \\ []) do
-    plug = Macro.expand(plug, %{__CALLER__ | function: {:init, 1}})
+    plug =
+      if Phoenix.plug_init_mode() == :runtime do
+        Macro.expand(plug, %{__CALLER__ | function: {:init, 1}})
+      else
+        plug
+      end
 
     quote do
       if pipeline = @phoenix_pipeline do
