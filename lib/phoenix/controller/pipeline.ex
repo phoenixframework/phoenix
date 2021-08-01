@@ -179,15 +179,27 @@ defmodule Phoenix.Controller.Pipeline do
   defp plug(plug, opts, guards, caller) do
     plug =
       if Phoenix.plug_init_mode() == :runtime do
-        Macro.expand(plug, %{caller | function: {:init, 1}})
+        expand_alias(plug, caller)
       else
         plug
+      end
+
+    opts =
+      if Macro.quoted_literal?(opts) do
+        Macro.prewalk(opts, &expand_alias(&1, caller))
+      else
+        opts
       end
 
     quote do
       @plugs {unquote(plug), unquote(opts), unquote(escape_guards(guards))}
     end
   end
+
+  defp expand_alias({:__aliases__, _, _} = alias, env),
+    do: Macro.expand(alias, %{env | function: {:init, 1}})
+
+  defp expand_alias(other, _env), do: other
 
   defp escape_guards({pre_expanded, _, [_ | _]} = node)
        when pre_expanded in [:@, :__aliases__],
