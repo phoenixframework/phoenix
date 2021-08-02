@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
   @moduledoc """
   Generates a Phoenix channel.
 
-      mix phx.gen.channel Room
+      $ mix phx.gen.channel Room
 
   Accepts the module name for the channel
 

@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.Gen.Socket do
   @moduledoc """
   Generates a Phoenix socket handler.
 
-      mix phx.gen.socket User
+      $ mix phx.gen.socket User
 
   Accepts the module name for the socket
 
