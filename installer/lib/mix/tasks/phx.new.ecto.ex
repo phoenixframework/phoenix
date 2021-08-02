@@ -38,11 +38,11 @@ defmodule Mix.Tasks.Phx.New.Ecto do
 
   ## Examples
 
-      mix phx.new.ecto hello_ecto
+      $ mix phx.new.ecto hello_ecto
 
   Is equivalent to:
 
-      mix phx.new.ecto hello_ecto --module HelloEcto
+      $ mix phx.new.ecto hello_ecto --module HelloEcto
   """
 
   @shortdoc "Creates a new Ecto project within an umbrella project"

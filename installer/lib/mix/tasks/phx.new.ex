@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.New do
 
   It expects the path of the project as an argument.
 
-      mix phx.new PATH [--module MODULE] [--app APP]
+      $ mix phx.new PATH [--module MODULE] [--app APP]
 
   A project at the given PATH will be created. The
   application name and module name will be retrieved
@@ -74,26 +74,28 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Examples
 
-      mix phx.new hello_world
+      $ mix phx.new hello_world
 
   Is equivalent to:
 
-      mix phx.new hello_world --module HelloWorld
+      $ mix phx.new hello_world --module HelloWorld
 
   Or without the HTML and JS bits (useful for APIs):
 
-      mix phx.new ~/Workspace/hello_world --no-html --no-assets
+      $ mix phx.new ~/Workspace/hello_world --no-html --no-assets
 
   As an umbrella:
 
-      mix phx.new hello --umbrella
+      $ mix phx.new hello --umbrella
 
   Would generate the following directory structure and modules:
 
-      hello_umbrella/   Hello.Umbrella
-        apps/
-          hello/        Hello
-          hello_web/    HelloWeb
+  ```text
+  hello_umbrella/   Hello.Umbrella
+    apps/
+      hello/        Hello
+      hello_web/    HelloWeb
+  ```
 
   You can read more about umbrella projects using the
   official [Elixir guide](http://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-apps.html#umbrella-projects)

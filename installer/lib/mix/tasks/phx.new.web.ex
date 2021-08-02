@@ -15,11 +15,11 @@ defmodule Mix.Tasks.Phx.New.Web do
 
   ## Examples
 
-      mix phx.new.web hello_web
+      $ mix phx.new.web hello_web
 
   Is equivalent to:
 
-      mix phx.new.web hello_web --module HelloWeb
+      $ mix phx.new.web hello_web --module HelloWeb
 
   Supports the same options as the `phx.new` task.
   See `Mix.Tasks.Phx.New` for details.

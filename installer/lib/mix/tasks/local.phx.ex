@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Local.Phx do
   @moduledoc """
   Updates the Phoenix project generator locally.
 
-      mix local.phx
+      $ mix local.phx
 
   Accepts the same command line options as `archive.install hex phx_new`.
   """
