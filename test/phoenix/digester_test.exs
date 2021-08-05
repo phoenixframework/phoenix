@@ -434,6 +434,42 @@ defmodule Phoenix.DigesterTest do
     end
   end
 
+  describe "clean_all" do
+    test "fails when the given path is invalid" do
+      assert {:error, :invalid_path} = Phoenix.Digester.clean_all("nonexistent path")
+    end
+
+    test "removes all compiled files including latest and manifest" do
+      manifest_path = "test/fixtures/digest/cleaner/cache_manifest.json"
+      File.mkdir_p!(@output_path)
+      File.cp(manifest_path, "#{@output_path}/cache_manifest.json")
+      File.touch("#{@output_path}/app.css")
+      File.touch("#{@output_path}/app-1.css")
+      File.touch("#{@output_path}/app-1.css.gz")
+      File.touch("#{@output_path}/app-2.css")
+      File.touch("#{@output_path}/app-2.css.gz")
+      File.touch("#{@output_path}/app-3.css")
+      File.touch("#{@output_path}/app-3.css.gz")
+      File.touch("#{@output_path}/manifest.json")
+      File.touch("#{@output_path}/manifest.json.gz")
+      File.touch("#{@output_path}/app.css")
+
+      assert :ok = Phoenix.Digester.clean_all(@output_path)
+      output_files = assets_files(@output_path)
+
+      assert "app.css" in output_files
+      refute "app-3.css" in output_files
+      refute "app-3.css.gz" in output_files
+      refute "app-2.css" in output_files
+      refute "app-2.css.gz" in output_files
+      refute "app-1.css" in output_files
+      refute "app-1.css.gz" in output_files
+      assert "manifest.json" in output_files
+      assert "manifest.json.gz" in output_files
+      refute "cache_manifest.json" in output_files
+    end
+  end
+
   defp assets_files(path) do
     path
     |> Path.join("**/*")
