@@ -439,11 +439,12 @@ defmodule Phoenix.DigesterTest do
       assert {:error, :invalid_path} = Phoenix.Digester.clean_all("nonexistent path")
     end
 
-    test "removes all compiled files including latest and manifest" do
+    test "removes all compressed/compiled files including latest and manifest" do
       manifest_path = "test/fixtures/digest/cleaner/cache_manifest.json"
       File.mkdir_p!(@output_path)
       File.cp(manifest_path, "#{@output_path}/cache_manifest.json")
       File.touch("#{@output_path}/app.css")
+      File.touch("#{@output_path}/app.css.gz")
       File.touch("#{@output_path}/app-1.css")
       File.touch("#{@output_path}/app-1.css.gz")
       File.touch("#{@output_path}/app-2.css")
@@ -458,6 +459,7 @@ defmodule Phoenix.DigesterTest do
       output_files = assets_files(@output_path)
 
       assert "app.css" in output_files
+      refute "app.css.gz" in output_files
       refute "app-3.css" in output_files
       refute "app-3.css.gz" in output_files
       refute "app-2.css" in output_files

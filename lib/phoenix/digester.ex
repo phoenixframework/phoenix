@@ -311,12 +311,18 @@ defmodule Phoenix.Digester do
     if File.exists?(path) do
       %{"digests" => digests} = load_manifest(path)
 
-      files = for {_, versions} <- group_by_logical_path(digests),
-          file <- Enum.map(versions, fn {path, _attrs} -> path end),
-          do: file
+      grouped_digests = group_by_logical_path(digests)
+      logical_paths = Map.keys(grouped_digests)
+
+      files =
+        for {_, versions} <- grouped_digests,
+            file <- Enum.map(versions, fn {path, _attrs} -> path end),
+            do: file
 
       remove_files(files, path)
+      remove_compressed_files(logical_paths, path)
       remove_manifest(path)
+      :ok
     else
       {:error, :invalid_path}
     end
@@ -349,9 +355,17 @@ defmodule Phoenix.Digester do
       |> Path.join(file)
       |> File.rm()
 
-      output_path
-      |> Path.join("#{file}.gz")
-      |> File.rm()
+      remove_compressed_file(file, output_path)
     end
+  end
+
+  defp remove_compressed_files(files, output_path) do
+    for file <- files, do: remove_compressed_file(file, output_path)
+  end
+
+  defp remove_compressed_file(file, output_path) do
+    output_path
+    |> Path.join("#{file}.gz")
+    |> File.rm()
   end
 end
