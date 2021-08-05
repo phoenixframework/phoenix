@@ -31,7 +31,7 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
       Defaults to 2 previous versions
 
     * `--all` - specifies that all compiled assets (including the manifest)
-      will be removed. Specifying `--all` overrides the age and keep options.
+      will be removed. Note this overrides the age and keep switches.
   """
 
   @doc false
