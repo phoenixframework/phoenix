@@ -12,9 +12,14 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
-### 1.5.10-dev
+### 1.5.10 (2021-08-06)
+
+### Bug Fixes
+  * [View] Do not render root layout outside of layout formats
+  * [Channel] Push proper close event to client on duplicate topic shutdown
 
 ### JavaScript Client Enhancements
+  * Schedule heartbeat on reply to avoid intensive throttling
   * Fire each event in a separate task for the LongPoll transport to fix ordering
 
 ### 1.5.9 (2021-05-10)
