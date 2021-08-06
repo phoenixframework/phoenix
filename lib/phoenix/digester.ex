@@ -95,7 +95,7 @@ defmodule Phoenix.Digester do
   end
 
   defp remove_manifest(output_path) do
-    File.rm!(Path.join(output_path, "cache_manifest.json"))
+    File.rm(Path.join(output_path, "cache_manifest.json"))
   end
 
   defp generate_digests(files) do
@@ -309,24 +309,19 @@ defmodule Phoenix.Digester do
   @spec clean_all(String.t()) :: :ok | {:error, :invalid_path}
   def clean_all(path) do
     if File.exists?(path) do
-      case load_manifest(path) do
-        %{"digests" => digests} when map_size(digests) > 0 ->
-          grouped_digests = group_by_logical_path(digests)
-          logical_paths = Map.keys(grouped_digests)
+      %{"digests" => digests} = load_manifest(path)
+      grouped_digests = group_by_logical_path(digests)
+      logical_paths = Map.keys(grouped_digests)
 
-          files =
-            for {_, versions} <- grouped_digests,
-                file <- Enum.map(versions, fn {path, _attrs} -> path end),
-                do: file
+      files =
+        for {_, versions} <- grouped_digests,
+            file <- Enum.map(versions, fn {path, _attrs} -> path end),
+            do: file
 
-          remove_files(files, path)
-          remove_compressed_files(logical_paths, path)
-          remove_manifest(path)
-          :ok
-
-        _ ->
-          :ok
-      end
+      remove_files(files, path)
+      remove_compressed_files(logical_paths, path)
+      remove_manifest(path)
+      :ok
     else
       {:error, :invalid_path}
     end
