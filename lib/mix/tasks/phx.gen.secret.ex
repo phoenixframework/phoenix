@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.Gen.Secret do
   @moduledoc """
   Generates a secret and prints it to the terminal.
 
-      mix phx.gen.secret [length]
+      $ mix phx.gen.secret [length]
 
   By default, mix phx.gen.secret generates a key 64 characters long.
 

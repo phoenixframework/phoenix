@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
   @moduledoc """
   Generates a notifier that delivers emails by default.
 
-      mix phx.gen.notifier Accounts User welcome_user reset_password confirmation_instructions
+      $ mix phx.gen.notifier Accounts User welcome_user reset_password confirmation_instructions
 
   This task expects a context module name, followed by a
   notifier name and one or more message names. Messages
@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
   `--context-app`, which is useful if the notifier is being
   generated in a different app under an umbrella.
 
-      mix phx.gen.notifier Accounts User welcome_user --context-app marketing
+      $ mix phx.gen.notifier Accounts User welcome_user --context-app marketing
 
   The app "marketing" must exist before the command is executed.
   """

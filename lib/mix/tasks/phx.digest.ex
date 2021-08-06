@@ -8,8 +8,8 @@ defmodule Mix.Tasks.Phx.Digest do
   @moduledoc """
   Digests and compresses static files.
 
-      mix phx.digest
-      mix phx.digest priv/static -o /www/public
+      $ mix phx.digest
+      $ mix phx.digest priv/static -o /www/public
 
   The first argument is the path where the static files are located. The
   `-o` option indicates the path that will be used to save the digested and

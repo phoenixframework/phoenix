@@ -6,11 +6,11 @@ defmodule Mix.Tasks.Phx do
   @moduledoc """
   Prints Phoenix tasks and their information.
 
-      mix phx
+      $ mix phx
 
   To print the Phoenix version, pass `-v` or `--version`, for example:
 
-      mix phx --version
+      $ mix phx --version
 
   """
 

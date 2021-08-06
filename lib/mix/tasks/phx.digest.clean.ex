@@ -14,9 +14,9 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
   2 previous versions as well as any digest created
   in the last hour.
 
-      mix phx.digest.clean
-      mix phx.digest.clean -o /www/public
-      mix phx.digest.clean --age 600 --keep 3
+      $ mix phx.digest.clean
+      $ mix phx.digest.clean -o /www/public
+      $ mix phx.digest.clean --age 600 --keep 3
 
   ## Options
 

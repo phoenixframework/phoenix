@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Phx.Server do
 
   For example, to run `phx.server` without recompiling:
 
-      mix phx.server --no-compile
+      $ mix phx.server --no-compile
 
   The `--no-halt` flag is automatically added.
 
@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Phx.Server do
 
   To run `phx.server` without checking dependencies, you can run:
 
-      mix do deps.loadpaths --no-deps-check, phx.server
+      $ mix do deps.loadpaths --no-deps-check, phx.server
   """
 
   @impl true
