@@ -309,20 +309,24 @@ defmodule Phoenix.Digester do
   @spec clean_all(String.t()) :: :ok | {:error, :invalid_path}
   def clean_all(path) do
     if File.exists?(path) do
-      %{"digests" => digests} = load_manifest(path)
+      case load_manifest(path) do
+        %{"digests" => digests} when map_size(digests) > 0 ->
+          grouped_digests = group_by_logical_path(digests)
+          logical_paths = Map.keys(grouped_digests)
 
-      grouped_digests = group_by_logical_path(digests)
-      logical_paths = Map.keys(grouped_digests)
+          files =
+            for {_, versions} <- grouped_digests,
+                file <- Enum.map(versions, fn {path, _attrs} -> path end),
+                do: file
 
-      files =
-        for {_, versions} <- grouped_digests,
-            file <- Enum.map(versions, fn {path, _attrs} -> path end),
-            do: file
+          remove_files(files, path)
+          remove_compressed_files(logical_paths, path)
+          remove_manifest(path)
+          :ok
 
-      remove_files(files, path)
-      remove_compressed_files(logical_paths, path)
-      remove_manifest(path)
-      :ok
+        _ ->
+          :ok
+      end
     else
       {:error, :invalid_path}
     end

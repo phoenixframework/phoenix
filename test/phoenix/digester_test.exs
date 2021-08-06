@@ -439,6 +439,13 @@ defmodule Phoenix.DigesterTest do
       assert {:error, :invalid_path} = Phoenix.Digester.clean_all("nonexistent path")
     end
 
+    test "no-op when the given path does not contain cache_manifest.json" do
+      output_path = "test/fixtures/digest/priv/static/css"
+      assert assets_files(output_path) == ["app.css"]
+      assert :ok = Phoenix.Digester.clean_all(output_path)
+      assert assets_files(output_path) == ["app.css"]
+    end
+
     test "removes all compressed/compiled files including latest and manifest" do
       manifest_path = "test/fixtures/digest/cleaner/cache_manifest.json"
       File.mkdir_p!(@output_path)
