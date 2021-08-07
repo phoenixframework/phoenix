@@ -39,7 +39,7 @@ defmodule <%= inspect schema.module %>Token do
   sessions to be expired. The token system can also be extended
   to store additional data, such as the device used for logging in.
   You could then use this information to display all valid sessions
-  and devices in the UI and allow users explicitly expire any
+  and devices in the UI and allow users to explicitly expire any
   session they deem invalid.
   """
   def build_session_token(<%= schema.singular %>) do
