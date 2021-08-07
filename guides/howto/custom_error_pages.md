@@ -77,7 +77,7 @@ Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web
   <body>
     <header>
       <section class="container">
-        <nav role="navigation">
+        <nav>
           <ul>
             <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
           </ul>
@@ -87,7 +87,7 @@ Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web
         </a>
       </section>
     </header>
-    <main role="main" class="container">
+    <main class="container">
       <section class="phx-hero">
         <p>Sorry, the page you are looking for does not exist.</p>
       </section>

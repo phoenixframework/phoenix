@@ -248,7 +248,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       existing_code = """
       <html>
         <body>
-          <nav role="navigation">
+          <nav>
             <%= render "_user_menu.html" %>
           </nav>
           <h1>My App</h1>
@@ -632,7 +632,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
         <body>
           <header>
             <section class="container">
-              <nav role="navigation">
+              <nav>
                 <ul>
                   <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
                   <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
@@ -658,7 +658,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  <body>
                    <header>
                      <section class="container">
-                       <nav role="navigation">
+                       <nav>
                          <ul>
                            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
                            <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
@@ -686,7 +686,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
         <body>\r
           <header>\r
             <section class="container">\r
-              <nav role="navigation">\r
+              <nav>\r
                 <ul>\r
                   <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>\r
                   <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>\r
@@ -712,7 +712,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  <body>\r
                    <header>\r
                      <section class="container">\r
-                       <nav role="navigation">\r
+                       <nav>\r
                          <ul>\r
                            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>\r
                            <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>\r
@@ -738,7 +738,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
           <title>Demo · Phoenix Framework</title>
         </head>
         <body>
-          <main role="main" class="container">
+          <main class="container">
             <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
             <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
             <%= @inner_content %>
@@ -758,7 +758,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  </head>
                  <body>
                    <%= render "_user_menu.html", assigns %>
-                   <main role="main" class="container">
+                   <main class="container">
                      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
                      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
                      <%= @inner_content %>
@@ -778,7 +778,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
           <title>Demo · Phoenix Framework</title>\r
         </head>\r
         <body>\r
-          <main role="main" class="container">\r
+          <main class="container">\r
             <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>\r
             <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>\r
             <%= @inner_content %>\r
@@ -798,7 +798,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  </head>\r
                  <body>\r
                    <%= render "_user_menu.html", assigns %>\r
-                   <main role="main" class="container">\r
+                   <main class="container">\r
                      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>\r
                      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>\r
                      <%= @inner_content %>\r
@@ -821,7 +821,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
           <div class="my-header">
             <%= render "_user_menu.html", assigns %>
           </div>
-          <main role="main" class="container">
+          <main class="container">
             <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
             <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
             <%= @inner_content %>
@@ -852,7 +852,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                """
                Add a render call for "_user_menu.html" to foo.ex:
 
-                 <nav role="navigation">
+                 <nav>
                    <%= render "_user_menu.html", assigns %>
                  </nav>
                """

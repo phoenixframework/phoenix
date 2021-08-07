@@ -141,7 +141,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     """
     Add a render call for #{inspect(app_layout_menu_template_name(schema))} to #{Path.relative_to_cwd(file_path)}:
 
-      <nav role="navigation">
+      <nav>
         #{app_layout_menu_code_to_inject(schema)}
       </nav>
     """

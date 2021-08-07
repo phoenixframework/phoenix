@@ -897,7 +897,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         Add a render call for "_user_menu.html" to lib/my_app_web/templates/layout/app.html.eex:
 
-          <nav role="navigation">
+          <nav>
             <%= render "_user_menu.html", assigns %>
           </nav>
 
