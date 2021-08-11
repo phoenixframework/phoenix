@@ -170,8 +170,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # Telemetry
       assert_file "phx_blog/mix.exs", fn file ->
-        assert file =~ "{:telemetry_metrics, \"~> 0.4\"}"
-        assert file =~ "{:telemetry_poller, \"~> 0.4\"}"
+        assert file =~ "{:telemetry_metrics,"
+        assert file =~ "{:telemetry_poller,"
       end
 
       assert_file "phx_blog/lib/phx_blog_web/telemetry.ex", fn file ->

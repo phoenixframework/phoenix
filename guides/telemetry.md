@@ -39,8 +39,8 @@ If you are coming from an older version of Phoenix, install
 the `:telemetry_metrics` and `:telemetry_poller` packages:
 
 ```elixir
-{:telemetry_metrics, "~> 0.4"},
-{:telemetry_poller, "~> 0.4"}
+{:telemetry_metrics, "~> 0.6"},
+{:telemetry_poller, "~> 0.5"}
 ```
 
 and create your Telemetry supervisor at

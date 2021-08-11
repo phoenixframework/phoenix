@@ -182,8 +182,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # Telemetry
       assert_file web_path(@app, "mix.exs"), fn file ->
-        assert file =~ "{:telemetry_metrics, \"~> 0.4\"}"
-        assert file =~ "{:telemetry_poller, \"~> 0.4\"}"
+        assert file =~ "{:telemetry_metrics,"
+        assert file =~ "{:telemetry_poller,"
       end
 
       assert_file web_path(@app, "lib/#{@app}_web/telemetry.ex"), fn file ->
