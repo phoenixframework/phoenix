@@ -712,6 +712,13 @@ defmodule Phoenix.Router do
   See `pipeline/2` for more information.
   """
   defmacro pipe_through(pipes) do
+    pipes =
+      if Phoenix.plug_init_mode() == :runtime and Macro.quoted_literal?(pipes) do
+        Macro.prewalk(pipes, &expand_alias(&1, __CALLER__))
+      else
+        pipes
+      end
+
     quote do
       if pipeline = @phoenix_pipeline do
         raise "cannot pipe_through inside a pipeline"
