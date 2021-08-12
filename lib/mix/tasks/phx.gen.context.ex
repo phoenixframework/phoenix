@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @moduledoc """
   Generates a context with functions around an Ecto schema.
 
-      mix phx.gen.context Accounts User users name:string age:integer
+      $ mix phx.gen.context Accounts User users name:string age:integer
 
   The first argument is the context module followed by the schema module
   and its plural name (used as the schema table name).
@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   the plural name provided for the resource. To customize this value,
   a `--table` option may be provided. For example:
 
-      mix phx.gen.context Accounts User users --table cms_users
+      $ mix phx.gen.context Accounts User users --table cms_users
 
   ## binary_id
 

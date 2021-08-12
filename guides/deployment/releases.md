@@ -37,15 +37,9 @@ Then load dependencies to compile code and assets:
 $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 
-# Install / update JavaScript dependencies
-$ npm install --prefix assets
-
 # Compile assets
-$ npm run deploy --prefix assets
-$ MIX_ENV=prod mix phx.digest
+$ MIX_ENV=prod mix assets.deploy
 ```
-
-*Note:* the `--prefix` flag on `npm` may not work on Windows. If so, replace the first command by `cd assets && npm run deploy && cd ..`.
 
 And now run `mix release`:
 
@@ -151,10 +145,12 @@ Elixir releases work well with container technologies, such as Docker. The idea 
 Here is an example Docker file to run at the root of your application covering all of the steps above:
 
 ```Dockerfile
+ARG MIX_ENV="prod"
+
 FROM hexpm/elixir:1.11.2-erlang-23.1.2-alpine-3.12.1 as build
 
 # install build dependencies
-RUN apk add --no-cache build-base npm git python3 curl
+RUN apk add --no-cache build-base git python3 curl
 
 # prepare build dir
 WORKDIR /app
@@ -164,13 +160,14 @@ RUN mix local.hex --force && \
     mix local.rebar --force
 
 # set build ENV
-ARG MIX_ENV="prod"
+ARG MIX_ENV
 ENV MIX_ENV="${MIX_ENV}"
 
 # install mix dependencies
 COPY mix.exs mix.lock .
 RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
+
 # Dependencies sometimes use compile-time configuration. Copying
 # these compile-time config files before we compile dependencies
 # ensures that any relevant config changes will trigger the dependencies
@@ -178,21 +175,12 @@ RUN mkdir config
 COPY config/config.exs config/$MIX_ENV.exs config/
 RUN mix deps.compile
 
-# build assets
-COPY assets/package.json assets/package-lock.json ./assets/
-# install all npm dependencies from scratch
-RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
-
-COPY priv priv
-
 # Note: if your project uses a tool like https://purgecss.com/,
 # which customizes asset compilation based on what it finds in
-# your Elixir templates, you will need to move the asset compilation step
-# down so that `lib` is available.
+# your Elixir templates, you will need to move the asset compilation
+# step down so that `lib` is available.
 COPY assets assets
-# use webpack to compile npm dependencies - https://www.npmjs.com/package/webpack-deploy
-RUN npm run --prefix ./assets deploy
-RUN mix phx.digest
+RUN mix assets.deploy
 
 # compile and build the release
 COPY lib lib
@@ -208,6 +196,7 @@ RUN mix release
 FROM alpine:3.12.1 AS app
 RUN apk add --no-cache libstdc++ openssl ncurses-libs
 
+ARG MIX_ENV
 ENV USER="elixir"
 
 WORKDIR "/home/${USER}/app"

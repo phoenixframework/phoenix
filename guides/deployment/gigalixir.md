@@ -88,17 +88,24 @@ $ git remote -v
 The buildpacks we use default to Elixir, Erlang, and Node.js versions that are quite old and it's generally a good idea to run the same version in production as you do in development, so let's do that.
 
 ```console
-$ echo "elixir_version=1.10.3" > elixir_buildpack.config
-$ echo "erlang_version=22.3" >> elixir_buildpack.config
-$ echo "node_version=12.16.3" > phoenix_static_buildpack.config
+$ echo 'elixir_version=1.10.3' > elixir_buildpack.config
+$ echo 'erlang_version=22.3' >> elixir_buildpack.config
+$ echo 'node_version=12.16.3' > phoenix_static_buildpack.config
 ```
 
-Don't forget to commit
+If you are using Phoenix v1.6, there is also a `mix assets.deploy` alias in your `mix.exs` that you want to invoke post compilation:
+
+```console
+$ echo 'hook_post_compile="mix assets.deploy && rm -f _build/esbuild"' >> elixir_buildpack.config
+```
+
+Finally don't forget to commit:
 
 ```console
 $ git add elixir_buildpack.config phoenix_static_buildpack.config
 $ git commit -m "Set Elixir, Erlang, and Node version"
 ```
+
 ## Making our Project ready for Gigalixir
 
 There's nothing we need to do to get our app running on Gigalixir, but for a production app, you probably want to enforce SSL. To do that, see [Force SSL](https://hexdocs.pm/phoenix/using_ssl.html#force-ssl)

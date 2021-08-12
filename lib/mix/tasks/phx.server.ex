@@ -11,13 +11,14 @@ defmodule Mix.Tasks.Phx.Server do
 
   ## Command line options
 
-  This task accepts the same command-line arguments as `run`.
-  For additional information, refer to the documentation for
-  `Mix.Tasks.Run`.
+    * `--open` - open browser window for each started endpoint
+
+  Furthermore, this task accepts the same command-line options as
+  `mix run`.
 
   For example, to run `phx.server` without recompiling:
 
-      mix phx.server --no-compile
+      $ mix phx.server --no-compile
 
   The `--no-halt` flag is automatically added.
 
@@ -26,20 +27,29 @@ defmodule Mix.Tasks.Phx.Server do
 
   To run `phx.server` without checking dependencies, you can run:
 
-      mix do deps.loadpaths --no-deps-check, phx.server
+      $ mix do deps.loadpaths --no-deps-check, phx.server
   """
 
-  @doc false
+  @impl true
   def run(args) do
     Application.put_env(:phoenix, :serve_endpoints, true, persistent: true)
-    Mix.Tasks.Run.run run_args() ++ args
-  end
-
-  defp run_args do
-    if iex_running?(), do: [], else: ["--no-halt"]
+    Mix.Tasks.Run.run(open_args(args) ++ run_args())
   end
 
   defp iex_running? do
     Code.ensure_loaded?(IEx) and IEx.started?()
+  end
+
+  defp open_args(args) do
+    if "--open" in args do
+      Application.put_env(:phoenix, :browser_open, true)
+      args -- ["--open"]
+    else
+      args
+    end
+  end
+
+  defp run_args do
+    if iex_running?(), do: [], else: ["--no-halt"]
   end
 end

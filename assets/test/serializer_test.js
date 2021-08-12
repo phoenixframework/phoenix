@@ -10,24 +10,24 @@ let binPayload = () => {
   return buffer
 }
 
-describe("JSON", () => {
-  it("encodes general pushes", done => {
+describe("JSON", function(){
+  it("encodes general pushes", function(done){
     Serializer.encode(exampleMsg, result => {
-      assert.equal(result, `["0","1","t","e",{"foo":1}]`)
+      assert.equal(result, "[\"0\",\"1\",\"t\",\"e\",{\"foo\":1}]")
       done()
     })
   })
 
-  it("decodes", done => {
-    Serializer.decode(`["0","1","t","e",{"foo":1}]`, result => {
+  it("decodes", function(done){
+    Serializer.decode("[\"0\",\"1\",\"t\",\"e\",{\"foo\":1}]", result => {
       assert.deepEqual(result, exampleMsg)
       done()
     })
   })
 })
 
-describe("binary", () => {
-  it("encodes", done => {
+describe("binary", function(){
+  it("encodes", function(done){
     let buffer = binPayload()
     let bin = "\0\x01\x01\x01\x0101te\x01"
     let decoder = new TextDecoder()
@@ -37,7 +37,7 @@ describe("binary", () => {
     })
   })
 
-  it("encodes variable length segments", done => {
+  it("encodes variable length segments", function(done){
     let buffer = binPayload()
     let bin = "\0\x02\x01\x03\x02101topev\x01"
     let decoder = new TextDecoder()
@@ -47,7 +47,7 @@ describe("binary", () => {
     })
   })
 
-  it("decodes push", done => {
+  it("decodes push", function(done){
     let bin = "\0\x03\x03\n123topsome-event\x01\x01"
     let buffer = (new TextEncoder()).encode(bin).buffer
     let decoder = new TextDecoder()
@@ -62,7 +62,7 @@ describe("binary", () => {
     })
   })
 
-  it("decodes reply", done => {
+  it("decodes reply", function(done){
     let bin = "\x01\x03\x02\x03\x0210012topok\x01\x01"
     let buffer = (new TextEncoder()).encode(bin).buffer
     let decoder = new TextDecoder()
@@ -78,7 +78,7 @@ describe("binary", () => {
     })
   })
 
-  it("decodes broadcast", done => {
+  it("decodes broadcast", function(done){
     let bin = "\x02\x03\ntopsome-event\x01\x01"
     let buffer = (new TextEncoder()).encode(bin).buffer
     let decoder = new TextDecoder()

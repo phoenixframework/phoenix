@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   @moduledoc """
   Generates authentication logic for a resource.
 
-      mix phx.gen.auth Accounts User users
+      $ mix phx.gen.auth Accounts User users
 
   The first argument is the context module followed by the schema module
   and its plural name (used as the schema table name).
@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
-      mix phx.gen.auth Accounts User users --web Warehouse
+      $ mix phx.gen.auth Accounts User users --web Warehouse
 
   Which would generate the controllers, views, templates and associated tests in nested in the `MyAppWeb.Warehouse` namespace:
 
@@ -70,7 +70,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   the plural name provided for the resource. To customize this value,
   a `--table` option may be provided. For example:
 
-      mix phx.gen.auth Accounts User users --table accounts_users
+      $ mix phx.gen.auth Accounts User users --table accounts_users
 
   This will cause the generated tables to be named `"accounts_users"` and `"accounts_users_tokens"`.
   """
@@ -81,9 +81,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   alias Mix.Tasks.Phx.Gen
   alias Mix.Tasks.Phx.Gen.Auth.{HashingLibrary, Injector, Migration}
 
-  @switches [web: :string, binary_id: :boolean, hashing_lib: :string,
-             table: :string, merge_with_existing_context: :boolean,
-             prefix: :string]
+  @switches [
+    web: :string,
+    binary_id: :boolean,
+    hashing_lib: :string,
+    table: :string,
+    merge_with_existing_context: :boolean,
+    prefix: :string
+  ]
 
   @doc false
   def run(args, test_opts \\ []) do
@@ -143,6 +148,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> maybe_inject_router_import(binding)
     |> maybe_inject_router_plug()
     |> maybe_inject_app_layout_menu()
+    |> Gen.Notifier.maybe_print_mailer_installation_instructions()
     |> print_shell_instructions()
   end
 

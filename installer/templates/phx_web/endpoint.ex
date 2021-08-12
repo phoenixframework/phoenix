@@ -8,11 +8,7 @@ defmodule <%= @endpoint_module %> do
     store: :cookie,
     key: "_<%= @web_app_name %>_key",
     signing_salt: "<%= @signing_salt %>"
-  ]
-
-  socket "/socket", <%= @web_namespace %>.UserSocket,
-    websocket: true,
-    longpoll: false<%= if @live || @dashboard do %>
+  ]<%= if @live || @dashboard do %>
 
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]<% end %>
 
@@ -24,7 +20,7 @@ defmodule <%= @endpoint_module %> do
     at: "/",
     from: :<%= @web_app_name %>,
     gzip: false,
-    only: ~w(css fonts images js favicon.ico robots.txt)
+    only: ~w(assets fonts images favicon.ico robots.txt)
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.

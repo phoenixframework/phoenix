@@ -14,9 +14,9 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
   2 previous versions as well as any digest created
   in the last hour.
 
-      mix phx.digest.clean
-      mix phx.digest.clean -o /www/public
-      mix phx.digest.clean --age 600 --keep 3
+      $ mix phx.digest.clean
+      $ mix phx.digest.clean -o /www/public
+      $ mix phx.digest.clean --age 600 --keep 3
 
   ## Options
 
@@ -30,19 +30,27 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
     * `--keep` - specifies how many previous versions of assets to keep.
       Defaults to 2 previous versions
 
+    * `--all` - specifies that all compiled assets (including the manifest)
+      will be removed. Note this overrides the age and keep switches.
   """
 
   @doc false
   def run(args) do
-    switches = [output: :string, age: :integer, keep: :integer]
+    switches = [output: :string, age: :integer, keep: :integer, all: :boolean]
     {opts, _, _} = OptionParser.parse(args, switches: switches, aliases: [o: :output])
     output_path = opts[:output] || @default_output_path
     age = opts[:age] || @default_age
     keep = opts[:keep] || @default_keep
+    all? = opts[:all] || false
 
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
-    case Phoenix.Digester.clean(output_path, age, keep) do
+    result =
+      if all?,
+        do: Phoenix.Digester.clean_all(output_path),
+        else: Phoenix.Digester.clean(output_path, age, keep)
+
+    case result do
       :ok ->
         # We need to call build structure so everything we have cleaned from
         # priv is removed from _build in case we have build_embedded set to

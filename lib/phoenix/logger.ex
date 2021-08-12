@@ -123,13 +123,13 @@ defmodule Phoenix.Logger do
   @doc false
   def install do
     handlers = %{
-      [:phoenix, :endpoint, :start] => &phoenix_endpoint_start/4,
-      [:phoenix, :endpoint, :stop] => &phoenix_endpoint_stop/4,
-      [:phoenix, :router_dispatch, :start] => &phoenix_router_dispatch_start/4,
-      [:phoenix, :error_rendered] => &phoenix_error_rendered/4,
-      [:phoenix, :socket_connected] => &phoenix_socket_connected/4,
-      [:phoenix, :channel_joined] => &phoenix_channel_joined/4,
-      [:phoenix, :channel_handled_in] => &phoenix_channel_handled_in/4
+      [:phoenix, :endpoint, :start] => &__MODULE__.phoenix_endpoint_start/4,
+      [:phoenix, :endpoint, :stop] => &__MODULE__.phoenix_endpoint_stop/4,
+      [:phoenix, :router_dispatch, :start] => &__MODULE__.phoenix_router_dispatch_start/4,
+      [:phoenix, :error_rendered] => &__MODULE__.phoenix_error_rendered/4,
+      [:phoenix, :socket_connected] => &__MODULE__.phoenix_socket_connected/4,
+      [:phoenix, :channel_joined] => &__MODULE__.phoenix_channel_joined/4,
+      [:phoenix, :channel_handled_in] => &__MODULE__.phoenix_channel_handled_in/4
     }
 
     for {key, fun} <- handlers do
@@ -200,7 +200,8 @@ defmodule Phoenix.Logger do
 
   ## Event: [:phoenix, :endpoint, *]
 
-  defp phoenix_endpoint_start(_, _, %{conn: conn} = metadata, _) do
+  @doc false
+  def phoenix_endpoint_start(_, _, %{conn: conn} = metadata, _) do
     case log_level(metadata[:options][:log] || :info, conn) do
       false ->
         :ok
@@ -213,7 +214,8 @@ defmodule Phoenix.Logger do
     end
   end
 
-  defp phoenix_endpoint_stop(_, %{duration: duration}, %{conn: conn} = metadata, _) do
+  @doc false
+  def phoenix_endpoint_stop(_, %{duration: duration}, %{conn: conn} = metadata, _) do
     case log_level(metadata[:options][:log] || :info, conn) do
       false ->
         :ok
@@ -232,9 +234,10 @@ defmodule Phoenix.Logger do
 
   ## Event: [:phoenix, :error_rendered]
 
-  defp phoenix_error_rendered(_, _, %{log: false}, _), do: :ok
+  @doc false
+  def phoenix_error_rendered(_, _, %{log: false}, _), do: :ok
 
-  defp phoenix_error_rendered(_, _, %{log: level, status: status, kind: kind, reason: reason}, _) do
+  def phoenix_error_rendered(_, _, %{log: level, status: status, kind: kind, reason: reason}, _) do
     Logger.log(level, fn ->
       [
         "Converted ",
@@ -253,9 +256,10 @@ defmodule Phoenix.Logger do
 
   ## Event: [:phoenix, :router_dispatch, :start]
 
-  defp phoenix_router_dispatch_start(_, _, %{log: false}, _), do: :ok
+  @doc false
+  def phoenix_router_dispatch_start(_, _, %{log: false}, _), do: :ok
 
-  defp phoenix_router_dispatch_start(_, _, metadata, _) do
+  def phoenix_router_dispatch_start(_, _, metadata, _) do
     %{log: level, conn: conn} = metadata
     level = log_level(level, conn)
 
@@ -288,9 +292,10 @@ defmodule Phoenix.Logger do
 
   ## Event: [:phoenix, :socket_connected]
 
-  defp phoenix_socket_connected(_, _, %{log: false}, _), do: :ok
+  @doc false
+  def phoenix_socket_connected(_, _, %{log: false}, _), do: :ok
 
-  defp phoenix_socket_connected(_, %{duration: duration}, %{log: level} = meta, _) do
+  def phoenix_socket_connected(_, %{duration: duration}, %{log: level} = meta, _) do
     Logger.log(level, fn ->
       %{
         transport: transport,
@@ -320,7 +325,8 @@ defmodule Phoenix.Logger do
 
   ## Event: [:phoenix, :channel_joined]
 
-  defp phoenix_channel_joined(_, %{duration: duration}, %{socket: socket} = metadata, _) do
+  @doc false
+  def phoenix_channel_joined(_, %{duration: duration}, %{socket: socket} = metadata, _) do
     channel_log(:log_join, socket, fn ->
       %{result: result, params: params} = metadata
 
@@ -340,7 +346,8 @@ defmodule Phoenix.Logger do
 
   ## Event: [:phoenix, :channel_handle_in]
 
-  defp phoenix_channel_handled_in(_, %{duration: duration}, %{socket: socket} = metadata, _) do
+  @doc false
+  def phoenix_channel_handled_in(_, %{duration: duration}, %{socket: socket} = metadata, _) do
     channel_log(:log_handle_in, socket, fn ->
       %{event: event, params: params} = metadata
 

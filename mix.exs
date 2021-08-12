@@ -7,8 +7,6 @@ defmodule Phoenix.MixProject do
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
   # installer is ahead of Phoenix itself.
-  #
-  # We also need to update guides/introduction/installation.md
   @elixir_requirement "~> 1.9"
 
   def project do
@@ -65,26 +63,29 @@ defmodule Phoenix.MixProject do
     [
       {:plug, "~> 1.10"},
       {:plug_crypto, "~> 1.1.2 or ~> 1.2"},
-      {:telemetry, "~> 0.4"},
+      {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.0"},
+      {:phoenix_view, "~> 1.0"},
 
       # Optional deps
       {:plug_cowboy, "~> 2.2", optional: true},
       {:jason, "~> 1.0", optional: true},
-      {:phoenix_view, git: "https://github.com/phoenixframework/phoenix_view.git"},
-      {:phoenix_html, "~> 2.14.2 or ~> 3.0", optional: true},
 
       # Docs dependencies (some for cross references)
       {:ex_doc, "~> 0.24", only: :docs},
       {:ecto, ">= 3.0.0", only: :docs},
       {:ecto_sql, "~> 3.5", only: :docs},
       {:gettext, "~> 0.15.0", only: :docs},
-      {:telemetry_poller, "~> 0.4", only: :docs},
-      {:telemetry_metrics, "~> 0.4", only: :docs},
+      {:telemetry_poller, "~> 0.5", only: :docs},
+      {:telemetry_metrics, "~> 0.6", only: :docs},
 
       # Test dependencies
+      {:phoenix_html, "~> 2.14.2 or ~> 3.0", only: :test},
       {:phx_new, path: "./installer", only: :test},
-      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
+      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
+
+      # Dev dependencies
+      {:esbuild, "~> 0.1", only: :dev}
     ]
   end
 
@@ -129,8 +130,8 @@ defmodule Phoenix.MixProject do
       "guides/mix_tasks.md",
       "guides/telemetry.md",
       "guides/authentication/mix_phx_gen_auth.md",
-      "guides/realtime/channels.md",
-      "guides/realtime/presence.md",
+      "guides/channels/channels.md",
+      "guides/channels/presence.md",
       "guides/testing/testing.md",
       "guides/testing/testing_contexts.md",
       "guides/testing/testing_controllers.md",
@@ -150,7 +151,7 @@ defmodule Phoenix.MixProject do
       Introduction: ~r/guides\/introduction\/.?/,
       Guides: ~r/guides\/[^\/]+\.md/,
       Authentication: ~r/guides\/authentication\/.?/,
-      "Real-time components": ~r/guides\/realtime\/.?/,
+      Channels: ~r/guides\/channels\/.?/,
       Testing: ~r/guides\/testing\/.?/,
       Deployment: ~r/guides\/deployment\/.?/,
       "How-to's": ~r/guides\/howto\/.?/
@@ -193,7 +194,9 @@ defmodule Phoenix.MixProject do
 
   defp aliases do
     [
-      docs: ["docs", &generate_js_docs/1]
+      docs: ["docs", &generate_js_docs/1],
+      "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min"],
+      "assets.watch": "esbuild module --watch"
     ]
   end
 

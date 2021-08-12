@@ -52,6 +52,19 @@ defmodule Phoenix.Controller.RenderTest do
     assert html_response?(conn)
   end
 
+  test "renders string template without put_root_layout based on layout_formats" do
+    conn =
+      conn()
+      |> put_layout_formats(["not_html"])
+      |> put_layout({MyApp.LayoutView, "app.html"})
+      |> put_root_layout({MyApp.LayoutView, "root.html"})
+      |> render("index.html", title: "Hello")
+
+    refute conn.resp_body =~ "ROOTSTART"
+    refute conn.resp_body =~ "<html>"
+    assert html_response?(conn)
+  end
+
   test "renders atom template with put layout" do
     conn = put_format(layout_conn(), "html")
     conn = render(conn, :index, title: "Hello")

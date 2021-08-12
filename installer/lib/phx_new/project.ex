@@ -51,8 +51,12 @@ defmodule Phx.New.Project do
     Keyword.fetch!(binding, :dashboard)
   end
 
-  def webpack?(%Project{binding: binding}) do
-    Keyword.fetch!(binding, :webpack)
+  def assets?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :assets)
+  end
+
+  def mailer?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :mailer)
   end
 
   def verbose?(%Project{opts: opts}) do
