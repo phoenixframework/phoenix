@@ -22,7 +22,11 @@ defmodule Mix.Tasks.Phx.Routes do
   task is invoked without arguments.
 
   Umbrella projects do not have a default router and
-  therefore always expect a router to be given.
+  therefore expect a router to be given or specified
+  by the following config:
+
+      config :phoenix,
+        phx_routes_router: MyApp.Router
   """
 
   @doc false
@@ -49,26 +53,49 @@ defmodule Mix.Tasks.Phx.Routes do
   end
 
   defp router(nil, base) do
-    if Mix.Project.umbrella?() do
-      Mix.raise """
-      umbrella applications require an explicit router to be given to phx.routes, for example:
+    cond do
+      router_from_config = router_from_config() ->
+        router(router_from_config, base)
 
-          $ mix phx.routes MyAppWeb.Router
-      """
+      Mix.Project.umbrella?() ->
+        Mix.raise("""
+        umbrella applications require an explicit router to be given to phx.routes, for example:
+
+            $ mix phx.routes MyAppWeb.Router
+
+        Alternatively, specify a default router for phx.routes by adding this config:
+
+            config :phoenix,
+              phx_routes_router: MyApp.Router
+
+        """)
+
+      true ->
+        web_router = web_mod(base, "Router")
+        old_router = app_mod(base, "Router")
+
+        loaded(web_router) || loaded(old_router) ||
+          Mix.raise("""
+          no router found at #{inspect(web_router)} or #{inspect(old_router)}.
+          An explicit router module may be given to phx.routes, for example:
+
+              $ mix phx.routes MyAppWeb.Router
+
+          Alternatively, specify a default router for phx.routes by adding this config:
+
+              config :phoenix,
+                phx_routes_router: MyApp.Router
+          """)
     end
-    web_router = web_mod(base, "Router")
-    old_router = app_mod(base, "Router")
-
-    loaded(web_router) || loaded(old_router) || Mix.raise """
-    no router found at #{inspect web_router} or #{inspect old_router}.
-    An explicit router module may be given to phx.routes, for example:
-
-        $ mix phx.routes MyAppWeb.Router
-    """
   end
+
   defp router(router_name, _base) do
     arg_router = Module.concat([router_name])
     loaded(arg_router) || Mix.raise "the provided router, #{inspect(arg_router)}, does not exist"
+  end
+
+  defp router_from_config do
+    Application.get_env(:phoenix, :phx_routes_router, nil)
   end
 
   defp loaded(module) do
