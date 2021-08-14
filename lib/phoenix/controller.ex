@@ -1291,11 +1291,13 @@ defmodule Phoenix.Controller do
 
   defp parse_exts("*", "*"),      do: "*/*"
   defp parse_exts(type, "*"),     do: type
+  defp parse_exts("text", "plain"), do: ["text"]
   defp parse_exts(type, subtype), do: MIME.extensions(type <> "/" <> subtype)
 
   defp find_format("*/*", accepted),                   do: Enum.fetch!(accepted, 0)
   defp find_format(exts, accepted) when is_list(exts), do: Enum.find(exts, &(&1 in accepted))
   defp find_format(_type_range, []),                   do: nil
+  defp find_format("text", ["text"|_]), do: "text"
   defp find_format(type_range, [h|t]) do
     mime_type = MIME.type(h)
     case Plug.Conn.Utils.media_type(mime_type) do

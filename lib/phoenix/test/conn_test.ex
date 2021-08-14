@@ -321,6 +321,8 @@ defmodule Phoenix.ConnTest do
 
   defp response_content_type?(header, format) do
     case parse_content_type(header) do
+      {"text", "plain"} ->
+        format == :text
       {part, subpart} ->
         format = Atom.to_string(format)
         format in MIME.extensions(part <> "/" <> subpart) or
