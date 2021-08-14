@@ -311,7 +311,7 @@ end
 
 We would then need to provide an `index.xml.eex` template which created valid XML, and we would be done.
 
-For a list of valid content mime-types, please see the [mime.types](https://github.com/elixir-plug/mime/blob/master/lib/mime.ex) documentation from the mime type library.
+For a list of valid content mime-types, please see the [mime](https://github.com/elixir-plug/mime) library.
 
 ### Setting the HTTP Status
 
