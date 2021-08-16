@@ -22,7 +22,15 @@ defmodule Mix.Tasks.Phx.Routes do
   task is invoked without arguments.
 
   Umbrella projects do not have a default router and
-  therefore always expect a router to be given.
+  therefore always expect a router to be given. An
+  alias can be added to mix.exs to automate this:
+
+    defp aliases do
+    [
+      "phx.routes": "phx.routes MyAppWeb.Router",
+      ...
+    ]
+
   """
 
   @doc false
@@ -54,6 +62,11 @@ defmodule Mix.Tasks.Phx.Routes do
       umbrella applications require an explicit router to be given to phx.routes, for example:
 
           $ mix phx.routes MyAppWeb.Router
+
+      An alias can be added to mix.exs aliases to automate this:
+
+          "phx.routes": "phx.routes MyAppWeb.Router"
+
       """
     end
     web_router = web_mod(base, "Router")
@@ -64,6 +77,11 @@ defmodule Mix.Tasks.Phx.Routes do
     An explicit router module may be given to phx.routes, for example:
 
         $ mix phx.routes MyAppWeb.Router
+
+    An alias can be added to mix.exs aliases to automate this:
+
+        "phx.routes": "phx.routes MyAppWeb.Router"
+
     """
   end
   defp router(router_name, _base) do
