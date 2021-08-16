@@ -100,7 +100,7 @@ defmodule Phx.New.Generator do
       Mix.raise(~s[Could not find "use Mix.Config" or "import Config" in #{inspect(file)}])
     else
       [left, middle, right] ->
-        write_formatted!(file, [left, middle, ?\n, to_inject, right])
+        write_formatted!(file, [left, middle, ?\n, ?\n, to_inject, right])
     end
   end
 
