@@ -101,7 +101,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(@app, "mix.exs"), fn file ->
         assert file =~ "mod: {PhxUmbWeb.Application, []}"
-        assert file =~ "{:jason, \"~> 1.0\"}"
+        assert file =~ "{:jason"
       end
 
       assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
