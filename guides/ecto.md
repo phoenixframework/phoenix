@@ -531,7 +531,7 @@ defmodule HelloPhoenix.MixProject do
     [
       {:phoenix, "~> 1.4.0"},
       {:phoenix_ecto, "~> 4.4"},
-      {:ecto_sql, "~> 3.5"},
+      {:ecto_sql, "~> 3.6"},
       {:myxql, ">= 0.0.0"},
       ...
     ]

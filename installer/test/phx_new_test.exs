@@ -61,7 +61,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog.ex", ~r/defmodule PhxBlog do/
       assert_file "phx_blog/mix.exs", fn file ->
         assert file =~ "mod: {PhxBlog.Application, []}"
-        assert file =~ "{:jason, \"~> 1.0\"}"
+        assert file =~ "{:jason,"
         assert file =~ "{:phoenix_live_dashboard,"
       end
 

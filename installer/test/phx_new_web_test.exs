@@ -47,7 +47,7 @@ defmodule Mix.Tasks.Phx.New.WebTest do
       end
 
       assert_file "#{@app_name}/mix.exs", fn file ->
-        assert file =~ "{:jason, \"~> 1.0\"}"
+        assert file =~ "{:jason,"
       end
 
       # Install dependencies?
