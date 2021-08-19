@@ -16,9 +16,10 @@ defmodule <%= inspect context.web_module %>.<%= if schema.web_path, do: "#{Phoen
 
   """
   def mount_current_<%= schema.singular %>(socket, %{"<%=schema.singular %>_token" => <%= schema.singular %>_token}) do
-    socket = assign_new(socket, :current_<%= schema.singular %>, fn ->
-      <%= inspect context.module %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-    end)
+    socket =
+      assign_new(socket, :current_<%= schema.singular %>, fn ->
+        <%= inspect context.module %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
+      end)
 
     {:cont, socket}
   end
@@ -42,9 +43,10 @@ defmodule <%= inspect context.web_module %>.<%= if schema.web_path, do: "#{Phoen
 
   """
   def ensure_mounted_current_<%= schema.singular %>(socket, %{"<%=schema.singular %>_token" => <%= schema.singular %>_token}) do
-    socket = assign_new(socket, :current_<%= schema.singular %>, fn ->
-      <%= inspect context.module %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-    end)
+    socket =
+      assign_new(socket, :current_<%= schema.singular %>, fn ->
+        <%= inspect context.module %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
+      end)
 
     case socket.assigns.current_<%= schema.singular %> do
       nil ->
