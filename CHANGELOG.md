@@ -12,6 +12,11 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+### 1.5.11 (2021-08-20)
+
+### Bug Fixes
+  * Relax `phoenix_ecto` version for installer to fix version conflicts
+
 ### 1.5.10 (2021-08-06)
 
 ### Bug Fixes
