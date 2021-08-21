@@ -238,10 +238,10 @@
 
   ## Examples
 
-      iex> deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, &Routes.<%= schema.singular %>_confirmation_url(conn, :confirm, &1))
+      iex> deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, &Routes.<%= schema.singular %>_confirmation_url(conn, :edit, &1))
       {:ok, %{to: ..., body: ...}}
 
-      iex> deliver_<%= schema.singular %>_confirmation_instructions(confirmed_<%= schema.singular %>, &Routes.<%= schema.singular %>_confirmation_url(conn, :confirm, &1))
+      iex> deliver_<%= schema.singular %>_confirmation_instructions(confirmed_<%= schema.singular %>, &Routes.<%= schema.singular %>_confirmation_url(conn, :edit, &1))
       {:error, :already_confirmed}
 
   """

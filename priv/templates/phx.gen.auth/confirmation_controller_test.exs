@@ -10,7 +10,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   describe "GET /<%= schema.singular %>s/confirm" do
-    test "renders the confirmation page", %{conn: conn} do
+    test "renders the resend confirmation page", %{conn: conn} do
       conn = get(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :new))
       response = html_response(conn, 200)
       assert response =~ "<h1>Resend confirmation instructions</h1>"
@@ -55,14 +55,25 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  describe "GET /<%= schema.singular %>s/confirm/:token" do
+  describe "GET /users/confirm/:token" do
+    test "renders the confirmation page", %{conn: conn} do
+      conn = get(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :edit, "some-token"))
+      response = html_response(conn, 200)
+      assert response =~ "<h1>Confirm account</h1>"
+
+      form_action = Routes.<%= schema.route_helper %>_confirmation_path(conn, :update, "some-token")
+      assert response =~ "action=\"#{form_action}\""
+    end
+  end
+
+  describe "POST /<%= schema.singular %>s/confirm/:token" do
     test "confirms the given token once", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       token =
         extract_<%= schema.singular %>_token(fn url ->
           <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, url)
         end)
 
-      conn = get(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :confirm, token))
+      conn = post(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :update, token))
       assert redirected_to(conn) == "/"
       assert get_flash(conn, :info) =~ "<%= schema.human_singular %> confirmed successfully"
       assert <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).confirmed_at
@@ -70,7 +81,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert Repo.all(<%= inspect context.alias %>.<%= inspect schema.alias %>Token) == []
 
       # When not logged in
-      conn = get(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :confirm, token))
+      conn = post(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :update, token))
       assert redirected_to(conn) == "/"
       assert get_flash(conn, :error) =~ "<%= schema.human_singular %> confirmation link is invalid or it has expired"
 
@@ -78,14 +89,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn =
         build_conn()
         |> log_in_<%= schema.singular %>(<%= schema.singular %>)
-        |> get(Routes.<%= schema.route_helper %>_confirmation_path(conn, :confirm, token))
+        |> post(Routes.<%= schema.route_helper %>_confirmation_path(conn, :update, token))
 
       assert redirected_to(conn) == "/"
       refute get_flash(conn, :error)
     end
 
     test "does not confirm email with invalid token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      conn = get(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :confirm, "oops"))
+      conn = post(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :update, "oops"))
       assert redirected_to(conn) == "/"
       assert get_flash(conn, :error) =~ "<%= schema.human_singular %> confirmation link is invalid or it has expired"
       refute <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).confirmed_at

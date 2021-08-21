@@ -167,7 +167,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
             delete "/users/log_out", UserSessionController, :delete
             get "/users/confirm", UserConfirmationController, :new
             post "/users/confirm", UserConfirmationController, :create
-            get "/users/confirm/:token", UserConfirmationController, :confirm
+            get "/users/confirm/:token", UserConfirmationController, :edit
+            post "/users/confirm/:token", UserConfirmationController, :update
           end
         """
       end
@@ -180,20 +181,6 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "def register_and_log_in_user(%{conn: conn})"
         assert file =~ "def log_in_user(conn, user)"
       end
-
-      assert_received {:mix_shell, :info, ["""
-
-      Please re-fetch your dependencies with the following command:
-
-          mix deps.get
-      """]}
-
-      assert_received {:mix_shell, :info, ["""
-
-      Remember to update your repository by running migrations:
-
-        $ mix ecto.migrate
-      """]}
 
       assert_received {:mix_shell, :info, ["Unable to find the \"MyApp.Mailer\"" <> mailer_notice]}
       assert mailer_notice =~ ~s(A mailer module like the following is expected to be defined)
@@ -383,7 +370,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
             delete "/users/log_out", UserSessionController, :delete
             get "/users/confirm", UserConfirmationController, :new
             post "/users/confirm", UserConfirmationController, :create
-            get "/users/confirm/:token", UserConfirmationController, :confirm
+            get "/users/confirm/:token", UserConfirmationController, :edit
+            post "/users/confirm/:token", UserConfirmationController, :update
           end
         """
       end
