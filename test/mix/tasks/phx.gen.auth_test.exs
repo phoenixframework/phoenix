@@ -318,8 +318,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "lib/my_app_web/templates/warehouse/user_settings/edit.html.eex", fn file ->
-        assert file =~ ~S|<%= form_for @email_changeset, Routes.warehouse_user_settings_path(@conn, :update), fn f -> %>|
-        assert file =~ ~S|<%= form_for @password_changeset, Routes.warehouse_user_settings_path(@conn, :update), fn f -> %>|
+        assert file =~ ~S|<%= form_for @email_changeset, Routes.warehouse_user_settings_path(@conn, :update), [id: :update_email], fn f -> %>|
+        assert file =~ ~S|<%= form_for @password_changeset, Routes.warehouse_user_settings_path(@conn, :update), [id: :update_password], fn f -> %>|
       end
 
       assert_file "lib/my_app_web/views/warehouse/user_settings_view.ex", fn file ->
