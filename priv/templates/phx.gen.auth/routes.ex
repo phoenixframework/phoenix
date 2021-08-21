@@ -28,5 +28,6 @@
     delete "/<%= schema.plural %>/log_out", <%= inspect schema.alias %>SessionController, :delete
     get "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :new
     post "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :create
-    get "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :confirm
+    get "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :edit
+    post "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :update
   end
