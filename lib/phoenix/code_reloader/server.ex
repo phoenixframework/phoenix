@@ -221,7 +221,7 @@ defmodule Phoenix.CodeReloader.Server do
         raise """
         could not compile application: #{Mix.Project.config()[:app]}.
 
-        You must restart your server after changing the following config or lib files:
+        You must restart your server after changing the following files:
 
           * #{Enum.map_join(files, "\n  * ", &Path.relative_to_cwd/1)}
 
