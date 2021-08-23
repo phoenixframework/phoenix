@@ -49,12 +49,12 @@ defmodule Phx.New.Single do
 
   template :live, [
     {:eex, "phx_live/assets/topbar.js",                      :web,     "assets/vendor/topbar.js"},
-    {:eex, "phx_live/templates/layout/root.html.leex",       :project, "lib/:lib_web_name/templates/layout/root.html.leex"},
-    {:eex, "phx_live/templates/layout/app.html.leex",        :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
-    {:eex, "phx_live/templates/layout/live.html.leex",       :project, "lib/:lib_web_name/templates/layout/live.html.leex"},
+    {:eex, "phx_live/templates/layout/root.html.heex",       :project, "lib/:lib_web_name/templates/layout/root.html.heex"},
+    {:eex, "phx_live/templates/layout/app.html.heex",        :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
+    {:eex, "phx_live/templates/layout/live.html.heex",       :project, "lib/:lib_web_name/templates/layout/live.html.heex"},
     {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
     {:eex, "phx_live/live/page_live.ex",                     :project, "lib/:lib_web_name/live/page_live.ex"},
-    {:eex, "phx_web/templates/page/index.html.eex",          :project, "lib/:lib_web_name/live/page_live.html.leex"},
+    {:eex, "phx_web/templates/page/index.html.eex",          :project, "lib/:lib_web_name/live/page_live.html.heex"},
     {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:lib_web_name/views/layout_view_test.exs"},
     {:eex, "phx_test/live/page_live_test.exs",               :project, "test/:lib_web_name/live/page_live_test.exs"},
   ]

@@ -199,7 +199,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         [ecto_adapter: Ecto.Adapters.Postgres, validate_dependencies?: false]
       )
 
-      assert_file "lib/my_app_web/templates/layout/root.html.leex", fn file ->
+      assert_file "lib/my_app_web/templates/layout/root.html.heex", fn file ->
         assert file =~ ~s|<%= render "_user_menu.html", assigns %>|
       end
 
@@ -857,7 +857,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         Missing files:
 
-          * lib/my_app_web/templates/layout/root.html.leex
+          * lib/my_app_web/templates/layout/root.html.heex
           * lib/my_app_web/templates/layout/app.html.eex
 
         Please ensure this phoenix app was not generated with

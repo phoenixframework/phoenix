@@ -407,7 +407,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_dashboard")
 
-      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.leex"), fn file ->
+      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.heex"), fn file ->
         refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
       end
 
@@ -429,7 +429,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "defmodule PhxUmbWeb.PageLive do"
       end
 
-      assert_file web_path(@app, "lib/#{@app}_web/live/page_live.html.leex"), fn file ->
+      assert_file web_path(@app, "lib/#{@app}_web/live/page_live.html.heex"), fn file ->
         assert file =~ ~s[Welcome]
       end
 

@@ -468,7 +468,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   defp potential_layout_file_paths(%Context{context_app: ctx_app}) do
     web_prefix = Mix.Phoenix.web_path(ctx_app)
 
-    for file_name <- ~w(root.html.leex app.html.eex) do
+    for file_name <- ~w(root.html.heex app.html.eex) do
       Path.join([web_prefix, "templates", "layout", file_name])
     end
   end

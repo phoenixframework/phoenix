@@ -426,12 +426,12 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "defmodule PhxBlogWeb.PageLive do"
       end
 
-      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.heex", fn file ->
         assert file =~ ~s|<%= live_title_tag assigns[:page_title]|
         assert file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
       end
 
-      assert_file "phx_blog/lib/phx_blog_web/live/page_live.html.leex", fn file ->
+      assert_file "phx_blog/lib/phx_blog_web/live/page_live.html.heex", fn file ->
         assert file =~ ~s[Welcome]
       end
 
@@ -471,7 +471,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard")
 
-      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.heex", fn file ->
         refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
       end
 

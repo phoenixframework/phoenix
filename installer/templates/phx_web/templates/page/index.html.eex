@@ -4,10 +4,10 @@
   <p>Peace of mind from prototype to production</p><%= if @live do %>
 
   <form phx-change="suggest" phx-submit="search">
-    <input type="text" name="q" value="<%%= @query %>" placeholder="Live dependency search" list="results" autocomplete="off" autofocus/>
+    <input type="text" name="q" value={@query} placeholder="Live dependency search" list="results" autocomplete="off" autofocus/>
     <datalist id="results">
       <%%= for {app, _vsn} <- @results do %>
-        <option value="<%%= app %>"><%%= app %></option>
+        <option value={app}><%%= app %></option>
       <%% end %>
     </datalist>
     <button type="submit" phx-disable-with="Searching...">Go to Hexdocs</button>
