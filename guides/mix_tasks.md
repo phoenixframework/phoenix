@@ -423,6 +423,8 @@ $ mix phx.digest priv/static/ -o www/public/
 Check your digested files at 'www/public/'
 ```
 
+> Note: You can use `mix phx.digest.clean` to prune stale versions of the assets. If you want to remove all produced files, run `mix phx.digest.clean --all`.
+
 ## Ecto tasks
 
 Newly generated Phoenix applications now include Ecto and Postgrex as dependencies by default (which is to say, unless we use `mix phx.new` with the `--no-ecto` flag). With those dependencies come Mix tasks to take care of common Ecto operations. Let's see which tasks we get out of the box.
