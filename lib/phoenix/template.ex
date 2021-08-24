@@ -192,7 +192,7 @@ defmodule Phoenix.Template do
       end
 
       @doc false
-      def __phoenix_recompile__? do
+      def __mix_recompile__? do
         unquote(hash(root, pattern, engines)) != Template.hash(@phoenix_root, @phoenix_pattern, @phoenix_template_engines)
       end
     end

@@ -118,8 +118,8 @@ defmodule Phoenix.TemplateTest do
     end
   end
 
-  test "generates __phoenix_recompile__? function" do
-    refute View.__phoenix_recompile__?()
+  test "generates __mix_recompile__? function" do
+    refute View.__mix_recompile__?()
   end
 
   defmodule CustomEngineView do
