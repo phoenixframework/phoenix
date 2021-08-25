@@ -197,6 +197,29 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "summary(\"phx_umb.repo.query.total_time\","
       end
 
+      # Live
+      assert_file web_path(@app, "assets/js/app.js"), fn file ->
+        assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
+      end
+
+      assert_file root_path(@app, "config/config.exs"), fn file ->
+        assert file =~ "live_view:"
+        assert file =~ "signing_salt:"
+      end
+
+      assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
+        assert file =~ "import Phoenix.LiveView.Helpers"
+        assert file =~ "def live_view do"
+        assert file =~ "def live_component do"
+      end
+
+      assert_file web_path(@app, "lib/phx_umb_web/endpoint.ex"), ~s[socket "/live", Phoenix.LiveView.Socket]
+      assert_file web_path(@app, "lib/phx_umb_web/router.ex"), fn file ->
+        assert file =~ ~s[plug :fetch_live_flash]
+        assert file =~ ~s[plug :put_root_layout, {PhxUmbWeb.LayoutView, :root}]
+        assert file =~ ~s[get "/", PageController]
+      end
+
       # Mailer
       assert_file app_path(@app, "mix.exs"), fn file ->
         assert file =~ "{:swoosh, \"~> 1.3\"}"
@@ -333,7 +356,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
-  test "new with no_dashboard" do
+  test "new with --no-dashboard" do
     in_tmp "new with no_dashboard", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-dashboard"])
 
@@ -351,7 +374,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
-  test "new with no_dashboard and no_live" do
+  test "new with --no-dashboard and --no-live" do
     in_tmp "new with no_dashboard and no_live", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-dashboard", "--no-live"])
 
@@ -368,7 +391,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
-  test "new with no_html" do
+  test "new with --no-html" do
     in_tmp "new with no_html", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-html"])
 
@@ -395,7 +418,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
-  test "new with no_assets" do
+  test "new with --no-assets" do
     in_tmp "new with no_assets", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-assets"])
 
@@ -414,60 +437,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--binary-id"])
       assert_file root_path(@app, "config/config.exs"),
                   ~r/generators: \[context_app: :phx_umb, binary_id: true\]/
-    end
-  end
-
-  test "new with live no_dashboard" do
-    in_tmp "new with live no_dashboard", fn ->
-      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--live", "--no-dashboard"])
-
-      assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_dashboard")
-
-      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.heex"), fn file ->
-        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
-      end
-
-      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), fn file ->
-        assert file =~ ~s|defmodule PhxUmbWeb.Endpoint|
-        assert file =~ ~s|socket "/live"|
-        refute file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
-      end
-    end
-  end
-
-  test "new with live" do
-    in_tmp "new with live", fn ->
-      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--live"])
-
-      assert_file web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex")
-      assert_file web_path(@app, "mix.exs"), &assert(&1 =~ ~r":phoenix_live_view")
-      assert_file web_path(@app, "mix.exs"), &assert(&1 =~ ~r":floki")
-
-      assert_file web_path(@app, "assets/js/app.js"), fn file ->
-        assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
-      end
-
-      assert_file web_path(@app, "assets/css/app.css"), fn file ->
-        assert file =~ ~s[.phx-click-loading]
-      end
-
-      assert_file root_path(@app, "config/config.exs"), fn file ->
-        assert file =~ "live_view:"
-        assert file =~ "signing_salt:"
-      end
-
-      assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
-        assert file =~ "import Phoenix.LiveView.Helpers"
-        assert file =~ "def live_view do"
-        assert file =~ "def live_component do"
-      end
-
-      assert_file web_path(@app, "lib/phx_umb_web/endpoint.ex"), ~s[socket "/live", Phoenix.LiveView.Socket]
-      assert_file web_path(@app, "lib/phx_umb_web/router.ex"), fn file ->
-        assert file =~ ~s[plug :fetch_live_flash]
-        assert file =~ ~s[plug :put_root_layout, {PhxUmbWeb.LayoutView, :root}]
-        assert file =~ ~s[get "/", PageController]
-      end
     end
   end
 
