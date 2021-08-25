@@ -129,6 +129,7 @@ defmodule Phoenix.MixProject do
       "guides/contexts.md",
       "guides/mix_tasks.md",
       "guides/telemetry.md",
+      "guides/asset_management.md",
       "guides/authentication/mix_phx_gen_auth.md",
       "guides/channels/channels.md",
       "guides/channels/presence.md",
