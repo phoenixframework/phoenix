@@ -165,7 +165,7 @@ defmodule Phx.New.Generator do
     db = Keyword.get(opts, :database, "postgres")
     ecto = Keyword.get(opts, :ecto, true)
     html = Keyword.get(opts, :html, true)
-    live = Keyword.get(opts, :live, true)
+    live = html && Keyword.get(opts, :live, true)
     dashboard = Keyword.get(opts, :dashboard, true)
     gettext = Keyword.get(opts, :gettext, true)
     assets = Keyword.get(opts, :assets, true)

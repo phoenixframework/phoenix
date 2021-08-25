@@ -12,8 +12,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
           "--no-ecto",
           "--no-gettext",
           "--no-mailer",
-          "--no-dashboard",
-          "--no-live"
+          "--no-dashboard"
         ])
 
       assert_no_compilation_warnings(app_root_path)
