@@ -202,6 +202,7 @@ defmodule Phx.New.Generator do
       web_namespace: inspect(project.web_namespace),
       phoenix_github_version_tag: "v#{version.major}.#{version.minor}",
       phoenix_dep: phoenix_dep(phoenix_path, version),
+      phoenix_js: phoenix_js(phoenix_path),
       pubsub_server: pubsub_server,
       secret_key_base: random_string(64),
       signing_salt: random_string(8),
@@ -394,6 +395,9 @@ defmodule Phx.New.Generator do
 
   defp phoenix_path_prefix(%Project{in_umbrella?: true}), do: "../../../"
   defp phoenix_path_prefix(%Project{in_umbrella?: false}), do: ".."
+
+  defp phoenix_js("deps/phoenix"), do: "phoenix"
+  defp phoenix_js(path), do: "../../#{path}/priv/static/phoenix.esm"
 
   defp phoenix_dep("deps/phoenix", %{pre: ["dev"]}),
     do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]

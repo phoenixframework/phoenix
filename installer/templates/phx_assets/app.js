@@ -23,7 +23,7 @@ import "../css/app.css"
 import "phoenix_html"
 <%= if @live do %>
 // Establish Phoenix Socket and LiveView configuration.
-import {Socket} from "phoenix"
+import {Socket} from "<%= @phoenix_js %>"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
