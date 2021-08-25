@@ -174,7 +174,11 @@ defmodule Phoenix.CodeReloader.Server do
 
     purge = mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers, purge)
     mix_compile_project(config[:app], apps_to_reload, compilers, purge)
-    Code.prepend_path(path)
+
+    if config[:consolidate_protocols] do
+      Code.prepend_path(path)
+    end
+
     :ok
   end
 
