@@ -426,24 +426,6 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
-  test "new with --live --no-dashboard" do
-    in_tmp "new with live no_dashboard", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--live", "--no-dashboard"])
-
-      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard")
-
-      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.heex", fn file ->
-        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
-        assert file =~ ~s|defmodule PhxBlogWeb.Endpoint|
-        assert file =~ ~s|socket "/live"|
-        refute file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
-      end
-    end
-  end
-
   test "new with uppercase" do
     in_tmp "new with uppercase", fn ->
       Mix.Tasks.Phx.New.run(["phxBlog"])
