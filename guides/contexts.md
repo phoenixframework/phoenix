@@ -37,11 +37,11 @@ $ mix phx.gen.html Catalog Product products title:string \
 description:string price:decimal views:integer
 
 * creating lib/hello_web/controllers/product_controller.ex
-* creating lib/hello_web/templates/product/edit.html.eex
-* creating lib/hello_web/templates/product/form.html.eex
-* creating lib/hello_web/templates/product/index.html.eex
-* creating lib/hello_web/templates/product/new.html.eex
-* creating lib/hello_web/templates/product/show.html.eex
+* creating lib/hello_web/templates/product/edit.html.heex
+* creating lib/hello_web/templates/product/form.html.heex
+* creating lib/hello_web/templates/product/index.html.heex
+* creating lib/hello_web/templates/product/new.html.heex
+* creating lib/hello_web/templates/product/show.html.heex
 * creating lib/hello_web/views/product_view.ex
 * creating test/hello_web/controllers/product_controller_test.exs
 * creating lib/hello/catalog/product.ex
@@ -504,7 +504,7 @@ end
 We added a new `category_select/2` function which uses `Phoenix.HTML`'s `multiple_select/3` to generate a multiple select tag. We calculated the existing category IDs from our changeset, then used those values when generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
 
 
-With our `category_select` function in place, we can open up `lib/hello_web/templates/product/form.html.eex` and add:
+With our `category_select` function in place, we can open up `lib/hello_web/templates/product/form.html.heex` and add:
 
 ```diff
   ...
@@ -519,7 +519,7 @@ With our `category_select` function in place, we can open up `lib/hello_web/temp
   </div>
 ```
 
-We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to `lib/hello_web/templates/product/show.html.eex`:
+We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to `lib/hello_web/templates/product/show.html.heex`:
 
 ```html
   ...
@@ -844,7 +844,7 @@ Let's implement our new interface in `lib/hello/shopping_cart.ex`:
 
 We started by implementing  `get_cart_by_user_uuid/1` which fetches our cart and joins the cart items, and their products so that we have the full cart popuplated with all preloaded data. Next, we modified our `create_cart` function to accept a user UUID instead of attributes, which we used to populate the `user_uuid` field. If the insert is successful, we reload the cart contents by calling a private `reload_cart/1` function, which simply calls `get_cart_by_user_uuid/1` to refetch data. Next, we wrote our new `add_item_to_cart/2` function which accepts a cart struct and a product struct from the catalog. We used an upsert operation against our repo to either insert a new cart item into the database, or increase the quantity by one if it already exists in the cart. This is accomplished via the `on_conflict` and `conflict_target` options, which tells our repo how to handle an insert conflict. Next, we implemented `remove_item_from_cart/2` where we simply issue a `Repo.delete_all` call with a query to delete the cart item in our cart that matches the product ID. Finally, we reload the cart contents by calling `reload_cart/1`.
 
-With our new cart functions in place, we can now expose the "Add to cart" button on the product catalog show page. Open up your template in `lib/hello_web/templates/product/show.html.leex` and make the following changes:
+With our new cart functions in place, we can now expose the "Add to cart" button on the product catalog show page. Open up your template in `lib/hello_web/templates/product/show.html.heex` and make the following changes:
 
 ```diff
 <h1>Show Product</h1>
@@ -913,7 +913,7 @@ end
 
 We created a view to render our `show.html` template and aliased our `ShoppingCart` context so it will be in scope for our template. We'll need to display the cart prices like product item price, cart total, etc, so we defined a `currency_to_str/1` which takes our decimal struct, rounds it properly for display, and prepends a USD dollar sign.
 
-Next we can create the template at `lib/hello_web/templates/cart/show.html.eex`:
+Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`:
 
 ```eex
 <h1>My Cart</h1>
@@ -1028,11 +1028,11 @@ Naming wise, `Orders` clearly defines the scope of our context, so let's get sta
 $ mix phx.gen.html Orders Order orders user_uuid:uuid total_price:decimal
 
 * creating lib/hello_web/controllers/order_controller.ex
-* creating lib/hello_web/templates/order/edit.html.eex
-* creating lib/hello_web/templates/order/form.html.eex
-* creating lib/hello_web/templates/order/index.html.eex
-* creating lib/hello_web/templates/order/new.html.eex
-* creating lib/hello_web/templates/order/show.html.eex
+* creating lib/hello_web/templates/order/edit.html.heex
+* creating lib/hello_web/templates/order/form.html.heex
+* creating lib/hello_web/templates/order/index.html.heex
+* creating lib/hello_web/templates/order/new.html.heex
+* creating lib/hello_web/templates/order/show.html.heex
 * creating lib/hello_web/views/order_view.ex
 * creating test/hello_web/controllers/order_controller_test.exs
 * creating lib/hello/orders/order.ex
@@ -1263,7 +1263,7 @@ Our new function accepts the cart struct and issues a `Repo.delete_all` which ac
   end
 ```
 
-We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can replace the order show template in `lib/hello_web/templates/order/show.html.eex`:
+We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can replace the order show template in `lib/hello_web/templates/order/show.html.heex`:
 
 ```eex
 <h1>Thank you for your order!</h1>
@@ -1293,7 +1293,7 @@ We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order
 
 To show our completed order, we displayed the order's user, followed by the line item listing with product title, quantity, and the price we "transacted" when completing the order, along with the total price.
 
-Our last addition will be to add the "complete order" button to our cart page to allow completing an order. Add the following button to the bottom of the cart show template in `lib/hello_web/templates/cart/show.html.eex`:
+Our last addition will be to add the "complete order" button to our cart page to allow completing an order. Add the following button to the bottom of the cart show template in `lib/hello_web/templates/cart/show.html.heex`:
 
 ```diff
   <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>

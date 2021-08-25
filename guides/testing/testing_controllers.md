@@ -47,7 +47,7 @@ def index(conn, _params) do
 end
 ```
 
-It gets all posts and renders the "index.html" template. The template can be found in `lib/hello_web/templates/page/index.html.eex`.
+It gets all posts and renders the "index.html" template. The template can be found in `lib/hello_web/templates/page/index.html.heex`.
 
 The test looks like this:
 

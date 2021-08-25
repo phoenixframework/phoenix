@@ -126,9 +126,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
                   ~r/defmodule PhxUmbWeb.PageView/
 
       assert_file web_path(@app, "lib/#{@app}_web/router.ex"), "defmodule PhxUmbWeb.Router"
-      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.eex"),
-                  "<title>PhxUmb · Phoenix Framework</title>"
-
+      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.heex")
+      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.heex")
       assert_file web_path(@app, "test/#{@app}_web/views/page_view_test.exs"),
                   "defmodule PhxUmbWeb.PageViewTest"
 
@@ -282,7 +281,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # No LiveView (in web_path)
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_view")
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":floki")
-      refute File.exists?(web_path(@app, "lib/#{@app}_web/templates/page/hero.html.leex"))
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/templates/page/hero.html.heex"))
 
       refute_file web_path(@app, "assets/js/live.js")
 
@@ -294,8 +293,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       refute File.exists?(web_path(@app, "test/views/layout_view_test.exs"))
       refute File.exists?(web_path(@app, "test/views/page_view_test.exs"))
       refute File.exists?(web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex"))
-      refute File.exists?(web_path(@app, "lib/#{@app}_web/templates/layout/app.html.eex"))
-      refute File.exists?(web_path(@app, "lib/#{@app}_web/templates/page/index.html.eex"))
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/templates/layout/app.html.heex"))
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/templates/page/index.html.heex"))
       refute File.exists?(web_path(@app, "lib/#{@app}_web/views/layout_view.ex"))
       refute File.exists?(web_path(@app, "lib/#{@app}_web/views/page_view.ex"))
 
@@ -340,14 +339,31 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_dashboard")
 
-      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.eex"), fn file ->
+      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.heex"), fn file ->
         refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
       end
 
       assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), fn file ->
         assert file =~ ~s|defmodule PhxUmbWeb.Endpoint|
-        refute file =~ ~s|socket "/live"|
+        assert file =~ ~s|socket "/live"|
         refute file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
+      end
+    end
+  end
+
+  test "new with no_dashboard and no_live" do
+    in_tmp "new with no_dashboard and no_live", fn ->
+      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-dashboard", "--no-live"])
+
+      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), fn file ->
+        assert file =~ ~s|# socket "/live"|
+      end
+
+      assert_file web_path(@app, "assets/js/app.js"), fn file ->
+        assert file =~ ~s|// import {Socket} from "phoenix"|
+        assert file =~ ~s|// import {LiveSocket} from "phoenix_live_view"|
+        assert file =~ ~s|// import topbar from "../vendor/topbar"|
+        assert file =~ ~s|// liveSocket.connect()|
       end
     end
   end
@@ -407,7 +423,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_dashboard")
 
-      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.leex"), fn file ->
+      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.heex"), fn file ->
         refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
       end
 
@@ -423,16 +439,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     in_tmp "new with live", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--live"])
 
-      refute_file web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex")
-
-      assert_file web_path(@app, "lib/#{@app}_web/live/page_live.ex"), fn file ->
-        assert file =~ "defmodule PhxUmbWeb.PageLive do"
-      end
-
-      assert_file web_path(@app, "lib/#{@app}_web/live/page_live.html.leex"), fn file ->
-        assert file =~ ~s[Welcome]
-      end
-
+      assert_file web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex")
       assert_file web_path(@app, "mix.exs"), &assert(&1 =~ ~r":phoenix_live_view")
       assert_file web_path(@app, "mix.exs"), &assert(&1 =~ ~r":floki")
 
@@ -459,9 +466,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "lib/phx_umb_web/router.ex"), fn file ->
         assert file =~ ~s[plug :fetch_live_flash]
         assert file =~ ~s[plug :put_root_layout, {PhxUmbWeb.LayoutView, :root}]
-        assert file =~ ~s[live "/", PageLive]
-        refute file =~ ~s[plug :fetch_flash]
-        refute file =~ ~s[PageController]
+        assert file =~ ~s[get "/", PageController]
       end
     end
   end
@@ -716,8 +721,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
         assert_file "another/lib/another/router.ex", "defmodule Another.Router"
         assert_file "another/lib/another.ex", "defmodule Another"
-        assert_file "another/lib/another/templates/layout/app.html.eex",
-                    "<title>Another · Phoenix Framework</title>"
+        assert_file "another/lib/another/templates/layout/root.html.heex"
+        assert_file "another/lib/another/templates/layout/app.html.heex"
 
         # assets
         assert_file "another/.gitignore",  ~r/\n$/

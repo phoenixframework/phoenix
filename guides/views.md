@@ -24,7 +24,7 @@ That's simple enough. There's only one line, `use HelloWeb, :view`. This line ca
 
 All of the imports and aliases we make in our view will also be available in our templates. That's because templates are effectively compiled into functions inside their respective views. For example, if you define a function in your view, you will be able to invoke it directly from the template. Let's see this in practice.
 
-Open up our application layout template, `lib/hello_web/templates/layout/app.html.eex`, and change this line,
+Open up our application layout template, `lib/hello_web/templates/layout/app.html.heex`, and change this line,
 
 ```html
 <title>Hello · Phoenix Framework</title>
@@ -103,13 +103,13 @@ rendering with assigns [:conn]
 
 By defining our own clause in [`render/2`], it takes higher priority than the template, but the template is still there, which you can verify by simply removing the newly added clause.
 
-Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.eex` templates and turns them into [`render/2`] function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved.
+Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.heex` templates and turns them into [`render/2`] function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved.
 
 ### Manually rendering templates
 
 So far, Phoenix has taken care of putting everything in place and rendering views for us. However, we can also render views directly.
 
-Let's create a new template to play around with, `lib/hello_web/templates/page/test.html.eex`:
+Let's create a new template to play around with, `lib/hello_web/templates/page/test.html.heex`:
 
 ```html
 This is the message: <%= @message %>
@@ -142,7 +142,7 @@ iex(5)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "
 
 Now that we have acquainted ourselves with `Phoenix.View.render/3`, we are ready to share views and templates from inside other views and templates.
 
-For example, if you want to render the `test.html` template from inside our layout, you can invoke [`render/3`] directly from the layout `lib/hello_web/templates/layout/app.html.eex`:
+For example, if you want to render the `test.html` template from inside our layout, you can invoke [`render/3`] directly from the layout `lib/hello_web/templates/layout/app.html.heex`:
 
 ```html
 <%= Phoenix.View.render(HelloWeb.PageView, "test.html", message: "Hello from layout!") %>
@@ -156,7 +156,7 @@ Since `Phoenix.View` is automatically imported into our templates, we could even
 <%= render(HelloWeb.PageView, "test.html", message: "Hello from layout!") %>
 ```
 
-If you want to render a template within the same view, you can skip the view name, and simply call `render("test.html", message: "Hello from sibling template!")` instead. For example, open up `lib/hello_web/templates/page/index.html.eex` and add this at the top:
+If you want to render a template within the same view, you can skip the view name, and simply call `render("test.html", message: "Hello from sibling template!")` instead. For example, open up `lib/hello_web/templates/page/index.html.heex` and add this at the top:
 
 ```html
 <%= render("test.html", message: "Hello from sibling template!") %>
@@ -166,7 +166,7 @@ Now if you visit the Welcome page, you see the template results also shown.
 
 ## Layouts
 
-Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/templates/layout/app.html.eex`, just about in the middle of the `<body>`, we will see this.
+Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/templates/layout/app.html.heex`, just about in the middle of the `<body>`, we will see this.
 
 ```html
 <%= @inner_content %>

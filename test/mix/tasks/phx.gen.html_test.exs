@@ -115,23 +115,23 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "defmodule PhoenixWeb.PostView"
       end
 
-      assert_file "lib/phoenix_web/templates/post/edit.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/post/edit.html.heex", fn file ->
         assert file =~ " Routes.post_path(@conn"
       end
 
-      assert_file "lib/phoenix_web/templates/post/index.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/post/index.html.heex", fn file ->
         assert file =~ " Routes.post_path(@conn"
       end
 
-      assert_file "lib/phoenix_web/templates/post/new.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/post/new.html.heex", fn file ->
         assert file =~ " Routes.post_path(@conn"
       end
 
-      assert_file "lib/phoenix_web/templates/post/show.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/post/show.html.heex", fn file ->
         assert file =~ " Routes.post_path(@conn"
       end
 
-      assert_file "lib/phoenix_web/templates/post/form.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/post/form.html.heex", fn file ->
         assert file =~ ~s(<%= text_input f, :title %>)
         assert file =~ ~s(<%= number_input f, :votes %>)
         assert file =~ ~s(<%= number_input f, :cost, step: "any" %>)
@@ -242,21 +242,21 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "redirect(to: Routes.blog_post_path(conn"
       end
 
-      assert_file "lib/phoenix_web/templates/blog/post/form.html.eex"
+      assert_file "lib/phoenix_web/templates/blog/post/form.html.heex"
 
-      assert_file "lib/phoenix_web/templates/blog/post/edit.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/blog/post/edit.html.heex", fn file ->
         assert file =~ " Routes.blog_post_path(@conn"
       end
 
-      assert_file "lib/phoenix_web/templates/blog/post/index.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/blog/post/index.html.heex", fn file ->
         assert file =~ " Routes.blog_post_path(@conn"
       end
 
-      assert_file "lib/phoenix_web/templates/blog/post/new.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/blog/post/new.html.heex", fn file ->
         assert file =~ " Routes.blog_post_path(@conn"
       end
 
-      assert_file "lib/phoenix_web/templates/blog/post/show.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/blog/post/show.html.heex", fn file ->
         assert file =~ " Routes.blog_post_path(@conn"
       end
 
@@ -294,7 +294,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "use PhoenixWeb, :controller"
       end
 
-      assert_file "lib/phoenix_web/templates/comment/form.html.eex"
+      assert_file "lib/phoenix_web/templates/comment/form.html.heex"
       assert_file "lib/phoenix_web/views/comment_view.ex", fn file ->
         assert file =~ "defmodule PhoenixWeb.CommentView"
       end
@@ -343,7 +343,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "use PhoenixWeb, :controller"
       end
 
-      assert_file "lib/phoenix_web/templates/comment/form.html.eex"
+      assert_file "lib/phoenix_web/templates/comment/form.html.heex"
       assert_file "lib/phoenix_web/views/comment_view.ex", fn file ->
         assert file =~ "defmodule PhoenixWeb.CommentView"
       end
@@ -375,7 +375,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
           assert file =~ "use PhoenixWeb, :controller"
         end
 
-        assert_file "lib/phoenix_web/templates/user/form.html.eex"
+        assert_file "lib/phoenix_web/templates/user/form.html.heex"
         assert_file "lib/phoenix_web/views/user_view.ex", fn file ->
           assert file =~ "defmodule PhoenixWeb.UserView"
         end
@@ -410,7 +410,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
           assert file =~ "use Phoenix, :controller"
         end
 
-        assert_file "lib/phoenix/templates/user/form.html.eex"
+        assert_file "lib/phoenix/templates/user/form.html.heex"
         assert_file "lib/phoenix/views/user_view.ex", fn file ->
           assert file =~ "defmodule Phoenix.UserView"
         end

@@ -501,11 +501,11 @@ We've seen what Phoenix gives us with a newly generated app. Furthermore, whenev
 ```console
 $ mix phx.gen.html Blog Post posts title body:text
 * creating lib/demo_web/controllers/post_controller.ex
-* creating lib/demo_web/templates/post/edit.html.eex
-* creating lib/demo_web/templates/post/form.html.eex
-* creating lib/demo_web/templates/post/index.html.eex
-* creating lib/demo_web/templates/post/new.html.eex
-* creating lib/demo_web/templates/post/show.html.eex
+* creating lib/demo_web/templates/post/edit.html.heex
+* creating lib/demo_web/templates/post/form.html.heex
+* creating lib/demo_web/templates/post/index.html.heex
+* creating lib/demo_web/templates/post/new.html.heex
+* creating lib/demo_web/templates/post/show.html.heex
 * creating lib/demo_web/views/post_view.ex
 * creating test/demo_web/controllers/post_controller_test.exs
 * creating lib/demo/blog/post.ex

@@ -87,9 +87,9 @@ lib/hello_web
 │   └── page_controller.ex
 ├── templates
 │   ├── layout
-│   │   └── app.html.eex
+│   │   └── app.html.heex
 │   └── page
-│       └── index.html.eex
+│       └── index.html.heex
 ├── views
 │   ├── error_helpers.ex
 │   ├── error_view.ex
