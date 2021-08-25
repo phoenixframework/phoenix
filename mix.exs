@@ -76,7 +76,7 @@ defmodule Phoenix.MixProject do
       {:ecto, "~> 3.0", only: :docs},
       {:ecto_sql, "~> 3.6", only: :docs},
       {:gettext, "~> 0.18", only: :docs},
-      {:telemetry_poller, "~> 0.5", only: :docs},
+      {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 0.6", only: :docs},
 
       # Test dependencies

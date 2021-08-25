@@ -46,7 +46,7 @@ defmodule <%= @web_namespace %>.MixProject do
       {:phoenix_live_dashboard, "~> 0.5"},<% end %><%= if @assets do %>
       {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},<% end %>
       {:telemetry_metrics, "~> 0.6"},
-      {:telemetry_poller, "~> 0.5"},<%= if @gettext do %>
+      {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 0.18"},<% end %><%= if @app_name != @web_app_name do %>
       {:<%= @app_name %>, in_umbrella: true},<% end %>
       {:jason, "~> 1.2"},
