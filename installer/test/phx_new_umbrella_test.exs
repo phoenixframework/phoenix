@@ -395,7 +395,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
-  test "new with --no-assets" do
+  test "new with no_assets" do
     in_tmp "new with no_assets", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-assets"])
 
