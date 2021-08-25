@@ -15,7 +15,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 ### 1.5.12 (2021-08-24)
 
 ### Bug Fixes
-  * [Router] Ensure we properly track all Plug compile-time dependencies. This may increase compilation times during test, to address it, you may set `config :phoenix, :plug_init_mode, :runtime` in your `config/test.exs`
+  * Support `__mix_recompile__?` as a more efficient recompilation technique. This will be required on Elixir v1.13+.
 
 ### 1.5.11 (2021-08-20)
 
@@ -26,6 +26,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 
 ### Bug Fixes
   * [Channel] Push proper close event to client on duplicate topic shutdown
+  * [Router] Ensure we properly track all Plug compile-time dependencies. This may increase compilation times during test, to address it, you may set `config :phoenix, :plug_init_mode, :runtime` in your `config/test.exs`
   * [View] Do not render root layout outside of layout formats
 
 ### JavaScript Client Enhancements
