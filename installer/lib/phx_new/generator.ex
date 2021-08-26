@@ -213,6 +213,7 @@ defmodule Phx.New.Generator do
       ecto: ecto,
       html: html,
       live: live,
+      live_comment: if(live, do: nil, else: "// "),
       dashboard: dashboard,
       gettext: gettext,
       adapter_app: adapter_app,
