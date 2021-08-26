@@ -50,7 +50,7 @@ end
 
 When we reload our home page, we should see our new title. Since templates are compiled inside the view, we could invoke the view function simply as `title()`, otherwise we would have to type `HelloWeb.LayoutView.title()`.
 
-As you may recall, Elixir templates use `EEx`, which stands for Embedded Elixir. We use `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. It is prudent to note that `<%= @user_name %>` is equivalent to `<%= assigns[:user_name] %>` and in essence, we are simply displaying a field from a map.
+As you may recall, Elixir templates use `EEx`, which stands for Embedded Elixir. We use `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. It is prudent to note that `<%= @user_name %>` is equivalent to `<%= assigns.user_name %>` and in essence, we are simply displaying a field from a map.
 
 In addition to displaying assigns and functions, we can use pretty much any Elixir expression. For example, in order to have conditionals:
 
