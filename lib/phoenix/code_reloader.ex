@@ -32,6 +32,14 @@ defmodule Phoenix.CodeReloader do
   @spec reload!(module) :: :ok | {:error, binary()}
   defdelegate reload!(endpoint), to: Phoenix.CodeReloader.Server
 
+  @doc """
+  Synchronizes with the code server if it is alive.
+
+  It returns `:ok`. If it is not running, it also returns `:ok`.
+  """
+  @spec sync :: :ok
+  defdelegate sync, to: Phoenix.CodeReloader.Server
+
   ## Plug
 
   @behaviour Plug

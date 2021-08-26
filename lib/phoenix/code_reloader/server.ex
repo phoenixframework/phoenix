@@ -6,7 +6,7 @@ defmodule Phoenix.CodeReloader.Server do
   alias Phoenix.CodeReloader.Proxy
 
   def start_link(_) do
-    GenServer.start_link(__MODULE__, false, name: __MODULE__)
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   def check_symlinks do
@@ -17,11 +17,6 @@ defmodule Phoenix.CodeReloader.Server do
     GenServer.call(__MODULE__, {:reload!, endpoint}, :infinity)
   end
 
-  @doc """
-  Synchronizes with the code server if it is alive.
-
-  If it is not running, it also returns true.
-  """
   def sync do
     pid = Process.whereis(__MODULE__)
     ref = Process.monitor(pid)
@@ -35,12 +30,12 @@ defmodule Phoenix.CodeReloader.Server do
 
   ## Callbacks
 
-  def init(false) do
-    {:ok, false}
+  def init(:ok) do
+    {:ok, %{check_symlinks: true, timestamp: timestamp()}}
   end
 
-  def handle_call(:check_symlinks, _from, checked?) do
-    if not checked? and Code.ensure_loaded?(Mix.Project) and not Mix.Project.umbrella?() do
+  def handle_call(:check_symlinks, _from, state) do
+    if state.check_symlinks and Code.ensure_loaded?(Mix.Project) and not Mix.Project.umbrella?() do
       priv_path = "#{Mix.Project.app_path()}/priv"
 
       case :file.read_link(priv_path) do
@@ -60,19 +55,22 @@ defmodule Phoenix.CodeReloader.Server do
       end
     end
 
-    {:reply, :ok, true}
+    {:reply, :ok, %{state | check_symlinks: false}}
   end
 
   def handle_call({:reload!, endpoint}, from, state) do
     compilers = endpoint.config(:reloadable_compilers)
     reloadable_apps = endpoint.config(:reloadable_apps) || default_reloadable_apps()
+
+    # We do a backup of the endpoint in case compilation fails.
+    # If so we can bring it back to finish the request handling.
     backup = load_backup(endpoint)
     froms = all_waiting([from], endpoint)
 
     {res, out} =
       proxy_io(fn ->
         try do
-          mix_compile(Code.ensure_loaded(Mix.Task), compilers, reloadable_apps)
+          mix_compile(Code.ensure_loaded(Mix.Task), compilers, reloadable_apps, state.timestamp)
         catch
           :exit, {:shutdown, 1} ->
             :error
@@ -94,7 +92,7 @@ defmodule Phoenix.CodeReloader.Server do
       end
 
     Enum.each(froms, &GenServer.reply(&1, reply))
-    {:noreply, state}
+    {:noreply, %{state | timestamp: timestamp()}}
   end
 
   def handle_cast({:sync, pid, ref}, state) do
@@ -167,13 +165,17 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  defp mix_compile({:module, Mix.Task}, compilers, apps_to_reload) do
+  defp mix_compile({:module, Mix.Task}, compilers, apps_to_reload, timestamp) do
     config = Mix.Project.config()
     path = Mix.Project.consolidation_path(config)
-    purge = fn -> purge_consolidated(path) end
 
-    purge = mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers, purge)
-    mix_compile_project(config[:app], apps_to_reload, compilers, purge)
+    if config[:consolidate_protocols] do
+      purge_modules(path)
+      Code.delete_path(path)
+    end
+
+    mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers, timestamp)
+    mix_compile_project(config[:app], apps_to_reload, compilers, timestamp)
 
     if config[:consolidate_protocols] do
       Code.prepend_path(path)
@@ -182,44 +184,43 @@ defmodule Phoenix.CodeReloader.Server do
     :ok
   end
 
-  defp mix_compile({:error, _reason}, _, _) do
+  defp mix_compile({:error, _reason}, _, _, _) do
     raise "the Code Reloader is enabled but Mix is not available. If you want to " <>
             "use the Code Reloader in production or inside an escript, you must add " <>
             ":mix to your applications list. Otherwise, you must disable code reloading " <>
             "in such environments"
   end
 
-  defp mix_compile_deps(deps, apps_to_reload, compilers, purge) do
-    Enum.reduce(deps, purge, fn dep, purge ->
-      if dep.app in apps_to_reload do
-        Mix.Dep.in_dependency(dep, fn _ ->
-          mix_compile_unless_stale_config(compilers, purge)
-        end)
-      else
-        purge
-      end
-    end)
+  defp mix_compile_deps(deps, apps_to_reload, compilers, timestamp) do
+    for dep <- deps, dep.app in apps_to_reload do
+      Mix.Dep.in_dependency(dep, fn _ ->
+        mix_compile_unless_stale_config(compilers, timestamp)
+      end)
+    end
   end
 
   defp mix_compile_project(nil, _, _, _), do: :ok
 
-  defp mix_compile_project(app, apps_to_reload, compilers, purge) do
+  defp mix_compile_project(app, apps_to_reload, compilers, timestamp) do
     if app in apps_to_reload do
-      mix_compile_unless_stale_config(compilers, purge)
-    else
-      purge
+      mix_compile_unless_stale_config(compilers, timestamp)
     end
   end
 
-  defp mix_compile_unless_stale_config(compilers, purge) do
+  defp mix_compile_unless_stale_config(compilers, timestamp) do
     manifests = Mix.Tasks.Compile.Elixir.manifests()
     configs = Mix.Project.config_files()
+    config = Mix.Project.config()
 
     case Mix.Utils.extract_stale(configs, manifests) do
       [] ->
-        purge = purge.()
-        mix_compile(compilers)
-        purge
+        # If the manifests are more recent than the timestamp,
+        # someone updated this app behind the scenes, so purge all beams.
+        if Mix.Utils.stale?(manifests, [timestamp]) do
+          purge_modules(Path.join(Mix.Project.app_path(config), "ebin"))
+        end
+
+        mix_compile(compilers, config)
 
       files ->
         raise """
@@ -233,8 +234,7 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  defp mix_compile(compilers) do
-    config = Mix.Project.config()
+  defp mix_compile(compilers, config) do
     all = config[:compilers] || Mix.compilers()
 
     compilers =
@@ -264,24 +264,17 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  defp purge_consolidated(path) do
+  defp timestamp, do: System.system_time(:second)
+
+  defp purge_modules(path) do
     with {:ok, beams} <- File.ls(path) do
-      Enum.map(beams, & &1 |> Path.rootname(".beam") |> String.to_atom() |> purge_module())
+      Enum.map(beams, &(&1 |> Path.rootname(".beam") |> String.to_atom() |> purge_module()))
     end
-
-    Code.delete_path(path)
-
-    # Now return a stub for the next calls
-    recursive_fun()
   end
 
   defp purge_module(module) do
     :code.purge(module)
     :code.delete(module)
-  end
-
-  defp recursive_fun() do
-    fn -> recursive_fun() end
   end
 
   defp proxy_io(fun) do
