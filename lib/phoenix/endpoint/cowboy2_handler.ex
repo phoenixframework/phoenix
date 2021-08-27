@@ -51,7 +51,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
           # Maybe the handler is not available because the code is being recompiled.
           # Sync with the code reloader and retry once.
           [{^endpoint, :__handler__, _, _} | _] when reason == :undef and retry? ->
-            Phoenix.CodeReloader.Server.sync()
+            Phoenix.CodeReloader.sync()
             init(conn, endpoint, opts, false)
 
           stacktrace ->

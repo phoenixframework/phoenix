@@ -38,9 +38,6 @@ defmodule Phoenix.Controller do
       the layout view. By default it uses the base alias
       in your controller name
 
-    * `:log` - the level to log. When false, disables controller
-      logging
-
     * `:put_default_views` - controls whether the default view
       and layout should be set or not
 
@@ -168,7 +165,7 @@ defmodule Phoenix.Controller do
       # TODO v2: No longer automatically import dependencies
       import Plug.Conn
 
-      use Phoenix.Controller.Pipeline, opts
+      use Phoenix.Controller.Pipeline
 
       if Keyword.get(opts, :put_default_views, true) do
         plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, opts), :app}

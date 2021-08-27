@@ -255,7 +255,7 @@ defmodule Phoenix.Socket do
           id: String.t | nil,
           joined: boolean,
           ref: term,
-          private: %{},
+          private: map,
           pubsub_server: atom,
           serializer: atom,
           topic: String.t,

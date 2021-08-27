@@ -62,7 +62,7 @@ defmodule Phoenix.MixProject do
   defp deps do
     [
       {:plug, "~> 1.10"},
-      {:plug_crypto, "~> 1.1.2 or ~> 1.2"},
+      {:plug_crypto, "~> 1.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.0"},
       {:phoenix_view, "~> 1.0"},
@@ -73,14 +73,14 @@ defmodule Phoenix.MixProject do
 
       # Docs dependencies (some for cross references)
       {:ex_doc, "~> 0.24", only: :docs},
-      {:ecto, ">= 3.0.0", only: :docs},
+      {:ecto, "~> 3.0", only: :docs},
       {:ecto_sql, "~> 3.6", only: :docs},
       {:gettext, "~> 0.18", only: :docs},
-      {:telemetry_poller, "~> 0.5", only: :docs},
+      {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 0.6", only: :docs},
 
       # Test dependencies
-      {:phoenix_html, "~> 2.14.2 or ~> 3.0", only: :test},
+      {:phoenix_html, "~> 3.0", only: :test},
       {:phx_new, path: "./installer", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
 
@@ -129,6 +129,7 @@ defmodule Phoenix.MixProject do
       "guides/contexts.md",
       "guides/mix_tasks.md",
       "guides/telemetry.md",
+      "guides/asset_management.md",
       "guides/authentication/mix_phx_gen_auth.md",
       "guides/channels/channels.md",
       "guides/channels/presence.md",

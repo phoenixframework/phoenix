@@ -49,7 +49,7 @@ defmodule <%= @app_module %>.MixProject do
       {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},<% end %><%= if @mailer do %>
       {:swoosh, "~> 1.3"},<% end %>
       {:telemetry_metrics, "~> 0.6"},
-      {:telemetry_poller, "~> 0.5"},<%= if @gettext do %>
+      {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 0.18"},<% end %>
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"}

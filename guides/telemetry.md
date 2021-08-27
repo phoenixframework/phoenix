@@ -40,7 +40,7 @@ the `:telemetry_metrics` and `:telemetry_poller` packages:
 
 ```elixir
 {:telemetry_metrics, "~> 0.6"},
-{:telemetry_poller, "~> 0.5"}
+{:telemetry_poller, "~> 1.0"}
 ```
 
 and create your Telemetry supervisor at

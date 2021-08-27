@@ -32,7 +32,7 @@ defmodule Phoenix.Integration.MixProject do
   defp deps do
     [
       {:phx_new, path: "../installer"},
-      {:phoenix, path: "../", override: true},
+      {:phoenix, path: "..", override: true},
       {:phoenix_ecto, "~> 4.4"},
       {:esbuild, "~> 0.2", runtime: false},
       {:ecto_sql, "~> 3.6"},
@@ -45,7 +45,7 @@ defmodule Phoenix.Integration.MixProject do
       {:phoenix_live_reload, "~> 1.2"},
       {:phoenix_live_dashboard, "~> 0.5"},
       {:telemetry_metrics, "~> 0.6"},
-      {:telemetry_poller, "~> 0.5"},
+      {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
       {:swoosh, "~> 1.3"},
