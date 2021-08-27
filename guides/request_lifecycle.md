@@ -119,9 +119,9 @@ end
 
 Now in order to add templates to this view, we simply need to add files to the `lib/hello_web/templates/hello` directory. Note the controller name (`HelloController`), the view name (`HelloView`), and the template directory (`hello`) all follow the same naming convention and are named after each other.
 
-A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, we will create an `index.html.eex` file at `lib/hello_web/templates/hello/index.html.eex`. ".eex" stands for `EEx`, which is a library for embedding Elixir that ships as part of Elixir itself. Phoenix enhances EEx to include automatic escaping of values. This protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
+A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, we will create an `index.html.heex` file at `lib/hello_web/templates/hello/index.html.heex`. ".heex" stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
 
-Create `lib/hello_web/templates/hello/index.html.eex` and make it look like this:
+Create `lib/hello_web/templates/hello/index.html.heex` and make it look like this:
 
 ```html
 <div class="phx-hero">
@@ -133,7 +133,7 @@ Now that we've got the route, controller, view, and template, we should be able 
 
 ![Phoenix Greets Us](assets/images/hello-from-phoenix.png)
 
-There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.eex` file consisted of only a single `div` tag, the page we get is a full HTML document. Our index template is rendered into the application layout: `lib/hello_web/templates/layout/app.html.eex`. If you open it, you'll see a line that looks like this:
+There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consisted of only a single `div` tag, the page we get is a full HTML document. Our index template is rendered into the application layout: `lib/hello_web/templates/layout/app.html.heex`. If you open it, you'll see a line that looks like this:
 
 ```html
 <%= @inner_content %>
@@ -226,7 +226,7 @@ It's good to remember that the keys of the `params` map will always be strings, 
 
 ### Another new template
 
-For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of `HelloController`, it will go into the `lib/hello_web/templates/hello` directory and be called `show.html.eex`. It will look surprisingly like our `index.html.eex` template, except that we will need to display the name of our messenger.
+For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of `HelloController`, it will go into the `lib/hello_web/templates/hello` directory and be called `show.html.heex`. It will look surprisingly like our `index.html.heex` template, except that we will need to display the name of our messenger.
 
 To do that, we'll use the special EEx tags for executing Elixir expressions: `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
 

@@ -50,15 +50,19 @@ end
 
 When we reload our home page, we should see our new title. Since templates are compiled inside the view, we could invoke the view function simply as `title()`, otherwise we would have to type `HelloWeb.LayoutView.title()`.
 
-As you may recall, Elixir templates use `EEx`, which stands for Embedded Elixir. We use `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. It is prudent to note that `<%= @user_name %>` is equivalent to `<%= assigns.user_name %>` and in essence, we are simply displaying a field from a map.
+As you may recall, Elixir templates use `.heex`, which stands for  "HTML+EEx". EEx is an Elixir library that uses `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. In your controller, if you invoke:
 
-In addition to displaying assigns and functions, we can use pretty much any Elixir expression. For example, in order to have conditionals:
+```elixir
+  render(conn, "show.html", username: "joe")
+```
+
+Then you can access said username in the templates as `<%= @username %>`. In addition to displaying assigns and functions, we can use pretty much any Elixir expression. For example, in order to have conditionals:
 
 ```html
 <%= if some_condition? do %>
-  <p>Some condition is true for user: <%= @user_name %></p>
+  <p>Some condition is true for user: <%= @username %></p>
 <% else %>
-  <p>Some condition is false for user: <%= @user_name %></p>
+  <p>Some condition is false for user: <%= @username %></p>
 <% end %>
 ```
 
@@ -81,9 +85,90 @@ or even loops:
 
 Did you notice the use of `<%= %>` versus `<% %>` above? All expressions that output something to the template **must** use the equals sign (`=`). If this is not included the code will still be executed but nothing will be inserted into the template.
 
-At the end of the day, our templates are always compiled into Elixir code. Let's learn more about this.
+### HTML extensions
+
+Besides allowing interpolation of Elixir expressions via `<%= %>`, `.heex` templates come with HTML-aware extensions. For example, let's see what tries to happen if you try to interpolate a value with "<" or ">" in it, which would lead to HTML injection:
+
+```html
+<%= "<b>Bold?</b>" %>
+```
+
+Once you render the template, you will see the literal `<b>` on the page. This means users cannot inject HTML content on the page. If you want to allow them to do so, you can call `raw`, but do so with extreme care:
+
+```html
+<%= raw "<b>Bold?</b>" %>
+```
+
+Another super power of HEEx templates is validation of HTML and lean interpolation syntax of attributes. You can write:
+
+```html
+<div title="My div" class={@class}>
+  <p>Hello <%= @username %></p>
+</div>
+```
+
+Notice how you could simply use `key={value}`. HEEx will automatically handle special values such as `false` to remove the attribute or a list of classes.
+
+To interpolate a dynamic number of attributes in a keyword list or map, do:
+
+```html
+<div title="My div" {@many_attributes}>
+  <p>Hello <%= @username %></p>
+</div>
+```
+
+Also, try removing the closing `</div>` or renaming it to `</div-typo>`. HEEx templates will let you know about your error.
+
+### HTML components
+
+The last feature provided by HEEx is the idea of components. Components are pure functins that can be either local (same module) or remote (external module).
+
+HEEx allows invoking whose function components directly in the template using an HTML-like notation. For example, a remote function:
+
+```html
+<MyApp.Weather.city name="Kraków"/>
+```
+
+A local function can be invoked with a leading dot:
+
+```html
+<.city name="Kraków"/>
+```
+
+where the component could be defined as follows:
+
+```elixir
+defmodule MyApp.Weather do
+  use Phoenix.Component
+
+  def city(assigns) do
+    ~H"""
+    The chosen city is: <%= @name %>.
+    """
+  end
+
+  def country(assigns) do
+    ~H"""
+    The chosen country is: <%= @name %>.
+    """
+  end
+end
+```
+
+In the example above, we used the `~H` sigil syntax to embed HEEx templates directly into our modules. We have already invoke the `city` component and calling the `country` component wouldn't be different:
+
+```html
+<div title="My div" {@many_attributes}>
+  <p>Hello <%= @username %></p>
+  <MyApp.Weather.country name="Brazil" />
+</div>
+```
+
+You can learn more about components in [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html).
 
 ### Understanding template compilation
+
+Phoenix templates are compiled into Elixir code, which make them extremely performant. Let's learn more about this.
 
 When a template is compiled into a view, it is simply compiled as a [`render/2`] function that expects two arguments: the template name and the assigns.
 

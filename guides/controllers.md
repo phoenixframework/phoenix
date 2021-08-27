@@ -108,29 +108,7 @@ If we again visit [`/hello/Frank`] in the browser, we should see a block of JSON
 {"id": "Frank"}
 ```
 
-Phoenix controllers can also render HTML without a view. As you may have already guessed, the [`html/2`](`Phoenix.Controller.html/2`) function does just that. This time, we implement the `show` action like this:
-
-```elixir
-def show(conn, %{"messenger" => messenger}) do
-  html(conn, """
-   <html>
-     <head>
-        <title>Passing a Messenger</title>
-     </head>
-     <body>
-       <p>From messenger #{Plug.HTML.html_escape(messenger)}</p>
-     </body>
-   </html>
-  """)
-end
-```
-
-Hitting [`/hello/Frank`] now renders the HTML string we defined in the `show` action. Note that what we wrote in the action is not an `EEx` template. It's a multi-line string, so we interpolate the `messenger` variable like this `#{Plug.HTML.html_escape(messenger)}`, instead of this `<%= messenger %>`.
-
-It is worth noting that the [`text/2`], [`json/2`], and [`html/2`] functions require neither a Phoenix view, nor a template to render.
-
-The [`json/2`](`Phoenix.Controller.json/2`) function is obviously useful for writing APIs, and the other two may come in handy, but most of the times we use Phoenix views to build our responses. For this, Phoenix provides the [`render/3`] function.
-
+The [`json/2`](`Phoenix.Controller.json/2`) function is useful for writing APIs and there is also the [`html/2`](`Phoenix.Controller.html/2`) function for rendering HTML, but most of the times we use Phoenix views to build our responses. For this, Phoenix includes the [`render/3`] function. It is specially important for HTML responses, as Phoenix Views provide performance and security benefits.
 
 Let's rollback our `show` action to what we originally wrote in the [request life-cycle guide](request_lifecycle.html):
 
