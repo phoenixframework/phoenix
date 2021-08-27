@@ -33,13 +33,13 @@ First of all, you'll need to install Node.js in development and make it availabl
 Then you'll need to add esbuild to your Node packages:
 
 ```console
-npm install esbuild --save-dev
+$ npm install esbuild --save-dev
 ```
 
 or, for Yarn:
 
 ```console
-yarn add --dev esbuild
+$ yarn add --dev esbuild
 ```
 
 Next, add a custom Javascript build script. We'll call the example `assets/build.js`:

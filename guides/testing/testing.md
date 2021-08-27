@@ -485,10 +485,10 @@ database: "hello_test#{System.get_env("MIX_TEST_PARTITION")}",
 
 By default, the `MIX_TEST_PARTITION` environment variable has no value, and therefore it has no effect. But in your CI server, you can, for example, split your test suite across machines by using four distinct commands:
 
-    MIX_TEST_PARTITION=1 mix test --partitions 4
-    MIX_TEST_PARTITION=2 mix test --partitions 4
-    MIX_TEST_PARTITION=3 mix test --partitions 4
-    MIX_TEST_PARTITION=4 mix test --partitions 4
+    $ MIX_TEST_PARTITION=1 mix test --partitions 4
+    $ MIX_TEST_PARTITION=2 mix test --partitions 4
+    $ MIX_TEST_PARTITION=3 mix test --partitions 4
+    $ MIX_TEST_PARTITION=4 mix test --partitions 4
 
 That's all you need to do and ExUnit and Phoenix will take care of all rest, including setting up the database for each distinct partition with a distinct name.
 

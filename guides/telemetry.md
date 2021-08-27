@@ -665,12 +665,12 @@ children = [
 Now start an IEx session and call the server:
 
 ```elixir
-iex(1)> MyApp.MyServer.call!
+iex> MyApp.MyServer.call!
 ```
 
 and you should see something like the following output:
 
-```elixir
+```text
 [Telemetry.Metrics.ConsoleReporter] Got new event!
 Event name: my_app.my_server.call.stop
 All measurements: %{duration: 4000}
