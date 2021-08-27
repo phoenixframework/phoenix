@@ -19,6 +19,7 @@ Phoenix v1.6 requires Elixir v1.9+.
   * [mix phx.gen.context] Support `enum` types and the `redact` option when declaring fields
   * [mix phx.gen.notifier] A new generator to build notifiers that by default deliver emails
   * [mix phx.new] Update `mix phx.new` to require Elixir v1.12 and use the new `config/runtime.exs`
+  * [mix phx.new] Set `plug_init_mode: :runtime` in generated `config/test.exs`
   * [mix phx.new] Add description to Ecto telemetry metrics
   * [mix phx.new] Use `Ecto.Adapters.SQL.Sandbox.start_owner!/2` in generators - this approach provides proper shutdown semantics for apps using LiveView and Presence
   * [mix phx.new] Add `--install` and `--no-install` options to `phx.new`
@@ -26,6 +27,7 @@ Phoenix v1.6 requires Elixir v1.9+.
   * [mix phx.new] Remove usage of Sass
   * [mix phx.new] New applications now depend on Swoosh to deliver emails
   * [mix phx.new] No longer generate a socket file by default, instead one can run `mix phx.gen.socket`
+  * [mix phx.server] Add `--open` flag
   * [Router] Do not add compile time deps in `pipe_through`
   * [View] Extracted `Phoenix.View` into its own project to facilitate reuse
 
