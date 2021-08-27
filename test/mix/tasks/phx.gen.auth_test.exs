@@ -102,24 +102,24 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert_file "lib/my_app_web/controllers/user_auth.ex"
       assert_file "test/my_app_web/controllers/user_auth_test.exs"
       assert_file "lib/my_app_web/views/user_confirmation_view.ex"
-      assert_file "lib/my_app_web/templates/user_confirmation/new.html.eex"
+      assert_file "lib/my_app_web/templates/user_confirmation/new.html.heex"
       assert_file "lib/my_app_web/controllers/user_confirmation_controller.ex"
       assert_file "test/my_app_web/controllers/user_confirmation_controller_test.exs"
-      assert_file "lib/my_app_web/templates/layout/_user_menu.html.eex"
+      assert_file "lib/my_app_web/templates/layout/_user_menu.html.heex"
       assert_file "lib/my_app_web/controllers/user_registration_controller.ex"
       assert_file "lib/my_app_web/views/user_registration_view.ex"
       assert_file "test/my_app_web/controllers/user_registration_controller_test.exs"
       assert_file "lib/my_app_web/controllers/user_reset_password_controller.ex"
-      assert_file "lib/my_app_web/templates/user_reset_password/edit.html.eex"
-      assert_file "lib/my_app_web/templates/user_reset_password/new.html.eex"
+      assert_file "lib/my_app_web/templates/user_reset_password/edit.html.heex"
+      assert_file "lib/my_app_web/templates/user_reset_password/new.html.heex"
       assert_file "lib/my_app_web/views/user_reset_password_view.ex"
       assert_file "test/my_app_web/controllers/user_reset_password_controller_test.exs"
       assert_file "lib/my_app_web/controllers/user_session_controller.ex"
-      assert_file "lib/my_app_web/templates/user_session/new.html.eex"
+      assert_file "lib/my_app_web/templates/user_session/new.html.heex"
       assert_file "test/my_app_web/controllers/user_session_controller_test.exs"
       assert_file "lib/my_app_web/views/user_session_view.ex"
       assert_file "lib/my_app_web/controllers/user_settings_controller.ex"
-      assert_file "lib/my_app_web/templates/user_settings/edit.html.eex"
+      assert_file "lib/my_app_web/templates/user_settings/edit.html.heex"
       assert_file "lib/my_app_web/views/user_settings_view.ex"
       assert_file "test/my_app_web/controllers/user_settings_controller_test.exs"
 
@@ -173,7 +173,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         """
       end
 
-      assert_file "lib/my_app_web/templates/layout/app.html.eex", fn file ->
+      assert_file "lib/my_app_web/templates/layout/root.html.heex", fn file ->
         assert file =~ ~s|<%= render "_user_menu.html", assigns %>|
       end
 
@@ -199,11 +199,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         [ecto_adapter: Ecto.Adapters.Postgres, validate_dependencies?: false]
       )
 
-      assert_file "lib/my_app_web/templates/layout/root.html.leex", fn file ->
+      assert_file "lib/my_app_web/templates/layout/root.html.heex", fn file ->
         assert file =~ ~s|<%= render "_user_menu.html", assigns %>|
       end
 
-      assert_file "lib/my_app_web/templates/layout/app.html.eex", fn file ->
+      assert_file "lib/my_app_web/templates/layout/app.html.heex", fn file ->
         refute file =~ ~s|<%= render "_user_menu.html", assigns %>|
       end
     end)
@@ -238,8 +238,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "defmodule MyAppWeb.Warehouse.UserConfirmationView do"
       end
 
-      assert_file "lib/my_app_web/templates/warehouse/user_confirmation/new.html.eex", fn file ->
-        assert file =~ ~S|<%= form_for :user, Routes.warehouse_user_confirmation_path(@conn, :create), fn f -> %>|
+      assert_file "lib/my_app_web/templates/warehouse/user_confirmation/new.html.heex", fn file ->
+        assert file =~ ~S|<.form let={f} for={:user} action={Routes.warehouse_user_confirmation_path(@conn, :create)}>|
         assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
         assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
       end
@@ -252,7 +252,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "defmodule MyAppWeb.Warehouse.UserConfirmationControllerTest do"
       end
 
-      assert_file "lib/my_app_web/templates/layout/_user_menu.html.eex", fn file ->
+      assert_file "lib/my_app_web/templates/layout/_user_menu.html.heex", fn file ->
         assert file =~ ~S|<%= link "Settings", to: Routes.warehouse_user_settings_path(@conn, :edit) %>|
         assert file =~ ~S|<%= link "Log out", to: Routes.warehouse_user_session_path(@conn, :delete), method: :delete %>|
         assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
@@ -275,14 +275,14 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "defmodule MyAppWeb.Warehouse.UserResetPasswordController do"
       end
 
-      assert_file "lib/my_app_web/templates/warehouse/user_reset_password/edit.html.eex", fn file ->
-        assert file =~ ~S|<%= form_for @changeset, Routes.warehouse_user_reset_password_path(@conn, :update, @token), fn f -> %>|
+      assert_file "lib/my_app_web/templates/warehouse/user_reset_password/edit.html.heex", fn file ->
+        assert file =~ ~S|<.form let={f} for={@changeset} action={Routes.warehouse_user_reset_password_path(@conn, :update, @token)}>|
         assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
         assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
       end
 
-      assert_file "lib/my_app_web/templates/warehouse/user_reset_password/new.html.eex", fn file ->
-        assert file =~ ~S|<%= form_for :user, Routes.warehouse_user_reset_password_path(@conn, :create), fn f -> %>|
+      assert_file "lib/my_app_web/templates/warehouse/user_reset_password/new.html.heex", fn file ->
+        assert file =~ ~S|<.form let={f} for={:user} action={Routes.warehouse_user_reset_password_path(@conn, :create)}>|
         assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
         assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
       end
@@ -299,8 +299,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "defmodule MyAppWeb.Warehouse.UserSessionController do"
       end
 
-      assert_file "lib/my_app_web/templates/warehouse/user_session/new.html.eex", fn file ->
-        assert file =~ ~S|<%= form_for @conn, Routes.warehouse_user_session_path(@conn, :create), [as: :user], fn f -> %>|
+      assert_file "lib/my_app_web/templates/warehouse/user_session/new.html.heex", fn file ->
+        assert file =~ ~S|<.form let={f} for={@conn} action={Routes.warehouse_user_session_path(@conn, :create)} as={:user}>|
         assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
         assert file =~ ~S|<%= link "Forgot your password?", to: Routes.warehouse_user_reset_password_path(@conn, :new) %>|
       end
@@ -317,9 +317,9 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "defmodule MyAppWeb.Warehouse.UserSettingsController do"
       end
 
-      assert_file "lib/my_app_web/templates/warehouse/user_settings/edit.html.eex", fn file ->
-        assert file =~ ~S|<%= form_for @email_changeset, Routes.warehouse_user_settings_path(@conn, :update), [id: :update_email], fn f -> %>|
-        assert file =~ ~S|<%= form_for @password_changeset, Routes.warehouse_user_settings_path(@conn, :update), [id: :update_password], fn f -> %>|
+      assert_file "lib/my_app_web/templates/warehouse/user_settings/edit.html.heex", fn file ->
+        assert file =~ ~S|<.form let={f} for={@email_changeset} action={Routes.warehouse_user_settings_path(@conn, :update)} id="update_email">|
+        assert file =~ ~S|<.form let={f} for={@password_changeset} action={Routes.warehouse_user_settings_path(@conn, :update)} id="update_password">|
       end
 
       assert_file "lib/my_app_web/views/warehouse/user_settings_view.ex", fn file ->
@@ -376,7 +376,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         """
       end
 
-      assert_file "lib/my_app_web/templates/layout/app.html.eex", fn file ->
+      assert_file "lib/my_app_web/templates/layout/root.html.heex", fn file ->
         assert file =~ ~s|<%= render "_user_menu.html", assigns %>|
       end
 
@@ -682,24 +682,24 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert_file "apps/my_app/lib/my_app_web/controllers/user_auth.ex"
         assert_file "apps/my_app/test/my_app_web/controllers/user_auth_test.exs"
         assert_file "apps/my_app/lib/my_app_web/views/user_confirmation_view.ex"
-        assert_file "apps/my_app/lib/my_app_web/templates/user_confirmation/new.html.eex"
+        assert_file "apps/my_app/lib/my_app_web/templates/user_confirmation/new.html.heex"
         assert_file "apps/my_app/lib/my_app_web/controllers/user_confirmation_controller.ex"
         assert_file "apps/my_app/test/my_app_web/controllers/user_confirmation_controller_test.exs"
-        assert_file "apps/my_app/lib/my_app_web/templates/layout/_user_menu.html.eex"
+        assert_file "apps/my_app/lib/my_app_web/templates/layout/_user_menu.html.heex"
         assert_file "apps/my_app/lib/my_app_web/controllers/user_registration_controller.ex"
         assert_file "apps/my_app/lib/my_app_web/views/user_registration_view.ex"
         assert_file "apps/my_app/test/my_app_web/controllers/user_registration_controller_test.exs"
         assert_file "apps/my_app/lib/my_app_web/controllers/user_reset_password_controller.ex"
-        assert_file "apps/my_app/lib/my_app_web/templates/user_reset_password/edit.html.eex"
-        assert_file "apps/my_app/lib/my_app_web/templates/user_reset_password/new.html.eex"
+        assert_file "apps/my_app/lib/my_app_web/templates/user_reset_password/edit.html.heex"
+        assert_file "apps/my_app/lib/my_app_web/templates/user_reset_password/new.html.heex"
         assert_file "apps/my_app/lib/my_app_web/views/user_reset_password_view.ex"
         assert_file "apps/my_app/test/my_app_web/controllers/user_reset_password_controller_test.exs"
         assert_file "apps/my_app/lib/my_app_web/controllers/user_session_controller.ex"
-        assert_file "apps/my_app/lib/my_app_web/templates/user_session/new.html.eex"
+        assert_file "apps/my_app/lib/my_app_web/templates/user_session/new.html.heex"
         assert_file "apps/my_app/test/my_app_web/controllers/user_session_controller_test.exs"
         assert_file "apps/my_app/lib/my_app_web/views/user_session_view.ex"
         assert_file "apps/my_app/lib/my_app_web/controllers/user_settings_controller.ex"
-        assert_file "apps/my_app/lib/my_app_web/templates/user_settings/edit.html.eex"
+        assert_file "apps/my_app/lib/my_app_web/templates/user_settings/edit.html.heex"
         assert_file "apps/my_app/lib/my_app_web/views/user_settings_view.ex"
         assert_file "apps/my_app/test/my_app_web/controllers/user_settings_controller_test.exs"
       end)
@@ -725,24 +725,24 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert_file "apps/my_app_web/lib/my_app_web/controllers/user_auth.ex"
         assert_file "apps/my_app_web/test/my_app_web/controllers/user_auth_test.exs"
         assert_file "apps/my_app_web/lib/my_app_web/views/user_confirmation_view.ex"
-        assert_file "apps/my_app_web/lib/my_app_web/templates/user_confirmation/new.html.eex"
+        assert_file "apps/my_app_web/lib/my_app_web/templates/user_confirmation/new.html.heex"
         assert_file "apps/my_app_web/lib/my_app_web/controllers/user_confirmation_controller.ex"
         assert_file "apps/my_app_web/test/my_app_web/controllers/user_confirmation_controller_test.exs"
-        assert_file "apps/my_app_web/lib/my_app_web/templates/layout/_user_menu.html.eex"
+        assert_file "apps/my_app_web/lib/my_app_web/templates/layout/_user_menu.html.heex"
         assert_file "apps/my_app_web/lib/my_app_web/controllers/user_registration_controller.ex"
         assert_file "apps/my_app_web/lib/my_app_web/views/user_registration_view.ex"
         assert_file "apps/my_app_web/test/my_app_web/controllers/user_registration_controller_test.exs"
         assert_file "apps/my_app_web/lib/my_app_web/controllers/user_reset_password_controller.ex"
-        assert_file "apps/my_app_web/lib/my_app_web/templates/user_reset_password/edit.html.eex"
-        assert_file "apps/my_app_web/lib/my_app_web/templates/user_reset_password/new.html.eex"
+        assert_file "apps/my_app_web/lib/my_app_web/templates/user_reset_password/edit.html.heex"
+        assert_file "apps/my_app_web/lib/my_app_web/templates/user_reset_password/new.html.heex"
         assert_file "apps/my_app_web/lib/my_app_web/views/user_reset_password_view.ex"
         assert_file "apps/my_app_web/test/my_app_web/controllers/user_reset_password_controller_test.exs"
         assert_file "apps/my_app_web/lib/my_app_web/controllers/user_session_controller.ex"
-        assert_file "apps/my_app_web/lib/my_app_web/templates/user_session/new.html.eex"
+        assert_file "apps/my_app_web/lib/my_app_web/templates/user_session/new.html.heex"
         assert_file "apps/my_app_web/test/my_app_web/controllers/user_session_controller_test.exs"
         assert_file "apps/my_app_web/lib/my_app_web/views/user_session_view.ex"
         assert_file "apps/my_app_web/lib/my_app_web/controllers/user_settings_controller.ex"
-        assert_file "apps/my_app_web/lib/my_app_web/templates/user_settings/edit.html.eex"
+        assert_file "apps/my_app_web/lib/my_app_web/templates/user_settings/edit.html.heex"
         assert_file "apps/my_app_web/lib/my_app_web/views/user_settings_view.ex"
         assert_file "apps/my_app_web/test/my_app_web/controllers/user_settings_controller_test.exs"
       end)
@@ -843,7 +843,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when layout file is not found", config do
       in_tmp_phx_project(config.test, fn ->
-        File.rm!("lib/my_app_web/templates/layout/app.html.eex")
+        File.rm!("lib/my_app_web/templates/layout/root.html.heex")
+        File.rm!("lib/my_app_web/templates/layout/app.html.heex")
 
         Gen.Auth.run(
           ~w(Accounts User users),
@@ -857,8 +858,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         Missing files:
 
-          * lib/my_app_web/templates/layout/root.html.leex
-          * lib/my_app_web/templates/layout/app.html.eex
+          * lib/my_app_web/templates/layout/root.html.heex
+          * lib/my_app_web/templates/layout/app.html.heex
 
         Please ensure this phoenix app was not generated with
         --no-html. If you have changed the name of your application
@@ -872,7 +873,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when user menu can't be injected into layout", config do
       in_tmp_phx_project(config.test, fn ->
-        modify_file("lib/my_app_web/templates/layout/app.html.eex", fn _file ->
+        modify_file("lib/my_app_web/templates/layout/root.html.heex", fn _file ->
           ""
         end)
 
@@ -883,7 +884,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         assert_received {:mix_shell, :info, ["""
 
-        Add a render call for "_user_menu.html" to lib/my_app_web/templates/layout/app.html.eex:
+        Add a render call for "_user_menu.html" to lib/my_app_web/templates/layout/root.html.heex:
 
           <nav>
             <%= render "_user_menu.html", assigns %>
@@ -897,7 +898,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   test "allows templates to be overridden", config do
     in_tmp_phx_project(config.test, fn ->
       File.mkdir_p!("priv/templates/phx.gen.auth")
-      File.write!("priv/templates/phx.gen.auth/_menu.html.eex", """
+      File.write!("priv/templates/phx.gen.auth/_menu.html.heex", """
       <ul>
         <%%= if @current_<%= schema.singular %> do %>
           You're logged in
@@ -910,7 +911,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         [ecto_adapter: Ecto.Adapters.Postgres, validate_dependencies?: false]
       )
 
-      assert_file "lib/my_app_web/templates/layout/_admin_menu.html.eex", fn file ->
+      assert_file "lib/my_app_web/templates/layout/_admin_menu.html.heex", fn file ->
         assert file =~ ~S|<%= if @current_admin do %>|
             assert file =~ ~S|You're logged in|
           end

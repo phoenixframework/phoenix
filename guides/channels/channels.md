@@ -275,7 +275,7 @@ import socket from "./user_socket"
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
-In `lib/hello_web/templates/page/index.html.eex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
+In `lib/hello_web/templates/page/index.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
 ```html
 <div id="messages" role="log" aria-live="polite"></div>
@@ -406,7 +406,7 @@ Now our `conn.assigns` contains the `current_user` and `user_token`.
 
 **Step 2 - Pass the Token to the JavaScript**
 
-Next we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.eex` right above the app.js script, as follows:
+Next we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.heex` right above the app.js script, as follows:
 
 ```html
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>

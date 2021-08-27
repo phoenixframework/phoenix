@@ -2,7 +2,7 @@
 
 <h3>Change email</h3>
 
-<%%= form_for @email_changeset, Routes.<%= schema.route_helper %>_settings_path(@conn, :update), [id: :update_email], fn f -> %>
+<.form let={f} for={@email_changeset} action={Routes.<%= schema.route_helper %>_settings_path(@conn, :update)} id="update_email">
   <%%= if @email_changeset.action do %>
     <div class="alert alert-danger">
       <p>Oops, something went wrong! Please check the errors below.</p>
@@ -22,11 +22,11 @@
   <div>
     <%%= submit "Change email" %>
   </div>
-<%% end %>
+</.form>
 
 <h3>Change password</h3>
 
-<%%= form_for @password_changeset, Routes.<%= schema.route_helper %>_settings_path(@conn, :update), [id: :update_password], fn f -> %>
+<.form let={f} for={@password_changeset} action={Routes.<%= schema.route_helper %>_settings_path(@conn, :update)} id="update_password">
   <%%= if @password_changeset.action do %>
     <div class="alert alert-danger">
       <p>Oops, something went wrong! Please check the errors below.</p>
@@ -50,4 +50,4 @@
   <div>
     <%%= submit "Change password" %>
   </div>
-<%% end %>
+</.form>

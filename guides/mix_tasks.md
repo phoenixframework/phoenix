@@ -42,11 +42,11 @@ The `mix phx.gen.html` task takes a number of arguments, the module name of the 
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer
 * creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/templates/post/edit.html.eex
-* creating lib/hello_web/templates/post/form.html.eex
-* creating lib/hello_web/templates/post/index.html.eex
-* creating lib/hello_web/templates/post/new.html.eex
-* creating lib/hello_web/templates/post/show.html.eex
+* creating lib/hello_web/templates/post/edit.html.heex
+* creating lib/hello_web/templates/post/form.html.heex
+* creating lib/hello_web/templates/post/index.html.heex
+* creating lib/hello_web/templates/post/new.html.heex
+* creating lib/hello_web/templates/post/show.html.heex
 * creating lib/hello_web/views/post_view.ex
 * creating test/hello_web/controllers/post_controller_test.exs
 * creating lib/hello/blog/post.ex
@@ -84,11 +84,11 @@ If we don't want to create a context or schema for our resource we can use the `
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-context
 * creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/templates/post/edit.html.eex
-* creating lib/hello_web/templates/post/form.html.eex
-* creating lib/hello_web/templates/post/index.html.eex
-* creating lib/hello_web/templates/post/new.html.eex
-* creating lib/hello_web/templates/post/show.html.eex
+* creating lib/hello_web/templates/post/edit.html.heex
+* creating lib/hello_web/templates/post/form.html.heex
+* creating lib/hello_web/templates/post/index.html.heex
+* creating lib/hello_web/templates/post/new.html.heex
+* creating lib/hello_web/templates/post/show.html.heex
 * creating lib/hello_web/views/post_view.ex
 * creating test/hello_web/controllers/post_controller_test.exs
 ```
@@ -106,11 +106,11 @@ Similarly, if we want a context created without a schema for our resource we can
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-schema
 * creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/templates/post/edit.html.eex
-* creating lib/hello_web/templates/post/form.html.eex
-* creating lib/hello_web/templates/post/index.html.eex
-* creating lib/hello_web/templates/post/new.html.eex
-* creating lib/hello_web/templates/post/show.html.eex
+* creating lib/hello_web/templates/post/edit.html.heex
+* creating lib/hello_web/templates/post/form.html.heex
+* creating lib/hello_web/templates/post/index.html.heex
+* creating lib/hello_web/templates/post/new.html.heex
+* creating lib/hello_web/templates/post/show.html.heex
 * creating lib/hello_web/views/post_view.ex
 * creating test/hello_web/controllers/post_controller_test.exs
 * creating lib/hello/blog.ex
@@ -222,25 +222,25 @@ $ mix phx.gen.auth Accounts User users
 * creating lib/hello_web/controllers/user_auth.ex
 * creating test/hello_web/controllers/user_auth_test.exs
 * creating lib/hello_web/views/user_confirmation_view.ex
-* creating lib/hello_web/templates/user_confirmation/new.html.eex
+* creating lib/hello_web/templates/user_confirmation/new.html.heex
 * creating lib/hello_web/controllers/user_confirmation_controller.ex
 * creating test/hello_web/controllers/user_confirmation_controller_test.exs
-* creating lib/hello_web/templates/layout/_user_menu.html.eex
-* creating lib/hello_web/templates/user_registration/new.html.eex
+* creating lib/hello_web/templates/layout/_user_menu.html.heex
+* creating lib/hello_web/templates/user_registration/new.html.heex
 * creating lib/hello_web/controllers/user_registration_controller.ex
 * creating test/hello_web/controllers/user_registration_controller_test.exs
 * creating lib/hello_web/views/user_registration_view.ex
 * creating lib/hello_web/views/user_reset_password_view.ex
 * creating lib/hello_web/controllers/user_reset_password_controller.ex
 * creating test/hello_web/controllers/user_reset_password_controller_test.exs
-* creating lib/hello_web/templates/user_reset_password/edit.html.eex
-* creating lib/hello_web/templates/user_reset_password/new.html.eex
+* creating lib/hello_web/templates/user_reset_password/edit.html.heex
+* creating lib/hello_web/templates/user_reset_password/new.html.heex
 * creating lib/hello_web/views/user_session_view.ex
 * creating lib/hello_web/controllers/user_session_controller.ex
 * creating test/hello_web/controllers/user_session_controller_test.exs
-* creating lib/hello_web/templates/user_session/new.html.eex
+* creating lib/hello_web/templates/user_session/new.html.heex
 * creating lib/hello_web/views/user_settings_view.ex
-* creating lib/hello_web/templates/user_settings/edit.html.eex
+* creating lib/hello_web/templates/user_settings/edit.html.heex
 * creating lib/hello_web/controllers/user_settings_controller.ex
 * creating test/hello_web/controllers/user_settings_controller_test.exs
 * creating lib/hello/accounts.ex
@@ -255,7 +255,7 @@ $ mix phx.gen.auth Accounts User users
 * injecting lib/hello_web/router.ex
 * injecting lib/hello_web/router.ex - imports
 * injecting lib/hello_web/router.ex - plug
-* injecting lib/hello_web/templates/layout/app.html.eex
+* injecting lib/hello_web/templates/layout/app.html.heex
 ```
 
 When `mix phx.gen.auth` is done creating files, it helpfully tells us that we need to re-fetch our dependencies as well as run our Ecto migrations.

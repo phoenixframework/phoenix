@@ -38,26 +38,17 @@ defmodule Phx.New.Web do
   ]
 
   template :html, [
-    {:eex,  "phx_web/controllers/page_controller.ex",         :web, "lib/:web_app/controllers/page_controller.ex"},
-    {:eex,  "phx_web/templates/layout/app.html.eex",          :web, "lib/:web_app/templates/layout/app.html.eex"},
-    {:eex,  "phx_web/templates/page/index.html.eex",          :web, "lib/:web_app/templates/page/index.html.eex"},
-    {:eex,  "phx_web/views/layout_view.ex",                   :web, "lib/:web_app/views/layout_view.ex"},
-    {:eex,  "phx_web/views/page_view.ex",                     :web, "lib/:web_app/views/page_view.ex"},
-    {:eex,  "phx_test/controllers/page_controller_test.exs",  :web, "test/:web_app/controllers/page_controller_test.exs"},
-    {:eex,  "phx_test/views/layout_view_test.exs",            :web, "test/:web_app/views/layout_view_test.exs"},
-    {:eex,  "phx_test/views/page_view_test.exs",              :web, "test/:web_app/views/page_view_test.exs"},
-  ]
-
-  template :live, [
-    {:eex, "phx_live/assets/topbar.js",                :web, "assets/vendor/topbar.js"},
-    {:eex, "phx_live/templates/layout/root.html.leex", :web, "lib/:web_app/templates/layout/root.html.leex"},
-    {:eex, "phx_live/templates/layout/app.html.leex",  :web, "lib/:web_app/templates/layout/app.html.eex"},
-    {:eex, "phx_live/templates/layout/live.html.leex", :web, "lib/:web_app/templates/layout/live.html.leex"},
-    {:eex, "phx_web/views/layout_view.ex",             :web, "lib/:web_app/views/layout_view.ex"},
-    {:eex, "phx_live/live/page_live.ex",               :web, "lib/:web_app/live/page_live.ex"},
-    {:eex, "phx_web/templates/page/index.html.eex",    :web, "lib/:web_app/live/page_live.html.leex"},
-    {:eex, "phx_test/views/layout_view_test.exs",      :web, "test/:web_app/views/layout_view_test.exs"},
-    {:eex, "phx_test/live/page_live_test.exs",         :web, "test/:web_app/live/page_live_test.exs"},
+    {:eex, "phx_web/controllers/page_controller.ex",        :web, "lib/:web_app/controllers/page_controller.ex"},
+    {:eex, "phx_web/views/layout_view.ex",                  :web, "lib/:web_app/views/layout_view.ex"},
+    {:eex, "phx_web/views/page_view.ex",                    :web, "lib/:web_app/views/page_view.ex"},
+    {:eex, "phx_test/controllers/page_controller_test.exs", :web, "test/:web_app/controllers/page_controller_test.exs"},
+    {:eex, "phx_test/views/page_view_test.exs",             :web, "test/:web_app/views/page_view_test.exs"},
+    {:eex, "phx_live/assets/topbar.js",                     :web, "assets/vendor/topbar.js"},
+    {:eex, "phx_web/templates/layout/root.html.heex",       :web, "lib/:web_app/templates/layout/root.html.heex"},
+    {:eex, "phx_web/templates/layout/app.html.heex",        :web, "lib/:web_app/templates/layout/app.html.heex"},
+    {:eex, "phx_web/templates/layout/live.html.heex",       :web, "lib/:web_app/templates/layout/live.html.heex"},
+    {:eex, "phx_web/templates/page/index.html.heex",        :web, "lib/:web_app/templates/page/index.html.heex"},
+    {:eex, "phx_test/views/layout_view_test.exs",           :web, "test/:web_app/views/layout_view_test.exs"},
   ]
 
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do
@@ -77,12 +68,7 @@ defmodule Phx.New.Web do
     inject_umbrella_config_defaults(project)
     copy_from project, __MODULE__, :new
 
-    cond do
-      Project.live?(project) -> gen_live(project)
-      Project.html?(project) -> gen_html(project)
-      true -> :noop
-    end
-
+    if Project.html?(project), do: gen_html(project)
     if Project.gettext?(project), do: gen_gettext(project)
 
     Phx.New.Single.gen_assets(project)
@@ -95,9 +81,5 @@ defmodule Phx.New.Web do
 
   defp gen_gettext(%Project{} = project) do
     copy_from project, __MODULE__, :gettext
-  end
-
-  defp gen_live(%Project{} = project) do
-    copy_from project, __MODULE__, :live
   end
 end

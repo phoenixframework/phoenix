@@ -97,9 +97,10 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
       end
 
-      assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex",
-                  "<title>PhxBlog · Phoenix Framework</title>"
-      assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.eex", fn file ->
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.heex"
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.heex"
+
+      assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.heex", fn file ->
         version = Application.spec(:phx_new, :vsn) |> to_string() |> Version.parse!()
         changelog_vsn = "v#{version.major}.#{version.minor}"
         assert file =~
@@ -155,7 +156,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file "phx_blog/lib/phx_blog_web/live/page_live_view.ex"
 
       assert_file "phx_blog/assets/js/app.js", fn file ->
-        refute file =~ "LiveSocket"
+        assert file =~ ~s|import {LiveSocket} from "phoenix_live_view"|
+        assert file =~ ~s|liveSocket.connect()|
       end
 
       assert_file "phx_blog/mix.exs", fn file ->
@@ -163,9 +165,8 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~r":floki"
       end
 
-      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :fetch_live_flash])
-      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[plug :put_root_layout])
-      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~s[HomeLive])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &assert(&1 =~ ~s[plug :fetch_live_flash])
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &assert(&1 =~ ~s[plug :put_root_layout])
       assert_file "phx_blog/lib/phx_blog_web/router.ex", &assert(&1 =~ ~s[PageController])
 
       # Telemetry
@@ -296,8 +297,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute File.exists? "phx_blog/test/views/layout_view_test.exs"
       refute File.exists? "phx_blog/test/views/page_view_test.exs"
       refute File.exists? "phx_blog/lib/phx_blog_web/controllers/page_controller.ex"
-      refute File.exists? "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex"
-      refute File.exists? "phx_blog/lib/phx_blog_web/templates/page/index.html.eex"
+      refute File.exists? "phx_blog/lib/phx_blog_web/templates/layout/app.html.heex"
+      refute File.exists? "phx_blog/lib/phx_blog_web/templates/page/index.html.heex"
       refute File.exists? "phx_blog/lib/phx_blog_web/views/layout_view.ex"
       refute File.exists? "phx_blog/lib/phx_blog_web/views/page_view.ex"
 
@@ -320,7 +321,6 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # No Dashboard
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
-        refute file =~ ~s|socket "/live"|
         refute file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
       end
 
@@ -345,13 +345,25 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard")
 
-      assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex", fn file ->
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.heex", fn file ->
         refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
       end
 
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
         assert file =~ ~s|defmodule PhxBlogWeb.Endpoint|
-        refute file =~ ~s|socket "/live"|
+        assert file =~ ~s|  socket "/live"|
+        refute file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
+      end
+    end
+  end
+
+  test "new with --no-dashboard and --no-live" do
+    in_tmp "new with no_dashboard and no_live", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--no-dashboard", "--no-live"])
+
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
+        assert file =~ ~s|defmodule PhxBlogWeb.Endpoint|
+        assert file =~ ~s|# socket "/live"|
         refute file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
       end
     end
@@ -411,75 +423,6 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--binary-id"])
       assert_file "phx_blog/config/config.exs", ~r/generators: \[binary_id: true\]/
-    end
-  end
-
-  test "new with live" do
-    in_tmp "new with live", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--live"])
-      assert_file "phx_blog/mix.exs", &assert(&1 =~ ~r":phoenix_live_view")
-      assert_file "phx_blog/mix.exs", &assert(&1 =~ ~r":floki")
-
-      refute_file "phx_blog/lib/phx_blog_web/controllers/page_controller.ex"
-
-      assert_file "phx_blog/lib/phx_blog_web/live/page_live.ex", fn file ->
-        assert file =~ "defmodule PhxBlogWeb.PageLive do"
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
-        assert file =~ ~s|<%= live_title_tag assigns[:page_title]|
-        assert file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web/live/page_live.html.leex", fn file ->
-        assert file =~ ~s[Welcome]
-      end
-
-      assert_file "phx_blog/assets/js/app.js", fn file ->
-        assert file =~ ~s[import {LiveSocket} from "phoenix_live_view"]
-      end
-
-      assert_file "phx_blog/assets/css/app.css", fn file ->
-        assert file =~ ~s[.phx-click-loading]
-      end
-
-      assert_file "phx_blog/config/config.exs", fn file ->
-        assert file =~ "live_view:"
-        assert file =~ "signing_salt:"
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
-        assert file =~ "import Phoenix.LiveView.Helpers"
-        assert file =~ "def live_view do"
-        assert file =~ "def live_component do"
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~s[socket "/live", Phoenix.LiveView.Socket]
-      assert_file "phx_blog/lib/phx_blog_web/router.ex", fn file ->
-        assert file =~ ~s[plug :fetch_live_flash]
-        assert file =~ ~s[plug :put_root_layout, {PhxBlogWeb.LayoutView, :root}]
-        assert file =~ ~s[live "/", PageLive]
-        refute file =~ ~s[plug :fetch_flash]
-        refute file =~ ~s[PageController]
-      end
-    end
-  end
-
-  test "new with --live --no-dashboard" do
-    in_tmp "new with live no_dashboard", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--live", "--no-dashboard"])
-
-      assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard")
-
-      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.leex", fn file ->
-        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
-      end
-
-      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
-        assert file =~ ~s|defmodule PhxBlogWeb.Endpoint|
-        assert file =~ ~s|socket "/live"|
-        refute file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
-      end
     end
   end
 

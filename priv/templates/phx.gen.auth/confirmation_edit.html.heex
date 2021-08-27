@@ -1,10 +1,10 @@
 <h1>Confirm account</h1>
 
-<%%= form_for :<%= schema.singular %>, Routes.<%= schema.route_helper %>_confirmation_path(@conn, :update, @token), fn _f -> %>
+<.form let={_f} for={:<%= schema.singular %>} action={Routes.<%= schema.route_helper %>_confirmation_path(@conn, :update, @token)}>
   <div>
     <%%= submit "Confirm my account" %>
   </div>
-<%% end %>
+</.form>
 
 <p>
   <%%= link "Register", to: Routes.<%= schema.route_helper %>_registration_path(@conn, :new) %> |
