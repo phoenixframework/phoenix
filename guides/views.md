@@ -79,7 +79,7 @@ or even loops:
 </table>
 ```
 
-Did you notice the use of `<%= %>` versus `<% %>` in the above loop? All expressions that output something to the template **must** use the equals sign (`=`). If this is not included the code will still be executed but nothing will be inserted into the template.
+Did you notice the use of `<%= %>` versus `<% %>` above? All expressions that output something to the template **must** use the equals sign (`=`). If this is not included the code will still be executed but nothing will be inserted into the template.
 
 At the end of the day, our templates are always compiled into Elixir code. Let's learn more about this.
 
