@@ -108,29 +108,7 @@ If we again visit [`/hello/Frank`] in the browser, we should see a block of JSON
 {"id": "Frank"}
 ```
 
-Phoenix controllers can also render HTML without a view. As you may have already guessed, the [`html/2`](`Phoenix.Controller.html/2`) function does just that. This time, we implement the `show` action like this:
-
-```elixir
-def show(conn, %{"messenger" => messenger}) do
-  html(conn, """
-   <html>
-     <head>
-        <title>Passing a Messenger</title>
-     </head>
-     <body>
-       <p>From messenger #{Plug.HTML.html_escape(messenger)}</p>
-     </body>
-   </html>
-  """)
-end
-```
-
-Hitting [`/hello/Frank`] now renders the HTML string we defined in the `show` action. Note that what we wrote in the action is not an `EEx` template. It's a multi-line string, so we interpolate the `messenger` variable like this `#{Plug.HTML.html_escape(messenger)}`, instead of this `<%= messenger %>`.
-
-It is worth noting that the [`text/2`], [`json/2`], and [`html/2`] functions require neither a Phoenix view, nor a template to render.
-
-The [`json/2`](`Phoenix.Controller.json/2`) function is obviously useful for writing APIs, and the other two may come in handy, but most of the times we use Phoenix views to build our responses. For this, Phoenix provides the [`render/3`] function.
-
+The [`json/2`](`Phoenix.Controller.json/2`) function is useful for writing APIs and there is also the [`html/2`](`Phoenix.Controller.html/2`) function for rendering HTML, but most of the times we use Phoenix views to build our responses. For this, Phoenix includes the [`render/3`] function. It is specially important for HTML responses, as Phoenix Views provide performance and security benefits.
 
 Let's rollback our `show` action to what we originally wrote in the [request life-cycle guide](request_lifecycle.html):
 
@@ -144,7 +122,7 @@ defmodule HelloWeb.HelloController do
 end
 ```
 
-In order for the [`render/3`] function to work correctly, the controller and view must share the same root name (in this case `Hello`), and it also must have the same root name as the template directory (in this case `hello`) where the `show.html.eex` template lives. In other words, `HelloController` requires `HelloView`, and `HelloView` requires the existence of the `lib/hello_web/templates/hello` directory, which must contain the `show.html.eex` template.
+In order for the [`render/3`] function to work correctly, the controller and view must share the same root name (in this case `Hello`), and it also must have the same root name as the template directory (in this case `hello`) where the `show.html.heex` template lives. In other words, `HelloController` requires `HelloView`, and `HelloView` requires the existence of the `lib/hello_web/templates/hello` directory, which must contain the `show.html.heex` template.
 
 [`render/3`] will also pass the value which the `show` action received for `messenger` from the parameters as an assign.
 
@@ -177,7 +155,7 @@ Generally speaking, once all assigns are configured, we invoke the view layer. T
 
 ### Assigning layouts
 
-Layouts are just a special subset of templates. The live in the `templates/layout` folder (`lib/hello_web/templates/layout`). Phoenix created one for us when we generated our app. The default layout is called `app.html.eex`, and it is the layout into which all templates will be rendered by default.
+Layouts are just a special subset of templates. The live in the `templates/layout` folder (`lib/hello_web/templates/layout`). Phoenix created one for us when we generated our app. The default layout is called `app.html.heex`, and it is the layout into which all templates will be rendered by default.
 
 Since layouts are really just templates, they need a view to render them. This one is `LayoutView` which is defined in `lib/hello_web/views/layout_view.ex`. Since Phoenix generated this view for us, we won't have to create a new one as long as we put the layouts we want to render inside the `lib/hello_web/templates/layout` directory.
 
@@ -197,7 +175,7 @@ end
 
 After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or CSS styling at all.
 
-Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `app.html.eex` to a new file `admin.html.eex` in the same directory `lib/hello_web/templates/layout`. Then let's replace the lines in `admin.html.eex` that displays the logo with the word "Administration".
+Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `app.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/templates/layout`. Then let's replace the lines in `admin.html.heex` that displays the logo with the word "Administration".
 
 Remove these lines:
 ```html
@@ -229,7 +207,7 @@ Rendering HTML through a template is fine, but what if we need to change the ren
 
 Phoenix allows us to change formats on the fly with the `_format` query string parameter. To make this happen, Phoenix requires an appropriately named view and an appropriately named template in the correct directory.
 
-As an example, let's take `PageController`'s `index` action from a newly generated app. Out of the box, this has the right view `PageView`, the right templates directory (`lib/hello_web/templates/page`), and the right template for rendering HTML (`index.html.eex`.)
+As an example, let's take `PageController`'s `index` action from a newly generated app. Out of the box, this has the right view `PageView`, the right templates directory (`lib/hello_web/templates/page`), and the right template for rendering HTML (`index.html.heex`.)
 
 ```elixir
 def index(conn, _params) do
@@ -311,7 +289,7 @@ end
 
 We would then need to provide an `index.xml.eex` template which created valid XML, and we would be done.
 
-For a list of valid content mime-types, please see the [mime.types](https://github.com/elixir-plug/mime/blob/master/lib/mime.ex) documentation from the mime type library.
+For a list of valid content mime-types, please see the [mime](https://github.com/elixir-plug/mime) library.
 
 ### Setting the HTTP Status
 
@@ -415,7 +393,7 @@ end
 
 In order to see our flash messages, we need to be able to retrieve them and display them in a template layout. One way to do the first part is with [`get_flash/2`] which takes `conn` and the key we care about. It then returns the value for that key.
 
-For our convenience, the application layout, `lib/hello_web/templates/layout/app.html.eex`, already has markup for displaying flash messages.
+For our convenience, the application layout, `lib/hello_web/templates/layout/app.html.heex`, already has markup for displaying flash messages.
 
 ```html
 <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>

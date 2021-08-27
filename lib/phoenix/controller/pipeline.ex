@@ -2,8 +2,8 @@ defmodule Phoenix.Controller.Pipeline do
   @moduledoc false
 
   @doc false
-  defmacro __using__(opts) do
-    quote bind_quoted: [opts: opts] do
+  defmacro __using__(_) do
+    quote do
       @behaviour Plug
 
       require Phoenix.Endpoint
@@ -11,7 +11,6 @@ defmodule Phoenix.Controller.Pipeline do
 
       Module.register_attribute(__MODULE__, :plugs, accumulate: true)
       @before_compile Phoenix.Controller.Pipeline
-      @phoenix_log_level Keyword.get(opts, :log, :debug)
       @phoenix_fallback :unregistered
 
       @doc false

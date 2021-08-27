@@ -12,7 +12,6 @@
 
 * Elixir version (elixir -v):
 * Phoenix version (mix deps):
-* Node.js version (node -v):
 * Operating system:
 
 ### Expected behavior

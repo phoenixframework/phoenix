@@ -8,9 +8,9 @@ defmodule <%= @endpoint_module %> do
     store: :cookie,
     key: "_<%= @web_app_name %>_key",
     signing_salt: "<%= @signing_salt %>"
-  ]<%= if @live || @dashboard do %>
+  ]
 
-  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]<% end %>
+  <%= if !(@dashboard || @live) do %><%= "# " %><% end %>socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #

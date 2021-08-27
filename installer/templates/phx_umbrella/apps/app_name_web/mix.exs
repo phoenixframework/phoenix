@@ -38,19 +38,19 @@ defmodule <%= @web_namespace %>.MixProject do
   defp deps do
     [
       <%= @phoenix_dep %>,<%= if @ecto do %>
-      {:phoenix_ecto, "~> 4.1"},<% end %><%= if @html do %>
-      {:phoenix_html, "~> 2.11"},
+      {:phoenix_ecto, "~> 4.4"},<% end %><%= if @html do %>
+      {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.15.7"},
+      {:phoenix_live_view, "~> 0.16.0"},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.4"},<% end %><%= if @assets do %>
+      {:phoenix_live_dashboard, "~> 0.5"},<% end %><%= if @assets do %>
       {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},<% end %>
       {:telemetry_metrics, "~> 0.6"},
-      {:telemetry_poller, "~> 0.5"},<%= if @gettext do %>
-      {:gettext, "~> 0.11"},<% end %><%= if @app_name != @web_app_name do %>
+      {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
+      {:gettext, "~> 0.18"},<% end %><%= if @app_name != @web_app_name do %>
       {:<%= @app_name %>, in_umbrella: true},<% end %>
-      {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:jason, "~> 1.2"},
+      {:plug_cowboy, "~> 2.5"}
     ]
   end
 

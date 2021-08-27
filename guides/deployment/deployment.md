@@ -51,6 +51,8 @@ Check your digested files at "priv/static".
 
 And that is it! The Mix task by default builds the assets and then generates digests with a cache manifest file so Phoenix can quickly serve assets in production.
 
+> Note: if you run the task above in your local machine, it will generate many digested assets in `priv/static`. You can prune them by running `mix phx.digest.clean --all`.
+
 Keep in mind that, if you by any chance forget to run the steps above, Phoenix will show an error message:
 
 ```console
@@ -97,8 +99,7 @@ $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 
 # Compile assets
-$ npm run deploy --prefix ./assets
-$ MIX_ENV=prod mix phx.digest
+$ MIX_ENV=prod mix assets.deploy
 
 # Custom tasks (like DB migrations)
 $ MIX_ENV=prod mix ecto.migrate

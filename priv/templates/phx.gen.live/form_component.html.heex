@@ -1,0 +1,20 @@
+<div>
+  <h2><%%= @title %></h2>
+
+  <.form
+    let={f}
+    for={@changeset}
+    id="<%= schema.singular %>-form"
+    phx-target={@myself}
+    phx-change="validate"
+    phx-submit="save">
+  <%= for {label, input, error} <- inputs, input do %>
+    <%= label %>
+    <%= input %>
+    <%= error %>
+  <% end %>
+    <div>
+      <%%= submit "Save", phx_disable_with: "Saving..." %>
+    </div>
+  </.form>
+</div>

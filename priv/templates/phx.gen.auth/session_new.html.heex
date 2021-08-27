@@ -1,6 +1,6 @@
 <h1>Log in</h1>
 
-<%%= form_for @conn, Routes.<%= schema.route_helper %>_session_path(@conn, :create), [as: :<%= schema.singular %>], fn f -> %>
+<.form let={f} for={@conn} action={Routes.<%= schema.route_helper %>_session_path(@conn, :create)} as={:<%= schema.singular %>}>
   <%%= if @error_message do %>
     <div class="alert alert-danger">
       <p><%%= @error_message %></p>
@@ -19,7 +19,7 @@
   <div>
     <%%= submit "Log in" %>
   </div>
-<%% end %>
+</.form>
 
 <p>
   <%%= link "Register", to: Routes.<%= schema.route_helper %>_registration_path(@conn, :new) %> |

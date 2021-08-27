@@ -11,7 +11,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email) do
       <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(
         <%= schema.singular %>,
-        &Routes.<%= schema.route_helper %>_confirmation_url(conn, :confirm, &1)
+        &Routes.<%= schema.route_helper %>_confirmation_url(conn, :edit, &1)
       )
     end
 
@@ -25,9 +25,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     |> redirect(to: "/")
   end
 
+  def edit(conn, %{"token" => token}) do
+    render(conn, "edit.html", token: token)
+  end
+
   # Do not log in the <%= schema.singular %> after confirmation to avoid a
   # leaked token giving the <%= schema.singular %> access to the account.
-  def confirm(conn, %{"token" => token}) do
+  def update(conn, %{"token" => token}) do
     case <%= inspect context.alias %>.confirm_<%= schema.singular %>(token) do
       {:ok, _} ->
         conn

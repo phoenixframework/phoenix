@@ -118,11 +118,11 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
     [
       {:eex, "controller.ex",       Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_controller.ex"])},
-      {:eex, "edit.html.eex",       Path.join([web_prefix, "templates", web_path, schema.singular, "edit.html.eex"])},
-      {:eex, "form.html.eex",       Path.join([web_prefix, "templates", web_path, schema.singular, "form.html.eex"])},
-      {:eex, "index.html.eex",      Path.join([web_prefix, "templates", web_path, schema.singular, "index.html.eex"])},
-      {:eex, "new.html.eex",        Path.join([web_prefix, "templates", web_path, schema.singular, "new.html.eex"])},
-      {:eex, "show.html.eex",       Path.join([web_prefix, "templates", web_path, schema.singular, "show.html.eex"])},
+      {:eex, "edit.html.heex",      Path.join([web_prefix, "templates", web_path, schema.singular, "edit.html.heex"])},
+      {:eex, "form.html.heex",      Path.join([web_prefix, "templates", web_path, schema.singular, "form.html.heex"])},
+      {:eex, "index.html.heex",     Path.join([web_prefix, "templates", web_path, schema.singular, "index.html.heex"])},
+      {:eex, "new.html.heex",       Path.join([web_prefix, "templates", web_path, schema.singular, "new.html.heex"])},
+      {:eex, "show.html.heex",      Path.join([web_prefix, "templates", web_path, schema.singular, "show.html.heex"])},
       {:eex, "view.ex",             Path.join([web_prefix, "views", web_path, "#{schema.singular}_view.ex"])},
       {:eex, "controller_test.exs", Path.join([test_prefix, "controllers", web_path, "#{schema.singular}_controller_test.exs"])},
     ]

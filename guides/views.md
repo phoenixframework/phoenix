@@ -24,7 +24,7 @@ That's simple enough. There's only one line, `use HelloWeb, :view`. This line ca
 
 All of the imports and aliases we make in our view will also be available in our templates. That's because templates are effectively compiled into functions inside their respective views. For example, if you define a function in your view, you will be able to invoke it directly from the template. Let's see this in practice.
 
-Open up our application layout template, `lib/hello_web/templates/layout/app.html.eex`, and change this line,
+Open up our application layout template, `lib/hello_web/templates/layout/app.html.heex`, and change this line,
 
 ```html
 <title>Hello · Phoenix Framework</title>
@@ -50,13 +50,19 @@ end
 
 When we reload our home page, we should see our new title. Since templates are compiled inside the view, we could invoke the view function simply as `title()`, otherwise we would have to type `HelloWeb.LayoutView.title()`.
 
-As you may recall, Elixir templates use `EEx`, which stands for Embedded Elixir. We use `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. You can use pretty much any Elixir expression. For example, in order to have conditionals:
+As you may recall, Elixir templates use `.heex`, which stands for  "HTML+EEx". EEx is an Elixir library that uses `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. In your controller, if you invoke:
+
+```elixir
+  render(conn, "show.html", username: "joe")
+```
+
+Then you can access said username in the templates as `<%= @username %>`. In addition to displaying assigns and functions, we can use pretty much any Elixir expression. For example, in order to have conditionals:
 
 ```html
 <%= if some_condition? do %>
-  <p>Some condition is true for user: <%= @user.name %></p>
+  <p>Some condition is true for user: <%= @username %></p>
 <% else %>
-  <p>Some condition is false for user: <%= @user.name %></p>
+  <p>Some condition is false for user: <%= @username %></p>
 <% end %>
 ```
 
@@ -77,9 +83,92 @@ or even loops:
 </table>
 ```
 
-At the end of the day, our templates are always compiled into Elixir code. Let's learn more about this.
+Did you notice the use of `<%= %>` versus `<% %>` above? All expressions that output something to the template **must** use the equals sign (`=`). If this is not included the code will still be executed but nothing will be inserted into the template.
+
+### HTML extensions
+
+Besides allowing interpolation of Elixir expressions via `<%= %>`, `.heex` templates come with HTML-aware extensions. For example, let's see what tries to happen if you try to interpolate a value with "<" or ">" in it, which would lead to HTML injection:
+
+```html
+<%= "<b>Bold?</b>" %>
+```
+
+Once you render the template, you will see the literal `<b>` on the page. This means users cannot inject HTML content on the page. If you want to allow them to do so, you can call `raw`, but do so with extreme care:
+
+```html
+<%= raw "<b>Bold?</b>" %>
+```
+
+Another super power of HEEx templates is validation of HTML and lean interpolation syntax of attributes. You can write:
+
+```html
+<div title="My div" class={@class}>
+  <p>Hello <%= @username %></p>
+</div>
+```
+
+Notice how you could simply use `key={value}`. HEEx will automatically handle special values such as `false` to remove the attribute or a list of classes.
+
+To interpolate a dynamic number of attributes in a keyword list or map, do:
+
+```html
+<div title="My div" {@many_attributes}>
+  <p>Hello <%= @username %></p>
+</div>
+```
+
+Also, try removing the closing `</div>` or renaming it to `</div-typo>`. HEEx templates will let you know about your error.
+
+### HTML components
+
+The last feature provided by HEEx is the idea of components. Components are pure functins that can be either local (same module) or remote (external module).
+
+HEEx allows invoking whose function components directly in the template using an HTML-like notation. For example, a remote function:
+
+```html
+<MyApp.Weather.city name="Kraków"/>
+```
+
+A local function can be invoked with a leading dot:
+
+```html
+<.city name="Kraków"/>
+```
+
+where the component could be defined as follows:
+
+```elixir
+defmodule MyApp.Weather do
+  use Phoenix.Component
+
+  def city(assigns) do
+    ~H"""
+    The chosen city is: <%= @name %>.
+    """
+  end
+
+  def country(assigns) do
+    ~H"""
+    The chosen country is: <%= @name %>.
+    """
+  end
+end
+```
+
+In the example above, we used the `~H` sigil syntax to embed HEEx templates directly into our modules. We have already invoke the `city` component and calling the `country` component wouldn't be different:
+
+```html
+<div title="My div" {@many_attributes}>
+  <p>Hello <%= @username %></p>
+  <MyApp.Weather.country name="Brazil" />
+</div>
+```
+
+You can learn more about components in [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html).
 
 ### Understanding template compilation
+
+Phoenix templates are compiled into Elixir code, which make them extremely performant. Let's learn more about this.
 
 When a template is compiled into a view, it is simply compiled as a [`render/2`] function that expects two arguments: the template name and the assigns.
 
@@ -103,13 +192,13 @@ rendering with assigns [:conn]
 
 By defining our own clause in [`render/2`], it takes higher priority than the template, but the template is still there, which you can verify by simply removing the newly added clause.
 
-Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.eex` templates and turns them into [`render/2`] function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved.
+Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.heex` templates and turns them into [`render/2`] function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved.
 
 ### Manually rendering templates
 
 So far, Phoenix has taken care of putting everything in place and rendering views for us. However, we can also render views directly.
 
-Let's create a new template to play around with, `lib/hello_web/templates/page/test.html.eex`:
+Let's create a new template to play around with, `lib/hello_web/templates/page/test.html.heex`:
 
 ```html
 This is the message: <%= @message %>
@@ -142,7 +231,7 @@ iex(5)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "
 
 Now that we have acquainted ourselves with `Phoenix.View.render/3`, we are ready to share views and templates from inside other views and templates.
 
-For example, if you want to render the `test.html` template from inside our layout, you can invoke [`render/3`] directly from the layout `lib/hello_web/templates/layout/app.html.eex`:
+For example, if you want to render the `test.html` template from inside our layout, you can invoke [`render/3`] directly from the layout `lib/hello_web/templates/layout/app.html.heex`:
 
 ```html
 <%= Phoenix.View.render(HelloWeb.PageView, "test.html", message: "Hello from layout!") %>
@@ -156,7 +245,7 @@ Since `Phoenix.View` is automatically imported into our templates, we could even
 <%= render(HelloWeb.PageView, "test.html", message: "Hello from layout!") %>
 ```
 
-If you want to render a template within the same view, you can skip the view name, and simply call `render("test.html", message: "Hello from sibling template!")` instead. For example, open up `lib/hello_web/templates/page/index.html.eex` and add this at the top:
+If you want to render a template within the same view, you can skip the view name, and simply call `render("test.html", message: "Hello from sibling template!")` instead. For example, open up `lib/hello_web/templates/page/index.html.heex` and add this at the top:
 
 ```html
 <%= render("test.html", message: "Hello from sibling template!") %>
@@ -166,7 +255,7 @@ Now if you visit the Welcome page, you see the template results also shown.
 
 ## Layouts
 
-Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/templates/layout/app.html.eex`, just about in the middle of the `<body>`, we will see this.
+Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/templates/layout/app.html.heex`, just about in the middle of the `<body>`, we will see this.
 
 ```html
 <%= @inner_content %>

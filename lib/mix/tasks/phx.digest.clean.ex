@@ -17,6 +17,7 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
       $ mix phx.digest.clean
       $ mix phx.digest.clean -o /www/public
       $ mix phx.digest.clean --age 600 --keep 3
+      $ mix phx.digest.clean --all
 
   ## Options
 
