@@ -2,7 +2,7 @@
 
 Phoenix v1.6 requires Elixir v1.9+.
 
-## 1.6.0-dev
+## 1.6.0-rc.0 (2021-08-26)
 
 ### Enhancements
 
