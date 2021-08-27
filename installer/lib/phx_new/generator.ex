@@ -400,8 +400,9 @@ defmodule Phx.New.Generator do
   defp phoenix_dep("deps/phoenix", %{pre: ["dev"]}),
     do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
 
+  # TODO remove override once rc is settled
   defp phoenix_dep("deps/phoenix", version),
-    do: ~s[{:phoenix, "~> #{version}"}]
+    do: ~s[{:phoenix, "~> #{version}", override: true}]
 
   defp phoenix_dep(path, _version),
     do: ~s[{:phoenix, path: #{inspect(path)}, override: true}]
