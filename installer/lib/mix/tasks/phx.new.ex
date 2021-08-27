@@ -12,9 +12,6 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Options
 
-    * `--live` - include Phoenix.LiveView to make it easier than ever
-      to build interactive, real-time applications
-
     * `--umbrella` - generate an umbrella project,
       with one application for your domain, and
       a second application for the web interface.
@@ -36,20 +33,22 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-assets` - do not generate the assets folder.
       When choosing this option, you will need to manually
-      handle JavaScript/CSS if building HTML apps
+      handle JavaScript/CSS if building HTML apps.
 
-    * `--no-ecto` - do not generate Ecto files.
+    * `--no-ecto` - do not generate Ecto files
 
-    * `--no-html` - do not generate HTML views.
+    * `--no-html` - do not generate HTML views
 
-    * `--no-gettext` - do not generate gettext files.
+    * `--no-gettext` - do not generate gettext files
 
     * `--no-dashboard` - do not include Phoenix.LiveDashboard
 
-    * `--no-mailer` - do not generate Swoosh mailer files.
+    * `--no-live` - comment out LiveView socket setup in assets/js/app.js
+      and also on the endpoint (the latter also requires `--no-dashboard`)
 
-    * `--binary-id` - use `binary_id` as primary key type
-      in Ecto schemas
+    * `--no-mailer` - do not generate Swoosh mailer files
+
+    * `--binary-id` - use `binary_id` as primary key type in Ecto schemas
 
     * `--verbose` - use verbose output
 
