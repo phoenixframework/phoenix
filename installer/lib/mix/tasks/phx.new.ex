@@ -43,8 +43,8 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-dashboard` - do not include Phoenix.LiveDashboard
 
-    * `--no-live` - comment out LiveSocket related things in assets/js/app.js.
-      In combination with `--no-dashboard` exclude `socket` on Endpoint.
+    * `--no-live` - comment out LiveView socket setup in assets/js/app.js
+      and also on the endpoint (the latter also requires `--no-dashboard`)
 
     * `--no-mailer` - do not generate Swoosh mailer files
 
