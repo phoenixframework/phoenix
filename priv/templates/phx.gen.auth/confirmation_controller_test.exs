@@ -9,7 +9,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
   end
 
-  describe "GET /<%= schema.singular %>s/confirm" do
+  describe "GET /<%= schema.plural %>/confirm" do
     test "renders the resend confirmation page", %{conn: conn} do
       conn = get(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :new))
       response = html_response(conn, 200)
@@ -17,7 +17,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  describe "POST /<%= schema.singular %>s/confirm" do
+  describe "POST /<%= schema.plural %>/confirm" do
     @tag :capture_log
     test "sends a new confirmation token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
@@ -55,7 +55,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  describe "GET /users/confirm/:token" do
+  describe "GET /<%= schema.plural %>/confirm/:token" do
     test "renders the confirmation page", %{conn: conn} do
       conn = get(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :edit, "some-token"))
       response = html_response(conn, 200)
@@ -66,7 +66,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  describe "POST /<%= schema.singular %>s/confirm/:token" do
+  describe "POST /<%= schema.plural %>/confirm/:token" do
     test "confirms the given token once", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       token =
         extract_<%= schema.singular %>_token(fn url ->
