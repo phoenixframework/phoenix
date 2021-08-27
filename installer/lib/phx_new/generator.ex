@@ -202,7 +202,7 @@ defmodule Phx.New.Generator do
       web_namespace: inspect(project.web_namespace),
       phoenix_github_version_tag: "v#{version.major}.#{version.minor}",
       phoenix_dep: phoenix_dep(phoenix_path, version),
-      phoenix_js_path: phoenix_js_path(project, dev),
+      phoenix_js_path: phoenix_js_path(phoenix_path),
       pubsub_server: pubsub_server,
       secret_key_base: random_string(64),
       signing_salt: random_string(8),
@@ -406,14 +406,8 @@ defmodule Phx.New.Generator do
   defp phoenix_dep(path, _version),
     do: ~s[{:phoenix, path: #{inspect(path)}, override: true}]
 
-  defp phoenix_js_path(%Project{in_umbrella?: true}, true = _dev),
-    do: "../../../../../"
-  defp phoenix_js_path(%Project{in_umbrella?: true}, false = _dev),
-    do: "phoenix"
-  defp phoenix_js_path(%Project{in_umbrella?: false}, true = _dev),
-    do: "../../../../"
-  defp phoenix_js_path(%Project{in_umbrella?: false}, false = _dev),
-    do: "phoenix"
+  defp phoenix_js_path("deps/phoenix"), do: "phoenix"
+  defp phoenix_js_path(path), do: "../../#{path}/"
 
   defp random_string(length),
     do: :crypto.strong_rand_bytes(length) |> Base.encode64() |> binary_part(0, length)
