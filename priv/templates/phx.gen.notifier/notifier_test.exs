@@ -2,12 +2,12 @@ defmodule <%= inspect context.module %>Test do
   use ExUnit.Case, async: true
   import Swoosh.TestAssertions
 
-  alias <%= inspect context.module %>.<%= inflections[:alias] %>Notifier<%= for message <- notifier_messages do %>
+  alias <%= inspect context.module %><%= for message <- notifier_messages do %>
 
   test "deliver_<%= message %>/1" do
     user = %{name: "Alice", email: "alice@example.com"}
 
-    <%= inflections[:alias] %>Notifier.deliver_<%= message %>(user)
+    <%= inflections[:alias] %>.deliver_<%= message %>(user)
 
     assert_email_sent(
       subject: "Welcome to Phoenix, Alice!",
