@@ -44,20 +44,20 @@ Don't forget to remove the `import "../css/app.css"` from your JavaScript file w
 
 Phoenix's default configuration of `esbuild` (via the Elixir wrapper) does not allow you to use [esbuild plugins](https://esbuild.github.io/plugins/). If you want to use an esbuild plugin, for example to compile SASS files to CSS, you can replace the default build system with a custom build script.
 
-The following is an example of a custom build using esbuild via Node.JS.
+The following is an example of a custom build using esbuild via Node.JS. First of all, you'll need to install Node.js in development and make it available for your production build step.
 
-First of all, you'll need to install Node.js in development and make it available for your production build step.
-
-Then you'll need to add esbuild to your Node packages:
+Then you'll need to add `esbuild` to your Node.js packages and the Phoenix packages. Inside the `assets` directory, run:
 
 ```console
 npm install esbuild --save-dev
+npm install ../deps/phoenix ../deps/phoenix_html --save
 ```
 
 or, for Yarn:
 
 ```console
 yarn add --dev esbuild
+yarn add ../deps/phoenix ../deps/phoenix_html
 ```
 
 Next, add a custom Javascript build script. We'll call the example `assets/build.js`:
@@ -96,8 +96,7 @@ if (watch) {
 
 This script works both for development (in "watch" mode) and for the production build (the default). For development, we just need to set the environment variable `ESBUILD_WATCH`.
 
-Modify `config/dev.exs` so that the script runs whenever you change files,
-replacing the existing `:esbuild` configuration under `watchers`:
+Modify `config/dev.exs` so that the script runs whenever you change files, replacing the existing `:esbuild` configuration under `watchers`:
 
 ```elixir
 config :hello, HelloWeb.Endpoint,
