@@ -50,14 +50,14 @@ Then you'll need to add `esbuild` to your Node.js packages and the Phoenix packa
 
 ```console
 npm install esbuild --save-dev
-npm install ../deps/phoenix ../deps/phoenix_html --save
+npm install ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view --save
 ```
 
 or, for Yarn:
 
 ```console
 yarn add --dev esbuild
-yarn add ../deps/phoenix ../deps/phoenix_html
+yarn add ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view
 ```
 
 Next, add a custom Javascript build script. We'll call the example `assets/build.js`:
