@@ -212,4 +212,43 @@ defmodule Phoenix.PresenceTest do
   test "fetchers_pid" do
     assert is_list(MyPresence.fetchers_pids())
   end
+
+  describe("sync_diff/2") do
+    @fixtures %{
+      joins: %{
+        u1: %{metas: [%{id: 1, phx_ref: "1.2"}]}
+      },
+      leaves: %{
+        u2: %{metas: [%{id: 2, phx_ref: "2"}]}
+      },
+      state: %{
+        u1: %{metas: [%{id: 1, phx_ref: "1"}]},
+        u2: %{metas: [%{id: 2, phx_ref: "2"}]},
+        u3: %{metas: [%{id: 3, phx_ref: "3"}]}
+      }
+    }
+
+    test "syncs an empty state" do
+      payload = %{
+        joins: @fixtures.joins,
+        leaves: %{}
+      }
+
+      assert Phoenix.Presence.sync_diff(%{}, payload) == @fixtures.joins
+    end
+
+    test "naively removes leaves and merges joins" do
+      payload = %{
+        joins: @fixtures.joins,
+        leaves: @fixtures.leaves
+      }
+
+      synced = %{
+        u1: %{metas: [%{id: 1, phx_ref: "1.2"}]},
+        u3: %{metas: [%{id: 3, phx_ref: "3"}]}
+      }
+
+      assert Phoenix.Presence.sync_diff(@fixtures.state, payload) == synced
+    end
+  end
 end

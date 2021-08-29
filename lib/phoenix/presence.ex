@@ -421,4 +421,31 @@ defmodule Phoenix.Presence do
       end)
     end)
   end
+
+  @doc """
+  Keep a presence state in sync.
+    * `presence_list` - A list of presences that was obtained by calling `Presence.list/1`
+    * `diff` - The `payload` from a `presence_diff` broadcast.
+  ## Examples
+      iex> state = %{
+          u1: %{metas: [%{id: 1, phx_ref: "1"}]},
+          u2: %{metas: [%{id: 2, phx_ref: "2"}]},
+          u3: %{metas: [%{id: 3, phx_ref: "3"}]}
+        }
+      iex> diff = %{
+        joins: %{u1: %{metas: [%{id: 1, phx_ref: "1.2"}]}},
+        leaves: %{u2: %{metas: [%{id: 2, phx_ref: "2"}]}}
+      }
+      iex> Phoenix.Presence.sync_diff(state, diff)
+      %{
+        u1: %{metas: [%{id: 1, phx_ref: "1.2"}]},
+        u3: %{metas: [%{id: 3, phx_ref: "3"}]}
+      }
+  """
+
+  def sync_diff(state, %{joins: joins, leaves: leaves}) do
+    state
+    |> Map.drop(Map.keys(leaves))
+    |> Map.merge(joins)
+  end
 end
