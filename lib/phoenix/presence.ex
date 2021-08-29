@@ -438,14 +438,47 @@ defmodule Phoenix.Presence do
       }
       iex> Phoenix.Presence.sync_diff(state, diff)
       %{
-        u1: %{metas: [%{id: 1, phx_ref: "1.2"}]},
+        u1: %{metas: [%{id: 1, phx_ref: "1"}, %{id: 1, phx_ref: "1.2"}]},
         u3: %{metas: [%{id: 3, phx_ref: "3"}]}
       }
   """
 
   def sync_diff(state, %{joins: joins, leaves: leaves}) do
-    state
-    |> Map.drop(Map.keys(leaves))
-    |> Map.merge(joins)
+    Enum.reduce(leaves, state, fn leave, new_state ->
+      delete_meta_or_presence(new_state, leave)
+    end)
+    |> Map.merge(joins, fn _k, state_presence, joined_presence ->
+      %{metas: add_or_replace_metas(state_presence.metas, joined_presence.metas)}
+    end)
+  end
+
+  defp delete_meta_or_presence(state, {key, %{metas: left_metas}}) do
+    state_metas = Map.get(state, key, %{}) |> Map.get(:metas, [])
+    remaining_metas = state_metas -- left_metas
+
+    case remaining_metas do
+      [] -> Map.delete(state, key)
+      _ -> Map.put(state, key, %{metas: remaining_metas})
+    end
+  end
+
+  defp add_or_replace_metas(state_metas, joined_metas) do
+    Enum.filter(state_metas, fn state_meta ->
+      keep_existing_meta?(state_meta, joined_metas)
+    end) ++ joined_metas
+  end
+
+  defp keep_existing_meta?(state_meta, joined_metas) do
+    Enum.all?(joined_metas, fn joined_meta ->
+      unique_ref?(state_meta, joined_meta) && unique_ref_prev?(state_meta, joined_meta)
+    end)
+  end
+
+  defp unique_ref?(state_meta, joined_meta) do
+    state_meta.phx_ref != joined_meta.phx_ref
+  end
+
+  defp unique_ref_prev?(state_meta, joined_meta) do
+    state_meta.phx_ref != Map.get(joined_meta, :phx_ref_prev, :safer_to_keep)
   end
 end

@@ -214,7 +214,7 @@ defmodule Phoenix.PresenceTest do
   end
 
   describe("sync_diff/2") do
-    @fixtures %{
+    @sync_fixtures %{
       joins: %{
         u1: %{metas: [%{id: 1, phx_ref: "1.2"}]}
       },
@@ -230,25 +230,68 @@ defmodule Phoenix.PresenceTest do
 
     test "syncs an empty state" do
       payload = %{
-        joins: @fixtures.joins,
+        joins: @sync_fixtures.joins,
         leaves: %{}
       }
 
-      assert Phoenix.Presence.sync_diff(%{}, payload) == @fixtures.joins
+      assert Phoenix.Presence.sync_diff(%{}, payload) == @sync_fixtures.joins
     end
 
-    test "naively removes leaves and merges joins" do
+    test "removes presence when meta is empty and adds additional meta" do
       payload = %{
-        joins: @fixtures.joins,
-        leaves: @fixtures.leaves
+        joins: @sync_fixtures.joins,
+        leaves: @sync_fixtures.leaves
       }
 
       synced = %{
-        u1: %{metas: [%{id: 1, phx_ref: "1.2"}]},
+        u1: %{metas: [%{id: 1, phx_ref: "1"}, %{id: 1, phx_ref: "1.2"}]},
         u3: %{metas: [%{id: 3, phx_ref: "3"}]}
       }
 
-      assert Phoenix.Presence.sync_diff(@fixtures.state, payload) == synced
+      assert Phoenix.Presence.sync_diff(@sync_fixtures.state, payload) == synced
+    end
+
+    test "removes meta while leaving key if other meta exists" do
+      state = %{
+        u1: %{metas: [%{id: 1, phx_ref: "1"}, %{id: 1, phx_ref: "1.2"}]}
+      }
+
+      payload = %{
+        joins: %{},
+        leaves: %{u1: %{metas: [%{id: 1, phx_ref: "1"}]}}
+      }
+
+      synced = %{
+        u1: %{metas: [%{id: 1, phx_ref: "1.2"}]}
+      }
+
+      assert Phoenix.Presence.sync_diff(state, payload) == synced
+    end
+
+    test "replaces existing meta using phx_ref_prev" do
+      state = %{
+        u1: %{metas: [%{id: 1, phx_ref: "1"}]}
+      }
+
+      payload = %{
+        joins: %{u1: %{metas: [%{id: 1, phx_ref: "2", phx_ref_prev: "1"}]}},
+        leaves: %{}
+      }
+
+      assert Phoenix.Presence.sync_diff(state, payload) == payload.joins
+    end
+
+    test "replaces existing meta using phx_ref" do
+      state = %{
+        u1: %{metas: [%{id: 1, phx_ref: "1", name: "Old Name"}]}
+      }
+
+      payload = %{
+        joins: %{u1: %{metas: [%{id: 1, phx_ref: "1", name: "New Name"}]}},
+        leaves: %{}
+      }
+
+      assert Phoenix.Presence.sync_diff(state, payload) == payload.joins
     end
   end
 end
