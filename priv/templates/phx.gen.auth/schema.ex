@@ -48,9 +48,7 @@ defmodule <%= inspect schema.module %> do
   defp validate_password(changeset, opts) do
     changeset
     |> validate_required([:password])
-    |> validate_length(:password, min: 12, max: 72)<%= if hashing_library.name == :bcrypt do %>
-    # If using Bcrypt, then further validate it is at most 72 bytes long
-    |> validate_length(:password, max: 72, count: :bytes)<% end %>
+    |> validate_length(:password, min: 12, max: 72)
     # |> validate_format(:password, ~r/[a-z]/, message: "at least one lower case character")
     # |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
     # |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/, message: "at least one digit or punctuation character")
@@ -62,7 +60,9 @@ defmodule <%= inspect schema.module %> do
     password = get_change(changeset, :password)
 
     if hash_password? && password && changeset.valid? do
-      changeset
+      changeset<%= if hashing_library.name == :bcrypt do %>
+      # If using Bcrypt, then further validate it is at most 72 bytes long
+      |> validate_length(:password, max: 72, count: :bytes)<% end %>
       |> put_change(:hashed_password, <%= inspect hashing_library.module %>.hash_pwd_salt(password))
       |> delete_change(:password)
     else
