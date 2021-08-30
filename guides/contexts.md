@@ -271,9 +271,9 @@ While in practice this would happen:
 
 The race conditions would make this an unreliable way to update the existing table since multiple callers may be updating out of date view values. There's a better way.
 
-Let's think of a function name that describes what we want to accomplish.
+Let's think of a function describes what we want to accomplish. Here's how we would like to use it:
 
-    > product = Catalog.inc_page_views(product)
+    product = Catalog.inc_page_views(product)
 
 That looks great. Our callers will have no confusion over what this function does, and we can wrap up the increment in an atomic operation to prevent race conditions.
 
@@ -598,7 +598,7 @@ Remember to update your repository by running migrations:
 
 ```
 
-We generated a new resource inside our `ShoppingCart` named `CartItem`. This schema and table will hold references to a cart and product, along with the price at the time we added the item to our cart, and the quantity the user wishes to purchase. Let's touch up the generated migration file in priv/repo/migrations/*_create_cart_items.ex`:
+We generated a new resource inside our `ShoppingCart` named `CartItem`. This schema and table will hold references to a cart and product, along with the price at the time we added the item to our cart, and the quantity the user wishes to purchase. Let's touch up the generated migration file in `priv/repo/migrations/*_create_cart_items.ex`:
 
 ```elixir
     create table(:cart_items) do
@@ -1108,7 +1108,7 @@ We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and
 
 With our migration in place, let's wire up our orders and line items associations in `lib/hello/orders/order.ex`:
 
-```diff
+```elixir
   schema "orders" do
     field :total_price, :decimal
     field :user_uuid, Ecto.UUID
@@ -1122,7 +1122,7 @@ With our migration in place, let's wire up our orders and line items association
 
 We used `has_many :line_items` to associate orders and line items, just like we've seen before. Next, we used the `:through` feature of `has_many`, which allows us to instruct ecto how to associate resources across another relationship. In this case, we can associate products of an order by finding all products through associated line items. Next, let's wire up the association in the other direction in `lib/hello/orders/line_item.ex`:
 
-```diff
+```elixir
   schema "order_line_items" do
     field :price, :decimal
     field :quantity, :integer
@@ -1138,7 +1138,7 @@ We used `has_many :line_items` to associate orders and line items, just like we'
 
 We used `belongs_to` to associate line items to orders and products. With our associations in place, we can start integrating the web interface into our order process. Open up your router `lib/hello_web/router.ex` and add the following line:
 
-```diff
+```elixir
   scope "/", HelloWeb do
     pipe_through :browser
 
@@ -1255,7 +1255,7 @@ To close out our order completion, we need to implement the `ShoppingCart.prune_
 
 Our new function accepts the cart struct and issues a `Repo.delete_all` which accepts a query of all items for the provided cart. We return a success result by simply reloading the pruned cart to the caller. With our context complete, we now need to show the user their completed order. Head back to your order controller and modify the `show/2` action:
 
-```diff
+```elixir
   def show(conn, %{"id" => id}) do
 -   order = Orders.get_order!(id)
 +   order = Orders.get_order!(conn.assigns.current_uuid, id)
@@ -1304,7 +1304,7 @@ Our last addition will be to add the "complete order" button to our cart page to
 
 We added a link with `method: :post` to send a POST request to our `OrderController.create` action. If we head back to our cart page at `http://localhost:4000/cart` and complete an order, we'll be greeted by our rendered template:
 
-```
+```text
 Thank you for your order!
 
 User uuid: 08964c7c-908c-4a55-bcd3-9811ad8b0b9d

@@ -49,15 +49,15 @@ The following is an example of a custom build using esbuild via Node.JS. First o
 Then you'll need to add `esbuild` to your Node.js packages and the Phoenix packages. Inside the `assets` directory, run:
 
 ```console
-npm install esbuild --save-dev
-npm install ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view --save
+$ npm install esbuild --save-dev
+$ npm install ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view --save
 ```
 
 or, for Yarn:
 
 ```console
-yarn add --dev esbuild
-yarn add ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view
+$ yarn add --dev esbuild
+$ yarn add ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view
 ```
 
 Next, add a custom Javascript build script. We'll call the example `assets/build.js`:

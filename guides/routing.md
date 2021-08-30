@@ -206,7 +206,7 @@ iex> Routes.user_path(Endpoint, :show, 17, admin: true, active: false)
 What if we need a full URL instead of a path? Just replace `_path` with `_url`:
 
 ```elixir
-iex(3)> Routes.user_url(Endpoint, :index)
+iex> Routes.user_url(Endpoint, :index)
 "http://localhost:4000/users"
 ```
 
@@ -358,7 +358,6 @@ The actual routes we get all look right, except for the path helper `review_path
 We can fix this problem by adding an `as: :admin` option to our admin scope:
 
 ```elixir
-
 scope "/admin", HelloWeb.Admin, as: :admin do
   pipe_through :browser
 
@@ -392,10 +391,10 @@ admin_review_path  DELETE  /admin/reviews/:id              HelloWeb.Admin.Review
 The path helpers now return what we want them to as well. Run `iex -S mix` and give it a try yourself.
 
 ```elixir
-iex(1)> HelloWeb.Router.Helpers.review_path(HelloWeb.Endpoint, :index)
+iex> HelloWeb.Router.Helpers.review_path(HelloWeb.Endpoint, :index)
 "/reviews"
 
-iex(2)> HelloWeb.Router.Helpers.admin_review_path(HelloWeb.Endpoint, :show, 1234)
+iex> HelloWeb.Router.Helpers.admin_review_path(HelloWeb.Endpoint, :show, 1234)
 "/admin/reviews/1234"
 ```
 
