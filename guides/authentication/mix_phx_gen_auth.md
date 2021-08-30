@@ -72,7 +72,7 @@ Note that whenever the password changes (either via reset password or directly),
 
 ### User Enumeration attacks
 
-A user enumeration attack allows an attacker to enumerate all emails registered in the application. For example, if trying to log in with a registered email and a wrong password returns a different error than trying to log in with an email that was never registered, an attacker could use this discrepency to find out which emails have accounts.
+A user enumeration attack allows an attacker to enumerate all emails registered in the application. For example, if trying to log in with a registered email and a wrong password returns a different error than trying to log in with an email that was never registered, an attacker could use this discrepancy to find out which emails have accounts.
 
 The generated authentication code protects against enumeration attacks on all endpoints, except in the registration and update email forms. If your application is really sensitive to enumeration attacks, you need to implement your own registration workflow, which tends to be very different from the workflow for most applications.
 

@@ -164,7 +164,7 @@ ARG MIX_ENV
 ENV MIX_ENV="${MIX_ENV}"
 
 # install mix dependencies
-COPY mix.exs mix.lock .
+COPY mix.exs mix.lock ./
 RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
 
@@ -209,7 +209,7 @@ RUN \
    -s /bin/sh \
    -u 1000 \
    -G "${USER}" \
-   -h /home/elixir \
+   -h "/home/${USER}" \
    -D "${USER}" \
   && su "${USER}"
 

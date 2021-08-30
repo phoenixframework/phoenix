@@ -36,13 +36,13 @@ defmodule Mix.Tasks.Phx.Routes do
   @doc false
   def run(args, base \\ Mix.Phoenix.base()) do
     Mix.Task.run("compile", args)
+    Mix.Task.reenable("phx.routes")
 
     {router_mod, opts} =
       case OptionParser.parse(args, switches: [endpoint: :string, router: :string]) do
         {opts, [passed_router], _} -> {router(passed_router, base), opts}
         {opts, [], _} -> {router(opts[:router], base), opts}
       end
-
 
     router_mod
     |> ConsoleFormatter.format(endpoint(opts[:endpoint], base))

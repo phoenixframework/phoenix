@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
   are the functions that will be created prefixed by "deliver",
   so the message name should be "snake_case" without punctuation.
 
-  Additionaly a context app can be specified with the flag
+  Additionally a context app can be specified with the flag
   `--context-app`, which is useful if the notifier is being
   generated in a different app under an umbrella.
 
