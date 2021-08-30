@@ -58,7 +58,7 @@
 
       assert %{
                email: ["must have the @ sign and no spaces"],
-               password: ["should be at least 12 character(s)"]
+               password: ["should be at least 12 byte(s)"]
              } = errors_on(changeset)
     end
 
@@ -66,7 +66,7 @@
       too_long = String.duplicate("db", 100)
       {:error, changeset} = <%= inspect context.alias %>.register_<%= schema.singular %>(%{email: too_long, password: too_long})
       assert "should be at most 160 character(s)" in errors_on(changeset).email
-      assert "should be at most 72 character(s)" in errors_on(changeset).password
+      assert "should be at most 72 byte(s)" in errors_on(changeset).password
     end
 
     test "validates email uniqueness" do
@@ -262,7 +262,7 @@
         })
 
       assert %{
-               password: ["should be at least 12 character(s)"],
+               password: ["should be at least 12 byte(s)"],
                password_confirmation: ["does not match password"]
              } = errors_on(changeset)
     end
@@ -273,7 +273,7 @@
       {:error, changeset} =
         <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, valid_<%= schema.singular %>_password(), %{password: too_long})
 
-      assert "should be at most 72 character(s)" in errors_on(changeset).password
+      assert "should be at most 72 byte(s)" in errors_on(changeset).password
     end
 
     test "validates current password", %{<%= schema.singular %>: <%= schema.singular %>} do
@@ -471,7 +471,7 @@
         })
 
       assert %{
-               password: ["should be at least 12 character(s)"],
+               password: ["should be at least 12 byte(s)"],
                password_confirmation: ["does not match password"]
              } = errors_on(changeset)
     end
@@ -479,7 +479,7 @@
     test "validates maximum values for password for security", %{<%= schema.singular %>: <%= schema.singular %>} do
       too_long = String.duplicate("db", 100)
       {:error, changeset} = <%= inspect context.alias %>.reset_<%= schema.singular %>_password(<%= schema.singular %>, %{password: too_long})
-      assert "should be at most 72 character(s)" in errors_on(changeset).password
+      assert "should be at most 72 byte(s)" in errors_on(changeset).password
     end
 
     test "updates the password", %{<%= schema.singular %>: <%= schema.singular %>} do
