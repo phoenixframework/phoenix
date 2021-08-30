@@ -270,10 +270,10 @@ defmodule Phoenix.Socket.Transport do
     key = Keyword.fetch!(session_config, :key)
     store = Plug.Session.Store.get(Keyword.fetch!(session_config, :store))
     init = store.init(Keyword.drop(session_config, [:store, :key]))
-    {key, store, init}
+    {key, store, init, session_config}
   end
 
-  defp init_session({_, _, _} = mfa)  do
+  defp init_session({_, _, _} = mfa) do
     {:mfa, mfa}
   end
 
@@ -468,15 +468,13 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp connect_session(conn, endpoint, {key, store, store_config}) do
+  defp connect_session(conn, endpoint, {key, store, store_config, session_config}) do
     conn = Plug.Conn.fetch_cookies(conn)
 
-    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
-         cookie when is_binary(cookie) <- conn.cookies[key],
+    with cookie when is_binary(cookie) <- conn.cookies[key],
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
          {_, session} <- store.get(conn, cookie, store_config),
-         csrf_state when is_binary(csrf_state) <- Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]),
-         true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
+         true <- safe_csrf_request?(conn, session, session_config) do
       session
     else
       _ -> nil
@@ -491,6 +489,23 @@ defmodule Phoenix.Socket.Transport do
       other ->
         raise ArgumentError,
           "the MFA given to `session_config` must return a keyword list, got: #{inspect other}"
+    end
+  end
+
+  defp safe_csrf_request?(conn, session, session_config) do
+    secure_cookie?(session_config) || valid_csrf_token?(conn, session)
+  end
+
+  defp secure_cookie?(session_config) do
+    session_config[:same_site] in ~w[Lax Strict] && session_config[:secure] &&
+      session_config[:http_only]
+  end
+
+  defp valid_csrf_token?(conn, session) do
+    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
+         csrf_state when is_binary(csrf_state) <-
+           Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]) do
+      Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token)
     end
   end
 

@@ -10,13 +10,44 @@ defmodule Phoenix.Socket.TransportTest do
 
   @secret_key_base String.duplicate("abcdefgh", 8)
 
-  Application.put_env :phoenix, __MODULE__.Endpoint,
+  @endpoint_config [
     force_ssl: [],
     url: [host: {:system, "TRANSPORT_TEST_HOST"}],
     check_origin: ["//endpoint.com"],
     secret_key_base: @secret_key_base
+  ]
+
+  Application.put_env :phoenix, __MODULE__.Endpoint, @endpoint_config
 
   defmodule Endpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+
+    @session_config [
+      store: :cookie,
+      key: "_hello_key",
+      signing_salt: "change_me",
+      secure: true,
+      same_site: "Lax",
+      http_only: true
+    ]
+
+    def session_config, do: @session_config
+
+    plug Plug.Session, @session_config
+    plug :fetch_session
+    plug Plug.CSRFProtection
+    plug :put_session
+
+    defp put_session(conn, _) do
+      conn
+      |> put_session(:from_session, "123")
+      |> send_resp(200, Plug.CSRFProtection.get_csrf_token())
+    end
+  end
+
+  Application.put_env :phoenix, __MODULE__.NonsecureCookieEndpoint, @endpoint_config
+
+  defmodule NonsecureCookieEndpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
     @session_config [
@@ -41,6 +72,7 @@ defmodule Phoenix.Socket.TransportTest do
 
   setup_all do
     Endpoint.start_link()
+    NonsecureCookieEndpoint.start_link()
     :ok
   end
 
@@ -260,13 +292,13 @@ defmodule Phoenix.Socket.TransportTest do
     end
   end
 
-  describe "connect_info/3" do
-    defp load_connect_info(connect_info) do
-      [connect_info: connect_info] = Transport.load_config(connect_info: connect_info)
-      connect_info
-    end
+  defp load_connect_info(connect_info) do
+    [connect_info: connect_info] = Transport.load_config(connect_info: connect_info)
+    connect_info
+  end
 
-    test "loads the session from MFA" do
+  describe "connect_info/3 using endpoint with secure cookie" do
+    test "loads the session from MFA with csrf token" do
       conn = conn(:get, "https://foo.com/") |> Endpoint.call([])
       csrf_token = conn.resp_body
       session_cookie = conn.cookies["_hello_key"]
@@ -278,6 +310,48 @@ defmodule Phoenix.Socket.TransportTest do
                |> put_req_cookie("_hello_key", session_cookie)
                |> fetch_query_params()
                |> Transport.connect_info(Endpoint, connect_info)
+    end
+
+    test "loads the session from MFA without csrf token with safe cookie" do
+      conn = conn(:get, "https://foo.com/") |> Endpoint.call([])
+      session_cookie = conn.cookies["_hello_key"]
+
+      connect_info = load_connect_info(session: {Endpoint, :session_config, []})
+
+      assert %{session: %{"from_session" => "123"}} =
+               conn(:get, "https://foo.com/")
+               |> put_req_cookie("_hello_key", session_cookie)
+               |> fetch_query_params()
+               |> Transport.connect_info(Endpoint, connect_info)
+    end
+  end
+
+  describe "connect_info/3 using endpoint with non-secure cookie" do
+    test "loads the session from MFA with csrf token" do
+      conn = conn(:get, "https://foo.com/") |> NonsecureCookieEndpoint.call([])
+      csrf_token = conn.resp_body
+      session_cookie = conn.cookies["_hello_key"]
+
+      connect_info = load_connect_info(session: {NonsecureCookieEndpoint, :session_config, []})
+
+      assert %{session: %{"from_session" => "123"}} =
+               conn(:get, "https://foo.com/", _csrf_token: csrf_token)
+               |> put_req_cookie("_hello_key", session_cookie)
+               |> fetch_query_params()
+               |> Transport.connect_info(NonsecureCookieEndpoint, connect_info)
+    end
+
+    test "leaves session empty when loading from MFA without csrf token" do
+      conn = conn(:get, "https://foo.com/") |> NonsecureCookieEndpoint.call([])
+      session_cookie = conn.cookies["_hello_key"]
+
+      connect_info = load_connect_info(session: {NonsecureCookieEndpoint, :session_config, []})
+
+      assert %{session: nil} =
+               conn(:get, "https://foo.com/")
+               |> put_req_cookie("_hello_key", session_cookie)
+               |> fetch_query_params()
+               |> Transport.connect_info(NonsecureCookieEndpoint, connect_info)
     end
   end
 end
