@@ -59,7 +59,7 @@ While we can name our actions whatever we like, there are conventions for action
 - new     - renders a form for creating a new item
 - create  - receives parameters for one new item and saves it in a data store
 - edit    - retrieves an individual item by ID and displays it in a form for editing
-- update  - receives parameters for one edited item and saves the item to a datas tore
+- update  - receives parameters for one edited item and saves the item to a data store
 - delete  - receives an ID for an item to be deleted and deletes it from a data store
 
 Each of these actions takes two parameters, which will be provided by Phoenix behind the scenes.

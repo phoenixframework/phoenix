@@ -121,7 +121,7 @@ Also, try removing the closing `</div>` or renaming it to `</div-typo>`. HEEx te
 
 ### HTML components
 
-The last feature provided by HEEx is the idea of components. Components are pure functins that can be either local (same module) or remote (external module).
+The last feature provided by HEEx is the idea of components. Components are pure functions that can be either local (same module) or remote (external module).
 
 HEEx allows invoking whose function components directly in the template using an HTML-like notation. For example, a remote function:
 
