@@ -209,7 +209,7 @@ RUN \
    -s /bin/sh \
    -u 1000 \
    -G "${USER}" \
-   -h /home/elixir \
+   -h "/home/${USER}" \
    -D "${USER}" \
   && su "${USER}"
 
