@@ -109,7 +109,8 @@ defmodule Phoenix.MixProject do
       formatters: ["html", "epub"],
       groups_for_modules: groups_for_modules(),
       extras: extras(),
-      groups_for_extras: groups_for_extras()
+      groups_for_extras: groups_for_extras(),
+      skip_undefined_reference_warnings_on: ["CHANGELOG.md"]
     ]
   end
 
@@ -143,7 +144,8 @@ defmodule Phoenix.MixProject do
       "guides/deployment/fly.md",
       "guides/deployment/heroku.md",
       "guides/howto/custom_error_pages.md",
-      "guides/howto/using_ssl.md"
+      "guides/howto/using_ssl.md",
+      "CHANGELOG.md"
     ]
   end
 
