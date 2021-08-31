@@ -28,6 +28,8 @@ Phoenix v1.6 requires Elixir v1.9+.
   * [mix phx.new] Remove usage of Sass
   * [mix phx.new] New applications now depend on Swoosh to deliver emails
   * [mix phx.new] No longer generate a socket file by default, instead one can run `mix phx.gen.socket`
+  * [mix phx.new] No longer generates a home page using LiveView, instead one can run `mix phx.gen.live`
+  * [mix phx.new] LiveView is now included by default. Passing `--no-live` will comment out lines in `app.js` and `Endpoint`
   * [mix phx.server] Add `--open` flag
   * [Router] Do not add compile time deps in `pipe_through`
   * [View] Extracted `Phoenix.View` into its own project to facilitate reuse
