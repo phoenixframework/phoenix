@@ -132,7 +132,9 @@ The Phoenix Static buildpack uses a predefined Node.js version but to avoid surp
 node_version=10.20.1
 ```
 
-Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile). If using this buildpack, remove `phx.digest` from the "assets.deploy" hook in your `mix.exs`, as the buildpack will automatically invoke it at the end.
+Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
+
+Important: if using this buildpack, remove `phx.digest` and any `npm` command from the "assets.deploy" hook in your `mix.exs`, as the buildpack will automatically invoke those.
 
 Finally, note that since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to make sure the Phoenix Static buildpack comes last.
 
