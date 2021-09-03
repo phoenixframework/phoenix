@@ -105,7 +105,7 @@ erlang_version=24.0.3
 
 # Invoke assets.deploy defined in your mix.exs to deploy assets with esbuild
 # Note we nuke the esbuild executable from the image
-hook_post_compile="mix assets.deploy"
+hook_post_compile="eval mix assets.deploy && rm -f _build/esbuild"
 ```
 
 Finally, let's tell the build pack how to start our webserver. Create a file named `Procfile` at the root of your project:
