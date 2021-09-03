@@ -605,10 +605,10 @@ We generated a new resource inside our `ShoppingCart` named `CartItem`. This sch
 -     add :price_when_carted, :decimal
 +     add :price_when_carted, :decimal, precision: 15, scale: 6, null: false
       add :quantity, :integer
--     add :cart_id, references(:carts, on_delete: :delete_all)
-+     add :product_id, references(:products, on_delete: :nothing)
--     add :cart_id, references(:carts, on_delete: :delete_all)
-+     add :product_id, references(:products, on_delete: :nothing)
+-     add :cart_id, references(:carts, on_delete: :nothing)
++     add :cart_id, references(:carts, on_delete: :delete_all)
+-     add :product_id, references(:products, on_delete: :nothing)
++     add :product_id, references(:products, on_delete: :delete_all)
 
       timestamps()
     end
