@@ -1,4 +1,10 @@
 defmodule Mix.Tasks.Phx.New do
+
+#Remove archive to avoid conflicts
+with list when is_list(list) <- :code.lib_dir(:phx_new) do
+  :code.del_path(:filename.join(list, 'ebin'))
+end
+
   @moduledoc """
   Creates a new Phoenix project.
 
