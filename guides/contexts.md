@@ -342,7 +342,7 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-This time around, we used `mix phx.gen.context`, which is just like `mix phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing products, we can integrate the new category features into our existing web form and product show page. We can see we now have a new `Category` schema alongside our product schema at `lib/hello/catalog/category.ex`, and Phoenix told us it was *injecting* new functions in our existing Catalog context for the category functionality. The injected functions will look very familiar to our product functions, with new functions like `create_category`, `list_categories`, and so on. Before we migrate up, we need to do a second bit of code generation. Our category schema is great for representing an individual category in the system, but we need to support a many-to-many relationship between products and categories. Fortunately, ecto allows us to do this simply with a join table, so let's generation that now with the `ecto.gen.migration` command:
+This time around, we used `mix phx.gen.context`, which is just like `mix phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing products, we can integrate the new category features into our existing web form and product show page. We can see we now have a new `Category` schema alongside our product schema at `lib/hello/catalog/category.ex`, and Phoenix told us it was *injecting* new functions in our existing Catalog context for the category functionality. The injected functions will look very familiar to our product functions, with new functions like `create_category`, `list_categories`, and so on. Before we migrate up, we need to do a second bit of code generation. Our category schema is great for representing an individual category in the system, but we need to support a many-to-many relationship between products and categories. Fortunately, ecto allows us to do this simply with a join table, so let's generate that now with the `ecto.gen.migration` command:
 
 ```console
 $ mix ecto.gen.migration create_product_categories
@@ -483,7 +483,7 @@ With our schema associations set up, we can implement the selection of categorie
 
 First, we added `Repo.preload` to preload our categories when we fetch a product. This will allow us to reference `product.categories` in our controllers, templates, and anywhere else we want to make use of category information. Next, we modified our `create_product` and `update_product` functions to call into our existing `change_product` function to produce a changeset. Within `change_product` we added a lookup to find all categories if the `"category_ids"` attribute is present. Then we preloaded categories and called `Ecto.Changeset.put_assoc` to place the fetched categories into the changeset. Finally, we implemented the `list_categories_by_id/1` function to query the categories matching the category IDs, or return an empty list if no `"category_ids"` attribute is present. Now our `create_product` and `update_product` functions receive a changeset with the category associations all ready to go once we attempt an insert or update against our repo.
 
-Next, let's expose our new feature to the web by adding the category input to our product form. To keep our form template tidy, let's write a new function to wrap up the details of rendering a category select input for our product. Open up your `ProductView` in `lib/hello_web/views/product_view.ex`: and key this in:
+Next, let's expose our new feature to the web by adding the category input to our product form. To keep our form template tidy, let's write a new function to wrap up the details of rendering a category select input for our product. Open up your `ProductView` in `lib/hello_web/views/product_view.ex` and key this in:
 
 ```elixir
 defmodule HelloWeb.ProductView do
@@ -605,10 +605,10 @@ We generated a new resource inside our `ShoppingCart` named `CartItem`. This sch
 -     add :price_when_carted, :decimal
 +     add :price_when_carted, :decimal, precision: 15, scale: 6, null: false
       add :quantity, :integer
--     add :cart_id, references(:carts, on_delete: :delete_all)
-+     add :product_id, references(:products, on_delete: :nothing)
--     add :cart_id, references(:carts, on_delete: :delete_all)
-+     add :product_id, references(:products, on_delete: :nothing)
+-     add :cart_id, references(:carts, on_delete: :nothing)
++     add :cart_id, references(:carts, on_delete: :delete_all)
+-     add :product_id, references(:products, on_delete: :nothing)
++     add :product_id, references(:products, on_delete: :delete_all)
 
       timestamps()
     end
@@ -733,9 +733,9 @@ We won't focus on a real user authentication system at this point, but by the ti
 + end
 ```
 
-We added a new `:fetch_current_user` and `:fetch_current_cart` plug to our browser pipeline to run on all browser-based requests. Next, we implemented the current user function which simply checks the session for a user UUID that was previously added. If we find one, we add a `current_uuid` assign to the connection and we're done. In the case we haven't yet identified this visitor, we generate a unique UUID with `Ecto.UUID.generate()`, then we place that value in the `current_uuid` assign, along with a new session value to identify this visitor on future requests. A random, unique ID isn't much to represent a user, but it's enough for us to track and identify a visitor across requests, which is all we need for now. Later as our application becomes more complete, you'll be ready to migrate to a complete user authentication solution. With a guaranteed current user, we then implemented the `fetch_current_cart` plug which either finds a cart for the user UUID or creates a cart for the current user and assigns the result in the connection assigns. We'll need to implement our `ShoppingCart.get_cart_by_user_uuid/1` and modify the create cart function to accept a UUID, but let's add our routes first.
+We added a new `:fetch_current_user` and `:fetch_current_cart` plug to our browser pipeline to run on all browser-based requests. Next, we implemented the `fetch_current_user` plug which simply checks the session for a user UUID that was previously added. If we find one, we add a `current_uuid` assign to the connection and we're done. In the case we haven't yet identified this visitor, we generate a unique UUID with `Ecto.UUID.generate()`, then we place that value in the `current_uuid` assign, along with a new session value to identify this visitor on future requests. A random, unique ID isn't much to represent a user, but it's enough for us to track and identify a visitor across requests, which is all we need for now. Later as our application becomes more complete, you'll be ready to migrate to a complete user authentication solution. With a guaranteed current user, we then implemented the `fetch_current_cart` plug which either finds a cart for the user UUID or creates a cart for the current user and assigns the result in the connection assigns. We'll need to implement our `ShoppingCart.get_cart_by_user_uuid/1` and modify the create cart function to accept a UUID, but let's add our routes first.
 
-We'll need to implement a cart controller for handling cart operations like viewing a cart, updating quantities, and initiating the checkout process, as well as a cart items controller for adding and removing individual items to and from the cart. Add the follow routes to your router in `lib/hello_web/router.ex`:
+We'll need to implement a cart controller for handling cart operations like viewing a cart, updating quantities, and initiating the checkout process, as well as a cart items controller for adding and removing individual items to and from the cart. Add the following routes to your router in `lib/hello_web/router.ex`:
 
 ```elixir
   scope "/", HelloWeb do
@@ -751,7 +751,7 @@ We'll need to implement a cart controller for handling cart operations like view
   end
 ```
 
-We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and remove individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT, will handle the submission of a form for updating our cart quantities.
+We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and remove individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT request, will handle the submission of a form for updating our cart quantities.
 
 With our routes in place, let's add the ability to add an item to our cart from the product show page. Create a new file at `lib/hello_web/cart_item_controller.ex` and key this in:
 
@@ -784,9 +784,9 @@ defmodule HelloWeb.CartItemController do
 end
 ```
 
-We defined a new `CartTimeController` with the create and update actions that we declared in our router. For `create`, we first lookup the product in the catalog with `Catalog.get_product!/1`, then we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we redirect to the cart show page or show a flash error message. For delete, we'll implement another new function on our `ShoppingCart` context called `remove_item_from_cart` and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` makes it obvious what we are accomplishing here. It also allows us to spec our our web layer and context APIs without thinking about all the implementation details at once.
+We defined a new `CartItemController` with the create and delete actions that we declared in our router. For `create`, we first lookup the product in the catalog with `Catalog.get_product!/1`, then we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we show a flash successful message and redirect to the cart show page; else, we show a flash error message and redirect to the cart show page. For `delete`, we'll call a `remove_item_from_cart` function which we'll implement on our `ShoppingCart` context  and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` make it obvious what we are accomplishing here. It also allows us to spec our our web layer and context APIs without thinking about all the implementation details at once.
 
-Let's implement our new interface in `lib/hello/shopping_cart.ex`:
+Let's implement our new interface of `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
 ```elixir
   alias Hello.Catalog
