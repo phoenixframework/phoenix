@@ -733,9 +733,9 @@ We won't focus on a real user authentication system at this point, but by the ti
 + end
 ```
 
-We added a new `:fetch_current_user` and `:fetch_current_cart` plug to our browser pipeline to run on all browser-based requests. Next, we implemented the current user function which simply checks the session for a user UUID that was previously added. If we find one, we add a `current_uuid` assign to the connection and we're done. In the case we haven't yet identified this visitor, we generate a unique UUID with `Ecto.UUID.generate()`, then we place that value in the `current_uuid` assign, along with a new session value to identify this visitor on future requests. A random, unique ID isn't much to represent a user, but it's enough for us to track and identify a visitor across requests, which is all we need for now. Later as our application becomes more complete, you'll be ready to migrate to a complete user authentication solution. With a guaranteed current user, we then implemented the `fetch_current_cart` plug which either finds a cart for the user UUID or creates a cart for the current user and assigns the result in the connection assigns. We'll need to implement our `ShoppingCart.get_cart_by_user_uuid/1` and modify the create cart function to accept a UUID, but let's add our routes first.
+We added a new `:fetch_current_user` and `:fetch_current_cart` plug to our browser pipeline to run on all browser-based requests. Next, we implemented the `fetch_current_user` plug which simply checks the session for a user UUID that was previously added. If we find one, we add a `current_uuid` assign to the connection and we're done. In the case we haven't yet identified this visitor, we generate a unique UUID with `Ecto.UUID.generate()`, then we place that value in the `current_uuid` assign, along with a new session value to identify this visitor on future requests. A random, unique ID isn't much to represent a user, but it's enough for us to track and identify a visitor across requests, which is all we need for now. Later as our application becomes more complete, you'll be ready to migrate to a complete user authentication solution. With a guaranteed current user, we then implemented the `fetch_current_cart` plug which either finds a cart for the user UUID or creates a cart for the current user and assigns the result in the connection assigns. We'll need to implement our `ShoppingCart.get_cart_by_user_uuid/1` and modify the create cart function to accept a UUID, but let's add our routes first.
 
-We'll need to implement a cart controller for handling cart operations like viewing a cart, updating quantities, and initiating the checkout process, as well as a cart items controller for adding and removing individual items to and from the cart. Add the follow routes to your router in `lib/hello_web/router.ex`:
+We'll need to implement a cart controller for handling cart operations like viewing a cart, updating quantities, and initiating the checkout process, as well as a cart items controller for adding and removing individual items to and from the cart. Add the following routes to your router in `lib/hello_web/router.ex`:
 
 ```elixir
   scope "/", HelloWeb do
@@ -751,7 +751,7 @@ We'll need to implement a cart controller for handling cart operations like view
   end
 ```
 
-We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and remove individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT, will handle the submission of a form for updating our cart quantities.
+We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and remove individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT request, will handle the submission of a form for updating our cart quantities.
 
 With our routes in place, let's add the ability to add an item to our cart from the product show page. Create a new file at `lib/hello_web/cart_item_controller.ex` and key this in:
 
@@ -784,9 +784,9 @@ defmodule HelloWeb.CartItemController do
 end
 ```
 
-We defined a new `CartTimeController` with the create and update actions that we declared in our router. For `create`, we first lookup the product in the catalog with `Catalog.get_product!/1`, then we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we redirect to the cart show page or show a flash error message. For delete, we'll implement another new function on our `ShoppingCart` context called `remove_item_from_cart` and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` makes it obvious what we are accomplishing here. It also allows us to spec our our web layer and context APIs without thinking about all the implementation details at once.
+We defined a new `CartItemController` with the create and delete actions that we declared in our router. For `create`, we first lookup the product in the catalog with `Catalog.get_product!/1`, then we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we show a flash successful message and redirect to the cart show page; else, we show a flash error message and redirect to the cart show page. For `delete`, we'll call a `remove_item_from_cart` function which we'll implement on our `ShoppingCart` context  and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` make it obvious what we are accomplishing here. It also allows us to spec our our web layer and context APIs without thinking about all the implementation details at once.
 
-Let's implement our new interface in `lib/hello/shopping_cart.ex`:
+Let's implement our new interface of `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
 ```elixir
   alias Hello.Catalog
