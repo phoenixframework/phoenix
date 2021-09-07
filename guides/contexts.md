@@ -277,7 +277,7 @@ Let's think of a function describes what we want to accomplish. Here's how we wo
 
 That looks great. Our callers will have no confusion over what this function does, and we can wrap up the increment in an atomic operation to prevent race conditions.
 
-Open up your CMS context (`lib/hello/catalog.ex`), and add this new function:
+Open up your catalog context (`lib/hello/catalog.ex`), and add this new function:
 
 ```elixir
   def inc_page_views(%Product{} = product) do
