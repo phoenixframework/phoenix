@@ -789,56 +789,58 @@ We defined a new `CartItemController` with the create and delete actions that we
 Let's implement our new interface of `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
 ```elixir
-  alias Hello.Catalog
-  alias Hello.ShoppingCart.{Cart, CartItem}
++ alias Hello.Catalog
+- alias Hello.ShoppingCart.Cart
++ alias Hello.ShoppingCart.{Cart, CartItem}
 
-  def get_cart_by_user_uuid(user_uuid) do
-    Repo.one(
-      from(c in Cart,
-        where: c.user_uuid == ^user_uuid,
-        left_join: i in assoc(c, :items),
-        left_join: p in assoc(i, :product),
-        order_by: [asc: i.inserted_at],
-        preload: [items: {i, product: p}]
-      )
-    )
-  end
++ def get_cart_by_user_uuid(user_uuid) do
++   Repo.one(
++     from(c in Cart,
++       where: c.user_uuid == ^user_uuid,
++       left_join: i in assoc(c, :items),
++       left_join: p in assoc(i, :product),
++       order_by: [asc: i.inserted_at],
++       preload: [items: {i, product: p}]
++     )
++   )
++ end
 
 - def create_cart(attrs \\ %{}) do
 -   %Cart{}
+-   |> Cart.changeset(attrs)
 + def create_cart(user_uuid) do
 +   %Cart{user_uuid: user_uuid}
-    |> Cart.changeset(%{})
++   |> Cart.changeset(%{})
     |> Repo.insert()
 +   |> case do
 +     {:ok, cart} -> {:ok, reload_cart(cart)}
 +     {:error, changeset} -> {:error, changeset}
 +   end
-  end
++ end
 
-  defp reload_cart(%Cart{} = cart), do: get_cart_by_user_uuid(cart.user_uuid)
++ defp reload_cart(%Cart{} = cart), do: get_cart_by_user_uuid(cart.user_uuid)
 
-  def add_item_to_cart(%Cart{} = cart, %Catalog.Product{} = product) do
-    %CartItem{quantity: 1, price_when_carted: product.price}
-    |> CartItem.changeset(%{})
-    |> Ecto.Changeset.put_assoc(:cart, cart)
-    |> Ecto.Changeset.put_assoc(:product, product)
-    |> Repo.insert(
-      on_conflict: [inc: [quantity: 1]],
-      conflict_target: [:id, :cart_id, :product_id]
-    )
-  end
++ def add_item_to_cart(%Cart{} = cart, %Catalog.Product{} = product) do
++   %CartItem{quantity: 1, price_when_carted: product.price}
++   |> CartItem.changeset(%{})
++   |> Ecto.Changeset.put_assoc(:cart, cart)
++   |> Ecto.Changeset.put_assoc(:product, product)
++   |> Repo.insert(
++     on_conflict: [inc: [quantity: 1]],
++     conflict_target: [:id, :cart_id, :product_id]
++   )
++ end
 
-  def remove_item_from_cart(%Cart{} = cart, product_id) do
-    {1, _} =
-      Repo.delete_all(
-        from(i in CartItem,
-          where: i.cart_id == ^cart.id,
-          where: i.product_id == ^product_id
-        )
-      )
++ def remove_item_from_cart(%Cart{} = cart, product_id) do
++   {1, _} =
++     Repo.delete_all(
++       from(i in CartItem,
++         where: i.cart_id == ^cart.id,
++         where: i.product_id == ^product_id
++       )
++     )
 
-    {:ok, reload_cart(cart)}
++   {:ok, reload_cart(cart)}
   end
 ```
 
