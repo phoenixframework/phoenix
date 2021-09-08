@@ -871,7 +871,8 @@ INSERT INTO "cart_items" ...
   Parameters: %{}
   Pipelines: [:browser]
 [debug] QUERY OK source="carts" db=1.9ms idle=1798.5ms
-
+SELECT c0."id", c0."user_uuid", c0."inserted_at", c0."updated_at", c1."id", c1."price_when_carted", c1."quantity", c1."cart_id", c1."product_id", c1."inserted_at", c1."updated_at", p2."id", p2."description", p2."price", p2."title", p2."views", p2."inserted_at", p2."updated_at" FROM "carts" AS c0 LEFT OUTER JOIN "cart_items" AS c1 ON c1."cart_id" = c0."id" LEFT OUTER JOIN "products" AS p2 ON p2."id" = c1."product_id" WHERE (c0."user_uuid" = $1) ORDER BY c1."inserted_at" [<<binary representation of user_uuid>>]
+[info] Sent 500 in 33ms
 [error] #PID<0.856.0> running HelloWeb.Endpoint (connection #PID<0.841.0>, stream id 5) terminated
 Server: localhost:4000 (http)
 Request: GET /cart
