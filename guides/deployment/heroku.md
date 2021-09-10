@@ -131,7 +131,7 @@ When using this buildpack, you want to delegate all asset bundling to `npm`. So 
 {
   ...
   "scripts": {
-    "deploy": "cd .. && mix assets.deploy"
+    "deploy": "cd .. && mix assets.deploy && rm -f _build/esbuild"
   }
   ...
 }
