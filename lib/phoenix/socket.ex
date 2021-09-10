@@ -10,8 +10,9 @@ defmodule Phoenix.Socket do
   It is the responsibility of the socket to tie transports and channels
   together.
 
-  By default, Phoenix supports both websockets and longpoll when invoking
-  `Phoenix.Endpoint.socket/3` in your endpoint:
+  Phoenix supports `websocket` and `longpoll` options when invoking
+  `Phoenix.Endpoint.socket/3` in your endpoint. `websocket` is set by default
+  and `longpoll` can also be configured explicitly.
 
       socket "/socket", MyAppWeb.Socket, websocket: true, longpoll: false
 
