@@ -96,7 +96,19 @@ $ echo 'node_version=12.16.3' > phoenix_static_buildpack.config
 If you are using Phoenix v1.6, there is also a `mix assets.deploy` alias in your `mix.exs` that you want to invoke post compilation:
 
 ```console
-$ echo 'hook_post_compile="mix assets.deploy && rm -f _build/esbuild"' >> elixir_buildpack.config
+$ echo 'hook_post_compile="mix assets.deploy && rm -f _build/esbuild"' >> phoenix_static_buildpack.config
+```
+
+Additionally, if you have NPM packages installed using an `assets/package.json` file, you must add a `deploy` script to it:
+
+```json
+{
+  ...
+  "scripts": {
+    "deploy": "cd ..; mix assets.deploy; cd assets;"
+  }
+  ...
+}
 ```
 
 Finally don't forget to commit:
