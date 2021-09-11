@@ -93,28 +93,20 @@ $ echo 'erlang_version=22.3' >> elixir_buildpack.config
 $ echo 'node_version=12.16.3' > phoenix_static_buildpack.config
 ```
 
-If you are using Phoenix v1.6, there is also a `mix assets.deploy` alias in your `mix.exs` that you want to invoke post compilation:
-
-```console
-$ echo 'hook_post_compile="mix assets.deploy && rm -f _build/esbuild"' >> phoenix_static_buildpack.config
-```
-
-Additionally, if you have NPM packages installed using an `assets/package.json` file, you must add a `deploy` script to it:
+Phoenix v1.6 uses `esbuild` to compile your assets but all Gigalixir images come with `npm`, so we will configure `npm` directly to deploy our assets. Add a `assets/package.json` file if you don't have any with the following:
 
 ```json
 {
-  ...
   "scripts": {
-    "deploy": "cd ..; mix assets.deploy; cd assets;"
+    "deploy": "cd .. && mix assets.deploy && rm -f _build/esbuild"
   }
-  ...
 }
 ```
 
 Finally don't forget to commit:
 
 ```console
-$ git add elixir_buildpack.config phoenix_static_buildpack.config
+$ git add elixir_buildpack.config phoenix_static_buildpack.config assets/package.json
 $ git commit -m "Set Elixir, Erlang, and Node version"
 ```
 
