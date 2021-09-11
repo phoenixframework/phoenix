@@ -446,6 +446,9 @@ With our schema associations set up, we can implement the selection of categorie
 
 
 ```diff
+- alias Hello.Catalog.Product
++ alias Hello.Catalog.{Product, Category}
+
 - def get_product!(id), do: Repo.get!(Product, id)
 + def get_product!(id) do
 +   Product |> Repo.get!(id) |> Repo.preload(:categories)
