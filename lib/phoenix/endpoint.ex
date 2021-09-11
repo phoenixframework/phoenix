@@ -175,7 +175,7 @@ defmodule Phoenix.Endpoint do
       The `:cd` and `:env` options can be given at the end of the list to customize
       the watcher:
 
-          [node: [..., cd: "assets"]]
+          [node: [..., cd: "assets", env: [{"TAILWIND_MODE", "watch"}]]]
 
       A watcher can also be a module-function-args tuple that will be invoked accordingly:
 

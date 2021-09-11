@@ -583,7 +583,7 @@ Migrations are a programmatic, repeatable way to affect changes to a database sc
 We simply need to invoke the task with a `snake_case` version of the module name that we want. Preferably, the name will describe what we want the migration to do.
 
 ```console
-mix ecto.gen.migration add_comments_table
+$ mix ecto.gen.migration add_comments_table
 * creating priv/repo/migrations
 * creating priv/repo/migrations/20150318001628_add_comments_table.exs
 ```

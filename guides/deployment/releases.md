@@ -164,18 +164,19 @@ ARG MIX_ENV
 ENV MIX_ENV="${MIX_ENV}"
 
 # install mix dependencies
-COPY mix.exs mix.lock .
+COPY mix.exs mix.lock ./
 RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
 
-# Dependencies sometimes use compile-time configuration. Copying
-# these compile-time config files before we compile dependencies
-# ensures that any relevant config changes will trigger the dependencies
+# copy compile-time config files before we compile dependencies
+# to ensure any relevant config change will trigger the dependencies
 # to be re-compiled.
 COPY config/config.exs config/$MIX_ENV.exs config/
 RUN mix deps.compile
 
-# Note: if your project uses a tool like https://purgecss.com/,
+COPY priv priv
+
+# note: if your project uses a tool like https://purgecss.com/,
 # which customizes asset compilation based on what it finds in
 # your Elixir templates, you will need to move the asset compilation
 # step down so that `lib` is available.
@@ -191,7 +192,7 @@ COPY config/runtime.exs config/
 # COPY rel rel
 RUN mix release
 
-# Start a new build stage so that the final image will only contain
+# start a new build stage so that the final image will only contain
 # the compiled release and other runtime necessities
 FROM alpine:3.12.1 AS app
 RUN apk add --no-cache libstdc++ openssl ncurses-libs
@@ -209,7 +210,7 @@ RUN \
    -s /bin/sh \
    -u 1000 \
    -G "${USER}" \
-   -h /home/elixir \
+   -h "/home/${USER}" \
    -D "${USER}" \
   && su "${USER}"
 

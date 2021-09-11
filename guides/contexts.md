@@ -271,13 +271,13 @@ While in practice this would happen:
 
 The race conditions would make this an unreliable way to update the existing table since multiple callers may be updating out of date view values. There's a better way.
 
-Let's think of a function name that describes what we want to accomplish.
+Let's think of a function describes what we want to accomplish. Here's how we would like to use it:
 
-    > product = Catalog.inc_page_views(product)
+    product = Catalog.inc_page_views(product)
 
 That looks great. Our callers will have no confusion over what this function does, and we can wrap up the increment in an atomic operation to prevent race conditions.
 
-Open up your CMS context (`lib/hello/catalog.ex`), and add this new function:
+Open up your catalog context (`lib/hello/catalog.ex`), and add this new function:
 
 ```elixir
   def inc_page_views(%Product{} = product) do
@@ -342,7 +342,7 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-This time around, we used `mix phx.gen.context`, which is just like `mix phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing products, we can integrate the new category features into our existing web form and product show page. We can see we now have a new `Category` schema alongside our product schema at `lib/hello/catalog/category.ex`, and Phoenix told us it was *injecting* new functions in our existing Catalog context for the category functionality. The injected functions will look very familiar to our product functions, with new functions like `create_category`, `list_categories`, and so on. Before we migrate up, we need to do a second bit of code generation. Our category schema is great for representing an individual category in the system, but we need to support a many-to-many relationship between products and categories. Fortunately, ecto allows us to do this simply with a join table, so let's generation that now with the `ecto.gen.migration` command:
+This time around, we used `mix phx.gen.context`, which is just like `mix phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing products, we can integrate the new category features into our existing web form and product show page. We can see we now have a new `Category` schema alongside our product schema at `lib/hello/catalog/category.ex`, and Phoenix told us it was *injecting* new functions in our existing Catalog context for the category functionality. The injected functions will look very familiar to our product functions, with new functions like `create_category`, `list_categories`, and so on. Before we migrate up, we need to do a second bit of code generation. Our category schema is great for representing an individual category in the system, but we need to support a many-to-many relationship between products and categories. Fortunately, ecto allows us to do this simply with a join table, so let's generate that now with the `ecto.gen.migration` command:
 
 ```console
 $ mix ecto.gen.migration create_product_categories
@@ -401,7 +401,7 @@ $ mix ecto.migrate
 Now that we have a `Catalog.Product` schema and a join table to associate products and categories, we're nearly ready to start wiring up our new features. Before we dive in, we first need real categories to select in our web UI. Let's quickly seed some new categories in the application. Add the following code to your seeds file in `priv/repo/seeds.exs`:
 
 ```elixir
-for title <- ["Fashion", "Power Tools", "Gardening", "Books", "Education"] do
+for title <- ["Home Improvement", "Power Tools", "Gardening", "Books"] do
   {:ok, _} = Hello.Catalog.create_category(%{title: title})
 end
 ```
@@ -483,7 +483,7 @@ With our schema associations set up, we can implement the selection of categorie
 
 First, we added `Repo.preload` to preload our categories when we fetch a product. This will allow us to reference `product.categories` in our controllers, templates, and anywhere else we want to make use of category information. Next, we modified our `create_product` and `update_product` functions to call into our existing `change_product` function to produce a changeset. Within `change_product` we added a lookup to find all categories if the `"category_ids"` attribute is present. Then we preloaded categories and called `Ecto.Changeset.put_assoc` to place the fetched categories into the changeset. Finally, we implemented the `list_categories_by_id/1` function to query the categories matching the category IDs, or return an empty list if no `"category_ids"` attribute is present. Now our `create_product` and `update_product` functions receive a changeset with the category associations all ready to go once we attempt an insert or update against our repo.
 
-Next, let's expose our new feature to the web by adding the category input to our product form. To keep our form template tidy, let's write a new function to wrap up the details of rendering a category select input for our product. Open up your `ProductView` in lib/hello_web/views/product_view.ex`: and key this in:
+Next, let's expose our new feature to the web by adding the category input to our product form. To keep our form template tidy, let's write a new function to wrap up the details of rendering a category select input for our product. Open up your `ProductView` in `lib/hello_web/views/product_view.ex` and key this in:
 
 ```elixir
 defmodule HelloWeb.ProductView do
@@ -598,17 +598,17 @@ Remember to update your repository by running migrations:
 
 ```
 
-We generated a new resource inside our `ShoppingCart` named `CartItem`. This schema and table will hold references to a cart and product, along with the price at the time we added the item to our cart, and the quantity the user wishes to purchase. Let's touch up the generated migration file in priv/repo/migrations/*_create_cart_items.ex`:
+We generated a new resource inside our `ShoppingCart` named `CartItem`. This schema and table will hold references to a cart and product, along with the price at the time we added the item to our cart, and the quantity the user wishes to purchase. Let's touch up the generated migration file in `priv/repo/migrations/*_create_cart_items.ex`:
 
 ```elixir
     create table(:cart_items) do
 -     add :price_when_carted, :decimal
 +     add :price_when_carted, :decimal, precision: 15, scale: 6, null: false
       add :quantity, :integer
--     add :cart_id, references(:carts, on_delete: :delete_all)
-+     add :product_id, references(:products, on_delete: :nothing)
--     add :cart_id, references(:carts, on_delete: :delete_all)
-+     add :product_id, references(:products, on_delete: :nothing)
+-     add :cart_id, references(:carts, on_delete: :nothing)
++     add :cart_id, references(:carts, on_delete: :delete_all)
+-     add :product_id, references(:products, on_delete: :nothing)
++     add :product_id, references(:products, on_delete: :delete_all)
 
       timestamps()
     end
@@ -688,7 +688,7 @@ Now that our cart is associated to the items we place in it, let's set up the ca
   end
 ```
 
-First, we replaced the `cart_id` field with a standard `belongs_to` pointing at our `ShoppingCart.Cart` schema. Next, we replaced our `product_id` field by adding our first cross-context data dependency with a `belongs_to` for the `Catalog.Product` schema. Here, we intentionally coupled the data boundaries because it provides exactly what we need. An isolated context API with the bare minium knowledge necessary to reference a product in our system. Next, we added a new validation to our changeset. With `validate_number/3`, we ensure any quantity provided by user input is between 0 and 100.
+First, we replaced the `cart_id` field with a standard `belongs_to` pointing at our `ShoppingCart.Cart` schema. Next, we replaced our `product_id` field by adding our first cross-context data dependency with a `belongs_to` for the `Catalog.Product` schema. Here, we intentionally coupled the data boundaries because it provides exactly what we need. An isolated context API with the bare minimum knowledge necessary to reference a product in our system. Next, we added a new validation to our changeset. With `validate_number/3`, we ensure any quantity provided by user input is between 0 and 100.
 
 With our schemas in place, we can start integrating the new data structures and `ShoppingCart` context APIs into our web-facing features.
 
@@ -733,9 +733,9 @@ We won't focus on a real user authentication system at this point, but by the ti
 + end
 ```
 
-We added a new `:fetch_current_user` and `:fetch_current_cart` plug to our browser pipeline to run on all browser-based requests. Next, we implemented the current user function which simply checks the session for a user UUID that was previously added. If we find one, we add a `current_uuid` assign to the connection and we're done. In the case we haven't yet identified this visitor, we generate a unique UUID with `Ecto.UUID.generate()`, then we place that value in the `current_uuid` assign, along with a new session value to identify this visitor on future requests. A random, unique ID isn't much to represent a user, but it's enough for us to track and identify a visitor across requests, which is all we need for now. Later as our application becomes more complete, you'll be ready to migrate to a complete user authentication solution. With a guaranteed current user, we then implemented the `fetch_current_cart` plug which either finds a cart for the user UUID or creates a cart for the current user and assigns the result in the connection assigns. We'll need to implement our `ShoppingCart.get_cart_by_user_uuid/1` and modify the create cart function to accept a UUID, but let's add our routes first.
+We added a new `:fetch_current_user` and `:fetch_current_cart` plug to our browser pipeline to run on all browser-based requests. Next, we implemented the `fetch_current_user` plug which simply checks the session for a user UUID that was previously added. If we find one, we add a `current_uuid` assign to the connection and we're done. In the case we haven't yet identified this visitor, we generate a unique UUID with `Ecto.UUID.generate()`, then we place that value in the `current_uuid` assign, along with a new session value to identify this visitor on future requests. A random, unique ID isn't much to represent a user, but it's enough for us to track and identify a visitor across requests, which is all we need for now. Later as our application becomes more complete, you'll be ready to migrate to a complete user authentication solution. With a guaranteed current user, we then implemented the `fetch_current_cart` plug which either finds a cart for the user UUID or creates a cart for the current user and assigns the result in the connection assigns. We'll need to implement our `ShoppingCart.get_cart_by_user_uuid/1` and modify the create cart function to accept a UUID, but let's add our routes first.
 
-We'll need to implement a cart controller for handling cart operations like viewing a cart, updating quantities, and initiating the checkout process, as well as a cart items controller for adding and removing individual items to and from the cart. Add the follow routes to your router in `lib/hello_web/router.ex`:
+We'll need to implement a cart controller for handling cart operations like viewing a cart, updating quantities, and initiating the checkout process, as well as a cart items controller for adding and removing individual items to and from the cart. Add the following routes to your router in `lib/hello_web/router.ex`:
 
 ```elixir
   scope "/", HelloWeb do
@@ -751,7 +751,7 @@ We'll need to implement a cart controller for handling cart operations like view
   end
 ```
 
-We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and remove individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT, will handle the submission of a form for updating our cart quantities.
+We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and remove individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT request, will handle the submission of a form for updating our cart quantities.
 
 With our routes in place, let's add the ability to add an item to our cart from the product show page. Create a new file at `lib/hello_web/cart_item_controller.ex` and key this in:
 
@@ -784,9 +784,9 @@ defmodule HelloWeb.CartItemController do
 end
 ```
 
-We defined a new `CartTimeController` with the create and update actions that we declared in our router. For `create`, we first lookup the product in the catalog with `Catalog.get_product!/1`, then we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we redirect to the cart show page or show a flash error message. For delete, we'll implement another new function on our `ShoppingCart` context called `remove_item_from_cart` and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` makes it obvious what we are accomplishing here. It also allows us to spec our our web layer and context APIs without thinking about all the implementation details at once.
+We defined a new `CartItemController` with the create and delete actions that we declared in our router. For `create`, we first lookup the product in the catalog with `Catalog.get_product!/1`, then we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we show a flash successful message and redirect to the cart show page; else, we show a flash error message and redirect to the cart show page. For `delete`, we'll call a `remove_item_from_cart` function which we'll implement on our `ShoppingCart` context  and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` make it obvious what we are accomplishing here. It also allows us to spec our our web layer and context APIs without thinking about all the implementation details at once.
 
-Let's implement our new interface in `lib/hello/shopping_cart.ex`:
+Let's implement our new interface of `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
 ```elixir
   alias Hello.Catalog
@@ -842,7 +842,7 @@ Let's implement our new interface in `lib/hello/shopping_cart.ex`:
   end
 ```
 
-We started by implementing  `get_cart_by_user_uuid/1` which fetches our cart and joins the cart items, and their products so that we have the full cart popuplated with all preloaded data. Next, we modified our `create_cart` function to accept a user UUID instead of attributes, which we used to populate the `user_uuid` field. If the insert is successful, we reload the cart contents by calling a private `reload_cart/1` function, which simply calls `get_cart_by_user_uuid/1` to refetch data. Next, we wrote our new `add_item_to_cart/2` function which accepts a cart struct and a product struct from the catalog. We used an upsert operation against our repo to either insert a new cart item into the database, or increase the quantity by one if it already exists in the cart. This is accomplished via the `on_conflict` and `conflict_target` options, which tells our repo how to handle an insert conflict. Next, we implemented `remove_item_from_cart/2` where we simply issue a `Repo.delete_all` call with a query to delete the cart item in our cart that matches the product ID. Finally, we reload the cart contents by calling `reload_cart/1`.
+We started by implementing  `get_cart_by_user_uuid/1` which fetches our cart and joins the cart items, and their products so that we have the full cart populated with all preloaded data. Next, we modified our `create_cart` function to accept a user UUID instead of attributes, which we used to populate the `user_uuid` field. If the insert is successful, we reload the cart contents by calling a private `reload_cart/1` function, which simply calls `get_cart_by_user_uuid/1` to refetch data. Next, we wrote our new `add_item_to_cart/2` function which accepts a cart struct and a product struct from the catalog. We used an upsert operation against our repo to either insert a new cart item into the database, or increase the quantity by one if it already exists in the cart. This is accomplished via the `on_conflict` and `conflict_target` options, which tells our repo how to handle an insert conflict. Next, we implemented `remove_item_from_cart/2` where we simply issue a `Repo.delete_all` call with a query to delete the cart item in our cart that matches the product ID. Finally, we reload the cart contents by calling `reload_cart/1`.
 
 With our new cart functions in place, we can now expose the "Add to cart" button on the product catalog show page. Open up your template in `lib/hello_web/templates/product/show.html.heex` and make the following changes:
 
@@ -1108,7 +1108,7 @@ We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and
 
 With our migration in place, let's wire up our orders and line items associations in `lib/hello/orders/order.ex`:
 
-```diff
+```elixir
   schema "orders" do
     field :total_price, :decimal
     field :user_uuid, Ecto.UUID
@@ -1122,7 +1122,7 @@ With our migration in place, let's wire up our orders and line items association
 
 We used `has_many :line_items` to associate orders and line items, just like we've seen before. Next, we used the `:through` feature of `has_many`, which allows us to instruct ecto how to associate resources across another relationship. In this case, we can associate products of an order by finding all products through associated line items. Next, let's wire up the association in the other direction in `lib/hello/orders/line_item.ex`:
 
-```diff
+```elixir
   schema "order_line_items" do
     field :price, :decimal
     field :quantity, :integer
@@ -1138,7 +1138,7 @@ We used `has_many :line_items` to associate orders and line items, just like we'
 
 We used `belongs_to` to associate line items to orders and products. With our associations in place, we can start integrating the web interface into our order process. Open up your router `lib/hello_web/router.ex` and add the following line:
 
-```diff
+```elixir
   scope "/", HelloWeb do
     pipe_through :browser
 
@@ -1255,7 +1255,7 @@ To close out our order completion, we need to implement the `ShoppingCart.prune_
 
 Our new function accepts the cart struct and issues a `Repo.delete_all` which accepts a query of all items for the provided cart. We return a success result by simply reloading the pruned cart to the caller. With our context complete, we now need to show the user their completed order. Head back to your order controller and modify the `show/2` action:
 
-```diff
+```elixir
   def show(conn, %{"id" => id}) do
 -   order = Orders.get_order!(id)
 +   order = Orders.get_order!(conn.assigns.current_uuid, id)
@@ -1304,7 +1304,7 @@ Our last addition will be to add the "complete order" button to our cart page to
 
 We added a link with `method: :post` to send a POST request to our `OrderController.create` action. If we head back to our cart page at `http://localhost:4000/cart` and complete an order, we'll be greeted by our rendered template:
 
-```
+```text
 Thank you for your order!
 
 User uuid: 08964c7c-908c-4a55-bcd3-9811ad8b0b9d

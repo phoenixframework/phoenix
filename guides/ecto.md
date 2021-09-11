@@ -95,6 +95,7 @@ end
 And here's what that translates to in the actual `users` table.
 
 ```console
+$ psql
 hello_dev=# \d users
 Table "public.users"
 Column         |            Type             | Modifiers
