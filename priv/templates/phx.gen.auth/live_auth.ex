@@ -15,7 +15,7 @@ defmodule <%= inspect context.web_module %>.<%= if schema.web_path, do: "#{Phoen
       end
 
   """
-  def mount_current_<%= schema.singular %>(socket, %{"<%=schema.singular %>_token" => <%= schema.singular %>_token}) do
+  def mount_current_<%= schema.singular %>(_params, %{"<%=schema.singular %>_token" => <%= schema.singular %>_token}, socket) do
     socket =
       assign_new(socket, :current_<%= schema.singular %>, fn ->
         <%= inspect context.module %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
@@ -24,7 +24,7 @@ defmodule <%= inspect context.web_module %>.<%= if schema.web_path, do: "#{Phoen
     {:cont, socket}
   end
 
-  def mount_current_<%= schema.singular %>(socket, _session) do
+  def mount_current_<%= schema.singular %>(_params, _session, socket) do
     {:cont, assign_new(socket, :current_<%= schema.singular %>, fn -> nil end)}
   end
 
@@ -42,7 +42,7 @@ defmodule <%= inspect context.web_module %>.<%= if schema.web_path, do: "#{Phoen
       end
 
   """
-  def ensure_mounted_current_<%= schema.singular %>(socket, %{"<%=schema.singular %>_token" => <%= schema.singular %>_token}) do
+  def ensure_mounted_current_<%= schema.singular %>(_params, %{"<%=schema.singular %>_token" => <%= schema.singular %>_token}, socket) do
     socket =
       assign_new(socket, :current_<%= schema.singular %>, fn ->
         <%= inspect context.module %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
@@ -57,7 +57,7 @@ defmodule <%= inspect context.web_module %>.<%= if schema.web_path, do: "#{Phoen
     end
   end
 
-  def ensure_mounted_current_<%= schema.singular %>(socket, _session) do
+  def ensure_mounted_current_<%= schema.singular %>(_params, _session, socket) do
     {:halt, push_redirect(socket, to: Routes.<%= schema.route_helper %>_session_path(socket, :new))}
   end
 end
