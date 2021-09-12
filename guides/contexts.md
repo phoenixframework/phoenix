@@ -448,7 +448,7 @@ With our schema associations set up, we can implement the selection of categorie
 ```diff
 - def get_product!(id), do: Repo.get!(Product, id)
 + def get_product!(id) do
-+   Product |> Repo.get(id) |> Repo.preload(:categories)
++   Product |> Repo.get!(id) |> Repo.preload(:categories)
 + end
 
   def create_product(attrs \\ %{}) do
@@ -475,13 +475,15 @@ With our schema associations set up, we can implement the selection of categorie
 +   |> Ecto.Changeset.put_assoc(:categories, categories)
   end
 
+  alias Hello.Catalog.Category
+  
 + def list_categories_by_id(nil), do: []
 + def list_categories_by_id(category_ids) do
 +   Repo.all(from c in Category, where: c.id in ^category_ids)
 + end
 ```
 
-First, we added `Repo.preload` to preload our categories when we fetch a product. This will allow us to reference `product.categories` in our controllers, templates, and anywhere else we want to make use of category information. Next, we modified our `create_product` and `update_product` functions to call into our existing `change_product` function to produce a changeset. Within `change_product` we added a lookup to find all categories if the `"category_ids"` attribute is present. Then we preloaded categories and called `Ecto.Changeset.put_assoc` to place the fetched categories into the changeset. Finally, we implemented the `list_categories_by_id/1` function to query the categories matching the category IDs, or return an empty list if no `"category_ids"` attribute is present. Now our `create_product` and `update_product` functions receive a changeset with the category associations all ready to go once we attempt an insert or update against our repo.
+First, we added `Repo.preload` to preload our categories when we fetch a product. This will allow us to reference `product.categories` in our controllers, templates, and anywhere else we want to make use of category information. Next, we modified our `create_product` and `update_product` functions to call into our existing `change_product` function to produce a changeset. Within `change_product` we added a lookup to find all categories if the `"category_ids"` attribute is present. Then we preloaded categories and called `Ecto.Changeset.put_assoc` to place the fetched categories into the changeset. Finally, we implemented the `list_categories_by_id/1` function to query the categories matching the category IDs, or return an empty list if no `"category_ids"` attribute is present. Make sure to implement `list_categories_by_id/1` below `alias Hello.Catalog.Category` to avoid ` (UndefinedFunctionError) function Category.__schema__/1 is undefined (module Category is not available)` caused by `Repo.all(from c in Category, where: c.id in ^category_ids)`. Now our `create_product` and `update_product` functions receive a changeset with the category associations all ready to go once we attempt an insert or update against our repo.
 
 Next, let's expose our new feature to the web by adding the category input to our product form. To keep our form template tidy, let's write a new function to wrap up the details of rendering a category select input for our product. Open up your `ProductView` in `lib/hello_web/views/product_view.ex` and key this in:
 
@@ -789,56 +791,58 @@ We defined a new `CartItemController` with the create and delete actions that we
 Let's implement our new interface of `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
 ```elixir
-  alias Hello.Catalog
-  alias Hello.ShoppingCart.{Cart, CartItem}
++ alias Hello.Catalog
+- alias Hello.ShoppingCart.Cart
++ alias Hello.ShoppingCart.{Cart, CartItem}
 
-  def get_cart_by_user_uuid(user_uuid) do
-    Repo.one(
-      from(c in Cart,
-        where: c.user_uuid == ^user_uuid,
-        left_join: i in assoc(c, :items),
-        left_join: p in assoc(i, :product),
-        order_by: [asc: i.inserted_at],
-        preload: [items: {i, product: p}]
-      )
-    )
-  end
++ def get_cart_by_user_uuid(user_uuid) do
++   Repo.one(
++     from(c in Cart,
++       where: c.user_uuid == ^user_uuid,
++       left_join: i in assoc(c, :items),
++       left_join: p in assoc(i, :product),
++       order_by: [asc: i.inserted_at],
++       preload: [items: {i, product: p}]
++     )
++   )
++ end
 
 - def create_cart(attrs \\ %{}) do
 -   %Cart{}
+- |> Cart.changeset(attrs)
 + def create_cart(user_uuid) do
 +   %Cart{user_uuid: user_uuid}
-    |> Cart.changeset(%{})
++   |> Cart.changeset(%{})
     |> Repo.insert()
 +   |> case do
 +     {:ok, cart} -> {:ok, reload_cart(cart)}
 +     {:error, changeset} -> {:error, changeset}
 +   end
-  end
++ end
 
-  defp reload_cart(%Cart{} = cart), do: get_cart_by_user_uuid(cart.user_uuid)
++ defp reload_cart(%Cart{} = cart), do: get_cart_by_user_uuid(cart.user_uuid)
 
-  def add_item_to_cart(%Cart{} = cart, %Catalog.Product{} = product) do
-    %CartItem{quantity: 1, price_when_carted: product.price}
-    |> CartItem.changeset(%{})
-    |> Ecto.Changeset.put_assoc(:cart, cart)
-    |> Ecto.Changeset.put_assoc(:product, product)
-    |> Repo.insert(
-      on_conflict: [inc: [quantity: 1]],
-      conflict_target: [:cart_id, :product_id]
-    )
-  end
++ def add_item_to_cart(%Cart{} = cart, %Catalog.Product{} = product) do
++   %CartItem{quantity: 1, price_when_carted: product.price}
++   |> CartItem.changeset(%{})
++   |> Ecto.Changeset.put_assoc(:cart, cart)
++   |> Ecto.Changeset.put_assoc(:product, product)
++   |> Repo.insert(
++     on_conflict: [inc: [quantity: 1]],
++     conflict_target: [:cart_id, :product_id]
++   )
++ end
 
-  def remove_item_from_cart(%Cart{} = cart, product_id) do
-    {1, _} =
-      Repo.delete_all(
-        from(i in CartItem,
-          where: i.cart_id == ^cart.id,
-          where: i.product_id == ^product_id
-        )
-      )
++ def remove_item_from_cart(%Cart{} = cart, product_id) do
++   {1, _} =
++     Repo.delete_all(
++       from(i in CartItem,
++         where: i.cart_id == ^cart.id,
++         where: i.product_id == ^product_id
++       )
++     )
 
-    {:ok, reload_cart(cart)}
++   {:ok, reload_cart(cart)}
   end
 ```
 
