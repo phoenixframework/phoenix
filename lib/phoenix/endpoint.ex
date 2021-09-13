@@ -114,7 +114,7 @@ defmodule Phoenix.Endpoint do
       set this value explicitly. This is used by projects such as `LiveView` to
       detect if the client is running on the latest version of all assets.
 
-    * `:cache_manifest_skip_vsn` - when true, skips the appended query string 
+    * `:cache_manifest_skip_vsn` - when true, skips the appended query string
       "?vsn=d" when generatic paths to static assets. This query string is used
       by `Plug.Static` to set long expiry dates, therefore, you should set this
       option to true only if you are not using `Plug.Static` to serve assets,
@@ -885,10 +885,10 @@ defmodule Phoenix.Endpoint do
   The following configuration applies only to `:longpoll`:
 
     * `:window_ms` - how long the client can wait for new messages
-      in its poll request
+      in its poll request, defaults to 10_000ms.
 
     * `:pubsub_timeout_ms` - how long a request can wait for the
-      pubsub layer to respond
+      pubsub layer to respond, defaults to 2000ms.
 
     * `:crypto` - options for verifying and signing the token, accepted
       by `Phoenix.Token`. By default tokens are valid for 2 weeks
