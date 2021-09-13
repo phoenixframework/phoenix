@@ -980,7 +980,7 @@ Let's head back to our `CartController` at `lib/hello_web/controllers/cart_contr
 ```elixir
   def update(conn, %{"cart" => cart_params}) do
     case ShoppingCart.update_cart(conn.assigns.cart, cart_params) do
-      {:ok, cart} ->
+      {:ok, _cart} ->
         redirect(conn, to: Routes.cart_path(conn, :show))
 
       {:error, _changeset} ->
