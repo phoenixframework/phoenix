@@ -1183,7 +1183,7 @@ Before we render information about our orders, we need to ensure our order data 
   def get_order!(user_uuid, id) do
     Order
     |> Repo.get_by!(id: id, user_uuid: user_uuid)
-    |> Repo.preload([line_items: [:product]])
+    |> Repo.preload(line_items: [:product])
   end
 ```
 
