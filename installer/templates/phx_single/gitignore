@@ -25,6 +25,9 @@ erl_crash.dump
 # Ignore assets that are produced by build tools.
 /priv/static/assets/
 
+# Ignore digested assets cache.
+/priv/static/cache_manifest.json
+
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log
 /assets/node_modules/
