@@ -6,7 +6,7 @@ From Phoenix v1.6, new applications use [esbuild](https://esbuild.github.io/) to
 
 Your JavaScript is typically placed at "assets/js/app.js" and `esbuild` will extract it to "priv/static/assets/app.js". In development, this is done automatically via the `esbuild` watcher. In production, this is done by running `mix assets.deploy`.
 
-`esbuild` can also handle your CSS files can also be handled by `esbuild`. For this, there is typically an `import "../css/app.css"` at the top of your "assets/js/app.js". We will explore alternatives below.
+`esbuild` can also handle your CSS files. For this, there is typically an `import "../css/app.css"` at the top of your "assets/js/app.js". We will explore alternatives below.
 
 Finally, all other assets, that usually don't have to be preprocessed, go directly to "priv/static".
 
