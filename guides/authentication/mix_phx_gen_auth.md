@@ -46,7 +46,7 @@ The following are notes about the generated authentication system.
 
 ### Password hashing
 
-The password hashing mechanism defaults to `bcrypt` for Unix systems and `pbkdf2` for Windows systems. Both systems use the [Comeonin interface](https://hexdocs.pm/comeonin/).
+The password hashing mechanism defaults to `argon2` for Unix systems and `pbkdf2` for Windows systems. Both systems use the [Comeonin interface](https://hexdocs.pm/comeonin/).
 
 ### Forbidding access
 
