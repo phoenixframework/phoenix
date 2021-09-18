@@ -433,9 +433,11 @@ defmodule Phoenix.Router do
 
     # @anno is used here to avoid warnings if forwarding to root path
     match_404 =
-      quote @anno do
-        def __match_route__(_method, _path_info, _host) do
-          :error
+      unless Enum.any?(routes, &(&1.kind == :forward and &1.path == "/")) do
+        quote @anno do
+          def __match_route__(_method, _path_info, _host) do
+            :error
+          end
         end
       end
 
