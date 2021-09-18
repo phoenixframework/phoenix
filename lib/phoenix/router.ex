@@ -430,11 +430,9 @@ defmodule Phoenix.Router do
       end
 
     match_404 =
-      unless Enum.any?(routes, &(&1.kind == :forward and &1.path == "/")) do
-        quote [generated: true] do
-          def __match_route__(_method, _path_info, _host) do
-            :error
-          end
+      quote [generated: true] do
+        def __match_route__(_method, _path_info, _host) do
+          :error
         end
       end
 
