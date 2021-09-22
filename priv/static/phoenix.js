@@ -304,14 +304,11 @@ var Phoenix = (() => {
     onMessage(_event, payload, _ref) {
       return payload;
     }
-    isLifecycleEvent(event) {
-      return CHANNEL_LIFECYCLE_EVENTS.indexOf(event) >= 0;
-    }
     isMember(topic, event, payload, joinRef) {
       if (this.topic !== topic) {
         return false;
       }
-      if (joinRef && joinRef !== this.joinRef() && this.isLifecycleEvent(event)) {
+      if (joinRef && joinRef !== this.joinRef()) {
         if (this.socket.hasLogger())
           this.socket.log("channel", "dropping outdated message", { topic, event, payload, joinRef });
         return false;

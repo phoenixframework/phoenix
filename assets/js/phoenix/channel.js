@@ -1,7 +1,6 @@
 import {closure} from "./utils"
 import {
   CHANNEL_EVENTS,
-  CHANNEL_LIFECYCLE_EVENTS,
   CHANNEL_STATES,
 } from "./constants"
 
