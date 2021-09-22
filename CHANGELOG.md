@@ -12,6 +12,14 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+### 1.5.13 (2021-09-22)
+
+### Bug Fixes
+  * [Router] Do not generate conflicting helpers in router
+
+### JavaScript Client Bug Fixes
+  * Fix messages for duplicate topic being dispatched to old channels
+
 ### 1.5.12 (2021-08-24)
 
 ### Bug Fixes
