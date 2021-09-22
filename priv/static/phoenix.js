@@ -51,13 +51,6 @@ var Phoenix = (() => {
     reply: "phx_reply",
     leave: "phx_leave"
   };
-  var CHANNEL_LIFECYCLE_EVENTS = [
-    CHANNEL_EVENTS.close,
-    CHANNEL_EVENTS.error,
-    CHANNEL_EVENTS.join,
-    CHANNEL_EVENTS.reply,
-    CHANNEL_EVENTS.leave
-  ];
   var TRANSPORTS = {
     longpoll: "longpoll",
     websocket: "websocket"

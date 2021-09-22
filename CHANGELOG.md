@@ -2,12 +2,15 @@
 
 Phoenix v1.6 requires Elixir v1.9+.
 
-## 1.6.0-rc.1
+## 1.6.0-rc.1 (2021-09-22)
 
 ### Enhancements
   * [mix phx.gen.auth] Validate bcrypt passwords are no longer than 72 bytes
   * re-enable `phx.routes` task to support back to back invocations, such as for aliased mix route tasks
   * [mix phx.gen.html] Remove comma after `for={@changeset}` on `form.html.heex`
+
+### JavaScript Client Bug Fixes
+  * Fix messages for duplicate topic being dispatched to old channels
 
 ## 1.6.0-rc.0 (2021-08-26)
 
