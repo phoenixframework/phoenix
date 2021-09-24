@@ -8,16 +8,16 @@ defmodule Mix.Tasks.Phx.Gen do
   
   ## CRUD related generators
 
-Sometimes you just want to create an schema to validate an external entity and other times you just need a REST API or an HTML CRUD. check the following table to get an idea of how each of the CRUD related generators relate to each other
+  The table below shows a summary of the contents created by the CRUD generators:
 
-| Tasks | Migration | Schema | Context | Controller | View | CRUD Templates | LiveView views/components |
-| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| `phx.gen.schema` | Included | Included |  |  |  |  |  |
-| `phx.gen.embedded` |  | Included |  |  |  |  |  |
-| `phx.gen.context` | Included | Included | Included |  |  |  |  |
-| `phx.gen.json` | Included | Included | Included | Included | Included |  |  |
-| `phx.gen.html` | Included | Included | Included | Included | Included | Included |  |
-| `phx.gen.live` | Included | Included |  |  |  |  | Included |
+  | Task | Schema | Migration | Context | Controller | View | LiveView |
+  |:------------------ |:-:|:-:|:-:|:-:|:-:|:-:|
+  | `phx.gen.embedded` | ✓ |   |   |   |   |   |
+  | `phx.gen.schema`   | ✓ | ✓ |   |   |   |   |
+  | `phx.gen.context`  | ✓ | ✓ | ✓ |   |   |   |
+  | `phx.gen.live`     | ✓ | ✓ | ✓ |   |   | ✓ |
+  | `phx.gen.json`     | ✓ | ✓ | ✓ | ✓ | ✓ |   |
+  | `phx.gen.html`     | ✓ | ✓ | ✓ | ✓ | ✓ |   |
   """
 
   def run(_args) do
