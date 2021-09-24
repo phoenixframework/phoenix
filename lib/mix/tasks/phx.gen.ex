@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Phx.Gen do
   use Mix.Task
 
-  @shortdoc "Explains in detail what every phx.gen task do"
+  @shortdoc "Lists all available Phoenix generators"
 
   @moduledoc """
     ## Explanation of the different types of phoenix generators
