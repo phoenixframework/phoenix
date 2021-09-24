@@ -595,8 +595,8 @@ defmodule Phoenix.ConnTest do
   @doc """
   Returns the matched params of the URL for the `%Plug.Conn{}`'s router.
 
-  Useful for testing LiveViews when we have any redirected paths that we want
-  to get the params out of.
+  Useful for extracting path params out of returned URLs, such as those
+  returned by `Phoenix.LiveViewTest`'s redirected results.
 
   ## Examples
 
