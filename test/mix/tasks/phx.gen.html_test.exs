@@ -353,7 +353,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "when more than 50 arguments are given", config do
     in_tmp_project config.test, fn ->
-      long_attribute_list = 0..55 |> Enum.map(&("attribute#{&1}:string")) |> Enum.join(" ")
+      long_attribute_list = Enum.map_join(0..55, " ", &("attribute#{&1}:string"))
       Gen.Html.run(~w(Blog Post posts #{long_attribute_list}))
 
       assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->

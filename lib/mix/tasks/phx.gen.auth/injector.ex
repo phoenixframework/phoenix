@@ -257,7 +257,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
 
     string
     |> String.split("\n")
-    |> Enum.map(&(indent <> &1))
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", &(indent <> &1))
   end
 end
