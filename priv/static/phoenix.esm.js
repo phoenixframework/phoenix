@@ -36,6 +36,9 @@ var TRANSPORTS = {
   longpoll: "longpoll",
   websocket: "websocket"
 };
+var XHR_STATES = {
+  complete: 4
+};
 
 // js/phoenix/push.js
 var Push = class {
@@ -334,9 +337,6 @@ var Channel = class {
 
 // js/phoenix/ajax.js
 var Ajax = class {
-  constructor() {
-    this.states = { complete: 4 };
-  }
   static request(method, endPoint, accept, body, timeout, ontimeout, callback) {
     if (global.XDomainRequest) {
       let req = new global.XDomainRequest();
@@ -368,7 +368,7 @@ var Ajax = class {
       callback && callback(null);
     };
     req.onreadystatechange = () => {
-      if (req.readyState === this.states.complete && callback) {
+      if (req.readyState === XHR_STATES.complete && callback) {
         let response = this.parseJSON(req.responseText);
         callback(response);
       }

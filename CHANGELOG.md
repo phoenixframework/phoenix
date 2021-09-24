@@ -2,6 +2,14 @@
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.0 (2021-09-24) 🚀
+
+### Enhancements
+  * [ConnTest] Add `path_params/2` for retrieving router path parameters out of dynamically returned URLs.
+
+### JavaScript Client Bug Fixes
+  * Fix LongPoll transport undefined readyState check
+
 ## 1.6.0-rc.1 (2021-09-22)
 
 ### Enhancements
