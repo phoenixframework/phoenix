@@ -435,8 +435,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       missing =
         context
         |> potential_layout_file_paths()
-        |> Enum.map(&"  * #{&1}")
-        |> Enum.join("\n")
+        |> Enum.map_join("\n", &"  * #{&1}")
 
       Mix.shell().error("""
 
@@ -585,8 +584,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
     string
     |> String.split("\n")
-    |> Enum.map(&(indent <> &1))
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", &(indent <> &1))
   end
 
   defp timestamp do

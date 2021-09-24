@@ -316,7 +316,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "when more than 50 attributes are given", config do
     in_tmp_project config.test, fn ->
-      long_attribute_list = 0..55 |> Enum.map(&("attribute#{&1}:string")) |> Enum.join(" ")
+      long_attribute_list = Enum.map_join(0..55, " ", &("attribute#{&1}:string"))
       Gen.Context.run(~w(Blog Post posts title #{long_attribute_list}))
 
       assert_file "test/phoenix/blog_test.exs", fn file ->
