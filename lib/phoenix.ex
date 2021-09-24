@@ -12,6 +12,9 @@ defmodule Phoenix do
 
     * [ExUnit](https://hexdocs.pm/ex_unit) - Elixir's built-in test framework
 
+    * [Gettext](https://hexdocs.pm/gettext) - Internationalization and
+      localization through [`gettext`](https://www.gnu.org/software/gettext/)
+
     * [Phoenix](https://hexdocs.pm/phoenix) - the Phoenix web framework
       (these docs)
 
@@ -35,11 +38,11 @@ defmodule Phoenix do
     * [Plug](https://hexdocs.pm/plug) - a specification and conveniences
       for composable modules in between web applications
 
+    * [Swoosh](https://hexdocs.pm/swoosh) - a library for composing,
+    delivering and testing emails, also used by `mix phx.gen.auth`
+
     * [Telemetry Metrics](https://hexdocs.pm/telemetry_metrics) - common
       interface for defining metrics based on Telemetry events
-
-    * [Gettext](https://hexdocs.pm/gettext) - Internationalization and
-      localization through [`gettext`](https://www.gnu.org/software/gettext/)
 
   To get started, see our [overview guides](overview.html).
   """
