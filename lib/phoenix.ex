@@ -38,7 +38,8 @@ defmodule Phoenix do
     * [Plug](https://hexdocs.pm/plug) - a specification and conveniences
       for composable modules in between web applications
 
-    * [Swoosh](https://hexdocs.pm/swoosh) - email delivery for `phx.gen.auth`
+    * [Swoosh](https://hexdocs.pm/swoosh) - a library for composing,
+    delivering and testing emails, also used by `mix phx.gen.auth`
 
     * [Telemetry Metrics](https://hexdocs.pm/telemetry_metrics) - common
       interface for defining metrics based on Telemetry events
