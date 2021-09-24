@@ -1,11 +1,9 @@
 import {
-  global
+  global,
+  XHR_STATES
 } from "./constants"
 
 export default class Ajax {
-  constructor(){
-    this.states = {complete: 4}
-  }
 
   static request(method, endPoint, accept, body, timeout, ontimeout, callback){
     if(global.XDomainRequest){
@@ -38,7 +36,7 @@ export default class Ajax {
     req.setRequestHeader("Content-Type", accept)
     req.onerror = () => { callback && callback(null) }
     req.onreadystatechange = () => {
-      if(req.readyState === this.states.complete && callback){
+      if(req.readyState === XHR_STATES.complete && callback){
         let response = this.parseJSON(req.responseText)
         callback(response)
       }

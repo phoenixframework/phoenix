@@ -24,3 +24,6 @@ export const TRANSPORTS = {
   longpoll: "longpoll",
   websocket: "websocket"
 }
+export const XHR_STATES = {
+  complete: 4
+}
