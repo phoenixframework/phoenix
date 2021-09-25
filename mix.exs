@@ -154,7 +154,7 @@ defmodule Phoenix.MixProject do
       Introduction: ~r/guides\/introduction\/.?/,
       Guides: ~r/guides\/[^\/]+\.md/,
       Authentication: ~r/guides\/authentication\/.?/,
-      Channels: ~r/guides\/channels\/.?/,
+      "Real-time": ~r/guides\/channels\/.?/,
       Testing: ~r/guides\/testing\/.?/,
       Deployment: ~r/guides\/deployment\/.?/,
       "How-to's": ~r/guides\/howto\/.?/
