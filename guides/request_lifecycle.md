@@ -34,7 +34,7 @@ get "/", PageController, :index
 
 Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an HTTP `GET` request to the root path. All requests like this will be handled by the `index/2` function in the `HelloWeb.PageController` module defined in `lib/hello_web/controllers/page_controller.ex`.
 
-The page we are going to build will simply say "Hello World, from Phoenix!" when we point our browser to [http://localhost:4000/hello](http://localhost:4000/hello).
+The page we are going to build will say "Hello World, from Phoenix!" when we point our browser to [http://localhost:4000/hello](http://localhost:4000/hello).
 
 The first thing we need to do to create that page is define a route for it. Let's open up `lib/hello_web/router.ex` in a text editor. For a brand new application, it looks like this:
 
@@ -45,7 +45,8 @@ defmodule HelloWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug :fetch_flash
+    plug :fetch_live_flash
+    plug :put_root_layout, {HelloWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -64,8 +65,9 @@ defmodule HelloWeb.Router do
   # scope "/api", HelloWeb do
   #   pipe_through :api
   # end
-end
 
+  # ...
+end
 ```
 
 For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. We will discuss those in the [Routing guide](routing.html).
@@ -117,7 +119,7 @@ defmodule HelloWeb.HelloView do
 end
 ```
 
-Now in order to add templates to this view, we simply need to add files to the `lib/hello_web/templates/hello` directory. Note the controller name (`HelloController`), the view name (`HelloView`), and the template directory (`hello`) all follow the same naming convention and are named after each other.
+Now in order to add templates to this view, we need to add files to the `lib/hello_web/templates/hello` directory. Note the controller name (`HelloController`), the view name (`HelloView`), and the template directory (`hello`) all follow the same naming convention and are named after each other.
 
 A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, we will create an `index.html.heex` file at `lib/hello_web/templates/hello/index.html.heex`. ".heex" stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
 
@@ -139,7 +141,7 @@ There are a couple of interesting things to notice about what we just did. We di
 <%= @inner_content %>
 ```
 
-which injects our template into the layout before the HTML is sent off to the browser.
+Which injects our template into the layout before the HTML is sent off to the browser.
 
 > A note on hot code reloading: Some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the discussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
 
@@ -188,7 +190,7 @@ As we did last time, the first thing we'll do is create a new route.
 
 ### Another new route
 
-For this exercise, we're going to reuse `HelloController` which was just created and simply add a new `show` action. We'll add a line just below our last route, like this:
+For this exercise, we're going to reuse `HelloController` which was just created and add a new `show` action. We'll add a line just below our last route, like this:
 
 ```elixir
 scope "/", HelloWeb do
