@@ -304,7 +304,7 @@ With our context function in place, let's make use of it in our product controll
   end
 ```
 
-We modified our `show` action to pipe our fetched page into `Catalog.inc_page_views/1`, which will return the updated product. Then we rendered our template just as before. Let's try it out. Refresh one of your product pages a few times and watch the view count increase.
+We modified our `show` action to pipe our fetched product into `Catalog.inc_page_views/1`, which will return the updated product. Then we rendered our template just as before. Let's try it out. Refresh one of your product pages a few times and watch the view count increase.
 
 We can also see our atomic update in action in the ecto debug logs:
 
