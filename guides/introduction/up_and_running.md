@@ -79,9 +79,9 @@ And finally, we'll start the Phoenix server:
 
 ```console
 $ mix phx.server
-[info] Running HelloWeb.Endpoint with cowboy 2.5.0 at http://localhost:4000
-
-Webpack is watching the files…
+[info] Running HelloWeb.Endpoint with cowboy 2.9.0 at 127.0.0.1:4000 (http)
+[info] Access HelloWeb.Endpoint at http://localhost:4000
+[watch] build finished, watching for changes...
 ...
 ```
 
