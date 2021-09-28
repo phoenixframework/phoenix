@@ -4,6 +4,7 @@
   "description": "The official JavaScript client for the Phoenix web framework.",
   "license": "MIT",
   "module": "./priv/static/phoenix.esm.js",
+  "main": "./priv/static/phoenix.cjs.js",
   "unpkg": "./priv/static/phoenix.min.js",
   "jsdelivr": "./priv/static/phoenix.min.js",
   "exports": {
