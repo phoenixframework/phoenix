@@ -6,7 +6,7 @@
 
 Phoenix controllers act as intermediary modules. Their functions — called actions — are invoked from the router in response to HTTP requests. The actions, in turn, gather all the necessary data and perform all the necessary steps before invoking the view layer to render a template or returning a JSON response.
 
-Phoenix controllers also build on the Plug package, and are themselves plugs. Controllers provide the functions to do almost anything we need to in an action. If we do find ourselves looking for something that Phoenix controllers don't provide, we might find what we're looking for in Plug itself. Please see the [Plug guide](plug.html) or the [Plug documentation](https://hexdocs.pm/plug/) for more information.
+Phoenix controllers also build on the Plug package, and are themselves plugs. Controllers provide the functions to do almost anything we need to in an action. If we do find ourselves looking for something that Phoenix controllers don't provide, we might find what we're looking for in Plug itself. Please see the [Plug guide](plug.html) or the [Plug documentation](`Plug`) for more information.
 
 A newly generated Phoenix app will have a single controller named `PageController`, which can be found at `lib/hello_web/controllers/page_controller.ex` which looks like this:
 
@@ -64,7 +64,7 @@ While we can name our actions whatever we like, there are conventions for action
 
 Each of these actions takes two parameters, which will be provided by Phoenix behind the scenes.
 
-The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn` comes to Phoenix via Elixir's Plug middleware framework. More detailed information about `conn` can be found in the [Plug.Conn documentation](https://hexdocs.pm/plug/Plug.Conn.html).
+The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn` comes to Phoenix via Elixir's Plug middleware framework. More detailed information about `conn` can be found in the [Plug.Conn documentation](`Plug.Conn`).
 
 The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against parameters in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the [request life-cycle guide](request_lifecycle.html) when we added a messenger parameter to our `show` route in `lib/hello_web/controllers/hello_controller.ex`.
 
@@ -94,7 +94,7 @@ end
 
 Now [`/hello/Frank`] in your browser should display `From messenger Frank` as plain text without any HTML.
 
-A step beyond this is rendering pure JSON with the [`json/2`] function. We need to pass it something that the [Jason library](https://github.com/michalmuskala/jason) can decode into JSON, such as a map. (Jason is one of Phoenix's dependencies.)
+A step beyond this is rendering pure JSON with the [`json/2`] function. We need to pass it something that the [Jason library](`Jason`) can decode into JSON, such as a map. (Jason is one of Phoenix's dependencies.)
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
@@ -108,7 +108,7 @@ If we again visit [`/hello/Frank`] in the browser, we should see a block of JSON
 {"id": "Frank"}
 ```
 
-The [`json/2`](`Phoenix.Controller.json/2`) function is useful for writing APIs and there is also the [`html/2`](`Phoenix.Controller.html/2`) function for rendering HTML, but most of the times we use Phoenix views to build our responses. For this, Phoenix includes the [`render/3`] function. It is specially important for HTML responses, as Phoenix Views provide performance and security benefits.
+The [`json/2`] function is useful for writing APIs and there is also the [`html/2`] function for rendering HTML, but most of the times we use Phoenix views to build our responses. For this, Phoenix includes the [`render/3`] function. It is specially important for HTML responses, as Phoenix Views provide performance and security benefits.
 
 Let's rollback our `show` action to what we originally wrote in the [request life-cycle guide](request_lifecycle.html):
 
@@ -136,9 +136,9 @@ If we need to pass values into the template when using `render`, that's easy. We
   end
 ```
 
-Note: Using `Phoenix.Controller` imports `Plug.Conn`, so shortening the call to `assign/3` works just fine.
+Note: Using `Phoenix.Controller` imports `Plug.Conn`, so shortening the call to [`assign/3`] works just fine.
 
-Passing more than one value to our template is as simple as connecting `assign/3` functions together:
+Passing more than one value to our template is as simple as connecting [`assign/3`] functions together:
 
 ```elixir
   def show(conn, %{"messenger" => messenger}) do
@@ -155,46 +155,48 @@ Generally speaking, once all assigns are configured, we invoke the view layer. T
 
 ### Assigning layouts
 
-Layouts are just a special subset of templates. The live in the `templates/layout` folder (`lib/hello_web/templates/layout`). Phoenix created one for us when we generated our app. The default layout is called `app.html.heex`, and it is the layout into which all templates will be rendered by default.
+Layouts are just a special subset of templates. They live in the `templates/layout` folder (`lib/hello_web/templates/layout`). Phoenix created three for us when we generated our app. The default _root layout_ is called `root.html.heex`, and it is the layout into which all templates will be rendered by default.
 
 Since layouts are really just templates, they need a view to render them. This one is `LayoutView` which is defined in `lib/hello_web/views/layout_view.ex`. Since Phoenix generated this view for us, we won't have to create a new one as long as we put the layouts we want to render inside the `lib/hello_web/templates/layout` directory.
 
 Before we create a new layout, though, let's do the simplest possible thing and render a template with no layout at all.
 
-The `Phoenix.Controller` module provides the `put_layout/2` function for us to switch layouts. This takes `conn` as its first argument and a string for the basename of the layout we want to render. It also accepts `false` to disable the layout altogether.
+The `Phoenix.Controller` module provides the [`put_root_layout/2`] function for us to switch _root layouts_. This takes `conn` as its first argument and a string for the basename of the layout we want to render. It also accepts `false` to disable the layout altogether.
 
 You can edit the `index` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this.
 
 ```elixir
 def index(conn, _params) do
   conn
-  |> put_layout(false)
+  |> put_root_layout(false)
   |> render("index.html")
 end
 ```
 
 After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or CSS styling at all.
 
-Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `app.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/templates/layout`. Then let's replace the lines in `admin.html.heex` that displays the logo with the word "Administration".
+Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `root.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/templates/layout`. Then let's replace the lines in `admin.html.heex` that displays the logo with the word "Administration".
 
 Remove these lines:
+
 ```html
 <a href="https://phoenixframework.org/" class="phx-logo">
-  <img src="<%= Routes.static_path(@conn, "/images/phoenix.png") %>" alt="Phoenix Framework Logo"/>
+  <img src={Routes.static_path(@conn, "/images/phoenix.png")} alt="Phoenix Framework Logo"/>
 </a>
 ```
 
 Replace them with:
+
 ```html
 <p>Administration</p>
 ```
 
-Then, pass the basename of the new layout into `put_layout/2` in our `index` action in `lib/hello_web/controllers/page_controller.ex`.
+Then, pass the basename of the new layout into [`put_root_layout/2`] in our `index` action in `lib/hello_web/controllers/page_controller.ex`.
 
 ```elixir
 def index(conn, _params) do
   conn
-  |> put_layout("admin.html")
+  |> put_root_layout("admin.html")
   |> render("index.html")
 end
 ```
@@ -230,6 +232,8 @@ defmodule HelloWeb.Router do
   pipeline :browser do
     plug :accepts, ["html", "text"]
     plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, {HelloWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -248,20 +252,19 @@ If we go to [`http://localhost:4000/?_format=text`](http://localhost:4000/?_form
 
 ### Sending responses directly
 
-If none of the rendering options above quite fits our needs, we can compose our own using some of the functions that Plug gives us. Let's say we want to send a response with a status of "201" and no body whatsoever. We can easily do that with the `Plug.Conn.send_resp/3` function.
+If none of the rendering options above quite fits our needs, we can compose our own using some of the functions that `Plug` gives us. Let's say we want to send a response with a status of "201" and no body whatsoever. We can do that with the `Plug.Conn.send_resp/3` function.
 
 Edit the `index` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this:
 
 ```elixir
 def index(conn, _params) do
-  conn
-  |> send_resp(201, "")
+  send_resp(conn, 201, "")
 end
 ```
 
-Reloading [http://localhost:4000](http://localhost:4000) should show us a completely blank page. The network tab of our browser's developer tools should show a response status of "201".
+Reloading [http://localhost:4000](http://localhost:4000) should show us a completely blank page. The network tab of our browser's developer tools should show a response status of "201" (Created).
 
-If we would like to be really specific about the content type, we can use `put_resp_content_type/2` in conjunction with `send_resp/3`.
+If we would like to be really specific about the content type, we can use [`put_resp_content_type/2`] in conjunction with [`send_resp/3`].
 
 ```elixir
 def index(conn, _params) do
@@ -271,7 +274,7 @@ def index(conn, _params) do
 end
 ```
 
-Using Plug functions in this way, we can craft just the response we need.
+Using `Plug` functions in this way, we can craft just the response we need.
 
 ### Setting the Content Type
 
@@ -289,13 +292,13 @@ end
 
 We would then need to provide an `index.xml.eex` template which created valid XML, and we would be done.
 
-For a list of valid content mime-types, please see the [mime](https://github.com/elixir-plug/mime) library.
+For a list of valid content mime-types, please see the `MIME` library.
 
 ### Setting the HTTP Status
 
 We can also set the HTTP status code of a response similarly to the way we set the content type. The `Plug.Conn` module, imported into all controllers, has a `put_status/2` function to do this.
 
-[`Plug.Conn.put_status/2`](https://hexdocs.pm/plug/Plug.Conn.html#put_status/2) takes `conn` as the first parameter and as the second parameter either an integer or a "friendly name" used as an atom for the status code we want to set. The list of status code atom representations can be found in [`Plug.Conn.Status.code/1`](https://hexdocs.pm/plug/Plug.Conn.Status.html#code/1) documentation.
+`Plug.Conn.put_status/2` takes `conn` as the first parameter and as the second parameter either an integer or a "friendly name" used as an atom for the status code we want to set. The list of status code atom representations can be found in `Plug.Conn.Status.code/1` documentation.
 
 Let's change the status in our `PageController` `index` action.
 
@@ -421,9 +424,9 @@ Phoenix does not enforce which keys are stored in the flash. As long as we are i
 
 ## Action fallback
 
-Action fallback allows us to centralize error handling code in plugs which are called when a controller action fails to return a [`%Plug.Conn{}`](https://hexdocs.pm/plug/Plug.Conn.html#t:t/0) struct. These plugs receive both the `conn` which was originally passed to the controller action along with the return value of the action.
+Action fallback allows us to centralize error handling code in plugs which are called when a controller action fails to return a [`%Plug.Conn{}`](`t:Plug.Conn.t/0`) struct. These plugs receive both the `conn` which was originally passed to the controller action along with the return value of the action.
 
-Let's say we have a `show` action which uses [`with`](`Kernel.SpecialForms.with/1`) to fetch a blog post and then authorize the current user to view that blog post. In this example we might expect `fetch_post/1` to return `{:error, :not_found}` if the post is not found and `authorize_user/3` might return `{:error, :unauthorized}` if the user is unauthorized. We could use `ErrorView` which is generated by Phoenix for every new application to handle these error paths accordingly:
+Let's say we have a `show` action which uses [`with`](`with/1`) to fetch a blog post and then authorize the current user to view that blog post. In this example we might expect `fetch_post/1` to return `{:error, :not_found}` if the post is not found and `authorize_user/3` might return `{:error, :unauthorized}` if the user is unauthorized. We could use `ErrorView` which is generated by Phoenix for every new application to handle these error paths accordingly:
 
 ```elixir
 defmodule HelloWeb.MyController do
@@ -494,13 +497,17 @@ end
 Whenever the `with` conditions do not match, `HelloWeb.MyFallbackController` will receive the original `conn` as well as the result of the action and respond accordingly.
 
 
-[welcome page]: http://localhost:4000/
 [`/hello/Frank`]:  http://localhost:4000/hello/Frank
+[`assign/3`]: `Plug.Conn.assign/3`
+[`clear_flash/1`]: `Phoenix.Controller.clear_flash/1`
+[`get_flash/2`]: `Phoenix.Controller.get_flash/2`
 [`html/2`]: `Phoenix.Controller.html/2`
 [`json/2`]: `Phoenix.Controller.json/2`
+[`put_flash/3`]: `Phoenix.Controller.put_flash/3`
+[`put_resp_content_type/2`]: `Plug.Conn.put_resp_content_type/2`
+[`put_root_layout/2`]: `Phoenix.Controller.put_root_layout/2`
 [`redirect/2`]: `Phoenix.Controller.redirect/2`
 [`render/3`]: `Phoenix.Controller.render/3`
+[`send_resp/3`]: `Plug.Conn.send_resp/3`
 [`text/2`]: `Phoenix.Controller.text/2`
-[`put_flash/3`]: `Phoenix.Controller.put_flash/3`
-[`get_flash/2`]: `Phoenix.Controller.get_flash/2`
-[`clear_flash/1`]: `Phoenix.Controller.clear_flash/1`
+[welcome page]: http://localhost:4000/
