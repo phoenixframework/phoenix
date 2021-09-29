@@ -581,13 +581,13 @@ While Phoenix uses the `Ecto` project to interact with the data access layer, th
 
 The data world is your oyster, but we won't be covering these options in these guides.
 
-[`Repo.delete/2`]: `c:Ecto.Repo.delete/2`
-[`Repo.delete_all/2`]: `c:Ecto.Repo.delete_all/2`
-[`Repo.insert/2`]: `c:Ecto.Repo.insert/2`
-[`Repo.insert_all/3`]: `c:Ecto.Repo.insert_all/3`
-[`Repo.one/2`]: `c:Ecto.Repo.one/2`
-[`Repo.update/2`]: `c:Ecto.Repo.update/2`
-[`Repo.update_all/3`]: `c:Ecto.Repo.update_all/3`
 [`cast/3`]: `Ecto.Changeset.cast/3`
 [`from/2`]: `Ecto.Query.from/2`
+[`Repo.delete_all/2`]: `c:Ecto.Repo.delete_all/2`
+[`Repo.delete/2`]: `c:Ecto.Repo.delete/2`
+[`Repo.insert_all/3`]: `c:Ecto.Repo.insert_all/3`
+[`Repo.insert/2`]: `c:Ecto.Repo.insert/2`
+[`Repo.one/2`]: `c:Ecto.Repo.one/2`
+[`Repo.update_all/3`]: `c:Ecto.Repo.update_all/3`
+[`Repo.update/2`]: `c:Ecto.Repo.update/2`
 [`timestamps/1`]: `Ecto.Migration.timestamps/1`
