@@ -8,7 +8,8 @@
   "unpkg": "./priv/static/phoenix.min.js",
   "jsdelivr": "./priv/static/phoenix.min.js",
   "exports": {
-    "import": "./priv/static/phoenix.esm.js"
+    "import": "./priv/static/phoenix.esm.js",
+    "require": "./priv/static/phoenix.cjs.js"
   },
   "repository": {
     "type": "git",
