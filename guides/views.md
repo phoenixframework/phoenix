@@ -87,7 +87,7 @@ Did you notice the use of `<%= %>` versus `<% %>` above? All expressions that ou
 
 ### HTML extensions
 
-Besides allowing interpolation of Elixir expressions via `<%= %>`, `.heex` templates come with HTML-aware extensions. For example, let's see what tries to happen if you try to interpolate a value with "<" or ">" in it, which would lead to HTML injection:
+Besides allowing interpolation of Elixir expressions via `<%= %>`, `.heex` templates come with HTML-aware extensions. For example, let's see what happens if you try to interpolate a value with "<" or ">" in it, which would lead to HTML injection:
 
 ```html
 <%= "<b>Bold?</b>" %>
@@ -123,7 +123,7 @@ Also, try removing the closing `</div>` or renaming it to `</div-typo>`. HEEx te
 
 The last feature provided by HEEx is the idea of components. Components are pure functions that can be either local (same module) or remote (external module).
 
-HEEx allows invoking whose function components directly in the template using an HTML-like notation. For example, a remote function:
+HEEx allows invoking those function components directly in the template using an HTML-like notation. For example, a remote function:
 
 ```html
 <MyApp.Weather.city name="Kraków"/>
@@ -155,7 +155,7 @@ defmodule MyApp.Weather do
 end
 ```
 
-In the example above, we used the `~H` sigil syntax to embed HEEx templates directly into our modules. We have already invoke the `city` component and calling the `country` component wouldn't be different:
+In the example above, we used the `~H` sigil syntax to embed HEEx templates directly into our modules. We have already invoked the `city` component and calling the `country` component wouldn't be different:
 
 ```html
 <div title="My div" {@many_attributes}>
