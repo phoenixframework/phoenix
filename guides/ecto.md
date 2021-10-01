@@ -127,7 +127,7 @@ end
 
 It begins by defining the repository module. Then it configures our `otp_app` name, and the `adapter` – `Postgres`, in our case.
 
-Our repo has three main tasks - to bring in all the common query functions from [`Ecto.Repo`], to set the `otp_app` name equal to our application name, and to configure our database adapter. We'll talk more about how to use `Hello.Repo` in a bit.
+Our repo has three main tasks - to bring in all the common query functions from `Ecto.Repo`, to set the `otp_app` name equal to our application name, and to configure our database adapter. We'll talk more about how to use `Hello.Repo` in a bit.
 
 When `phx.new` generated our application, it included some basic repository configuration as well. Let's look at `config/dev.exs`.
 
@@ -191,11 +191,11 @@ def changeset(%User{} = user, attrs) do
 end
 ```
 
-Right now, we have two transformations in our pipeline. In the first call, we invoke [`Ecto.Changeset.cast/3`], passing in our external parameters and marking which fields are required for validation.
+Right now, we have two transformations in our pipeline. In the first call, we invoke `Ecto.Changeset.cast/3`, passing in our external parameters and marking which fields are required for validation.
 
 [`cast/3`] first takes a struct, then the parameters (the proposed updates), and then the final field is the list of columns to be updated. [`cast/3`] also will only take fields that exist in the schema.
 
-Next, [`Ecto.Changeset.validate_required/3`] checks that this list of fields is present in the changeset that [`cast/3`] returns. By default with the generator, all fields are required.
+Next, `Ecto.Changeset.validate_required/3` checks that this list of fields is present in the changeset that [`cast/3`] returns. By default with the generator, all fields are required.
 
 We can verify this functionality in `IEx`. Let's fire up our application inside IEx by running `iex -S mix`. In order to minimize typing and make this easier to read, let's alias our `Hello.User` struct.
 
@@ -307,7 +307,7 @@ iex> changeset = User.changeset(%User{}, params)
   errors: [],
   data: #Hello.User<>,
   valid?: true
-> 
+>
 ```
 
 Our new changeset is valid.
@@ -365,7 +365,7 @@ def changeset(%User{} = user, attrs) do
 end
 ```
 
-Let's say we want to perform at least some rudimentary format validation on the `email` field. All we want to check for is the presence of the `@`. The [`Ecto.Changeset.validate_format/3`] function is just what we need.
+Let's say we want to perform at least some rudimentary format validation on the `email` field. All we want to check for is the presence of the `@`. The `Ecto.Changeset.validate_format/3` function is just what we need.
 
 ```elixir
 def changeset(%User{} = user, attrs) do
@@ -434,7 +434,7 @@ INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETUR
  }}
 ```
 
-We started by aliasing our `User` and `Repo` modules for easy access. Next, we called [`Repo.insert/1`] and passed a user struct. Since we are in the `dev` environment, we can see the debug logs for the query our repository performed when inserting the underlying `%User{}` data. We received a two-element tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful. With a couple of users inserted, let's fetch them back out of the repo.
+We started by aliasing our `User` and `Repo` modules for easy access. Next, we called `Repo.insert/1` and passed a user struct. Since we are in the `dev` environment, we can see the debug logs for the query our repository performed when inserting the underlying `%User{}` data. We received a two-element tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful. With a couple of users inserted, let's fetch them back out of the repo.
 
 ```elixir
 iex> Repo.all(User)
@@ -476,7 +476,7 @@ SELECT u0."email" FROM "users" AS u0 []
 ["user1@example.com", "user2@example.com"]
 ```
 
-First, we imported [`Ecto.Query`], which imports the [`from/2`] macro of Ecto's Query DSL. Next, we built a query which selects all the email addresses in our users table. Let's try another example.
+First, we imported `Ecto.Query`, which imports the [`from/2`] macro of Ecto's Query DSL. Next, we built a query which selects all the email addresses in our users table. Let's try another example.
 
 ```elixir
 iex)> Repo.one(from u in User, where: ilike(u.email, "%1%"),
@@ -485,7 +485,7 @@ iex)> Repo.one(from u in User, where: ilike(u.email, "%1%"),
 1
 ```
 
-Now we're starting to get a taste of Ecto's rich querying capabilities. We used [`Repo.one/1`] to fetch the count of all users with an email address containing `1`, and received the expected count in return. This just scratches the surface of Ecto's query interface, and much more is supported such as sub-querying, interval queries, and advanced select statements. For example, let's build a query to fetch a map of all user id's to their email addresses.
+Now we're starting to get a taste of Ecto's rich querying capabilities. We used `Repo.one/1` to fetch the count of all users with an email address containing `1`, and received the expected count in return. This just scratches the surface of Ecto's query interface, and much more is supported such as sub-querying, interval queries, and advanced select statements. For example, let's build a query to fetch a map of all user id's to their email addresses.
 
 ```elixir
 iex> Repo.all(from u in User, select: %{u.id => u.email})
