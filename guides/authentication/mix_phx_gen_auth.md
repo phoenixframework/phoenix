@@ -46,7 +46,17 @@ The following are notes about the generated authentication system.
 
 ### Password hashing
 
-The password hashing mechanism defaults to `argon2` for Unix systems and `pbkdf2` for Windows systems. Both systems use the [Comeonin interface](https://hexdocs.pm/comeonin/).
+The password hashing mechanism defaults to `bcrypt` for Unix systems and `pbkdf2` for Windows systems. Both systems use the [Comeonin interface](https://hexdocs.pm/comeonin/).
+
+The password hashing mechanism can be overridden with the `--hashing-lib` option. The following values are supported:
+
+    * `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
+    * `pbkdf2` - [pbkdf2_elixir](https://hex.pm/packages/pbkdf2_elixir)
+    * `argon2` - [argon2_elixir](https://hex.pm/packages/argon2_elixir)
+
+We recommend developers to consider using `argon2`, which is the most robust of all 3. The downside is that `argon2` is quite CPU and memory intensive, and you will need more powerful instances to run your applications on.
+
+For more information about choosing these libraries, see the [Comeonin project](https://github.com/riverrun/comeonin).
 
 ### Forbidding access
 

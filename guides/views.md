@@ -24,10 +24,10 @@ That's simple enough. There's only one line, `use HelloWeb, :view`. This line ca
 
 All of the imports and aliases we make in our view will also be available in our templates. That's because templates are effectively compiled into functions inside their respective views. For example, if you define a function in your view, you will be able to invoke it directly from the template. Let's see this in practice.
 
-Open up our application layout template, `lib/hello_web/templates/layout/app.html.heex`, and change this line,
+Open up our application layout template, `lib/hello_web/templates/layout/root.html.heex`, and change this line,
 
 ```html
-<title>Hello · Phoenix Framework</title>
+<%= live_title_tag assigns[:page_title] || "Hello", suffix: " · Phoenix Framework" %>
 ```
 
 to call a `title/0` function, like this.
@@ -87,7 +87,7 @@ Did you notice the use of `<%= %>` versus `<% %>` above? All expressions that ou
 
 ### HTML extensions
 
-Besides allowing interpolation of Elixir expressions via `<%= %>`, `.heex` templates come with HTML-aware extensions. For example, let's see what tries to happen if you try to interpolate a value with "<" or ">" in it, which would lead to HTML injection:
+Besides allowing interpolation of Elixir expressions via `<%= %>`, `.heex` templates come with HTML-aware extensions. For example, let's see what happens if you try to interpolate a value with "<" or ">" in it, which would lead to HTML injection:
 
 ```html
 <%= "<b>Bold?</b>" %>
@@ -123,7 +123,7 @@ Also, try removing the closing `</div>` or renaming it to `</div-typo>`. HEEx te
 
 The last feature provided by HEEx is the idea of components. Components are pure functions that can be either local (same module) or remote (external module).
 
-HEEx allows invoking whose function components directly in the template using an HTML-like notation. For example, a remote function:
+HEEx allows invoking those function components directly in the template using an HTML-like notation. For example, a remote function:
 
 ```html
 <MyApp.Weather.city name="Kraków"/>
@@ -155,7 +155,7 @@ defmodule MyApp.Weather do
 end
 ```
 
-In the example above, we used the `~H` sigil syntax to embed HEEx templates directly into our modules. We have already invoke the `city` component and calling the `country` component wouldn't be different:
+In the example above, we used the `~H` sigil syntax to embed HEEx templates directly into our modules. We have already invoked the `city` component and calling the `country` component wouldn't be different:
 
 ```html
 <div title="My div" {@many_attributes}>
@@ -255,7 +255,7 @@ Now if you visit the Welcome page, you see the template results also shown.
 
 ## Layouts
 
-Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/templates/layout/app.html.heex`, just about in the middle of the `<body>`, we will see this.
+Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/templates/layout/root.html.heex`, just about at the end of the `<body>`, we will see this.
 
 ```html
 <%= @inner_content %>
@@ -267,7 +267,7 @@ In other words, the inner template is placed in the `@inner_content` assign.
 
 The view's job is not only to render HTML templates. Views are about data presentation. Given a bag of data, the view's purpose is to present that in a meaningful way given some format, be it HTML, JSON, CSV, or others. Many web apps today return JSON to remote clients, and Phoenix views are *great* for JSON rendering.
 
-Phoenix uses the [Jason](https://github.com/michalmuskala/jason) library to encode JSON, so all we need to do in our views is to format the data we would like to respond with as a list or a map, and Phoenix will do the rest.
+Phoenix uses the `Jason` library to encode JSON, so all we need to do in our views is to format the data we would like to respond with as a list or a map, and Phoenix will do the rest.
 
 While it is possible to respond with JSON back directly from the controller and skip the view, Phoenix views provide a much more structured approach for doing  so. Let's take our `PageController`, and see what it may look like when we respond with some static page maps as JSON, instead of HTML.
 
@@ -311,7 +311,7 @@ end
 
 In the view we see our [`render/2`] function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. The `"index.json"` and `"show.json"` are the ones requested directly from the controller. They also match on the assigns sent by the controller. `"index.json"` will respond with JSON like this:
 
-```javascript
+```json
 {
   "data": [
     {
@@ -326,7 +326,7 @@ In the view we see our [`render/2`] function pattern matching on `"index.json"`,
 
 And the [`render/2`] matching `"show.json"`:
 
-```javascript
+```json
 {
   "data": {
     "title": "foo"

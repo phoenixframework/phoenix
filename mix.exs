@@ -198,7 +198,7 @@ defmodule Phoenix.MixProject do
   defp aliases do
     [
       docs: ["docs", &generate_js_docs/1],
-      "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min"],
+      "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min", "esbuild main"],
       "assets.watch": "esbuild module --watch"
     ]
   end

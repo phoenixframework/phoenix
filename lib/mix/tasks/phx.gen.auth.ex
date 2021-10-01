@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   ## Password hashing
 
-  The password hashing mechanism defaults to `argon2` for
+  The password hashing mechanism defaults to `bcrypt` for
   Unix systems and `pbkdf2` for Windows systems. Both
   systems use the [Comeonin interface](https://hexdocs.pm/comeonin/).
 
@@ -24,6 +24,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     * `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
     * `pbkdf2` - [pbkdf2_elixir](https://hex.pm/packages/pbkdf2_elixir)
     * `argon2` - [argon2_elixir](https://hex.pm/packages/argon2_elixir)
+
+  We recommend developers to consider using `argon2`, which
+  is the most robust of all 3. The downside is that `argon2`
+  is quite CPU and memory intensive, and you will need more
+  powerful instances to run your applications on.
 
   For more information about choosing these libraries, see the
   [Comeonin project](https://github.com/riverrun/comeonin).
@@ -200,7 +205,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp default_hashing_library_option do
     case :os.type() do
-      {:unix, _} -> "argon2"
+      {:unix, _} -> "bcrypt"
       {:win32, _} -> "pbkdf2"
     end
   end
