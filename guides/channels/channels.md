@@ -1,4 +1,4 @@
-# Introduction
+# Channels
 
 > **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 

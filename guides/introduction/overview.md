@@ -12,6 +12,8 @@ The guides that you are currently looking at provide an overview of all parts th
 
   * Guides - in-depth guides covering the main components in Phoenix and Phoenix applications
 
+  * Authentication - in-depth guide covering how to use `mix phx.gen.auth`
+
   * Real-time components - in-depth guides covering Phoenix's built-in real-time components
 
   * Testing - in-depth guides about testing
