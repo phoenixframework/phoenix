@@ -634,7 +634,7 @@ defmodule Phoenix.Controller do
   Renders the given `template` and `assigns` based on the `conn` information.
 
   Once the template is rendered, the template format is set as the response
-  content type (for example, an HTML template will set "text/html" as response
+  content type (for example, a HTML template will set "text/html" as response
   content type) and the data is sent to the client with default status of 200.
 
   ## Arguments
@@ -643,7 +643,7 @@ defmodule Phoenix.Controller do
 
     * `template` - which may be an atom or a string. If an atom, like `:index`,
       it will render a template with the same format as the one returned by
-      `get_format/1`. For example, for an HTML request, it will render
+      `get_format/1`. For example, for a HTML request, it will render
       the "index.html" template. If the template is a string, it must contain
       the extension too, like "index.json"
 
