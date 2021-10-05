@@ -98,7 +98,7 @@ The generated tests run concurrently if you are using a database that supports c
 
 ## More about `mix phx.gen.auth`
 
-Check out [here](https://hexdocs.pm/phoenix/Mix.Tasks.Phx.Gen.Auth.html#content) for more details such as using different password hashing library, customizing the web module namespace, generating binary id type, configuring the default options and using custom table names.  
+Check out `mix phx.gen.auth` for more details, such as using different password hashing library, customizing the web module namespace, generating binary id type, configuring the default options, and using custom table names.  
 
 ## Additional resources
 
