@@ -50,6 +50,8 @@ description:string price:decimal views:integer
 * injecting lib/hello/catalog.ex
 * creating test/hello/catalog_test.exs
 * injecting test/hello/catalog_test.exs
+* creating test/support/fixtures/catalog_fixtures.ex
+* injecting test/support/fixtures/catalog_fixtures.ex
 
 Add the resource to your browser scope in lib/hello_web/router.ex:
 
@@ -63,7 +65,7 @@ Remember to update your repository by running migrations:
 
 > Note: we are starting with the basics for modeling an ecommerce system. In practice, modeling such systems yields more complex relationships such as product variants, optional pricing, multiple currencies, etc. We'll keep things simple in this guide, but the foundations will give you a solid starting point to building such a complete system.
 
-Phoenix generated the web files as expected in `lib/hello_web/`. We can also see our context files were generated inside a `lib/hello/catalog.ex` file and our product schema in the directory of the same name. Note the difference between `lib/hello` and `lib/hello_web`. We have a `Catalog` module to serve as the public API for product catalog functionality, as well as an `Catalog.Product` struct, which is an Ecto schema for casting and validating product data. Phoenix also provided web and context tests for us, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_web/router.ex`:
+Phoenix generated the web files as expected in `lib/hello_web/`. We can also see our context files were generated inside a `lib/hello/catalog.ex` file and our product schema in the directory of the same name. Note the difference between `lib/hello` and `lib/hello_web`. We have a `Catalog` module to serve as the public API for product catalog functionality, as well as an `Catalog.Product` struct, which is an Ecto schema for casting and validating product data. Phoenix also provided web and context tests for us, it also included test helpers for creating entities via the `Hello.Catalog` context, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_web/router.ex`:
 
 ```diff
   scope "/", HelloWeb do
@@ -336,6 +338,7 @@ Would you like to proceed? [Yn] y
 * creating priv/repo/migrations/20210203192325_create_categories.exs
 * injecting lib/hello/catalog.ex
 * injecting test/hello/catalog_test.exs
+* injecting test/support/fixtures/catalog_fixtures.ex
 
 Remember to update your repository by running migrations:
 
@@ -571,6 +574,16 @@ $ mix phx.gen.context ShoppingCart Cart carts user_uuid:uuid:unique
 * injecting lib/hello/shopping_cart.ex
 * creating test/hello/shopping_cart_test.exs
 * injecting test/hello/shopping_cart_test.exs
+* creating test/support/fixtures/shopping_cart_fixtures.ex
+* injecting test/support/fixtures/shopping_cart_fixtures.ex
+
+Some of the generated database columns are unique. Please provide
+unique implementations for the following fixture function(s) in
+test/support/fixtures/shopping_cart_fixtures.ex:
+
+    def unique_cart_user_uuid do
+      raise "implement the logic to generate a unique cart user_uuid"
+    end
 
 Remember to update your repository by running migrations:
 
@@ -591,6 +604,7 @@ Would you like to proceed? [Yn] y
 * creating priv/repo/migrations/20210205213410_create_cart_items.exs
 * injecting lib/hello/shopping_cart.ex
 * injecting test/hello/shopping_cart_test.exs
+* injecting test/support/fixtures/shopping_cart_fixtures.ex
 
 Remember to update your repository by running migrations:
 
@@ -702,7 +716,8 @@ We won't focus on a real user authentication system at this point, but by the ti
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug :fetch_flash
+    plug :fetch_live_flash
+    plug :put_root_layout, {HelloWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
 +   plug :fetch_current_user
@@ -806,9 +821,10 @@ Let's implement our new interface of `ShoppingCart` context API in `lib/hello/sh
 
 - def create_cart(attrs \\ %{}) do
 -   %Cart{}
+-   |> Cart.changeset(attrs)
 + def create_cart(user_uuid) do
 +   %Cart{user_uuid: user_uuid}
-    |> Cart.changeset(%{})
++   |> Cart.changeset(%{})
     |> Repo.insert()
 +   |> case do
 +     {:ok, cart} -> {:ok, reload_cart(cart)}
@@ -940,7 +956,7 @@ Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`
 <% end %>
 ```
 
-We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use `form_for` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use `Phoenix.HTML.Form.inputs_for` to render inputs for the nested cart items. For each item form input, we use `hidden_inputs_for` which will render out the item ID as a hidden input tag. This will allow us to map item inputs back together when the form is submitted. Next, we display the product title for the item in the cart, followed by a number input for the item quantity. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment.
+We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use [`form_for`](`Phoenix.HTML.Form.form_for/4`) to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use `Phoenix.HTML.Form.inputs_for/2` to render inputs for the nested cart items. For each item form input, we use [`hidden_inputs_for/1`](`Phoenix.HTML.Form.hidden_inputs_for/1`) which will render out the item ID as a hidden input tag. This will allow us to map item inputs back together when the form is submitted. Next, we display the product title for the item in the cart, followed by a number input for the item quantity. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment.
 
 We're almost ready to try out our cart page, but first we need to implement our new currency calculation functions. Open up your shopping cart context at `lib/hello/shopping_cart.ex` and add these new functions:
 
@@ -960,7 +976,7 @@ We're almost ready to try out our cart page, but first we need to implement our 
 
 We implemented `total_item_price/1` which accepts a `%CartItem{}` struct. To calculate the total price, we simply take the preloaded product's price and multiply it by the item's quantity. We used `Decimal.mult/2` to take our decimal currency struct and multiply it with proper precision. Similarly for calculating the total cart price, we implemented a `total_cart_price/1` function which accepts the cart and sums the preloaded product prices for items in the cart. We again make use of the `Decimal` functions to add our decimal structs together.
 
-Now that we can calculate price totals, let's try it out! Visit `http://localhost:4000/cart` and you should already see your first item in the cart. Going back to the same product and clicking "add to cart" will show our upsert in action. Your quantity should now show be two. Nice work!
+Now that we can calculate price totals, let's try it out! Visit [`http://localhost:4000/cart`](http://localhost:4000/cart) and you should already see your first item in the cart. Going back to the same product and clicking "add to cart" will show our upsert in action. Your quantity should now show be two. Nice work!
 
 Our cart page is almost complete, but submitting the form will yield yet another error.
 
@@ -1010,7 +1026,7 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
   end
 ```
 
-We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the `hidden_inputs_for/1` call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new()`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database repo transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
+We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`hidden_inputs_for/1`](`Phoenix.HTML.Form.hidden_inputs_for/1`) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new/0`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
 
 For our multi operations, we start by issuing an update of our cart, which we named `:cart`. After the cart update is issued, we perform a multi `delete_all` operation, which takes the updated cart and applies our zero-quantity logic. We prune any items in the cart with zero quantity by returning an ecto query that finds all cart items for this cart with an empty quantity. Calling `Repo.transaction/1` with our multi will execute the operations in a new transaction and we return the success or failure result to the caller just like the original function.
 
@@ -1041,6 +1057,8 @@ $ mix phx.gen.html Orders Order orders user_uuid:uuid total_price:decimal
 * injecting lib/hello/orders.ex
 * creating test/hello/orders_test.exs
 * injecting test/hello/orders_test.exs
+* creating test/support/fixtures/orders_fixtures.ex
+* injecting test/support/fixtures/orders_fixtures.ex
 
 Add the resource to your browser scope in lib/hello_web/router.ex:
 
@@ -1081,6 +1099,7 @@ Would you like to proceed? [Yn] y
 * creating priv/repo/migrations/20210209215050_create_order_line_items.exs
 * injecting lib/hello/orders.ex
 * injecting test/hello/orders_test.exs
+* injecting test/support/fixtures/orders_fixtures.ex
 
 Remember to update your repository by running migrations:
 
@@ -1242,7 +1261,7 @@ From our requirements alone, we can start to see why a generic `create_order` fu
   end
 ```
 
-We started by mapping the `%ShoppingCart.CartItem{}`'s in our shopping cart into a map of order line items structs. The job of order line item record is to capture the price of the product *at payment transaction time*, so we reference the product's price here. Next, we create a bare order changeset with `Ecto.Changeset.change/2` and associate our user UUID, set our total price calculation, and place our order line items in the changeset. With a fresh order changeset ready to be inserted, we can again make use of `Ecto.Multi` to execute our operations in a database transaction. We start by inserting the order, followed by a `run` operation. The `Ecto.Multi.run` function allows us to run any code in the function which must either succeed with `{:ok, result}` or error, which halts and rolls back the transaction. Here, we simply can call into our shopping cart context and ask it to prune all items in a cart. Running the transaction will execute the multi as before and we return the result to the caller.
+We started by mapping the `%ShoppingCart.CartItem{}`'s in our shopping cart into a map of order line items structs. The job of order line item record is to capture the price of the product *at payment transaction time*, so we reference the product's price here. Next, we create a bare order changeset with `Ecto.Changeset.change/2` and associate our user UUID, set our total price calculation, and place our order line items in the changeset. With a fresh order changeset ready to be inserted, we can again make use of `Ecto.Multi` to execute our operations in a database transaction. We start by inserting the order, followed by a `run` operation. The `Ecto.Multi.run/3` function allows us to run any code in the function which must either succeed with `{:ok, result}` or error, which halts and rolls back the transaction. Here, we simply can call into our shopping cart context and ask it to prune all items in a cart. Running the transaction will execute the multi as before and we return the result to the caller.
 
 To close out our order completion, we need to implement the `ShoppingCart.prune_cart_items/1` function in `lib/hello/shopping_cart.ex`:
 
@@ -1302,7 +1321,7 @@ Our last addition will be to add the "complete order" button to our cart page to
 <% end %>
 ```
 
-We added a link with `method: :post` to send a POST request to our `OrderController.create` action. If we head back to our cart page at `http://localhost:4000/cart` and complete an order, we'll be greeted by our rendered template:
+We added a link with `method: :post` to send a POST request to our `OrderController.create` action. If we head back to our cart page at [`http://localhost:4000/cart`](http://localhost:4000/cart) and complete an order, we'll be greeted by our rendered template:
 
 ```text
 Thank you for your order!
