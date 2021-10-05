@@ -19,9 +19,12 @@ mix phx.gen.context    # Generates a context with functions around an Ecto schem
 mix phx.gen.embedded   # Generates an embedded Ecto schema file
 mix phx.gen.html       # Generates controller, views, and context for an HTML resource
 mix phx.gen.json       # Generates controller, views, and context for a JSON resource
+mix phx.gen.live       # Generates LiveView, templates, and context for a resource
+mix phx.gen.notifier   # Generates a notifier that delivers emails by default
 mix phx.gen.presence   # Generates a Presence tracker
 mix phx.gen.schema     # Generates an Ecto schema and migration file
 mix phx.gen.secret     # Generates a secret
+mix phx.gen.socket     # Generates a Phoenix socket handler
 mix phx.new            # Creates a new Phoenix application
 mix phx.new.ecto       # Creates a new Ecto project within an umbrella project
 mix phx.new.web        # Creates a new Phoenix web project within an umbrella project
@@ -50,11 +53,13 @@ $ mix phx.gen.html Blog Post posts body:string word_count:integer
 * creating lib/hello_web/views/post_view.ex
 * creating test/hello_web/controllers/post_controller_test.exs
 * creating lib/hello/blog/post.ex
-* creating priv/repo/migrations/20170906150129_create_posts.exs
+* creating priv/repo/migrations/20211001233016_create_posts.exs
 * creating lib/hello/blog.ex
 * injecting lib/hello/blog.ex
-* creating test/hello/blog/blog_test.exs
-* injecting test/hello/blog/blog_test.exs
+* creating test/hello/blog_test.exs
+* injecting test/hello/blog_test.exs
+* creating test/support/fixtures/blog_fixtures.ex
+* injecting test/support/fixtures/blog_fixtures.ex
 ```
 
 When `mix phx.gen.html` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our Ecto migrations.
@@ -115,8 +120,10 @@ $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-schema
 * creating test/hello_web/controllers/post_controller_test.exs
 * creating lib/hello/blog.ex
 * injecting lib/hello/blog.ex
-* creating test/hello/blog/blog_test.exs
-* injecting test/hello/blog/blog_test.exs
+* creating test/hello/blog_test.exs
+* injecting test/hello/blog_test.exs
+* creating test/support/fixtures/blog_fixtures.ex
+* injecting test/support/fixtures/blog_fixtures.ex
 ```
 
 It will tell us we need to add a line to our router file, but since we skipped the schema, it won't mention anything about `ecto.migrate`.
@@ -140,6 +147,8 @@ $ mix phx.gen.json Blog Post posts title:string content:string
 * injecting lib/hello/blog.ex
 * creating test/hello/blog/blog_test.exs
 * injecting test/hello/blog/blog_test.exs
+* creating test/support/fixtures/blog_fixtures.ex
+* injecting test/support/fixtures/blog_fixtures.ex
 ```
 
 When `mix phx.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our Ecto migrations.
@@ -180,17 +189,22 @@ $ mix phx.gen.context Accounts User users name:string age:integer
 * injecting lib/hello/accounts.ex
 * creating test/hello/accounts/accounts_test.exs
 * injecting test/hello/accounts/accounts_test.exs
+* creating test/support/fixtures/accounts_fixtures.ex
+* injecting test/support/fixtures/accounts_fixtures.ex
 ```
 
 > Note: If we need to namespace our resource we can simply namespace the first argument of the generator.
 
 ```console
+$ mix phx.gen.context Admin.Accounts User users name:string age:integer
 * creating lib/hello/admin/accounts/user.ex
 * creating priv/repo/migrations/20170906161246_create_users.exs
 * creating lib/hello/admin/accounts.ex
 * injecting lib/hello/admin/accounts.ex
-* creating test/hello/admin/accounts/accounts_test.exs
-* injecting test/hello/admin/accounts/accounts_test.exs
+* creating test/hello/admin/accounts_test.exs
+* injecting test/hello/admin/accounts_test.exs
+* creating test/support/fixtures/admin/accounts_fixtures.ex
+* injecting test/support/fixtures/admin/accounts_fixtures.ex
 ```
 
 ### `mix phx.gen.schema`
@@ -223,6 +237,7 @@ $ mix phx.gen.auth Accounts User users
 * creating test/hello_web/controllers/user_auth_test.exs
 * creating lib/hello_web/views/user_confirmation_view.ex
 * creating lib/hello_web/templates/user_confirmation/new.html.heex
+* creating lib/hello_web/templates/user_confirmation/edit.html.heex
 * creating lib/hello_web/controllers/user_confirmation_controller.ex
 * creating test/hello_web/controllers/user_confirmation_controller_test.exs
 * creating lib/hello_web/templates/layout/_user_menu.html.heex
@@ -255,7 +270,7 @@ $ mix phx.gen.auth Accounts User users
 * injecting lib/hello_web/router.ex
 * injecting lib/hello_web/router.ex - imports
 * injecting lib/hello_web/router.ex - plug
-* injecting lib/hello_web/templates/layout/app.html.heex
+* injecting lib/hello_web/templates/layout/root.html.heex
 ```
 
 When `mix phx.gen.auth` is done creating files, it helpfully tells us that we need to re-fetch our dependencies as well as run our Ecto migrations.
@@ -268,6 +283,10 @@ Please re-fetch your dependencies with the following command:
 Remember to update your repository by running migrations:
 
   $ mix ecto.migrate
+
+Once you are ready, visit "/users/register"
+to create your account and then access to "/dev/mailbox" to
+see the account confirmation email.
 ```
 
 A more complete walk-through of how to get started with this generator is available in the [`mix phx.gen.auth` authentication guide](mix_phx_gen_auth.html).
@@ -303,8 +322,7 @@ Add the socket handler to your `lib/hello_web/endpoint.ex`, for example:
 For the front-end integration, you need to import the `user_socket.js`
 in your `assets/js/app.js` file:
 
-    import "./#{binding[:path]}_socket.js"
-
+    import "./user_socket.js"
 ```
 
 In case a `UserSocket` already exists or you decide to not create one, the `channel` generator will tell you to add it to the Socket manually:
@@ -324,7 +342,15 @@ This task will generate a presence tracker. The module name can be passed as an 
 
 ```console
 $ mix phx.gen.presence Presence
-$ lib/hello_web/channels/presence.ex
+* lib/hello_web/channels/presence.ex
+
+Add your new module to your supervision tree,
+in lib/hello/application.ex:
+
+    children = [
+      ...
+      HelloWeb.Presence
+    ]
 ```
 
 ### `mix phx.routes`
@@ -440,7 +466,9 @@ mix ecto.gen.repo      # Generates a new repository
 mix ecto.load          # Loads previously dumped database structure
 mix ecto.migrate       # Runs the repository migrations
 mix ecto.migrations    # Displays the repository migration status
+mix ecto.reset         # Alias defined in mix.exs
 mix ecto.rollback      # Rolls back the repository migrations
+mix ecto.setup         # Alias defined in mix.exs
 ```
 
 Note: We can run any of the tasks above with the `--no-start` flag to execute the task without starting the application.
@@ -609,7 +637,7 @@ What we want to do is create a `comments` table with a `body` column, a `word_co
 . . .
 def change do
   create table(:comments) do
-    add :body,       :string
+    add :body, :string
     add :word_count, :integer
     timestamps()
   end
@@ -628,7 +656,7 @@ $ mix ecto.gen.migration -r OurCustom.Repo add_users
 For more information on how to modify your database schema please refer to the
 [Ecto's migration DSL docs](https://hexdocs.pm/ecto_sql/Ecto.Migration.html).
 For example, to alter an existing schema see the documentation on Ecto’s
-[`alter/2`](https://hexdocs.pm/ecto_sql/Ecto.Migration.html#alter/2) function.
+[`alter/2`](`Ecto.Migration.alter/2`) function.
 
 That's it! We're ready to run our migration.
 
@@ -719,6 +747,7 @@ defmodule Mix.Tasks.Hello.Greeting do
   This is where we would put any long form documentation and doctests.
   """
 
+  @impl Mix.Task
   def run(_args) do
     Mix.shell().info("Greetings from the Hello Phoenix Application!")
   end
@@ -768,13 +797,14 @@ Greetings from the Hello Phoenix Application!
 
 Indeed it does.
 
-If you want to make your new Mix task to use your application's infrastructure, you need to make sure the application is started when Mix task is being executed. This is particularly useful if you need to access your database from within the Mix task. Thankfully, Mix makes it really easy for us:
+If you want to make your new Mix task to use your application's infrastructure, you need to make sure the application is started and configure when Mix task is being executed. This is particularly useful if you need to access your database from within the Mix task. Thankfully, Mix makes it really easy for us via the `@requirements` module attribute:
 
 ```elixir
+  @requirements ["app.config"]
+
+  @impl Mix.Task
   def run(_args) do
-    Mix.Task.run("app.start")
     Mix.shell().info("Now I have access to Repo and other goodies!")
     Mix.shell().info("Greetings from the Hello Phoenix Application!")
   end
 ```
-
