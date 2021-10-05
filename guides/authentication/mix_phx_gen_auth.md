@@ -96,6 +96,10 @@ Note `citext` is part of PostgreSQL itself and is bundled with it in most operat
 
 The generated tests run concurrently if you are using a database that supports concurrent tests, which is the case of PostgreSQL.
 
+## More about `mix phx.gen.auth`
+
+Check out `mix phx.gen.auth` for more details, such as using different password hashing library, customizing the web module namespace, generating binary id type, configuring the default options, and using custom table names.  
+
 ## Additional resources
 
 The following links have more information regarding the motivation and design of the code this generates.
