@@ -157,7 +157,7 @@ A full list of all Phoenix telemetry events can be found in `Phoenix.Logger`
 > specific name, providing a view of the system's behaviour
 > over time.
 >
-> &#x2015; `Telemetry.Metrics`
+> ― `Telemetry.Metrics`
 
 The Telemetry.Metrics package provides a common interface
 for defining metrics. It exposes a set of [five metric type functions](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#module-metrics) that are responsible for structuring a given Telemetry event as a particular measurement.
