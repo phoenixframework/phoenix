@@ -42,9 +42,9 @@ Don't forget to remove the `import "../css/app.css"` from your JavaScript file w
 
 ## Images, fonts, and external files
 
-`esbuild` has support for external files. If you reference a static path to a font or an image in your `.css` file(s), `esbuild` will ignore these paths. This is Phoenix's default configuration:
+If you reference an external file in your CSS or JavaScript files, `esbuild` will attempt to validate and manage them, unless told otherwise.
 
-Put images in `priv/static/images` and reference them from `/images`:
+For example, imagine you want to reference `priv/static/images/bg.png`, served at `/images/bg.png`, from your CSS file:
 
 ```css
 body {
@@ -52,21 +52,19 @@ body {
 }
 ```
 
-Put fonts in `priv/static/fonts` and reference them from `/fonts`:
+The above may fail with the following message:
 
-```css
-@font-face {
-  font-family: 'MyWebFont';
-  src:  url('/fonts/myfont.woff2') format('woff2'),
-        url('/fonts/myfont.woff') format('woff');
-}
+```text
+error: Could not resolve "/images/bg.png" (mark it as external to exclude it from the bundle)
 ```
 
-You can add more external paths to the `esbuild` configuration in your app.
+Given the images are already managed by Phoenix, you need to mark all resources from `/images` (and also `/fonts`) as external, as the error message says. This is what Phoenix does by default for new apps since v1.6.1+. In your `config/config.exs`, you will find:
 
-Note running `mix phx.digest` will create digested files for all of the
-assets in `priv/static`, so your images and fonts will still be cache-busted
-even though they are being ignored by `esbuild.`
+```elixir
+args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets --external=/fonts/* --external=/images/*),
+```
+
+If you need to reference other directories, you need to update the arguments above accordingly. Note running `mix phx.digest` will create digested files for all of the assets in `priv/static`, so your images and fonts are still cache-busted.
 
 ## Esbuild plugins
 
