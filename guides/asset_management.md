@@ -40,6 +40,32 @@ However, if you want to use a CSS framework, such as SASS or Tailwind, you will 
 
 Don't forget to remove the `import "../css/app.css"` from your JavaScript file when doing so.
 
+## Images, fonts, and external files
+
+If you reference an external file in your CSS or JavaScript files, `esbuild` will attempt to validate and manage them, unless told otherwise.
+
+For example, imagine you want to reference `priv/static/images/bg.png`, served at `/images/bg.png`, from your CSS file:
+
+```css
+body {
+  background-image: url(/images/bg.png);
+}
+```
+
+The above may fail with the following message:
+
+```text
+error: Could not resolve "/images/bg.png" (mark it as external to exclude it from the bundle)
+```
+
+Given the images are already managed by Phoenix, you need to mark all resources from `/images` (and also `/fonts`) as external, as the error message says. This is what Phoenix does by default for new apps since v1.6.1+. In your `config/config.exs`, you will find:
+
+```elixir
+args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets --external=/fonts/* --external=/images/*),
+```
+
+If you need to reference other directories, you need to update the arguments above accordingly. Note running `mix phx.digest` will create digested files for all of the assets in `priv/static`, so your images and fonts are still cache-busted.
+
 ## Esbuild plugins
 
 Phoenix's default configuration of `esbuild` (via the Elixir wrapper) does not allow you to use [esbuild plugins](https://esbuild.github.io/plugins/). If you want to use an esbuild plugin, for example to compile SASS files to CSS, you can replace the default build system with a custom build script.

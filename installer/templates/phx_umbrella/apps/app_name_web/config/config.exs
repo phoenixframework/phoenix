@@ -15,7 +15,8 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
 config :esbuild,
   version: "0.12.18",
   default: [
-    args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets),
+    args:
+      ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets --external=/fonts/* --external=/images/*),
     cd: Path.expand("../apps/<%= @web_app_name %>/assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]<% end %>
