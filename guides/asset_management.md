@@ -40,6 +40,33 @@ However, if you want to use a CSS framework, such as SASS or Tailwind, you will 
 
 Don't forget to remove the `import "../css/app.css"` from your JavaScript file when doing so.
 
+## Images, fonts, and external files
+
+`esbuild` has support for external files. If you reference a static path to a font or an image in your `.css` file(s), `esbuild` will ignore these paths. This is Phoenix's default configuration:
+
+Put images in `priv/static/images`:
+
+
+```css
+background-image: url(/images/bg.png);
+```
+
+Put fonts in `priv/static/fonts`:
+
+```css
+@font-face {
+  font-family: 'MyWebFont';
+  src:  url('/fonts/myfont.woff2') format('woff2'),
+        url('/fonts/myfont.woff') format('woff');
+}
+```
+
+You can add more external paths to the `esbuild` configuration in your app.
+
+Note running `mix phx.digest` will create digested files for all of the
+assets in `priv/static`, so your images and fonts will still be cache-busted
+even though they are being ignored by `esbuild.`
+
 ## Esbuild plugins
 
 Phoenix's default configuration of `esbuild` (via the Elixir wrapper) does not allow you to use [esbuild plugins](https://esbuild.github.io/plugins/). If you want to use an esbuild plugin, for example to compile SASS files to CSS, you can replace the default build system with a custom build script.
