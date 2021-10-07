@@ -44,14 +44,15 @@ Don't forget to remove the `import "../css/app.css"` from your JavaScript file w
 
 `esbuild` has support for external files. If you reference a static path to a font or an image in your `.css` file(s), `esbuild` will ignore these paths. This is Phoenix's default configuration:
 
-Put images in `priv/static/images`:
-
+Put images in `priv/static/images` and reference them from `/images`:
 
 ```css
-background-image: url(/images/bg.png);
+body {
+  background-image: url(/images/bg.png);
+}
 ```
 
-Put fonts in `priv/static/fonts`:
+Put fonts in `priv/static/fonts` and reference them from `/fonts`:
 
 ```css
 @font-face {
