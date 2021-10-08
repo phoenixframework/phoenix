@@ -4,6 +4,18 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.1 (2021-10-08)
+
+### Enhancements
+  * [phx.new] Add external flag to esbuild for fonts and image path loading
+  * [phx.gen.auth] No longer set `argon2` as the default hash algorithm for `phx.gen.auth` in favor of bcrypt for performance reasons on smaller hardware
+
+### Bug Fixes
+  * Fix race conditions logging debug duplicate channel joins when no duplicate existed
+
+### JavaScript Client Bug Fixes
+  * Export commonjs modules for backwards compatibility
+
 ## 1.6.0 (2021-09-24) 🚀
 
 ### Enhancements
