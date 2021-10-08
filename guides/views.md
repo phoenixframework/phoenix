@@ -207,31 +207,38 @@ This is the message: <%= @message %>
 This doesn't correspond to any action in our controller, which is fine. We'll exercise it in an `IEx` session. At the root of our project, we can run `iex -S mix`, and then explicitly render our template.
 
 ```elixir
-iex(1)> Phoenix.View.render(HelloWeb.PageView, "test.html", message: "Hello from IEx!")
-{:safe, ["This is the message: ", "Hello from IEx!"]}
+iex(5)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "Hello from IEx!")
+"This is the message: Hello from IEx!"
 ```
 
-As we can see, we're calling [`render/3`] with the individual view responsible for our test template, the name of our test template, and a set of assigns we might have wanted to pass in. The return value is a tuple beginning with the atom `:safe` and the resultant IO list of the interpolated template. "Safe" here means that Phoenix has escaped the contents of our rendered template to avoid XSS injection attacks.
+We have called the [`render_to_string/3`] method with the individual view responsible for our test template, the name of our test template, and a set of assigns we might have wanted to pass and we got the renderd template as a string.
 
 Let's test out the HTML escaping, just for fun:
 
 ```elixir
-iex(2)> Phoenix.View.render(HelloWeb.PageView, "test.html", message: "<script>badThings();</script>")
-{:safe, ["This is the message: ", "&lt;script&gt;badThings();&lt;/script&gt;"]}
+iex(2)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "<script>badThings();</script>")
+"This is the message: &lt;script&gt;badThings();&lt;/script&gt;"
 ```
 
-If we need only the rendered string, without the whole tuple, we can use [`render_to_string/3`].
+If we wanted to use the [`render/3`] instead of render_to_string method we'd get the following output:
 
 ```elixir
-iex(5)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "Hello from IEx!")
-"This is the message: Hello from IEx!"
+iex(1)> Phoenix.View.render(HelloWeb.PageView, "test.html", message: "Hello from IEx!")
+%Phoenix.LiveView.Rendered{
+  dynamic: #Function<1.71437968/1 in Hello16Web.PageView."test.html"/1>,
+  fingerprint: 142353463236917710626026938006893093300,
+  root: false,
+  static: ["This is the message: ", ""]
+}
 ```
+
+This is related to how PhoenixLive view works to render a template; you can find more info here: https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.Engine.html.
 
 ## Sharing views and templates
 
 Now that we have acquainted ourselves with `Phoenix.View.render/3`, we are ready to share views and templates from inside other views and templates.
 
-For example, if you want to render the `test.html` template from inside our layout, you can invoke [`render/3`] directly from the layout `lib/hello_web/templates/layout/app.html.heex`:
+For example, if you want to render the `test.html` template from inside our layout, you can invoke [`render/3`] directly from the layout `lib/hello_web/templates/layout/root.html.heex`:
 
 ```html
 <%= Phoenix.View.render(HelloWeb.PageView, "test.html", message: "Hello from layout!") %>
