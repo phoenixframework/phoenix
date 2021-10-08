@@ -170,7 +170,7 @@ You can learn more about components in [Phoenix.Component](https://hexdocs.pm/ph
 
 Phoenix templates are compiled into Elixir code, which make them extremely performant. Let's learn more about this.
 
-When a template is compiled into a view, it is simply compiled as a [`render/2`] function that expects two arguments: the template name and the assigns.
+When a template is compiled into a view, it is simply compiled as a `render/2` function that expects two arguments: the template name and the assigns.
 
 You can prove this by temporarily adding this function clause to your `PageView` module in `lib/hello_web/views/page_view.ex`.
 
@@ -190,9 +190,9 @@ Now if you fire up the server with `mix phx.server` and visit [`http://localhost
 rendering with assigns [:conn]
 ```
 
-By defining our own clause in [`render/2`], it takes higher priority than the template, but the template is still there, which you can verify by simply removing the newly added clause.
+By defining our own clause in `render/2`, it takes higher priority than the template, but the template is still there, which you can verify by simply removing the newly added clause.
 
-Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.heex` templates and turns them into [`render/2`] function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved.
+Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.heex` templates and turns them into `render/2` function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved.
 
 ### Manually rendering templates
 
@@ -204,34 +204,37 @@ Let's create a new template to play around with, `lib/hello_web/templates/page/t
 This is the message: <%= @message %>
 ```
 
-This doesn't correspond to any action in our controller, which is fine. We'll exercise it in an `IEx` session. At the root of our project, we can run `iex -S mix`, and then explicitly render our template.
+This doesn't correspond to any action in our controller, which is fine. We'll exercise it in an `IEx` session. At the root of our project, we can run `iex -S mix`, and then explicitly render our template. Let's give it a try by calling `Phoenix.View.render/3` with the view name, the template name, and a set of assigns we might have wanted to pass and we got the rendered template as a string:
 
 ```elixir
 iex(1)> Phoenix.View.render(HelloWeb.PageView, "test.html", message: "Hello from IEx!")
-{:safe, ["This is the message: ", "Hello from IEx!"]}
+%Phoenix.LiveView.Rendered{
+  dynamic: #Function<1.71437968/1 in Hello16Web.PageView."test.html"/1>,
+  fingerprint: 142353463236917710626026938006893093300,
+  root: false,
+  static: ["This is the message: ", ""]
+}
 ```
 
-As we can see, we're calling [`render/3`] with the individual view responsible for our test template, the name of our test template, and a set of assigns we might have wanted to pass in. The return value is a tuple beginning with the atom `:safe` and the resultant IO list of the interpolated template. "Safe" here means that Phoenix has escaped the contents of our rendered template to avoid XSS injection attacks.
-
-Let's test out the HTML escaping, just for fun:
+The output we got above is not very helpful. That's the internal representation of how Phoenix keeps our rendered templates. Luckily, we can convert them into strings with `render_to_string/3`:
 
 ```elixir
-iex(2)> Phoenix.View.render(HelloWeb.PageView, "test.html", message: "<script>badThings();</script>")
-{:safe, ["This is the message: ", "&lt;script&gt;badThings();&lt;/script&gt;"]}
-```
-
-If we need only the rendered string, without the whole tuple, we can use [`render_to_string/3`].
-
-```elixir
-iex(5)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "Hello from IEx!")
+iex(2)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "Hello from IEx!")
 "This is the message: Hello from IEx!"
+```
+
+That's much better! Let's test out the HTML escaping, just for fun:
+
+```elixir
+iex(3)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "<script>badThings();</script>")
+"This is the message: &lt;script&gt;badThings();&lt;/script&gt;"
 ```
 
 ## Sharing views and templates
 
-Now that we have acquainted ourselves with `Phoenix.View.render/3`, we are ready to share views and templates from inside other views and templates.
+Now that we have acquainted ourselves with `Phoenix.View.render/3`, we are ready to share views and templates from inside other views and templates. We use `render/3` to compose our templates and at the end Phoenix will convert them all into the proper representation to send to the browser.
 
-For example, if you want to render the `test.html` template from inside our layout, you can invoke [`render/3`] directly from the layout `lib/hello_web/templates/layout/app.html.heex`:
+For example, if you want to render the `test.html` template from inside our layout, you can invoke [`render/3`] directly from the layout `lib/hello_web/templates/layout/root.html.heex`:
 
 ```html
 <%= Phoenix.View.render(HelloWeb.PageView, "test.html", message: "Hello from layout!") %>
@@ -296,20 +299,16 @@ defmodule HelloWeb.PageView do
   use HelloWeb, :view
 
   def render("index.json", %{pages: pages}) do
-    %{data: render_many(pages, HelloWeb.PageView, "page.json")}
+    %{data: Enum.map(pages, fn page -> %{title: page.title} end)}
   end
 
   def render("show.json", %{page: page}) do
-    %{data: render_one(page, HelloWeb.PageView, "page.json")}
-  end
-
-  def render("page.json", %{page: page}) do
-    %{title: page.title}
+    %{data: %{title: page.title}}
   end
 end
 ```
 
-In the view we see our [`render/2`] function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. The `"index.json"` and `"show.json"` are the ones requested directly from the controller. They also match on the assigns sent by the controller. `"index.json"` will respond with JSON like this:
+In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. The `"index.json"` and `"show.json"` are the ones requested directly from the controller. They also match on the assigns sent by the controller. Phoenix understands the `.json` extension and will take care of converting the data-structures we return into JSON.  `"index.json"` will respond like this:
 
 ```json
 {
@@ -324,7 +323,7 @@ In the view we see our [`render/2`] function pattern matching on `"index.json"`,
 }
 ```
 
-And the [`render/2`] matching `"show.json"`:
+And `"show.json"` like this:
 
 ```json
 {
@@ -334,11 +333,29 @@ And the [`render/2`] matching `"show.json"`:
 }
 ```
 
-This works because both `index.json` and `show.json` build themselves on top of an internal `page.json` clause.
+However, there is some duplication between `index.json` and `show.json`, as both encode the same logic on how to render pages. We can address this by moving the page rendering to a separate function clause and using `render_many/3` and `render_one/3` to reuse it:
 
-The [`render_many/3`] function takes the data we want to respond with (`pages`), a view, and a string to pattern match on the [`render/2`] function defined on view. It will map over each item in `pages` and call `PageView.render("page.json", %{page: page})`. [`render_one/3`] follows the same signature, ultimately using the [`render/2`] matching `page.json` to specify what each `page` looks like.
+```elixir
+defmodule HelloWeb.PageView do
+  use HelloWeb, :view
 
-It's useful to build our views like this so that they are composable. Imagine a situation where our `Page` has a `has_many` relationship (#NOTE: We haven't talked about has_many relationship yet#) with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new [`render/2`]:
+  def render("index.json", %{pages: pages}) do
+    %{data: render_many(pages, HelloWeb.PageView, "page.json")}
+  end
+
+  def render("show.json", %{page: page}) do
+    %{data: render_one(page, HelloWeb.PageView, "page.json")}
+  end
+
+  def render("page.json", %{page: page}) do
+    %{title: page.title}
+  end
+end
+```
+
+The [`render_many/3`] function takes the data we want to respond with (`pages`), a view, and a string to pattern match on the `render/2` function defined on view. It will map over each item in `pages` and call `PageView.render("page.json", %{page: page})`. [`render_one/3`] follows the same signature, ultimately using the `render/2` matching `page.json` to specify what each `page` looks like.
+
+It's useful to build our views like this so that they are composable. Imagine a situation where our `Page` has a `has_many` relationship (#NOTE: We haven't talked about has_many relationship yet#) with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new `render/2`:
 
 ```elixir
 defmodule HelloWeb.PageView do
@@ -371,7 +388,6 @@ Phoenix has a view called `ErrorView` which lives in `lib/hello_web/views/error_
 
 
 [welcome page]: http://localhost:4000
-[`render/2`]: `Phoenix.View.render/3`
 [`render/3`]: `Phoenix.View.render/3`
 [`render_many/3`]: `Phoenix.View.render_many/3`
 [`render_one/3`]: `Phoenix.View.render_one/3`
