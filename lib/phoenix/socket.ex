@@ -608,15 +608,17 @@ defmodule Phoenix.Socket do
     end
   end
 
-  defp handle_in({pid, _ref}, %{event: "phx_join", topic: topic} = message, state, socket) do
+  defp handle_in({pid, _ref, status}, %{event: "phx_join", topic: topic} = message, state, socket) do
     receive do
       {:socket_close, ^pid, _reason} -> :ok
     after
       0 ->
-        Logger.debug(fn ->
-          "Duplicate channel join for topic \"#{topic}\" in #{inspect(socket.handler)}. " <>
-          "Closing existing channel for new join."
-        end)
+        if status != :leaving do
+          Logger.debug(fn ->
+            "Duplicate channel join for topic \"#{topic}\" in #{inspect(socket.handler)}. " <>
+            "Closing existing channel for new join."
+          end)
+        end
     end
 
     :ok = shutdown_duplicate_channel(pid)
@@ -625,9 +627,9 @@ defmodule Phoenix.Socket do
     handle_in(nil, message, new_state, new_socket)
   end
 
-  defp handle_in({pid, _ref}, message, state, socket) do
+  defp handle_in({pid, _ref, _status}, message, state, socket) do
     send(pid, message)
-    {:ok, {state, socket}}
+    {:ok, {maybe_put_status(state, pid, message), socket}}
   end
 
   defp handle_in(nil, %{event: "phx_leave", ref: ref, topic: topic, join_ref: join_ref}, state, socket) do
@@ -654,7 +656,7 @@ defmodule Phoenix.Socket do
 
     %{
       state |
-        channels: Map.put(channels, topic, {pid, monitor_ref}),
+        channels: Map.put(channels, topic, {pid, monitor_ref, :joined}),
         channels_inverse: Map.put(channels_inverse, pid, {topic, join_ref})
     }
   end
@@ -706,12 +708,25 @@ defmodule Phoenix.Socket do
   defp socket_close(pid, {state, socket}) do
     case state.channels_inverse do
       %{^pid => {topic, join_ref}} ->
-        {^pid, monitor_ref} = Map.fetch!(state.channels, topic)
+        {^pid, monitor_ref, _status} = Map.fetch!(state.channels, topic)
         state = delete_channel(state, pid, topic, monitor_ref)
         {:push, encode_close(socket, topic, join_ref), {state, socket}}
 
       %{} ->
         {:ok, {state, socket}}
     end
+  end
+
+  defp maybe_put_status(state, pid, %{event: "phx_leave", topic: topic}) do
+    update_channel_status(state, pid, topic, :leaving)
+  end
+
+  defp maybe_put_status(state, _pid, %{} = _msg) do
+    state
+  end
+
+  defp update_channel_status(state, pid, topic, status) do
+    new_channels = Map.update!(state.channels, topic, fn {^pid, ref, _} -> {pid, ref, status} end)
+    %{state | channels: new_channels}
   end
 end
