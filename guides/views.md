@@ -207,11 +207,11 @@ This is the message: <%= @message %>
 This doesn't correspond to any action in our controller, which is fine. We'll exercise it in an `IEx` session. At the root of our project, we can run `iex -S mix`, and then explicitly render our template.
 
 ```elixir
-iex(5)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "Hello from IEx!")
+iex(1)> Phoenix.View.render_to_string(HelloWeb.PageView, "test.html", message: "Hello from IEx!")
 "This is the message: Hello from IEx!"
 ```
 
-We have called the [`render_to_string/3`] method with the individual view responsible for our test template, the name of our test template, and a set of assigns we might have wanted to pass and we got the renderd template as a string.
+We have called the [`render_to_string/3`] function with the individual view responsible for our test template, the name of our test template, and a set of assigns we might have wanted to pass and we got the rendered template as a string.
 
 Let's test out the HTML escaping, just for fun:
 
