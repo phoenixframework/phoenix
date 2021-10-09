@@ -4,6 +4,11 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.2 (2021-10-08)
+
+### Bug Fixes
+  * [phx.new] Fix external flag to esbuild using incorrect syntax
+
 ## 1.6.1 (2021-10-08)
 
 ### Enhancements
