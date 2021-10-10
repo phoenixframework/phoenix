@@ -660,7 +660,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         mix phx.new my_app --umbrella
         mix phx.new my_app --database mysql
 
-    Apps generated with --no-ecto and --no-html are not supported.
+    Apps generated with --no-ecto or --no-html are not supported.
     """)
   end
 
