@@ -976,7 +976,7 @@ We're almost ready to try out our cart page, but first we need to implement our 
 
 We implemented `total_item_price/1` which accepts a `%CartItem{}` struct. To calculate the total price, we simply take the preloaded product's price and multiply it by the item's quantity. We used `Decimal.mult/2` to take our decimal currency struct and multiply it with proper precision. Similarly for calculating the total cart price, we implemented a `total_cart_price/1` function which accepts the cart and sums the preloaded product prices for items in the cart. We again make use of the `Decimal` functions to add our decimal structs together.
 
-Now that we can calculate price totals, let's try it out! Visit [`http://localhost:4000/cart`](http://localhost:4000/cart) and you should already see your first item in the cart. Going back to the same product and clicking "add to cart" will show our upsert in action. Your quantity should now show be two. Nice work!
+Now that we can calculate price totals, let's try it out! Visit [`http://localhost:4000/cart`](http://localhost:4000/cart) and you should already see your first item in the cart. Going back to the same product and clicking "add to cart" will show our upsert in action. Your quantity should now be two. Nice work!
 
 Our cart page is almost complete, but submitting the form will yield yet another error.
 
@@ -991,7 +991,7 @@ Let's head back to our `CartController` at `lib/hello_web/controllers/cart_contr
 ```elixir
   def update(conn, %{"cart" => cart_params}) do
     case ShoppingCart.update_cart(conn.assigns.cart, cart_params) do
-      {:ok, cart} ->
+      {:ok, _cart} ->
         redirect(conn, to: Routes.cart_path(conn, :show))
 
       {:error, _changeset} ->
