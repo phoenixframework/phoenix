@@ -32,7 +32,7 @@ defmodule Phoenix.Router.RoutingTest do
 
   defmodule LogLevel do
     def log_level(%{params: %{"level" => "info"}}), do: :info
-    def log_level(%{params: %{"level" => "warn"}}), do: :warn
+    def log_level(%{params: %{"level" => "error"}}), do: :error
     def log_level(_), do: :debug
   end
 
@@ -246,8 +246,8 @@ defmodule Phoenix.Router.RoutingTest do
       assert capture_log(fn -> call(Router, :get, "/fun_log", level: "info") end) =~
                "[info]  Processing with Phoenix.Router.RoutingTest.SomePlug"
 
-      assert capture_log(fn -> call(Router, :get, "/fun_log", level: "warn") end) =~
-               "[warn]  Processing with Phoenix.Router.RoutingTest.SomePlug"
+      assert capture_log(fn -> call(Router, :get, "/fun_log", level: "error") end) =~
+               "[error] Processing with Phoenix.Router.RoutingTest.SomePlug"
 
       assert capture_log(fn -> call(Router, :get, "/fun_log", level: "yelling") end) =~
                "[debug] Processing with Phoenix.Router.RoutingTest.SomePlug"
