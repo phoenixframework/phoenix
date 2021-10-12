@@ -115,6 +115,29 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.path_params["id"] == "1"
   end
 
+  test "get with named param and late query string fetch" do
+    conn =
+      conn(:get, "/users/1")
+      |> Router.call(Router.init([]))
+      |> fetch_query_params()
+
+    assert conn.status == 200
+    assert conn.resp_body == "users show"
+    assert conn.params["id"] == "1"
+    assert conn.path_params["id"] == "1"
+
+    conn =
+      conn(:get, "/users/1?foo=bar")
+      |> Router.call(Router.init([]))
+      |> fetch_query_params()
+
+    assert conn.status == 200
+    assert conn.resp_body == "users show"
+    assert conn.params["id"] == "1"
+    assert conn.params["foo"] == "bar"
+    assert conn.path_params["id"] == "1"
+  end
+
   test "parameters are url decoded" do
     conn = call(Router, :get, "/users/hello%20matey")
     assert conn.params == %{"id" => "hello matey"}
