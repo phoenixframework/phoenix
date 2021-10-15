@@ -28,6 +28,16 @@ defmodule Phoenix.CodeReloader do
   applications to reload only some of them, empty list - to
   effectively disable code reloader, or include external
   applications from library dependencies.
+
+  This function is a no-op and returns `:ok` if Mix is not available.
+  """
+  @spec reload!(module) :: :ok | {:error, binary()}
+  def reload(endpoint) do
+    if Code.ensure_loaded?(Mix.Project), do: reload!(endpoint), else: :ok
+  end
+
+  @doc """
+  Same as `reload/1` but it will raise if Mix is not available.
   """
   @spec reload!(module) :: :ok | {:error, binary()}
   defdelegate reload!(endpoint), to: Phoenix.CodeReloader.Server
@@ -56,7 +66,7 @@ defmodule Phoenix.CodeReloader do
   @doc """
   API used by Plug to start the code reloader.
   """
-  def init(opts), do: Keyword.put_new(opts, :reloader, &Phoenix.CodeReloader.reload!/1)
+  def init(opts), do: Keyword.put_new(opts, :reloader, &Phoenix.CodeReloader.reload/1)
 
   @doc """
   API used by Plug to invoke the code reloader on every request.

@@ -76,7 +76,7 @@ defmodule Phoenix.Endpoint do
 
     * `:code_reloader` - when `true`, enables code reloading functionality.
       For the list of code reloader configuration options see
-      `Phoenix.CodeReloader.reload!/1`. Keep in mind code reloading is
+      `Phoenix.CodeReloader.reload/1`. Keep in mind code reloading is
       based on the file-system, therefore it is not possible to run two
       instances of the same app at the same time with code reloading in
       development, as they will race each other and only one will effectively

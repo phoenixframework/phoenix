@@ -12,7 +12,7 @@ defmodule Phoenix.CodeReloaderTest do
     end
   end
 
-  def reload!(_) do
+  def reload(_) do
     {:error, "oops"}
   end
 
@@ -56,7 +56,7 @@ defmodule Phoenix.CodeReloaderTest do
   end
 
   test "renders compilation error on failure" do
-    opts = Phoenix.CodeReloader.init(reloader: &__MODULE__.reload!/1)
+    opts = Phoenix.CodeReloader.init(reloader: &__MODULE__.reload/1)
     conn = conn(:get, "/")
            |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
            |> Phoenix.CodeReloader.call(opts)
