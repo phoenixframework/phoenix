@@ -88,8 +88,10 @@ $ git remote -v
 The buildpacks we use default to Elixir, Erlang, and Node.js versions that are quite old and it's generally a good idea to run the same version in production as you do in development, so let's do that.
 
 ```console
+$ elixir -v
 $ echo 'elixir_version=1.10.3' > elixir_buildpack.config
 $ echo 'erlang_version=22.3' >> elixir_buildpack.config
+$ node -v
 $ echo 'node_version=12.16.3' > phoenix_static_buildpack.config
 ```
 
