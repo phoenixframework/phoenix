@@ -192,6 +192,7 @@
  * @module phoenix
  */
 
+import Ajax from "./ajax"
 import Channel from "./channel"
 import LongPoll from "./longpoll"
 import Presence from "./presence"
@@ -199,6 +200,7 @@ import Serializer from "./serializer"
 import Socket from "./socket"
 
 export {
+  Ajax,
   Channel,
   LongPoll,
   Presence,
