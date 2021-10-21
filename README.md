@@ -66,9 +66,8 @@ $ mix archive.build
 ### Building phoenix.js
 
 ```bash
-$ cd assets
-$ npm install
-$ npm run watch
+$ npm install --prefix assets/
+$ mix assets.build
 ```
 
 ## Important links
