@@ -31,7 +31,7 @@ defmodule Phoenix.CodeReloader do
 
   This function is a no-op and returns `:ok` if Mix is not available.
   """
-  @spec reload!(module) :: :ok | {:error, binary()}
+  @spec reload(module) :: :ok | {:error, binary()}
   def reload(endpoint) do
     if Code.ensure_loaded?(Mix.Project), do: reload!(endpoint), else: :ok
   end
