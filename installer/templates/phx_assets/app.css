@@ -46,11 +46,8 @@
   transition: opacity 1s ease-out;
 }
 
-.phx-disconnected{
+.phx-loading{
   cursor: wait;
-}
-.phx-disconnected *{
-  pointer-events: none;
 }
 
 .phx-modal {
