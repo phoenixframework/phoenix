@@ -80,7 +80,7 @@ defmodule Phoenix.MixProject do
       {:telemetry_metrics, "~> 0.6", only: :docs},
 
       # Test dependencies
-      {:phoenix_html, "~> 3.0", only: :test},
+      {:phoenix_html, "~> 3.0", only: [:docs, :test]},
       {:phx_new, path: "./installer", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
 
