@@ -25,11 +25,11 @@ defmodule Mix.Tasks.Phx.Routes do
   therefore always expect a router to be given. An
   alias can be added to mix.exs to automate this:
 
-    defp aliases do
-    [
-      "phx.routes": "phx.routes MyAppWeb.Router",
-      ...
-    ]
+      defp aliases do
+        [
+          "phx.routes": "phx.routes MyAppWeb.Router",
+          # aliases...
+        ]
 
   """
 
