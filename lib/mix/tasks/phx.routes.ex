@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Phx.Routes do
       defp aliases do
         [
           "phx.routes": "phx.routes MyAppWeb.Router",
-          ...
+          # aliases...
         ]
 
   """
