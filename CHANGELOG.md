@@ -81,7 +81,9 @@ Phoenix v1.6 requires Elixir v1.9+.
 ### Deprecations
   * [mix compile.phoenix] Adding the `:phoenix` compiler to your `mix.exs` (`compilers: [:phoenix] ++ Mix.compilers()`) is no longer required from Phoenix v1.6 forward if you are running on Elixir v1.11. Remove it from your `mix.exs` and you should gain faster compilation times too
   * [Endpoint] Phoenix now requires Cowboy v2.7+
-  * [View] `@view_module` is deprecated in favor of `Phoenix.Controller.view_module/1` and `@view_template` is deprecated in favor of `Phoenix.Controller.view_template/1`
+
+### Breaking changes
+  * [View] `@view_module` and `@view_template` are no longer set. Use `Phoenix.Controller.view_module/1` and `Phoenix.Controller.view_template/1` respectively, or pass explicit assigns from `Phoenix.View.render`.
 
 ## v1.5
 
