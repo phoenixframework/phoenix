@@ -132,3 +132,5 @@ Your other static assets are placed in the `priv/static` folder, where `priv/sta
 **NB:** When you first create your Phoenix app using `mix phx.new` it is possible to specify options that will affect the presence and layout of the `assets` directory.  In fact, Phoenix apps can bring their own front end tools or not have a front-end at all (handy if you're writing an API for example).  For more information you can run `mix help phx.new` or see the documentation in [Mix tasks](mix_tasks.html).
 
 If the default esbuild integration does not cover your needs, for example because you want to use another build tool, you can switch to a [custom assets build](asset_management.html#custom_builds).
+
+As for CSS, Phoenix ships with a handful of custom styles as well as the [Milligram CSS Framework](https://milligram.io/), providing a solid foundation for many projects. However, as styling needs grow more complex, [Tailwind CSS](https://tailwindcss.com/) is a viable option that is popular within the community. More detail on how to add Tailwind or any other CSS framework to a Phoenix project is available [here](asset_management.md#css).
