@@ -133,4 +133,4 @@ Note that when you first create your Phoenix app using `mix phx.new` it is possi
 
 If the default esbuild integration does not cover your needs, for example because you want to use another build tool, you can switch to a [custom assets build](asset_management.html#custom_builds).
 
-As for CSS, Phoenix ships with a handful of custom styles as well as the [Milligram CSS Framework](https://milligram.io/), providing a solid foundation for many projects. However, as styling needs grow more complex, [Tailwind CSS](https://tailwindcss.com/) is a viable option that is popular within the community. More detail on how to add Tailwind or any other CSS framework to a Phoenix project is available [here](asset_management.md#css).
+As for CSS, Phoenix ships with a handful of custom styles as well as the [Milligram CSS Framework](https://milligram.io/), providing a minimal setup for projects. You may move to any CSS framework of your choice. Additional references can be found in the [asset management](asset_management.md#css) guide.
