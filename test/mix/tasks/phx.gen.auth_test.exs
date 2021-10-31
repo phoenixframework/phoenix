@@ -545,7 +545,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
     end
   end
 
-  test "supports --binary_id option", config do
+  test "supports --binary-id option", config do
     in_tmp_phx_project(config.test, fn ->
       Gen.Auth.run(
         ~w(Accounts User users --binary-id),
