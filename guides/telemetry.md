@@ -31,7 +31,7 @@ defines a `metrics/0` function, which returns a list of
 that you define for your application.
 
 By default, the supervisor also starts
-[`:telemetry_poller`](http://hexdocs.pm/telemetry_poller).
+[`:telemetry_poller`](https://hexdocs.pm/telemetry_poller).
 By simply adding `:telemetry_poller` as a dependency, you
 can receive VM-related events on a specified interval.
 
@@ -111,7 +111,7 @@ children = [
 ## Telemetry Events
 
 Many Elixir libraries (including Phoenix) are already using
-the [`:telemetry`](http://hexdocs.pm/telemetry) package as a
+the [`:telemetry`](https://hexdocs.pm/telemetry) package as a
 way to give users more insight into the behavior of their
 applications, by emitting events at key moments in the
 application lifecycle.
@@ -455,7 +455,7 @@ event.
 
 You might want to periodically measure key-value pairs within
 your application. Fortunately the
-[`:telemetry_poller`](http://hexdocs.pm/telemetry_poller)
+[`:telemetry_poller`](https://hexdocs.pm/telemetry_poller)
 package provides a mechanism for custom measurements,
 which is useful for retrieving process information or for
 performing custom measurements periodically.

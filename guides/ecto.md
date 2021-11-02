@@ -577,7 +577,7 @@ $ mix ecto.migrate
 
 ## Other options
 
-While Phoenix uses the `Ecto` project to interact with the data access layer, there are many other data access options, some even built into the Erlang standard library. [ETS](http://www.erlang.org/doc/man/ets.html) – available in Ecto via [`etso`](https://hexdocs.pm/etso/) – and [DETS](http://www.erlang.org/doc/man/dets.html) are key-value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [Mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
+While Phoenix uses the `Ecto` project to interact with the data access layer, there are many other data access options, some even built into the Erlang standard library. [ETS](https://www.erlang.org/doc/man/ets.html) – available in Ecto via [`etso`](https://hexdocs.pm/etso/) – and [DETS](https://www.erlang.org/doc/man/dets.html) are key-value data stores built into [OTP](https://www.erlang.org/doc/). OTP also provides a relational database called [Mnesia](https://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
 
 The data world is your oyster, but we won't be covering these options in these guides.
 
