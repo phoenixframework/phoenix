@@ -12,7 +12,7 @@ There are a number of places to connect with community members at all experience
 
   * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/master/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
 
-  * Ask or answer questions about Phoenix on [Elixir Forum](https://elixirforum.com/c/phoenix-forum) or [Stack Overflow](http://stackoverflow.com/questions/tagged/phoenix-framework).
+  * Ask or answer questions about Phoenix on [Elixir Forum](https://elixirforum.com/c/phoenix-forum) or [Stack Overflow](https://stackoverflow.com/questions/tagged/phoenix-framework).
 
   * To discuss new features in the framework, email the [phoenix-core mailing list](https://groups.google.com/group/phoenix-core).
 

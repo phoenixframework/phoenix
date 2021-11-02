@@ -121,10 +121,10 @@ defmodule Phoenix.Router do
       "/pages/hello?some=query"
 
       MyAppWeb.Router.Helpers.page_url(conn_or_endpoint, :show, "hello")
-      "http://example.com/pages/hello"
+      "https://example.com/pages/hello"
 
       MyAppWeb.Router.Helpers.page_url(conn_or_endpoint, :show, "hello", some: "query")
-      "http://example.com/pages/hello?some=query"
+      "https://example.com/pages/hello?some=query"
 
   If the route contains glob-like patterns, parameters for those have to be given as
   list:
@@ -220,7 +220,7 @@ defmodule Phoenix.Router do
   request is dispatched to a desired end-point.
 
   Such transformations are defined via plugs, as defined
-  in the [Plug](http://github.com/elixir-lang/plug) specification.
+  in the [Plug](https://github.com/elixir-lang/plug) specification.
   Once a pipeline is defined, it can be piped through per scope.
 
   For example:

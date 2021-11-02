@@ -159,7 +159,7 @@ This is useful to broadcast messages on channel and also for application develop
 The PubSub system takes care of getting messages from one node to another so that they can be sent to all subscribers across the cluster.
 By default, this is done using [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), which uses native BEAM messaging.
 
-If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](http://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
+If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
 
 ### Client Libraries
 
@@ -481,4 +481,4 @@ Phoenix uses an at-most-once strategy when sending messages to clients. If the c
 
 To see an example of the application we just built, checkout the project [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
 
-You can also see a live demo at <http://phoenixchat.herokuapp.com/>.
+You can also see a live demo at <https://phoenixchat.herokuapp.com/>.

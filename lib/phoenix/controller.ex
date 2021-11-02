@@ -392,7 +392,7 @@ defmodule Phoenix.Controller do
 
       iex> redirect(conn, to: "/login")
 
-      iex> redirect(conn, external: "http://elixir-lang.org")
+      iex> redirect(conn, external: "https://elixir-lang.org")
 
   """
   def redirect(conn, opts) when is_list(opts) do
