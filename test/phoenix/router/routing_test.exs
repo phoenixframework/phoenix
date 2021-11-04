@@ -32,7 +32,7 @@ defmodule Phoenix.Router.RoutingTest do
 
   defmodule LogLevel do
     def log_level(%{params: %{"level" => "info"}}), do: :info
-    def log_level(%{params: %{"level" => "warn"}}), do: :warn
+    def log_level(%{params: %{"level" => "error"}}), do: :error
     def log_level(_), do: :debug
   end
 
@@ -112,6 +112,29 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.status == 200
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "1"
+    assert conn.path_params["id"] == "1"
+  end
+
+  test "get with named param and late query string fetch" do
+    conn =
+      conn(:get, "/users/1")
+      |> Router.call(Router.init([]))
+      |> fetch_query_params()
+
+    assert conn.status == 200
+    assert conn.resp_body == "users show"
+    assert conn.params["id"] == "1"
+    assert conn.path_params["id"] == "1"
+
+    conn =
+      conn(:get, "/users/1?foo=bar")
+      |> Router.call(Router.init([]))
+      |> fetch_query_params()
+
+    assert conn.status == 200
+    assert conn.resp_body == "users show"
+    assert conn.params["id"] == "1"
+    assert conn.params["foo"] == "bar"
     assert conn.path_params["id"] == "1"
   end
 
@@ -246,8 +269,8 @@ defmodule Phoenix.Router.RoutingTest do
       assert capture_log(fn -> call(Router, :get, "/fun_log", level: "info") end) =~
                "[info]  Processing with Phoenix.Router.RoutingTest.SomePlug"
 
-      assert capture_log(fn -> call(Router, :get, "/fun_log", level: "warn") end) =~
-               "[warn]  Processing with Phoenix.Router.RoutingTest.SomePlug"
+      assert capture_log(fn -> call(Router, :get, "/fun_log", level: "error") end) =~
+               "[error] Processing with Phoenix.Router.RoutingTest.SomePlug"
 
       assert capture_log(fn -> call(Router, :get, "/fun_log", level: "yelling") end) =~
                "[debug] Processing with Phoenix.Router.RoutingTest.SomePlug"

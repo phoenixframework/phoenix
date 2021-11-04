@@ -150,13 +150,19 @@ defmodule Phoenix.Router.Route do
   defp build_params(_binding) do
     params = Macro.var(:params, :conn)
     path_params = Macro.var(:path_params, :conn)
-    merge_params = quote(do: Map.merge(unquote(params), unquote(path_params)))
+    merge_params = quote(do: Phoenix.Router.Route.merge_params(unquote(params), unquote(path_params)))
 
     {
       [{:params, params}],
       [{:params, merge_params}, {:path_params, path_params}]
     }
   end
+
+  @doc """
+  Merges params from router.
+  """
+  def merge_params(%Plug.Conn.Unfetched{}, path_params), do: path_params
+  def merge_params(params, path_params), do: Map.merge(params, path_params)
 
   @doc """
   Validates and returns the list of forward path segments.

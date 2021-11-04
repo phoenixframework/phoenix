@@ -48,6 +48,16 @@ The following are notes about the generated authentication system.
 
 The password hashing mechanism defaults to `bcrypt` for Unix systems and `pbkdf2` for Windows systems. Both systems use the [Comeonin interface](https://hexdocs.pm/comeonin/).
 
+The password hashing mechanism can be overridden with the `--hashing-lib` option. The following values are supported:
+
+    * `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
+    * `pbkdf2` - [pbkdf2_elixir](https://hex.pm/packages/pbkdf2_elixir)
+    * `argon2` - [argon2_elixir](https://hex.pm/packages/argon2_elixir)
+
+We recommend developers to consider using `argon2`, which is the most robust of all 3. The downside is that `argon2` is quite CPU and memory intensive, and you will need more powerful instances to run your applications on.
+
+For more information about choosing these libraries, see the [Comeonin project](https://github.com/riverrun/comeonin).
+
 ### Forbidding access
 
 The generated code ships with an authentication module with a handful of plugs that fetch the current user, require authentication and so on. For instance, in an app named Demo which had `mix phx.gen.auth Accounts User users` run on it, you will find a module named `DemoWeb.UserAuth` with plugs such as:
@@ -85,6 +95,10 @@ Note `citext` is part of PostgreSQL itself and is bundled with it in most operat
 ### Concurrent tests
 
 The generated tests run concurrently if you are using a database that supports concurrent tests, which is the case of PostgreSQL.
+
+## More about `mix phx.gen.auth`
+
+Check out `mix phx.gen.auth` for more details, such as using different password hashing library, customizing the web module namespace, generating binary id type, configuring the default options, and using custom table names.  
 
 ## Additional resources
 

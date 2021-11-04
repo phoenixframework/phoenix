@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   ## Password hashing
 
-  The password hashing mechanism defaults to `argon2` for
+  The password hashing mechanism defaults to `bcrypt` for
   Unix systems and `pbkdf2` for Windows systems. Both
   systems use the [Comeonin interface](https://hexdocs.pm/comeonin/).
 
@@ -24,6 +24,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     * `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
     * `pbkdf2` - [pbkdf2_elixir](https://hex.pm/packages/pbkdf2_elixir)
     * `argon2` - [argon2_elixir](https://hex.pm/packages/argon2_elixir)
+
+  We recommend developers to consider using `argon2`, which
+  is the most robust of all 3. The downside is that `argon2`
+  is quite CPU and memory intensive, and you will need more
+  powerful instances to run your applications on.
 
   For more information about choosing these libraries, see the
   [Comeonin project](https://github.com/riverrun/comeonin).
@@ -36,7 +41,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
       $ mix phx.gen.auth Accounts User users --web Warehouse
 
-  Which would generate the controllers, views, templates and associated tests in nested in the `MyAppWeb.Warehouse` namespace:
+  Which would generate the controllers, views, templates and associated tests nested in the `MyAppWeb.Warehouse` namespace:
 
     * `lib/my_app_web/controllers/warehouse/user_auth.ex`
     * `lib/my_app_web/controllers/warehouse/user_confirmation_controller.ex`
@@ -200,7 +205,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp default_hashing_library_option do
     case :os.type() do
-      {:unix, _} -> "argon2"
+      {:unix, _} -> "bcrypt"
       {:win32, _} -> "pbkdf2"
     end
   end
@@ -436,8 +441,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       missing =
         context
         |> potential_layout_file_paths()
-        |> Enum.map(&"  * #{&1}")
-        |> Enum.join("\n")
+        |> Enum.map_join("\n", &"  * #{&1}")
 
       Mix.shell().error("""
 
@@ -586,8 +590,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
     string
     |> String.split("\n")
-    |> Enum.map(&(indent <> &1))
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", &(indent <> &1))
   end
 
   defp timestamp do
@@ -658,7 +661,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         mix phx.new my_app --umbrella
         mix phx.new my_app --database mysql
 
-    Apps generated with --no-ecto and --no-html are not supported.
+    Apps generated with --no-ecto or --no-html are not supported.
     """)
   end
 

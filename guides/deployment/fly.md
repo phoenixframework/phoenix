@@ -230,6 +230,19 @@ Our project is now ready to be deployed to Fly.io.
 $ fly deploy
 ```
 
+Note: On Apple Silicon (M1) computers, docker runs cross platform builds using qemu which might not always work. If you get a segmentation fault error like the following:
+
+```
+ => [build  7/17] RUN mix deps.get --only
+ => => # qemu: uncaught target signal 11 (Segmentation fault) - core dumped
+```
+
+You can use fly's remote builder by adding the `--remote-only` flag:
+
+```console
+$ fly deploy --remote-only
+```
+
 You can always check on the status of a deploy
 
 ```console

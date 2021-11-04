@@ -6,7 +6,7 @@ From Phoenix v1.6, new applications use [esbuild](https://esbuild.github.io/) to
 
 Your JavaScript is typically placed at "assets/js/app.js" and `esbuild` will extract it to "priv/static/assets/app.js". In development, this is done automatically via the `esbuild` watcher. In production, this is done by running `mix assets.deploy`.
 
-`esbuild` can also handle your CSS files can also be handled by `esbuild`. For this, there is typically an `import "../css/app.css"` at the top of your "assets/js/app.js". We will explore alternatives below.
+`esbuild` can also handle your CSS files. For this, there is typically an `import "../css/app.css"` at the top of your "assets/js/app.js". We will explore alternatives below.
 
 Finally, all other assets, that usually don't have to be preprocessed, go directly to "priv/static".
 
@@ -39,6 +39,32 @@ However, if you want to use a CSS framework, such as SASS or Tailwind, you will 
   * You can bring Node.JS + `npm` to your application and install any package you want, typically working directly with their command line interface. See [this pull request on how to add Alpine + Tailwind](https://github.com/josevalim/phx_esbuild_demo/pull/3).
 
 Don't forget to remove the `import "../css/app.css"` from your JavaScript file when doing so.
+
+## Images, fonts, and external files
+
+If you reference an external file in your CSS or JavaScript files, `esbuild` will attempt to validate and manage them, unless told otherwise.
+
+For example, imagine you want to reference `priv/static/images/bg.png`, served at `/images/bg.png`, from your CSS file:
+
+```css
+body {
+  background-image: url(/images/bg.png);
+}
+```
+
+The above may fail with the following message:
+
+```text
+error: Could not resolve "/images/bg.png" (mark it as external to exclude it from the bundle)
+```
+
+Given the images are already managed by Phoenix, you need to mark all resources from `/images` (and also `/fonts`) as external, as the error message says. This is what Phoenix does by default for new apps since v1.6.1+. In your `config/config.exs`, you will find:
+
+```elixir
+args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+```
+
+If you need to reference other directories, you need to update the arguments above accordingly. Note running `mix phx.digest` will create digested files for all of the assets in `priv/static`, so your images and fonts are still cache-busted.
 
 ## Esbuild plugins
 

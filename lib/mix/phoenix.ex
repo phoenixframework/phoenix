@@ -331,7 +331,7 @@ defmodule Mix.Phoenix do
         Mix.shell().info"""
         The following files conflict with new files to be generated:
 
-        #{conflicts |> Enum.map(&"  * #{&1}") |> Enum.join("\n")}
+        #{Enum.map_join(conflicts, "\n", &"  * #{&1}")}
 
         See the --web option to namespace similarly named resources
         """

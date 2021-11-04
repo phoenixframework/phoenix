@@ -51,16 +51,12 @@ var Phoenix = (() => {
     reply: "phx_reply",
     leave: "phx_leave"
   };
-  var CHANNEL_LIFECYCLE_EVENTS = [
-    CHANNEL_EVENTS.close,
-    CHANNEL_EVENTS.error,
-    CHANNEL_EVENTS.join,
-    CHANNEL_EVENTS.reply,
-    CHANNEL_EVENTS.leave
-  ];
   var TRANSPORTS = {
     longpoll: "longpoll",
     websocket: "websocket"
+  };
+  var XHR_STATES = {
+    complete: 4
   };
 
   // js/phoenix/push.js
@@ -304,14 +300,11 @@ var Phoenix = (() => {
     onMessage(_event, payload, _ref) {
       return payload;
     }
-    isLifecycleEvent(event) {
-      return CHANNEL_LIFECYCLE_EVENTS.indexOf(event) >= 0;
-    }
     isMember(topic, event, payload, joinRef) {
       if (this.topic !== topic) {
         return false;
       }
-      if (joinRef && joinRef !== this.joinRef() && this.isLifecycleEvent(event)) {
+      if (joinRef && joinRef !== this.joinRef()) {
         if (this.socket.hasLogger())
           this.socket.log("channel", "dropping outdated message", { topic, event, payload, joinRef });
         return false;
@@ -363,9 +356,6 @@ var Phoenix = (() => {
 
   // js/phoenix/ajax.js
   var Ajax = class {
-    constructor() {
-      this.states = { complete: 4 };
-    }
     static request(method, endPoint, accept, body, timeout, ontimeout, callback) {
       if (global.XDomainRequest) {
         let req = new global.XDomainRequest();
@@ -397,7 +387,7 @@ var Phoenix = (() => {
         callback && callback(null);
       };
       req.onreadystatechange = () => {
-        if (req.readyState === this.states.complete && callback) {
+        if (req.readyState === XHR_STATES.complete && callback) {
           let response = this.parseJSON(req.responseText);
           callback(response);
         }

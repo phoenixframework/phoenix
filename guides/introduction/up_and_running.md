@@ -79,9 +79,9 @@ And finally, we'll start the Phoenix server:
 
 ```console
 $ mix phx.server
-[info] Running HelloWeb.Endpoint with cowboy 2.5.0 at http://localhost:4000
-
-Webpack is watching the files…
+[info] Running HelloWeb.Endpoint with cowboy 2.9.0 at 127.0.0.1:4000 (http)
+[info] Access HelloWeb.Endpoint at http://localhost:4000
+[watch] build finished, watching for changes...
 ...
 ```
 
@@ -119,4 +119,3 @@ To stop it, we hit `ctrl-c` twice.
 Now you are ready to explore the world provided by Phoenix! See [our community page](community.html) for books, screencasts, courses, and more.
 
 Alternatively, you can continue reading these guides to have a quick introduction into all the parts that make your Phoenix application. If that's the case, you can read the guides in any order or start with our guide that explains the [Phoenix directory structure](directory_structure.html).
-

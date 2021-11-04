@@ -302,7 +302,6 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
-  @spec raise_with_help(String.t) :: no_return()
   def raise_with_help(msg) do
     Mix.raise """
     #{msg}
@@ -323,6 +322,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     """
   end
 
+  @doc false
   def prompt_for_code_injection(%Context{generate?: false}), do: :ok
   def prompt_for_code_injection(%Context{} = context) do
     if Context.pre_existing?(context) && !merge_with_existing_context?(context) do

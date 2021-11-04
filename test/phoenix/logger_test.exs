@@ -88,7 +88,7 @@ defmodule Phoenix.LoggerTest do
 
       assert ExUnit.CaptureLog.capture_log(fn ->
         Plug.Telemetry.call(conn(:get, "/warn"), opts)
-      end) =~ "[warn]  GET /warn"
+      end) =~ ~r"\[warn(ing)?\]  ?GET /warn"
 
       assert ExUnit.CaptureLog.capture_log(fn ->
         Plug.Telemetry.call(conn(:get, "/error/404"), opts)

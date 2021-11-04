@@ -103,12 +103,14 @@ defmodule Phoenix.Router.Helpers do
       end)
 
     trailing_slash? = Enum.any?(routes, fn {route, _} -> route.trailing_slash? end)
-
     groups = Enum.group_by(routes, fn {route, _exprs} -> route.helper end)
 
     impls =
-      for {_helper, group} <- groups,
-          {route, exprs} <- Enum.sort_by(group, fn {_, exprs} -> length(exprs.binding) end),
+      for {_helper, helper_routes} <- groups,
+          {_, [{route, exprs} | _]} <-
+            helper_routes
+            |> Enum.group_by(fn {route, exprs} -> [length(exprs.binding) | route.plug_opts] end)
+            |> Enum.sort(),
           do: defhelper(route, exprs)
 
     catch_all = Enum.map(groups, &defhelper_catch_all/1)
@@ -137,8 +139,8 @@ defmodule Phoenix.Router.Helpers do
     end
 
     defcatch_all = quote [generated: true, unquote: false] do
-      defcatch_all = fn helper, lengths, routes ->
-	      for length <- lengths do
+      defcatch_all = fn helper, binding_lengths, params_lengths, routes ->
+	      for length <- binding_lengths do
 	        binding = List.duplicate({:_, [], nil}, length)
 	        arity = length + 2
 
@@ -147,14 +149,19 @@ defmodule Phoenix.Router.Helpers do
             raise_route_error(unquote(helper), :path, unquote(arity), action, [])
           end
 
-          def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding), params) do
-            path(conn_or_endpoint, "/")
-            raise_route_error(unquote(helper), :path, unquote(arity + 1), action, params)
-          end
-
           def unquote(:"#{helper}_url")(conn_or_endpoint, action, unquote_splicing(binding)) do
             url(conn_or_endpoint)
             raise_route_error(unquote(helper), :url, unquote(arity), action, [])
+          end
+        end
+
+        for length <- params_lengths do
+          binding = List.duplicate({:_, [], nil}, length)
+          arity = length + 2
+
+          def unquote(:"#{helper}_path")(conn_or_endpoint, action, unquote_splicing(binding), params) do
+            path(conn_or_endpoint, "/")
+            raise_route_error(unquote(helper), :path, unquote(arity + 1), action, params)
           end
 
           def unquote(:"#{helper}_url")(conn_or_endpoint, action, unquote_splicing(binding), params) do
@@ -326,15 +333,27 @@ defmodule Phoenix.Router.Helpers do
       |> Enum.map(fn {routes, exprs} -> {routes.plug_opts, Enum.map(exprs.binding, &elem(&1, 0))} end)
       |> Enum.sort()
 
-    lengths =
+    params_lengths =
 	    routes
 	    |> Enum.map(fn {_, bindings} -> length(bindings) end)
 	    |> Enum.uniq()
 
+    # Each helper defines catch alls like this:
+    #
+    #     def helper_path(context, action, ...binding)
+    #     def helper_path(context, action, ...binding, params)
+    #
+    # Given the helpers are ordered by binding length, the additional
+    # helper with param for a helper_path/n will always override the
+    # binding for helper_path/n+1, so we skip those here to avoid warnings.
+    binding_lengths =
+      Enum.reject(params_lengths, &(&1 - 1 in params_lengths))
+
     quote do
       defcatch_all.(
         unquote(helper),
-        unquote(lengths),
+        unquote(binding_lengths),
+        unquote(params_lengths),
         unquote(Macro.escape(routes))
       )
     end

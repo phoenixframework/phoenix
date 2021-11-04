@@ -18,8 +18,9 @@ if Mix.env() == :dev do
   end
 
   config :esbuild,
-    version: "0.12.18",
+    version: "0.13.5",
     module: esbuild.(~w(--format=esm --sourcemap --outfile=../priv/static/phoenix.esm.js)),
+    main: esbuild.(~w(--format=cjs --sourcemap --outfile=../priv/static/phoenix.cjs.js)),
     cdn:
       esbuild.(
         ~w(--target=es2016 --format=iife --global-name=Phoenix --outfile=../priv/static/phoenix.js)

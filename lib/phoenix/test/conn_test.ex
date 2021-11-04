@@ -593,6 +593,30 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
+  Returns the matched params of the URL for the `%Plug.Conn{}`'s router.
+
+  Useful for extracting path params out of returned URLs, such as those
+  returned by `Phoenix.LiveViewTest`'s redirected results.
+
+  ## Examples
+
+      assert {:error, {:redirect, %{to: "/posts/123" = to}}} = live(conn, "/path")
+      assert %{id: "123"} = path_params(conn, to)
+  """
+  @spec path_params(Conn.t, String.t) :: map
+  def path_params(%Plug.Conn{} = conn, to) when is_binary(to) do
+    router = Phoenix.Controller.router_module(conn)
+
+    case Phoenix.Router.route_info(router, "GET", to, conn.host) do
+    %{path_params: path_params} ->
+      Enum.into(path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
+
+    :error ->
+      raise Phoenix.Router.NoRouteError, conn: conn, router: router
+    end
+  end
+
+  @doc """
   Asserts an error was wrapped and sent with the given status.
 
   Useful for testing actions that you expect raise an error and have

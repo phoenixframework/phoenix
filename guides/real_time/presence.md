@@ -35,7 +35,7 @@ in lib/hello/application.ex:
     ]
 
 You're all set! See the Phoenix.Presence docs for more details:
-http://hexdocs.pm/phoenix/Phoenix.Presence.html
+https://hexdocs.pm/phoenix/Phoenix.Presence.html
 ```
 
 If we open up the `lib/hello_web/channels/presence.ex` file, we will see the following line:

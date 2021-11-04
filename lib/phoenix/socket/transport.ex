@@ -282,7 +282,7 @@ defmodule Phoenix.Socket.Transport do
   """
   def code_reload(conn, endpoint, opts) do
     reload? = Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader))
-    reload? && Phoenix.CodeReloader.reload!(endpoint)
+    reload? && Phoenix.CodeReloader.reload(endpoint)
     conn
   end
 
