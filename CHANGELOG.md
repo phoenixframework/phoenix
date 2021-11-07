@@ -1,6 +1,6 @@
 # Changelog for v1.6
 
-See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0f4de6decba7b) to upgrade from Phoenix 1.5.x.
+See the [upgrade guide](UPGRADE.md) to upgrade from Phoenix 1.5.x.
 
 Phoenix v1.6 requires Elixir v1.9+.
 

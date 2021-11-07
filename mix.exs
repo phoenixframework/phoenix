@@ -145,7 +145,8 @@ defmodule Phoenix.MixProject do
       "guides/deployment/heroku.md",
       "guides/howto/custom_error_pages.md",
       "guides/howto/using_ssl.md",
-      "CHANGELOG.md"
+      "CHANGELOG.md",
+      "UPGRADE.md"
     ]
   end
 
