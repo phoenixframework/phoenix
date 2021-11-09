@@ -51,7 +51,7 @@ First delete your webpack config and related node files:
 
 ```console
 $ rm assets/webpack.config.js assets/package.json assets/package-lock.json assets/.babelrc
-$ rm -rf assetes/node_modules
+$ rm -rf assets/node_modules
 ```
 
 Next, add the `esbuild` mix dep to your `mix.exs` deps:
