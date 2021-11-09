@@ -801,7 +801,7 @@ end
 
 We defined a new `CartItemController` with the create and delete actions that we declared in our router. For `create`, we first lookup the product in the catalog with `Catalog.get_product!/1`, then we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we show a flash successful message and redirect to the cart show page; else, we show a flash error message and redirect to the cart show page. For `delete`, we'll call a `remove_item_from_cart` function which we'll implement on our `ShoppingCart` context  and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` make it obvious what we are accomplishing here. It also allows us to spec our our web layer and context APIs without thinking about all the implementation details at once.
 
-Let's implement our new interface of `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
+Let's implement the new interface for the `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
 ```elixir
   alias Hello.Catalog
