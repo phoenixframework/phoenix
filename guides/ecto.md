@@ -393,7 +393,7 @@ There are many more validations and transformations we can perform in a changese
 
 ## Data persistence
 
-We've explored migrations and schemas, but we haven't yet persisted any of our schemas or changesets. We briefly looked at our repository module in `lib/hello/repo.ex` earlier, now it's time to put it to use.
+We've explored migrations and schemas, but we haven't yet persisted any of our schemas or changesets. We briefly looked at our repository module in `lib/hello/repo.ex` earlier, and now it's time to put it to use.
 
 Ecto repositories are the interface into a storage system, be it a database like PostgreSQL or an external service like a RESTful API. The `Repo` module's purpose is to take care of the finer details of persistence and data querying for us. As the caller, we only care about fetching and persisting data. The `Repo` module takes care of the underlying database adapter communication, connection pooling, and error translation for database constraint violations.
 
