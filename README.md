@@ -68,7 +68,6 @@ $ mix archive.build
 ```bash
 $ cd assets
 $ npm install
-$ npm run watch
 ```
 
 ## Important links
