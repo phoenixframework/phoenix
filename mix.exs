@@ -1,6 +1,13 @@
 defmodule Phoenix.MixProject do
   use Mix.Project
 
+  if Mix.env() != :prod do
+    for path <- :code.get_path(),
+        Regex.match?(~r/phx_new\-\d+\.\d+\.\d.*\/ebin$/, List.to_string(path)) do
+      Code.delete_path(path)
+    end
+  end
+
   @version "1.6.2"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
