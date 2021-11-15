@@ -938,7 +938,7 @@ var Socket = class {
       this.log("transport", "close", event);
     this.triggerChanError();
     clearTimeout(this.heartbeatTimer);
-    if (!this.closeWasClean) {
+    if (!this.closeWasClean && event.code !== 1e3) {
       this.reconnectTimer.scheduleTimeout();
     }
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event));
