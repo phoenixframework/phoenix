@@ -28,7 +28,7 @@ defmodule Phoenix.Logger do
       * Measurement: `%{system_time: System.system_time}`
       * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
       * Disable logging: Pass `log: false` to the router macro, for example: `get("/page", PageController, :index, log: false)`
-      * Configure log level dynamically: `get("/page", PageController, :index, log: {Mod, Fun, Args}`
+      * Configure log level dynamically: `get("/page", PageController, :index, log: {Mod, Fun, Args})`
 
     * `[:phoenix, :router_dispatch, :exception]` - dispatched by `Phoenix.Router`
       after exceptions on dispatching a route
