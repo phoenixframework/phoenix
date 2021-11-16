@@ -260,7 +260,7 @@ defmodule Mix.Phoenix.Schema do
 
   def format_fields_for_schema(schema) do
     Enum.map_join(schema.types, "\n", fn {k, v} ->
-      "field #{inspect(k)}, #{type_and_opts_for_schema(v)}#{schema.defaults[k]}#{maybe_redact_field(k in schema.redacts)}"
+      "    field #{inspect(k)}, #{type_and_opts_for_schema(v)}#{schema.defaults[k]}#{maybe_redact_field(k in schema.redacts)}"
     end)
   end
 
