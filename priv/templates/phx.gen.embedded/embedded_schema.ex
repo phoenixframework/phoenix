@@ -4,8 +4,8 @@ defmodule <%= inspect schema.module %> do
   alias <%= inspect schema.module %>
 
   embedded_schema do
-<%= for {k, v} <- schema.types do %>    field <%= inspect k %>, <%= Mix.Phoenix.Schema.type_and_opts_for_schema(v) %><%= schema.defaults[k] %><%= Mix.Phoenix.Schema.maybe_redact_field(k in schema.redacts) %>
-<% end %>  end
+<%= Mix.Phoenix.Schema.format_fields_for_schema(schema) %>
+  end
 
   @doc false
   def changeset(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
