@@ -10,7 +10,6 @@ defmodule Phoenix.Router.Helpers do
   """
   def url(_router, %Conn{private: private}) do
     case private do
-      %{phoenix_router_url: %URI{} = uri} -> URI.to_string(uri)
       %{phoenix_router_url: url} when is_binary(url) -> url
       %{phoenix_endpoint: endpoint} -> endpoint.url()
     end
@@ -237,7 +236,6 @@ defmodule Phoenix.Router.Helpers do
       """
       def static_url(%Conn{private: private}, path) do
         case private do
-          %{phoenix_static_url: %URI{} = uri} -> URI.to_string(uri) <> path
           %{phoenix_static_url: url} when is_binary(url) -> url <> path
           %{phoenix_endpoint: endpoint} -> static_url(endpoint, path)
         end
