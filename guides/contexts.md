@@ -768,7 +768,7 @@ We'll need to implement a cart controller for handling cart operations like view
 
 We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and remove individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT request, will handle the submission of a form for updating our cart quantities.
 
-With our routes in place, let's add the ability to add an item to our cart from the product show page. Create a new file at `lib/hello_web/cart_item_controller.ex` and key this in:
+With our routes in place, let's add the ability to add an item to our cart from the product show page. Create a new file at `lib/hello_web/controllers/cart_item_controller.ex` and key this in:
 
 ```elixir
 defmodule HelloWeb.CartItemController do
