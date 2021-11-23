@@ -262,9 +262,10 @@ def index(conn, _params) do
 end
 ```
 
-Reloading [http://localhost:4000](http://localhost:4000) should show us a completely blank page. The network tab of our browser's developer tools should show a response status of "201" (Created).
+Reloading [http://localhost:4000](http://localhost:4000) should show us a completely blank page. The network tab of our browser's developer tools should show a response status of "201" (Created). Some browsers (Safari) will download the response, as the content type is not set.
 
-If we would like to be really specific about the content type, we can use [`put_resp_content_type/2`] in conjunction with [`send_resp/3`].
+To be specific about the content type, we can use [`put_resp_content_type/2`] in conjunction with [`send_resp/3`].
+
 
 ```elixir
 def index(conn, _params) do
