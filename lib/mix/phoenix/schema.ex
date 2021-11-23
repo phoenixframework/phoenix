@@ -255,6 +255,12 @@ defmodule Mix.Phoenix.Schema do
   def type_for_migration({:enum, _}), do: :string
   def type_for_migration(other), do: other
 
+  def format_fields_for_schema(schema) do
+    Enum.map_join(schema.types, "\n", fn {k, v} ->
+      "    field #{inspect(k)}, #{type_and_opts_for_schema(v)}#{schema.defaults[k]}#{maybe_redact_field(k in schema.redacts)}"
+    end)
+  end
+
   def type_and_opts_for_schema({:enum, opts}), do: ~s|Ecto.Enum, values: #{inspect Keyword.get(opts, :values)}|
   def type_and_opts_for_schema(other), do: inspect other
 
