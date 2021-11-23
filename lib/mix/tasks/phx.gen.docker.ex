@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Phx.Gen.Docker do
     * `rel/overlays/bin/migrate` - A migrate script for conveniently invoking
       the release system migrations.
 
-    * `rel/overlays/bin/migrate` - A server script for conveniently invoking
+    * `rel/overlays/bin/server` - A server script for conveniently invoking
       the release system with environment variables to start the phoenix web server.
 
   The following standard files are also generated and match the standard
