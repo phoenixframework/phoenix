@@ -262,7 +262,7 @@ Intuitively, you would assume the following events:
   1. User 1 loads the product page with count of 13
   2. User 1 saves the product page with count of 14
   3. User 2 loads the product page with count of 14
-  4. User 2 loads the product page with count of 15
+  4. User 2 saves the product page with count of 15
 
 While in practice this would happen:
 
@@ -273,7 +273,7 @@ While in practice this would happen:
 
 The race conditions would make this an unreliable way to update the existing table since multiple callers may be updating out of date view values. There's a better way.
 
-Let's think of a function describes what we want to accomplish. Here's how we would like to use it:
+Let's think of a function that describes what we want to accomplish. Here's how we would like to use it:
 
     product = Catalog.inc_page_views(product)
 
@@ -752,7 +752,7 @@ We added a new `:fetch_current_user` and `:fetch_current_cart` plug to our brows
 
 We'll need to implement a cart controller for handling cart operations like viewing a cart, updating quantities, and initiating the checkout process, as well as a cart items controller for adding and removing individual items to and from the cart. Add the following routes to your router in `lib/hello_web/router.ex`:
 
-```elixir
+```diff
   scope "/", HelloWeb do
     pipe_through :browser
 
