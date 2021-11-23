@@ -349,10 +349,12 @@ defmodule Phx.New.Generator do
           environment variable DATABASE_URL is missing.
           For example: ecto://USER:PASS@HOST/DATABASE
           \"""
+
+      ipv6? = System.get_env("IPV6") == "true"
       """,
       prod_config: """
       # ssl: true,
-      # socket_options: [:inet6],
+      socket_options: if(ipv6?, do: [:inet6], else: []),
       url: database_url,
       pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
       """
