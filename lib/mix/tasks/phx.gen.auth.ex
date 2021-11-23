@@ -524,7 +524,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         $ mix ecto.migrate
 
     Once you are ready, visit "/#{context.schema.plural}/register"
-    to create your account and then access to "/dev/mailbox" to
+    to create your account and then access "/dev/mailbox" to
     see the account confirmation email.
     """)
 
