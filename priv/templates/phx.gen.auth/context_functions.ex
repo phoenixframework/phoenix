@@ -139,7 +139,10 @@
   end
 
   defp <%= schema.singular %>_email_multi(<%= schema.singular %>, email, context) do
-    changeset = <%= schema.singular %> |> <%= inspect schema.alias %>.email_changeset(%{email: email}) |> <%= inspect schema.alias %>.confirm_changeset()
+    changeset =
+      <%= schema.singular %>
+      |> <%= inspect schema.alias %>.email_changeset(%{email: email})
+      |> <%= inspect schema.alias %>.confirm_changeset()
 
     Ecto.Multi.new()
     |> Ecto.Multi.update(:<%= schema.singular %>, changeset)
