@@ -50,12 +50,8 @@ COPY priv priv
 # step down so that `lib` is available.
 COPY assets assets
 
-# For Phoenix 1.6 and later, compile assets using esbuild
+# compile assets
 RUN mix assets.deploy
-
-# For Phoenix versions earlier than 1.6, compile assets npm
-# RUN cd assets && yarn install && yarn run webpack --mode production
-# RUN mix phx.digest
 
 # Compile the release
 COPY lib lib
