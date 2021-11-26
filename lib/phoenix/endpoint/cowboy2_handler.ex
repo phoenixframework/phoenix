@@ -24,10 +24,21 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
               cowboy_opts =
                 opts
                 |> Enum.flat_map(fn
-                  {:timeout, timeout} -> [idle_timeout: timeout]
-                  {:compress, _} = opt -> [opt]
-                  {:max_frame_size, _} = opt -> [opt]
-                  _other -> []
+                  {:timeout, timeout} ->
+                    [idle_timeout: timeout]
+
+                  {:compress, _} = opt ->
+                    [opt]
+
+                  {:max_frame_size, _} = opt ->
+                    [opt]
+
+                  {:fullsweep_after, value} ->
+                    :erlang.process_flag(:fullsweep_after, value)
+                    []
+
+                  _other ->
+                    []
                 end)
                 |> Map.new()
 

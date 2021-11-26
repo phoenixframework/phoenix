@@ -862,6 +862,11 @@ defmodule Phoenix.Endpoint do
     * `:max_frame_size` - the maximum allowed frame size in bytes,
       defaults to "infinity"
 
+    * `:fullsweep_after` - the maximum number of garbage collections
+      before forcing a fullsweep for the socket process. You can set
+      it to `0` to force more frequent cleanups of your websocket
+      transport processes. Setting this option requires Erlang/OTP 24
+
     * `:compress` - whether to enable per message compression on
       all data frames, defaults to false
 

@@ -88,6 +88,10 @@ defmodule Phoenix.Socket do
 
       send(socket.transport_pid, :garbage_collect)
 
+  Alternatively, you can configure your endpoint socket to trigger more
+  fullsweep garbage collections more frequently, by setting the `:fullsweep_after`
+  option for websockets. See `Phoenix.Endpoint.socket/3` for more info.
+
   ## Client-server communication
 
   The encoding of server data and the decoding of client data is done
