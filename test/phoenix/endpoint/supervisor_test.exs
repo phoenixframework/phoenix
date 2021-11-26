@@ -13,7 +13,9 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     config = Supervisor.config(:phoenix, SupervisorApp.Endpoint)
     assert config[:otp_app] == :phoenix
     assert config[:custom] == true
-    assert config[:render_errors] == [view: SupervisorApp.ErrorView, accepts: ~w(html), layout: false]
+
+    assert config[:render_errors] ==
+             [view: SupervisorApp.ErrorView, accepts: ~w(html), layout: false]
   end
 
   defmodule HTTPSEndpoint do
@@ -34,8 +36,8 @@ defmodule Phoenix.Endpoint.SupervisorTest do
 
   defmodule HTTPEnvVarEndpoint do
     def config(:https), do: false
-    def config(:http), do: [port: {:system,"PHOENIX_PORT"}]
-    def config(:url), do: [host: {:system,"PHOENIX_HOST"}]
+    def config(:http), do: [port: {:system, "PHOENIX_PORT"}]
+    def config(:url), do: [host: {:system, "PHOENIX_HOST"}]
     def config(:otp_app), do: :phoenix
   end
 
@@ -82,6 +84,7 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   test "static_path/2 returns file's path with lookup cache" do
     assert {:nocache, {"/phoenix.png", nil}} =
              Supervisor.static_lookup(HTTPEndpoint, "/phoenix.png")
+
     assert {:nocache, {"/images/unknown.png", nil}} =
              Supervisor.static_lookup(HTTPEndpoint, "/images/unknown.png")
   end
@@ -103,30 +106,38 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     @watchers [esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}]
 
     test "init/1 starts watcher children when `:server` config is true" do
-      Application.put_env(:phoenix, WatchersEndpoint, [server: true, watchers: @watchers])
+      Application.put_env(:phoenix, WatchersEndpoint, server: true, watchers: @watchers)
       {:ok, {_, children}} = Supervisor.init({:phoenix, WatchersEndpoint, []})
+
       assert Enum.any?(children, fn
-        %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
-        _ -> false
-      end)
+               %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
+               _ -> false
+             end)
     end
 
     test "init/1 doesnt start watchers when `:server` config is false" do
-      Application.put_env(:phoenix, WatchersEndpoint, [server: false, watchers: @watchers])
+      Application.put_env(:phoenix, WatchersEndpoint, server: false, watchers: @watchers)
       {:ok, {_, children}} = Supervisor.init({:phoenix, WatchersEndpoint, []})
+
       refute Enum.any?(children, fn
-        %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
-        _ -> false
-      end)
+               %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
+               _ -> false
+             end)
     end
 
     test "init/1 starts watcher children when `:server` config is false and `:force_watchers` is true" do
-      Application.put_env(:phoenix, WatchersEndpoint, [server: false, force_watchers: true, watchers: @watchers])
+      Application.put_env(:phoenix, WatchersEndpoint,
+        server: false,
+        force_watchers: true,
+        watchers: @watchers
+      )
+
       {:ok, {_, children}} = Supervisor.init({:phoenix, WatchersEndpoint, []})
+
       assert Enum.any?(children, fn
-        %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
-        _ -> false
-      end)
+               %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
+               _ -> false
+             end)
     end
   end
 end
