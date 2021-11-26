@@ -156,7 +156,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp watcher_children(_mod, conf, server?) do
-    if server? do
+    if server? || conf[:force_watchers] do
       Enum.map(conf[:watchers], &{Phoenix.Endpoint.Watcher, &1})
     else
       []
@@ -207,7 +207,8 @@ defmodule Phoenix.Endpoint.Supervisor do
      cache_manifest_skip_vsn: false,
 
      # Supervisor config
-     watchers: []]
+     watchers: [],
+     force_watchers: false]
   end
 
   defp render_errors(module) do

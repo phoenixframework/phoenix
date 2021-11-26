@@ -158,9 +158,10 @@ defmodule Phoenix.Endpoint do
     * `:watchers` - a set of watchers to run alongside your server. It
       expects a list of tuples containing the executable and its arguments.
       Watchers are guaranteed to run in the application directory, but only
-      when the server is enabled. For example, the watcher below will run
-      the "watch" mode of the webpack build tool when the server starts.
-      You can configure it to whatever build tool or command you want:
+      when the server is enabled (unless `:force_watchers` configuration is
+      set to `true`). For example, the watcher below will run the "watch" mode
+      of the webpack build tool when the server starts. You can configure it
+      to whatever build tool or command you want:
 
           [
             node: [
@@ -180,6 +181,9 @@ defmodule Phoenix.Endpoint do
       A watcher can also be a module-function-args tuple that will be invoked accordingly:
 
           [another: {Mod, :fun, [arg1, arg2]}]
+
+    * `:force_watchers` - when `true`, forces your watchers to start
+      even when the `:server` option is set to `false`.
 
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of

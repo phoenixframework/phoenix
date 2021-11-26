@@ -57,6 +57,12 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def __compile_config__(), do: [force_ssl: [rewrite_on: [:x_forwarded_proto]]]
   end
 
+  defmodule WatchersEndpoint do
+    def init(:supervisor, config), do: {:ok, config}
+    def __compile_config__(), do: []
+    def __sockets__(), do: []
+  end
+
   test "generates the static url based on the static host configuration" do
     static_host = {:cache, "http://static.example.com"}
     assert Supervisor.static_url(StaticURLEndpoint) == static_host
@@ -91,5 +97,36 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     assert_raise ArgumentError,
                  "expected these options to be unchanged from compile time: [:force_ssl]",
                  fn -> Supervisor.init({:phoenix, ForceSslEndpoint, []}) end
+  end
+
+  describe "watchers" do
+    @watchers [esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}]
+
+    test "init/1 starts watcher children when `:server` config is true" do
+      Application.put_env(:phoenix, WatchersEndpoint, [server: true, watchers: @watchers])
+      {:ok, {_, children}} = Supervisor.init({:phoenix, WatchersEndpoint, []})
+      assert Enum.any?(children, fn
+        %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
+        _ -> false
+      end)
+    end
+
+    test "init/1 doesnt start watchers when `:server` config is false" do
+      Application.put_env(:phoenix, WatchersEndpoint, [server: false, watchers: @watchers])
+      {:ok, {_, children}} = Supervisor.init({:phoenix, WatchersEndpoint, []})
+      refute Enum.any?(children, fn
+        %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
+        _ -> false
+      end)
+    end
+
+    test "init/1 starts watcher children when `:server` config is false and `:force_watchers` is true" do
+      Application.put_env(:phoenix, WatchersEndpoint, [server: false, force_watchers: true, watchers: @watchers])
+      {:ok, {_, children}} = Supervisor.init({:phoenix, WatchersEndpoint, []})
+      assert Enum.any?(children, fn
+        %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
+        _ -> false
+      end)
+    end
   end
 end
