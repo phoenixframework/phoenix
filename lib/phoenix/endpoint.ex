@@ -182,8 +182,8 @@ defmodule Phoenix.Endpoint do
 
           [another: {Mod, :fun, [arg1, arg2]}]
 
-    * `:force_watchers` - when `true`, forces your watchers to start alongside your
-      server even when the `:server` option is set to `false`.
+    * `:force_watchers` - when `true`, forces your watchers to start
+      even when the `:server` option is set to `false`.
 
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of
