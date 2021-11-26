@@ -99,12 +99,14 @@ defmodule Phoenix.Endpoint.Supervisor do
       Phoenix.CodeReloader.Server.check_symlinks()
     end
 
+    force_watchers? = force_watchers?(conf)
+
     children =
       config_children(mod, secret_conf, default_conf) ++
       pubsub_children(mod, conf) ++
       socket_children(mod) ++
       server_children(mod, conf, server?) ++
-      watcher_children(mod, conf, server?)
+      watcher_children(mod, conf, server?, force_watchers?)
 
     Supervisor.init(children, strategy: :one_for_one)
   end
@@ -155,12 +157,16 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp watcher_children(_mod, conf, server?) do
-    if server? do
+  defp watcher_children(_mod, conf, server?, force_watchers?) do
+    if server? or force_watchers? do
       Enum.map(conf[:watchers], &{Phoenix.Endpoint.Watcher, &1})
     else
       []
     end
+  end
+
+  defp force_watchers?(conf) when is_list(conf) do
+    Keyword.get(conf, :force_watchers, false)
   end
 
   @doc """
@@ -207,7 +213,8 @@ defmodule Phoenix.Endpoint.Supervisor do
      cache_manifest_skip_vsn: false,
 
      # Supervisor config
-     watchers: []]
+     watchers: [],
+     force_watchers: false]
   end
 
   defp render_errors(module) do
