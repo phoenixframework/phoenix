@@ -98,7 +98,7 @@ Phoenix v1.6 uses `esbuild` to compile your assets but all Gigalixir images come
 ```json
 {
   "scripts": {
-    "deploy": "cd .. && mix assets.deploy && rm -f _build/esbuild"
+    "deploy": "cd .. && mix assets.deploy && rm -f _build/esbuild*"
   }
 }
 ```
