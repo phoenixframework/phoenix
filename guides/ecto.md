@@ -435,7 +435,11 @@ INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETUR
  }}
 ```
 
-We started by aliasing our `User` and `Repo` modules for easy access. Next, we called [`Repo.insert/2`] and passed a user struct. Since we are in the `dev` environment, we can see the debug logs for the query our repository performed when inserting the underlying `%User{}` data. We received a two-element tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful. With a couple of users inserted, let's fetch them back out of the repo.
+We started by aliasing our `User` and `Repo` modules for easy access. Next, we called [`Repo.insert/2`] with a User struct. Since we are in the `dev` environment, we can see the debug logs for the query our repository performed when inserting the underlying `%User{}` data. We received a two-element tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful.
+
+We could also insert a user by passing a changeset to [`Repo.insert/2`]. If the changeset is valid, the repository will use an optimized database query to insert the record, and return a two-element tuple back, as above. If the changeset is not valid, we receive a two-element tuple consisting of `:error` plus the invalid changeset.
+
+With a couple of users inserted, let's fetch them back out of the repo.
 
 ```elixir
 iex> Repo.all(User)
