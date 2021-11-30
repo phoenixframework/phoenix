@@ -62,11 +62,10 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
 
   @doc false
   def validate_args!([schema | _] = args) do
-    cond do
-      not Schema.valid?(schema) ->
-        raise_with_help "Expected the schema argument, #{inspect schema}, to be a valid module name"
-      true ->
-        args
+    if Schema.valid?(schema) do
+      args
+    else
+      raise_with_help "Expected the schema argument, #{inspect schema}, to be a valid module name"
     end
   end
   def validate_args!(_) do

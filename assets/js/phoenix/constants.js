@@ -19,14 +19,11 @@ export const CHANNEL_EVENTS = {
   reply: "phx_reply",
   leave: "phx_leave"
 }
-export const CHANNEL_LIFECYCLE_EVENTS = [
-  CHANNEL_EVENTS.close,
-  CHANNEL_EVENTS.error,
-  CHANNEL_EVENTS.join,
-  CHANNEL_EVENTS.reply,
-  CHANNEL_EVENTS.leave
-]
+
 export const TRANSPORTS = {
   longpoll: "longpoll",
   websocket: "websocket"
+}
+export const XHR_STATES = {
+  complete: 4
 }

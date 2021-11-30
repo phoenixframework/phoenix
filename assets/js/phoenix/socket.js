@@ -1,3 +1,24 @@
+import {
+  global,
+  phxWindow,
+  CHANNEL_EVENTS,
+  DEFAULT_TIMEOUT,
+  DEFAULT_VSN,
+  SOCKET_STATES,
+  TRANSPORTS,
+  WS_CLOSE_NORMAL
+} from "./constants"
+
+import {
+  closure
+} from "./utils"
+
+import Ajax from "./ajax"
+import Channel from "./channel"
+import LongPoll from "./longpoll"
+import Serializer from "./serializer"
+import Timer from "./timer"
+
 /** Initializes the Socket *
  *
  * For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
@@ -66,28 +87,6 @@
  *
  * Defaults to DEFAULT_VSN.
 */
-
-import {
-  global,
-  phxWindow,
-  CHANNEL_EVENTS,
-  DEFAULT_TIMEOUT,
-  DEFAULT_VSN,
-  SOCKET_STATES,
-  TRANSPORTS,
-  WS_CLOSE_NORMAL
-} from "./constants"
-
-import {
-  closure
-} from "./utils"
-
-import Ajax from "./ajax"
-import Channel from "./channel"
-import LongPoll from "./longpoll"
-import Serializer from "./serializer"
-import Timer from "./timer"
-
 export default class Socket {
   constructor(endPoint, opts = {}){
     this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
@@ -361,7 +360,7 @@ export default class Socket {
     if(this.hasLogger()) this.log("transport", "close", event)
     this.triggerChanError()
     clearTimeout(this.heartbeatTimer)
-    if(!this.closeWasClean){
+    if(!this.closeWasClean && event.code !== 1000){
       this.reconnectTimer.scheduleTimeout()
     }
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event))

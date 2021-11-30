@@ -17,13 +17,15 @@ defmodule Phoenix.Channel.Server do
   @spec join(Socket.t(), module, Message.t(), keyword) :: {:ok, term, pid} | {:error, term}
   def join(socket, channel, message, opts) do
     %{topic: topic, payload: payload, ref: ref, join_ref: join_ref} = message
+
+    starter = opts[:starter] || &PoolSupervisor.start_child/4
     assigns = Map.merge(socket.assigns, Keyword.get(opts, :assigns, %{}))
     socket = %{socket | topic: topic, channel: channel, join_ref: join_ref || ref, assigns: assigns}
     ref = make_ref()
     from = {self(), ref}
     child_spec = channel.child_spec({socket.endpoint, from})
-
-    case PoolSupervisor.start_child(socket.endpoint, socket.handler, from, child_spec) do
+    
+    case starter.(socket.endpoint, socket.handler, from, child_spec) do
       {:ok, pid} ->
         send(pid, {Phoenix.Channel, payload, from, socket})
         mon_ref = Process.monitor(pid)

@@ -462,6 +462,22 @@ defmodule Phoenix.Test.ConnTest do
     end
   end
 
+  describe "path_params/1" do
+    test "with matching route" do
+      conn = RedirRouter.call(build_conn(:get, "/"), RedirRouter.init([]))
+
+      assert path_params(conn, "/posts/123") == %{id: "123"}
+    end
+
+    test "raises Phoenix.Router.NoRouteError for unmatched location" do
+      conn = RedirRouter.call(build_conn(:get, "/"), RedirRouter.init([]))
+
+      assert_raise Phoenix.Router.NoRouteError, fn ->
+        path_params(conn, "/unmatched")
+      end
+    end
+  end
+
   test "bypass_through/3 bypasses route match and invokes pipeline" do
     conn = get(build_conn(), "/")
     assert conn.assigns[:catch_all]

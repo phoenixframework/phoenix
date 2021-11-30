@@ -1,4 +1,4 @@
-# Introduction
+# Channels
 
 > **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
@@ -159,7 +159,7 @@ This is useful to broadcast messages on channel and also for application develop
 The PubSub system takes care of getting messages from one node to another so that they can be sent to all subscribers across the cluster.
 By default, this is done using [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), which uses native BEAM messaging.
 
-If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](http://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
+If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
 
 ### Client Libraries
 
@@ -168,7 +168,7 @@ The following libraries exist today, and new ones are always welcome.
 
 #### Official
 
-Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [phoenix.js](https://github.com/phoenixframework/phoenix/blob/master/assets/js/phoenix.js).
+Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [multiple js files](https://github.com/phoenixframework/phoenix/blob/master/assets/js/phoenix/).
 
 #### 3rd Party
 
@@ -237,6 +237,7 @@ defmodule HelloWeb.RoomChannel do
   def join("room:lobby", _message, socket) do
     {:ok, socket}
   end
+
   def join("room:" <> _private_room_id, _params, _socket) do
     {:error, %{reason: "unauthorized"}}
   end
@@ -345,6 +346,7 @@ defmodule HelloWeb.RoomChannel do
   def join("room:lobby", _message, socket) do
     {:ok, socket}
   end
+
   def join("room:" <> _private_room_id, _params, _socket) do
     {:error, %{reason: "unauthorized"}}
   end
@@ -410,7 +412,7 @@ Next we need to pass this token to JavaScript. We can do so inside a script tag 
 
 ```html
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
-<script src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
+<script src={Routes.static_path(@conn, "/assets/app.js")}></script>
 ```
 
 **Step 3 - Pass the Token to the Socket Constructor and Verify**
@@ -479,4 +481,4 @@ Phoenix uses an at-most-once strategy when sending messages to clients. If the c
 
 To see an example of the application we just built, checkout the project [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
 
-You can also see a live demo at <http://phoenixchat.herokuapp.com/>.
+You can also see a live demo at <https://phoenixchat.herokuapp.com/>.

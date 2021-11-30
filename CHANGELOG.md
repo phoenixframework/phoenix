@@ -1,12 +1,43 @@
 # Changelog for v1.6
 
+See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0f4de6decba7b) to upgrade from Phoenix 1.5.x.
+
 Phoenix v1.6 requires Elixir v1.9+.
 
-## 1.6.0-rc.1
+## 1.6.2 (2021-10-08)
+
+### Bug Fixes
+  * [phx.new] Fix external flag to esbuild using incorrect syntax
+
+## 1.6.1 (2021-10-08)
+
+### Enhancements
+  * [phx.new] Add external flag to esbuild for fonts and image path loading
+  * [phx.gen.auth] No longer set `argon2` as the default hash algorithm for `phx.gen.auth` in favor of bcrypt for performance reasons on smaller hardware
+
+### Bug Fixes
+  * Fix race conditions logging debug duplicate channel joins when no duplicate existed
+
+### JavaScript Client Bug Fixes
+  * Export commonjs modules for backwards compatibility
+
+## 1.6.0 (2021-09-24) 🚀
+
+### Enhancements
+  * [ConnTest] Add `path_params/2` for retrieving router path parameters out of dynamically returned URLs.
+
+### JavaScript Client Bug Fixes
+  * Fix LongPoll transport undefined readyState check
+
+## 1.6.0-rc.1 (2021-09-22)
 
 ### Enhancements
   * [mix phx.gen.auth] Validate bcrypt passwords are no longer than 72 bytes
   * re-enable `phx.routes` task to support back to back invocations, such as for aliased mix route tasks
+  * [mix phx.gen.html] Remove comma after `for={@changeset}` on `form.html.heex`
+
+### JavaScript Client Bug Fixes
+  * Fix messages for duplicate topic being dispatched to old channels
 
 ## 1.6.0-rc.0 (2021-08-26)
 
@@ -28,6 +59,8 @@ Phoenix v1.6 requires Elixir v1.9+.
   * [mix phx.new] Remove usage of Sass
   * [mix phx.new] New applications now depend on Swoosh to deliver emails
   * [mix phx.new] No longer generate a socket file by default, instead one can run `mix phx.gen.socket`
+  * [mix phx.new] No longer generates a home page using LiveView, instead one can run `mix phx.gen.live`
+  * [mix phx.new] LiveView is now included by default. Passing `--no-live` will comment out lines in `app.js` and `Endpoint`
   * [mix phx.server] Add `--open` flag
   * [Router] Do not add compile time deps in `pipe_through`
   * [View] Extracted `Phoenix.View` into its own project to facilitate reuse
@@ -48,7 +81,9 @@ Phoenix v1.6 requires Elixir v1.9+.
 ### Deprecations
   * [mix compile.phoenix] Adding the `:phoenix` compiler to your `mix.exs` (`compilers: [:phoenix] ++ Mix.compilers()`) is no longer required from Phoenix v1.6 forward if you are running on Elixir v1.11. Remove it from your `mix.exs` and you should gain faster compilation times too
   * [Endpoint] Phoenix now requires Cowboy v2.7+
-  * [View] `@view_module` is deprecated in favor of `Phoenix.Controller.view_module/1` and `@view_template` is deprecated in favor of `Phoenix.Controller.view_template/1`
+
+### Breaking changes
+  * [View] `@view_module` and `@view_template` are no longer set. Use `Phoenix.Controller.view_module/1` and `Phoenix.Controller.view_template/1` respectively, or pass explicit assigns from `Phoenix.View.render`.
 
 ## v1.5
 

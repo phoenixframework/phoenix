@@ -12,8 +12,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = get(conn, Routes.<%= schema.route_helper %>_session_path(conn, :new))
       response = html_response(conn, 200)
       assert response =~ "<h1>Log in</h1>"
-      assert response =~ "Log in</a>"
       assert response =~ "Register</a>"
+      assert response =~ "Forgot your password?</a>"
     end
 
     test "redirects if already logged in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
@@ -30,7 +30,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert get_session(conn, :<%= schema.singular %>_token)
-      assert redirected_to(conn) =~ "/"
+      assert redirected_to(conn) == "/"
 
       # Now do a logged in request and assert on the menu
       conn = get(conn, "/")
@@ -51,7 +51,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert conn.resp_cookies["_<%= web_app_name %>_<%= schema.singular %>_remember_me"]
-      assert redirected_to(conn) =~ "/"
+      assert redirected_to(conn) == "/"
     end
 
     test "logs the <%= schema.singular %> in with return to", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do

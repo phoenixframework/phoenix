@@ -32,12 +32,8 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         Gen.Html.run(~w(Blog Post))
       end
 
-      assert_raise Mix.Error, ~r/Enum type requires at least two values/, fn ->
+      assert_raise Mix.Error, ~r/Enum type requires at least one value/, fn ->
         Gen.Html.run(~w(Blog Post posts status:enum))
-      end
-
-      assert_raise Mix.Error, ~r/Enum type requires at least two values/, fn ->
-        Gen.Html.run(~w(Blog Post posts status:enum:new))
       end
     end
   end
@@ -132,6 +128,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       end
 
       assert_file "lib/phoenix_web/templates/post/form.html.heex", fn file ->
+        assert file =~ ~s(<.form let={f} for={@changeset} action={@action}>)
         assert file =~ ~s(<%= text_input f, :title %>)
         assert file =~ ~s(<%= number_input f, :votes %>)
         assert file =~ ~s(<%= number_input f, :cost, step: "any" %>)
@@ -352,7 +349,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "when more than 50 arguments are given", config do
     in_tmp_project config.test, fn ->
-      long_attribute_list = 0..55 |> Enum.map(&("attribute#{&1}:string")) |> Enum.join(" ")
+      long_attribute_list = Enum.map_join(0..55, " ", &("attribute#{&1}:string"))
       Gen.Html.run(~w(Blog Post posts #{long_attribute_list}))
 
       assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
@@ -417,6 +414,16 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
         assert_file "test/phoenix/controllers/user_controller_test.exs", fn file ->
           assert file =~ "defmodule Phoenix.UserControllerTest"
+        end
+      end
+    end
+
+    test "allows enum type with at least one value", config do
+      in_tmp_project config.test, fn ->
+        Gen.Html.run(~w(Blog Post posts status:enum:new))
+
+        assert_file "lib/phoenix_web/templates/post/form.html.heex", fn file ->
+          assert file =~ ~s|<%= select f, :status, Ecto.Enum.values(Phoenix.Blog.Post, :status), prompt: "Choose a value" %>|
         end
       end
     end

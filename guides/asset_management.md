@@ -6,7 +6,7 @@ From Phoenix v1.6, new applications use [esbuild](https://esbuild.github.io/) to
 
 Your JavaScript is typically placed at "assets/js/app.js" and `esbuild` will extract it to "priv/static/assets/app.js". In development, this is done automatically via the `esbuild` watcher. In production, this is done by running `mix assets.deploy`.
 
-`esbuild` can also handle your CSS files can also be handled by `esbuild`. For this, there is typically an `import "../css/app.css"` at the top of your "assets/js/app.js". We will explore alternatives below.
+`esbuild` can also handle your CSS files. For this, there is typically an `import "../css/app.css"` at the top of your "assets/js/app.js". We will explore alternatives below.
 
 Finally, all other assets, that usually don't have to be preprocessed, go directly to "priv/static".
 
@@ -40,6 +40,32 @@ However, if you want to use a CSS framework, such as SASS or Tailwind, you will 
 
 Don't forget to remove the `import "../css/app.css"` from your JavaScript file when doing so.
 
+## Images, fonts, and external files
+
+If you reference an external file in your CSS or JavaScript files, `esbuild` will attempt to validate and manage them, unless told otherwise.
+
+For example, imagine you want to reference `priv/static/images/bg.png`, served at `/images/bg.png`, from your CSS file:
+
+```css
+body {
+  background-image: url(/images/bg.png);
+}
+```
+
+The above may fail with the following message:
+
+```text
+error: Could not resolve "/images/bg.png" (mark it as external to exclude it from the bundle)
+```
+
+Given the images are already managed by Phoenix, you need to mark all resources from `/images` (and also `/fonts`) as external, as the error message says. This is what Phoenix does by default for new apps since v1.6.1+. In your `config/config.exs`, you will find:
+
+```elixir
+args: ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+```
+
+If you need to reference other directories, you need to update the arguments above accordingly. Note running `mix phx.digest` will create digested files for all of the assets in `priv/static`, so your images and fonts are still cache-busted.
+
 ## Esbuild plugins
 
 Phoenix's default configuration of `esbuild` (via the Elixir wrapper) does not allow you to use [esbuild plugins](https://esbuild.github.io/plugins/). If you want to use an esbuild plugin, for example to compile SASS files to CSS, you can replace the default build system with a custom build script.
@@ -65,23 +91,44 @@ Next, add a custom Javascript build script. We'll call the example `assets/build
 ```js
 const esbuild = require('esbuild')
 
-const bundle = true
-const logLevel = process.env.ESBUILD_LOG_LEVEL || 'silent'
-const watch = !!process.env.ESBUILD_WATCH
+const args = process.argv.slice(2)
+const watch = args.includes('--watch')
+const deploy = args.includes('--deploy')
+
+const loader = {
+  // Add loaders for images/fonts/etc, e.g. { '.svg': 'file' }
+}
 
 const plugins = [
   // Add and configure plugins here
 ]
 
-const promise = esbuild.build({
+let opts = {
   entryPoints: ['js/app.js'],
-  bundle,
-  target: 'es2016',
-  plugins,
+  bundle: true,
+  target: 'es2017',
   outdir: '../priv/static/assets',
-  logLevel,
-  watch
-})
+  logLevel: 'info',
+  loader,
+  plugins
+}
+
+if (watch) {
+  opts = {
+    ...opts,
+    watch,
+    sourcemap: 'inline'
+  }
+}
+
+if (deploy) {
+  opts = {
+    ...opts,
+    minify: true
+  }
+}
+
+const promise = esbuild.build(opts)
 
 if (watch) {
   promise.then(_result => {
@@ -94,7 +141,11 @@ if (watch) {
 }
 ```
 
-This script works both for development (in "watch" mode) and for the production build (the default). For development, we just need to set the environment variable `ESBUILD_WATCH`.
+This script covers following use cases:
+
+- `node build.js`: builds for development & testing (useful on CI)
+- `node build.js --watch`: like above, but watches for changes continuously
+- `node build.js --deploy`: builds minified assets for production
 
 Modify `config/dev.exs` so that the script runs whenever you change files, replacing the existing `:esbuild` configuration under `watchers`:
 
@@ -102,11 +153,7 @@ Modify `config/dev.exs` so that the script runs whenever you change files, repla
 config :hello, HelloWeb.Endpoint,
   ...
   watchers: [
-    node: [
-      "build.js",
-      cd: Path.expand("../assets", __DIR__),
-      env: %{"ESBUILD_LOG_LEVEL" => "silent", "ESBUILD_WATCH" => "1"}
-    ]
+    node: ["build.js", "--watch", cd: Path.expand("../assets", __DIR__)]
   ],
   ...
 ```
@@ -118,7 +165,7 @@ Modify the `aliases` task in `mix.exs` to install `npm` packages during `mix set
     [
       setup: ["deps.get", "ecto.setup", "cmd --cd assets npm install"],
       ...,
-      "assets.deploy": ["cmd --cd assets node build.js", "phx.digest"]
+      "assets.deploy": ["cmd --cd assets node build.js --deploy", "phx.digest"]
     ]
   end
 ```

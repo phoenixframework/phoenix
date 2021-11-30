@@ -204,7 +204,8 @@ defmodule Phx.New.Generator do
       phoenix_dep: phoenix_dep(phoenix_path, version),
       phoenix_js_path: phoenix_js_path(phoenix_path),
       pubsub_server: pubsub_server,
-      secret_key_base: random_string(64),
+      secret_key_base_dev: random_string(64),
+      secret_key_base_test: random_string(64),
       signing_salt: random_string(8),
       lv_signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
@@ -400,9 +401,8 @@ defmodule Phx.New.Generator do
   defp phoenix_dep("deps/phoenix", %{pre: ["dev"]}),
     do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
 
-  # TODO remove override once rc is settled
   defp phoenix_dep("deps/phoenix", version),
-    do: ~s[{:phoenix, "~> #{version}", override: true}]
+    do: ~s[{:phoenix, "~> #{version}"}]
 
   defp phoenix_dep(path, _version),
     do: ~s[{:phoenix, path: #{inspect(path)}, override: true}]

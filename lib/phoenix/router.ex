@@ -220,7 +220,7 @@ defmodule Phoenix.Router do
   request is dispatched to a desired end-point.
 
   Such transformations are defined via plugs, as defined
-  in the [Plug](http://github.com/elixir-lang/plug) specification.
+  in the [Plug](https://github.com/elixir-lang/plug) specification.
   Once a pipeline is defined, it can be piped through per scope.
 
   For example:

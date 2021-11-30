@@ -392,7 +392,7 @@ defmodule Phoenix.Controller do
 
       iex> redirect(conn, to: "/login")
 
-      iex> redirect(conn, external: "http://elixir-lang.org")
+      iex> redirect(conn, external: "https://elixir-lang.org")
 
   """
   def redirect(conn, opts) when is_list(opts) do
@@ -861,7 +861,7 @@ defmodule Phoenix.Controller do
   `Routes.some_route_path` helpers, as those are always relative.
   """
   def put_router_url(conn, %URI{} = uri) do
-    put_private(conn, :phoenix_router_url, uri)
+    put_private(conn, :phoenix_router_url, URI.to_string(uri))
   end
   def put_router_url(conn, url) when is_binary(url) do
     put_private(conn, :phoenix_router_url, url)
@@ -875,7 +875,7 @@ defmodule Phoenix.Controller do
   endpoint configuration (much like `put_router_url/2` but for static URLs).
   """
   def put_static_url(conn, %URI{} = uri) do
-    put_private(conn, :phoenix_static_url, uri)
+    put_private(conn, :phoenix_static_url, URI.to_string(uri))
   end
   def put_static_url(conn, url) when is_binary(url) do
     put_private(conn, :phoenix_static_url, url)

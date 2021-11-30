@@ -51,7 +51,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
         ]
 
     You're all set! See the Phoenix.Presence docs for more details:
-    http://hexdocs.pm/phoenix/Phoenix.Presence.html
+    https://hexdocs.pm/phoenix/Phoenix.Presence.html
     """
   end
 

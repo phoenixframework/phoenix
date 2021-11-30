@@ -36,6 +36,18 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     * a LiveComponent in `lib/app_web/live/modal_component.ex`
     * a helpers module in `lib/app_web/live/live_helpers.ex`
 
+  After file generation is complete, there will be output regarding required
+  updates to the lib/app_web/router.ex file. 
+
+      Add the live routes to your browser scope in lib/app_web/router.ex:
+
+        live "/users", UserLive.Index, :index
+        live "/users/new", UserLive.Index, :new
+        live "/users/:id/edit", UserLive.Index, :edit
+
+        live "/users/:id", UserLive.Show, :show
+        live "/users/:id/show/edit", UserLive.Show, :edit
+
   ## The context app
 
   A migration file for the repository and test files for the context and

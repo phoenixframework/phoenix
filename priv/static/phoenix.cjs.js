@@ -1,3 +1,20 @@
+var __defProp = Object.defineProperty;
+var __markAsModule = (target) => __defProp(target, "__esModule", { value: true });
+var __export = (target, all) => {
+  __markAsModule(target);
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
+// js/phoenix/index.js
+__export(exports, {
+  Channel: () => Channel,
+  LongPoll: () => LongPoll,
+  Presence: () => Presence,
+  Serializer: () => serializer_default,
+  Socket: () => Socket
+});
+
 // js/phoenix/utils.js
 var closure = (value) => {
   if (typeof value === "function") {
@@ -1065,11 +1082,4 @@ var Socket = class {
     }
   }
 };
-export {
-  Channel,
-  LongPoll,
-  Presence,
-  serializer_default as Serializer,
-  Socket
-};
-//# sourceMappingURL=phoenix.esm.js.map
+//# sourceMappingURL=phoenix.cjs.js.map

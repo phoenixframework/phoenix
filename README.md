@@ -68,7 +68,6 @@ $ mix archive.build
 ```bash
 $ cd assets
 $ npm install
-$ npm run watch
 ```
 
 ## Important links
@@ -86,7 +85,7 @@ $ npm run watch
   [3]: https://elixir-slackin.herokuapp.com/
   [4]: https://github.com/phoenixframework/phoenix/issues
   [5]: https://elixirforum.com/c/phoenix-forum
-  [6]: http://groups.google.com/group/phoenix-core
+  [6]: https://groups.google.com/group/phoenix-core
 
 ## Copyright and License
 

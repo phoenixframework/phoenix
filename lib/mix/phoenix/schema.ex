@@ -255,6 +255,12 @@ defmodule Mix.Phoenix.Schema do
   def type_for_migration({:enum, _}), do: :string
   def type_for_migration(other), do: other
 
+  def format_fields_for_schema(schema) do
+    Enum.map_join(schema.types, "\n", fn {k, v} ->
+      "    field #{inspect(k)}, #{type_and_opts_for_schema(v)}#{schema.defaults[k]}#{maybe_redact_field(k in schema.redacts)}"
+    end)
+  end
+
   def type_and_opts_for_schema({:enum, opts}), do: ~s|Ecto.Enum, values: #{inspect Keyword.get(opts, :values)}|
   def type_and_opts_for_schema(other), do: inspect other
 
@@ -286,7 +292,7 @@ defmodule Mix.Phoenix.Schema do
   defp type_to_default(key, t, :create) do
     case t do
         {:array, _}     -> []
-        {:enum, values} -> values |> translate_enum_vals() |> hd()
+        {:enum, values} -> build_enum_values(values, :create)
         :integer        -> 42
         :float          -> 120.5
         :decimal        -> "120.5"
@@ -307,7 +313,7 @@ defmodule Mix.Phoenix.Schema do
   defp type_to_default(key, t, :update) do
     case t do
         {:array, _}     -> []
-        {:enum, values} -> values |> translate_enum_vals() |> tl() |> hd()
+        {:enum, values} -> build_enum_values(values, :update)
         :integer        -> 43
         :float          -> 456.7
         :decimal        -> "456.7"
@@ -326,6 +332,14 @@ defmodule Mix.Phoenix.Schema do
     end
   end
 
+  defp build_enum_values(values, action) do
+    case {action, translate_enum_vals(values)} do
+      {:create, vals} -> hd(vals)
+      {:update, [val | []]} -> val
+      {:update, vals} -> vals |> tl() |> hd()
+    end
+  end
+
   defp build_utc_datetime_usec,
     do: %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
 
@@ -339,8 +353,8 @@ defmodule Mix.Phoenix.Schema do
     do: NaiveDateTime.truncate(build_utc_naive_datetime_usec(), :second)
 
 
-  @enum_missing_values_error """
-  Enum type requires at least two values
+  @enum_missing_value_error """
+  Enum type requires at least one value
   For example:
 
       mix phx.gen.schema Comment comments body:text status:enum:published:unpublished
@@ -355,23 +369,13 @@ defmodule Mix.Phoenix.Schema do
         mix phx.gen.schema Post posts settings:array:string
     """
   end
-  defp validate_attr!({_name, :enum}), do: Mix.raise @enum_missing_values_error
+  defp validate_attr!({_name, :enum}), do: Mix.raise @enum_missing_value_error
   defp validate_attr!({_name, type} = attr) when type in @valid_types, do: attr
-  defp validate_attr!({_name, {:enum, vals}} = attr), do: validate_enum_attr!(vals, attr)
+  defp validate_attr!({_name, {:enum, _vals}} = attr), do: attr
   defp validate_attr!({_name, {type, _}} = attr) when type in @valid_types, do: attr
   defp validate_attr!({_, type}) do
     Mix.raise "Unknown type `#{inspect type}` given to generator. " <>
               "The supported types are: #{@valid_types |> Enum.sort() |> Enum.join(", ")}"
-  end
-
-  defp validate_enum_attr!(vals, attr) do
-     vals
-    |> Atom.to_string()
-    |> String.split(":")
-    |> case do
-      [_] -> Mix.raise @enum_missing_values_error
-      _ -> attr
-    end
   end
 
   defp partition_attrs_and_assocs(schema_module, attrs) do

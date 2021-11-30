@@ -28,7 +28,7 @@ defmodule Phoenix.Logger do
       * Measurement: `%{system_time: System.system_time}`
       * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
       * Disable logging: Pass `log: false` to the router macro, for example: `get("/page", PageController, :index, log: false)`
-      * Configure log level dynamically: `get("/page", PageController, :index, log: {Mod, Fun, Args}`
+      * Configure log level dynamically: `get("/page", PageController, :index, log: {Mod, Fun, Args})`
 
     * `[:phoenix, :router_dispatch, :exception]` - dispatched by `Phoenix.Router`
       after exceptions on dispatching a route
@@ -192,6 +192,7 @@ defmodule Phoenix.Logger do
 
   defp keep_values(_other, _params), do: "[FILTERED]"
 
+  defp log_level(nil, _conn), do: :info
   defp log_level(level, _conn) when is_atom(level), do: level
 
   defp log_level({mod, fun, args}, conn) when is_atom(mod) and is_atom(fun) and is_list(args) do
@@ -202,7 +203,7 @@ defmodule Phoenix.Logger do
 
   @doc false
   def phoenix_endpoint_start(_, _, %{conn: conn} = metadata, _) do
-    case log_level(metadata[:options][:log] || :info, conn) do
+    case log_level(metadata[:options][:log], conn) do
       false ->
         :ok
 
@@ -216,7 +217,7 @@ defmodule Phoenix.Logger do
 
   @doc false
   def phoenix_endpoint_stop(_, %{duration: duration}, %{conn: conn} = metadata, _) do
-    case log_level(metadata[:options][:log] || :info, conn) do
+    case log_level(metadata[:options][:log], conn) do
       false ->
         :ok
 

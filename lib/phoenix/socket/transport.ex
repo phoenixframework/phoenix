@@ -57,7 +57,7 @@ defmodule Phoenix.Socket.Transport do
 
         def child_spec(opts) do
           # We won't spawn any process, so let's return a dummy task
-          %{id: Task, start: {Task, :start_link, [fn -> :ok end]}, restart: :transient}
+          %{id: __MODULE__, start: {Task, :start_link, [fn -> :ok end]}, restart: :transient}
         end
 
         def connect(state) do
@@ -282,7 +282,7 @@ defmodule Phoenix.Socket.Transport do
   """
   def code_reload(conn, endpoint, opts) do
     reload? = Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader))
-    reload? && Phoenix.CodeReloader.reload!(endpoint)
+    reload? && Phoenix.CodeReloader.reload(endpoint)
     conn
   end
 

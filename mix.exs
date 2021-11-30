@@ -1,7 +1,14 @@
 defmodule Phoenix.MixProject do
   use Mix.Project
 
-  @version "1.6.0-rc.0"
+  if Mix.env() != :prod do
+    for path <- :code.get_path(),
+        Regex.match?(~r/phx_new\-\d+\.\d+\.\d.*\/ebin$/, List.to_string(path)) do
+      Code.delete_path(path)
+    end
+  end
+
+  @version "1.6.2"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -80,12 +87,12 @@ defmodule Phoenix.MixProject do
       {:telemetry_metrics, "~> 0.6", only: :docs},
 
       # Test dependencies
-      {:phoenix_html, "~> 3.0", only: :test},
+      {:phoenix_html, "~> 3.0", only: [:docs, :test]},
       {:phx_new, path: "./installer", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
 
       # Dev dependencies
-      {:esbuild, "~> 0.1", only: :dev}
+      {:esbuild, "~> 0.3", only: :dev}
     ]
   end
 
@@ -132,8 +139,8 @@ defmodule Phoenix.MixProject do
       "guides/telemetry.md",
       "guides/asset_management.md",
       "guides/authentication/mix_phx_gen_auth.md",
-      "guides/channels/channels.md",
-      "guides/channels/presence.md",
+      "guides/real_time/channels.md",
+      "guides/real_time/presence.md",
       "guides/testing/testing.md",
       "guides/testing/testing_contexts.md",
       "guides/testing/testing_controllers.md",
@@ -154,7 +161,7 @@ defmodule Phoenix.MixProject do
       Introduction: ~r/guides\/introduction\/.?/,
       Guides: ~r/guides\/[^\/]+\.md/,
       Authentication: ~r/guides\/authentication\/.?/,
-      Channels: ~r/guides\/channels\/.?/,
+      "Real-time": ~r/guides\/real_time\/.?/,
       Testing: ~r/guides\/testing\/.?/,
       Deployment: ~r/guides\/deployment\/.?/,
       "How-to's": ~r/guides\/howto\/.?/
@@ -198,7 +205,7 @@ defmodule Phoenix.MixProject do
   defp aliases do
     [
       docs: ["docs", &generate_js_docs/1],
-      "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min"],
+      "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min", "esbuild main"],
       "assets.watch": "esbuild module --watch"
     ]
   end

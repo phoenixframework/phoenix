@@ -76,7 +76,7 @@ defmodule Phoenix.Endpoint do
 
     * `:code_reloader` - when `true`, enables code reloading functionality.
       For the list of code reloader configuration options see
-      `Phoenix.CodeReloader.reload!/1`. Keep in mind code reloading is
+      `Phoenix.CodeReloader.reload/1`. Keep in mind code reloading is
       based on the file-system, therefore it is not possible to run two
       instances of the same app at the same time with code reloading in
       development, as they will race each other and only one will effectively
@@ -114,7 +114,7 @@ defmodule Phoenix.Endpoint do
       set this value explicitly. This is used by projects such as `LiveView` to
       detect if the client is running on the latest version of all assets.
 
-    * `:cache_manifest_skip_vsn` - when true, skips the appended query string 
+    * `:cache_manifest_skip_vsn` - when true, skips the appended query string
       "?vsn=d" when generatic paths to static assets. This query string is used
       by `Plug.Static` to set long expiry dates, therefore, you should set this
       option to true only if you are not using `Plug.Static` to serve assets,
@@ -158,9 +158,10 @@ defmodule Phoenix.Endpoint do
     * `:watchers` - a set of watchers to run alongside your server. It
       expects a list of tuples containing the executable and its arguments.
       Watchers are guaranteed to run in the application directory, but only
-      when the server is enabled. For example, the watcher below will run
-      the "watch" mode of the webpack build tool when the server starts.
-      You can configure it to whatever build tool or command you want:
+      when the server is enabled (unless `:force_watchers` configuration is
+      set to `true`). For example, the watcher below will run the "watch" mode
+      of the webpack build tool when the server starts. You can configure it
+      to whatever build tool or command you want:
 
           [
             node: [
@@ -175,11 +176,14 @@ defmodule Phoenix.Endpoint do
       The `:cd` and `:env` options can be given at the end of the list to customize
       the watcher:
 
-          [node: [..., cd: "assets"]]
+          [node: [..., cd: "assets", env: [{"TAILWIND_MODE", "watch"}]]]
 
       A watcher can also be a module-function-args tuple that will be invoked accordingly:
 
           [another: {Mod, :fun, [arg1, arg2]}]
+
+    * `:force_watchers` - when `true`, forces your watchers to start
+      even when the `:server` option is set to `false`.
 
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of
@@ -858,6 +862,11 @@ defmodule Phoenix.Endpoint do
     * `:max_frame_size` - the maximum allowed frame size in bytes,
       defaults to "infinity"
 
+    * `:fullsweep_after` - the maximum number of garbage collections
+      before forcing a fullsweep for the socket process. You can set
+      it to `0` to force more frequent cleanups of your websocket
+      transport processes. Setting this option requires Erlang/OTP 24
+
     * `:compress` - whether to enable per message compression on
       all data frames, defaults to false
 
@@ -885,10 +894,10 @@ defmodule Phoenix.Endpoint do
   The following configuration applies only to `:longpoll`:
 
     * `:window_ms` - how long the client can wait for new messages
-      in its poll request
+      in its poll request, defaults to 10_000ms.
 
     * `:pubsub_timeout_ms` - how long a request can wait for the
-      pubsub layer to respond
+      pubsub layer to respond, defaults to 2000ms.
 
     * `:crypto` - options for verifying and signing the token, accepted
       by `Phoenix.Token`. By default tokens are valid for 2 weeks

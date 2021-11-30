@@ -590,7 +590,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
             }
           }
         end)
-        assert log =~ "[warn]  Ignoring unmatched topic \"unmatched-topic\" in Phoenix.Integration.WebSocketChannelsTest.UserSocket"
+        assert log =~ "Ignoring unmatched topic \"unmatched-topic\" in Phoenix.Integration.WebSocketChannelsTest.UserSocket"
       end
     end
   end

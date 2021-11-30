@@ -180,7 +180,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
   @doc """
   Print mailer instructions if mailer is not defined.
 
-  This is useful for applications there were created without the
+  This is useful for applications that were created without the
   mailer.
   """
   @spec maybe_print_mailer_installation_instructions(%Context{}) :: %Context{}

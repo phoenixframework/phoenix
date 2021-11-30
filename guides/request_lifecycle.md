@@ -34,9 +34,9 @@ get "/", PageController, :index
 
 Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an HTTP `GET` request to the root path. All requests like this will be handled by the `index/2` function in the `HelloWeb.PageController` module defined in `lib/hello_web/controllers/page_controller.ex`.
 
-The page we are going to build will simply say "Hello World, from Phoenix!" when we point our browser to [http://localhost:4000/hello](http://localhost:4000/hello).
+The page we are going to build will say "Hello World, from Phoenix!" when we point our browser to [http://localhost:4000/hello](http://localhost:4000/hello).
 
-The first thing we need to do to create that page is define a route for it. Let's open up `lib/hello_web/router.ex` in a text editor. For a brand new application, it looks like this:
+The first thing we need to do is to create the page route for a new page. Let's open up `lib/hello_web/router.ex` in a text editor. For a brand new application, it looks like this:
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -45,7 +45,8 @@ defmodule HelloWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug :fetch_flash
+    plug :fetch_live_flash
+    plug :put_root_layout, {HelloWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -64,8 +65,9 @@ defmodule HelloWeb.Router do
   # scope "/api", HelloWeb do
   #   pipe_through :api
   # end
-end
 
+  # ...
+end
 ```
 
 For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. We will discuss those in the [Routing guide](routing.html).
@@ -85,7 +87,7 @@ end
 
 Controllers are Elixir modules, and actions are Elixir functions defined in them. The purpose of actions is to gather the data and perform the tasks needed for rendering. Our route specifies that we need a `HelloWeb.HelloController` module with an `index/2` function.
 
-To make that happen, let's create a new `lib/hello_web/controllers/hello_controller.ex` file, and make it look like the following:
+To make the `index` action happen, let's create a new `lib/hello_web/controllers/hello_controller.ex` file, and make it look like the following:
 
 ```elixir
 defmodule HelloWeb.HelloController do
@@ -117,7 +119,7 @@ defmodule HelloWeb.HelloView do
 end
 ```
 
-Now in order to add templates to this view, we simply need to add files to the `lib/hello_web/templates/hello` directory. Note the controller name (`HelloController`), the view name (`HelloView`), and the template directory (`hello`) all follow the same naming convention and are named after each other.
+Now in order to add templates to this view, we need to add files to the `lib/hello_web/templates/hello` directory. Note the controller name (`HelloController`), the view name (`HelloView`), and the template directory (`hello`) all follow the same naming convention and are named after each other.
 
 A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, we will create an `index.html.heex` file at `lib/hello_web/templates/hello/index.html.heex`. ".heex" stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
 
@@ -133,13 +135,13 @@ Now that we've got the route, controller, view, and template, we should be able 
 
 ![Phoenix Greets Us](assets/images/hello-from-phoenix.png)
 
-There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consisted of only a single `div` tag, the page we get is a full HTML document. Our index template is rendered into the application layout: `lib/hello_web/templates/layout/app.html.heex`. If you open it, you'll see a line that looks like this:
+There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `div` tag, the page we get is a full HTML document. Our index template is rendered into the application layout: `lib/hello_web/templates/layout/app.html.heex`. If you open it, you'll see a line that looks like this:
 
 ```html
 <%= @inner_content %>
 ```
 
-which injects our template into the layout before the HTML is sent off to the browser.
+Which injects our template into the layout before the HTML is sent off to the browser.
 
 > A note on hot code reloading: Some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the discussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
 
@@ -188,7 +190,7 @@ As we did last time, the first thing we'll do is create a new route.
 
 ### Another new route
 
-For this exercise, we're going to reuse `HelloController` which was just created and simply add a new `show` action. We'll add a line just below our last route, like this:
+For this exercise, we're going to reuse `HelloController` created at the [previous step](request_lifecycle.html#a-new-controller) and add a new `show` action. We'll add a line just below our last route, like this:
 
 ```elixir
 scope "/", HelloWeb do
@@ -204,7 +206,7 @@ Notice that we use the `:messenger` syntax in the path. Phoenix will take whatev
 
 ### Another new Action
 
-Requests to our new route will be handled by the `HelloWeb.HelloController` `show` action. We already have the controller at `lib/hello_web/controllers/hello_controller.ex`, so all we need to do is edit that file and add a `show` action to it. This time, we'll need to extract the messenger from the parameters so that we can pass it (the messenger) to the template. To do that, we add this show function to the controller:
+Requests to our new route will be handled by the `HelloWeb.HelloController` `show` action. We already have the controller at `lib/hello_web/controllers/hello_controller.ex`, so all we need to do is edit that controller and add a `show` action to it. This time, we'll need to extract the messenger from the parameters so that we can pass it (the messenger) to the template. To do that, we add this show function to the controller:
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
@@ -212,9 +214,9 @@ def show(conn, %{"messenger" => messenger}) do
 end
 ```
 
-Within the body of the `show` action, we also pass a third argument into the render function, a key-value pair where `:messenger` is the key, and the `messenger` variable is passed as the value.
+Within the body of the `show` action, we also pass a third argument to the render function, a key-value pair where `:messenger` is the key, and the `messenger` variable is passed as the value.
 
-If the body of the action needs access to the full map of parameters bound to the params variable in addition to the bound messenger variable, we could define `show/2` like this:
+If the body of the action needs access to the full map of parameters bound to the `params` variable, in addition to the bound messenger variable, we could define `show/2` like this:
 
 ```elixir
 def show(conn, %{"messenger" => messenger} = params) do
@@ -228,7 +230,7 @@ It's good to remember that the keys of the `params` map will always be strings, 
 
 For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of `HelloController`, it will go into the `lib/hello_web/templates/hello` directory and be called `show.html.heex`. It will look surprisingly like our `index.html.heex` template, except that we will need to display the name of our messenger.
 
-To do that, we'll use the special EEx tags for executing Elixir expressions: `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
+To do that, we'll use the special EEx tags for executing Elixir expressions: `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag in the HTML output. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
 
 And this is what the template should look like:
 
