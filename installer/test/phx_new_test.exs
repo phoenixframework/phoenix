@@ -145,9 +145,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/test.exs", config
       assert_file "phx_blog/config/runtime.exs", fn file ->
         assert file =~ config
-        assert file =~ ~S|ipv6? = System.get_env("IPV6") == "true"|
-        assert file =~ ~S|server? = System.get_env("SERVER") == "true"|
-        assert file =~ "host = System.get_env(\"URL_HOST\") || \"example.com\""
+        assert file =~ ~S|ipv6? = System.get_env("ECTO_IPV6") == "true"|
+        assert file =~ ~S|server? = System.get_env("PHX_SERVER") == "true"|
+        assert file =~ "host = System.get_env(\"PHX_HOST\") || \"example.com\""
         assert file =~ ~S|url: [host: host, port: 80],|
         assert file =~ ~S|server: server?|
         assert file =~ ~S|socket_options: if(ipv6?, do: [:inet6], else: []),|
