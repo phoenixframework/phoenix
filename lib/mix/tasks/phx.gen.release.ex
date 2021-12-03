@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Phx.Gen.Docker do
+defmodule Mix.Tasks.Phx.Gen.Release do
   @shortdoc "Generates release files and optional Dockerfile for release-based deployments"
 
   @moduledoc """

@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
 
   test "generates release files", config do
     in_tmp_project(config.test, fn ->
-      Gen.Docker.run([])
+      Gen.Release.run([])
 
       assert_file("lib/phoenix/release.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Release do|
@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
 
   test "generates release and docker files", config do
     in_tmp_project(config.test, fn ->
-      Gen.Docker.run(["--docker"])
+      Gen.Release.run(["--docker"])
 
       assert_file("lib/phoenix/release.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Release do|
