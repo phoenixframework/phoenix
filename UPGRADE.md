@@ -31,7 +31,7 @@ For example, the following code will raise:
 <div id="<%= @id %>">
 ```
 
-Instead of the standard `<%= %>` EEx expressions, elixir expressions inside tags can only appear withing `{}`, such as:
+Instead of the standard `<%= %>` EEx expressions, elixir expressions inside tags can only appear within `{}`, such as:
 
 ```eex
 <div id={@id}>
