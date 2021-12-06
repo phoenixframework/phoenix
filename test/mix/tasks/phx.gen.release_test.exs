@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
 
   test "generates release files", config do
     in_tmp_project(config.test, fn ->
-      Gen.Release.run([])
+      Gen.Release.run(["--ecto"])
 
       assert_file("lib/phoenix/release.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Release do|
@@ -39,9 +39,33 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
     end)
   end
 
+  test "generates release files without ecto", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Release.run([])
+
+      assert_file("rel/overlays/bin/server", fn file ->
+        assert file =~ ~S|SERVER=true ./phoenix start|
+      end)
+
+      refute_file "lib/phoenix/release.ex"
+      refute_file "rel/overlays/bin/migrate"
+      refute_file("Dockerfile")
+      refute_file(".dockerignore")
+
+      refute_receive {:mix_shell, :info, ["* creating Dockerfile"]}
+      refute_receive {:mix_shell, :info, ["* creating .dockerignore"]}
+      refute_receive {:mix_shell, :info, ["* creating lib/phoenix/release.ex"]}
+      refute_receive {:mix_shell, :info, ["* creating rel/overlays/bin/migrate"]}
+      assert_receive {:mix_shell, :info, ["* creating rel/overlays/bin/server"]}
+      assert_receive {:mix_shell, :info, ["\nYour application is ready to be deployed" <> _]}
+    end)
+  end
+
+
+
   test "generates release and docker files", config do
     in_tmp_project(config.test, fn ->
-      Gen.Release.run(["--docker"])
+      Gen.Release.run(["--docker", "--ecto"])
 
       assert_file("lib/phoenix/release.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Release do|

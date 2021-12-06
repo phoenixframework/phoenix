@@ -33,6 +33,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   @doc false
   def run(args) do
     docker? = "--docker" in args
+    ecto? = "--ecto" in args || Code.ensure_loaded?(Ecto)
 
     if Mix.Project.umbrella?() do
       Mix.raise("mix phx.gen.release is not supported in umbrella applications")
@@ -47,10 +48,15 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     ]
 
     Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
-      {:eex, "rel/migrate.sh.eex", "rel/overlays/bin/migrate"},
-      {:eex, "rel/server.sh.eex", "rel/overlays/bin/server"},
-      {:eex, "release.ex", Mix.Phoenix.context_lib_path(app, "release.ex")}
+      {:eex, "rel/server.sh.eex", "rel/overlays/bin/server"}
     ])
+
+    if ecto? do
+      Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
+        {:eex, "rel/migrate.sh.eex", "rel/overlays/bin/migrate"},
+        {:eex, "release.ex", Mix.Phoenix.context_lib_path(app, "release.ex")}
+      ])
+    end
 
     if docker? do
       Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
@@ -59,8 +65,8 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       ])
     end
 
-    File.chmod!("rel/overlays/bin/migrate", 0o700)
     File.chmod!("rel/overlays/bin/server", 0o700)
+    if ecto?, do: File.chmod!("rel/overlays/bin/migrate", 0o700)
 
     Mix.shell().info("""
 
@@ -71,10 +77,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
         # To start your system with the Phoenix server running
         _build/dev/rel/#{app}/bin/server
-
-        # To run migrations
-        _build/dev/rel/#{app}/bin/migrate
-
+        #{ecto? && ecto_instructions(app)}
     Once the release is running:
 
         # To connect to it remotely
@@ -88,17 +91,18 @@ defmodule Mix.Tasks.Phx.Gen.Release do
         _build/dev/rel/#{app}/bin/#{app}
     """)
 
-    post_install_instructions("config/runtime.exs", ~r/ECTO_IPV6/, """
-    [warn] Conditional IPV6 support missing from runtime configuration.
+    ecto? &&
+      post_install_instructions("config/runtime.exs", ~r/ECTO_IPV6/, """
+      [warn] Conditional IPV6 support missing from runtime configuration.
 
-    Add the following to your config/runtime.exs:
+      Add the following to your config/runtime.exs:
 
-        ipv6? = System.get_env("ECTO_IPV6") == "true"
+          ipv6? = System.get_env("ECTO_IPV6") == "true"
 
-        config :#{app}, #{app_namespace}.Repo,
-          ...,
-          socket_options: if(ipv6?, do: [:inet6], else: [])
-    """)
+          config :#{app}, #{app_namespace}.Repo,
+            ...,
+            socket_options: if(ipv6?, do: [:inet6], else: [])
+      """)
 
     post_install_instructions("config/runtime.exs", ~r/PHX_SERVER/, """
     [warn] Conditional server startup is missing from runtime configuration.
@@ -123,6 +127,14 @@ defmodule Mix.Tasks.Phx.Gen.Release do
           ...,
           url: [host: host, port: 443]
     """)
+  end
+
+  defp ecto_instructions(app) do
+    """
+
+        # To run migrations
+        _build/dev/rel/#{app}/bin/migrate
+    """
   end
 
   defp paths do
