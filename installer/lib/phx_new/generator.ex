@@ -350,7 +350,7 @@ defmodule Phx.New.Generator do
           For example: ecto://USER:PASS@HOST/DATABASE
           \"""
 
-      ipv6? = System.get_env("ECTO_IPV6") == "true"
+      maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
       """,
       prod_config: """
       # ssl: true,
