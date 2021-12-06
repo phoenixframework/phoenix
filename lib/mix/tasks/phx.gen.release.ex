@@ -44,7 +44,9 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     binding = [
       app_namespace: app_namespace,
-      otp_app: app
+      otp_app: app,
+      elixir_vsn: System.version(),
+      otp_vsn: otp_vsn()
     ]
 
     Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
@@ -148,6 +150,20 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
       {:error, _} ->
         Mix.shell().info(msg)
+    end
+  end
+
+  def otp_vsn do
+    major = to_string(:erlang.system_info(:otp_release))
+    path = Path.join([:code.root_dir(), "releases", major, "OTP_VERSION"])
+
+    with {:ok, content} <- File.read(path),
+         {:ok, %Version{} = vsn} <- Version.parse(String.trim_trailing(content)) do
+      "#{vsn.major}.#{vsn.minor}.#{vsn.patch}"
+    else
+      _ ->
+        IO.warn("unable to read OTP minor version at #{path}. Falling back to #{major}.0.0")
+        "#{major}.0.0"
     end
   end
 end
