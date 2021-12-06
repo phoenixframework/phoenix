@@ -19,7 +19,7 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  server? = System.get_env("PHX_SERVER") == "true"
+  server? = System.get_env("PHX_SERVER") != nil
   host = System.get_env("PHX_HOST") || "example.com"
   port = String.to_integer(System.get_env("PORT") || "4000")
 
