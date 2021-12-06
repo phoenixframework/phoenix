@@ -356,7 +356,7 @@ defmodule Phx.New.Generator do
       # ssl: true,
       url: database_url,
       pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-      socket_options: if(ipv6?, do: [:inet6], else: [])
+      socket_options: maybe_ipv6
       """
     ]
   end
