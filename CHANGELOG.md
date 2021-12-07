@@ -4,6 +4,19 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.3 (2021-12-07)
+
+### Enhancements
+  * Add new `phx.gen.release` task for release and docker based deployments
+  * Add `fullsweep_after` option to the websocket transport
+  * Add `:force_watchers` option to `Phoenix.Endpoint` for running watchers even when web server is not started
+
+### Bug Fixes
+  * Fix Endpoint `log: false` failing to disable logging
+
+### JavaScript Client Bug Fixes
+  * Do not attempt to reconnect automatically if client gracefully closes connection
+
 ## 1.6.2 (2021-10-08)
 
 ### Bug Fixes
