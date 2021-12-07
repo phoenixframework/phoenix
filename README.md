@@ -89,6 +89,6 @@ $ npm install
 
 ## Copyright and License
 
-Copyright (c) 2014, Chris McCord.
+Copyright (c) 2021, Chris McCord.
 
 Phoenix source code is licensed under the [MIT License](LICENSE.md).
