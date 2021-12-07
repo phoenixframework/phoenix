@@ -148,9 +148,9 @@ The `Phoenix.Router.resources/4` macro describes additional options for customiz
 
 ## Path helpers
 
-Path helpers are functions that are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloWeb.Router.Helpers`. The name of each path helper is derived from the name of the controller used in the route definition. Our controller is `HelloWeb.PageController`, and `page_path` is the function which will return the path to the root of our application.
+Path helpers are dynamically defined functions. They allow us to retrieve the path corresponding to a given controller-action pair. The name of each path helper is derived from the name of the controller used in the route definition. For our controller `HelloWeb.PageController`, `page_path` is the function that will return the path, which in this case is the root of our application.
 
-That's a mouthful. Let's see it in action. Run `iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the endpoint or connection and action as arguments, it returns the path to us.
+Let's see it in action. Run `iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the endpoint or connection and action as arguments, it returns the path to us.
 
 ```elixir
 iex> HelloWeb.Router.Helpers.page_path(HelloWeb.Endpoint, :index)
@@ -162,6 +162,8 @@ This is significant because we can use the `page_path` function in a template to
 ```html
 <%= link "Welcome Page!", to: Routes.page_path(@conn, :index) %>
 ```
+
+Note that path helpers are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloWeb.Router.Helpers`.
 
 The reason we can use `Routes.page_path` instead of the full `HelloWeb.Router.Helpers.page_path` name is because `HelloWeb.Router.Helpers` is aliased as `Routes` by default in the `view_helpers/0` block defined inside `lib/hello_web.ex`. This definition is made available to our templates through `use HelloWeb, :view`.
 
