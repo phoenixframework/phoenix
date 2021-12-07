@@ -36,7 +36,11 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     ecto? = "--ecto" in args || Code.ensure_loaded?(Ecto)
 
     if Mix.Project.umbrella?() do
-      Mix.raise("mix phx.gen.release is not supported in umbrella applications")
+      Mix.raise("""
+      mix phx.gen.release is not supported in umbrella applications.
+
+      Run this task in your web application instead.
+      """)
     end
 
     app = Mix.Phoenix.otp_app()
@@ -99,11 +103,11 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
       Add the following to your config/runtime.exs:
 
-          ipv6? = System.get_env("ECTO_IPV6") == "true"
+          maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
           config :#{app}, #{app_namespace}.Repo,
             ...,
-            socket_options: if(ipv6?, do: [:inet6], else: [])
+            socket_options: maybe_ipv6
       """)
 
     post_install_instructions("config/runtime.exs", ~r/PHX_SERVER/, """
