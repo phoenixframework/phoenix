@@ -23,8 +23,16 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
         assert file =~ ~S|exec ./phoenix eval Phoenix.Release.migrate|
       end)
 
+      assert_file("rel/overlays/bin/migrate.bat", fn file ->
+        assert file =~ ~S|call "%~dp0\phoenix" eval Phoenix.Release.migrate|
+      end)
+
       assert_file("rel/overlays/bin/server", fn file ->
         assert file =~ ~S|PHX_SERVER=true exec ./phoenix start|
+      end)
+
+      assert_file("rel/overlays/bin/server.bat", fn file ->
+        assert file =~ "set PHX_SERVER=true\ncall \"%~dp0\\phoenix\" start"
       end)
 
       refute_file("Dockerfile")
@@ -34,7 +42,9 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       refute_receive {:mix_shell, :info, ["* creating .dockerignore"]}
       assert_receive {:mix_shell, :info, ["* creating lib/phoenix/release.ex"]}
       assert_receive {:mix_shell, :info, ["* creating rel/overlays/bin/migrate"]}
+      assert_receive {:mix_shell, :info, ["* creating rel/overlays/bin/migrate.bat"]}
       assert_receive {:mix_shell, :info, ["* creating rel/overlays/bin/server"]}
+      assert_receive {:mix_shell, :info, ["* creating rel/overlays/bin/server.bat"]}
       assert_receive {:mix_shell, :info, ["\nYour application is ready to be deployed" <> _]}
     end)
   end
@@ -49,6 +59,7 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
 
       refute_file "lib/phoenix/release.ex"
       refute_file "rel/overlays/bin/migrate"
+      refute_file "rel/overlays/bin/migrate.bat"
       refute_file("Dockerfile")
       refute_file(".dockerignore")
 
@@ -56,7 +67,9 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       refute_receive {:mix_shell, :info, ["* creating .dockerignore"]}
       refute_receive {:mix_shell, :info, ["* creating lib/phoenix/release.ex"]}
       refute_receive {:mix_shell, :info, ["* creating rel/overlays/bin/migrate"]}
+      refute_receive {:mix_shell, :info, ["* creating rel/overlays/bin/migrate.bat"]}
       assert_receive {:mix_shell, :info, ["* creating rel/overlays/bin/server"]}
+      assert_receive {:mix_shell, :info, ["* creating rel/overlays/bin/server.bat"]}
       assert_receive {:mix_shell, :info, ["\nYour application is ready to be deployed" <> _]}
     end)
   end
@@ -86,8 +99,16 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
         assert file =~ ~S|exec ./phoenix eval Phoenix.Release.migrate|
       end)
 
+      assert_file("rel/overlays/bin/migrate.bat", fn file ->
+        assert file =~ ~S|call "%~dp0\phoenix" eval Phoenix.Release.migrate|
+      end)
+
       assert_file("rel/overlays/bin/server", fn file ->
         assert file =~ ~S|PHX_SERVER=true exec ./phoenix start|
+      end)
+
+      assert_file("rel/overlays/bin/server.bat", fn file ->
+        assert file =~ "set PHX_SERVER=true\ncall \"%~dp0\\phoenix\" start"
       end)
 
       assert_file(".dockerignore")

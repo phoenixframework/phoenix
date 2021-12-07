@@ -54,12 +54,14 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     ]
 
     Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
-      {:eex, "rel/server.sh.eex", "rel/overlays/bin/server"}
+      {:eex, "rel/server.sh.eex", "rel/overlays/bin/server"},
+      {:eex, "rel/server.bat.eex", "rel/overlays/bin/server.bat"}
     ])
 
     if ecto? do
       Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
         {:eex, "rel/migrate.sh.eex", "rel/overlays/bin/migrate"},
+        {:eex, "rel/migrate.bat.eex", "rel/overlays/bin/migrate.bat"},
         {:eex, "release.ex", Mix.Phoenix.context_lib_path(app, "release.ex")}
       ])
     end
@@ -71,8 +73,12 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       ])
     end
 
-    File.chmod!("rel/overlays/bin/server", 0o700)
-    if ecto?, do: File.chmod!("rel/overlays/bin/migrate", 0o700)
+    File.chmod!("rel/overlays/bin/server", 0o755)
+    File.chmod!("rel/overlays/bin/server.bat", 0o755)
+    if ecto? do
+      File.chmod!("rel/overlays/bin/migrate", 0o755)
+      File.chmod!("rel/overlays/bin/migrate.bat", 0o755)
+    end
 
     Mix.shell().info("""
 
