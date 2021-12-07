@@ -4,6 +4,24 @@ defmodule Phoenix.SocketTest do
   import Phoenix.Socket
   alias Phoenix.Socket.{Message, InvalidMessageError}
 
+  defmodule UserSocket do
+    use Phoenix.Socket
+
+    channel "food*", FoodChannel
+    channel "foo*", FooChannel
+
+    def connect(_params, socket, _connect_info), do: {:ok, socket}
+    def id(_socket), do: nil
+  end
+
+  describe "__channel__" do
+    test "returns the correct channel handler module" do
+      assert {FooChannel, []} == UserSocket.__channel__("foo:1")
+      assert {FoodChannel, []} == UserSocket.__channel__("food:1")
+      assert nil == UserSocket.__channel__("unknown")
+    end
+  end
+
   describe "messages" do
     test "from_map! converts a map with string keys into a %Message{}" do
       msg = Message.from_map!(%{"topic" => "c", "event" => "e", "payload" => "", "ref" => "r"})
