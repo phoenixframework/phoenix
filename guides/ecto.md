@@ -139,6 +139,7 @@ config :hello, Hello.Repo,
   password: "postgres",
   database: "hello_dev",
   hostname: "localhost",
+  show_sensitive_data_on_connection_error: true,
   pool_size: 10
 ...
 ```
@@ -167,7 +168,7 @@ defmodule Hello.User do
   end
 
   @doc false
-  def changeset(%User{} = user, attrs) do
+  def changeset(user, attrs) do
     user
     |> cast(attrs, [:name, :email, :bio, :number_of_pets])
     |> validate_required([:name, :email, :bio, :number_of_pets])
@@ -404,7 +405,7 @@ iex> alias Hello.{Repo, User}
 [Hello.Repo, Hello.User]
 
 iex> Repo.insert(%User{email: "user1@example.com"})
-[debug] QUERY OK db=6.5ms decode=2.0ms queue=0.5ms idle=1358.3ms
+[debug] QUERY OK db=6.5ms queue=0.5ms idle=1358.3ms
 INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user1@example.com", ~N[2021-02-25 01:58:55], ~N[2021-02-25 01:58:55]]
 {:ok,
  %Hello.User{
@@ -434,7 +435,11 @@ INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETUR
  }}
 ```
 
-We started by aliasing our `User` and `Repo` modules for easy access. Next, we called [`Repo.insert/2`] and passed a user struct. Since we are in the `dev` environment, we can see the debug logs for the query our repository performed when inserting the underlying `%User{}` data. We received a two-element tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful. With a couple of users inserted, let's fetch them back out of the repo.
+We started by aliasing our `User` and `Repo` modules for easy access. Next, we called [`Repo.insert/2`] with a User struct. Since we are in the `dev` environment, we can see the debug logs for the query our repository performed when inserting the underlying `%User{}` data. We received a two-element tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful.
+
+We could also insert a user by passing a changeset to [`Repo.insert/2`]. If the changeset is valid, the repository will use an optimized database query to insert the record, and return a two-element tuple back, as above. If the changeset is not valid, we receive a two-element tuple consisting of `:error` plus the invalid changeset.
+
+With a couple of users inserted, let's fetch them back out of the repo.
 
 ```elixir
 iex> Repo.all(User)
@@ -491,7 +496,10 @@ Now we're starting to get a taste of Ecto's rich querying capabilities. We used 
 iex> Repo.all(from u in User, select: %{u.id => u.email})
 [debug] QUERY OK source="users" db=0.9ms
 SELECT u0."id", u0."email" FROM "users" AS u0 []
-[%{3 => "user1@example.com"}, %{4 => "user2@example.com"}]
+[
+  %{1 => "user1@example.com"},
+  %{2 => "user2@example.com"}
+]
 ```
 
 That little query packed a big punch. It both fetched all user emails from the database and efficiently built a map of the results in one go. You should browse the [Ecto.Query documentation](https://hexdocs.pm/ecto/Ecto.Query.html#content) to see the breadth of supported query features.
