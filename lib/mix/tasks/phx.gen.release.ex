@@ -157,13 +157,13 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     major = to_string(:erlang.system_info(:otp_release))
     path = Path.join([:code.root_dir(), "releases", major, "OTP_VERSION"])
 
-    with {:ok, content} <- File.read(path),
-         {:ok, %Version{} = vsn} <- Version.parse(String.trim_trailing(content)) do
-      "#{vsn.major}.#{vsn.minor}.#{vsn.patch}"
-    else
-      _ ->
-        IO.warn("unable to read OTP minor version at #{path}. Falling back to #{major}.0.0")
-        "#{major}.0.0"
+    case File.read(path) do
+      {:ok, content} ->
+        String.trim(content)
+
+      {:error, _} ->
+        IO.warn("unable to read OTP minor version at #{path}. Falling back to #{major}.0")
+        "#{major}.0"
     end
   end
 end
