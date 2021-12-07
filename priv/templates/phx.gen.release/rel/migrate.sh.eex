@@ -1,3 +1,3 @@
 #!/bin/sh
 cd -P -- "$(dirname -- "$0")"
-./<%= otp_app %> eval <%= app_namespace %>.Release.migrate
+exec ./<%= otp_app %> eval <%= app_namespace %>.Release.migrate
