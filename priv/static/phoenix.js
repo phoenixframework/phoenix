@@ -953,11 +953,12 @@ var Phoenix = (() => {
       }, 150 * tries);
     }
     onConnClose(event) {
+      let closeCode = event && event.code;
       if (this.hasLogger())
         this.log("transport", "close", event);
       this.triggerChanError();
       clearTimeout(this.heartbeatTimer);
-      if (!this.closeWasClean && event.code !== 1e3) {
+      if (!this.closeWasClean && closeCode !== 1e3) {
         this.reconnectTimer.scheduleTimeout();
       }
       this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event));

@@ -593,10 +593,21 @@ describe("with transports", function(){
       socket.connect()
     })
 
-    it("schedules reconnectTimer timeout if normal close", function(){
+    it("does not schedule reconnectTimer if normal close", function(){
       const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
 
       const event = {code: 1000}
+
+      socket.onConnClose(event)
+
+      assert.equal(spy.calledOnce, false)
+    })
+
+
+    it("schedules reconnectTimer timeout if abnormal close", function(){
+      const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
+
+      const event = {code: 1006}
 
       socket.onConnClose(event)
 
