@@ -111,7 +111,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     Add the following to your config/runtime.exs:
 
-        server? = System.get_env("PHX_SERVER") == "true"
+        server? = System.get_env("PHX_SERVER") != nil
 
         config :#{app}, #{app_namespace}.Endpoint,
           ...,
