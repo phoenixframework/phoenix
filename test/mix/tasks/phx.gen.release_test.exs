@@ -20,11 +20,11 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       end)
 
       assert_file("rel/overlays/bin/migrate", fn file ->
-        assert file =~ ~S|./phoenix eval Phoenix.Release.migrate|
+        assert file =~ ~S|exec ./phoenix eval Phoenix.Release.migrate|
       end)
 
       assert_file("rel/overlays/bin/server", fn file ->
-        assert file =~ ~S|SERVER=true ./phoenix start|
+        assert file =~ ~S|PHX_SERVER=true exec ./phoenix start|
       end)
 
       refute_file("Dockerfile")
@@ -44,7 +44,7 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       Gen.Release.run([])
 
       assert_file("rel/overlays/bin/server", fn file ->
-        assert file =~ ~S|SERVER=true ./phoenix start|
+        assert file =~ ~S|PHX_SERVER=true exec ./phoenix start|
       end)
 
       refute_file "lib/phoenix/release.ex"
@@ -83,11 +83,11 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       end)
 
       assert_file("rel/overlays/bin/migrate", fn file ->
-        assert file =~ ~S|./phoenix eval Phoenix.Release.migrate|
+        assert file =~ ~S|exec ./phoenix eval Phoenix.Release.migrate|
       end)
 
       assert_file("rel/overlays/bin/server", fn file ->
-        assert file =~ ~S|SERVER=true ./phoenix start|
+        assert file =~ ~S|PHX_SERVER=true exec ./phoenix start|
       end)
 
       assert_file(".dockerignore")
