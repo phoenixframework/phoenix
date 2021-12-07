@@ -79,7 +79,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
         # To start your system with the Phoenix server running
         _build/dev/rel/#{app}/bin/server
-        #{ecto? && ecto_instructions(app)}
+    #{ecto? && ecto_instructions(app)}
     Once the release is running:
 
         # To connect to it remotely
