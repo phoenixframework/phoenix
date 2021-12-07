@@ -10,11 +10,11 @@ Our main goal for this guide is to package your Phoenix application into a self-
 
 ## Releases, assemble!
 
-To assemble a release, you will need at least Elixir v1.9, however this guide assumes you are using Elixir v1.11 or later to take advantage of latest releases improvements:
+To assemble a release, you will need at least Elixir v1.9, however this guide assumes you are using Elixir v1.12 or later to take advantage of latest releases improvements:
 
 ```console
 $ elixir -v
-1.11.0
+1.12.0
 ```
 
 If you are not familiar with Elixir releases yet, we recommend you to read [Elixir's excellent docs](https://hexdocs.pm/mix/Mix.Tasks.Release.html) before continuing.
@@ -41,7 +41,47 @@ $ MIX_ENV=prod mix compile
 $ MIX_ENV=prod mix assets.deploy
 ```
 
-And now run `mix release`:
+And now run `mix phx.gen.release`:
+
+```console
+$ mix phx.gen.release
+==> my_app
+* creating rel/overlays/bin/server
+* creating rel/overlays/bin/server.bat
+* creating rel/overlays/bin/migrate
+* creating rel/overlays/bin/migrate.bat
+* creating lib/my_app/release.ex
+
+Your application is ready to be deployed in a release!
+
+    # To start your system
+    _build/dev/rel/my_app/bin/my_app start
+
+    # To start your system with the Phoenix server running
+    _build/dev/rel/my_app/bin/server
+
+    # To run migrations
+    _build/dev/rel/my_app/bin/migrate
+
+Once the release is running:
+
+    # To connect to it remotely
+    _build/dev/rel/my_app/bin/my_app remote
+
+    # To stop it gracefully (you may also send SIGINT/SIGTERM)
+    _build/dev/rel/my_app/bin/my_app stop
+
+To list all commands:
+
+    _build/dev/rel/my_app/bin/my_app
+
+```
+
+The `phx.gen.release` task generated a few files for us to assist in releases. First, it created `server` and `migrate` *overlay* scripts for conveniently running the phoenix server inside a release or invoking migrations from a release. The files in the `rel/overlays` directory are copied into every release environment. Next, it generated a `release.ex` file which is used to invoked Ecto migrations without a dependency on `mix` itself.
+
+*Note*: If you are a docker user, you can pass the `--docker` flag to `mix phx.gen.release` to generate a Dockerfile ready for deployment.
+
+Next, we can invoke `mix release` to build the release:
 
 ```console
 $ MIX_ENV=prod mix release
@@ -57,29 +97,9 @@ Release created at _build/prod/rel/my_app!
 ...
 ```
 
-You can start the release by calling `_build/prod/rel/my_app/bin/my_app start`, where you have to replace `my_app` by your current application name. If you do so, your application should start but you will notice your web server does not actually run! That's because we need to tell Phoenix to start the web servers. When using `mix phx.server`, the `phx.server` command does that for us, but in a release we don't have Mix (which is a *build* tool), so we have to do it ourselves.
+You can start the release by calling `_build/prod/rel/my_app/bin/my_app start`, or boot your webserver by calling `_build/prod/rel/my_app/bin/server`, where you have to replace `my_app` by your current application name.
 
-Open up `config/runtime.exs` (formerly `config/prod.secret.exs` or `config/releases.exs`) and you should find a section about "Using releases" with a configuration to set. Go ahead and uncomment that line or manually add the line below, adapted to your application names:
-
-```elixir
-config :my_app, MyAppWeb.Endpoint, server: true
-```
-
-Now assemble the release once again:
-
-```console
-$ MIX_ENV=prod mix release
-Generated my_app app
-* assembling my_app-0.1.0 on MIX_ENV=prod
-* using config/runtime.exs to configure the release at runtime
-
-Release created at _build/prod/rel/my_app!
-
-    # To start your system
-    _build/prod/rel/my_app/bin/my_app start
-```
-
-And starting the release now should also successfully start the web server! Now you can get all of the files under the `_build/prod/rel/my_app` directory, package it, and run it in any production machine with the same OS and architecture as the one that assembled the release. For more details, check the [docs for `mix release`](https://hexdocs.pm/mix/Mix.Tasks.Release.html).
+Now you can get all of the files under the `_build/prod/rel/my_app` directory, package it, and run it in any production machine with the same OS and architecture as the one that assembled the release. For more details, check the [docs for `mix release`](https://hexdocs.pm/mix/Mix.Tasks.Release.html).
 
 But before we finish this guide, there is one more feature from releases that most Phoenix application will use, so let's talk about that.
 
@@ -87,7 +107,7 @@ But before we finish this guide, there is one more feature from releases that mo
 
 A common need in production systems is to execute custom commands required to set up the production environment. One of such commands is precisely migrating the database. Since we don't have `Mix`, a *build* tool, inside releases, which are a production artifact, we need to bring said commands directly into the release.
 
-Our recommendation is to create a new file in your application, such as `lib/my_app/release.ex`, with the following:
+The `phx.gen.release` command created the following `release.ex` file in your projet `lib/my_app/release.ex`, with the following content:
 
 ```elixir
 defmodule MyApp.Release do
@@ -124,7 +144,7 @@ Now you can assemble a new release with `MIX_ENV=prod mix release` and you can i
 $ _build/prod/rel/my_app/bin/my_app eval "MyApp.Release.migrate"
 ```
 
-And that's it!
+And that's it! If you peek inside the `migrate` script, you'll see it wraps exactly this invocation.
 
 You can use this approach to create any custom command to run in production. In this case, we used `load_app`, which calls `Application.load/1` to load the current application without starting it. However, you may want to write a custom command that starts the whole application. In such cases, `Application.ensure_all_started/1` must be used. Keep in mind starting the application will start all processes for the current application, including the Phoenix endpoint. This can be circumvented by changing your supervision tree to not start certain children under certain conditions. For example, in the release commands file you could do:
 
@@ -142,15 +162,31 @@ And then in your application you check `Application.get_env(@app, :minimal)` and
 
 Elixir releases work well with container technologies, such as Docker. The idea is that you assemble the release inside the Docker container and then build an image based on the release artifacts.
 
-Here is an example Docker file to run at the root of your application covering all of the steps above:
+If you call `mix phx.gen.release --docker` you'll see a new file with these contents:
 
 ```Dockerfile
-ARG MIX_ENV="prod"
+# Find eligible builder and runner images on Docker Hub. We use Ubuntu/Debian instead of
+# Alpine to avoid DNS resolution issues in production.
+#
+# https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=ubuntu
+# https://hub.docker.com/_/ubuntu?tab=tags
+#
+#
+# This file is based on these images:
+#
+#   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
+#   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20210902-slim - for the release image
+#   - https://pkgs.org/ - resource for finding needed packages
+#   - Ex: hexpm/elixir:1.12.0-erlang-24.0.1-debian-bullseye-20210902-slim
+#
+ARG BUILDER_IMAGE="hexpm/elixir:1.12.0-erlang-24.0.1-debian-bullseye-20210902-slim"
+ARG RUNNER_IMAGE="debian:bullseye-20210902-slim"
 
-FROM hexpm/elixir:1.11.2-erlang-23.1.2-alpine-3.12.1 as build
+FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
-RUN apk add --no-cache build-base git python3 curl
+RUN apt-get update -y && apt-get install -y build-essential git \
+    && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # prepare build dir
 WORKDIR /app
@@ -160,8 +196,7 @@ RUN mix local.hex --force && \
     mix local.rebar --force
 
 # set build ENV
-ARG MIX_ENV
-ENV MIX_ENV="${MIX_ENV}"
+ENV MIX_ENV="prod"
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
@@ -171,7 +206,7 @@ RUN mkdir config
 # copy compile-time config files before we compile dependencies
 # to ensure any relevant config change will trigger the dependencies
 # to be re-compiled.
-COPY config/config.exs config/$MIX_ENV.exs config/
+COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
 COPY priv priv
@@ -181,56 +216,47 @@ COPY priv priv
 # your Elixir templates, you will need to move the asset compilation
 # step down so that `lib` is available.
 COPY assets assets
+
+# compile assets
 RUN mix assets.deploy
 
-# compile and build the release
+# Compile the release
 COPY lib lib
+
 RUN mix compile
-# changes to config/runtime.exs don't require recompiling the code
+
+# Changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/
-# uncomment COPY if rel/ exists
-# COPY rel rel
+
+COPY rel rel
 RUN mix release
 
 # start a new build stage so that the final image will only contain
 # the compiled release and other runtime necessities
-FROM alpine:3.12.1 AS app
-RUN apk add --no-cache libstdc++ openssl ncurses-libs
+FROM ${RUNNER_IMAGE}
 
-ARG MIX_ENV
-ENV USER="elixir"
+RUN apt-get update -y && apt-get install -y libstdc++6 openssl libncurses5 locales \
+  && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
-WORKDIR "/home/${USER}/app"
-# Creates an unprivileged user to be used exclusively to run the Phoenix app
-RUN \
-  addgroup \
-   -g 1000 \
-   -S "${USER}" \
-  && adduser \
-   -s /bin/sh \
-   -u 1000 \
-   -G "${USER}" \
-   -h "/home/${USER}" \
-   -D "${USER}" \
-  && su "${USER}"
+# Set the locale
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
-# Everything from this line onwards will run in the context of the unprivileged user.
-USER "${USER}"
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 
-COPY --from=build --chown="${USER}":"${USER}" /app/_build/"${MIX_ENV}"/rel/my_app ./
+WORKDIR "/app"
+RUN chown nobody /app
 
-ENTRYPOINT ["bin/my_app"]
+# Only copy the final release from the build stage
+COPY --from=builder --chown=nobody:root /app/_build/prod/rel/my_app ./
 
-# Usage:
-#  * build: sudo docker image build -t elixir/my_app .
-#  * shell: sudo docker container run --rm -it --entrypoint "" -p 127.0.0.1:4000:4000 elixir/my_app sh
-#  * run:   sudo docker container run --rm -it -p 127.0.0.1:4000:4000 --name my_app elixir/my_app
-#  * exec:  sudo docker container exec -it my_app sh
-#  * logs:  sudo docker container logs --follow --tail 100 my_app
-CMD ["start"]
+USER nobody
+
+CMD /app/bin/server
 ```
 
-At the end, you will have an application in `/app` ready to run as `bin/my_app start`.
+Where `my_app` is the name of your app. At the end, you will have an application in `/app` ready to run as `/app/bin/server`.
 
 A few points about configuring a containerized application:
 
