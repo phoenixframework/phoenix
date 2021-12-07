@@ -1,0 +1,1 @@
+call "%~dp0\<%= otp_app %>" eval <%= app_namespace %>.Release.migrate
