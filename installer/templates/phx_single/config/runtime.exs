@@ -6,6 +6,12 @@ import Config
 # and secrets from environment variables or elsewhere. Do not define
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
+
+# Start the phoenix server if environment is set and running in a  release
+if System.get_env("PHX_SERVER") && System.get_env("RELEASE_NAME") do
+  config :<%= @app_name %>, <%= @endpoint_module %>, server: true
+end
+
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
@@ -19,7 +25,6 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  server? = System.get_env("PHX_SERVER") != nil
   host = System.get_env("PHX_HOST") || "example.com"
   port = String.to_integer(System.get_env("PORT") || "4000")
 
@@ -33,7 +38,6 @@ if config_env() == :prod do
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
       port: port
     ],
-    server: server?,
     secret_key_base: secret_key_base
 
   # ## Using releases

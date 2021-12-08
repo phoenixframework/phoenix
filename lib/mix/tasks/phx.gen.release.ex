@@ -75,6 +75,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     File.chmod!("rel/overlays/bin/server", 0o755)
     File.chmod!("rel/overlays/bin/server.bat", 0o755)
+
     if ecto? do
       File.chmod!("rel/overlays/bin/migrate", 0o755)
       File.chmod!("rel/overlays/bin/migrate.bat", 0o755)
@@ -84,26 +85,26 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     Your application is ready to be deployed in a release!
 
-        # To start your system
-        _build/dev/rel/#{app}/bin/#{app} start
+    See https://hexdocs.pm/mix/Mix.Tasks.Release.html for more information about Elixir releases.
+    #{if docker?, do: docker_instructions()}
+    Here are some useful release commands you can run in any release environment:
+
+        # To build a release
+        mix release
 
         # To start your system with the Phoenix server running
-        _build/dev/rel/#{app}/bin/server
-    #{ecto? && ecto_instructions(app)}
-    Once the release is running:
+        _build/dev/rel/live_beats/bin/server
+    #{if ecto?, do: ecto_instructions(app)}
+    Once the release is running you can connect to it remotely:
 
-        # To connect to it remotely
-        _build/dev/rel/#{app}/bin/#{app} remote
-
-        # To stop it gracefully (you may also send SIGINT/SIGTERM)
-        _build/dev/rel/#{app}/bin/#{app} stop
+        _build/dev/rel/live_beats/bin/live_beats remote
 
     To list all commands:
 
-        _build/dev/rel/#{app}/bin/#{app}
+        _build/dev/rel/live_beats/bin/live_beats
     """)
 
-    ecto? &&
+    if ecto? do
       post_install_instructions("config/runtime.exs", ~r/ECTO_IPV6/, """
       [warn] Conditional IPV6 support missing from runtime configuration.
 
@@ -115,6 +116,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
             ...,
             socket_options: maybe_ipv6
       """)
+    end
 
     post_install_instructions("config/runtime.exs", ~r/PHX_SERVER/, """
     [warn] Conditional server startup is missing from runtime configuration.
@@ -146,6 +148,17 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
         # To run migrations
         _build/dev/rel/#{app}/bin/migrate
+    """
+  end
+
+  defp docker_instructions do
+    """
+
+    Using the generated Dockerfile, your release will be bundled into
+    a Docker image, ready for deployment on platforms that support Docker.
+
+    For more information about deploying with Docker see
+    https://hexdocs.pm/phoenix/releases.html#containers
     """
   end
 

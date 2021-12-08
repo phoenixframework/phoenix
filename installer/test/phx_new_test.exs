@@ -147,10 +147,13 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ config
         assert file =~ ~S|maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []|
         assert file =~ ~S|socket_options: maybe_ipv6|
-        assert file =~ ~S|server? = System.get_env("PHX_SERVER") != nil|
+        assert file =~ """
+        if System.get_env("PHX_SERVER") && System.get_env("RELEASE_NAME") do
+          config :phx_blog, PhxBlogWeb.Endpoint, server: true
+        end
+        """
         assert file =~ ~S[host = System.get_env("PHX_HOST") || "example.com"]
         assert file =~ ~S|url: [host: host, port: 443],|
-        assert file =~ ~S|server: server?|
       end
       assert_file "phx_blog/config/test.exs", ~R/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
       assert_file "phx_blog/lib/phx_blog/repo.ex", ~r"defmodule PhxBlog.Repo"
