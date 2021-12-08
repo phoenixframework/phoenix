@@ -93,15 +93,15 @@ defmodule Mix.Tasks.Phx.Gen.Release do
         mix release
 
         # To start your system with the Phoenix server running
-        _build/dev/rel/live_beats/bin/server
+        _build/dev/rel/#{app}/bin/server
     #{if ecto?, do: ecto_instructions(app)}
     Once the release is running you can connect to it remotely:
 
-        _build/dev/rel/live_beats/bin/live_beats remote
+        _build/dev/rel/#{app}/bin/#{app} remote
 
     To list all commands:
 
-        _build/dev/rel/live_beats/bin/live_beats
+        _build/dev/rel/#{app}/bin/#{app}
     """)
 
     if ecto? do
