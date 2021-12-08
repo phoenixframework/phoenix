@@ -4,6 +4,11 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.4 (2021-12-08)
+
+### Bug Fixes
+  * Fix incorrect `phx.gen.release` output
+
 ## 1.6.3 (2021-12-07)
 
 ### Enhancements
