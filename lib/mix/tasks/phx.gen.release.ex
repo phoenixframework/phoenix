@@ -121,13 +121,11 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     post_install_instructions("config/runtime.exs", ~r/PHX_SERVER/, """
     [warn] Conditional server startup is missing from runtime configuration.
 
-    Add the following to your config/runtime.exs:
+    Add the following to the top of your config/runtime.exs:
 
-        server? = System.get_env("PHX_SERVER") != nil
-
-        config :#{app}, #{app_namespace}.Endpoint,
-          ...,
-          server: server?
+        if System.get_env("PHX_SERVER") && System.get_env("RELEASE_NAME") do
+          config :#{app}, #{app_namespace}.Endpoint, server: true
+        end
     """)
 
     post_install_instructions("config/runtime.exs", ~r/PHX_HOST/, """
