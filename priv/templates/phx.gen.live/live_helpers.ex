@@ -46,7 +46,7 @@ defmodule <%= inspect context.web_module %>.LiveHelpers do
          <a id="close" href="#" class="phx-modal-close" phx-click={hide_modal()}>✖</a>
         <%% end %>
 
-        <%%= render_slot(@inner_block, assigns) %>
+        <%%= render_slot(@inner_block) %>
       </div>
     </div>
     """
