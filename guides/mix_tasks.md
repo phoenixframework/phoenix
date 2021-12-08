@@ -580,10 +580,10 @@ Notice that this task has updated `config/config.exs`. If we take a look, we'll 
 ```elixir
 . . .
 config :hello, OurCustom.Repo,
-  database: "hello_repo",
   username: "user",
   password: "pass",
-  hostname: "localhost"
+  hostname: "localhost",
+  database: "hello_repo",
 . . .
 ```
 
