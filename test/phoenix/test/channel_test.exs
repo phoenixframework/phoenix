@@ -187,27 +187,23 @@ defmodule Phoenix.Test.ChannelTest do
   ## socket
 
   test "socket/1" do
-    assert socket(UserSocket) == %Socket{
+    assert %Socket{
              endpoint: @endpoint,
              handler: UserSocket,
              pubsub_server: Phoenix.Test.ChannelTest.PubSub,
-             transport: :channel_test,
-             transport_pid: self(),
              serializer: Phoenix.ChannelTest.NoopSerializer
-           }
+           } = socket(UserSocket)
   end
 
-  test "socket/2" do
-    assert socket(UserSocket, "user:id", %{hello: :world}) == %Socket{
+  test "socket/3" do
+    assert %Socket{
              id: "user:id",
              assigns: %{hello: :world},
              endpoint: @endpoint,
              pubsub_server: Phoenix.Test.ChannelTest.PubSub,
-             transport: :channel_test,
-             transport_pid: self(),
              serializer: Phoenix.ChannelTest.NoopSerializer,
              handler: UserSocket
-           }
+           } = socket(UserSocket, "user:id", %{hello: :world})
   end
 
   ## join
@@ -220,7 +216,7 @@ defmodule Phoenix.Test.ChannelTest do
     assert socket.endpoint == @endpoint
     assert socket.pubsub_server == Phoenix.Test.ChannelTest.PubSub
     assert socket.topic == "foo:socket"
-    assert socket.transport == :channel_test
+    assert {Phoenix.ChannelTest, _} = socket.transport
     assert socket.transport_pid == self()
     assert socket.serializer == Phoenix.ChannelTest.NoopSerializer
     assert socket.assigns == %{hello: :world, original: :assign}
@@ -231,6 +227,18 @@ defmodule Phoenix.Test.ChannelTest do
 
     {:dictionary, dictionary} = Process.info(client.channel_pid, :dictionary)
     assert dictionary[:"$callers"] == [self()]
+  end
+
+  test "join/3 from another process" do
+    socket = socket(UserSocket, "id", original: :assign)
+
+    assert {:ok, socket, client} =
+             Task.async(fn ->
+               join(socket, Channel, "foo:socket")
+              end)
+              |> Task.await()
+
+    assert %{socket | joined: true} == client
   end
 
   test "join/3 with error reply" do
