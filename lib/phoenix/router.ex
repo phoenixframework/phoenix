@@ -531,7 +531,8 @@ defmodule Phoenix.Router do
 
   defp build_pipes(name, pipe_through) do
     plugs = pipe_through |> Enum.reverse |> Enum.map(&{&1, [], true})
-    {conn, body} = Plug.Builder.compile(__ENV__, plugs, init_mode: Phoenix.plug_init_mode(), log_on_halt: :debug)
+    opts = [init_mode: Phoenix.plug_init_mode(), log_on_halt: :debug]
+    {conn, body} = Plug.Builder.compile(__ENV__, plugs, opts)
 
     quote do
       defp unquote(name)(unquote(conn)), do: unquote(body)
@@ -676,21 +677,7 @@ defmodule Phoenix.Router do
   See `pipeline/2` for more information.
   """
   defmacro plug(plug, opts \\ []) do
-    runtime? = Phoenix.plug_init_mode() == :runtime
-
-    plug =
-      if runtime? do
-        expand_alias(plug, __CALLER__)
-      else
-        plug
-      end
-
-    opts =
-      if runtime? and Macro.quoted_literal?(opts) do
-        Macro.prewalk(opts, &expand_alias(&1, __CALLER__))
-      else
-        opts
-      end
+    {plug, opts} = expand_plug_and_opts(plug, opts, __CALLER__)
 
     quote do
       if pipeline = @phoenix_pipeline do
@@ -699,6 +686,26 @@ defmodule Phoenix.Router do
         raise "cannot define plug at the router level, plug must be defined inside a pipeline"
       end
     end
+  end
+
+  defp expand_plug_and_opts(plug, opts, caller) do
+    runtime? = Phoenix.plug_init_mode() == :runtime
+
+    plug =
+      if runtime? do
+        expand_alias(plug, caller)
+      else
+        plug
+      end
+
+    opts =
+      if runtime? and Macro.quoted_literal?(opts) do
+        Macro.prewalk(opts, &expand_alias(&1, caller))
+      else
+        opts
+      end
+
+    {plug, opts}
   end
 
   defp expand_alias({:__aliases__, _, _} = alias, env),
@@ -874,6 +881,13 @@ defmodule Phoenix.Router do
 
   """
   defmacro scope(options, do: context) do
+    options =
+      if Macro.quoted_literal?(options) do
+        Macro.prewalk(options, &expand_alias(&1, __CALLER__))
+      else
+        options
+      end
+
     do_scope(options, context)
   end
 
@@ -894,15 +908,23 @@ defmodule Phoenix.Router do
 
   """
   defmacro scope(path, options, do: context) do
-    options = Macro.expand(options, %{__CALLER__ | function: {:init, 1}})
-
-    options = quote do
-      path = unquote(path)
-      case unquote(options) do
-        alias when is_atom(alias) -> [path: path, alias: alias]
-        options when is_list(options) -> Keyword.put(options, :path, path)
+    options =
+      if Macro.quoted_literal?(options) do
+        Macro.prewalk(options, &expand_alias(&1, __CALLER__))
+      else
+        options
       end
-    end
+
+    options =
+      quote do
+        path = unquote(path)
+
+        case unquote(options) do
+          alias when is_atom(alias) -> [path: path, alias: alias]
+          options when is_list(options) -> Keyword.put(options, :path, path)
+        end
+      end
+
     do_scope(options, context)
   end
 
@@ -923,7 +945,7 @@ defmodule Phoenix.Router do
 
   """
   defmacro scope(path, alias, options, do: context) do
-    alias = Macro.expand(alias, %{__CALLER__ | function: {:init, 1}})
+    alias = expand_alias(alias, __CALLER__)
 
     options = quote do
       unquote(options)
@@ -985,7 +1007,7 @@ defmodule Phoenix.Router do
 
   """
   defmacro forward(path, plug, plug_opts \\ [], router_opts \\ []) do
-    plug = Macro.expand(plug, %{__CALLER__ | function: {:init, 1}})
+    {plug, plug_opts} = expand_plug_and_opts(plug, plug_opts, __CALLER__)
     router_opts = Keyword.put(router_opts, :as, nil)
 
     quote unquote: true, bind_quoted: [path: path, plug: plug] do
