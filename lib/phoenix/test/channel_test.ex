@@ -383,34 +383,12 @@ defmodule Phoenix.ChannelTest do
         match_topic_to_channel!(socket, topic)
       end
 
-    starter =
-      fn _, _, _, spec ->
-        Supervisor.start_child(fetch_test_supervisor!(), %{spec | id: make_ref()})
-      end
-
-    case Server.join(socket, channel, message, [starter: starter] ++ opts) do
+    case Server.join(socket, channel, message, opts) do
       {:ok, reply, pid} ->
         Process.link(pid)
         {:ok, reply, Server.socket(pid)}
       {:error, _} = error ->
         error
-    end
-  end
-
-  # TODO: replace with ExUnit.Case.fetch_test_supervisor!() when we require Elixir v1.11.
-  defp fetch_test_supervisor!() do
-    case ExUnit.OnExitHandler.get_supervisor(self()) do
-      {:ok, nil} ->
-        opts = [strategy: :one_for_one, max_restarts: 1_000_000, max_seconds: 1]
-        {:ok, sup} = Supervisor.start_link([], opts)
-        ExUnit.OnExitHandler.put_supervisor(self(), sup)
-        sup
-
-      {:ok, sup} ->
-        sup
-
-      :error ->
-        raise ArgumentError, "fetch_test_supervisor!/0 can only be invoked from the test process"
     end
   end
 
