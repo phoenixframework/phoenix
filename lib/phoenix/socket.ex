@@ -354,24 +354,24 @@ defmodule Phoenix.Socket do
   See `Phoenix.Channel` for more information
   """
   defmacro channel(topic_pattern, module, opts \\ []) do
-    # Tear the alias to simply store the root in the AST.
-    # This will make Elixir unable to track the dependency between
-    # endpoint <-> socket and avoid recompiling the endpoint
-    # (alongside the whole project) whenever the socket changes.
-    module = tear_alias(module)
+    module = expand_alias(module, __CALLER__)
+
+    opts =
+      if Macro.quoted_literal?(opts) do
+        Macro.prewalk(opts, &expand_alias(&1, __CALLER__))
+      else
+        opts
+      end
 
     quote do
       @phoenix_channels {unquote(topic_pattern), unquote(module), unquote(opts)}
     end
   end
 
-  defp tear_alias({:__aliases__, meta, [h|t]}) do
-    alias = {:__aliases__, meta, [h]}
-    quote do
-      Module.concat([unquote(alias)|unquote(t)])
-    end
-  end
-  defp tear_alias(other), do: other
+  defp expand_alias({:__aliases__, _, _} = alias, env),
+    do: Macro.expand(alias, %{env | function: {:channel, 3}})
+
+  defp expand_alias(other, _env), do: other
 
   @doc false
   @deprecated "transport/3 in Phoenix.Socket is deprecated and has no effect"
