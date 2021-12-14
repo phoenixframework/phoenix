@@ -324,16 +324,16 @@ defmodule Phx.New.Generator do
       dev: [
         username: user,
         password: pass,
-        database: "#{app}_dev",
         hostname: "localhost",
+        database: "#{app}_dev",
         show_sensitive_data_on_connection_error: true,
         pool_size: 10
       ],
       test: [
         username: user,
         password: pass,
-        database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|},
         hostname: "localhost",
+        database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|},
         pool: Ecto.Adapters.SQL.Sandbox,
         pool_size: 10,
       ],
