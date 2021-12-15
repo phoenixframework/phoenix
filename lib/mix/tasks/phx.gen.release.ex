@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
   The following release files are created:
 
-    * `lib/app_name/release.exs` - A release module containing tasks for running
+    * `lib/app_name/release.ex` - A release module containing tasks for running
       migrations inside a release
 
     * `rel/overlays/bin/migrate` - A migrate script for conveniently invoking
