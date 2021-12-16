@@ -340,8 +340,10 @@ defmodule Mix.Phoenix.Schema do
     end
   end
 
-  defp build_utc_datetime_usec,
-    do: %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
+  defp build_utc_datetime_usec do
+    ensure_started(Calendar.get_time_zone_database)
+    %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
+  end
 
   defp build_utc_datetime,
     do: DateTime.truncate(build_utc_datetime_usec(), :second)
@@ -352,6 +354,12 @@ defmodule Mix.Phoenix.Schema do
   defp build_utc_naive_datetime,
     do: NaiveDateTime.truncate(build_utc_naive_datetime_usec(), :second)
 
+  defp ensure_started(Tzdata.TimeZoneDatabase) do
+    {:ok, _} = Application.ensure_all_started(:tzdata)
+    :ok
+  end
+
+  defp ensure_started(_), do: :ok
 
   @enum_missing_value_error """
   Enum type requires at least one value
