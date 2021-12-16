@@ -798,9 +798,9 @@ defmodule Phoenix.Endpoint do
             "//*.other.com"
           ]
 
-      Or to accept any origin matching the request host header:
+      Or to accept any origin matching the request connection's host, port, and scheme:
 
-          check_origin: :host
+          check_origin: :conn
 
       Or a custom MFA function:
 
