@@ -567,11 +567,11 @@ defmodule Phoenix.Socket.Transport do
           {module, function, arguments} ->
             {module, function, arguments}
 
-          :host ->
-            :host
+          :conn ->
+            :conn
 
           invalid ->
-            raise ArgumentError, ":check_origin expects a boolean, list of hosts, :host, or MFA tuple, got: #{inspect(invalid)}"
+            raise ArgumentError, ":check_origin expects a boolean, list of hosts, :conn, or MFA tuple, got: #{inspect(invalid)}"
         end
 
       {:cache, check_origin}
@@ -593,7 +593,7 @@ defmodule Phoenix.Socket.Transport do
 
   defp origin_allowed?({module, function, arguments}, uri, _endpoint, _conn),
     do: apply(module, function, [uri | arguments])
-  defp origin_allowed?(:host, uri, _endpoint, %Plug.Conn{} = conn),
+  defp origin_allowed?(:conn, uri, _endpoint, %Plug.Conn{} = conn),
     do: uri.host == conn.host and uri.scheme == conn.scheme and uri.port == conn.port
   defp origin_allowed?(_check_origin, %{host: nil}, _endpoint, _conn),
     do: false

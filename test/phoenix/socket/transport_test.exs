@@ -135,18 +135,18 @@ defmodule Phoenix.Socket.TransportTest do
 
     test "checks origin against :host" do
       conn = %Plug.Conn{conn(:get, "/") | host: "example.com", scheme: "http", port: 80}
-      refute check_origin(conn, "http://example.com", check_origin: :host).halted
+      refute check_origin(conn, "http://example.com", check_origin: :conn).halted
 
-      assert check_origin(conn, "https://example.com", check_origin: :host).halted
-      assert check_origin(conn, "ws://example.com", check_origin: :host).halted
-      assert check_origin(conn, "wss://example.com", check_origin: :host).halted
-      assert check_origin(conn, "http://www.example.com", check_origin: :host).halted
-      assert check_origin(conn, "http://www.another.com", check_origin: :host).halted
+      assert check_origin(conn, "https://example.com", check_origin: :conn).halted
+      assert check_origin(conn, "ws://example.com", check_origin: :conn).halted
+      assert check_origin(conn, "wss://example.com", check_origin: :conn).halted
+      assert check_origin(conn, "http://www.example.com", check_origin: :conn).halted
+      assert check_origin(conn, "http://www.another.com", check_origin: :conn).halted
 
       conn = %Plug.Conn{conn(:get, "/") | host: "example.com", scheme: "https", port: 443}
-      refute check_origin(conn, "https://example.com", check_origin: :host).halted
-      assert check_origin(conn, "http://example.com", check_origin: :host).halted
-      assert check_origin(conn, "https://example.com:4000", check_origin: :host).halted
+      refute check_origin(conn, "https://example.com", check_origin: :conn).halted
+      assert check_origin(conn, "http://example.com", check_origin: :conn).halted
+      assert check_origin(conn, "https://example.com:4000", check_origin: :conn).halted
     end
 
     test "does not halt invalid URIs when check_origin is disabled" do
