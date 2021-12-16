@@ -4,6 +4,14 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.5 (2021-12-16)
+
+### Enhancements
+  * [Endpoint] Support `check_origin: :conn` to enforce origin on the connection's host, port, and scheme
+
+### Bug Fixes
+  * Fix LiveView upload testing errors caused by `Phoenix.ChannelTest`
+
 ## 1.6.4 (2021-12-08)
 
 ### Bug Fixes
