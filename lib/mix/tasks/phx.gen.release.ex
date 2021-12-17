@@ -45,6 +45,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     app = Mix.Phoenix.otp_app()
     app_namespace = Mix.Phoenix.base()
+    web_namespace = app_namespace |> Mix.Phoenix.web_module() |> inspect()
 
     binding = [
       app_namespace: app_namespace,
@@ -124,7 +125,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     Add the following to the top of your config/runtime.exs:
 
         if System.get_env("PHX_SERVER") && System.get_env("RELEASE_NAME") do
-          config :#{app}, #{app_namespace}.Endpoint, server: true
+          config :#{app}, #{web_namespace}.Endpoint, server: true
         end
     """)
 
@@ -135,7 +136,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
         host = System.get_env("PHX_HOST") || "example.com"
 
-        config :#{app}, #{app_namespace}.Endpoint,
+        config :#{app}, #{web_namespace}.Endpoint,
           ...,
           url: [host: host, port: 443]
     """)
