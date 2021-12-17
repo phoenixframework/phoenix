@@ -78,7 +78,7 @@ import Timer from "./timer"
  *
  * Defaults to 20s (double the server long poll timer).
  *
- * @param {{Object|function)} [opts.params] - The optional params to pass when connecting
+ * @param {(Object|function)} [opts.params] - The optional params to pass when connecting
  * @param {string} [opts.binaryType] - The binary type to use for binary WebSocket frames.
  *
  * Defaults to "arraybuffer"
