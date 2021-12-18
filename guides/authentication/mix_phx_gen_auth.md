@@ -82,9 +82,11 @@ Note that whenever the password changes (either via reset password or directly),
 
 ### User Enumeration attacks
 
-A user enumeration attack allows an attacker to enumerate all emails registered in the application. For example, if trying to log in with a registered email and a wrong password returns a different error than trying to log in with an email that was never registered, an attacker could use this discrepancy to find out which emails have accounts.
+A user enumeration attack allows someone to check if an email is registered in the application. The generated authentication code does not attempt to protect from such checks. For instance, when you register an account, if the email is already registered, the code will notify the user the email is already registered.
 
-The generated authentication code protects against enumeration attacks on all endpoints, except in the registration and update email forms. If your application is really sensitive to enumeration attacks, you need to implement your own registration workflow, which tends to be very different from the workflow for most applications.
+If your application is sensitive to enumeration attacks, you need to implement your own workflows, which tends to be very different from most applications, as you need to carefully balance security and user experience.
+
+Furthermore, if you are concerned about enumeration attacks, beware of timing attacks too. For example, registering a new account typically involves additional work (such as writing to the database, sending emails, etc) compared to when an account already exists. Someone could measure the time taken to execute those additional tasks to enumerate emails. This applies to all endpoints (registration, confirmation, password recovery, etc.) that may send email, in-app notifications, etc.
 
 ### Case sensitiveness
 
