@@ -32,6 +32,8 @@ defmodule Phoenix.Endpoint.Watcher do
     {args, opts} = Enum.split_while(args, &is_binary(&1))
     opts = Keyword.merge([into: IO.stream(:stdio, :line), stderr_to_stdout: true], opts)
 
+    {cmd, args} = maybe_prefix_shell(:os.type(), cmd, args, opts)
+
     try do
       System.cmd(cmd, args, opts)
     catch
@@ -57,4 +59,39 @@ defmodule Phoenix.Endpoint.Watcher do
   end
 
   defp cd(opts), do: opts[:cd] || File.cwd!()
+
+  defp maybe_prefix_shell({:win32, _}, cmd, args, opts) do
+    # This lets us call batch files on Windows, which aren't proper executables and can't be simply
+    # passed to `System.cmd`.
+    case find_executable(cmd, opts[:cd]) do
+      nil ->
+        {cmd, args}
+
+      path ->
+        if String.ends_with?(path, [".cmd", ".bat"]) do
+          {"cmd", ["/c", Path.basename(path)] ++ args}
+        else
+          {cmd, args}
+        end
+    end
+  end
+
+  defp maybe_prefix_shell(_, cmd, args, _opts) do
+    {cmd, args}
+  end
+
+  defp find_executable(cmd, cd) do
+    path =
+      if cd do
+        search_path = System.get_env("PATH") <> ";" <> cd
+        :os.find_executable(String.to_charlist(cmd), String.to_charlist(search_path))
+      else
+        :os.find_executable(String.to_charlist(cmd))
+      end
+
+    case path do
+      false -> nil
+      other -> List.to_string(other)
+    end
+  end
 end
