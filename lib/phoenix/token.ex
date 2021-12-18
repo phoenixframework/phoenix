@@ -197,8 +197,8 @@ defmodule Phoenix.Token do
   ## Options
 
     * `:max_age` - verifies the token only if it has been generated
-      "max age" ago in seconds. A reasonable value is 1 day (86400
-      seconds)
+      "max age" ago in seconds. Defaults to the max age signed in the
+      token (86400)
     * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to 1000
     * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
