@@ -380,7 +380,10 @@ defmodule Phoenix.Socket do
   end
 
   defmacro __before_compile__(env) do
-    channels = Module.get_attribute(env.module, :phoenix_channels)
+    channels =
+      env.module
+      |> Module.get_attribute(:phoenix_channels, [])
+      |> Enum.reverse()
 
     channel_defs =
       for {topic_pattern, module, opts} <- channels do
