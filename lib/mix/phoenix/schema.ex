@@ -303,8 +303,8 @@ defmodule Mix.Phoenix.Schema do
         :time           -> ~T[14:00:00]
         :time_usec      -> ~T[14:00:00.000000]
         :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
-        :utc_datetime   -> DateTime.add(build_utc_datetime(), -@one_day_in_seconds)
-        :utc_datetime_usec -> DateTime.add(build_utc_datetime_usec(), -@one_day_in_seconds)
+        :utc_datetime   -> DateTime.add(build_utc_datetime(), -@one_day_in_seconds, :second, Calendar.UTCOnlyTimeZoneDatabase)
+        :utc_datetime_usec -> DateTime.add(build_utc_datetime_usec(), -@one_day_in_seconds, :second, Calendar.UTCOnlyTimeZoneDatabase)
         :naive_datetime -> NaiveDateTime.add(build_utc_naive_datetime(), -@one_day_in_seconds)
         :naive_datetime_usec -> NaiveDateTime.add(build_utc_naive_datetime_usec(), -@one_day_in_seconds)
         _  -> "some #{key}"
@@ -340,10 +340,8 @@ defmodule Mix.Phoenix.Schema do
     end
   end
 
-  defp build_utc_datetime_usec do
-    ensure_started(Calendar.get_time_zone_database)
-    %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
-  end
+  defp build_utc_datetime_usec,
+    do: %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
 
   defp build_utc_datetime,
     do: DateTime.truncate(build_utc_datetime_usec(), :second)
@@ -353,13 +351,6 @@ defmodule Mix.Phoenix.Schema do
 
   defp build_utc_naive_datetime,
     do: NaiveDateTime.truncate(build_utc_naive_datetime_usec(), :second)
-
-  defp ensure_started(Tzdata.TimeZoneDatabase) do
-    {:ok, _} = Application.ensure_all_started(:tzdata)
-    :ok
-  end
-
-  defp ensure_started(_), do: :ok
 
   @enum_missing_value_error """
   Enum type requires at least one value
