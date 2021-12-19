@@ -20,7 +20,7 @@ defmodule <%= module %>Socket do
   #     mix phx.gen.channel Room
   #
   # See the [`Channels guide`](https://hexdocs.pm/phoenix/channels.html)
-  # for futher details.
+  # for further details.
 
 <% end %>
   # Socket params are passed from the client and can
