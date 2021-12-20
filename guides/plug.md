@@ -65,7 +65,7 @@ Host: "localhost"
 Headers: [...]
 ```
 
-Our plug simply prints information from the connection. Although our initial plug is very simple, you can virtually do anything you want inside of it. To learn about all fields available in the connection and all of the functionality associated to it, see the [documentation for `Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html).
+Our plug simply prints information from the connection. Although our initial plug is very simple, you can do virtually anything you want inside of it. To learn about all fields available in the connection and all of the functionality associated to it, see the [documentation for `Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html).
 
 Now let's look at the other plug variant, the module plugs.
 

@@ -125,7 +125,7 @@ Finally, there is a `lib/hello_web/gettext.ex` file which provides international
 
 ## The assets directory
 
-The `assets` directory contains source files related to front-end assets, such as JavaScript and CSS. Since Phoenix v1.6, we use the [`esbuild`](https://github.com/evanw/esbuild/) to compile assets, which is managed by [`esbuild`](https://github.com/phoenixframework/esbuild) Elixir package. The integration with `esbuild` is baked into your app. The relevant config can be found in your `config/config.exs` file.
+The `assets` directory contains source files related to front-end assets, such as JavaScript and CSS. Since Phoenix v1.6, we use [`esbuild`](https://github.com/evanw/esbuild/) to compile assets, which is managed by the [`esbuild`](https://github.com/phoenixframework/esbuild) Elixir package. The integration with `esbuild` is baked into your app. The relevant config can be found in your `config/config.exs` file.
 
 Your other static assets are placed in the `priv/static` folder, where `priv/static/assets` is kept for generated assets. Everything in `priv/static` is served by the `Plug.Static` plug configured in `lib/hello_web/endpoint.ex`.  When running in dev mode (`MIX_ENV=dev`), Phoenix watches for any changes you make in the `assets` directory, and then takes care of updating your front end application in your browser as you work.
 
