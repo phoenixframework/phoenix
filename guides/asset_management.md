@@ -30,13 +30,11 @@ If you want to import JavaScript dependencies, you have two options to add them 
 import "../css/app.css"
 ```
 
-However, if you want to use a CSS framework, such as SASS or Tailwind, you will need to use a separate tool. Here are some options to do so:
+However, if you want to use a CSS framework, you will need to use a separate tool. Here are some options to do so:
+
+  * Use [standalone Tailwind](https://github.com/phoenixframework/tailwind) or [standalone SASS](https://github.com/CargoSense/dart_sass). Both similar to `esbuild`.
 
   * You can use `esbuild` plugins (requires `npm`). See the "Esbuild plugins" section below
-
-  * If you want SASS, you can bring [standalone SASS](https://github.com/CargoSense/dart_sass) to your project, without a need for external dependencies (similar to esbuild).
-
-  * You can bring Node.JS + `npm` to your application and install any package you want, typically working directly with their command line interface. See [this pull request on how to add Alpine + Tailwind](https://github.com/josevalim/phx_esbuild_demo/pull/3).
 
 Don't forget to remove the `import "../css/app.css"` from your JavaScript file when doing so.
 
