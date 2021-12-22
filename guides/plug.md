@@ -144,7 +144,7 @@ defmodule HelloWeb.Endpoint do
 
 The default endpoint plugs do quite a lot of work. Here they are in order:
 
-- `Plug.Static` - serves static assets. Since this plug comes before the logger, serving of static assets is not logged
+- `Plug.Static` - serves static assets. Since this plug comes before the logger, requests for static assets are not logged.
 
 - `Phoenix.LiveDashboard.RequestLogger` - sets up the _Request Logger_ for Phoenix LiveDashboard, this will allow you to have the option to either pass a query parameter to stream requests logs or to enable/disable a cookie that streams requests logs from your dashboard.
 
@@ -152,13 +152,13 @@ The default endpoint plugs do quite a lot of work. Here they are in order:
 
 - `Plug.Telemetry` - adds instrumentation points so Phoenix can log the request path, status code and request time by default.
 
-- `Plug.Parsers` - parses the request body when a known parser is available. By default, `Plug.Parsers`, parse URL-encoded, multipart and JSON (with `Jason`). The request body is left untouched when the request content-type cannot be parsed
+- `Plug.Parsers` - parses the request body when a known parser is available. By default, this plug can handle URL-encoded, multipart and JSON content (with `Jason`). The request body is left untouched if the request content-type cannot be parsed.
 
-- `Plug.MethodOverride` - converts the request method to PUT, PATCH or DELETE for POST requests with a valid `_method` parameter
+- `Plug.MethodOverride` - converts the request method to PUT, PATCH or DELETE for POST requests with a valid `_method` parameter.
 
-- `Plug.Head` - converts HEAD requests to GET requests and strips the response body
+- `Plug.Head` - converts HEAD requests to GET requests and strips the response body.
 
-- `Plug.Session` - a plug that sets up session management. Note that `fetch_session/2` must still be explicitly called before using the session as this plug just sets up how the session is fetched
+- `Plug.Session` - a plug that sets up session management. Note that `fetch_session/2` must still be explicitly called before using the session as this plug just sets up how the session is fetched.
 
 In the middle of the endpoint, there is also a conditional block:
 
