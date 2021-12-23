@@ -105,6 +105,8 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:signed_at` - set the timestamp of the token in seconds.
       Defaults to `System.system_time(:second)`
+    * `:max_age` - the default maximum age of the token. Defaults to
+      86400 seconds (1 day) and it may be overridden on verify/4.
 
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
