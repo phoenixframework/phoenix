@@ -163,7 +163,7 @@ defmodule Phoenix.Token do
   returned a tuple of type `{:ok, user_id}`. The server can now proceed with
   the request.
 
-  However, if the client had sent an expired or invalid token or otherwise `nil`,
+  However, if the client had sent an expired token, an invalid token, or `nil`,
   `verify/4` would have returned an error instead:
 
       iex> Phoenix.Token.verify(secret, namespace, expired, max_age: 86400)
