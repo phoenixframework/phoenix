@@ -133,8 +133,8 @@ defmodule Phoenix.Socket.TransportTest do
       refute check_origin("", check_origin: mfa).halted
     end
 
-    test "checks origin against :host" do
-      conn = %Plug.Conn{conn(:get, "/") | host: "example.com", scheme: "http", port: 80}
+    test "checks origin against :conn" do
+      conn = %Plug.Conn{conn(:get, "/") | host: "example.com", scheme: :http, port: 80}
       refute check_origin(conn, "http://example.com", check_origin: :conn).halted
 
       assert check_origin(conn, "https://example.com", check_origin: :conn).halted
@@ -143,7 +143,7 @@ defmodule Phoenix.Socket.TransportTest do
       assert check_origin(conn, "http://www.example.com", check_origin: :conn).halted
       assert check_origin(conn, "http://www.another.com", check_origin: :conn).halted
 
-      conn = %Plug.Conn{conn(:get, "/") | host: "example.com", scheme: "https", port: 443}
+      conn = %Plug.Conn{conn(:get, "/") | host: "example.com", scheme: :https, port: 443}
       refute check_origin(conn, "https://example.com", check_origin: :conn).halted
       assert check_origin(conn, "http://example.com", check_origin: :conn).halted
       assert check_origin(conn, "https://example.com:4000", check_origin: :conn).halted
