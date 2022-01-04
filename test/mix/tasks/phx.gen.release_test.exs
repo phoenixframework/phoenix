@@ -87,12 +87,12 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
 
       assert_file("Dockerfile", fn file ->
         assert file =~ ~S|COPY --from=builder --chown=nobody:root /app/_build/prod/rel/phoenix ./|
-        assert file =~ ~S|CMD /app/bin/server|
+        assert file =~ ~S|CMD ["/app/bin/server"]|
       end)
 
       assert_file("Dockerfile", fn file ->
         assert file =~ ~S|COPY --from=builder --chown=nobody:root /app/_build/prod/rel/phoenix ./|
-        assert file =~ ~S|CMD /app/bin/server|
+        assert file =~ ~S|CMD ["/app/bin/server"]|
       end)
 
       assert_file("rel/overlays/bin/migrate", fn file ->

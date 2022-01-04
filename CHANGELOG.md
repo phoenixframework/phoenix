@@ -4,6 +4,11 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.6 (2022-01-04)
+
+### Bug Fixes
+  * [Endpoint] Fix `check_origin: :conn` failing to match scheme
+
 ## 1.6.5 (2021-12-16)
 
 ### Enhancements
