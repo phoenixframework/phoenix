@@ -593,8 +593,13 @@ defmodule Phoenix.Socket.Transport do
 
   defp origin_allowed?({module, function, arguments}, uri, _endpoint, _conn),
     do: apply(module, function, [uri | arguments])
-  defp origin_allowed?(:conn, uri, _endpoint, %Plug.Conn{} = conn),
-    do: uri.host == conn.host and uri.scheme == conn.scheme and uri.port == conn.port
+
+  defp origin_allowed?(:conn, uri, _endpoint, %Plug.Conn{} = conn) do
+    uri.host == conn.host and
+      uri.scheme == Atom.to_string(conn.scheme) and
+      uri.port == conn.port
+  end
+
   defp origin_allowed?(_check_origin, %{host: nil}, _endpoint, _conn),
     do: false
   defp origin_allowed?(true, uri, endpoint, _conn),
