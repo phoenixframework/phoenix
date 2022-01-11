@@ -179,9 +179,20 @@ defmodule Phoenix.Router do
         get "/pages/:id", PageController, :show
       end
 
-  For example, the route above will match on the path `"/api/v1/pages/:id"`
+  For example, the route above will match on the path `"/api/v1/pages/1"`
   and the named route will be `api_v1_page_path`, as expected from the
   values given to `scope/2` option.
+  
+  Like all paths you can define dynamic segments that will be applied as
+  parameters in the controller:
+  
+      scope "/api/:version", MyAppWeb do
+        get "/pages/:id", PageController, :show
+      end
+      
+  For example, the route above will match on the path `"/api/v1/pages/1"` 
+  and in the controller the `params` argument will have a map with the 
+  key `:version` with the value `"v1"`.
 
   Phoenix also provides a `resources/4` macro that allows developers
   to generate "RESTful" routes to a given resource:
