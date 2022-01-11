@@ -292,6 +292,7 @@ defmodule Phx.New.Generator do
       dev: [
         database: {:literal, ~s|Path.expand("../#{app}_dev.db", Path.dirname(__ENV__.file))|},
         pool_size: 5,
+        stacktrace: true,
         show_sensitive_data_on_connection_error: true
       ],
       test: [
@@ -326,6 +327,7 @@ defmodule Phx.New.Generator do
         password: pass,
         hostname: "localhost",
         database: "#{app}_dev",
+        stacktrace: true,
         show_sensitive_data_on_connection_error: true,
         pool_size: 10
       ],
