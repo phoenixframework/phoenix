@@ -239,7 +239,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
             ]
           end
 
-      Then fetch the updated dependencies:
+      Then install the dependencies:
 
           $ mix deps.get
       """
