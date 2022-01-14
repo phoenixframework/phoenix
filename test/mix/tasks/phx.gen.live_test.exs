@@ -174,6 +174,26 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
           live "/comments/:id", CommentLive.Show, :show
           live "/comments/:id/show/edit", CommentLive.Show, :edit
       """]}
+
+      assert_receive({:mix_shell, :info, ["""
+
+      Note the generated code requires Phoenix.LiveView v0.17+.
+
+      Before proceeding, update your :phoenix_live_view and,
+      if present, :phoenix_live_dashboard deps in mix.exs:
+
+          def deps do
+            [
+              {:phoenix_live_view, "~> 0.17.0"},
+              {:phoenix_live_dashboard, "~> 0.6"},
+              ...
+            ]
+          end
+
+      Then fetch the updated dependencies:
+
+          $ mix deps.get
+      """]})
     end
   end
 
