@@ -101,6 +101,23 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       Mix.raise "mix phx.gen.live must be invoked from within your *_web application root directory"
     end
 
+    unless Code.ensure_loaded?(Phoenix.LiveView.JS) do
+      Mix.raise """
+      mix phx.gen.live requires :phoenix_live_view v0.17+.
+
+      Update your LiveView (and, if present, LiveDashboard) deps in mix.exs:
+
+          def deps do
+            [
+              {:phoenix_live_view, "~> 0.17.0"},
+              {:phoenix_live_dashboard, "~> 0.6.0"}
+              ...
+            ]
+          end
+
+      """
+    end
+
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
