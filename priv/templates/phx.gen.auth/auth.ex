@@ -72,7 +72,7 @@ defmodule <%= inspect auth_module %> do
   """
   def log_out_<%= schema.singular %>(conn) do
     <%= schema.singular %>_token = get_session(conn, :<%= schema.singular %>_token)
-    <%= schema.singular %>_token && <%= inspect context.alias %>.delete_session_token(<%= schema.singular %>_token)
+    <%= schema.singular %>_token && <%= inspect context.alias %>.delete_<%= schema.singular %>_session_token(<%= schema.singular %>_token)
 
     if live_socket_id = get_session(conn, :live_socket_id) do
       <%= inspect(endpoint_module) %>.broadcast(live_socket_id, "disconnect", %{})

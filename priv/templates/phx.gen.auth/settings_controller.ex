@@ -16,7 +16,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     case <%= inspect context.alias %>.apply_<%= schema.singular %>_email(<%= schema.singular %>, password, <%= schema.singular %>_params) do
       {:ok, applied_<%= schema.singular %>} ->
-        <%= inspect context.alias %>.deliver_update_email_instructions(
+        <%= inspect context.alias %>.deliver_<%= schema.singular %>_update_email_instructions(
           applied_<%= schema.singular %>,
           <%= schema.singular %>.email,
           &Routes.<%= schema.route_helper %>_settings_url(conn, :confirm_email, &1)

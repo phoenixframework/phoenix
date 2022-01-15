@@ -154,11 +154,11 @@
 
   ## Examples
 
-      iex> deliver_update_email_instructions(<%= schema.singular %>, current_email, &Routes.<%= schema.singular %>_update_email_url(conn, :edit, &1))
+      iex> deliver_<%= schema.singular %>_update_email_instructions(<%= schema.singular %>, current_email, &Routes.<%= schema.singular %>_update_email_url(conn, :edit, &1))
       {:ok, %{to: ..., body: ...}}
 
   """
-  def deliver_update_email_instructions(%<%= inspect schema.alias %>{} = <%= schema.singular %>, current_email, update_email_url_fun)
+  def deliver_<%= schema.singular %>_update_email_instructions(%<%= inspect schema.alias %>{} = <%= schema.singular %>, current_email, update_email_url_fun)
       when is_function(update_email_url_fun, 1) do
     {encoded_token, <%= schema.singular %>_token} = <%= inspect schema.alias %>Token.build_email_token(<%= schema.singular %>, "change:#{current_email}")
 
@@ -229,7 +229,7 @@
   @doc """
   Deletes the signed token with the given context.
   """
-  def delete_session_token(token) do
+  def delete_<%= schema.singular %>_session_token(token) do
     Repo.delete_all(<%= inspect schema.alias %>Token.token_and_context_query(token, "session"))
     :ok
   end
