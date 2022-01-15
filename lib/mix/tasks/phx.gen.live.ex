@@ -226,22 +226,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     unless Code.ensure_loaded?(Phoenix.LiveView.JS) do
       Mix.shell().info """
 
-      Note the generated code requires Phoenix.LiveView v0.17+.
-
-      Before proceeding, update your :phoenix_live_view and,
-      if present, :phoenix_live_dashboard deps in mix.exs:
-
-          def deps do
-            [
-              {:phoenix_live_view, "~> 0.17.0"},
-              {:phoenix_live_dashboard, "~> 0.6"},
-              ...
-            ]
-          end
-
-      Then install the dependencies:
-
-          $ mix deps.get
+      You must update :phoenix_live_view to v0.17 or later and
+      :phoenix_live_dashboard to v0.6 or later to use the features
+      in this generator.
       """
     end
   end
