@@ -74,8 +74,6 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
     end)
   end
 
-
-
   test "generates release and docker files", config do
     in_tmp_project(config.test, fn ->
       Gen.Release.run(["--docker", "--ecto"])
@@ -86,13 +84,8 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       end)
 
       assert_file("Dockerfile", fn file ->
-        assert file =~ ~S|COPY --from=builder --chown=nobody:root /app/_build/prod/rel/phoenix ./|
-        assert file =~ ~S|CMD /app/bin/server|
-      end)
-
-      assert_file("Dockerfile", fn file ->
-        assert file =~ ~S|COPY --from=builder --chown=nobody:root /app/_build/prod/rel/phoenix ./|
-        assert file =~ ~S|CMD /app/bin/server|
+        assert file =~ ~S|COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/phoenix ./|
+        assert file =~ ~S|CMD ["/app/bin/server"]|
       end)
 
       assert_file("rel/overlays/bin/migrate", fn file ->

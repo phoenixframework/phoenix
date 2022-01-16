@@ -303,8 +303,8 @@ defmodule Mix.Phoenix.Schema do
         :time           -> ~T[14:00:00]
         :time_usec      -> ~T[14:00:00.000000]
         :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
-        :utc_datetime   -> DateTime.add(build_utc_datetime(), -@one_day_in_seconds)
-        :utc_datetime_usec -> DateTime.add(build_utc_datetime_usec(), -@one_day_in_seconds)
+        :utc_datetime   -> DateTime.add(build_utc_datetime(), -@one_day_in_seconds, :second, Calendar.UTCOnlyTimeZoneDatabase)
+        :utc_datetime_usec -> DateTime.add(build_utc_datetime_usec(), -@one_day_in_seconds, :second, Calendar.UTCOnlyTimeZoneDatabase)
         :naive_datetime -> NaiveDateTime.add(build_utc_naive_datetime(), -@one_day_in_seconds)
         :naive_datetime_usec -> NaiveDateTime.add(build_utc_naive_datetime_usec(), -@one_day_in_seconds)
         _  -> "some #{key}"
@@ -351,7 +351,6 @@ defmodule Mix.Phoenix.Schema do
 
   defp build_utc_naive_datetime,
     do: NaiveDateTime.truncate(build_utc_naive_datetime_usec(), :second)
-
 
   @enum_missing_value_error """
   Enum type requires at least one value
