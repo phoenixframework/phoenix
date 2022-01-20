@@ -10,15 +10,13 @@ defmodule Phoenix.Endpoint.Supervisor do
   Starts the endpoint supervision tree.
   """
   def start_link(otp_app, mod, opts \\ []) do
-    case Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
-      {:ok, _} = ok ->
-        warmup(mod)
-        log_access_url(otp_app, mod, opts)
-        browser_open(otp_app, mod)
-        ok
-
-      {:error, _} = error ->
-        error
+    with {:ok, _} = ok <- Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
+      # We don't use the defaults in the checks below
+      conf = Keyword.merge(Application.get_env(otp_app, mod, []), opts)
+      warmup(mod)
+      log_access_url(mod, conf)
+      browser_open(mod, conf)
+      ok
     end
   end
 
@@ -178,37 +176,40 @@ defmodule Phoenix.Endpoint.Supervisor do
   Checks if Endpoint's web server has been configured to start.
   """
   def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
-    otp_app
-    |> config(endpoint)
-    |> server?()
+    server?(Application.get_env(otp_app, endpoint, []))
   end
-  def server?(conf) when is_list(conf) do
-    Keyword.get(conf, :server, Application.get_env(:phoenix, :serve_endpoints, false))
+
+  defp server?(conf) when is_list(conf) do
+    Keyword.get_lazy(conf, :server, fn ->
+      Application.get_env(:phoenix, :serve_endpoints, false)
+    end)
   end
 
   defp defaults(otp_app, module) do
-    [otp_app: otp_app,
+    [
+      otp_app: otp_app,
 
-     # Compile-time config
-     code_reloader: false,
-     debug_errors: false,
-     render_errors: [view: render_errors(module), accepts: ~w(html), layout: false],
+      # Compile-time config
+      code_reloader: false,
+      debug_errors: false,
+      render_errors: [view: render_errors(module), accepts: ~w(html), layout: false],
 
-     # Runtime config
-     cache_static_manifest: nil,
-     check_origin: true,
-     http: false,
-     https: false,
-     reloadable_apps: nil,
-     reloadable_compilers: [:gettext, :elixir],
-     secret_key_base: nil,
-     static_url: nil,
-     url: [host: "localhost", path: "/"],
-     cache_manifest_skip_vsn: false,
+      # Runtime config
+      cache_static_manifest: nil,
+      check_origin: true,
+      http: false,
+      https: false,
+      reloadable_apps: nil,
+      reloadable_compilers: [:gettext, :elixir],
+      secret_key_base: nil,
+      static_url: nil,
+      url: [host: "localhost", path: "/"],
+      cache_manifest_skip_vsn: false,
 
-     # Supervisor config
-     watchers: [],
-     force_watchers: false]
+      # Supervisor config
+      watchers: [],
+      force_watchers: false
+   ]
   end
 
   defp render_errors(module) do
@@ -432,14 +433,14 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp log_access_url(otp_app, endpoint, opts) do
-    if Keyword.get(opts, :log_access_url, true) && server?(otp_app, endpoint) do
+  defp log_access_url(endpoint, conf) do
+    if Keyword.get(conf, :log_access_url, true) && server?(conf) do
       Logger.info("Access #{inspect(endpoint)} at #{endpoint.url()}")
     end
   end
 
-  defp browser_open(otp_app, endpoint) do
-    if Application.get_env(:phoenix, :browser_open) && server?(otp_app, endpoint) do
+  defp browser_open(endpoint, conf) do
+    if Application.get_env(:phoenix, :browser_open) && server?(conf) do
       url = endpoint.url()
 
       {cmd, args} =

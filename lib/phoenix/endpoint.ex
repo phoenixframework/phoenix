@@ -213,6 +213,8 @@ defmodule Phoenix.Endpoint do
 
       The default format is used when none is set in the connection
 
+    * `:log_access_url` - log the access url once the server boots
+
   ### Adapter configuration
 
   Phoenix allows you to choose which webserver adapter to use. The default
@@ -500,11 +502,6 @@ defmodule Phoenix.Endpoint do
 
       @doc """
       Starts the endpoint supervision tree.
-
-      ## Options
-
-        * `:log_access_url` - if the access url should be logged
-          once the endpoint starts
 
       All other options are merged into the endpoint configuration.
       """
