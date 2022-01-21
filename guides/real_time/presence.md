@@ -92,7 +92,7 @@ We can see presence working by adding the following to `assets/js/app.js`:
 import {Socket, Presence} from "phoenix"
 
 let socket = new Socket("/socket", {params: {token: window.userToken}})
-let channel = socket.channel("room:lobby", {name: window.location.search.split("=")[1])
+let channel = socket.channel("room:lobby", {name: window.location.search.split("=")[1]})
 let presence = new Presence(channel)
 
 function renderOnlineUsers(presence) {
