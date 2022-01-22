@@ -268,26 +268,26 @@ defmodule Phx.New.Generator do
   end
 
   defp get_ecto_adapter("mssql", app, module) do
-    {:tds, Ecto.Adapters.Tds, db_config(app, module, "sa", "some!Password")}
+    {:tds, Ecto.Adapters.Tds, socket_db_config(app, module, "sa", "some!Password")}
   end
 
   defp get_ecto_adapter("mysql", app, module) do
-    {:myxql, Ecto.Adapters.MyXQL, db_config(app, module, "root", "")}
+    {:myxql, Ecto.Adapters.MyXQL, socket_db_config(app, module, "root", "")}
   end
 
   defp get_ecto_adapter("postgres", app, module) do
-    {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
+    {:postgrex, Ecto.Adapters.Postgres, socket_db_config(app, module, "postgres", "postgres")}
   end
 
   defp get_ecto_adapter("sqlite3", app, module) do
-    {:ecto_sqlite3, Ecto.Adapters.SQLite3, db_config(app, module)}
+    {:ecto_sqlite3, Ecto.Adapters.SQLite3, fs_db_config(app, module)}
   end
 
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
   end
 
-  defp db_config(app, module) do
+  defp fs_db_config(app, module) do
     [
       dev: [
         database: {:literal, ~s|Path.expand("../#{app}_dev.db", Path.dirname(__ENV__.file))|},
@@ -320,7 +320,7 @@ defmodule Phx.New.Generator do
     ]
   end
 
-  defp db_config(app, module, user, pass) do
+  defp socket_db_config(app, module, user, pass) do
     [
       dev: [
         username: user,
