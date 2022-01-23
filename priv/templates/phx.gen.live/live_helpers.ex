@@ -5,6 +5,26 @@ defmodule <%= inspect context.web_module %>.LiveHelpers do
   alias Phoenix.LiveView.JS
 
   @doc """
+  Renders a flash message.
+
+  The rendered flash receives a `:type` that will be used to define
+  proper classes to the element, and a `:message` which will be the
+  inner HTML.
+  If message is empty, the element is not rendered.
+
+  ## Examples
+
+      <.flash type="info" message="User created" />
+  """
+  def flash(assigns) do
+    ~H"""
+    <%= if is_binary(@message) and byte_size(String.trim(@message)) > 0 do %>
+      <p class={"alert alert-#{@type}"} role="alert"><%= @message %></p>
+    <% end %>
+    """
+  end
+
+  @doc """
   Renders a live component inside a modal.
 
   The rendered modal receives a `:return_to` option to properly update
