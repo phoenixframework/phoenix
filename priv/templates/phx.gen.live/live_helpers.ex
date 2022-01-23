@@ -19,7 +19,9 @@ defmodule <%= inspect context.web_module %>.LiveHelpers do
   def flash(assigns) do
     ~H"""
     <%= if is_binary(@message) and byte_size(String.trim(@message)) > 0 do %>
-      <p class={"alert alert-#{@type}"} role="alert"><%= @message %></p>
+      <p class={"alert alert-#{@type}"} role="alert">
+        <%= @message %>
+      </p>
     <% end %>
     """
   end
