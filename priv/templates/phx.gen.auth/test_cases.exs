@@ -169,7 +169,7 @@
     end
   end
 
-  describe "deliver_update_email_instructions/3" do
+  describe "deliver_<%= schema.singular %>_update_email_instructions/3" do
     setup do
       %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
     end
@@ -177,7 +177,7 @@
     test "sends token through notification", %{<%= schema.singular %>: <%= schema.singular %>} do
       token =
         extract_<%= schema.singular %>_token(fn url ->
-          <%= inspect context.alias %>.deliver_update_email_instructions(<%= schema.singular %>, "current@example.com", url)
+          <%= inspect context.alias %>.deliver_<%= schema.singular %>_update_email_instructions(<%= schema.singular %>, "current@example.com", url)
         end)
 
       {:ok, token} = Base.url_decode64(token, padding: false)
@@ -195,7 +195,7 @@
 
       token =
         extract_<%= schema.singular %>_token(fn url ->
-          <%= inspect context.alias %>.deliver_update_email_instructions(%{<%= schema.singular %> | email: email}, <%= schema.singular %>.email, url)
+          <%= inspect context.alias %>.deliver_<%= schema.singular %>_update_email_instructions(%{<%= schema.singular %> | email: email}, <%= schema.singular %>.email, url)
         end)
 
       %{<%= schema.singular %>: <%= schema.singular %>, token: token, email: email}
@@ -348,11 +348,11 @@
     end
   end
 
-  describe "delete_session_token/1" do
+  describe "delete_<%= schema.singular %>_session_token/1" do
     test "deletes the token" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
       token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
-      assert <%= inspect context.alias %>.delete_session_token(token) == :ok
+      assert <%= inspect context.alias %>.delete_<%= schema.singular %>_session_token(token) == :ok
       refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token)
     end
   end
@@ -495,7 +495,7 @@
     end
   end
 
-  describe "inspect/2" do
+  describe "inspect/2 for the <%= inspect schema.alias %> module" do
     test "does not include password" do
       refute inspect(%<%= inspect schema.alias %>{password: "123456"}) =~ "password: \"123456\""
     end
