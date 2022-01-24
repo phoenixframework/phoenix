@@ -16,9 +16,11 @@ defmodule <%= inspect context.web_module %>.LiveHelpers do
       <.flash type="info" message="User created" />
   """
   def flash(assigns) do
-    if assigns.message do
+    message = Map.get(assigns.flash, assigns.kind)
+
+    if is_binary(message) do
       ~H"""
-      <p class={"alert alert-#{@type}"} role="alert">
+      <p class={"alert alert-#{@type}"} role="alert" phx-click="lv:clear-flash" phx-value-key={@kind}>
        <%= @message %>
       </p>
       """

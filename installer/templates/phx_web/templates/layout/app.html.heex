@@ -1,6 +1,6 @@
 <main class="container">
-  <.flash type="info" message={get_flash(@conn, :info)} />
-  <.flash type="danger" message={get_flash(@conn, :danger)} />
+  <.flash flash={get_flash(@conn)} kind={:info} />
+  <.flash flash={get_flash(@conn)} kind={:error} />
 
   <%%= @inner_content %>
 </main>
