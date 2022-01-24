@@ -9,8 +9,7 @@ defmodule <%= inspect context.web_module %>.LiveHelpers do
 
   The rendered flash receives a `:type` that will be used to define
   proper classes to the element, and a `:message` which will be the
-  inner HTML.
-  If message is empty, the element is not rendered.
+  inner HTML, if any exists.
 
   ## Examples
 
