@@ -95,7 +95,7 @@ defmodule <%= @web_namespace %> do
       # Import basic rendering functionality (render, render_layout, etc)
       import Phoenix.View
 
-      import <%= @web_namespace %>.ErrorHelpers<%= if @gettext do %>
+      import <%= @web_namespace %>.Helpers<%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %>
       alias <%= @web_namespace %>.Router.Helpers, as: Routes
     end

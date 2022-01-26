@@ -17,7 +17,7 @@ defmodule Phx.New.Web do
     {:eex,  "phx_web/endpoint.ex",                    :web, "lib/:web_app/endpoint.ex"},
     {:eex,  "phx_web/router.ex",                      :web, "lib/:web_app/router.ex"},
     {:eex,  "phx_web/telemetry.ex",                   :web, "lib/:web_app/telemetry.ex"},
-    {:eex,  "phx_web/views/error_helpers.ex",         :web, "lib/:web_app/views/error_helpers.ex"},
+    {:eex,  "phx_web/views/helpers.ex",               :web, "lib/:web_app/views/helpers.ex"},
     {:eex,  "phx_web/views/error_view.ex",            :web, "lib/:web_app/views/error_view.ex"},
     {:eex,  "#{@pre}/mix.exs",                        :web, "mix.exs"},
     {:eex,  "#{@pre}/README.md",                      :web, "README.md"},
@@ -39,6 +39,7 @@ defmodule Phx.New.Web do
 
   template :html, [
     {:eex, "phx_web/controllers/page_controller.ex",        :web, "lib/:web_app/controllers/page_controller.ex"},
+    {:eex,  "phx_web/views/helpers.ex",                     :web, "lib/:web_app/views/helpers.ex"},
     {:eex, "phx_web/views/layout_view.ex",                  :web, "lib/:web_app/views/layout_view.ex"},
     {:eex, "phx_web/views/page_view.ex",                    :web, "lib/:web_app/views/page_view.ex"},
     {:eex, "phx_test/controllers/page_controller_test.exs", :web, "test/:web_app/controllers/page_controller_test.exs"},

@@ -12,7 +12,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_single/lib/app_name/application.ex",   :project, "lib/:app/application.ex"},
     {:eex,  "phx_single/lib/app_name.ex",               :project, "lib/:app.ex"},
     {:keep, "phx_web/controllers",                      :project, "lib/:lib_web_name/controllers"},
-    {:eex,  "phx_web/views/error_helpers.ex",           :project, "lib/:lib_web_name/views/error_helpers.ex"},
+    {:eex,  "phx_web/views/helpers.ex",                 :project, "lib/:lib_web_name/views/helpers.ex"},
     {:eex,  "phx_web/views/error_view.ex",              :project, "lib/:lib_web_name/views/error_view.ex"},
     {:eex,  "phx_web/endpoint.ex",                      :project, "lib/:lib_web_name/endpoint.ex"},
     {:eex,  "phx_web/router.ex",                        :project, "lib/:lib_web_name/router.ex"},

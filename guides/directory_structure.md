@@ -103,7 +103,7 @@ lib/hello_web
 │   └── page
 │       └── index.html.heex
 ├── views
-│   ├── error_helpers.ex
+│   ├── helpers.ex
 │   ├── error_view.ex
 │   ├── layout_view.ex
 │   └── page_view.ex

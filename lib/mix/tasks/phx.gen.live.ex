@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   types.  See `mix help phx.gen.schema` for more information on attributes.
 
   When this command is run for the first time, a `ModalComponent` and
-  `LiveHelpers` module will be created, along with the resource level
+  `Helpers` module will be created, along with the resource level
   LiveViews and components, including `UserLive.Index`, `UserLive.Show`,
   and `UserLive.FormComponent` modules for the new resource.
 
@@ -33,7 +33,6 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     * a LiveView in `lib/app_web/live/user_live/show.ex`
     * a LiveView in `lib/app_web/live/user_live/index.ex`
     * a LiveComponent in `lib/app_web/live/user_live/form_component.ex`
-    * a helpers module in `lib/app_web/live/live_helpers.ex` with a modal
 
   After file generation is complete, there will be output regarding required
   updates to the lib/app_web/router.ex file.
@@ -142,7 +141,6 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       {:eex, "index.html.heex",           Path.join([web_prefix, "live", web_path, live_subdir, "index.html.heex"])},
       {:eex, "show.html.heex",            Path.join([web_prefix, "live", web_path, live_subdir, "show.html.heex"])},
       {:eex, "live_test.exs",             Path.join([test_prefix, "live", web_path, "#{schema.singular}_live_test.exs"])},
-      {:new_eex, "live_helpers.ex",       Path.join([web_prefix, "live", "live_helpers.ex"])},
     ]
   end
 
@@ -159,7 +157,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     [lib_prefix, web_dir] = Path.split(web_prefix)
     file_path = Path.join(lib_prefix, "#{web_dir}.ex")
     file = File.read!(file_path)
-    inject = "import #{inspect(context.web_module)}.LiveHelpers"
+    inject = "import #{inspect(context.web_module)}.Helpers"
 
     if String.contains?(file, inject) do
       :ok
@@ -188,7 +186,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
       Please make sure LiveView is installed and that #{inspect(context.web_module)}
       defines both `live_view/0` and `live_component/0` functions,
-      and that both functions import #{inspect(context.web_module)}.LiveHelpers.
+      and that both functions import #{inspect(context.web_module)}.Helpers.
       """
     end
   end
