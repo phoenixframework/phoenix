@@ -4,9 +4,7 @@ defmodule <%= @web_namespace %>.Helpers do
   """<%= if @html do %>
 
   use Phoenix.HTML
-
-  import Phoenix.LiveView
-  import Phoenix.LiveView.Helpers
+  use Phoenix.Component
 
   alias Phoenix.LiveView.JS
 
