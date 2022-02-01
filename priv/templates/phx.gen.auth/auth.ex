@@ -101,7 +101,10 @@ defmodule <%= inspect auth_module %> do
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
       if <%= schema.singular %>_token = conn.cookies[@remember_me_cookie] do
-        {<%= schema.singular %>_token, put_session(conn, :<%= schema.singular %>_token, <%= schema.singular %>_token)}
+        {<%= schema.singular %>_token,
+         conn
+         |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token)
+         |> put_session(:live_socket_id, "<%= schema.plural %>_sessions:#{Base.url_encode64(<%= schema.singular %>_token)}")}
       else
         {nil, conn}
       end
