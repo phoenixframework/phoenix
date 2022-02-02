@@ -94,13 +94,13 @@ defmodule <%= inspect auth_module %> do
   end
 
   defp ensure_<%= schema.singular %>_token(conn) do
-    if <%= schema.singular %>_token = get_session(conn, :<%= schema.singular %>_token) do
-      {<%= schema.singular %>_token, conn}
+    if token = get_session(conn, :<%= schema.singular %>_token) do
+      {token, conn}
     else
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
-      if <%= schema.singular %>_token = conn.cookies[@remember_me_cookie] do
-        {<%= schema.singular %>_token, put_token_in_session(conn, token)}
+      if token = conn.cookies[@remember_me_cookie] do
+        {token, put_token_in_session(conn, token)}
       else
         {nil, conn}
       end
