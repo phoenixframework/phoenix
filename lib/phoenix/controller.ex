@@ -1113,12 +1113,14 @@ defmodule Phoenix.Controller do
   end
   defp put_secure_defaults(conn) do
     merge_resp_headers(conn, [
-      {"x-frame-options", "SAMEORIGIN"},
-      {"x-xss-protection", "1; mode=block"},
+      # Below is the default from November 2020 but not yet in Safari as in Jan/2022.
+      # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
+      {"referrer-policy", "strict-origin-when-cross-origin"},
       {"x-content-type-options", "nosniff"},
+      # Applies only to Internet Explorer, can safely be removed in the future.
       {"x-download-options", "noopen"},
-      {"x-permitted-cross-domain-policies", "none"},
-      {"cross-origin-window-policy", "deny"}
+      {"x-frame-options", "SAMEORIGIN"},
+      {"x-permitted-cross-domain-policies", "none"}
     ])
   end
 
