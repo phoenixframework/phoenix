@@ -30,8 +30,7 @@ defmodule <%= inspect auth_module %> do
 
     conn
     |> renew_session()
-    |> put_session(:<%= schema.singular %>_token, token)
-    |> put_session(:live_socket_id, "<%= schema.plural %>_sessions:#{Base.url_encode64(token)}")
+    |> put_token_in_session(token)
     |> maybe_write_remember_me_cookie(token, params)
     |> redirect(to: <%= schema.singular %>_return_to || signed_in_path(conn))
   end
@@ -95,13 +94,13 @@ defmodule <%= inspect auth_module %> do
   end
 
   defp ensure_<%= schema.singular %>_token(conn) do
-    if <%= schema.singular %>_token = get_session(conn, :<%= schema.singular %>_token) do
-      {<%= schema.singular %>_token, conn}
+    if token = get_session(conn, :<%= schema.singular %>_token) do
+      {token, conn}
     else
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
-      if <%= schema.singular %>_token = conn.cookies[@remember_me_cookie] do
-        {<%= schema.singular %>_token, put_session(conn, :<%= schema.singular %>_token, <%= schema.singular %>_token)}
+      if token = conn.cookies[@remember_me_cookie] do
+        {token, put_token_in_session(conn, token)}
       else
         {nil, conn}
       end
@@ -137,6 +136,12 @@ defmodule <%= inspect auth_module %> do
       |> redirect(to: Routes.<%= schema.route_helper %>_session_path(conn, :new))
       |> halt()
     end
+  end
+
+  defp put_token_in_session(conn, token) do
+    conn
+    |> put_session(:<%= schema.singular %>_token, token)
+    |> put_session(:live_socket_id, "<%= schema.plural %>_sessions:#{Base.url_encode64(token)}")
   end
 
   defp maybe_store_return_to(%{method: "GET"} = conn) do
