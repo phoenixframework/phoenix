@@ -713,9 +713,14 @@ defmodule Phoenix.Endpoint do
             conn
           end
         else
-          params_map = {:%{}, [], Plug.Router.Utils.build_path_params_match(vars)}
+          params =
+            for var <- vars,
+                param = Atom.to_string(var),
+                not match?("_" <> _, param),
+                do: {param, Macro.var(var, nil)}
+
           quote do
-            params = unquote(params_map)
+            params = %{unquote_splicing(params)}
             %Plug.Conn{conn | path_params: params, params: params}
           end
         end
