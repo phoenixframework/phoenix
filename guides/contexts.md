@@ -367,15 +367,16 @@ defmodule Hello.Repo.Migrations.CreateProductCategories do
     end
 
     create index(:product_categories, [:product_id])
-    create index(:product_categories, [:category_id])
-    create unique_index(:product_categories, [:product_id, :category_id])
+    create unique_index(:product_categories, [:category_id, :product_id])
   end
 end
 ```
 
 We created a `product_categories` table and used the `primary_key: false` option since our join table does not need a primary key. Next we defined our `:product_id` and `:category_id` foreign key fields, and passed `on_delete: :delete_all` to ensure the database prunes our join table records if a linked product or category is deleted. By using a database constraint, we enforce data integrity at the database level, rather than relying on ad-hoc and error-prone application logic.
 
-Next, we created indexes for our foreign keys, and a unique index to ensure a product cannot have duplicate categories. With our migrations in place, we can migrate up.
+Next, we created indexes for our foreign keys, one of which is a unique index to ensure a product cannot have duplicate categories. Note that we do not necessarily need single-column index for `category_id` because it is in the leftmost prefix of multicolumn index, which is enough for the database optimizer. Adding a redundant index, on the other hand, only adds overhead on write.
+
+With our migrations in place, we can migrate up.
 
 ```console
 $ mix ecto.migrate
@@ -394,9 +395,7 @@ $ mix ecto.migrate
 
 18:20:36.557 [info]  create index product_categories_product_id_index
 
-18:20:36.558 [info]  create index product_categories_category_id_index
-
-18:20:36.560 [info]  create index product_categories_product_id_category_id_index
+18:20:36.560 [info]  create index product_categories_category_id_product_id_index
 
 18:20:36.562 [info]  == Migrated 20210222231930 in 0.0s
 ```
