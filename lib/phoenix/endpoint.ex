@@ -809,7 +809,7 @@ defmodule Phoenix.Endpoint do
           check_origin: {MyAppWeb.Auth, :my_check_origin?, []}
 
       The MFA is invoked with the request `%URI{}` as the first argument,
-      followed by arguments in the MFA list.
+      followed by arguments in the MFA list, and must return a boolean.
 
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
