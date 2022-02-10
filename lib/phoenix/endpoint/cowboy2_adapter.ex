@@ -61,7 +61,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
           raise "aborting due to nil port"
         end
 
-        opts = [port: port_to_integer(port), otp_app: otp_app] ++ :proplists.delete(:port, opts)
+        opts = :proplists.delete(:port, opts) ++ [port: port_to_integer(port), otp_app: otp_app]
         child_spec(scheme, endpoint, opts)
       end
 
