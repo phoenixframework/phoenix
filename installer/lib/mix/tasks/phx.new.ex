@@ -216,7 +216,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp rebar_available? do
-    Mix.Rebar.rebar_cmd(:rebar) && Mix.Rebar.rebar_cmd(:rebar3)
+    Mix.Rebar.rebar_cmd(:rebar3)
   end
 
   defp print_missing_steps(steps) do
