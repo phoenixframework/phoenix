@@ -182,16 +182,16 @@ defmodule Phoenix.Router do
   For example, the route above will match on the path `"/api/v1/pages/1"`
   and the named route will be `api_v1_page_path`, as expected from the
   values given to `scope/2` option.
-  
+
   Like all paths you can define dynamic segments that will be applied as
   parameters in the controller:
-  
+
       scope "/api/:version", MyAppWeb do
         get "/pages/:id", PageController, :show
       end
-      
-  For example, the route above will match on the path `"/api/v1/pages/1"` 
-  and in the controller the `params` argument will have a map with the 
+
+  For example, the route above will match on the path `"/api/v1/pages/1"`
+  and in the controller the `params` argument will have a map with the
   key `:version` with the value `"v1"`.
 
   Phoenix also provides a `resources/4` macro that allows developers
@@ -871,6 +871,16 @@ defmodule Phoenix.Router do
   The generated route above will match on the path `"/api/v1/pages/:id"`
   and will dispatch to `:show` action in `API.V1.PageController`. A named
   helper `api_v1_page_path` will also be generated.
+
+  A scope can also be nested in another scope.
+
+      scope path: "/api", as: :api, alias: API do
+        get "/stats", StatsController, :show
+
+        scope path: "/v1", as: :v1, alias: V1 do
+          get "/pages/:id", PageController, :show
+        end
+      end
 
   ## Options
 
