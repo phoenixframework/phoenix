@@ -38,6 +38,8 @@ There are a number of places to connect with community members at all experience
   * [Phoenix LiveView Free Course (by The Pragmatic Studio - 2020)](https://pragmaticstudio.com/courses/phoenix-liveview)
 
   * [Groxio LiveView: Self Study Program (by Bruce Tate - 2020)](https://grox.io/language/liveview/course)
+  
+  * [Alchemist Camp: Learn Elixir and Phoenix by building (2018-2022)](https://alchemist.camp/episodes)
 
   * [The Complete Elixir and Phoenix Bootcamp Master Functional Programming Techniques with Elixir and Phoenix while Learning to Build Compelling Web Applications (by Stephen Grider - 2017)](https://www.udemy.com/the-complete-elixir-and-phoenix-bootcamp-and-tutorial/)
 
