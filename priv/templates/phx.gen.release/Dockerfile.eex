@@ -45,12 +45,12 @@ RUN mix deps.compile
 COPY priv priv
 
 COPY lib lib
-
+<%= if assets_dir_exists? do %>
 COPY assets assets
 
 # compile assets
 RUN mix assets.deploy
-
+<% end %>
 # Compile the release
 RUN mix compile
 
