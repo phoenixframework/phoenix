@@ -114,4 +114,27 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       assert_receive {:mix_shell, :info, ["\nYour application is ready to be deployed" <> _]}
     end)
   end
+
+  test "generates release and docker files with assets dir", config do
+    in_tmp_project(config.test, fn ->
+      File.mkdir_p!("assets")
+      Gen.Release.run(["--docker"])
+
+      assert_file("Dockerfile", fn file ->
+        assert file =~ ~S|COPY assets assets|
+        assert file =~ ~S|mix assets.deploy|
+      end)
+    end)
+  end
+
+  test "generates release and docker files without assets dir", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Release.run(["--docker"])
+
+      assert_file("Dockerfile", fn file ->
+        refute file =~ ~S|COPY assets assets|
+        refute file =~ ~S|mix assets.deploy|
+      end)
+    end)
+  end
 end

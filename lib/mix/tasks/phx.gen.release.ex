@@ -51,7 +51,8 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       app_namespace: app_namespace,
       otp_app: app,
       elixir_vsn: System.version(),
-      otp_vsn: otp_vsn()
+      otp_vsn: otp_vsn(),
+      assets_dir_exists?: File.dir?("assets")
     ]
 
     Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
