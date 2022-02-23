@@ -1,10 +1,9 @@
 .dockerignore
-# there are valid reasons to keep the .git, namely so that you can get the
+# There are valid reasons to keep .git, namely so that you can get the
 # current commit hash
 #/.git/
 /.log/
-# if you serve coverage report or documentation in production comment
-# the following lines
+# Ignore common development/test artifacts
 /cover/
 /doc/
 /test/
@@ -20,10 +19,7 @@
 erl_crash.dump
 
 # Static artifacts
+# They are refetched/rebuilt by the Docker image
 /assets/node_modules/
-
-# Ignore assets that are produced by build tools.
 /priv/static/assets/
-
-# Ignore digested assets cache.
 /priv/static/cache_manifest.json
