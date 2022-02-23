@@ -125,7 +125,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     Add the following to the top of your config/runtime.exs:
 
-        if System.get_env("PHX_SERVER") && System.get_env("RELEASE_NAME") do
+        if System.get_env("PHX_SERVER") do
           config :#{app}, #{web_namespace}.Endpoint, server: true
         end
     """)

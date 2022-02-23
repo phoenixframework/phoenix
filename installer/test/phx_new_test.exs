@@ -148,7 +148,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~S|maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []|
         assert file =~ ~S|socket_options: maybe_ipv6|
         assert file =~ """
-        if System.get_env("PHX_SERVER") && System.get_env("RELEASE_NAME") do
+        if System.get_env("PHX_SERVER") do
           config :phx_blog, PhxBlogWeb.Endpoint, server: true
         end
         """
