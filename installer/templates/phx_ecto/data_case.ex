@@ -36,7 +36,7 @@ defmodule <%= @app_module %>.DataCase do
   Sets up the sandbox based on the test tags.
   """
   def setup_sandbox(tags) do
-    <%= @adapter_config[:test_setup] %>
+<%= @adapter_config[:test_setup] %>
   end
 
   @doc """
