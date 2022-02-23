@@ -511,8 +511,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/runtime.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Postgres"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)"
       assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
     end
   end
@@ -528,8 +527,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/runtime.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.MyXQL"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)"
       assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
     end
   end
@@ -545,8 +543,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/runtime.exs", [~r/database: database_path/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.SQLite3"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)"
       assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
 
       assert_file "custom_path/.gitignore", "*.db"
@@ -565,8 +562,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/runtime.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Tds"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)"
       assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
     end
   end

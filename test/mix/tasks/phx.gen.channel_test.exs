@@ -3,6 +3,9 @@ Code.require_file("../../../installer/test/mix_helper.exs", __DIR__)
 defmodule PhoenixWeb.DupChannel do
 end
 
+defmodule Ecto.Adapters.SQL do
+end
+
 defmodule Mix.Tasks.Phx.Gen.ChannelTest do
   use ExUnit.Case
   import MixHelper
@@ -29,6 +32,12 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
         assert file =~ ~S|def handle_in("shout", payload, socket) do|
         assert file =~ ~S|broadcast(socket, "shout", payload)|
         assert file =~ ~S|{:noreply, socket}|
+      end)
+
+      assert_file("test/support/channel_case.ex", fn file ->
+        assert file =~ ~S|defmodule PhoenixWeb.ChannelCase|
+        assert file =~ ~S|@endpoint PhoenixWeb.Endpoint|
+        assert file =~ ~S|Phoenix.DataCase.setup_sandbox|
       end)
 
       assert_file("test/phoenix_web/channels/room_channel_test.exs", fn file ->
@@ -128,6 +137,12 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
       assert_file("lib/phoenix/channels/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule PhoenixWeb.RoomChannel do|
         assert file =~ ~S|use PhoenixWeb, :channel|
+      end)
+
+      assert_file("test/support/channel_case.ex", fn file ->
+        assert file =~ ~S|defmodule PhoenixWeb.ChannelCase|
+        assert file =~ ~S|@endpoint PhoenixWeb.Endpoint|
+        assert file =~ ~S|Phoenix.DataCase.setup_sandbox|
       end)
 
       assert_file("test/phoenix/channels/room_channel_test.exs", fn file ->
