@@ -25,7 +25,6 @@ defmodule Phx.New.Web do
     {:keep, "phx_test/channels",                      :web, "test/:web_app/channels"},
     {:keep, "phx_test/controllers",                   :web, "test/:web_app/controllers"},
     {:eex,  "#{@pre}/test/test_helper.exs",           :web, "test/test_helper.exs"},
-    {:eex,  "phx_test/support/channel_case.ex",       :web, "test/support/channel_case.ex"},
     {:eex,  "phx_test/support/conn_case.ex",          :web, "test/support/conn_case.ex"},
     {:eex,  "phx_test/views/error_view_test.exs",     :web, "test/:web_app/views/error_view_test.exs"},
     {:eex,  "#{@pre}/formatter.exs",                  :web, ".formatter.exs"},

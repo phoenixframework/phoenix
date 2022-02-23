@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-assets` - do not generate the assets folder.
       When choosing this option, you will need to manually
-      handle JavaScript/CSS if building HTML apps.
+      handle JavaScript/CSS if building HTML apps
 
     * `--no-ecto` - do not generate Ecto files
 
