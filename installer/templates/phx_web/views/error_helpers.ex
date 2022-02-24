@@ -3,7 +3,8 @@ defmodule <%= @web_namespace %>.ErrorHelpers do
   Conveniences for translating and building error messages.
   """<%= if @html do %>
 
-  use Phoenix.HTML
+  import Phoenix.HTML
+  import Phoenix.HTML.Form
 
   @doc """
   Generates tag for inlined form input errors.

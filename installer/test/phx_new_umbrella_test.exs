@@ -107,7 +107,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
         assert file =~ "defmodule PhxUmbWeb do"
         assert file =~ ~r/use Phoenix.View,\s+root: "lib\/phx_umb_web\/templates"/
-        assert file =~ "use Phoenix.HTML"
+        assert file =~ "import Phoenix.HTML"
+        assert file =~ "import Phoenix.HTML.Form"
         assert file =~ "Phoenix.LiveView"
       end
 
