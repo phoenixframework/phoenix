@@ -7,7 +7,7 @@ defmodule Phoenix.PresenceTest do
   end
 
   defmodule MyPresence do
-    use Phoenix.Presence, otp_app: :phoenix, client: Phoenix.PresenceTest.MyClient
+    use Phoenix.Presence, otp_app: :phoenix, presence_client: Phoenix.PresenceTest.MyClient
 
     def fetch(_topic, entries) do
       for {key, %{metas: metas}} <- entries, into: %{} do
@@ -21,7 +21,6 @@ defmodule Phoenix.PresenceTest do
 
     @impl Phoenix.Presence.Client
     def init(_opts) do
-      # user-land state
       {:ok, %{}}
     end
 
@@ -248,7 +247,7 @@ defmodule Phoenix.PresenceTest do
     }
 
     assert %{topics: %{^topic => %{"u1" => [%{name: "u1", phx_ref: _ref}]}}} =
-             :sys.get_state(PhoenixPresenceClient)
+             :sys.get_state(PresenceClient)
   end
 
   test "Phoenix.Presence.Client.handle_diff/2 add new presences to existing topic",
@@ -277,7 +276,7 @@ defmodule Phoenix.PresenceTest do
                  "u3" => [%{name: "u3", phx_ref: _u3_ref}]
                }
              }
-           } = :sys.get_state(PhoenixPresenceClient)
+           } = :sys.get_state(PresenceClient)
   end
 
   test "Phoenix.Presence.Client.handle_diff/2 add new metas to existing presence",
@@ -308,7 +307,7 @@ defmodule Phoenix.PresenceTest do
                  ]
                }
              }
-           } = :sys.get_state(PhoenixPresenceClient)
+           } = :sys.get_state(PresenceClient)
   end
 
   test "Phoenix.Presence.Client.handle_diff/2 remove topic if it doesn't have presences",
@@ -334,7 +333,7 @@ defmodule Phoenix.PresenceTest do
       }
     }
 
-    assert %{topics: topics} = :sys.get_state(PhoenixPresenceClient)
+    assert %{topics: topics} = :sys.get_state(PresenceClient)
     refute Map.has_key?(topics, topic)
   end
 
@@ -359,7 +358,7 @@ defmodule Phoenix.PresenceTest do
       }
     }
 
-    assert %{topics: %{^topic => presences}} = :sys.get_state(PhoenixPresenceClient)
+    assert %{topics: %{^topic => presences}} = :sys.get_state(PresenceClient)
 
     assert Map.has_key?(presences, "u1")
     assert Map.has_key?(presences, "u2")
@@ -392,13 +391,13 @@ defmodule Phoenix.PresenceTest do
                  "u1" => metas
                }
              }
-           } = :sys.get_state(PhoenixPresenceClient)
+           } = :sys.get_state(PresenceClient)
 
     assert length(metas) == 2
 
     assert [
-      %{name: "u1.1", phx_ref: _u1_1_ref},
-      %{name: "u1.2", phx_ref: _u1_2_ref}
-    ] = metas
+             %{name: "u1.1", phx_ref: _u1_1_ref},
+             %{name: "u1.2", phx_ref: _u1_2_ref}
+           ] = metas
   end
 end
