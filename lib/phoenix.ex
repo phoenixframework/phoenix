@@ -73,7 +73,6 @@ defmodule Phoenix do
     Supervisor.start_link(children, strategy: :one_for_one, name: Phoenix.Supervisor)
   end
 
-  # TODO v2: swap Poison default with Jason
   # From there we can ditch explicit config for new projects
   @doc """
   Returns the configured JSON encoding library for Phoenix.
@@ -85,7 +84,7 @@ defmodule Phoenix do
 
   """
   def json_library do
-    Application.get_env(:phoenix, :json_library, Poison)
+    Application.get_env(:phoenix, :json_library, Jason)
   end
 
   @doc """
