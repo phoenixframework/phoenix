@@ -44,11 +44,11 @@ $ mix ecto.migrate
 Compiling 1 file (.ex)
 Generated hello app
 
-[info]  == Running Hello.Repo.Migrations.CreateUsers.change/0 forward
+[info] == Running Hello.Repo.Migrations.CreateUsers.change/0 forward
 
-[info]  create table users
+[info] create table users
 
-[info]  == Migrated in 0.0s
+[info] == Migrated in 0.0s
 ```
 
 Mix assumes that we are in the development environment unless we tell it otherwise with `MIX_ENV=prod mix ecto.migrate`.

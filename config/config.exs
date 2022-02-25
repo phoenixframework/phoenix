@@ -1,12 +1,13 @@
 import Config
 
-config :logger, :console, colors: [enabled: false]
+config :logger, :console,
+  colors: [enabled: false],
+  format: "\n$time $metadata[$level] $message\n"
 
-config :phoenix, :stacktrace_depth, 20
-
-config :phoenix, :json_library, Jason
-
-config :phoenix, :trim_on_html_eex_engine, false
+config :phoenix,
+  json_library: Jason,
+  stacktrace_depth: 20,
+  trim_on_html_eex_engine: false
 
 if Mix.env() == :dev do
   esbuild = fn args ->
