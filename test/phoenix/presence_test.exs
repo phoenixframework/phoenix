@@ -7,12 +7,32 @@ defmodule Phoenix.PresenceTest do
   end
 
   defmodule MyPresence do
-    use Phoenix.Presence, otp_app: :phoenix
+    use Phoenix.Presence, otp_app: :phoenix, client: Phoenix.PresenceTest.MyClient
 
     def fetch(_topic, entries) do
       for {key, %{metas: metas}} <- entries, into: %{} do
         {key, %{metas: metas, extra: "extra"}}
       end
+    end
+  end
+
+  defmodule MyClient do
+    @behaviour Phoenix.Presence.Client
+
+    @impl Phoenix.Presence.Client
+    def init(_opts) do
+      # user-land state
+      {:ok, %{}}
+    end
+
+    @impl Phoenix.Presence.Client
+    def handle_join(_topic, _key, _presence, state) do
+      {:ok, state}
+    end
+
+    @impl Phoenix.Presence.Client
+    def handle_leave(_topic, _key, _presence, state) do
+      {:ok, state}
     end
   end
 
@@ -211,5 +231,174 @@ defmodule Phoenix.PresenceTest do
 
   test "fetchers_pid" do
     assert is_list(MyPresence.fetchers_pids())
+  end
+
+  test "Phoenix.Presence.Client.handle_diff/2 creates new topic and metas",
+       %{topic: topic} = config do
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
+    MyPresence.track(self(), topic, "u1", %{name: "u1"})
+
+    assert_receive %Broadcast{
+      topic: ^topic,
+      event: "presence_diff",
+      payload: %{
+        joins: %{"u1" => %{metas: [%{name: "u1"}]}},
+        leaves: %{}
+      }
+    }
+
+    assert %{topics: %{^topic => %{"u1" => [%{name: "u1", phx_ref: _ref}]}}} =
+             :sys.get_state(PhoenixPresenceClient)
+  end
+
+  test "Phoenix.Presence.Client.handle_diff/2 add new presences to existing topic",
+       %{topic: topic} = config do
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
+    pid1 = spawn(fn -> :timer.sleep(:infinity) end)
+    pid2 = spawn(fn -> :timer.sleep(:infinity) end)
+    MyPresence.track(pid1, topic, "u1", %{name: "u1"})
+    MyPresence.track(pid2, topic, "u2", %{name: "u2"})
+    MyPresence.track(self(), topic, "u3", %{name: "u3"})
+
+    assert_receive %Broadcast{
+      topic: ^topic,
+      event: "presence_diff",
+      payload: %{
+        joins: %{"u3" => %{metas: [%{name: "u3"}]}},
+        leaves: %{}
+      }
+    }
+
+    assert %{
+             topics: %{
+               ^topic => %{
+                 "u1" => [%{name: "u1", phx_ref: _u1_ref}],
+                 "u2" => [%{name: "u2", phx_ref: _u2_ref}],
+                 "u3" => [%{name: "u3", phx_ref: _u3_ref}]
+               }
+             }
+           } = :sys.get_state(PhoenixPresenceClient)
+  end
+
+  test "Phoenix.Presence.Client.handle_diff/2 add new metas to existing presence",
+       %{topic: topic} = config do
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
+    pid1 = spawn(fn -> :timer.sleep(:infinity) end)
+    pid2 = spawn(fn -> :timer.sleep(:infinity) end)
+    MyPresence.track(pid1, topic, "u1", %{name: "u1.1"})
+    MyPresence.track(pid2, topic, "u1", %{name: "u1.2"})
+    MyPresence.track(self(), topic, "u1", %{name: "u1.3"})
+
+    assert_receive %Broadcast{
+      topic: ^topic,
+      event: "presence_diff",
+      payload: %{
+        joins: %{"u1" => %{metas: [%{name: "u1.3"}]}},
+        leaves: %{}
+      }
+    }
+
+    assert %{
+             topics: %{
+               ^topic => %{
+                 "u1" => [
+                   %{name: "u1.1", phx_ref: _u1_1_ref},
+                   %{name: "u1.2", phx_ref: _u1_2_ref},
+                   %{name: "u1.3", phx_ref: _u1_3_ref}
+                 ]
+               }
+             }
+           } = :sys.get_state(PhoenixPresenceClient)
+  end
+
+  test "Phoenix.Presence.Client.handle_diff/2 remove topic if it doesn't have presences",
+       %{topic: topic} = config do
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
+    pid1 = spawn(fn -> :timer.sleep(:infinity) end)
+    pid2 = spawn(fn -> :timer.sleep(:infinity) end)
+
+    MyPresence.track(pid1, topic, "u1", %{name: "u1"})
+    MyPresence.track(pid2, topic, "u2", %{name: "u2"})
+    MyPresence.track(self(), topic, "u3", %{name: "u3"})
+
+    MyPresence.untrack(pid1, topic, "u1")
+    MyPresence.untrack(pid2, topic, "u2")
+    MyPresence.untrack(self(), topic, "u3")
+
+    assert_receive %Broadcast{
+      topic: ^topic,
+      event: "presence_diff",
+      payload: %{
+        joins: %{},
+        leaves: %{"u3" => %{metas: [%{name: "u3"}]}}
+      }
+    }
+
+    assert %{topics: topics} = :sys.get_state(PhoenixPresenceClient)
+    refute Map.has_key?(topics, topic)
+  end
+
+  test "Phoenix.Presence.Client.handle_diff/2 remove presence info if it only has one meta",
+       %{topic: topic} = config do
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
+
+    pid1 = spawn(fn -> :timer.sleep(:infinity) end)
+    pid2 = spawn(fn -> :timer.sleep(:infinity) end)
+    MyPresence.track(pid1, topic, "u1", %{name: "u1"})
+    MyPresence.track(pid2, topic, "u2", %{name: "u2"})
+    MyPresence.track(self(), topic, "u3", %{name: "u3"})
+
+    MyPresence.untrack(self(), topic, "u3")
+
+    assert_receive %Broadcast{
+      topic: ^topic,
+      event: "presence_diff",
+      payload: %{
+        joins: %{},
+        leaves: %{"u3" => %{metas: [%{name: "u3"}]}}
+      }
+    }
+
+    assert %{topics: %{^topic => presences}} = :sys.get_state(PhoenixPresenceClient)
+
+    assert Map.has_key?(presences, "u1")
+    assert Map.has_key?(presences, "u2")
+    refute Map.has_key?(presences, "u3")
+  end
+
+  test "Phoenix.Presence.Client.handle_diff/2 remove metas when a presence left",
+       %{topic: topic} = config do
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
+    pid1 = spawn(fn -> :timer.sleep(:infinity) end)
+    pid2 = spawn(fn -> :timer.sleep(:infinity) end)
+    MyPresence.track(pid1, topic, "u1", %{name: "u1.1"})
+    MyPresence.track(pid2, topic, "u1", %{name: "u1.2"})
+    MyPresence.track(self(), topic, "u1", %{name: "u1.3"})
+
+    MyPresence.untrack(self(), topic, "u1")
+
+    assert_receive %Broadcast{
+      topic: ^topic,
+      event: "presence_diff",
+      payload: %{
+        joins: %{},
+        leaves: %{"u1" => %{metas: [%{name: "u1.3"}]}}
+      }
+    }
+
+    assert %{
+             topics: %{
+               ^topic => %{
+                 "u1" => metas
+               }
+             }
+           } = :sys.get_state(PhoenixPresenceClient)
+
+    assert length(metas) == 2
+
+    assert [
+      %{name: "u1.1", phx_ref: _u1_1_ref},
+      %{name: "u1.2", phx_ref: _u1_2_ref}
+    ] = metas
   end
 end
