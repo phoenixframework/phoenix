@@ -126,16 +126,16 @@ A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. 
 Create `lib/hello_web/templates/hello/index.html.heex` and make it look like this:
 
 ```html
-<div class="phx-hero">
+<section class="phx-hero">
   <h2>Hello World, from Phoenix!</h2>
-</div>
+</section>
 ```
 
 Now that we've got the route, controller, view, and template, we should be able to point our browsers at [http://localhost:4000/hello](http://localhost:4000/hello) and see our greeting from Phoenix! (In case you stopped the server along the way, the task to restart it is `mix phx.server`.)
 
 ![Phoenix Greets Us](assets/images/hello-from-phoenix.png)
 
-There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `div` tag, the page we get is a full HTML document. Our index template is rendered into the application layout: `lib/hello_web/templates/layout/app.html.heex`. If you open it, you'll see a line that looks like this:
+There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is rendered into the application layout: `lib/hello_web/templates/layout/app.html.heex`. If you open it, you'll see a line that looks like this:
 
 ```html
 <%= @inner_content %>
@@ -235,9 +235,9 @@ To do that, we'll use the special EEx tags for executing Elixir expressions: `<%
 And this is what the template should look like:
 
 ```html
-<div class="phx-hero">
+<section class="phx-hero">
   <h2>Hello World, from <%= @messenger %>!</h2>
-</div>
+</section>
 ```
 
 Our messenger appears as `@messenger`. We call "assigns" the values passed from the controller to views. It is a special bit of metaprogrammed syntax which stands in for `assigns.messenger`. The result is much nicer on the eyes and much easier to work with in a template.
