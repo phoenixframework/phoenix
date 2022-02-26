@@ -341,7 +341,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
                                       "path" => "/ws/connect_info/websocket",
                                       "query" => "vsn=#{@vsn}",
                                       "scheme" => "http",
-                                      "port" => 80}}}}
+                                      "port" => @port}}}}
       end
 
       test "transport user agent is extracted to the socket connect_info" do
