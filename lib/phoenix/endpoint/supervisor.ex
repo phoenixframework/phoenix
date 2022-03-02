@@ -367,37 +367,26 @@ defmodule Phoenix.Endpoint.Supervisor do
     deprecated_configs = Enum.filter(conf[key] || [], &match?({_, {:system, _}}, &1))
 
     if Enum.any?(deprecated_configs) do
-      runtime_exs_config_lines =
-        for {key, {:system, env_var}} <- deprecated_configs do
-          ~s|#{key}: System.get_env("#{env_var}")|
-        end
-
-      init_suggestion_lines =
-        for {setting, {:system, env_var}} <- deprecated_configs do
-          ~s/|> put_in(#{inspect([key, setting])}, System.get_env("#{env_var}"))/
-        end
+      deprecated_config_lines = for {k, v} <- deprecated_configs, do: "#{k}: #{inspect(v)}"
+      runtime_exs_config_lines = for {key, {:system, env_var}} <- deprecated_configs, do: ~s|#{key}: System.get_env("#{env_var}")|
 
       Logger.warn """
-      #{inspect(key)} configuration containing values of {:system, env_var} tuples for #{inspect(mod)} is deprecated.
+      #{inspect(key)} configuration containing {:system, env_var} tuples for #{inspect(mod)} is deprecated.
 
-      Configuration:
-
-          config #{inspect(otp_app)}, #{inspect(mod)},
-            #{inspect(deprecated_configs)}
-
-      Either move these config values into config/runtime.exs:
+      Configuration with deprecated values:
 
           config #{inspect(otp_app)}, #{inspect(mod)},
-            #{runtime_exs_config_lines |> Enum.join(",\r\n      ")}
+            #{key}: [
+              #{deprecated_config_lines |> Enum.join(",\r\n        ")}
+            ]
 
-      Or read them during initialization inside of the #{inspect(mod)}.init/2 callback.
+      Move this configuration into config/runtime.exs and replace the {:system, env_var} tuples
+      with System.get_env/1 function calls:
 
-          def init(:supervisor, config) do
-            config
-            #{Enum.join(init_suggestion_lines, "\r\n      ")}
-
-            {:ok, config}
-          end
+          config #{inspect(otp_app)}, #{inspect(mod)},
+            #{key}: [
+              #{runtime_exs_config_lines |> Enum.join(",\r\n        ")}
+            ]
       """
     end
   end

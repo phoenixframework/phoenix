@@ -99,10 +99,10 @@ defmodule Phoenix.Endpoint.EndpointTest do
         start_supervised!(SystemTupleEndpoint)
       end)
 
-    assert log =~ "[:url, :host]"
-    assert log =~ "[:url, :port]"
-    assert log =~ "[:static_url, :host]"
-    assert log =~ "[:static_url, :host]"
+    assert log =~ ~S|host: System.get_env("ENDPOINT_TEST_HOST")|
+    assert log =~ ~S|port: System.get_env("ENDPOINT_TEST_PORT")|
+    assert log =~ ~S|host: System.get_env("ENDPOINT_TEST_ASSET_HOST")|
+    assert log =~ ~S|port: System.get_env("ENDPOINT_TEST_ASSET_PORT")|
   end
 
   test "sets script name when using path" do
