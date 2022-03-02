@@ -1,4 +1,7 @@
 System.put_env("ENDPOINT_TEST_HOST", "example.com")
+System.put_env("ENDPOINT_TEST_PORT", "80")
+System.put_env("ENDPOINT_TEST_ASSET_HOST", "assets.example.com")
+System.put_env("ENDPOINT_TEST_ASSET_PORT", "443")
 
 defmodule Phoenix.Endpoint.EndpointTest do
   use ExUnit.Case, async: true
@@ -25,6 +28,10 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   defmodule NoConfigEndpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+  end
+
+  defmodule SystemTupleEndpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
 
@@ -73,6 +80,29 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.path("/") == "/api/"
     assert Endpoint.static_url() == "https://static.example.com:456"
     assert Endpoint.struct_url() == %URI{scheme: "https", host: "example.com", port: 1234}
+  end
+
+  test "{:system, env_var} tuples are deprecated" do
+    Application.put_env(:phoenix, __MODULE__.SystemTupleEndpoint,
+      url: [
+        host: {:system, "ENDPOINT_TEST_HOST"},
+        port: {:system, "ENDPOINT_TEST_PORT"}
+      ],
+      static_url: [
+        host: {:system, "ENDPOINT_TEST_ASSET_HOST"},
+        port: {:system, "ENDPOINT_TEST_ASSET_PORT"}
+      ]
+    )
+
+    log =
+      ExUnit.CaptureLog.capture_log(fn ->
+        start_supervised!(SystemTupleEndpoint)
+      end)
+
+    assert log =~ "[:url, :host]"
+    assert log =~ "[:url, :port]"
+    assert log =~ "[:static_url, :host]"
+    assert log =~ "[:static_url, :host]"
   end
 
   test "sets script name when using path" do

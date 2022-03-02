@@ -97,6 +97,10 @@ defmodule Phoenix.Endpoint.Supervisor do
       Phoenix.CodeReloader.Server.check_symlinks()
     end
 
+    # TODO: Remove this once {:system, env_var} tuples are removed
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :url)
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :static_url)
+
     children =
       config_children(mod, secret_conf, default_conf) ++
       pubsub_children(mod, conf) ++
@@ -350,14 +354,53 @@ defmodule Phoenix.Endpoint.Supervisor do
     raise ArgumentError, "expected a path starting with a single / but got #{inspect path}"
   end
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
+  # TODO: Remove the first function clause once {:system, env_var} tuples are removed
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
+  # TODO: Remove the first function clause once {:system, env_var} tuples are removed
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
+
+  defp warn_on_deprecated_system_env_tuples(otp_app, mod, conf, key) do
+    deprecated_configs = Enum.filter(conf[key] || [], &match?({_, {:system, _}}, &1))
+
+    if Enum.any?(deprecated_configs) do
+      runtime_exs_config_lines =
+        for {key, {:system, env_var}} <- deprecated_configs do
+          ~s|#{key}: System.get_env("#{env_var}")|
+        end
+
+      init_suggestion_lines =
+        for {setting, {:system, env_var}} <- deprecated_configs do
+          ~s/|> put_in(#{inspect([key, setting])}, System.get_env("#{env_var}"))/
+        end
+
+      Logger.warn """
+      #{inspect(key)} configuration containing values of {:system, env_var} tuples for #{inspect(mod)} is deprecated.
+
+      Configuration:
+
+          config #{inspect(otp_app)}, #{inspect(mod)},
+            #{inspect(deprecated_configs)}
+
+      Either move these config values into config/runtime.exs:
+
+          config #{inspect(otp_app)}, #{inspect(mod)},
+            #{runtime_exs_config_lines |> Enum.join(",\r\n      ")}
+
+      Or read them during initialization inside of the #{inspect(mod)}.init/2 callback.
+
+          def init(:supervisor, config) do
+            config
+            #{Enum.join(init_suggestion_lines, "\r\n      ")}
+
+            {:ok, config}
+          end
+      """
+    end
+  end
 
   @doc """
   Invoked to warm up caches on start and config change.
