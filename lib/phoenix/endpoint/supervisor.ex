@@ -97,6 +97,10 @@ defmodule Phoenix.Endpoint.Supervisor do
       Phoenix.CodeReloader.Server.check_symlinks()
     end
 
+    # TODO: Remove this once {:system, env_var} tuples are removed
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :url)
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :static_url)
+
     children =
       config_children(mod, secret_conf, default_conf) ++
       pubsub_children(mod, conf) ++
@@ -350,14 +354,42 @@ defmodule Phoenix.Endpoint.Supervisor do
     raise ArgumentError, "expected a path starting with a single / but got #{inspect path}"
   end
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
+  # TODO: Remove the first function clause once {:system, env_var} tuples are removed
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
+  # TODO: Remove the first function clause once {:system, env_var} tuples are removed
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
+
+  defp warn_on_deprecated_system_env_tuples(otp_app, mod, conf, key) do
+    deprecated_configs = Enum.filter(conf[key] || [], &match?({_, {:system, _}}, &1))
+
+    if Enum.any?(deprecated_configs) do
+      deprecated_config_lines = for {k, v} <- deprecated_configs, do: "#{k}: #{inspect(v)}"
+      runtime_exs_config_lines = for {key, {:system, env_var}} <- deprecated_configs, do: ~s|#{key}: System.get_env("#{env_var}")|
+
+      Logger.warn """
+      #{inspect(key)} configuration containing {:system, env_var} tuples for #{inspect(mod)} is deprecated.
+
+      Configuration with deprecated values:
+
+          config #{inspect(otp_app)}, #{inspect(mod)},
+            #{key}: [
+              #{deprecated_config_lines |> Enum.join(",\r\n        ")}
+            ]
+
+      Move this configuration into config/runtime.exs and replace the {:system, env_var} tuples
+      with System.get_env/1 function calls:
+
+          config #{inspect(otp_app)}, #{inspect(mod)},
+            #{key}: [
+              #{runtime_exs_config_lines |> Enum.join(",\r\n        ")}
+            ]
+      """
+    end
+  end
 
   @doc """
   Invoked to warm up caches on start and config change.
