@@ -21,7 +21,6 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   To skip generating the migration-related files, use the `--no-ecto` flag. To
   force these migration-related files to be generated, the use `--ecto` flag.
 
-
   ## Docker
 
   When the `--docker` flag is passed, the following docker files are generated:
@@ -65,7 +64,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       {:eex, "rel/server.bat.eex", "rel/overlays/bin/server.bat"}
     ])
 
-    if opts.ecto? do
+    if opts.ecto do
       Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
         {:eex, "rel/migrate.sh.eex", "rel/overlays/bin/migrate"},
         {:eex, "rel/migrate.bat.eex", "rel/overlays/bin/migrate.bat"},
@@ -73,7 +72,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       ])
     end
 
-    if opts.docker? do
+    if opts.docker do
       Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
         {:eex, "Dockerfile.eex", "Dockerfile"},
         {:eex, "dockerignore.eex", ".dockerignore"}
@@ -83,7 +82,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     File.chmod!("rel/overlays/bin/server", 0o755)
     File.chmod!("rel/overlays/bin/server.bat", 0o755)
 
-    if opts.ecto? do
+    if opts.ecto do
       File.chmod!("rel/overlays/bin/migrate", 0o755)
       File.chmod!("rel/overlays/bin/migrate.bat", 0o755)
     end
@@ -93,7 +92,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     Your application is ready to be deployed in a release!
 
     See https://hexdocs.pm/mix/Mix.Tasks.Release.html for more information about Elixir releases.
-    #{if opts.docker?, do: docker_instructions()}
+    #{if opts.docker, do: docker_instructions()}
     Here are some useful release commands you can run in any release environment:
 
         # To build a release
@@ -101,7 +100,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
         # To start your system with the Phoenix server running
         _build/dev/rel/#{app}/bin/server
-    #{if opts.ecto?, do: ecto_instructions(app)}
+    #{if opts.ecto, do: ecto_instructions(app)}
     Once the release is running you can connect to it remotely:
 
         _build/dev/rel/#{app}/bin/#{app} remote
@@ -111,7 +110,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
         _build/dev/rel/#{app}/bin/#{app}
     """)
 
-    if opts.ecto? do
+    if opts.ecto do
       post_install_instructions("config/runtime.exs", ~r/ECTO_IPV6/, """
       [warn] Conditional IPV6 support missing from runtime configuration.
 
@@ -154,10 +153,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     |> elem(0)
     |> Keyword.put_new_lazy(:ecto, &ecto_sql_installed?/0)
     |> Keyword.put_new(:docker, false)
-    |> Map.new(fn
-      {:ecto, val} -> {:ecto?, val}
-      {:docker, val} -> {:docker?, val}
-    end)
+    |> Map.new()
   end
 
   defp ecto_instructions(app) do
