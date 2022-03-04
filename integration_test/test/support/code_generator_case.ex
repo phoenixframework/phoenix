@@ -7,14 +7,14 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
     end
   end
 
-  def generate_phoenix_app(tmp_dir, app_name, args \\ [], opts \\ [])
-      when is_binary(app_name) and is_list(args) and is_list(opts) do
+  def generate_phoenix_app(tmp_dir, app_name, opts \\ [])
+      when is_binary(app_name) and is_list(opts) do
     app_path = Path.expand(app_name, tmp_dir)
     integration_test_root_path = Path.expand("../../", __DIR__)
-    app_root_path = get_app_root_path(tmp_dir, app_name, args)
+    app_root_path = get_app_root_path(tmp_dir, app_name, opts)
 
     output =
-      mix_run!(["phx.new", app_path, "--dev", "--no-install"] ++ args, integration_test_root_path)
+      mix_run!(["phx.new", app_path, "--dev", "--no-install"] ++ opts, integration_test_root_path)
 
     for path <- ~w(mix.lock deps _build) do
       File.cp_r!(
@@ -23,17 +23,7 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
       )
     end
 
-    # The integration test app has dependencies needed for all apps. This
-    # removes all dependencies that aren't needed by this generated app.
-    unless opts[:skip_clean_unused_deps] do
-      clean_unused_deps(app_root_path)
-    end
-
     {app_root_path, output}
-  end
-
-  def clean_unused_deps(app_root_path) do
-    mix_run!(["do", "deps.unlock", "--unused,", "deps.clean", "--unused"], app_root_path)
   end
 
   def mix_run!(args, app_path, opts \\ [])
@@ -158,51 +148,5 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
 
   defp random_string(len) do
     len |> :crypto.strong_rand_bytes() |> Base.url_encode64() |> binary_part(0, len)
-  end
-
-  @spec mix_dependency_inject(String.t(), String.t()) ::
-          {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
-  def mix_dependency_inject(mixfile, dependency) do
-    with :ok <- ensure_not_already_injected(mixfile, dependency),
-         {:ok, new_mixfile} <- do_mix_dependency_inject(mixfile, dependency) do
-      {:ok, new_mixfile}
-    end
-  end
-
-  @spec do_mix_dependency_inject(String.t(), String.t()) ::
-          {:ok, String.t()} | {:error, :unable_to_inject}
-  defp do_mix_dependency_inject(mixfile, dependency) do
-    string_to_split_on = """
-      defp deps do
-        [
-    """
-
-    case split_with_self(mixfile, string_to_split_on) do
-      {beginning, splitter, rest} ->
-        new_mixfile =
-          IO.iodata_to_binary([beginning, splitter, "      ", dependency, ?,, ?\n, rest])
-
-        {:ok, new_mixfile}
-
-      _ ->
-        {:error, :unable_to_inject}
-    end
-  end
-
-  @spec ensure_not_already_injected(String.t(), String.t()) :: :ok | :already_injected
-  defp ensure_not_already_injected(file, inject) do
-    if String.contains?(file, inject) do
-      :already_injected
-    else
-      :ok
-    end
-  end
-
-  @spec split_with_self(String.t(), String.t()) :: {String.t(), String.t(), String.t()} | :error
-  defp split_with_self(contents, text) do
-    case :binary.split(contents, text) do
-      [left, right] -> {left, text, right}
-      [_] -> :error
-    end
   end
 end

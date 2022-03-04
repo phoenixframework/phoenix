@@ -176,17 +176,9 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
   describe "phx.gen.auth + bcrypt" do
     test "has no compilation or formatter warnings" do
       with_installer_tmp("new with defaults", fn tmp_dir ->
-        {app_root_path, _} =
-          generate_phoenix_app(
-            tmp_dir,
-            "phx_blog",
-            [],
-            skip_clean_unused_deps: true
-          )
+        {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
 
         mix_run!(~w(phx.gen.auth Accounts User users), app_root_path)
-
-        clean_unused_deps(app_root_path)
 
         assert_no_compilation_warnings(app_root_path)
         assert_passes_formatter_check(app_root_path)
@@ -196,53 +188,12 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
     @tag database: :postgresql
     test "has a passing test suite" do
       with_installer_tmp("app_with_defaults", fn tmp_dir ->
-        {app_root_path, _} =
-          generate_phoenix_app(tmp_dir, "default_app", [], skip_clean_unused_deps: true)
+        {app_root_path, _} = generate_phoenix_app(tmp_dir, "default_app")
 
         mix_run!(~w(phx.gen.auth Accounts User users), app_root_path)
 
-        clean_unused_deps(app_root_path)
-
         drop_test_database(app_root_path)
         assert_tests_pass(app_root_path)
-      end)
-    end
-  end
-
-  describe "phx.gen.release" do
-    test "has no compilation or formatter warnings" do
-      with_installer_tmp("app_with_defaults", fn tmp_dir ->
-        {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
-
-        output = mix_run!(~w(phx.gen.release), app_root_path)
-        refute output =~ "[warn]"
-
-        assert_file("#{app_root_path}/rel/overlays/bin/server")
-        assert_file("#{app_root_path}/rel/overlays/bin/server.bat")
-        assert_file("#{app_root_path}/rel/overlays/bin/migrate")
-        assert_file("#{app_root_path}/rel/overlays/bin/migrate.bat")
-        assert_file("#{app_root_path}/lib/phx_blog/release.ex")
-
-        assert_no_compilation_warnings(app_root_path)
-        assert_passes_formatter_check(app_root_path)
-      end)
-    end
-
-    test "--no-ecto skips generating ecto related files" do
-      with_installer_tmp("app_with_defaults", fn tmp_dir ->
-        {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
-
-        output = mix_run!(~w(phx.gen.release --no-ecto), app_root_path)
-        refute output =~ "[warn]"
-
-        assert_file("#{app_root_path}/rel/overlays/bin/server")
-        assert_file("#{app_root_path}/rel/overlays/bin/server.bat")
-        refute_file("#{app_root_path}/rel/overlays/bin/migrate")
-        refute_file("#{app_root_path}/rel/overlays/bin/migrate.bat")
-        refute_file("#{app_root_path}/lib/phx_blog/release.ex")
-
-        assert_no_compilation_warnings(app_root_path)
-        assert_passes_formatter_check(app_root_path)
       end)
     end
   end
