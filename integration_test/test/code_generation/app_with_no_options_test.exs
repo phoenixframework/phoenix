@@ -51,6 +51,67 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
     end)
   end
 
+  describe "phx.gen.release" do
+    test "has no compilation or formatter warnings" do
+      with_installer_tmp("app_with_no_options", fn tmp_dir ->
+        {app_root_path, _} =
+          generate_phoenix_app(tmp_dir, "phx_blog", [
+                "--no-html",
+                "--no-assets",
+                "--no-ecto",
+                "--no-gettext",
+                "--no-mailer",
+                "--no-dashboard"
+              ])
+
+        output = mix_run!(~w(phx.gen.release), app_root_path)
+        refute output =~ "[warn]"
+
+        assert_file("#{app_root_path}/rel/overlays/bin/server")
+        assert_file("#{app_root_path}/rel/overlays/bin/server.bat")
+        refute_file("#{app_root_path}/rel/overlays/bin/migrate")
+        refute_file("#{app_root_path}/rel/overlays/bin/migrate.bat")
+        refute_file("#{app_root_path}/lib/phx_blog/release.ex")
+
+        assert_no_compilation_warnings(app_root_path)
+        assert_passes_formatter_check(app_root_path)
+      end)
+    end
+
+    test "does not generate ecto-related files when ecto is installed but not ecto_sql" do
+      with_installer_tmp("app_with_no_options", fn tmp_dir ->
+        {app_root_path, _} =
+          generate_phoenix_app(tmp_dir, "phx_blog", [
+                "--no-html",
+                "--no-assets",
+                "--no-ecto",
+                "--no-gettext",
+                "--no-mailer",
+                "--no-dashboard"
+              ], skip_clean_unused_deps: true)
+
+        modify_file("#{app_root_path}/mix.exs", fn file ->
+          {:ok, updated_file} = mix_dependency_inject(file, ~S|{:ecto, "~> 3.6"}|)
+          updated_file
+        end)
+
+        clean_unused_deps(app_root_path)
+
+        output = mix_run!(~w(phx.gen.release), app_root_path)
+        refute output =~ "[warn]"
+
+        assert_file("#{app_root_path}/rel/overlays/bin/server")
+        assert_file("#{app_root_path}/rel/overlays/bin/server.bat")
+        refute_file("#{app_root_path}/rel/overlays/bin/migrate")
+        refute_file("#{app_root_path}/rel/overlays/bin/migrate.bat")
+        refute_file("#{app_root_path}/lib/phx_blog/release.ex")
+
+        assert_no_compilation_warnings(app_root_path)
+        assert_passes_formatter_check(app_root_path)
+      end)
+    end
+  end
+
   defp run_phx_server(app_root_path) do
     {_output, 0} =
       System.cmd(

@@ -159,4 +159,50 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
   defp random_string(len) do
     len |> :crypto.strong_rand_bytes() |> Base.url_encode64() |> binary_part(0, len)
   end
+
+  @spec mix_dependency_inject(String.t(), String.t()) ::
+          {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
+  def mix_dependency_inject(mixfile, dependency) do
+    with :ok <- ensure_not_already_injected(mixfile, dependency),
+         {:ok, new_mixfile} <- do_mix_dependency_inject(mixfile, dependency) do
+      {:ok, new_mixfile}
+    end
+  end
+
+  @spec do_mix_dependency_inject(String.t(), String.t()) ::
+          {:ok, String.t()} | {:error, :unable_to_inject}
+  defp do_mix_dependency_inject(mixfile, dependency) do
+    string_to_split_on = """
+      defp deps do
+        [
+    """
+
+    case split_with_self(mixfile, string_to_split_on) do
+      {beginning, splitter, rest} ->
+        new_mixfile =
+          IO.iodata_to_binary([beginning, splitter, "      ", dependency, ?,, ?\n, rest])
+
+        {:ok, new_mixfile}
+
+      _ ->
+        {:error, :unable_to_inject}
+    end
+  end
+
+  @spec ensure_not_already_injected(String.t(), String.t()) :: :ok | :already_injected
+  defp ensure_not_already_injected(file, inject) do
+    if String.contains?(file, inject) do
+      :already_injected
+    else
+      :ok
+    end
+  end
+
+  @spec split_with_self(String.t(), String.t()) :: {String.t(), String.t(), String.t()} | :error
+  defp split_with_self(contents, text) do
+    case :binary.split(contents, text) do
+      [left, right] -> {left, text, right}
+      [_] -> :error
+    end
+  end
 end
