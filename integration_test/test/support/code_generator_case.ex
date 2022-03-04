@@ -7,14 +7,14 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
     end
   end
 
-  def generate_phoenix_app(tmp_dir, app_name, opts \\ [])
-      when is_binary(app_name) and is_list(opts) do
+  def generate_phoenix_app(tmp_dir, app_name, args \\ [], opts \\ [])
+      when is_binary(app_name) and is_list(args) and is_list(opts) do
     app_path = Path.expand(app_name, tmp_dir)
     integration_test_root_path = Path.expand("../../", __DIR__)
-    app_root_path = get_app_root_path(tmp_dir, app_name, opts)
+    app_root_path = get_app_root_path(tmp_dir, app_name, args)
 
     output =
-      mix_run!(["phx.new", app_path, "--dev", "--no-install"] ++ opts, integration_test_root_path)
+      mix_run!(["phx.new", app_path, "--dev", "--no-install"] ++ args, integration_test_root_path)
 
     for path <- ~w(mix.lock deps _build) do
       File.cp_r!(
@@ -23,7 +23,17 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
       )
     end
 
+    # The integration test app has dependencies needed for all apps. This
+    # removes all dependencies that aren't needed by this generated app.
+    unless opts[:skip_clean_unused_deps] do
+      clean_unused_deps(app_root_path)
+    end
+
     {app_root_path, output}
+  end
+
+  def clean_unused_deps(app_root_path) do
+    mix_run!(["do", "deps.unlock", "--unused,", "deps.clean", "--unused"], app_root_path)
   end
 
   def mix_run!(args, app_path, opts \\ [])
