@@ -10,7 +10,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   Starts the endpoint supervision tree.
   """
   def start_link(otp_app, mod, opts \\ []) do
-     with {:ok, pid} = ok <- Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
+    with {:ok, pid} = ok <- Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
       # We don't use the defaults in the checks below
       conf = Keyword.merge(Application.get_env(otp_app, mod, []), opts)
       warmup(mod)
