@@ -277,6 +277,11 @@ defmodule Phoenix.Presence do
   """
   @callback fetch(topic, presences) :: presences
 
+  @callback init(state :: term) :: {:ok, new_state :: term}
+
+  # @callback handle_metas(topic :: String.t(), key :: String.t(), meta :: [map()], state :: term) ::
+  # {:ok, term}
+
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Phoenix.Presence
@@ -343,11 +348,19 @@ defmodule Phoenix.Presence do
       pubsub_server =
         opts[:pubsub_server] || raise "use Phoenix.Presence expects :pubsub_server to be given"
 
-      presence_client = opts[:presence_client]
+      presence_client = opts[:client]
+
+      {:ok, client_state} = presence_client.init(%{})
+
+      metas_state = %{
+        topics: %{},
+        client: presence_client,
+        client_state: client_state
+      }
 
       Phoenix.Tracker.start_link(
         __MODULE__,
-        {module, task_supervisor, pubsub_server, presence_client},
+        {module, task_supervisor, pubsub_server, metas_state},
         opts
       )
     end
@@ -357,75 +370,46 @@ defmodule Phoenix.Presence do
     end
 
     def handle_diff(diff, state) do
-      {module, task_supervisor, pubsub_server, presence_client} = state
+      {module, task_supervisor, pubsub_server, metas_state} = state
 
       Task.Supervisor.start_child(task_supervisor, fn ->
         for {topic, {joins, leaves}} <- diff do
+          Phoenix.Channel.Server.local_broadcast(
+            pubsub_server,
+            topic,
+            "presence_diff",
+            %{
+              joins: module.fetch(topic, Phoenix.Presence.group(joins)),
+              leaves: module.fetch(topic, Phoenix.Presence.group(leaves))
+            }
+          )
+        end
+      end)
+
+      metas_state =
+        Enum.reduce(diff, metas_state, fn {topic, {joins, leaves}}, metas_state ->
           presence_diff = %{
             joins: module.fetch(topic, Phoenix.Presence.group(joins)),
             leaves: module.fetch(topic, Phoenix.Presence.group(leaves))
           }
 
-          if presence_client do
-            Phoenix.Presence.Client.handle_diff(topic, presence_diff)
-          end
+          updated_metas_state = merge_diff(metas_state, topic, presence_diff)
 
-          Phoenix.Channel.Server.local_broadcast(
-            pubsub_server,
-            topic,
-            "presence_diff",
-            presence_diff
-          )
-        end
-      end)
+          {:ok, updated_client_state} =
+            metas_state.client.handle_metas(
+              topic,
+              presence_diff,
+              metas_state.topics,
+              metas_state.client_state
+            )
 
-      {:ok, state}
-    end
-  end
+          Map.put(updated_metas_state, :client_state, updated_client_state)
+        end)
 
-  defmodule Client do
-    use GenServer
-    require Logger
-
-    @callback init(state :: term) :: {:ok, new_state :: term}
-    @callback handle_join(topic :: String.t(), key :: String.t(), meta :: [map()], state :: term) ::
-                {:ok, term}
-    @callback handle_leave(topic :: String.t(), key :: String.t(), meta :: [map()], state :: term) ::
-                {:ok, term}
-
-    @doc """
-    Keeps track of the presences per topic.
-
-    ## Options
-      * `:client` - The required callback module
-    """
-    def start_link(opts) do
-      GenServer.start_link(__MODULE__, opts, name: PresenceClient)
+      {:ok, {module, task_supervisor, pubsub_server, metas_state}}
     end
 
-    def init(opts) do
-      client = Keyword.fetch!(opts, :presence_client)
-      {:ok, client_state} = client.init(%{})
-
-      state = %{
-        topics: %{},
-        client: client,
-        pubsub: Keyword.fetch!(opts, :pubsub_server),
-        client_state: client_state
-      }
-
-      {:ok, state}
-    end
-
-    def handle_diff(topic, diff) do
-      GenServer.call(PresenceClient, {:merge_diff, topic, diff})
-    end
-
-    def handle_call({:merge_diff, topic, diff}, _from, state) do
-      {:reply, :ok, merge_diff(state, topic, diff)}
-    end
-
-    defp merge_diff(state, topic, %{leaves: leaves, joins: joins}) do
+    defp merge_diff(state, topic, %{leaves: leaves, joins: joins} = _diff) do
       # add new topic if needed
       updated_state =
         if Map.has_key?(state.topics, topic) do
@@ -539,7 +523,6 @@ defmodule Phoenix.Presence do
     end
   end
 
-
   @doc false
   def start_link(module, task_supervisor, opts) do
     otp_app = opts[:otp_app]
@@ -549,21 +532,10 @@ defmodule Phoenix.Presence do
       |> Keyword.merge(Application.get_env(otp_app, module, []))
       |> Keyword.put(:name, module)
 
-    children =
-      case Keyword.fetch(opts, :presence_client) do
-        {:ok, _client} ->
-          [
-            {Task.Supervisor, name: task_supervisor},
-            {Tracker, {module, task_supervisor, opts}},
-            {Phoenix.Presence.Client, opts}
-          ]
-
-        :error ->
-          [
-            {Task.Supervisor, name: task_supervisor},
-            {Tracker, {module, task_supervisor, opts}}
-          ]
-      end
+    children = [
+      {Task.Supervisor, name: task_supervisor},
+      {Tracker, {module, task_supervisor, opts}}
+    ]
 
     sup_opts = [
       strategy: :rest_for_one,
