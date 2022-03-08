@@ -117,7 +117,7 @@ In the [`init/1`] callback, we pass a default locale to use if none is present i
 
 To see the assign in action, go to the layout in `lib/hello_web/templates/layout/app.html.heex` and add the following close to the main container:
 
-```html
+```heex
 <main class="container">
   <p>Locale: <%= @locale %></p>
 ```
