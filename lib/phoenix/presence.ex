@@ -397,7 +397,7 @@ defmodule Phoenix.Presence do
             |> async_merge(diff)
 
           {:empty, _} ->
-            %{state | metas_state: updated_metas_state}
+            %{state | metas_state: updated_metas_state, current_task: nil}
         end
 
       {:noreply, updated_state}
