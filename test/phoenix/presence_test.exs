@@ -7,31 +7,12 @@ defmodule Phoenix.PresenceTest do
   end
 
   defmodule MyPresence do
-    use Phoenix.Presence, otp_app: :phoenix, presence_client: Phoenix.PresenceTest.MyClient
+    use Phoenix.Presence, otp_app: :phoenix
 
     def fetch(_topic, entries) do
       for {key, %{metas: metas}} <- entries, into: %{} do
         {key, %{metas: metas, extra: "extra"}}
       end
-    end
-  end
-
-  defmodule MyClient do
-    @behaviour Phoenix.Presence.Client
-
-    @impl Phoenix.Presence.Client
-    def init(_opts) do
-      {:ok, %{}}
-    end
-
-    @impl Phoenix.Presence.Client
-    def handle_join(_topic, _key, _presence, state) do
-      {:ok, state}
-    end
-
-    @impl Phoenix.Presence.Client
-    def handle_leave(_topic, _key, _presence, state) do
-      {:ok, state}
     end
   end
 
@@ -250,7 +231,7 @@ defmodule Phoenix.PresenceTest do
              :sys.get_state(PresenceClient)
   end
 
-  test "Phoenix.Presence.Client.handle_diff/2 add new presences to existing topic",
+  test "Phoenix.Presence.Client.handle_diff/2 adds new presences to existing topic",
        %{topic: topic} = config do
     Phoenix.PubSub.subscribe(config.pubsub, topic)
     pid1 = spawn(fn -> :timer.sleep(:infinity) end)
@@ -279,7 +260,7 @@ defmodule Phoenix.PresenceTest do
            } = :sys.get_state(PresenceClient)
   end
 
-  test "Phoenix.Presence.Client.handle_diff/2 add new metas to existing presence",
+  test "Phoenix.Presence.Client.handle_diff/2 adds new metas to existing presence",
        %{topic: topic} = config do
     Phoenix.PubSub.subscribe(config.pubsub, topic)
     pid1 = spawn(fn -> :timer.sleep(:infinity) end)
@@ -310,7 +291,7 @@ defmodule Phoenix.PresenceTest do
            } = :sys.get_state(PresenceClient)
   end
 
-  test "Phoenix.Presence.Client.handle_diff/2 remove topic if it doesn't have presences",
+  test "Phoenix.Presence.Client.handle_diff/2 removes topic if it doesn't have presences",
        %{topic: topic} = config do
     Phoenix.PubSub.subscribe(config.pubsub, topic)
     pid1 = spawn(fn -> :timer.sleep(:infinity) end)
@@ -337,7 +318,7 @@ defmodule Phoenix.PresenceTest do
     refute Map.has_key?(topics, topic)
   end
 
-  test "Phoenix.Presence.Client.handle_diff/2 remove presence info if it only has one meta",
+  test "Phoenix.Presence.Client.handle_diff/2 removes presence info if it only has one meta",
        %{topic: topic} = config do
     Phoenix.PubSub.subscribe(config.pubsub, topic)
 
@@ -365,7 +346,7 @@ defmodule Phoenix.PresenceTest do
     refute Map.has_key?(presences, "u3")
   end
 
-  test "Phoenix.Presence.Client.handle_diff/2 remove metas when a presence left",
+  test "Phoenix.Presence.Client.handle_diff/2 removes metas when a presence left",
        %{topic: topic} = config do
     Phoenix.PubSub.subscribe(config.pubsub, topic)
     pid1 = spawn(fn -> :timer.sleep(:infinity) end)

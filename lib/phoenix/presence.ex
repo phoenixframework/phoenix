@@ -279,8 +279,7 @@ defmodule Phoenix.Presence do
 
   @callback init(state :: term) :: {:ok, new_state :: term}
 
-  # @callback handle_metas(topic :: String.t(), key :: String.t(), meta :: [map()], state :: term) ::
-  # {:ok, term}
+  @callback handle_metas(topic :: String.t(), diff :: map(), presences :: map(), state :: term) :: {:ok, term}
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
@@ -292,8 +291,14 @@ defmodule Phoenix.Presence do
 
       # User defined
 
+      def init(state), do: {:ok, state}
+      defoverridable init: 1
+
       def fetch(_topic, presences), do: presences
       defoverridable fetch: 2
+
+      def handle_metas(topic, diff, presences, state), do: {:ok, state}
+      defoverridable handle_metas: 4
 
       # Private
 
@@ -357,6 +362,7 @@ defmodule Phoenix.Presence do
 
     def init({module, task_supervisor, pubsub_server}) do
       {:ok, client_state} = module.init(%{})
+
       metas_state = %{
         topics: %{},
         client_state: client_state
