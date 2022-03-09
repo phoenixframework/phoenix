@@ -348,65 +348,91 @@ defmodule Phoenix.Presence do
       pubsub_server =
         opts[:pubsub_server] || raise "use Phoenix.Presence expects :pubsub_server to be given"
 
-      presence_client = opts[:client]
-
-      {:ok, client_state} = presence_client.init(%{})
-
-      metas_state = %{
-        topics: %{},
-        client: presence_client,
-        client_state: client_state
-      }
-
       Phoenix.Tracker.start_link(
         __MODULE__,
-        {module, task_supervisor, pubsub_server, metas_state},
+        {module, task_supervisor, pubsub_server},
         opts
       )
     end
 
-    def init(state) do
-      {:ok, state}
+    def init({module, task_supervisor, pubsub_server}) do
+      {:ok, client_state} = module.init(%{})
+      metas_state = %{
+        topics: %{},
+        client_state: client_state
+      }
+
+      {:ok,
+       %{
+         module: module,
+         task_supervisor: task_supervisor,
+         pubsub_server: pubsub_server,
+         metas_state: metas_state,
+         tasks: :queue.new(),
+         current_task: nil
+       }}
     end
 
     def handle_diff(diff, state) do
-      {module, task_supervisor, pubsub_server, metas_state} = state
+      if state.current_task do
+        {:ok, %{state | tasks: :queue.in(diff, state.tasks)}}
+      else
+        {:ok, async_merge(state, diff)}
+      end
+    end
 
-      Task.Supervisor.start_child(task_supervisor, fn ->
-        for {topic, {joins, leaves}} <- diff do
-          Phoenix.Channel.Server.local_broadcast(
-            pubsub_server,
-            topic,
-            "presence_diff",
-            %{
-              joins: module.fetch(topic, Phoenix.Presence.group(joins)),
-              leaves: module.fetch(topic, Phoenix.Presence.group(leaves))
-            }
-          )
+    def handle_info({ref, updated_metas_state}, state) do
+      %Task{ref: ^ref} = state.current_task
+
+      updated_state =
+        case :queue.out(state.tasks) do
+          {{:value, diff}, remaining_tasks} ->
+            %{state | metas_state: updated_metas_state, tasks: remaining_tasks}
+            |> async_merge(diff)
+
+          {:empty, _} ->
+            %{state | metas_state: updated_metas_state}
         end
-      end)
 
-      metas_state =
-        Enum.reduce(diff, metas_state, fn {topic, {joins, leaves}}, metas_state ->
-          presence_diff = %{
-            joins: module.fetch(topic, Phoenix.Presence.group(joins)),
-            leaves: module.fetch(topic, Phoenix.Presence.group(leaves))
-          }
+      {:noreply, updated_state}
+    end
 
-          updated_metas_state = merge_diff(metas_state, topic, presence_diff)
+    def handle_info({:DOWN, _ref, :process, _pid, :normal}, state) do
+      {:noreply, state}
+    end
 
-          {:ok, updated_client_state} =
-            metas_state.client.handle_metas(
+
+    defp async_merge(state, diff) do
+      current_task =
+        Task.Supervisor.async(state.task_supervisor, fn ->
+          Enum.reduce(diff, state, fn {topic, {joins, leaves}}, state ->
+            presence_diff = %{
+              joins: state.module.fetch(topic, Phoenix.Presence.group(joins)),
+              leaves: state.module.fetch(topic, Phoenix.Presence.group(leaves))
+            }
+
+            Phoenix.Channel.Server.local_broadcast(
+              state.pubsub_server,
               topic,
-              presence_diff,
-              metas_state.topics,
-              metas_state.client_state
+              "presence_diff",
+              presence_diff
             )
 
-          Map.put(updated_metas_state, :client_state, updated_client_state)
+            updated_metas_state = merge_diff(state.metas_state, topic, presence_diff)
+
+            {:ok, updated_client_state} =
+              state.module.handle_metas(
+                topic,
+                presence_diff,
+                updated_metas_state.topics[topic],
+                updated_metas_state.client_state
+              )
+
+            %{updated_metas_state | client_state: updated_client_state}
+          end)
         end)
 
-      {:ok, {module, task_supervisor, pubsub_server, metas_state}}
+      %{state | current_task: current_task}
     end
 
     defp merge_diff(state, topic, %{leaves: leaves, joins: joins} = _diff) do
@@ -433,27 +459,14 @@ defmodule Phoenix.Presence do
     defp handle_join({joined_key, presence}, {state, topic}) do
       joined_metas = Map.get(presence, :metas, [])
 
-      {updated_state, new_metas} =
+      {updated_state, _new_metas} =
         add_new_presence_or_metas(state, topic, joined_key, joined_metas)
-
-      new_presence = Map.put(presence, :metas, new_metas)
-
-      {:ok, updated_client_state} =
-        state.client.handle_join(topic, joined_key, new_presence, state.client_state)
-
-      updated_state = Map.put(updated_state, :client_state, updated_client_state)
 
       {updated_state, topic}
     end
 
     defp handle_leave({left_key, presence}, {state, topic}) do
-      {updated_state, new_metas} = remove_presence_or_metas(state, topic, left_key, presence)
-      new_presence = Map.put(presence, :metas, new_metas)
-
-      {:ok, updated_client_state} =
-        state.client.handle_leave(topic, left_key, new_presence, state.client_state)
-
-      updated_state = Map.put(updated_state, :client_state, updated_client_state)
+      {updated_state, _new_metas} = remove_presence_or_metas(state, topic, left_key, presence)
 
       {updated_state, topic}
     end
