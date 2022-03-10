@@ -524,7 +524,7 @@ With our `category_select` function in place, we can open up `lib/hello_web/temp
 
 We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to `lib/hello_web/templates/product/show.html.heex`:
 
-```html
+```heex
   ...
 + <li>
 +   <strong>Categories:</strong>
@@ -931,7 +931,7 @@ We created a view to render our `show.html` template and aliased our `ShoppingCa
 
 Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`:
 
-```eex
+```heex
 <h1>My Cart</h1>
 
 <%= if @cart.items == [] do %>
@@ -1284,7 +1284,7 @@ Our new function accepts the cart struct and issues a `Repo.delete_all` which ac
 
 We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can replace the order show template in `lib/hello_web/templates/order/show.html.heex`:
 
-```eex
+```heex
 <h1>Thank you for your order!</h1>
 
 <ul>
