@@ -279,7 +279,8 @@ defmodule Phoenix.Presence do
 
   @callback init(state :: term) :: {:ok, new_state :: term}
 
-  @callback handle_metas(topic :: String.t(), diff :: map(), presences :: map(), state :: term) :: {:ok, term}
+  @callback handle_metas(topic :: String.t(), diff :: map(), presences :: map(), state :: term) ::
+              {:ok, term}
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
@@ -387,17 +388,17 @@ defmodule Phoenix.Presence do
       end
     end
 
-    def handle_info({ref, updated_metas_state}, state) do
-      %Task{ref: ^ref} = state.current_task
+    def handle_info({ref, merged_state}, current_state) do
+      %Task{ref: ^ref} = current_state.current_task
 
       updated_state =
-        case :queue.out(state.tasks) do
+        case :queue.out(current_state.tasks) do
           {{:value, diff}, remaining_tasks} ->
-            %{state | metas_state: updated_metas_state, tasks: remaining_tasks}
+            %{current_state | metas_state: merged_state.metas_state, tasks: remaining_tasks}
             |> async_merge(diff)
 
           {:empty, _} ->
-            %{state | metas_state: updated_metas_state, current_task: nil}
+            %{current_state | metas_state: merged_state.metas_state, current_task: nil}
         end
 
       {:noreply, updated_state}
@@ -406,7 +407,6 @@ defmodule Phoenix.Presence do
     def handle_info({:DOWN, _ref, :process, _pid, :normal}, state) do
       {:noreply, state}
     end
-
 
     defp async_merge(state, diff) do
       current_task =
@@ -424,121 +424,112 @@ defmodule Phoenix.Presence do
               presence_diff
             )
 
-            updated_metas_state = merge_diff(state.metas_state, topic, presence_diff)
+            updated_topics = merge_diff(state.metas_state.topics, topic, presence_diff)
 
             {:ok, updated_client_state} =
               state.module.handle_metas(
                 topic,
                 presence_diff,
-                updated_metas_state.topics[topic],
-                updated_metas_state.client_state
+                updated_topics[topic],
+                state.metas_state.client_state
               )
 
-            %{updated_metas_state | client_state: updated_client_state}
+            updated_metas_state = %{
+              state.metas_state
+              | client_state: updated_client_state,
+                topics: updated_topics
+            }
+
+            %{state | metas_state: updated_metas_state}
           end)
         end)
 
       %{state | current_task: current_task}
     end
 
-    defp merge_diff(state, topic, %{leaves: leaves, joins: joins} = _diff) do
+    defp merge_diff(topics, topic, %{leaves: leaves, joins: joins} = _diff) do
       # add new topic if needed
-      updated_state =
-        if Map.has_key?(state.topics, topic) do
-          state
+      updated_topics =
+        if Map.has_key?(topics, topic) do
+          topics
         else
-          add_new_topic(state, topic)
+          add_new_topic(topics, topic)
         end
 
-      # merge diff into state.topics
-      {updated_state, _topic} = Enum.reduce(joins, {updated_state, topic}, &handle_join/2)
-      {updated_state, _topic} = Enum.reduce(leaves, {updated_state, topic}, &handle_leave/2)
+      # merge diff into topics
+      {updated_topics, _topic} = Enum.reduce(joins, {updated_topics, topic}, &handle_join/2)
+      {updated_topics, _topic} = Enum.reduce(leaves, {updated_topics, topic}, &handle_leave/2)
 
       # if no more presences for given topic, remove topic
-      if topic_presences_count(updated_state, topic) == 0 do
-        remove_topic(updated_state, topic)
+      if topic_presences_count(updated_topics, topic) == 0 do
+        remove_topic(updated_topics, topic)
       else
-        updated_state
+        updated_topics
       end
     end
 
-    defp handle_join({joined_key, presence}, {state, topic}) do
+    defp handle_join({joined_key, presence}, {topics, topic}) do
       joined_metas = Map.get(presence, :metas, [])
-
-      {updated_state, _new_metas} =
-        add_new_presence_or_metas(state, topic, joined_key, joined_metas)
-
-      {updated_state, topic}
+      {add_new_presence_or_metas(topics, topic, joined_key, joined_metas), topic}
     end
 
-    defp handle_leave({left_key, presence}, {state, topic}) do
-      {updated_state, _new_metas} = remove_presence_or_metas(state, topic, left_key, presence)
-
-      {updated_state, topic}
+    defp handle_leave({left_key, presence}, {topics, topic}) do
+      {remove_presence_or_metas(topics, topic, left_key, presence), topic}
     end
 
-    defp add_new_topic(%{topics: topics} = state, topic) do
-      updated_topics = Map.put_new(topics, topic, %{})
-      Map.put(state, :topics, updated_topics)
+    defp add_new_topic(topics, topic) do
+      Map.put_new(topics, topic, %{})
     end
 
-    defp remove_topic(%{topics: topics} = state, topic) do
-      updated_topics = Map.delete(topics, topic)
-      Map.put(state, :topics, updated_topics)
+    defp remove_topic(topics, topic) do
+      Map.delete(topics, topic)
     end
 
     defp add_new_presence_or_metas(
-           %{topics: topics} = state,
+           topics,
            topic,
            key,
            new_metas
          ) do
-      topic_info = topics[topic]
+      topic_presences = topics[topic]
 
-      {updated_topic, updated_metas} =
-        case Map.fetch(topic_info, key) do
+      updated_topic =
+        case Map.fetch(topic_presences, key) do
           # existing presence, add new metas
           {:ok, existing_metas} ->
             remaining_metas = new_metas -- existing_metas
             updated_metas = existing_metas ++ remaining_metas
-            {Map.put(topic_info, key, updated_metas), updated_metas}
+            Map.put(topic_presences, key, updated_metas)
 
+          # there are no presences for that key
           :error ->
-            # there are no presences for that key
-            {Map.put(topic_info, key, new_metas), new_metas}
+            Map.put_new(topic_presences, key, new_metas)
         end
 
-      updated_topics = Map.put(topics, topic, updated_topic)
-
-      {Map.put(state, :topics, updated_topics), updated_metas}
+      Map.put(topics, topic, updated_topic)
     end
 
     defp remove_presence_or_metas(
-           %{topics: topics} = state,
+           topics,
            topic,
            key,
            deleted_metas
          ) do
-      topic_info = topics[topic]
-
-      state_metas = Map.get(topic_info, key, [])
-      remaining_metas = state_metas -- Map.get(deleted_metas, :metas, [])
+      topic_presences = topics[topic]
+      presence_metas = Map.get(topic_presences, key, [])
+      remaining_metas = presence_metas -- Map.get(deleted_metas, :metas, [])
 
       updated_topic =
         case remaining_metas do
-          # delete presence
-          [] -> Map.delete(topic_info, key)
-          # delete metas
-          _ -> Map.put(topic_info, key, remaining_metas)
+          [] -> Map.delete(topic_presences, key)
+          _ -> Map.put(topic_presences, key, remaining_metas)
         end
 
-      updated_topics = Map.put(topics, topic, updated_topic)
-
-      {Map.put(state, :topics, updated_topics), remaining_metas}
+      Map.put(topics, topic, updated_topic)
     end
 
-    defp topic_presences_count(state, topic) do
-      map_size(state.topics[topic])
+    defp topic_presences_count(topics, topic) do
+      map_size(topics[topic])
     end
   end
 
