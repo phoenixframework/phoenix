@@ -22,11 +22,11 @@ defmodule Phoenix.CodeReloader do
   `:compilers` specified in `project/0` in your `mix.exs`.
 
   The `:reloadable_apps` defaults to `nil`. In such case
-  default behaviour is to reload current project if it
-  consists of single app, or all applications within umbrella
-  project. You can set `:reloadable_apps` to subset of default
-  applications to reload only some of them, empty list - to
-  effectively disable code reloader, or include external
+  default behaviour is to reload the current project if it
+  consists of a single app, or all applications within an umbrella
+  project. You can set `:reloadable_apps` to a subset of default
+  applications to reload only some of them, an empty list - to
+  effectively disable the code reloader, or include external
   applications from library dependencies.
 
   This function is a no-op and returns `:ok` if Mix is not available.
