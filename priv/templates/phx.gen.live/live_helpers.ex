@@ -18,8 +18,8 @@ defmodule <%= inspect context.web_module %>.LiveHelpers do
           id={@<%= schema.singular %>.id || :new}
           title={@page_title}
           action={@live_action}
+          <%= schema.singular %>={@<%= schema.singular %>}
           return_to={Routes.<%= schema.singular %>_index_path(@socket, :index)}
-          <%= schema.singular %>: @<%= schema.singular %>
         />
       </.modal>
   """

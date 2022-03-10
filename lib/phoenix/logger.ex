@@ -7,6 +7,12 @@ defmodule Phoenix.Logger do
   Phoenix uses the `:telemetry` library for instrumentation. The following events
   are published by Phoenix with the following measurements and metadata:
 
+    * `[:phoenix, :endpoint, :init]` - dispatched by `Phoenix.Endpoint.Supervisor` after your
+      Endpoint supervision tree successfully starts
+      * Measurement: `%{system_time: system_time}`
+      * Metadata: `%{pid: pid(), config: Keyword.t(), module: module(), otp_app: atom()}`
+      * Disable logging: This event is not logged
+
     * `[:phoenix, :endpoint, :start]` - dispatched by `Plug.Telemetry` in your endpoint,
       usually after code reloading
       * Measurement: `%{system_time: system_time}`
@@ -113,7 +119,7 @@ defmodule Phoenix.Logger do
   ## Disabling
 
   When you are using custom logging system it is not always desirable to enable
-  `#{inspect __MODULE__}` by default. You can always disable this in general by:
+  `#{inspect(__MODULE__)}` by default. You can always disable this in general by:
 
       config :phoenix, :logger, false
   """

@@ -86,11 +86,14 @@ defmodule Phoenix.MixProject do
       {:gettext, "~> 0.18", only: :docs},
       {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 0.6", only: :docs},
+      {:makeup_eex, ">= 0.1.1", only: :docs},
+      {:makeup_elixir, "~> 0.16", only: :docs},
 
       # Test dependencies
       {:phoenix_html, "~> 3.0", only: [:docs, :test]},
       {:phx_new, path: "./installer", only: :test},
-      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
+      {:mint, "~> 1.4", only: :test},
+      {:mint_web_socket, "~> 0.3.0", only: :test},
 
       # Dev dependencies
       {:esbuild, "~> 0.3", only: :dev}

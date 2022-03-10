@@ -1,5 +1,3 @@
-System.put_env("TRANSPORT_TEST_HOST", "host.com")
-
 defmodule Phoenix.Socket.TransportTest do
   use ExUnit.Case, async: true
   use RouterHelper
@@ -12,7 +10,7 @@ defmodule Phoenix.Socket.TransportTest do
 
   Application.put_env :phoenix, __MODULE__.Endpoint,
     force_ssl: [],
-    url: [host: {:system, "TRANSPORT_TEST_HOST"}],
+    url: [host: "host.com"],
     check_origin: ["//endpoint.com"],
     secret_key_base: @secret_key_base
 

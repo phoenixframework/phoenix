@@ -278,7 +278,7 @@ Save the file and your browser should auto refresh, thanks to the Phoenix live r
 
 In `lib/hello_web/templates/page/index.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
-```html
+```heex
 <div id="messages" role="log" aria-live="polite"></div>
 <input id="chat-input" type="text">
 ```
@@ -410,7 +410,7 @@ Now our `conn.assigns` contains the `current_user` and `user_token`.
 
 Next we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.heex` right above the app.js script, as follows:
 
-```html
+```heex
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
 <script src={Routes.static_path(@conn, "/assets/app.js")}></script>
 ```

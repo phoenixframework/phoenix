@@ -125,7 +125,7 @@ A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. 
 
 Create `lib/hello_web/templates/hello/index.html.heex` and make it look like this:
 
-```html
+```heex
 <section class="phx-hero">
   <h2>Hello World, from Phoenix!</h2>
 </section>
@@ -137,7 +137,7 @@ Now that we've got the route, controller, view, and template, we should be able 
 
 There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is rendered into the application layout: `lib/hello_web/templates/layout/app.html.heex`. If you open it, you'll see a line that looks like this:
 
-```html
+```heex
 <%= @inner_content %>
 ```
 
@@ -234,7 +234,7 @@ To do that, we'll use the special EEx tags for executing Elixir expressions: `<%
 
 And this is what the template should look like:
 
-```html
+```heex
 <section class="phx-hero">
   <h2>Hello World, from <%= @messenger %>!</h2>
 </section>
