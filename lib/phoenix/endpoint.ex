@@ -844,17 +844,21 @@ defmodule Phoenix.Endpoint do
 
       For example:
 
-          socket "/socket", AppWeb.UserSocket,
+      ```
+        socket "/socket", AppWeb.UserSocket,
             websocket: [
               connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri, session: [store: :cookie]]
             ]
+      ```
 
       With arbitrary keywords:
 
-          socket "/socket", AppWeb.UserSocket,
+      ```
+        socket "/socket", AppWeb.UserSocket,
             websocket: [
               connect_info: [:uri, custom_value: "abcdef"]
             ]
+      ```
 
   ## Websocket configuration
 
