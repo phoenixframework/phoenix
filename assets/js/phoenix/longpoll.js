@@ -85,16 +85,16 @@ export default class LongPoll {
           break
         case 410:
           this.readyState = SOCKET_STATES.open
-          this.onopen()
+          this.onopen({})
           this.poll()
           break
         case 403:
-          this.onerror()
+          this.onerror(status)
           this.close()
           break
         case 0:
         case 500:
-          this.onerror()
+          this.onerror(status)
           this.closeAndRetry()
           break
         default: throw new Error(`unhandled poll status ${status}`)
@@ -111,8 +111,8 @@ export default class LongPoll {
     })
   }
 
-  close(_code, _reason){
+  close(code, reason){
     this.readyState = SOCKET_STATES.closed
-    this.onclose()
+    this.onclose({code, reason})
   }
 }
