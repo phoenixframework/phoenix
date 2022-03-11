@@ -3,7 +3,8 @@
 # current commit hash
 #/.git/
 /.log/
-# Ignore common development/test artifacts
+
+# Common development/test artifacts
 /cover/
 /doc/
 /test/
@@ -15,11 +16,11 @@
 *.ez
 /releases/
 
-# Generate on crash by the VM
+# Generated on crash by the VM
 erl_crash.dump
 
 # Static artifacts
-# They are refetched/rebuilt by the Docker image
+# Static artifacts - These should be fetched and built inside the Docker image
 /assets/node_modules/
 /priv/static/assets/
 /priv/static/cache_manifest.json
