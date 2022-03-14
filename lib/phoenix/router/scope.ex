@@ -27,6 +27,7 @@ defmodule Phoenix.Router.Scope do
     assigns = Keyword.get(opts, :assigns, %{})
     as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
     alias?  = Keyword.get(opts, :alias, true)
+    module  = Keyword.get(opts, :module, plug)
     trailing_slash? = Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
 
     if to_string(as) == "static"  do
@@ -41,7 +42,7 @@ defmodule Phoenix.Router.Scope do
       |> Keyword.get(:metadata, %{})
       |> Map.put(:log, Keyword.get(opts, :log, top.log))
 
-    Phoenix.Router.Route.build(line, kind, verb, path, top.host, alias, plug_opts, as, top.pipes, private, assigns, metadata, trailing_slash?)
+    Phoenix.Router.Route.build(line, kind, verb, path, top.host, alias, plug_opts, as, top.pipes, private, assigns, metadata, module, trailing_slash?)
   end
 
   @doc """

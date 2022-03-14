@@ -82,7 +82,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
   end
 
   defp format_route(route, column_widths) do
-    %{verb: verb, path: path, plug: plug, plug_opts: plug_opts, helper: helper} = route
+    %{verb: verb, path: path, module: module, plug_opts: plug_opts, helper: helper} = route
     verb = verb_name(verb)
     route_name = route_name(helper)
     {verb_len, path_len, route_name_len} = column_widths
@@ -90,7 +90,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
     String.pad_leading(route_name, route_name_len) <> "  " <>
     String.pad_trailing(verb, verb_len) <> "  " <>
     String.pad_trailing(path, path_len) <> "  " <>
-    "#{inspect(plug)} #{inspect(plug_opts)}\n"
+    "#{inspect(module)} #{inspect(plug_opts)}\n"
   end
 
   defp route_name(nil),  do: ""
