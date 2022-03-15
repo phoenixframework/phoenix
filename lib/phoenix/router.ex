@@ -447,7 +447,7 @@ defmodule Phoenix.Router do
         end
       end
 
-    keys = [:verb, :path, :plug, :plug_opts, :helper, :metadata, :module]
+    keys = [:verb, :path, :plug, :plug_opts, :helper, :metadata]
     routes = Enum.map(routes, &Map.take(&1, keys))
 
     quote do
