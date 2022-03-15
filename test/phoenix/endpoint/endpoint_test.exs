@@ -7,18 +7,91 @@ defmodule Phoenix.Endpoint.EndpointTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  @config [url: [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api"],
-           static_url: [host: "static.example.com"],
-           server: false, http: [port: 80], https: [port: 443],
-           force_ssl: [subdomains: true],
-           cache_manifest_skip_vsn: false,
-           cache_static_manifest: "../../../../test/fixtures/digest/compile/cache_manifest.json",
-           pubsub_server: :endpoint_pub]
+  defmodule CustomDebugger do
+    # A dummy debugger to make sure the Endpoint reads the correct debugger
+    # from the config when given a custom debugger
 
+    defmacro __using__(opts) do
+      quote do
+        @plug_debugger unquote(opts)
+        @before_compile Phoenix.Endpoint.EndpointTest.CustomDebugger
+      end
+    end
+
+    @doc false
+    defmacro __before_compile__(_) do
+      quote location: :keep do
+        defoverridable call: 2
+
+        require Logger
+
+        def call(conn, opts) do
+          Logger.warn("custom_debugger")
+          super(conn, opts)
+        end
+      end
+    end
+  end
+
+  config = [
+    url: [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api"],
+    static_url: [host: "static.example.com"],
+    server: false,
+    http: [port: 80],
+    https: [port: 443],
+    force_ssl: [subdomains: true],
+    cache_manifest_skip_vsn: false,
+    cache_static_manifest: "../../../../test/fixtures/digest/compile/cache_manifest.json",
+    pubsub_server: :endpoint_pub
+  ]
+
+  config_with_debug_errors = Keyword.put(config, :debug_errors, true)
+
+  config_with_debug_errors_turned_off = Keyword.put(config, :debug_errors, false)
+
+  @config config
+  @config_with_debug_errors config_with_debug_errors
+  @config_with_debug_errors_turned_off config_with_debug_errors_turned_off
+
+  # Configure the endpoints (still to be defined)
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
+
+  Application.put_env(:phoenix, __MODULE__.EndpointWithCustomDebugger, @config_with_debug_errors)
+
+  Application.put_env(
+    :phoenix,
+    __MODULE__.EndpointWithCustomDebuggerAndDebugErrorsTurnedOff,
+    @config_with_debug_errors_turned_off
+  )
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
+
+    # Assert endpoint variables
+    assert is_list(config)
+    assert @otp_app == :phoenix
+    assert code_reloading? == false
+    assert @compile_config == [force_ssl: [subdomains: true]]
+  end
+
+  defmodule EndpointWithCustomDebugger do
+    use Phoenix.Endpoint,
+      otp_app: :phoenix,
+      debugger: {CustomDebugger, []}
+
+    # Assert endpoint variables
+    assert is_list(config)
+    assert @otp_app == :phoenix
+    assert code_reloading? == false
+    assert @compile_config == [force_ssl: [subdomains: true]]
+  end
+
+  defmodule EndpointWithCustomDebuggerAndDebugErrorsTurnedOff do
+    use Phoenix.Endpoint,
+      otp_app: :phoenix,
+      # We have passed a custom debugger, but the debugger is turned off.
+      # This endpoint should behave as if there isn't a debugger.
+      debugger: {CustomDebugger, []}
 
     # Assert endpoint variables
     assert is_list(config)
@@ -40,24 +113,60 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   setup_all do
-    ExUnit.CaptureLog.capture_log(fn -> start_supervised! Endpoint end)
-    start_supervised! {Phoenix.PubSub, name: :endpoint_pub}
-    on_exit fn -> Application.delete_env(:phoenix, :serve_endpoints) end
+    # Start the endpoints we'll actually call
+    ExUnit.CaptureLog.capture_log(fn -> start_supervised!(Endpoint) end)
+
+    ExUnit.CaptureLog.capture_log(fn -> start_supervised!(EndpointWithCustomDebugger) end)
+
+    ExUnit.CaptureLog.capture_log(fn ->
+      start_supervised!(EndpointWithCustomDebuggerAndDebugErrorsTurnedOff)
+    end)
+
+    start_supervised!({Phoenix.PubSub, name: :endpoint_pub})
+    on_exit(fn -> Application.delete_env(:phoenix, :serve_endpoints) end)
     :ok
+  end
+
+  alias Phoenix.ConnTest
+
+  describe "debugger tests" do
+    test "the custom debugger runs" do
+      conn = ConnTest.build_conn()
+      output = ExUnit.CaptureLog.capture_log(fn -> EndpointWithCustomDebugger.call(conn, []) end)
+
+      assert output =~ "custom_debugger"
+    end
+
+    test "endpoint without config doesn't run the custom debugger" do
+      conn = ConnTest.build_conn()
+      output = ExUnit.CaptureLog.capture_log(fn -> Endpoint.call(conn, []) end)
+      refute output =~ "custom_debugger"
+    end
+
+    test "turning off :debug_errors disables the custom debugger" do
+      conn = ConnTest.build_conn()
+
+      output =
+        ExUnit.CaptureLog.capture_log(fn ->
+          EndpointWithCustomDebuggerAndDebugErrorsTurnedOff.call(conn, [])
+        end)
+
+      refute output =~ "custom_debugger"
+    end
   end
 
   test "defines child_spec/1" do
     assert Endpoint.child_spec([]) == %{
-      id: Endpoint,
-      start: {Endpoint, :start_link, [[]]},
-      type: :supervisor
-    }
+             id: Endpoint,
+             start: {Endpoint, :start_link, [[]]},
+             type: :supervisor
+           }
   end
 
   test "warns if there is no configuration for an endpoint" do
     assert ExUnit.CaptureLog.capture_log(fn ->
-      NoConfigEndpoint.start_link()
-    end) =~ "no configuration"
+             NoConfigEndpoint.start_link()
+           end) =~ "no configuration"
   end
 
   test "has reloadable configuration" do
@@ -76,10 +185,13 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Endpoint.config(:endpoint_id) == endpoint_id
+
     assert Enum.sort(Endpoint.config(:url)) ==
-           [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api", port: 1234]
+             [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api", port: 1234]
+
     assert Enum.sort(Endpoint.config(:static_url)) ==
-           [host: "static.example.com", port: 456]
+             [host: "static.example.com", port: 456]
+
     assert Endpoint.url() == "https://example.com:1234"
     assert Endpoint.path("/") == "/api/"
     assert Endpoint.static_url() == "https://static.example.com:456"
@@ -137,7 +249,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
     conn = conn(:get, "https://example.com/")
     assert Endpoint.call(conn, []).script_name == ~w"api"
 
-    conn = put_in conn.script_name, ~w(foo)
+    conn = put_in(conn.script_name, ~w(foo))
     assert Endpoint.call(conn, []).script_name == ~w"api"
   end
 
@@ -150,19 +262,25 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
   test "sends hsts on https requests on force_ssl" do
     conn = Endpoint.call(conn(:get, "https://example.com/"), [])
+
     assert get_resp_header(conn, "strict-transport-security") ==
-           ["max-age=31536000; includeSubDomains"]
+             ["max-age=31536000; includeSubDomains"]
   end
 
   test "warms up caches on load and config change" do
     assert Endpoint.config_change([{Endpoint, @config}], []) == :ok
+
     assert Endpoint.config(:cache_static_manifest_latest) ==
              %{"foo.css" => "foo-d978852bea6530fcd197b5445ed008fd.css"}
 
     assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
 
     # Trigger a config change and the cache should be warmed up again
-    config = put_in(@config[:cache_static_manifest], "../../../../test/fixtures/digest/compile/cache_manifest_upgrade.json")
+    config =
+      put_in(
+        @config[:cache_static_manifest],
+        "../../../../test/fixtures/digest/compile/cache_manifest_upgrade.json"
+      )
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Endpoint.config(:cache_static_manifest_latest) == %{"foo.css" => "foo-ghijkl.css"}
@@ -185,7 +303,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
       use Phoenix.Endpoint, otp_app: :phoenix
 
       def init(:supervisor, opts) do
-        send opts[:parent], {self(), :sample}
+        send(opts[:parent], {self(), :sample})
         {:ok, opts}
       end
     end
@@ -197,9 +315,11 @@ defmodule Phoenix.Endpoint.EndpointTest do
   @tag :capture_log
   test "uses url configuration for static path" do
     Application.put_env(:phoenix, __MODULE__.UrlEndpoint, url: [path: "/api"])
+
     defmodule UrlEndpoint do
       use Phoenix.Endpoint, otp_app: :phoenix
     end
+
     UrlEndpoint.start_link()
     assert UrlEndpoint.path("/phoenix.png") =~ "/api/phoenix.png"
     assert UrlEndpoint.static_path("/phoenix.png") =~ "/api/phoenix.png"
@@ -208,9 +328,11 @@ defmodule Phoenix.Endpoint.EndpointTest do
   @tag :capture_log
   test "uses static_url configuration for static path" do
     Application.put_env(:phoenix, __MODULE__.StaticEndpoint, static_url: [path: "/static"])
+
     defmodule StaticEndpoint do
       use Phoenix.Endpoint, otp_app: :phoenix
     end
+
     StaticEndpoint.start_link()
     assert StaticEndpoint.path("/phoenix.png") =~ "/phoenix.png"
     assert StaticEndpoint.static_path("/phoenix.png") =~ "/static/phoenix.png"
@@ -218,35 +340,63 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
   test "injects pubsub broadcast with configured server" do
     Endpoint.subscribe("sometopic")
-    some = spawn fn -> :ok end
+    some = spawn(fn -> :ok end)
 
     Endpoint.broadcast_from(some, "sometopic", "event1", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event1", payload: %{key: :val}, topic: "sometopic"}
+      event: "event1",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
 
     Endpoint.broadcast_from!(some, "sometopic", "event2", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event2", payload: %{key: :val}, topic: "sometopic"}
+      event: "event2",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
 
     Endpoint.broadcast("sometopic", "event3", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event3", payload: %{key: :val}, topic: "sometopic"}
+      event: "event3",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
 
     Endpoint.broadcast!("sometopic", "event4", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event4", payload: %{key: :val}, topic: "sometopic"}
+      event: "event4",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
 
     Endpoint.local_broadcast_from(some, "sometopic", "event1", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event1", payload: %{key: :val}, topic: "sometopic"}
+      event: "event1",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
 
     Endpoint.local_broadcast("sometopic", "event3", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event3", payload: %{key: :val}, topic: "sometopic"}
+      event: "event3",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
   end
 
   test "loads cache manifest from specified application" do
-    config = put_in(@config[:cache_static_manifest], {:phoenix, "../../../../test/fixtures/digest/compile/cache_manifest.json"})
+    config =
+      put_in(
+        @config[:cache_static_manifest],
+        {:phoenix, "../../../../test/fixtures/digest/compile/cache_manifest.json"}
+      )
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
