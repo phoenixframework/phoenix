@@ -77,6 +77,7 @@ defmodule Phoenix.MixProject do
       # Optional deps
       {:plug_cowboy, "~> 2.2", optional: true},
       {:jason, "~> 1.0", optional: true},
+      {:poison, "~> 5.0", optional: true},
 
       # Docs dependencies (some for cross references)
       {:ex_doc, "~> 0.24", only: :docs},
