@@ -319,17 +319,32 @@ defmodule Phoenix.Test.ConnTest do
       build_conn(:get, "/") |> resp(200, "ok") |> json_response(200)
     end
 
-    assert_raise Jason.DecodeError,
-                 "unexpected byte at position 0: 0x6F ('o')", fn ->
+    unexpected_byte_fun = fn ->
       build_conn(:get, "/") |> put_resp_content_type("application/json")
-                      |> resp(200, "ok") |> json_response(200)
+      |> resp(200, "ok") |> json_response(200)
     end
 
-    assert_raise Jason.DecodeError, ~r/unexpected end of input at position 0/, fn ->
+    end_of_input_fun = fn ->
       build_conn(:get, "/")
       |> put_resp_content_type("application/json")
       |> resp(200, "")
       |> json_response(200)
+    end
+
+    case Phoenix.json_library() do
+      Jason ->
+        assert_raise Jason.DecodeError,
+        "unexpected byte at position 0: 0x6F ('o')", unexpected_byte_fun
+
+        assert_raise Jason.DecodeError,
+        ~r/unexpected end of input at position 0/, end_of_input_fun
+
+      Poison ->
+        assert_raise Poison.ParseError,
+        "unexpected token at position 0: o", unexpected_byte_fun
+
+        assert_raise Poison.ParseError,
+        ~r/unexpected end of input at position 0/, end_of_input_fun
     end
 
     assert_raise RuntimeError, ~s(expected response with status 200, got: 400, with body:\n) <> inspect(~s({"error": "oh oh"})), fn ->

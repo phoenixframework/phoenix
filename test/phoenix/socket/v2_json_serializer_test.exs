@@ -3,9 +3,16 @@ defmodule Phoenix.Socket.V2.JSONSerializerTest do
   alias Phoenix.Socket.{Broadcast, Message, Reply, V2}
 
   @serializer V2.JSONSerializer
-  @v2_fastlane_json "[null,null,\"t\",\"e\",{\"m\":1}]"
-  @v2_reply_json "[null,null,\"t\",\"phx_reply\",{\"response\":{\"m\":1},\"status\":null}]"
-  @v2_msg_json "[null,null,\"t\",\"e\",{\"m\":1}]"
+  case Phoenix.json_library() do
+    Jason ->
+      @v2_fastlane_json "[null,null,\"t\",\"e\",{\"m\":1}]"
+      @v2_reply_json "[null,null,\"t\",\"phx_reply\",{\"response\":{\"m\":1},\"status\":null}]"
+      @v2_msg_json "[null,null,\"t\",\"e\",{\"m\":1}]"
+    Poison ->
+      @v2_fastlane_json "[null,null,\"t\",\"e\",{\"m\":1}]"
+      @v2_reply_json "[null,null,\"t\",\"phx_reply\",{\"status\":null,\"response\":{\"m\":1}}]"
+      @v2_msg_json "[null,null,\"t\",\"e\",{\"m\":1}]"
+  end
 
   @client_push <<
     # push

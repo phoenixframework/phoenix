@@ -5,9 +5,16 @@ defmodule Phoenix.Socket.V1.JSONSerializerTest do
 
   # v1 responses must not contain join_ref
   @serializer V1.JSONSerializer
-  @v1_msg_json "{\"event\":\"e\",\"payload\":\"m\",\"ref\":null,\"topic\":\"t\"}"
-  @v1_reply_json "{\"event\":\"phx_reply\",\"payload\":{\"response\":null,\"status\":null},\"ref\":\"null\",\"topic\":\"t\"}"
-  @v1_fastlane_json "{\"event\":\"e\",\"payload\":\"m\",\"ref\":null,\"topic\":\"t\"}"
+  case Phoenix.json_library() do
+    Jason ->
+      @v1_msg_json "{\"event\":\"e\",\"payload\":\"m\",\"ref\":null,\"topic\":\"t\"}"
+      @v1_reply_json "{\"event\":\"phx_reply\",\"payload\":{\"response\":null,\"status\":null},\"ref\":\"null\",\"topic\":\"t\"}"
+      @v1_fastlane_json "{\"event\":\"e\",\"payload\":\"m\",\"ref\":null,\"topic\":\"t\"}"
+    Poison ->
+      @v1_msg_json "{\"topic\":\"t\",\"ref\":null,\"payload\":\"m\",\"event\":\"e\"}"
+      @v1_reply_json "{\"topic\":\"t\",\"ref\":\"null\",\"payload\":{\"status\":null,\"response\":null},\"event\":\"phx_reply\"}"
+      @v1_fastlane_json "{\"topic\":\"t\",\"ref\":null,\"payload\":\"m\",\"event\":\"e\"}"
+  end
 
   def encode!(serializer, msg) do
     {:socket_push, :text, encoded} = serializer.encode!(msg)
