@@ -1,3 +1,19 @@
+# This file excludes paths from the Docker build context.
+#
+# By default, Docker's build context includes all files (and folders) in the
+# current directory. Even if a file isn't copied into the container it is still sent to
+# the Docker daemon.
+#
+# There are multiple reasons to exclude files from the build context:
+#
+# 1. Prevent nested folders from being copied into the container (ex: exclude
+#    /assets/node_modules when copying /assets)
+# 2. Reduce the size of the build context and improve built time (ex. /build, /deps, /doc)
+# 3. Avoid sending files containing sensitive information
+#
+# More information on using .dockerignore is available here:
+# https://docs.docker.com/engine/reference/builder/#dockerignore-file
+
 .dockerignore
 # There are valid reasons to keep .git, namely so that you can get the
 # current commit hash
