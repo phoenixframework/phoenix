@@ -2,7 +2,6 @@
 # There are valid reasons to keep .git, namely so that you can get the
 # current commit hash
 #/.git/
-/.log/
 
 # Common development/test artifacts
 /cover/
@@ -14,12 +13,10 @@
 /_build/
 /deps/
 *.ez
-/releases/
 
 # Generated on crash by the VM
 erl_crash.dump
 
-# Static artifacts
 # Static artifacts - These should be fetched and built inside the Docker image
 /assets/node_modules/
 /priv/static/assets/
