@@ -8,7 +8,7 @@
 #
 # 1. Prevent nested folders from being copied into the container (ex: exclude
 #    /assets/node_modules when copying /assets)
-# 2. Reduce the size of the build context and improve built time (ex. /build, /deps, /doc)
+# 2. Reduce the size of the build context and improve build time (ex. /build, /deps, /doc)
 # 3. Avoid sending files containing sensitive information
 #
 # More information on using .dockerignore is available here:
