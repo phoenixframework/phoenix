@@ -306,7 +306,7 @@ defmodule Phoenix.PresenceTest do
       presences: presences
     }
 
-    assert is_nil(presences)
+    assert presences == %{}
   end
 
   test "async_merge/2 removes presence info if it only has one meta",

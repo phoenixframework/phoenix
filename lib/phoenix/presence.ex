@@ -496,11 +496,17 @@ defmodule Phoenix.Presence do
 
           updated_topics = merge_diff(state.metas_state.topics, topic, presence_diff)
 
+          topic_presences =
+            case Map.fetch(updated_topics, topic) do
+              {:ok, presences} -> presences
+              :error -> %{}
+            end
+
           {:ok, updated_client_state} =
             state.module.handle_metas(
               topic,
               presence_diff,
-              updated_topics[topic],
+              topic_presences,
               state.metas_state.client_state
             )
 
