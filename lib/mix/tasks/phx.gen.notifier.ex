@@ -177,12 +177,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
     |> Mix.Phoenix.prompt_for_conflicts()
   end
 
-  @doc """
-  Print mailer instructions if mailer is not defined.
-
-  This is useful for applications that were created without the
-  mailer.
-  """
+  @doc false
   @spec maybe_print_mailer_installation_instructions(%Context{}) :: %Context{}
   def maybe_print_mailer_installation_instructions(%Context{} = context) do
     mailer_module = Module.concat([context.base_module, "Mailer"])
