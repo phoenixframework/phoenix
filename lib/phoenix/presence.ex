@@ -282,6 +282,8 @@ defmodule Phoenix.Presence do
   @callback handle_metas(topic :: String.t(), diff :: map(), presences :: map(), state :: term) ::
               {:ok, term}
 
+  @optional_callbacks init: 1, handle_metas: 4
+
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Phoenix.Presence
@@ -291,15 +293,8 @@ defmodule Phoenix.Presence do
       _ = opts[:otp_app] || raise "use Phoenix.Presence expects :otp_app to be given"
 
       # User defined
-
-      def init(state), do: {:ok, state}
-      defoverridable init: 1
-
       def fetch(_topic, presences), do: presences
       defoverridable fetch: 2
-
-      def handle_metas(topic, diff, presences, state), do: {:ok, state}
-      defoverridable handle_metas: 4
 
       # Private
 
@@ -393,22 +388,29 @@ defmodule Phoenix.Presence do
 
   @doc false
   def init({module, task_supervisor, pubsub_server}) do
-    {:ok, client_state} = module.init(%{})
-
-    metas_state = %{
-      topics: %{},
-      client_state: client_state
+    default_state = %{
+      module: module,
+      task_supervisor: task_supervisor,
+      pubsub_server: pubsub_server,
+      tasks: :queue.new(),
+      current_task: nil
     }
 
-    {:ok,
-     %{
-       module: module,
-       task_supervisor: task_supervisor,
-       pubsub_server: pubsub_server,
-       metas_state: metas_state,
-       tasks: :queue.new(),
-       current_task: nil
-     }}
+    state =
+      if function_exported?(module, :handle_metas, 4) do
+        {:ok, client_state} = module.init(%{})
+
+        metas_state = %{
+          topics: %{},
+          client_state: client_state
+        }
+
+        Map.put_new(default_state, :metas_state, metas_state)
+      else
+        default_state
+      end
+
+    {:ok, state}
   end
 
   @doc false
@@ -421,17 +423,14 @@ defmodule Phoenix.Presence do
   end
 
   @doc false
-  def handle_info({ref, merged_state}, current_state) do
+  def handle_info({ref, new_state}, current_state) do
     %Task{ref: ^ref} = current_state.current_task
 
     updated_state =
-      case :queue.out(current_state.tasks) do
-        {{:value, diff}, remaining_tasks} ->
-          %{current_state | metas_state: merged_state.metas_state, tasks: remaining_tasks}
-          |> async_merge(diff)
-
-        {:empty, _} ->
-          %{current_state | metas_state: merged_state.metas_state, current_task: nil}
+      if function_exported?(current_state.module, :handle_metas, 4) do
+        update_state(current_state, new_state)
+      else
+        update_state(current_state)
       end
 
     {:noreply, updated_state}
@@ -478,6 +477,28 @@ defmodule Phoenix.Presence do
     end)
   end
 
+  defp update_state(current_state) do
+    case :queue.out(current_state.tasks) do
+      {{:value, next_task}, remaining_tasks} ->
+        %{current_state | tasks: remaining_tasks}
+        |> async_merge(next_task)
+
+      {:empty, _} ->
+        %{current_state | current_task: nil}
+    end
+  end
+
+  defp update_state(current_state, new_state) do
+    case :queue.out(current_state.tasks) do
+      {{:value, next_task}, remaining_tasks} ->
+        %{current_state | metas_state: new_state.metas_state, tasks: remaining_tasks}
+        |> async_merge(next_task)
+
+      {:empty, _} ->
+        %{current_state | metas_state: new_state.metas_state, current_task: nil}
+    end
+  end
+
   defp async_merge(state, diff) do
     current_task =
       Task.Supervisor.async(state.task_supervisor, fn ->
@@ -494,29 +515,33 @@ defmodule Phoenix.Presence do
             presence_diff
           )
 
-          updated_topics = merge_diff(state.metas_state.topics, topic, presence_diff)
+          if function_exported?(state.module, :handle_metas, 4) do
+            updated_topics = merge_diff(state.metas_state.topics, topic, presence_diff)
 
-          topic_presences =
-            case Map.fetch(updated_topics, topic) do
-              {:ok, presences} -> presences
-              :error -> %{}
-            end
+            topic_presences =
+              case Map.fetch(updated_topics, topic) do
+                {:ok, presences} -> presences
+                :error -> %{}
+              end
 
-          {:ok, updated_client_state} =
-            state.module.handle_metas(
-              topic,
-              presence_diff,
-              topic_presences,
-              state.metas_state.client_state
-            )
+            {:ok, updated_client_state} =
+              state.module.handle_metas(
+                topic,
+                presence_diff,
+                topic_presences,
+                state.metas_state.client_state
+              )
 
-          updated_metas_state = %{
-            state.metas_state
-            | client_state: updated_client_state,
-              topics: updated_topics
-          }
+            updated_metas_state = %{
+              state.metas_state
+              | client_state: updated_client_state,
+                topics: updated_topics
+            }
 
-          %{state | metas_state: updated_metas_state}
+            %{state | metas_state: updated_metas_state}
+          else
+            state
+          end
         end)
       end)
 
