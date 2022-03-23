@@ -44,7 +44,7 @@ defmodule <%= inspect schema.module %>Token do
   """
   def build_session_token(<%= schema.singular %>) do
     token = :crypto.strong_rand_bytes(@rand_size)
-    {token, %<%= inspect schema.module %>Token{token: token, context: "session", <%= schema.singular %>_id: <%= schema.singular %>.id}}
+    {token, %__MODULE__{token: token, context: "session", <%= schema.singular %>_id: <%= schema.singular %>.id}}
   end
 
   @doc """
@@ -87,7 +87,7 @@ defmodule <%= inspect schema.module %>Token do
     hashed_token = :crypto.hash(@hash_algorithm, token)
 
     {Base.url_encode64(token, padding: false),
-     %<%= inspect schema.module %>Token{
+     %__MODULE__{
        token: hashed_token,
        context: context,
        sent_to: sent_to,
@@ -171,10 +171,10 @@ defmodule <%= inspect schema.module %>Token do
   Gets all tokens for the given <%= schema.singular %> for the given contexts.
   """
   def <%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all) do
-    from t in <%= inspect schema.module %>Token, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id
+    from t in __MODULE__, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id
   end
 
   def <%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [_ | _] = contexts) do
-    from t in <%= inspect schema.module %>Token, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id and t.context in ^contexts
+    from t in __MODULE__, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id and t.context in ^contexts
   end
 end
