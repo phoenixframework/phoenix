@@ -267,7 +267,7 @@ channel.join()
 export default socket
 ```
 
-After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment the line in `assets/js/app.js`.
+After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment this line in `assets/js/app.js`.
 
 ```javascript
 // ...
