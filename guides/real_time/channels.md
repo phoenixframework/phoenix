@@ -267,11 +267,11 @@ channel.join()
 export default socket
 ```
 
-After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment the last line in `assets/js/app.js`.
+After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment this line in `assets/js/app.js`.
 
 ```javascript
 // ...
-import socket from "./user_socket"
+import "./user_socket.js"
 ```
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
