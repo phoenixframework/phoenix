@@ -93,6 +93,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "defmodule MyApp.Accounts.UserNotifier do"
         assert file =~ "import Swoosh.Email"
         assert file =~ "Mailer.deliver(email)"
+        assert file =~ ~s|from({"MyApp", "contact@example.com"})|
         assert file =~ ~s|deliver(user.email, "Confirmation instructions",|
         assert file =~ ~s|deliver(user.email, "Reset password instructions",|
         assert file =~ ~s|deliver(user.email, "Update email instructions",|
