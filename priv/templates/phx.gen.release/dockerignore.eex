@@ -14,10 +14,8 @@
 # More information on using .dockerignore is available here:
 # https://docs.docker.com/engine/reference/builder/#dockerignore-file
 
-.dockerignore
-# There are valid reasons to keep .git, namely so that you can get the
-# current commit hash
-#/.git/
+# Git repository
+/.git/
 
 # Common development/test artifacts
 /cover/
