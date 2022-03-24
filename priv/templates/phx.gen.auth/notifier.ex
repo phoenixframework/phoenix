@@ -8,7 +8,7 @@ defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Notifier do
     email =
       new()
       |> to(recipient)
-      |> from({"MyApp", "contact@example.com"})
+      |> from({"<%= inspect context.base_module %>", "contact@example.com"})
       |> subject(subject)
       |> text_body(body)
 
