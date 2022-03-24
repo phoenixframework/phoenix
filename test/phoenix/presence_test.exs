@@ -160,7 +160,7 @@ defmodule Phoenix.PresenceTest do
       }
     }
 
-    assert %{} = MyPresence.list(config.topic)
+    assert MyPresence.list(config.topic) == %{}
   end
 
   test "track and untrack with %Socket{}", %{topic: topic} = config do
@@ -179,7 +179,7 @@ defmodule Phoenix.PresenceTest do
       }
     }
 
-    assert %{} = MyPresence.list(topic)
+    assert MyPresence.list(topic) == %{}
   end
 
   test "untrack with no tracked presence", config do
@@ -201,7 +201,6 @@ defmodule Phoenix.PresenceTest do
       }
     }
 
-    assert %{} = MyPresence.list(topic)
     assert %{"u1" => %{metas: [%{name: "updated"}]}} = MyPresence.list(topic)
   end
 
