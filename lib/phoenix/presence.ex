@@ -277,6 +277,13 @@ defmodule Phoenix.Presence do
   """
   @callback fetch(topic, presences) :: presences
 
+  @callback init(state :: term) :: {:ok, new_state :: term}
+
+  @callback handle_metas(topic :: String.t(), diff :: map(), presences :: map(), state :: term) ::
+              {:ok, term}
+
+  @optional_callbacks init: 1, handle_metas: 4
+
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Phoenix.Presence
@@ -286,7 +293,6 @@ defmodule Phoenix.Presence do
       _ = opts[:otp_app] || raise "use Phoenix.Presence expects :otp_app to be given"
 
       # User defined
-
       def fetch(_topic, presences), do: presences
       defoverridable fetch: 2
 
@@ -343,27 +349,19 @@ defmodule Phoenix.Presence do
       pubsub_server =
         opts[:pubsub_server] || raise "use Phoenix.Presence expects :pubsub_server to be given"
 
-      Phoenix.Tracker.start_link(__MODULE__, {module, task_supervisor, pubsub_server}, opts)
+      Phoenix.Tracker.start_link(
+        __MODULE__,
+        {module, task_supervisor, pubsub_server},
+        opts
+      )
     end
 
-    def init(state) do
-      {:ok, state}
-    end
+    def init(state), do: Phoenix.Presence.init(state)
 
-    def handle_diff(diff, state) do
-      {module, task_supervisor, pubsub_server} = state
+    def handle_diff(diff, state), do: Phoenix.Presence.handle_diff(diff, state)
 
-      Task.Supervisor.start_child(task_supervisor, fn ->
-        for {topic, {joins, leaves}} <- diff do
-          Phoenix.Channel.Server.local_broadcast(pubsub_server, topic, "presence_diff", %{
-            joins: module.fetch(topic, Phoenix.Presence.group(joins)),
-            leaves: module.fetch(topic, Phoenix.Presence.group(leaves))
-          })
-        end
-      end)
-
-      {:ok, state}
-    end
+    def handle_info(msg, state),
+      do: Phoenix.Presence.handle_info(msg, state)
   end
 
   @doc false
@@ -389,6 +387,61 @@ defmodule Phoenix.Presence do
   end
 
   @doc false
+  def init({module, task_supervisor, pubsub_server}) do
+    default_state = %{
+      module: module,
+      task_supervisor: task_supervisor,
+      pubsub_server: pubsub_server,
+      tasks: :queue.new(),
+      current_task: nil
+    }
+
+    state =
+      if function_exported?(module, :handle_metas, 4) do
+        {:ok, client_state} = module.init(%{})
+
+        metas_state = %{
+          topics: %{},
+          client_state: client_state
+        }
+
+        Map.put_new(default_state, :metas_state, metas_state)
+      else
+        default_state
+      end
+
+    {:ok, state}
+  end
+
+  @doc false
+  def handle_diff(diff, state) do
+    if state.current_task do
+      {:ok, %{state | tasks: :queue.in(diff, state.tasks)}}
+    else
+      {:ok, async_merge(state, diff)}
+    end
+  end
+
+  @doc false
+  def handle_info({ref, new_state}, current_state) do
+    %Task{ref: ^ref} = current_state.current_task
+
+    updated_state =
+      if function_exported?(current_state.module, :handle_metas, 4) do
+        update_state(current_state, new_state)
+      else
+        update_state(current_state)
+      end
+
+    {:noreply, updated_state}
+  end
+
+  @doc false
+  def handle_info({:DOWN, _ref, :process, _pid, :normal}, state) do
+    {:noreply, state}
+  end
+
+  @doc false
   def list(module, topic) do
     grouped =
       module
@@ -403,8 +456,10 @@ defmodule Phoenix.Presence do
     string_key = to_string(key)
 
     case Phoenix.Tracker.get_by_key(module, topic, key) do
-      [] -> []
-      [_|_] = pid_metas ->
+      [] ->
+        []
+
+      [_ | _] = pid_metas ->
         metas = Enum.map(pid_metas, fn {_pid, meta} -> meta end)
         %{^string_key => fetched_metas} = module.fetch(topic, %{string_key => %{metas: metas}})
         fetched_metas
@@ -420,5 +475,161 @@ defmodule Phoenix.Presence do
         %{metas: [meta | metas]}
       end)
     end)
+  end
+
+  defp update_state(current_state) do
+    case :queue.out(current_state.tasks) do
+      {{:value, next_task}, remaining_tasks} ->
+        %{current_state | tasks: remaining_tasks}
+        |> async_merge(next_task)
+
+      {:empty, _} ->
+        %{current_state | current_task: nil}
+    end
+  end
+
+  defp update_state(current_state, new_state) do
+    case :queue.out(current_state.tasks) do
+      {{:value, next_task}, remaining_tasks} ->
+        %{current_state | metas_state: new_state.metas_state, tasks: remaining_tasks}
+        |> async_merge(next_task)
+
+      {:empty, _} ->
+        %{current_state | metas_state: new_state.metas_state, current_task: nil}
+    end
+  end
+
+  defp async_merge(state, diff) do
+    current_task =
+      Task.Supervisor.async(state.task_supervisor, fn ->
+        Enum.reduce(diff, state, fn {topic, {joins, leaves}}, state ->
+          presence_diff = %{
+            joins: state.module.fetch(topic, Phoenix.Presence.group(joins)),
+            leaves: state.module.fetch(topic, Phoenix.Presence.group(leaves))
+          }
+
+          Phoenix.Channel.Server.local_broadcast(
+            state.pubsub_server,
+            topic,
+            "presence_diff",
+            presence_diff
+          )
+
+          if function_exported?(state.module, :handle_metas, 4) do
+            updated_topics = merge_diff(state.metas_state.topics, topic, presence_diff)
+
+            topic_presences =
+              case Map.fetch(updated_topics, topic) do
+                {:ok, presences} -> presences
+                :error -> %{}
+              end
+
+            {:ok, updated_client_state} =
+              state.module.handle_metas(
+                topic,
+                presence_diff,
+                topic_presences,
+                state.metas_state.client_state
+              )
+
+            updated_metas_state = %{
+              state.metas_state
+              | client_state: updated_client_state,
+                topics: updated_topics
+            }
+
+            %{state | metas_state: updated_metas_state}
+          else
+            state
+          end
+        end)
+      end)
+
+    %{state | current_task: current_task}
+  end
+
+  defp merge_diff(topics, topic, %{leaves: leaves, joins: joins} = _diff) do
+    # add new topic if needed
+    updated_topics =
+      if Map.has_key?(topics, topic) do
+        topics
+      else
+        add_new_topic(topics, topic)
+      end
+
+    # merge diff into topics
+    {updated_topics, _topic} = Enum.reduce(joins, {updated_topics, topic}, &handle_join/2)
+    {updated_topics, _topic} = Enum.reduce(leaves, {updated_topics, topic}, &handle_leave/2)
+
+    # if no more presences for given topic, remove topic
+    if topic_presences_count(updated_topics, topic) == 0 do
+      remove_topic(updated_topics, topic)
+    else
+      updated_topics
+    end
+  end
+
+  defp handle_join({joined_key, presence}, {topics, topic}) do
+    joined_metas = Map.get(presence, :metas, [])
+    {add_new_presence_or_metas(topics, topic, joined_key, joined_metas), topic}
+  end
+
+  defp handle_leave({left_key, presence}, {topics, topic}) do
+    {remove_presence_or_metas(topics, topic, left_key, presence), topic}
+  end
+
+  defp add_new_presence_or_metas(
+         topics,
+         topic,
+         key,
+         new_metas
+       ) do
+    topic_presences = topics[topic]
+
+    updated_topic =
+      case Map.fetch(topic_presences, key) do
+        # existing presence, add new metas
+        {:ok, existing_metas} ->
+          remaining_metas = new_metas -- existing_metas
+          updated_metas = existing_metas ++ remaining_metas
+          Map.put(topic_presences, key, updated_metas)
+
+        # there are no presences for that key
+        :error ->
+          Map.put_new(topic_presences, key, new_metas)
+      end
+
+    Map.put(topics, topic, updated_topic)
+  end
+
+  defp remove_presence_or_metas(
+         topics,
+         topic,
+         key,
+         deleted_metas
+       ) do
+    topic_presences = topics[topic]
+    presence_metas = Map.get(topic_presences, key, [])
+    remaining_metas = presence_metas -- Map.get(deleted_metas, :metas, [])
+
+    updated_topic =
+      case remaining_metas do
+        [] -> Map.delete(topic_presences, key)
+        _ -> Map.put(topic_presences, key, remaining_metas)
+      end
+
+    Map.put(topics, topic, updated_topic)
+  end
+
+  defp add_new_topic(topics, topic) do
+    Map.put_new(topics, topic, %{})
+  end
+
+  defp remove_topic(topics, topic) do
+    Map.delete(topics, topic)
+  end
+
+  defp topic_presences_count(topics, topic) do
+    map_size(topics[topic])
   end
 end
