@@ -161,7 +161,13 @@ defmodule Phoenix.PresenceTest do
   test "untrack with pid", %{topic: topic} = config do
     Phoenix.PubSub.subscribe(config.pubsub, config.topic)
     MyPresence.track(self(), config.topic, "u1", %{})
-    assert %{"u1" => %{metas: [%{}]}} = MyPresence.list(config.topic)
+    MyPresence.track(self(), config.topic, "u2", %{})
+
+    assert %{
+             "u1" => %{extra: "extra", metas: [%{}]},
+             "u2" => %{extra: "extra", metas: [%{}]}
+           } = MyPresence.list(config.topic)
+
     assert MyPresence.untrack(self(), config.topic, "u1") == :ok
 
     assert_receive %Broadcast{
@@ -173,7 +179,8 @@ defmodule Phoenix.PresenceTest do
       }
     }
 
-    assert MyPresence.list(config.topic) == %{}
+    assert %{"u2" => %{extra: "extra", metas: [%{}]}} = MyPresence.list(config.topic)
+    assert map_size(MyPresence.list(config.topic)) == 1
   end
 
   test "track and untrack with %Socket{}", %{topic: topic} = config do
