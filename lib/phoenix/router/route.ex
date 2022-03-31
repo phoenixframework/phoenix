@@ -70,7 +70,7 @@ defmodule Phoenix.Router.Route do
       host: build_host(route.host),
       verb_match: verb_match(route.verb),
       binding: binding,
-      prepare: build_prepare(route, binding),
+      prepare: build_prepare(route),
       path_params: build_path_params(binding),
       dispatch: build_dispatch(route)
     }
@@ -102,8 +102,8 @@ defmodule Phoenix.Router.Route do
     end
   end
 
-  defp build_prepare(route, binding) do
-    {match_params, merge_params} = build_params(binding)
+  defp build_prepare(route) do
+    {match_params, merge_params} = build_params()
     {match_private, merge_private} = build_prepare_expr(:private, route.private)
     {match_assigns, merge_assigns} = build_prepare_expr(:assigns, route.assigns)
 
@@ -146,8 +146,7 @@ defmodule Phoenix.Router.Route do
     {[{key, var}], [{key, merge}]}
   end
 
-  defp build_params([]), do: {[], []}
-  defp build_params(_binding) do
+  defp build_params() do
     params = Macro.var(:params, :conn)
     path_params = Macro.var(:path_params, :conn)
     merge_params = quote(do: Phoenix.Router.Route.merge_params(unquote(params), unquote(path_params)))
