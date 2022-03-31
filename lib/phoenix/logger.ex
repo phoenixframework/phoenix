@@ -261,19 +261,19 @@ defmodule Phoenix.Logger do
   def phoenix_router_dispatch_start(_, _, %{log: false}, _), do: :ok
 
   def phoenix_router_dispatch_start(_, _, metadata, _) do
-    %{log: level, conn: conn} = metadata
+    %{log: level, conn: conn, plug: plug} = metadata
     level = log_level(level, conn)
+    log_module = metadata[:log_module] || plug
 
     Logger.log(level, fn ->
       %{
         pipe_through: pipe_through,
-        plug: plug,
         plug_opts: plug_opts
       } = metadata
 
       [
         "Processing with ",
-        inspect(plug),
+        inspect(log_module),
         maybe_action(plug_opts),
         ?\n,
         "  Parameters: ",
