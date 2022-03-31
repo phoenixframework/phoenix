@@ -121,6 +121,49 @@ defmodule Phoenix.Presence do
   information, while maintaining the required `:metas` field from the
   original presence data.
 
+  ## Using Elixir as a Presence Client
+
+  Presence is great for external clients, such as JavaScript applications, but
+  it can also be used from an Elixir client process to keep track of presence
+  changes as they happen. This can be accomplished by implementing the optional
+  `init/1` and handle_metas/4` callback on your presence module. For example,
+  the following callback receives presence metadata changes as they happen,
+  and broadcasts to othe Elixir processes about users joining and leaving:
+
+      def init(_opts) do
+        {:ok, %{}} # user-land state
+      end
+
+      def handle_metas(topic, %{joins: joins, leaves: leaves}, presences, state) do
+        # fetch existing presence information for the joined users and broadcast the
+        # event to all subscribers
+        for {user_id, presence} <- joins do
+          user_data = %{user: presence.user, metas: Map.fetch!(presences, user_id)}
+          Phoenix.PubSub.local_broadcast(MyPub, topic, {LiveBeats.PresenceClient, {:join, user_data}})
+        end
+
+        # fetch existing presence information for the left users and broadcast the
+        # event to all subscribers
+        for {user_id, presence} <- leaves do
+          metas =
+            case Map.fetch(presences, user_id) do
+              {:ok, presence_metas} -> presence_metas
+              :error -> []
+            end
+
+          user_data = %{user: presence.user, metas: metas}
+          Phoenix.PubSub.local_broadcast(MyPub, topic, {LiveBeats.PresenceClient, {:leave, user_data}})
+        end
+
+        {:ok, state}
+      end
+
+  The `handle_metas/4` callback receives the topic, the presence diff, current presences
+  for the topic with their metadata, and any user-land state from accumulated form init and
+  subsequent `handle_metas/4` calls. In our example implementation, we walk the `:joins` and
+  `:leaves` in the diff, and populate a complete presence from our known presence information.
+  Then we broadcast to the local node about presence joins and leaves.
+
   ## Testing with Presence
 
   Every time the `fetch` callback is invoked, it is done from a separate
