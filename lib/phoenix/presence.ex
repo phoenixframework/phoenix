@@ -125,44 +125,52 @@ defmodule Phoenix.Presence do
 
   Presence is great for external clients, such as JavaScript applications, but
   it can also be used from an Elixir client process to keep track of presence
-  changes as they happen. This can be accomplished by implementing the optional
-  `init/1` and handle_metas/4` callback on your presence module. For example,
-  the following callback receives presence metadata changes as they happen,
-  and broadcasts to othe Elixir processes about users joining and leaving:
+  changes as they happen on the server. This can be accomplished by implementing
+  the optional `init/1` and handle_metas/4` callback on your presence module.
+  For example, the following callback receives presence metadata changes,
+  and broadcasts to other Elixir processes about users joining and leaving:
 
-      def init(_opts) do
-        {:ok, %{}} # user-land state
-      end
+      defmodule MyApp.Presence do
+        use Phoenix.Presence,
+          otp_app: :my_app,
+          pubsub_server: MyApp.PubSub
 
-      def handle_metas(topic, %{joins: joins, leaves: leaves}, presences, state) do
-        # fetch existing presence information for the joined users and broadcast the
-        # event to all subscribers
-        for {user_id, presence} <- joins do
-          user_data = %{user: presence.user, metas: Map.fetch!(presences, user_id)}
-          Phoenix.PubSub.local_broadcast(MyPub, topic, {LiveBeats.PresenceClient, {:join, user_data}})
+        def init(_opts) do
+          {:ok, %{}} # user-land state
         end
 
-        # fetch existing presence information for the left users and broadcast the
-        # event to all subscribers
-        for {user_id, presence} <- leaves do
-          metas =
-            case Map.fetch(presences, user_id) do
-              {:ok, presence_metas} -> presence_metas
-              :error -> []
-            end
+        def handle_metas(topic, %{joins: joins, leaves: leaves}, presences, state) do
+          # fetch existing presence information for the joined users and broadcast the
+          # event to all subscribers
+          for {user_id, presence} <- joins do
+            user_data = %{user: presence.user, metas: Map.fetch!(presences, user_id)}
+            msg = {LiveBeats.PresenceClient, {:join, user_data}}
+            Phoenix.PubSub.local_broadcast(MyApp.PubSub, topic, msg)
+          end
 
-          user_data = %{user: presence.user, metas: metas}
-          Phoenix.PubSub.local_broadcast(MyPub, topic, {LiveBeats.PresenceClient, {:leave, user_data}})
+          # fetch existing presence information for the left users and broadcast the
+          # event to all subscribers
+          for {user_id, presence} <- leaves do
+            metas =
+              case Map.fetch(presences, user_id) do
+                {:ok, presence_metas} -> presence_metas
+                :error -> []
+              end
+
+            user_data = %{user: presence.user, metas: metas}
+            msg = {LiveBeats.PresenceClient, {:leave, user_data}}
+            Phoenix.PubSub.local_broadcast(MyApp.PubSub, topic, msg)
+          end
+
+          {:ok, state}
         end
-
-        {:ok, state}
       end
 
-  The `handle_metas/4` callback receives the topic, the presence diff, current presences
-  for the topic with their metadata, and any user-land state from accumulated form init and
+  The `handle_metas/4` callback receives the topic, presence diff, current presences
+  for the topic with their metadata, and any user-land state accumulated from init and
   subsequent `handle_metas/4` calls. In our example implementation, we walk the `:joins` and
   `:leaves` in the diff, and populate a complete presence from our known presence information.
-  Then we broadcast to the local node about presence joins and leaves.
+  Then we broadcast to the local node subscribers about user joins and leaves.
 
   ## Testing with Presence
 
