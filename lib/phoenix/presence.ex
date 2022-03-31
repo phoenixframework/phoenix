@@ -428,7 +428,8 @@ defmodule Phoenix.Presence do
   @doc false
   def handle_info({task_ref, {ref, computed_diffs}}, state) do
     %{current_task: current_task} = state
-    {^ref, %Task{ref: ^task_ref}} = current_task
+    {^ref, %Task{ref: ^task_ref} = task} = current_task
+    {:exit, _} = Task.shutdown(task)
 
     Enum.each(computed_diffs, fn {topic, presence_diff} ->
       Phoenix.Channel.Server.local_broadcast(
@@ -447,11 +448,6 @@ defmodule Phoenix.Presence do
       end
 
     {:noreply, next_task(new_state)}
-  end
-
-  @doc false
-  def handle_info({:DOWN, _ref, :process, _pid, :normal}, state) do
-    {:noreply, state}
   end
 
   @doc false
