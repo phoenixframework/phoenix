@@ -40,7 +40,6 @@ defmodule Phoenix.Router.Scope do
       opts
       |> Keyword.get(:metadata, %{})
       |> Map.put(:log, Keyword.get(opts, :log, top.log))
-      |> Map.put_new(:log_module, plug)
 
     Phoenix.Router.Route.build(line, kind, verb, path, top.host, alias, plug_opts, as, top.pipes, private, assigns, metadata, trailing_slash?)
   end

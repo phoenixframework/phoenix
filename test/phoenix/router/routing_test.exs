@@ -481,8 +481,7 @@ defmodule Phoenix.Router.RoutingTest do
              pipe_through: [],
              plug: Phoenix.Router.RoutingTest.UserController,
              plug_opts: :not_found,
-             route: "/*path",
-             log_module: Phoenix.Router.RoutingTest.UserController,
+             route: "/*path"
            }
 
     assert Phoenix.Router.route_info(Router, "GET", "users/1", nil) == %{
@@ -492,8 +491,7 @@ defmodule Phoenix.Router.RoutingTest do
              plug: Phoenix.Router.RoutingTest.UserController,
              plug_opts: :show,
              route: "/users/:id",
-             access: :user,
-             log_module: Phoenix.Router.RoutingTest.UserController,
+             access: :user
            }
 
     assert Phoenix.Router.route_info(Router, "GET", "/", "host") == %{
@@ -502,8 +500,7 @@ defmodule Phoenix.Router.RoutingTest do
              pipe_through: [],
              plug: Phoenix.Router.RoutingTest.UserController,
              plug_opts: :index,
-             route: "/",
-             log_module: Phoenix.Router.RoutingTest.UserController
+             route: "/"
            }
 
     assert Phoenix.Router.route_info(Router, "POST", "/not-exists", "host") == :error
@@ -516,8 +513,7 @@ defmodule Phoenix.Router.RoutingTest do
              pipe_through: [],
              plug: Phoenix.Router.RoutingTest.UserController,
              plug_opts: :not_found,
-             route: "/*path",
-             log_module: Phoenix.Router.RoutingTest.UserController
+             route: "/*path"
            }
   end
 end
