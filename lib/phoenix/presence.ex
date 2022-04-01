@@ -464,7 +464,7 @@ defmodule Phoenix.Presence do
 
           other ->
             raise ArgumentError, """
-            expected #{inspect(module)}.init/1 to return `{:ok, state}`, got: #{inspect(other)}
+            expected #{inspect(module)}.init/1 to return {:ok, state}, got: #{inspect(other)}
             """
         end
       end
@@ -478,7 +478,7 @@ defmodule Phoenix.Presence do
   end
 
   @doc false
-  def handle_info({task_ref, {ref, computed_diffs}}, state) do
+  def handle_info({task_ref, {:phoenix, ref, computed_diffs}}, state) do
     %{current_task: current_task} = state
     {^ref, %Task{ref: ^task_ref} = task} = current_task
     {:exit, _} = Task.shutdown(task)
@@ -587,7 +587,7 @@ defmodule Phoenix.Presence do
           end)
 
         receive do
-          {^ref, :continue} -> {ref, computed_diffs}
+          {^ref, :continue} -> {:phoenix, ref, computed_diffs}
         end
       end)
 
