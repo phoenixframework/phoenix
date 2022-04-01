@@ -561,15 +561,17 @@ defmodule Phoenix.Presence do
           :error -> %{}
         end
 
-      {:ok, updated_client_state} =
-        acc.module.handle_metas(
-          topic,
-          presence_diff,
-          topic_presences,
-          acc.client_state
-        )
+      case acc.module.handle_metas(topic, presence_diff, topic_presences, acc.client_state) do
+        {:ok, updated_client_state} ->
+          %{acc | topics: updated_topics, client_state: updated_client_state}
 
-      %{acc | topics: updated_topics, client_state: updated_client_state}
+        other ->
+          raise ArgumentError, """
+          expected #{inspect(acc.module)}.handle_metas/4 to return {:ok, new_state}.
+
+            got: #{inspect(other)}
+          """
+      end
     end)
   end
 
