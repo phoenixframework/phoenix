@@ -446,29 +446,30 @@ defmodule Phoenix.Presence do
 
   @doc false
   def init({module, task_supervisor, pubsub_server}) do
-    default_state = %{
+    state = %{
       module: module,
       task_supervisor: task_supervisor,
       pubsub_server: pubsub_server,
+      topics: %{},
       tasks: :queue.new(),
-      current_task: nil
+      current_task: nil,
+      client_state: nil
     }
 
-    state =
+    client_state =
       if function_exported?(module, :handle_metas, 4) do
-        {:ok, client_state} = module.init(%{})
+        case module.init(%{}) do
+          {:ok, client_state} ->
+            client_state
 
-        metas_state = %{
-          topics: %{},
-          client_state: client_state
-        }
-
-        Map.put_new(default_state, :metas_state, metas_state)
-      else
-        default_state
+          other ->
+            raise ArgumentError, """
+            expected #{inspect(module)}.init/1 to return `{:ok, state}`, got: #{inspect(other)}
+            """
+        end
       end
 
-    {:ok, state}
+    {:ok, %{state | client_state: client_state}}
   end
 
   @doc false
@@ -552,7 +553,7 @@ defmodule Phoenix.Presence do
 
   defp do_handle_metas(state, computed_diffs) do
     Enum.reduce(computed_diffs, state, fn {topic, presence_diff}, acc ->
-      updated_topics = merge_diff(acc.metas_state.topics, topic, presence_diff)
+      updated_topics = merge_diff(acc.topics, topic, presence_diff)
 
       topic_presences =
         case Map.fetch(updated_topics, topic) do
@@ -565,16 +566,10 @@ defmodule Phoenix.Presence do
           topic,
           presence_diff,
           topic_presences,
-          acc.metas_state.client_state
+          acc.client_state
         )
 
-      updated_metas_state = %{
-        acc.metas_state
-        | client_state: updated_client_state,
-          topics: updated_topics
-      }
-
-      %{acc | metas_state: updated_metas_state}
+      %{acc | topics: updated_topics, client_state: updated_client_state}
     end)
   end
 
