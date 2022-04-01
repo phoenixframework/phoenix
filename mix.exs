@@ -72,6 +72,7 @@ defmodule Phoenix.MixProject do
       {:plug, "~> 1.10"},
       {:plug_crypto, "~> 1.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
+      # TODO: release PubSub and bump to hex dep before 1.7 release
       {:phoenix_pubsub, git: "https://github.com/phoenixframework/phoenix_pubsub.git"},
       {:phoenix_view, "~> 1.0"},
 
