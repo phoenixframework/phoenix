@@ -458,6 +458,19 @@ defmodule Phoenix.Presence do
 
     client_state =
       if function_exported?(module, :handle_metas, 4) do
+        unless function_exported?(module, :init, 1) do
+          raise ArgumentError, """
+          missing #{inspect(module)}.init/1 callback for client state
+
+          When you implement the handle_metas/4 callback, you must also
+          implement init/1. For example, add the following to
+          #{inspect(module)}:
+
+          def init(_opts), do: {:ok, %{}}
+
+          """
+        end
+
         case module.init(%{}) do
           {:ok, client_state} ->
             client_state

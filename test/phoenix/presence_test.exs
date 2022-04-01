@@ -27,6 +27,22 @@ defmodule Phoenix.PresenceTest do
     end
   end
 
+  defmodule MetasMissingInitPresence do
+    use Phoenix.Presence, otp_app: :phoenix
+
+    def init_presence do
+      Phoenix.Presence.init({
+        __MODULE__,
+        __MODULE__.TaskSupervisor,
+        PresPub
+      })
+    end
+
+    def handle_metas(_topic, _diff, _presences, _state) do
+      raise ArgumentError, "should not be called due to missing init/1"
+    end
+  end
+
   Application.put_env(:phoenix, MyPresence, pubsub_server: PresPub)
   Application.put_env(:phoenix, MetasPresence, pubsub_server: PresPub)
 
@@ -233,6 +249,14 @@ defmodule Phoenix.PresenceTest do
   end
 
   describe "Presence behaviour when handle_metas is defined" do
+    test "raises when missing init/1" do
+      assert_raise ArgumentError,
+                   ~r|missing Phoenix.PresenceTest.MetasMissingInitPresence.init/1 callback for client state|,
+                   fn ->
+                     MetasMissingInitPresence.init_presence()
+                   end
+    end
+
     test "async_merge/2 creates new topic and metas",
          %{topic: topic} = config do
       Phoenix.PubSub.subscribe(config.pubsub, topic)
