@@ -126,9 +126,10 @@ defmodule Phoenix.Presence do
   Presence is great for external clients, such as JavaScript applications, but
   it can also be used from an Elixir client process to keep track of presence
   changes as they happen on the server. This can be accomplished by implementing
-  the optional `init/1` and handle_metas/4` callback on your presence module.
-  For example, the following callback receives presence metadata changes,
-  and broadcasts to other Elixir processes about users joining and leaving:
+  the optional [`init/1`](`c:init/1`) and [`handle_metas/4`](`c:handle_metas/4`)
+  callbacks on your presence module. For example, the following callback
+  receives presence metadata changes, and broadcasts to other Elixir processes
+  about users joining and leaving:
 
       defmodule MyApp.Presence do
         use Phoenix.Presence,
@@ -144,7 +145,7 @@ defmodule Phoenix.Presence do
           # event to all subscribers
           for {user_id, presence} <- joins do
             user_data = %{user: presence.user, metas: Map.fetch!(presences, user_id)}
-            msg = {LiveBeats.PresenceClient, {:join, user_data}}
+            msg = {MyApp.PresenceClient, {:join, user_data}}
             Phoenix.PubSub.local_broadcast(MyApp.PubSub, topic, msg)
           end
 
@@ -158,7 +159,7 @@ defmodule Phoenix.Presence do
               end
 
             user_data = %{user: presence.user, metas: metas}
-            msg = {LiveBeats.PresenceClient, {:leave, user_data}}
+            msg = {MyApp.PresenceClient, {:leave, user_data}}
             Phoenix.PubSub.local_broadcast(MyApp.PubSub, topic, msg)
           end
 
@@ -332,8 +333,17 @@ defmodule Phoenix.Presence do
   """
   @callback fetch(topic, presences) :: presences
 
+  @doc """
+  Initializes the presence client state.
+
+  Invoked when your presence module starts, allows dynamically
+  providing initial state for handling presence metadata.
+  """
   @callback init(state :: term) :: {:ok, new_state :: term}
 
+  @doc """
+  Receives presence metadata changes.
+  """
   @callback handle_metas(topic :: String.t(), diff :: map(), presences :: map(), state :: term) ::
               {:ok, term}
 
@@ -458,6 +468,19 @@ defmodule Phoenix.Presence do
 
     client_state =
       if function_exported?(module, :handle_metas, 4) do
+        unless function_exported?(module, :init, 1) do
+          raise ArgumentError, """
+          missing #{inspect(module)}.init/1 callback for client state
+
+          When you implement the handle_metas/4 callback, you must also
+          implement init/1. For example, add the following to
+          #{inspect(module)}:
+
+          def init(_opts), do: {:ok, %{}}
+
+          """
+        end
+
         case module.init(%{}) do
           {:ok, client_state} ->
             client_state
