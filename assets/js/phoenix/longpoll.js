@@ -113,11 +113,16 @@ export default class LongPoll {
 
   close(code, reason, wasClean){
     this.readyState = SOCKET_STATES.closed
-    this.onclose(
-      new CloseEvent(
-        'close',
-        Object.assign({ code: 1000, reason: undefined, wasClean: true }, { code, reason, wasClean }),
-      ),
-    )
+
+    const closeArgs = Object.assign(
+      {code: 1000, reason: undefined, wasClean: true},
+      {code, reason, wasClean}
+    );
+
+    if("CloseEvent" in window && !!CloseEvent){
+      this.onclose(new CloseEvent("close", closeArgs))
+    } else {
+      this.onclose(closeArgs)
+    }
   }
 }
