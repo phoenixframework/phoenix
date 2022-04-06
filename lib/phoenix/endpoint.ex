@@ -645,8 +645,7 @@ defmodule Phoenix.Endpoint do
 
       # Inline render errors so we set the endpoint before calling it.
       def call(conn, opts) do
-        conn = put_in conn.secret_key_base, config(:secret_key_base)
-        conn = put_in conn.script_name, script_name()
+        conn = %{conn | script_name: script_name(), secret_key_base: config(:secret_key_base)}
         conn = Plug.Conn.put_private(conn, :phoenix_endpoint, __MODULE__)
 
         try do
