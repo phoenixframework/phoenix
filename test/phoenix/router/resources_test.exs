@@ -31,6 +31,11 @@ defmodule Phoenix.Router.ResourcesTest do
     def special(conn, _params), do: text(conn, "special comments")
   end
 
+  defmodule ProductController do
+    use Phoenix.Controller
+    def index(conn, _params), do: text(conn, "index roles")
+  end
+
   defmodule Router do
     use Phoenix.Router
 
@@ -48,6 +53,10 @@ defmodule Phoenix.Router.ResourcesTest do
     resources "/admin", UserController, param: "slug", name: "admin", only: [:show], alias: Api do
       resources "/comments", CommentController, param: "key", name: "post", except: [:delete]
       resources "/files", FileController, only: [:show, :index, :new]
+    end
+
+    resources "/products", ProductController, param: "uuid", name: nil do
+      resources "/comments", Api.CommentController
     end
   end
 
@@ -145,6 +154,14 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.resp_body == "delete comments"
     assert conn.params["user_id"] == "1"
     assert conn.params["id"] == "123"
+  end
+
+  test "1-Level nested route works when name is nil" do
+    conn = call(Router, :get, "products/1/comments")
+    assert conn.status == 200
+    assert conn.resp_body == "index comments"
+    assert conn.params["uuid"] == "1"
+    assert Router.Helpers.product_comment_path(conn, :index, "foo") == "/products/foo/comments"
   end
 
   test "2-Level nested route with get matches" do

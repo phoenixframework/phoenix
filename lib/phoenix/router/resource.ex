@@ -32,7 +32,7 @@ defmodule Phoenix.Router.Resource do
     alias   = Keyword.get(options, :alias)
     param   = Keyword.get(options, :param, @default_param_key)
     name    = Keyword.get(options, :name, Phoenix.Naming.resource_name(controller, "Controller"))
-    as      = Keyword.get(options, :as, name)
+    as      = Keyword.get(options, :as, (if is_nil(name), do: Phoenix.Naming.resource_name(controller, "Controller"), else: name))
     private = Keyword.get(options, :private, %{})
     assigns = Keyword.get(options, :assigns, %{})
 
@@ -41,7 +41,7 @@ defmodule Phoenix.Router.Resource do
 
     route       = [as: as, private: private, assigns: assigns]
     collection  = [path: path, as: as, private: private, assigns: assigns]
-    member_path = if singleton, do: path, else: Path.join(path, ":#{name}_#{param}")
+    member_path = if singleton, do: path, else: Path.join(path, (if is_nil(name), do: ":#{param}", else: ":#{name}_#{param}"))
     member      = [path: member_path, as: as, alias: alias, private: private, assigns: assigns]
 
     %Resource{path: path, actions: actions, param: param, route: route,
