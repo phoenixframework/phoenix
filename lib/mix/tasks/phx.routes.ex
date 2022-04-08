@@ -39,11 +39,38 @@ defmodule Mix.Tasks.Phx.Routes do
     Mix.Task.reenable("phx.routes")
 
     {router_mod, opts} =
-      case OptionParser.parse(args, switches: [endpoint: :string, router: :string]) do
+      case OptionParser.parse(args, switches: [endpoint: :string, router: :string, info: :string]) do
         {opts, [passed_router], _} -> {router(passed_router, base), opts}
         {opts, [], _} -> {router(opts[:router], base), opts}
       end
 
+    case Keyword.get(opts, :info) do
+      nil -> list_routes({router_mod, opts}, base)
+      url -> get_url_info(url, {router_mod, opts})
+    end
+  end
+
+  def get_url_info(url, {router_mod, _opts}) do
+    %{path: path} = URI.parse(url)
+
+    %{plug: plug, plug_opts: plug_opts} = Phoenix.Router.route_info(router_mod, "GET", path, "")
+
+    Mix.shell().info("""
+
+    Module: #{plug}
+    Function: #{plug_opts}
+    """)
+
+    line_number = get_line_number(plug, plug_opts)
+    file_path = get_file_path(plug)
+
+    Mix.shell().info("#{file_path}:#{line_number}")
+  rescue
+    _ ->
+      Mix.raise("could not locate the corresponding controller function")
+  end
+
+  def list_routes({router_mod, opts}, base) do
     router_mod
     |> ConsoleFormatter.format(endpoint(opts[:endpoint], base))
     |> Mix.shell().info()
@@ -96,4 +123,23 @@ defmodule Mix.Tasks.Phx.Routes do
   defp app_mod(base, name), do: Module.concat([base, name])
 
   defp web_mod(base, name), do: Module.concat(["#{base}Web", name])
+
+  defp get_file_path(module_name) do
+    [compile_infos] = Keyword.get_values(module_name.module_info(), :compile)
+    [source] = Keyword.get_values(compile_infos, :source)
+    source
+  end
+
+  defp get_line_number(module, function_name) do
+    {_, _, _, _, _, _, functions_list} = Code.fetch_docs(module)
+
+    function_infos =
+      functions_list
+      |> Enum.find(fn {{type, name, _}, _, _, _, _} ->
+        type == :function and name == function_name
+      end)
+
+    {_, line, _, _, _} = function_infos
+    line
+  end
 end
