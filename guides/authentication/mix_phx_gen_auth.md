@@ -50,9 +50,9 @@ The password hashing mechanism defaults to `bcrypt` for Unix systems and `pbkdf2
 
 The password hashing mechanism can be overridden with the `--hashing-lib` option. The following values are supported:
 
-    * `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
-    * `pbkdf2` - [pbkdf2_elixir](https://hex.pm/packages/pbkdf2_elixir)
-    * `argon2` - [argon2_elixir](https://hex.pm/packages/argon2_elixir)
+  * `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
+  * `pbkdf2` - [pbkdf2_elixir](https://hex.pm/packages/pbkdf2_elixir)
+  * `argon2` - [argon2_elixir](https://hex.pm/packages/argon2_elixir)
 
 We recommend developers to consider using `argon2`, which is the most robust of all 3. The downside is that `argon2` is quite CPU and memory intensive, and you will need more powerful instances to run your applications on.
 
@@ -100,7 +100,7 @@ The generated tests run concurrently if you are using a database that supports c
 
 ## More about `mix phx.gen.auth`
 
-Check out `mix phx.gen.auth` for more details, such as using different password hashing library, customizing the web module namespace, generating binary id type, configuring the default options, and using custom table names.  
+Check out `mix phx.gen.auth` for more details, such as using different password hashing library, customizing the web module namespace, generating binary id type, configuring the default options, and using custom table names.
 
 ## Additional resources
 
