@@ -93,7 +93,7 @@ defmodule Phoenix.MixProject do
       {:phoenix_html, "~> 3.0", only: [:docs, :test]},
       {:phx_new, path: "./installer", only: :test},
       {:mint, "~> 1.4", only: :test},
-      {:mint_web_socket, "~> 0.3.0", only: :test},
+      {:mint_web_socket, "~> 1.0.0", only: :test},
 
       # Dev dependencies
       {:esbuild, "~> 0.4", only: :dev}
