@@ -7,7 +7,8 @@ defmodule <%= @endpoint_module %> do
   @session_options [
     store: :cookie,
     key: "_<%= @web_app_name %>_key",
-    signing_salt: "<%= @signing_salt %>"
+    signing_salt: "<%= @signing_salt %>",
+    same_site: "Lax"
   ]
 
   <%= if !(@dashboard || @live) do %><%= "# " %><% end %>socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]

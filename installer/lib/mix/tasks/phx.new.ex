@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-assets` - do not generate the assets folder.
       When choosing this option, you will need to manually
-      handle JavaScript/CSS if building HTML apps.
+      handle JavaScript/CSS if building HTML apps
 
     * `--no-ecto` - do not generate Ecto files
 
@@ -216,7 +216,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp rebar_available? do
-    Mix.Rebar.rebar_cmd(:rebar) && Mix.Rebar.rebar_cmd(:rebar3)
+    Mix.Rebar.rebar_cmd(:rebar3)
   end
 
   defp print_missing_steps(steps) do

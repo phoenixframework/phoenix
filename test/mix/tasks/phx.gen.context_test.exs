@@ -357,4 +357,23 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       assert Path.wildcard("priv/repo/migrations/*_create_posts.exs") == []
     end
   end
+
+  test "generates context with enum", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Context.run(
+        ~w(Accounts User users email:text:unique password:text:redact status:enum:verified:unverified:disabled)
+      )
+
+      assert_file("lib/phoenix/accounts/user.ex", fn file ->
+        assert file =~ "field :status, Ecto.Enum, values: [:verified, :unverified, :disabled]"
+      end)
+
+      assert [path] = Path.wildcard("priv/repo/migrations/*_create_users.exs")
+
+      assert_file(path, fn file ->
+        assert file =~ "create table(:users)"
+        assert file =~ "add :status, :string"
+      end)
+    end)
+  end
 end

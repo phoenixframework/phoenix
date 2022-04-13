@@ -159,7 +159,7 @@ iex> HelloWeb.Router.Helpers.page_path(HelloWeb.Endpoint, :index)
 
 This is significant because we can use the `page_path` function in a template to link to the root of our application. We can then use this helper in our templates:
 
-```html
+```heex
 <%= link "Welcome Page!", to: Routes.page_path(@conn, :index) %>
 ```
 

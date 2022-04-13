@@ -22,10 +22,8 @@ defmodule Phx.New.Single do
     {:eex,  "phx_single/README.md",                     :project, "README.md"},
     {:eex,  "phx_single/formatter.exs",                 :project, ".formatter.exs"},
     {:eex,  "phx_single/gitignore",                     :project, ".gitignore"},
-    {:eex,  "phx_test/support/channel_case.ex",         :project, "test/support/channel_case.ex"},
     {:eex,  "phx_test/support/conn_case.ex",            :project, "test/support/conn_case.ex"},
     {:eex,  "phx_single/test/test_helper.exs",          :project, "test/test_helper.exs"},
-    {:keep, "phx_test/channels",                        :project, "test/:lib_web_name/channels"},
     {:keep, "phx_test/controllers",                     :project, "test/:lib_web_name/controllers"},
     {:eex,  "phx_test/views/error_view_test.exs",       :project, "test/:lib_web_name/views/error_view_test.exs"},
   ]

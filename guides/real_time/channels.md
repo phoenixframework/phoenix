@@ -267,18 +267,18 @@ channel.join()
 export default socket
 ```
 
-After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment the last line in `assets/js/app.js`.
+After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment this line in `assets/js/app.js`.
 
 ```javascript
 // ...
-import socket from "./user_socket"
+import "./user_socket.js"
 ```
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
 In `lib/hello_web/templates/page/index.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
-```html
+```heex
 <div id="messages" role="log" aria-live="polite"></div>
 <input id="chat-input" type="text">
 ```
@@ -410,7 +410,7 @@ Now our `conn.assigns` contains the `current_user` and `user_token`.
 
 Next we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.heex` right above the app.js script, as follows:
 
-```html
+```heex
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
 <script src={Routes.static_path(@conn, "/assets/app.js")}></script>
 ```

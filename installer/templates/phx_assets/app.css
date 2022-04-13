@@ -46,7 +46,7 @@
   transition: opacity 1s ease-out;
 }
 
-.phx-loading{
+.phx-loading {
   cursor: wait;
 }
 
@@ -99,22 +99,22 @@
   animation: 0.2s ease-out 0s normal forwards 1 fade-out-keys;
 }
 
-@keyframes fade-in-scale-keys{
+@keyframes fade-in-scale-keys {
   0% { scale: 0.95; opacity: 0; }
   100% { scale: 1.0; opacity: 1; }
 }
 
-@keyframes fade-out-scale-keys{
+@keyframes fade-out-scale-keys {
   0% { scale: 1.0; opacity: 1; }
   100% { scale: 0.95; opacity: 0; }
 }
 
-@keyframes fade-in-keys{
+@keyframes fade-in-keys {
   0% { opacity: 0; }
   100% { opacity: 1; }
 }
 
-@keyframes fade-out-keys{
+@keyframes fade-out-keys {
   0% { opacity: 1; }
   100% { opacity: 0; }
 }

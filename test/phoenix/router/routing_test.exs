@@ -65,6 +65,7 @@ defmodule Phoenix.Router.RoutingTest do
 
     get "/no_log", SomePlug, [], log: false
     get "/fun_log", SomePlug, [], log: {LogLevel, :log_level, []}
+    get "/override-plug-name", SomePlug, :action, metadata: %{log_module: PlugOverride}
     get "/users/:user_id/files/:id", UserController, :image
 
     scope "/halt-plug" do
@@ -254,7 +255,7 @@ defmodule Phoenix.Router.RoutingTest do
 
     test "logs plug with pipeline and custom level" do
       assert capture_log(fn -> call(Router, :get, "/plug") end) =~ """
-             [info]  Processing with Phoenix.Router.RoutingTest.SomePlug
+             [info] Processing with Phoenix.Router.RoutingTest.SomePlug
                Parameters: %{}
                Pipelines: [:noop]
              """
@@ -265,9 +266,14 @@ defmodule Phoenix.Router.RoutingTest do
                "Processing with Phoenix.Router.RoutingTest.SomePlug"
     end
 
+    test "overrides plug name that processes the route when set in metadata" do
+      assert capture_log(fn -> call(Router, :get, "/override-plug-name") end) =~
+               "Processing with PlugOverride"
+    end
+
     test "logs custom level when log is set to a 1-arity function" do
       assert capture_log(fn -> call(Router, :get, "/fun_log", level: "info") end) =~
-               "[info]  Processing with Phoenix.Router.RoutingTest.SomePlug"
+               "[info] Processing with Phoenix.Router.RoutingTest.SomePlug"
 
       assert capture_log(fn -> call(Router, :get, "/fun_log", level: "error") end) =~
                "[error] Processing with Phoenix.Router.RoutingTest.SomePlug"
@@ -500,7 +506,7 @@ defmodule Phoenix.Router.RoutingTest do
              pipe_through: [],
              plug: Phoenix.Router.RoutingTest.UserController,
              plug_opts: :index,
-             route: "/",
+             route: "/"
            }
 
     assert Phoenix.Router.route_info(Router, "POST", "/not-exists", "host") == :error

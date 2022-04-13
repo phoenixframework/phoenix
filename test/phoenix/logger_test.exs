@@ -97,14 +97,14 @@ defmodule Phoenix.LoggerTest do
 
       assert ExUnit.CaptureLog.capture_log(fn ->
         Plug.Telemetry.call(conn(:get, "/any"), opts)
-      end) =~ "[info]  GET /any"
+      end) =~ "[info] GET /any"
     end
 
     test "invokes log level from Plug.Telemetry" do
       assert ExUnit.CaptureLog.capture_log(fn ->
         opts = Plug.Telemetry.init(event_prefix: [:phoenix, :endpoint])
         Plug.Telemetry.call(conn(:get, "/"), opts)
-      end) =~ "[info]  GET /"
+      end) =~ "[info] GET /"
 
       assert ExUnit.CaptureLog.capture_log(fn ->
         opts = Plug.Telemetry.init(event_prefix: [:phoenix, :endpoint], log: false)

@@ -101,8 +101,11 @@ defmodule <%= inspect auth_module %>Test do
         |> put_req_cookie(@remember_me_cookie, signed_token)
         |> <%= inspect schema.alias %>Auth.fetch_current_<%= schema.singular %>([])
 
-      assert get_session(conn, :<%= schema.singular %>_token) == <%= schema.singular %>_token
       assert conn.assigns.current_<%= schema.singular %>.id == <%= schema.singular %>.id
+      assert get_session(conn, :<%= schema.singular %>_token) == <%= schema.singular %>_token
+
+      assert get_session(conn, :live_socket_id) ==
+               "<%= schema.plural %>_sessions:#{Base.url_encode64(<%= schema.singular %>_token)}"
     end
 
     test "does not authenticate if data is missing", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do

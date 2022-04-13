@@ -18,10 +18,10 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   table name), and an optional list of attributes as their respective names and
   types.  See `mix help phx.gen.schema` for more information on attributes.
 
-  When this command is run for the first time, a `ModalComponent` and
-  `LiveHelpers` module will be created, along with the resource level
-  LiveViews and components, including `UserLive.Index`, `UserLive.Show`,
-  and `UserLive.FormComponent` modules for the new resource.
+  When this command is run for the first time, a `LiveHelpers` module will be
+  created, along with the resource level LiveViews and components, including
+  `UserLive.Index`, `UserLive.Show`, and `UserLive.FormComponent` modules for
+  the new resource.
 
   > Note: A resource may also be split
   > over distinct contexts (such as `Accounts.User` and `Payments.User`).

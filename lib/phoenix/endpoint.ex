@@ -645,8 +645,7 @@ defmodule Phoenix.Endpoint do
 
       # Inline render errors so we set the endpoint before calling it.
       def call(conn, opts) do
-        conn = put_in conn.secret_key_base, config(:secret_key_base)
-        conn = put_in conn.script_name, script_name()
+        conn = %{conn | script_name: script_name(), secret_key_base: config(:secret_key_base)}
         conn = Plug.Conn.put_private(conn, :phoenix_endpoint, __MODULE__)
 
         try do
@@ -713,9 +712,14 @@ defmodule Phoenix.Endpoint do
             conn
           end
         else
-          params_map = {:%{}, [], Plug.Router.Utils.build_path_params_match(vars)}
+          params =
+            for var <- vars,
+                param = Atom.to_string(var),
+                not match?("_" <> _, param),
+                do: {param, Macro.var(var, nil)}
+
           quote do
-            params = unquote(params_map)
+            params = %{unquote_splicing(params)}
             %Plug.Conn{conn | path_params: params, params: params}
           end
         end
@@ -804,7 +808,7 @@ defmodule Phoenix.Endpoint do
           check_origin: {MyAppWeb.Auth, :my_check_origin?, []}
 
       The MFA is invoked with the request `%URI{}` as the first argument,
-      followed by arguments in the MFA list.
+      followed by arguments in the MFA list, and must return a boolean.
 
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
@@ -841,17 +845,21 @@ defmodule Phoenix.Endpoint do
 
       For example:
 
-          socket "/socket", AppWeb.UserSocket,
+      ```
+        socket "/socket", AppWeb.UserSocket,
             websocket: [
               connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri, session: [store: :cookie]]
             ]
+      ```
 
       With arbitrary keywords:
 
-          socket "/socket", AppWeb.UserSocket,
+      ```
+        socket "/socket", AppWeb.UserSocket,
             websocket: [
               connect_info: [:uri, custom_value: "abcdef"]
             ]
+      ```
 
   ## Websocket configuration
 
