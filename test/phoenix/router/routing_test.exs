@@ -23,6 +23,7 @@ defmodule Phoenix.Router.RoutingTest do
     def any(conn, _params), do: text(conn, "users any")
     def raise(_conn, _params), do: raise("boom")
     def exit(_conn, _params), do: exit(:boom)
+
     def halt(conn, _params) do
       conn
       |> send_resp(401, "Unauthorized")
@@ -76,6 +77,7 @@ defmodule Phoenix.Router.RoutingTest do
     get "/*path", UserController, :not_found
 
     defp noop(conn, _), do: conn
+
     defp halt(conn, _) do
       conn |> Plug.Conn.send_resp(401, "Unauthorized") |> halt()
     end
@@ -93,13 +95,13 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   test "get to named param with dashes" do
-    conn = call(Router, :get, "users/75f6306d-a090-46f9-8b80-80fd57ec9a41")
+    conn = call(Router, :get, "/users/75f6306d-a090-46f9-8b80-80fd57ec9a41")
     assert conn.status == 200
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "75f6306d-a090-46f9-8b80-80fd57ec9a41"
     assert conn.path_params["id"] == "75f6306d-a090-46f9-8b80-80fd57ec9a41"
 
-    conn = call(Router, :get, "users/75f6306d-a0/files/34-95")
+    conn = call(Router, :get, "/users/75f6306d-a0/files/34-95")
     assert conn.status == 200
     assert conn.resp_body == "show files"
     assert conn.params["user_id"] == "75f6306d-a0"
@@ -109,7 +111,7 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   test "get with named param" do
-    conn = call(Router, :get, "users/1")
+    conn = call(Router, :get, "/users/1")
     assert conn.status == 200
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "1"
@@ -157,7 +159,7 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   test "get to custom action" do
-    conn = call(Router, :get, "users/top")
+    conn = call(Router, :get, "/users/top")
     assert conn.status == 200
     assert conn.resp_body == "users top"
   end
@@ -181,32 +183,32 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   test "splat arg with preceding named parameter to files/:user_name/*path" do
-    conn = call(Router, :get, "files/elixir/Users/home/file.txt")
+    conn = call(Router, :get, "/files/elixir/Users/home/file.txt")
     assert conn.status == 200
     assert conn.params["user_name"] == "elixir"
     assert conn.params["path"] == ["Users", "home", "file.txt"]
   end
 
   test "splat arg with preceding string to backups/*path" do
-    conn = call(Router, :get, "backups/name")
+    conn = call(Router, :get, "/backups/name")
     assert conn.status == 200
     assert conn.params["path"] == ["name"]
   end
 
   test "splat arg with multiple preceding strings to static/images/icons/*path" do
-    conn = call(Router, :get, "static/images/icons/elixir/logos/main.png")
+    conn = call(Router, :get, "/static/images/icons/elixir/logos/main.png")
     assert conn.status == 200
     assert conn.params["image"] == ["elixir", "logos", "main.png"]
   end
 
   test "splat args are %encodings in path" do
-    conn = call(Router, :get, "backups/silly%20name")
+    conn = call(Router, :get, "/backups/silly%20name")
     assert conn.status == 200
     assert conn.params["path"] == ["silly name"]
   end
 
   test "catch-all splat route matches" do
-    conn = call(Router, :get, "foo/bar/baz")
+    conn = call(Router, :get, "/foo/bar/baz")
     assert conn.status == 404
     assert conn.params == %{"path" => ~w"foo bar baz"}
     assert conn.resp_body == "not found"
@@ -311,16 +313,13 @@ defmodule Phoenix.Router.RoutingTest do
     end
 
     test "phoenix.router_dispatch.start and .stop are emitted on success" do
-      call(Router, :get, "users/123")
+      call(Router, :get, "/users/123")
 
-      assert_received {:telemetry_event, @router_start_event,
-                       {_, %{route: "/users/:id"}, _}}
+      assert_received {:telemetry_event, @router_start_event, {_, %{route: "/users/:id"}, _}}
 
-      assert_received {:telemetry_event, @router_stop_event,
-                       {_, %{route: "/users/:id"}, _}}
+      assert_received {:telemetry_event, @router_stop_event, {_, %{route: "/users/:id"}, _}}
 
-      refute_received {:telemetry_event, @router_exception_event,
-                       {_, %{route: "/users/:id"}, _}}
+      refute_received {:telemetry_event, @router_exception_event, {_, %{route: "/users/:id"}, _}}
     end
 
     test "phoenix.router_dispatch.start and .stop are emitted when conn halted in router" do
@@ -329,14 +328,11 @@ defmodule Phoenix.Router.RoutingTest do
       assert conn.halted
       assert conn.status == 401
 
-      assert_received {:telemetry_event, @router_start_event,
-                       {_, %{route: "/halt-plug"}, _}}
+      assert_received {:telemetry_event, @router_start_event, {_, %{route: "/halt-plug"}, _}}
 
-      assert_received {:telemetry_event, @router_stop_event,
-                       {_, %{route: "/halt-plug"}, _}}
+      assert_received {:telemetry_event, @router_stop_event, {_, %{route: "/halt-plug"}, _}}
 
-      refute_received {:telemetry_event, @router_exception_event,
-                       {_, %{route: "/halt-plug"}, _}}
+      refute_received {:telemetry_event, @router_exception_event, {_, %{route: "/halt-plug"}, _}}
     end
 
     test "phoenix.router_dispatch.start and .stop are emitted when conn is halted in controller" do
@@ -348,8 +344,7 @@ defmodule Phoenix.Router.RoutingTest do
       assert_received {:telemetry_event, @router_start_event,
                        {_, %{route: "/halt-controller"}, _}}
 
-      assert_received {:telemetry_event, @router_stop_event,
-                       {_, %{route: "/halt-controller"}, _}}
+      assert_received {:telemetry_event, @router_stop_event, {_, %{route: "/halt-controller"}, _}}
 
       refute_received {:telemetry_event, @router_exception_event,
                        {_, %{route: "/halt-controller"}, _}}
@@ -357,7 +352,7 @@ defmodule Phoenix.Router.RoutingTest do
 
     test "phoenix.router_dispatch.start and .exception are emitted on crash" do
       assert_raise Plug.Conn.WrapperError, ~r/UndefinedFunctionError/, fn ->
-        call(Router, :get, "route_that_crashes")
+        call(Router, :get, "/route_that_crashes")
       end
 
       assert_received {:telemetry_event, @router_start_event,
@@ -371,20 +366,17 @@ defmodule Phoenix.Router.RoutingTest do
     end
 
     test "phoenix.router_dispatch.start and .exception are emitted on exit" do
-      catch_exit(call(Router, :get, "exit"))
+      catch_exit(call(Router, :get, "/exit"))
 
-      assert_received {:telemetry_event, @router_start_event,
-                       {_, %{route: "/exit"}, _}}
+      assert_received {:telemetry_event, @router_start_event, {_, %{route: "/exit"}, _}}
 
-      assert_received {:telemetry_event, @router_exception_event,
-                       {_, %{route: "/exit"}, _}}
+      assert_received {:telemetry_event, @router_exception_event, {_, %{route: "/exit"}, _}}
 
-      refute_received {:telemetry_event, @router_stop_event,
-                       {_, %{route: "/exit"}, _}}
+      refute_received {:telemetry_event, @router_stop_event, {_, %{route: "/exit"}, _}}
     end
 
     test "phoenix.router_dispatch.start has supported measurements and metadata" do
-      call(Router, :get, "users/123")
+      call(Router, :get, "/users/123")
 
       assert_received {:telemetry_event, @router_start_event,
                        {measures, %{route: "/users/:id"} = meta, _config}}
@@ -404,7 +396,7 @@ defmodule Phoenix.Router.RoutingTest do
     end
 
     test "phoenix.router_dispatch.stop has supported measurements and metadata" do
-      call(Router, :get, "users/123")
+      call(Router, :get, "/users/123")
 
       assert_received {:telemetry_event, @router_stop_event,
                        {measures, %{route: "/users/:id"} = meta, _config}}
@@ -425,7 +417,7 @@ defmodule Phoenix.Router.RoutingTest do
 
     test "phoenix.router_dispatch.exception has supported measurements and metadata on crash" do
       assert_raise Plug.Conn.WrapperError, "** (RuntimeError) boom", fn ->
-        call(Router, :get, "users/123/raise")
+        call(Router, :get, "/users/123/raise")
       end
 
       assert_received {:telemetry_event, @router_exception_event,
@@ -456,7 +448,7 @@ defmodule Phoenix.Router.RoutingTest do
     end
 
     test "phoenix.router_dispatch.exception has supported measurements and metadata on exit" do
-      catch_exit(call(Router, :get, "exit"))
+      catch_exit(call(Router, :get, "/exit"))
 
       assert_received {:telemetry_event, @router_exception_event,
                        {measures, %{route: "/exit"} = meta, _config}}
