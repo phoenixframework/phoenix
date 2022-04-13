@@ -17,7 +17,6 @@ export default class LongPoll {
     this.onclose = function (){ } // noop
     this.pollEndpoint = this.normalizeEndpoint(endPoint)
     this.readyState = SOCKET_STATES.connecting
-
     this.poll()
   }
 
@@ -113,11 +112,11 @@ export default class LongPoll {
 
   close(code, reason, wasClean){
     this.readyState = SOCKET_STATES.closed
-    this.onclose(
-      new CloseEvent(
-        'close',
-        Object.assign({ code: 1000, reason: undefined, wasClean: true }, { code, reason, wasClean }),
-      ),
-    )
+    let opts = Object.assign({code: 1000, reason: undefined, wasClean: true}, {code, reason, wasClean})
+    if(typeof(CloseEvent) !== "undefined"){
+      this.onclose(new CloseEvent("close", opts))
+    } else {
+      this.onclose(opts)
+    }
   }
 }
