@@ -18,8 +18,3 @@ updates:
     schedule:
       interval: "daily"
 
-  # Maintain dependencies for Yarn
-  - package-ecosystem: "npm"
-    directory: "/assets"
-    schedule:
-      interval: "daily"
