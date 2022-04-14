@@ -103,7 +103,7 @@ function renderOnlineUsers(presence) {
     response += `<br>${id} (count: ${count})</br>`
   })
 
-  document.querySelector("main[role=main]").innerHTML = response
+  document.querySelector("main").innerHTML = response
 }
 
 socket.connect()
