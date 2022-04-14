@@ -24,6 +24,7 @@
 /doc/
 /test/
 /tmp/
+.elixir_ls
 
 # Mix artifacts
 /_build/
