@@ -1,6 +1,7 @@
 defmodule <%= inspect schema.module %>Token do
   use Ecto.Schema
   import Ecto.Query
+  alias <%= inspect schema.module %>Token
 
   @hash_algorithm :sha256
   @rand_size 32
@@ -44,7 +45,7 @@ defmodule <%= inspect schema.module %>Token do
   """
   def build_session_token(<%= schema.singular %>) do
     token = :crypto.strong_rand_bytes(@rand_size)
-    {token, %<%= inspect schema.module %>Token{token: token, context: "session", <%= schema.singular %>_id: <%= schema.singular %>.id}}
+    {token, %<%= inspect schema.alias %>Token{token: token, context: "session", <%= schema.singular %>_id: <%= schema.singular %>.id}}
   end
 
   @doc """
@@ -87,7 +88,7 @@ defmodule <%= inspect schema.module %>Token do
     hashed_token = :crypto.hash(@hash_algorithm, token)
 
     {Base.url_encode64(token, padding: false),
-     %<%= inspect schema.module %>Token{
+     %<%= inspect schema.alias %>Token{
        token: hashed_token,
        context: context,
        sent_to: sent_to,
@@ -164,17 +165,17 @@ defmodule <%= inspect schema.module %>Token do
   Returns the token struct for the given token value and context.
   """
   def token_and_context_query(token, context) do
-    from <%= inspect schema.module %>Token, where: [token: ^token, context: ^context]
+    from <%= inspect schema.alias %>Token, where: [token: ^token, context: ^context]
   end
 
   @doc """
   Gets all tokens for the given <%= schema.singular %> for the given contexts.
   """
   def <%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all) do
-    from t in <%= inspect schema.module %>Token, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id
+    from t in <%= inspect schema.alias %>Token, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id
   end
 
   def <%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [_ | _] = contexts) do
-    from t in <%= inspect schema.module %>Token, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id and t.context in ^contexts
+    from t in <%= inspect schema.alias %>Token, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id and t.context in ^contexts
   end
 end

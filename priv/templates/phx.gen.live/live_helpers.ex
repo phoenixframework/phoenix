@@ -18,8 +18,8 @@ defmodule <%= inspect context.web_module %>.LiveHelpers do
           id={@<%= schema.singular %>.id || :new}
           title={@page_title}
           action={@live_action}
+          <%= schema.singular %>={@<%= schema.singular %>}
           return_to={Routes.<%= schema.singular %>_index_path(@socket, :index)}
-          <%= schema.singular %>: @<%= schema.singular %>
         />
       </.modal>
   """
@@ -43,7 +43,7 @@ defmodule <%= inspect context.web_module %>.LiveHelpers do
             phx_click: hide_modal()
           %>
         <%% else %>
-         <a id="close" href="#" class="phx-modal-close" phx-click={hide_modal()}>✖</a>
+          <a id="close" href="#" class="phx-modal-close" phx-click={hide_modal()}>✖</a>
         <%% end %>
 
         <%%= render_slot(@inner_block) %>

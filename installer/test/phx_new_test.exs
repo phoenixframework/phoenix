@@ -148,12 +148,12 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~S|maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []|
         assert file =~ ~S|socket_options: maybe_ipv6|
         assert file =~ """
-        if System.get_env("PHX_SERVER") && System.get_env("RELEASE_NAME") do
+        if System.get_env("PHX_SERVER") do
           config :phx_blog, PhxBlogWeb.Endpoint, server: true
         end
         """
         assert file =~ ~S[host = System.get_env("PHX_HOST") || "example.com"]
-        assert file =~ ~S|url: [host: host, port: 443],|
+        assert file =~ ~S|url: [host: host, port: 443, scheme: "https"],|
       end
       assert_file "phx_blog/config/test.exs", ~R/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
       assert_file "phx_blog/lib/phx_blog/repo.ex", ~r"defmodule PhxBlog.Repo"
@@ -511,8 +511,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/runtime.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Postgres"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)"
       assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
     end
   end
@@ -528,8 +527,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/runtime.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.MyXQL"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)"
       assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
     end
   end
@@ -545,8 +543,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/runtime.exs", [~r/database: database_path/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.SQLite3"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)"
       assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
 
       assert_file "custom_path/.gitignore", "*.db"
@@ -565,8 +562,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/config/runtime.exs", [~r/url: database_url/]
       assert_file "custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Tds"
 
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
+      assert_file "custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)"
       assert_file "custom_path/test/support/data_case.ex", "Ecto.Adapters.SQL.Sandbox.start_owner"
     end
   end

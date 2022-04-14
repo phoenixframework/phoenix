@@ -63,7 +63,7 @@ But we can do even better.
 
 Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_web/templates/error` directory. Let's create one now. Inside our new directory, let's add a template named`404.html.heex` and give it some markup – a mixture of our application layout and a new `<div>` with our message to the user.
 
-```html
+```heex
 <!DOCTYPE html>
 <html lang="en">
   <head>

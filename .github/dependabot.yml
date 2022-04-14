@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # Maintain dependencies for Phoenix itself
+  - package-ecosystem: "mix"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  # Maintain dependencies for Phoenix integration tests
+  - package-ecosystem: "mix"
+    directory: "/integration_test"
+    schedule:
+      interval: "daily"
+
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+

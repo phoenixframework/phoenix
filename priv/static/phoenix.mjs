@@ -1073,4 +1073,4 @@ export {
   serializer_default as Serializer,
   Socket
 };
-//# sourceMappingURL=phoenix.esm.js.map
+//# sourceMappingURL=phoenix.mjs.map

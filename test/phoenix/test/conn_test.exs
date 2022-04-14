@@ -320,7 +320,7 @@ defmodule Phoenix.Test.ConnTest do
     end
 
     assert_raise Jason.DecodeError,
-                 "unexpected byte at position 0: 0x6F ('o')", fn ->
+                 "unexpected byte at position 0: 0x6F (\"o\")", fn ->
       build_conn(:get, "/") |> put_resp_content_type("application/json")
                       |> resp(200, "ok") |> json_response(200)
     end

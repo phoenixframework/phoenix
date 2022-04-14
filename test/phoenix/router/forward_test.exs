@@ -70,7 +70,7 @@ defmodule Phoenix.Router.ForwardTest do
   end
 
   test "forwards path to plug" do
-    conn = call(Router, :get, "admin")
+    conn = call(Router, :get, "/admin")
     assert conn.script_name == []
     assert conn.assigns[:fwd_script] == ["admin"]
     assert conn.status == 200
@@ -78,7 +78,7 @@ defmodule Phoenix.Router.ForwardTest do
   end
 
   test "forwards any request starting with forward path" do
-    conn = call(Router, :get, "admin/stats")
+    conn = call(Router, :get, "/admin/stats")
     assert conn.script_name == []
     assert conn.assigns[:fwd_script] == ["admin"]
     assert conn.status == 200
@@ -113,7 +113,7 @@ defmodule Phoenix.Router.ForwardTest do
   end
 
   test "accumulates phoenix_forwards" do
-    conn = call(Router, :get, "admin")
+    conn = call(Router, :get, "/admin")
     assert conn.private[Router] == {[], %{
       Phoenix.Router.ForwardTest.AdminDashboard => ["admin"],
       Phoenix.Router.ForwardTest.InitPlug => ["init"],
@@ -129,33 +129,33 @@ defmodule Phoenix.Router.ForwardTest do
     import AdminDashboard.Helpers
     assert page_path(%Plug.Conn{}, :stats) == "/stats"
 
-    conn = call(Router, :get, "stats")
+    conn = call(Router, :get, "/stats")
     assert page_path(conn, :stats) == "/admin/stats"
 
-    conn = call(Router, :get, "stats", _params = nil, ["phx"])
+    conn = call(Router, :get, "/stats", _params = nil, ["phx"])
     assert page_path(conn, :stats) == "/phx/admin/stats"
 
-    conn = call(Router, :get, "admin/stats")
+    conn = call(Router, :get, "/admin/stats")
     assert page_path(conn, :stats) == "/admin/stats"
 
-    conn = call(Router, :get, "admin/stats", _params = nil, ["phx"])
+    conn = call(Router, :get, "/admin/stats", _params = nil, ["phx"])
     assert page_path(conn, :stats) == "/phx/admin/stats"
   end
 
   test "forward can handle plugs with non-literal init returns" do
-    assert call(Router, :get, "init").assigns.opts == %{non: :literal}
+    assert call(Router, :get, "/init").assigns.opts == %{non: :literal}
   end
 
   test "forward can handle plugs with custom options" do
-    assert call(Router, :get, "assign/opts").assigns.opts == %{foo: "bar"}
+    assert call(Router, :get, "/assign/opts").assigns.opts == %{foo: "bar"}
   end
 
   test "forward can handle params" do
-    assert call(Router, :get, "params/hello_world").resp_body =~ ~s["param" => "hello_world"]
+    assert call(Router, :get, "/params/hello_world").resp_body =~ ~s["param" => "hello_world"]
   end
 
   test "forward with scoped alias" do
-    conn = call(ApiRouter, :get, "health")
+    conn = call(ApiRouter, :get, "/health")
     assert conn.resp_body == "health"
     assert conn.private[ApiRouter] == {[], %{Phoenix.Test.HealthController => []}}
   end

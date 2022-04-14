@@ -121,6 +121,58 @@ defmodule Phoenix.Presence do
   information, while maintaining the required `:metas` field from the
   original presence data.
 
+  ## Using Elixir as a Presence Client
+
+  Presence is great for external clients, such as JavaScript applications, but
+  it can also be used from an Elixir client process to keep track of presence
+  changes as they happen on the server. This can be accomplished by implementing
+  the optional [`init/1`](`c:init/1`) and [`handle_metas/4`](`c:handle_metas/4`)
+  callbacks on your presence module. For example, the following callback
+  receives presence metadata changes, and broadcasts to other Elixir processes
+  about users joining and leaving:
+
+      defmodule MyApp.Presence do
+        use Phoenix.Presence,
+          otp_app: :my_app,
+          pubsub_server: MyApp.PubSub
+
+        def init(_opts) do
+          {:ok, %{}} # user-land state
+        end
+
+        def handle_metas(topic, %{joins: joins, leaves: leaves}, presences, state) do
+          # fetch existing presence information for the joined users and broadcast the
+          # event to all subscribers
+          for {user_id, presence} <- joins do
+            user_data = %{user: presence.user, metas: Map.fetch!(presences, user_id)}
+            msg = {MyApp.PresenceClient, {:join, user_data}}
+            Phoenix.PubSub.local_broadcast(MyApp.PubSub, topic, msg)
+          end
+
+          # fetch existing presence information for the left users and broadcast the
+          # event to all subscribers
+          for {user_id, presence} <- leaves do
+            metas =
+              case Map.fetch(presences, user_id) do
+                {:ok, presence_metas} -> presence_metas
+                :error -> []
+              end
+
+            user_data = %{user: presence.user, metas: metas}
+            msg = {MyApp.PresenceClient, {:leave, user_data}}
+            Phoenix.PubSub.local_broadcast(MyApp.PubSub, topic, msg)
+          end
+
+          {:ok, state}
+        end
+      end
+
+  The `handle_metas/4` callback receives the topic, presence diff, current presences
+  for the topic with their metadata, and any user-land state accumulated from init and
+  subsequent `handle_metas/4` calls. In our example implementation, we walk the `:joins` and
+  `:leaves` in the diff, and populate a complete presence from our known presence information.
+  Then we broadcast to the local node subscribers about user joins and leaves.
+
   ## Testing with Presence
 
   Every time the `fetch` callback is invoked, it is done from a separate
@@ -137,9 +189,9 @@ defmodule Phoenix.Presence do
 
   """
 
-  @type presences :: %{String.t => %{metas: [map()]}}
-  @type presence :: %{key: String.t, meta: map()}
-  @type topic :: String.t
+  @type presences :: %{String.t() => %{metas: [map()]}}
+  @type presence :: %{key: String.t(), meta: map()}
+  @type topic :: String.t()
 
   @doc """
   Track a channel's process as a presence.
@@ -160,28 +212,28 @@ defmodule Phoenix.Presence do
       end
 
   """
-  @callback track(socket :: Phoenix.Socket.t, key :: String.t, meta :: map()) ::
-    {:ok, ref :: binary()} |
-    {:error, reason :: term()}
+  @callback track(socket :: Phoenix.Socket.t(), key :: String.t(), meta :: map()) ::
+              {:ok, ref :: binary()}
+              | {:error, reason :: term()}
 
   @doc """
   Track an arbitrary process as a presence.
 
   Same with `track/3`, except track any process by `topic` and `key`.
   """
-  @callback track(pid, topic, key :: String.t, meta :: map()) ::
-    {:ok, ref :: binary()} |
-    {:error, reason :: term()}
+  @callback track(pid, topic, key :: String.t(), meta :: map()) ::
+              {:ok, ref :: binary()}
+              | {:error, reason :: term()}
 
   @doc """
   Stop tracking a channel's process.
   """
-  @callback untrack(socket :: Phoenix.Socket.t, key :: String.t) :: :ok
+  @callback untrack(socket :: Phoenix.Socket.t(), key :: String.t()) :: :ok
 
   @doc """
   Stop tracking a process.
   """
-  @callback untrack(pid, topic, key :: String.t) :: :ok
+  @callback untrack(pid, topic, key :: String.t()) :: :ok
 
   @doc """
   Update a channel presence's metadata.
@@ -189,18 +241,22 @@ defmodule Phoenix.Presence do
   Replace a presence's metadata by passing a new map or a function that takes
   the current map and returns a new one.
   """
-  @callback update(socket :: Phoenix.Socket.t, key :: String.t, meta :: map() | (map() -> map())) ::
-    {:ok, ref :: binary()} |
-    {:error, reason :: term()}
+  @callback update(
+              socket :: Phoenix.Socket.t(),
+              key :: String.t(),
+              meta :: map() | (map() -> map())
+            ) ::
+              {:ok, ref :: binary()}
+              | {:error, reason :: term()}
 
   @doc """
   Update a process presence's metadata.
 
   Same as `update/3`, but with an arbitrary process.
   """
-  @callback update(pid, topic, key :: String.t, meta :: map() | (map() -> map())) ::
-    {:ok, ref :: binary()} |
-    {:error, reason :: term()}
+  @callback update(pid, topic, key :: String.t(), meta :: map() | (map() -> map())) ::
+              {:ok, ref :: binary()}
+              | {:error, reason :: term()}
 
   @doc """
   Returns presences for a socket/topic.
@@ -228,7 +284,7 @@ defmodule Phoenix.Presence do
   a `:phx_ref_prev` key will be present containing the previous
   `:phx_ref` value.
   """
-  @callback list(Phoenix.Socket.t | topic) :: presences
+  @callback list(Phoenix.Socket.t() | topic) :: presences
 
   @doc """
   Returns the map of presence metadata for a socket/topic-key pair.
@@ -246,7 +302,7 @@ defmodule Phoenix.Presence do
   Like `c:list/1`, the presence metadata is passed to the `fetch`
   callback of your presence module to fetch any additional information.
   """
-  @callback get_by_key(Phoenix.Socket.t | topic, key :: String.t) :: presences
+  @callback get_by_key(Phoenix.Socket.t() | topic, key :: String.t()) :: presences
 
   @doc """
   Extend presence information with additional data.
@@ -277,6 +333,22 @@ defmodule Phoenix.Presence do
   """
   @callback fetch(topic, presences) :: presences
 
+  @doc """
+  Initializes the presence client state.
+
+  Invoked when your presence module starts, allows dynamically
+  providing initial state for handling presence metadata.
+  """
+  @callback init(state :: term) :: {:ok, new_state :: term}
+
+  @doc """
+  Receives presence metadata changes.
+  """
+  @callback handle_metas(topic :: String.t(), diff :: map(), presences :: map(), state :: term) ::
+              {:ok, term}
+
+  @optional_callbacks init: 1, handle_metas: 4
+
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Phoenix.Presence
@@ -286,7 +358,6 @@ defmodule Phoenix.Presence do
       _ = opts[:otp_app] || raise "use Phoenix.Presence expects :otp_app to be given"
 
       # User defined
-
       def fetch(_topic, presences), do: presences
       defoverridable fetch: 2
 
@@ -307,6 +378,7 @@ defmodule Phoenix.Presence do
       def track(%Phoenix.Socket{} = socket, key, meta) do
         track(socket.channel_pid, socket.topic, key, meta)
       end
+
       def track(pid, topic, key, meta) do
         Phoenix.Tracker.track(__MODULE__, pid, topic, key, meta)
       end
@@ -314,6 +386,7 @@ defmodule Phoenix.Presence do
       def untrack(%Phoenix.Socket{} = socket, key) do
         untrack(socket.channel_pid, socket.topic, key)
       end
+
       def untrack(pid, topic, key) do
         Phoenix.Tracker.untrack(__MODULE__, pid, topic, key)
       end
@@ -321,6 +394,7 @@ defmodule Phoenix.Presence do
       def update(%Phoenix.Socket{} = socket, key, meta) do
         update(socket.channel_pid, socket.topic, key, meta)
       end
+
       def update(pid, topic, key, meta) do
         Phoenix.Tracker.update(__MODULE__, pid, topic, key, meta)
       end
@@ -343,27 +417,19 @@ defmodule Phoenix.Presence do
       pubsub_server =
         opts[:pubsub_server] || raise "use Phoenix.Presence expects :pubsub_server to be given"
 
-      Phoenix.Tracker.start_link(__MODULE__, {module, task_supervisor, pubsub_server}, opts)
+      Phoenix.Tracker.start_link(
+        __MODULE__,
+        {module, task_supervisor, pubsub_server},
+        opts
+      )
     end
 
-    def init(state) do
-      {:ok, state}
-    end
+    def init(state), do: Phoenix.Presence.init(state)
 
-    def handle_diff(diff, state) do
-      {module, task_supervisor, pubsub_server} = state
+    def handle_diff(diff, state), do: Phoenix.Presence.handle_diff(diff, state)
 
-      Task.Supervisor.start_child(task_supervisor, fn ->
-        for {topic, {joins, leaves}} <- diff do
-          Phoenix.Channel.Server.local_broadcast(pubsub_server, topic, "presence_diff", %{
-            joins: module.fetch(topic, Phoenix.Presence.group(joins)),
-            leaves: module.fetch(topic, Phoenix.Presence.group(leaves))
-          })
-        end
-      end)
-
-      {:ok, state}
-    end
+    def handle_info(msg, state),
+      do: Phoenix.Presence.handle_info(msg, state)
   end
 
   @doc false
@@ -389,6 +455,77 @@ defmodule Phoenix.Presence do
   end
 
   @doc false
+  def init({module, task_supervisor, pubsub_server}) do
+    state = %{
+      module: module,
+      task_supervisor: task_supervisor,
+      pubsub_server: pubsub_server,
+      topics: %{},
+      tasks: :queue.new(),
+      current_task: nil,
+      client_state: nil
+    }
+
+    client_state =
+      if function_exported?(module, :handle_metas, 4) do
+        unless function_exported?(module, :init, 1) do
+          raise ArgumentError, """
+          missing #{inspect(module)}.init/1 callback for client state
+
+          When you implement the handle_metas/4 callback, you must also
+          implement init/1. For example, add the following to
+          #{inspect(module)}:
+
+          def init(_opts), do: {:ok, %{}}
+
+          """
+        end
+
+        case module.init(%{}) do
+          {:ok, client_state} ->
+            client_state
+
+          other ->
+            raise ArgumentError, """
+            expected #{inspect(module)}.init/1 to return {:ok, state}, got: #{inspect(other)}
+            """
+        end
+      end
+
+    {:ok, %{state | client_state: client_state}}
+  end
+
+  @doc false
+  def handle_diff(diff, state) do
+    {:ok, async_merge(state, diff)}
+  end
+
+  @doc false
+  def handle_info({task_ref, {:phoenix, ref, computed_diffs}}, state) do
+    %{current_task: current_task} = state
+    {^ref, %Task{ref: ^task_ref} = task} = current_task
+    {:exit, _} = Task.shutdown(task)
+
+    Enum.each(computed_diffs, fn {topic, presence_diff} ->
+      Phoenix.Channel.Server.local_broadcast(
+        state.pubsub_server,
+        topic,
+        "presence_diff",
+        presence_diff
+      )
+    end)
+
+    new_state =
+      if function_exported?(state.module, :handle_metas, 4) do
+        do_handle_metas(state, computed_diffs)
+      else
+        state
+      end
+
+    {:noreply, next_task(new_state)}
+  end
+
+  @doc false
   def list(module, topic) do
     grouped =
       module
@@ -403,8 +540,10 @@ defmodule Phoenix.Presence do
     string_key = to_string(key)
 
     case Phoenix.Tracker.get_by_key(module, topic, key) do
-      [] -> []
-      [_|_] = pid_metas ->
+      [] ->
+        []
+
+      [_ | _] = pid_metas ->
         metas = Enum.map(pid_metas, fn {_pid, meta} -> meta end)
         %{^string_key => fetched_metas} = module.fetch(topic, %{string_key => %{metas: metas}})
         fetched_metas
@@ -420,5 +559,153 @@ defmodule Phoenix.Presence do
         %{metas: [meta | metas]}
       end)
     end)
+  end
+
+  defp send_continue(%Task{} = task, ref), do: send(task.pid, {ref, :continue})
+
+  defp next_task(state) do
+    case :queue.out(state.tasks) do
+      {{:value, {ref, %Task{} = next}}, remaining_tasks} ->
+        send_continue(next, ref)
+        %{state | current_task: {ref, next}, tasks: remaining_tasks}
+
+      {:empty, _} ->
+        %{state | current_task: nil, tasks: :queue.new()}
+    end
+  end
+
+  defp do_handle_metas(state, computed_diffs) do
+    Enum.reduce(computed_diffs, state, fn {topic, presence_diff}, acc ->
+      updated_topics = merge_diff(acc.topics, topic, presence_diff)
+
+      topic_presences =
+        case Map.fetch(updated_topics, topic) do
+          {:ok, presences} -> presences
+          :error -> %{}
+        end
+
+      case acc.module.handle_metas(topic, presence_diff, topic_presences, acc.client_state) do
+        {:ok, updated_client_state} ->
+          %{acc | topics: updated_topics, client_state: updated_client_state}
+
+        other ->
+          raise ArgumentError, """
+          expected #{inspect(acc.module)}.handle_metas/4 to return {:ok, new_state}.
+
+            got: #{inspect(other)}
+          """
+      end
+    end)
+  end
+
+  defp async_merge(state, diff) do
+    %{module: module} = state
+    ref = make_ref()
+
+    new_task =
+      Task.Supervisor.async(state.task_supervisor, fn ->
+        computed_diffs =
+          Enum.map(diff, fn {topic, {joins, leaves}} ->
+            joins = module.fetch(topic, Phoenix.Presence.group(joins))
+            leaves = module.fetch(topic, Phoenix.Presence.group(leaves))
+            {topic, %{joins: joins, leaves: leaves}}
+          end)
+
+        receive do
+          {^ref, :continue} -> {:phoenix, ref, computed_diffs}
+        end
+      end)
+
+    if state.current_task do
+      %{state | tasks: :queue.in({ref, new_task}, state.tasks)}
+    else
+      send_continue(new_task, ref)
+      %{state | current_task: {ref, new_task}}
+    end
+  end
+
+  defp merge_diff(topics, topic, %{leaves: leaves, joins: joins} = _diff) do
+    # add new topic if needed
+    updated_topics =
+      if Map.has_key?(topics, topic) do
+        topics
+      else
+        add_new_topic(topics, topic)
+      end
+
+    # merge diff into topics
+    {updated_topics, _topic} = Enum.reduce(joins, {updated_topics, topic}, &handle_join/2)
+    {updated_topics, _topic} = Enum.reduce(leaves, {updated_topics, topic}, &handle_leave/2)
+
+    # if no more presences for given topic, remove topic
+    if topic_presences_count(updated_topics, topic) == 0 do
+      remove_topic(updated_topics, topic)
+    else
+      updated_topics
+    end
+  end
+
+  defp handle_join({joined_key, presence}, {topics, topic}) do
+    joined_metas = Map.get(presence, :metas, [])
+    {add_new_presence_or_metas(topics, topic, joined_key, joined_metas), topic}
+  end
+
+  defp handle_leave({left_key, presence}, {topics, topic}) do
+    {remove_presence_or_metas(topics, topic, left_key, presence), topic}
+  end
+
+  defp add_new_presence_or_metas(
+         topics,
+         topic,
+         key,
+         new_metas
+       ) do
+    topic_presences = topics[topic]
+
+    updated_topic =
+      case Map.fetch(topic_presences, key) do
+        # existing presence, add new metas
+        {:ok, existing_metas} ->
+          remaining_metas = new_metas -- existing_metas
+          updated_metas = existing_metas ++ remaining_metas
+          Map.put(topic_presences, key, updated_metas)
+
+        # there are no presences for that key
+        :error ->
+          Map.put_new(topic_presences, key, new_metas)
+      end
+
+    Map.put(topics, topic, updated_topic)
+  end
+
+  defp remove_presence_or_metas(
+         topics,
+         topic,
+         key,
+         deleted_metas
+       ) do
+    topic_presences = topics[topic]
+    presence_metas = Map.get(topic_presences, key, [])
+    remaining_metas = presence_metas -- Map.get(deleted_metas, :metas, [])
+
+    updated_topic =
+      case remaining_metas do
+        [] -> Map.delete(topic_presences, key)
+        _ -> Map.put(topic_presences, key, remaining_metas)
+      end
+
+    Map.put(topics, topic, updated_topic)
+  end
+
+  defp add_new_topic(topics, topic) do
+    Map.put_new(topics, topic, %{})
+  end
+
+  defp remove_topic(topics, topic) do
+    Map.delete(topics, topic)
+  end
+
+  defp topic_presences_count(topics, topic) do
+    map_size(topics[topic])
   end
 end

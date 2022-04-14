@@ -7,8 +7,16 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 
-# Start the phoenix server if environment is set and running in a release
-if System.get_env("PHX_SERVER") && System.get_env("RELEASE_NAME") do
+# ## Using releases
+#
+# If you use `mix release`, you need to explicitly enable the server
+# by passing the PHX_SERVER=true when you start it:
+#
+#     PHX_SERVER=true bin/<%= @app_name %> start
+#
+# Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
+# script that automatically sets the env var above.
+if System.get_env("PHX_SERVER") do
   config :<%= @app_name %>, <%= @endpoint_module %>, server: true
 end
 
@@ -29,7 +37,7 @@ if config_env() == :prod do
   port = String.to_integer(System.get_env("PORT") || "4000")
 
   config :<%= @app_name %>, <%= @endpoint_module %>,
-    url: [host: host, port: 443],
+    url: [host: host, port: 443, scheme: "https"],
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
@@ -38,17 +46,7 @@ if config_env() == :prod do
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
       port: port
     ],
-    secret_key_base: secret_key_base
-
-  # ## Using releases
-  #
-  # If you are doing OTP releases, you need to instruct Phoenix
-  # to start each relevant endpoint:
-  #
-  #     config :<%= @web_app_name %>, <%= @endpoint_module %>, server: true
-  #
-  # Then you can assemble a release by calling `mix release`.
-  # See `mix help release` for more information.<%= if @mailer do %>
+    secret_key_base: secret_key_base<%= if @mailer do %>
 
   # ## Configuring the mailer
   #

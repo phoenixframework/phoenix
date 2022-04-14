@@ -15,6 +15,11 @@ defmodule PhoenixTestOld.Router do
   get "/old", PageController, :index, as: :page
 end
 
+defmodule PhoenixTestLiveWeb.Router do
+  use Phoenix.Router
+  get "/", PageController, :index, metadata: %{log_module: PageLive.Index}
+end
+
 defmodule Mix.Tasks.Phx.RoutesTest do
   use ExUnit.Case, async: true
 
@@ -46,5 +51,11 @@ defmodule Mix.Tasks.Phx.RoutesTest do
     Mix.Tasks.Phx.Routes.run([], PhoenixTestOld)
     assert_received {:mix_shell, :info, [routes]}
     assert routes =~ "page_path  GET  /old  PageController :index"
+  end
+
+  test "overrides module name for route with :log_module metadata" do
+    Mix.Tasks.Phx.Routes.run(["PhoenixTestLiveWeb.Router"])
+    assert_received {:mix_shell, :info, [routes]}
+    assert routes =~ "page_path  GET  /  PageLive.Index :index"
   end
 end

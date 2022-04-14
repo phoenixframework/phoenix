@@ -180,7 +180,7 @@ or you could use a distribution metric to see how many
 requests were completed in particular time buckets:
 
 ```elixir
-Telemetry.Metrics.distribution("phoenix.endpoint.stop.duration", buckets: [100, 200, 300])
+Telemetry.Metrics.distribution("phoenix.endpoint.stop.duration")
 ```
 
 This ability to introspect HTTP requests is really powerful --
@@ -232,8 +232,7 @@ Or you could use the `Telemetry.Metrics.distribution/2` function to define a his
 
 ```elixir
 Telemetry.Metrics.distribution("my_app.repo.query.queue_time",
-  unit: {:native, :millisecond},
-  buckets: [10, 50, 100]
+  unit: {:native, :millisecond}
 )
 ```
 

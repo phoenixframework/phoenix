@@ -12,8 +12,12 @@
 #   - https://pkgs.org/ - resource for finding needed packages
 #   - Ex: hexpm/elixir:<%= elixir_vsn %>-erlang-<%= otp_vsn %>-debian-bullseye-20210902-slim
 #
-ARG BUILDER_IMAGE="hexpm/elixir:<%= elixir_vsn %>-erlang-<%= otp_vsn %>-debian-bullseye-20210902-slim"
-ARG RUNNER_IMAGE="debian:bullseye-20210902-slim"
+ARG ELIXIR_VERSION=<%= elixir_vsn %>
+ARG OTP_VERSION=<%= otp_vsn %>
+ARG DEBIAN_VERSION=bullseye-20210902-slim
+
+ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
+ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
 FROM ${BUILDER_IMAGE} as builder
 
@@ -45,12 +49,12 @@ RUN mix deps.compile
 COPY priv priv
 
 COPY lib lib
-
+<%= if assets_dir_exists? do %>
 COPY assets assets
 
 # compile assets
 RUN mix assets.deploy
-
+<% end %>
 # Compile the release
 RUN mix compile
 

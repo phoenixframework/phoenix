@@ -16,11 +16,40 @@ defmodule Phoenix.PresenceTest do
     end
   end
 
+  defmodule MetasPresence do
+    use Phoenix.Presence, otp_app: :phoenix
+
+    def init(state), do: {:ok, state}
+
+    def handle_metas(topic, diff, presences, state) do
+      Phoenix.PubSub.local_broadcast(PresPub, topic, %{diff: diff, presences: presences})
+      {:ok, state}
+    end
+  end
+
+  defmodule MetasMissingInitPresence do
+    use Phoenix.Presence, otp_app: :phoenix
+
+    def init_presence do
+      Phoenix.Presence.init({
+        __MODULE__,
+        __MODULE__.TaskSupervisor,
+        PresPub
+      })
+    end
+
+    def handle_metas(_topic, _diff, _presences, _state) do
+      raise ArgumentError, "should not be called due to missing init/1"
+    end
+  end
+
   Application.put_env(:phoenix, MyPresence, pubsub_server: PresPub)
+  Application.put_env(:phoenix, MetasPresence, pubsub_server: PresPub)
 
   setup_all do
     start_supervised!({Phoenix.PubSub, name: PresPub, pool_size: 1})
     start_supervised!(MyPresence)
+    start_supervised!(MetasPresence)
     {:ok, pubsub: PresPub}
   end
 
@@ -148,7 +177,13 @@ defmodule Phoenix.PresenceTest do
   test "untrack with pid", %{topic: topic} = config do
     Phoenix.PubSub.subscribe(config.pubsub, config.topic)
     MyPresence.track(self(), config.topic, "u1", %{})
-    assert %{"u1" => %{metas: [%{}]}} = MyPresence.list(config.topic)
+    MyPresence.track(self(), config.topic, "u2", %{})
+
+    assert %{
+             "u1" => %{extra: "extra", metas: [%{}]},
+             "u2" => %{extra: "extra", metas: [%{}]}
+           } = MyPresence.list(config.topic)
+
     assert MyPresence.untrack(self(), config.topic, "u1") == :ok
 
     assert_receive %Broadcast{
@@ -160,7 +195,8 @@ defmodule Phoenix.PresenceTest do
       }
     }
 
-    assert %{} = MyPresence.list(config.topic)
+    assert %{"u2" => %{extra: "extra", metas: [%{}]}} = MyPresence.list(config.topic)
+    assert map_size(MyPresence.list(config.topic)) == 1
   end
 
   test "track and untrack with %Socket{}", %{topic: topic} = config do
@@ -179,7 +215,7 @@ defmodule Phoenix.PresenceTest do
       }
     }
 
-    assert %{} = MyPresence.list(topic)
+    assert MyPresence.list(topic) == %{}
   end
 
   test "untrack with no tracked presence", config do
@@ -201,7 +237,6 @@ defmodule Phoenix.PresenceTest do
       }
     }
 
-    assert %{} = MyPresence.list(topic)
     assert %{"u1" => %{metas: [%{name: "updated"}]}} = MyPresence.list(topic)
   end
 
@@ -211,5 +246,163 @@ defmodule Phoenix.PresenceTest do
 
   test "fetchers_pid" do
     assert is_list(MyPresence.fetchers_pids())
+  end
+
+  describe "Presence behaviour when handle_metas is defined" do
+    test "raises when missing init/1" do
+      assert_raise ArgumentError,
+                   ~r|missing Phoenix.PresenceTest.MetasMissingInitPresence.init/1 callback for client state|,
+                   fn ->
+                     MetasMissingInitPresence.init_presence()
+                   end
+    end
+
+    test "async_merge/2 creates new topic and metas",
+         %{topic: topic} = config do
+      Phoenix.PubSub.subscribe(config.pubsub, topic)
+      MetasPresence.track(self(), topic, "u1", %{name: "u1"})
+
+      assert_receive %{
+        diff: %{
+          joins: %{"u1" => %{metas: [%{name: "u1"}]}},
+          leaves: %{}
+        },
+        presences: presences
+      }
+
+      assert %{"u1" => [%{name: "u1", phx_ref: _ref}]} = presences
+    end
+
+    test "async_merge/2 adds new presences to existing topic",
+         %{topic: topic} = config do
+      Phoenix.PubSub.subscribe(config.pubsub, topic)
+      pid1 = spawn(fn -> :timer.sleep(:infinity) end)
+      pid2 = spawn(fn -> :timer.sleep(:infinity) end)
+      MetasPresence.track(pid1, topic, "u1", %{name: "u1"})
+      MetasPresence.track(pid2, topic, "u2", %{name: "u2"})
+      MetasPresence.track(self(), topic, "u3", %{name: "u3"})
+
+      assert_receive %{
+        diff: %{
+          joins: %{"u3" => %{metas: [%{name: "u3"}]}},
+          leaves: %{}
+        },
+        presences: presences
+      }
+
+      assert %{
+               "u1" => [%{name: "u1", phx_ref: _u1_ref}],
+               "u2" => [%{name: "u2", phx_ref: _u2_ref}],
+               "u3" => [%{name: "u3", phx_ref: _u3_ref}]
+             } = presences
+    end
+
+    test "async_merge/2 adds new metas to existing presence",
+         %{topic: topic} = config do
+      Phoenix.PubSub.subscribe(config.pubsub, topic)
+      pid1 = spawn(fn -> :timer.sleep(:infinity) end)
+      pid2 = spawn(fn -> :timer.sleep(:infinity) end)
+      MetasPresence.track(pid1, topic, "u1", %{name: "u1.1"})
+      MetasPresence.track(pid2, topic, "u1", %{name: "u1.2"})
+      MetasPresence.track(self(), topic, "u1", %{name: "u1.3"})
+
+      assert_receive %{
+        diff: %{
+          joins: %{"u1" => %{metas: [%{name: "u1.3"}]}},
+          leaves: %{}
+        },
+        presences: presences
+      }
+
+      assert %{
+               "u1" => [
+                 %{name: "u1.1", phx_ref: _u1_1_ref},
+                 %{name: "u1.2", phx_ref: _u1_2_ref},
+                 %{name: "u1.3", phx_ref: _u1_3_ref}
+               ]
+             } = presences
+    end
+
+    test "async_merge/2 removes topic if it doesn't have presences",
+         %{topic: topic} = config do
+      Phoenix.PubSub.subscribe(config.pubsub, topic)
+      pid1 = spawn(fn -> :timer.sleep(:infinity) end)
+      pid2 = spawn(fn -> :timer.sleep(:infinity) end)
+
+      MetasPresence.track(pid1, topic, "u1", %{name: "u1"})
+      MetasPresence.track(pid2, topic, "u2", %{name: "u2"})
+      MetasPresence.track(self(), topic, "u3", %{name: "u3"})
+
+      MetasPresence.untrack(pid1, topic, "u1")
+      MetasPresence.untrack(pid2, topic, "u2")
+      MetasPresence.untrack(self(), topic, "u3")
+
+      assert_receive %{
+        diff: %{
+          joins: %{},
+          leaves: %{"u3" => %{metas: [%{name: "u3"}]}}
+        },
+        presences: presences
+      }
+
+      assert presences == %{}
+    end
+
+    test "async_merge/2 removes presence info if it only has one meta",
+         %{topic: topic} = config do
+      Phoenix.PubSub.subscribe(config.pubsub, topic)
+
+      pid1 = spawn(fn -> :timer.sleep(:infinity) end)
+      pid2 = spawn(fn -> :timer.sleep(:infinity) end)
+      MetasPresence.track(pid1, topic, "u1", %{name: "u1"})
+      MetasPresence.track(pid2, topic, "u2", %{name: "u2"})
+      MetasPresence.track(self(), topic, "u3", %{name: "u3"})
+
+      MetasPresence.untrack(self(), topic, "u3")
+
+      assert_receive %{
+        diff: %{
+          joins: %{},
+          leaves: %{"u3" => %{metas: [%{name: "u3"}]}}
+        },
+        presences: presences
+      }
+
+      assert map_size(presences) == 2
+
+      assert %{
+               "u1" => [%{name: "u1", phx_ref: _u1_ref}],
+               "u2" => [%{name: "u2", phx_ref: _u2_ref}]
+             } = presences
+    end
+
+    test "async_merge/2 removes metas when a presence left",
+         %{topic: topic} = config do
+      Phoenix.PubSub.subscribe(config.pubsub, topic)
+      pid1 = spawn(fn -> :timer.sleep(:infinity) end)
+      pid2 = spawn(fn -> :timer.sleep(:infinity) end)
+      MetasPresence.track(pid1, topic, "u1", %{name: "u1.1"})
+      MetasPresence.track(pid2, topic, "u1", %{name: "u1.2"})
+      MetasPresence.track(self(), topic, "u1", %{name: "u1.3"})
+
+      MetasPresence.untrack(self(), topic, "u1")
+
+      assert_receive %{
+        diff: %{
+          joins: %{},
+          leaves: %{"u1" => %{metas: [%{name: "u1.3"}]}}
+        },
+        presences: presences
+      }
+
+      assert %{"u1" => metas} = presences
+
+      assert length(metas) == 2
+
+      assert [
+               %{name: "u1.1", phx_ref: _u1_1_ref},
+               %{name: "u1.2", phx_ref: _u1_2_ref}
+             ] = metas
+    end
   end
 end

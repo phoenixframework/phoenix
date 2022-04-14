@@ -96,11 +96,11 @@ We modified our price column to a specific precision of 15, scale of 6, along wi
 
 ```console
 $ mix ecto.migrate
-14:09:02.260 [info]  == Running 20210201185747 Hello.Repo.Migrations.CreateProducts.change/0 forward
+14:09:02.260 [info] == Running 20210201185747 Hello.Repo.Migrations.CreateProducts.change/0 forward
 
-14:09:02.262 [info]  create table products
+14:09:02.262 [info] create table products
 
-14:09:02.273 [info]  == Migrated 20210201185747 in 0.0s
+14:09:02.273 [info] == Migrated 20210201185747 in 0.0s
 ```
 
 Before we jump into the generated code, let's start the server with `mix phx.server` and visit [http://localhost:4000/products](http://localhost:4000/products). Let's follow the "New Product" link and click the "Save" button without providing any input. We should be greeted with the following output:
@@ -381,23 +381,23 @@ With our migrations in place, we can migrate up.
 ```console
 $ mix ecto.migrate
 
-18:20:36.489 [info]  == Running 20210222231834 Hello.Repo.Migrations.CreateCategories.change/0 forward
+18:20:36.489 [info] == Running 20210222231834 Hello.Repo.Migrations.CreateCategories.change/0 forward
 
-18:20:36.493 [info]  create table categories
+18:20:36.493 [info] create table categories
 
-18:20:36.508 [info]  create index categories_title_index
+18:20:36.508 [info] create index categories_title_index
 
-18:20:36.512 [info]  == Migrated 20210222231834 in 0.0s
+18:20:36.512 [info] == Migrated 20210222231834 in 0.0s
 
-18:20:36.547 [info]  == Running 20210222231930 Hello.Repo.Migrations.CreateProductCategories.change/0 forward
+18:20:36.547 [info] == Running 20210222231930 Hello.Repo.Migrations.CreateProductCategories.change/0 forward
 
-18:20:36.547 [info]  create table product_categories
+18:20:36.547 [info] create table product_categories
 
-18:20:36.557 [info]  create index product_categories_product_id_index
+18:20:36.557 [info] create index product_categories_product_id_index
 
 18:20:36.560 [info]  create index product_categories_category_id_product_id_index
 
-18:20:36.562 [info]  == Migrated 20210222231930 in 0.0s
+18:20:36.562 [info] == Migrated 20210222231930 in 0.0s
 ```
 
 Now that we have a `Catalog.Product` schema and a join table to associate products and categories, we're nearly ready to start wiring up our new features. Before we dive in, we first need real categories to select in our web UI. Let's quickly seed some new categories in the application. Add the following code to your seeds file in `priv/repo/seeds.exs`:
@@ -523,7 +523,7 @@ With our `category_select` function in place, we can open up `lib/hello_web/temp
 
 We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to `lib/hello_web/templates/product/show.html.heex`:
 
-```html
+```heex
   ...
 + <li>
 +   <strong>Categories:</strong>
@@ -636,25 +636,25 @@ We used the `:delete_all` strategy again to enforce data integrity. This way, wh
 ```console
 $ mix ecto.migrate
 
-16:59:51.941 [info]  == Running 20210205203342 Hello.Repo.Migrations.CreateCarts.change/0 forward
+16:59:51.941 [info] == Running 20210205203342 Hello.Repo.Migrations.CreateCarts.change/0 forward
 
-16:59:51.945 [info]  create table carts
+16:59:51.945 [info] create table carts
 
-16:59:51.949 [info]  create index carts_user_uuid_index
+16:59:51.949 [info] create index carts_user_uuid_index
 
-16:59:51.952 [info]  == Migrated 20210205203342 in 0.0s
+16:59:51.952 [info] == Migrated 20210205203342 in 0.0s
 
-16:59:51.988 [info]  == Running 20210205213410 Hello.Repo.Migrations.CreateCartItems.change/0 forward
+16:59:51.988 [info] == Running 20210205213410 Hello.Repo.Migrations.CreateCartItems.change/0 forward
 
-16:59:51.988 [info]  create table cart_items
+16:59:51.988 [info] create table cart_items
 
-16:59:51.998 [info]  create index cart_items_cart_id_index
+16:59:51.998 [info] create index cart_items_cart_id_index
 
-16:59:52.000 [info]  create index cart_items_product_id_index
+16:59:52.000 [info] create index cart_items_product_id_index
 
-16:59:52.001 [info]  create index cart_items_cart_id_product_id_index
+16:59:52.001 [info] create index cart_items_cart_id_product_id_index
 
-16:59:52.002 [info]  == Migrated 20210205213410 in 0.0s
+16:59:52.002 [info] == Migrated 20210205213410 in 0.0s
 ```
 
 Our database is ready to go with new `carts` and `cart_items` tables, but now we need to map that back into application code. You may be wondering how we can mix database foreign keys across different tables and how that relates to the context pattern of isolated, grouped functionality. Let's jump in and discuss the approaches and their tradeoffs.
@@ -930,7 +930,7 @@ We created a view to render our `show.html` template and aliased our `ShoppingCa
 
 Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`:
 
-```eex
+```heex
 <h1>My Cart</h1>
 
 <%= if @cart.items == [] do %>
@@ -1170,21 +1170,21 @@ We wired up `create` and `show` routes for our generated `OrderController`, sinc
 ```console
 $ mix ecto.migrate
 
-17:14:37.715 [info]  == Running 20210209214612 Hello.Repo.Migrations.CreateOrders.change/0 forward
+17:14:37.715 [info] == Running 20210209214612 Hello.Repo.Migrations.CreateOrders.change/0 forward
 
-17:14:37.720 [info]  create table orders
+17:14:37.720 [info] create table orders
 
-17:14:37.755 [info]  == Migrated 20210209214612 in 0.0s
+17:14:37.755 [info] == Migrated 20210209214612 in 0.0s
 
-17:14:37.784 [info]  == Running 20210209215050 Hello.Repo.Migrations.CreateOrderLineItems.change/0 forward
+17:14:37.784 [info] == Running 20210209215050 Hello.Repo.Migrations.CreateOrderLineItems.change/0 forward
 
-17:14:37.785 [info]  create table order_line_items
+17:14:37.785 [info] create table order_line_items
 
-17:14:37.795 [info]  create index order_line_items_order_id_index
+17:14:37.795 [info] create index order_line_items_order_id_index
 
-17:14:37.796 [info]  create index order_line_items_product_id_index
+17:14:37.796 [info] create index order_line_items_product_id_index
 
-17:14:37.798 [info]  == Migrated 20210209215050 in 0.0s
+17:14:37.798 [info] == Migrated 20210209215050 in 0.0s
 ```
 
 Before we render information about our orders, we need to ensure our order data is fully populated and can be looked up by a current user. Open up your orders context in `lib/hello/orders.ex` and replace your `get_order!/1` function by a new `get_order!/2` definition:
@@ -1283,7 +1283,7 @@ Our new function accepts the cart struct and issues a `Repo.delete_all` which ac
 
 We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can replace the order show template in `lib/hello_web/templates/order/show.html.heex`:
 
-```eex
+```heex
 <h1>Thank you for your order!</h1>
 
 <ul>

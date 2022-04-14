@@ -35,17 +35,25 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
     [channel_name] = validate_args!(args)
     context_app = Mix.Phoenix.context_app()
     web_prefix = Mix.Phoenix.web_path(context_app)
-    test_prefix = Mix.Phoenix.web_test_path(context_app)
+    web_test_prefix = Mix.Phoenix.web_test_path(context_app)
     binding = Mix.Phoenix.inflect(channel_name)
     binding = Keyword.put(binding, :module, "#{binding[:web_module]}.#{binding[:scoped]}")
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")
 
+    test_path = Path.join(web_test_prefix, "channels/#{binding[:path]}_channel_test.exs")
+    case_path = Path.join(Path.dirname(web_test_prefix), "support/channel_case.ex")
+
+    maybe_case = if File.exists?(case_path) do
+      []
+    else
+      [{:eex, "channel_case.ex", case_path}]
+    end
+
     Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.channel", binding, [
       {:eex, "channel.ex", Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
-      {:eex, "channel_test.exs",
-       Path.join(test_prefix, "channels/#{binding[:path]}_channel_test.exs")}
-    ])
+      {:eex, "channel_test.exs", test_path}
+    ] ++ maybe_case)
 
     user_socket_path = Mix.Phoenix.web_path(context_app, "channels/user_socket.ex")
 
