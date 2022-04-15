@@ -4,17 +4,17 @@ updates:
   - package-ecosystem: "mix"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
 
   # Maintain dependencies for Phoenix integration tests
   - package-ecosystem: "mix"
     directory: "/integration_test"
     schedule:
-      interval: "daily"
+      interval: "weekly"
 
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
 
