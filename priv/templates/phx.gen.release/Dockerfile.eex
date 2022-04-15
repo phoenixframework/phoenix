@@ -88,7 +88,7 @@ ENV MIX_ENV="prod"
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/<%= otp_app %> ./
 
 # set exectute to server
-RUN chmod 755 /app/bin/server
+RUN chmod +x /app/bin/server
 
 USER nobody
 
