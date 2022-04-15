@@ -8,15 +8,15 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @scm_url "https://github.com/phoenixframework/phoenix"
   @version File.read!("VERSION")
 
-  # If the Elixir requirement for Phoenix is updated ("../ELIXIR_REQUIREMENT"),
+  @scm_url "https://github.com/phoenixframework/phoenix"
+
+  # If the Elixir requirement for Phoenix ("../ELIXIR_REQUIREMENT") is updated,
   # we need to make the installer use at least the minimum requirement used
   # here ("./ELIXIR_REQUIREMENT"). Although often the
   # installer is ahead of Phoenix itself.
   @elixir_requirement File.read!("ELIXIR_REQUIREMENT")
-  def __ELIXIR_REQUIREMENT__(), do: @elixir_requirement
 
   def project do
     [

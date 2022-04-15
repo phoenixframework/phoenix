@@ -9,7 +9,7 @@ defmodule <%= @app_module %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "<%= Phx.New.MixProject.__ELIXIR_REQUIREMENT__() %>",
+      elixir: "<%= Phx.New.__ELIXIR_REQUIREMENT__() %>",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),

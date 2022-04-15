@@ -336,7 +336,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    elixir_requirement = Phx.New.MixProject.__ELIXIR_REQUIREMENT__()
+    elixir_requirement = Phx.New.__ELIXIR_REQUIREMENT__()
 
     unless Version.match?(System.version(), elixir_requirement) do
       elixir_requirement_plain_version = elixir_requirement |> String.split(" ") |> List.last()

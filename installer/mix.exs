@@ -6,8 +6,9 @@ end
 defmodule Phx.New.MixProject do
   use Mix.Project
 
-  @scm_url "https://github.com/phoenixframework/phoenix"
   @version File.read!("../VERSION")
+
+  @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the Elixir requirement is updated, we need to update:
   #
@@ -15,7 +16,6 @@ defmodule Phx.New.MixProject do
   #   2. ../guides/deployment/releases.md
   #
   @elixir_requirement File.read!("ELIXIR_REQUIREMENT")
-  def __ELIXIR_REQUIREMENT__(), do: @elixir_requirement
 
   def project do
     [

@@ -6,11 +6,13 @@ end
 defmodule Phoenix.Integration.MixProject do
   use Mix.Project
 
+  @elixir_requirement File.read!("../ELIXIR_REQUIREMENT")
+
   def project do
     [
       app: :phoenix_integration,
       version: "0.1.0",
-      elixir: Phoenix.MixProject.__ELIXIR_REQUIREMENT__(),
+      elixir: @elixir_requirement,
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
