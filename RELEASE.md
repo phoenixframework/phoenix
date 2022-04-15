@@ -14,11 +14,17 @@
 
 ## Files with version
 
+  * `VERSION`
   * `CHANGELOG`
-  * `mix.exs`
-  * `installer/mix.exs`
   * `package.json`
   * `assets/package.json`
+  * `Earthfile`
+
+## Files with Elixir version requirement
+
+  * `ELIXIR_REQUIREMENT`
+  * `installer/ELIXIR_REQUIREMENT`
+  * ``./github/workflows/ci.yml`
 
 ## Files with external dependency versions
   * `priv/templates/phx.gen.release/Docker.eex` (debian)

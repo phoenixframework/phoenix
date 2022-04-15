@@ -25,8 +25,10 @@ assert_timeout = String.to_integer(
   System.get_env("ELIXIR_ASSERT_TIMEOUT") || "200"
 )
 
+phx_new_elixir_requirement = File.read!("installer/ELIXIR_REQUIREMENT")
+
 excludes =
-  if Version.match?(System.version(), "~> 1.12") do
+  if Version.match?(System.version(), phx_new_elixir_requirement) do
     []
   else
     [:mix_phx_new]

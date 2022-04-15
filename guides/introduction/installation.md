@@ -34,7 +34,7 @@ To check that we are on Elixir 1.12 and Erlang 22 or later, run:
 elixir -v
 Erlang/OTP 22 [erts-10.7] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
-Elixir 1.12.1
+Elixir 1.12.0
 ```
 
 Once we have Elixir and Erlang, we are ready to install the Phoenix application generator:

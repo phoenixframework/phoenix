@@ -44,6 +44,9 @@ integration-test:
     COPY /integration_test/docker-compose.yml ./integration_test/docker-compose.yml
     COPY mix.exs ./
     COPY /.formatter.exs ./
+    COPY VERSION ./
+    COPY ELIXIR_REQUIREMENT ./
+    COPY /installer/ELIXIR_REQUIREMENT ./installer/
     COPY /installer/mix.exs ./installer/mix.exs
     COPY /integration_test/mix.exs ./integration_test/mix.exs
     COPY /integration_test/mix.lock ./integration_test/mix.lock
@@ -106,6 +109,9 @@ test-setup:
    COPY mix.exs .
    COPY mix.lock .
    COPY .formatter.exs .
+   COPY VERSION .
+   COPY ELIXIR_REQUIREMENT .
+   COPY /installer/ELIXIR_REQUIREMENT ./installer/
    COPY package.json .
    RUN mix local.rebar --force
    RUN mix local.hex --force
