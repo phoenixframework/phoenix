@@ -96,7 +96,8 @@ npm:
 setup-base:
    ARG ELIXIR=1.12.1
    ARG OTP=24.0.2
-   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.13.3
+   ARG ALPINE=3.13.3
+   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-$ALPINE
    RUN apk add --no-progress --update git build-base
    ENV ELIXIR_ASSERT_TIMEOUT=10000
    WORKDIR /src

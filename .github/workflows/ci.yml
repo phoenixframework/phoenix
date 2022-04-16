@@ -15,7 +15,8 @@ jobs:
             otp: 21.3.8.24
             run_installer_tests: 0
           - elixir: 1.13.4
-            otp: 24.0.2
+            otp: 24.3.3
+            alpine: 3.15.3
             run_installer_tests: 1
     steps:
       - uses: actions/checkout@v3
@@ -35,7 +36,8 @@ jobs:
           - elixir: 1.12.1
             otp: 22.3.4.19
           - elixir: 1.13.4
-            otp: 24.0.2
+            otp: 24.3.3
+            alpine: 3.15.3
     steps:
       - uses: actions/checkout@v3
       - name: Download released earth
