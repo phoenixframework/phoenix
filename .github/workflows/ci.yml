@@ -36,6 +36,7 @@ jobs:
         include:
           - elixir: 1.12.1
             otp: 22.3.4.19
+            alpine: 3.13.3
           - elixir: 1.13.4
             otp: 24.3.3
             alpine: 3.15.3
@@ -44,7 +45,7 @@ jobs:
       - name: Download released earth
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.4.1/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
       - name: Execute tests
-        run: earthly -P --build-arg ELIXIR=${{ matrix.elixir }} --build-arg OTP=${{ matrix.otp }} --build-arg ALPINE=${{ matrix.alpine }}  +integration-test
+        run: earthly -P --build-arg ELIXIR=${{ matrix.elixir }} --build-arg OTP=${{ matrix.otp }} --build-arg ALPINE=${{ matrix.alpine }} +integration-test
   npm_test:
     name: npm
     runs-on: ubuntu-latest
