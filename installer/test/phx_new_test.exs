@@ -32,10 +32,20 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/README.md"
 
-      assert_file "phx_blog/.formatter.exs", fn file ->
-        assert file =~ "import_deps: [:ecto, :phoenix]"
-        assert file =~ "inputs: [\"*.{ex,exs}\", \"priv/*/seeds.exs\", \"{config,lib,test}/**/*.{ex,exs}\"]"
-        assert file =~ "subdirectories: [\"priv/*/migrations\"]"
+      if Version.match?(System.version(), ">= 1.13.4") do
+        assert_file "phx_blog/.formatter.exs", fn file ->
+          assert file =~ "import_deps: [:ecto, :phoenix]"
+          assert file =~ "subdirectories: [\"priv/*/migrations\"]"
+          assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
+          assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\", \"priv/*/seeds.exs\"]"
+        end
+      else
+        assert_file "phx_blog/.formatter.exs", fn file ->
+          assert file =~ "import_deps: [:ecto, :phoenix]"
+          assert file =~ "subdirectories: [\"priv/*/migrations\"]"
+          assert file =~ "inputs: [\"*.{ex,exs}\", \"{config,lib,test}/**/*.{ex,exs}\", \"priv/*/seeds.exs\"]"
+          refute file =~ "plugins:"
+        end
       end
 
       assert_file "phx_blog/mix.exs", fn file ->
