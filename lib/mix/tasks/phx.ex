@@ -1,6 +1,4 @@
 defmodule Mix.Tasks.Phx do
-  use Mix.Task
-
   @shortdoc "Prints Phoenix help information"
 
   @moduledoc """
@@ -13,6 +11,10 @@ defmodule Mix.Tasks.Phx do
       $ mix phx --version
 
   """
+
+  use Mix.Task
+
+  @external_resource "VERSION"
 
   @version Mix.Project.config()[:version]
 

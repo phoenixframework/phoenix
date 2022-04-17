@@ -102,6 +102,8 @@ defmodule Mix.Tasks.Phx.New do
   use Mix.Task
   alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
 
+  @external_resource "../VERSION"
+
   @version Mix.Project.config()[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application"
 

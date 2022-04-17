@@ -1,6 +1,9 @@
 defmodule Phoenix.MixProject do
   use Mix.Project
 
+  @external_resource version_path = "VERSION"
+  @external_resource elixir_requirement_path = "ELIXIR_REQUIREMENT"
+
   if Mix.env() != :prod do
     for path <- :code.get_path(),
         Regex.match?(~r/phx_new\-\d+\.\d+\.\d.*\/ebin$/, List.to_string(path)) do
@@ -8,7 +11,7 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version File.read!("VERSION")
+  @version File.read!(version_path)
 
   @scm_url "https://github.com/phoenixframework/phoenix"
 
@@ -16,7 +19,7 @@ defmodule Phoenix.MixProject do
   # we need to make the installer use at least the minimum requirement used
   # here ("./ELIXIR_REQUIREMENT"). Although often the
   # installer is ahead of Phoenix itself.
-  @elixir_requirement File.read!("ELIXIR_REQUIREMENT")
+  @elixir_requirement File.read!(elixir_requirement_path)
 
   def project do
     [

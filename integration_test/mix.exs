@@ -6,7 +6,8 @@ end
 defmodule Phoenix.Integration.MixProject do
   use Mix.Project
 
-  @elixir_requirement File.read!("../ELIXIR_REQUIREMENT")
+  @external_resource elixir_requirement_path = "../ELIXIR_REQUIREMENT"
+  @elixir_requirement File.read!(elixir_requirement_path)
 
   def project do
     [
