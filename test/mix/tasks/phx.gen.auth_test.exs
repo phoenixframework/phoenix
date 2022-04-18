@@ -131,7 +131,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "mix.exs", fn file ->
-        assert file =~ ~s|{:bcrypt_elixir, "~> 2.0"},|
+        assert file =~ ~s|{:bcrypt_elixir, "~> 3.0"},|
       end
 
       assert_file "lib/my_app_web/router.ex", fn file ->
@@ -581,7 +581,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         )
 
         assert_file "mix.exs", fn file ->
-          assert file =~ ~s|{:bcrypt_elixir, "~> 2.0"}|
+          assert file =~ ~s|{:bcrypt_elixir, "~> 3.0"}|
         end
 
         assert_file "config/test.exs", fn file ->
@@ -602,7 +602,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         )
 
         assert_file "mix.exs", fn file ->
-          assert file =~ ~s|{:pbkdf2_elixir, "~> 1.0"}|
+          assert file =~ ~s|{:pbkdf2_elixir, "~> 2.0"}|
         end
 
         assert_file "config/test.exs", fn file ->
@@ -777,11 +777,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         assert_received {:mix_shell, :info, ["""
 
-        Add your {:bcrypt_elixir, "~> 2.0"} dependency to mix.exs:
+        Add your {:bcrypt_elixir, "~> 3.0"} dependency to mix.exs:
 
             defp deps do
               [
-                {:bcrypt_elixir, "~> 2.0"},
+                {:bcrypt_elixir, "~> 3.0"},
                 ...
               ]
             end
