@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.HashingLibrary do
     lib = %__MODULE__{
       name: :bcrypt,
       module: Bcrypt,
-      mix_dependency: ~s|{:bcrypt_elixir, "~> 2.0"}|,
+      mix_dependency: ~s|{:bcrypt_elixir, "~> 3.0"}|,
       test_config: """
       config :bcrypt_elixir, :log_rounds, 1
       """
@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.HashingLibrary do
     lib = %__MODULE__{
       name: :pbkdf2,
       module: Pbkdf2,
-      mix_dependency: ~s|{:pbkdf2_elixir, "~> 1.0"}|,
+      mix_dependency: ~s|{:pbkdf2_elixir, "~> 2.0"}|,
       test_config: """
       config :pbkdf2_elixir, :rounds, 1
       """
