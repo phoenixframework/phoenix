@@ -203,5 +203,5 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     end
   end
 
-  defp ecto_sql_installed?, do: Application.loaded_applications() |> List.keymember?(:ecto_sql, 0)
+  defp ecto_sql_installed?, do: Mix.Project.deps_apps() |> Enum.member?(:ecto_sql)
 end
