@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # Phoenix.LiveView.HTMLFormatter
       if Version.match?(System.version(), ">= 1.13.4") do
         assert_file root_path(@app, "mix.exs"), fn file ->
-          assert file =~ "{:phoenix_live_view, \">= 0.0.0\"}"
+          assert file =~ ~r/defp deps do\n.*\[\n.*\n.*{:phoenix_live_view, \">= 0.0.0\"}/
         end
       else
         assert_file root_path(@app, "mix.exs"), fn file ->
