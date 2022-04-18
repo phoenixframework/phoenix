@@ -23,8 +23,10 @@ defmodule <%= @root_app_module %>.MixProject do
   #
   # Dependencies listed here are available only for this project
   # and cannot be accessed from applications inside the apps/ folder.
-  defp deps do
-    []
+  defp deps do<%= if @html and Version.match?(System.version(), ">= 1.13.4") do %>
+    {:phoenix_live_view, ">= 0.0.0"} # required by Phoenix.LiveView.HTMLFormatter
+<% else %>
+    []<% end %>
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

@@ -45,6 +45,17 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "apps_path: \"apps\""
       end
 
+      # Phoenix.LiveView.HTMLFormatter
+      if Version.match?(System.version(), ">= 1.13.4") do
+        assert_file root_path(@app, "mix.exs"), fn file ->
+          assert file =~ "defp deps do\n    {:phoenix_live_view, \">= 0.0.0\"}"
+        end
+      else
+        assert_file root_path(@app, "mix.exs"), fn file ->
+          assert file =~ "defp deps do\n    []"
+        end
+      end
+
       assert_file app_path(@app, "mix.exs"), fn file ->
         assert file =~ "app: :phx_umb"
         assert file =~ ~S{build_path: "../../_build"}
@@ -414,6 +425,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   test "new with --no-html" do
     in_tmp "new with no_html", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-html"])
+
+      assert_file root_path(@app, "mix.exs"), fn file ->
+        assert file =~ "defp deps do\n    []"
+      end
 
       assert_file web_path(@app, "mix.exs"), fn file ->
         refute file =~ ~s|:phoenix_live_view|
