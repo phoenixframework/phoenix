@@ -399,7 +399,11 @@ defmodule Phoenix.Endpoint do
     quote do
       @otp_app unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
       var!(config) = Phoenix.Endpoint.Supervisor.config(@otp_app, __MODULE__)
-      var!(code_reloading?) = var!(config)[:code_reloader]
+
+      var!(code_reloading?) = Application.compile_env(@otp_app, [__MODULE__, :code_reloader], var!(config)[:code_reloader])
+      var!(debug_errors?) =  Application.compile_env(@otp_app, [__MODULE__, :debug_errors], var!(config)[:debug_errors])
+      var!(render_errors) =  Application.compile_env(@otp_app, [__MODULE__, :render_errors], var!(config)[:render_errors])
+      
       @compile_config Keyword.take(var!(config), Phoenix.Endpoint.Supervisor.compile_config_keys())
 
       @doc false
@@ -409,6 +413,7 @@ defmodule Phoenix.Endpoint do
 
       # Avoid unused variable warnings
       _ = var!(code_reloading?)
+      _ = var!(render_errors)
 
       @doc false
       def init(_key, config) do
@@ -471,7 +476,7 @@ defmodule Phoenix.Endpoint do
         plug Plug.SSL, force_ssl
       end
 
-      if var!(config)[:debug_errors] do
+      if var!(debug_errors?) do
         use Plug.Debugger,
           otp_app: @otp_app,
           banner: {Phoenix.Endpoint.RenderErrors, :__debugger_banner__, []},
