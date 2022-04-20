@@ -1204,7 +1204,8 @@ To complete an order, our cart page can issue a POST to the `OrderController.cre
 
 ```elixir
   def create(conn, _) do
-    case Orders.complete_order(conn.assigns.cart) do
+-   case Orders.create_order(conn.assigns.cart) do
++   case Orders.complete_order(conn.assigns.cart) do
       {:ok, order} ->
         conn
         |> put_flash(:info, "Order created successfully.")
