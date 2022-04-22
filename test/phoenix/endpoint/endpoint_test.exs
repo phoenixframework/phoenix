@@ -24,8 +24,6 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert is_list(config)
     assert @otp_app == :phoenix
     assert code_reloading? == false
-    assert debug_errors? == false
-    assert render_errors == [view: Phoenix.ErrorView, accepts: ["html"], layout: false]
     assert @compile_config == [force_ssl: [subdomains: true]]
   end
 
