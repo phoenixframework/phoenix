@@ -1,12 +1,12 @@
-<h1>Confirm account</h1>
+<h1 class="font-extralight mb-5 text-4xl">Confirm account</h1>
 
-<.form let={_f} for={:<%= schema.singular %>} action={Routes.<%= schema.route_helper %>_confirmation_path(@conn, :update, @token)}>
+<.form class="phx-form" let={_f} for={:<%= schema.singular %>} action={Routes.<%= schema.route_helper %>_confirmation_path(@conn, :update, @token)}>
   <div>
-    <%%= submit "Confirm my account" %>
+    <%%= submit "Confirm my account", class: "button-primary mb-2.5" %>
   </div>
 </.form>
 
-<p>
-  <%%= link "Register", to: Routes.<%= schema.route_helper %>_registration_path(@conn, :new) %> |
-  <%%= link "Log in", to: Routes.<%= schema.route_helper %>_session_path(@conn, :new) %>
+<p class="font-extralight">
+  <%%= link "Register", to: Routes.<%= schema.route_helper %>_registration_path(@conn, :new), class: "phx-link" %> |
+  <%%= link "Log in", to: Routes.<%= schema.route_helper %>_session_path(@conn, :new), class: "phx-link" %>
 </p>

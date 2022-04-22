@@ -1,4 +1,4 @@
-<h1>Show <%= schema.human_singular %></h1>
+<h1 class="mb-5 text-4xl">Show <%= schema.human_singular %></h1>
 
 <%%= if @live_action in [:edit] do %>
   <.modal return_to={Routes.<%= schema.route_helper %>_show_path(@socket, :show, @<%= schema.singular %>)}>
@@ -13,7 +13,7 @@
   </.modal>
 <%% end %>
 
-<ul>
+<ul class="list-[circle] list-inside mb-6 space-y-3.5">
 <%= for {k, _} <- schema.attrs do %>
   <li>
     <strong><%= Phoenix.Naming.humanize(Atom.to_string(k)) %>:</strong>
@@ -22,5 +22,5 @@
 <% end %>
 </ul>
 
-<span><%%= live_patch "Edit", to: Routes.<%= schema.route_helper %>_show_path(@socket, :edit, @<%= schema.singular %>), class: "button" %></span> |
-<span><%%= live_redirect "Back", to: Routes.<%= schema.route_helper %>_index_path(@socket, :index) %></span>
+<span><%%= live_patch "Edit", to: Routes.<%= schema.route_helper %>_show_path(@socket, :edit, @<%= schema.singular %>), class: "button-primary" %></span> |
+<span class="phx-link"><%%= live_redirect "Back", to: Routes.<%= schema.route_helper %>_index_path(@socket, :index) %></span>

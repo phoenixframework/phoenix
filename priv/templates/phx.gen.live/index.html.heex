@@ -1,4 +1,4 @@
-<h1>Listing <%= schema.human_plural %></h1>
+<h1 class="mb-5 text-4xl">Listing <%= schema.human_plural %></h1>
 
 <%%= if @live_action in [:new, :edit] do %>
   <.modal return_to={Routes.<%= schema.route_helper %>_index_path(@socket, :index)}>
@@ -13,27 +13,27 @@
   </.modal>
 <%% end %>
 
-<table>
+<table class="table w-full mb-6 text-left align-middle">
   <thead>
-    <tr>
-<%= for {k, _} <- schema.attrs do %>      <th><%= Phoenix.Naming.humanize(Atom.to_string(k)) %></th>
+    <tr class="border-neutral-200 border-b">
+<%= for {k, _} <- schema.attrs do %>      <th class="first:pr-0 px-4 py-3"><%= Phoenix.Naming.humanize(Atom.to_string(k)) %></th>
 <% end %>
-      <th></th>
+      <th class="px-4 pl-3"></th>
     </tr>
   </thead>
   <tbody id="<%= schema.plural %>">
     <%%= for <%= schema.singular %> <- @<%= schema.collection %> do %>
-      <tr id={"<%= schema.singular %>-#{<%= schema.singular %>.id}"}>
-<%= for {k, _} <- schema.attrs do %>        <td><%%= <%= schema.singular %>.<%= k %> %></td>
+      <tr id={"<%= schema.singular %>-#{<%= schema.singular %>.id}"} class="border-neutral-200 border-b">
+<%= for {k, _} <- schema.attrs do %>        <td class="first:pl-0 last:pr-0 px-4 py-3"><%%= <%= schema.singular %>.<%= k %> %></td>
 <% end %>
-        <td>
-          <span><%%= live_redirect "Show", to: Routes.<%= schema.route_helper %>_show_path(@socket, :show, <%= schema.singular %>) %></span>
-          <span><%%= live_patch "Edit", to: Routes.<%= schema.route_helper %>_index_path(@socket, :edit, <%= schema.singular %>) %></span>
-          <span><%%= link "Delete", to: "#", phx_click: "delete", phx_value_id: <%= schema.singular %>.id, data: [confirm: "Are you sure?"] %></span>
+        <td class="px-4 py-3">
+          <span><%%= live_redirect "Show", to: Routes.<%= schema.route_helper %>_show_path(@socket, :show, <%= schema.singular %>), class: "phx-link" %></span>
+          <span><%%= live_patch "Edit", to: Routes.<%= schema.route_helper %>_index_path(@socket, :edit, <%= schema.singular %>), class: "phx-link" %></span>
+          <span><%%= link "Delete", to: "#", phx_click: "delete", phx_value_id: <%= schema.singular %>.id, data: [confirm: "Are you sure?"], class: "phx-link" %></span>
         </td>
       </tr>
     <%% end %>
   </tbody>
 </table>
 
-<span><%%= live_patch "New <%= schema.human_singular %>", to: Routes.<%= schema.route_helper %>_index_path(@socket, :new) %></span>
+<span><%%= live_patch "New <%= schema.human_singular %>", to: Routes.<%= schema.route_helper %>_index_path(@socket, :new), class: "phx-link" %></span>

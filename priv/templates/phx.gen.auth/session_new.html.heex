@@ -1,6 +1,6 @@
-<h1>Log in</h1>
+<h1 class="font-extralight mb-5 text-4xl">Log in</h1>
 
-<.form let={f} for={@conn} action={Routes.<%= schema.route_helper %>_session_path(@conn, :create)} as={:<%= schema.singular %>}>
+<.form class="phx-form" let={f} for={@conn} action={Routes.<%= schema.route_helper %>_session_path(@conn, :create)} as={:<%= schema.singular %>}>
   <%%= if @error_message do %>
     <div class="alert alert-danger">
       <p><%%= @error_message %></p>
@@ -17,11 +17,11 @@
   <%%= checkbox f, :remember_me %>
 
   <div>
-    <%%= submit "Log in" %>
+    <%%= submit "Log in", class: "button-primary mb-2.5" %>
   </div>
 </.form>
 
-<p>
-  <%%= link "Register", to: Routes.<%= schema.route_helper %>_registration_path(@conn, :new) %> |
-  <%%= link "Forgot your password?", to: Routes.<%= schema.route_helper %>_reset_password_path(@conn, :new) %>
+<p class="font-extralight">
+  <%%= link "Register", to: Routes.<%= schema.route_helper %>_registration_path(@conn, :new), class: "phx-link" %> |
+  <%%= link "Forgot your password?", to: Routes.<%= schema.route_helper %>_reset_password_path(@conn, :new), class: "phx-link" %>
 </p>

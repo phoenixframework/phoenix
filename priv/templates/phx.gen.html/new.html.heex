@@ -1,5 +1,5 @@
-<h1>New <%= schema.human_singular %></h1>
+<h1 class="font-extralight mb-5 text-4xl">New <%= schema.human_singular %></h1>
 
 <%%= render "form.html", Map.put(assigns, :action, Routes.<%= schema.route_helper %>_path(@conn, :create)) %>
 
-<span><%%= link "Back", to: Routes.<%= schema.route_helper %>_path(@conn, :index) %></span>
+<span class="font-extralight"><%%= link "Back", to: Routes.<%= schema.route_helper %>_path(@conn, :index), class: "phx-link" %></span>
