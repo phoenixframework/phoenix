@@ -25,43 +25,6 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp check_compile_configs!(mod, runtime_configs) do
-    compile_configs = mod.__compile_config__()
-
-    bad_keys =
-      Enum.filter(Phoenix.Endpoint.Supervisor.compile_config_keys(), fn key ->
-        compile_config = Keyword.get(compile_configs, key)
-        runtime_config = Keyword.get(runtime_configs, key)
-
-        if compile_config != runtime_config do
-          require Logger
-
-          Logger.error("""
-          #{inspect(key)} mismatch for #{inspect(mod)}.
-
-          Compile time configuration: #{inspect(compile_config)}
-          Runtime configuration     : #{inspect(runtime_config)}
-
-          #{inspect(key)} is a compile-time configuration, so setting
-          it at runtime has no effect. Therefore you must set it in your
-          config/prod.exs or similar (not in your config/releases.exs)
-          and make sure the value doesn't change.
-          """)
-
-          true
-        else
-          false
-        end
-      end)
-
-    unless Enum.empty?(bad_keys) do
-      raise ArgumentError,
-            "expected these options to be unchanged from compile time: #{inspect(bad_keys)}"
-    end
-
-    :ok
-  end
-
   @doc false
   def init({otp_app, mod, opts}) do
     default_conf = Phoenix.Config.merge(defaults(otp_app, mod), opts)
@@ -92,7 +55,6 @@ defmodule Phoenix.Endpoint.Supervisor do
     # Drop all secrets from secret_conf before passing it around
     conf = Keyword.drop(secret_conf, [:secret_key_base])
     server? = server?(conf)
-    check_compile_configs!(mod, conf)
 
     if conf[:instrumenters] do
       Logger.warn(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
@@ -489,15 +451,5 @@ defmodule Phoenix.Endpoint.Supervisor do
 
       System.cmd(cmd, args)
     end
-  end
-
-  @doc """
-  List of keys which we ensure are unchanged from compile time to runtime. For
-  example, the :force_ssl option must be available at compile time in order to
-  work properly. We check these keys so we can warn the user that changing the
-  option at runtime may lead to undesirable behavior.
-  """
-  def compile_config_keys do
-    [:force_ssl]
   end
 end
