@@ -408,13 +408,6 @@ defmodule Phoenix.Endpoint do
       var!(debug_errors?) =  Application.compile_env(@otp_app, [__MODULE__, :debug_errors], var!(config)[:debug_errors])
       var!(render_errors) =  Application.compile_env(@otp_app, [__MODULE__, :render_errors], var!(config)[:render_errors])
 
-      @compile_config Keyword.take(var!(config), Phoenix.Endpoint.Supervisor.compile_config_keys())
-
-      @doc false
-      def __compile_config__ do
-        @compile_config
-      end
-
       # Avoid unused variable warnings
       _ = var!(code_reloading?)
       _ = var!(render_errors)
