@@ -1,13 +1,6 @@
 defmodule <%= @endpoint_module %> do
   use Phoenix.Endpoint, otp_app: :<%= @web_app_name %>
 
-  # Compile-time configurations
-  #
-  # This ensures that if a compile-time configuration is overwritten at runtime the application won't boot.
-  code_reloading? = Application.compile_env(:<%= @web_app_name %>, [<%= @endpoint_module %>, :code_reloader])
-  _debug_errors? =  Application.compile_env(:<%= @web_app_name %>, [<%= @endpoint_module %>, :debug_errors])
-  _render_errors =  Application.compile_env(:<%= @web_app_name %>, [<%= @endpoint_module %>, :render_errors])
-
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
