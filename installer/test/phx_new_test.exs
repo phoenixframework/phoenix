@@ -134,11 +134,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/assets/css/app.css"
-      assert_file "phx_blog/assets/css/phoenix.css"
 
       refute File.exists? "phx_blog/priv/static/assets/app.css"
       refute File.exists? "phx_blog/priv/static/assets/phoenix.css"
       refute File.exists? "phx_blog/priv/static/assets/app.js"
+      refute File.exists? "phx_blog/assets/css/phoenix.css"
       assert File.exists? "phx_blog/assets/vendor"
 
       assert_file "phx_blog/config/config.exs", fn file ->
@@ -439,7 +439,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/.gitignore"
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/priv/static/assets/app.css"
-      assert_file "phx_blog/priv/static/assets/phoenix.css"
       assert_file "phx_blog/priv/static/assets/app.js"
       assert_file "phx_blog/priv/static/favicon.ico"
       assert_file "phx_blog/priv/static/images/phoenix.png"
@@ -447,6 +446,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/config.exs", fn file ->
         refute file =~ "config :esbuild"
       end
+
+      refute File.exists? "phx_blog/priv/static/assets/phoenix.css"
     end
   end
 

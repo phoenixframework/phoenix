@@ -1,36 +1,136 @@
-/* This file is for your main application CSS */
-@import "./phoenix.css";
+/* This file is your main application CSS */
 
-/* Alerts and form errors used by phx.new */
-.alert {
-  padding: 15px;
-  margin-bottom: 20px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-}
-.alert-info {
-  color: #31708f;
-  background-color: #d9edf7;
-  border-color: #bce8f1;
-}
-.alert-warning {
-  color: #8a6d3b;
-  background-color: #fcf8e3;
-  border-color: #faebcc;
-}
-.alert-danger {
-  color: #a94442;
-  background-color: #f2dede;
-  border-color: #ebccd1;
-}
-.alert p {
-  margin-bottom: 0;
-}
-.alert:empty {
-  display: none;
-}
-.invalid-feedback {
-  color: #a94442;
-  display: block;
-  margin: -1rem 0 2rem;
+/* Import Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * The components layer is for class-based styles that you want to be able to
+ * override with utilities.
+ * see https://tailwindcss.com/docs/adding-custom-styles#using-css-and-layer
+ */
+@layer components {
+  /* Alerts and form errors used by phx.new */
+  .alert {
+    @apply mb-5 border border-solid border-transparent rounded p-4 font-extralight;
+  }
+  .alert-info {
+    @apply text-cyan-700 bg-sky-100 border-sky-200;
+  }
+  .alert-warning {
+    @apply text-yellow-700 bg-yellow-50 border-orange-100;
+  }
+  .alert-danger {
+    @apply text-rose-800 bg-red-100 border-rose-200;
+  }
+  .alert:empty {
+    @apply hidden;
+  }
+  .invalid-feedback {
+    @apply text-rose-800 block -mt-3 mb-6 font-extralight;
+  }
+
+
+  .phx-no-feedback.invalid-feedback,
+  .phx-no-feedback .invalid-feedback {
+    @apply hidden;
+  }
+
+  /* Buttons */
+  .button {
+    @apply px-7 whitespace-nowrap inline-block h-10 text-xs font-bold leading-10 tracking-wider text-center uppercase border rounded cursor-pointer;
+  }
+
+  .button-primary {
+    @apply button;
+    @apply text-white bg-blue-700 border-blue-700 hover:bg-gray-500 hover:border-gray-500;
+  }
+
+  /* Forms */
+  form.phx-form {
+    @apply mb-6;
+  }
+
+  form.phx-form label, form.phx-form legend {
+    @apply font-bold mb-1 block text-base;
+  }
+
+  form.phx-form input, form.phx-form textarea, form.phx-form select {
+    @apply border border-neutral-200 rounded h-10 py-1.5 px-2.5 w-full mb-4 appearance-none text-sm;
+  }
+
+  form.phx-form input:focus, form.phx-form textarea:focus, form.phx-form select:focus {
+    @apply border-blue-700;
+  }
+
+  form.phx-form input[type="checkbox"] {
+    @apply w-4;
+  }
+
+  form.phx-form select {
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 8" width="30"><path fill="%23d1d1d1" d="M0,0l6,8l6-8"/></svg>');
+    @apply w-auto pr-7 bg-no-repeat bg-[center_right];
+  }
+
+  form.phx-form select:focus {
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 8" width="30"><path fill="%231d4ed8" d="M0,0l6,8l6-8"/></svg>');
+    @apply bg-no-repeat bg-[center_right];
+  }
+
+  form.phx-form select[multiple] {
+    @apply h-auto bg-none;
+  }
+
+  form.phx-form textarea {
+    @apply min-h-[4rem];
+  }
+
+  /* Links */
+  .phx-link {
+    @apply hover:text-zinc-500 focus:text-zinc-500 text-blue-700;
+  }
+
+  /* Modals */
+  .phx-modal {
+    @apply opacity-100 fixed z-10 left-0 top-0 w-full h-full overflow-auto bg-black/40;
+  }
+
+  .phx-modal-content {
+    @apply bg-white my-[15vh] mx-auto p-5 border border-solid border-neutral-500 w-4/5;
+  }
+
+  .phx-modal-close {
+    @apply text-neutral-400 float-right text-3xl font-bold;
+  }
+
+  .phx-modal-close:hover,
+  .phx-modal-close:focus {
+    @apply text-black no-underline cursor-pointer;
+  }
+
+  /* Transitions */
+  .phx-click-loading {
+    @apply opacity-50 transition-opacity duration-1000 ease-out;
+  }
+
+  .phx-loading {
+    @apply cursor-wait;
+  }
+
+  .fade-in-scale {
+    @apply animate-fade-in-scale;
+  }
+
+  .fade-out-scale {
+    @apply animate-fade-out-scale;
+  }
+
+  .fade-in {
+    @apply animate-fade-in;
+  }
+
+  .fade-out {
+    @apply animate-fade-out;
+  }
 }

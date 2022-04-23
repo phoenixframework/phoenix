@@ -57,14 +57,12 @@ defmodule Phx.New.Single do
   ]
 
   template :assets, [
-    {:eex,  "phx_static/phoenix.css", :web, "assets/css/phoenix.css"},
     {:eex,  "phx_assets/app.css",     :web, "assets/css/app.css"},
     {:eex,  "phx_assets/app.js",      :web, "assets/js/app.js"},
     {:keep, "phx_assets/vendor",      :web, "assets/vendor"},
   ]
 
   template :no_assets, [
-    {:text, "phx_static/phoenix.css", :web, "priv/static/assets/phoenix.css"},
     {:text, "phx_static/app.css",     :web, "priv/static/assets/app.css"},
     {:text, "phx_static/app.js",      :web, "priv/static/assets/app.js"},
   ]
