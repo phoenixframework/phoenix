@@ -1,4 +1,4 @@
-  alias <%= inspect context.module %>.{<%= inspect schema.alias %>, <%= inspect schema.alias %>Token, <%= inspect schema.alias %>Notifier}
+  alias <%= inspect context.module %>.{<%= inspect schema.alias %>, <%= inspect schema.alias %>Notifier, <%= inspect schema.alias %>Token}
 
   ## Database getters
 
