@@ -1,4 +1,5 @@
 defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>SessionController do
+  @moduledoc false
   use <%= inspect context.web_module %>, :controller
 
   alias <%= inspect context.module %>

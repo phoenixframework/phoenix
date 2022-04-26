@@ -1,4 +1,5 @@
 defmodule <%= inspect auth_module %>Test do
+  @moduledoc false
   use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
   alias <%= inspect context.module %>

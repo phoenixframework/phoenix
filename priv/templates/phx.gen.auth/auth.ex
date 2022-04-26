@@ -1,4 +1,5 @@
 defmodule <%= inspect auth_module %> do
+  @moduledoc false
   import Plug.Conn
   import Phoenix.Controller
 

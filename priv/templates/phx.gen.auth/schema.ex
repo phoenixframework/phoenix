@@ -1,4 +1,5 @@
 defmodule <%= inspect schema.module %> do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
 <%= if schema.binary_id do %>  @primary_key {:id, :binary_id, autogenerate: true}

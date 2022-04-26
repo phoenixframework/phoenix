@@ -1,4 +1,5 @@
 defmodule <%= inspect schema.module %>Token do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Query
   alias <%= inspect schema.module %>Token
