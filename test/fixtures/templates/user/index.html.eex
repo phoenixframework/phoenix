@@ -1,1 +1,0 @@
-<%= escaped_title @title %>

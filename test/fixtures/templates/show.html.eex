@@ -1,2 +1,0 @@
-<div>Show! <%= @message %></div>
-<% :ok # Template is still valid %>
