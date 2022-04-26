@@ -1,6 +1,6 @@
 defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Notifier do
   @moduledoc false
-	import Swoosh.Email
+  import Swoosh.Email
 
   alias <%= inspect context.base_module %>.Mailer
 
