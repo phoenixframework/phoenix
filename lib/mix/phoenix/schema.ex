@@ -356,7 +356,7 @@ defmodule Mix.Phoenix.Schema do
   Enum type requires at least one value
   For example:
 
-      mix phx.gen.schema Comment comments body:text status:enum:published:unpublished
+      mix gpanel.gen.schema Comment comments body:text status:enum:published:unpublished
   """
 
   defp validate_attr!({name, :datetime}), do: validate_attr!({name, :naive_datetime})
@@ -365,7 +365,7 @@ defmodule Mix.Phoenix.Schema do
     Phoenix generators expect the type of the array to be given to #{name}:array.
     For example:
 
-        mix phx.gen.schema Post posts settings:array:string
+        mix gpanel.gen.schema Post posts settings:array:string
     """
   end
   defp validate_attr!({_name, :enum}), do: Mix.raise @enum_missing_value_error
@@ -387,7 +387,7 @@ defmodule Mix.Phoenix.Schema do
           Phoenix generators expect the table to be given to #{key}:references.
           For example:
 
-              mix phx.gen.schema Comment comments body:text post_id:references:posts
+              mix gpanel.gen.schema Comment comments body:text post_id:references:posts
           """
         _ -> false
       end)

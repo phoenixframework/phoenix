@@ -1,9 +1,9 @@
 Code.require_file("../../../installer/test/mix_helper.exs", __DIR__)
 
-defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
+defmodule Mix.Tasks.Gpanel.Gen.EmbeddedTest do
   use ExUnit.Case
   import MixHelper
-  alias Mix.Tasks.Phx.Gen
+  alias Mix.Tasks.Gpanel.Gen
   alias Mix.Phoenix.Schema
 
   setup do

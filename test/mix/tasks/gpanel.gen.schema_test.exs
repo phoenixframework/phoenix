@@ -3,10 +3,10 @@ Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 defmodule Phoenix.DupSchema do
 end
 
-defmodule Mix.Tasks.Phx.Gen.SchemaTest do
+defmodule Mix.Tasks.Gpanel.Gen.SchemaTest do
   use ExUnit.Case
   import MixHelper
-  alias Mix.Tasks.Phx.Gen
+  alias Mix.Tasks.Gpanel.Gen
   alias Mix.Phoenix.Schema
 
   setup do

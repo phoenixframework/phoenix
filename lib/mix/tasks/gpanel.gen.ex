@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Phx.Gen do
+defmodule Mix.Tasks.Gpanel.Gen do
   use Mix.Task
 
   @shortdoc "Lists all available Phoenix generators"
@@ -12,14 +12,14 @@ defmodule Mix.Tasks.Phx.Gen do
 
   | Task | Schema | Migration | Context | Controller | View | LiveView |
   |:------------------ |:-:|:-:|:-:|:-:|:-:|:-:|
-  | `phx.gen.embedded` | ✓ |   |   |   |   |   |
-  | `phx.gen.schema`   | ✓ | ✓ |   |   |   |   |
-  | `phx.gen.context`  | ✓ | ✓ | ✓ |   |   |   |
-  | `phx.gen.live`     | ✓ | ✓ | ✓ |   |   | ✓ |
-  | `phx.gen.html`     | ✓ | ✓ | ✓ | ✓ | ✓ |   |
+  | `gpanel.gen.embedded` | ✓ |   |   |   |   |   |
+  | `gpanel.gen.schema`   | ✓ | ✓ |   |   |   |   |
+  | `gpanel.gen.context`  | ✓ | ✓ | ✓ |   |   |   |
+  | `gpanel.gen.live`     | ✓ | ✓ | ✓ |   |   | ✓ |
+  | `gpanel.gen.html`     | ✓ | ✓ | ✓ | ✓ | ✓ |   |
   """
 
   def run(_args) do
-    Mix.Task.run("help", ["--search", "phx.gen."])
+    Mix.Task.run("help", ["--search", "gpanel.gen."])
   end
 end

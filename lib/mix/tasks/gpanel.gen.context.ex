@@ -1,10 +1,10 @@
-defmodule Mix.Tasks.Phx.Gen.Context do
+defmodule Mix.Tasks.Gpanel.Gen.Context do
   @shortdoc "Generates a context with functions around an Ecto schema"
 
   @moduledoc """
   Generates a context with functions around an Ecto schema.
 
-      $ mix phx.gen.context Accounts User users name:string age:integer
+      $ mix gpanel.gen.context Accounts User users name:string age:integer
 
   The first argument is the context module followed by the schema module
   and its plural name (used as the schema table name).
@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   the plural name provided for the resource. To customize this value,
   a `--table` option may be provided. For example:
 
-      $ mix phx.gen.context Accounts User users --table cms_users
+      $ mix gpanel.gen.context Accounts User users --table cms_users
 
   ## binary_id
 
@@ -61,7 +61,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   switches, e.g. `--no-binary-id` to use normal ids despite the default
   configuration or `--migration` to force generation of the migration.
 
-  Read the documentation for `phx.gen.schema` for more information on
+  Read the documentation for `gpanel.gen.schema` for more information on
   attributes.
 
   ## Skipping prompts
@@ -76,7 +76,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   use Mix.Task
 
   alias Mix.Phoenix.{Context, Schema}
-  alias Mix.Tasks.Phx.Gen
+  alias Mix.Tasks.Gpanel.Gen
 
   @switches [binary_id: :boolean, table: :string, web: :string,
              schema: :boolean, context: :boolean, context_app: :string,
@@ -87,7 +87,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.context must be invoked from within your *_web application root directory"
+      Mix.raise "mix gpanel.gen.context must be invoked from within your *_web application root directory"
     end
 
     {context, schema} = build(args)
@@ -154,7 +154,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @doc false
   def ensure_context_file_exists(%Context{file: file} = context, paths, binding) do
     unless Context.pre_existing?(context) do
-      Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
+      Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/gpanel.gen.context/context.ex", binding))
     end
   end
 
@@ -162,7 +162,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     ensure_context_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/#{schema_access_template(context)}", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/gpanel.gen.context/#{schema_access_template(context)}", binding)
     |> inject_eex_before_final_end(file, binding)
   end
 
@@ -173,7 +173,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @doc false
   def ensure_test_file_exists(%Context{test_file: test_file} = context, paths, binding) do
     unless Context.pre_existing_tests?(context) do
-      Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding))
+      Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/gpanel.gen.context/context_test.exs", binding))
     end
   end
 
@@ -181,14 +181,14 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     ensure_test_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/test_cases.exs", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/gpanel.gen.context/test_cases.exs", binding)
     |> inject_eex_before_final_end(test_file, binding)
   end
 
   @doc false
   def ensure_test_fixtures_file_exists(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
     unless Context.pre_existing_test_fixtures?(context) do
-      Mix.Generator.create_file(test_fixtures_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/fixtures_module.ex", binding))
+      Mix.Generator.create_file(test_fixtures_file, Mix.Phoenix.eval_from(paths, "priv/templates/gpanel.gen.context/fixtures_module.ex", binding))
     end
   end
 
@@ -196,7 +196,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     ensure_test_fixtures_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/fixtures.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/gpanel.gen.context/fixtures.ex", binding)
     |> Mix.Phoenix.prepend_newline()
     |> inject_eex_before_final_end(test_fixtures_file, binding)
 
@@ -306,15 +306,15 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     Mix.raise """
     #{msg}
 
-    mix phx.gen.html, phx.gen.json, phx.gen.live, and phx.gen.context
+    mix gpanel.gen.html, gpanel.gen.json, gpanel.gen.live, and gpanel.gen.context
     expect a context module name, followed by singular and plural names
     of the generated resource, ending with any number of attributes.
     For example:
 
-        mix phx.gen.html Accounts User users name:string
-        mix phx.gen.json Accounts User users name:string
-        mix phx.gen.live Accounts User users name:string
-        mix phx.gen.context Accounts User users name:string
+        mix gpanel.gen.html Accounts User users name:string
+        mix gpanel.gen.json Accounts User users name:string
+        mix gpanel.gen.live Accounts User users name:string
+        mix gpanel.gen.context Accounts User users name:string
 
     The context serves as the API boundary for the given resource.
     Multiple resources may belong to a context and a resource may be

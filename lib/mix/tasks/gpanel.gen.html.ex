@@ -1,10 +1,10 @@
-defmodule Mix.Tasks.Phx.Gen.Html do
+defmodule Mix.Tasks.Gpanel.Gen.Html do
   @shortdoc "Generates controller, views, and context for an HTML resource"
 
   @moduledoc """
   Generates controller, views, and context for an HTML resource.
 
-      mix phx.gen.html Accounts User users name:string age:integer
+      mix gpanel.gen.html Accounts User users name:string age:integer
 
   The first argument is the context module followed by the schema module
   and its plural name (used as the schema table name).
@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   The schema is responsible for mapping the database fields into an
   Elixir struct. It is followed by an optional list of attributes,
-  with their respective names and types. See `mix phx.gen.schema`
+  with their respective names and types. See `mix gpanel.gen.schema`
   for more information on attributes.
 
   Overall, this generator will add the following files to `lib/`:
@@ -49,7 +49,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
-      mix phx.gen.html Sales User users --context-app warehouse
+      mix gpanel.gen.html Sales User users --context-app warehouse
 
   ## Web namespace
 
@@ -57,7 +57,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
-      mix phx.gen.html Sales User users --web Sales
+      mix gpanel.gen.html Sales User users --web Sales
 
   Which would generate a `lib/app_web/controllers/sales/user_controller.ex` and
   `lib/app_web/views/sales/user_view.ex`.
@@ -70,18 +70,18 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   flags for file generation control.
 
   You can also change the table name or configure the migrations to
-  use binary ids for primary keys, see `mix phx.gen.schema` for more
+  use binary ids for primary keys, see `mix gpanel.gen.schema` for more
   information.
   """
   use Mix.Task
 
   alias Mix.Phoenix.{Context, Schema}
-  alias Mix.Tasks.Phx.Gen
+  alias Mix.Tasks.Gpanel.Gen
 
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.html must be invoked from within your *_web application root directory"
+      Mix.raise "mix gpanel.gen.html must be invoked from within your *_web application root directory"
     end
 
     {context, schema} = Gen.Context.build(args)
@@ -131,7 +131,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
-    Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.html", binding, files)
+    Mix.Phoenix.copy_from(paths, "priv/templates/gpanel.gen.html", binding, files)
     if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
     context
   end

@@ -1,10 +1,10 @@
-defmodule Mix.Tasks.Phx.Gen.Embedded do
+defmodule Mix.Tasks.Gpanel.Gen.Embedded do
   @shortdoc "Generates an embedded Ecto schema file"
 
   @moduledoc """
   Generates an embedded Ecto schema for casting/validating data outside the DB.
 
-      mix phx.gen.embedded Blog.Post title:string views:integer
+      mix gpanel.gen.embedded Blog.Post title:string views:integer
 
   The first argument is the schema module followed by the schema attributes.
 
@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   where type are the types supported by Ecto. Omitting
   the type makes it default to `:string`:
 
-      mix phx.gen.embedded Blog.Post title views:integer
+      mix gpanel.gen.embedded Blog.Post title views:integer
 
   The following types are supported:
 
@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.embedded must be invoked from within your *_web application root directory"
+      Mix.raise "mix gpanel.gen.embedded must be invoked from within your *_web application root directory"
     end
 
     schema = build(args)
@@ -78,10 +78,10 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
     Mix.raise """
     #{msg}
 
-    mix phx.gen.embedded expects a module name followed by
+    mix gpanel.gen.embedded expects a module name followed by
     any number of attributes:
 
-        mix phx.gen.embedded Blog.Post title:string
+        mix gpanel.gen.embedded Blog.Post title:string
     """
   end
 
@@ -100,7 +100,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   @doc false
   def copy_new_files(%Schema{} = schema, paths, binding) do
     files = files_to_be_generated(schema)
-    Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.embedded", binding, files)
+    Mix.Phoenix.copy_from(paths, "priv/templates/gpanel.gen.embedded", binding, files)
 
     schema
   end

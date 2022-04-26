@@ -1,10 +1,10 @@
-defmodule Mix.Tasks.Phx.Gen.Live do
+defmodule Mix.Tasks.Gpanel.Gen.Live do
   @shortdoc "Generates LiveView, templates, and context for a resource"
 
   @moduledoc """
   Generates LiveView, templates, and context for a resource.
 
-      mix phx.gen.live Accounts User users name:string age:integer
+      mix gpanel.gen.live Accounts User users name:string age:integer
 
   The first argument is the context module.  The context is an Elixir module
   that serves as an API boundary for the given resource. A context often holds
@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   The remaining arguments are the schema module plural name (used as the schema
   table name), and an optional list of attributes as their respective names and
-  types.  See `mix help phx.gen.schema` for more information on attributes.
+  types.  See `mix help gpanel.gen.schema` for more information on attributes.
 
   When this command is run for the first time, a `LiveHelpers` module will be
   created, along with the resource level LiveViews and components, including
@@ -66,7 +66,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
-      mix phx.gen.live Accounts User users --context-app warehouse
+      mix gpanel.gen.live Accounts User users --context-app warehouse
 
   ## Web namespace
 
@@ -74,7 +74,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
-      mix phx.gen.live Accounts User users --web Sales
+      mix gpanel.gen.live Accounts User users --web Sales
 
   Which would generate the LiveViews in `lib/app_web/live/sales/user_live/`,
   namespaced `AppWeb.Sales.UserLive` instead of `AppWeb.UserLive`.
@@ -87,18 +87,18 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   for file generation control.
 
   You can also change the table name or configure the migrations to
-  use binary ids for primary keys, see `mix help phx.gen.schema` for more
+  use binary ids for primary keys, see `mix help gpanel.gen.schema` for more
   information.
   """
   use Mix.Task
 
   alias Mix.Phoenix.{Context}
-  alias Mix.Tasks.Phx.Gen
+  alias Mix.Tasks.Gpanel.Gen
 
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.live must be invoked from within your *_web application root directory"
+      Mix.raise "mix gpanel.gen.live must be invoked from within your *_web application root directory"
     end
 
     {context, schema} = Gen.Context.build(args)
@@ -148,7 +148,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   defp copy_new_files(%Context{} = context, binding, paths) do
     files = files_to_be_generated(context)
-    Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.live", binding, files)
+    Mix.Phoenix.copy_from(paths, "priv/templates/gpanel.gen.live", binding, files)
     if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
 
     context
