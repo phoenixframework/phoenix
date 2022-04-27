@@ -235,6 +235,37 @@ defmodule Phoenix.Endpoint do
       Defaults to `[]`, which will start a drainer process for each configured endpoint,
       but can be disabled by setting it to `false`.
 
+  Phoenix also provides the `Phoenix.Endpoint.BanditAdapter` adapter which works with the
+  [Bandit](https://hexdocs.pm/bandit) web server. It can be configured via the following top-level
+  options:
+
+    * `:http`: the configuration for the HTTP server. Accepts the following options:
+      * `port`: The port to run on. Defaults to 4000
+      * `ip`: The address to bind to. Can be specified as `{127, 0, 0, 1}`, or using `{:local,
+        path}` to bind to a Unix domain socket. Defaults to {127, 0, 0, 1}.
+      * `transport_options`: Any valid value from `ThousandIsland.Transports.TCP`
+    
+      Defaults to `false`, which will cause Bandit to not start an HTTP server.
+
+    * `:https`: the configuration for the HTTPS server. Accepts the following options:
+      * `port`: The port to run on. Defaults to 4040
+      * `ip`: The address to bind to. Can be specified as `{127, 0, 0, 1}`, or using `{:local,
+        path}` to bind to a Unix domain socket. Defaults to {127, 0, 0, 1}.
+      * `transport_options`: Any valid value from `ThousandIsland.Transports.SSL`
+    
+      Defaults to `false`, which will cause Bandit to not start an HTTPS server.
+
+  To use the bandit adapter, add the following to your endpoint configuration in
+  `config/config.exs`:
+
+  ```
+  config :your_app, YourAppWeb.Endpoint,
+    adapter: Phoenix.Endpoint.BanditAdapter
+  ```
+
+  Note that the Bandit adapter does not currently support WebSocket connections; it is
+  only suitable for use with HTTP(S)-only Phoenix instances.
+
   ## Endpoint API
 
   In the previous section, we have used the `c:config/2` function that is

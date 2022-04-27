@@ -78,6 +78,7 @@ defmodule Phoenix.MixProject do
       # Optional deps
       {:plug_cowboy, "~> 2.2", optional: true},
       {:jason, "~> 1.0", optional: true},
+      {:bandit, ">= 0.4.9", optional: true},
 
       # Docs dependencies (some for cross references)
       {:ex_doc, "~> 0.24", only: :docs},
@@ -193,7 +194,8 @@ defmodule Phoenix.MixProject do
       ],
       "Adapters and Plugs": [
         Phoenix.CodeReloader,
-        Phoenix.Endpoint.Cowboy2Adapter
+        Phoenix.Endpoint.Cowboy2Adapter,
+        Phoenix.Endpoint.BanditAdapter
       ],
       "Socket and Transport": [
         Phoenix.Socket,
