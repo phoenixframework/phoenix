@@ -69,7 +69,7 @@ First off, is the setup block:
 ```elixir
 setup do
   {:ok, _, socket} =
-    UserSocket
+    HelloWeb.UserSocket
     |> socket("user_id", %{some: :assign})
     |> subscribe_and_join(RoomChannel, "room:lobby")
 
