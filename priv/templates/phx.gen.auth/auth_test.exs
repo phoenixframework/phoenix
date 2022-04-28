@@ -116,6 +116,15 @@ defmodule <%= inspect auth_module %>Test do
     end
   end
 
+  describe "mount_current_<%= schema.singular %>/2" do
+    test "validates and mount <%= schema.singular %> from session", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
+      updated_socket = <%= inspect schema.alias %>Auth.mount_current_<%= schema.singular %>(session, %Phoenix.LiveView.Socket{})
+      assert updated_socket.assigns.current_<%= schema.singular %>.id == <%= schema.singular %>.id
+    end
+  end
+
   describe "redirect_if_<%= schema.singular %>_is_authenticated/2" do
     test "redirects if <%= schema.singular %> is authenticated", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn = conn |> assign(:current_<%= schema.singular %>, <%= schema.singular %>) |> <%= inspect schema.alias %>Auth.redirect_if_<%= schema.singular %>_is_authenticated([])

@@ -2,6 +2,7 @@ defmodule <%= inspect auth_module %> do
   import Plug.Conn
   import Phoenix.Controller
 
+  alias Phoenix.LiveView
   alias <%= inspect context.module %>
   alias <%= inspect context.web_module %>.Router.Helpers, as: Routes
 
@@ -105,6 +106,24 @@ defmodule <%= inspect auth_module %> do
         {nil, conn}
       end
     end
+  end
+
+  @doc """
+  Authenticates and mounts in the socket assigns the
+  <%= schema.singular %> by looking into the session.
+  """
+  def mount_current_<%= schema.singular %>(session, socket) do
+    case session do
+      %{"<%= schema.singular %>_token" => <%= schema.singular %>_token} ->
+        LiveView.assign_new(socket, :current_<%= schema.singular %>, fn -> <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token) end)
+
+      %{} ->
+        LiveView.assign(socket, :current_<%= schema.singular %>, nil)
+    end
+  end
+
+  def on_mount(:current_<%= schema.singular %>, _params, session, socket) do
+    {:cont, mount_current_<%= schema.singular %>(session, socket)}
   end
 
   @doc """
