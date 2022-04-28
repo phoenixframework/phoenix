@@ -169,7 +169,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
                   ~r/defmodule PhxUmbWeb.PageView/
 
       assert_file web_path(@app, "lib/#{@app}_web/router.ex"), "defmodule PhxUmbWeb.Router"
-      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.heex")
+
+      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.heex"), fn file ->
+        assert file =~ ~s|<meta name="csrf-token" content={csrf_token_value()}>|
+      end
+
       assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.heex")
       assert_file web_path(@app, "test/#{@app}_web/views/page_view_test.exs"),
                   "defmodule PhxUmbWeb.PageViewTest"
