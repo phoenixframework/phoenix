@@ -107,7 +107,10 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
       end
 
-      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.heex"
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.heex", fn file ->
+        assert file =~ ~s|<meta name="csrf-token" content={csrf_token_value()}>|
+      end
+
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.heex"
 
       assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.heex", fn file ->
