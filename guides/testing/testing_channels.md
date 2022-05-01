@@ -149,4 +149,4 @@ Since the `handle_out/3` event is only triggered when we call `broadcast/3` from
 
 The line `broadcast_from!(socket, "broadcast", %{"some" => "data"})` will trigger our `handle_out/3` callback above which pushes the same event and payload back to the client. To test this, we do `assert_push "broadcast", %{"some" => "data"}`.
 
-That's it. Now you are ready to develop and fully test realtime applications. To learn more about other functionality provided when testing channels, check out the documentation for [`Phoenix.ChannelTest`](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html).
+That's it. Now you are ready to develop and fully test real-time applications. To learn more about other functionality provided when testing channels, check out the documentation for [`Phoenix.ChannelTest`](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html).

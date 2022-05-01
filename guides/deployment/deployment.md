@@ -108,7 +108,7 @@ $ MIX_ENV=prod mix ecto.migrate
 $ PORT=4001 MIX_ENV=prod mix phx.server
 ```
 
-And that's it. Next you can use one of our official guides to deploy:
+And that's it. Next, you can use one of our official guides to deploy:
 
   * [with Elixir's releases](releases.html)
   * [to Gigalixir](gigalixir.html), an Elixir-centric Platform as a Service (PaaS)

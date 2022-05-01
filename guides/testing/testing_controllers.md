@@ -218,7 +218,7 @@ First of all, run this command:
 $ mix phx.gen.json News Article articles title body
 ```
 
-We chose a very similar concept to the Blog context <-> Post schema, except we are using a different name so we can study these concepts in isolation.
+We chose a very similar concept to the Blog context <-> Post schema, except we are using a different name, so we can study these concepts in isolation.
 
 After you run the command above, do not forget to follow the final steps output by the generator. Once all is done, we should run `mix test` and now have 33 passing tests:
 
