@@ -404,7 +404,7 @@ defp put_user_token(conn, _) do
 end
 ```
 
-Now, our `conn.assigns` contains the `current_user` and `user_token`.
+Now our `conn.assigns` contains the `current_user` and `user_token`.
 
 **Step 2 - Pass the Token to the JavaScript**
 

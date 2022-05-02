@@ -1,6 +1,6 @@
 # Overview
 
-Phoenix is a web development framework written in Elixir which implements the server-side Model View Controller (MVC) pattern. Many of its components and concepts will seem familiar to those of us with experience in other web frameworks like, Ruby on Rails or Python's Django.
+Phoenix is a web development framework written in Elixir which implements the server-side Model View Controller (MVC) pattern. Many of its components and concepts will seem familiar to those of us with experience in other web frameworks like Ruby on Rails or Python's Django.
 
 Phoenix provides the best of both worlds - high developer productivity _and_ high application performance. It also has some interesting new twists like channels for implementing realtime features and pre-compiled templates for blazing speed.
 
@@ -22,7 +22,7 @@ The guides that you are currently looking at provide an overview of all parts th
 
   * How-to's - a collection of articles on how to achieve certain things with Phoenix
 
-If you preferred to read these guides as an EPUB, [click here!](Phoenix.epub)
+If you would prefer to read these guides as an EPUB, [click here!](Phoenix.epub)
 
 Note, these guides are not a step-by-step introduction to Phoenix. If you want a more structured approach to learning the framework, we have a large community and many books, courses, and screencasts available. See [our community page](community.html) for a complete list.
 

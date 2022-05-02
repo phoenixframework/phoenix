@@ -211,7 +211,7 @@ When running a mix task later (after we have pushed the project to Heroku) you w
 $ heroku run "POOL_SIZE=2 mix hello.task"
 ```
 
-So that, Ecto does not attempt to open more than the available connections.
+So that Ecto does not attempt to open more than the available connections.
 
 We still have to create the `SECRET_KEY_BASE` config based on a random string. First, use `mix phx.gen.secret` to get a new secret:
 
