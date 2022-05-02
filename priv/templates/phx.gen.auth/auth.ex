@@ -109,21 +109,51 @@ defmodule <%= inspect auth_module %> do
   end
 
   @doc """
-  Authenticates and mounts in the socket assigns the
-  <%= schema.singular %> by looking into the session.
-  """
-  def mount_current_<%= schema.singular %>(session, socket) do
-    case session do
-      %{"<%= schema.singular %>_token" => <%= schema.singular %>_token} ->
-        LiveView.assign_new(socket, :current_<%= schema.singular %>, fn -> <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token) end)
+  #mount_current_<%= schema.singular %>:
+  Assigns current_<%= schema.singular %> to socket assigns based on <%= schema.singular %>_token.
+  Returns nil if there's no <%= schema.singular %>_token or if there's no matching <%= schema.singular %>.
 
-      %{} ->
-        LiveView.assign(socket, :current_<%= schema.singular %>, nil)
+  #ensure_authenticated:
+  Authenticates the <%= schema.singular %> by looking into the session.
+  Assigns current_<%= schema.singular %> to socket assigns based on <%= schema.singular %>_token.
+  Redirects to login page if there's no logged <%= schema.singular %>.
+
+  ##Examples
+  # In a LiveView file
+  defmodule <%= inspect context.web_module %>.PageLive do
+    use <%= inspect context.web_module %>, :live_view
+
+    on_mount {<%= inspect auth_module %>, :mount_current_<%= schema.singular %>}
+
+
+  #using live_session in router.ex
+  live_session :authenticated, on_mount: [{<%= inspect auth_module %>, :ensure_authenticated}] do
+    live "/profile", ProfileLive, :index
+  end
+  """
+  def on_mount(:mount_current_<%= schema.singular %>, _params, session, socket) do
+    {:cont, mount_current_<%= schema.singular %>(session, socket)}
+  end
+
+  def on_mount(:ensure_authenticated, _params, session, socket) do
+    socket = mount_current_<%= schema.singular %>(session, socket)
+    case  socket.assigns.current_<%= schema.singular %> do
+      nil ->
+        {:halt, LiveView.redirect(socket, to: Routes.<%= schema.singular %>_session_path(socket, :new))}
+
+      _ ->
+        {:cont, socket}
     end
   end
 
-  def on_mount(:current_<%= schema.singular %>, _params, session, socket) do
-    {:cont, mount_current_<%= schema.singular %>(session, socket)}
+  defp mount_current_<%= schema.singular %>(session, socket) do
+    case session do
+      %{"<%= schema.singular %>_token" => <%= schema.singular %>_token} ->
+        LiveView.assign_new(socket, :current_<%= schema.singular %>, fn -> Accounts.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token) end)
+
+      %{} ->
+        LiveView.assign_new(socket, :current_<%= schema.singular %>, fn -> nil end)
+    end
   end
 
   @doc """
