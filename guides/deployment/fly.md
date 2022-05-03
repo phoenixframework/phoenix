@@ -16,7 +16,7 @@ The main goal for this guide is to get a Phoenix application running on [Fly.io]
 
 ## Sections
 
-Let's separate this process into a few steps so we can keep track of where we are.
+Let's separate this process into a few steps, so we can keep track of where we are.
 
 - Install the Fly.io CLI
 - Sign up for Fly.io
@@ -36,7 +36,7 @@ We can [sign up for an account](https://fly.io/docs/getting-started/login-to-fly
 $ fly auth signup
 ```
 
-Or signin.
+Or sign in.
 
 ```console
 $ flyctl auth login
@@ -67,7 +67,7 @@ The `fly launch` command also created a `fly.toml` file for you. This is where y
 
 ### Storing secrets on Fly.io
 
-You may also have some secrets you'd like set on your app.
+You may also have some secrets you'd like to set on your app.
 
 Use [`fly secrets`](https://fly.io/docs/reference/secrets/#setting-secrets) to configure those.
 
@@ -83,7 +83,7 @@ When you want to deploy changes to your application, use `fly deploy`.
 $ fly deploy
 ```
 
-Note: On Apple Silicon (M1) computers, docker runs cross platform builds using qemu which might not always work. If you get a segmentation fault error like the following:
+Note: On Apple Silicon (M1) computers, docker runs cross-platform builds using qemu which might not always work. If you get a segmentation fault error like the following:
 
 ```
  => [build  7/17] RUN mix deps.get --only
@@ -259,7 +259,7 @@ $ fly scale count 2
 Count changed to 2
 ```
 
-Checking the status we can see what happened.
+Checking the status, we can see what happened.
 
 ```console
 $ fly status
@@ -299,7 +299,7 @@ The IEx prompt is included to help show the IP address of the node we are connec
 
 Fly makes it easy to deploy instances closer to your users. Through the magic of DNS, users are directed to the nearest region where your application is located. You can read more about [Fly.io regions here](https://fly.io/docs/reference/regions/).
 
-Starting back from our baseline of a single instance running in `sea` which is Seattle, Washington (US), Let's add the region `ewr` which is Parsippany, NJ (US). This puts an instance on both coasts of the US.
+Starting back from our baseline of a single instance running in `sea` which is Seattle, Washington (US), let's add the region `ewr` which is Parsippany, NJ (US). This puts an instance on both coasts of the US.
 
 ```console
 $ fly regions add ewr
