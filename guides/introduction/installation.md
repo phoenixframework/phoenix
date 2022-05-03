@@ -3,7 +3,7 @@
 In order to build a Phoenix application, we will need a few dependencies installed in our Operating System:
 
   * the Erlang VM and the Elixir programming language
-  * a database - Phoenix recommends PostgreSQL but you can pick others or not use a database at all
+  * a database - Phoenix recommends PostgreSQL, but you can pick others or not use a database at all
   * and other optional packages.
 
 Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.
@@ -57,7 +57,7 @@ However, if you are just getting started with Phoenix, we recommend you to insta
 
 Phoenix provides a very handy feature called Live Reloading. As you change your views or your assets, it automatically reloads the page in the browser. In order for this functionality to work, you need a filesystem watcher.
 
-macOS and Windows users already have a filesystem watcher but Linux users must install inotify-tools. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
+macOS and Windows users already have a filesystem watcher, but Linux users must install inotify-tools. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
 
 ## Summary
 
