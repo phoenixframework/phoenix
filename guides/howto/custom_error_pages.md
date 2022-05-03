@@ -25,7 +25,7 @@ defmodule HelloWeb.ErrorView do
 end
 ```
 
-Before we dive into this, let's see what the rendered `404 Not Found` message looks like in a browser. In the development environment, Phoenix will debug errors by default, showing us a very informative debugging page. What we want here, however, is to see what page the application would serve in production. In order to do that we need to set `debug_errors: false` in `config/dev.exs`.
+Before we dive into this, let's see what the rendered `404 Not Found` message looks like in a browser. In the development environment, Phoenix will debug errors by default, showing us a very informative debugging page. What we want here, however, is to see what page the application would serve in production. In order to do that, we need to set `debug_errors: false` in `config/dev.exs`.
 
 ```elixir
 import Config
@@ -49,7 +49,7 @@ def template_not_found(template, _assigns) do
 end
 ```
 
-Great, so we have this `template_not_found/2` function that takes a template and an `assigns` map, which we ignore. The `template_not_found/2` is invoked whenever a `Phoenix.View` view attempts to render a template but no template is found.
+Great, so we have this `template_not_found/2` function that takes a template and an `assigns` map, which we ignore. The `template_not_found/2` is invoked whenever a `Phoenix.View` view attempts to render a template, but no template is found.
 
 In other words, to provide custom error pages, we could simply define a proper `render/2` function clause in `HelloWeb.ErrorView`.
 
@@ -104,13 +104,13 @@ After you define the template file, remember to remove the equivalent `render/2`
 - end
 ```
 
-Now when we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see a much nicer error page. It is worth noting that we did not render our `404.html.heex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. This is to avoid circular errors. For example, what happens if our application failed due to an error in the layout? Attempting to render the layout again will just trigger another error. So ideally we want to minimize the amount of dependencies and logic in our error templates, sharing only what is necessary.
+Now, when we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see a much nicer error page. It is worth noting that we did not render our `404.html.heex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. This is to avoid circular errors. For example, what happens if our application failed due to an error in the layout? Attempting to render the layout again will just trigger another error. So ideally we want to minimize the amount of dependencies and logic in our error templates, sharing only what is necessary.
 
 ## Custom exceptions
 
 Elixir provides a macro called `defexception/1` for defining custom exceptions. Exceptions are represented as structs, and structs need to be defined inside of modules.
 
-In order to create a custom exception, we need to define a new module. Conventionally this will have "Error" in the name. Inside of that module, we need to define a new exception with `defexception/1`, the file `lib/hello_web.ex` seems like a good place for it.
+In order to create a custom exception, we need to define a new module. Conventionally, this will have "Error" in the name. Inside that module, we need to define a new exception with `defexception/1`, the file `lib/hello_web.ex` seems like a good place for it.
 
 ```elixir
 defmodule HelloWeb.SomethingNotFoundError do

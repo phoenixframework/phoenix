@@ -24,13 +24,13 @@ Heroku is a great platform and Elixir performs well on it. However, you may run 
 - [The built-in observer](https://elixir-lang.org/getting-started/debugging.html#observer) can't be used with Heroku.
   - Heroku does allow for connection into your dyno, but you won't be able to use the observer to watch the state of your dyno.
 
-If you are just getting started or you don't expect to use the features above, Heroku should be enough for your needs. For instance, if you are migrating an existing application running on Heroku to Phoenix, keeping a similar set of features, Elixir will perform just as well or even better than your current stack.
+If you are just getting started, or you don't expect to use the features above, Heroku should be enough for your needs. For instance, if you are migrating an existing application running on Heroku to Phoenix, keeping a similar set of features, Elixir will perform just as well or even better than your current stack.
 
 If you want a platform-as-a-service without these limitations, try [Gigalixir](gigalixir.html). If you would rather deploy to a cloud platform, such as EC2, Google Cloud, etc, consider using `mix release`.
 
 ## Steps
 
-Let's separate this process into a few steps so we can keep track of where we are.
+Let's separate this process into a few steps, so we can keep track of where we are.
 
 - Initialize Git repository
 - Sign up for Heroku
@@ -44,7 +44,7 @@ Let's separate this process into a few steps so we can keep track of where we ar
 
 [Git](https://git-scm.com/) is a popular decentralized revision control system and is also used to deploy apps to Heroku.
 
-Before we can push to Heroku we'll need to initialize a local Git repository and commit our files to it. We can do so by running the following commands in our project directory:
+Before we can push to Heroku, we'll need to initialize a local Git repository and commit our files to it. We can do so by running the following commands in our project directory:
 
 ```console
 $ git init
@@ -70,7 +70,7 @@ The Heroku CLI, part of the Toolbelt, is useful to create Heroku applications, l
 
 ## Create and Set Up Heroku Application
 
-There are two different ways to deploy a Phoenix app on Heroku. We could use Heroku buildpacks or their container stack. The difference between these two approaches is in how we tell Heroku to treat our build. In buildpack case, we need to update our apps configuration on Heroku to use Phoenix/Elixir specific buildpacks. On container approach, we have more control on how we want to set up our app and we can define our container image using `Dockerfile` and `heroku.yml`. This section will explore the buildpack approach. In order to use Dockerfile, it is often recommended to convert our app to use releases, which we will describe later on.
+There are two different ways to deploy a Phoenix app on Heroku. We could use Heroku buildpacks or their container stack. The difference between these two approaches is in how we tell Heroku to treat our build. In buildpack case, we need to update our apps configuration on Heroku to use Phoenix/Elixir specific buildpacks. On container approach, we have more control on how we want to set up our app, and we can define our container image using `Dockerfile` and `heroku.yml`. This section will explore the buildpack approach. In order to use Dockerfile, it is often recommended to convert our app to use releases, which we will describe later on.
 
 ### Create Application
 
@@ -93,7 +93,7 @@ https://mysterious-meadow-6277.herokuapp.com/ | https://git.heroku.com/mysteriou
 
 > Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we wouldn't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
 
-The buildpack uses a predefined Elixir and Erlang version but to avoid surprises when deploying, it is best to explicitly list the Elixir and Erlang version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of Elixir and Erlang:
+The buildpack uses a predefined Elixir and Erlang version, but to avoid surprises when deploying, it is best to explicitly list the Elixir and Erlang version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of Elixir and Erlang:
 
 ```
 # Elixir version
@@ -137,7 +137,7 @@ When using this buildpack, you want to delegate all asset bundling to `npm`. So 
 }
 ```
 
-The Phoenix Static buildpack uses a predefined Node.js version but to avoid surprises when deploying, it is best to explicitly list the Node.js version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `phoenix_static_buildpack.config` in the root directory of your project with your target version of Node.js:
+The Phoenix Static buildpack uses a predefined Node.js version, but to avoid surprises when deploying, it is best to explicitly list the Node.js version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `phoenix_static_buildpack.config` in the root directory of your project with your target version of Node.js:
 
 ```
 # Node.js version
