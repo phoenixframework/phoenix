@@ -22,7 +22,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
   end
 
   test "development workflow works as expected" do
-    with_installer_tmp("development_workflow", fn tmp_dir ->
+    with_installer_tmp("development_workflow", [autoremove?: false], fn tmp_dir ->
       {app_root_path, _} =
         generate_phoenix_app(tmp_dir, "phx_blog", [
           "--no-assets",
