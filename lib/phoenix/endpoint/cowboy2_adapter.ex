@@ -97,6 +97,10 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
         Logger.info(info(scheme, endpoint, ref))
         {:ok, pid}
 
+      {:error, {:shutdown, {_, _, {:listen_error, _, :eaddrinuse}}}} = error ->
+        Logger.error([info(scheme, endpoint, ref), " failed, port already in use"])
+        error
+
       {:error, {:shutdown, {_, _, {{_, {:error, :eaddrinuse}}, _}}}} = error ->
         Logger.error([info(scheme, endpoint, ref), " failed, port already in use"])
         error
