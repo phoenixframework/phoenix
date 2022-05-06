@@ -13,14 +13,14 @@
   </.modal>
 <%% end %>
 
-<ul>
-<%= for {k, _} <- schema.attrs do %>
+<ul><%= for {k, _} <- schema.attrs do %>
   <li>
     <strong><%= Phoenix.Naming.humanize(Atom.to_string(k)) %>:</strong>
     <%%= @<%= schema.singular %>.<%= k %> %>
   </li>
-<% end %>
-</ul>
+<% end %></ul>
 
-<span><%%= live_patch "Edit", to: Routes.<%= schema.route_helper %>_show_path(@socket, :edit, @<%= schema.singular %>), class: "button" %></span> |
-<span><%%= live_redirect "Back", to: Routes.<%= schema.route_helper %>_index_path(@socket, :index) %></span>
+<span>
+  <%%= live_patch("Edit", to: Routes.<%= schema.route_helper %>_show_path(@socket, :edit, @<%= schema.singular %>), class: "button") %>
+</span>
+| <span><%%= live_redirect("Back", to: Routes.<%= schema.route_helper %>_index_path(@socket, :index)) %></span>
