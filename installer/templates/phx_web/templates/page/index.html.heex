@@ -1,5 +1,5 @@
 <section class="phx-hero"><%= if @gettext do %>
-  <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
+  <h1><%%= gettext("Welcome to %{name}!", name: "Phoenix") %></h1><% else %>
   <h1>Welcome to Phoenix!</h1><% end %>
   <p>Peace of mind from prototype to production</p>
 </section>
@@ -15,7 +15,9 @@
         <a href="https://github.com/phoenixframework/phoenix">Source</a>
       </li>
       <li>
-        <a href="https://github.com/phoenixframework/phoenix/blob/<%= @phoenix_github_version_tag %>/CHANGELOG.md"><%= @phoenix_github_version_tag %> Changelog</a>
+        <a href="https://github.com/phoenixframework/phoenix/blob/<%= @phoenix_github_version_tag %>/CHANGELOG.md">
+          <%= @phoenix_github_version_tag %> Changelog
+        </a>
       </li>
     </ul>
   </article>
