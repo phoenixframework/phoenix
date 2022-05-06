@@ -7,20 +7,20 @@
     </div>
   <%% end %>
 
-  <%%= label f, :email %>
-  <%%= email_input f, :email, required: true %>
-  <%%= error_tag f, :email %>
+  <%%= label(f, :email) %>
+  <%%= email_input(f, :email, required: true) %>
+  <%%= error_tag(f, :email) %>
 
-  <%%= label f, :password %>
-  <%%= password_input f, :password, required: true %>
-  <%%= error_tag f, :password %>
+  <%%= label(f, :password) %>
+  <%%= password_input(f, :password, required: true) %>
+  <%%= error_tag(f, :password) %>
 
   <div>
-    <%%= submit "Register" %>
+    <%%= submit("Register") %>
   </div>
 </.form>
 
 <p>
-  <%%= link "Log in", to: Routes.<%= schema.route_helper %>_session_path(@conn, :new) %> |
-  <%%= link "Forgot your password?", to: Routes.<%= schema.route_helper %>_reset_password_path(@conn, :new) %>
+  <%%= link("Log in", to: Routes.<%= schema.route_helper %>_session_path(@conn, :new)) %> |
+  <%%= link("Forgot your password?", to: Routes.<%= schema.route_helper %>_reset_password_path(@conn, :new)) %>
 </p>
