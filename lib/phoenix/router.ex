@@ -88,18 +88,17 @@ defmodule Phoenix.Router do
       GET /pages/hello/world
       %{"page" => ["hello", "world"]} = params
 
-  Globs can match segments partially too. The difference is the whole segment
-  is captured along with the trailing segments.
+  Globs cannot have prefixes nor suffixes, but can be mixed with variables:
 
-      get "/pages/he*page", PageController, :show
+       get "/pages/he:page/*rest", PageController, :show
 
   matches
 
-      GET /pages/hello/world
-      %{"page" => ["hello", "world"]} = params
+      GET /pages/hello
+       %{"page" => "llo", "rest" => []} = params
 
-      GET /pages/hey/world
-      %{"page" => ["hey", "world"]} = params
+      GET /pages/hey/there/world
+       %{"page" => "y", "rest" => ["there" "world"]} = params
 
   ## Helpers
 
