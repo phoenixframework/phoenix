@@ -88,12 +88,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file root_path(@app, "config/runtime.exs"), ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
 
       if Version.match?(System.version(), ">= 1.13.4") do
-        assert_file root_path(@app, ".formatter.exs"), fn file ->
-          assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
-          assert file =~ "inputs: [\"mix.exs\", \"config/*.exs\"]"
-          assert file =~ "subdirectories: [\"apps/*\"]"
-        end
-
         assert_file app_path(@app, ".formatter.exs"), fn file ->
           assert file =~ "import_deps: [:ecto]"
           assert file =~ "subdirectories: [\"priv/*/migrations\"]"
@@ -109,12 +103,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
           refute file =~ "subdirectories:"
         end
       else
-        assert_file root_path(@app, ".formatter.exs"), fn file ->
-          assert file =~ "inputs: [\"mix.exs\", \"config/*.exs\"]"
-          assert file =~ "subdirectories: [\"apps/*\"]"
-          refute file =~ "plugins:"
-        end
-
         assert_file app_path(@app, ".formatter.exs"), fn file ->
           assert file =~ "import_deps: [:ecto]"
           assert file =~ "subdirectories: [\"priv/*/migrations\"]"
