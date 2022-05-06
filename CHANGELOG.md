@@ -4,6 +4,11 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.8 (2022-05-06)
+
+### Bug Fixes
+  * [phx.gen.release] Fix Ecto check failing to find ecto in certain cases
+
 ## 1.6.7 (2022-04-14)
 
 ### Enhancements
