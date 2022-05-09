@@ -152,7 +152,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   """
   @spec app_layout_menu_code_to_inject(schema) :: String.t()
   def app_layout_menu_code_to_inject(%Schema{} = schema) do
-    "<%= render \"#{app_layout_menu_template_name(schema)}\", assigns %>"
+    "<%= render(\"#{app_layout_menu_template_name(schema)}\", assigns) %>"
   end
 
   @doc """
