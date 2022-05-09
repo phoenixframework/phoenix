@@ -7,5 +7,7 @@
   </li>
 <% end %></ul>
 
-<span><%%= link("Edit", to: Routes.<%= schema.route_helper %>_path(@conn, :edit, @<%= schema.singular %>)) %></span> |
-<span><%%= link("Back", to: Routes.<%= schema.route_helper %>_path(@conn, :index)) %></span>
+<p>
+  <span><%%= link("Edit", to: Routes.<%= schema.route_helper %>_path(@conn, :edit, @<%= schema.singular %>)) %></span> |
+  <span><%%= link("Back", to: Routes.<%= schema.route_helper %>_path(@conn, :index)) %></span>
+</p>

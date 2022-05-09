@@ -21,6 +21,8 @@
 </.form>
 
 <p>
-  <%%= link("Log in", to: Routes.<%= schema.route_helper %>_session_path(@conn, :new)) %> |
-  <%%= link("Forgot your password?", to: Routes.<%= schema.route_helper %>_reset_password_path(@conn, :new)) %>
+  <span><%%= link("Log in", to: Routes.<%= schema.route_helper %>_session_path(@conn, :new)) %></span> |
+  <span>
+    <%%= link("Forgot your password?", to: Routes.<%= schema.route_helper %>_reset_password_path(@conn, :new)) %>
+  </span>
 </p>

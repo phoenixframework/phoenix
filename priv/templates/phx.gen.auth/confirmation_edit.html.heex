@@ -7,6 +7,6 @@
 </.form>
 
 <p>
-  <%%= link("Register", to: Routes.<%= schema.route_helper %>_registration_path(@conn, :new)) %> |
-  <%%= link("Log in", to: Routes.<%= schema.route_helper %>_session_path(@conn, :new)) %>
+  <span><%%= link("Register", to: Routes.<%= schema.route_helper %>_registration_path(@conn, :new)) %></span> |
+  <span><%%= link("Log in", to: Routes.<%= schema.route_helper %>_session_path(@conn, :new)) %></span>
 </p>
