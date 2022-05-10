@@ -37,6 +37,7 @@ defmodule <%= @app_module %>.MixProject do
   defp deps do
     [
       {:phoenix_pubsub, "~> 2.1"}<%= if @ecto do %>,
+      {:ecto, "~> 3.6"},
       {:ecto_sql, "~> 3.6"},
       {:<%= @adapter_app %>, ">= 0.0.0"},
       {:jason, "~> 1.2"}<% end %><%= if @mailer do %>,
