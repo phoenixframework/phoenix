@@ -3,7 +3,7 @@
 <h3>Change email</h3>
 
 <.form
-  let={f}
+  :let={f}
   for={@email_changeset}
   action={Routes.<%= schema.route_helper %>_settings_path(@conn, :update)}
   id="update_email"
@@ -36,7 +36,7 @@
 <h3>Change password</h3>
 
 <.form
-  let={f}
+  :let={f}
   for={@password_changeset}
   action={Routes.<%= schema.route_helper %>_settings_path(@conn, :update)}
   id="update_password"

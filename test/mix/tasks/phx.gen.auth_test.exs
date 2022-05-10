@@ -240,7 +240,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "lib/my_app_web/templates/warehouse/user_confirmation/new.html.heex", fn file ->
-        assert file =~ ~S|<.form let={f} for={:user} action={Routes.warehouse_user_confirmation_path(@conn, :create)}>|
+        assert file =~ ~S|<.form :let={f} for={:user} action={Routes.warehouse_user_confirmation_path(@conn, :create)}>|
         assert file =~ ~S|<%= link("Register", to: Routes.warehouse_user_registration_path(@conn, :new)) %>|
         assert file =~ ~S|<%= link("Log in", to: Routes.warehouse_user_session_path(@conn, :new)) %>|
       end
@@ -277,13 +277,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "lib/my_app_web/templates/warehouse/user_reset_password/edit.html.heex", fn file ->
-        assert file =~ ~S|<.form let={f} for={@changeset} action={Routes.warehouse_user_reset_password_path(@conn, :update, @token)}>|
+        assert file =~ ~S|<.form :let={f} for={@changeset} action={Routes.warehouse_user_reset_password_path(@conn, :update, @token)}>|
         assert file =~ ~S|<%= link("Register", to: Routes.warehouse_user_registration_path(@conn, :new)) %>|
         assert file =~ ~S|<%= link("Log in", to: Routes.warehouse_user_session_path(@conn, :new)) %>|
       end
 
       assert_file "lib/my_app_web/templates/warehouse/user_reset_password/new.html.heex", fn file ->
-        assert file =~ ~S|<.form let={f} for={:user} action={Routes.warehouse_user_reset_password_path(@conn, :create)}>|
+        assert file =~ ~S|<.form :let={f} for={:user} action={Routes.warehouse_user_reset_password_path(@conn, :create)}>|
         assert file =~ ~S|<%= link("Register", to: Routes.warehouse_user_registration_path(@conn, :new)) %>|
         assert file =~ ~S|<%= link("Log in", to: Routes.warehouse_user_session_path(@conn, :new)) %>|
       end
@@ -301,7 +301,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "lib/my_app_web/templates/warehouse/user_session/new.html.heex", fn file ->
-        assert file =~ ~S|<.form let={f} for={@conn} action={Routes.warehouse_user_session_path(@conn, :create)} as={:user}>|
+        assert file =~ ~S|<.form :let={f} for={@conn} action={Routes.warehouse_user_session_path(@conn, :create)} as={:user}>|
         assert file =~ ~S|<%= link("Register", to: Routes.warehouse_user_registration_path(@conn, :new)) %>|
         assert file =~ ~S|<%= link("Forgot your password?", to: Routes.warehouse_user_reset_password_path(@conn, :new)) %>|
       end
@@ -319,8 +319,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "lib/my_app_web/templates/warehouse/user_settings/edit.html.heex", fn file ->
-        assert file =~ ~s|<.form\n  let={f}\n  for={@email_changeset}\n  action={Routes.warehouse_user_settings_path(@conn, :update)}\n  id="update_email"\n>|
-        assert file =~ ~s|<.form\n  let={f}\n  for={@password_changeset}\n  action={Routes.warehouse_user_settings_path(@conn, :update)}\n  id="update_password"\n>|
+        assert file =~ ~s|<.form\n  :let={f}\n  for={@email_changeset}\n  action={Routes.warehouse_user_settings_path(@conn, :update)}\n  id="update_email"\n>|
+        assert file =~ ~s|<.form\n  :let={f}\n  for={@password_changeset}\n  action={Routes.warehouse_user_settings_path(@conn, :update)}\n  id="update_password"\n>|
       end
 
       assert_file "lib/my_app_web/views/warehouse/user_settings_view.ex", fn file ->
