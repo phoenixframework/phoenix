@@ -175,7 +175,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "lib/my_app_web/templates/layout/root.html.heex", fn file ->
-        assert file =~ ~s|<%= render "_user_menu.html", assigns %>|
+        assert file =~ ~s|<%= render("_user_menu.html", assigns) %>|
       end
 
       assert_file "test/support/conn_case.ex", fn file ->
@@ -201,11 +201,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       )
 
       assert_file "lib/my_app_web/templates/layout/root.html.heex", fn file ->
-        assert file =~ ~s|<%= render "_user_menu.html", assigns %>|
+        assert file =~ ~s|<%= render("_user_menu.html", assigns) %>|
       end
 
       assert_file "lib/my_app_web/templates/layout/app.html.heex", fn file ->
-        refute file =~ ~s|<%= render "_user_menu.html", assigns %>|
+        refute file =~ ~s|<%= render("_user_menu.html", assigns) %>|
       end
     end)
   end
@@ -241,8 +241,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file "lib/my_app_web/templates/warehouse/user_confirmation/new.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={:user} action={Routes.warehouse_user_confirmation_path(@conn, :create)}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<%= link("Register", to: Routes.warehouse_user_registration_path(@conn, :new)) %>|
+        assert file =~ ~S|<%= link("Log in", to: Routes.warehouse_user_session_path(@conn, :new)) %>|
       end
 
       assert_file "lib/my_app_web/controllers/warehouse/user_confirmation_controller.ex", fn file ->
@@ -254,10 +254,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "lib/my_app_web/templates/layout/_user_menu.html.heex", fn file ->
-        assert file =~ ~S|<%= link "Settings", to: Routes.warehouse_user_settings_path(@conn, :edit) %>|
-        assert file =~ ~S|<%= link "Log out", to: Routes.warehouse_user_session_path(@conn, :delete), method: :delete %>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<%= link("Settings", to: Routes.warehouse_user_settings_path(@conn, :edit)) %>|
+        assert file =~ ~S|<%= link("Log out", to: Routes.warehouse_user_session_path(@conn, :delete), method: :delete) %>|
+        assert file =~ ~S|<%= link("Register", to: Routes.warehouse_user_registration_path(@conn, :new)) %>|
+        assert file =~ ~S|<%= link("Log in", to: Routes.warehouse_user_session_path(@conn, :new)) %>|
       end
 
       assert_file "lib/my_app_web/controllers/warehouse/user_registration_controller.ex", fn file ->
@@ -278,14 +278,14 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file "lib/my_app_web/templates/warehouse/user_reset_password/edit.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={@changeset} action={Routes.warehouse_user_reset_password_path(@conn, :update, @token)}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<%= link("Register", to: Routes.warehouse_user_registration_path(@conn, :new)) %>|
+        assert file =~ ~S|<%= link("Log in", to: Routes.warehouse_user_session_path(@conn, :new)) %>|
       end
 
       assert_file "lib/my_app_web/templates/warehouse/user_reset_password/new.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={:user} action={Routes.warehouse_user_reset_password_path(@conn, :create)}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<%= link("Register", to: Routes.warehouse_user_registration_path(@conn, :new)) %>|
+        assert file =~ ~S|<%= link("Log in", to: Routes.warehouse_user_session_path(@conn, :new)) %>|
       end
 
       assert_file "lib/my_app_web/views/warehouse/user_reset_password_view.ex", fn file ->
@@ -302,8 +302,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file "lib/my_app_web/templates/warehouse/user_session/new.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={@conn} action={Routes.warehouse_user_session_path(@conn, :create)} as={:user}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Forgot your password?", to: Routes.warehouse_user_reset_password_path(@conn, :new) %>|
+        assert file =~ ~S|<%= link("Register", to: Routes.warehouse_user_registration_path(@conn, :new)) %>|
+        assert file =~ ~S|<%= link("Forgot your password?", to: Routes.warehouse_user_reset_password_path(@conn, :new)) %>|
       end
 
       assert_file "test/my_app_web/controllers/warehouse/user_session_controller_test.exs", fn file ->
@@ -319,8 +319,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "lib/my_app_web/templates/warehouse/user_settings/edit.html.heex", fn file ->
-        assert file =~ ~S|<.form let={f} for={@email_changeset} action={Routes.warehouse_user_settings_path(@conn, :update)} id="update_email">|
-        assert file =~ ~S|<.form let={f} for={@password_changeset} action={Routes.warehouse_user_settings_path(@conn, :update)} id="update_password">|
+        assert file =~ ~s|<.form\n  let={f}\n  for={@email_changeset}\n  action={Routes.warehouse_user_settings_path(@conn, :update)}\n  id="update_email"\n>|
+        assert file =~ ~s|<.form\n  let={f}\n  for={@password_changeset}\n  action={Routes.warehouse_user_settings_path(@conn, :update)}\n  id="update_password"\n>|
       end
 
       assert_file "lib/my_app_web/views/warehouse/user_settings_view.ex", fn file ->
@@ -378,7 +378,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "lib/my_app_web/templates/layout/root.html.heex", fn file ->
-        assert file =~ ~s|<%= render "_user_menu.html", assigns %>|
+        assert file =~ ~s|<%= render("_user_menu.html", assigns) %>|
       end
 
       assert_file "test/support/conn_case.ex", fn file ->
@@ -867,7 +867,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         layout file, please add the following code to it where you'd
         like "_user_menu.html" to be rendered.
 
-            <%= render "_user_menu.html", assigns %>
+            <%= render("_user_menu.html", assigns) %>
         """]}
       end)
     end
@@ -888,7 +888,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         Add a render call for "_user_menu.html" to lib/my_app_web/templates/layout/root.html.heex:
 
           <nav>
-            <%= render "_user_menu.html", assigns %>
+            <%= render("_user_menu.html", assigns) %>
           </nav>
 
         """]}
