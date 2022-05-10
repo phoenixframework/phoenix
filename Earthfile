@@ -1,19 +1,24 @@
+VERSION 0.6
+
 all:
     BUILD +all-test
     BUILD +all-integration-test
     BUILD +npm
 
 all-test:
-    BUILD --build-arg ELIXIR=1.9.4 --build-arg OTP=21.3.8.24 +test
-    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=24.0.2 --build-arg RUN_INSTALLER_TESTS=1 +test
+    BUILD --build-arg ELIXIR=1.10.0 --build-arg OTP=21.3.8.24 +test
+    BUILD --build-arg ELIXIR=1.13.4 --build-arg OTP=24.3.4 --build-arg ALPINE=3.15.3 --build-arg RUN_INSTALLER_TESTS=1 +test
 
 test:
     FROM +test-setup
+    COPY --dir installer ./
     RUN MIX_ENV=test mix deps.compile
-    COPY --dir assets config installer lib integration_test priv test ./
+    COPY --dir assets config lib integration_test priv test ./
 
     # Run unit tests
     RUN mix test
+
+    ARG RUN_INSTALLER_TESTS
 
     IF [ "$RUN_INSTALLER_TESTS" = "1" ]
         WORKDIR /src/installer
@@ -24,7 +29,7 @@ test:
 
 all-integration-test:
     BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=22.3.4.19 +integration-test
-    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=24.0.2 +integration-test
+    BUILD --build-arg ELIXIR=1.13.4 --build-arg OTP=24.3.4 --build-arg ALPINE=3.15.3 +integration-test
 
 integration-test:
     FROM +setup-base
@@ -66,8 +71,8 @@ integration-test:
     # RUN MIX_ENV=test mix deps.compile
 
     # Run integration tests
-    COPY integration_test/test  ./test
-    COPY integration_test/config/config.exs  ./config/config.exs
+    COPY integration_test/test ./test
+    COPY integration_test/config/config.exs ./config/config.exs
 
     WITH DOCKER
         # Start docker compose
@@ -96,7 +101,8 @@ npm:
 setup-base:
    ARG ELIXIR=1.12.1
    ARG OTP=24.0.2
-   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.13.3
+   ARG ALPINE=3.13.3
+   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-$ALPINE
    RUN apk add --no-progress --update git build-base
    ENV ELIXIR_ASSERT_TIMEOUT=10000
    WORKDIR /src
