@@ -225,7 +225,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       </html>
       """
 
-      code_to_inject = ~s|<%= render "_user_menu.html" %>|
+      code_to_inject = ~s|<%= render("_user_menu.html") %>|
 
       assert {:ok, new_code} =
                Injector.inject_unless_contains(
@@ -237,7 +237,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       assert new_code == """
              <html>
                <body>
-                 <%= render "_user_menu.html" %>
+                 <%= render("_user_menu.html") %>
                  <h1>My App</h1>
                </body>
              </html>
@@ -249,14 +249,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       <html>
         <body>
           <nav>
-            <%= render "_user_menu.html" %>
+            <%= render("_user_menu.html") %>
           </nav>
           <h1>My App</h1>
         </body>
       </html>
       """
 
-      code_to_inject = ~s|<%= render "_user_menu.html" %>|
+      code_to_inject = ~s|<%= render("_user_menu.html") %>|
 
       assert :already_injected =
                Injector.inject_unless_contains(
@@ -269,7 +269,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     test "returns {:error, :unable_to_inject} when no change is made" do
       existing_code = ""
 
-      code_to_inject = ~s|<%= render "_user_menu.html" %>|
+      code_to_inject = ~s|<%= render("_user_menu.html") %>|
 
       assert {:error, :unable_to_inject} =
                Injector.inject_unless_contains(
@@ -636,7 +636,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                 <ul>
                   <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
                   <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-                    <li><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>
+                    <li><%= link("LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)) %></li>
                   <% end %>
                 </ul>
               </nav>
@@ -662,10 +662,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          <ul>
                            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
                            <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-                             <li><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>
+                             <li><%= link("LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)) %></li>
                            <% end %>
                          </ul>
-                         <%= render "_user_menu.html", assigns %>
+                         <%= render("_user_menu.html", assigns) %>
                        </nav>
                      </section>
                    </header>
@@ -690,7 +690,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                 <ul>\r
                   <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>\r
                   <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>\r
-                    <li><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>\r
+                    <li><%= link("LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)) %></li>\r
                   <% end %>\r
                 </ul>\r
               </nav>\r
@@ -716,10 +716,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          <ul>\r
                            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>\r
                            <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>\r
-                             <li><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>\r
+                             <li><%= link("LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)) %></li>\r
                            <% end %>\r
                          </ul>\r
-                         <%= render "_user_menu.html", assigns %>\r
+                         <%= render("_user_menu.html", assigns) %>\r
                        </nav>\r
                      </section>\r
                    </header>\r
@@ -757,7 +757,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <title>Demo · Phoenix Framework</title>
                  </head>
                  <body>
-                   <%= render "_user_menu.html", assigns %>
+                   <%= render("_user_menu.html", assigns) %>
                    <main class="container">
                      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
                      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
@@ -797,7 +797,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <title>Demo · Phoenix Framework</title>\r
                  </head>\r
                  <body>\r
-                   <%= render "_user_menu.html", assigns %>\r
+                   <%= render("_user_menu.html", assigns) %>\r
                    <main class="container">\r
                      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>\r
                      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>\r
@@ -819,7 +819,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
         </head>
         <body>
           <div class="my-header">
-            <%= render "_user_menu.html", assigns %>
+            <%= render("_user_menu.html", assigns) %>
           </div>
           <main class="container">
             <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
@@ -853,7 +853,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                Add a render call for "_user_menu.html" to foo.ex:
 
                  <nav>
-                   <%= render "_user_menu.html", assigns %>
+                   <%= render("_user_menu.html", assigns) %>
                  </nav>
                """
     end
