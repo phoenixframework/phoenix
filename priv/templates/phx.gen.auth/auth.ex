@@ -137,7 +137,8 @@ defmodule <%= inspect auth_module %> do
 
   def on_mount(:ensure_authenticated, _params, session, socket) do
     socket = mount_current_<%= schema.singular %>(session, socket)
-    case  socket.assigns.current_<%= schema.singular %> do
+
+    case socket.assigns.current_<%= schema.singular %> do
       nil ->
         {:halt, LiveView.redirect(socket, to: Routes.<%= schema.singular %>_session_path(socket, :new))}
 
@@ -149,7 +150,9 @@ defmodule <%= inspect auth_module %> do
   defp mount_current_<%= schema.singular %>(session, socket) do
     case session do
       %{"<%= schema.singular %>_token" => <%= schema.singular %>_token} ->
-        LiveView.assign_new(socket, :current_<%= schema.singular %>, fn -> Accounts.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token) end)
+        LiveView.assign_new(socket, :current_<%= schema.singular %>, fn ->
+          Accounts.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
+        end)
 
       %{} ->
         LiveView.assign_new(socket, :current_<%= schema.singular %>, fn -> nil end)

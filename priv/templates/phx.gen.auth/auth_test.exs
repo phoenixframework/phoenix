@@ -1,6 +1,7 @@
 defmodule <%= inspect auth_module %>Test do
   use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
+  alias Phoenix.LiveView
   alias <%= inspect context.module %>
   alias <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Auth
   import <%= inspect context.module %>Fixtures
@@ -120,20 +121,29 @@ defmodule <%= inspect auth_module %>Test do
     test "assigns current_<%= schema.singular %> based on a valid <%= schema.singular %>_token ", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
-      {:cont, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:mount_current_<%= schema.singular %>, %{}, session, %Phoenix.LiveView.Socket{})
+
+      {:cont, updated_socket} =
+        <%= inspect schema.alias %>Auth.on_mount(:mount_current_<%= schema.singular %>, %{}, session, %LiveView.Socket{})
+
       assert updated_socket.assigns.current_<%= schema.singular %>.id == <%= schema.singular %>.id
     end
 
     test "assigns nil to current_user assign if there isn't a valid <%= schema.singular %>_token ", %{conn: conn} do
       <%= schema.singular %>_token = "invalid_token"
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
-      {:cont, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:mount_current_<%= schema.singular %>, %{}, session, %Phoenix.LiveView.Socket{})
+
+      {:cont, updated_socket} =
+        <%= inspect schema.alias %>Auth.on_mount(:mount_current_<%= schema.singular %>, %{}, session, %LiveView.Socket{})
+
       assert updated_socket.assigns.current_<%= schema.singular %> == nil
     end
 
     test "assigns nil to current_user assign if there isn't a <%= schema.singular %>_token", %{conn: conn} do
       session = conn |> get_session()
-      {:cont, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:mount_current_<%= schema.singular %>, %{}, session, %Phoenix.LiveView.Socket{})
+
+      {:cont, updated_socket} =
+        <%= inspect schema.alias %>Auth.on_mount(:mount_current_<%= schema.singular %>, %{}, session, %LiveView.Socket{})
+
       assert updated_socket.assigns.current_<%= schema.singular %> == nil
     end
   end
@@ -142,7 +152,10 @@ defmodule <%= inspect auth_module %>Test do
     test "authenticates current_<%= schema.singular %> based on a valid <%= schema.singular %>_token ", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
-      {:cont, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, %Phoenix.LiveView.Socket{})
+
+      {:cont, updated_socket} =
+        <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, %LiveView.Socket{})
+
       assert updated_socket.assigns.current_<%= schema.singular %>.id == <%= schema.singular %>.id
     end
 
