@@ -30,7 +30,7 @@ Follow the instructions [here](https://fly.io/docs/getting-started/installing-fl
 
 ## Sign up for Fly.io
 
-We can [sign up for an account](https://fly.io/docs/getting-started/login-to-fly/) using the CLI.
+We can [sign up for an account](https://fly.io/docs/getting-started/log-in-to-fly/) using the CLI.
 
 ```console
 $ fly auth signup
