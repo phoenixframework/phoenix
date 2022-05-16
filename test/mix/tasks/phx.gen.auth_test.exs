@@ -623,7 +623,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         )
 
         assert_file "mix.exs", fn file ->
-          assert file =~ ~s|{:argon2_elixir, "~> 2.0"}|
+          assert file =~ ~s|{:argon2_elixir, "~> 3.0"}|
         end
 
         assert_file "config/test.exs", fn file ->
