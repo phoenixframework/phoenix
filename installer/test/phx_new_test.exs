@@ -108,7 +108,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.heex", fn file ->
-        assert file =~ ~s|<meta name="csrf-token" content={csrf_token_value()}>|
+        assert file =~ ~s|<meta name="csrf-token" content={get_csrf_token()}>|
       end
 
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.heex"
