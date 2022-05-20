@@ -332,6 +332,12 @@ defmodule Phoenix.Channel.Server do
         metadata = Map.merge(metadata, %{kind: :error, reason: exception, stacktrace: __STACKTRACE__})
         :telemetry.execute([:phoenix, :channel_handle_in, :exception], measurements, metadata)
         reraise exception, __STACKTRACE__
+    catch
+      kind, reason ->
+        measurements = %{duration: System.monotonic_time() - start}
+        metadata = Map.merge(metadata, %{kind: kind, reason: reason, stacktrace: __STACKTRACE__})
+        :telemetry.execute([:phoenix, :channel_handle_in, :exception], measurements, metadata)
+        :erlang.raise(kind, reason, __STACKTRACE__)
     end
   end
 

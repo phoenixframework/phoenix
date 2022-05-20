@@ -75,7 +75,7 @@ defmodule Phoenix.Logger do
 
     * `[:phoenix, :channel_handle_in, :exception]` - dispatched after exceptions on dispatching incoming event
       * Measurement: `%{duration: native_time}`
-      * Metadata: `%{conn: Plug.Conn.t, kind: :error, reason: term(), stacktrace: Exception.stacktrace()}`
+      * Metadata: `%{conn: Plug.Conn.t, kind: :throw | :error | :exit, reason: term(), stacktrace: Exception.stacktrace()}`
       * Disable logging: This event is not logged
 
   To see an example of how Phoenix LiveDashboard uses these events to create

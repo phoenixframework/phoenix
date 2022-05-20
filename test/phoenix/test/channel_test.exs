@@ -84,6 +84,10 @@ defmodule Phoenix.Test.ChannelTest do
       raise "boom!"
     end
 
+    def handle_in("exit", %{}, _socket) do
+      exit :bye
+    end
+
     def handle_in("async_reply", %{"req" => arg}, socket) do
       ref = socket_ref(socket)
       Task.start(fn -> reply(ref, {:ok, %{"async_resp" => arg}}) end)
@@ -403,6 +407,17 @@ defmodule Phoenix.Test.ChannelTest do
       refute_receive {:telemetry_event, @handle_in_stop_event, {_, _, _}}
     end
 
+    test "phoenix.channel_handle_in.start and .exception are emitted on exit", %{socket: socket} do
+      Process.flag(:trap_exit, true)
+      push(socket, "exit", %{})
+
+      assert_receive {:telemetry_event, @handle_in_start_event, {_, %{event: "exit"}, _}}
+
+      assert_receive {:telemetry_event, @handle_in_exception_event, {_, %{event: "exit"}, _}}
+
+      refute_receive {:telemetry_event, @handle_in_stop_event, {_, _, _}}
+    end
+
     test "phoenix.channel_handle_in.start has supported measures and metadata", %{socket: socket} do
       ref = push(socket, "noreply", %{"req" => "foo"})
 
@@ -419,7 +434,7 @@ defmodule Phoenix.Test.ChannelTest do
       assert is_integer(measures.duration)
     end
 
-    test "phoenix.channel_handle_in.exception has measures and metadata", %{socket: socket} do
+    test "phoenix.channel_handle_in.exception has measures and metadata on crash", %{socket: socket} do
       Process.flag(:trap_exit, true)
       ref = push(socket, "crash", %{})
 
@@ -431,6 +446,25 @@ defmodule Phoenix.Test.ChannelTest do
                ref: ^ref,
                params: %{},
                reason: %RuntimeError{message: "boom!"},
+               socket: ^socket
+             } = metadata
+
+      assert is_list(metadata.stacktrace) && length(metadata.stacktrace) > 0
+      assert is_integer(measures.duration)
+    end
+
+    test "phoenix.channel_handle_in.exception has measures and metadata on exit", %{socket: socket} do
+      Process.flag(:trap_exit, true)
+      ref = push(socket, "exit", %{})
+
+      assert_receive {:telemetry_event, @handle_in_exception_event, {measures, metadata, _}}
+
+      assert %{
+               event: "exit",
+               kind: :exit,
+               ref: ^ref,
+               params: %{},
+               reason: :bye,
                socket: ^socket
              } = metadata
 
