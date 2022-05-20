@@ -63,10 +63,20 @@ defmodule Phoenix.Logger do
       * Metadata: `%{result: :ok | :error, params: term, socket: Phoenix.Socket.t}`
       * Disable logging: This event cannot be disabled
 
-    * `[:phoenix, :channel_handled_in]` - dispatched at the end of a channel handle in
+    * `[:phoenix, :channel_handle_in, :start]` - dispatched before channel handles incoming event
+      * Measurement: `%{system_time: system_time}`
+      * Metadata: `%{event: binary, params: term, socket: Phoenix.Socket.t}`
+      * Disable logging: This event is not logged
+
+    * `[:phoenix, :channel_handle_in, :stop]` - dispatched after channel successfully handled incoming event
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{event: binary, params: term, socket: Phoenix.Socket.t}`
       * Disable logging: This event cannot be disabled
+
+    * `[:phoenix, :channel_handle_in, :exception]` - dispatched after exceptions on dispatching incoming event
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{conn: Plug.Conn.t, kind: :error, reason: term(), stacktrace: Exception.stacktrace()}`
+      * Disable logging: This event is not logged
 
   To see an example of how Phoenix LiveDashboard uses these events to create
   metrics, visit <https://hexdocs.pm/phoenix_live_dashboard/metrics.html>.
