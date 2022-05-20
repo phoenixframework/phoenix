@@ -135,7 +135,7 @@ defmodule Phoenix.Logger do
       [:phoenix, :error_rendered] => &__MODULE__.phoenix_error_rendered/4,
       [:phoenix, :socket_connected] => &__MODULE__.phoenix_socket_connected/4,
       [:phoenix, :channel_joined] => &__MODULE__.phoenix_channel_joined/4,
-      [:phoenix, :channel_handled_in] => &__MODULE__.phoenix_channel_handled_in/4
+      [:phoenix, :channel_handle_in, :stop] => &__MODULE__.phoenix_channel_handle_in_stop/4
     }
 
     for {key, fun} <- handlers do
@@ -354,7 +354,7 @@ defmodule Phoenix.Logger do
   ## Event: [:phoenix, :channel_handle_in]
 
   @doc false
-  def phoenix_channel_handled_in(_, %{duration: duration}, %{socket: socket} = metadata, _) do
+  def phoenix_channel_handle_in_stop(_, %{duration: duration}, %{socket: socket} = metadata, _) do
     channel_log(:log_handle_in, socket, fn ->
       %{event: event, params: params} = metadata
 
