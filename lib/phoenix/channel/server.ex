@@ -313,12 +313,26 @@ defmodule Phoenix.Channel.Server do
         %Message{topic: topic, event: event, payload: payload, ref: ref},
         %{topic: topic} = socket
       ) do
-    start = System.monotonic_time()
-    result = socket.channel.handle_in(event, payload, put_in(socket.ref, ref))
-    duration = System.monotonic_time() - start
     metadata = %{ref: ref, event: event, params: payload, socket: socket}
-    :telemetry.execute([:phoenix, :channel_handled_in], %{duration: duration}, metadata)
-    handle_in(result)
+    start = System.monotonic_time()
+    measurements = %{system_time: System.system_time()}
+    :telemetry.execute([:phoenix, :channel_handle_in, :start], measurements, metadata)
+
+    try do
+      socket.channel.handle_in(event, payload, put_in(socket.ref, ref))
+    else
+      result ->
+        measurements = %{duration: System.monotonic_time() - start}
+        :telemetry.execute([:phoenix, :channel_handle_in, :stop], measurements, metadata)
+        :telemetry.execute([:phoenix, :channel_handled_in], measurements, metadata)
+        handle_in(result)
+    rescue
+      exception ->
+        measurements = %{duration: System.monotonic_time() - start}
+        metadata = Map.merge(metadata, %{kind: :error, reason: exception, stacktrace: __STACKTRACE__})
+        :telemetry.execute([:phoenix, :channel_handle_in, :exception], measurements, metadata)
+        reraise exception, __STACKTRACE__
+    end
   end
 
   def handle_info(

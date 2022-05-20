@@ -360,6 +360,85 @@ defmodule Phoenix.Test.ChannelTest do
     :error = connect(UserSocket, %{reject: true})
   end
 
+  describe "telemetry" do
+    @handle_in_start_event [:phoenix, :channel_handle_in, :start]
+    @handle_in_stop_event [:phoenix, :channel_handle_in, :stop]
+    @handle_in_exception_event [:phoenix, :channel_handle_in, :exception]
+
+    setup context do
+      test_pid = self()
+      test_name = context.test
+
+      :telemetry.attach_many(
+        test_name,
+        [@handle_in_start_event, @handle_in_stop_event, @handle_in_exception_event],
+        fn event, measures, metadata, config ->
+          send(test_pid, {:telemetry_event, event, {measures, metadata, config}})
+        end,
+        nil
+      )
+
+      {:ok, _, socket} = join(socket(UserSocket), Channel, "foo:ok")
+      %{socket: socket}
+    end
+
+    test "phoenix.channel_handle_in.start and .stop are emitted on success", %{socket: socket} do
+      push(socket, "noreply", %{"req" => "foo"})
+
+      assert_receive {:telemetry_event, @handle_in_start_event, {_, %{event: "noreply"}, _}}
+
+      assert_receive {:telemetry_event, @handle_in_stop_event, {_, %{event: "noreply"}, _}}
+
+      refute_receive {:telemetry_event, @handle_in_exception_event, {_, _, _}}
+    end
+
+    test "phoenix.channel_handle_in.start and .exception are emitted on crash", %{socket: socket} do
+      Process.flag(:trap_exit, true)
+      push(socket, "crash", %{})
+
+      assert_receive {:telemetry_event, @handle_in_start_event, {_, %{event: "crash"}, _}}
+
+      assert_receive {:telemetry_event, @handle_in_exception_event, {_, %{event: "crash"}, _}}
+
+      refute_receive {:telemetry_event, @handle_in_stop_event, {_, _, _}}
+    end
+
+    test "phoenix.channel_handle_in.start has supported measures and metadata", %{socket: socket} do
+      ref = push(socket, "noreply", %{"req" => "foo"})
+
+      assert_receive {:telemetry_event, @handle_in_start_event, {measures, metadata, _}}
+      assert %{event: "noreply", params: %{"req" => "foo"}, ref: ^ref, socket: ^socket} = metadata
+      assert is_integer(measures.system_time)
+    end
+
+    test "phoenix.channel_handle_in.stop has measures and metadata", %{socket: socket} do
+      ref = push(socket, "noreply", %{"req" => "foo"})
+
+      assert_receive {:telemetry_event, @handle_in_stop_event, {measures, metadata, _}}
+      assert %{event: "noreply", params: %{"req" => "foo"}, ref: ^ref, socket: ^socket} = metadata
+      assert is_integer(measures.duration)
+    end
+
+    test "phoenix.channel_handle_in.exception has measures and metadata", %{socket: socket} do
+      Process.flag(:trap_exit, true)
+      ref = push(socket, "crash", %{})
+
+      assert_receive {:telemetry_event, @handle_in_exception_event, {measures, metadata, _}}
+
+      assert %{
+               event: "crash",
+               kind: :error,
+               ref: ^ref,
+               params: %{},
+               reason: %RuntimeError{message: "boom!"},
+               socket: ^socket
+             } = metadata
+
+      assert is_list(metadata.stacktrace) && length(metadata.stacktrace) > 0
+      assert is_integer(measures.duration)
+    end
+  end
+
   ## handle_out
 
   test "push broadcasts by default" do
