@@ -125,8 +125,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
     end
   end
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
-  defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
+
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
 end
