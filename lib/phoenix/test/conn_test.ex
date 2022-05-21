@@ -400,8 +400,6 @@ defmodule Phoenix.ConnTest do
     body
   end
 
-  @type json_value :: integer | float | boolean | nil
-  @type json_response :: map | list | json_value
   @doc """
   Asserts the given status code, that we have a json response and
   returns the decoded JSON response if one was set or sent.
@@ -412,7 +410,7 @@ defmodule Phoenix.ConnTest do
       assert "can't be blank" in body["errors"]
 
   """
-  @spec json_response(Conn.t, status :: integer | atom) :: json_response | no_return
+  @spec json_response(Conn.t, status :: integer | atom) :: term | no_return
   def json_response(conn, status) do
     body = response(conn, status)
     _    = response_content_type(conn, :json)
