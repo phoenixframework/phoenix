@@ -64,6 +64,8 @@ locals_without_parens = [
   assert_error_sent: 2,
 
   # Phoenix.Live{Dashboard,View}.Router
+  attr: 2,
+  attr: 3,
   live: 2,
   live: 3,
   live: 4,

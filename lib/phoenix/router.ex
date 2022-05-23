@@ -44,7 +44,7 @@ defmodule Phoenix.Router do
 
   ## Routing
 
-  `get/3`, `post/3`, `put/3` and other macros named after HTTP verbs are used
+  `get/3`, `post/3`, `put/3`, and other macros named after HTTP verbs are used
   to create routes.
 
   The route:
@@ -227,7 +227,7 @@ defmodule Phoenix.Router do
 
   Once a request arrives at the Phoenix router, it performs
   a series of transformations through pipelines until the
-  request is dispatched to a desired end-point.
+  request is dispatched to a desired route.
 
   Such transformations are defined via plugs, as defined
   in the [Plug](https://github.com/elixir-lang/plug) specification.
@@ -256,6 +256,57 @@ defmodule Phoenix.Router do
 
   Note that router pipelines are only invoked after a route is found.
   No plug is invoked in case no matches were found.
+
+  ## How to organize my routes?
+
+  In Phoenix, we tend to define several pipelines, that provide specific
+  functionality. For example, the `pipeline :browser` above includes plugs
+  that are common for all routes that are meant to be accessed by a browser.
+  Similarly, if you are also serving `:api` requests, you would have a separate
+  `:api` pipeline that validates information specific to your endpoints.
+
+  Perhaps more importantly, it is also very common to define pipelines specific
+  to authentication and authorization. For example, you might have a pipeline
+  that requires all users are authenticated. Another pipeline may enforce only
+  admin users can acess certain routes.
+
+  Once your pipelines are defined, you reuse the pipelines in the desired
+  scopes, grouping your routes around their pipelines. For example, imagine
+  you are building a blog. Anyone can read a post, but only authenticated
+  users can create them. Your routes could look like this:
+
+      pipeline :browser do
+        plug :fetch_session
+        plug :accepts, ["html"]
+      end
+
+      pipeline :auth do
+        plug :ensure_authenticated
+      end
+
+      scope "/" do
+        pipe_through [:browser]
+
+        get "/posts", PostController, :index
+        get "/posts/:id", PostController, :show
+      end
+
+      scope "/" do
+        pipe_through [:browser, :auth]
+
+        get "/posts/new", PostController, :new
+        post "/posts", PostController, :create
+      end
+
+  Note in the above how the routes are split across different scopes.
+  While the separation can be confusing at first, it has one big upside:
+  it is very easy to inspect your routes and see all routes that, for
+  example, require authentication and which ones do not. This helps with
+  auditing and making sure your routes have the proper scope.
+
+  You can create as few or as many scopes as you want. Because pipelines
+  are reusable across scopes, they help encapsulate common functionality
+  and you can compose them as necessary on each scope you define.
   """
 
   alias Phoenix.Router.{Resource, Scope, Route, Helpers}

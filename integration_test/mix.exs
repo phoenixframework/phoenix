@@ -40,7 +40,8 @@ defmodule Phoenix.Integration.MixProject do
       {:myxql, ">= 0.0.0"},
       {:tds, ">= 0.0.0"},
       {:ecto_sqlite3, ">= 0.0.0"},
-      {:phoenix_live_view, "~> 0.17.5"},
+      # TODO bump to 0.18 on release
+      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", override: true},
       {:floki, ">= 0.30.0"},
       {:phoenix_live_reload, "~> 1.2"},
       {:phoenix_live_dashboard, "~> 0.6"},

@@ -555,62 +555,6 @@ Conversely, suppose the request matches any of the routes defined by the [`resou
 
 If no route matches, no pipeline is invoked and a 404 error is raised.
 
-Let's stretch these ideas out a little bit more. What if we need to pipe requests through both `:browser` and one or more custom pipelines? We simply `pipe_through` a list of pipelines, and Phoenix will invoke them in order.
-
-```elixir
-defmodule HelloWeb.Router do
-  use HelloWeb, :router
-
-  pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, {HelloWeb.LayoutView, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
-  end
-  ...
-
-  scope "/reviews" do
-    pipe_through [:browser, :review_checks, :other_great_stuff]
-
-    resources "/", HelloWeb.ReviewController
-  end
-end
-```
-
-Here's another example with two scopes that have different pipelines:
-
-```elixir
-defmodule HelloWeb.Router do
-  use HelloWeb, :router
-
-  pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, {HelloWeb.LayoutView, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
-  end
-  ...
-
-  scope "/", HelloWeb do
-    pipe_through :browser
-
-    resources "/posts", PostController
-  end
-
-  scope "/reviews", HelloWeb do
-    pipe_through [:browser, :review_checks]
-
-    resources "/", ReviewController
-  end
-end
-```
-
-In general, the scoping rules for pipelines behave as you might expect. In this example, all routes will pipe through the `:browser` pipeline. However, only the `reviews` resources routes will  pipe through the `:review_checks` pipeline. Since we declared both pipes `pipe_through [:browser, :review_checks]` in a list of pipelines, Phoenix will `pipe_through` each of them as it invokes them in order.
-
 ### Creating new pipelines
 
 Phoenix allows us to create our own custom pipelines anywhere in the router. To do so, we call the [`pipeline/2`](`Phoenix.Router.pipeline/2`) macro with these arguments: an atom for the name of our new pipeline and a block with all the plugs we want in it.
@@ -628,34 +572,71 @@ defmodule HelloWeb.Router do
     plug :put_secure_browser_headers
   end
 
-  pipeline :review_checks do
-    plug :ensure_authenticated_user
-    plug :ensure_user_owns_review
+  pipeline :auth do
+    plug HelloWeb.Authentication
   end
 
   scope "/reviews", HelloWeb do
-    pipe_through [:browser, :review_checks]
+    pipe_through [:browser, :auth]
 
     resources "/", ReviewController
   end
 end
 ```
 
+The above assumes there is a plug called `MyApp.Authentication` that performs authentication and is now part of the `:auth` pipeline.
+
 Note that pipelines themselves are plugs, so we can plug a pipeline inside another pipeline. For example, we could rewrite the `review_checks` pipeline above to automatically invoke `browser`, simplifying the downstream pipeline call:
 
 ```elixir
-  pipeline :review_checks do
+  pipeline :auth do
     plug :browser
     plug :ensure_authenticated_user
     plug :ensure_user_owns_review
   end
 
   scope "/reviews", HelloWeb do
-    pipe_through :review_checks
+    pipe_through :auth
 
     resources "/", ReviewController
   end
 ```
+
+## How to organize my routes?
+
+In Phoenix, we tend to define several pipelines, that provide specific functionality. For example, the `:browser` and `:api` pipelines are meant to be accessed by specific clients, browsers and http clients respectively.
+
+Perhaps more importantly, it is also very common to define pipelines specific to authentication and authorization. For example, you might have a pipeline that requires all users are authenticated. Another pipeline may enforce only admin users can acess certain routes.
+
+Once your pipelines are defined, you reuse the pipelines in the desired scopes, grouping your routes around their pipelines. For example, going back to our reviews example. Let's say anyone can read a review, but only authenticated users can create them. Your routes could look like this:
+
+```elixir
+pipeline :browser do
+  ...
+end
+
+pipeline :auth do
+  plug HelloWeb.Authentication
+end
+
+scope "/" do
+  pipe_through [:browser]
+
+  get "/reviews", PostController, :index
+  get "/reviews/:id", PostController, :show
+end
+
+scope "/" do
+  pipe_through [:browser, :auth]
+
+  get "/reviews/new", PostController, :new
+  post "/reviews", PostController, :create
+end
+```
+
+Note in the above how the routes are split across different scopes. While the separation can be confusing at first, it has one big upside: it is very easy to inspect your routes and see all routes that, for example, require authentication and which ones do not. This helps with auditing and making sure your routes have the proper scope.
+
+You can create as few or as many scopes as you want. Because pipelines are reusable across scopes, they help encapsulate common functionality and you can compose them as necessary on each scope you define.
 
 ## Forward
 

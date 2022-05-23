@@ -410,7 +410,7 @@ defmodule Phoenix.ConnTest do
       assert "can't be blank" in body["errors"]
 
   """
-  @spec json_response(Conn.t, status :: integer | atom) :: map | no_return
+  @spec json_response(Conn.t, status :: integer | atom) :: term | no_return
   def json_response(conn, status) do
     body = response(conn, status)
     _    = response_content_type(conn, :json)

@@ -18,7 +18,7 @@
 
 # Ignore git, but keep git HEAD and refs to access current commit hash if needed:
 #
-$ cat .git/HEAD | awk '{print ".git/"$2}' | xargs cat
+# $ cat .git/HEAD | awk '{print ".git/"$2}' | xargs cat
 # d0b8727759e1e0e7aa3d41707d12376e373d5ecc
 .git
 !.git/HEAD
