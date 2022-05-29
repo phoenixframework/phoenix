@@ -1207,7 +1207,7 @@ defmodule Phoenix.Controller do
       plug :accepts, ["html", "json-api"]
 
   """
-  @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t | no_return()
+  @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t
   def accepts(conn, [_|_] = accepted) do
     case Map.fetch(conn.params, "_format") do
       {:ok, format} ->

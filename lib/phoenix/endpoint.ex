@@ -359,7 +359,7 @@ defmodule Phoenix.Endpoint do
 
   Raises in case of failures.
   """
-  @callback broadcast!(topic, event, msg) :: :ok | no_return
+  @callback broadcast!(topic, event, msg) :: :ok
 
   @doc """
   Broadcasts a `msg` from the given `from` as `event` in the given `topic` to all nodes.
@@ -371,7 +371,7 @@ defmodule Phoenix.Endpoint do
 
   Raises in case of failures.
   """
-  @callback broadcast_from!(from :: pid, topic, event, msg) :: :ok | no_return
+  @callback broadcast_from!(from :: pid, topic, event, msg) :: :ok
 
   @doc """
   Broadcasts a `msg` as `event` in the given `topic` within the current node.
