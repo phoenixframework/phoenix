@@ -13,7 +13,7 @@ var closure = (value) => {
 // js/phoenix/constants.js
 var globalSelf = typeof self !== "undefined" ? self : null;
 var phxWindow = typeof window !== "undefined" ? window : null;
-var global = globalSelf || phxWindow || void 0;
+var global = globalSelf || phxWindow || global;
 var DEFAULT_VSN = "2.0.0";
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 var DEFAULT_TIMEOUT = 1e4;
@@ -438,13 +438,13 @@ var LongPoll = class {
   endpointURL() {
     return Ajax.appendParams(this.pollEndpoint, { token: this.token });
   }
-  closeAndRetry() {
-    this.close();
+  closeAndRetry(code, reason, wasClean) {
+    this.close(code, reason, wasClean);
     this.readyState = SOCKET_STATES.connecting;
   }
   ontimeout() {
     this.onerror("timeout");
-    this.closeAndRetry();
+    this.closeAndRetry(1005, "timeout", false);
   }
   poll() {
     if (!(this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting)) {
@@ -471,17 +471,17 @@ var LongPoll = class {
           break;
         case 410:
           this.readyState = SOCKET_STATES.open;
-          this.onopen();
+          this.onopen({});
           this.poll();
           break;
         case 403:
-          this.onerror();
-          this.close();
+          this.onerror(403);
+          this.close(1008, "forbidden", false);
           break;
         case 0:
         case 500:
-          this.onerror();
-          this.closeAndRetry();
+          this.onerror(500);
+          this.closeAndRetry(1011, "internal server error", 500);
           break;
         default:
           throw new Error(`unhandled poll status ${status}`);
@@ -492,13 +492,18 @@ var LongPoll = class {
     Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), (resp) => {
       if (!resp || resp.status !== 200) {
         this.onerror(resp && resp.status);
-        this.closeAndRetry();
+        this.closeAndRetry(1011, "internal server error", false);
       }
     });
   }
-  close(_code, _reason) {
+  close(code, reason, wasClean) {
     this.readyState = SOCKET_STATES.closed;
-    this.onclose();
+    let opts = Object.assign({ code: 1e3, reason: void 0, wasClean: true }, { code, reason, wasClean });
+    if (typeof CloseEvent !== "undefined") {
+      this.onclose(new CloseEvent("close", opts));
+    } else {
+      this.onclose(opts);
+    }
   }
 };
 
@@ -865,6 +870,21 @@ var Socket = class {
     let ref = this.makeRef();
     this.stateChangeCallbacks.message.push([ref, callback]);
     return ref;
+  }
+  ping(callback) {
+    if (!this.isConnected()) {
+      return false;
+    }
+    let ref = this.makeRef();
+    let startTime = Date.now();
+    this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref });
+    let onMsgRef = this.onMessage((msg) => {
+      if (msg.ref === ref) {
+        this.off([onMsgRef]);
+        callback(Date.now() - startTime);
+      }
+    });
+    return true;
   }
   onConnOpen() {
     if (this.hasLogger())
