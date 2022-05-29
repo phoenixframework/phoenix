@@ -282,6 +282,26 @@ export default class Socket {
   }
 
   /**
+   * Pings the server and invokes the callback with the RTT in milliseconds
+   * @param {Function} callback
+   *
+   * Returns true if the ping was pushed or false if unable to be pushed.
+   */
+  ping(callback){
+    if(!this.isConnected()){ return false }
+    let ref = this.makeRef()
+    let startTime = Date.now()
+    this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: ref})
+    let onMsgRef = this.onMessage(msg => {
+      if(msg.ref === ref){
+        this.off([onMsgRef])
+        callback(Date.now() - startTime)
+      }
+    })
+    return true
+  }
+
+  /**
    * @private
    */
   onConnOpen(){
