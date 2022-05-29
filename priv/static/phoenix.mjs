@@ -871,6 +871,21 @@ var Socket = class {
     this.stateChangeCallbacks.message.push([ref, callback]);
     return ref;
   }
+  ping(callback) {
+    if (!this.isConnected()) {
+      return false;
+    }
+    let ref = this.makeRef();
+    let startTime = Date.now();
+    this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref });
+    let onMsgRef = this.onMessage((msg) => {
+      if (msg.ref === ref) {
+        this.off([onMsgRef]);
+        callback(Date.now() - startTime);
+      }
+    });
+    return true;
+  }
   onConnOpen() {
     if (this.hasLogger())
       this.log("transport", `connected to ${this.endPointURL()}`);
