@@ -41,10 +41,7 @@ defmodule Phoenix.MixProject do
       aliases: aliases(),
       source_url: @scm_url,
       homepage_url: "https://www.phoenixframework.org",
-      description: """
-      Productive. Reliable. Fast. A productive web framework that
-      does not compromise speed or maintainability.
-      """
+      description: "Peace of mind from prototype to production"
     ]
   end
 
