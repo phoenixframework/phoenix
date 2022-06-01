@@ -4,6 +4,11 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.10 (2022-06-01)
+
+### JavaScript Client Enhancements
+  * Add `ping` function to socket
+
 ## 1.6.9 (2022-05-16)
 
 ### Bug Fixes
