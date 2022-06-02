@@ -109,27 +109,36 @@ defmodule <%= inspect auth_module %> do
   end
 
   @doc """
-  #mount_current_<%= schema.singular %>:
-  Assigns current_<%= schema.singular %> to socket assigns based on <%= schema.singular %>_token.
-  Returns nil if there's no <%= schema.singular %>_token or if there's no matching <%= schema.singular %>.
+  Handles mounting and authenticating the current_<%= schema.singular %> in LiveViews.
 
-  #ensure_authenticated:
-  Authenticates the <%= schema.singular %> by looking into the session.
-  Assigns current_<%= schema.singular %> to socket assigns based on <%= schema.singular %>_token.
-  Redirects to login page if there's no logged <%= schema.singular %>.
+  ## `on_mount` arguments
 
-  ##Examples
-  # In a LiveView file
-  defmodule <%= inspect context.web_module %>.PageLive do
-    use <%= inspect context.web_module %>, :live_view
+    * `:mount_current_<%= schema.singular %>` - Assigns current_<%= schema.singular %>
+      to socket assigns based on <%= schema.singular %>_token, or nil if
+      there's no <%= schema.singular %>_token or no matching <%= schema.singular %>.
 
-    on_mount {<%= inspect auth_module %>, :mount_current_<%= schema.singular %>}
+    * `:ensure_authenticated` - Authenticates the <%= schema.singular %> from the session,
+      and assigns the current_<%= schema.singular %> to socket assigns based
+      on <%= schema.singular %>_token.
+      Redirects to login page if there's no logged <%= schema.singular %>.
 
+  ## Examples
 
-  #using live_session in router.ex
-  live_session :authenticated, on_mount: [{<%= inspect auth_module %>, :ensure_authenticated}] do
-    live "/profile", ProfileLive, :index
-  end
+  Use the `on_mount` lifecycle macro in LiveViews to mount or authenticate
+  the current_<%= schema.singular %>:
+
+      defmodule <%= inspect context.web_module %>.PageLive do
+        use <%= inspect context.web_module %>, :live_view
+
+        on_mount {<%= inspect auth_module %>, :mount_current_<%= schema.singular %>}
+        ...
+      end
+
+  Or use the `live_session` of your router to invoke the on_mount callback:
+
+      live_session :authenticated, on_mount: [{<%= inspect auth_module %>, :ensure_authenticated}] do
+        live "/profile", ProfileLive, :index
+      end
   """
   def on_mount(:mount_current_<%= schema.singular %>, _params, session, socket) do
     {:cont, mount_current_<%= schema.singular %>(session, socket)}
