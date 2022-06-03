@@ -854,6 +854,37 @@ describe("with transports", function(){
     })
   })
 
+  describe("ping", function(){
+    beforeEach(function(){
+      socket = new Socket("/socket")
+      socket.connect()
+    })
+
+    it("pushes when connected", function(done){
+      let latency = 100
+      socket.conn.readyState = 1 // open
+      assert.equal(socket.isConnected(), true)
+      socket.push = (msg) => {
+        setTimeout(() => {
+          socket.onConnMessage({data: encode({topic: "phoenix", event: "phx_reply", ref: msg.ref})})
+        }, latency)
+      }
+
+      let result = socket.ping(rtt => {
+        assert.equal(rtt >= latency, true)
+        done()
+      })
+      assert.equal(result, true)
+    })
+
+    it("returns false when disconnected", function(){
+      socket.conn.readyState = 0
+      assert.equal(socket.isConnected(), false)
+      let result = socket.ping(rtt => true)
+      assert.equal(result, false)
+    })
+  })
+
   describe("custom encoder and decoder", function(){
 
     it("encodes to JSON array by default", function(){

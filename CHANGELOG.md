@@ -4,6 +4,36 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.10 (2022-06-01)
+
+### JavaScript Client Enhancements
+  * Add `ping` function to socket
+
+## 1.6.9 (2022-05-16)
+
+### Bug Fixes
+  * [phx.gen.release] Fix generated .dockerignore comment
+
+## 1.6.8 (2022-05-06)
+
+### Bug Fixes
+  * [phx.gen.release] Fix Ecto check failing to find Ecto in certain cases
+
+## 1.6.7 (2022-04-14)
+
+### Enhancements
+  * [Endpoint] Add Endpoint init telemetry event
+  * [Endpoint] Prioritize user :http configuration for ranch  to fix inet_backend failing to be respected
+  * [Logger] Support log_module in router metadata
+  * [phx.gen.release] Don't handle assets in Docker when directory doesn't exist
+  * [phx.gen.release] Skip generating migration files when ecto_sql is not installed
+
+### JavaScript Client Enhancements
+  * Switch to .mjs files for ESM for better compatibility across build tools
+
+### JavaScript Client Bug Fixes
+  * Fix LongPoll callbacks in JS client causing errors on connection close
+
 ## 1.6.6 (2022-01-04)
 
 ### Bug Fixes

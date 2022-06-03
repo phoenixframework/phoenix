@@ -45,7 +45,7 @@ defmodule <%= @web_namespace %>.MixProject do
       {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", override: true},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.6"},<% end %><%= if @assets do %>
-      {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},<% end %>
+      {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 0.18"},<% end %><%= if @app_name != @web_app_name do %>
