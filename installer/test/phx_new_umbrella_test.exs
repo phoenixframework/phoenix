@@ -278,12 +278,16 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file root_path(@app, "config/config.exs"), fn file ->
-        assert file =~ "config :swoosh"
         assert file =~ "config :phx_umb, PhxUmb.Mailer, adapter: Swoosh.Adapters.Local"
       end
 
       assert_file root_path(@app, "config/test.exs"), fn file ->
+        assert file =~ "config :swoosh"
         assert file =~ "config :phx_umb, PhxUmb.Mailer, adapter: Swoosh.Adapters.Test"
+      end
+
+      assert_file root_path(@app, "config/dev.exs"), fn file ->
+        assert file =~ "config :swoosh"
       end
 
       # Install dependencies?
