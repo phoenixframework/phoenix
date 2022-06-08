@@ -36,4 +36,4 @@
   </tbody>
 </table>
 
-<span><%%= live_patch "New <%= schema.human_singular %>", to: Routes.<%= schema.route_helper %>_index_path(@socket, :new) %></span>
+<span><.link patch={Routes.<%= schema.route_helper %>_index_path(@socket, :new)}>New <%= schema.human_singular %></.link></span>
