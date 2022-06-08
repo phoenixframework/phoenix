@@ -864,13 +864,11 @@ With our new cart functions in place, we can now expose the "Add to cart" button
 ```diff
 <h1>Show Product</h1>
 
-+<%= link "Add to cart",
-+  to: Routes.cart_item_path(@conn, :create, product_id: @product.id),
-+  method: :post %>
++<.link href={Routes.cart_item_path(@conn, :create, product_id: @product.id)} method="post">Add to cart</.link>
 ...
 ```
 
-The `link` functions from `Phoenix.HTML` accepts a `:method` option to issue an HTTP verb when clicked, instead of the default GET request. With this link in place, the "Add to cart" link will issue a POST request, which will be matched by the route we defined in router which dispatches to the `CartItemController.create/2` function.
+The `link` function component from `Phoenix.LiveView.Helpers` accepts a `:method` attribute to issue an HTTP verb when clicked, instead of the default GET request. With this link in place, the "Add to cart" link will issue a POST request, which will be matched by the route we defined in router which dispatches to the `CartItemController.create/2` function.
 
 Let's try it out. Start your server with `mix phx.server` and visit a product page. If we try clicking the add to cart link, we'll be greeted by an error page with the following logs in the console:
 
@@ -936,7 +934,7 @@ Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`
 <%= if @cart.items == [] do %>
   Your cart is empty
 <% else %>
-  <%= form_for @changeset, Routes.cart_path(@conn, :update), fn f -> %>
+  <.form let={f} for={@changeset} action={Routes.cart_path(@conn, :update)}>
     <ul>
       <%= for item_form <- inputs_for(f, :items), item = item_form.data do %>
         <li>
@@ -949,13 +947,13 @@ Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`
     </ul>
 
     <%= submit "update cart" %>
-  <% end %>
+  </.form>
 
   <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>
 <% end %>
 ```
 
-We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use [`form_for`](`Phoenix.HTML.Form.form_for/4`) to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use `Phoenix.HTML.Form.inputs_for/2` to render inputs for the nested cart items. For each item form input, we use [`hidden_inputs_for/1`](`Phoenix.HTML.Form.hidden_inputs_for/1`) which will render out the item ID as a hidden input tag. This will allow us to map item inputs back together when the form is submitted. Next, we display the product title for the item in the cart, followed by a number input for the item quantity. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment.
+We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the [`form`] component provided by (`Phoenix.LiveView.Helpers`) to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use `Phoenix.HTML.Form.inputs_for/2` to render inputs for the nested cart items. For each item form input, we use [`hidden_inputs_for/1`](`Phoenix.HTML.Form.hidden_inputs_for/1`) which will render out the item ID as a hidden input tag. This will allow us to map item inputs back together when the form is submitted. Next, we display the product title for the item in the cart, followed by a number input for the item quantity. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment.
 
 We're almost ready to try out our cart page, but first we need to implement our new currency calculation functions. Open up your shopping cart context at `lib/hello/shopping_cart.ex` and add these new functions:
 
@@ -1306,7 +1304,7 @@ We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order
 
 </ul>
 
-<span><%= link "Back", to: Routes.cart_path(@conn, :show) %></span>
+<span><.link href={Routes.cart_path(@conn, :show)}>Back</.link></span>
 ```
 
 To show our completed order, we displayed the order's user, followed by the line item listing with product title, quantity, and the price we "transacted" when completing the order, along with the total price.
@@ -1316,11 +1314,11 @@ Our last addition will be to add the "complete order" button to our cart page to
 ```diff
   <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>
 
-+ <%= link "complete order", to: Routes.order_path(@conn, :create), method: :post %>
++ <.link href={Routes.order_path(@conn, :create)} method="post">complete order</.link>
 <% end %>
 ```
 
-We added a link with `method: :post` to send a POST request to our `OrderController.create` action. If we head back to our cart page at [`http://localhost:4000/cart`](http://localhost:4000/cart) and complete an order, we'll be greeted by our rendered template:
+We added a link with `method="post"` to send a POST request to our `OrderController.create` action. If we head back to our cart page at [`http://localhost:4000/cart`](http://localhost:4000/cart) and complete an order, we'll be greeted by our rendered template:
 
 ```text
 Thank you for your order!

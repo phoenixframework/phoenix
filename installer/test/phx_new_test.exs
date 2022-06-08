@@ -383,7 +383,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard")
 
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.heex", fn file ->
-        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
+        refute file =~ ~s|LiveDashboard|
       end
 
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->

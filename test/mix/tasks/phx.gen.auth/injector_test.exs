@@ -636,7 +636,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                 <ul>
                   <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
                   <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-                    <li><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>
+                    <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>
                   <% end %>
                 </ul>
               </nav>
@@ -662,7 +662,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          <ul>
                            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
                            <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-                             <li><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>
+                             <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>
                            <% end %>
                          </ul>
                          <%= render "_user_menu.html", assigns %>
@@ -690,7 +690,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                 <ul>\r
                   <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>\r
                   <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>\r
-                    <li><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>\r
+                    <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>\r
                   <% end %>\r
                 </ul>\r
               </nav>\r
@@ -716,7 +716,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          <ul>\r
                            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>\r
                            <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>\r
-                             <li><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>\r
+                             <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>\r
                            <% end %>\r
                          </ul>\r
                          <%= render "_user_menu.html", assigns %>\r

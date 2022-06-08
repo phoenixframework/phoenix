@@ -241,8 +241,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file "lib/my_app_web/templates/warehouse/user_confirmation/new.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={:user} action={Routes.warehouse_user_confirmation_path(@conn, :create)}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_session_path(@conn, :new)}>Log in</.link>|
       end
 
       assert_file "lib/my_app_web/controllers/warehouse/user_confirmation_controller.ex", fn file ->
@@ -254,10 +254,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "lib/my_app_web/templates/layout/_user_menu.html.heex", fn file ->
-        assert file =~ ~S|<%= link "Settings", to: Routes.warehouse_user_settings_path(@conn, :edit) %>|
-        assert file =~ ~S|<%= link "Log out", to: Routes.warehouse_user_session_path(@conn, :delete), method: :delete %>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_settings_path(@conn, :edit)}>Settings</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_session_path(@conn, :delete)} method="delete">Log out</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_session_path(@conn, :new)}>Log in</.link>|
       end
 
       assert_file "lib/my_app_web/controllers/warehouse/user_registration_controller.ex", fn file ->
@@ -278,14 +278,14 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file "lib/my_app_web/templates/warehouse/user_reset_password/edit.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={@changeset} action={Routes.warehouse_user_reset_password_path(@conn, :update, @token)}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_session_path(@conn, :new)}>Log in</.link>|
       end
 
       assert_file "lib/my_app_web/templates/warehouse/user_reset_password/new.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={:user} action={Routes.warehouse_user_reset_password_path(@conn, :create)}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_session_path(@conn, :new)}>Log in</.link>|
       end
 
       assert_file "lib/my_app_web/views/warehouse/user_reset_password_view.ex", fn file ->
@@ -302,8 +302,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file "lib/my_app_web/templates/warehouse/user_session/new.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={@conn} action={Routes.warehouse_user_session_path(@conn, :create)} as={:user}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Forgot your password?", to: Routes.warehouse_user_reset_password_path(@conn, :new) %>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_reset_password_path(@conn, :new)}>Forgot your password?</.link>|
       end
 
       assert_file "test/my_app_web/controllers/warehouse/user_session_controller_test.exs", fn file ->
