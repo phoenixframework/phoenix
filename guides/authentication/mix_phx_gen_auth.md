@@ -74,6 +74,8 @@ The generated functionality ships with an account confirmation mechanism, where 
 
 The generated code is not integrated with any system to send SMSes or emails for confirming accounts, resetting passwords, etc. Instead, it simply logs a message to the terminal. It is your responsibility to integrate with the proper system after generation.
 
+Note that if you generated your Phoenix project with `mix phx.new`, your project is configured to use [Swoosh](https://hexdocs.pm/swoosh/Swoosh.html) mailer by default. To view notifier emails during development with Swoosh, navigate to `/dev/mailbox`.
+
 ### Tracking sessions
 
 All sessions and tokens are tracked in a separate table. This allows you to track how many sessions are active for each account. You could even expose this information to users if desired.
