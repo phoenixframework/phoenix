@@ -51,7 +51,8 @@ defmodule <%= @web_namespace %>.MixProject do
       {:gettext, "~> 0.18"},<% end %><%= if @app_name != @web_app_name do %>
       {:<%= @app_name %>, in_umbrella: true},<% end %>
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+      {:tailwind, "~> 0.1.6", runtime: Mix.env() == :dev}
     ]
   end
 
