@@ -1,41 +1,41 @@
-<section class="phx-hero"><%= if @gettext do %>
-  <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
-  <h1>Welcome to Phoenix!</h1><% end %>
-  <p>Peace of mind from prototype to production</p>
+<section class="font-extralight border-neutral-200 p-14 bg-[#eee] pb-5 text-center border-b rounded-md mb-8"><%= if @gettext do %>
+  <h1 class="mb-5 text-4xl"><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
+  <h1 class="mb-5 text-4xl">Welcome to Phoenix!</h1><% end %>
+  <p class="mb-6 text-lg">Peace of mind from prototype to production</p>
 </section>
 
-<section class="row">
-  <article class="column">
-    <h2>Resources</h2>
-    <ul>
+<section class="flex -ml-2.5 w-[calc(100%+1.25rem)] font-extralight flex-col md:flex-row">
+  <article class="px-2.5 block flex-auto w-full">
+    <h2 class="text-blue-700">Resources</h2>
+    <ul class="list-[circle] list-inside mb-12 space-y-3.5">
       <li>
-        <a href="https://hexdocs.pm/phoenix/overview.html">Guides &amp; Docs</a>
+        <a class="text-blue-700" href="https://hexdocs.pm/phoenix/overview.html">Guides &amp; Docs</a>
       </li>
       <li>
-        <a href="https://github.com/phoenixframework/phoenix">Source</a>
+        <a class="text-blue-700" href="https://github.com/phoenixframework/phoenix">Source</a>
       </li>
       <li>
-        <a href="https://github.com/phoenixframework/phoenix/blob/<%= @phoenix_github_version_tag %>/CHANGELOG.md"><%= @phoenix_github_version_tag %> Changelog</a>
+        <a class="text-blue-700" href="https://github.com/phoenixframework/phoenix/blob/<%= @phoenix_github_version_tag %>/CHANGELOG.md"><%= @phoenix_github_version_tag %> Changelog</a>
       </li>
     </ul>
   </article>
-  <article class="column">
-    <h2>Help</h2>
-    <ul>
+  <article class="px-2.5 block flex-auto w-full">
+    <h2 class="text-blue-700">Help</h2>
+    <ul class="list-[circle] list-inside mb-12 space-y-3.5">
       <li>
-        <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
+        <a class="text-blue-700" href="https://elixirforum.com/c/phoenix-forum">Forum</a>
       </li>
       <li>
-        <a href="https://web.libera.chat/#elixir">#elixir on Libera Chat (IRC)</a>
+        <a class="text-blue-700" href="https://web.libera.chat/#elixir">#elixir on Libera Chat (IRC)</a>
       </li>
       <li>
-        <a href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>
+        <a class="text-blue-700" href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>
       </li>
       <li>
-        <a href="https://elixir-slackin.herokuapp.com/">Elixir on Slack</a>
+        <a class="text-blue-700" href="https://elixir-slackin.herokuapp.com/">Elixir on Slack</a>
       </li>
       <li>
-        <a href="https://discord.gg/elixir">Elixir on Discord</a>
+        <a class="text-blue-700" href="https://discord.gg/elixir">Elixir on Discord</a>
       </li>
     </ul>
   </article>
