@@ -3,7 +3,6 @@
 /* Import Tailwind CSS */
 @tailwind base;
 @tailwind components;
-@tailwind utilities;
 
 /*
  * The components layer is for class-based styles that you want to be able to
@@ -134,3 +133,6 @@
     @apply animate-fade-out;
   }
 }
+
+/* Finally, Import Tailwind Utilities */
+@tailwind utilities;
