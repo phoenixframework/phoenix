@@ -275,7 +275,9 @@ The race conditions would make this an unreliable way to update the existing tab
 
 Let's think of a function that describes what we want to accomplish. Here's how we would like to use it:
 
-    product = Catalog.inc_page_views(product)
+```elixir
+product = Catalog.inc_page_views(product)
+```
 
 That looks great. Our callers will have no confusion over what this function does, and we can wrap up the increment in an atomic operation to prevent race conditions.
 
@@ -492,7 +494,10 @@ defmodule HelloWeb.ProductView do
   use HelloWeb, :view
 
   def category_select(f, changeset) do
-    existing_ids = changeset |> Ecto.Changeset.get_change(:categories, []) |> Enum.map(& &1.data.id)
+    existing_ids =
+      changeset
+      |> Ecto.Changeset.get_change(:categories, [])
+      |> Enum.map(& &1.data.id)
 
     category_opts =
       for cat <- Hello.Catalog.list_categories(),
@@ -504,7 +509,6 @@ end
 ```
 
 We added a new `category_select/2` function which uses `Phoenix.HTML`'s `multiple_select/3` to generate a multiple select tag. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
-
 
 With our `category_select` function in place, we can open up `lib/hello_web/templates/product/form.html.heex` and add:
 
