@@ -57,9 +57,10 @@ defmodule Phx.New.Single do
   ]
 
   template :assets, [
-    {:eex,  "phx_assets/app.css",     :web, "assets/css/app.css"},
-    {:eex,  "phx_assets/app.js",      :web, "assets/js/app.js"},
-    {:keep, "phx_assets/vendor",      :web, "assets/vendor"},
+    {:eex,  "phx_assets/app.css",            :web, "assets/css/app.css"},
+    {:eex,  "phx_assets/app.js",             :web, "assets/js/app.js"},
+    {:keep, "phx_assets/vendor",             :web, "assets/vendor"},
+    {:text, "phx_assets/tailwind.config.js", :web, "assets/tailwind.config.js"},
   ]
 
   template :no_assets, [
