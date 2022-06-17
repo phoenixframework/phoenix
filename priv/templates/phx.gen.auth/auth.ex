@@ -149,12 +149,35 @@ defmodule <%= inspect auth_module %> do
 
     case socket.assigns.current_<%= schema.singular %> do
       nil ->
-        {:halt, LiveView.redirect(socket, to: Routes.<%= schema.singular %>_session_path(socket, :new))}
+        {:halt, LiveView.redirect(socket, to: Routes.<%= schema.singular %><%= schema.login_path %>(socket, :new))}
 
       _ ->
         {:cont, socket}
     end
   end
+
+  <%= if live? do %>
+  def on_mount(:get_<%= schema.singular %>_by_reset_password_token, params, _session, socket) do
+    if socket.assigns.live_action == :edit do
+      set_<%= schema.singular %>_and_token(socket, params)
+    else
+      {:cont, socket}
+    end
+  end
+
+  defp set_<%= schema.singular %>_and_token(socket, %{"token" => token}) do
+    if <%= schema.singular %> = Accounts.get_<%= schema.singular %>_by_reset_password_token(token) do
+      {:cont, LiveView.assign(socket, <%= schema.singular %>: <%= schema.singular %>, token: token)}
+    else
+      socket =
+        socket
+        |> LiveView.put_flash(:error, "Reset password link is invalid or it has expired.")
+        |> LiveView.redirect(to: "/")
+
+      {:halt, socket}
+    end
+  end
+  <% end %>
 
   defp mount_current_<%= schema.singular %>(session, socket) do
     case session do
@@ -194,7 +217,7 @@ defmodule <%= inspect auth_module %> do
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
-      |> redirect(to: Routes.<%= schema.route_helper %>_session_path(conn, :new))
+      |> redirect(to: Routes.<%= schema.route_helper %><%= schema.login_path %>(conn, :new))
       |> halt()
     end
   end

@@ -80,9 +80,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   @switches [binary_id: :boolean, table: :string, web: :string,
              schema: :boolean, context: :boolean, context_app: :string,
-             merge_with_existing_context: :boolean, prefix: :string]
+             merge_with_existing_context: :boolean, prefix: :string, live: :boolean]
 
-  @default_opts [schema: true, context: true]
+  @default_opts [schema: true, context: true, live: false]
 
   @doc false
   def run(args) do

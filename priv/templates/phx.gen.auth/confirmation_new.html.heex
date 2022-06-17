@@ -11,5 +11,5 @@
 
 <p>
   <.link href={Routes.<%= schema.route_helper %>_registration_path(@conn, :new)}>Register</.link> |
-  <.link href={Routes.<%= schema.route_helper %>_session_path(@conn, :new)}>Log in</.link>
+  <.link href={Routes.<%= schema.route_helper %><%= schema.login_path %>(@conn, :new)}>Log in</.link>
 </p>

@@ -18,8 +18,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </div>
     </.form>
 
-    <.link href={Routes.<%= schema.route_helper %>_registration_path(@conn, :new)}>Register</.link> |
-    <.link href={Routes.<%= schema.route_helper %>_login_path(@conn, :new)}>Log in</.link>
+    <.link href={Routes.<%= schema.route_helper %>_registration_path(@socket, :new)}>Register</.link> |
+    <.link href={Routes.<%= schema.route_helper %>_login_path(@socket, :new)}>Log in</.link>
     """
   end
 
@@ -46,8 +46,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </div>
     </.form>
 
-    <.link href={Routes.<%= schema.route_helper %>_registration_path(@conn, :new)}>Register</.link> |
-    <.link href={Routes.<%= schema.route_helper %>_login_path(@conn, :new)}>Log in</.link>
+    <.link href={Routes.<%= schema.route_helper %>_registration_path(@socket, :new)}>Register</.link> |
+    <.link href={Routes.<%= schema.route_helper %>_login_path(@socket, :new)}>Log in</.link>
 
     """
   end
