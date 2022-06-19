@@ -4,6 +4,8 @@ The `mix phx.gen.auth` command generates a flexible, pre-built authentication sy
 
 ## Getting started
 
+As a recommendation, commit all of your work before running this command because this modifies/creates 39 files that if you want to undo, will be quite a time consumer if you have other files generated.
+
 Let's start by running the following command from the root of our app (or `apps/my_app_web` in an umbrella app):
 
 ```console
@@ -35,6 +37,59 @@ And finally, let's start our Phoenix server and try it out.
 ```console
 $ mix phx.server
 ```
+
+## Multiple Account Type Setup
+
+If you have a User and Admin setup, ie: where an app needs moderation and such then it's suggested that you use the commands like so:
+
+```console
+mix phx.gen.auth Accounts.Admin Admin admins
+mix phx.gen.auth Accounts.User User users
+```
+
+This will put Admin and User contexts within the accounts folder but completely separated contexts.
+
+```console
+├── accounts
+    └── admin
+    └── user
+    └── admin.ex
+    └── user.ex
+```
+
+As compared to calling the base example with different contexts such as:
+
+```console
+mix phx.gen.auth Accounts Admin admins
+mix phx.gen.auth Accounts User users
+```
+
+```console
+├── accounts
+    └── admin_token.ex
+    └── admin_notifier.ex
+    └── admin.ex
+    └── user_token.ex
+    └── user_notifier.ex
+    └── user.ex
+├── accounts.ex <- 19 methods here
+```
+
+This will generate a main accounts.ex file with functions for both Admins and Users alike, where you'll get a warning saying:
+
+```console
+ The Your.Context context currently has 19 functions and 3 files in its directory.
+
+  * It's OK to have multiple resources in the same context as long as they are closely related. But if a context grows too large, consider breaking it apart
+
+  * If they are not closely related, another context probably works better
+
+The fact two entities are related in the database does not mean they belong to the same context.
+
+If you are not sure, prefer creating a new context over adding to the existing one.
+```
+
+So it's best to do the call with a `Parent.Child` like call so the following structure will be generated
 
 ## Developer responsibilities
 
