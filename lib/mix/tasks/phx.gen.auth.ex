@@ -17,8 +17,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   If you have a User and Admin setup, ie: where an app needs moderation
   and such then it's suggested that you use the commands like so:
 
-      $ mix phx.gen.auth Accounts.Admin Admin admins
-      $ mix phx.gen.auth Accounts.User User users
+      $ mix phx.gen.auth Accounts.Admins Admin admins
+      $ mix phx.gen.auth Accounts.Users User users
 
   ## Password hashing
 

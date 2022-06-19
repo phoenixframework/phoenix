@@ -43,18 +43,18 @@ $ mix phx.server
 If you have a User and Admin setup, ie: where an app needs moderation and such then it's suggested that you use the commands like so:
 
 ```console
-mix phx.gen.auth Accounts.Admin Admin admins
-mix phx.gen.auth Accounts.User User users
+mix phx.gen.auth Accounts.Admins Admin admins
+mix phx.gen.auth Accounts.Users User users
 ```
 
 This will put Admin and User contexts within the accounts folder but completely separated contexts.
 
 ```console
 ├── accounts
-    └── admin
-    └── user
-    └── admin.ex
-    └── user.ex
+    └── admins
+    └── users
+    └── admins.ex
+    └── users.ex
 ```
 
 As compared to calling the base example with different contexts such as:
@@ -105,9 +105,9 @@ The password hashing mechanism defaults to `bcrypt` for Unix systems and `pbkdf2
 
 The password hashing mechanism can be overridden with the `--hashing-lib` option. The following values are supported:
 
-  * `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
-  * `pbkdf2` - [pbkdf2_elixir](https://hex.pm/packages/pbkdf2_elixir)
-  * `argon2` - [argon2_elixir](https://hex.pm/packages/argon2_elixir)
+- `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
+- `pbkdf2` - [pbkdf2_elixir](https://hex.pm/packages/pbkdf2_elixir)
+- `argon2` - [argon2_elixir](https://hex.pm/packages/argon2_elixir)
 
 We recommend developers to consider using `argon2`, which is the most robust of all 3. The downside is that `argon2` is quite CPU and memory intensive, and you will need more powerful instances to run your applications on.
 
@@ -117,9 +117,9 @@ For more information about choosing these libraries, see the [Comeonin project](
 
 The generated code ships with an authentication module with a handful of plugs that fetch the current user, require authentication and so on. For instance, in an app named Demo which had `mix phx.gen.auth Accounts User users` run on it, you will find a module named `DemoWeb.UserAuth` with plugs such as:
 
-  * `fetch_current_user` - fetches the current user information if available
-  * `require_authenticated_user` - must be invoked after `fetch_current_user` and requires that a current user exists and is authenticated
-  * `redirect_if_user_is_authenticated` - used for the few pages that must not be available to authenticated users
+- `fetch_current_user` - fetches the current user information if available
+- `require_authenticated_user` - must be invoked after `fetch_current_user` and requires that a current user exists and is authenticated
+- `redirect_if_user_is_authenticated` - used for the few pages that must not be available to authenticated users
 
 ### Confirmation
 
@@ -163,10 +163,10 @@ Check out `mix phx.gen.auth` for more details, such as using a different passwor
 
 The following links have more information regarding the motivation and design of the code this generates.
 
-  * José Valim's blog post - [An upcoming authentication solution for Phoenix](https://dashbit.co/blog/a-new-authentication-solution-for-phoenix)
-  * The [original `phx_gen_auth` repo][phx_gen_auth repo] (for Phoenix 1.5 applications) - This is a great resource to see discussions around decisions that have been made in earlier versions of the project.
-  * [Original pull request on bare Phoenix app][auth PR]
-  * [Original design spec](https://github.com/dashbitco/mix_phx_gen_auth_demo/blob/auth/README.md)
+- José Valim's blog post - [An upcoming authentication solution for Phoenix](https://dashbit.co/blog/a-new-authentication-solution-for-phoenix)
+- The [original `phx_gen_auth` repo][phx_gen_auth repo] (for Phoenix 1.5 applications) - This is a great resource to see discussions around decisions that have been made in earlier versions of the project.
+- [Original pull request on bare Phoenix app][auth pr]
+- [Original design spec](https://github.com/dashbitco/mix_phx_gen_auth_demo/blob/auth/README.md)
 
 [phx_gen_auth repo]: https://github.com/aaronrenner/phx_gen_auth
-[auth PR]: https://github.com/dashbitco/mix_phx_gen_auth_demo/pull/1
+[auth pr]: https://github.com/dashbitco/mix_phx_gen_auth_demo/pull/1
