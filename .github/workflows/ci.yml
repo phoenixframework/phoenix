@@ -1,5 +1,8 @@
 name: CI
 on: [push, pull_request]
+permissions:
+  contents: read
+
 jobs:
   test-elixir:
     runs-on: ubuntu-latest
