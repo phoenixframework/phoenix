@@ -16,7 +16,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "redirects if <%= schema.singular %> is not logged in" do
       conn = build_conn()
       conn = get(conn, Routes.<%= schema.route_helper %>_settings_path(conn, :edit))
-      assert redirected_to(conn) == Routes.<%= schema.route_helper %>_session_path(conn, :new)
+      assert redirected_to(conn) == Routes.<%= schema.route_helper %><%= schema.login_path %>(conn, :new)
     end
   end
 
@@ -123,7 +123,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "redirects if <%= schema.singular %> is not logged in", %{token: token} do
       conn = build_conn()
       conn = get(conn, Routes.<%= schema.route_helper %>_settings_path(conn, :confirm_email, token))
-      assert redirected_to(conn) == Routes.<%= schema.route_helper %>_session_path(conn, :new)
+      assert redirected_to(conn) == Routes.<%= schema.route_helper %><%= schema.login_path %>(conn, :new)
     end
   end
 end

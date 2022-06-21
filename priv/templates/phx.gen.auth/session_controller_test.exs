@@ -6,7 +6,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   setup do
     %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
   end
-
+  <%= if not live? do %>
   describe "GET <%= web_path_prefix %>/<%= schema.plural %>/log_in" do
     test "renders log in page", %{conn: conn} do
       conn = get(conn, Routes.<%= schema.route_helper %>_session_path(conn, :new))
@@ -21,6 +21,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert redirected_to(conn) == "/"
     end
   end
+  <% end %>
 
   describe "POST <%= web_path_prefix %>/<%= schema.plural %>/log_in" do
     test "logs the <%= schema.singular %> in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
@@ -67,7 +68,17 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert redirected_to(conn) == "/foo/bar"
     end
+    <%= if live? do %>
+    test "redirects to login page with invalid credentials", %{conn: conn} do
+      conn =
+        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
+          "<%= schema.singular %>" => %{"email" => "invalid@email.com", "password" => "invalid_password"}
+        })
 
+      assert get_flash(conn, :error) == "Invalid email or password"
+      assert redirected_to(conn) == "/<%= schema.plural %>/log_in"
+    end
+    <% else %>
     test "emits error message with invalid credentials", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
         post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
@@ -78,6 +89,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert response =~ "<h1>Log in</h1>"
       assert response =~ "Invalid email or password"
     end
+    <% end %>
   end
 
   describe "DELETE <%= web_path_prefix %>/<%= schema.plural %>/log_out" do

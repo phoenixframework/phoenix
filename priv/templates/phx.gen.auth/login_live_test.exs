@@ -57,7 +57,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert get_flash(conn, :error) == "Invalid email or password"
 
-      assert redirected_to(conn) == "/<%= schema.singular %>s/log_in"
+      assert redirected_to(conn) == "/<%= schema.plural %>/log_in"
     end
   end
 
