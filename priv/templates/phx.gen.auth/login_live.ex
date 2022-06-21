@@ -6,6 +6,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <h1>Log in</h1>
 
     <.form
+      id="login_form"
       let={f}
       for={:<%= schema.singular %>}
       phx-change="validate"

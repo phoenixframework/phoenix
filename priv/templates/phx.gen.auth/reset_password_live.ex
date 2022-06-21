@@ -9,7 +9,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <h1>Forgot your password?</h1>
 
-    <.form let={f} for={:<%= schema.singular %>} phx-submit="send_email"}>
+    <.form id="reset_password_form" let={f} for={:<%= schema.singular %>} phx-submit="send_email"}>
       <%%= label f, :email %>
       <%%= email_input f, :email, required: true %>
 
@@ -26,7 +26,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def render(%{live_action: :edit} = assigns) do
     ~H"""
     <h1>Reset password</h1>
-    <.form let={f} for={@changeset} phx-submit="reset_password" @token)}>
+    <.form id="reset_password_form" let={f} for={@changeset} phx-submit="reset_password" @token)}>
       <%%= if @changeset.action do %>
         <div class="alert alert-danger">
           <p>Oops, something went wrong! Please check the errors below.</p>
