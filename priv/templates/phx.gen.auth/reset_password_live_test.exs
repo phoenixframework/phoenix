@@ -2,7 +2,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   use <%= inspect context.web_module %>.ConnCase
 
   import Phoenix.LiveViewTest
-  <%= inspect context.module %>Fixtures
+  import <%= inspect context.module %>Fixtures
 
   alias <%= inspect context.module %>
   alias <%= inspect schema.repo %>
@@ -116,7 +116,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       refute get_session(conn, :<%= schema.singular %>_token)
       assert get_flash(conn, :info) =~ "Password reset successfully"
-      assert <%= inspect context.alias %>.get_<%= schema.singular %>_email_and_password(<%= schema.singular %>.email, "new valid password")
+      assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, "new valid password")
     end
 
     test "does not reset password on invalid data", %{conn: conn, token: token} do
