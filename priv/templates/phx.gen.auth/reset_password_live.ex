@@ -67,9 +67,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     case <%= inspect context.alias %>.reset_<%= schema.singular %>_password(socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params) do
       {:ok, _} ->
         socket =
-        socket
-        |> put_flash(:info, "Password reset successfully.")
-        |> redirect(to: Routes.<%= schema.singular %>_login_path(socket, :new))
+          socket
+          |> put_flash(:info, "Password reset successfully.")
+          |> redirect(to: Routes.<%= schema.singular %>_login_path(socket, :new))
 
         {:noreply, socket}
 
@@ -87,12 +87,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     socket =
-    socket
-    |> put_flash(
-      :info,
-      "If your email is in our system, you will receive instructions to reset your password shortly."
-    )
-    |> redirect(to: "/")
+      socket
+      |> put_flash(
+        :info,
+        "If your email is in our system, you will receive instructions to reset your password shortly."
+      )
+      |> redirect(to: "/")
+
     {:noreply, socket}
   end
 end

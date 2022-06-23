@@ -59,9 +59,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           )
 
         socket =
-        socket
-        |> put_flash(:info, "<%= inspect schema.alias %> created successfully.")
-        |> assign(:trigger_submit, true)
+          socket
+          |> put_flash(:info, "<%= inspect schema.alias %> created successfully.")
+          |> assign(:trigger_submit, true)
 
         {:noreply, socket}
 
