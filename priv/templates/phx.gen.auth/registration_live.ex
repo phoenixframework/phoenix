@@ -29,7 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <%%= error_tag f, :email %>
 
       <%%= label f, :password %>
-      <%%= password_input f, :password, required: true %>
+      <%%= password_input f, :password, required: true, value: input_value(f, :password) %>
       <%%= error_tag f, :password %>
 
       <div>
