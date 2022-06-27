@@ -82,7 +82,7 @@
 
   """
   def change_<%= schema.singular %>_registration(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs \\ %{}) do
-    <%= inspect schema.alias %>.registration_changeset(<%= schema.singular %>, attrs, hash_password: false)
+    <%= inspect schema.alias %>.registration_changeset(<%= schema.singular %>, attrs, hash_password: false, validate_email: false)
   end
 
   ## Settings

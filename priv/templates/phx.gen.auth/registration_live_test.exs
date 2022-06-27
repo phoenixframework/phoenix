@@ -22,6 +22,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert {:ok, _conn} = result
     end
+
+    test "renders errors for invalid data", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_registration_path(conn, :new))
+
+      result =
+        lv
+        |> element("#registration_form")
+        |> render_change(<%= schema.singular %>: %{"email" => "with spaces", "password" => "too short"})
+
+      assert result =~ "<h1>Register</h1>"
+      assert result =~ "must have the @ sign and no spaces"
+      assert result =~ "should be at least 12 character"
+    end
   end
 
   describe "register <%= schema.singular %>" do
@@ -43,17 +56,16 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert response =~ "Log out</a>"
     end
 
-    test "render errors for invalid data", %{conn: conn} do
+    test "renders errors for duplicated email", %{conn: conn} do
       {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_registration_path(conn, :new))
 
-      result =
-        lv
-        |> form("#registration_form", <%= schema.singular %>: %{"email" => "with spaces", "password" => "too short"})
-        |> render_submit()
+      <%= schema.singular %> = <%= schema.singular %>_fixture(%{email: "test@email.com"})
 
-      assert result =~ "<h1>Register</h1>"
-      assert result =~ "must have the @ sign and no spaces"
-      assert result =~ "should be at least 12 character"
+      lv
+      |> form("#registration_form",
+        <%= schema.singular %>: %{"email" => <%= schema.singular %>.email, "password" => "valid_password"}
+      )
+      |> render_submit() =~ "has already been taken"
     end
   end
 

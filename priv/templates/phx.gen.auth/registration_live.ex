@@ -18,7 +18,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       action={Routes.<%= schema.singular %>_session_path(@socket, :create)}
       as={:<%= schema.singular %>}
     >
-      <%%= if @changeset.action do %>
+      <%%= if @changeset.action == :insert do %>
         <div class="alert alert-danger">
           <p>Oops, something went wrong! Please check the errors below.</p>
         </div>
@@ -73,6 +73,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_registration(%<%= inspect schema.alias %>{}, <%= schema.singular %>_params)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    {:noreply, assign(socket, :changeset, Map.put(changeset, :action, :validate))}
   end
 end
