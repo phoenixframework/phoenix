@@ -2,14 +2,14 @@
   ## Authentication routes
 
   scope <%= router_scope %> do
-    pipe_through [:browser, :redirect_if_<%= schema.singular %>_is_authenticated]
-    <%= if live? do %>
+    pipe_through [:browser, :redirect_if_<%= schema.singular %>_is_authenticated]<%= if live? do %>
+
     post "/<%= schema.plural %>/register", <%= inspect schema.alias %>SessionController, :create
     live "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationLive, :new
     live "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>LoginLive, :new
     live "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ResetPasswordLive, :new
-    live "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordLive, :edit
-    <% else %>
+    live "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordLive, :edit<% else %>
+
     get "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :new
     post "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :create
     get "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :new
@@ -17,8 +17,7 @@
     get "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ResetPasswordController, :new
     post "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ResetPasswordController, :create
     get "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordController, :edit
-    put "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordController, :update
-    <% end %>
+    put "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordController, :update<% end %>
   end
 
   scope <%= router_scope %> do

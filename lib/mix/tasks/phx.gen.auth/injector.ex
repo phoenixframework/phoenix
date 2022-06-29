@@ -10,7 +10,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Injects a dependency into the contents of mix.exs
   """
-  @spec mix_dependency_inject(String.t(), String.t()) :: {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
+  @spec mix_dependency_inject(String.t(), String.t()) ::
+          {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
   def mix_dependency_inject(mixfile, dependency) do
     with :ok <- ensure_not_already_injected(mixfile, dependency),
          {:ok, new_mixfile} <- do_mix_dependency_inject(mixfile, dependency) do
@@ -18,7 +19,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     end
   end
 
-  @spec do_mix_dependency_inject(String.t(), String.t()) :: {:ok, String.t()} | {:error, :unable_to_inject}
+  @spec do_mix_dependency_inject(String.t(), String.t()) ::
+          {:ok, String.t()} | {:error, :unable_to_inject}
   defp do_mix_dependency_inject(mixfile, dependency) do
     string_to_split_on = """
       defp deps do
@@ -27,7 +29,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
 
     case split_with_self(mixfile, string_to_split_on) do
       {beginning, splitter, rest} ->
-        new_mixfile = IO.iodata_to_binary([beginning, splitter, "      ", dependency, ?,, ?\n, rest])
+        new_mixfile =
+          IO.iodata_to_binary([beginning, splitter, "      ", dependency, ?,, ?\n, rest])
+
         {:ok, new_mixfile}
 
       _ ->
@@ -38,7 +42,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Injects configuration for test environment into `file`.
   """
-  @spec test_config_inject(String.t(), HashingLibrary.t()) :: {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
+  @spec test_config_inject(String.t(), HashingLibrary.t()) ::
+          {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
   def test_config_inject(file, %HashingLibrary{} = hashing_library) when is_binary(file) do
     code_to_inject =
       hashing_library
@@ -54,7 +59,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
       # * the entire matching line is inserted with \\0,
       # * the actual code is injected with &2,
       # * and the appropriate newlines are injected using \\2.
-      &Regex.replace(~r/(use Mix\.Config|import Config)(\r\n|\n|$)/, &1, "\\0\\2#{&2}\\2", global: false)
+      &Regex.replace(~r/(use Mix\.Config|import Config)(\r\n|\n|$)/, &1, "\\0\\2#{&2}\\2",
+        global: false
+      )
     )
   end
 
@@ -82,7 +89,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Injects the fetch_current_<schema> plug into router's browser pipeline
   """
-  @spec router_plug_inject(String.t(), context) :: {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
+  @spec router_plug_inject(String.t(), context) ::
+          {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
   def router_plug_inject(file, %Context{schema: schema}) when is_binary(file) do
     inject_unless_contains(
       file,
@@ -94,7 +102,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
       # * the captured indent is inserted using \\1,
       # * the actual code is injected with &2,
       # * and the appropriate newline is injected using \\2
-      &Regex.replace(~r/^(\s*)#{@router_plug_anchor_line}.*(\r\n|\n|$)/Um, &1, "\\0\\1#{&2}\\2", global: false)
+      &Regex.replace(~r/^(\s*)#{@router_plug_anchor_line}.*(\r\n|\n|$)/Um, &1, "\\0\\1#{&2}\\2",
+        global: false
+      )
     )
   end
 
@@ -125,42 +135,89 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Injects a menu in the application layout
   """
-  @spec app_layout_menu_inject(String.t(), schema) :: {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
-  def app_layout_menu_inject(file, %Schema{} = schema) when is_binary(file) do
-    with {:error, :unable_to_inject} <- app_layout_menu_inject_at_end_of_nav_tag(file, schema),
-         {:error, :unable_to_inject} <- app_layout_menu_inject_after_opening_body_tag(file, schema) do
-      {:error, :unable_to_inject}
+  def app_layout_menu_inject(%Schema{} = schema, template, view, web_mod) do
+    {tmpl_path, template_str} = template
+    {view_path, view_str} = view
+
+    with {:error, :unable_to_inject} <-
+           app_layout_menu_inject_at_end_of_nav_tag(template_str, schema),
+         {:error, :unable_to_inject} <-
+           app_layout_menu_inject_after_opening_body_tag(template_str, schema) do
+      [{:error, :unable_to_inject}]
+    else
+      :already_injected -> [:already_injected]
+      {:ok, new_tmpl} ->
+        [{:ok, {tmpl_path, new_tmpl}}, layout_view_inject({view_path, view_str}, schema, web_mod)]
+    end
+  end
+
+  defp layout_view_code(%Schema{} = schema, web_module, padding \\ "  ") do
+    endpoint = inspect(Module.concat(web_module, "Endpoint"))
+
+    ~s'''
+    #{padding}def #{app_layout_menu_template_name(schema)}(assigns) do
+    #{padding}  ~H"""
+    #{padding}  <ul>
+    #{padding}    <%= if @current_#{schema.singular} do %>
+    #{padding}      <li><%= @current_#{schema.singular}.email %></li>
+    #{padding}      <li><.link href={Routes.#{schema.route_helper}_settings_path(#{endpoint}, :edit)}>Settings</.link></li>
+    #{padding}      <li><.link href={Routes.#{schema.route_helper}_session_path(#{endpoint}, :delete)} method="delete">Log out</.link></li>
+    #{padding}    <% else %>
+    #{padding}      <li><.link href={Routes.#{schema.route_helper}_registration_path(#{endpoint}, :new)}>Register</.link></li>
+    #{padding}      <li><.link href={Routes.#{schema.route_helper}_#{schema.login_path}(#{endpoint}, :new)}>Log in</.link></li>
+    #{padding}    <% end %>
+    #{padding}  </ul>
+    #{padding}  """
+    #{padding}end
+    '''
+  end
+
+  defp layout_view_inject({view_path, content}, %Schema{} = schema, web_module) do
+    code = layout_view_code(schema, web_module)
+
+    if String.contains?(content, "def #{app_layout_menu_template_name(schema)}") do
+      :already_injected
+    else
+      new_view_file =
+        content
+        |> String.split("end")
+        |> Enum.drop(-1)
+        |> Enum.join("end")
+        |> Kernel.<>("\n")
+        |> Kernel.<>(code)
+        |> Kernel.<>("end")
+
+      {:ok, {view_path, new_view_file}}
     end
   end
 
   @doc """
-  Instructions to provide the user when `app_layout_menu_inject/2` fails.
+  Instructions to provide the user when `app_layout_menu_inject/3` fails.
   """
-  @spec app_layout_menu_help_text(String.t(), schema) :: String.t()
-  def app_layout_menu_help_text(file_path, %Schema{} = schema) do
-    """
-    Add a render call for #{inspect(app_layout_menu_template_name(schema))} to #{Path.relative_to_cwd(file_path)}:
+  @spec app_layout_menu_help_text(String.t(), schema, web_module :: atom) :: String.t()
+  def app_layout_menu_help_text(file_path, %Schema{} = schema, web_module) do
+    ~s'''
+    Add a #{app_layout_menu_template_name(schema)} function component to your layout view in #{inspect(Module.concat(web_module, "LayoutView"))}:
 
-      <nav>
-        #{app_layout_menu_code_to_inject(schema)}
-      </nav>
-    """
+    #{layout_view_code(schema, web_module, "    ")}
+
+    and render it within #{Path.relative_to_cwd(file_path)}:
+
+        <nav>
+          ...
+          <.#{app_layout_menu_template_name(schema)} current_user={@current_user} />
+        </nav>
+    '''
   end
+
+  def app_layout_menu_template_name(schema), do: "#{schema.singular}_menu"
 
   @doc """
   Menu code to inject into the application layout template.
   """
   @spec app_layout_menu_code_to_inject(schema) :: String.t()
   def app_layout_menu_code_to_inject(%Schema{} = schema) do
-    "<%= render \"#{app_layout_menu_template_name(schema)}\", assigns %>"
-  end
-
-  @doc """
-  Name of the template containing the menu
-  """
-  @spec app_layout_menu_template_name(schema) :: String.t()
-  def app_layout_menu_template_name(%Schema{} = schema) do
-    "_#{schema.singular}_menu.html"
+    ~s|<.user_menu current_#{schema.singular}={@current_#{schema.singular}} />|
   end
 
   defp app_layout_menu_inject_at_end_of_nav_tag(file, schema) do
@@ -172,7 +229,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   end
 
   defp app_layout_menu_inject_after_opening_body_tag(file, schema) do
-    anchor_line = "<body>"
+    anchor_line = "<body"
 
     inject_unless_contains(
       file,
@@ -182,7 +239,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
       # entire matching line is inserted with \\0, then a newline then
       # the indent that was captured using \\1. &2 is the code to
       # inject.
-      &Regex.replace(~r/^(\s*)#{anchor_line}.*(\r\n|\n|$)/Um, &1, "\\0\\1  #{&2}\\2", global: false)
+      &Regex.replace(~r/^(\s*)#{anchor_line}.*(\r\n|\n|$)/Um, &1, "\\0\\1  #{&2}\\2",
+        global: false
+      )
     )
   end
 
@@ -191,7 +250,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   """
   @spec inject_unless_contains(String.t(), String.t(), (String.t(), String.t() -> String.t())) ::
           {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
-  def inject_unless_contains(code, code_to_inject, inject_fn) when is_binary(code) and is_binary(code_to_inject) and is_function(inject_fn, 2) do
+  def inject_unless_contains(code, code_to_inject, inject_fn)
+      when is_binary(code) and is_binary(code_to_inject) and is_function(inject_fn, 2) do
     with :ok <- ensure_not_already_injected(code, code_to_inject) do
       new_code = inject_fn.(code, code_to_inject)
 
@@ -207,7 +267,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   Injects snippet before the final end in a file
   """
   @spec inject_before_final_end(String.t(), String.t()) :: {:ok, String.t()} | :already_injected
-  def inject_before_final_end(code, code_to_inject) when is_binary(code) and is_binary(code_to_inject) do
+  def inject_before_final_end(code, code_to_inject)
+      when is_binary(code) and is_binary(code_to_inject) do
     if String.contains?(code, code_to_inject) do
       :already_injected
     else
@@ -252,7 +313,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     end
   end
 
-  defp indent_spaces(string, number_of_spaces) when is_binary(string) and is_integer(number_of_spaces) do
+  defp indent_spaces(string, number_of_spaces)
+       when is_binary(string) and is_integer(number_of_spaces) do
     indent = String.duplicate(" ", number_of_spaces)
 
     string

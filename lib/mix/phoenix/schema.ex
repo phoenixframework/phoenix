@@ -557,8 +557,8 @@ defmodule Mix.Phoenix.Schema do
 
   defp login_path(opts) do
     case Keyword.fetch(opts, :live) do
-      {:ok, true} -> "_login_path"
-      _ -> "_session_path"
+      {:ok, true} -> "login_path"
+      _ -> "session_path"
     end
   end
 end

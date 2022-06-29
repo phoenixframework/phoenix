@@ -240,7 +240,6 @@ $ mix phx.gen.auth Accounts User users
 * creating lib/hello_web/templates/user_confirmation/edit.html.heex
 * creating lib/hello_web/controllers/user_confirmation_controller.ex
 * creating test/hello_web/controllers/user_confirmation_controller_test.exs
-* creating lib/hello_web/templates/layout/_user_menu.html.heex
 * creating lib/hello_web/templates/user_registration/new.html.heex
 * creating lib/hello_web/controllers/user_registration_controller.ex
 * creating test/hello_web/controllers/user_registration_controller_test.exs

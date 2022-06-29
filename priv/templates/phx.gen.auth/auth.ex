@@ -149,7 +149,7 @@ defmodule <%= inspect auth_module %> do
 
     case socket.assigns.current_<%= schema.singular %> do
       nil ->
-        {:halt, LiveView.redirect(socket, to: Routes.<%= schema.singular %><%= schema.login_path %>(socket, :new))}
+        {:halt, LiveView.redirect(socket, to: Routes.<%= schema.singular %>_<%= schema.login_path %>(socket, :new))}
 
       _ ->
         {:cont, socket}
@@ -217,7 +217,7 @@ defmodule <%= inspect auth_module %> do
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
-      |> redirect(to: Routes.<%= schema.route_helper %><%= schema.login_path %>(conn, :new))
+      |> redirect(to: Routes.<%= schema.route_helper %>_<%= schema.login_path %>(conn, :new))
       |> halt()
     end
   end

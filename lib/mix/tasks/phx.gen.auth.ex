@@ -134,8 +134,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       migration: migration,
       hashing_library: hashing_library,
       web_app_name: web_app_name(context),
+      web_namespace: context.web_module,
       endpoint_module: Module.concat([context.web_module, Endpoint]),
-      auth_module: Module.concat([context.web_module, schema.web_namespace, "#{inspect(schema.alias)}Auth"]),
+      auth_module:
+        Module.concat([context.web_module, schema.web_namespace, "#{inspect(schema.alias)}Auth"]),
       router_scope: router_scope(context),
       web_path_prefix: web_path_prefix(schema),
       test_case_options: test_case_options(ecto_adapter),
@@ -201,7 +203,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         hashing_library
 
       {:error, {:unknown_library, unknown_library}} ->
-        raise_with_help("Unknown value for --hashing-lib #{inspect(unknown_library)}", :hashing_lib)
+        raise_with_help(
+          "Unknown value for --hashing-lib #{inspect(unknown_library)}",
+          :hashing_lib
+        )
     end
   end
 
@@ -227,64 +232,256 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     case Keyword.fetch(context.opts, :live) do
       {:ok, true} ->
         [
-          {:eex, "migration.ex", Path.join([migrations_prefix, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"])},
+          {:eex, "migration.ex",
+           Path.join([migrations_prefix, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"])},
           {:eex, "notifier.ex", Path.join([context.dir, "#{schema.singular}_notifier.ex"])},
           {:eex, "schema.ex", Path.join([context.dir, "#{schema.singular}.ex"])},
           {:eex, "schema_token.ex", Path.join([context.dir, "#{schema.singular}_token.ex"])},
           {:eex, "auth.ex", Path.join([web_prefix, web_path, "#{schema.singular}_auth.ex"])},
-          {:eex, "auth_test.exs", Path.join([web_test_prefix, web_path, "#{schema.singular}_auth_test.exs"])},
-          {:eex, "confirmation_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_confirmation_view.ex"])},
-          {:eex, "confirmation_new.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_confirmation", "new.html.heex"])},
-          {:eex, "confirmation_edit.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_confirmation", "edit.html.heex"])},
-          {:eex, "confirmation_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller.ex"])},
-          {:eex, "confirmation_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller_test.exs"])},
-          {:eex, "_menu.html.heex", Path.join([web_prefix, "templates", "layout", "_#{schema.singular}_menu.html.heex"])},
-          {:eex, "session_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_session_view.ex"])},
-          {:eex, "session_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_session_controller.ex"])},
-          {:eex, "session_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_session_controller_test.exs"])},
-          {:eex, "settings_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_settings_view.ex"])},
-          {:eex, "settings_edit.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_settings", "edit.html.heex"])},
-          {:eex, "settings_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_settings_controller.ex"])},
-          {:eex, "settings_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_settings_controller_test.exs"])},
-          {:eex, "registration_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_registration_live.ex"])},
-          {:eex, "login_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_login_live.ex"])},
-          {:eex, "reset_password_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_reset_password_live.ex"])},
-          {:eex, "registration_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_registration_live_test.exs"])},
-          {:eex, "login_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_login_live_test.exs"])},
-          {:eex, "reset_password_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_reset_password_live_test.exs"])}
+          {:eex, "auth_test.exs",
+           Path.join([web_test_prefix, web_path, "#{schema.singular}_auth_test.exs"])},
+          {:eex, "confirmation_view.ex",
+           Path.join([web_prefix, "views", web_path, "#{schema.singular}_confirmation_view.ex"])},
+          {:eex, "confirmation_new.html.heex",
+           Path.join([
+             web_prefix,
+             "templates",
+             web_path,
+             "#{schema.singular}_confirmation",
+             "new.html.heex"
+           ])},
+          {:eex, "confirmation_edit.html.heex",
+           Path.join([
+             web_prefix,
+             "templates",
+             web_path,
+             "#{schema.singular}_confirmation",
+             "edit.html.heex"
+           ])},
+          {:eex, "confirmation_controller.ex",
+           Path.join([
+             web_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_confirmation_controller.ex"
+           ])},
+          {:eex, "confirmation_controller_test.exs",
+           Path.join([
+             web_test_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_confirmation_controller_test.exs"
+           ])},
+          {:eex, "session_view.ex",
+           Path.join([web_prefix, "views", web_path, "#{schema.singular}_session_view.ex"])},
+          {:eex, "session_controller.ex",
+           Path.join([
+             web_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_session_controller.ex"
+           ])},
+          {:eex, "session_controller_test.exs",
+           Path.join([
+             web_test_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_session_controller_test.exs"
+           ])},
+          {:eex, "settings_view.ex",
+           Path.join([web_prefix, "views", web_path, "#{schema.singular}_settings_view.ex"])},
+          {:eex, "settings_edit.html.heex",
+           Path.join([
+             web_prefix,
+             "templates",
+             web_path,
+             "#{schema.singular}_settings",
+             "edit.html.heex"
+           ])},
+          {:eex, "settings_controller.ex",
+           Path.join([
+             web_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_settings_controller.ex"
+           ])},
+          {:eex, "settings_controller_test.exs",
+           Path.join([
+             web_test_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_settings_controller_test.exs"
+           ])},
+          {:eex, "registration_live.ex",
+           Path.join([web_prefix, "live", web_path, "#{schema.singular}_registration_live.ex"])},
+          {:eex, "login_live.ex",
+           Path.join([web_prefix, "live", web_path, "#{schema.singular}_login_live.ex"])},
+          {:eex, "reset_password_live.ex",
+           Path.join([web_prefix, "live", web_path, "#{schema.singular}_reset_password_live.ex"])},
+          {:eex, "registration_live_test.exs",
+           Path.join([
+             web_test_prefix,
+             "live",
+             web_path,
+             "#{schema.singular}_registration_live_test.exs"
+           ])},
+          {:eex, "login_live_test.exs",
+           Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_login_live_test.exs"])},
+          {:eex, "reset_password_live_test.exs",
+           Path.join([
+             web_test_prefix,
+             "live",
+             web_path,
+             "#{schema.singular}_reset_password_live_test.exs"
+           ])}
         ]
+
       _ ->
         [
-          {:eex, "migration.ex", Path.join([migrations_prefix, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"])},
+          {:eex, "migration.ex",
+           Path.join([migrations_prefix, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"])},
           {:eex, "notifier.ex", Path.join([context.dir, "#{schema.singular}_notifier.ex"])},
           {:eex, "schema.ex", Path.join([context.dir, "#{schema.singular}.ex"])},
           {:eex, "schema_token.ex", Path.join([context.dir, "#{schema.singular}_token.ex"])},
           {:eex, "auth.ex", Path.join([web_prefix, web_path, "#{schema.singular}_auth.ex"])},
-          {:eex, "auth_test.exs", Path.join([web_test_prefix, web_path, "#{schema.singular}_auth_test.exs"])},
-          {:eex, "confirmation_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_confirmation_view.ex"])},
-          {:eex, "confirmation_new.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_confirmation", "new.html.heex"])},
-          {:eex, "confirmation_edit.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_confirmation", "edit.html.heex"])},
-          {:eex, "confirmation_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller.ex"])},
-          {:eex, "confirmation_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller_test.exs"])},
-          {:eex, "_menu.html.heex", Path.join([web_prefix, "templates", "layout", "_#{schema.singular}_menu.html.heex"])},
-          {:eex, "registration_new.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_registration", "new.html.heex"])},
-          {:eex, "registration_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_registration_controller.ex"])},
-          {:eex, "registration_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_registration_controller_test.exs"])},
-          {:eex, "registration_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_registration_view.ex"])},
-          {:eex, "reset_password_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_reset_password_view.ex"])},
-          {:eex, "reset_password_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_reset_password_controller.ex"])},
+          {:eex, "auth_test.exs",
+           Path.join([web_test_prefix, web_path, "#{schema.singular}_auth_test.exs"])},
+          {:eex, "confirmation_view.ex",
+           Path.join([web_prefix, "views", web_path, "#{schema.singular}_confirmation_view.ex"])},
+          {:eex, "confirmation_new.html.heex",
+           Path.join([
+             web_prefix,
+             "templates",
+             web_path,
+             "#{schema.singular}_confirmation",
+             "new.html.heex"
+           ])},
+          {:eex, "confirmation_edit.html.heex",
+           Path.join([
+             web_prefix,
+             "templates",
+             web_path,
+             "#{schema.singular}_confirmation",
+             "edit.html.heex"
+           ])},
+          {:eex, "confirmation_controller.ex",
+           Path.join([
+             web_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_confirmation_controller.ex"
+           ])},
+          {:eex, "confirmation_controller_test.exs",
+           Path.join([
+             web_test_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_confirmation_controller_test.exs"
+           ])},
+          {:eex, "registration_new.html.heex",
+           Path.join([
+             web_prefix,
+             "templates",
+             web_path,
+             "#{schema.singular}_registration",
+             "new.html.heex"
+           ])},
+          {:eex, "registration_controller.ex",
+           Path.join([
+             web_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_registration_controller.ex"
+           ])},
+          {:eex, "registration_controller_test.exs",
+           Path.join([
+             web_test_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_registration_controller_test.exs"
+           ])},
+          {:eex, "registration_view.ex",
+           Path.join([web_prefix, "views", web_path, "#{schema.singular}_registration_view.ex"])},
+          {:eex, "reset_password_view.ex",
+           Path.join([web_prefix, "views", web_path, "#{schema.singular}_reset_password_view.ex"])},
+          {:eex, "reset_password_controller.ex",
+           Path.join([
+             web_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_reset_password_controller.ex"
+           ])},
           {:eex, "reset_password_controller_test.exs",
-           Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_reset_password_controller_test.exs"])},
-          {:eex, "reset_password_edit.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_reset_password", "edit.html.heex"])},
-          {:eex, "reset_password_new.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_reset_password", "new.html.heex"])},
-          {:eex, "session_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_session_view.ex"])},
-          {:eex, "session_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_session_controller.ex"])},
-          {:eex, "session_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_session_controller_test.exs"])},
-          {:eex, "session_new.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_session", "new.html.heex"])},
-          {:eex, "settings_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_settings_view.ex"])},
-          {:eex, "settings_edit.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_settings", "edit.html.heex"])},
-          {:eex, "settings_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_settings_controller.ex"])},
-          {:eex, "settings_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_settings_controller_test.exs"])},
+           Path.join([
+             web_test_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_reset_password_controller_test.exs"
+           ])},
+          {:eex, "reset_password_edit.html.heex",
+           Path.join([
+             web_prefix,
+             "templates",
+             web_path,
+             "#{schema.singular}_reset_password",
+             "edit.html.heex"
+           ])},
+          {:eex, "reset_password_new.html.heex",
+           Path.join([
+             web_prefix,
+             "templates",
+             web_path,
+             "#{schema.singular}_reset_password",
+             "new.html.heex"
+           ])},
+          {:eex, "session_view.ex",
+           Path.join([web_prefix, "views", web_path, "#{schema.singular}_session_view.ex"])},
+          {:eex, "session_controller.ex",
+           Path.join([
+             web_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_session_controller.ex"
+           ])},
+          {:eex, "session_controller_test.exs",
+           Path.join([
+             web_test_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_session_controller_test.exs"
+           ])},
+          {:eex, "session_new.html.heex",
+           Path.join([
+             web_prefix,
+             "templates",
+             web_path,
+             "#{schema.singular}_session",
+             "new.html.heex"
+           ])},
+          {:eex, "settings_view.ex",
+           Path.join([web_prefix, "views", web_path, "#{schema.singular}_settings_view.ex"])},
+          {:eex, "settings_edit.html.heex",
+           Path.join([
+             web_prefix,
+             "templates",
+             web_path,
+             "#{schema.singular}_settings",
+             "edit.html.heex"
+           ])},
+          {:eex, "settings_controller.ex",
+           Path.join([
+             web_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_settings_controller.ex"
+           ])},
+          {:eex, "settings_controller_test.exs",
+           Path.join([
+             web_test_prefix,
+             "controllers",
+             web_path,
+             "#{schema.singular}_settings_controller_test.exs"
+           ])}
         ]
     end
   end
@@ -317,7 +514,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> inject_before_final_end(test_file)
   end
 
-  defp inject_context_test_fixtures(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
+  defp inject_context_test_fixtures(
+         %Context{test_fixtures_file: test_fixtures_file} = context,
+         paths,
+         binding
+       ) do
     Gen.Context.ensure_test_fixtures_file_exists(context, paths, binding)
 
     paths
@@ -347,7 +548,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     context
   end
 
-  defp maybe_inject_mix_dependency(%Context{context_app: ctx_app} = context, %HashingLibrary{mix_dependency: mix_dependency}) do
+  defp maybe_inject_mix_dependency(%Context{context_app: ctx_app} = context, %HashingLibrary{
+         mix_dependency: mix_dependency
+       }) do
     file_path = Mix.Phoenix.context_app_path(ctx_app, "mix.exs")
 
     file = File.read!(file_path)
@@ -398,7 +601,12 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     """
 
     with {:ok, file} <- read_file(file_path),
-         {:ok, new_file} <- Injector.inject_unless_contains(file, inject, &String.replace(&1, use_line, "#{use_line}\n\n  #{&2}")) do
+         {:ok, new_file} <-
+           Injector.inject_unless_contains(
+             file,
+             inject,
+             &String.replace(&1, use_line, "#{use_line}\n\n  #{&2}")
+           ) do
       print_injecting(file_path, " - imports")
       File.write!(file_path, new_file)
     else
@@ -448,24 +656,31 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp maybe_inject_app_layout_menu(%Context{} = context) do
     schema = context.schema
+    view_path = get_layout_view_path(context)
 
     if file_path = get_layout_html_path(context) do
-      file = File.read!(file_path)
+      Enum.map(
+        Injector.app_layout_menu_inject(
+          schema,
+          {file_path, File.read!(file_path)},
+          {view_path, File.read!(view_path)},
+          context.web_module
+        ),
+        fn
+          {:ok, {path, new_content}} ->
+            print_injecting(path)
+            File.write!(path, new_content)
 
-      case Injector.app_layout_menu_inject(file, schema) do
-        {:ok, new_file} ->
-          print_injecting(file_path)
-          File.write!(file_path, new_file)
+          :already_injected ->
+            :ok
 
-        :already_injected ->
-          :ok
+          {:error, :unable_to_inject} ->
+            Mix.shell().info("""
 
-        {:error, :unable_to_inject} ->
-          Mix.shell().info("""
-
-          #{Injector.app_layout_menu_help_text(file_path, schema)}
-          """)
-      end
+            #{Injector.app_layout_menu_help_text(file_path, schema, context.web_module)}
+            """)
+        end
+      )
     else
       menu_name = Injector.app_layout_menu_template_name(schema)
       inject = Injector.app_layout_menu_code_to_inject(schema)
@@ -477,8 +692,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
       Mix.shell().error("""
 
-      Unable to find an application layout file to inject a render
-      call for #{inspect(menu_name)}.
+      Unable to find an application layout file to inject <.#{menu_name} />.
 
       Missing files:
 
@@ -487,13 +701,21 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       Please ensure this phoenix app was not generated with
       --no-html. If you have changed the name of your application
       layout file, please add the following code to it where you'd
-      like #{inspect(menu_name)} to be rendered.
+      like #{menu_name} to be rendered.
 
           #{inject}
       """)
     end
 
     context
+  end
+
+  defp get_layout_view_path(%Context{context_app: ctx_app}) do
+    path = Path.join([Mix.Phoenix.web_path(ctx_app), "views", "layout_view.ex"])
+
+    if File.exists?(path) do
+      path
+    end
   end
 
   defp get_layout_html_path(%Context{} = context) do
@@ -617,7 +839,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     end
   end
 
-  defp indent_spaces(string, number_of_spaces) when is_binary(string) and is_integer(number_of_spaces) do
+  defp indent_spaces(string, number_of_spaces)
+       when is_binary(string) and is_integer(number_of_spaces) do
     indent = String.duplicate(" ", number_of_spaces)
 
     string
