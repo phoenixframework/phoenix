@@ -2,7 +2,25 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   use <%= inspect context.web_module %>, :controller
 
   alias <%= inspect context.module %>
-  alias <%= inspect auth_module %>
+  alias <%= inspect auth_module %><%= if live? do %>
+
+  def update(conn, params) do
+    %{"current_password" => password, "<%= schema.singular %>" => <%= schema.singular %>_params} = params
+    <%= schema.singular %> = conn.assigns.current_<%= schema.singular %>
+
+    case <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, password, <%= schema.singular %>_params) do
+      {:ok, <%= schema.singular %>} ->
+        conn
+        |> put_flash(:info, "Password updated successfully.")
+        |> put_session(:<%= schema.singular %>_return_to, Routes.<%= schema.route_helper %>_settings_path(conn, :edit))
+        |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>)
+
+      {:error, _changeset} ->
+        conn
+        |> put_flash(:error, "Password update failed.")
+        |> redirect(to: Routes.<%= schema.route_helper %>_settings_path(conn, :edit))
+    end
+  end<% else %>
 
   plug :assign_email_and_password_changesets
 
@@ -70,5 +88,5 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     conn
     |> assign(:email_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>))
     |> assign(:password_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>))
-  end
+  end<% end %>
 end

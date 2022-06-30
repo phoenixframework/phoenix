@@ -21,11 +21,15 @@
   end
 
   scope <%= router_scope %> do
-    pipe_through [:browser, :require_authenticated_<%= schema.singular %>]
+    pipe_through [:browser, :require_authenticated_<%= schema.singular %>]<%= if live? do %>
+
+    put "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsController, :update
+    live "/users/settings", UserSettingsLive, :edit
+    live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email<% else %>
 
     get "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsController, :edit
     put "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsController, :update
-    get "/<%= schema.plural %>/settings/confirm_email/:token", <%= inspect schema.alias %>SettingsController, :confirm_email
+    get "/<%= schema.plural %>/settings/confirm_email/:token", <%= inspect schema.alias %>SettingsController, :confirm_email<% end %>
   end
 
   scope <%= router_scope %> do

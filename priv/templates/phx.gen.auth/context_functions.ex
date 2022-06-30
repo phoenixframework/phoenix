@@ -177,7 +177,13 @@
   """
   def change_<%= schema.singular %>_password(<%= schema.singular %>, attrs \\ %{}) do
     <%= inspect schema.alias %>.password_changeset(<%= schema.singular %>, attrs, hash_password: false)
-  end
+  end<%= if live? do %>
+
+  def change_<%= schema.singular %>_password(<%= schema.singular %>, password, attrs) do
+    <%= schema.singular %>
+    |> <%= inspect schema.alias %>.password_changeset(attrs)
+    |> <%= inspect schema.alias %>.validate_current_password(password)
+  end<% end %>
 
   @doc """
   Updates the <%= schema.singular %> password.
