@@ -2,7 +2,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   use <%= inspect context.web_module %>, :controller
 
   alias <%= inspect context.module %>
-  alias <%= inspect auth_module %>  <%= if live? do %>
+  alias <%= inspect auth_module %><%= if live? do %>
 
   def create(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params}) do
     %{"email" => email, "password" => password} = <%= schema.singular %>_params

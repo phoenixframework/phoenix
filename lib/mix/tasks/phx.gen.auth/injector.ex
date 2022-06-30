@@ -186,7 +186,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
         |> Kernel.<>("\n")
         |> Kernel.<>(code)
         |> Kernel.<>("end")
-
+        |> Kernel.<>("\n")
       {:ok, {view_path, new_view_file}}
     end
   end
