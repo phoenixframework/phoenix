@@ -242,19 +242,17 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  scope "/", MyAppWeb do
                    pipe_through [:browser, :require_authenticated_user]
 
-                   get "/users/settings", UserSettingsController, :edit
                    put "/users/settings", UserSettingsController, :update
-                   get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
+                   live "/users/settings", UserSettingsLive, :edit
+                   live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
                  end
 
                  scope "/", MyAppWeb do
                    pipe_through [:browser]
 
                    delete "/users/log_out", UserSessionController, :delete
-                   get "/users/confirm", UserConfirmationController, :new
-                   post "/users/confirm", UserConfirmationController, :create
-                   get "/users/confirm/:token", UserConfirmationController, :edit
-                   post "/users/confirm/:token", UserConfirmationController, :update
+                   live "/users/confirm/:token", UserConfirmationLive, :edit
+                   live "/users/confirm", UserConfirmationLive, :new
                  end
                """
       end)

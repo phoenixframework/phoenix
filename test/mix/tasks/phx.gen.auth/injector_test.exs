@@ -27,6 +27,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       """
     end
   end\
+
   '''
 
   describe "mix_dependency_inject/2" do
