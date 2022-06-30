@@ -154,9 +154,8 @@ defmodule <%= inspect auth_module %> do
       _ ->
         {:cont, socket}
     end
-  end
+  end<%= if live? do %>
 
-  <%= if live? do %>
   def on_mount(:get_<%= schema.singular %>_by_reset_password_token, params, _session, socket) do
     if socket.assigns.live_action == :edit do
       set_<%= schema.singular %>_and_token(socket, params)
@@ -176,8 +175,7 @@ defmodule <%= inspect auth_module %> do
 
       {:halt, socket}
     end
-  end
-  <% end %>
+  end<% end %>
 
   defp mount_current_<%= schema.singular %>(session, socket) do
     case session do

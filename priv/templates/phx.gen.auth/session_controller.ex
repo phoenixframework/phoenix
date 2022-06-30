@@ -2,9 +2,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   use <%= inspect context.web_module %>, :controller
 
   alias <%= inspect context.module %>
-  alias <%= inspect auth_module %>
+  alias <%= inspect auth_module %>  <%= if live? do %>
 
-  <%= if live? do %>
   def create(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params}) do
     %{"email" => email, "password" => password} = <%= schema.singular %>_params
 
@@ -16,8 +15,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       |> put_flash(:error, "Invalid email or password")
       |> redirect(to: Routes.<%= schema.route_helper %>_login_path(conn, :new))
     end
-  end
-  <% else %>
+  end<% else %>
+
   def new(conn, _params) do
     render(conn, "new.html", error_message: nil)
   end
@@ -31,8 +30,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
       render(conn, "new.html", error_message: "Invalid email or password")
     end
-  end
-  <% end %>
+  end<% end %>
 
   def delete(conn, _params) do
     conn

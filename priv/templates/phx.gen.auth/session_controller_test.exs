@@ -5,8 +5,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   setup do
     %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
-  end
-  <%= if not live? do %>
+  end<%= if not live? do %>
+
   describe "GET <%= web_path_prefix %>/<%= schema.plural %>/log_in" do
     test "renders log in page", %{conn: conn} do
       conn = get(conn, Routes.<%= schema.route_helper %>_session_path(conn, :new))
@@ -20,8 +20,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = conn |> log_in_<%= schema.singular %>(<%= schema.singular %>) |> get(Routes.<%= schema.route_helper %>_session_path(conn, :new))
       assert redirected_to(conn) == "/"
     end
-  end
-  <% end %>
+  end<% end %>
 
   describe "POST <%= web_path_prefix %>/<%= schema.plural %>/log_in" do
     test "logs the <%= schema.singular %> in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
@@ -67,8 +66,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert redirected_to(conn) == "/foo/bar"
-    end
-    <%= if live? do %>
+    end<%= if live? do %>
+
     test "redirects to login page with invalid credentials", %{conn: conn} do
       conn =
         post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
@@ -77,8 +76,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert get_flash(conn, :error) == "Invalid email or password"
       assert redirected_to(conn) == "/<%= schema.plural %>/log_in"
-    end
-    <% else %>
+    end<% else %>
+
     test "emits error message with invalid credentials", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
         post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
@@ -88,8 +87,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       response = html_response(conn, 200)
       assert response =~ "<h1>Log in</h1>"
       assert response =~ "Invalid email or password"
-    end
-    <% end %>
+    end<% end %>
   end
 
   describe "DELETE <%= web_path_prefix %>/<%= schema.plural %>/log_out" do
