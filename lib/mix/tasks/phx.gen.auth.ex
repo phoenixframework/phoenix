@@ -238,11 +238,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
           {:eex, "schema_token.ex", Path.join([context.dir, "#{schema.singular}_token.ex"])},
           {:eex, "auth.ex", Path.join([web_prefix, web_path, "#{schema.singular}_auth.ex"])},
           {:eex, "auth_test.exs", Path.join([web_test_prefix, web_path, "#{schema.singular}_auth_test.exs"])},
-          {:eex, "confirmation_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_confirmation_view.ex"])},
-          {:eex, "confirmation_new.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_confirmation", "new.html.heex"])},
-          {:eex, "confirmation_edit.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_confirmation", "edit.html.heex"])},
-          {:eex, "confirmation_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller.ex"])},
-          {:eex, "confirmation_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_confirmation_controller_test.exs"])},
           {:eex, "session_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_session_view.ex"])},
           {:eex, "session_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_session_controller.ex"])},
           {:eex, "session_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_session_controller_test.exs"])},
@@ -256,7 +251,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
           {:eex, "reset_password_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_reset_password_live.ex"])},
           {:eex, "reset_password_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_reset_password_live_test.exs"])},
           {:eex, "settings_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_settings_live.ex"])},
-          {:eex, "settings_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_settings_live_test.exs"])}
+          {:eex, "settings_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_settings_live_test.exs"])},
+          {:eex, "confirmation_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_confirmation_live.ex"])},
+          {:eex, "confirmation_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_confirmation_live_test.exs"])}
         ]
       _ ->
         [

@@ -35,9 +35,11 @@
   scope <%= router_scope %> do
     pipe_through [:browser]
 
-    delete "/<%= schema.plural %>/log_out", <%= inspect schema.alias %>SessionController, :delete
+    delete "/<%= schema.plural %>/log_out", <%= inspect schema.alias %>SessionController, :delete<%= if live? do %>
+    live "/users/confirm/:token", UserConfirmationLive, :edit
+    live "/users/confirm", UserConfirmationLive, :new<% else %>
     get "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :new
     post "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :create
     get "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :edit
-    post "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :update
+    post "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :update<% end %>
   end
