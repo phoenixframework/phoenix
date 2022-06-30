@@ -77,7 +77,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> element(~s{a:fl-contains('Log in')})
         |> render_click()
-        |> follow_redirect(conn, "/<%= schema.singular %>s/log_in")
+        |> follow_redirect(conn, "/<%= schema.plural %>/log_in")
 
       assert conn.resp_body =~ "<h1>Log in</h1>"
     end
@@ -91,7 +91,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> element(~s{a:fl-contains('Forgot your password?')})
         |> render_click()
-        |> follow_redirect(conn, "/<%= schema.singular %>s/reset_password")
+        |> follow_redirect(conn, "/<%= schema.plural %>/reset_password")
 
       assert conn.resp_body =~ "<h1>Forgot your password?</h1>"
     end

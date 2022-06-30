@@ -69,7 +69,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         socket =
           socket
           |> put_flash(:info, "Password reset successfully.")
-          |> redirect(to: Routes.<%= schema.singular %>_login_path(socket, :new))
+          |> redirect(to: Routes.<%= schema.route_helper %>_login_path(socket, :new))
 
         {:noreply, socket}
 
@@ -82,7 +82,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email) do
       <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(
         <%= schema.singular %>,
-        &Routes.<%= schema.singular %>_reset_password_url(socket, :edit, &1)
+        &Routes.<%= schema.route_helper %>_reset_password_url(socket, :edit, &1)
       )
     end
 

@@ -65,7 +65,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       token =
         extract_<%= schema.singular %>_token(fn url ->
-          Accounts.deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, url)
+          <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, url)
         end)
 
       %{token: token}
@@ -112,7 +112,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           }
         )
         |> render_submit()
-        |> follow_redirect(conn, Routes.<%= schema.singular %>_login_path(conn, :new))
+        |> follow_redirect(conn, Routes.<%= schema.route_helper %>_login_path(conn, :new))
 
       refute get_session(conn, :<%= schema.singular %>_token)
       assert get_flash(conn, :info) =~ "Password reset successfully"
@@ -146,7 +146,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> element(~s{a:fl-contains('Log in')})
         |> render_click()
-        |> follow_redirect(conn, "/<%= schema.singular %>s/log_in")
+        |> follow_redirect(conn, "/<%= schema.plural %>/log_in")
 
       assert conn.resp_body =~ "<h1>Log in</h1>"
     end
@@ -158,7 +158,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> element(~s{a:fl-contains('Register')})
         |> render_click()
-        |> follow_redirect(conn, "/<%= schema.singular %>s/register")
+        |> follow_redirect(conn, "/<%= schema.plural %>/register")
 
       assert conn.resp_body =~ "<h1>Register</h1>"
     end

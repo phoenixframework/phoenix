@@ -24,8 +24,8 @@
     pipe_through [:browser, :require_authenticated_<%= schema.singular %>]<%= if live? do %>
 
     put "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsController, :update
-    live "/users/settings", UserSettingsLive, :edit
-    live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email<% else %>
+    live "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsLive, :edit
+    live "/<%= schema.plural %>/settings/confirm_email/:token", <%= inspect schema.alias %>SettingsLive, :confirm_email<% else %>
 
     get "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsController, :edit
     put "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsController, :update
@@ -36,8 +36,8 @@
     pipe_through [:browser]
 
     delete "/<%= schema.plural %>/log_out", <%= inspect schema.alias %>SessionController, :delete<%= if live? do %>
-    live "/users/confirm/:token", UserConfirmationLive, :edit
-    live "/users/confirm", UserConfirmationLive, :new<% else %>
+    live "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationLive, :edit
+    live "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationLive, :new<% else %>
     get "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :new
     post "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :create
     get "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :edit

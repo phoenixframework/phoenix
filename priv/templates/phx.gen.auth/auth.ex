@@ -149,7 +149,7 @@ defmodule <%= inspect auth_module %> do
 
     case socket.assigns.current_<%= schema.singular %> do
       nil ->
-        {:halt, LiveView.redirect(socket, to: Routes.<%= schema.singular %>_<%= schema.login_path %>(socket, :new))}
+        {:halt, LiveView.redirect(socket, to: Routes.<%= schema.route_helper %>_<%= schema.login_path %>(socket, :new))}
 
       _ ->
         {:cont, socket}
@@ -166,7 +166,7 @@ defmodule <%= inspect auth_module %> do
   end
 
   defp set_<%= schema.singular %>_and_token(socket, %{"token" => token}) do
-    if <%= schema.singular %> = Accounts.get_<%= schema.singular %>_by_reset_password_token(token) do
+    if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_reset_password_token(token) do
       {:cont, LiveView.assign(socket, <%= schema.singular %>: <%= schema.singular %>, token: token)}
     else
       socket =
@@ -183,7 +183,7 @@ defmodule <%= inspect auth_module %> do
     case session do
       %{"<%= schema.singular %>_token" => <%= schema.singular %>_token} ->
         LiveView.assign_new(socket, :current_<%= schema.singular %>, fn ->
-          Accounts.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
+          <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
         end)
 
       %{} ->

@@ -55,7 +55,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   # leaked token giving the <%= schema.singular %> access to the account.
   def handle_event("confirm_account", _params, socket) do
     socket =
-      case Accounts.confirm_<%= schema.singular %>(socket.assigns.token) do
+      case <%= inspect context.alias %>.confirm_<%= schema.singular %>(socket.assigns.token) do
         {:ok, _} ->
           socket
           |> put_flash(:info, "User confirmed successfully.")

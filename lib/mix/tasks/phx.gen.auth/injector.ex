@@ -217,7 +217,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   """
   @spec app_layout_menu_code_to_inject(schema) :: String.t()
   def app_layout_menu_code_to_inject(%Schema{} = schema) do
-    ~s|<.user_menu current_#{schema.singular}={@current_#{schema.singular}} />|
+    ~s|<.#{schema.singular}_menu current_#{schema.singular}={@current_#{schema.singular}} />|
   end
 
   defp app_layout_menu_inject_at_end_of_nav_tag(file, schema) do

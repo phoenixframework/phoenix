@@ -14,7 +14,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
       conn
       |> put_flash(:error, "Invalid email or password")
-      |> redirect(to: Routes.<%= schema.singular %>_login_path(conn, :new))
+      |> redirect(to: Routes.<%= schema.route_helper %>_login_path(conn, :new))
     end
   end
   <% else %>
