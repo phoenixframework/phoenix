@@ -179,6 +179,16 @@
     <%= inspect schema.alias %>.password_changeset(<%= schema.singular %>, attrs, hash_password: false)
   end<%= if live? do %>
 
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the <%= schema.singular %> password
+  and validating the current password.
+
+  ## Examples
+
+      iex> change_<%= schema.singular %>_password(<%= schema.singular %>, "valid password", %{password: "new password"})
+      %Ecto.Changeset{data: %<%= inspect schema.alias %>{}}
+
+  """
   def change_<%= schema.singular %>_password(<%= schema.singular %>, password, attrs) do
     <%= schema.singular %>
     |> <%= inspect schema.alias %>.password_changeset(attrs)

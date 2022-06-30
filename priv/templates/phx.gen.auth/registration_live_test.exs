@@ -4,7 +4,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   import Phoenix.LiveViewTest
   import <%= inspect context.module %>Fixtures
 
-  describe "<%= inspect Module.concat(schema.web_namespace, schema.alias) %>RegistrationLive" do
+  describe "Registration page" do
     test "renders registration page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, Routes.<%= schema.route_helper %>_registration_path(conn, :new))
 

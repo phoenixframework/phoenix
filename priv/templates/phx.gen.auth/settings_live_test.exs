@@ -5,7 +5,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   import Phoenix.LiveViewTest
   import <%= inspect context.module %>Fixtures
 
-  describe "<%= inspect Module.concat(schema.web_namespace, schema.alias) %>SettingsLive" do
+  describe "Settings page" do
     test "renders settings page", %{conn: conn} do
       {:ok, _lv, html} =
         conn
