@@ -153,4 +153,50 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert result =~ "is not valid"
     end
   end
+
+  describe "confirm email" do
+    setup %{conn: conn} do
+      <%= schema.singular %> = <%= schema.singular %>_fixture()
+      email = unique_<%= schema.singular %>_email()
+
+      token =
+        extract_<%= schema.singular %>_token(fn url ->
+          <%= inspect context.alias %>.deliver_<%= schema.singular %>_update_email_instructions(%{<%= schema.singular %> | email: email}, <%= schema.singular %>.email, url)
+        end)
+
+      %{conn: log_in_<%= schema.singular %>(conn, <%= schema.singular %>), token: token, email: email, <%= schema.singular %>: <%= schema.singular %>}
+    end
+
+    test "updates the <%= schema.singular %> email once", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>, token: token, email: email} do
+      {:error, redirect} = live(conn, Routes.<%= schema.route_helper %>_settings_path(conn, :confirm_email, token))
+
+      assert {:live_redirect, %{flash: flash, to: "/<%= schema.plural %>/settings"}} = redirect
+      assert %{"info" => message} = flash
+      assert message == "Email changed successfully."
+      refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(<%= schema.singular %>.email)
+      assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email)
+
+      # use confirm token again
+      {:error, redirect} = live(conn, Routes.<%= schema.route_helper %>_settings_path(conn, :confirm_email, token))
+      assert {:live_redirect, %{flash: flash, to: "/<%= schema.plural %>/settings"}} = redirect
+      assert %{"error" => message} = flash
+      assert message == "Email change link is invalid or it has expired."
+    end
+
+    test "does not update email with invalid token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      {:error, redirect} = live(conn, Routes.<%= schema.route_helper %>_settings_path(conn, :confirm_email, "oops"))
+      assert {:live_redirect, %{flash: flash, to: "/<%= schema.plural %>/settings"}} = redirect
+      assert %{"error" => message} = flash
+      assert message == "Email change link is invalid or it has expired."
+      assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(<%= schema.singular %>.email)
+    end
+
+    test "redirects if <%= schema.singular %> is not logged in", %{token: token} do
+      conn = build_conn()
+      {:error, redirect} = live(conn, Routes.<%= schema.route_helper %>_settings_path(conn, :confirm_email, token))
+      assert {:redirect, %{flash: flash, to: "/<%= schema.plural %>/log_in"}} = redirect
+      assert %{"error" => message} = flash
+      assert message == "You must log in to access this page."
+    end
+  end
 end
