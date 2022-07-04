@@ -9,7 +9,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <h1>Resend confirmation instructions</h1>
 
-    <.form id="resend_confirmation_form" let={f} for={:<%= schema.singular %>} phx-submit="send_instructions">
+    <.form id="resend_confirmation_form" :let={f} for={:<%= schema.singular %>} phx-submit="send_instructions">
       <%%= label f, :email %>
       <%%= email_input f, :email, required: true %>
 
@@ -29,7 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <h1>Confirm account</h1>
 
-    <.form id="confirmation_form" let={_f} for={:<%= schema.singular %>} phx-submit="confirm_account"}>
+    <.form id="confirmation_form" :let={_f} for={:<%= schema.singular %>} phx-submit="confirm_account"}>
       <div>
         <%%= submit "Confirm my account" %>
       </div>

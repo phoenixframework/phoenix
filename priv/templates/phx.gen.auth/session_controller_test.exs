@@ -25,7 +25,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   describe "POST <%= web_path_prefix %>/<%= schema.plural %>/log_in" do
     test "logs the <%= schema.singular %> in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
-        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
+        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :<%= if live?, do: "login", else: "create" %>), %{
           "<%= schema.singular %>" => %{"email" => <%= schema.singular %>.email, "password" => valid_<%= schema.singular %>_password()}
         })
 
@@ -42,7 +42,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "logs the <%= schema.singular %> in with remember me", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
-        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
+        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :<%= if live?, do: "login", else: "create" %>), %{
           "<%= schema.singular %>" => %{
             "email" => <%= schema.singular %>.email,
             "password" => valid_<%= schema.singular %>_password(),
@@ -58,7 +58,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn =
         conn
         |> init_test_session(<%= schema.singular %>_return_to: "/foo/bar")
-        |> post(Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
+        |> post(Routes.<%= schema.route_helper %>_session_path(conn, :<%= if live?, do: "login", else: "create" %>), %{
           "<%= schema.singular %>" => %{
             "email" => <%= schema.singular %>.email,
             "password" => valid_<%= schema.singular %>_password()
@@ -66,11 +66,40 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert redirected_to(conn) == "/foo/bar"
+      assert get_flash(conn, :info) =~ "Welcome back!"
     end<%= if live? do %>
+
+    test "login following registration", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      conn =
+        conn
+        |> post(Routes.<%= schema.route_helper %>_session_path(conn, :login_register), %{
+          "<%= schema.singular %>" => %{
+            "email" => <%= schema.singular %>.email,
+            "password" => valid_<%= schema.singular %>_password()
+          }
+        })
+
+      assert redirected_to(conn) == "/"
+      assert get_flash(conn, :info) =~ "Account created successfully!"
+    end
+
+    test "login following settings", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      conn =
+        conn
+        |> post(Routes.<%= schema.route_helper %>_session_path(conn, :login_settings), %{
+          "<%= schema.singular %>" => %{
+            "email" => <%= schema.singular %>.email,
+            "password" => valid_<%= schema.singular %>_password()
+          }
+        })
+
+      assert redirected_to(conn) == "/users/settings"
+      assert get_flash(conn, :info) =~ "Settings updated"
+    end
 
     test "redirects to login page with invalid credentials", %{conn: conn} do
       conn =
-        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
+        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :login), %{
           "<%= schema.singular %>" => %{"email" => "invalid@email.com", "password" => "invalid_password"}
         })
 
@@ -80,7 +109,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "emits error message with invalid credentials", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
-        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
+        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :<%= if live?, do: "login", else: "create" %>), %{
           "<%= schema.singular %>" => %{"email" => <%= schema.singular %>.email, "password" => "invalid_password"}
         })
 

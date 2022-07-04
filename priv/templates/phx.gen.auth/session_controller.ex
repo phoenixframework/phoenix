@@ -11,7 +11,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def login_settings(conn, params) do
     conn
     |> put_session(:<%= schema.singular %>_return_to, Routes.<%= schema.singular %>_settings_path(conn, :edit))
-    |> do_login(params, "Settings updated")
+    |> do_login(params, "Settings updated successfully")
   end
 
   def login(conn, params) do

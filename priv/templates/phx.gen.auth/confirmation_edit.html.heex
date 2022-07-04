@@ -1,6 +1,6 @@
 <h1>Confirm account</h1>
 
-<.form let={_f} for={:<%= schema.singular %>} action={Routes.<%= schema.route_helper %>_confirmation_path(@conn, :update, @token)}>
+<.form :let={_f} for={:<%= schema.singular %>} action={Routes.<%= schema.route_helper %>_confirmation_path(@conn, :update, @token)}>
   <div>
     <%%= submit "Confirm my account" %>
   </div>

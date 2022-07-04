@@ -863,7 +863,7 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
   end
 ```
 
-We started by implementing  `get_cart_by_user_uuid/1` which fetches our cart and joins the cart items, and their products so that we have the full cart populated with all preloaded data. Next, we modified our `create_cart` function to accept a user UUID instead of attributes, which we used to populate the `user_uuid` field. If the insert is successful, we reload the cart contents by calling a private `reload_cart/1` function, which simply calls `get_cart_by_user_uuid/1` to refetch data. 
+We started by implementing  `get_cart_by_user_uuid/1` which fetches our cart and joins the cart items, and their products so that we have the full cart populated with all preloaded data. Next, we modified our `create_cart` function to accept a user UUID instead of attributes, which we used to populate the `user_uuid` field. If the insert is successful, we reload the cart contents by calling a private `reload_cart/1` function, which simply calls `get_cart_by_user_uuid/1` to refetch data.
 
 Next, we wrote our new `add_item_to_cart/2` function which accepts a cart struct and a product id. We proceed to fetch the product with `Catalog.get_product!/1`, showing how contexts can naturally invoke other contexts if required. You could also have chosen to receive the product as argument and you would achieve similar results. Then we used an upsert operation against our repo to either insert a new cart item into the database, or increase the quantity by one if it already exists in the cart. This is accomplished via the `on_conflict` and `conflict_target` options, which tells our repo how to handle an insert conflict.
 
@@ -944,7 +944,7 @@ Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`
 <%= if @cart.items == [] do %>
   Your cart is empty
 <% else %>
-  <.form let={f} for={@changeset} action={Routes.cart_path(@conn, :update)}>
+  <.form :let={f} for={@changeset} action={Routes.cart_path(@conn, :update)}>
     <ul>
       <%= for item_form <- inputs_for(f, :items), item = item_form.data do %>
         <li>

@@ -10,7 +10,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     <.form
       id="registration_form"
-      let={f}
+      :let={f}
       for={@changeset}
       phx-submit="save"
       phx-change="validate"
