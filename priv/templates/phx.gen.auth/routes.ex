@@ -4,11 +4,13 @@
   scope <%= router_scope %> do
     pipe_through [:browser, :redirect_if_<%= schema.singular %>_is_authenticated]<%= if live? do %>
 
-    post "/<%= schema.plural %>/register", <%= inspect schema.alias %>SessionController, :create
     live "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationLive, :new
     live "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>LoginLive, :new
     live "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ResetPasswordLive, :new
-    live "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordLive, :edit<% else %>
+    live "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordLive, :edit
+    post "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :login
+    post "/<%= schema.plural %>/log_in/register", <%= inspect schema.alias %>SessionController, :login_register
+    post "/<%= schema.plural %>/log_in/settings", <%= inspect schema.alias %>SessionController, :login_settings<% else %>
 
     get "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :new
     post "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :create
@@ -23,7 +25,6 @@
   scope <%= router_scope %> do
     pipe_through [:browser, :require_authenticated_<%= schema.singular %>]<%= if live? do %>
 
-    put "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsController, :update
     live "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsLive, :edit
     live "/<%= schema.plural %>/settings/confirm_email/:token", <%= inspect schema.alias %>SettingsLive, :confirm_email<% else %>
 

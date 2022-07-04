@@ -232,17 +232,18 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  scope "/", MyAppWeb do
                    pipe_through [:browser, :redirect_if_user_is_authenticated]
 
-                   post "/users/register", UserSessionController, :create
                    live "/users/register", UserRegistrationLive, :new
                    live "/users/log_in", UserLoginLive, :new
                    live "/users/reset_password", UserResetPasswordLive, :new
                    live "/users/reset_password/:token", UserResetPasswordLive, :edit
+                   post "/users/log_in", UserSessionController, :login
+                   post "/users/log_in/register", UserSessionController, :login_register
+                   post "/users/log_in/settings", UserSessionController, :login_settings
                  end
 
                  scope "/", MyAppWeb do
                    pipe_through [:browser, :require_authenticated_user]
 
-                   put "/users/settings", UserSettingsController, :update
                    live "/users/settings", UserSettingsLive, :edit
                    live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
                  end

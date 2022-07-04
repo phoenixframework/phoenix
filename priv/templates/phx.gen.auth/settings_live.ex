@@ -13,7 +13,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     <.form
       id="email_form"
-      let={f}
+      :let={f}
       for={@email_changeset}
       phx-submit="update_email"
       phx-change="validate_email"
@@ -41,9 +41,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     <.form
       id="password_form"
-      let={f}
+      :let={f}
       for={@password_changeset}
-      action={Routes.<%= schema.route_helper %>_settings_path(@socket, :update)}
+      action={Routes.<%= schema.route_helper %>_session_path(@socket, :login_settings)}
+      method="post"
       phx-change="validate_password"
       phx-submit="update_password"
       phx-trigger-action={@trigger_submit}
@@ -53,6 +54,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           <p>Oops, something went wrong! Please check the errors below.</p>
         </div>
       <%% end %>
+
+      <%%= hidden_input f, :email, value: @current_email %>
 
       <%%= label f, :password, "New password" %>
       <%%= password_input f, :password, required: true,  value: input_value(f, :password) %>
@@ -79,6 +82,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     socket =
       socket
       |> assign(:current_password, "")
+      |> assign(:current_email, <%= schema.singular %>.email)
       |> assign(:email_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>))
       |> assign(:password_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>))
       |> assign(:trigger_submit, false)
@@ -96,7 +100,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           put_flash(socket, :error, "Email change link is invalid or it has expired.")
       end
 
-    {:noreply, push_patch(socket, to: Routes.<%= schema.route_helper %>_settings_path(socket, :edit))}
+    {:noreply, push_redirect(socket, to: Routes.<%= schema.route_helper %>_settings_path(socket, :edit))}
   end
 
   def handle_params(_params, _uri, socket), do: {:noreply, socket}
@@ -146,12 +150,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{"current_password" => password, "<%= schema.singular %>" => <%= schema.singular %>_params} = params
     <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
 
-    case <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>, password, <%= schema.singular %>_params) do
-      %{valid?: true} ->
+    case <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, password, <%= schema.singular %>_params) do
+      {:ok, _user} ->
         {:noreply, assign(socket, :trigger_submit, true)}
 
-      changeset ->
-        {:noreply, assign(socket, :password_changeset, Map.put(changeset, :action, :insert))}
+      {:error, changeset} ->
+        {:noreply, assign(socket, :password_changeset, changeset)}
     end
   end
 end
