@@ -24,7 +24,7 @@ defmodule Phoenix.Channel.Server do
     ref = make_ref()
     from = {self(), ref}
     child_spec = channel.child_spec({socket.endpoint, from})
-    
+
     case starter.(socket.endpoint, socket.handler, from, child_spec) do
       {:ok, pid} ->
         send(pid, {Phoenix.Channel, payload, from, socket})
@@ -345,7 +345,7 @@ defmodule Phoenix.Channel.Server do
       |> socket.channel.handle_info(socket)
       |> handle_result(:handle_info)
     else
-      warn_unexpected_msg(:handle_info, 2, msg)
+      warn_unexpected_msg(:handle_info, 2, msg, channel)
       {:noreply, socket}
     end
   end
@@ -533,7 +533,7 @@ defmodule Phoenix.Channel.Server do
     """
   end
 
-  defp warn_unexpected_msg(fun, arity, msg) do
+  defp warn_unexpected_msg(fun, arity, msg, channel) do
     proc =
       case Process.info(self(), :registered_name) do
         {_, []} -> self()
@@ -542,7 +542,7 @@ defmodule Phoenix.Channel.Server do
 
     :error_logger.warning_msg(
       ~c"~p ~p received unexpected message in #{fun}/#{arity}: ~p~n",
-      [__MODULE__, proc, msg]
+      [channel, proc, msg]
     )
   end
 end
