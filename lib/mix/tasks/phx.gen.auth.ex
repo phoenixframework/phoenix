@@ -279,6 +279,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             {:eex, "session_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_session_view.ex"])},
             {:eex, "session_new.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_session", "new.html.heex"])},
             {:eex, "settings_view.ex", Path.join([web_prefix, "views", web_path, "#{schema.singular}_settings_view.ex"])},
+            {:eex, "settings_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_settings_controller.ex"])},
             {:eex, "settings_edit.html.heex", Path.join([web_prefix, "templates", web_path, "#{schema.singular}_settings", "edit.html.heex"])},
             {:eex, "settings_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_settings_controller_test.exs"])},
           ]
