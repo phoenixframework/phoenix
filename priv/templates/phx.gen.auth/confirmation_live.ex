@@ -54,30 +54,29 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   # Do not log in the <%= schema.singular %> after confirmation to avoid a
   # leaked token giving the <%= schema.singular %> access to the account.
   def handle_event("confirm_account", _params, socket) do
-    socket =
-      case <%= inspect context.alias %>.confirm_<%= schema.singular %>(socket.assigns.token) do
-        {:ok, _} ->
+    case <%= inspect context.alias %>.confirm_<%= schema.singular %>(socket.assigns.token) do
+      {:ok, _} ->
+        {:noreply,
           socket
           |> put_flash(:info, "User confirmed successfully.")
-          |> redirect(to: "/")
+          |> redirect(to: "/")}
 
-        :error ->
-          # If there is a current <%= schema.singular %> and the account was already confirmed,
-          # then odds are that the confirmation link was already visited, either
-          # by some automation or by the <%= schema.singular %> themselves, so we redirect without
-          # a warning message.
-          case socket.assigns do
-            %{current_<%= schema.singular %>: %{confirmed_at: confirmed_at}} when not is_nil(confirmed_at) ->
-              redirect(socket, to: "/")
+      :error ->
+        # If there is a current <%= schema.singular %> and the account was already confirmed,
+        # then odds are that the confirmation link was already visited, either
+        # by some automation or by the <%= schema.singular %> themselves, so we redirect without
+        # a warning message.
+        case socket.assigns do
+          %{current_<%= schema.singular %>: %{confirmed_at: confirmed_at}} when not is_nil(confirmed_at) ->
+            {:noreply, redirect(socket, to: "/")}
 
-            %{} ->
+          %{} ->
+            {:noreply,
               socket
               |> put_flash(:error, "User confirmation link is invalid or it has expired.")
-              |> redirect(to: "/")
-          end
-      end
-
-    {:noreply, socket}
+              |> redirect(to: "/")}
+        end
+    end
   end
 
   def handle_event("send_instructions", %{"<%= schema.singular %>" => %{"email" => email}}, socket) do
@@ -88,15 +87,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       )
     end
 
-    socket =
-      socket
-      |> put_flash(
-        :info,
-        "If your email is in our system and it has not been confirmed yet, " <>
-          "you will receive an email with instructions shortly."
-      )
-      |> redirect(to: "/")
+    info = "If your email is in our system and it has not been confirmed yet, you will receive an email with instructions shortly."
 
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> put_flash(:info, info)
+     |> redirect(to: "/")}
   end
 end

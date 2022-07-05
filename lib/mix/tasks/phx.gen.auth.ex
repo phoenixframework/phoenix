@@ -238,7 +238,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       {:eex, "auth_test.exs", Path.join([web_test_prefix, web_path, "#{schema.singular}_auth_test.exs"])},
       {:eex, "session_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_session_controller.ex"])},
       {:eex, "session_controller_test.exs", Path.join([web_test_prefix, "controllers", web_path, "#{schema.singular}_session_controller_test.exs"])},
-      {:eex, "settings_controller.ex", Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_settings_controller.ex"])}
     ]
 
     case Keyword.fetch(context.opts, :live) do

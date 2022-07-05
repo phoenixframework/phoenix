@@ -46,18 +46,21 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </div>
     </.form>
 
-    <.link href={Routes.<%= schema.route_helper %>_registration_path(@socket, :new)}>Register</.link> |
-    <.link href={Routes.<%= schema.route_helper %>_login_path(@socket, :new)}>Log in</.link>
-
+    <p>
+      <.link href={Routes.<%= schema.route_helper %>_registration_path(@socket, :new)}>Register</.link> |
+      <.link href={Routes.<%= schema.route_helper %>_login_path(@socket, :new)}>Log in</.link>
+    </p>
     """
   end
 
   def mount(_params, _session, socket) do
-    if socket.assigns.live_action == :edit do
-      changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(socket.assigns.<%= schema.singular %>)
-      {:ok, assign(socket, :changeset, changeset)}
-    else
-      {:ok, socket}
+    case socket.assigns.live_action do
+      :new ->
+        {:ok, socket}
+
+      :edit ->
+        changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(socket.assigns.<%= schema.singular %>)
+        {:ok, assign(socket, :changeset, changeset)}
     end
   end
 
@@ -66,12 +69,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def handle_event("reset_password", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
     case <%= inspect context.alias %>.reset_<%= schema.singular %>_password(socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params) do
       {:ok, _} ->
-        socket =
-          socket
-          |> put_flash(:info, "Password reset successfully.")
-          |> redirect(to: Routes.<%= schema.route_helper %>_login_path(socket, :new))
-
-        {:noreply, socket}
+        {:noreply,
+         socket
+         |> put_flash(:info, "Password reset successfully.")
+         |> redirect(to: Routes.<%= schema.route_helper %>_login_path(socket, :new))}
 
       {:error, changeset} ->
         {:noreply, assign(socket, :changeset, changeset)}
@@ -86,14 +87,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       )
     end
 
-    socket =
-      socket
-      |> put_flash(
-        :info,
-        "If your email is in our system, you will receive instructions to reset your password shortly."
-      )
-      |> redirect(to: "/")
+    info = "If your email is in our system, you will receive instructions to reset your password shortly."
 
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> put_flash(:info, info)
+     |> redirect(to: "/")}
   end
 end

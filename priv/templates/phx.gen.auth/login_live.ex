@@ -13,12 +13,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       action={Routes.<%= schema.route_helper %>_session_path(@socket, :login)}
       as={:<%= schema.singular %>}
     >
-      <%%= if @error_message do %>
-        <div class="alert alert-danger">
-        <p><%%= @error_message %></p>
-        </div>
-      <%% end %>
-
       <%%= label f, :email %>
       <%%= email_input f, :email, required: true, value: @email %>
 
@@ -27,7 +21,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       <%%= label f, :remember_me, "Keep me logged in for 60 days" %>
       <%%= checkbox f, :remember_me, value: @remember_me %>
-
       <div>
         <%%= submit "Log in" %>
       </div>
@@ -41,23 +34,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def mount(_params, _session, socket) do
-    {:ok,
-     assign(socket,
-       error_message: nil,
-       password: nil,
-       email: nil,
-       remember_me: false
-     )}
+    {:ok, assign(socket, password: nil, email: nil, remember_me: false)}
   end
 
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
-    %{"email" => email, "password" => password, "remember_me" => remember_me} = <%= schema.singular %>_params
+    %{"email" => email, "password" => pass, "remember_me" => remember_me} = <%= schema.singular %>_params
 
-    {:noreply,
-     assign(socket,
-       password: password,
-       email: email,
-       remember_me: remember_me
-     )}
+    {:noreply, assign(socket, password: pass, email: email, remember_me: remember_me)}
   end
 end

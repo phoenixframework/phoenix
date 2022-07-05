@@ -79,15 +79,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def mount(_params, _session, socket) do
     <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
 
-    socket =
-      socket
-      |> assign(:current_password, "")
-      |> assign(:current_email, <%= schema.singular %>.email)
-      |> assign(:email_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>))
-      |> assign(:password_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>))
-      |> assign(:trigger_submit, false)
-
-    {:ok, socket}
+    {:ok,
+     socket
+     |> assign(:current_password, "")
+     |> assign(:current_email, <%= schema.singular %>.email)
+     |> assign(:email_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>))
+     |> assign(:password_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>))
+     |> assign(:trigger_submit, false)}
   end
 
   def handle_params(%{"token" => token}, _uri, socket) do
@@ -121,13 +119,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           <%= schema.singular %>.email,
           &Routes.<%= schema.route_helper %>_settings_url(socket, :confirm_email, &1)
         )
-
-        {:noreply,
-         put_flash(
-           socket,
-           :info,
-           "A link to confirm your email change has been sent to the new address."
-         )}
+        info = "A link to confirm your email change has been sent to the new address."
+        {:noreply, put_flash(socket, :info, info)}
 
       {:error, changeset} ->
         {:noreply, assign(socket, :email_changeset, Map.put(changeset, :action, :insert))}
@@ -138,12 +131,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{"current_password" => password, "<%= schema.singular %>" => <%= schema.singular %>_params} = params
     password_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(socket.assigns.current_<%= schema.singular %>, <%= schema.singular %>_params)
 
-    socket =
-      socket
-      |> assign(:password_changeset, Map.put(password_changeset, :action, :validate))
-      |> assign(:current_password, password)
-
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> assign(:password_changeset, Map.put(password_changeset, :action, :validate))
+     |> assign(:current_password, password)}
   end
 
   def handle_event("update_password", params, socket) do
