@@ -34,7 +34,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       form =
         form(lv, "#login_form", <%= schema.singular %>: %{email: <%= schema.singular %>.email, password: password, remember_me: true})
 
-      conn = follow_trigger_action(form, conn)
+      conn = submit_form(form, conn)
 
       assert redirected_to(conn) == "/"
     end
@@ -49,7 +49,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           <%= schema.singular %>: %{email: "test@email.com", password: "123456", remember_me: true}
         )
 
-      conn = follow_trigger_action(form, conn)
+      conn = submit_form(form, conn)
 
       assert get_flash(conn, :error) == "Invalid email or password"
 
