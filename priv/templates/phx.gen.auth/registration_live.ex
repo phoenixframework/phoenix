@@ -45,10 +45,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def mount(_params, _session, socket) do
-    {:ok,
-     socket
-     |> assign_changeset()
-     |> assign(trigger_submit: false), temporary_assigns: [changeset: nil]}
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_registration(%<%= inspect schema.alias %>{})
+    socket = assign(socket, changeset: changeset, trigger_submit: false)
+    {:ok, socket, temporary_assigns: [changeset: nil]}
   end
 
   def handle_event("save", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
@@ -60,7 +59,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             &Routes.<%= schema.route_helper %>_confirmation_url(socket, :edit, &1)
           )
 
-        {:noreply, socket |> assign(:trigger_submit, true) |> assign_changeset(<%= schema.singular %>_params)}
+        changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_registration(<%= schema.singular %>)
+        {:noreply, assign(socket, trigger_submit: true, changeset: changeset)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, :changeset, changeset)}
@@ -68,13 +68,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
-    {:noreply, assign_changeset(socket, <%= schema.singular %>_params)}
-  end
-
-  defp assign_changeset(socket), do: assign_changeset(socket, %{}, nil)
-
-  defp assign_changeset(socket, <%= schema.singular %>_params, action \\ :validate) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_registration(%<%= inspect schema.alias %>{}, <%= schema.singular %>_params)
-    assign(socket, :changeset, Map.put(changeset, :action, action))
+    {:noreply, assign(socket, changeset: Map.put(changeset, :action, :validate))}
   end
 end
