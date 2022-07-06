@@ -730,13 +730,15 @@ defmodule Phoenix.Endpoint do
 
     * `:websocket` - controls the websocket configuration.
       Defaults to `true`. May be false or a keyword list
-      of options. See "Common configuration" and
-      "WebSocket configuration" for the whole list
+      of options. See ["Common configuration"](#socket/3-common-configuration)
+      and ["WebSocket configuration"](#socket/3-websocket-configuration)
+      for the whole list
 
     * `:longpoll` - controls the longpoll configuration.
       Defaults to `false`. May be true or a keyword list
-      of options. See "Common configuration" and
-      "Longpoll configuration" for the whole list
+      of options. See ["Common configuration"](#socket/3-common-configuration)
+      and ["Longpoll configuration"](#socket/3-longpoll-configuration)
+      for the whole list
 
   If your socket is implemented using `Phoenix.Socket`,
   you can also pass to each transport above all options
