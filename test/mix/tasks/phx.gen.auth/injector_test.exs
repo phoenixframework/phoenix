@@ -11,7 +11,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
   @view_module_injected ~s'''
   defmodule AppWeb.LayoutView do
-
     def user_menu(assigns) do
       ~H"""
       <ul>

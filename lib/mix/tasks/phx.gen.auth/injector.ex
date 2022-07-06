@@ -145,7 +145,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
            app_layout_menu_inject_after_opening_body_tag(template_str, schema) do
       [{:error, :unable_to_inject}]
     else
-      :already_injected -> [:already_injected]
+      :already_injected ->
+        [:already_injected]
+
       {:ok, new_tmpl} ->
         [{:ok, {tmpl_path, new_tmpl}}, layout_view_inject({view_path, view_str}, schema, web_mod)]
     end
@@ -175,19 +177,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   defp layout_view_inject({view_path, content}, %Schema{} = schema, web_module) do
     code = layout_view_code(schema, web_module)
 
-    if String.contains?(content, "def #{app_layout_menu_template_name(schema)}") do
-      :already_injected
-    else
-      new_view_file =
-        content
-        |> String.split("end")
-        |> Enum.drop(-1)
-        |> Enum.join("end")
-        |> Kernel.<>("\n")
-        |> Kernel.<>(code)
-        |> Kernel.<>("end")
-        |> Kernel.<>("\n")
-      {:ok, {view_path, new_view_file}}
+    case inject_before_final_end(content, code, "def #{app_layout_menu_template_name(schema)}") do
+      {:ok, new_view_file} -> {:ok, {view_path, new_view_file}}
+      :already_injected -> :already_injected
     end
   end
 
@@ -267,9 +259,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   Injects snippet before the final end in a file
   """
   @spec inject_before_final_end(String.t(), String.t()) :: {:ok, String.t()} | :already_injected
-  def inject_before_final_end(code, code_to_inject)
+  def inject_before_final_end(code, code_to_inject, search \\ nil)
       when is_binary(code) and is_binary(code_to_inject) do
-    if String.contains?(code, code_to_inject) do
+    if String.contains?(code, search || code_to_inject) do
       :already_injected
     else
       new_code =
