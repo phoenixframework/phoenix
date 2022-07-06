@@ -10,7 +10,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       :let={f}
       for={:<%= schema.singular %>}
       phx-change="validate"
-      action={Routes.<%= schema.route_helper %>_session_path(@socket, :login)}
+      action={Routes.<%= schema.route_helper %>_session_path(@socket, :create)}
       as={:<%= schema.singular %>}
     >
       <%%= label f, :email %>
@@ -34,7 +34,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, password: nil, email: nil, remember_me: false)}
+    email = live_flash(socket.assigns.flash, :email)
+    socket = assign(socket, email: email, password: nil, remember_me: false)
+    {:ok, socket, temporary_assigns: [email: nil, password: nil, remember_me: nil]}
   end
 
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do

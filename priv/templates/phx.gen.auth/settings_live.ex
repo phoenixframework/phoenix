@@ -43,7 +43,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       id="password_form"
       :let={f}
       for={@password_changeset}
-      action={Routes.<%= schema.route_helper %>_session_path(@socket, :login_settings)}
+      action={Routes.<%= schema.route_helper %>_session_path(@socket, :create, %{_action: "password_updated"})}
       method="post"
       phx-change="validate_password"
       phx-submit="update_password"

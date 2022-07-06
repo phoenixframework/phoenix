@@ -110,7 +110,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert redirected_to(new_password_conn) == Routes.<%= schema.route_helper %>_settings_path(conn, :edit)
       assert get_session(new_password_conn, :<%= schema.singular %>_token) != get_session(conn, :<%= schema.singular %>_token)
-      assert get_flash(new_password_conn, :info) =~ "Settings updated successfully"
+      assert get_flash(new_password_conn, :info) =~ "Password updated successfully"
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, new_password)
     end
 

@@ -4,21 +4,21 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect context.module %>
   alias <%= inspect auth_module %><%= if live? do %>
 
-  def login_register(conn, params) do
-    do_login(conn, params, "Account created successfully!")
+  def create(conn, %{"_action" => "registered"} = params) do
+    do_create(conn, params, "Account created successfully!")
   end
 
-  def login_settings(conn, params) do
+  def create(conn, %{"_action" => "password_updated"} = params) do
     conn
     |> put_session(:<%= schema.singular %>_return_to, Routes.<%= schema.singular %>_settings_path(conn, :edit))
-    |> do_login(params, "Settings updated successfully")
+    |> do_create(params, "Password updated successfully!")
   end
 
-  def login(conn, params) do
-    do_login(conn, params, "Welcome back!")
+  def create(conn, params) do
+    do_create(conn, params, "Welcome back!")
   end
 
-  defp do_login(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params}, info) do
+  defp do_create(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params}, info) do
     %{"email" => email, "password" => password} = <%= schema.singular %>_params
 
     if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(email, password) do
@@ -29,6 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
       conn
       |> put_flash(:error, "Invalid email or password")
+      |> put_flash(:email, String.slice(email, 0, 160))
       |> redirect(to: Routes.<%= schema.route_helper %>_login_path(conn, :new))
     end
   end<% else %>

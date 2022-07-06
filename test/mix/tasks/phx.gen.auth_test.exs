@@ -236,9 +236,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    live "/users/log_in", UserLoginLive, :new
                    live "/users/reset_password", UserResetPasswordLive, :new
                    live "/users/reset_password/:token", UserResetPasswordLive, :edit
-                   post "/users/log_in", UserSessionController, :login
-                   post "/users/log_in/register", UserSessionController, :login_register
-                   post "/users/log_in/settings", UserSessionController, :login_settings
+                   post "/users/log_in", UserSessionController, :create
                  end
 
                  scope "/", MyAppWeb do

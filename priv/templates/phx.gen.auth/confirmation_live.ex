@@ -29,8 +29,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <h1>Confirm account</h1>
 
-    <.form id="confirmation_form" :let={_f} for={:<%= schema.singular %>} phx-submit="confirm_account"}>
+    <.form id="confirmation_form" :let={f} for={:<%= schema.singular %>} phx-submit="confirm_account"}>
       <div>
+        <%%= hidden_input f, :token, value: @token %>
         <%%= submit "Confirm my account" %>
       </div>
     </.form>
@@ -42,19 +43,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     """
   end
 
-  def mount(_params, _session, socket) do
-    {:ok, socket}
+  def mount(params, _session, socket) do
+    {:ok, assign(socket, token: params["token"]), temporary_assigns: [token: nil]}
   end
-
-  def handle_params(%{"token" => token}, _uri, socket),
-    do: {:noreply, assign(socket, :token, token)}
-
-  def handle_params(_params, _uri, socket), do: {:noreply, socket}
 
   # Do not log in the <%= schema.singular %> after confirmation to avoid a
   # leaked token giving the <%= schema.singular %> access to the account.
-  def handle_event("confirm_account", _params, socket) do
-    case <%= inspect context.alias %>.confirm_<%= schema.singular %>(socket.assigns.token) do
+  def handle_event("confirm_account", %{"<%= schema.singular %>" => %{"token" => token}}, socket) do
+    case <%= inspect context.alias %>.confirm_<%= schema.singular %>(token) do
       {:ok, _} ->
         {:noreply,
           socket

@@ -54,14 +54,17 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def mount(_params, _session, socket) do
-    case socket.assigns.live_action do
-      :new ->
-        {:ok, socket}
+    socket =
+      case socket.assigns.live_action do
+        :new ->
+          socket
 
-      :edit ->
-        changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(socket.assigns.<%= schema.singular %>)
-        {:ok, assign(socket, :changeset, changeset)}
-    end
+        :edit ->
+          changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(socket.assigns.<%= schema.singular %>)
+          assign(socket, :changeset, changeset)
+      end
+
+    {:ok, socket, temporary_assigns: [changeset: nil]}
   end
 
   # Do not log in the <%= schema.singular %> after reset password to avoid a

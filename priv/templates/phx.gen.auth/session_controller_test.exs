@@ -25,7 +25,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   describe "POST <%= web_path_prefix %>/<%= schema.plural %>/log_in" do
     test "logs the <%= schema.singular %> in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
-        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :<%= if live?, do: "login", else: "create" %>), %{
+        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
           "<%= schema.singular %>" => %{"email" => <%= schema.singular %>.email, "password" => valid_<%= schema.singular %>_password()}
         })
 
@@ -42,7 +42,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "logs the <%= schema.singular %> in with remember me", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
-        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :<%= if live?, do: "login", else: "create" %>), %{
+        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
           "<%= schema.singular %>" => %{
             "email" => <%= schema.singular %>.email,
             "password" => valid_<%= schema.singular %>_password(),
@@ -58,7 +58,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn =
         conn
         |> init_test_session(<%= schema.singular %>_return_to: "/foo/bar")
-        |> post(Routes.<%= schema.route_helper %>_session_path(conn, :<%= if live?, do: "login", else: "create" %>), %{
+        |> post(Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
           "<%= schema.singular %>" => %{
             "email" => <%= schema.singular %>.email,
             "password" => valid_<%= schema.singular %>_password()
@@ -72,7 +72,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "login following registration", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
         conn
-        |> post(Routes.<%= schema.route_helper %>_session_path(conn, :login_register), %{
+        |> post(Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
+          "_action" => "registered",
           "<%= schema.singular %>" => %{
             "email" => <%= schema.singular %>.email,
             "password" => valid_<%= schema.singular %>_password()
@@ -80,13 +81,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert redirected_to(conn) == "/"
-      assert get_flash(conn, :info) =~ "Account created successfully!"
+      assert get_flash(conn, :info) =~ "Account created successfully"
     end
 
-    test "login following settings", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+    test "login following password update", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
         conn
-        |> post(Routes.<%= schema.route_helper %>_session_path(conn, :login_settings), %{
+        |> post(Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
+          "_action" => "password_updated",
           "<%= schema.singular %>" => %{
             "email" => <%= schema.singular %>.email,
             "password" => valid_<%= schema.singular %>_password()
@@ -94,12 +96,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert redirected_to(conn) == "/users/settings"
-      assert get_flash(conn, :info) =~ "Settings updated"
+      assert get_flash(conn, :info) =~ "Password updated successfully"
     end
 
     test "redirects to login page with invalid credentials", %{conn: conn} do
       conn =
-        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :login), %{
+        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
           "<%= schema.singular %>" => %{"email" => "invalid@email.com", "password" => "invalid_password"}
         })
 
@@ -109,7 +111,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "emits error message with invalid credentials", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
-        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :<%= if live?, do: "login", else: "create" %>), %{
+        post(conn, Routes.<%= schema.route_helper %>_session_path(conn, :create), %{
           "<%= schema.singular %>" => %{"email" => <%= schema.singular %>.email, "password" => "invalid_password"}
         })
 

@@ -8,9 +8,7 @@
     live "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>LoginLive, :new
     live "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ResetPasswordLive, :new
     live "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordLive, :edit
-    post "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :login
-    post "/<%= schema.plural %>/log_in/register", <%= inspect schema.alias %>SessionController, :login_register
-    post "/<%= schema.plural %>/log_in/settings", <%= inspect schema.alias %>SessionController, :login_settings<% else %>
+    post "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :create<% else %>
 
     get "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :new
     post "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :create
