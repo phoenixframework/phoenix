@@ -157,7 +157,13 @@ export default class Socket {
    *
    */
   replaceTransport(newTransport){
-    this.disconnect()
+    this.connectClock++
+    this.closeWasClean = true
+    this.reconnectTimer.reset()
+    if(this.conn){
+      this.conn.close()
+      this.conn = null
+    }
     this.transport = newTransport
   }
 
