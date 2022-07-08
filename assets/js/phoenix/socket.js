@@ -151,6 +151,11 @@ export default class Socket {
   }
 
   /**
+   * Returns the LongPoll transport reference
+   */
+  getLongPollTransport(){ return LongPoll }
+
+  /**
    * Disconnects and replaces the active transport
    *
    * @param {Function} newTransport - The new transport class to instantiate
