@@ -3,27 +3,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   alias <%= inspect context.module %>
 
-  on_mount {<%= inspect auth_module %>, :get_<%= schema.singular %>_by_reset_password_token}
-
-  def render(%{live_action: :new} = assigns) do
-    ~H"""
-    <h1>Forgot your password?</h1>
-
-    <.form id="reset_password_form" :let={f} for={:<%= schema.singular %>} phx-submit="send_email">
-      <%%= label f, :email %>
-      <%%= email_input f, :email, required: true %>
-
-      <div>
-        <%%= submit "Send instructions to reset password" %>
-      </div>
-    </.form>
-
-    <.link href={Routes.<%= schema.route_helper %>_registration_path(@socket, :new)}>Register</.link> |
-    <.link href={Routes.<%= schema.route_helper %>_login_path(@socket, :new)}>Log in</.link>
-    """
-  end
-
-  def render(%{live_action: :edit} = assigns) do
+  def render(assigns) do
     ~H"""
     <h1>Reset password</h1>
     <.form id="reset_password_form" :let={f} for={@changeset} phx-submit="reset_password">
@@ -53,15 +33,16 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     """
   end
 
-  def mount(_params, _session, socket) do
-    socket =
-      case socket.assigns.live_action do
-        :new ->
-          socket
+  def mount(params, _session, socket) do
+    socket = set_<%= schema.singular %>_and_token(socket, params)
 
-        :edit ->
-          changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(socket.assigns.<%= schema.singular %>)
-          assign(socket, :changeset, changeset)
+    socket =
+      case socket.assigns do
+        %{<%= schema.singular %>: <%= schema.singular %>} ->
+          assign(socket, :changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>))
+
+        _ ->
+          socket
       end
 
     {:ok, socket, temporary_assigns: [changeset: nil]}
@@ -82,19 +63,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  def handle_event("send_email", %{"<%= schema.singular %>" => %{"email" => email}}, socket) do
-    if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email) do
-      <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(
-        <%= schema.singular %>,
-        &Routes.<%= schema.route_helper %>_reset_password_url(socket, :edit, &1)
-      )
+  defp set_<%= schema.singular %>_and_token(socket, %{"token" => token}) do
+    if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_reset_password_token(token) do
+      assign(socket, <%= schema.singular %>: <%= schema.singular %>, token: token)
+    else
+      socket
+      |> put_flash(:error, "Reset password link is invalid or it has expired.")
+      |> redirect(to: "/")
     end
-
-    info = "If your email is in our system, you will receive instructions to reset your password shortly."
-
-    {:noreply,
-     socket
-     |> put_flash(:info, info)
-     |> redirect(to: "/")}
   end
 end

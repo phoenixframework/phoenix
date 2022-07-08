@@ -6,7 +6,7 @@
 
     live "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationLive, :new
     live "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>LoginLive, :new
-    live "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ResetPasswordLive, :new
+    live "/<%= schema.plural %>/forgot_password", <%= inspect schema.alias %>ForgotPasswordLive, :new
     live "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordLive, :edit
     post "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :create<% else %>
 

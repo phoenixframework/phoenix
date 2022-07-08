@@ -82,7 +82,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert conn.resp_body =~ "<h1>Log in</h1>"
     end
 
-    test "redirects to password reset page when the Forgot Password button is clicked", %{
+    test "redirects to forgot password page when the Forgot Password button is clicked", %{
       conn: conn
     } do
       {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_registration_path(conn, :new))
@@ -91,7 +91,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> element(~s{a:fl-contains('Forgot your password?')})
         |> render_click()
-        |> follow_redirect(conn, "/<%= schema.plural %>/reset_password")
+        |> follow_redirect(conn, "/<%= schema.plural %>/forgot_password")
 
       assert conn.resp_body =~ "<h1>Forgot your password?</h1>"
     end

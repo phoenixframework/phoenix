@@ -95,7 +95,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           }
         })
 
-      assert redirected_to(conn) == "/users/settings"
+      assert redirected_to(conn) == "/<%= schema.plural %>/settings"
       assert get_flash(conn, :info) =~ "Password updated successfully"
     end
 

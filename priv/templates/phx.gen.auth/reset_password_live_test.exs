@@ -5,72 +5,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   import <%= inspect context.module %>Fixtures
 
   alias <%= inspect context.module %>
-  alias <%= inspect schema.repo %>
 
-  describe "Reset password(email page)" do
-    test "renders email page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :new))
+  setup do
+    <%= schema.singular %> = <%= schema.singular %>_fixture()
 
-      assert html =~ "<h1>Forgot your password?</h1>"
-      assert html =~ "Register</a>"
-      assert html =~ "Log in</a>"
-    end
+    token =
+      extract_<%= schema.singular %>_token(fn url ->
+        <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, url)
+      end)
 
-    test "redirects if already logged in", %{conn: conn} do
-      result =
-        conn
-        |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture())
-        |> live(Routes.<%= schema.route_helper %>_reset_password_path(conn, :new))
-        |> follow_redirect(conn, "/")
-
-      assert {:ok, _conn} = result
-    end
+    %{token: token, <%= schema.singular %>: <%= schema.singular %>}
   end
 
-  describe "Reset token" do
-    setup do
-      %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
-    end
-
-    test "sends a new reset password token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :new))
-
-      {:ok, conn} =
-        lv
-        |> form("#reset_password_form", <%= schema.singular %>: %{"email" => <%= schema.singular %>.email})
-        |> render_submit()
-        |> follow_redirect(conn, "/")
-
-      assert get_flash(conn, :info) =~ "If your email is in our system"
-      assert Repo.get_by!(<%= inspect context.alias %>.<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id).context == "reset_password"
-    end
-
-    test "does not send reset password token if email is invalid", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :new))
-
-      {:ok, conn} =
-        lv
-        |> form("#reset_password_form", <%= schema.singular %>: %{"email" => "unknown@example.com"})
-        |> render_submit()
-        |> follow_redirect(conn, "/")
-
-      assert get_flash(conn, :info) =~ "If your email is in our system"
-      assert Repo.all(<%= inspect context.alias %>.<%= inspect schema.alias %>Token) == []
-    end
-  end
-
-  describe "Reset password(new password page)" do
-    setup do
-      <%= schema.singular %> = <%= schema.singular %>_fixture()
-
-      token =
-        extract_<%= schema.singular %>_token(fn url ->
-          <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, url)
-        end)
-
-      %{token: token}
-    end
-
+  describe "Reset password page" do
     test "renders reset password with valid token", %{conn: conn, token: token} do
       {:ok, _lv, html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
 
@@ -89,17 +36,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   describe "Reset password" do
-    setup do
-      <%= schema.singular %> = <%= schema.singular %>_fixture()
-
-      token =
-        extract_<%= schema.singular %>_token(fn url ->
-          <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, url)
-        end)
-
-      %{token: token, <%= schema.singular %>: <%= schema.singular %>}
-    end
-
     test "resets password once", %{conn: conn, token: token, <%= schema.singular %>: <%= schema.singular %>} do
       {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
 
@@ -138,9 +74,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  describe "registration navigation" do
-    test "redirects to login page when the Log in button is clicked", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :new))
+  describe "Reset password navigation" do
+    test "redirects to login page when the Log in button is clicked", %{conn: conn, token: token} do
+      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
 
       {:ok, conn} =
         lv
@@ -151,8 +87,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert conn.resp_body =~ "<h1>Log in</h1>"
     end
 
-    test "redirects to password reset page when the Register button is clicked", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :new))
+    test "redirects to password reset page when the Register button is clicked", %{
+      conn: conn,
+      token: token
+    } do
+      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
 
       {:ok, conn} =
         lv

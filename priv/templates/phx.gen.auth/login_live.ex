@@ -28,7 +28,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     <p>
       <.link href={Routes.<%= schema.route_helper %>_registration_path(@socket, :new)}>Register</.link> |
-      <.link href={Routes.<%= schema.route_helper %>_reset_password_path(@socket, :new)}>Forgot your password?</.link>
+      <.link href={Routes.<%= schema.route_helper %>_forgot_password_path(@socket, :new)}>Forgot your password?</.link>
     </p>
     """
   end

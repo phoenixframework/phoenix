@@ -250,6 +250,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
               {:eex, "login_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_login_live_test.exs"])},
               {:eex, "reset_password_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_reset_password_live.ex"])},
               {:eex, "reset_password_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_reset_password_live_test.exs"])},
+              {:eex, "forgot_password_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_forgot_password_live.ex"])},
+              {:eex, "forgot_password_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_forgot_password_live_test.exs"])},
               {:eex, "settings_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_settings_live.ex"])},
               {:eex, "settings_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_settings_live_test.exs"])},
               {:eex, "confirmation_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_confirmation_live.ex"])},
