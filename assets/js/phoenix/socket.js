@@ -160,6 +160,7 @@ export default class Socket {
     this.connectClock++
     this.closeWasClean = true
     this.reconnectTimer.reset()
+    this.sendBuffer = []
     if(this.conn){
       this.conn.close()
       this.conn = null
@@ -212,12 +213,13 @@ export default class Socket {
    * `new Socket("/socket", {params: {user_id: userToken}})`.
    */
   connect(params){
-    this.connectClock++
     if(params){
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
       this.params = closure(params)
     }
     if(this.conn){ return }
+
+    this.connectClock++
     this.closeWasClean = false
     this.conn = new this.transport(this.endPointURL())
     this.conn.binaryType = this.binaryType
