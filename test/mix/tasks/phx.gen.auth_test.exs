@@ -234,7 +234,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    live "/users/register", UserRegistrationLive, :new
                    live "/users/log_in", UserLoginLive, :new
-                   live "/users/reset_password", UserResetPasswordLive, :new
+                   live "/users/forgot_password", UserForgotPasswordLive, :new
                    live "/users/reset_password/:token", UserResetPasswordLive, :edit
                    post "/users/log_in", UserSessionController, :create
                  end
@@ -251,7 +251,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    delete "/users/log_out", UserSessionController, :delete
                    live "/users/confirm/:token", UserConfirmationLive, :edit
-                   live "/users/confirm", UserConfirmationLive, :new
+                   live "/users/confirm", UserConfirmationInstructionsLive, :new
                  end
                """
       end)
