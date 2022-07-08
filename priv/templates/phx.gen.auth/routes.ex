@@ -36,7 +36,7 @@
 
     delete "/<%= schema.plural %>/log_out", <%= inspect schema.alias %>SessionController, :delete<%= if live? do %>
     live "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationLive, :edit
-    live "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationLive, :new<% else %>
+    live "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationInstructionsLive, :new<% else %>
     get "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :new
     post "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :create
     get "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :edit

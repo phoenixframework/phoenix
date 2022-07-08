@@ -255,7 +255,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
               {:eex, "settings_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_settings_live.ex"])},
               {:eex, "settings_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_settings_live_test.exs"])},
               {:eex, "confirmation_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_confirmation_live.ex"])},
-              {:eex, "confirmation_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_confirmation_live_test.exs"])}
+              {:eex, "confirmation_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_confirmation_live_test.exs"])},
+              {:eex, "confirmation_instructions_live.ex", Path.join([web_prefix, "live", web_path, "#{schema.singular}_confirmation_instructions_live.ex"])},
+              {:eex, "confirmation_instructions_live_test.exs", Path.join([web_test_prefix, "live", web_path, "#{schema.singular}_confirmation_instructions_live_test.exs"])}
             ]
 
         default_files ++ live_files
