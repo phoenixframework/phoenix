@@ -849,6 +849,9 @@ var Phoenix = (() => {
         this.teardown(() => this.connect());
       }, this.reconnectAfterMs);
     }
+    getLongPollTransport() {
+      return LongPoll;
+    }
     replaceTransport(newTransport) {
       this.connectClock++;
       this.closeWasClean = true;
