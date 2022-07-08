@@ -8,10 +8,10 @@ export default class Ajax {
   static request(method, endPoint, accept, body, timeout, ontimeout, callback){
     if(global.XDomainRequest){
       let req = new global.XDomainRequest() // IE8, IE9
-      this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
+      return this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
     } else {
       let req = new global.XMLHttpRequest() // IE7+, Firefox, Chrome, Opera, Safari
-      this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
+      return this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
     }
   }
 
@@ -28,13 +28,14 @@ export default class Ajax {
     req.onprogress = () => { }
 
     req.send(body)
+    return req
   }
 
   static xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback){
     req.open(method, endPoint, true)
     req.timeout = timeout
     req.setRequestHeader("Content-Type", accept)
-    req.onerror = () => { callback && callback(null) }
+    req.onerror = () => callback && callback(null)
     req.onreadystatechange = () => {
       if(req.readyState === XHR_STATES.complete && callback){
         let response = this.parseJSON(req.responseText)
@@ -44,6 +45,7 @@ export default class Ajax {
     if(ontimeout){ req.ontimeout = ontimeout }
 
     req.send(body)
+    return req
   }
 
   static parseJSON(resp){
