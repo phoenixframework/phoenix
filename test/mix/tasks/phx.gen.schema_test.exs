@@ -273,6 +273,17 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
+  test "generates schema and migration with repo", config do
+    in_tmp_project config.test, fn ->
+      Gen.Schema.run(~w(Blog.Post posts --repo MyApp.SecondaryRepo))
+
+      assert [migration] = Path.wildcard("priv/secondary_repo/migrations/*_create_posts.exs")
+      assert_file migration, fn file ->
+        assert file =~ "MyApp.SecondaryRepo.Migrations.CreatePosts"
+      end
+    end
+  end
+
   test "skips migration with --no-migration option", config do
     in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post posts --no-migration))

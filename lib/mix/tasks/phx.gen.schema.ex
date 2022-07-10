@@ -86,6 +86,14 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   Generated migration can use `binary_id` for schema's primary key
   and its references with option `--binary-id`.
 
+  ## repo
+
+  By default, the migration will be generated for the primary repo. If your app
+  has multiple repos you can choose the repo the migration is generated for with
+  the `--repo` option.
+
+      $ mix phx.gen.schema Blog.Post posts --repo MyApp.SecondaryRepo
+
   ## Default options
 
   This generator uses default options provided in the `:generators`
@@ -105,7 +113,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   alias Mix.Phoenix.Schema
 
   @switches [migration: :boolean, binary_id: :boolean, table: :string,
-             web: :string, context_app: :string, prefix: :string]
+             web: :string, context_app: :string, prefix: :string, repo: :string]
 
   @doc false
   def run(args) do
@@ -138,6 +146,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
       parent_opts
       |> Keyword.merge(schema_opts)
       |> put_context_app(schema_opts[:context_app])
+      |> put_repo(schema_opts[:repo] || parent_opts[:repo])
 
     schema = Schema.new(schema_name, plural, attrs, opts)
 
@@ -147,6 +156,11 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   defp put_context_app(opts, nil), do: opts
   defp put_context_app(opts, string) do
     Keyword.put(opts, :context_app, String.to_atom(string))
+  end
+
+  defp put_repo(opts, nil), do: opts
+  defp put_repo(opts, string) do
+    Keyword.put(opts, :repo, Module.concat([string]))
   end
 
   @doc false
@@ -160,10 +174,12 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.schema", binding, files)
 
     if schema.migration? do
-      migration_path = Mix.Phoenix.context_app_path(ctx_app, "priv/repo/migrations/#{timestamp()}_create_#{schema.table}.exs")
-      Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", binding, [
-        {:eex, "migration.exs", migration_path},
-      ]
+      priv_path = "priv/#{schema.repo |> Module.split() |> List.last() |> Macro.underscore()}"
+      migration_path = Mix.Phoenix.context_app_path(ctx_app, "#{priv_path}/migrations/#{timestamp()}_create_#{schema.table}.exs")
+
+      Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.schema", binding, [
+        {:eex, "migration.exs", migration_path}
+      ])
     end
 
     schema
