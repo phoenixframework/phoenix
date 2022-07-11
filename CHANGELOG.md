@@ -4,6 +4,15 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.11 (2022-07-11)
+
+### JavaScript Client Enhancements
+ * Add convenience for getting longpoll reference with  `getLongPollTransport`
+
+### JavaScript Client Bug Fixes
+  * Cancel inflight longpoll requests on canceled longpoll session
+  * Do not attempt to flush socket buffer when tearing down socket on `replaceTransport`
+
 ## 1.6.10 (2022-06-01)
 
 ### JavaScript Client Enhancements
