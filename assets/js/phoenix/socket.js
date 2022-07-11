@@ -530,6 +530,10 @@ export default class Socket {
 
       if(this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
 
+      if (topic === 'phoenix') {
+        this.onPhoenixMessage(event, payload, ref, join_ref)
+      }
+
       for(let i = 0; i < this.channels.length; i++){
         const channel = this.channels[i]
         if(!channel.isMember(topic, event, payload, join_ref)){ continue }
@@ -541,6 +545,12 @@ export default class Socket {
         callback(msg)
       }
     })
+  }
+
+  onPhoenixMessage(event, payload, ref, join_ref) {
+    if (event === 'phx_error') {
+      this.onConnError(payload)
+    }
   }
 
   leaveOpenTopic(topic){

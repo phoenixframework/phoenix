@@ -44,8 +44,8 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
 
               {:cowboy_websocket, copy_resp_headers(conn, req), [handler | state], cowboy_opts}
 
-            {:error, %Plug.Conn{adapter: {@connection, req}} = conn} ->
-              {:ok, copy_resp_headers(conn, req), {handler, opts}}
+            {:error, reason, %Plug.Conn{adapter: {@connection, req}} = conn} ->
+              {:cowboy_websocket, copy_resp_headers(conn, req), [{:error, reason}, handler]}
           end
 
         {:plug, conn, handler, opts} ->
@@ -135,6 +135,15 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
   end
 
   ## Websocket callbacks
+
+  def websocket_init([{:error, reason}, handler]) do
+    last_frame = Jason.encode!([nil, nil, "phoenix", "phx_error", reason])
+    # Close frame payloads have a max size of 123 bytes
+    {[
+      {:text, last_frame},
+      {:close, 3000, ""}
+      ], [handler]}
+  end
 
   def websocket_init([handler | state]) do
     {:ok, state} = handler.init(state)
