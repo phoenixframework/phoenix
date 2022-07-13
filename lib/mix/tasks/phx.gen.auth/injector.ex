@@ -160,25 +160,24 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Menu code to inject into the application layout template.
   """
-  @spec app_layout_menu_code_to_inject(schema, web_module :: atom) :: String.t()
-  def app_layout_menu_code_to_inject(%Schema{} = schema, web_mod, pad \\ "    ", newline \\ "\n") do
+  def app_layout_menu_code_to_inject(%Schema{} = schema, web_mod, padding \\ 4, newline \\ "\n") do
     endpoint = inspect(Module.concat(web_mod, "Endpoint"))
     already_injected_str = "#{schema.route_helper}_#{schema.login_path}"
 
     template = """
-    #{pad}<ul>
-    #{pad}  <%= if @current_#{schema.singular} do %>
-    #{pad}    <li><%= @current_#{schema.singular}.email %></li>
-    #{pad}    <li><.link href={Routes.#{schema.route_helper}_settings_path(#{endpoint}, :edit)}>Settings</.link></li>
-    #{pad}    <li><.link href={Routes.#{schema.route_helper}_session_path(#{endpoint}, :delete)} method="delete">Log out</.link></li>
-    #{pad}  <% else %>
-    #{pad}    <li><.link href={Routes.#{schema.route_helper}_registration_path(#{endpoint}, :new)}>Register</.link></li>
-    #{pad}    <li><.link href={Routes.#{schema.route_helper}_#{schema.login_path}(#{endpoint}, :new)}>Log in</.link></li>
-    #{pad}  <% end %>
-    #{pad}</ul>\
+    <ul>
+      <%= if @current_#{schema.singular} do %>
+        <li><%= @current_#{schema.singular}.email %></li>
+        <li><.link href={Routes.#{schema.route_helper}_settings_path(#{endpoint}, :edit)}>Settings</.link></li>
+        <li><.link href={Routes.#{schema.route_helper}_session_path(#{endpoint}, :delete)} method="delete">Log out</.link></li>
+      <% else %>
+        <li><.link href={Routes.#{schema.route_helper}_registration_path(#{endpoint}, :new)}>Register</.link></li>
+        <li><.link href={Routes.#{schema.route_helper}_#{schema.login_path}(#{endpoint}, :new)}>Log in</.link></li>
+      <% end %>
+    </ul>\
     """
 
-    {already_injected_str, String.replace(template, "\n", newline)}
+    {already_injected_str, indent_spaces(template, padding, newline)}
   end
 
   defp formatting_info(template, tag) do
@@ -189,7 +188,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
         _ -> {"", "\n"}
       end
 
-    {padding, newline}
+    {String.length(padding), newline}
   end
 
   defp app_layout_menu_inject_at_end_of_nav_tag(file, schema, web_mod) do
@@ -293,12 +292,12 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     end
   end
 
-  defp indent_spaces(string, number_of_spaces)
+  defp indent_spaces(string, number_of_spaces, newline \\ "\n")
        when is_binary(string) and is_integer(number_of_spaces) do
     indent = String.duplicate(" ", number_of_spaces)
 
     string
     |> String.split("\n")
-    |> Enum.map_join("\n", &(indent <> &1))
+    |> Enum.map_join(newline, &(indent <> &1))
   end
 end
