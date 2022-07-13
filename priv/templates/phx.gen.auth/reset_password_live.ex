@@ -59,7 +59,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
          |> redirect(to: Routes.<%= schema.route_helper %>_login_path(socket, :new))}
 
       {:error, changeset} ->
-        {:noreply, assign(socket, :changeset,  Map.put(changeset, :action, :insert))}
+        {:noreply, assign(socket, :changeset, Map.put(changeset, :action, :insert))}
     end
   end
 
