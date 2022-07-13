@@ -248,18 +248,25 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  scope "/", MyAppWeb do
                    pipe_through [:browser, :redirect_if_user_is_authenticated]
 
-                   live "/users/register", UserRegistrationLive, :new
-                   live "/users/log_in", UserLoginLive, :new
-                   live "/users/forgot_password", UserForgotPasswordLive, :new
-                   live "/users/reset_password/:token", UserResetPasswordLive, :edit
+                   live_session :redirect_if_user_is_authenticated,
+                     on_mount: [{MyAppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+                     live "/users/register", UserRegistrationLive, :new
+                     live "/users/log_in", UserLoginLive, :new
+                     live "/users/forgot_password", UserForgotPasswordLive, :new
+                     live "/users/reset_password/:token", UserResetPasswordLive, :edit
+                   end
+
                    post "/users/log_in", UserSessionController, :create
                  end
 
                  scope "/", MyAppWeb do
                    pipe_through [:browser, :require_authenticated_user]
 
-                   live "/users/settings", UserSettingsLive, :edit
-                   live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+                   live_session :require_authenticated_user,
+                     on_mount: [{MyAppWeb.UserAuth, :ensure_authenticated}] do
+                     live "/users/settings", UserSettingsLive, :edit
+                     live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+                   end
                  end
 
                  scope "/", MyAppWeb do

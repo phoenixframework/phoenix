@@ -122,6 +122,9 @@ defmodule <%= inspect auth_module %> do
       on <%= schema.singular %>_token.
       Redirects to login page if there's no logged <%= schema.singular %>.
 
+    * `:redirect_if_<%= schema.singular %>_is_authenticated` - Authenticates the <%= schema.singular %> from the session.
+      Redirects to signed_in_path if there's a logged <%= schema.singular %>.
+
   ## Examples
 
   Use the `on_mount` lifecycle macro in LiveViews to mount or authenticate
@@ -149,10 +152,27 @@ defmodule <%= inspect auth_module %> do
 
     case socket.assigns.current_<%= schema.singular %> do
       nil ->
-        {:halt, LiveView.redirect(socket, to: Routes.<%= schema.route_helper %>_<%= schema.login_path %>(socket, :new))}
+        socket =
+          socket
+          |> LiveView.put_flash(:error, "You must log in to access this page.")
+          |> LiveView.redirect(to: Routes.<%= schema.route_helper %>_<%= schema.login_path %>(socket, :new))
+
+        {:halt, socket}
 
       _ ->
         {:cont, socket}
+    end
+  end
+
+  def on_mount(:redirect_if_<%= schema.singular %>_is_authenticated, _params, session, socket) do
+    socket = mount_current_<%= schema.singular %>(session, socket)
+
+    case socket.assigns.current_<%= schema.singular %> do
+      nil ->
+        {:cont, socket}
+
+      _<%= schema.singular %> ->
+        {:halt, LiveView.redirect(socket, to: signed_in_path(socket))}
     end
   end
 

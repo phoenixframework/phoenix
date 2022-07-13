@@ -4,10 +4,14 @@
   scope <%= router_scope %> do
     pipe_through [:browser, :redirect_if_<%= schema.singular %>_is_authenticated]<%= if live? do %>
 
-    live "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationLive, :new
-    live "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>LoginLive, :new
-    live "/<%= schema.plural %>/forgot_password", <%= inspect schema.alias %>ForgotPasswordLive, :new
-    live "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordLive, :edit
+    live_session :redirect_if_<%= schema.singular %>_is_authenticated,
+      on_mount: [{<%= inspect auth_module %>, :redirect_if_<%= schema.singular %>_is_authenticated}] do
+      live "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationLive, :new
+      live "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>LoginLive, :new
+      live "/<%= schema.plural %>/forgot_password", <%= inspect schema.alias %>ForgotPasswordLive, :new
+      live "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordLive, :edit
+    end
+
     post "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :create<% else %>
 
     get "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :new
@@ -23,8 +27,11 @@
   scope <%= router_scope %> do
     pipe_through [:browser, :require_authenticated_<%= schema.singular %>]<%= if live? do %>
 
-    live "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsLive, :edit
-    live "/<%= schema.plural %>/settings/confirm_email/:token", <%= inspect schema.alias %>SettingsLive, :confirm_email<% else %>
+    live_session :require_authenticated_<%= schema.singular %>,
+      on_mount: [{<%= inspect auth_module %>, :ensure_authenticated}] do
+      live "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsLive, :edit
+      live "/<%= schema.plural %>/settings/confirm_email/:token", <%= inspect schema.alias %>SettingsLive, :confirm_email
+    end<% else %>
 
     get "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsController, :edit
     put "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsController, :update

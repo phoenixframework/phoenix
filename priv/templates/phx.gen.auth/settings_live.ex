@@ -3,8 +3,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   alias <%= inspect context.module %>
 
-  on_mount {<%= inspect auth_module %>, :mount_current_<%= schema.singular %>}
-
   def render(assigns) do
     ~H"""
     <h1>Settings</h1>
