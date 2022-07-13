@@ -76,10 +76,7 @@ defmodule <%= inspect schema.module %> do
   end
 
   defp maybe_validate_unique_email(changeset, opts) do
-    validate_unique_email? = Keyword.get(opts, :validate_email, true)
-    email = get_change(changeset, :email)
-
-    if validate_unique_email? and email do
+    if Keyword.get(opts, :validate_email, true) do
       changeset
       |> unsafe_validate_unique(:email, <%= inspect schema.repo %>)
       |> unique_constraint(:email)
