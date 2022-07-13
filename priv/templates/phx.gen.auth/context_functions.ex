@@ -97,7 +97,7 @@
 
   """
   def change_<%= schema.singular %>_email(<%= schema.singular %>, attrs \\ %{}) do
-    <%= inspect schema.alias %>.email_changeset(<%= schema.singular %>, attrs)
+    <%= inspect schema.alias %>.email_changeset(<%= schema.singular %>, attrs, validate_email: false)
   end
 
   @doc """

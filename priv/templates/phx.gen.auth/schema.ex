@@ -42,7 +42,7 @@ defmodule <%= inspect schema.module %> do
     |> validate_password(opts)
   end
 
-  defp validate_email(changeset, opts \\ []) do
+  defp validate_email(changeset, opts) do
     changeset
     |> validate_required([:email])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
@@ -93,10 +93,10 @@ defmodule <%= inspect schema.module %> do
 
   It requires the email to change otherwise an error is added.
   """
-  def email_changeset(<%= schema.singular %>, attrs) do
+  def email_changeset(<%= schema.singular %>, attrs, opts \\ []) do
     <%= schema.singular %>
     |> cast(attrs, [:email])
-    |> validate_email()
+    |> validate_email(opts)
     |> case do
       %{changes: %{email: _}} = changeset -> changeset
       %{} = changeset -> add_error(changeset, :email, "did not change")
