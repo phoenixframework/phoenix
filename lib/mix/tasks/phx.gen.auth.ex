@@ -479,7 +479,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
           """)
       end
     else
-      inject = Injector.app_layout_menu_code_to_inject(schema, context.web_module)
+      {_dup, inject} = Injector.app_layout_menu_code_to_inject(schema, context.web_module)
 
       missing =
         context
@@ -499,7 +499,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       layout file, please add the following code to it where you'd
       like the #{schema.singular} menu items to be rendered.
 
-          #{inject}
+      #{inject}
       """)
     end
 

@@ -186,7 +186,17 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end)
 
       assert_file("lib/my_app_web/templates/layout/root.html.heex", fn file ->
-        assert file =~ ~s|<.user_menu current_user={@current_user} />|
+        assert file =~
+                 ~S|<.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link>|
+
+        assert file =~
+                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link>|
+
+        assert file =~
+                 ~S|<.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link>|
+
+        assert file =~
+                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link>|
       end)
 
       assert_file("test/support/conn_case.ex", fn file ->
@@ -215,11 +225,17 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       )
 
       assert_file("lib/my_app_web/templates/layout/root.html.heex", fn file ->
-        assert file =~ ~s|<.user_menu current_user={@current_user} />|
-      end)
+        assert file =~
+                 ~S|<.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link>|
 
-      assert_file("lib/my_app_web/templates/layout/app.html.heex", fn file ->
-        refute file =~ ~s|user_menu|
+        assert file =~
+                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link>|
+
+        assert file =~
+                 ~S|<.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link>|
+
+        assert file =~
+                 ~S|<.link href={Routes.user_login_path(MyAppWeb.Endpoint, :new)}>Log in</.link>|
       end)
 
       assert_file("lib/my_app_web/router.ex", fn file ->
@@ -313,7 +329,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         end
       )
 
-      assert_file("lib/my_app_web/views/layout_view.ex", fn file ->
+      assert_file("lib/my_app_web/templates/layout/root.html.heex", fn file ->
         assert file =~
                  ~S|<.link href={Routes.warehouse_user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link>|
 
@@ -485,10 +501,6 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    post "/users/confirm/:token", UserConfirmationController, :update
                  end
                """
-      end)
-
-      assert_file("lib/my_app_web/templates/layout/root.html.heex", fn file ->
-        assert file =~ ~s|<.user_menu current_user={@current_user} />|
       end)
 
       assert_file("test/support/conn_case.ex", fn file ->
@@ -1065,20 +1077,29 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         assert error == """
 
-               Unable to find an application layout file to inject <.user_menu />.
+        Unable to find an application layout file to inject user menu items.
 
-               Missing files:
+        Missing files:
 
-                 * lib/my_app_web/templates/layout/root.html.heex
-                 * lib/my_app_web/templates/layout/app.html.heex
+          * lib/my_app_web/templates/layout/root.html.heex
+          * lib/my_app_web/templates/layout/app.html.heex
 
-               Please ensure this phoenix app was not generated with
-               --no-html. If you have changed the name of your application
-               layout file, please add the following code to it where you'd
-               like user_menu to be rendered.
+        Please ensure this phoenix app was not generated with
+        --no-html. If you have changed the name of your application
+        layout file, please add the following code to it where you'd
+        like the user menu items to be rendered.
 
-                   <.user_menu current_user={@current_user} />
-               """
+            <ul>
+              <%= if @current_user do %>
+                <li><%= @current_user.email %></li>
+                <li><.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link></li>
+                <li><.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
+              <% else %>
+                <li><.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link></li>
+                <li><.link href={Routes.user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link></li>
+              <% end %>
+            </ul>
+        """
       end)
     end
 
@@ -1094,37 +1115,23 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           validate_dependencies?: false
         )
 
-        assert_received {:mix_shell, :info,
-                         [
-                           ~s'''
+        help_text = """
 
-                           Add a user_menu function component to your layout view in MyAppWeb.LayoutView:
+        Add the following user menu items to your lib/my_app_web/templates/layout/root.html.heex layout file:
 
-                               def user_menu(assigns) do
-                                 ~H"""
-                                 <ul>
-                                   <%= if @current_user do %>
-                                     <li><%= @current_user.email %></li>
-                                     <li><.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link></li>
-                                     <li><.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
-                                   <% else %>
-                                     <li><.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link></li>
-                                     <li><.link href={Routes.user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link></li>
-                                   <% end %>
-                                 </ul>
-                                 """
-                               end
+            <ul>
+              <%= if @current_user do %>
+                <li><%= @current_user.email %></li>
+                <li><.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link></li>
+                <li><.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
+              <% else %>
+                <li><.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link></li>
+                <li><.link href={Routes.user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link></li>
+              <% end %>
+            </ul>
 
-
-                           and render it within lib/my_app_web/templates/layout/root.html.heex:
-
-                               <nav>
-                                 ...
-                                 <.user_menu current_user={@current_user} />
-                               </nav>
-
-                           '''
-                         ]}
+        """
+        assert_received {:mix_shell, :info, [^help_text]}
       end)
     end
   end

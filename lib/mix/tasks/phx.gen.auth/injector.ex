@@ -153,7 +153,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     """
     Add the following #{schema.singular} menu items to your #{Path.relative_to_cwd(file_path)} layout file:
 
-        #{code}
+    #{code}
     """
   end
 
