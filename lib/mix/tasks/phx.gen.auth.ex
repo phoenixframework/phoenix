@@ -462,34 +462,24 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp maybe_inject_app_layout_menu(%Context{} = context) do
     schema = context.schema
-    view_path = get_layout_view_path(context)
 
     if file_path = get_layout_html_path(context) do
-      Enum.map(
-        Injector.app_layout_menu_inject(
-          schema,
-          {file_path, File.read!(file_path)},
-          {view_path, File.read!(view_path)},
-          context.web_module
-        ),
-        fn
-          {:ok, {path, new_content}} ->
-            print_injecting(path)
-            File.write!(path, new_content)
+      case Injector.app_layout_menu_inject(schema, File.read!(file_path), context.web_module) do
+        {:ok, new_content} ->
+          print_injecting(file_path)
+          File.write!(file_path, new_content)
 
-          :already_injected ->
-            :ok
+        :already_injected ->
+          :ok
 
-          {:error, :unable_to_inject} ->
-            Mix.shell().info("""
+        {:error, :unable_to_inject} ->
+          Mix.shell().info("""
 
-            #{Injector.app_layout_menu_help_text(file_path, schema, context.web_module)}
-            """)
-        end
-      )
+          #{Injector.app_layout_menu_help_text(file_path, schema, context.web_module)}
+          """)
+      end
     else
-      menu_name = Injector.app_layout_menu_template_name(schema)
-      inject = Injector.app_layout_menu_code_to_inject(schema)
+      inject = Injector.app_layout_menu_code_to_inject(schema, context.web_module)
 
       missing =
         context
@@ -498,7 +488,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
       Mix.shell().error("""
 
-      Unable to find an application layout file to inject <.#{menu_name} />.
+      Unable to find an application layout file to inject user menu items.
 
       Missing files:
 
@@ -507,21 +497,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       Please ensure this phoenix app was not generated with
       --no-html. If you have changed the name of your application
       layout file, please add the following code to it where you'd
-      like #{menu_name} to be rendered.
+      like the #{schema.singular} menu items to be rendered.
 
           #{inject}
       """)
     end
 
     context
-  end
-
-  defp get_layout_view_path(%Context{context_app: ctx_app}) do
-    path = Path.join([Mix.Phoenix.web_path(ctx_app), "views", "layout_view.ex"])
-
-    if File.exists?(path) do
-      path
-    end
   end
 
   defp get_layout_html_path(%Context{} = context) do

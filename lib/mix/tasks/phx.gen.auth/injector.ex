@@ -135,51 +135,12 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Injects a menu in the application layout
   """
-  def app_layout_menu_inject(%Schema{} = schema, template, view, web_mod) do
-    {tmpl_path, template_str} = template
-    {view_path, view_str} = view
-
+  def app_layout_menu_inject(%Schema{} = schema, template_str, web_mod) do
     with {:error, :unable_to_inject} <-
-           app_layout_menu_inject_at_end_of_nav_tag(template_str, schema),
+           app_layout_menu_inject_at_end_of_nav_tag(template_str, schema, web_mod),
          {:error, :unable_to_inject} <-
-           app_layout_menu_inject_after_opening_body_tag(template_str, schema) do
-      [{:error, :unable_to_inject}]
-    else
-      :already_injected ->
-        [:already_injected]
-
-      {:ok, new_tmpl} ->
-        [{:ok, {tmpl_path, new_tmpl}}, layout_view_inject({view_path, view_str}, schema, web_mod)]
-    end
-  end
-
-  defp layout_view_code(%Schema{} = schema, web_module, padding \\ "  ") do
-    endpoint = inspect(Module.concat(web_module, "Endpoint"))
-
-    ~s'''
-    #{padding}def #{app_layout_menu_template_name(schema)}(assigns) do
-    #{padding}  ~H"""
-    #{padding}  <ul>
-    #{padding}    <%= if @current_#{schema.singular} do %>
-    #{padding}      <li><%= @current_#{schema.singular}.email %></li>
-    #{padding}      <li><.link href={Routes.#{schema.route_helper}_settings_path(#{endpoint}, :edit)}>Settings</.link></li>
-    #{padding}      <li><.link href={Routes.#{schema.route_helper}_session_path(#{endpoint}, :delete)} method="delete">Log out</.link></li>
-    #{padding}    <% else %>
-    #{padding}      <li><.link href={Routes.#{schema.route_helper}_registration_path(#{endpoint}, :new)}>Register</.link></li>
-    #{padding}      <li><.link href={Routes.#{schema.route_helper}_#{schema.login_path}(#{endpoint}, :new)}>Log in</.link></li>
-    #{padding}    <% end %>
-    #{padding}  </ul>
-    #{padding}  """
-    #{padding}end
-    '''
-  end
-
-  defp layout_view_inject({view_path, content}, %Schema{} = schema, web_module) do
-    code = layout_view_code(schema, web_module)
-
-    case inject_before_final_end(content, code, "def #{app_layout_menu_template_name(schema)}") do
-      {:ok, new_view_file} -> {:ok, {view_path, new_view_file}}
-      :already_injected -> :already_injected
+           app_layout_menu_inject_after_opening_body_tag(template_str, schema, web_mod) do
+      {:error, :unable_to_inject}
     end
   end
 
@@ -188,63 +149,90 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   """
   @spec app_layout_menu_help_text(String.t(), schema, web_module :: atom) :: String.t()
   def app_layout_menu_help_text(file_path, %Schema{} = schema, web_module) do
-    ~s'''
-    Add a #{app_layout_menu_template_name(schema)} function component to your layout view in #{inspect(Module.concat(web_module, "LayoutView"))}:
+    {_dup_check, code} = app_layout_menu_code_to_inject(schema, web_module)
+    """
+    Add the following #{schema.singular} menu items to your #{Path.relative_to_cwd(file_path)} layout file:
 
-    #{layout_view_code(schema, web_module, "    ")}
-
-    and render it within #{Path.relative_to_cwd(file_path)}:
-
-        <nav>
-          ...
-          <.#{app_layout_menu_template_name(schema)} current_user={@current_user} />
-        </nav>
-    '''
+        #{code}
+    """
   end
-
-  def app_layout_menu_template_name(schema), do: "#{schema.singular}_menu"
 
   @doc """
   Menu code to inject into the application layout template.
   """
-  @spec app_layout_menu_code_to_inject(schema) :: String.t()
-  def app_layout_menu_code_to_inject(%Schema{} = schema) do
-    ~s|<.#{schema.singular}_menu current_#{schema.singular}={@current_#{schema.singular}} />|
+  @spec app_layout_menu_code_to_inject(schema, web_module :: atom) :: String.t()
+  def app_layout_menu_code_to_inject(%Schema{} = schema, web_mod, pad \\ "    ", newline \\ "\n") do
+    endpoint = inspect(Module.concat(web_mod, "Endpoint"))
+    already_injected_str = "#{schema.route_helper}_#{schema.login_path}"
+
+    template = """
+    #{pad}<ul>
+    #{pad}  <%= if @current_#{schema.singular} do %>
+    #{pad}    <li><%= @current_#{schema.singular}.email %></li>
+    #{pad}    <li><.link href={Routes.#{schema.route_helper}_settings_path(#{endpoint}, :edit)}>Settings</.link></li>
+    #{pad}    <li><.link href={Routes.#{schema.route_helper}_session_path(#{endpoint}, :delete)} method="delete">Log out</.link></li>
+    #{pad}  <% else %>
+    #{pad}    <li><.link href={Routes.#{schema.route_helper}_registration_path(#{endpoint}, :new)}>Register</.link></li>
+    #{pad}    <li><.link href={Routes.#{schema.route_helper}_#{schema.login_path}(#{endpoint}, :new)}>Log in</.link></li>
+    #{pad}  <% end %>
+    #{pad}</ul>\
+    """
+
+    {already_injected_str, String.replace(template, "\n", newline)}
   end
 
-  defp app_layout_menu_inject_at_end_of_nav_tag(file, schema) do
+  defp formatting_info(template, tag) do
+    {padding, newline} =
+      case Regex.run(~r/<?(([\r\n]{1})\s*)#{tag}/m, template, global: false) do
+        [_, pre, "\n"] -> {String.trim_leading(pre, "\n") <> "  ", "\n"}
+        [_, "\r\n" <> pre, "\r"] -> {String.trim_leading(pre, "\r\n") <> "  ", "\r\n"}
+        _ -> {"", "\n"}
+      end
+
+    {padding, newline}
+  end
+
+  defp app_layout_menu_inject_at_end_of_nav_tag(file, schema, web_mod) do
+    {padding, newline} = formatting_info(file, "<\/nav>")
+    {dup_check, code} = app_layout_menu_code_to_inject(schema, web_mod, padding, newline)
+
     inject_unless_contains(
       file,
-      app_layout_menu_code_to_inject(schema),
-      &Regex.replace(~r/(\s*)<\/nav>/m, &1, "\\1  #{&2}\\0", global: false)
+      dup_check,
+      code,
+      &Regex.replace(~r/(\s*)<\/nav>/m, &1, "#{newline}#{&2}\\0", global: false)
     )
   end
 
-  defp app_layout_menu_inject_after_opening_body_tag(file, schema) do
+  defp app_layout_menu_inject_after_opening_body_tag(file, schema, web_mod) do
     anchor_line = "<body"
+    {padding, newline} = formatting_info(file, anchor_line)
+    {dup_check, code} = app_layout_menu_code_to_inject(schema, web_mod, padding, newline)
 
     inject_unless_contains(
       file,
-      app_layout_menu_code_to_inject(schema),
+      dup_check,
+      code,
       # Matches the entire line containing `anchor_line` and captures
       # the whitespace before the anchor. In the replace string, the
       # entire matching line is inserted with \\0, then a newline then
       # the indent that was captured using \\1. &2 is the code to
       # inject.
-      &Regex.replace(~r/^(\s*)#{anchor_line}.*(\r\n|\n|$)/Um, &1, "\\0\\1  #{&2}\\2",
-        global: false
-      )
+      &Regex.replace(~r/^(\s*)#{anchor_line}.*(\r\n|\n|$)/Um, &1, "\\0#{&2}\\2", global: false)
     )
   end
 
   @doc """
   Injects code unless the existing code already contains `code_to_inject`
   """
-  @spec inject_unless_contains(String.t(), String.t(), (String.t(), String.t() -> String.t())) ::
-          {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
-  def inject_unless_contains(code, code_to_inject, inject_fn)
-      when is_binary(code) and is_binary(code_to_inject) and is_function(inject_fn, 2) do
-    with :ok <- ensure_not_already_injected(code, code_to_inject) do
+  def inject_unless_contains(code, dup_check, inject_fn) do
+    inject_unless_contains(code, dup_check, dup_check, inject_fn)
+  end
+
+  def inject_unless_contains(code, dup_check, code_to_inject, inject_fn)
+      when is_binary(code) and is_binary(code_to_inject) and is_binary(dup_check) and
+             is_function(inject_fn, 2) do
+    with :ok <- ensure_not_already_injected(code, dup_check) do
       new_code = inject_fn.(code, code_to_inject)
 
       if code != new_code do
@@ -259,9 +247,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   Injects snippet before the final end in a file
   """
   @spec inject_before_final_end(String.t(), String.t()) :: {:ok, String.t()} | :already_injected
-  def inject_before_final_end(code, code_to_inject, search \\ nil)
+  def inject_before_final_end(code, code_to_inject)
       when is_binary(code) and is_binary(code_to_inject) do
-    if String.contains?(code, search || code_to_inject) do
+    if String.contains?(code, code_to_inject) do
       :already_injected
     else
       new_code =

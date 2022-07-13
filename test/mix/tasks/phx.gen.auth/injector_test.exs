@@ -4,31 +4,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
   alias Mix.Phoenix.{Context, Schema}
   alias Mix.Tasks.Phx.Gen.Auth.{HashingLibrary, Injector}
 
-  @view_module """
-  defmodule AppWeb.LayoutView do
-  end
-  """
-
-  @view_module_injected ~s'''
-  defmodule AppWeb.LayoutView do
-    def user_menu(assigns) do
-      ~H"""
-      <ul>
-        <%= if @current_user do %>
-          <li><%= @current_user.email %></li>
-          <li><.link href={Routes.user_settings_path(AppWeb.Endpoint, :edit)}>Settings</.link></li>
-          <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
-        <% else %>
-          <li><.link href={Routes.user_registration_path(AppWeb.Endpoint, :new)}>Register</.link></li>
-          <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :new)}>Log in</.link></li>
-        <% end %>
-      </ul>
-      """
-    end
-  end\
-
-  '''
-
   describe "mix_dependency_inject/2" do
     test "injects before existing dependencies" do
       existing_file = """
@@ -645,40 +620,33 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
   end
 
   describe "app_layout_menu_inject/2" do
-    test "injects render user_menu.html at the bottom of nav section when it exists" do
+    test "injects user menu at the bottom of nav section when it exists" do
       schema = Schema.new("Accounts.User", "users", [], [])
 
-      view = {"layout_view.ex", @view_module}
+      template = """
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <title>Demo · Phoenix Framework</title>
+        </head>
+        <body>
+          <header>
+            <section class="container">
+              <nav>
+                <ul>
+                  <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+                  <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
+                    <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>
+                  <% end %>
+                </ul>
+              </nav>
+            </section>
+          </header>
+        </body>
+      </html>
+      """
 
-      template =
-        {"root.html.heex",
-         """
-         <!DOCTYPE html>
-         <html lang="en">
-           <head>
-             <title>Demo · Phoenix Framework</title>
-           </head>
-           <body>
-             <header>
-               <section class="container">
-                 <nav>
-                   <ul>
-                     <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
-                     <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-                       <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>
-                     <% end %>
-                   </ul>
-                 </nav>
-               </section>
-             </header>
-           </body>
-         </html>
-         """}
-
-      [{:ok, {_, template_str}}, {:ok, {_, view_str}}] =
-        Injector.app_layout_menu_inject(schema, template, view, AppWeb)
-
-      assert view_str == @view_module_injected
+      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template, AppWeb)
 
       assert template_str ==
                """
@@ -697,7 +665,16 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>
                            <% end %>
                          </ul>
-                         <.user_menu current_user={@current_user} />
+                         <ul>
+                           <%= if @current_user do %>
+                             <li><%= @current_user.email %></li>
+                             <li><.link href={Routes.user_settings_path(AppWeb.Endpoint, :edit)}>Settings</.link></li>
+                             <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
+                           <% else %>
+                             <li><.link href={Routes.user_registration_path(AppWeb.Endpoint, :new)}>Register</.link></li>
+                             <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :new)}>Log in</.link></li>
+                           <% end %>
+                         </ul>
                        </nav>
                      </section>
                    </header>
@@ -706,38 +683,33 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                """
     end
 
-    test "injects render user_menu at the bottom of nav section when it exists with windows line endings" do
+    test "injects user menu at the bottom of nav section when it exists with windows line endings" do
       schema = Schema.new("Accounts.User", "users", [], [])
 
-      view = {"layout_view.ex", @view_module}
+      template = """
+      <!DOCTYPE html>\r
+      <html lang="en">\r
+        <head>\r
+          <title>Demo · Phoenix Framework</title>\r
+        </head>\r
+        <body>\r
+          <header>\r
+            <section class="container">\r
+              <nav>\r
+                <ul>\r
+                  <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>\r
+                  <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>\r
+                    <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>\r
+                  <% end %>\r
+                </ul>\r
+              </nav>\r
+            </section>\r
+          </header>\r
+        </body>\r
+      </html>\r
+      """
 
-      template =
-        {"root.html.heex",
-         """
-         <!DOCTYPE html>\r
-         <html lang="en">\r
-           <head>\r
-             <title>Demo · Phoenix Framework</title>\r
-           </head>\r
-           <body>\r
-             <header>\r
-               <section class="container">\r
-                 <nav>\r
-                   <ul>\r
-                     <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>\r
-                     <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>\r
-                       <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>\r
-                     <% end %>\r
-                   </ul>\r
-                 </nav>\r
-               </section>\r
-             </header>\r
-           </body>\r
-         </html>\r
-         """}
-
-      [{:ok, {_, template_str}}, {:ok, {_, view_str}}] =
-        Injector.app_layout_menu_inject(schema, template, view, AppWeb)
+      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template, AppWeb)
 
       assert template_str ==
                """
@@ -756,44 +728,44 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>\r
                            <% end %>\r
                          </ul>\r
-                         <.user_menu current_user={@current_user} />\r
+                         <ul>\r
+                           <%= if @current_user do %>\r
+                             <li><%= @current_user.email %></li>\r
+                             <li><.link href={Routes.user_settings_path(AppWeb.Endpoint, :edit)}>Settings</.link></li>\r
+                             <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>\r
+                           <% else %>\r
+                             <li><.link href={Routes.user_registration_path(AppWeb.Endpoint, :new)}>Register</.link></li>\r
+                             <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :new)}>Log in</.link></li>\r
+                           <% end %>\r
+                         </ul>\r
                        </nav>\r
                      </section>\r
                    </header>\r
                  </body>\r
                </html>\r
                """
-
-      assert view_str == @view_module_injected
     end
 
     test "injects render user_menu after the opening body tag" do
       schema = Schema.new("Accounts.User", "users", [], [])
 
-      view = {"layout_view.ex", @view_module}
+      template = """
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <title>Demo · Phoenix Framework</title>
+        </head>
+        <body>
+          <main class="container">
+            <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
+            <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+            <%= @inner_content %>
+          </main>
+        </body>
+      </html>
+      """
 
-      template =
-        {"root.html.heex",
-         """
-         <!DOCTYPE html>
-         <html lang="en">
-           <head>
-             <title>Demo · Phoenix Framework</title>
-           </head>
-           <body>
-             <main class="container">
-               <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-               <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
-               <%= @inner_content %>
-             </main>
-           </body>
-         </html>
-         """}
-
-      [{:ok, {_, template_str}}, {:ok, {_, view_str}}] =
-        Injector.app_layout_menu_inject(schema, template, view, AppWeb)
-
-      assert view_str == @view_module_injected
+      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template, AppWeb)
 
       assert template_str ==
                """
@@ -803,7 +775,16 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <title>Demo · Phoenix Framework</title>
                  </head>
                  <body>
-                   <.user_menu current_user={@current_user} />
+                   <ul>
+                     <%= if @current_user do %>
+                       <li><%= @current_user.email %></li>
+                       <li><.link href={Routes.user_settings_path(AppWeb.Endpoint, :edit)}>Settings</.link></li>
+                       <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
+                     <% else %>
+                       <li><.link href={Routes.user_registration_path(AppWeb.Endpoint, :new)}>Register</.link></li>
+                       <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :new)}>Log in</.link></li>
+                     <% end %>
+                   </ul>
                    <main class="container">
                      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
                      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
@@ -817,35 +798,23 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     test "works with windows line endings" do
       schema = Schema.new("Accounts.User", "users", [], [])
 
-      template =
-        {"path/to/root.html.heex",
-         """
-         <!DOCTYPE html>\r
-         <html lang="en">\r
-           <head>\r
-             <title>Demo · Phoenix Framework</title>\r
-           </head>\r
-           <body>\r
-             <main class="container">\r
-               <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>\r
-               <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>\r
-               <%= @inner_content %>\r
-             </main>\r
-           </body>\r
-         </html>\r
-         """}
+      template = """
+      <!DOCTYPE html>\r
+      <html lang="en">\r
+        <head>\r
+          <title>Demo · Phoenix Framework</title>\r
+        </head>\r
+        <body>\r
+          <main class="container">\r
+            <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>\r
+            <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>\r
+            <%= @inner_content %>\r
+          </main>\r
+        </body>\r
+      </html>\r
+      """
 
-      view =
-        {"path/to/layout_view.ex",
-         """
-         defmodule AppWeb.LayoutView do
-         end
-         """}
-
-      [
-        {:ok, {"path/to/root.html.heex", template_str}},
-        {:ok, {"path/to/layout_view.ex", view_str}}
-      ] = Injector.app_layout_menu_inject(schema, template, view, AppWeb)
+      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template, AppWeb)
 
       assert template_str ==
                """
@@ -855,7 +824,16 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <title>Demo · Phoenix Framework</title>\r
                  </head>\r
                  <body>\r
-                   <.user_menu current_user={@current_user} />\r
+                   <ul>\r
+                     <%= if @current_user do %>\r
+                       <li><%= @current_user.email %></li>\r
+                       <li><.link href={Routes.user_settings_path(AppWeb.Endpoint, :edit)}>Settings</.link></li>\r
+                       <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>\r
+                     <% else %>\r
+                       <li><.link href={Routes.user_registration_path(AppWeb.Endpoint, :new)}>Register</.link></li>\r
+                       <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :new)}>Log in</.link></li>\r
+                     <% end %>\r
+                   </ul>\r
                    <main class="container">\r
                      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>\r
                      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>\r
@@ -864,47 +842,45 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  </body>\r
                </html>\r
                """
-
-      assert view_str == @view_module_injected
     end
 
     test "returns :already_injected when render is already found in file" do
       schema = Schema.new("Accounts.User", "users", [], [])
 
-      view = {"layout_view.ex", ""}
+      template = """
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <title>Demo · Phoenix Framework</title>
+        </head>
+        <body>
+          <div class="my-header">
+            <ul>
+              <%= if @current_user do %>
+                <li><%= @current_user.email %></li>
+                <li><.link href={Routes.user_settings_path(AppWeb.Endpoint, :edit)}>Settings</.link></li>
+                <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
+              <% else %>
+                <li><.link href={Routes.user_registration_path(AppWeb.Endpoint, :new)}>Register</.link></li>
+                <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :new)}>Log in</.link></li>
+              <% end %>
+            </ul>
+          </div>
+          <main class="container">
+            <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
+            <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+            <%= @inner_content %>
+          </main>
+        </body>
+      </html>
+      """
 
-      template =
-        {"root.html.heex",
-         """
-         <!DOCTYPE html>
-         <html lang="en">
-           <head>
-             <title>Demo · Phoenix Framework</title>
-           </head>
-           <body>
-             <div class="my-header">
-               <.user_menu current_user={@current_user} />
-             </div>
-             <main class="container">
-               <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-               <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
-               <%= @inner_content %>
-             </main>
-           </body>
-         </html>
-         """}
-
-      assert [:already_injected] = Injector.app_layout_menu_inject(schema, template, view, AppWeb)
+      assert :already_injected = Injector.app_layout_menu_inject(schema, template, AppWeb)
     end
 
     test "returns {:error, :unable_to_inject} when the body tag isn't found" do
       schema = Schema.new("Accounts.User", "users", [], [])
-
-      template = {"root.html.heex", ""}
-      view = {"layout_view.ex", ""}
-
-      assert [{:error, :unable_to_inject}] =
-               Injector.app_layout_menu_inject(schema, template, view, AppWeb)
+      assert {:error, :unable_to_inject} = Injector.app_layout_menu_inject(schema, "", AppWeb)
     end
   end
 
@@ -912,7 +888,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     test "returns a string with the expected help text" do
       schema = Schema.new("Accounts.User", "users", [], [])
       file_path = Path.expand("foo.ex")
-      assert Injector.app_layout_menu_help_text(file_path, schema, AppWeb) =~ "Add a user_menu"
+
+      assert Injector.app_layout_menu_help_text(file_path, schema, AppWeb) =~
+               "Add the following user menu"
     end
   end
 end
