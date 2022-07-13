@@ -5,20 +5,20 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect auth_module %><%= if live? do %>
 
   def create(conn, %{"_action" => "registered"} = params) do
-    do_create(conn, params, "Account created successfully!")
+    create(conn, params, "Account created successfully!")
   end
 
   def create(conn, %{"_action" => "password_updated"} = params) do
     conn
     |> put_session(:<%= schema.singular %>_return_to, Routes.<%= schema.singular %>_settings_path(conn, :edit))
-    |> do_create(params, "Password updated successfully!")
+    |> create(params, "Password updated successfully!")
   end
 
   def create(conn, params) do
-    do_create(conn, params, "Welcome back!")
+    create(conn, params, "Welcome back!")
   end
 
-  defp do_create(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params}, info) do
+  defp create(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params}, info) do
     %{"email" => email, "password" => password} = <%= schema.singular %>_params
 
     if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(email, password) do
