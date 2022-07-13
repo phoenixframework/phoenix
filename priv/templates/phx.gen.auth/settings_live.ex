@@ -133,7 +133,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         socket =
           socket
           |> assign(:trigger_submit, true)
-          |> assign(:password_changeset,  <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params))
+          |> assign(:password_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params))
 
         {:noreply, socket}
 

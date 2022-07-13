@@ -162,14 +162,24 @@ defmodule <%= inspect auth_module %>Test do
     test "redirects to login page if there isn't a valid <%= schema.singular %>_token ", %{conn: conn} do
       <%= schema.singular %>_token = "invalid_token"
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
-      socket = %LiveView.Socket{endpoint: <%= inspect context.web_module %>.Endpoint, assigns: %{__changed__: %{}, flash: %{}}}
+
+      socket = %LiveView.Socket{
+        endpoint: <%= inspect context.web_module %>.Endpoint,
+        assigns: %{__changed__: %{}, flash: %{}}
+      }
+
       {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_<%= schema.singular %> == nil
     end
 
     test "redirects to login page if there isn't a <%= schema.singular %>_token ", %{conn: conn} do
       session = conn |> get_session()
-      socket = %LiveView.Socket{endpoint: <%= inspect context.web_module %>.Endpoint, assigns: %{__changed__: %{}, flash: %{}}}
+
+      socket = %LiveView.Socket{
+        endpoint: <%= inspect context.web_module %>.Endpoint,
+        assigns: %{__changed__: %{}, flash: %{}}
+      }
+
       {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_<%= schema.singular %> == nil
     end
@@ -181,14 +191,24 @@ defmodule <%= inspect auth_module %>Test do
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
       assert {:halt, _updated_socket} =
-        <%= inspect schema.alias %>Auth.on_mount(:redirect_if_<%= schema.singular %>_is_authenticated, %{}, session, %LiveView.Socket{})
+               <%= inspect schema.alias %>Auth.on_mount(
+                 :redirect_if_<%= schema.singular %>_is_authenticated,
+                 %{},
+                 session,
+                 %LiveView.Socket{}
+               )
     end
 
     test "Don't redirect is there is no authenticated <%= schema.singular %>", %{conn: conn} do
       session = conn |> get_session()
 
       assert {:cont, _updated_socket} =
-        <%= inspect schema.alias %>Auth.on_mount(:redirect_if_<%= schema.singular %>_is_authenticated, %{}, session, %LiveView.Socket{})
+               <%= inspect schema.alias %>Auth.on_mount(
+                 :redirect_if_<%= schema.singular %>_is_authenticated,
+                 %{},
+                 session,
+                 %LiveView.Socket{}
+               )
     end
   end
 

@@ -33,9 +33,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     case <%= inspect context.alias %>.confirm_<%= schema.singular %>(token) do
       {:ok, _} ->
         {:noreply,
-          socket
-          |> put_flash(:info, "User confirmed successfully.")
-          |> redirect(to: "/")}
+         socket
+         |> put_flash(:info, "User confirmed successfully.")
+         |> redirect(to: "/")}
 
       :error ->
         # If there is a current <%= schema.singular %> and the account was already confirmed,
@@ -48,9 +48,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
           %{} ->
             {:noreply,
-              socket
-              |> put_flash(:error, "User confirmation link is invalid or it has expired.")
-              |> redirect(to: "/")}
+             socket
+             |> put_flash(:error, "User confirmation link is invalid or it has expired.")
+             |> redirect(to: "/")}
         end
     end
   end
