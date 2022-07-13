@@ -6,19 +6,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def render(assigns) do
     ~H"""
     <h1>Reset password</h1>
-    <.form id="reset_password_form" :let={f} for={@changeset} phx-submit="reset_password">
-      <%%= if @changeset.action do %>
+    <.form id="reset_password_form" :let={f} for={@changeset} phx-submit="reset_password" phx-change="validate">
+      <%%= if @changeset.action == :insert do %>
         <div class="alert alert-danger">
           <p>Oops, something went wrong! Please check the errors below.</p>
         </div>
       <%% end %>
 
       <%%= label f, :password, "New password" %>
-      <%%= password_input f, :password, required: true %>
+      <%%= password_input f, :password, required: true, value: input_value(f, :password) %>
       <%%= error_tag f, :password %>
 
       <%%= label f, :password_confirmation, "Confirm new password" %>
-      <%%= password_input f, :password_confirmation, required: true %>
+      <%%= password_input f, :password_confirmation, required: true, value: input_value(f, :password_confirmation) %>
       <%%= error_tag f, :password_confirmation %>
 
       <div>
@@ -59,8 +59,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
          |> redirect(to: Routes.<%= schema.route_helper %>_login_path(socket, :new))}
 
       {:error, changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
+        {:noreply, assign(socket, :changeset,  Map.put(changeset, :action, :insert))}
     end
+  end
+
+  def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params)
+    {:noreply, assign(socket, changeset: Map.put(changeset, :action, :validate))}
   end
 
   defp set_<%= schema.singular %>_and_token(socket, %{"token" => token}) do

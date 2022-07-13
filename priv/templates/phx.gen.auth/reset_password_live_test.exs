@@ -33,6 +33,18 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
                to: "/"
              }
     end
+
+    test "renders errors for invalid data", %{conn: conn, token: token} do
+      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
+
+      result =
+        lv
+        |> element("#reset_password_form")
+        |> render_change(<%= schema.singular %>: %{"password" => "secret12", "confirmation_password" => "secret123456"})
+
+        assert result =~ "should be at least 12 character"
+        assert result =~ "does not match password"
+    end
   end
 
   describe "Reset password" do
