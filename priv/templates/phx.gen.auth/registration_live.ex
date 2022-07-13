@@ -16,6 +16,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-change="validate"
       phx-trigger-action={@trigger_submit}
       action={Routes.<%= schema.route_helper %>_session_path(@socket, :create, %{_action: "registered"})}
+      method="post"
       as={:<%= schema.singular %>}
     >
       <%%= if @changeset.action == :insert do %>
