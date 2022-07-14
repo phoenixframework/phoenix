@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   use ExUnit.Case
 
   @moduletag :mix_phx_new
+  @liveview_option_message "Do you want to create a LiveView based authentication system?"
 
   import MixHelper
   alias Mix.Tasks.Phx.Gen
@@ -83,13 +84,17 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
     end)
   end
 
-  test "generates with defaults", config do
+  test "generates with defaults (Prompt: --no-live)", config do
     in_tmp_phx_project(config.test, fn ->
+      send self(), {:mix_shell_input, :yes?, false}
+
       Gen.Auth.run(
         ~w(Accounts User users),
         ecto_adapter: Ecto.Adapters.Postgres,
         validate_dependencies?: false
       )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
       assert_file("config/test.exs", fn file ->
         assert file =~ "config :bcrypt_elixir, :log_rounds, 1"
@@ -216,6 +221,137 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
     end)
   end
 
+  test "generates with defaults (Prompt: --live)", config do
+    in_tmp_phx_project(config.test, fn ->
+      send self(), {:mix_shell_input, :yes?, true}
+
+      Gen.Auth.run(
+        ~w(Accounts User users),
+        ecto_adapter: Ecto.Adapters.Postgres,
+        validate_dependencies?: false
+      )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
+
+      assert_file("config/test.exs", fn file ->
+        assert file =~ "config :bcrypt_elixir, :log_rounds, 1"
+      end)
+
+      assert_file("lib/my_app/accounts.ex")
+      assert_file("lib/my_app/accounts/user.ex")
+      assert_file("lib/my_app/accounts/user_token.ex")
+
+      assert_file("lib/my_app/accounts/user_notifier.ex", fn file ->
+        assert file =~ "defmodule MyApp.Accounts.UserNotifier do"
+        assert file =~ "import Swoosh.Email"
+        assert file =~ "Mailer.deliver(email)"
+        assert file =~ ~s|from({"MyApp", "contact@example.com"})|
+        assert file =~ ~s|deliver(user.email, "Confirmation instructions",|
+        assert file =~ ~s|deliver(user.email, "Reset password instructions",|
+        assert file =~ ~s|deliver(user.email, "Update email instructions",|
+      end)
+
+      assert_file("lib/my_app_web/live/user_registration_live.ex")
+      assert_file("test/my_app_web/live/user_registration_live_test.exs")
+      assert_file("lib/my_app_web/live/user_login_live.ex")
+      assert_file("test/my_app_web/live/user_login_live_test.exs")
+      assert_file("lib/my_app_web/live/user_reset_password_live.ex")
+      assert_file("test/my_app_web/live/user_reset_password_live_test.exs")
+      assert_file("lib/my_app_web/live/user_forgot_password_live.ex")
+      assert_file("test/my_app_web/live/user_forgot_password_live_test.exs")
+      assert_file("lib/my_app_web/live/user_settings_live.ex")
+      assert_file("test/my_app_web/live/user_settings_live_test.exs")
+      assert_file("lib/my_app_web/live/user_confirmation_live.ex")
+      assert_file("test/my_app_web/live/user_confirmation_live_test.exs")
+      assert_file("lib/my_app_web/live/user_confirmation_instructions_live.ex")
+      assert_file("test/my_app_web/live/user_confirmation_instructions_live_test.exs")
+
+      assert_file("lib/my_app_web/user_auth.ex")
+      assert_file("test/my_app_web/user_auth_test.exs")
+
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
+
+      assert_file(migration, fn file ->
+        assert file =~ "create table(:users) do"
+        assert file =~ "create table(:users_tokens) do"
+      end)
+
+      assert_file("mix.exs", fn file ->
+        assert file =~ ~s|{:bcrypt_elixir, "~> 3.0"},|
+      end)
+
+      assert_file("lib/my_app_web/router.ex", fn file ->
+        assert file =~ "import MyAppWeb.UserAuth"
+        assert file =~ "plug :fetch_current_user"
+
+        assert file =~ """
+                 ## Authentication routes
+
+                 scope "/", MyAppWeb do
+                   pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+                   live_session :redirect_if_user_is_authenticated,
+                     on_mount: [{MyAppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+                     live "/users/register", UserRegistrationLive, :new
+                     live "/users/log_in", UserLoginLive, :new
+                     live "/users/forgot_password", UserForgotPasswordLive, :new
+                     live "/users/reset_password/:token", UserResetPasswordLive, :edit
+                   end
+
+                   post "/users/log_in", UserSessionController, :create
+                 end
+
+                 scope "/", MyAppWeb do
+                   pipe_through [:browser, :require_authenticated_user]
+
+                   live_session :require_authenticated_user,
+                     on_mount: [{MyAppWeb.UserAuth, :ensure_authenticated}] do
+                     live "/users/settings", UserSettingsLive, :edit
+                     live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+                   end
+                 end
+
+                 scope "/", MyAppWeb do
+                   pipe_through [:browser]
+
+                   delete "/users/log_out", UserSessionController, :delete
+                   live "/users/confirm/:token", UserConfirmationLive, :edit
+                   live "/users/confirm", UserConfirmationInstructionsLive, :new
+                 end
+               """
+      end)
+
+      assert_file("lib/my_app_web/templates/layout/root.html.heex", fn file ->
+        assert file =~
+                 ~S|<.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link>|
+
+        assert file =~
+                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link>|
+
+        assert file =~
+                 ~S|<.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link>|
+
+        assert file =~
+                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link>|
+      end)
+
+      assert_file("test/support/conn_case.ex", fn file ->
+        assert file =~ "def register_and_log_in_user(%{conn: conn})"
+        assert file =~ "def log_in_user(conn, user)"
+      end)
+
+      assert_received {:mix_shell, :info,
+                       ["Unable to find the \"MyApp.Mailer\"" <> mailer_notice]}
+
+      assert mailer_notice =~ ~s(A mailer module like the following is expected to be defined)
+      assert mailer_notice =~ ~s(in your application in order to send emails.)
+      assert mailer_notice =~ ~s(defmodule MyApp.Mailer do)
+      assert mailer_notice =~ ~s(use Swoosh.Mailer, otp_app: :my_app)
+      assert mailer_notice =~ ~s(def deps do)
+      assert mailer_notice =~ ~s(https://hexdocs.pm/swoosh)
+    end)
+  end
+
   test "works with apps generated with --live", config do
     in_tmp_phx_project(config.test, ~w(--live), fn ->
       Gen.Auth.run(
@@ -281,13 +417,81 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
     end)
   end
 
+  test "works with apps generated with --no-live", config do
+    in_tmp_phx_project(config.test, ~w(--no-live), fn ->
+      Gen.Auth.run(
+        ~w(Accounts User users --no-live),
+        ecto_adapter: Ecto.Adapters.Postgres,
+        validate_dependencies?: false
+      )
+
+      assert_file("lib/my_app_web/templates/layout/root.html.heex", fn file ->
+        assert file =~
+                 ~S|<.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link>|
+
+        assert file =~
+                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link>|
+
+        assert file =~
+                 ~S|<.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link>|
+
+        assert file =~
+                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link>|
+      end)
+
+      assert_file("lib/my_app_web/router.ex", fn file ->
+        assert file =~ "import MyAppWeb.UserAuth"
+        assert file =~ "plug :fetch_current_user"
+
+        assert file =~ """
+                 ## Authentication routes
+
+                 scope "/", MyAppWeb do
+                   pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+                   get "/users/register", UserRegistrationController, :new
+                   post "/users/register", UserRegistrationController, :create
+                   get "/users/log_in", UserSessionController, :new
+                   post "/users/log_in", UserSessionController, :create
+                   get "/users/reset_password", UserResetPasswordController, :new
+                   post "/users/reset_password", UserResetPasswordController, :create
+                   get "/users/reset_password/:token", UserResetPasswordController, :edit
+                   put "/users/reset_password/:token", UserResetPasswordController, :update
+                 end
+
+                 scope "/", MyAppWeb do
+                   pipe_through [:browser, :require_authenticated_user]
+
+                   get "/users/settings", UserSettingsController, :edit
+                   put "/users/settings", UserSettingsController, :update
+                   get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
+                 end
+
+                 scope "/", MyAppWeb do
+                   pipe_through [:browser]
+
+                   delete "/users/log_out", UserSessionController, :delete
+                   get "/users/confirm", UserConfirmationController, :new
+                   post "/users/confirm", UserConfirmationController, :create
+                   get "/users/confirm/:token", UserConfirmationController, :edit
+                   post "/users/confirm/:token", UserConfirmationController, :update
+                 end
+               """
+      end)
+    end)
+  end
+
   test "generates with --web option", config do
     in_tmp_phx_project(config.test, fn ->
+      send self(), {:mix_shell_input, :yes?, false}
+
       Gen.Auth.run(
         ~w(Accounts User users --web warehouse),
         ecto_adapter: Ecto.Adapters.Postgres,
         validate_dependencies?: false
       )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
       assert_file("lib/my_app/accounts.ex")
       assert_file("lib/my_app/accounts/user.ex")
@@ -520,11 +724,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   describe "--database option" do
     test "when the database is postgres", config do
       in_tmp_phx_project(config.test, fn ->
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users),
           ecto_adapter: Ecto.Adapters.Postgres,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
 
@@ -570,11 +778,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when the database is mysql", config do
       in_tmp_phx_project(config.test, fn ->
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users),
           ecto_adapter: Ecto.Adapters.MyXQL,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
 
@@ -620,11 +832,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when the database is sqlite3", config do
       in_tmp_phx_project(config.test, fn ->
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users),
           ecto_adapter: Ecto.Adapters.SQLite3,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
 
@@ -670,11 +886,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when the database is mssql", config do
       in_tmp_phx_project(config.test, fn ->
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users),
           ecto_adapter: Ecto.Adapters.TDS,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
 
@@ -721,11 +941,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
   test "supports --binary-id option", config do
     in_tmp_phx_project(config.test, fn ->
+      send self(), {:mix_shell_input, :yes?, false}
+
       Gen.Auth.run(
         ~w(Accounts User users --binary-id),
         ecto_adapter: Ecto.Adapters.Postgres,
         validate_dependencies?: false
       )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
       assert_file("lib/my_app/accounts/user.ex", fn file ->
         assert file =~ "@primary_key {:id, :binary_id, autogenerate: true}"
@@ -750,11 +974,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   describe "--hashing-lib option" do
     test "when bcrypt", config do
       in_tmp_phx_project(config.test, fn ->
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users --hashing-lib bcrypt),
           ecto_adapter: Ecto.Adapters.Postgres,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert_file("mix.exs", fn file ->
           assert file =~ ~s|{:bcrypt_elixir, "~> 3.0"}|
@@ -772,11 +1000,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when pbkdf2", config do
       in_tmp_phx_project(config.test, fn ->
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users --hashing-lib pbkdf2),
           ecto_adapter: Ecto.Adapters.Postgres,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert_file("mix.exs", fn file ->
           assert file =~ ~s|{:pbkdf2_elixir, "~> 2.0"}|
@@ -794,11 +1026,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when argon2", config do
       in_tmp_phx_project(config.test, fn ->
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users --hashing-lib argon2),
           ecto_adapter: Ecto.Adapters.Postgres,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert_file("mix.exs", fn file ->
           assert file =~ ~s|{:argon2_elixir, "~> 3.0"}|
@@ -819,11 +1055,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
   test "with --table option", config do
     in_tmp_phx_project(config.test, fn ->
+      send self(), {:mix_shell_input, :yes?, false}
+
       Gen.Auth.run(
         ~w(Accounts User users --table my_users),
         ecto_adapter: Ecto.Adapters.Postgres,
         validate_dependencies?: false
       )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
       assert_file("lib/my_app/accounts/user.ex", fn file ->
         assert file =~ ~S|schema "my_users" do|
@@ -847,11 +1087,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       in_tmp_phx_umbrella_project(config.test, fn ->
         in_project(:my_app, "apps/my_app", fn _module ->
           with_generator_env(:my_app_web, [context_app: nil], fn ->
+            send self(), {:mix_shell_input, :yes?, false}
+
             Gen.Auth.run(
               ~w(Accounts User users),
               ecto_adapter: Ecto.Adapters.Postgres,
               validate_dependencies?: false
             )
+
+            assert_received {:mix_shell, :yes?, [@liveview_option_message]}
           end)
         end)
 
@@ -902,11 +1146,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       in_tmp_phx_umbrella_project(config.test, fn ->
         in_project(:my_app_web, "apps/my_app_web", fn _module ->
           with_generator_env(:my_app_web, [context_app: :my_app], fn ->
+            send self(), {:mix_shell_input, :yes?, false}
+
             Gen.Auth.run(
               ~w(Accounts User users),
               ecto_adapter: Ecto.Adapters.Postgres,
               validate_dependencies?: false
             )
+
+            assert_received {:mix_shell, :yes?, [@liveview_option_message]}
           end)
         end)
 
@@ -985,11 +1233,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       in_tmp_phx_project(config.test, fn ->
         File.write!("mix.exs", "")
 
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users),
           ecto_adapter: Ecto.Adapters.Postgres,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert_received {:mix_shell, :info,
                          [
@@ -1014,11 +1266,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           String.replace(file, "use MyAppWeb, :router", "")
         end)
 
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users),
           ecto_adapter: Ecto.Adapters.Postgres,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert_received {:mix_shell, :info,
                          [
@@ -1046,11 +1302,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           String.replace(file, "plug :put_secure_browser_headers\n", "")
         end)
 
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users),
           ecto_adapter: Ecto.Adapters.Postgres,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert_received {:mix_shell, :info,
                          [
@@ -1074,11 +1334,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         File.rm!("lib/my_app_web/templates/layout/root.html.heex")
         File.rm!("lib/my_app_web/templates/layout/app.html.heex")
 
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users),
           ecto_adapter: Ecto.Adapters.Postgres,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert_receive {:mix_shell, :error, [error]}
 
@@ -1116,11 +1380,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           ""
         end)
 
+        send self(), {:mix_shell_input, :yes?, false}
+
         Gen.Auth.run(
           ~w(Accounts User users),
           ecto_adapter: Ecto.Adapters.Postgres,
           validate_dependencies?: false
         )
+
+        assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         help_text = """
 
@@ -1148,11 +1416,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       File.mkdir_p!("priv/templates/phx.gen.auth")
       File.write!("priv/templates/phx.gen.auth/auth.ex", "#it works!")
 
+      send self(), {:mix_shell_input, :yes?, false}
+
       Gen.Auth.run(
         ~w(Accounts Admin admins),
         ecto_adapter: Ecto.Adapters.Postgres,
         validate_dependencies?: false
       )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
       assert_file("lib/my_app_web/admin_auth.ex", fn file ->
         assert file =~ ~S|it works!|

@@ -129,7 +129,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
 
     case <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, password, <%= schema.singular %>_params) do
-      {:ok, user} ->
+      {:ok, <%= schema.singular %>} ->
         socket =
           socket
           |> assign(:trigger_submit, true)

@@ -109,6 +109,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     context_args = OptionParser.to_argv(opts, switches: @switches) ++ parsed
 
     {context, schema} = Gen.Context.build(context_args, __MODULE__)
+
+    context = put_live_option(context)
+
     Gen.Context.prompt_for_code_injection(context)
 
     if Keyword.get(test_opts, :validate_dependencies?, true) do
@@ -725,4 +728,27 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp test_case_options(Ecto.Adapters.Postgres), do: ", async: true"
   defp test_case_options(adapter) when is_atom(adapter), do: ""
+
+  defp put_live_option(schema) do
+    opts =
+    case Keyword.fetch(schema.opts, :live) do
+      {:ok, _live?} ->
+        schema.opts
+
+      _ ->
+        Mix.shell().info("""
+        An authentication system can be created in two different ways:
+        - Using LiveViews
+        - Using Phoenix Templates
+        """)
+
+        if Mix.shell().yes?("Do you want to create a LiveView based authentication system?") do
+          Keyword.put_new(schema.opts, :live, true)
+        else
+          Keyword.put_new(schema.opts, :live, false)
+        end
+    end
+
+    Map.put(schema, :opts, opts)
+  end
 end
