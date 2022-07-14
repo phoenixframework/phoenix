@@ -9,18 +9,18 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       id="login_form"
       :let={f}
       for={:<%= schema.singular %>}
-      phx-change="validate"
       action={Routes.<%= schema.route_helper %>_session_path(@socket, :create)}
       as={:<%= schema.singular %>}
+      phx-update="ignore"
     >
       <%%= label f, :email %>
       <%%= email_input f, :email, required: true, value: @email %>
 
       <%%= label f, :password %>
-      <%%= password_input f, :password, required: true, value: @password %>
+      <%%= password_input f, :password, required: true %>
 
       <%%= label f, :remember_me, "Keep me logged in for 60 days" %>
-      <%%= checkbox f, :remember_me, value: @remember_me %>
+      <%%= checkbox f, :remember_me %>
       <div>
         <%%= submit "Log in" %>
       </div>
@@ -35,13 +35,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def mount(_params, _session, socket) do
     email = live_flash(socket.assigns.flash, :email)
-    socket = assign(socket, email: email, password: nil, remember_me: false)
-    {:ok, socket, temporary_assigns: [email: nil, password: nil, remember_me: nil]}
-  end
-
-  def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
-    %{"email" => email, "password" => pass, "remember_me" => remember_me} = <%= schema.singular %>_params
-
-    {:noreply, assign(socket, password: pass, email: email, remember_me: remember_me)}
+    {:ok, assign(socket, email: email), temporary_assigns: [email: nil]}
   end
 end
