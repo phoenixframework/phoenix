@@ -18,17 +18,17 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp raise_invalid_route(ast) do
     raise ArgumentError,
-          "expected compile-time route path string, got: \n\n    #{Macro.to_string(ast)}\n"
+          "expected compile-time ~p path string, got: #{Macro.to_string(ast)}"
   end
 
-  defmacro path({:<<>>, _meta, _segments} = route) do
+  defmacro path({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}) do
     {endpoint, router, statics} = attrs!(__CALLER__)
     {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, statics, route)
 
     ast
   end
 
-  defmacro path(str) when is_binary(str) do
+  defmacro path({:sigil_p, _, [str, _]}) when is_binary(str) do
     {endpoint, router, statics} = attrs!(__CALLER__)
     {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, statics, str)
 
@@ -37,7 +37,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro path(other), do: raise_invalid_route(other)
 
-  defmacro path(endpoint, router, {:<<>>, _meta, _segments} = route) do
+  defmacro path(endpoint, router, {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}) do
     endpoint = Macro.expand(endpoint, __CALLER__)
     router = Macro.expand(router, __CALLER__)
     {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, [], route)
@@ -45,7 +45,7 @@ defmodule Phoenix.VerifiedRoutes do
     ast
   end
 
-  defmacro path(endpoint, router, str) when is_binary(str) do
+  defmacro path(endpoint, router, {:sigil_p, _, [str, _]}) when is_binary(str) do
     endpoint = Macro.expand(endpoint, __CALLER__)
     router = Macro.expand(router, __CALLER__)
     {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, [], str)
@@ -55,14 +55,14 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro path(_endpoint, _router, other), do: raise_invalid_route(other)
 
-  defmacro path(conn_or_socket_or_endpoint_or_uri, {:<<>>, _meta, _segments} = route) do
+  defmacro path(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}) do
     {_endpoint, router, statics} = attrs!(__CALLER__)
     {ast, _type} = verify_rewrite(__CALLER__, conn_or_socket_or_endpoint_or_uri, router, statics, route)
 
     ast
   end
 
-  defmacro path(conn_or_socket_or_endpoint_or_uri, route) when is_binary(route) do
+  defmacro path(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, _]}) when is_binary(route) do
     {_endpoint, router, statics} = attrs!(__CALLER__)
     {ast, _type} = verify_rewrite(__CALLER__, conn_or_socket_or_endpoint_or_uri, router, statics, route)
 
@@ -78,11 +78,11 @@ defmodule Phoenix.VerifiedRoutes do
     ast
   end
 
-  defmacro url(conn_or_socket_or_endpoint_or_uri, {:<<>>, _meta, _segments} = route) do
+  defmacro url(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}) do
     verify_url(conn_or_socket_or_endpoint_or_uri, route, __CALLER__)
   end
 
-  defmacro url(conn_or_socket_or_endpoint_or_uri, route) when is_binary(route) do
+  defmacro url(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, _]}) when is_binary(route) do
     verify_url(conn_or_socket_or_endpoint_or_uri, route, __CALLER__)
   end
 
