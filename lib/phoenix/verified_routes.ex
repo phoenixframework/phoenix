@@ -21,18 +21,21 @@ defmodule Phoenix.VerifiedRoutes do
           "expected compile-time ~p path string, got: #{Macro.to_string(ast)}"
   end
 
-  defmacro path({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}) do
-    {endpoint, router, statics} = attrs!(__CALLER__)
-    {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, statics, route)
+  defp verify_path(env, {endpoint, router, statics}, route) do
+    {rewrite_ast, _type} = verify_rewrite(env, endpoint, router, statics, route)
 
-    ast
+    rewrite_ast
+  end
+
+  @doc """
+  TODO
+  """
+  defmacro path({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}) do
+    verify_path(__CALLER__, attrs!(__CALLER__), route)
   end
 
   defmacro path({:sigil_p, _, [str, _]}) when is_binary(str) do
-    {endpoint, router, statics} = attrs!(__CALLER__)
-    {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, statics, str)
-
-    ast
+    verify_path(__CALLER__, attrs!(__CALLER__), str)
   end
 
   defmacro path(other), do: raise_invalid_route(other)
@@ -40,99 +43,119 @@ defmodule Phoenix.VerifiedRoutes do
   defmacro path(endpoint, router, {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}) do
     endpoint = Macro.expand(endpoint, __CALLER__)
     router = Macro.expand(router, __CALLER__)
-    {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, [], route)
-
-    ast
+    verify_path(__CALLER__, {endpoint, router, []}, route)
   end
 
   defmacro path(endpoint, router, {:sigil_p, _, [str, _]}) when is_binary(str) do
-    endpoint = Macro.expand(endpoint, __CALLER__)
-    router = Macro.expand(router, __CALLER__)
-    {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, [], str)
-
-    ast
+    verify_path(__CALLER__, {endpoint, router, []}, str)
   end
 
   defmacro path(_endpoint, _router, other), do: raise_invalid_route(other)
 
-  defmacro path(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}) do
+  defmacro path(
+             conn_or_socket_or_endpoint_or_uri,
+             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}
+           ) do
     {_endpoint, router, statics} = attrs!(__CALLER__)
-    {ast, _type} = verify_rewrite(__CALLER__, conn_or_socket_or_endpoint_or_uri, router, statics, route)
-
-    ast
+    verify_path(__CALLER__, {conn_or_socket_or_endpoint_or_uri, router, statics}, route)
   end
 
-  defmacro path(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, _]}) when is_binary(route) do
+  defmacro path(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, _]})
+           when is_binary(route) do
     {_endpoint, router, statics} = attrs!(__CALLER__)
-    {ast, _type} = verify_rewrite(__CALLER__, conn_or_socket_or_endpoint_or_uri, router, statics, route)
-
-    ast
+    verify_path(__CALLER__, {conn_or_socket_or_endpoint_or_uri, router, statics}, route)
   end
 
   defmacro path(_conn_or_socket_or_endpoint_or_uri, other), do: raise_invalid_route(other)
 
+  @doc """
+  TODO
+  """
   defmacro sigil_p({:<<>>, _meta, _segments} = route, []) do
-    {endpoint, router, statics} = attrs!(__CALLER__)
-    {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, statics, route)
-
-    ast
+    verify_path(__CALLER__, attrs!(__CALLER__), route)
   end
 
-  defmacro url(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}) do
+  @doc """
+  TODO
+  """
+  defmacro url(
+             conn_or_socket_or_endpoint_or_uri,
+             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}
+           ) do
     verify_url(conn_or_socket_or_endpoint_or_uri, route, __CALLER__)
   end
 
-  defmacro url(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, _]}) when is_binary(route) do
+  defmacro url(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, _]})
+           when is_binary(route) do
     verify_url(conn_or_socket_or_endpoint_or_uri, route, __CALLER__)
   end
 
-  defmacro url(_conn_or_socket_or_endpoint_or_uri, other), do: raise_invalid_route(other)
+  defmacro url(_conn_or_socket_or_endpoint_or_uri, other),
+    do: raise_invalid_route(IO.inspect(other))
 
   defp verify_url(endpoint_ctx, route, env) do
     {_endoint, router, statics} = attrs!(env)
-    {rewrite, type} = verify_rewrite(env, endpoint_ctx, router, statics, route)
 
-    quote do
-      unquote(__MODULE__).__runtime_url__(unquote_splicing([type, endpoint_ctx, router, rewrite]))
+    case verify_rewrite(env, endpoint_ctx, router, statics, route) do
+      {rewrite, :static} ->
+        quote do
+          unquote(__MODULE__).static_url(unquote_splicing([endpoint_ctx, router, rewrite]))
+        end
+
+      {rewrite, _match_or_error} ->
+        quote do
+          unquote(__MODULE__).unverified_url(unquote_splicing([endpoint_ctx, router, rewrite]))
+        end
     end
   end
 
-  @doc false
-  def __runtime_url__(:static, %Plug.Conn{private: private}, router, path) do
+  @doc """
+  TODO
+  """
+  def static_url(%Plug.Conn{private: private}, router, path) do
     case private do
       %{phoenix_static_url: static_url} -> concat_url(static_url, path)
-      %{phoenix_endpoint: endpoint} -> __runtime_url__(:static, endpoint, router, path)
+      %{phoenix_endpoint: endpoint} -> static_url(endpoint, router, path)
     end
   end
 
-  def __runtime_url__(_type, %Plug.Conn{private: private}, _router, path) do
+  def static_url(%_{endpoint: endpoint}, router, path) do
+    static_url(endpoint, router, path)
+  end
+
+  def static_url(endpoint, _router, path) when is_atom(endpoint) do
+    endpoint.static_url() <> path
+  end
+
+  def static_url(other, router, path) do
+    raise ArgumentError,
+          "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
+            "or a Phoenix.Endpoint when building static url for #{inspect(router)} at #{path}, got: #{inspect(other)}"
+  end
+
+  @doc """
+  TODO
+  """
+  def unverified_url(%Plug.Conn{private: private}, _router, path) do
     case private do
       %{phoenix_router_url: url} when is_binary(url) -> concat_url(url, path)
       %{phoenix_endpoint: endpoint} -> concat_url(endpoint.url(), path)
     end
   end
 
-  def __runtime_url__(:static, %_{endpoint: endpoint}, router, path) do
-    __runtime_url__(:static, endpoint, router, path)
-  end
-
-  def __runtime_url__(_type, %_{endpoint: endpoint}, _router, path) do
+  def unverified_url(%_{endpoint: endpoint}, _router, path) do
     concat_url(endpoint.url(), path)
   end
 
-  def __runtime_url__(_type, %URI{} = uri, _router, path) do
+  def unverified_url(%URI{} = uri, _router, path) do
     URI.to_string(%{uri | path: path})
   end
 
-  def __runtime_url__(:static, endpoint, _router, path) when is_atom(endpoint) do
-    endpoint.static_url() <> path
-  end
-
-  def __runtime_url__(_type, endpoint, _router, path) when is_atom(endpoint) do
+  def unverified_url(endpoint, _router, path) when is_atom(endpoint) do
     concat_url(endpoint.url(), path)
   end
 
-  def __runtime_url__(_type, other, router, path) do
+  def unverified_url(other, router, path) do
     raise ArgumentError,
           "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
             "or a Phoenix.Endpoint when building url for #{inspect(router)} at #{path}, got: #{inspect(other)}"
@@ -141,34 +164,49 @@ defmodule Phoenix.VerifiedRoutes do
   defp concat_url(url, "/"), do: url
   defp concat_url(url, path) when is_binary(path), do: url <> path
 
-  @doc false
-  def __runtime_path__(:static, %Plug.Conn{private: private}, _router, path) do
+  @doc """
+  TODO
+  """
+  def static_path(%Plug.Conn{private: private}, _router, path) do
     case private do
       %{phoenix_static_url: _} -> path
       %{phoenix_endpoint: endpoint} -> endpoint.static_path(path)
     end
   end
 
-  def __runtime_path__(_type, %Plug.Conn{} = conn, router, path) do
-    Phoenix.Router.Helpers.path(router, conn, path)
-  end
-
-  def __runtime_path__(_type, %URI{} = uri, _router, path) do
+  def static_path(%URI{} = uri, _router, path) do
     (uri.path || "") <> path
   end
 
-  def __runtime_path__(type, %_{endpoint: endpoint}, router, path) do
-    __runtime_path__(type, endpoint, router, path)
+  def static_path(%_{endpoint: endpoint}, router, path) do
+    static_path(endpoint, router, path)
   end
 
-  def __runtime_path__(type, endpoint, _router, path) when is_atom(endpoint) do
-    case type do
-      :static -> endpoint.static_path(path)
-      _other -> endpoint.path(path)
-    end
+  def static_path(endpoint, _router, path) when is_atom(endpoint) do
+    endpoint.static_path(path)
   end
 
-  def __runtime_path__(_type, other, router, path) do
+  @doc """
+  TODO
+  """
+  def unverified_path(%Plug.Conn{} = conn, router, path) do
+    # TODO move primary code for path here
+    Phoenix.Router.Helpers.path(router, conn, path)
+  end
+
+  def unverified_path(%URI{} = uri, _router, path) do
+    (uri.path || "") <> path
+  end
+
+  def unverified_path(%_{endpoint: endpoint}, router, path) do
+    unverified_path(endpoint, router, path)
+  end
+
+  def unverified_path(endpoint, _router, path) when is_atom(endpoint) do
+    endpoint.path(path)
+  end
+
+  def unverified_path(other, router, path) do
     raise ArgumentError,
           "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
             "or a Phoenix.Endpoint when building path for #{inspect(router)} at #{path}, got: #{inspect(other)}"
@@ -268,14 +306,7 @@ defmodule Phoenix.VerifiedRoutes do
         _ -> raise ArgumentError, "invalid query string for path #{route}"
       end
 
-    type = warn_on_umatched_route(env, router, statics, test_path, route)
-
-    ast =
-      quote do
-        unquote(__MODULE__).__runtime_path__(unquote_splicing([type, endpoint, router, route]))
-      end
-
-    {ast, type}
+    rewrite_path(env, endpoint, router, route, statics, test_path)
   end
 
   defp verify_rewrite(env, endpoint, router, statics, {:<<>>, meta, segments} = route) do
@@ -287,29 +318,45 @@ defmodule Phoenix.VerifiedRoutes do
         _other -> "..."
       end)
 
-    rewrite = {:<<>>, meta, path_rewrite ++ query_rewrite}
+    rewrite_route = {:<<>>, meta, path_rewrite ++ query_rewrite}
+    rewrite_path(env, endpoint, router, rewrite_route, statics, test_path)
+  end
+
+  defp rewrite_path(env, endpoint, router, route, statics, test_path) do
     type = warn_on_umatched_route(env, router, statics, test_path, route)
 
     ast =
-      quote do
-        unquote(__MODULE__).__runtime_path__(unquote_splicing([type, endpoint, router, rewrite]))
+      case type do
+        match when match in [:match, :error] ->
+          quote do
+            unquote(__MODULE__).unverified_path(unquote_splicing([endpoint, router, route]))
+          end
+
+        :static ->
+          quote do
+            unquote(__MODULE__).static_path(unquote_splicing([endpoint, router, route]))
+          end
       end
 
     {ast, type}
   end
 
   defp warn_on_umatched_route(env, router, statics, test_path, route) do
-    case Phoenix.Router.route_info(router, "GET", test_path, _host = nil) do
-      %{} ->
-        :match
+    if static_path?(test_path, statics) do
+      :static
+    else
+      case Phoenix.Router.route_info(router, "GET", test_path, _host = nil) do
+        %{} ->
+          :match
 
-      :error ->
-        if static_path?(test_path, statics) do
-          :static
-        else
-          IO.warn("no route path for #{inspect(router)} matches #{Macro.to_string(route)}", Macro.Env.stacktrace(env))
+        :error ->
+          IO.warn(
+            "no route path for #{inspect(router)} matches #{Macro.to_string(route)}",
+            Macro.Env.stacktrace(env)
+          )
+
           :error
-        end
+      end
     end
   end
 
