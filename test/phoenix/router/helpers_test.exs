@@ -22,6 +22,8 @@ defmodule Phoenix.Router.HelpersTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
+  import Phoenix.VerifiedRoutes
+
   defmodule Router do
     use Phoenix.Router
 
@@ -530,6 +532,8 @@ defmodule Phoenix.Router.HelpersTest do
     %URI{scheme: "https", host: "example.com", port: 123, path: "/api"}
   end
 
+  @endpoint ScriptName
+  @router Router
   test "paths use script name" do
     assert Helpers.page_path(ScriptName, :root) == "/api/"
     assert Helpers.page_path(conn_with_script_name(), :root) == "/api/"
@@ -537,8 +541,23 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.post_path(ScriptName, :show, 5) == "/api/posts/5"
     assert Helpers.post_path(conn_with_script_name(), :show, 5) == "/api/posts/5"
     assert Helpers.post_path(uri_with_script_name(), :show, 5) == "/api/posts/5"
+
+    # verified
+
+    assert ~p"/" == "/api/"
+    assert path(ScriptName, Router, "/") == "/api/"
+    assert path(conn_with_script_name(), "/") == "/api/"
+    assert path(uri_with_script_name(), "/") == "/api/"
+    assert path(ScriptName, Router, "/posts/5") == "/api/posts/5"
+    assert ~p"/posts/5" == "/api/posts/5"
+    assert path(ScriptName, Router, "/posts/#{123}") == "/api/posts/123"
+    assert ~p"/posts/#{123}" == "/api/posts/123"
+    assert path(uri_with_script_name(), "/posts/5") == "/api/posts/5"
+    assert path(uri_with_script_name(), "/posts/#{123}") == "/api/posts/123"
   end
 
+  @endpoint ScriptName
+  @router Router
   test "urls use script name" do
     assert Helpers.page_url(ScriptName, :root) ==
            "https://example.com/api/"
@@ -555,14 +574,36 @@ defmodule Phoenix.Router.HelpersTest do
            "https://example.com/foo/posts/5"
     assert Helpers.post_url(uri_with_script_name(), :show, 5) ==
            "https://example.com:123/api/posts/5"
+
+    # verified
+
+    assert url(ScriptName, "/") == "https://example.com/api/"
+    assert url(conn_with_script_name(~w(foo)), "/") == "https://example.com/foo/"
+    assert url(uri_with_script_name(), "/") == "https://example.com:123/api/"
+    assert url(ScriptName, "/posts/5") == "https://example.com/api/posts/5"
+    assert url(ScriptName, "/posts/#{123}") == "https://example.com/api/posts/123"
+    assert url(conn_with_script_name(), "/posts/5") == "https://example.com/api/posts/5"
+    assert url(conn_with_script_name(~w(foo)), "/posts/5") == "https://example.com/foo/posts/5"
+    assert url(uri_with_script_name(), "/posts/5") == "https://example.com:123/api/posts/5"
   end
 
+  @endpoint ScriptName
+  @router Router
+  @statics ~w(images)
   test "static use endpoint script name only" do
     assert Helpers.static_path(conn_with_script_name(~w(foo)), "/images/foo.png") ==
-           "/api/images/foo.png"
+             "/api/images/foo.png"
 
     assert Helpers.static_url(conn_with_script_name(~w(foo)), "/images/foo.png") ==
-           "https://static.example.com/api/images/foo.png"
+             "https://static.example.com/api/images/foo.png"
+
+    # verified
+
+    assert path(conn_with_script_name(~w(foo)), "/images/foo.png") ==
+             "/api/images/foo.png"
+
+    assert url(conn_with_script_name(~w(foo)), "/images/foo.png") ==
+             "https://static.example.com/api/images/foo.png"
   end
 
   ## Dynamics
@@ -572,8 +613,13 @@ defmodule Phoenix.Router.HelpersTest do
     conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), url)
 
     assert Helpers.url(conn) == url
-    assert Helpers.admin_message_url(conn, :show, 1) ==
-      url <> "/admin/new/messages/1"
+    assert Helpers.admin_message_url(conn, :show, 1) == url <> "/admin/new/messages/1"
+
+    # verified
+
+    assert url(conn, "/") == url
+    assert url(conn, "/admin/new/messages/1") == url <> "/admin/new/messages/1"
+    assert url(conn, "/admin/new/messages/#{123}") == url <> "/admin/new/messages/123"
   end
 
   test "phoenix_router_url with URI takes precedence over endpoint" do
@@ -583,6 +629,11 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.url(conn) == "https://phoenixframework.org:123/path"
     assert Helpers.admin_message_url(conn, :show, 1) ==
       "https://phoenixframework.org:123/path/admin/new/messages/1"
+
+    # verified
+
+    assert url(conn, "/") == "https://phoenixframework.org:123/path"
+    assert url(conn, "/admin/new/messages/1") == "https://phoenixframework.org:123/path/admin/new/messages/1"
   end
 
   test "phoenix_static_url with string takes precedence over endpoint" do
