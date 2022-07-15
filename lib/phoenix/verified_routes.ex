@@ -98,8 +98,11 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   @doc false
-  def __runtime_url__(:static, %Plug.Conn{} = conn, router, path) do
-    __runtime_url__(:static, conn.private.phoenix_endpoint, router, path)
+  def __runtime_url__(:static, %Plug.Conn{private: private}, router, path) do
+    case private do
+      %{phoenix_static_url: static_url} -> concat_url(static_url, path)
+      %{phoenix_endpoint: endpoint} -> __runtime_url__(:static, endpoint, router, path)
+    end
   end
 
   def __runtime_url__(_type, %Plug.Conn{private: private}, _router, path) do
@@ -112,6 +115,7 @@ defmodule Phoenix.VerifiedRoutes do
   def __runtime_url__(:static, %_{endpoint: endpoint}, router, path) do
     __runtime_url__(:static, endpoint, router, path)
   end
+
   def __runtime_url__(_type, %_{endpoint: endpoint}, _router, path) do
     concat_url(endpoint.url(), path)
   end
@@ -138,11 +142,15 @@ defmodule Phoenix.VerifiedRoutes do
   defp concat_url(url, path) when is_binary(path), do: url <> path
 
   @doc false
-  def __runtime_path__(type, %Plug.Conn{} = conn, router, path) do
-    case type do
-      :static -> conn.private.phoenix_endpoint.static_path(path)
-      _other -> Phoenix.Router.Helpers.path(router, conn, path)
+  def __runtime_path__(:static, %Plug.Conn{private: private}, _router, path) do
+    case private do
+      %{phoenix_static_url: _} -> path
+      %{phoenix_endpoint: endpoint} -> endpoint.static_path(path)
     end
+  end
+
+  def __runtime_path__(_type, %Plug.Conn{} = conn, router, path) do
+    Phoenix.Router.Helpers.path(router, conn, path)
   end
 
   def __runtime_path__(_type, %URI{} = uri, _router, path) do
@@ -168,30 +176,36 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp verify_segment(["/" | rest], route, acc), do: verify_segment(rest, route, ["/" | acc])
 
+  # we've found a static segment, return to caller with rewritten query if found
   defp verify_segment(["/" <> _ = segment | rest], route, acc) do
     case {String.split(segment, "?"), rest} do
       {[segment], _} ->
-        verify_segment(rest, route, [segment | acc])
+        verify_segment(rest, route, [URI.encode(segment) | acc])
 
-      {[segment, ""],
-       [{:"::", m1, [{{:., m2, [Kernel, :to_string]}, m2, [query_arg]}, {:binary, m4, nil}]}]} ->
-        rewrite =
-          {:"::", m1,
-           [{{:., m2, [__MODULE__, :__encode_query__]}, m2, [query_arg]}, {:binary, m4, nil}]}
+      {[segment, ""], [{:"::", _, _}] = query} ->
+        {Enum.reverse([URI.encode(segment) | acc]), [verify_query(query, route)]}
 
-        {Enum.reverse([segment | acc]), [rewrite]}
-
-      {[_segment, query], []} ->
-        {Enum.reverse([segment | acc]), [query]}
+      {[segment, query], []} ->
+        {Enum.reverse([URI.encode(segment) <> "?" | acc]), [query]}
 
       {[_segment, _], _} ->
-        raise ArgumentError,
-              "expected query string param to be compile-time map or keyword list, got: #{Macro.to_string(route)}"
+        raise_invalid_query(route)
     end
   end
 
+  # we reached the static query string, return to caller
+  defp verify_segment(["?" <> _ = query], _route, acc) do
+    {Enum.reverse(acc), [query]}
+  end
+
+  # we reached the dynamic query string, return to call with rewritten query
+  defp verify_segment(["?" | rest], route, acc) do
+    {Enum.reverse(acc), [verify_query(rest, route)]}
+  end
+
   defp verify_segment([segment | _], route, _acc) when is_binary(segment) do
-    raise ArgumentError, "path segments must begin with /, got: #{Macro.to_string(route)}"
+    raise ArgumentError,
+          "path segments must begin with /, got: #{inspect(segment)} in #{Macro.to_string(route)}"
   end
 
   defp verify_segment(
@@ -213,7 +227,24 @@ defmodule Phoenix.VerifiedRoutes do
           "verified routes require a compile-time string, got: #{Macro.to_string(route)}"
   end
 
+  # we've reached the end of the path without finding query, return to caller
   defp verify_segment([], _route, acc), do: {Enum.reverse(acc), _query = []}
+
+  defp verify_query(
+         [{:"::", m1, [{{:., m2, [Kernel, :to_string]}, m2, [arg]}, {:binary, m4, nil}]}],
+         _route
+       ) do
+    {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m2, [arg]}, {:binary, m4, nil}]}
+  end
+
+  defp verify_query(_other, route) do
+    raise_invalid_query(route)
+  end
+
+  defp raise_invalid_query(route) do
+    raise ArgumentError,
+          "expected query string param to be compile-time map or keyword list, got: #{Macro.to_string(route)}"
+  end
 
   @doc false
   def __encode_query__(dict) when is_list(dict) or is_map(dict) do
