@@ -23,14 +23,14 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro path({:<<>>, _meta, _segments} = route) do
     {endpoint, router, statics} = attrs!(__CALLER__)
-    {ast, _type} = verify_rewrite(endpoint, router, statics, route)
+    {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, statics, route)
 
     ast
   end
 
   defmacro path(str) when is_binary(str) do
     {endpoint, router, statics} = attrs!(__CALLER__)
-    {ast, _type} = verify_rewrite(endpoint, router, statics, str)
+    {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, statics, str)
 
     ast
   end
@@ -40,7 +40,7 @@ defmodule Phoenix.VerifiedRoutes do
   defmacro path(endpoint, router, {:<<>>, _meta, _segments} = route) do
     endpoint = Macro.expand(endpoint, __CALLER__)
     router = Macro.expand(router, __CALLER__)
-    {ast, _type} = verify_rewrite(endpoint, router, [], route)
+    {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, [], route)
 
     ast
   end
@@ -48,7 +48,7 @@ defmodule Phoenix.VerifiedRoutes do
   defmacro path(endpoint, router, str) when is_binary(str) do
     endpoint = Macro.expand(endpoint, __CALLER__)
     router = Macro.expand(router, __CALLER__)
-    {ast, _type} = verify_rewrite(endpoint, router, [], str)
+    {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, [], str)
 
     ast
   end
@@ -57,14 +57,14 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro path(conn_or_socket_or_endpoint_or_uri, {:<<>>, _meta, _segments} = route) do
     {_endpoint, router, statics} = attrs!(__CALLER__)
-    {ast, _type} = verify_rewrite(conn_or_socket_or_endpoint_or_uri, router, statics, route)
+    {ast, _type} = verify_rewrite(__CALLER__, conn_or_socket_or_endpoint_or_uri, router, statics, route)
 
     ast
   end
 
   defmacro path(conn_or_socket_or_endpoint_or_uri, route) when is_binary(route) do
     {_endpoint, router, statics} = attrs!(__CALLER__)
-    {ast, _type} = verify_rewrite(conn_or_socket_or_endpoint_or_uri, router, statics, route)
+    {ast, _type} = verify_rewrite(__CALLER__, conn_or_socket_or_endpoint_or_uri, router, statics, route)
 
     ast
   end
@@ -73,7 +73,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro sigil_p({:<<>>, _meta, _segments} = route, []) do
     {endpoint, router, statics} = attrs!(__CALLER__)
-    {ast, _type} = verify_rewrite(endpoint, router, statics, route)
+    {ast, _type} = verify_rewrite(__CALLER__, endpoint, router, statics, route)
 
     ast
   end
@@ -90,7 +90,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp verify_url(endpoint_ctx, route, env) do
     {_endoint, router, statics} = attrs!(env)
-    {rewrite, type} = verify_rewrite(endpoint_ctx, router, statics, route)
+    {rewrite, type} = verify_rewrite(env, endpoint_ctx, router, statics, route)
 
     quote do
       unquote(__MODULE__).__runtime_url__(unquote_splicing([type, endpoint_ctx, router, rewrite]))
@@ -260,7 +260,7 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(true), do: "true"
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
-  defp verify_rewrite(endpoint, router, statics, route) when is_binary(route) do
+  defp verify_rewrite(env, endpoint, router, statics, route) when is_binary(route) do
     test_path =
       case String.split(route, "?") do
         [^route] -> route
@@ -268,7 +268,7 @@ defmodule Phoenix.VerifiedRoutes do
         _ -> raise ArgumentError, "invalid query string for path #{route}"
       end
 
-    type = warn_on_umatched_route(router, statics, test_path, route)
+    type = warn_on_umatched_route(env, router, statics, test_path, route)
 
     ast =
       quote do
@@ -278,7 +278,7 @@ defmodule Phoenix.VerifiedRoutes do
     {ast, type}
   end
 
-  defp verify_rewrite(endpoint, router, statics, {:<<>>, meta, segments} = route) do
+  defp verify_rewrite(env, endpoint, router, statics, {:<<>>, meta, segments} = route) do
     {path_rewrite, query_rewrite} = verify_segment(segments, route, [])
 
     test_path =
@@ -288,7 +288,7 @@ defmodule Phoenix.VerifiedRoutes do
       end)
 
     rewrite = {:<<>>, meta, path_rewrite ++ query_rewrite}
-    type = warn_on_umatched_route(router, statics, test_path, route)
+    type = warn_on_umatched_route(env, router, statics, test_path, route)
 
     ast =
       quote do
@@ -298,7 +298,7 @@ defmodule Phoenix.VerifiedRoutes do
     {ast, type}
   end
 
-  defp warn_on_umatched_route(router, statics, test_path, route) do
+  defp warn_on_umatched_route(env, router, statics, test_path, route) do
     case Phoenix.Router.route_info(router, "GET", test_path, _host = nil) do
       %{} ->
         :match
@@ -307,7 +307,7 @@ defmodule Phoenix.VerifiedRoutes do
         if static_path?(test_path, statics) do
           :static
         else
-          IO.warn("no route path for #{inspect(router)} matches #{Macro.to_string(route)}")
+          IO.warn("no route path for #{inspect(router)} matches #{Macro.to_string(route)}", Macro.Env.stacktrace(env))
           :error
         end
     end
