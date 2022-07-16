@@ -36,52 +36,9 @@ defmodule Phoenix.Router.Helpers do
   @doc """
   Callback invoked by path generated in each helper module.
   """
-  def path(router, %Conn{} = conn, path) do
-    conn
-    |> build_own_forward_path(router, path)
-    |> Kernel.||(build_conn_forward_path(conn, router, path))
-    |> Kernel.||(path_with_script(path, conn.script_name))
+  def path(router, conn_or_uri_or_endpoint_ctx, path) do
+    Phoenix.VerifiedRoutes.unverified_path(conn_or_uri_or_endpoint_ctx, router, path)
   end
-
-  def path(_router, %URI{} = uri, path) do
-    (uri.path || "") <> path
-  end
-
-  def path(_router, %_{endpoint: endpoint}, path) do
-    endpoint.path(path)
-  end
-
-  def path(_router, endpoint, path) when is_atom(endpoint) do
-    endpoint.path(path)
-  end
-
-  def path(router, other, path) do
-    raise ArgumentError,
-          "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
-            "or a Phoenix.Endpoint when building path for #{inspect(router)} at #{inspect(path)}, got: #{inspect(other)}"
-  end
-
-  ## Helpers
-
-  defp build_own_forward_path(conn, router, path) do
-    case Map.fetch(conn.private, router) do
-      {:ok, {local_script, _}} -> path_with_script(path, local_script)
-      :error -> nil
-    end
-  end
-
-  defp build_conn_forward_path(%Plug.Conn{} = conn, router, path) do
-    with %{phoenix_router: phx_router} <- conn.private,
-         {script_name, forwards} <- conn.private[phx_router],
-         {:ok, local_script} <- Map.fetch(forwards, router) do
-      path_with_script(path, script_name ++ local_script)
-    else
-      _ -> nil
-    end
-  end
-
-  defp path_with_script(path, []), do: path
-  defp path_with_script(path, script), do: "/" <> Enum.join(script, "/") <> path
 
   @doc """
   Generates the helper module for the given environment and routes.
@@ -268,49 +225,22 @@ defmodule Phoenix.Router.Helpers do
         @doc """
         Generates path to a static asset given its file path.
         """
-        def static_path(%Conn{private: private} = conn, path) do
-          private.phoenix_endpoint.static_path(path)
-        end
-
-        def static_path(%_{endpoint: endpoint} = conn, path) do
-          endpoint.static_path(path)
-        end
-
-        def static_path(endpoint, path) when is_atom(endpoint) do
-          endpoint.static_path(path)
+        def static_path(conn_or_endpoint_ctx, path) do
+          Phoenix.VerifiedRoutes.static_path(conn_or_endpoint_ctx, path)
         end
 
         @doc """
         Generates url to a static asset given its file path.
         """
-        def static_url(%Conn{private: private}, path) do
-          case private do
-            %{phoenix_static_url: url} when is_binary(url) -> url <> path
-            %{phoenix_endpoint: endpoint} -> static_url(endpoint, path)
-          end
-        end
-
-        def static_url(%_{endpoint: endpoint} = conn, path) do
-          static_url(endpoint, path)
-        end
-
-        def static_url(endpoint, path) when is_atom(endpoint) do
-          endpoint.static_url() <> endpoint.static_path(path)
+        def static_url(conn_or_endpoint_ctx, path) do
+          Phoenix.VerifiedRoutes.static_url(conn_or_endpoint_ctx, path)
         end
 
         @doc """
         Generates an integrity hash to a static asset given its file path.
         """
-        def static_integrity(%Conn{private: %{phoenix_endpoint: endpoint}}, path) do
-          static_integrity(endpoint, path)
-        end
-
-        def static_integrity(%_{endpoint: endpoint}, path) do
-          static_integrity(endpoint, path)
-        end
-
-        def static_integrity(endpoint, path) when is_atom(endpoint) do
-          endpoint.static_integrity(path)
+        def static_integrity(conn_or_endpoint_ctx, path) do
+          Phoenix.VerifiedRoutes.static_integrity(conn_or_endpoint_ctx, path)
         end
 
         # Functions used by generated helpers

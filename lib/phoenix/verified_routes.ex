@@ -22,9 +22,10 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp verify_path(env, {endpoint, router, statics}, route) do
-    {rewrite_ast, _type} = verify_rewrite(env, endpoint, router, statics, route)
-
-    rewrite_ast
+    case verify_rewrite(env, endpoint, router, statics, route) do
+      {:static, _route_ast, _path_ast, static_ast} -> static_ast
+      {_type, _route_ast, path_ast, _static_ast} -> path_ast
+    end
   end
 
   @doc """
@@ -90,47 +91,46 @@ defmodule Phoenix.VerifiedRoutes do
     verify_url(conn_or_socket_or_endpoint_or_uri, route, __CALLER__)
   end
 
-  defmacro url(_conn_or_socket_or_endpoint_or_uri, other),
-    do: raise_invalid_route(IO.inspect(other))
+  defmacro url(_conn_or_socket_or_endpoint_or_uri, other), do: raise_invalid_route(other)
 
   defp verify_url(endpoint_ctx, route, env) do
     {_endoint, router, statics} = attrs!(env)
 
     case verify_rewrite(env, endpoint_ctx, router, statics, route) do
-      {rewrite, :static} ->
+      {:static, route_ast, _path_ast, _static_ast} ->
         quote do
-          unquote(__MODULE__).static_url(unquote_splicing([endpoint_ctx, router, rewrite]))
+          unquote(__MODULE__).static_url(unquote_splicing([endpoint_ctx, route_ast]))
         end
 
-      {rewrite, _match_or_error} ->
+      {other, _route_ast, path_ast, _static_ast} when other in [:match, :error] ->
         quote do
-          unquote(__MODULE__).unverified_url(unquote_splicing([endpoint_ctx, router, rewrite]))
+          unquote(__MODULE__).unverified_url(unquote_splicing([endpoint_ctx, router, path_ast]))
         end
     end
   end
 
   @doc """
-  TODO
+  Generates url to a static asset given its file path.
   """
-  def static_url(%Plug.Conn{private: private}, router, path) do
+  def static_url(%Plug.Conn{private: private}, path) do
     case private do
       %{phoenix_static_url: static_url} -> concat_url(static_url, path)
-      %{phoenix_endpoint: endpoint} -> static_url(endpoint, router, path)
+      %{phoenix_endpoint: endpoint} -> static_url(endpoint, path)
     end
   end
 
-  def static_url(%_{endpoint: endpoint}, router, path) do
-    static_url(endpoint, router, path)
+  def static_url(%_{endpoint: endpoint}, path) do
+    static_url(endpoint, path)
   end
 
-  def static_url(endpoint, _router, path) when is_atom(endpoint) do
-    endpoint.static_url() <> path
+  def static_url(endpoint, path) when is_atom(endpoint) do
+    endpoint.static_url() <> endpoint.static_path(path)
   end
 
-  def static_url(other, router, path) do
+  def static_url(other, path) do
     raise ArgumentError,
           "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
-            "or a Phoenix.Endpoint when building static url for #{inspect(router)} at #{path}, got: #{inspect(other)}"
+            "or a Phoenix.Endpoint when building static url for #{path}, got: #{inspect(other)}"
   end
 
   @doc """
@@ -165,24 +165,24 @@ defmodule Phoenix.VerifiedRoutes do
   defp concat_url(url, path) when is_binary(path), do: url <> path
 
   @doc """
-  TODO
+  Generates path to a static asset given its file path.
   """
-  def static_path(%Plug.Conn{private: private}, _router, path) do
+  def static_path(%Plug.Conn{private: private}, path) do
     case private do
       %{phoenix_static_url: _} -> path
       %{phoenix_endpoint: endpoint} -> endpoint.static_path(path)
     end
   end
 
-  def static_path(%URI{} = uri, _router, path) do
+  def static_path(%URI{} = uri, path) do
     (uri.path || "") <> path
   end
 
-  def static_path(%_{endpoint: endpoint}, router, path) do
-    static_path(endpoint, router, path)
+  def static_path(%_{endpoint: endpoint}, path) do
+    static_path(endpoint, path)
   end
 
-  def static_path(endpoint, _router, path) when is_atom(endpoint) do
+  def static_path(endpoint, path) when is_atom(endpoint) do
     endpoint.static_path(path)
   end
 
@@ -190,8 +190,10 @@ defmodule Phoenix.VerifiedRoutes do
   TODO
   """
   def unverified_path(%Plug.Conn{} = conn, router, path) do
-    # TODO move primary code for path here
-    Phoenix.Router.Helpers.path(router, conn, path)
+    conn
+    |> build_own_forward_path(router, path)
+    |> Kernel.||(build_conn_forward_path(conn, router, path))
+    |> Kernel.||(path_with_script(path, conn.script_name))
   end
 
   def unverified_path(%URI{} = uri, _router, path) do
@@ -284,6 +286,21 @@ defmodule Phoenix.VerifiedRoutes do
           "expected query string param to be compile-time map or keyword list, got: #{Macro.to_string(route)}"
   end
 
+  @doc """
+  Generates an integrity hash to a static asset given its file path.
+  """
+  def static_integrity(%Plug.Conn{private: %{phoenix_endpoint: endpoint}}, path) do
+    static_integrity(endpoint, path)
+  end
+
+  def static_integrity(%_{endpoint: endpoint}, path) do
+    static_integrity(endpoint, path)
+  end
+
+  def static_integrity(endpoint, path) when is_atom(endpoint) do
+    endpoint.static_integrity(path)
+  end
+
   @doc false
   def __encode_query__(dict) when is_list(dict) or is_map(dict) do
     case Plug.Conn.Query.encode(dict, &to_param/1) do
@@ -325,20 +342,17 @@ defmodule Phoenix.VerifiedRoutes do
   defp rewrite_path(env, endpoint, router, route, statics, test_path) do
     type = warn_on_umatched_route(env, router, statics, test_path, route)
 
-    ast =
-      case type do
-        match when match in [:match, :error] ->
-          quote do
-            unquote(__MODULE__).unverified_path(unquote_splicing([endpoint, router, route]))
-          end
-
-        :static ->
-          quote do
-            unquote(__MODULE__).static_path(unquote_splicing([endpoint, router, route]))
-          end
+    path_ast =
+      quote do
+        unquote(__MODULE__).unverified_path(unquote_splicing([endpoint, router, route]))
       end
 
-    {ast, type}
+    static_ast =
+      quote do
+        unquote(__MODULE__).static_path(unquote_splicing([endpoint, route]))
+      end
+
+    {type, route, path_ast, static_ast}
   end
 
   defp warn_on_umatched_route(env, router, statics, test_path, route) do
@@ -374,4 +388,24 @@ defmodule Phoenix.VerifiedRoutes do
   defp static_path?(path, statics) do
     Enum.find(statics, &String.starts_with?(path, "/" <> &1))
   end
+
+  defp build_own_forward_path(conn, router, path) do
+    case Map.fetch(conn.private, router) do
+      {:ok, {local_script, _}} -> path_with_script(path, local_script)
+      :error -> nil
+    end
+  end
+
+  defp build_conn_forward_path(%Plug.Conn{} = conn, router, path) do
+    with %{phoenix_router: phx_router} <- conn.private,
+         {script_name, forwards} <- conn.private[phx_router],
+         {:ok, local_script} <- Map.fetch(forwards, router) do
+      path_with_script(path, script_name ++ local_script)
+    else
+      _ -> nil
+    end
+  end
+
+  defp path_with_script(path, []), do: path
+  defp path_with_script(path, script), do: "/" <> Enum.join(script, "/") <> path
 end
