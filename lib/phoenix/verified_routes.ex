@@ -2,7 +2,10 @@ defmodule Phoenix.VerifiedRoutes do
   @moduledoc """
   TODO
 
-  use Phoenix.VerifiedRoutes, router: AppWeb.Router, endpoint: AppWeb.Endpoint
+  use Phoenix.VerifiedRoutes,
+    router: AppWeb.Router,
+    endpoint: AppWeb.Endpoint,
+    statics: ~(images)
   """
 
   defmacro __using__(opts) do
