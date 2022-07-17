@@ -149,7 +149,7 @@ defmodule Phoenix.Router.HelpersTest do
 
       assert warnings =~ ~s|no route path for Phoenix.Router.HelpersTest.Router matches "/unknown"|
       assert warnings =~ ~s|no route path for Phoenix.Router.HelpersTest.Router matches "/unknown/123"|
-      assert warnings =~ ~s|Phoenix.Router.HelpersTest.Router "/unknown/#{123}"|
+      assert warnings =~ ~s|no route path for Phoenix.Router.HelpersTest.Router matches "/unknown/#{123}"|
     end
 
     test "~p raises when not prefixed by /" do
