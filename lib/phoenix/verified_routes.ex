@@ -21,7 +21,8 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp raise_invalid_route(ast) do
     raise ArgumentError,
-          "expected compile-time ~p path string, got: #{Macro.to_string(ast)}"
+          "expected compile-time ~p path string, got: #{Macro.to_string(ast)}\n" <>
+            "Use unverified_path/2 and unverified_url/2 if you need to build an arbitrary path."
   end
 
   defp verify_path(env, {endpoint, router, statics}, route) do
@@ -82,6 +83,18 @@ defmodule Phoenix.VerifiedRoutes do
   @doc """
   TODO
   """
+  defmacro url({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}) do
+    {endpoint, _router, _statics} = attrs!(__CALLER__)
+    verify_url(endpoint, route, __CALLER__)
+  end
+
+  defmacro url({:sigil_p, _, [route, _]}) when is_binary(route) do
+    {endpoint, _router, _statics} = attrs!(__CALLER__)
+    verify_url(endpoint, route, __CALLER__)
+  end
+
+  defmacro url(other), do: raise_invalid_route(other)
+
   defmacro url(
              conn_or_socket_or_endpoint_or_uri,
              {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]}
@@ -253,14 +266,14 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp verify_segment(
          [
-           {:"::", m1, [{{:., m2, [Kernel, :to_string]}, m3, [dynamic]}, {:binary, m4, nil}]}
+           {:"::", m1, [{{:., m2, [Kernel, :to_string]}, m3, [dynamic]}, {:binary, _, _} = bin]}
            | rest
          ],
          route,
          acc
        ) do
     rewrite =
-      {:"::", m1, [{{:., m2, [Phoenix.Param, :to_param]}, m3, [dynamic]}, {:binary, m4, nil}]}
+      {:"::", m1, [{{:., m2, [Phoenix.Param, :to_param]}, m3, [dynamic]}, bin]}
 
     verify_segment(rest, route, [rewrite | acc])
   end
@@ -274,10 +287,10 @@ defmodule Phoenix.VerifiedRoutes do
   defp verify_segment([], _route, acc), do: {Enum.reverse(acc), _query = []}
 
   defp verify_query(
-         [{:"::", m1, [{{:., m2, [Kernel, :to_string]}, m2, [arg]}, {:binary, m4, nil}]}],
+         [{:"::", m1, [{{:., m2, [Kernel, :to_string]}, m2, [arg]}, {:binary, _, _} = bin]}],
          _route
        ) do
-    {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m2, [arg]}, {:binary, m4, nil}]}
+    {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m2, [arg]}, bin]}
   end
 
   defp verify_query(_other, route) do
