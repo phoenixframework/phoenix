@@ -272,8 +272,7 @@ defmodule Phoenix.VerifiedRoutes do
          route,
          acc
        ) do
-    rewrite =
-      {:"::", m1, [{{:., m2, [Phoenix.Param, :to_param]}, m3, [dynamic]}, bin]}
+    rewrite = {:"::", m1, [{{:., m2, [Phoenix.Param, :to_param]}, m3, [dynamic]}, bin]}
 
     verify_segment(rest, route, [rewrite | acc])
   end
