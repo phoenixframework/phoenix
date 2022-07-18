@@ -388,7 +388,7 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   @http_methods ~w(GET POST PUT PATCH DELETE OPTIONS CONNECT TRACE HEAD)
-  def match_route?(router, test_path) do
+  defp match_route?(router, test_path) do
     Enum.find_value([nil | router.__hosts__()], false, fn host ->
       Enum.find_value(@http_methods, false, fn method ->
         case Phoenix.Router.route_info(router, method, test_path, host) do
