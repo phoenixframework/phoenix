@@ -179,8 +179,6 @@ defmodule Phoenix.Router.HelpersTest do
     end
 
     test "path arities" do
-      assert path(~p"/posts/1") == "/posts/1"
-      assert path(~p"/posts/#{123}") == "/posts/123"
       assert path(Endpoint, ~p"/posts/1") == "/posts/1"
       assert path(conn_with_endpoint(), ~p"/posts/1") == "/posts/1"
       assert path(conn_with_script_name(), ~p"/posts/1") == "/api/posts/1"
@@ -199,7 +197,7 @@ defmodule Phoenix.Router.HelpersTest do
         Code.compile_quoted(quote do
           defmodule MissingPathPrefix do
             use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
-            def test, do: path("/posts/1")
+            def test, do: path(%URI{}, "/posts/1")
           end
         end)
       end

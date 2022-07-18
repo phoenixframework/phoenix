@@ -9,14 +9,50 @@ defmodule Phoenix.VerifiedRoutes do
   """
 
   defmacro __using__(opts) do
+    opts =
+      if Macro.quoted_literal?(opts) do
+        Macro.prewalk(opts, &expand_alias(&1, __CALLER__))
+      else
+        opts
+      end
+
     quote do
       opts = unquote(opts)
-      # TODO quoted_literal?
       @router Keyword.fetch!(opts, :router)
       @endpoint Keyword.fetch!(opts, :endpoint)
       @statics Keyword.get(opts, :statics, [])
       import unquote(__MODULE__)
     end
+  end
+
+  defp expand_alias({:__aliases__, _, _} = alias, env),
+    do: Macro.expand(alias, %{env | function: {:path, 1}})
+
+  defp expand_alias(other, _env), do: other
+
+
+  @doc ~S'''
+  Generates the router path with route verification.
+
+  Interpolated named parameters are encoded via the `Phoenix.Param` protocol.
+
+  Warns when the provided path does not match against the router specified
+  in `use Phoenix.VerifiedRoutes` or the `@router` module attribute.
+
+  ## Examples
+
+      use Phoenix.VerifiedRoutes, endpoint: MyAppWeb.Endpoint, router: MyAppWeb.Router
+
+      redirect(to: ~p"/users/top")
+
+      redirect(to: ~p"/users/#{@user}")
+
+      ~H"""
+      <.link to={~p"/users?#{[page: @page]}"}>profile</.link>
+      """
+  '''
+  defmacro sigil_p({:<<>>, _meta, _segments} = route, []) do
+    verify_path(__CALLER__, attrs!(__CALLER__), route, route)
   end
 
   defp raise_invalid_route(ast) do
@@ -32,19 +68,26 @@ defmodule Phoenix.VerifiedRoutes do
     end
   end
 
-  @doc """
-  TODO
-  """
-  defmacro path({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast) do
-    verify_path(__CALLER__, attrs!(__CALLER__), route, og_ast)
-  end
+  @doc ~S'''
+  Generates the router path with route verification.
 
-  defmacro path({:sigil_p, _, [str, _]} = og_ast) when is_binary(str) do
-    verify_path(__CALLER__, attrs!(__CALLER__), str, og_ast)
-  end
+  See `sigil_p/1` for more information.
 
-  defmacro path(other), do: raise_invalid_route(other)
+  Warns when the provided path does not match against the router specified
+  in `use Phoenix.VerifiedRoutes` or the `@router` module attribute.
 
+  ## Examples
+
+      use Phoenix.VerifiedRoutes, endpoint: MyAppWeb.Endpoint, router: MyAppWeb.Router
+
+      redirect(to: path(conn, ~p"/users/top"))
+
+      redirect(to: path(conn, ~p"/users/#{@user}"))
+
+      ~H"""
+      <.link to={path(@uri, "/users?#{[page: @page]}")}>profile</.link>
+      """
+  '''
   defmacro path(endpoint, router, {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast) do
     endpoint = Macro.expand(endpoint, __CALLER__)
     router = Macro.expand(router, __CALLER__)
@@ -72,13 +115,6 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defmacro path(_conn_or_socket_or_endpoint_or_uri, other), do: raise_invalid_route(other)
-
-  @doc """
-  TODO
-  """
-  defmacro sigil_p({:<<>>, _meta, _segments} = route, []) do
-    verify_path(__CALLER__, attrs!(__CALLER__), route, route)
-  end
 
   @doc """
   TODO
