@@ -230,6 +230,21 @@ defmodule Phoenix.VerifiedRoutes do
             "or a Phoenix.Endpoint when building path for #{inspect(router)} at #{path}, got: #{inspect(other)}"
   end
 
+  @doc false
+  def __encode_segment__(data) do
+    case data do
+      [] -> ""
+      [str | _] when is_binary(str) -> Enum.map_join(data, "/", &encode_segment/1)
+      _ -> encode_segment(data)
+    end
+  end
+
+  defp encode_segment(data) do
+    data
+    |> Phoenix.Param.to_param()
+    |> URI.encode(&URI.char_unreserved?/1)
+  end
+
   defp verify_segment(["/" | rest], route, acc), do: verify_segment(rest, route, ["/" | acc])
 
   # we've found a static segment, return to caller with rewritten query if found
@@ -272,7 +287,7 @@ defmodule Phoenix.VerifiedRoutes do
          route,
          acc
        ) do
-    rewrite = {:"::", m1, [{{:., m2, [Phoenix.Param, :to_param]}, m3, [dynamic]}, bin]}
+    rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_segment__]}, m3, [dynamic]}, bin]}
 
     verify_segment(rest, route, [rewrite | acc])
   end
@@ -347,7 +362,7 @@ defmodule Phoenix.VerifiedRoutes do
     test_path =
       Enum.map_join(path_rewrite, fn
         segment when is_binary(segment) -> segment
-        _other -> "..."
+        _other -> "dynamic"
       end)
 
     rewrite_route = {:<<>>, meta, path_rewrite ++ query_rewrite}

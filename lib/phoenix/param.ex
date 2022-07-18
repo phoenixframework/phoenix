@@ -63,7 +63,7 @@ defimpl Phoenix.Param, for: Float do
 end
 
 defimpl Phoenix.Param, for: BitString do
-  def to_param(bin) when is_binary(bin), do: URI.encode(bin)
+  def to_param(bin) when is_binary(bin), do: bin
 end
 
 defimpl Phoenix.Param, for: Atom do

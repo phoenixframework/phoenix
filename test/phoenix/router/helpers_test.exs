@@ -140,6 +140,13 @@ defmodule Phoenix.Router.HelpersTest do
       assert ~p"/posts/#{struct}?foo=bar" == "/posts/post-123?foo=bar"
     end
 
+    test "~p on splat segments" do
+      assert ~p|/posts/file/#{1}/#{"2.jpg"}| == "/posts/file/1/2.jpg"
+
+      location = ["folder", "file.jpg"]
+      assert ~p|/posts/file/#{location}| == "/posts/file/folder/file.jpg"
+    end
+
     test "~p warns on unmatched path" do
       warnings =
         ExUnit.CaptureIO.capture_io(:stderr, fn ->
@@ -317,6 +324,8 @@ defmodule Phoenix.Router.HelpersTest do
     end
   end
 
+  @endpoint Endpoint
+  @router Router
   test "top-level named routes with complex ids" do
     assert Helpers.post_path(Endpoint, :show, "==d--+") ==
       "/posts/%3D%3Dd--%2B"
@@ -331,6 +340,14 @@ defmodule Phoenix.Router.HelpersTest do
       "/posts/file/%3D%3Dd--%2B/%3AO.jpg"
     assert Helpers.post_path(Endpoint, :file, ["==d--+", ":O.jpg"], xx: "/=+/") ==
       "/posts/file/%3D%3Dd--%2B/%3AO.jpg?xx=%2F%3D%2B%2F"
+
+    # verified
+
+    assert ~p|/posts/#{"==d--+"}| == "/posts/%3D%3Dd--%2B"
+    assert ~p|/posts/top?#{[id: "==d--+"]}| == "/posts/top?id=%3D%3Dd--%2B"
+
+    assert ~p|/posts/file/#{"==d--+"}/#{":O.jpg"}| == "/posts/file/%3D%3Dd--%2B/%3AO.jpg"
+    assert ~p|/posts/file/#{"==d--+"}/#{":O.jpg"}?#{[xx: "/=+/"]}| == "/posts/file/%3D%3Dd--%2B/%3AO.jpg?xx=%2F%3D%2B%2F"
   end
 
   test "top-level named routes with trailing slashes" do
