@@ -27,7 +27,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <%%= error_tag f, :email %>
 
       <%%= label f, :current_password, for: "current_password_for_email" %>
-      <%%= password_input f, :current_password, required: true, name: "current_password", id: "current_password_for_email", value: input_value(f, :current_password) %>
+      <%%= password_input f, :current_password, required: true, name: "current_password", id: "current_password_for_email", value: @email_form_current_password %>
       <%%= error_tag f, :current_password %>
 
       <div>
@@ -74,24 +74,45 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     """
   end
 
-  def mount(params, _session, socket) do
+  def mount(%{"token" => token}, _session, socket) do
+    socket =
+      case <%= inspect context.alias %>.update_<%= schema.singular %>_email(socket.assigns.current_<%= schema.singular %>, token) do
+        :ok ->
+          put_flash(socket, :info, "Email changed successfully.")
+
+        :error ->
+          put_flash(socket, :error, "Email change link is invalid or it has expired.")
+      end
+
+    {:ok, push_redirect(socket, to: Routes.<%= schema.route_helper %>_settings_path(socket, :edit))}
+  end
+
+  def mount(_params, _session, socket) do
     <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
 
     socket =
       socket
-      |> assign(:current_password, "")
+      |> assign(:current_password, nil)
+      |> assign(:email_form_current_password, nil)
       |> assign(:current_email, <%= schema.singular %>.email)
       |> assign(:email_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>))
       |> assign(:password_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>))
       |> assign(:trigger_submit, false)
-      |> update_email(params)
 
     {:ok, socket}
   end
 
-  def handle_event("validate_email", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
+  def handle_event("validate_email", params, socket) do
+    %{"current_password" => password, "<%= schema.singular %>" => <%= schema.singular %>_params} = params
     email_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(socket.assigns.current_<%= schema.singular %>, <%= schema.singular %>_params)
-    {:noreply, assign(socket, :email_changeset, Map.put(email_changeset, :action, :validate))}
+
+    socket =
+      assign(socket,
+        email_changeset: Map.put(email_changeset, :action, :validate),
+        email_form_current_password: password
+      )
+
+    {:noreply, socket}
   end
 
   def handle_event("update_email", params, socket) do
@@ -141,19 +162,4 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply, assign(socket, :password_changeset, changeset)}
     end
   end
-
-  defp update_email(socket, %{"token" => token}) do
-    socket =
-      case <%= inspect context.alias %>.update_<%= schema.singular %>_email(socket.assigns.current_<%= schema.singular %>, token) do
-        :ok ->
-          put_flash(socket, :info, "Email changed successfully.")
-
-        :error ->
-          put_flash(socket, :error, "Email change link is invalid or it has expired.")
-      end
-
-    push_redirect(socket, to: Routes.<%= schema.route_helper %>_settings_path(socket, :edit))
-  end
-
-  defp update_email(socket, _params), do: socket
 end
