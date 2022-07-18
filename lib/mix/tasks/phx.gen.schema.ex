@@ -86,6 +86,13 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   Generated migration can use `binary_id` for schema's primary key
   and its references with option `--binary-id`.
 
+  ## prefix
+
+  By default migrations and schemas are generated without a prefix.
+  A prefix can be specified with the `--prefix` flags. For example:
+
+      $ mix phx.gen.schema Blog.Post posts --prefix blog
+
   ## Default options
 
   This generator uses default options provided in the `:generators`
