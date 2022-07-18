@@ -1,6 +1,9 @@
 defmodule Phoenix.VerifiedRoutes do
-  @moduledoc """
+  @moduledoc ~S"""
   TODO
+    - [ ] ~p"/posts?page=#{page}"
+    - [ ] optimize verb/host lookup
+    - [ ] forwards?
 
   use Phoenix.VerifiedRoutes,
     router: AppWeb.Router,
