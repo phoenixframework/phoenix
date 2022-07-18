@@ -41,6 +41,9 @@ defmodule Phoenix.Router.HelpersTest do
         resources "/files", FileController
       end
     end
+    scope "/", host: "users." do
+      post "/host_users/:id/info", UserController, :create
+    end
 
     resources "/files", FileController
 
@@ -125,6 +128,11 @@ defmodule Phoenix.Router.HelpersTest do
     test "~p with dynamic string and query params" do
       struct = %__MODULE__{id: 123, slug: "post-123"}
       assert ~p"/posts/#{struct}?#{[page: 1, spaced: "a b"]}" == "/posts/post-123?page=1&spaced=a+b"
+      assert ~p"/posts/#{struct}?#{[page: 1, spaced: "a b"]}" == "/posts/post-123?page=1&spaced=a+b"
+    end
+
+    test "~p with scoped host" do
+      assert ~p"/host_users/1/info" == "/host_users/1/info"
     end
 
     test "~p with dynamic string and static query params" do

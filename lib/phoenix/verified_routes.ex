@@ -374,19 +374,29 @@ defmodule Phoenix.VerifiedRoutes do
     if static_path?(test_path, statics) do
       :static
     else
-      case Phoenix.Router.route_info(router, "GET", test_path, _host = nil) do
-        %{} ->
-          :match
+      if match_route?(router, test_path) do
+        :match
+      else
+        IO.warn(
+          "no route path for #{inspect(router)} matches #{Macro.to_string(og_ast)}",
+          Macro.Env.stacktrace(env)
+        )
 
-        :error ->
-          IO.warn(
-            "no route path for #{inspect(router)} matches #{Macro.to_string(og_ast)}",
-            Macro.Env.stacktrace(env)
-          )
-
-          :error
+        :error
       end
     end
+  end
+
+  @http_methods ~w(GET POST PUT PATCH DELETE OPTIONS CONNECT TRACE HEAD)
+  def match_route?(router, test_path) do
+    Enum.find_value([nil | router.__hosts__()], false, fn host ->
+      Enum.find_value(@http_methods, false, fn method ->
+        case Phoenix.Router.route_info(router, method, test_path, host) do
+          %{} -> true
+          :error -> false
+        end
+      end)
+    end)
   end
 
   defp attrs!(env) do

@@ -327,6 +327,7 @@ defmodule Phoenix.Router do
       @helpers_moduledoc Keyword.get(unquote(opts), :helpers_moduledoc, true)
 
       Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
+      Module.register_attribute __MODULE__, :phoenix_hosts, accumulate: true
       @phoenix_forwards %{}
 
       import Phoenix.Router
@@ -475,8 +476,9 @@ defmodule Phoenix.Router do
 
   @doc false
   defmacro __before_compile__(env) do
-    routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
+    routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse()
     routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1)})
+    hosts = env.module |> Module.get_attribute(:phoenix_hosts) |> Enum.reverse() |> Enum.uniq()
 
     helpers_moduledoc = Module.get_attribute(env.module, :helpers_moduledoc)
 
@@ -503,6 +505,8 @@ defmodule Phoenix.Router do
     quote do
       @doc false
       def __routes__,  do: unquote(Macro.escape(routes))
+
+      def __hosts__,  do: unquote(hosts)
 
       @doc false
       def __checks__, do: unquote({:__block__, [], Map.keys(checks)})
