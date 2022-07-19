@@ -89,7 +89,7 @@ The buildpacks we use default to Elixir, Erlang, and Node.js versions that are q
 
 ```console
 $ echo 'elixir_version=1.14.3' > elixir_buildpack.config
-$ echo 'erlang_version=24.3.4.2' >> elixir_buildpack.config
+$ echo 'erlang_version=24.3' >> elixir_buildpack.config
 $ echo 'node_version=12.16.3' > phoenix_static_buildpack.config
 ```
 
