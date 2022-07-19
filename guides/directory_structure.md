@@ -49,10 +49,10 @@ The `lib/hello/application.ex` file defines an Elixir application named `Hello.A
 
 ```elixir
 children = [
-  # Start the Ecto repository
-  Hello.Repo,
   # Start the Telemetry supervisor
   HelloWeb.Telemetry,
+  # Start the Ecto repository
+  Hello.Repo,
   # Start the PubSub system
   {Phoenix.PubSub, name: Hello.PubSub},
   # Start the Endpoint (http/https)
