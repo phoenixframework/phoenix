@@ -9,6 +9,7 @@ all-test:
 
 test:
     FROM +test-setup
+    COPY --dir config installer ./
     RUN MIX_ENV=test mix deps.compile
     COPY --dir assets config installer lib integration_test priv test ./
 
