@@ -6,7 +6,7 @@ end
 defmodule Phx.New.MixProject do
   use Mix.Project
 
-  @version "1.6.4"
+  @version "1.7.0-dev"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to update:
