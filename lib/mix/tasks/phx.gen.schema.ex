@@ -94,15 +94,14 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   and for MySQL it sets the database for the generated migration and schema.
   The prefix can be used to thematically organize your tables on the database level.
 
-  > #### Warning {: .warning}
-  >
-  > The flag does not generate migrations to create the schema / database.
-  > This needs to be done manually or in a separate migration.
-
   A prefix can be specified with the `--prefix` flags. For example:
 
       $ mix phx.gen.schema Blog.Post posts --prefix blog
 
+  > #### Warning {: .warning}
+  >
+  > The flag does not generate migrations to create the schema / database.
+  > This needs to be done manually or in a separate migration.
   ## Default options
 
   This generator uses default options provided in the `:generators`
