@@ -67,7 +67,7 @@ defmodule Phoenix.Router.Route do
 
     %{
       path: path,
-      host: build_host(route.host),
+      host: Plug.Router.Utils.build_host_match(route.host),
       verb_match: verb_match(route.verb),
       binding: binding,
       prepare: build_prepare(route),
@@ -82,26 +82,28 @@ defmodule Phoenix.Router.Route do
   defp build_path_params(binding), do: {:%{}, [], binding}
 
   defp build_path_and_binding(%Route{path: path} = route) do
-    {params, segments} =
+    {_params, segments} =
       case route.kind do
         :forward -> Plug.Router.Utils.build_path_match(path <> "/*_forward_path_info")
         :match   -> Plug.Router.Utils.build_path_match(path)
       end
 
-    binding =
-      for var <- params, var != :_forward_path_info do
-        {Atom.to_string(var), Macro.var(var, nil)}
-      end
-
-    {segments, binding}
+    rewrite_segments(segments)
   end
 
-  defp build_host(host) do
-    cond do
-      is_nil(host)             -> quote do: _
-      String.last(host) == "." -> quote do: unquote(host) <> _
-      true                     -> host
-    end
+  # We rewrite segments to use consistent variable naming as we want to group routes later on.
+  defp rewrite_segments(segments) do
+    {segments, {binding, _counter}} =
+      Macro.prewalk(segments, {[], 0}, fn
+        {name, _meta, nil}, {binding, counter} when is_atom(name) and name != :_forward_path_info ->
+          var = Macro.var(:"arg#{counter}", nil)
+          {var, {[{Atom.to_string(name), var} | binding], counter + 1}}
+
+        other, acc ->
+          {other, acc}
+      end)
+
+    {segments, Enum.reverse(binding)}
   end
 
   defp build_prepare(route) do
@@ -133,12 +135,13 @@ defmodule Phoenix.Router.Route do
   end
 
   defp build_dispatch(%Route{kind: :forward} = route) do
-    {_params, fwd_segments} = Plug.Router.Utils.build_path_match(route.path)
+    {_params, segments} = Plug.Router.Utils.build_path_match(route.path)
+    {segments, _} = rewrite_segments(segments)
 
     quote do
       {
         Phoenix.Router.Route,
-        {unquote(fwd_segments), unquote(route.plug), unquote(Macro.escape(route.plug_opts))}
+        {unquote(segments), unquote(route.plug), unquote(Macro.escape(route.plug_opts))}
       }
     end
   end

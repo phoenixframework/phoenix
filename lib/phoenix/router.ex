@@ -469,7 +469,7 @@ defmodule Phoenix.Router do
               raise MalformedURIError, "malformed URI path: #{inspect conn.request_path}"
           end
 
-        case __match_route__(method, decoded, host) do
+        case __match_route__(decoded).(method, host) do
           :error -> raise NoRouteError, conn: conn, router: __MODULE__
           match -> Phoenix.Router.__call__(conn, match)
         end
@@ -486,7 +486,8 @@ defmodule Phoenix.Router do
     hosts = env.module |> Module.get_attribute(:phoenix_hosts) |> Enum.reverse() |> Enum.uniq()
 
     Helpers.define(env, routes_with_exprs)
-    {matches, _} = Enum.map_reduce(routes_with_exprs, %{}, &build_match/2)
+    group = Enum.group_by(routes_with_exprs, fn {_route, exprs} -> exprs.path end)
+    {matches, _} = Enum.flat_map_reduce(routes_with_exprs, {group, %{}}, &build_match/2)
 
     checks =
       for %{line: line, plug: plug, plug_opts: plug_opts} <- routes, into: %{} do
@@ -497,8 +498,9 @@ defmodule Phoenix.Router do
 
     match_404 =
       quote [generated: true] do
-        def __match_route__(_method, _path_info, _host) do
-          :error
+        @doc false
+        def __match_route__(_path_info) do
+          fn _method, _host -> :error end
         end
       end
 
@@ -533,42 +535,72 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp build_match({route, exprs}, known_pipelines) do
+  defp build_match({route, expr}, {groups, known_pipes}) do
+    # We need to process the routes in the order they are defined
+    # while grouping them. So we keep the original route ordering
+    # and unpack the groups.
+    {grouped_routes_with_exprs, groups} = Map.pop(groups, expr.path)
+
+    if grouped_routes_with_exprs do
+      {clauses, pipes, known_pipes} =
+        Enum.reduce(grouped_routes_with_exprs, {[], [], known_pipes}, &build_match_group/2)
+
+      catch_all =
+        quote generated: true do
+          _, _ -> :error
+        end
+
+      block =
+        quote line: route.line do
+          unquote_splicing(pipes)
+
+          def __match_route__(unquote(expr.path)) do
+            unquote({:fn, [], Enum.reverse(clauses, catch_all)})
+          end
+        end
+
+      {[block], {groups, known_pipes}}
+    else
+      {[], {groups, known_pipes}}
+    end
+  end
+
+  defp build_match_pipes(route, acc_pipes, known_pipes) do
     %{pipe_through: pipe_through} = route
+
+    case known_pipes do
+      %{^pipe_through => name} ->
+        {name, acc_pipes, known_pipes}
+
+      %{} ->
+        name = :"__pipe_through#{map_size(known_pipes)}__"
+        acc_pipes = [build_pipes(name, pipe_through) | acc_pipes]
+        known_pipes = Map.put(known_pipes, pipe_through, name)
+        {name, acc_pipes, known_pipes}
+    end
+  end
+
+  defp build_match_group({route, expr}, {acc_clauses, acc_pipes, known_pipes}) do
+    {pipe_name, acc_pipes, known_pipes} = build_match_pipes(route, acc_pipes, known_pipes)
 
     %{
       prepare: prepare,
       dispatch: dispatch,
       verb_match: verb_match,
       path_params: path_params,
-      path: path,
       host: host
-    } = exprs
+    } = expr
 
-    {pipe_name, pipe_definition, known_pipelines} =
-      case known_pipelines do
-        %{^pipe_through => name} ->
-          {name, :ok, known_pipelines}
-
-        %{} ->
-          name = :"__pipe_through#{map_size(known_pipelines)}__"
-          {name, build_pipes(name, pipe_through), Map.put(known_pipelines, pipe_through, name)}
-      end
-
-    quoted =
-      quote line: route.line do
-        unquote(pipe_definition)
-
-        @doc false
-        def __match_route__(unquote(verb_match), unquote(path), unquote(host)) do
+    [clause] =
+      quote do
+        unquote(verb_match), unquote(host) ->
           {unquote(build_metadata(route, path_params)),
            fn var!(conn, :conn), %{path_params: var!(path_params, :conn)} -> unquote(prepare) end,
            &unquote(Macro.var(pipe_name, __MODULE__))/1,
            unquote(dispatch)}
-        end
       end
 
-    {quoted, known_pipelines}
+    {[clause | acc_clauses], acc_pipes, known_pipes}
   end
 
   defp build_metadata(route, path_params) do
@@ -623,8 +655,6 @@ defmodule Phoenix.Router do
       Defaults to true, disables scoping if false.
     * `:log` - the level to log the route dispatching under,
       may be set to false. Defaults to `:debug`
-    * `:host` - a string containing the host scope, or prefix host scope,
-      ie `"foo.bar.com"`, `"foo."`
     * `:private` - a map of private data to merge into the connection
       when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
@@ -1076,7 +1106,6 @@ defmodule Phoenix.Router do
     router_opts = Keyword.put(router_opts, :as, nil)
 
     quote unquote: true, bind_quoted: [path: path, plug: plug] do
-      plug = Scope.register_forwards(__MODULE__, path, plug)
       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
     end
   end
@@ -1123,7 +1152,7 @@ defmodule Phoenix.Router do
   end
 
   def route_info(router, method, split_path, host) when is_list(split_path) do
-    case router.__match_route__(method, split_path, host) do
+    case router.__match_route__(split_path).(method, host) do
       {%{} = metadata, _prepare, _pipeline, {_plug, _opts}} -> Map.delete(metadata, :conn)
       :error -> :error
     end

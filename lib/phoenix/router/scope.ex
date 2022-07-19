@@ -21,6 +21,10 @@ defmodule Phoenix.Router.Scope do
   Builds a route based on the top of the stack.
   """
   def route(line, module, kind, verb, path, plug, plug_opts, opts) do
+    unless is_atom(plug) do
+      raise ArgumentError, "routes expect a module plug as second argument, got: #{inspect plug}"
+    end
+
     top = get_top(module)
     path    = validate_path(path)
     private = Keyword.get(opts, :private, %{})
@@ -41,7 +45,37 @@ defmodule Phoenix.Router.Scope do
       |> Keyword.get(:metadata, %{})
       |> Map.put(:log, Keyword.get(opts, :log, top.log))
 
+    if kind == :forward do
+      register_forwards(module, path, plug)
+    end
+
     Phoenix.Router.Route.build(line, kind, verb, path, top.host, alias, plug_opts, as, top.pipes, private, assigns, metadata, trailing_slash?)
+  end
+
+  defp register_forwards(module, path, plug) when is_atom(plug) do
+    plug = expand_alias(module, plug)
+    phoenix_forwards = Module.get_attribute(module, :phoenix_forwards)
+
+    path_segments =
+      case Plug.Router.Utils.build_path_match(path) do
+        {[], path_segments} ->
+          if phoenix_forwards[plug] do
+            raise ArgumentError, "#{inspect plug} has already been forwarded to. A module can only be forwarded a single time"
+          end
+
+          path_segments
+
+        _ ->
+          raise ArgumentError, "dynamic segment \"#{path}\" not allowed when forwarding. Use a static path instead"
+      end
+
+    phoenix_forwards = Map.put(phoenix_forwards, plug, path_segments)
+    Module.put_attribute(module, :phoenix_forwards, phoenix_forwards)
+    plug
+  end
+
+  defp register_forwards(_, _, plug) do
+    raise ArgumentError, "forward expects a module as the second argument, #{inspect plug} given"
   end
 
   @doc """
@@ -49,11 +83,7 @@ defmodule Phoenix.Router.Scope do
   """
   def validate_path("/" <> _ = path), do: path
   def validate_path(path) when is_binary(path) do
-    IO.warn """
-    router paths should begin with a forward slash, got: #{inspect path}
-    #{Exception.format_stacktrace()}
-    """
-
+    IO.warn "router paths should begin with a forward slash, got: #{inspect path}"
     "/" <> path
   end
   def validate_path(path) do
@@ -142,35 +172,6 @@ defmodule Phoenix.Router.Scope do
       put_top(module, top)
       stack
     end)
-  end
-
-  @doc """
-  Add a forward to the router.
-  """
-  def register_forwards(module, path, plug) when is_atom(plug) do
-    plug = expand_alias(module, plug)
-    phoenix_forwards = Module.get_attribute(module, :phoenix_forwards)
-
-    path_segments =
-      case Plug.Router.Utils.build_path_match(path) do
-        {[], path_segments} ->
-          if phoenix_forwards[plug] do
-            raise ArgumentError, "#{inspect plug} has already been forwarded to. A module can only be forwarded a single time"
-          end
-
-          path_segments
-
-        _ ->
-          raise ArgumentError, "dynamic segment \"#{path}\" not allowed when forwarding. Use a static path instead"
-      end
-
-    phoenix_forwards = Map.put(phoenix_forwards, plug, path_segments)
-    Module.put_attribute(module, :phoenix_forwards, phoenix_forwards)
-    plug
-  end
-
-  def register_forwards(_, _, plug) do
-    raise ArgumentError, "forward expects a module as the second argument, #{inspect plug} given"
   end
 
   @doc """

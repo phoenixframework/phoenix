@@ -30,8 +30,8 @@ defmodule Phoenix.Router.RouteTest do
   test "builds expressions based on the route" do
     exprs = build(1, :match, :get, "/foo/:bar", nil, Hello, :world, "hello_world", [], %{}, %{}, %{}, false) |> exprs
     assert exprs.verb_match == "GET"
-    assert exprs.path == ["foo", {:bar, [], nil}]
-    assert exprs.binding == [{"bar", {:bar, [], nil}}]
+    assert exprs.path == ["foo", {:arg0, [], nil}]
+    assert exprs.binding == [{"bar", {:arg0, [], nil}}]
     assert Macro.to_string(exprs.host) == "_"
 
     exprs = build(1, :match, :get, "/", "foo.", Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false) |> exprs
