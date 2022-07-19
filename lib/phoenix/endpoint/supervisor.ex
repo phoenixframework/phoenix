@@ -427,7 +427,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       else
         Logger.error "Could not find static manifest at #{inspect outer}. " <>
                      "Run \"mix phx.digest\" after building your static files " <>
-                     "or remove the configuration from \"config/prod.exs\"."
+                     "or remove the \"cache_static_manifest\" configuration from your config files."
       end
     else
       %{}
