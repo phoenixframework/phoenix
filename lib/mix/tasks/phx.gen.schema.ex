@@ -102,6 +102,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   >
   > The flag does not generate migrations to create the schema / database.
   > This needs to be done manually or in a separate migration.
+
   ## Default options
 
   This generator uses default options provided in the `:generators`
