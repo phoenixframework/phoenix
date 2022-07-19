@@ -899,10 +899,10 @@ defmodule Phoenix.Endpoint do
   The following configuration applies only to `:longpoll`:
 
     * `:window_ms` - how long the client can wait for new messages
-      in its poll request, defaults to 10_000ms.
+      in its poll request in milliseconds (ms). Defaults to `10_000`.
 
     * `:pubsub_timeout_ms` - how long a request can wait for the
-      pubsub layer to respond, defaults to 2000ms.
+      pubsub layer to respond in milliseconds (ms). Defaults to `2000`.
 
     * `:crypto` - options for verifying and signing the token, accepted
       by `Phoenix.Token`. By default tokens are valid for 2 weeks
