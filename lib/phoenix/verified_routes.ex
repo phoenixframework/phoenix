@@ -31,7 +31,7 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp expand_alias({:__aliases__, _, _} = alias, env),
-    do: Macro.expand(alias, %{env | function: {:path, 1}})
+    do: Macro.expand(alias, %{env | function: {:path, 2}})
 
   defp expand_alias(other, _env), do: other
 
@@ -98,6 +98,7 @@ defmodule Phoenix.VerifiedRoutes do
     verify_path(__CALLER__, {endpoint, router, []}, route, og_ast)
   end
 
+  # TODO: Check sigil leftover
   defmacro path(endpoint, router, {:sigil_p, _, [str, _]} = og_ast) when is_binary(str) do
     verify_path(__CALLER__, {endpoint, router, []}, str, og_ast)
   end
@@ -441,16 +442,14 @@ defmodule Phoenix.VerifiedRoutes do
     end
   end
 
-  @http_methods ~w(GET POST PUT PATCH DELETE OPTIONS CONNECT TRACE HEAD)
   defp match_route?(router, test_path) do
-    Enum.find_value([nil | router.__hosts__()], false, fn host ->
-      Enum.find_value(@http_methods, false, fn method ->
-        case Phoenix.Router.route_info(router, method, test_path, host) do
-          %{} -> true
-          :error -> false
-        end
-      end)
-    end)
+    # TODO: Use the new match_route with forward recursion
+    split_path = for segment <- String.split(test_path, "/"), segment != "", do: segment
+
+    case router.__match_route__(split_path) do
+      {_, _} -> true
+      :error -> false
+    end
   end
 
   defp attrs!(env) do
@@ -469,16 +468,16 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp build_own_forward_path(conn, router, path) do
-    case Map.fetch(conn.private, router) do
-      {:ok, {local_script, _}} -> path_with_script(path, local_script)
-      :error -> nil
+    case conn.private do
+      %{^router => local_script} when is_list(local_script) -> path_with_script(path, local_script)
+      %{} -> nil
     end
   end
 
   defp build_conn_forward_path(%Plug.Conn{} = conn, router, path) do
     with %{phoenix_router: phx_router} <- conn.private,
-         {script_name, forwards} <- conn.private[phx_router],
-         {:ok, local_script} <- Map.fetch(forwards, router) do
+         %{^phx_router => script_name} when is_list(script_name) <- conn.private,
+         local_script when is_list(local_script) <- phx_router.__forward__(router) do
       path_with_script(path, script_name ++ local_script)
     else
       _ -> nil

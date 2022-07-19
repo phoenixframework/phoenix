@@ -28,16 +28,16 @@ defmodule Phoenix.Router.RouteTest do
   end
 
   test "builds expressions based on the route" do
-    exprs = build(1, :match, :get, "/foo/:bar", nil, Hello, :world, "hello_world", [], %{}, %{}, %{}, false) |> exprs
+    exprs = build(1, :match, :get, "/foo/:bar", nil, Hello, :world, "hello_world", [], %{}, %{}, %{}, false) |> exprs(%{})
     assert exprs.verb_match == "GET"
-    assert exprs.path == ["foo", {:arg0, [], nil}]
-    assert exprs.binding == [{"bar", {:arg0, [], nil}}]
+    assert exprs.path == ["foo", {:arg0, [], Phoenix.Router.Route}]
+    assert exprs.binding == [{"bar", {:arg0, [], Phoenix.Router.Route}}]
     assert Macro.to_string(exprs.host) == "_"
 
-    exprs = build(1, :match, :get, "/", "foo.", Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false) |> exprs
+    exprs = build(1, :match, :get, "/", "foo.", Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false) |> exprs(%{})
     assert Macro.to_string(exprs.host) == "\"foo.\" <> _"
 
-    exprs = build(1, :match, :get, "/", "foo.com", Hello, :world, "hello_world", [], %{foo: "bar"}, %{bar: "baz"}, %{}, false) |> exprs
+    exprs = build(1, :match, :get, "/", "foo.com", Hello, :world, "hello_world", [], %{foo: "bar"}, %{bar: "baz"}, %{}, false) |> exprs(%{})
     assert Macro.to_string(exprs.host) == "\"foo.com\""
   end
 
@@ -45,14 +45,14 @@ defmodule Phoenix.Router.RouteTest do
     route = build(1, :match, :*, "/foo/:bar", nil, __MODULE__, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false)
     assert route.verb == :*
     assert route.kind == :match
-    assert exprs(route).verb_match == {:_verb, [], nil}
+    assert exprs(route, %{}).verb_match == {:_verb, [], nil}
   end
 
   test "builds a catch-all verb_match for forwarded routes" do
-    route = build(1, :forward, :*, "/foo/:bar", nil, __MODULE__, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false)
+    route = build(1, :forward, :*, "/foo", nil, __MODULE__, :world, "hello_world", [:foo], %{foo: "bar"}, %{bar: "baz"}, %{}, false)
     assert route.verb == :*
     assert route.kind == :forward
-    assert exprs(route).verb_match == {:_verb, [], nil}
+    assert exprs(route, %{__MODULE__ => ["foo"]}).verb_match == {:_verb, [], nil}
   end
 
   test "as a plug, it forwards and sets path_info and script_name for target, then resumes" do
@@ -63,16 +63,5 @@ defmodule Phoenix.Router.RouteTest do
     assert fwd_conn.script_name == ["phoenix", "admin"]
     assert conn.path_info == ["admin", "stats"]
     assert conn.script_name == ["phoenix"]
-  end
-
-  test "exprs/1 returns quoted expressions" do
-    opts = %{a: ~r/foo/}
-    escaped_opts = Macro.escape(opts)
-
-    route = build(1, :match, :*, "/foo", nil, __MODULE__, opts, "hello_world", [], %{}, %{}, %{}, false)
-    assert {__MODULE__, escaped_opts} == exprs(route).dispatch
-
-    fwd_route = build(1, :forward, :*, "/foo", nil, __MODULE__, opts, "hello_world", [], %{}, %{}, %{}, false)
-    assert {_, {:{}, _, [_, __MODULE__, ^escaped_opts]}} = exprs(fwd_route).dispatch
   end
 end

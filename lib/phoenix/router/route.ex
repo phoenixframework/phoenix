@@ -62,17 +62,17 @@ defmodule Phoenix.Router.Route do
   @doc """
   Builds the compiled expressions used by the route.
   """
-  def exprs(route) do
+  def exprs(route, forwards) do
     {path, binding} = build_path_and_binding(route)
 
     %{
       path: path,
-      host: Plug.Router.Utils.build_host_match(route.host),
-      verb_match: verb_match(route.verb),
       binding: binding,
-      prepare: build_prepare(route),
+      dispatch: build_dispatch(route, forwards),
+      host: Plug.Router.Utils.build_host_match(route.host),
       path_params: build_path_params(binding),
-      dispatch: build_dispatch(route)
+      prepare: build_prepare(route),
+      verb_match: verb_match(route.verb)
     }
   end
 
@@ -96,7 +96,7 @@ defmodule Phoenix.Router.Route do
     {segments, {binding, _counter}} =
       Macro.prewalk(segments, {[], 0}, fn
         {name, _meta, nil}, {binding, counter} when is_atom(name) and name != :_forward_path_info ->
-          var = Macro.var(:"arg#{counter}", nil)
+          var = Macro.var(:"arg#{counter}", __MODULE__)
           {var, {[{Atom.to_string(name), var} | binding], counter + 1}}
 
         other, acc ->
@@ -134,21 +134,20 @@ defmodule Phoenix.Router.Route do
     {[{key, var}], [{key, merge}]}
   end
 
-  defp build_dispatch(%Route{kind: :forward} = route) do
-    {_params, segments} = Plug.Router.Utils.build_path_match(route.path)
-    {segments, _} = rewrite_segments(segments)
+  defp build_dispatch(%Route{kind: :match, plug: plug, plug_opts: plug_opts}, _forwards) do
+    quote do
+      {unquote(plug), unquote(Macro.escape(plug_opts))}
+    end
+  end
+
+  defp build_dispatch(%Route{kind: :forward, plug: plug, plug_opts: plug_opts}, forwards) do
+    segments = Map.fetch!(forwards, plug)
 
     quote do
       {
         Phoenix.Router.Route,
-        {unquote(segments), unquote(route.plug), unquote(Macro.escape(route.plug_opts))}
+        {unquote(segments), unquote(plug), unquote(Macro.escape(plug_opts))}
       }
-    end
-  end
-
-  defp build_dispatch(%Route{} = route) do
-    quote do
-      {unquote(route.plug), unquote(Macro.escape(route.plug_opts))}
     end
   end
 

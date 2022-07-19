@@ -107,16 +107,10 @@ defmodule Phoenix.Router.ForwardTest do
     end
   end
 
-  test "accumulates phoenix_forwards" do
+  test "accumulates script names" do
     conn = call(Router, :get, "/admin")
-    assert conn.private[Router] == {[], %{
-      Phoenix.Router.ForwardTest.AdminDashboard => ["admin"],
-      Phoenix.Router.ForwardTest.InitPlug => ["init"],
-      Phoenix.Router.ForwardTest.AssignOptsPlug => ["assign", "opts"]
-    }}
-    assert conn.private[AdminDashboard] ==
-      {["admin"], %{Phoenix.Router.ForwardTest.ApiRouter => ["api-admin"]}}
-
+    assert conn.private[Router] == []
+    assert conn.private[AdminDashboard] == ["admin"]
   end
 
   test "helpers cascade script name across forwards based on main router" do
@@ -147,7 +141,7 @@ defmodule Phoenix.Router.ForwardTest do
   test "forward with scoped alias" do
     conn = call(ApiRouter, :get, "/health")
     assert conn.resp_body == "health"
-    assert conn.private[ApiRouter] == {[], %{Phoenix.Test.HealthController => ["health"]}}
+    assert conn.private[ApiRouter] == []
   end
 
   test "forwards raises if using the plug to arguments" do

@@ -326,7 +326,6 @@ defmodule Phoenix.Router do
   defp prelude(_opts) do
     quote do
       Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
-      Module.register_attribute __MODULE__, :phoenix_hosts, accumulate: true
       @phoenix_forwards %{}
 
       import Phoenix.Router
@@ -469,9 +468,11 @@ defmodule Phoenix.Router do
               raise MalformedURIError, "malformed URI path: #{inspect conn.request_path}"
           end
 
-        case __match_route__(decoded).(method, host) do
-          :error -> raise NoRouteError, conn: conn, router: __MODULE__
-          match -> Phoenix.Router.__call__(conn, match)
+        with {_forward_plug, fun} <- __match_route__(decoded),
+             {_, _, _, _} = match <- fun.(method, host) do
+          Phoenix.Router.__call__(conn, match)
+        else
+          _ -> raise NoRouteError, conn: conn, router: __MODULE__
         end
       end
 
@@ -482,12 +483,33 @@ defmodule Phoenix.Router do
   @doc false
   defmacro __before_compile__(env) do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse()
-    routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1)})
-    hosts = env.module |> Module.get_attribute(:phoenix_hosts) |> Enum.reverse() |> Enum.uniq()
+    forwards = env.module |> Module.get_attribute(:phoenix_forwards)
+    routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1, forwards)})
 
     Helpers.define(env, routes_with_exprs)
     group = Enum.group_by(routes_with_exprs, fn {_route, exprs} -> exprs.path end)
     {matches, _} = Enum.flat_map_reduce(routes_with_exprs, {group, %{}}, &build_match/2)
+
+    match_catch_all =
+      quote generated: true do
+        @doc false
+        def __match_route__(_path_info) do
+          :error
+        end
+      end
+
+    forwards =
+      for {plug, script_name} <- forwards do
+        quote do
+          def __forward__(unquote(plug)), do: unquote(script_name)
+        end
+      end
+
+    forward_catch_all =
+      quote generated: true do
+        @doc false
+        def __forward__(_), do: nil
+      end
 
     checks =
       for %{line: line, plug: plug} <- routes, into: %{} do
@@ -496,23 +518,12 @@ defmodule Phoenix.Router do
         end
       end
 
-    match_404 =
-      quote [generated: true] do
-        @doc false
-        def __match_route__(_path_info) do
-          fn _method, _host -> :error end
-        end
-      end
-
     keys = [:verb, :path, :plug, :plug_opts, :helper, :metadata]
     routes = Enum.map(routes, &Map.take(&1, keys))
 
     quote do
       @doc false
-      def __routes__,  do: unquote(Macro.escape(routes))
-
-      # TODO: Remove hosts
-      def __hosts__,  do: unquote(hosts)
+      def __routes__, do: unquote(Macro.escape(routes))
 
       @doc false
       def __checks__, do: unquote({:__block__, [], Map.keys(checks)})
@@ -521,17 +532,13 @@ defmodule Phoenix.Router do
       def __helpers__, do: __MODULE__.Helpers
 
       defp prepare(conn) do
-        merge_private(
-          conn,
-          [
-            {:phoenix_router, __MODULE__},
-            {__MODULE__, {conn.script_name, @phoenix_forwards}}
-          ]
-        )
+        merge_private(conn, [{:phoenix_router, __MODULE__}, {__MODULE__, conn.script_name}])
       end
 
       unquote(matches)
-      unquote(match_404)
+      unquote(match_catch_all)
+      unquote(forwards)
+      unquote(forward_catch_all)
     end
   end
 
@@ -545,6 +552,12 @@ defmodule Phoenix.Router do
       {clauses, pipes, known_pipes} =
         Enum.reduce(grouped_routes_with_exprs, {[], [], known_pipes}, &build_match_group/2)
 
+      forward_plug =
+        Enum.find_value(grouped_routes_with_exprs, fn
+          {%{kind: :forward, plug: plug}, _expr} -> plug
+          {_, _} -> nil
+        end)
+
       catch_all =
         quote generated: true do
           _, _ -> :error
@@ -555,7 +568,7 @@ defmodule Phoenix.Router do
           unquote_splicing(pipes)
 
           def __match_route__(unquote(expr.path)) do
-            unquote({:fn, [], Enum.reverse(clauses, catch_all)})
+            {unquote(forward_plug), unquote({:fn, [], Enum.reverse(clauses, catch_all)})}
           end
         end
 
@@ -1152,9 +1165,9 @@ defmodule Phoenix.Router do
   end
 
   def route_info(router, method, split_path, host) when is_list(split_path) do
-    case router.__match_route__(split_path).(method, host) do
-      {%{} = metadata, _prepare, _pipeline, {_plug, _opts}} -> Map.delete(metadata, :conn)
-      :error -> :error
+    with {_forward_plug, fun} <- router.__match_route__(split_path),
+         {metadata, _prepare, _pipeline, {_plug, _opts}} <- fun.(method, host) do
+      Map.delete(metadata, :conn)
     end
   end
 end

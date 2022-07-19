@@ -133,11 +133,6 @@ defmodule Phoenix.Router.Scope do
     alias = append_unless_false(top, opts, :alias, &Atom.to_string(&1))
     as = append_unless_false(top, opts, :as, & &1)
     host = Keyword.get(opts, :host)
-
-    if host do
-      Module.put_attribute(module, :phoenix_hosts, host)
-    end
-
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
 
