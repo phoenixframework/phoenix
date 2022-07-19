@@ -65,6 +65,8 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
 
     # TODO: Remove this once {:system, env_var} tuples are removed
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :http)
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :https)
     warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :url)
     warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :static_url)
 
