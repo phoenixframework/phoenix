@@ -22,6 +22,8 @@ defmodule Phoenix.VerifiedRoutes do
     quote do
       opts = unquote(opts)
       @router Keyword.fetch!(opts, :router)
+      # TODO: the endpoint should be optional because we don't have one for forwarded routers
+      # When the endpoint is optional, we should raise for `~p` outside of `path/2`
       @endpoint Keyword.fetch!(opts, :endpoint)
       @statics Keyword.get(opts, :statics, [])
       import unquote(__MODULE__)
@@ -32,7 +34,6 @@ defmodule Phoenix.VerifiedRoutes do
     do: Macro.expand(alias, %{env | function: {:path, 1}})
 
   defp expand_alias(other, _env), do: other
-
 
   @doc ~S'''
   Generates the router path with route verification.
@@ -159,7 +160,7 @@ defmodule Phoenix.VerifiedRoutes do
 
       {other, _route_ast, path_ast, _static_ast} when other in [:match, :error] ->
         quote do
-          unquote(__MODULE__).unverified_url(unquote_splicing([endpoint_ctx, router, path_ast]))
+          unquote(__MODULE__).unverified_url(unquote_splicing([endpoint_ctx, path_ast]))
         end
     end
   end
@@ -191,32 +192,31 @@ defmodule Phoenix.VerifiedRoutes do
   @doc """
   TODO
   """
-  def unverified_url(%Plug.Conn{private: private}, _router, path) do
+  def unverified_url(%Plug.Conn{private: private}, path) do
     case private do
       %{phoenix_router_url: url} when is_binary(url) -> concat_url(url, path)
       %{phoenix_endpoint: endpoint} -> concat_url(endpoint.url(), path)
     end
   end
 
-  def unverified_url(%_{endpoint: endpoint}, _router, path) do
+  def unverified_url(%_{endpoint: endpoint}, path) do
     concat_url(endpoint.url(), path)
   end
 
-  def unverified_url(%URI{} = uri, _router, path) do
+  def unverified_url(%URI{} = uri, path) do
     URI.to_string(%{uri | path: path})
   end
 
-  def unverified_url(endpoint, _router, path) when is_atom(endpoint) do
+  def unverified_url(endpoint, path) when is_atom(endpoint) do
     concat_url(endpoint.url(), path)
   end
 
-  def unverified_url(other, router, path) do
+  def unverified_url(other, path) do
     raise ArgumentError,
           "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
-            "or a Phoenix.Endpoint when building url for #{inspect(router)} at #{path}, got: #{inspect(other)}"
+            "or a Phoenix.Endpoint when building url at #{path}, got: #{inspect(other)}"
   end
 
-  defp concat_url(url, "/"), do: url
   defp concat_url(url, path) when is_binary(path), do: url <> path
 
   @doc """

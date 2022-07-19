@@ -1,5 +1,5 @@
 defmodule Phoenix.Router.Scope do
-  alias Phoenix.Router.{Scope, Route}
+  alias Phoenix.Router.Scope
   @moduledoc false
 
   @stack :phoenix_router_scopes
@@ -150,7 +150,20 @@ defmodule Phoenix.Router.Scope do
   def register_forwards(module, path, plug) when is_atom(plug) do
     plug = expand_alias(module, plug)
     phoenix_forwards = Module.get_attribute(module, :phoenix_forwards)
-    path_segments = Route.forward_path_segments(path, plug, phoenix_forwards)
+
+    path_segments =
+      case Plug.Router.Utils.build_path_match(path) do
+        {[], path_segments} ->
+          if phoenix_forwards[plug] do
+            raise ArgumentError, "#{inspect plug} has already been forwarded to. A module can only be forwarded a single time"
+          end
+
+          path_segments
+
+        _ ->
+          raise ArgumentError, "dynamic segment \"#{path}\" not allowed when forwarding. Use a static path instead"
+      end
+
     phoenix_forwards = Map.put(phoenix_forwards, plug, path_segments)
     Module.put_attribute(module, :phoenix_forwards, phoenix_forwards)
     plug

@@ -174,7 +174,7 @@ defmodule Phoenix.Router do
 
   Scopes allow us to scope on any path or even on the helper name:
 
-      scope "/api/v1", MyAppWeb, as: :api_v1 do
+      scope "/v1", MyAppWeb, host: "api." do
         get "/pages/:id", PageController, :show
       end
 
@@ -309,6 +309,7 @@ defmodule Phoenix.Router do
   and you can compose them as necessary on each scope you define.
   """
 
+  # TODO: Deprecate trailing_slash? and remove :as from the docs.
   alias Phoenix.Router.{Resource, Scope, Route, Helpers}
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
@@ -322,10 +323,8 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp prelude(opts) do
+  defp prelude(_opts) do
     quote do
-      @helpers_moduledoc Keyword.get(unquote(opts), :helpers_moduledoc, true)
-
       Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
       Module.register_attribute __MODULE__, :phoenix_hosts, accumulate: true
       @phoenix_forwards %{}
@@ -397,14 +396,17 @@ defmodule Phoenix.Router do
       _ -> Enum.reduce(pipes, conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
     end
   end
+
   def __call__(%{private: %{phoenix_bypass: :all}} = conn, {metadata, prepare, _, _}) do
     prepare.(conn, metadata)
   end
+
   def __call__(conn, {metadata, prepare, pipeline, {plug, opts}}) do
     conn = prepare.(conn, metadata)
     start = System.monotonic_time()
+    measurements = %{system_time: System.system_time()}
     metadata = %{metadata | conn: conn}
-    :telemetry.execute([:phoenix, :router_dispatch, :start], %{system_time: System.system_time()}, metadata)
+    :telemetry.execute([:phoenix, :router_dispatch, :start], measurements, metadata)
 
     case pipeline.(conn) do
       %Plug.Conn{halted: true} = halted_conn ->
@@ -412,6 +414,7 @@ defmodule Phoenix.Router do
         metadata = %{metadata | conn: halted_conn}
         :telemetry.execute([:phoenix, :router_dispatch, :stop], measurements, metadata)
         halted_conn
+
       %Plug.Conn{} = piped_conn ->
         try do
           plug.call(piped_conn, plug.init(opts))
@@ -424,13 +427,15 @@ defmodule Phoenix.Router do
         rescue
           e in Plug.Conn.WrapperError ->
             measurements = %{duration: System.monotonic_time() - start}
-            metadata = Map.merge(metadata, %{conn: conn, kind: :error, reason: e, stacktrace: __STACKTRACE__})
+            new_metadata = %{conn: conn, kind: :error, reason: e, stacktrace: __STACKTRACE__}
+            metadata = Map.merge(metadata, new_metadata)
             :telemetry.execute([:phoenix, :router_dispatch, :exception], measurements, metadata)
             Plug.Conn.WrapperError.reraise(e)
         catch
           kind, reason ->
             measurements = %{duration: System.monotonic_time() - start}
-            metadata = Map.merge(metadata, %{conn: conn, kind: kind, reason: reason, stacktrace: __STACKTRACE__})
+            new_metadata = %{conn: conn, kind: kind, reason: reason, stacktrace: __STACKTRACE__}
+            metadata = Map.merge(metadata, new_metadata)
             :telemetry.execute([:phoenix, :router_dispatch, :exception], measurements, metadata)
             Plug.Conn.WrapperError.reraise(piped_conn, kind, reason, __STACKTRACE__)
         end
@@ -480,9 +485,7 @@ defmodule Phoenix.Router do
     routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1)})
     hosts = env.module |> Module.get_attribute(:phoenix_hosts) |> Enum.reverse() |> Enum.uniq()
 
-    helpers_moduledoc = Module.get_attribute(env.module, :helpers_moduledoc)
-
-    Helpers.define(env, routes_with_exprs, docs: helpers_moduledoc)
+    Helpers.define(env, routes_with_exprs)
     {matches, _} = Enum.map_reduce(routes_with_exprs, %{}, &build_match/2)
 
     checks =
@@ -506,6 +509,7 @@ defmodule Phoenix.Router do
       @doc false
       def __routes__,  do: unquote(Macro.escape(routes))
 
+      # TODO: Remove hosts
       def __hosts__,  do: unquote(hosts)
 
       @doc false
@@ -626,8 +630,6 @@ defmodule Phoenix.Router do
     * `:assigns` - a map of data to merge into the connection when a route matches
     * `:metadata` - a map of metadata used by the telemetry events and returned by
       `route_info/4`
-    * `:trailing_slash` - a boolean to flag whether or not the helper functions
-      append a trailing slash. Defaults to `false`.
 
   ## Examples
 
@@ -918,7 +920,7 @@ defmodule Phoenix.Router do
 
   ## Examples
 
-      scope path: "/api/v1", as: :api_v1, alias: API.V1 do
+      scope path: "/api/v1", alias: API.V1 do
         get "/pages/:id", PageController, :show
       end
 
@@ -941,8 +943,6 @@ defmodule Phoenix.Router do
     * `:assigns` - a map of data to merge into the connection when a route matches
     * `:log` - the level to log the route dispatching under,
       may be set to false. Defaults to `:debug`
-    * `:trailing_slash` - whether or not the helper functions append a trailing
-      slash. Defaults to `false`.
 
   """
   defmacro scope(options, do: context) do
@@ -967,7 +967,7 @@ defmodule Phoenix.Router do
 
   ## Examples
 
-      scope "/api/v1", as: :api_v1 do
+      scope "/v1", host: "api." do
         get "/pages/:id", PageController, :show
       end
 
@@ -1004,7 +1004,7 @@ defmodule Phoenix.Router do
 
   ## Examples
 
-      scope "/api/v1", API.V1, as: :api_v1 do
+      scope "/v1", API.V1, host: "api." do
         get "/pages/:id", PageController, :show
       end
 

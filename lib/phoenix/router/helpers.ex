@@ -6,44 +6,9 @@ defmodule Phoenix.Router.Helpers do
   alias Plug.Conn
 
   @doc """
-  Callback invoked by the url generated in each helper module.
-  """
-  def url(_router, %Conn{private: private}) do
-    case private do
-      %{phoenix_router_url: url} when is_binary(url) -> url
-      %{phoenix_endpoint: endpoint} -> endpoint.url()
-    end
-  end
-
-  def url(_router, %_{endpoint: endpoint}) do
-    endpoint.url()
-  end
-
-  def url(_router, %URI{} = uri) do
-    URI.to_string(%{uri | path: nil})
-  end
-
-  def url(_router, endpoint) when is_atom(endpoint) do
-    endpoint.url()
-  end
-
-  def url(router, other) do
-    raise ArgumentError,
-          "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
-            "or a Phoenix.Endpoint when building url for #{inspect(router)}, got: #{inspect(other)}"
-  end
-
-  @doc """
-  Callback invoked by path generated in each helper module.
-  """
-  def path(router, conn_or_uri_or_endpoint_ctx, path) do
-    Phoenix.VerifiedRoutes.unverified_path(conn_or_uri_or_endpoint_ctx, router, path)
-  end
-
-  @doc """
   Generates the helper module for the given environment and routes.
   """
-  def define(env, routes, opts \\ []) do
+  def define(env, routes) do
     # Ignore any route without helper or forwards.
     routes =
       Enum.reject(routes, fn {route, _exprs} ->
@@ -186,8 +151,6 @@ defmodule Phoenix.Router.Helpers do
         end
       end
 
-    docs = Keyword.get(opts, :docs, true)
-
     # It is in general bad practice to generate large chunks of code
     # inside quoted expressions. However, we can get away with this
     # here for two reasons:
@@ -199,10 +162,7 @@ defmodule Phoenix.Router.Helpers do
     #
     code =
       quote do
-        @moduledoc unquote(docs) &&
-                     """
-                     Module with named helpers generated from #{inspect(unquote(env.module))}.
-                     """
+        @moduledoc false
         unquote(defhelper)
         unquote(defcatch_all)
         unquote_splicing(impls)
@@ -212,14 +172,14 @@ defmodule Phoenix.Router.Helpers do
         Generates the path information including any necessary prefix.
         """
         def path(data, path) do
-          Phoenix.Router.Helpers.path(unquote(env.module), data, path)
+          Phoenix.VerifiedRoutes.unverified_path(data, unquote(env.module), path)
         end
 
         @doc """
         Generates the connection/endpoint base URL without any path information.
         """
         def url(data) do
-          Phoenix.Router.Helpers.url(unquote(env.module), data)
+          Phoenix.VerifiedRoutes.unverified_url(data, "")
         end
 
         @doc """

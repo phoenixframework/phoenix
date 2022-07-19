@@ -1514,7 +1514,7 @@ defmodule Phoenix.Controller do
   See `current_url/2` to override the default parameters.
   """
   def current_url(%Plug.Conn{} = conn) do
-    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn)
+    Phoenix.VerifiedRoutes.unverified_url(conn, current_path(conn))
   end
 
   @doc ~S"""
@@ -1551,17 +1551,16 @@ defmodule Phoenix.Controller do
   For example, to get the current URL always in HTTPS format:
 
       def current_secure_url(conn, params \\ %{}) do
-        cur_uri  = MyAppWeb.Endpoint.struct_url()
-        cur_path = Phoenix.Controller.current_path(conn, params)
-
-        MyAppWeb.Router.Helpers.url(%URI{cur_uri | scheme: "https"}) <> cur_path
+        current_uri = MyAppWeb.Endpoint.struct_url()
+        current_path = Phoenix.Controller.current_path(conn, params)
+        Phoenix.VerifiedRoutes.unverified_url(%URI{current_uri | scheme: "https"}, current_path)
       end
 
   However, if you want all generated URLs to always have a certain schema,
   host, etc, you may use `put_router_url/2`.
   """
   def current_url(%Plug.Conn{} = conn, %{} = params) do
-    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn, params)
+    Phoenix.VerifiedRoutes.unverified_url(conn, current_path(conn, params))
   end
 
   @doc false

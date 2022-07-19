@@ -82,14 +82,16 @@ defmodule Phoenix.Router.Route do
   defp build_path_params(binding), do: {:%{}, [], binding}
 
   defp build_path_and_binding(%Route{path: path} = route) do
-    {params, segments} = case route.kind do
-      :forward -> Plug.Router.Utils.build_path_match(path <> "/*_forward_path_info")
-      :match   -> Plug.Router.Utils.build_path_match(path)
-    end
+    {params, segments} =
+      case route.kind do
+        :forward -> Plug.Router.Utils.build_path_match(path <> "/*_forward_path_info")
+        :match   -> Plug.Router.Utils.build_path_match(path)
+      end
 
-    binding = for var <- params, var != :_forward_path_info do
-      {Atom.to_string(var), Macro.var(var, nil)}
-    end
+    binding =
+      for var <- params, var != :_forward_path_info do
+        {Atom.to_string(var), Macro.var(var, nil)}
+      end
 
     {segments, binding}
   end
@@ -122,6 +124,14 @@ defmodule Phoenix.Router.Route do
     end
   end
 
+  defp build_prepare_expr(_key, data) when data == %{}, do: {[], []}
+
+  defp build_prepare_expr(key, data) do
+    var = Macro.var(key, :conn)
+    merge = quote(do: Map.merge(unquote(var), unquote(Macro.escape(data))))
+    {[{key, var}], [{key, merge}]}
+  end
+
   defp build_dispatch(%Route{kind: :forward} = route) do
     {_params, fwd_segments} = Plug.Router.Utils.build_path_match(route.path)
 
@@ -137,13 +147,6 @@ defmodule Phoenix.Router.Route do
     quote do
       {unquote(route.plug), unquote(Macro.escape(route.plug_opts))}
     end
-  end
-
-  defp build_prepare_expr(_key, data) when data == %{}, do: {[], []}
-  defp build_prepare_expr(key, data) do
-    var = Macro.var(key, :conn)
-    merge = quote(do: Map.merge(unquote(var), unquote(Macro.escape(data))))
-    {[{key, var}], [{key, merge}]}
   end
 
   defp build_params() do
@@ -162,22 +165,4 @@ defmodule Phoenix.Router.Route do
   """
   def merge_params(%Plug.Conn.Unfetched{}, path_params), do: path_params
   def merge_params(params, path_params), do: Map.merge(params, path_params)
-
-  @doc """
-  Validates and returns the list of forward path segments.
-
-  Raises `RuntimeError` if the `plug` is already forwarded or the
-  `path` contains a dynamic segment.
-  """
-  def forward_path_segments(path, plug, phoenix_forwards) do
-    case Plug.Router.Utils.build_path_match(path) do
-      {[], path_segments} ->
-        if phoenix_forwards[plug] do
-          raise ArgumentError, "#{inspect plug} has already been forwarded to. A module can only be forwarded a single time."
-        end
-        path_segments
-      _ ->
-        raise ArgumentError, "dynamic segment \"#{path}\" not allowed when forwarding. Use a static path instead."
-    end
-  end
 end

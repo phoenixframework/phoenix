@@ -312,14 +312,6 @@ defmodule Phoenix.Router.HelpersTest do
     assert_raise ArgumentError, error_message.("post_url", 4), fn ->
       Helpers.post_url(Endpoint, :skip, 5, foo: "bar", other: "param")
     end
-
-    assert_raise ArgumentError, ~r/when building url for Phoenix.Router.HelpersTest.Router/, fn ->
-      Helpers.post_url("oops", :skip, 5, foo: "bar", other: "param")
-    end
-
-    assert_raise ArgumentError, ~r/when building path for Phoenix.Router.HelpersTest.Router/, fn ->
-      Helpers.post_path("oops", :skip, 5, foo: "bar", other: "param")
-    end
   end
 
   @endpoint Endpoint
@@ -743,13 +735,11 @@ defmodule Phoenix.Router.HelpersTest do
   test "phoenix_router_url with string takes precedence over endpoint" do
     url = "https://phoenixframework.org"
     conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), url)
-
     assert Helpers.url(conn) == url
     assert Helpers.admin_message_url(conn, :show, 1) == url <> "/admin/new/messages/1"
 
     # verified
-
-    assert url(conn, ~p"/") == url
+    assert url(conn, ~p"/") == url <> "/"
     assert url(conn, ~p"/admin/new/messages/1") == url <> "/admin/new/messages/1"
     assert url(conn, ~p"/admin/new/messages/#{123}") == url <> "/admin/new/messages/123"
   end
@@ -765,8 +755,7 @@ defmodule Phoenix.Router.HelpersTest do
       "https://phoenixframework.org:123/path/admin/new/messages/1"
 
     # verified
-
-    assert url(conn, ~p"/") == "https://phoenixframework.org:123/path"
+    assert url(conn, ~p"/") == "https://phoenixframework.org:123/path/"
     assert url(conn, ~p"/admin/new/messages/1") == "https://phoenixframework.org:123/path/admin/new/messages/1"
   end
 
