@@ -4,8 +4,8 @@ all:
     BUILD +npm
 
 all-test:
-    BUILD --build-arg ELIXIR=1.11.4 --build-arg OTP=22.3 +test
-    BUILD --build-arg ELIXIR=1.13.4 --build-arg OTP=24.3 --build-arg RUN_INSTALLER_TESTS=1 +test
+    BUILD --build-arg ELIXIR=1.11.4 --build-arg OTP=22.3.4.26 +test
+    BUILD --build-arg ELIXIR=1.13.4 --build-arg OTP=24.3.4.2 --build-arg RUN_INSTALLER_TESTS=1 +test
 
 test:
     FROM +test-setup
@@ -23,8 +23,8 @@ test:
     END
 
 all-integration-test:
-    BUILD --build-arg ELIXIR=1.13.4 --build-arg OTP=22.3 +integration-test
-    BUILD --build-arg ELIXIR=1.13.4 --build-arg OTP=24.3 +integration-test
+    BUILD --build-arg ELIXIR=1.13.4 --build-arg OTP=22.3.4.26 +integration-test
+    BUILD --build-arg ELIXIR=1.13.4 --build-arg OTP=24.3.4.2 +integration-test
 
 integration-test:
     FROM +setup-base
@@ -95,7 +95,7 @@ npm:
 
 setup-base:
    ARG ELIXIR=1.13.4
-   ARG OTP=24.3
+   ARG OTP=24.3.4.2
    FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.13.3
    RUN apk add --no-progress --update git build-base
    ENV ELIXIR_ASSERT_TIMEOUT=10000
