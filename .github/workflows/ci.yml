@@ -14,11 +14,11 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - elixir: 1.10.0
-            otp: 21.3.8.24
+          - elixir: 1.11.4
+            otp: 23.3.4
             run_installer_tests: 0
-          - elixir: 1.12.1
-            otp: 24.0.2
+          - elixir: 1.13.3
+            otp: 24.3.4
             run_installer_tests: 1
     steps:
       - uses: actions/checkout@v3
@@ -35,10 +35,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: 1.12.1
-            otp: 22.3.4.19
-          - elixir: 1.12.1
-            otp: 24.0.2
+          - elixir: 1.13.3
+            otp: 23.3.4
+          - elixir: 1.13.3
+            otp: 24.3.4
     steps:
       - uses: actions/checkout@v3
       - name: Download released earth
@@ -53,4 +53,4 @@ jobs:
       - name: Download released earth
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.4.1/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
       - name: Execute tests
-        run: earthly --build-arg ELIXIR=1.12.1 --build-arg OTP=24.0.2 +npm
+        run: earthly --build-arg ELIXIR=1.13.3 --build-arg OTP=24.3.4 +npm

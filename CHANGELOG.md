@@ -1,3 +1,7 @@
+# Changelog for v1.7
+
+Phoenix v1.7 requires Elixir v1.11+.
+
 # Changelog for v1.6
 
 See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0f4de6decba7b) to upgrade from Phoenix 1.5.x.

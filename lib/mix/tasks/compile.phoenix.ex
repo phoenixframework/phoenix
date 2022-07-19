@@ -1,21 +1,20 @@
 defmodule Mix.Tasks.Compile.Phoenix do
   use Mix.Task
   @recursive true
-
-  @moduledoc """
-  Compiles Phoenix source files that support code reloading.
-
-  If you are using Elixir v1.11+ or later, there is no longer
-  a need to use this module as this functionality is now provided
-  by Elixir. Just remember to update `__phoenix_recompile__?` to
-  `__mix_recompile__?` in any module that may define it.
-  """
-
-  # TODO: Deprecate this module once we require Elixir v1.11+
+  @moduledoc false
   @mix_recompile Version.match?(System.version(), ">= 1.11.0")
 
   @doc false
   def run(_args) do
+    IO.warn """
+    the :phoenix compiler is no longer required in your mix.exs.
+
+    Please find the following line in your mix.exs and remove the :phoenix entry:
+
+        compilers: [..., :phoenix, ...] ++ Mix.compilers(),
+
+    """
+
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
     case touch() do
