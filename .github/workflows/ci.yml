@@ -17,7 +17,7 @@ jobs:
           - elixir: 1.11.4
             otp: 23.3.4
             run_installer_tests: 0
-          - elixir: 1.13.4
+          - elixir: 1.13.3
             otp: 24.3.4
             run_installer_tests: 1
     steps:
@@ -35,9 +35,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: 1.13.4
+          - elixir: 1.13.3
             otp: 23.3.4
-          - elixir: 1.13.4
+          - elixir: 1.13.3
             otp: 24.3.4
     steps:
       - uses: actions/checkout@v3
@@ -53,4 +53,4 @@ jobs:
       - name: Download released earth
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.4.1/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
       - name: Execute tests
-        run: earthly --build-arg ELIXIR=1.13.4 --build-arg OTP=24.3.4 +npm
+        run: earthly --build-arg ELIXIR=1.13.3 --build-arg OTP=24.3.4 +npm
