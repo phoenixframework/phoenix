@@ -28,7 +28,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   @doc false
   def init({otp_app, mod, opts}) do
     default_conf = Phoenix.Config.merge(defaults(otp_app, mod), opts)
-    env_conf = config(otp_app, mod, default_conf)
+    env_conf = Phoenix.Config.from_env(otp_app, mod, default_conf)
 
     secret_conf =
       case mod.init(:supervisor, env_conf) do
