@@ -11,7 +11,6 @@ defmodule <%= @web_namespace %>.MixProject do
       lockfile: "../../mix.lock",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: <%= if @compilers != [] do %>[<%= Enum.join(@compilers, ", ") %>] ++ <% end %>Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -48,7 +47,7 @@ defmodule <%= @web_namespace %>.MixProject do
       {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
-      {:gettext, "~> 0.18"},<% end %><%= if @app_name != @web_app_name do %>
+      {:gettext, "~> 0.20"},<% end %><%= if @app_name != @web_app_name do %>
       {:<%= @app_name %>, in_umbrella: true},<% end %>
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"}

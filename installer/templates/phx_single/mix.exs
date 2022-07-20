@@ -11,7 +11,6 @@ defmodule <%= @app_module %>.MixProject do
       lockfile: "../../mix.lock",<% end %>
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: <%= if @compilers != [] do %>[<%= Enum.join(@compilers, ", ") %>] ++ <% end %>Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -51,7 +50,7 @@ defmodule <%= @app_module %>.MixProject do
       {:swoosh, "~> 1.3"},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
-      {:gettext, "~> 0.18"},<% end %>
+      {:gettext, "~> 0.20"},<% end %>
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"}
     ]
