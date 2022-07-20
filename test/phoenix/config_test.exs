@@ -6,6 +6,14 @@ defmodule Phoenix.ConfigTest do
   @config [parsers: false, custom: true, otp_app: :phoenix_config]
   @all @config ++ @defaults
 
+  test "reads configuration from env", meta do
+    Application.put_env(:config_app, meta.test, @config)
+    config = from_env(:config_app, meta.test, [static: true])
+    assert config[:parsers] == false
+    assert config[:custom]  == true
+    assert config[:static]  == true
+  end
+
   test "starts an ets table as part of the module", meta do
     {:ok, _pid} = start_link({meta.test, @all, @defaults, []})
     assert :ets.info(meta.test, :name) == meta.test
