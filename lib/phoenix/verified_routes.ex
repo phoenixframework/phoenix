@@ -19,6 +19,7 @@ defmodule Phoenix.VerifiedRoutes do
         opts
       end
 
+    # TODO warn if endpoint / router already set?
     quote do
       opts = unquote(opts)
       @router Keyword.fetch!(opts, :router)
@@ -121,9 +122,26 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro path(_conn_or_socket_or_endpoint_or_uri, other), do: raise_invalid_route(other)
 
-  @doc """
-  TODO
-  """
+  @doc ~S'''
+  Generates the router url with route verification.
+
+  See `sigil_p/1` for more information.
+
+  Warns when the provided path does not match against the router specified
+  in `use Phoenix.VerifiedRoutes` or the `@router` module attribute.
+
+  ## Examples
+
+      use Phoenix.VerifiedRoutes, endpoint: MyAppWeb.Endpoint, router: MyAppWeb.Router
+
+      redirect(to: path(conn, ~p"/users/top"))
+
+      redirect(to: path(conn, ~p"/users/#{@user}"))
+
+      ~H"""
+      <.link to={path(@uri, "/users?#{[page: @page]}")}>profile</.link>
+      """
+  '''
   defmacro url({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast) do
     {endpoint, _router, _statics} = attrs!(__CALLER__)
     verify_url(endpoint, route, __CALLER__, og_ast)
