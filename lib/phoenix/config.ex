@@ -84,6 +84,7 @@ defmodule Phoenix.Config do
 
   @doc """
   Reads the configuration for module from the given OTP app.
+
   Useful to read a particular value at compilation time.
   """
   def from_env(otp_app, module, defaults) do
