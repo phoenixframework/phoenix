@@ -83,29 +83,11 @@ defmodule Phoenix.Config do
   end
 
   @doc """
-  Reads the configuration for module from the given OTP app.
-
-  Useful to read a particular value at compilation time.
-  """
-  def from_env(otp_app, module, defaults) do
-    config = fetch_config(otp_app, module)
-
-    merge(defaults, config)
-  end
-
-  @doc """
   Take 2 keyword lists and merge them recursively.
 
   Used to merge configuration values into defaults.
   """
   def merge(a, b), do: Keyword.merge(a, b, &merger/3)
-
-  defp fetch_config(otp_app, module) do
-    case Application.fetch_env(otp_app, module) do
-      {:ok, conf} -> conf
-      :error -> []
-    end
-  end
 
   defp merger(_k, v1, v2) do
     if Keyword.keyword?(v1) and Keyword.keyword?(v2) do
