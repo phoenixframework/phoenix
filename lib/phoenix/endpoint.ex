@@ -404,8 +404,8 @@ defmodule Phoenix.Endpoint do
       # Compile-time configuration checkg
       #
       # This ensures that if a compile-time configuration is overwritten at runtime the application won't boot.
-      var!(code_reloading?) = Application.compile_env(@otp_app, [__MODULE__, :code_reloader], var!(config)[:code_reloader])
-      var!(debug_errors?) =  Application.compile_env(@otp_app, [__MODULE__, :debug_errors], var!(config)[:debug_errors])
+      var!(code_reloading?) = Application.compile_env(@otp_app, [__MODULE__, :code_reloader])
+      var!(debug_errors?) =  Application.compile_env(@otp_app, [__MODULE__, :debug_errors])
       var!(force_ssl) =  Application.compile_env(@otp_app, [__MODULE__, :force_ssl])
 
       # Avoid unused variable warnings
