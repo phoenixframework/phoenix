@@ -466,7 +466,7 @@ defmodule Phoenix.Endpoint do
 
       Module.register_attribute(__MODULE__, :phoenix_sockets, accumulate: true)
 
-      if force_ssl = Phoenix.Endpoint.__force_ssl__(__MODULE__, var!(config)) do
+      if force_ssl = Phoenix.Endpoint.__force_ssl__(__MODULE__, var!(force_ssl)) do
         plug Plug.SSL, force_ssl
       end
 
@@ -619,8 +619,8 @@ defmodule Phoenix.Endpoint do
   end
 
   @doc false
-  def __force_ssl__(module, config) do
-    if force_ssl = config[:force_ssl] do
+  def __force_ssl__(module, force_ssl) do
+    if force_ssl do
       Keyword.put_new(force_ssl, :host, {module, :host, []})
     end
   end
