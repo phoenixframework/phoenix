@@ -399,13 +399,10 @@ defmodule Phoenix.Endpoint do
     quote do
       @otp_app unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
 
-      var!(config) = Phoenix.Endpoint.Supervisor.config(@otp_app, __MODULE__)
-
-      # Compile-time configuration checkg
-      #
+      # Compile-time configuration checking
       # This ensures that if a compile-time configuration is overwritten at runtime the application won't boot.
-      var!(code_reloading?) = Application.compile_env(@otp_app, [__MODULE__, :code_reloader])
-      var!(debug_errors?) =  Application.compile_env(@otp_app, [__MODULE__, :debug_errors])
+      var!(code_reloading?) = Application.compile_env(@otp_app, [__MODULE__, :code_reloader], false)
+      var!(debug_errors?) =  Application.compile_env(@otp_app, [__MODULE__, :debug_errors], false)
       var!(force_ssl) =  Application.compile_env(@otp_app, [__MODULE__, :force_ssl])
 
       # Avoid unused variable warnings
