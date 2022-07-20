@@ -4,9 +4,9 @@
 
 > **Requirement**: This guide expects that you have gone through the [Channels guide](channels.html).
 
-Phoenix Presence is a feature which allows you to register process information on a topic and replicate it transparently across a cluster. It's a combination of both a server-side and client-side library which makes it simple to implement. A simple use-case would be showing which users are currently online in an application.
+Phoenix Presence is a feature which allows you to register process information on a topic and replicate it transparently across a cluster. It's a combination of both a server-side and client-side library, which makes it simple to implement. A simple use-case would be showing which users are currently online in an application.
 
-Phoenix Presence is special for a number of reasons. It has no single point of failure, no single source of truth, relies entirely on the standard library with no operational dependencies and self heals.
+Phoenix Presence is special for a number of reasons. It has no single point of failure, no single source of truth, relies entirely on the standard library with no operational dependencies and self-heals.
 
 ## Setting up
 
@@ -20,7 +20,7 @@ Follow the steps after the generator and you are ready to start tracking presenc
 
 ## The Presence generator
 
-To get started with Presence we'll first need to generate a presence module. We can do this with the `mix phx.gen.presence` task:
+To get started with Presence, we'll first need to generate a presence module. We can do this with the `mix phx.gen.presence` task:
 
 ```console
 $ mix phx.gen.presence
@@ -56,7 +56,7 @@ children = [
 ]
 ```
 
-Next, we will create the channel that we'll communicate presence over. After a user joins we can push the list of presences down the channel and then track the connection. We can also provide a map of additional information to track.
+Next, we will create the channel that we'll communicate presence over. After a user joins, we can push the list of presences down the channel and then track the connection. We can also provide a map of additional information to track.
 
 ```elixir
 defmodule HelloWeb.RoomChannel do
@@ -80,7 +80,7 @@ defmodule HelloWeb.RoomChannel do
 end
 ```
 
-Finally we can use the client-side Presence library included in `phoenix.js` to manage the state and presence diffs that come down the socket. It listens for the `"presence_state"` and `"presence_diff"` events and provides a simple callback for you to handle the events as they happen, with the `onSync` callback.
+Finally, we can use the client-side Presence library included in `phoenix.js` to manage the state and presence diffs that come down the socket. It listens for the `"presence_state"` and `"presence_diff"` events and provides a simple callback for you to handle the events as they happen, with the `onSync` callback.
 
 The `onSync` callback allows you to easily react to presence state changes, which most often results in re-rendering an updated list of active users. You can use the `list` method to format and return each individual presence based on the needs of your application.
 

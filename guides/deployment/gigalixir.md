@@ -10,7 +10,7 @@ Our main goal for this guide is to get a Phoenix application running on Gigalixi
 
 ## Steps
 
-Let's separate this process into a few steps so we can keep track of where we are.
+Let's separate this process into a few steps, so we can keep track of where we are.
 
 - Initialize Git repository
 - Install the Gigalixir CLI
@@ -23,7 +23,7 @@ Let's separate this process into a few steps so we can keep track of where we ar
 
 ## Initializing Git repository
 
-If you haven't already, we'll need to commit our files git. We can do so by running the following commands in our project directory:
+If you haven't already, we'll need to commit our files to git. We can do so by running the following commands in our project directory:
 
 ```console
 $ git init
@@ -88,12 +88,12 @@ $ git remote -v
 The buildpacks we use default to Elixir, Erlang, and Node.js versions that are quite old and it's generally a good idea to run the same version in production as you do in development, so let's do that.
 
 ```console
-$ echo 'elixir_version=1.10.3' > elixir_buildpack.config
-$ echo 'erlang_version=22.3' >> elixir_buildpack.config
+$ echo 'elixir_version=1.14.3' > elixir_buildpack.config
+$ echo 'erlang_version=24.3' >> elixir_buildpack.config
 $ echo 'node_version=12.16.3' > phoenix_static_buildpack.config
 ```
 
-Phoenix v1.6 uses `esbuild` to compile your assets but all Gigalixir images come with `npm`, so we will configure `npm` directly to deploy our assets. Add a `assets/package.json` file if you don't have any with the following:
+Phoenix v1.6 uses `esbuild` to compile your assets, but all Gigalixir images come with `npm`, so we will configure `npm` directly to deploy our assets. Add a `assets/package.json` file if you don't have any with the following:
 
 ```json
 {
@@ -103,7 +103,7 @@ Phoenix v1.6 uses `esbuild` to compile your assets but all Gigalixir images come
 }
 ```
 
-Finally don't forget to commit:
+Finally, don't forget to commit:
 
 ```console
 $ git add elixir_buildpack.config phoenix_static_buildpack.config assets/package.json

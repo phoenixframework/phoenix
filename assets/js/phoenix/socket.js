@@ -151,13 +151,25 @@ export default class Socket {
   }
 
   /**
+   * Returns the LongPoll transport reference
+   */
+  getLongPollTransport(){ return LongPoll }
+
+  /**
    * Disconnects and replaces the active transport
    *
    * @param {Function} newTransport - The new transport class to instantiate
    *
    */
   replaceTransport(newTransport){
-    this.disconnect()
+    this.connectClock++
+    this.closeWasClean = true
+    this.reconnectTimer.reset()
+    this.sendBuffer = []
+    if(this.conn){
+      this.conn.close()
+      this.conn = null
+    }
     this.transport = newTransport
   }
 
@@ -206,12 +218,13 @@ export default class Socket {
    * `new Socket("/socket", {params: {user_id: userToken}})`.
    */
   connect(params){
-    this.connectClock++
     if(params){
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
       this.params = closure(params)
     }
     if(this.conn){ return }
+
+    this.connectClock++
     this.closeWasClean = false
     this.conn = new this.transport(this.endPointURL())
     this.conn.binaryType = this.binaryType
@@ -279,6 +292,26 @@ export default class Socket {
     let ref = this.makeRef()
     this.stateChangeCallbacks.message.push([ref, callback])
     return ref
+  }
+
+  /**
+   * Pings the server and invokes the callback with the RTT in milliseconds
+   * @param {Function} callback
+   *
+   * Returns true if the ping was pushed or false if unable to be pushed.
+   */
+  ping(callback){
+    if(!this.isConnected()){ return false }
+    let ref = this.makeRef()
+    let startTime = Date.now()
+    this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: ref})
+    let onMsgRef = this.onMessage(msg => {
+      if(msg.ref === ref){
+        this.off([onMsgRef])
+        callback(Date.now() - startTime)
+      }
+    })
+    return true
   }
 
   /**

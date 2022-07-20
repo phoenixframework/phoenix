@@ -2,4 +2,4 @@
 
 <%%= render "form.html", Map.put(assigns, :action, Routes.<%= schema.route_helper %>_path(@conn, :update, @<%= schema.singular %>)) %>
 
-<span><%%= link "Back", to: Routes.<%= schema.route_helper %>_path(@conn, :index) %></span>
+<span><.link href={Routes.<%= schema.route_helper %>_path(@conn, :index)}>Back</.link></span>

@@ -100,8 +100,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
       assert_file "test/my_app/accounts_test.exs"
       assert_file "test/support/fixtures/accounts_fixtures.ex"
-      assert_file "lib/my_app_web/controllers/user_auth.ex"
-      assert_file "test/my_app_web/controllers/user_auth_test.exs"
+      assert_file "lib/my_app_web/user_auth.ex"
+      assert_file "test/my_app_web/user_auth_test.exs"
       assert_file "lib/my_app_web/views/user_confirmation_view.ex"
       assert_file "lib/my_app_web/templates/user_confirmation/new.html.heex"
       assert_file "lib/my_app_web/controllers/user_confirmation_controller.ex"
@@ -227,11 +227,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ ~s|def valid_user_attributes(attrs \\\\ %{}) do|
       end
 
-      assert_file "lib/my_app_web/controllers/warehouse/user_auth.ex", fn file ->
+      assert_file "lib/my_app_web/warehouse/user_auth.ex", fn file ->
         assert file =~ "defmodule MyAppWeb.Warehouse.UserAuth do"
       end
 
-      assert_file "test/my_app_web/controllers/warehouse/user_auth_test.exs", fn file ->
+      assert_file "test/my_app_web/warehouse/user_auth_test.exs", fn file ->
         assert file =~ "defmodule MyAppWeb.Warehouse.UserAuthTest do"
       end
 
@@ -241,8 +241,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file "lib/my_app_web/templates/warehouse/user_confirmation/new.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={:user} action={Routes.warehouse_user_confirmation_path(@conn, :create)}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_session_path(@conn, :new)}>Log in</.link>|
       end
 
       assert_file "lib/my_app_web/controllers/warehouse/user_confirmation_controller.ex", fn file ->
@@ -254,10 +254,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end
 
       assert_file "lib/my_app_web/templates/layout/_user_menu.html.heex", fn file ->
-        assert file =~ ~S|<%= link "Settings", to: Routes.warehouse_user_settings_path(@conn, :edit) %>|
-        assert file =~ ~S|<%= link "Log out", to: Routes.warehouse_user_session_path(@conn, :delete), method: :delete %>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_settings_path(@conn, :edit)}>Settings</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_session_path(@conn, :delete)} method="delete">Log out</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_session_path(@conn, :new)}>Log in</.link>|
       end
 
       assert_file "lib/my_app_web/controllers/warehouse/user_registration_controller.ex", fn file ->
@@ -278,14 +278,14 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file "lib/my_app_web/templates/warehouse/user_reset_password/edit.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={@changeset} action={Routes.warehouse_user_reset_password_path(@conn, :update, @token)}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_session_path(@conn, :new)}>Log in</.link>|
       end
 
       assert_file "lib/my_app_web/templates/warehouse/user_reset_password/new.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={:user} action={Routes.warehouse_user_reset_password_path(@conn, :create)}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Log in", to: Routes.warehouse_user_session_path(@conn, :new) %>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_session_path(@conn, :new)}>Log in</.link>|
       end
 
       assert_file "lib/my_app_web/views/warehouse/user_reset_password_view.ex", fn file ->
@@ -302,8 +302,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file "lib/my_app_web/templates/warehouse/user_session/new.html.heex", fn file ->
         assert file =~ ~S|<.form let={f} for={@conn} action={Routes.warehouse_user_session_path(@conn, :create)} as={:user}>|
-        assert file =~ ~S|<%= link "Register", to: Routes.warehouse_user_registration_path(@conn, :new) %>|
-        assert file =~ ~S|<%= link "Forgot your password?", to: Routes.warehouse_user_reset_password_path(@conn, :new) %>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+        assert file =~ ~S|<.link href={Routes.warehouse_user_reset_password_path(@conn, :new)}>Forgot your password?</.link>|
       end
 
       assert_file "test/my_app_web/controllers/warehouse/user_session_controller_test.exs", fn file ->
@@ -402,7 +402,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           assert file =~ ~r/add :email, :citext, null: false$/m
         end
 
-        assert_file "test/my_app_web/controllers/user_auth_test.exs", fn file ->
+        assert_file "test/my_app_web/user_auth_test.exs", fn file ->
           assert file =~ ~r/use MyAppWeb\.ConnCase, async: true$/m
         end
 
@@ -441,7 +441,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           assert file =~ ~r/add :email, :string, null: false, size: 160$/m
         end
 
-        assert_file "test/my_app_web/controllers/user_auth_test.exs", fn file ->
+        assert_file "test/my_app_web/user_auth_test.exs", fn file ->
           assert file =~ ~r/use MyAppWeb\.ConnCase$/m
         end
 
@@ -480,7 +480,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           assert file =~ ~r/add :email, :string, null: false, collate: :nocase$/m
         end
 
-        assert_file "test/my_app_web/controllers/user_auth_test.exs", fn file ->
+        assert_file "test/my_app_web/user_auth_test.exs", fn file ->
           assert file =~ ~r/use MyAppWeb\.ConnCase$/m
         end
 
@@ -519,7 +519,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           assert file =~ ~r/add :email, :string, null: false, size: 160$/m
         end
 
-        assert_file "test/my_app_web/controllers/user_auth_test.exs", fn file ->
+        assert_file "test/my_app_web/user_auth_test.exs", fn file ->
           assert file =~ ~r/use MyAppWeb\.ConnCase$/m
         end
 
@@ -680,8 +680,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert_file "apps/my_app/lib/my_app/accounts/user_notifier.ex"
         assert_file "apps/my_app/test/my_app/accounts_test.exs"
         assert_file "apps/my_app/test/support/fixtures/accounts_fixtures.ex"
-        assert_file "apps/my_app/lib/my_app_web/controllers/user_auth.ex"
-        assert_file "apps/my_app/test/my_app_web/controllers/user_auth_test.exs"
+        assert_file "apps/my_app/lib/my_app_web/user_auth.ex"
+        assert_file "apps/my_app/test/my_app_web/user_auth_test.exs"
         assert_file "apps/my_app/lib/my_app_web/views/user_confirmation_view.ex"
         assert_file "apps/my_app/lib/my_app_web/templates/user_confirmation/new.html.heex"
         assert_file "apps/my_app/lib/my_app_web/controllers/user_confirmation_controller.ex"
@@ -723,8 +723,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert_file "apps/my_app/lib/my_app/accounts/user_notifier.ex"
         assert_file "apps/my_app/test/my_app/accounts_test.exs"
         assert_file "apps/my_app/test/support/fixtures/accounts_fixtures.ex"
-        assert_file "apps/my_app_web/lib/my_app_web/controllers/user_auth.ex"
-        assert_file "apps/my_app_web/test/my_app_web/controllers/user_auth_test.exs"
+        assert_file "apps/my_app_web/lib/my_app_web/user_auth.ex"
+        assert_file "apps/my_app_web/test/my_app_web/user_auth_test.exs"
         assert_file "apps/my_app_web/lib/my_app_web/views/user_confirmation_view.ex"
         assert_file "apps/my_app_web/lib/my_app_web/templates/user_confirmation/new.html.heex"
         assert_file "apps/my_app_web/lib/my_app_web/controllers/user_confirmation_controller.ex"

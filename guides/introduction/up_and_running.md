@@ -71,7 +71,7 @@ Generated hello app
 The database for Hello.Repo has been created
 ```
 
-In case the database could not be created, see the guides for the [`mix ecto.create`](mix_tasks.html#mix-ecto-create) for general trouble-shooting.
+In case the database could not be created, see the guides for the [`mix ecto.create`](mix_tasks.html#mix-ecto-create) for general troubleshooting.
 
 > Note: if this is the first time you are running this command, Phoenix may also ask to install Rebar. Go ahead with the installation as Rebar is used to build Erlang packages.
 
@@ -108,7 +108,7 @@ You can also run your app inside IEx (Interactive Elixir) as:
     $ iex -S mix phx.server
 ```
 
-By default Phoenix accepts requests on port 4000. If we point our favorite web browser at [http://localhost:4000](http://localhost:4000), we should see the Phoenix Framework welcome page.
+By default, Phoenix accepts requests on port 4000. If we point our favorite web browser at [http://localhost:4000](http://localhost:4000), we should see the Phoenix Framework welcome page.
 
 ![Phoenix Welcome Page](assets/images/welcome-to-phoenix.png)
 

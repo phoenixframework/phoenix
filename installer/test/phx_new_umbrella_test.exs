@@ -169,7 +169,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
                   ~r/defmodule PhxUmbWeb.PageView/
 
       assert_file web_path(@app, "lib/#{@app}_web/router.ex"), "defmodule PhxUmbWeb.Router"
-      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.heex")
+
+      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.heex"), fn file ->
+        assert file =~ ~s|<meta name="csrf-token" content={get_csrf_token()}>|
+      end
+
       assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.heex")
       assert_file web_path(@app, "test/#{@app}_web/views/page_view_test.exs"),
                   "defmodule PhxUmbWeb.PageViewTest"
@@ -274,12 +278,16 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file root_path(@app, "config/config.exs"), fn file ->
-        assert file =~ "config :swoosh"
         assert file =~ "config :phx_umb, PhxUmb.Mailer, adapter: Swoosh.Adapters.Local"
       end
 
       assert_file root_path(@app, "config/test.exs"), fn file ->
+        assert file =~ "config :swoosh"
         assert file =~ "config :phx_umb, PhxUmb.Mailer, adapter: Swoosh.Adapters.Test"
+      end
+
+      assert_file root_path(@app, "config/dev.exs"), fn file ->
+        assert file =~ "config :swoosh"
       end
 
       # Install dependencies?
@@ -406,7 +414,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_dashboard")
 
       assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.heex"), fn file ->
-        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
+        refute file =~ ~s|LiveDashboard|
       end
 
       assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), fn file ->

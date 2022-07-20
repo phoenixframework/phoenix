@@ -50,7 +50,7 @@ end
 
 When we reload our home page, we should see our new title. Since templates are compiled inside the view, we could invoke the view function simply as `title()`, otherwise we would have to type `HelloWeb.LayoutView.title()`.
 
-As you may recall, Elixir templates use `.heex`, which stands for  "HTML+EEx". EEx is an Elixir library that uses `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. In your controller, if you invoke:
+Our layouts and templates use the `.heex` extension, which stands for  "HTML+EEx". EEx is an Elixir library that uses `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. In your controller, if you invoke:
 
 ```elixir
   render(conn, "show.html", username: "joe")
@@ -84,6 +84,8 @@ or even loops:
 ```
 
 Did you notice the use of `<%= %>` versus `<% %>` above? All expressions that output something to the template **must** use the equals sign (`=`). If this is not included the code will still be executed but nothing will be inserted into the template.
+
+HEEx also comes with handy HTML extensions we will learn next.
 
 ### HTML extensions
 

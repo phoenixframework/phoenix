@@ -107,7 +107,10 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
       end
 
-      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.heex"
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.heex", fn file ->
+        assert file =~ ~s|<meta name="csrf-token" content={get_csrf_token()}>|
+      end
+
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.heex"
 
       assert_file "phx_blog/lib/phx_blog_web/templates/page/index.html.heex", fn file ->
@@ -219,12 +222,16 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/config/config.exs", fn file ->
-        assert file =~ "config :swoosh"
         assert file =~ "config :phx_blog, PhxBlog.Mailer, adapter: Swoosh.Adapters.Local"
       end
 
       assert_file "phx_blog/config/test.exs", fn file ->
+        assert file =~ "config :swoosh"
         assert file =~ "config :phx_blog, PhxBlog.Mailer, adapter: Swoosh.Adapters.Test"
+      end
+
+      assert_file "phx_blog/config/dev.exs", fn file ->
+        assert file =~ "config :swoosh"
       end
 
       # Install dependencies?
@@ -357,6 +364,15 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ "config :swoosh"
         refute file =~ "config :phx_blog, PhxBlog.Mailer, adapter: Swoosh.Adapters.Local"
       end
+
+      assert_file "phx_blog/config/test.exs", fn file ->
+        refute file =~ "config :swoosh"
+        refute file =~ "config :phx_blog, PhxBlog.Mailer, adapter: Swoosh.Adapters.Test"
+      end
+
+      assert_file "phx_blog/config/dev.exs", fn file ->
+        refute file =~ "config :swoosh"
+      end
     end
   end
 
@@ -367,7 +383,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard")
 
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.heex", fn file ->
-        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
+        refute file =~ ~s|LiveDashboard|
       end
 
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->

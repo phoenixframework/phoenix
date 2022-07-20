@@ -86,6 +86,23 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   Generated migration can use `binary_id` for schema's primary key
   and its references with option `--binary-id`.
 
+  ## prefix
+
+  By default migrations and schemas are generated without a prefix.
+
+  For PostgreSQL this sets the "SCHEMA" (typically set via `search_path`)
+  and for MySQL it sets the database for the generated migration and schema.
+  The prefix can be used to thematically organize your tables on the database level.
+
+  A prefix can be specified with the `--prefix` flags. For example:
+
+      $ mix phx.gen.schema Blog.Post posts --prefix blog
+
+  > #### Warning {: .warning}
+  >
+  > The flag does not generate migrations to create the schema / database.
+  > This needs to be done manually or in a separate migration.
+
   ## Default options
 
   This generator uses default options provided in the `:generators`

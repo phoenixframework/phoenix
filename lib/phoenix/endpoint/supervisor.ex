@@ -65,6 +65,8 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
 
     # TODO: Remove this once {:system, env_var} tuples are removed
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :http)
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :https)
     warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :url)
     warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :static_url)
 
@@ -171,7 +173,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       http: false,
       https: false,
       reloadable_apps: nil,
-      reloadable_compilers: [:gettext, :elixir],
+      reloadable_compilers: [:gettext, :phoenix_live_view, :elixir],
       secret_key_base: nil,
       static_url: nil,
       url: [host: "localhost", path: "/"],
@@ -425,7 +427,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       else
         Logger.error "Could not find static manifest at #{inspect outer}. " <>
                      "Run \"mix phx.digest\" after building your static files " <>
-                     "or remove the configuration from \"config/prod.exs\"."
+                     "or remove the \"cache_static_manifest\" configuration from your config files."
       end
     else
       %{}

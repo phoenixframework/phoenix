@@ -11,7 +11,7 @@ defmodule <%= @web_namespace %>.MixProject do
       lockfile: "../../mix.lock",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: <%= if @gettext do %>[:gettext] ++ <% end %>Mix.compilers(),
+      compilers: <%= if @compilers != [] do %>[<%= Enum.join(@compilers, ", ") %>] ++ <% end %>Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -41,10 +41,11 @@ defmodule <%= @web_namespace %>.MixProject do
       {:phoenix_ecto, "~> 4.4"},<% end %><%= if @html do %>
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.17.5"},
+      # TODO bump to 0.18 on release
+      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", override: true},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.6"},<% end %><%= if @assets do %>
-      {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},<% end %>
+      {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 0.18"},<% end %><%= if @app_name != @web_app_name do %>

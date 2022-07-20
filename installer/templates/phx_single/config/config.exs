@@ -26,14 +26,11 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Local
-
-# Swoosh API client is needed for adapters other than SMTP.
-config :swoosh, :api_client, false<% end %><%= if @assets do %>
+config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Local<% end %><%= if @assets do %>
 
 # Configure esbuild (the version is required)
 config :esbuild,
-  version: "0.14.29",
+  version: "0.14.41",
   default: [
     args:
       ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),

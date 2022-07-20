@@ -158,7 +158,7 @@ The default endpoint plugs do quite a lot of work. Here they are in order:
 
 - `Plug.Head` - converts HEAD requests to GET requests and strips the response body.
 
-- `Plug.Session` - a plug that sets up session management. Note that `fetch_session/2` must still be explicitly called before using the session as this plug just sets up how the session is fetched.
+- `Plug.Session` - a plug that sets up session management. Note that `fetch_session/2` must still be explicitly called before using the session, as this plug just sets up how the session is fetched.
 
 In the middle of the endpoint, there is also a conditional block:
 

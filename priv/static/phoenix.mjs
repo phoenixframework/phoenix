@@ -13,7 +13,7 @@ var closure = (value) => {
 // js/phoenix/constants.js
 var globalSelf = typeof self !== "undefined" ? self : null;
 var phxWindow = typeof window !== "undefined" ? window : null;
-var global = globalSelf || phxWindow || void 0;
+var global = globalSelf || phxWindow || global;
 var DEFAULT_VSN = "2.0.0";
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 var DEFAULT_TIMEOUT = 1e4;
@@ -340,10 +340,10 @@ var Ajax = class {
   static request(method, endPoint, accept, body, timeout, ontimeout, callback) {
     if (global.XDomainRequest) {
       let req = new global.XDomainRequest();
-      this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
+      return this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
     } else {
       let req = new global.XMLHttpRequest();
-      this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback);
+      return this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback);
     }
   }
   static xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback) {
@@ -359,14 +359,13 @@ var Ajax = class {
     req.onprogress = () => {
     };
     req.send(body);
+    return req;
   }
   static xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback) {
     req.open(method, endPoint, true);
     req.timeout = timeout;
     req.setRequestHeader("Content-Type", accept);
-    req.onerror = () => {
-      callback && callback(null);
-    };
+    req.onerror = () => callback && callback(null);
     req.onreadystatechange = () => {
       if (req.readyState === XHR_STATES.complete && callback) {
         let response = this.parseJSON(req.responseText);
@@ -377,6 +376,7 @@ var Ajax = class {
       req.ontimeout = ontimeout;
     }
     req.send(body);
+    return req;
   }
   static parseJSON(resp) {
     if (!resp || resp === "") {
@@ -420,6 +420,7 @@ var LongPoll = class {
     this.endPoint = null;
     this.token = null;
     this.skipHeartbeat = true;
+    this.reqs = /* @__PURE__ */ new Set();
     this.onopen = function() {
     };
     this.onerror = function() {
@@ -438,19 +439,19 @@ var LongPoll = class {
   endpointURL() {
     return Ajax.appendParams(this.pollEndpoint, { token: this.token });
   }
-  closeAndRetry() {
-    this.close();
+  closeAndRetry(code, reason, wasClean) {
+    this.close(code, reason, wasClean);
     this.readyState = SOCKET_STATES.connecting;
   }
   ontimeout() {
     this.onerror("timeout");
-    this.closeAndRetry();
+    this.closeAndRetry(1005, "timeout", false);
+  }
+  isActive() {
+    return this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting;
   }
   poll() {
-    if (!(this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting)) {
-      return;
-    }
-    Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), (resp) => {
+    this.ajax("GET", null, () => this.ontimeout(), (resp) => {
       if (resp) {
         var { status, token, messages } = resp;
         this.token = token;
@@ -460,9 +461,7 @@ var LongPoll = class {
       switch (status) {
         case 200:
           messages.forEach((msg) => {
-            setTimeout(() => {
-              this.onmessage({ data: msg });
-            }, 0);
+            setTimeout(() => this.onmessage({ data: msg }), 0);
           });
           this.poll();
           break;
@@ -471,17 +470,17 @@ var LongPoll = class {
           break;
         case 410:
           this.readyState = SOCKET_STATES.open;
-          this.onopen();
+          this.onopen({});
           this.poll();
           break;
         case 403:
-          this.onerror();
-          this.close();
+          this.onerror(403);
+          this.close(1008, "forbidden", false);
           break;
         case 0:
         case 500:
-          this.onerror();
-          this.closeAndRetry();
+          this.onerror(500);
+          this.closeAndRetry(1011, "internal server error", 500);
           break;
         default:
           throw new Error(`unhandled poll status ${status}`);
@@ -489,16 +488,38 @@ var LongPoll = class {
     });
   }
   send(body) {
-    Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), (resp) => {
+    this.ajax("POST", body, () => this.onerror("timeout"), (resp) => {
       if (!resp || resp.status !== 200) {
         this.onerror(resp && resp.status);
-        this.closeAndRetry();
+        this.closeAndRetry(1011, "internal server error", false);
       }
     });
   }
-  close(_code, _reason) {
+  close(code, reason, wasClean) {
+    for (let req of this.reqs) {
+      req.abort();
+    }
     this.readyState = SOCKET_STATES.closed;
-    this.onclose();
+    let opts = Object.assign({ code: 1e3, reason: void 0, wasClean: true }, { code, reason, wasClean });
+    if (typeof CloseEvent !== "undefined") {
+      this.onclose(new CloseEvent("close", opts));
+    } else {
+      this.onclose(opts);
+    }
+  }
+  ajax(method, body, onCallerTimeout, callback) {
+    let req;
+    let ontimeout = () => {
+      this.reqs.delete(req);
+      onCallerTimeout();
+    };
+    req = Ajax.request(method, this.endpointURL(), "application/json", body, this.timeout, ontimeout, (resp) => {
+      this.reqs.delete(req);
+      if (this.isActive()) {
+        callback(resp);
+      }
+    });
+    this.reqs.add(req);
   }
 };
 
@@ -799,8 +820,18 @@ var Socket = class {
       this.teardown(() => this.connect());
     }, this.reconnectAfterMs);
   }
+  getLongPollTransport() {
+    return LongPoll;
+  }
   replaceTransport(newTransport) {
-    this.disconnect();
+    this.connectClock++;
+    this.closeWasClean = true;
+    this.reconnectTimer.reset();
+    this.sendBuffer = [];
+    if (this.conn) {
+      this.conn.close();
+      this.conn = null;
+    }
     this.transport = newTransport;
   }
   protocol() {
@@ -823,7 +854,6 @@ var Socket = class {
     this.teardown(callback, code, reason);
   }
   connect(params) {
-    this.connectClock++;
     if (params) {
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor");
       this.params = closure(params);
@@ -831,6 +861,7 @@ var Socket = class {
     if (this.conn) {
       return;
     }
+    this.connectClock++;
     this.closeWasClean = false;
     this.conn = new this.transport(this.endPointURL());
     this.conn.binaryType = this.binaryType;
@@ -865,6 +896,21 @@ var Socket = class {
     let ref = this.makeRef();
     this.stateChangeCallbacks.message.push([ref, callback]);
     return ref;
+  }
+  ping(callback) {
+    if (!this.isConnected()) {
+      return false;
+    }
+    let ref = this.makeRef();
+    let startTime = Date.now();
+    this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref });
+    let onMsgRef = this.onMessage((msg) => {
+      if (msg.ref === ref) {
+        this.off([onMsgRef]);
+        callback(Date.now() - startTime);
+      }
+    });
+    return true;
   }
   onConnOpen() {
     if (this.hasLogger())

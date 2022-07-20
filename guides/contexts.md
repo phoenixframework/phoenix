@@ -275,7 +275,9 @@ The race conditions would make this an unreliable way to update the existing tab
 
 Let's think of a function that describes what we want to accomplish. Here's how we would like to use it:
 
-    product = Catalog.inc_page_views(product)
+```elixir
+product = Catalog.inc_page_views(product)
+```
 
 That looks great. Our callers will have no confusion over what this function does, and we can wrap up the increment in an atomic operation to prevent race conditions.
 
@@ -448,6 +450,8 @@ With our schema associations set up, we can implement the selection of categorie
 
 
 ```diff
++ alias Hello.Catalog.Category
+
 - def get_product!(id), do: Repo.get!(Product, id)
 + def get_product!(id) do
 +   Product |> Repo.get(id) |> Repo.preload(:categories)
@@ -492,7 +496,10 @@ defmodule HelloWeb.ProductView do
   use HelloWeb, :view
 
   def category_select(f, changeset) do
-    existing_ids = changeset |> Ecto.Changeset.get_change(:categories, []) |> Enum.map(& &1.data.id)
+    existing_ids =
+      changeset
+      |> Ecto.Changeset.get_change(:categories, [])
+      |> Enum.map(& &1.data.id)
 
     category_opts =
       for cat <- Hello.Catalog.list_categories(),
@@ -504,7 +511,6 @@ end
 ```
 
 We added a new `category_select/2` function which uses `Phoenix.HTML`'s `multiple_select/3` to generate a multiple select tag. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
-
 
 With our `category_select` function in place, we can open up `lib/hello_web/templates/product/form.html.heex` and add:
 
@@ -776,9 +782,7 @@ defmodule HelloWeb.CartItemController do
   alias Hello.{ShoppingCart, Catalog}
 
   def create(conn, %{"product_id" => product_id}) do
-    product = Catalog.get_product!(product_id)
-
-    case ShoppingCart.add_item_to_cart(conn.assigns.cart, product) do
+    case ShoppingCart.add_item_to_cart(conn.assigns.cart, product_id) do
       {:ok, _item} ->
         conn
         |> put_flash(:info, "Item added to your cart")
@@ -798,7 +802,7 @@ defmodule HelloWeb.CartItemController do
 end
 ```
 
-We defined a new `CartItemController` with the create and delete actions that we declared in our router. For `create`, we first lookup the product in the catalog with `Catalog.get_product!/1`, then we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we show a flash successful message and redirect to the cart show page; else, we show a flash error message and redirect to the cart show page. For `delete`, we'll call a `remove_item_from_cart` function which we'll implement on our `ShoppingCart` context  and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` make it obvious what we are accomplishing here. It also allows us to spec out our web layer and context APIs without thinking about all the implementation details at once.
+We defined a new `CartItemController` with the create and delete actions that we declared in our router. For `create`, we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we show a flash successful message and redirect to the cart show page; else, we show a flash error message and redirect to the cart show page. For `delete`, we'll call a `remove_item_from_cart` function which we'll implement on our `ShoppingCart` context  and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` make it obvious what we are accomplishing here. It also allows us to spec out our web layer and context APIs without thinking about all the implementation details at once.
 
 Let's implement the new interface for the `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
@@ -833,7 +837,9 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 
   defp reload_cart(%Cart{} = cart), do: get_cart_by_user_uuid(cart.user_uuid)
 
-  def add_item_to_cart(%Cart{} = cart, %Catalog.Product{} = product) do
+  def add_item_to_cart(%Cart{} = cart, product_id) do
+    product = Catalog.get_product!(product_id)
+
     %CartItem{quantity: 1, price_when_carted: product.price}
     |> CartItem.changeset(%{})
     |> Ecto.Changeset.put_assoc(:cart, cart)
@@ -857,20 +863,22 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
   end
 ```
 
-We started by implementing  `get_cart_by_user_uuid/1` which fetches our cart and joins the cart items, and their products so that we have the full cart populated with all preloaded data. Next, we modified our `create_cart` function to accept a user UUID instead of attributes, which we used to populate the `user_uuid` field. If the insert is successful, we reload the cart contents by calling a private `reload_cart/1` function, which simply calls `get_cart_by_user_uuid/1` to refetch data. Next, we wrote our new `add_item_to_cart/2` function which accepts a cart struct and a product struct from the catalog. We used an upsert operation against our repo to either insert a new cart item into the database, or increase the quantity by one if it already exists in the cart. This is accomplished via the `on_conflict` and `conflict_target` options, which tells our repo how to handle an insert conflict. Next, we implemented `remove_item_from_cart/2` where we simply issue a `Repo.delete_all` call with a query to delete the cart item in our cart that matches the product ID. Finally, we reload the cart contents by calling `reload_cart/1`.
+We started by implementing  `get_cart_by_user_uuid/1` which fetches our cart and joins the cart items, and their products so that we have the full cart populated with all preloaded data. Next, we modified our `create_cart` function to accept a user UUID instead of attributes, which we used to populate the `user_uuid` field. If the insert is successful, we reload the cart contents by calling a private `reload_cart/1` function, which simply calls `get_cart_by_user_uuid/1` to refetch data. 
+
+Next, we wrote our new `add_item_to_cart/2` function which accepts a cart struct and a product id. We proceed to fetch the product with `Catalog.get_product!/1`, showing how contexts can naturally invoke other contexts if required. You could also have chosen to receive the product as argument and you would achieve similar results. Then we used an upsert operation against our repo to either insert a new cart item into the database, or increase the quantity by one if it already exists in the cart. This is accomplished via the `on_conflict` and `conflict_target` options, which tells our repo how to handle an insert conflict.
+
+Finally, we implemented `remove_item_from_cart/2` where we simply issue a `Repo.delete_all` call with a query to delete the cart item in our cart that matches the product ID. Finally, we reload the cart contents by calling `reload_cart/1`.
 
 With our new cart functions in place, we can now expose the "Add to cart" button on the product catalog show page. Open up your template in `lib/hello_web/templates/product/show.html.heex` and make the following changes:
 
 ```diff
 <h1>Show Product</h1>
 
-+<%= link "Add to cart",
-+  to: Routes.cart_item_path(@conn, :create, product_id: @product.id),
-+  method: :post %>
++<.link href={Routes.cart_item_path(@conn, :create, product_id: @product.id)} method="post">Add to cart</.link>
 ...
 ```
 
-The `link` functions from `Phoenix.HTML` accepts a `:method` option to issue an HTTP verb when clicked, instead of the default GET request. With this link in place, the "Add to cart" link will issue a POST request, which will be matched by the route we defined in router which dispatches to the `CartItemController.create/2` function.
+The `link` function component from `Phoenix.LiveView.Helpers` accepts a `:method` attribute to issue an HTTP verb when clicked, instead of the default GET request. With this link in place, the "Add to cart" link will issue a POST request, which will be matched by the route we defined in router which dispatches to the `CartItemController.create/2` function.
 
 Let's try it out. Start your server with `mix phx.server` and visit a product page. If we try clicking the add to cart link, we'll be greeted by an error page with the following logs in the console:
 
@@ -936,7 +944,7 @@ Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`
 <%= if @cart.items == [] do %>
   Your cart is empty
 <% else %>
-  <%= form_for @changeset, Routes.cart_path(@conn, :update), fn f -> %>
+  <.form let={f} for={@changeset} action={Routes.cart_path(@conn, :update)}>
     <ul>
       <%= for item_form <- inputs_for(f, :items), item = item_form.data do %>
         <li>
@@ -949,13 +957,13 @@ Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`
     </ul>
 
     <%= submit "update cart" %>
-  <% end %>
+  </.form>
 
   <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>
 <% end %>
 ```
 
-We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use [`form_for`](`Phoenix.HTML.Form.form_for/4`) to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use `Phoenix.HTML.Form.inputs_for/2` to render inputs for the nested cart items. For each item form input, we use [`hidden_inputs_for/1`](`Phoenix.HTML.Form.hidden_inputs_for/1`) which will render out the item ID as a hidden input tag. This will allow us to map item inputs back together when the form is submitted. Next, we display the product title for the item in the cart, followed by a number input for the item quantity. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment.
+We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the [`form`] component provided by (`Phoenix.LiveView.Helpers`) to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use `Phoenix.HTML.Form.inputs_for/2` to render inputs for the nested cart items. For each item form input, we use [`hidden_inputs_for/1`](`Phoenix.HTML.Form.hidden_inputs_for/1`) which will render out the item ID as a hidden input tag. This will allow us to map item inputs back together when the form is submitted. Next, we display the product title for the item in the cart, followed by a number input for the item quantity. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment.
 
 We're almost ready to try out our cart page, but first we need to implement our new currency calculation functions. Open up your shopping cart context at `lib/hello/shopping_cart.ex` and add these new functions:
 
@@ -1001,7 +1009,7 @@ Let's head back to our `CartController` at `lib/hello_web/controllers/cart_contr
   end
 ```
 
-We started by plucking out the cart params from the form submit. Next, we call our existing `ShoppingCart.update_cart/2` function which was added by the context generator. We'll need to make some changes to this function, but the interface is good as is. If the update is successful, we redirect back to the cart page, otherwise we show a flash error message and send the user back to the cart page to fix any mistakes. Out-of-the-box, our `ShoppingCart.update_cart/2` function only concerned itself with casting the cart params into a changeset and updates it against our repo. For our purposes, we now need it to handled nested cart item associations, and most importantly, business logic for how to handle quantity updates like zero-quantity items being removed from the cart.
+We started by plucking out the cart params from the form submit. Next, we call our existing `ShoppingCart.update_cart/2` function which was added by the context generator. We'll need to make some changes to this function, but the interface is good as is. If the update is successful, we redirect back to the cart page, otherwise we show a flash error message and send the user back to the cart page to fix any mistakes. Out-of-the-box, our `ShoppingCart.update_cart/2` function only concerned itself with casting the cart params into a changeset and updates it against our repo. For our purposes, we now need it to handle nested cart item associations, and most importantly, business logic for how to handle quantity updates like zero-quantity items being removed from the cart.
 
 Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and replace your `update_cart/2` function with the following implementation:
 
@@ -1220,6 +1228,8 @@ To complete an order, our cart page can issue a POST to the `OrderController.cre
 
 We rewrote the `create` action to call an as-yet-implemented `Orders.complete_order/1` function. The code that phoenix generated had a generic `Orders.create_order/1` call. Our code is technically "creating" an order, but it's important to step back and consider the naming of your interfaces. The act of *completing* an order is extremely important in our system. Money changes hands in a transaction, physical goods could be automatically shipped, etc. Such an operation deserves a better, more obvious function name, such as `complete_order`. If the order is completed successfully we redirect to the show page, otherwise a flash error is shown as we redirect back to the cart page.
 
+Here is also a good opportunity to highlight that contexts can naturally work with data defined by other contexts too. This will be specially common with data that is used throughout the application, such as the cart here (but it can also be the current user or the current project, and so forth, depending on your project).
+
 Now we can implement our `Orders.complete_order/1` function. To complete an order, our job will require a few operations:
 
   1. A new order record must be persisted with the total price of the order
@@ -1306,7 +1316,7 @@ We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order
 
 </ul>
 
-<span><%= link "Back", to: Routes.cart_path(@conn, :show) %></span>
+<span><.link href={Routes.cart_path(@conn, :show)}>Back</.link></span>
 ```
 
 To show our completed order, we displayed the order's user, followed by the line item listing with product title, quantity, and the price we "transacted" when completing the order, along with the total price.
@@ -1316,11 +1326,11 @@ Our last addition will be to add the "complete order" button to our cart page to
 ```diff
   <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>
 
-+ <%= link "complete order", to: Routes.order_path(@conn, :create), method: :post %>
++ <.link href={Routes.order_path(@conn, :create)} method="post">complete order</.link>
 <% end %>
 ```
 
-We added a link with `method: :post` to send a POST request to our `OrderController.create` action. If we head back to our cart page at [`http://localhost:4000/cart`](http://localhost:4000/cart) and complete an order, we'll be greeted by our rendered template:
+We added a link with `method="post"` to send a POST request to our `OrderController.create` action. If we head back to our cart page at [`http://localhost:4000/cart`](http://localhost:4000/cart) and complete an order, we'll be greeted by our rendered template:
 
 ```text
 Thank you for your order!

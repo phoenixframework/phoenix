@@ -8,13 +8,13 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.6.4"
+  @version "1.7.0-dev"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
   # installer is ahead of Phoenix itself.
-  @elixir_requirement "~> 1.10"
+  @elixir_requirement "~> 1.11"
 
   def project do
     [
@@ -41,10 +41,7 @@ defmodule Phoenix.MixProject do
       aliases: aliases(),
       source_url: @scm_url,
       homepage_url: "https://www.phoenixframework.org",
-      description: """
-      Productive. Reliable. Fast. A productive web framework that
-      does not compromise speed or maintainability.
-      """
+      description: "Peace of mind from prototype to production"
     ]
   end
 
@@ -96,7 +93,7 @@ defmodule Phoenix.MixProject do
       {:mint_web_socket, "~> 1.0.0", only: :test},
 
       # Dev dependencies
-      {:esbuild, "~> 0.4", only: :dev}
+      {:esbuild, "~> 0.5", only: :dev}
     ]
   end
 

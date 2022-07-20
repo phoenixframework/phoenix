@@ -4,7 +4,7 @@ defmodule Phoenix.CodeReloaderTest do
 
   defmodule Endpoint do
     def config(:reloadable_compilers) do
-      [:gettext, :phoenix, :elixir]
+      [:gettext, :unknown_compiler, :elixir]
     end
 
     def config(:reloadable_apps) do
@@ -14,10 +14,6 @@ defmodule Phoenix.CodeReloaderTest do
 
   def reload(_) do
     {:error, "oops"}
-  end
-
-  test "compile.phoenix tasks touches files" do
-    assert Mix.Tasks.Compile.Phoenix.run([]) == {:noop, []}
   end
 
   @tag :capture_log

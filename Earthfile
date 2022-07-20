@@ -4,11 +4,12 @@ all:
     BUILD +npm
 
 all-test:
-    BUILD --build-arg ELIXIR=1.9.4 --build-arg OTP=21.3.8.24 +test
-    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=24.0.2 --build-arg RUN_INSTALLER_TESTS=1 +test
+    BUILD --build-arg ELIXIR=1.11.4 --build-arg OTP=23.3.4 +test
+    BUILD --build-arg ELIXIR=1.13.3 --build-arg OTP=24.3.4 --build-arg RUN_INSTALLER_TESTS=1 +test
 
 test:
     FROM +test-setup
+    COPY --dir config installer ./
     RUN MIX_ENV=test mix deps.compile
     COPY --dir assets config installer lib integration_test priv test ./
 
@@ -23,8 +24,8 @@ test:
     END
 
 all-integration-test:
-    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=22.3.4.19 +integration-test
-    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=24.0.2 +integration-test
+    BUILD --build-arg ELIXIR=1.13.3 --build-arg OTP=22.3.4 +integration-test
+    BUILD --build-arg ELIXIR=1.13.3 --build-arg OTP=24.3.4 +integration-test
 
 integration-test:
     FROM +setup-base
@@ -94,9 +95,9 @@ npm:
     RUN npm test
 
 setup-base:
-   ARG ELIXIR=1.12.1
-   ARG OTP=24.0.2
-   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.13.3
+   ARG ELIXIR=1.13.3
+   ARG OTP=24.3.4
+   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.16.0
    RUN apk add --no-progress --update git build-base
    ENV ELIXIR_ASSERT_TIMEOUT=10000
    WORKDIR /src
