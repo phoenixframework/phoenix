@@ -2,10 +2,7 @@ defmodule Phoenix.VerifiedRoutes do
   @moduledoc ~S"""
   TODO
     - [ ] ~p"/posts?page=#{page}"
-    - [ ] optimize verb/host lookup
-    - [ ] forwards?
-    - [ ] after_verify
-    - [ ] move to own test file
+    - [ ] forwards
 
   use Phoenix.VerifiedRoutes,
     router: AppWeb.Router,
@@ -32,8 +29,6 @@ defmodule Phoenix.VerifiedRoutes do
       opts = unquote(opts)
 
       @before_compile unquote(__MODULE__)
-      # TODO: the endpoint should be optional because we don't have one for forwarded routers
-      # When the endpoint is optional, we should raise for `~p` outside of `path/2`
       @endpoint Keyword.get(opts, :endpoint)
       @router Keyword.get(opts, :router)
       @statics Keyword.get(opts, :statics, [])
@@ -93,7 +88,8 @@ defmodule Phoenix.VerifiedRoutes do
       <.link to={~p"/users?#{[page: @page]}"}>profile</.link>
       """
   '''
-  defmacro sigil_p({:<<>>, _meta, _segments} = route, []) do
+  defmacro sigil_p({:<<>>, _meta, _segments} = route, extra) do
+    validate_sigil_p!(extra)
     endpoint = attr!(__CALLER__, :endpoint)
     router = attr!(__CALLER__, :router)
 
@@ -135,6 +131,12 @@ defmodule Phoenix.VerifiedRoutes do
     end
   end
 
+  defp validate_sigil_p!([]), do: :ok
+
+  defp validate_sigil_p!(extra) do
+    raise ArgumentError, "~p does not support trailing fragment, got: #{inspect(extra)}"
+  end
+
   defp raise_invalid_route(ast) do
     raise ArgumentError,
           "expected compile-time ~p path string, got: #{Macro.to_string(ast)}\n" <>
@@ -161,7 +163,12 @@ defmodule Phoenix.VerifiedRoutes do
       <.link to={path(@uri, "/users?#{[page: @page]}")}>profile</.link>
       """
   '''
-  defmacro path(endpoint, router, {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast) do
+  defmacro path(
+             endpoint,
+             router,
+             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = og_ast
+           ) do
+    validate_sigil_p!(extra)
     endpoint = Macro.expand(endpoint, __CALLER__)
     router = Macro.expand(router, __CALLER__)
 
@@ -170,8 +177,8 @@ defmodule Phoenix.VerifiedRoutes do
     |> inject_path(__CALLER__)
   end
 
-  # TODO: Check sigil leftover
-  defmacro path(endpoint, router, {:sigil_p, _, [str, _]} = og_ast) when is_binary(str) do
+  defmacro path(endpoint, router, {:sigil_p, _, [str, extra]} = og_ast) when is_binary(str) do
+    validate_sigil_p!(extra)
     endpoint = Macro.expand(endpoint, __CALLER__)
     router = Macro.expand(router, __CALLER__)
 
@@ -184,8 +191,9 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro path(
              conn_or_socket_or_endpoint_or_uri,
-             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast
+             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = og_ast
            ) do
+    validate_sigil_p!(extra)
     router = attr!(__CALLER__, :router)
 
     route
@@ -193,8 +201,9 @@ defmodule Phoenix.VerifiedRoutes do
     |> inject_path(__CALLER__)
   end
 
-  defmacro path(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, _]} = og_ast)
+  defmacro path(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, extra]} = og_ast)
            when is_binary(route) do
+    validate_sigil_p!(extra)
     router = attr!(__CALLER__, :router)
 
     route
@@ -291,7 +300,7 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   @doc """
-  TODO
+  Returns the URL for the endpoint from the path without verification.
   """
   def unverified_url(%Plug.Conn{private: private}, path) do
     case private do
@@ -343,7 +352,7 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   @doc """
-  TODO
+  Returns the path with relevant script name prefixes without verification.
   """
   def unverified_path(%Plug.Conn{} = conn, router, path) do
     conn
@@ -485,7 +494,6 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(true), do: "true"
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
-  # separate compile and verify checks - no need for static check for verify
   defp route_type(router, statics, test_path) do
     cond do
       static_path?(test_path, statics) -> :static

@@ -1,6 +1,6 @@
 modules = [
-  PostController,
-  UserController
+  Phoenix.VerifiedRoutesTest.PostController,
+  Phoenix.VerifiedRoutesTest.UserController
 ]
 
 for module <- modules do
@@ -19,6 +19,7 @@ defmodule Phoenix.VerifiedRoutesTest do
 
   defmodule Router do
     use Phoenix.Router
+    alias Phoenix.VerifiedRoutesTest.{PostController, UserController}
 
     get "/posts/top", PostController, :top
     get "/posts/bottom/:order/:count", PostController, :bottom
@@ -115,13 +116,13 @@ defmodule Phoenix.VerifiedRoutesTest do
              "/posts/bottom/asc/123?foo=bar"
   end
 
-  test "~p with scoped host" do
-    assert ~p"/host_users/1/info" == "/host_users/1/info"
-  end
-
   test "~p with dynamic string and static query params" do
     struct = %__MODULE__{id: 123, slug: "post-123"}
     assert ~p"/posts/#{struct}?foo=bar" == "/posts/post-123?foo=bar"
+  end
+
+  test "~p with scoped host" do
+    assert ~p"/host_users/1/info" == "/host_users/1/info"
   end
 
   test "~p on splat segments" do
@@ -135,6 +136,15 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/my path?#{[foo: "my param"]}" == "/posts/my%20path?foo=my+param"
     slug = "my path"
     assert ~p"/posts/#{slug}?#{[foo: "my param"]}" == "/posts/my%20path?foo=my+param"
+  end
+
+  test "~p raises on leftover sigil" do
+    assert_raise ArgumentError, "~p does not support trailing fragment, got: 'foo'", fn ->
+      defmodule LeftOver do
+        use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+        ~p"/posts/1"foo
+      end
+    end
   end
 
   test "~p warns on unmatched path" do
