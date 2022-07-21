@@ -107,6 +107,8 @@ defmodule Phoenix.Router.HelpersTest do
     def static_integrity(_path), do: nil
   end
 
+  use Phoenix.VerifiedRoutes
+
   alias Router.Helpers
 
   describe "verfied routes" do
@@ -150,16 +152,14 @@ defmodule Phoenix.Router.HelpersTest do
     test "~p warns on unmatched path" do
       warnings =
         ExUnit.CaptureIO.capture_io(:stderr, fn ->
-          Code.compile_quoted(quote do
-            defmodule Unmatched do
-              use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
-              def test do
-                ~p"/unknown"
-                ~p"/unknown/123"
-                ~p"/unknown/#{123}"
-              end
+          defmodule Unmatched do
+            use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+            def test do
+              ~p"/unknown"
+              ~p"/unknown/123"
+              ~p"/unknown/#{123}"
             end
-          end)
+          end
         end)
 
       assert warnings =~ ~s|no route path for Phoenix.Router.HelpersTest.Router matches "/unknown"|
@@ -169,12 +169,10 @@ defmodule Phoenix.Router.HelpersTest do
 
     test "~p raises when not prefixed by /" do
       assert_raise ArgumentError, ~s|path segments must begin with /, got: "posts/1" in "posts/1"|, fn ->
-        Code.compile_quoted(quote do
-          defmodule SigilPPrefix do
-            use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
-            def test, do: ~p"posts/1"
-          end
-        end)
+        defmodule SigilPPrefix do
+          use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+          def test, do: ~p"posts/1"
+        end
       end
     end
 
