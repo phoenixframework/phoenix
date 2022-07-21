@@ -28,10 +28,7 @@ defmodule Phoenix.VerifiedRoutes do
       end
 
     quote do
-      Module.register_attribute(__MODULE__, :phoenix_verified_routes,
-        accumulate: true,
-        persist: false
-      )
+      Module.register_attribute(__MODULE__, :phoenix_verified_routes, accumulate: true)
 
       opts = unquote(opts)
 
