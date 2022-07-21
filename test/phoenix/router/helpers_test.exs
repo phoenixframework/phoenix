@@ -22,11 +22,6 @@ defmodule Phoenix.Router.HelpersTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  import Phoenix.VerifiedRoutes
-
-  @derive {Phoenix.Param, key: :slug}
-  defstruct [:id, :slug]
-
   defmodule Router do
     use Phoenix.Router
 
@@ -107,117 +102,7 @@ defmodule Phoenix.Router.HelpersTest do
     def static_integrity(_path), do: nil
   end
 
-  use Phoenix.VerifiedRoutes
-
   alias Router.Helpers
-
-  describe "verfied routes" do
-    @endpoint Endpoint
-    @router Router
-
-    test "~p with static string" do
-      assert ~p"/posts/1" == "/posts/1"
-      assert ~p"/posts/1?foo=bar" == "/posts/1?foo=bar"
-    end
-
-    test "~p with dynamic string uses Phoenix.Param" do
-      struct = %__MODULE__{id: 123, slug: "post-123"}
-      assert ~p"/posts/#{struct}" == "/posts/post-123"
-      assert ~p"/posts/#{123}" == "/posts/123"
-      assert ~p|/posts/#{"a b"}| == "/posts/a%20b"
-    end
-
-    test "~p with dynamic string and query params" do
-      struct = %__MODULE__{id: 123, slug: "post-123"}
-      assert ~p"/posts/#{struct}?#{[page: 1, spaced: "a b"]}" == "/posts/post-123?page=1&spaced=a+b"
-      assert ~p"/posts/#{struct}?#{[page: 1, spaced: "a b"]}" == "/posts/post-123?page=1&spaced=a+b"
-    end
-
-    test "~p with scoped host" do
-      assert ~p"/host_users/1/info" == "/host_users/1/info"
-    end
-
-    test "~p with dynamic string and static query params" do
-      struct = %__MODULE__{id: 123, slug: "post-123"}
-      assert ~p"/posts/#{struct}?foo=bar" == "/posts/post-123?foo=bar"
-    end
-
-    test "~p on splat segments" do
-      assert ~p|/posts/file/#{1}/#{"2.jpg"}| == "/posts/file/1/2.jpg"
-
-      location = ["folder", "file.jpg"]
-      assert ~p|/posts/file/#{location}| == "/posts/file/folder/file.jpg"
-    end
-
-    test "~p warns on unmatched path" do
-      warnings =
-        ExUnit.CaptureIO.capture_io(:stderr, fn ->
-          defmodule Unmatched do
-            use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
-            def test do
-              ~p"/unknown"
-              ~p"/unknown/123"
-              ~p"/unknown/#{123}"
-            end
-          end
-        end)
-
-      assert warnings =~ ~s|no route path for Phoenix.Router.HelpersTest.Router matches "/unknown"|
-      assert warnings =~ ~s|no route path for Phoenix.Router.HelpersTest.Router matches "/unknown/123"|
-      assert warnings =~ ~s|no route path for Phoenix.Router.HelpersTest.Router matches "/unknown/#{123}"|
-    end
-
-    test "~p raises when not prefixed by /" do
-      assert_raise ArgumentError, ~s|path segments must begin with /, got: "posts/1" in "posts/1"|, fn ->
-        defmodule SigilPPrefix do
-          use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
-          def test, do: ~p"posts/1"
-        end
-      end
-    end
-
-    test "path arities" do
-      assert path(Endpoint, ~p"/posts/1") == "/posts/1"
-      assert path(conn_with_endpoint(), ~p"/posts/1") == "/posts/1"
-      assert path(conn_with_script_name(), ~p"/posts/1") == "/api/posts/1"
-    end
-
-    test "url arities" do
-      assert url(~p"/posts/1") == "https://example.com/posts/1"
-      assert url(~p"/posts/#{123}") == "https://example.com/posts/123"
-      assert url(Endpoint, ~p"/posts/1") == "https://example.com/posts/1"
-      assert url(conn_with_endpoint(), ~p"/posts/1") == "https://example.com/posts/1"
-      assert url(conn_with_script_name(), ~p"/posts/1") == "https://example.com/api/posts/1"
-    end
-
-    test "path raises when non ~p is passed" do
-      assert_raise ArgumentError, ~r|expected compile-time ~p path string, got: "/posts/1"|, fn ->
-        Code.compile_quoted(quote do
-          defmodule MissingPathPrefix do
-            use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
-            def test, do: path(%URI{}, "/posts/1")
-          end
-        end)
-      end
-    end
-
-    test "url raises when non ~p is passed" do
-      assert_raise ArgumentError, ~r|expected compile-time ~p path string, got: "/posts/1"|, fn ->
-        Code.compile_quoted(quote do
-          defmodule MissingURLPrefix do
-            use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
-            def test, do: url("/posts/1")
-          end
-        end)
-      end
-    end
-
-    test "static_integrity" do
-      assert is_nil(static_integrity(Endpoint, "/images/foo.png"))
-      assert is_nil(static_integrity(conn_with_endpoint(), "/images/foo.png"))
-      assert is_nil(static_integrity(socket_with_endpoint(), "/images/foo.png"))
-    end
-  end
 
   test "defines a __helpers__ function" do
     assert Router.__helpers__() == Router.Helpers
@@ -312,8 +197,6 @@ defmodule Phoenix.Router.HelpersTest do
     end
   end
 
-  @endpoint Endpoint
-  @router Router
   test "top-level named routes with complex ids" do
     assert Helpers.post_path(Endpoint, :show, "==d--+") ==
       "/posts/%3D%3Dd--%2B"
@@ -328,14 +211,6 @@ defmodule Phoenix.Router.HelpersTest do
       "/posts/file/%3D%3Dd--%2B/%3AO.jpg"
     assert Helpers.post_path(Endpoint, :file, ["==d--+", ":O.jpg"], xx: "/=+/") ==
       "/posts/file/%3D%3Dd--%2B/%3AO.jpg?xx=%2F%3D%2B%2F"
-
-    # verified
-
-    assert ~p|/posts/#{"==d--+"}| == "/posts/%3D%3Dd--%2B"
-    assert ~p|/posts/top?#{[id: "==d--+"]}| == "/posts/top?id=%3D%3Dd--%2B"
-
-    assert ~p|/posts/file/#{"==d--+"}/#{":O.jpg"}| == "/posts/file/%3D%3Dd--%2B/%3AO.jpg"
-    assert ~p|/posts/file/#{"==d--+"}/#{":O.jpg"}?#{[xx: "/=+/"]}| == "/posts/file/%3D%3Dd--%2B/%3AO.jpg?xx=%2F%3D%2B%2F"
   end
 
   test "top-level named routes with trailing slashes" do
@@ -652,8 +527,6 @@ defmodule Phoenix.Router.HelpersTest do
     %URI{scheme: "https", host: "example.com", port: 123, path: "/api"}
   end
 
-  @endpoint ScriptName
-  @router Router
   test "paths use script name" do
     assert Helpers.page_path(ScriptName, :root) == "/api/"
     assert Helpers.page_path(conn_with_script_name(), :root) == "/api/"
@@ -661,23 +534,8 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.post_path(ScriptName, :show, 5) == "/api/posts/5"
     assert Helpers.post_path(conn_with_script_name(), :show, 5) == "/api/posts/5"
     assert Helpers.post_path(uri_with_script_name(), :show, 5) == "/api/posts/5"
-
-    # verified
-
-    assert ~p"/" == "/api/"
-    assert path(ScriptName, Router, ~p"/") == "/api/"
-    assert path(conn_with_script_name(), ~p"/") == "/api/"
-    assert path(uri_with_script_name(), ~p"/") == "/api/"
-    assert path(ScriptName, Router, ~p"/posts/5") == "/api/posts/5"
-    assert ~p"/posts/5" == "/api/posts/5"
-    assert path(ScriptName, Router, ~p"/posts/#{123}") == "/api/posts/123"
-    assert ~p"/posts/#{123}" == "/api/posts/123"
-    assert path(uri_with_script_name(), ~p"/posts/5") == "/api/posts/5"
-    assert path(uri_with_script_name(), ~p"/posts/#{123}") == "/api/posts/123"
   end
 
-  @endpoint ScriptName
-  @router Router
   test "urls use script name" do
     assert Helpers.page_url(ScriptName, :root) ==
            "https://example.com/api/"
@@ -694,56 +552,25 @@ defmodule Phoenix.Router.HelpersTest do
            "https://example.com/foo/posts/5"
     assert Helpers.post_url(uri_with_script_name(), :show, 5) ==
            "https://example.com:123/api/posts/5"
-
-    # verified
-
-    assert url(ScriptName, ~p"/") == "https://example.com/api/"
-    assert url(conn_with_script_name(~w(foo)), ~p"/") == "https://example.com/foo/"
-    assert url(uri_with_script_name(), ~p"/") == "https://example.com:123/api/"
-    assert url(ScriptName, ~p"/posts/5") == "https://example.com/api/posts/5"
-    assert url(ScriptName, ~p"/posts/#{123}") == "https://example.com/api/posts/123"
-    assert url(conn_with_script_name(), ~p"/posts/5") == "https://example.com/api/posts/5"
-    assert url(conn_with_script_name(~w(foo)), ~p"/posts/5") == "https://example.com/foo/posts/5"
-    assert url(uri_with_script_name(), ~p"/posts/5") == "https://example.com:123/api/posts/5"
   end
 
-  @endpoint ScriptName
-  @router Router
-  @statics ~w(images)
   test "static use endpoint script name only" do
     assert Helpers.static_path(conn_with_script_name(~w(foo)), "/images/foo.png") ==
              "/api/images/foo.png"
 
     assert Helpers.static_url(conn_with_script_name(~w(foo)), "/images/foo.png") ==
              "https://static.example.com/api/images/foo.png"
-
-    # verified
-
-    assert path(conn_with_script_name(~w(foo)), ~p"/images/foo.png") ==
-             "/api/images/foo.png"
-
-    assert url(conn_with_script_name(~w(foo)), ~p"/images/foo.png") ==
-             "https://static.example.com/api/images/foo.png"
   end
 
   ## Dynamics
 
-  @endpoint ScriptName
-  @router Router
   test "phoenix_router_url with string takes precedence over endpoint" do
     url = "https://phoenixframework.org"
     conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), url)
     assert Helpers.url(conn) == url
     assert Helpers.admin_message_url(conn, :show, 1) == url <> "/admin/new/messages/1"
-
-    # verified
-    assert url(conn, ~p"/") == url <> "/"
-    assert url(conn, ~p"/admin/new/messages/1") == url <> "/admin/new/messages/1"
-    assert url(conn, ~p"/admin/new/messages/#{123}") == url <> "/admin/new/messages/123"
   end
 
-  @endpoint ScriptName
-  @router Router
   test "phoenix_router_url with URI takes precedence over endpoint" do
     uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123, path: "/path"}
     conn = Phoenix.Controller.put_router_url(conn_with_endpoint(), uri)
@@ -751,15 +578,8 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.url(conn) == "https://phoenixframework.org:123/path"
     assert Helpers.admin_message_url(conn, :show, 1) ==
       "https://phoenixframework.org:123/path/admin/new/messages/1"
-
-    # verified
-    assert url(conn, ~p"/") == "https://phoenixframework.org:123/path/"
-    assert url(conn, ~p"/admin/new/messages/1") == "https://phoenixframework.org:123/path/admin/new/messages/1"
   end
 
-  @endpoint ScriptName
-  @router Router
-  @statics ~w(images)
   test "phoenix_static_url with string takes precedence over endpoint" do
     url = "https://phoenixframework.org"
     conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), url)
@@ -767,19 +587,8 @@ defmodule Phoenix.Router.HelpersTest do
 
     conn = Phoenix.Controller.put_static_url(conn_with_script_name(), url)
     assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
-
-    # verified
-
-    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), url)
-    assert url(conn, ~p"/images/foo.png") == url <> "/images/foo.png"
-
-    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), url)
-    assert url(conn, ~p"/images/foo.png") == url <> "/images/foo.png"
   end
 
-  @endpoint ScriptName
-  @router Router
-  @statics ~w(images)
   test "phoenix_static_url set to string with path results in static url with that path" do
     url = "https://phoenixframework.org/path"
     conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), url)
@@ -787,19 +596,8 @@ defmodule Phoenix.Router.HelpersTest do
 
     conn = Phoenix.Controller.put_static_url(conn_with_script_name(), url)
     assert Helpers.static_url(conn, "/images/foo.png") == url <> "/images/foo.png"
-
-    # verified
-
-    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), url)
-    assert url(conn, ~p"/images/foo.png") == url <> "/images/foo.png"
-
-    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), url)
-    assert url(conn, ~p"/images/foo.png") == url <> "/images/foo.png"
   end
 
-  @endpoint ScriptName
-  @router Router
-  @statics ~w(images)
   test "phoenix_static_url with URI takes precedence over endpoint" do
     uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123}
 
@@ -808,19 +606,8 @@ defmodule Phoenix.Router.HelpersTest do
 
     conn = Phoenix.Controller.put_static_url(conn_with_script_name(), uri)
     assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/images/foo.png"
-
-    # verified
-
-    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), uri)
-    assert url(conn, ~p"/images/foo.png") == "https://phoenixframework.org:123/images/foo.png"
-
-    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), uri)
-    assert url(conn, ~p"/images/foo.png") == "https://phoenixframework.org:123/images/foo.png"
   end
 
-  @endpoint ScriptName
-  @router Router
-  @statics ~w(images)
   test "phoenix_static_url set to URI with path results in static url with that path" do
     uri = %URI{scheme: "https", host: "phoenixframework.org", port: 123, path: "/path"}
 
@@ -829,62 +616,5 @@ defmodule Phoenix.Router.HelpersTest do
 
     conn = Phoenix.Controller.put_static_url(conn_with_script_name(), uri)
     assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/path/images/foo.png"
-
-    # verified
-
-    conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), uri)
-    assert url(conn, ~p"/images/foo.png") == "https://phoenixframework.org:123/path/images/foo.png"
-
-    conn = Phoenix.Controller.put_static_url(conn_with_script_name(), uri)
-    assert url(conn, ~p"/images/foo.png") == "https://phoenixframework.org:123/path/images/foo.png"
-  end
-
-  describe "verified routes" do
-    @endpoint Endpoint
-    @router Router
-
-    test "matches against router" do
-      # static segments
-      assert ~p"/posts/1" == "/posts/1"
-      assert ~p"/posts/bottom/asc/10" == "/posts/bottom/asc/10"
-      assert path(conn_with_endpoint(), ~p"/posts/1") == "/posts/1"
-      assert path(@endpoint, @router, ~p"/posts/1") == "/posts/1"
-      assert path(conn_with_endpoint(), ~p"/posts/bottom/asc/10") == "/posts/bottom/asc/10"
-      assert path(@endpoint, @router, ~p"/posts/bottom/asc/10") == "/posts/bottom/asc/10"
-
-      # dynamic segments
-      id = 123
-      dir = "asc"
-      assert ~p"/posts/#{id}" == "/posts/123"
-      assert path(conn_with_endpoint(), ~p"/posts/#{id}") == "/posts/123"
-      assert path(@endpoint, @router, ~p"/posts/#{id}") == "/posts/123"
-      assert path(conn_with_endpoint(), ~p"/posts/bottom/#{dir}/#{id}") == "/posts/bottom/asc/123"
-      assert path(@endpoint, @router, ~p"/posts/bottom/#{dir}/#{id}") == "/posts/bottom/asc/123"
-    end
-
-    test "matches against router with query params" do
-      # static segments
-      assert ~p"/posts/1?foo=bar" == "/posts/1?foo=bar"
-      assert ~p"/posts/bottom/asc/10?foo=bar" == "/posts/bottom/asc/10?foo=bar"
-      assert path(conn_with_endpoint(), ~p"/posts/1?foo=bar") == "/posts/1?foo=bar"
-      assert path(@endpoint, @router, ~p"/posts/1?foo=bar") == "/posts/1?foo=bar"
-      assert path(conn_with_endpoint(), ~p"/posts/bottom/asc/10?foo=bar") == "/posts/bottom/asc/10?foo=bar"
-      assert path(@endpoint, @router, ~p"/posts/bottom/asc/10?foo=bar") == "/posts/bottom/asc/10?foo=bar"
-
-      # dynamic segments
-      id = 123
-      dir = "asc"
-      assert ~p"/posts/#{id}?foo=bar" == "/posts/123?foo=bar"
-      assert path(conn_with_endpoint(), ~p"/posts/#{id}?foo=bar") == "/posts/123?foo=bar"
-      assert path(@endpoint, @router, ~p"/posts/#{id}?foo=bar") == "/posts/123?foo=bar"
-      assert path(conn_with_endpoint(), ~p"/posts/bottom/#{dir}/#{id}?foo=bar") == "/posts/bottom/asc/123?foo=bar"
-      assert path(@endpoint, @router, ~p"/posts/bottom/#{dir}/#{id}?foo=bar") == "/posts/bottom/asc/123?foo=bar"
-    end
-
-    test "URI encodes interpolated segments and query params" do
-      assert ~p"/posts/my path?#{[foo: "my param"]}" == "/posts/my%20path?foo=my+param"
-      slug = "my path"
-      assert ~p"/posts/#{slug}?#{[foo: "my param"]}" == "/posts/my%20path?foo=my+param"
-    end
   end
 end
