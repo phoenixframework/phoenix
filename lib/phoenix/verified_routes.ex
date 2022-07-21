@@ -12,17 +12,12 @@ defmodule Phoenix.VerifiedRoutes do
     endpoint: AppWeb.Endpoint,
     statics: ~(images)
   """
-  defstruct endpoint: nil,
+  defstruct endpoint_ctx: nil,
             router: nil,
-            statics: nil,
             route: nil,
             inspected_route: nil,
             stacktrace: nil,
-            test_path: nil,
-            route_ast: nil,
-            path_ast: nil,
-            static_ast: nil,
-            type: nil
+            test_path: nil
 
   defmacro __using__(opts) do
     opts =
@@ -33,7 +28,11 @@ defmodule Phoenix.VerifiedRoutes do
       end
 
     quote do
-      Module.register_attribute(__MODULE__, :phoenix_verified_routes, accumulate: true, persist: false)
+      Module.register_attribute(__MODULE__, :phoenix_verified_routes,
+        accumulate: true,
+        persist: false
+      )
+
       opts = unquote(opts)
 
       @before_compile unquote(__MODULE__)
@@ -62,18 +61,13 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   @doc false
-  def __verify__(routes, statics) when is_list(routes) do
-    # TODO dispath back against router
+  def __verify__(routes) when is_list(routes) do
     Enum.each(routes, fn {_kind, %__MODULE__{} = route} ->
-      case route.type do
-        matched when matched in [:match, :static] ->
-          :ok
-
-        :error ->
-          IO.warn(
-            "no route path for #{inspect(route.router)} matches #{route.inspected_route}",
-            route.stacktrace
-          )
+      unless match_route?(route.router, route.test_path) do
+        IO.warn(
+          "no route path for #{inspect(route.router)} matches #{route.inspected_route}",
+          route.stacktrace
+        )
       end
     end)
   end
@@ -107,31 +101,34 @@ defmodule Phoenix.VerifiedRoutes do
     endpoint = attr!(__CALLER__, :endpoint)
     router = attr!(__CALLER__, :router)
 
-    route = build_route(route, route, __CALLER__, endpoint, router)
-    inject_path(route, __CALLER__)
+    route
+    |> build_route(route, __CALLER__, endpoint, router)
+    |> inject_path(__CALLER__)
   end
 
-  defp inject_path(%__MODULE__{} = route, env) do
-    Module.put_attribute(env.module, :phoenix_verified_routes, {:path, route})
+  defp inject_path({%__MODULE__{} = route, type, _route_ast, path_ast, static_ast}, env) do
+    case type do
+      :static ->
+        static_ast
 
-    case route.type do
-      :static -> route.static_ast
-      other when other in [:match, :error] -> route.path_ast
+      other when other in [:match, :error] ->
+        Module.put_attribute(env.module, :phoenix_verified_routes, {:path, route})
+        path_ast
     end
   end
 
-  defp inject_url(%__MODULE__{} = route, env) do
-    Module.put_attribute(env.module, :phoenix_verified_routes, {:url, route})
-
-    case route.type do
+  defp inject_url({%__MODULE__{} = route, type, route_ast, path_ast, _static_ast}, env) do
+    case type do
       :static ->
         quote do
-          unquote(__MODULE__).static_url(unquote_splicing([route.endpoint, route.route_ast]))
+          unquote(__MODULE__).static_url(unquote_splicing([route.endpoint_ctx, route_ast]))
         end
 
       other when other in [:match, :error] ->
+        Module.put_attribute(env.module, :phoenix_verified_routes, {:url, route})
+
         quote do
-          unquote(__MODULE__).unverified_url(unquote_splicing([route.endpoint, route.path_ast]))
+          unquote(__MODULE__).unverified_url(unquote_splicing([route.endpoint_ctx, path_ast]))
         end
     end
   end
@@ -165,18 +162,20 @@ defmodule Phoenix.VerifiedRoutes do
   defmacro path(endpoint, router, {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast) do
     endpoint = Macro.expand(endpoint, __CALLER__)
     router = Macro.expand(router, __CALLER__)
-    route = build_route(route, og_ast, __CALLER__, endpoint, router)
 
-    inject_path(route, __CALLER__)
+    route
+    |> build_route(og_ast, __CALLER__, endpoint, router)
+    |> inject_path(__CALLER__)
   end
 
   # TODO: Check sigil leftover
   defmacro path(endpoint, router, {:sigil_p, _, [str, _]} = og_ast) when is_binary(str) do
     endpoint = Macro.expand(endpoint, __CALLER__)
     router = Macro.expand(router, __CALLER__)
-    route = build_route(str, og_ast, __CALLER__, endpoint, router)
 
-    inject_path(route, __CALLER__)
+    str
+    |> build_route(og_ast, __CALLER__, endpoint, router)
+    |> inject_path(__CALLER__)
   end
 
   defmacro path(_endpoint, _router, other), do: raise_invalid_route(other)
@@ -186,17 +185,19 @@ defmodule Phoenix.VerifiedRoutes do
              {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast
            ) do
     router = attr!(__CALLER__, :router)
-    route = build_route(route, og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
 
-    inject_path(route, __CALLER__)
+    route
+    |> build_route(og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> inject_path(__CALLER__)
   end
 
   defmacro path(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, _]} = og_ast)
            when is_binary(route) do
     router = attr!(__CALLER__, :router)
-    route = build_route(route, og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
 
-    inject_path(route, __CALLER__)
+    route
+    |> build_route(og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> inject_path(__CALLER__)
   end
 
   defmacro path(_conn_or_socket_or_endpoint_or_uri, other), do: raise_invalid_route(other)
@@ -224,17 +225,19 @@ defmodule Phoenix.VerifiedRoutes do
   defmacro url({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast) do
     endpoint = attr!(__CALLER__, :endpoint)
     router = attr!(__CALLER__, :router)
-    route = build_route(route, og_ast, __CALLER__, endpoint, router)
 
-    inject_url(route, __CALLER__)
+    route
+    |> build_route(og_ast, __CALLER__, endpoint, router)
+    |> inject_url(__CALLER__)
   end
 
   defmacro url({:sigil_p, _, [route, _]} = og_ast) when is_binary(route) do
     endpoint = attr!(__CALLER__, :endpoint)
     router = attr!(__CALLER__, :router)
-    route = build_route(route, og_ast, __CALLER__, endpoint, router)
 
-    inject_url(route, __CALLER__)
+    route
+    |> build_route(og_ast, __CALLER__, endpoint, router)
+    |> inject_url(__CALLER__)
   end
 
   defmacro url(other), do: raise_invalid_route(other)
@@ -244,17 +247,19 @@ defmodule Phoenix.VerifiedRoutes do
              {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast
            ) do
     router = attr!(__CALLER__, :router)
-    route = build_route(route, og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
 
-    inject_url(route, __CALLER__)
+    route
+    |> build_route(og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> inject_url(__CALLER__)
   end
 
   defmacro url(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, _]} = og_ast)
            when is_binary(route) do
     router = attr!(__CALLER__, :router)
-    route = build_route(route, og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
 
-    inject_url(route, __CALLER__)
+    route
+    |> build_route(og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> inject_url(__CALLER__)
   end
 
   defmacro url(_conn_or_socket_or_endpoint_or_uri, other), do: raise_invalid_route(other)
@@ -497,23 +502,22 @@ defmodule Phoenix.VerifiedRoutes do
     end
   end
 
-  defp build_route(route, og_ast, env, endpoint, router) do
+  defp build_route(route_ast, og_ast, env, endpoint_ctx, router) do
     statics = Module.get_attribute(env.module, :statics, [])
-    {endpoint, router, statics} = Macro.expand({endpoint, router, statics}, env)
-    {type, test_path, path_ast, static_ast} = rewrite_path(route, endpoint, router, statics)
+    {endpoint_ctx, router, statics} = Macro.expand({endpoint_ctx, router, statics}, env)
 
-    %__MODULE__{
-      type: type,
-      endpoint: endpoint,
+    {type, test_path, path_ast, static_ast} =
+      rewrite_path(route_ast, endpoint_ctx, router, statics)
+
+    route = %__MODULE__{
+      endpoint_ctx: endpoint_ctx,
       router: router,
-      statics: statics,
       stacktrace: Macro.Env.stacktrace(env),
       inspected_route: Macro.to_string(og_ast),
-      test_path: test_path,
-      route_ast: route,
-      path_ast: path_ast,
-      static_ast: static_ast
+      test_path: test_path
     }
+
+    {route, type, route_ast, path_ast, static_ast}
   end
 
   defp rewrite_path(route, endpoint, router, statics) do
@@ -523,7 +527,7 @@ defmodule Phoenix.VerifiedRoutes do
           test_path =
             case String.split(route, "?") do
               [^route] -> route
-              [path, _query] -> path
+              [prefix, _query] -> prefix
               _ -> raise ArgumentError, "invalid query string for path #{route}"
             end
 
@@ -531,15 +535,8 @@ defmodule Phoenix.VerifiedRoutes do
 
         {:<<>>, meta, segments} = route ->
           {path_rewrite, query_rewrite} = verify_segment(segments, route, [])
-
-          test_path =
-            Enum.map_join(path_rewrite, fn
-              segment when is_binary(segment) -> segment
-              _other -> "dynamic"
-            end)
-
-          rewrite_route = {:<<>>, meta, path_rewrite ++ query_rewrite}
-          {rewrite_route, test_path}
+          test_path = Enum.map_join(path_rewrite, &if(is_binary(&1), do: &1, else: "1"))
+          {{:<<>>, meta, path_rewrite ++ query_rewrite}, test_path}
       end
 
     type = route_type(router, statics, test_path)
