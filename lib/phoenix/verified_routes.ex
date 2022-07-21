@@ -12,8 +12,7 @@ defmodule Phoenix.VerifiedRoutes do
     endpoint: AppWeb.Endpoint,
     statics: ~(images)
   """
-  defstruct endpoint_ctx: nil,
-            router: nil,
+  defstruct router: nil,
             route: nil,
             inspected_route: nil,
             stacktrace: nil,
@@ -59,7 +58,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   @doc false
   def __verify__(routes) when is_list(routes) do
-    Enum.each(routes, fn {_kind, %__MODULE__{} = route} ->
+    Enum.each(routes, fn %__MODULE__{} = route ->
       unless match_route?(route.router, route.test_path) do
         IO.warn(
           "no route path for #{inspect(route.router)} matches #{route.inspected_route}",
@@ -103,29 +102,35 @@ defmodule Phoenix.VerifiedRoutes do
     |> inject_path(__CALLER__)
   end
 
-  defp inject_path({%__MODULE__{} = route, type, _route_ast, path_ast, static_ast}, env) do
+  defp inject_path(
+         {%__MODULE__{} = route, type, _endpoint_ctx, _route_ast, path_ast, static_ast},
+         env
+       ) do
     case type do
       :static ->
         static_ast
 
       other when other in [:match, :error] ->
-        Module.put_attribute(env.module, :phoenix_verified_routes, {:path, route})
+        Module.put_attribute(env.module, :phoenix_verified_routes, route)
         path_ast
     end
   end
 
-  defp inject_url({%__MODULE__{} = route, type, route_ast, path_ast, _static_ast}, env) do
+  defp inject_url(
+         {%__MODULE__{} = route, type, endpoint_ctx, route_ast, path_ast, _static_ast},
+         env
+       ) do
     case type do
       :static ->
         quote do
-          unquote(__MODULE__).static_url(unquote_splicing([route.endpoint_ctx, route_ast]))
+          unquote(__MODULE__).static_url(unquote_splicing([endpoint_ctx, route_ast]))
         end
 
       other when other in [:match, :error] ->
-        Module.put_attribute(env.module, :phoenix_verified_routes, {:url, route})
+        Module.put_attribute(env.module, :phoenix_verified_routes, route)
 
         quote do
-          unquote(__MODULE__).unverified_url(unquote_splicing([route.endpoint_ctx, path_ast]))
+          unquote(__MODULE__).unverified_url(unquote_splicing([endpoint_ctx, path_ast]))
         end
     end
   end
@@ -507,14 +512,13 @@ defmodule Phoenix.VerifiedRoutes do
       rewrite_path(route_ast, endpoint_ctx, router, statics)
 
     route = %__MODULE__{
-      endpoint_ctx: endpoint_ctx,
       router: router,
       stacktrace: Macro.Env.stacktrace(env),
       inspected_route: Macro.to_string(og_ast),
       test_path: test_path
     }
 
-    {route, type, route_ast, path_ast, static_ast}
+    {route, type, endpoint_ctx, route_ast, path_ast, static_ast}
   end
 
   defp rewrite_path(route, endpoint, router, statics) do
