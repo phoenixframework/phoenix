@@ -17,6 +17,12 @@ defmodule Phoenix.VerifiedRoutesTest do
   @derive {Phoenix.Param, key: :slug}
   defstruct [:id, :slug]
 
+  defmodule AdminRouter do
+    use Phoenix.Router
+
+    get "/dashboard", Phoenix.VerifiedRoutesTest.UserController, :index
+  end
+
   defmodule Router do
     use Phoenix.Router
     alias Phoenix.VerifiedRoutesTest.{PostController, UserController}
@@ -36,6 +42,9 @@ defmodule Phoenix.VerifiedRoutesTest do
     end
 
     get "/", PostController, :root
+
+    forward "/router_forward", AdminRouter
+    forward "/plug_forward", UserController
   end
 
   # Emulate regular endpoint functions
@@ -261,6 +270,24 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/5/?#{[id: 5]}" == "/posts/5/?id=5"
     assert ~p"/posts/5/?#{%{"id" => "foo"}}" == "/posts/5/?id=foo"
     assert ~p"/posts/5/?#{%{"id" => "foo bar"}}" == "/posts/5/?id=foo+bar"
+  end
+
+  test "forwards" do
+    warnings =
+      ExUnit.CaptureIO.capture_io(:stderr, fn ->
+        defmodule Forwards do
+          use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+
+          def test do
+            "/router_forward/dashboard" = ~p"/router_forward/dashboard"
+            "/router_forward/warn" = ~p"/router_forward/warn"
+            "/plug_forward/home" = ~p"/plug_forward/home"
+          end
+        end
+      end)
+
+    assert warnings ==
+             "\e[33mwarning: \e[0mno route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:283: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
   end
 
   describe "with script name" do
