@@ -2,7 +2,6 @@ defmodule Phoenix.VerifiedRoutes do
   @moduledoc ~S"""
   TODO
     - [ ] ~p"/posts?page=#{page}"
-    - [ ] forwards
 
   use Phoenix.VerifiedRoutes,
     router: AppWeb.Router,
