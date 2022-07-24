@@ -189,7 +189,7 @@ defmodule Phx.New.Generator do
       end
 
     compilers =
-      for {compiler, enabled?} <- [gettext: gettext, phoenix_live_view: html],
+      for {compiler, enabled?} <- [phoenix_live_view: html],
           enabled?,
           do: inspect(compiler)
 
