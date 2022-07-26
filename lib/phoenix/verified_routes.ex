@@ -1,8 +1,5 @@
 defmodule Phoenix.VerifiedRoutes do
   @moduledoc ~S"""
-  TODO
-    - [ ] ~p"/posts?page=#{page}"
-
   use Phoenix.VerifiedRoutes,
     router: AppWeb.Router,
     endpoint: AppWeb.Endpoint,
@@ -382,14 +379,9 @@ defmodule Phoenix.VerifiedRoutes do
       {[segment], _} ->
         verify_segment(rest, route, [URI.encode(segment) | acc])
 
-      {[segment, ""], [{:"::", _, _}] = query} ->
-        {Enum.reverse([URI.encode(segment) | acc]), [verify_query(query, route)]}
-
-      {[segment, query], []} ->
-        {Enum.reverse([URI.encode(segment) <> "?" | acc]), [query]}
-
-      {[_segment, _], _} ->
-        raise_invalid_query(route)
+      {[segment, static_query], dynamic_query} ->
+        {Enum.reverse([URI.encode(segment) | acc]),
+         verify_query(dynamic_query, route, [static_query, "?"])}
     end
   end
 
@@ -400,7 +392,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   # we reached the dynamic query string, return to call with rewritten query
   defp verify_segment(["?" | rest], route, acc) do
-    {Enum.reverse(acc), [verify_query(rest, route)]}
+    {Enum.reverse(acc), verify_query(rest, route, ["?"])}
   end
 
   defp verify_segment([segment | _], route, _acc) when is_binary(segment) do
@@ -417,7 +409,6 @@ defmodule Phoenix.VerifiedRoutes do
          acc
        ) do
     rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_segment__]}, m3, [dynamic]}, bin]}
-
     verify_segment(rest, route, [rewrite | acc])
   end
 
@@ -430,13 +421,38 @@ defmodule Phoenix.VerifiedRoutes do
   defp verify_segment([], _route, acc), do: {Enum.reverse(acc), _query = []}
 
   defp verify_query(
-         [{:"::", m1, [{{:., m2, [Kernel, :to_string]}, m2, [arg]}, {:binary, _, _} = bin]}],
-         _route
+         [
+           {:"::", m1, [{{:., m2, [Kernel, :to_string]}, m2, [arg]}, {:binary, _, _} = bin]}
+           | rest
+         ],
+         route,
+         acc
        ) do
-    {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m2, [arg]}, bin]}
+    unless is_binary(hd(acc)) do
+      raise ArgumentError,
+            "interpolated query string params must be separated by &, got: #{Macro.to_string(route)}"
+    end
+
+    rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m2, [arg]}, bin]}
+    verify_query(rest, route, [rewrite | acc])
   end
 
-  defp verify_query(_other, route) do
+  defp verify_query([], _route, acc), do: Enum.reverse(acc)
+
+  defp verify_query(["=" | rest], route, acc) do
+    verify_query(rest, route, ["=" | acc])
+  end
+
+  defp verify_query(["&" <> _ = param | rest], route, acc) do
+    unless String.ends_with?(param, "=") do
+      raise ArgumentError,
+            "inspected query string param key to end with =, got: #{inspect(param)}"
+    end
+
+    verify_query(rest, route, [param | acc])
+  end
+
+  defp verify_query(_other, route, _acc) do
     raise_invalid_query(route)
   end
 
@@ -464,9 +480,11 @@ defmodule Phoenix.VerifiedRoutes do
   def __encode_query__(dict) when is_list(dict) or is_map(dict) do
     case Plug.Conn.Query.encode(dict, &to_param/1) do
       "" -> ""
-      query_str -> "?" <> query_str
+      query_str -> query_str
     end
   end
+
+  def __encode_query__(val), do: val |> to_param() |> URI.encode_www_form()
 
   defp to_param(int) when is_integer(int), do: Integer.to_string(int)
   defp to_param(bin) when is_binary(bin), do: bin
@@ -509,12 +527,15 @@ defmodule Phoenix.VerifiedRoutes do
 
     router =
       case Macro.expand(router, env) do
-        mod when is_atom(mod) -> mod
-        other -> raise ArgumentError, """
-        expected router to be to module, got: #{inspect(other)}
+        mod when is_atom(mod) ->
+          mod
 
-        If you want to generate a compile-time router, use unverified_path/2 instead.
-        """
+        other ->
+          raise ArgumentError, """
+          expected router to be to module, got: #{inspect(other)}
+
+          If you want to generate a compile-time router, use unverified_path/2 instead.
+          """
       end
 
     statics =

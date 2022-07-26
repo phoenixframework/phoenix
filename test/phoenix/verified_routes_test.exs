@@ -255,6 +255,33 @@ defmodule Phoenix.VerifiedRoutesTest do
              "/posts/5?foo=5"
   end
 
+  test "~p mixed query string interpolation" do
+    dir = "asc"
+    page = "pg"
+
+    assert ~p"/posts/5?page=#{3}" == "/posts/5?page=3"
+    assert ~p"/posts/5?page=#{3}&dir=#{dir}" == "/posts/5?page=3&dir=asc"
+    assert ~p"/posts/5?#{page}=#{3}&dir=#{dir}" == "/posts/5?pg=3&dir=asc"
+    assert ~p"/posts/5?#{"a b"}=#{3}&dir=#{"a b"}" == "/posts/5?a+b=3&dir=a+b"
+  end
+
+  test "invalid mixed interpolation query string raises" do
+    msg =
+      ~S|interpolated query string params must be separated by &, got: "/posts/5?page=#{3}#{dir}"|
+
+    assert_raise ArgumentError, msg, fn ->
+      defmodule InvalidQuery do
+        use Phoenix.VerifiedRoutes,
+          endpoint: unquote(@endpoint),
+          router: unquote(@router)
+
+        def test do
+          ~p"/posts/5?page=#{3}#{dir}" == "/posts/5?page=3"
+        end
+      end
+    end
+  end
+
   test "~p with complex ids" do
     assert ~p|/posts/#{"==d--+"}| == "/posts/%3D%3Dd--%2B"
     assert ~p|/posts/top?#{[id: "==d--+"]}| == "/posts/top?id=%3D%3Dd--%2B"
@@ -286,8 +313,10 @@ defmodule Phoenix.VerifiedRoutesTest do
         end
       end)
 
+    line = __ENV__.line - 6
+
     assert warnings ==
-             "\e[33mwarning: \e[0mno route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:283: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
+             "\e[33mwarning: \e[0mno route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:#{line}: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
   end
 
   describe "with script name" do
