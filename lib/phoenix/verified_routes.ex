@@ -155,25 +155,25 @@ defmodule Phoenix.VerifiedRoutes do
 
   ## Examples
 
-      use Phoenix.VerifiedRoutes, endpoint: MyAppWeb.Endpoint, router: MyAppWeb.Router
+      import Phoenix.VerifiedRoutes
 
-      redirect(to: path(conn, ~p"/users/top"))
+      redirect(to: path(conn, MyAppWeb.Router, ~p"/users/top"))
 
-      redirect(to: path(conn, ~p"/users/#{@user}"))
+      redirect(to: path(conn, MyAppWeb.Router, ~p"/users/#{@user}"))
 
       ~H"""
-      <.link to={path(@uri, "/users?#{[page: @page]}")}>profile</.link>
+      <.link to={path(@uri, MyAppWeb.Router, "/users?#{[page: @page]}")}>profile</.link>
       """
   '''
   defmacro path(
-             endpoint,
+             conn_or_socket_or_endpoint_or_uri,
              router,
              {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = og_ast
            ) do
     validate_sigil_p!(extra)
 
     route
-    |> build_route(og_ast, __CALLER__, endpoint, router)
+    |> build_route(og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
     |> inject_path(__CALLER__)
   end
 
@@ -205,12 +205,12 @@ defmodule Phoenix.VerifiedRoutes do
 
       use Phoenix.VerifiedRoutes, endpoint: MyAppWeb.Endpoint, router: MyAppWeb.Router
 
-      redirect(to: path(conn, ~p"/users/top"))
+      redirect(to: url(conn, ~p"/users/top"))
 
-      redirect(to: path(conn, ~p"/users/#{@user}"))
+      redirect(to: url(conn, ~p"/users/#{@user}"))
 
       ~H"""
-      <.link to={path(@uri, "/users?#{[page: @page]}")}>profile</.link>
+      <.link to={url(@uri, "/users?#{[page: @page]}")}>profile</.link>
       """
   '''
   defmacro url({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast) do
