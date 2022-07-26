@@ -191,16 +191,6 @@ defmodule Phoenix.VerifiedRoutes do
     |> inject_path(__CALLER__)
   end
 
-  defmacro path(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, extra]} = og_ast)
-           when is_binary(route) do
-    validate_sigil_p!(extra)
-    router = attr!(__CALLER__, :router)
-
-    route
-    |> build_route(og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
-    |> inject_path(__CALLER__)
-  end
-
   defmacro path(_conn_or_socket_or_endpoint_or_uri, other), do: raise_invalid_route(other)
 
   @doc ~S'''
