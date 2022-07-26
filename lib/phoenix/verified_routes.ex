@@ -171,8 +171,6 @@ defmodule Phoenix.VerifiedRoutes do
              {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = og_ast
            ) do
     validate_sigil_p!(extra)
-    endpoint = Macro.expand(endpoint, __CALLER__)
-    router = Macro.expand(router, __CALLER__)
 
     route
     |> build_route(og_ast, __CALLER__, endpoint, router)
@@ -181,8 +179,6 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro path(endpoint, router, {:sigil_p, _, [str, extra]} = og_ast) when is_binary(str) do
     validate_sigil_p!(extra)
-    endpoint = Macro.expand(endpoint, __CALLER__)
-    router = Macro.expand(router, __CALLER__)
 
     str
     |> build_route(og_ast, __CALLER__, endpoint, router)
@@ -528,7 +524,18 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp build_route(route_ast, og_ast, env, endpoint_ctx, router) do
     statics = Module.get_attribute(env.module, :phoenix_verified_statics, [])
-    {endpoint_ctx, router, statics} = Macro.expand({endpoint_ctx, router, statics}, env)
+
+    router =
+      case Macro.expand(router, env) do
+        mod when is_atom(mod) -> mod
+        other -> raise ArgumentError, "expected router to be to module, got: #{inspect(other)}"
+      end
+
+    statics =
+      case Macro.expand(statics, env) do
+        list when is_list(list) -> list
+        other -> raise ArgumentError, "expected statics to be a list, got: #{inspect(other)}"
+      end
 
     {type, test_path, path_ast, static_ast} =
       rewrite_path(route_ast, endpoint_ctx, router, statics)
