@@ -1,9 +1,74 @@
 defmodule Phoenix.VerifiedRoutes do
   @moduledoc ~S"""
-  use Phoenix.VerifiedRoutes,
-    router: AppWeb.Router,
-    endpoint: AppWeb.Endpoint,
-    statics: ~(images)
+  Provies route generation with compile-time verificiation.
+
+  Use of the `sigil_p` macro allows paths and URLs throughout your
+  application to be compile-time verified against your Phoenix router(s).
+  For example the following path and URL usages:
+
+
+      <.link href={~p"/sessions/new"} method="post">Sign in</.link>
+
+      redirect(to: url(~p"/posts/#{post}"))
+
+  Will be verified against your standard `Phoenix.Router` definitions:
+
+      get "/posts/:post_id", PostController, :show
+      post "/sessions/new", SessionController, :create
+
+  Unmatched routes will issue compiler warnings:
+
+      warning: no route path for AppWeb.Router matches "/postz/#{post}"
+        lib/app_web/controllers/post_controller.ex:100: AppWeb.PostController.show/2
+
+  Additionally, interpolated ~p values are encoded via the `Phoenix.Param` protocol.
+  For example, a `%Post{}` struct in your application may derive the `Phoenix.Param`
+  protocol to generate slug-based paths rather than ID based ones. This allows you to
+  use `~p"/posts/#{post}"` rather than `~p"/posts/#{post.id}"` throughout your
+  application. See the `Phoenix.Param` documentation for more details.
+
+  Query strings are also supported in verified routes, either in traditional query
+  string form:
+
+      ~p"/posts?page=#{page}"
+
+  Or as a keyword list or map of values:
+
+      params = %{page: 1, direction: "asc"}
+      ~p"/posts?#{params}"
+
+  Like path segments, query strings params are proper URL encoded and may be interpolated
+  directly into the ~p string.
+
+  ## Options
+
+  To verify routes in your application modules, such as controller, templates, and views,
+  `use Phoenx.VerifiedRoutes`, which supports the following options:
+
+    * `:router` - The required router to verify ~p paths against
+    * `:endpoint` - The optional endpoint for ~p script_name and URL generation
+    * `:statics` - The optional list of static directories to treat as verified paths
+
+  For example:
+
+      use Phoenix.VerifiedRoutes,
+        router: AppWeb.Router,
+        endpoint: AppWeb.Endpoint,
+        statics: ~(images)
+
+  ## Tracking Warnings
+
+  Like any other compilation warning, the Elixir compiler will warn any time the file
+  that a ~p resides in changes, or if the router is changed. To view prevoiusly issued
+  warnings for files that lack new changes, the `--all-warnings` flag may be passed to
+  the `mix compile` task. For the following will show all warnings the compiler
+  has previously encountered when compiling the current application code:
+
+      $ mix compile --all-warnigns
+
+  *Note: Elixir >= 1.14.0 is required for comprehensive warnings. Older versions
+  will work properly and warn on new compilations, but changes to the router file
+  will not issue new warnings.
   """
   @doc false
   defstruct router: nil,
@@ -84,7 +149,9 @@ defmodule Phoenix.VerifiedRoutes do
       redirect(to: ~p"/users/#{@user}")
 
       ~H"""
-      <.link to={~p"/users?#{[page: @page]}"}>profile</.link>
+      <.link to={~p"/users??page=#{@page}"}>profile</.link>
+
+      <.link to={~p"/users?#{@params}"}>profile</.link>
       """
   '''
   defmacro sigil_p({:<<>>, _meta, _segments} = route, extra) do
@@ -211,15 +278,6 @@ defmodule Phoenix.VerifiedRoutes do
       """
   '''
   defmacro url({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast) do
-    endpoint = attr!(__CALLER__, :endpoint)
-    router = attr!(__CALLER__, :router)
-
-    route
-    |> build_route(og_ast, __CALLER__, endpoint, router)
-    |> inject_url(__CALLER__)
-  end
-
-  defmacro url({:sigil_p, _, [route, _]} = og_ast) when is_binary(route) do
     endpoint = attr!(__CALLER__, :endpoint)
     router = attr!(__CALLER__, :router)
 
