@@ -177,14 +177,6 @@ defmodule Phoenix.VerifiedRoutes do
     |> inject_path(__CALLER__)
   end
 
-  defmacro path(endpoint, router, {:sigil_p, _, [str, extra]} = og_ast) when is_binary(str) do
-    validate_sigil_p!(extra)
-
-    str
-    |> build_route(og_ast, __CALLER__, endpoint, router)
-    |> inject_path(__CALLER__)
-  end
-
   defmacro path(_endpoint, _router, other), do: raise_invalid_route(other)
 
   defmacro path(
@@ -528,7 +520,11 @@ defmodule Phoenix.VerifiedRoutes do
     router =
       case Macro.expand(router, env) do
         mod when is_atom(mod) -> mod
-        other -> raise ArgumentError, "expected router to be to module, got: #{inspect(other)}"
+        other -> raise ArgumentError, """
+        expected router to be to module, got: #{inspect(other)}
+
+        If you want to generate a compile-time router, use unverified_path/2 instead.
+        """
       end
 
     statics =
