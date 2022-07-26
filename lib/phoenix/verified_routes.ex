@@ -584,6 +584,17 @@ defmodule Phoenix.VerifiedRoutes do
     {type, test_path, path_ast, static_ast}
   end
 
+  defp attr!(env, :endpoint) do
+    Module.get_attribute(env.module, :endpoint) ||
+      raise """
+      expected @endpoint to be set. For dynamic endpoint resolution, use path/2 instead.
+
+      for example:
+
+          path(conn_or_socket, ~p"/my-path")
+      """
+  end
+
   defp attr!(env, name) do
     Module.get_attribute(env.module, name) || raise "expected @#{name} module attribute to be set"
   end
