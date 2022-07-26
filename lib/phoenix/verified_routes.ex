@@ -23,16 +23,17 @@ defmodule Phoenix.VerifiedRoutes do
       end
 
     quote do
-      Module.register_attribute(__MODULE__, :phoenix_verified_routes, accumulate: true)
-
-      opts = unquote(opts)
-
-      @before_compile unquote(__MODULE__)
-      @endpoint Keyword.get(opts, :endpoint)
-      @router Keyword.get(opts, :router)
-      @statics Keyword.get(opts, :statics, [])
+      unquote(__MODULE__).__using__(__MODULE__, unquote(opts))
       import unquote(__MODULE__)
     end
+  end
+  
+  def __using__(mod, opts) do
+    Module.register_attribute(mod, :phoenix_verified_routes, accumulate: true)
+    Module.put_attribute(mod, :before_compile, __MODULE__)
+    Module.put_attribute(mod, :router, Keyword.fetch!(opts, :router))
+    Module.put_attribute(mod, :endpoint, Keyword.get(opts, :endpoint))
+    Module.put_attribute(mod, :phoenix_verified_statics, Keyword.get(opts, :statics)
   end
 
   defmacro __before_compile__(env) do
