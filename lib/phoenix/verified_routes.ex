@@ -8,6 +8,7 @@ defmodule Phoenix.VerifiedRoutes do
     endpoint: AppWeb.Endpoint,
     statics: ~(images)
   """
+  @doc false
   defstruct router: nil,
             route: nil,
             inspected_route: nil,
