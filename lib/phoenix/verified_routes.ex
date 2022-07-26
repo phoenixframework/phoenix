@@ -28,13 +28,14 @@ defmodule Phoenix.VerifiedRoutes do
       import unquote(__MODULE__)
     end
   end
-  
+
+  @doc false
   def __using__(mod, opts) do
     Module.register_attribute(mod, :phoenix_verified_routes, accumulate: true)
     Module.put_attribute(mod, :before_compile, __MODULE__)
     Module.put_attribute(mod, :router, Keyword.fetch!(opts, :router))
     Module.put_attribute(mod, :endpoint, Keyword.get(opts, :endpoint))
-    Module.put_attribute(mod, :phoenix_verified_statics, Keyword.get(opts, :statics)
+    Module.put_attribute(mod, :phoenix_verified_statics, Keyword.get(opts, :statics))
   end
 
   defmacro __before_compile__(env) do
@@ -526,7 +527,7 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp build_route(route_ast, og_ast, env, endpoint_ctx, router) do
-    statics = Module.get_attribute(env.module, :statics, [])
+    statics = Module.get_attribute(env.module, :phoenix_verified_statics, [])
     {endpoint_ctx, router, statics} = Macro.expand({endpoint_ctx, router, statics}, env)
 
     {type, test_path, path_ast, static_ast} =
