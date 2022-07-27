@@ -683,23 +683,10 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp rewrite_path(route, endpoint, router, statics) do
-    {rewrite_route, test_path} =
-      case route do
-        route when is_binary(route) ->
-          test_path =
-            case String.split(route, "?") do
-              [^route] -> route
-              [prefix, _query] -> prefix
-              _ -> raise ArgumentError, "invalid query string for path #{route}"
-            end
-
-          {route, test_path}
-
-        {:<<>>, meta, segments} = route ->
-          {path_rewrite, query_rewrite} = verify_segment(segments, route, [])
-          test_path = Enum.map_join(path_rewrite, &if(is_binary(&1), do: &1, else: "1"))
-          {{:<<>>, meta, path_rewrite ++ query_rewrite}, test_path}
-      end
+    {:<<>>, meta, segments} = route
+    {path_rewrite, query_rewrite} = verify_segment(segments, route, [])
+    rewrite_route = {:<<>>, meta, path_rewrite ++ query_rewrite}
+    test_path = Enum.map_join(path_rewrite, &if(is_binary(&1), do: &1, else: "1"))
 
     type = route_type(router, statics, test_path)
 
