@@ -26,7 +26,7 @@ defmodule Phoenix.Router.Route do
 
   defstruct [:verb, :line, :kind, :path, :host, :plug, :plug_opts,
              :helper, :private, :pipe_through, :assigns, :metadata,
-             :trailing_slash?]
+             :trailing_slash?, :warn_on_verify?]
 
   @type t :: %Route{}
 
@@ -46,8 +46,8 @@ defmodule Phoenix.Router.Route do
   Receives the verb, path, plug, options and helper
   and returns a `Phoenix.Router.Route` struct.
   """
-  @spec build(non_neg_integer, :match | :forward, atom, String.t, String.t | nil, atom, atom, atom | nil, list(atom), map, map, map, boolean) :: t
-  def build(line, kind, verb, path, host, plug, plug_opts, helper, pipe_through, private, assigns, metadata, trailing_slash?)
+  @spec build(non_neg_integer, :match | :forward, atom, String.t, String.t | nil, atom, atom, atom | nil, list(atom), map, map, map, boolean, boolean) :: t
+  def build(line, kind, verb, path, host, plug, plug_opts, helper, pipe_through, private, assigns, metadata, trailing_slash?, warn_on_verify?)
       when is_atom(verb) and (is_binary(host) or is_nil(host)) and
            is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
            is_list(pipe_through) and is_map(private) and is_map(assigns) and
@@ -56,7 +56,7 @@ defmodule Phoenix.Router.Route do
     %Route{kind: kind, verb: verb, path: path, host: host, private: private,
            plug: plug, plug_opts: plug_opts, helper: helper,
            pipe_through: pipe_through, assigns: assigns, line: line, metadata: metadata,
-           trailing_slash?: trailing_slash?}
+           trailing_slash?: trailing_slash?, warn_on_verify?: warn_on_verify?}
   end
 
   @doc """

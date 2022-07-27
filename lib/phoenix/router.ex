@@ -474,7 +474,7 @@ defmodule Phoenix.Router do
               raise MalformedURIError, "malformed URI path: #{inspect conn.request_path}"
           end
 
-        with {_forward_plug, fun} <- __match_route__(decoded),
+        with {_forward_plug, _warn_on_verify?, fun} <- __match_route__(decoded),
              {_, _, _, _} = match <- fun.(method, host) do
           Phoenix.Router.__call__(conn, match)
         else
@@ -580,7 +580,7 @@ defmodule Phoenix.Router do
           unquote_splicing(pipes)
 
           def __match_route__(unquote(expr.path)) do
-            {unquote(forward_plug), unquote({:fn, [], Enum.reverse(clauses, catch_all)})}
+            {unquote(forward_plug), unquote(route.warn_on_verify?), unquote({:fn, [], Enum.reverse(clauses, catch_all)})}
           end
         end
 
@@ -685,6 +685,10 @@ defmodule Phoenix.Router do
     * `:assigns` - a map of data to merge into the connection when a route matches
     * `:metadata` - a map of metadata used by the telemetry events and returned by
       `route_info/4`
+    * `:warn_on_verify` - the boolean for whether matches to this route trigger
+      an unmatched route warning for `Phoenix.VerifiedRoutes`. Useful to ignore
+      an otherwise catch-all route definition from being matched when verifying routes.
+      Defaults `true`.
 
   ## Examples
 
@@ -1177,7 +1181,7 @@ defmodule Phoenix.Router do
   end
 
   def route_info(router, method, split_path, host) when is_list(split_path) do
-    with {_forward_plug, fun} <- router.__match_route__(split_path),
+    with {_forward_plug, _warn_on_verify?, fun} <- router.__match_route__(split_path),
          {metadata, _prepare, _pipeline, {_plug, _opts}} <- fun.(method, host) do
       Map.delete(metadata, :conn)
     end
