@@ -226,7 +226,8 @@ defmodule Phoenix.VerifiedRoutes do
       redirect(to: path(conn, MyAppWeb.Router, ~p"/users/#{@user}"))
 
       ~H"""
-      <.link to={path(@uri, MyAppWeb.Router, "/users?#{[page: @page]}")}>profile</.link>
+      <.link to={path(@uri, MyAppWeb.Router, "/users?page=#{@page}")}>profile</.link>
+      <.link to={path(@uri, MyAppWeb.Router, "/users?#{@params}")}>profile</.link>
       """
   '''
   defmacro path(
