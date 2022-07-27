@@ -276,6 +276,27 @@ defmodule Phoenix.VerifiedRoutes do
       ~H"""
       <.link to={url(@uri, "/users?#{[page: @page]}")}>profile</.link>
       """
+
+  The router may also be provided in cases where you want to verify routes for a
+  router other than the one passed to `use Phoenix.VerifiedRoutes`:
+
+      redirect(to: url(conn, OtherRouter, ~p"/users"))
+
+  Forwarded routes are also resolved automatically. For example, imagine you
+  have a forward path to an admin router in your main router:
+
+      defmodule AppWeb.Router do
+        ...
+        forward "/admin", AppWeb.AdminRouter
+      end
+
+      defmodule AppWeb.AdminRouter do
+        ...
+        get "/users", AppWeb.Admin.UserController
+      end
+
+  Forwarded paths in your main application router will be verified as usual,
+  such as `~p"/admin/users"`.
   '''
   defmacro url({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast) do
     endpoint = attr!(__CALLER__, :endpoint)
@@ -299,16 +320,21 @@ defmodule Phoenix.VerifiedRoutes do
     |> inject_url(__CALLER__)
   end
 
-  defmacro url(conn_or_socket_or_endpoint_or_uri, {:sigil_p, _, [route, _]} = og_ast)
-           when is_binary(route) do
-    router = attr!(__CALLER__, :router)
+  defmacro url(_conn_or_socket_or_endpoint_or_uri, other), do: raise_invalid_route(other)
+
+  defmacro url(
+             conn_or_socket_or_endpoint_or_uri,
+             router,
+             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast
+           ) do
+    router = Macro.expand(router, __CALLER__)
 
     route
     |> build_route(og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
     |> inject_url(__CALLER__)
   end
 
-  defmacro url(_conn_or_socket_or_endpoint_or_uri, other), do: raise_invalid_route(other)
+  defmacro url(_conn_or_socket_or_endpoint_or_uri, _router, other), do: raise_invalid_route(other)
 
   @doc """
   Generates url to a static asset given its file path.

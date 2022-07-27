@@ -205,6 +205,10 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert url(Endpoint, ~p"/posts/1") == "https://example.com/posts/1"
     assert url(conn_with_endpoint(), ~p"/posts/1") == "https://example.com/posts/1"
     assert url(conn_with_script_name(), ~p"/posts/1") == "https://example.com/api/posts/1"
+
+    assert url(Endpoint, Router, ~p"/posts/1") == "https://example.com/posts/1"
+    assert url(conn_with_endpoint(), Router, ~p"/posts/1") == "https://example.com/posts/1"
+    assert url(conn_with_script_name(), Router, ~p"/posts/1") == "https://example.com/api/posts/1"
   end
 
   test "path raises when non ~p is passed" do
