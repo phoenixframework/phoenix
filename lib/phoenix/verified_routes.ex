@@ -569,7 +569,7 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp verify_query(["&" <> _ = param | rest], route, acc) do
-    unless String.ends_with?(param, "=") do
+    unless String.contains?(param, "=") do
       raise ArgumentError,
             "expected query string param key to end with =, got: #{inspect(param)}"
     end

@@ -159,7 +159,10 @@ defmodule Phoenix.VerifiedRoutesTest do
   end
 
   test "~p raises on dynamic dynamic interpolation" do
-    assert_raise ArgumentError, ~S|a dynamic ~p interpolation must be followed by a static segment, got: "/posts/#{1}#{2}"|, fn ->
+    msg =
+      ~S|a dynamic ~p interpolation must be followed by a static segment, got: "/posts/#{1}#{2}"|
+
+    assert_raise ArgumentError, msg, fn ->
       defmodule DynamicDynamic do
         use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
         def test, do: ~p"/posts/#{1}#{2}"
@@ -200,7 +203,8 @@ defmodule Phoenix.VerifiedRoutesTest do
         end
       end)
 
-    assert warnings =~ ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/should-warn/foobar"|
+    assert warnings =~
+             ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/should-warn/foobar"|
   end
 
   test "~p raises when not prefixed by /" do
@@ -291,6 +295,7 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/5?page=#{3}&dir=#{dir}" == "/posts/5?page=3&dir=asc"
     assert ~p"/posts/5?#{page}=#{3}&dir=#{dir}" == "/posts/5?pg=3&dir=asc"
     assert ~p"/posts/5?#{"a b"}=#{3}&dir=#{"a b"}" == "/posts/5?a+b=3&dir=a+b"
+    assert ~p"/posts/post?foo=bar&#{"key"}=#{"val"}&baz=bat" == "/posts/post?foo=bar&key=val&baz=bat"
   end
 
   test "invalid mixed interpolation query string raises" do
