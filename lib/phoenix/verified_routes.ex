@@ -56,7 +56,6 @@ defmodule Phoenix.VerifiedRoutes do
         endpoint: AppWeb.Endpoint,
         statics: ~(images)
 
-
   ## Usage
 
   The majority of path and URL generation needs your application will be met
