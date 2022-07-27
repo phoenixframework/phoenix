@@ -116,6 +116,7 @@ defmodule Phoenix.VerifiedRoutesTest do
     id = 123
     dir = "asc"
     assert ~p"/posts/#{id}?foo=bar" == "/posts/123?foo=bar"
+    assert ~p"/posts/post-#{id}?foo=bar" == "/posts/post-123?foo=bar"
     assert path(conn_with_endpoint(), ~p"/posts/#{id}?foo=bar") == "/posts/123?foo=bar"
     assert path(@endpoint, @router, ~p"/posts/#{id}?foo=bar") == "/posts/123?foo=bar"
 
@@ -152,7 +153,16 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert_raise ArgumentError, "~p does not support trailing fragment, got: 'foo'", fn ->
       defmodule LeftOver do
         use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
-        ~p"/posts/1"foo
+        def test, do: ~p"/posts/1"foo
+      end
+    end
+  end
+
+  test "~p raises on dynamic dynamic interpolation" do
+    assert_raise ArgumentError, ~S|a dynamic ~p interpolation must be followed by a static segment, got: "/posts/#{1}#{2}"|, fn ->
+      defmodule DynamicDynamic do
+        use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+        def test, do: ~p"/posts/#{1}#{2}"
       end
     end
   end

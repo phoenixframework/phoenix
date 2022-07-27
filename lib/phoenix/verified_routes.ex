@@ -56,7 +56,42 @@ defmodule Phoenix.VerifiedRoutes do
         endpoint: AppWeb.Endpoint,
         statics: ~(images)
 
+
+  ## Usage
+
+  The majority of path and URL generation needs your application will be met
+  with `~p` and `url/1`, where all information necessary to construct the path
+  or URL is provided the by the compile-time information stored in the Endpoint
+  and Router passed to `use Phoenix.VerifiedRoutes`.
+
+  That said, there are some circumstances where `path/2`, `path/3`, `url/2`, and `url/3`
+  are required:
+
+    * When the runtime values of the `%Plug.Conn{}`, `%Phoenix.LiveSocket{}`, or a `%URI{}`
+      dictate the formation of the path or URL, which happens under the following scenarios:
+
+      - `Phoenix.Controller.put_router_url/2` is used to override the endpoint's URL
+      - `Phoenix.Controller.put_static_url/2` is used to override the endpoint's static URL
+
+    * When the Router module differs from the the one passed to `use Phoenix.VerifiedRoutes`,
+      such as library code, or application code that relies on multiple routers. In such cases,
+      the router module can be provided explicitly to `path/3` and `url/3`.
+
   ## Tracking Warnings
+
+  All static path segments must start with forward slash and you must have a static segment
+  between dynamic interpolations in order for a route to be verified without warnings.
+  For example, the following path generates proper warnings
+
+      ~p"/media/posts/#{post}"
+
+  While this one will not allow the compiler to see the full path:
+
+      type = "posts"
+      ~p"/media/#{type}/#{post}"
+
+  In such cases, it's better to write a function such as `media_path/1` which branches
+  on different `~p`'s to handle each type.
 
   Like any other compilation warning, the Elixir compiler will warn any time the file
   that a ~p resides in changes, or if the router is changed. To view prevoiusly issued
@@ -493,6 +528,11 @@ defmodule Phoenix.VerifiedRoutes do
          route,
          acc
        ) do
+    unless is_binary(Enum.at(acc, 0)) do
+      raise ArgumentError,
+            "a dynamic ~p interpolation must be followed by a static segment, got: #{Macro.to_string(route)}"
+    end
+
     rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_segment__]}, m3, [dynamic]}, bin]}
     verify_segment(rest, route, [rewrite | acc])
   end
@@ -531,7 +571,7 @@ defmodule Phoenix.VerifiedRoutes do
   defp verify_query(["&" <> _ = param | rest], route, acc) do
     unless String.ends_with?(param, "=") do
       raise ArgumentError,
-            "inspected query string param key to end with =, got: #{inspect(param)}"
+            "expected query string param key to end with =, got: #{inspect(param)}"
     end
 
     verify_query(rest, route, [param | acc])
