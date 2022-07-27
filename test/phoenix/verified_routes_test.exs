@@ -295,7 +295,9 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/5?page=#{3}&dir=#{dir}" == "/posts/5?page=3&dir=asc"
     assert ~p"/posts/5?#{page}=#{3}&dir=#{dir}" == "/posts/5?pg=3&dir=asc"
     assert ~p"/posts/5?#{"a b"}=#{3}&dir=#{"a b"}" == "/posts/5?a+b=3&dir=a+b"
-    assert ~p"/posts/post?foo=bar&#{"key"}=#{"val"}&baz=bat" == "/posts/post?foo=bar&key=val&baz=bat"
+
+    assert ~p"/posts/post?foo=bar&#{"key"}=#{"val"}&baz=bat" ==
+             "/posts/post?foo=bar&key=val&baz=bat"
   end
 
   test "invalid mixed interpolation query string raises" do
@@ -348,8 +350,10 @@ defmodule Phoenix.VerifiedRoutesTest do
 
     line = __ENV__.line - 6
 
+    warnings = String.replace(warnings, ~r/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/, "")
+
     assert warnings ==
-             "\e[33mwarning: \e[0mno route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:#{line}: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
+             "warning: no route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:#{line}: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
   end
 
   describe "with script name" do
