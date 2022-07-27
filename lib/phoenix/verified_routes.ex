@@ -344,6 +344,11 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro url(other), do: raise_invalid_route(other)
 
+  @doc """
+  Generates the router url with route verification from the connection, socket, or URI.
+
+  See `url/1` for more information.
+  """
   defmacro url(
              conn_or_socket_or_endpoint_or_uri,
              {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast
@@ -357,6 +362,11 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro url(_conn_or_socket_or_endpoint_or_uri, other), do: raise_invalid_route(other)
 
+  @doc """
+  Generates the url with route verification from the connection, socket, or URI and router.
+
+  See `url/1` for more information.
+  """
   defmacro url(
              conn_or_socket_or_endpoint_or_uri,
              router,
