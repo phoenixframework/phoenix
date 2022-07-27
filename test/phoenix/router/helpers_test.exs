@@ -617,4 +617,20 @@ defmodule Phoenix.Router.HelpersTest do
     conn = Phoenix.Controller.put_static_url(conn_with_script_name(), uri)
     assert Helpers.static_url(conn, "/images/foo.png") == "https://phoenixframework.org:123/path/images/foo.png"
   end
+
+  describe "helpers: false" do
+    defmodule NoHelpersRouter do
+      use Phoenix.Router, helpers: false
+
+      get "/", PostController, :home
+    end
+
+    test "__helpers__ return nil" do
+      assert NoHelpersRouter.__helpers__() == nil
+    end
+
+    test "test not generate Helpers module" do
+      refute Code.ensure_loaded?(NoHelpersRouter.Helpers)
+    end
+  end
 end

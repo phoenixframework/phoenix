@@ -103,8 +103,13 @@ defmodule Phoenix.Router do
   ## Helpers
 
   Phoenix automatically generates a module `Helpers` inside your router
-  which contains named helpers to help developers generate and keep
-  their routes up to date.
+  by default, which contains named helpers to help developers generate and keep
+  their routes up to date. Helpers can be disabled by passing `helpers: false`
+  to `use Phoenix.Router`.
+
+  See the `Phoenix.VerifiedRoutes` documentation for `~p` based route generation
+  which is the preferred way to generate route paths and URLs with compile-time
+  verification.
 
   Helpers are automatically generated based on the controller name.
   For example, the route:
@@ -323,10 +328,11 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp prelude(_opts) do
+  defp prelude(opts) do
     quote do
-      Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
+      Module.register_attribute(__MODULE__, :phoenix_routes, accumulate: true)
       @phoenix_forwards %{}
+      @phoenix_helpers Keyword.get(unquote(opts), :helpers, true)
 
       import Phoenix.Router
 
@@ -485,8 +491,10 @@ defmodule Phoenix.Router do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse()
     forwards = env.module |> Module.get_attribute(:phoenix_forwards)
     routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1, forwards)})
+    helpers? = Module.get_attribute(env.module, :phoenix_helpers)
 
-    Helpers.define(env, routes_with_exprs)
+    if helpers?, do: Helpers.define(env, routes_with_exprs)
+
     group = Enum.group_by(routes_with_exprs, fn {_route, exprs} -> exprs.path end)
     {matches, _} = Enum.flat_map_reduce(routes_with_exprs, {group, %{}}, &build_match/2)
 
@@ -529,7 +537,11 @@ defmodule Phoenix.Router do
       def __checks__, do: unquote({:__block__, [], Map.keys(checks)})
 
       @doc false
-      def __helpers__, do: __MODULE__.Helpers
+      if unquote(helpers?) do
+        def __helpers__, do: __MODULE__.Helpers
+      else
+        def __helpers__, do: nil
+      end
 
       defp prepare(conn) do
         merge_private(conn, [{:phoenix_router, __MODULE__}, {__MODULE__, conn.script_name}])
