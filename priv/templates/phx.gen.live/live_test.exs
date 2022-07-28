@@ -91,7 +91,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert show_live |> element("a", "Edit") |> render_click() =~
                "Edit <%= schema.human_singular %>"
 
-      assert_patch(show_live, ~p"<%= schema.route_path %>/#{<%= schema.singular %>}/edit"))
+      assert_patch(show_live, ~p"<%= schema.route_path %>/#{<%= schema.singular %>}/show/edit")
 
       assert show_live
              |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)
