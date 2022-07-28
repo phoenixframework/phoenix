@@ -460,6 +460,10 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/config.exs", fn file ->
         refute file =~ "config :esbuild"
       end
+
+      assert_file "phx_blog/config/prod.exs", fn file ->
+        refute file =~ "config :phx_blog, PhxBlogWeb.Endpoint, cache_static_manifest:"
+      end
     end
   end
 
