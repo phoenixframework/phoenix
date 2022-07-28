@@ -4,7 +4,7 @@ defmodule <%= @web_namespace %>.PageLiveTest do
   import Phoenix.LiveViewTest
 
   test "disconnected and connected render", %{conn: conn} do
-    conn = get(conn, "/")
+    conn = get(conn, ~p"/")
     disconnected_html = html_response(conn, 200)
     {:ok, _live, connected_html} = live(conn)
 

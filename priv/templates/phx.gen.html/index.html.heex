@@ -14,13 +14,13 @@
 <%= for {k, _} <- schema.attrs do %>      <td><%%= <%= schema.singular %>.<%= k %> %></td>
 <% end %>
       <td>
-        <span><.link href={Routes.<%= schema.route_helper %>_path(@conn, :show, <%= schema.singular %>)}>Show</.link></span>
-        <span><.link href={Routes.<%= schema.route_helper %>_path(@conn, :edit, <%= schema.singular %>)}>Edit</.link></span>
-        <span><.link href={Routes.<%= schema.route_helper %>_path(@conn, :delete, <%= schema.singular %>)} method="delete" data-confirm="Are you sure?">Delete</.link></span>
+        <span><.link href={~p"<%= schema.route_path %>/#{<%= schema.singular %>}"}>Show</.link></span>
+        <span><.link href={~p"<%= schema.route_path %>/#{<%= schema.singular %>}/edit"}>Edit</.link></span>
+        <span><.link href={~p"<%= schema.route_path %>/#{<%= schema.singular %>}"} method="delete" data-confirm="Are you sure?">Delete</.link></span>
       </td>
     </tr>
 <%% end %>
   </tbody>
 </table>
 
-<span><.link href={Routes.<%= schema.route_helper %>_path(@conn, :new)}>New <%= schema.human_singular %></.link></span>
+<span><.link href={~p"<%= schema.route_path %>/new"}>New <%= schema.human_singular %></.link></span>

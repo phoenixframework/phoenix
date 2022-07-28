@@ -33,6 +33,7 @@ defmodule Mix.Phoenix.Schema do
             web_namespace: nil,
             context_app: nil,
             route_helper: nil,
+            route_path: nil,
             migration_module: nil,
             fixture_unique_functions: %{},
             fixture_params: %{},
@@ -132,6 +133,7 @@ defmodule Mix.Phoenix.Schema do
       web_namespace: web_namespace,
       web_path: web_path,
       route_helper: route_helper(web_path, singular),
+      route_path: route_path(web_path, schema_plural),
       sample_id: sample_id(opts),
       context_app: ctx_app,
       generate?: generate?,
@@ -474,6 +476,9 @@ defmodule Mix.Phoenix.Schema do
     |> String.trim_leading("_")
     |> String.replace("/", "_")
   end
+
+  defp route_path("/" <> _ = web_path, plural), do: "#{web_path}/#{plural}"
+  defp route_path(nil = _web_path, plural), do: "/#{plural}"
 
   defp migration_module do
     case Application.get_env(:ecto_sql, :migration_module, Ecto.Migration) do
