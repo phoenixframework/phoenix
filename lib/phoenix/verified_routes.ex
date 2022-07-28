@@ -1,6 +1,6 @@
 defmodule Phoenix.VerifiedRoutes do
   @moduledoc ~S"""
-  Provies route generation with compile-time verificiation.
+  Provides route generation with compile-time verification.
 
   Use of the `sigil_p` macro allows paths and URLs throughout your
   application to be compile-time verified against your Phoenix router(s).
