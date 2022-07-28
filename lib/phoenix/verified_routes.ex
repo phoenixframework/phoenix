@@ -24,7 +24,7 @@ defmodule Phoenix.VerifiedRoutes do
   Additionally, interpolated ~p values are encoded via the `Phoenix.Param` protocol.
   For example, a `%Post{}` struct in your application may derive the `Phoenix.Param`
   protocol to generate slug-based paths rather than ID based ones. This allows you to
-  use `~p"/posts/#{post}"` rather than `~p"/posts/#{post.id}"` throughout your
+  use `~p"/posts/#{post}"` rather than `~p"/posts/#{post.slug}"` throughout your
   application. See the `Phoenix.Param` documentation for more details.
 
   Query strings are also supported in verified routes, either in traditional query
