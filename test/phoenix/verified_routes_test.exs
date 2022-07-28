@@ -159,8 +159,7 @@ defmodule Phoenix.VerifiedRoutesTest do
   end
 
   test "~p raises on dynamic dynamic interpolation" do
-    msg =
-      ~S|a dynamic ~p interpolation must be followed by a static segment, got: "/posts/#{1}#{2}"|
+    msg = ~S|a dynamic ~p interpolation must follow a static segment, got: "/posts/#{1}#{2}"|
 
     assert_raise ArgumentError, msg, fn ->
       defmodule DynamicDynamic do
@@ -299,7 +298,8 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/post?foo=bar&#{"key"}=#{"val"}&baz=bat" ==
              "/posts/post?foo=bar&key=val&baz=bat"
 
-    assert ~p"/posts/#{page}?foo=bar&#{"key"}=#{"val"}&baz=bat" == "/posts/pg?foo=bar&key=val&baz=bat"
+    assert ~p"/posts/#{page}?foo=bar&#{"key"}=#{"val"}&baz=bat" ==
+             "/posts/pg?foo=bar&key=val&baz=bat"
   end
 
   test "invalid mixed interpolation query string raises" do
