@@ -131,7 +131,14 @@ defmodule Phoenix.VerifiedRoutes do
     Module.put_attribute(mod, :before_compile, __MODULE__)
     Module.put_attribute(mod, :router, Keyword.fetch!(opts, :router))
     Module.put_attribute(mod, :endpoint, Keyword.get(opts, :endpoint))
-    Module.put_attribute(mod, :phoenix_verified_statics, Keyword.get(opts, :statics))
+
+    statics =
+      case Keyword.get(opts, :statics, []) do
+        list when is_list(list) -> list
+        other -> raise ArgumentError, "expected statics to be a list, got: #{inspect(other)}"
+      end
+
+    Module.put_attribute(mod, :phoenix_verified_statics, statics)
   end
 
   defmacro __before_compile__(env) do
@@ -671,12 +678,6 @@ defmodule Phoenix.VerifiedRoutes do
 
           If your router is not defined at compile-time, use unverified_path/3 instead.
           """
-      end
-
-    statics =
-      case Macro.expand(statics, env) do
-        list when is_list(list) -> list
-        other -> raise ArgumentError, "expected statics to be a list, got: #{inspect(other)}"
       end
 
     {type, test_path, path_ast, static_ast} =
