@@ -669,7 +669,7 @@ defmodule Phoenix.VerifiedRoutes do
           raise ArgumentError, """
           expected router to be to module, got: #{inspect(other)}
 
-          If you want to generate a compile-time router, use unverified_path/2 instead.
+          If your router is not defined at compile-time, use unverified_path/3 instead.
           """
       end
 
