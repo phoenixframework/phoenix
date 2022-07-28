@@ -2,6 +2,43 @@
 
 Phoenix v1.7 requires Elixir v1.11+.
 
+## Introduction of Verified Routes
+
+Phoenix 1.7 includes a new `Phoenix.VerifiedRoutes` feature which provides `~p`
+for route generation with compile-time verification.
+
+Use of the `sigil_p` macro allows paths and URLs throughout your
+application to be compile-time verified against your Phoenix router(s).
+For example the following path and URL usages:
+
+    <.link href={~p"/sessions/new"} method="post">Sign in</.link>
+
+    redirect(to: url(~p"/posts/#{post}"))
+
+Will be verified against your standard `Phoenix.Router` definitions:
+
+    get "/posts/:post_id", PostController, :show
+    post "/sessions/new", SessionController, :create
+
+Unmatched routes will issue compiler warnings:
+
+    warning: no route path for AppWeb.Router matches "/postz/#{post}"
+      lib/app_web/controllers/post_controller.ex:100: AppWeb.PostController.show/2
+
+*Note: Elixir >= 1.14.0 is required for comprehensive warnings. Older versions
+will work properly and warn on new compilations, but changes to the router file
+will not issue new warnings.
+
+This feature replaces the `Helpers` module generated in your Phoenix router, but helpers
+will continue to work and be generated. You can disable router helpers by passing the
+`helpers: false` option to `use Phoenix.Router`.
+
+## 1.7.0-dev
+
+### Enhancements
+  * [Router] Add `Phoenix.VerifiedRoutes` for `~p`-based route generation with compile-time verification.
+  * [Router] Support `helpers: false` to `use Phoenix.Router` to disable helper generation
+
 # Changelog for v1.6
 
 See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0f4de6decba7b) to upgrade from Phoenix 1.5.x.
