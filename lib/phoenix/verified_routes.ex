@@ -43,7 +43,7 @@ defmodule Phoenix.VerifiedRoutes do
   ## Options
 
   To verify routes in your application modules, such as controller, templates, and views,
-  `use Phoenx.VerifiedRoutes`, which supports the following options:
+  `use Phoenix.VerifiedRoutes`, which supports the following options:
 
     * `:router` - The required router to verify ~p paths against
     * `:endpoint` - The optional endpoint for ~p script_name and URL generation
