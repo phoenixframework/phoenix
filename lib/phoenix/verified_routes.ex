@@ -542,20 +542,15 @@ defmodule Phoenix.VerifiedRoutes do
            | rest
          ],
          route,
-         acc
-       ) do
-    unless is_binary(Enum.at(acc, 0)) do
-      raise ArgumentError,
-            "a dynamic ~p interpolation must be followed by a static segment, got: #{Macro.to_string(route)}"
-    end
-
+         [prev | _] = acc
+       ) when is_binary(prev) do
     rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_segment__]}, m3, [dynamic]}, bin]}
     verify_segment(rest, route, [rewrite | acc])
   end
 
-  defp verify_segment([_other | _], route, _acc) do
+  defp verify_segment([_ | _], route, _acc) do
     raise ArgumentError,
-          "verified routes require a compile-time string, got: #{Macro.to_string(route)}"
+          "a dynamic ~p interpolation must follow a static segment, got: #{Macro.to_string(route)}"
   end
 
   # we've reached the end of the path without finding query, return to caller
