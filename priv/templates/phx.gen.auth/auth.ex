@@ -160,7 +160,7 @@ defmodule <%= inspect auth_module %> do
     case session do
       %{"<%= schema.singular %>_token" => <%= schema.singular %>_token} ->
         LiveView.assign_new(socket, :current_<%= schema.singular %>, fn ->
-          Accounts.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
+          <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
         end)
 
       %{} ->
