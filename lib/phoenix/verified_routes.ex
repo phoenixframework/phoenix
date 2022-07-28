@@ -93,7 +93,7 @@ defmodule Phoenix.VerifiedRoutes do
   on different `~p`'s to handle each type.
 
   Like any other compilation warning, the Elixir compiler will warn any time the file
-  that a ~p resides in changes, or if the router is changed. To view prevoiusly issued
+  that a ~p resides in changes, or if the router is changed. To view previously issued
   warnings for files that lack new changes, the `--all-warnings` flag may be passed to
   the `mix compile` task. For the following will show all warnings the compiler
   has previously encountered when compiling the current application code:
