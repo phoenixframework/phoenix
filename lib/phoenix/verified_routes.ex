@@ -527,8 +527,8 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   # we reached the dynamic query string, return to call with rewritten query
-  defp verify_segment(["?" | rest], route, acc) do
-    {Enum.reverse(acc), verify_query(rest, route, ["?"])}
+  defp verify_segment(["?" <> _ = static_query_segment | rest], route, acc) do
+    {Enum.reverse(acc), verify_query(rest, route, [static_query_segment])}
   end
 
   defp verify_segment([segment | _], route, _acc) when is_binary(segment) do

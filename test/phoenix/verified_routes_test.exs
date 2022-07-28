@@ -298,6 +298,8 @@ defmodule Phoenix.VerifiedRoutesTest do
 
     assert ~p"/posts/post?foo=bar&#{"key"}=#{"val"}&baz=bat" ==
              "/posts/post?foo=bar&key=val&baz=bat"
+
+    assert ~p"/posts/#{page}?foo=bar&#{"key"}=#{"val"}&baz=bat" == "/posts/pg?foo=bar&key=val&baz=bat"
   end
 
   test "invalid mixed interpolation query string raises" do
