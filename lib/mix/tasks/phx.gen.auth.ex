@@ -738,11 +738,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       _ ->
         Mix.shell().info("""
         An authentication system can be created in two different ways:
-        - Using LiveViews
-        - Using Phoenix Templates
+        - Using Phoenix.LiveView (default)
+        - Using Phoenix.View
         """)
 
-        if Mix.shell().yes?("Do you want to create a LiveView based authentication system?") do
+        if Mix.shell().yes?("Do you want to create a LiveView based authentication system? [Y/n]") do
           Keyword.put_new(schema.opts, :live, true)
         else
           Keyword.put_new(schema.opts, :live, false)
