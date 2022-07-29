@@ -1103,6 +1103,7 @@ defmodule Phoenix.Router do
         get "/", ProxyPlug, controller: scoped_alias(__MODULE__, MyController)
       end
   """
+  @doc type: :reflection
   def scoped_alias(router_module, alias) do
     Scope.expand_alias(router_module, alias)
   end
@@ -1175,6 +1176,7 @@ defmodule Phoenix.Router do
       iex> Phoenix.Router.route_info(MyRouter, "GET", "/not-exists", "myhost")
       :error
   """
+  @doc type: :reflection
   def route_info(router, method, path, host) when is_binary(path) do
     split_path = for segment <- String.split(path, "/"), segment != "", do: segment
     route_info(router, method, split_path, host)
