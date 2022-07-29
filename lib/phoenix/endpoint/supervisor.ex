@@ -34,7 +34,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       case mod.init(:supervisor, env_conf) do
         {:ok, init_conf} ->
           if is_nil(Application.get_env(otp_app, mod)) and init_conf == env_conf do
-            Logger.warn("no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}")
+            Logger.warning("no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}")
           end
 
           init_conf
@@ -57,7 +57,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     server? = server?(conf)
 
     if conf[:instrumenters] do
-      Logger.warn(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
+      Logger.warning(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
     end
 
     if server? and conf[:code_reloader] do
@@ -84,7 +84,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     pub_conf = conf[:pubsub]
 
     if pub_conf do
-      Logger.warn """
+      Logger.warning """
       The :pubsub key in your #{inspect mod} is deprecated.
 
       You must now start the pubsub in your application supervision tree.
@@ -273,7 +273,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     port   = port_to_integer(url[:port] || port)
 
     if host =~ ~r"[^:]:\d" do
-      Logger.warn("url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid")
+      Logger.warning("url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid")
     end
 
     %URI{scheme: scheme, port: port, host: host}
@@ -339,7 +339,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       deprecated_config_lines = for {k, v} <- deprecated_configs, do: "#{k}: #{inspect(v)}"
       runtime_exs_config_lines = for {key, {:system, env_var}} <- deprecated_configs, do: ~s|#{key}: System.get_env("#{env_var}")|
 
-      Logger.warn """
+      Logger.warning """
       #{inspect(key)} configuration containing {:system, env_var} tuples for #{inspect(mod)} is deprecated.
 
       Configuration with deprecated values:

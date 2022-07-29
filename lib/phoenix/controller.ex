@@ -1006,7 +1006,7 @@ defmodule Phoenix.Controller do
 
   defp warn_if_ajax(conn) do
     if ajax?(conn) do
-      Logger.warn "send_download/3 has been invoked during an AJAX request. " <>
+      Logger.warning "send_download/3 has been invoked during an AJAX request. " <>
                   "The download may not work as expected under XMLHttpRequest"
     end
   end

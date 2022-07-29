@@ -342,7 +342,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       use Mix.Config
 
       # Print only warnings and errors during test
-      config :logger, level: :warn
+      config :logger, level: :warning
       """
 
       {:ok, injected} = Injector.test_config_inject(input, hashing_library)
@@ -355,7 +355,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                config :bcrypt_elixir, :log_rounds, 1
 
                # Print only warnings and errors during test
-               config :logger, level: :warn
+               config :logger, level: :warning
                """
     end
 
@@ -366,7 +366,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       import Config
 
       # Print only warnings and errors during test
-      config :logger, level: :warn
+      config :logger, level: :warning
       """
 
       {:ok, injected} = Injector.test_config_inject(input, hashing_library)
@@ -379,7 +379,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                config :bcrypt_elixir, :log_rounds, 1
 
                # Print only warnings and errors during test
-               config :logger, level: :warn
+               config :logger, level: :warning
                """
     end
 
@@ -390,7 +390,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       import Config\r
       \r
       # Print only warnings and errors during test\r
-      config :logger, level: :warn\r
+      config :logger, level: :warning\r
       """
 
       {:ok, injected} = Injector.test_config_inject(input, hashing_library)
@@ -403,7 +403,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                config :bcrypt_elixir, :log_rounds, 1\r
                \r
                # Print only warnings and errors during test\r
-               config :logger, level: :warn\r
+               config :logger, level: :warning\r
                """
     end
 
@@ -414,7 +414,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       import Config
 
       # Print only warnings and errors during test
-      config :logger, level: :warn
+      config :logger, level: :warning
 
       # Only in tests, remove the complexity from the password hashing algorithm
       config :bcrypt_elixir, :log_rounds, 1
@@ -431,7 +431,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       import Config\r
       \r
       # Print only warnings and errors during test\r
-      config :logger, level: :warn\r
+      config :logger, level: :warning\r
       \r
       # Only in tests, remove the complexity from the password hashing algorithm\r
       config :bcrypt_elixir, :log_rounds, 1\r
