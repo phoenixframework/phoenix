@@ -413,33 +413,50 @@ defmodule Phoenix.VerifiedRoutes do
 
   @doc """
   Returns the URL for the endpoint from the path without verification.
+
+  ## Examples
+
+      iex> unverified_url(conn, "/posts")
+      "https://example.com/posts"
+
+      iex> unverified_url(conn, "/posts", page: 1)
+      "https://example.com/posts?page=1"
   """
-  def unverified_url(%Plug.Conn{private: private}, path) do
+  def unverified_url(ctx, path) when is_binary(path) do
+    unverified_url(ctx, path, %{})
+  end
+
+  def unverified_url(%Plug.Conn{private: private}, path, params)
+      when is_map(params) or is_list(params) do
     case private do
-      %{phoenix_router_url: url} when is_binary(url) -> concat_url(url, path)
-      %{phoenix_endpoint: endpoint} -> concat_url(endpoint.url(), path)
+      %{phoenix_router_url: url} when is_binary(url) -> concat_url(url, path, params)
+      %{phoenix_endpoint: endpoint} -> concat_url(endpoint.url(), path, params)
     end
   end
 
-  def unverified_url(%_{endpoint: endpoint}, path) do
-    concat_url(endpoint.url(), path)
+  def unverified_url(%_{endpoint: endpoint}, path, params) do
+    concat_url(endpoint.url(), path, params)
   end
 
-  def unverified_url(%URI{} = uri, path) do
-    URI.to_string(%{uri | path: path})
+  def unverified_url(%URI{} = uri, path, params) do
+    append_params(URI.to_string(%{uri | path: path}), params)
   end
 
-  def unverified_url(endpoint, path) when is_atom(endpoint) do
-    concat_url(endpoint.url(), path)
+  def unverified_url(endpoint, path, params) when is_atom(endpoint) do
+    concat_url(endpoint.url(), path, params)
   end
 
-  def unverified_url(other, path) do
+  def unverified_url(other, path, _params) do
     raise ArgumentError,
           "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
             "or a Phoenix.Endpoint when building url at #{path}, got: #{inspect(other)}"
   end
 
   defp concat_url(url, path) when is_binary(path), do: url <> path
+
+  defp concat_url(url, path, params) when is_binary(path) do
+    append_params(url <> path, params)
+  end
 
   @doc """
   Generates path to a static asset given its file path.
@@ -465,30 +482,47 @@ defmodule Phoenix.VerifiedRoutes do
 
   @doc """
   Returns the path with relevant script name prefixes without verification.
+
+  ## Examples
+
+      iex> unverified_path(conn, AppWeb.Router, "/posts")
+      "/posts"
+
+      iex> unverified_path(conn, AppWeb.Router, "/posts", page: 1)
+      "/posts?page=1"
   """
-  def unverified_path(%Plug.Conn{} = conn, router, path) do
+  def unverified_path(ctx, router, path, params \\ %{})
+
+  def unverified_path(%Plug.Conn{} = conn, router, path, params) do
     conn
     |> build_own_forward_path(router, path)
     |> Kernel.||(build_conn_forward_path(conn, router, path))
     |> Kernel.||(path_with_script(path, conn.script_name))
+    |> append_params(params)
   end
 
-  def unverified_path(%URI{} = uri, _router, path) do
-    (uri.path || "") <> path
+  def unverified_path(%URI{} = uri, _router, path, params) do
+    append_params((uri.path || "") <> path, params)
   end
 
-  def unverified_path(%_{endpoint: endpoint}, router, path) do
-    unverified_path(endpoint, router, path)
+  def unverified_path(%_{endpoint: endpoint}, router, path, params) do
+    unverified_path(endpoint, router, path, params)
   end
 
-  def unverified_path(endpoint, _router, path) when is_atom(endpoint) do
-    endpoint.path(path)
+  def unverified_path(endpoint, _router, path, params) when is_atom(endpoint) do
+    append_params(endpoint.path(path), params)
   end
 
-  def unverified_path(other, router, path) do
+  def unverified_path(other, router, path, _params) do
     raise ArgumentError,
           "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
             "or a Phoenix.Endpoint when building path for #{inspect(router)} at #{path}, got: #{inspect(other)}"
+  end
+
+  defp append_params(path, params) when params == %{} or params == [], do: path
+
+  defp append_params(path, params) when is_map(params) or is_list(params) do
+    path <> "?" <> __encode_query__(params)
   end
 
   @doc false

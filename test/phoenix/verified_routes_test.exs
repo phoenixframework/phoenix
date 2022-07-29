@@ -153,6 +153,20 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/5?#{%{}}" == "/posts/5"
   end
 
+  test "unverified_path" do
+    assert unverified_path(conn_with_script_name(), @router, "/posts") == "/api/posts"
+    assert unverified_path(@endpoint, @router, "/posts") == "/posts"
+    assert unverified_path(@endpoint, @router, "/posts", %{}) == "/posts"
+    assert unverified_path(@endpoint, @router, "/posts", a: "b") == "/posts?a=b"
+  end
+
+  test "unverified_url" do
+    assert unverified_url(conn_with_script_name(), "/posts") == "https://example.com/posts"
+    assert unverified_url(@endpoint, "/posts") == "https://example.com/posts"
+    assert unverified_url(@endpoint, "/posts", %{}) == "https://example.com/posts"
+    assert unverified_url(@endpoint, "/posts", a: "b") == "https://example.com/posts?a=b"
+  end
+
   test "~p raises on leftover sigil" do
     assert_raise ArgumentError, "~p does not support trailing fragment, got: 'foo'", fn ->
       defmodule LeftOver do
