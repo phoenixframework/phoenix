@@ -1,14 +1,14 @@
 <h1>Listing <%= schema.human_plural %></h1>
 
 <%%= if @live_action in [:new, :edit] do %>
-  <.modal return_to={Routes.<%= schema.route_helper %>_index_path(@socket, :index)}>
+  <.modal return_to={~p"<%= schema.route_path %>"}>
     <.live_component
       module={<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent}
       id={@<%= schema.singular %>.id || :new}
       title={@page_title}
       action={@live_action}
       <%= schema.singular %>={@<%= schema.singular %>}
-      return_to={Routes.<%= schema.route_helper %>_index_path(@socket, :index)}
+      return_to={~p"<%= schema.route_path %>"}
     />
   </.modal>
 <%% end %>
@@ -27,8 +27,8 @@
 <%= for {k, _} <- schema.attrs do %>        <td><%%= <%= schema.singular %>.<%= k %> %></td>
 <% end %>
         <td>
-          <span><.link navigate={Routes.<%= schema.route_helper %>_show_path(@socket, :show, <%= schema.singular %>)}>Show</.link></span>
-          <span><.link patch={Routes.<%= schema.route_helper %>_index_path(@socket, :edit, <%= schema.singular %>)}>Edit</.link></span>
+          <span><.link navigate={~p"<%= schema.route_path %>/#{<%= schema.singular %>}"}>Show</.link></span>
+          <span><.link patch={~p"<%= schema.route_path %>/#{<%= schema.singular %>}/edit"}>Edit</.link></span>
           <span><.link phx-click={JS.push("delete", value: %{id: <%= schema.singular %>.id})} data-confirm="Are you sure?">Delete</.link></span>
         </td>
       </tr>
@@ -36,4 +36,4 @@
   </tbody>
 </table>
 
-<span><.link patch={Routes.<%= schema.route_helper %>_index_path(@socket, :new)}>New <%= schema.human_singular %></.link></span>
+<span><.link patch={~p"<%= schema.route_path %>/new"}>New <%= schema.human_singular %></.link></span>

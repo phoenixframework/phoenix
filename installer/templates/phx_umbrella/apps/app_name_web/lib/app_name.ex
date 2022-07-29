@@ -17,9 +17,15 @@ defmodule <%= @web_namespace %> do
   and import those modules here.
   """
 
+  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+
   def controller do
     quote do
       use Phoenix.Controller, namespace: <%= @web_namespace %>
+      use Phoenix.VerifiedRoutes,
+        endpoint: <%= @endpoint_module %>,
+        router: <%= @web_namespace %>.Router,
+        statics: <%= @web_namespace %>.static_paths()
 
       import Plug.Conn<%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %>
@@ -88,17 +94,25 @@ defmodule <%= @web_namespace %> do
     quote do<%= if @html do %>
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
+      use Phoenix.VerifiedRoutes,
+        endpoint: <%= @endpoint_module %>,
+        router: <%= @web_namespace %>.Router,
+        statics: <%= @web_namespace %>.static_paths()
 
       # Import LiveView and .heex helpers (live_render, <.link>, <.form>, etc)
       import Phoenix.LiveView.Helpers
 <% end %>
+      use Phoenix.VerifiedRoutes,
+        endpoint: <%= @endpoint_module %>,
+        router: <%= @web_namespace %>.Router,
+        statics: <%= @web_namespace %>.static_paths()
+
       # Import basic rendering functionality (render, render_layout, etc)
       import Phoenix.View
 
       import <%= @web_namespace %>.ErrorHelpers<%= if @gettext do %>
-      import <%= @web_namespace %>.Gettext<% end %>
-      alias <%= @web_namespace %>.Router.Helpers, as: Routes
-      alias Phoenix.LiveView.JS
+      import <%= @web_namespace %>.Gettext<% end %><%= if @html do %>
+      alias Phoenix.LiveView.JS<% end %>
     end
   end
 

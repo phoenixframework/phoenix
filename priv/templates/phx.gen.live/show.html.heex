@@ -1,14 +1,14 @@
 <h1>Show <%= schema.human_singular %></h1>
 
 <%%= if @live_action in [:edit] do %>
-  <.modal return_to={Routes.<%= schema.route_helper %>_show_path(@socket, :show, @<%= schema.singular %>)}>
+  <.modal return_to={~p"<%= schema.route_path %>/#{@<%= schema.singular %>}"}>
     <.live_component
       module={<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent}
       id={@<%= schema.singular %>.id}
       title={@page_title}
       action={@live_action}
       <%= schema.singular %>={@<%= schema.singular %>}
-      return_to={Routes.<%= schema.route_helper %>_show_path(@socket, :show, @<%= schema.singular %>)}
+      return_to={~p"<%= schema.route_path %>/#{@<%= schema.singular %>}"}
     />
   </.modal>
 <%% end %>
@@ -22,5 +22,5 @@
 <% end %>
 </ul>
 
-<span><.link patch={Routes.<%= schema.route_helper %>_show_path(@socket, :edit, @<%= schema.singular %>)} class="button">Edit</.link></span> |
-<span><.link navigate={Routes.<%= schema.route_helper %>_index_path(@socket, :index)}>Back</.link></span>
+<span><.link patch={~p"<%= schema.route_path %>/#{@<%= schema.singular %>}/show/edit"} class="button">Edit</.link></span> |
+<span><.link navigate={~p"<%= schema.route_path %>"}>Back</.link></span>
