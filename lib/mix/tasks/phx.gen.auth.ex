@@ -742,7 +742,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         - Using Phoenix.View
         """)
 
-        if Mix.shell().yes?("Do you want to create a LiveView based authentication system? [Y/n]") do
+        if Mix.shell().yes?("Do you want to create a LiveView based authentication system?") do
           Keyword.put_new(schema.opts, :live, true)
         else
           Keyword.put_new(schema.opts, :live, false)

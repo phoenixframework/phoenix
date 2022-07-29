@@ -34,7 +34,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def mount(params, _session, socket) do
-    socket = set_<%= schema.singular %>_and_token(socket, params)
+    socket = assign_<%= schema.singular %>_and_token(socket, params)
 
     socket =
       case socket.assigns do
@@ -68,7 +68,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:noreply, assign(socket, changeset: Map.put(changeset, :action, :validate))}
   end
 
-  defp set_<%= schema.singular %>_and_token(socket, %{"token" => token}) do
+  defp assign_<%= schema.singular %>_and_token(socket, %{"token" => token}) do
     if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_reset_password_token(token) do
       assign(socket, <%= schema.singular %>: <%= schema.singular %>, token: token)
     else

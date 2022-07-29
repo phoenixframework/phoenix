@@ -41,11 +41,14 @@
   scope <%= router_scope %> do
     pipe_through [:browser]
 
-    delete "/<%= schema.plural %>/log_out", <%= inspect schema.alias %>SessionController, :delete<%= if live? do %>
-    live "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationLive, :edit
-    live "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationInstructionsLive, :new<% else %>
-    get "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :new
-    post "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :create
-    get "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :edit
-    post "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :update<% end %>
+    live_session :current_<%= schema.singular %>,
+      on_mount: [{<%= inspect auth_module %>, :mount_current_<%= schema.singular %>}] do
+      delete "/<%= schema.plural %>/log_out", <%= inspect schema.alias %>SessionController, :delete<%= if live? do %>
+      live "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationLive, :edit
+      live "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationInstructionsLive, :new<% else %>
+      get "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :new
+      post "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :create
+      get "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :edit
+      post "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :update<% end %>
+    end
   end

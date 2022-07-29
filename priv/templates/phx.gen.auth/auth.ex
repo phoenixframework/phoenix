@@ -150,29 +150,25 @@ defmodule <%= inspect auth_module %> do
   def on_mount(:ensure_authenticated, _params, session, socket) do
     socket = mount_current_<%= schema.singular %>(session, socket)
 
-    case socket.assigns.current_<%= schema.singular %> do
-      nil ->
-        socket =
-          socket
-          |> LiveView.put_flash(:error, "You must log in to access this page.")
-          |> LiveView.redirect(to: Routes.<%= schema.route_helper %>_<%= schema.login_path %>(socket, :new))
+    if socket.assigns.current_<%= schema.singular %> do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> LiveView.put_flash(:error, "You must log in to access this page.")
+        |> LiveView.redirect(to: Routes.<%= schema.route_helper %>_<%= schema.login_path %>(socket, :new))
 
-        {:halt, socket}
-
-      _ ->
-        {:cont, socket}
+      {:halt, socket}
     end
   end
 
   def on_mount(:redirect_if_<%= schema.singular %>_is_authenticated, _params, session, socket) do
     socket = mount_current_<%= schema.singular %>(session, socket)
 
-    case socket.assigns.current_<%= schema.singular %> do
-      nil ->
-        {:cont, socket}
-
-      _<%= schema.singular %> ->
-        {:halt, LiveView.redirect(socket, to: signed_in_path(socket))}
+    if socket.assigns.current_<%= schema.singular %> do
+      {:halt, LiveView.redirect(socket, to: signed_in_path(socket))}
+    else
+      {:cont, socket}
     end
   end
 
