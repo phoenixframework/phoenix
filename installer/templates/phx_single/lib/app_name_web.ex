@@ -110,9 +110,8 @@ defmodule <%= @web_namespace %> do
       import Phoenix.View
 
       import <%= @web_namespace %>.ErrorHelpers<%= if @gettext do %>
-      import <%= @web_namespace %>.Gettext<% end %>
-      alias <%= @web_namespace %>.Router.Helpers, as: Routes
-      alias Phoenix.LiveView.JS
+      import <%= @web_namespace %>.Gettext<% end %><%= if @html do %>
+      alias Phoenix.LiveView.JS<% end %>
     end
   end
 
