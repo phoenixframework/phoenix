@@ -32,6 +32,14 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   A migration file for the repository and test files for the context and
   controller features will also be generated.
 
+  ## API Prefix
+
+  By default, the prefix "/api" will be generated for API route paths.
+  This can be customized via the `:api_prefix` generators configuration:
+
+      config :your_app, :generators,
+        api_prefix: "/api/v1"
+
   ## The context app
 
   The location of the web files (controllers, views, templates, etc) in an

@@ -34,6 +34,7 @@ defmodule Mix.Phoenix.Schema do
             context_app: nil,
             route_helper: nil,
             route_path: nil,
+            api_route_path: nil,
             migration_module: nil,
             fixture_unique_functions: %{},
             fixture_params: %{},
@@ -82,6 +83,7 @@ defmodule Mix.Phoenix.Schema do
     types = types(attrs)
     web_namespace = opts[:web] && Phoenix.Naming.camelize(opts[:web])
     web_path = web_namespace && Phoenix.Naming.underscore(web_namespace)
+    api_prefix = Application.get_env(otp_app, :generators)[:api_prefix] || "/api"
     embedded? = Keyword.get(opts, :embedded, false)
     generate? = Keyword.get(opts, :schema, true)
 
@@ -134,6 +136,7 @@ defmodule Mix.Phoenix.Schema do
       web_path: web_path,
       route_helper: route_helper(web_path, singular),
       route_path: route_path(web_path, schema_plural),
+      api_route_path: api_route_path(web_path, schema_plural, api_prefix),
       sample_id: sample_id(opts),
       context_app: ctx_app,
       generate?: generate?,
@@ -477,8 +480,15 @@ defmodule Mix.Phoenix.Schema do
     |> String.replace("/", "_")
   end
 
-  defp route_path("/" <> _ = web_path, plural), do: "#{web_path}/#{plural}"
-  defp route_path(nil = _web_path, plural), do: "/#{plural}"
+  defp route_path(web_path, plural) do
+    path = Path.join(for str <- [web_path, plural], do: to_string(str))
+    "/" <> String.trim_leading(path, "/")
+  end
+
+  defp api_route_path(web_path, plural, api_prefix) do
+    path = Path.join(for str <- [api_prefix, web_path, plural], do: to_string(str))
+    "/" <> String.trim_leading(path, "/")
+  end
 
   defp migration_module do
     case Application.get_env(:ecto_sql, :migration_module, Ecto.Migration) do
