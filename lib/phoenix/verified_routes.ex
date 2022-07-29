@@ -516,17 +516,17 @@ defmodule Phoenix.VerifiedRoutes do
 
       {[segment, static_query], dynamic_query} ->
         {Enum.reverse([URI.encode(segment) | acc]),
-         verify_query(dynamic_query, route, [static_query, "?"])}
+         verify_query(dynamic_query, route, [static_query])}
     end
   end
 
   # we reached the static query string, return to caller
-  defp verify_segment(["?" <> _ = query], _route, acc) do
+  defp verify_segment(["?" <> query], _route, acc) do
     {Enum.reverse(acc), [query]}
   end
 
   # we reached the dynamic query string, return to call with rewritten query
-  defp verify_segment(["?" <> _ = static_query_segment | rest], route, acc) do
+  defp verify_segment(["?" <> static_query_segment | rest], route, acc) do
     {Enum.reverse(acc), verify_query(rest, route, [static_query_segment])}
   end
 
@@ -542,7 +542,8 @@ defmodule Phoenix.VerifiedRoutes do
          ],
          route,
          [prev | _] = acc
-       ) when is_binary(prev) do
+       )
+       when is_binary(prev) do
     rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_segment__]}, m3, [dynamic]}, bin]}
     verify_segment(rest, route, [rewrite | acc])
   end
@@ -690,7 +691,19 @@ defmodule Phoenix.VerifiedRoutes do
   defp rewrite_path(route, endpoint, router, statics) do
     {:<<>>, meta, segments} = route
     {path_rewrite, query_rewrite} = verify_segment(segments, route, [])
-    rewrite_route = {:<<>>, meta, path_rewrite ++ query_rewrite}
+
+    rewrite_route =
+      quote do
+        query_str = unquote({:<<>>, meta, query_rewrite})
+        path_str = unquote({:<<>>, meta, path_rewrite})
+
+        if query_str == "" do
+          path_str
+        else
+          path_str <> "?" <> query_str
+        end
+      end
+
     test_path = Enum.map_join(path_rewrite, &if(is_binary(&1), do: &1, else: "1"))
 
     type = route_type(router, statics, test_path)

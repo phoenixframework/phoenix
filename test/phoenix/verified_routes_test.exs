@@ -149,6 +149,10 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/#{slug}?#{[foo: "my param"]}" == "/posts/my%20path?foo=my+param"
   end
 
+  test "~p with empty query string drops ?" do
+    assert ~p"/posts/5?#{%{}}" == "/posts/5"
+  end
+
   test "~p raises on leftover sigil" do
     assert_raise ArgumentError, "~p does not support trailing fragment, got: 'foo'", fn ->
       defmodule LeftOver do
