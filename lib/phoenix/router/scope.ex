@@ -177,6 +177,19 @@ defmodule Phoenix.Router.Scope do
     join_alias(get_top(module), alias)
   end
 
+  @doc """
+  Returns the full path in the current router scope.
+  """
+  def full_path(module, path) do
+    split_path = String.split(path, "/", trim: true)
+    prefix = get_top(module).path
+    cond do
+      prefix == [] -> path
+      split_path == [] -> "/" <> Enum.join(prefix, "/")
+      true -> "/" <> Path.join(get_top(module).path ++ split_path)
+    end
+  end
+
   defp join(top, path, alias, alias?, as, private, assigns) do
     joined_alias =
       if alias? do

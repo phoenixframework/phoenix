@@ -1109,6 +1109,13 @@ defmodule Phoenix.Router do
   end
 
   @doc """
+  Returns the full path with the current scope's path prefix.
+  """
+  def scoped_path(router_module, path) do
+    Scope.full_path(router_module, path)
+  end
+
+  @doc """
   Forwards a request at the given path to a plug.
 
   All paths that match the forwarded prefix will be sent to
