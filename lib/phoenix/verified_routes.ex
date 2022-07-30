@@ -140,18 +140,16 @@ defmodule Phoenix.VerifiedRoutes do
     Module.put_attribute(mod, :phoenix_verified_statics, statics)
   end
 
-  defmacro __before_compile__(env) do
+  defmacro __before_compile__(_env) do
     if Version.match?(System.version(), ">= 1.14.0-dev") do
       quote do
-        @after_verify {__MODULE__, :__verify_routes__}
+        @after_verify {__MODULE__, :__phoenix_verify_routes__}
 
         @doc false
-        def __verify_routes__(_module) do
+        def __phoenix_verify_routes__(_module) do
           unquote(__MODULE__).__verify__(@phoenix_verified_routes)
         end
       end
-    else
-      __verify__(Module.get_attribute(env.module, :phoenix_verified_routes))
     end
   end
 
@@ -205,35 +203,31 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp inject_path(
-         {%__MODULE__{} = route, type, _endpoint_ctx, _route_ast, path_ast, static_ast},
+         {%__MODULE__{} = route, static?, _endpoint_ctx, _route_ast, path_ast, static_ast},
          env
        ) do
-    case type do
-      :static ->
-        static_ast
-
-      other when other in [:match, :error] ->
-        Module.put_attribute(env.module, :phoenix_verified_routes, route)
-        path_ast
+    if static? do
+      static_ast
+    else
+      Module.put_attribute(env.module, :phoenix_verified_routes, route)
+      path_ast
     end
   end
 
   defp inject_url(
-         {%__MODULE__{} = route, type, endpoint_ctx, route_ast, path_ast, _static_ast},
+         {%__MODULE__{} = route, static?, endpoint_ctx, route_ast, path_ast, _static_ast},
          env
        ) do
-    case type do
-      :static ->
-        quote do
-          unquote(__MODULE__).static_url(unquote_splicing([endpoint_ctx, route_ast]))
-        end
+    if static? do
+      quote do
+        unquote(__MODULE__).static_url(unquote_splicing([endpoint_ctx, route_ast]))
+      end
+    else
+      Module.put_attribute(env.module, :phoenix_verified_routes, route)
 
-      other when other in [:match, :error] ->
-        Module.put_attribute(env.module, :phoenix_verified_routes, route)
-
-        quote do
-          unquote(__MODULE__).unverified_url(unquote_splicing([endpoint_ctx, path_ast]))
-        end
+      quote do
+        unquote(__MODULE__).unverified_url(unquote_splicing([endpoint_ctx, path_ast]))
+      end
     end
   end
 
@@ -662,14 +656,6 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(true), do: "true"
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
-  defp route_type(router, statics, test_path) do
-    cond do
-      static_path?(test_path, statics) -> :static
-      match_route?(router, test_path) -> :match
-      true -> :error
-    end
-  end
-
   defp match_route?(router, test_path) when is_binary(test_path) do
     split_path = for segment <- String.split(test_path, "/"), segment != "", do: segment
     match_route?(router, split_path)
@@ -709,7 +695,7 @@ defmodule Phoenix.VerifiedRoutes do
           """
       end
 
-    {type, test_path, path_ast, static_ast} =
+    {static?, test_path, path_ast, static_ast} =
       rewrite_path(route_ast, endpoint_ctx, router, statics)
 
     route = %__MODULE__{
@@ -719,7 +705,7 @@ defmodule Phoenix.VerifiedRoutes do
       test_path: test_path
     }
 
-    {route, type, endpoint_ctx, route_ast, path_ast, static_ast}
+    {route, static?, endpoint_ctx, route_ast, path_ast, static_ast}
   end
 
   defp rewrite_path(route, endpoint, router, statics) do
@@ -740,7 +726,7 @@ defmodule Phoenix.VerifiedRoutes do
 
     test_path = Enum.map_join(path_rewrite, &if(is_binary(&1), do: &1, else: "1"))
 
-    type = route_type(router, statics, test_path)
+    static? = static_path?(test_path, statics)
 
     path_ast =
       quote do
@@ -752,7 +738,7 @@ defmodule Phoenix.VerifiedRoutes do
         unquote(__MODULE__).static_path(unquote_splicing([endpoint, rewrite_route]))
       end
 
-    {type, test_path, path_ast, static_ast}
+    {static?, test_path, path_ast, static_ast}
   end
 
   defp attr!(env, :endpoint) do

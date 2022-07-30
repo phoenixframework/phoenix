@@ -187,43 +187,6 @@ defmodule Phoenix.VerifiedRoutesTest do
     end
   end
 
-  test "~p warns on unmatched path" do
-    warnings =
-      ExUnit.CaptureIO.capture_io(:stderr, fn ->
-        defmodule Unmatched do
-          use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
-
-          def test do
-            ~p"/unknown"
-            ~p"/unknown/123"
-            ~p"/unknown/#{123}"
-          end
-        end
-      end)
-
-    assert warnings =~ ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown"|
-
-    assert warnings =~
-             ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/123"|
-
-    assert warnings =~
-             ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/#{123}"|
-  end
-
-  test "~p warns on warn_on_verify: true route" do
-    warnings =
-      ExUnit.CaptureIO.capture_io(:stderr, fn ->
-        defmodule VerifyFalse do
-          use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
-
-          def test, do: ~p"/should-warn/foobar"
-        end
-      end)
-
-    assert warnings =~
-             ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/should-warn/foobar"|
-  end
-
   test "~p raises when not prefixed by /" do
     assert_raise ArgumentError,
                  ~s|path segments must begin with /, got: "posts/1" in "posts/1"|,
@@ -354,28 +317,6 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/5/?#{%{"id" => "foo bar"}}" == "/posts/5/?id=foo+bar"
   end
 
-  test "forwards" do
-    warnings =
-      ExUnit.CaptureIO.capture_io(:stderr, fn ->
-        defmodule Forwards do
-          use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
-
-          def test do
-            "/router_forward/dashboard" = ~p"/router_forward/dashboard"
-            "/router_forward/warn" = ~p"/router_forward/warn"
-            "/plug_forward/home" = ~p"/plug_forward/home"
-          end
-        end
-      end)
-
-    line = __ENV__.line - 6
-
-    warnings = String.replace(warnings, ~r/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/, "")
-
-    assert warnings ==
-             "warning: no route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:#{line}: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
-  end
-
   describe "with script name" do
     @endpoint ScriptName
     @router Router
@@ -475,6 +416,69 @@ defmodule Phoenix.VerifiedRoutesTest do
 
       assert url(conn, ~p"/images/foo.png") ==
                "https://phoenixframework.org:123/path/images/foo.png"
+    end
+  end
+
+  if Version.match?(System.version(), ">= 1.14.0-dev") do
+    describe "warnings" do
+      test "forwards" do
+        warnings =
+          ExUnit.CaptureIO.capture_io(:stderr, fn ->
+            defmodule Forwards do
+              use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+
+              def test do
+                "/router_forward/dashboard" = ~p"/router_forward/dashboard"
+                "/router_forward/warn" = ~p"/router_forward/warn"
+                "/plug_forward/home" = ~p"/plug_forward/home"
+              end
+            end
+          end)
+
+        line = __ENV__.line - 6
+
+        warnings = String.replace(warnings, ~r/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/, "")
+
+        assert warnings ==
+                "warning: no route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:#{line}: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
+      end
+
+      test "~p warns on unmatched path" do
+        warnings =
+          ExUnit.CaptureIO.capture_io(:stderr, fn ->
+            defmodule Unmatched do
+              use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+
+              def test do
+                ~p"/unknown"
+                ~p"/unknown/123"
+                ~p"/unknown/#{123}"
+              end
+            end
+          end)
+
+        assert warnings =~ ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown"|
+
+        assert warnings =~
+                ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/123"|
+
+        assert warnings =~
+                ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/#{123}"|
+      end
+
+      test "~p warns on warn_on_verify: true route" do
+        warnings =
+          ExUnit.CaptureIO.capture_io(:stderr, fn ->
+            defmodule VerifyFalse do
+              use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+
+              def test, do: ~p"/should-warn/foobar"
+            end
+          end)
+
+        assert warnings =~
+                ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/should-warn/foobar"|
+      end
     end
   end
 end
