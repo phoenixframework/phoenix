@@ -33,8 +33,8 @@ defmodule Mix.Phoenix.Schema do
             web_namespace: nil,
             context_app: nil,
             route_helper: nil,
-            route_path: nil,
-            api_route_path: nil,
+            route_prefix: nil,
+            api_route_prefix: nil,
             migration_module: nil,
             fixture_unique_functions: %{},
             fixture_params: %{},
@@ -135,8 +135,8 @@ defmodule Mix.Phoenix.Schema do
       web_namespace: web_namespace,
       web_path: web_path,
       route_helper: route_helper(web_path, singular),
-      route_path: route_path(web_path, schema_plural),
-      api_route_path: api_route_path(web_path, schema_plural, api_prefix),
+      route_prefix: route_prefix(web_path, schema_plural),
+      api_route_prefix: api_route_prefix(web_path, schema_plural, api_prefix),
       sample_id: sample_id(opts),
       context_app: ctx_app,
       generate?: generate?,
@@ -480,12 +480,12 @@ defmodule Mix.Phoenix.Schema do
     |> String.replace("/", "_")
   end
 
-  defp route_path(web_path, plural) do
+  defp route_prefix(web_path, plural) do
     path = Path.join(for str <- [web_path, plural], do: to_string(str))
     "/" <> String.trim_leading(path, "/")
   end
 
-  defp api_route_path(web_path, plural, api_prefix) do
+  defp api_route_prefix(web_path, plural, api_prefix) do
     path = Path.join(for str <- [api_prefix, web_path, plural], do: to_string(str))
     "/" <> String.trim_leading(path, "/")
   end

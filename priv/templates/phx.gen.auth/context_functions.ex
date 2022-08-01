@@ -82,7 +82,7 @@
 
   """
   def change_<%= schema.singular %>_registration(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs \\ %{}) do
-    <%= inspect schema.alias %>.registration_changeset(<%= schema.singular %>, attrs, hash_password: false)
+    <%= inspect schema.alias %>.registration_changeset(<%= schema.singular %>, attrs, hash_password: false, validate_email: false)
   end
 
   ## Settings
@@ -97,7 +97,7 @@
 
   """
   def change_<%= schema.singular %>_email(<%= schema.singular %>, attrs \\ %{}) do
-    <%= inspect schema.alias %>.email_changeset(<%= schema.singular %>, attrs)
+    <%= inspect schema.alias %>.email_changeset(<%= schema.singular %>, attrs, validate_email: false)
   end
 
   @doc """
@@ -149,12 +149,12 @@
     |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [context]))
   end
 
-  @doc """
+  @doc ~S"""
   Delivers the update email instructions to the given <%= schema.singular %>.
 
   ## Examples
 
-      iex> deliver_<%= schema.singular %>_update_email_instructions(<%= schema.singular %>, current_email, &Routes.<%= schema.singular %>_update_email_url(conn, :edit, &1))
+      iex> deliver_<%= schema.singular %>_update_email_instructions(<%= schema.singular %>, current_email, &url(~p"<%= schema.route_prefix %>/settings/confirm_email/#{&1})")
       {:ok, %{to: ..., body: ...}}
 
   """
@@ -236,15 +236,15 @@
 
   ## Confirmation
 
-  @doc """
+  @doc ~S"""
   Delivers the confirmation email instructions to the given <%= schema.singular %>.
 
   ## Examples
 
-      iex> deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, &Routes.<%= schema.singular %>_confirmation_url(conn, :edit, &1))
+      iex> deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, &url(~p"<%= schema.route_prefix %>/confirm/#{&1}"))
       {:ok, %{to: ..., body: ...}}
 
-      iex> deliver_<%= schema.singular %>_confirmation_instructions(confirmed_<%= schema.singular %>, &Routes.<%= schema.singular %>_confirmation_url(conn, :edit, &1))
+      iex> deliver_<%= schema.singular %>_confirmation_instructions(confirmed_<%= schema.singular %>, &url(~p"<%= schema.route_prefix %>/confirm/#{&1}"))
       {:error, :already_confirmed}
 
   """
@@ -283,12 +283,12 @@
 
   ## Reset password
 
-  @doc """
+  @doc ~S"""
   Delivers the reset password email to the given <%= schema.singular %>.
 
   ## Examples
 
-      iex> deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, &Routes.<%= schema.singular %>_reset_password_url(conn, :edit, &1))
+      iex> deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, &url(~p"<%= schema.route_prefix %>/reset_password/#{&1}"))
       {:ok, %{to: ..., body: ...}}
 
   """

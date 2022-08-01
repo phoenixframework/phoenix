@@ -9,40 +9,40 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
   end
 
-  describe "GET <%= web_path_prefix %>/<%= schema.plural %>/reset_password" do
+  describe "GET <%= schema.route_prefix %>/reset_password" do
     test "renders the reset password page", %{conn: conn} do
-      conn = get(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :new))
+      conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password")
       response = html_response(conn, 200)
       assert response =~ "<h1>Forgot your password?</h1>"
     end
   end
 
-  describe "POST <%= web_path_prefix %>/<%= schema.plural %>/reset_password" do
+  describe "POST <%= schema.route_prefix %>/reset_password" do
     @tag :capture_log
     test "sends a new reset password token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
-        post(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :create), %{
+        post(conn, ~p"<%= schema.route_prefix %>/reset_password", %{
           "<%= schema.singular %>" => %{"email" => <%= schema.singular %>.email}
         })
 
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == ~p"/"
       assert get_flash(conn, :info) =~ "If your email is in our system"
       assert Repo.get_by!(<%= inspect context.alias %>.<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id).context == "reset_password"
     end
 
     test "does not send reset password token if email is invalid", %{conn: conn} do
       conn =
-        post(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :create), %{
+        post(conn, ~p"<%= schema.route_prefix %>/reset_password", %{
           "<%= schema.singular %>" => %{"email" => "unknown@example.com"}
         })
 
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == ~p"/"
       assert get_flash(conn, :info) =~ "If your email is in our system"
       assert Repo.all(<%= inspect context.alias %>.<%= inspect schema.alias %>Token) == []
     end
   end
 
-  describe "GET <%= web_path_prefix %>/<%= schema.plural %>/reset_password/:token" do
+  describe "GET <%= schema.route_prefix %>/reset_password/:token" do
     setup %{<%= schema.singular %>: <%= schema.singular %>} do
       token =
         extract_<%= schema.singular %>_token(fn url ->
@@ -53,18 +53,18 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "renders reset password", %{conn: conn, token: token} do
-      conn = get(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
+      conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
       assert html_response(conn, 200) =~ "<h1>Reset password</h1>"
     end
 
     test "does not render reset password with invalid token", %{conn: conn} do
-      conn = get(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, "oops"))
-      assert redirected_to(conn) == "/"
+      conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password/oops")
+      assert redirected_to(conn) == ~p"/"
       assert get_flash(conn, :error) =~ "Reset password link is invalid or it has expired"
     end
   end
 
-  describe "PUT <%= web_path_prefix %>/<%= schema.plural %>/reset_password/:token" do
+  describe "PUT <%= schema.route_prefix %>/reset_password/:token" do
     setup %{<%= schema.singular %>: <%= schema.singular %>} do
       token =
         extract_<%= schema.singular %>_token(fn url ->
@@ -76,14 +76,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "resets password once", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>, token: token} do
       conn =
-        put(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :update, token), %{
+        put(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}", %{
           "<%= schema.singular %>" => %{
             "password" => "new valid password",
             "password_confirmation" => "new valid password"
           }
         })
 
-      assert redirected_to(conn) == Routes.<%= schema.route_helper %>_session_path(conn, :new)
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log_in"
       refute get_session(conn, :<%= schema.singular %>_token)
       assert get_flash(conn, :info) =~ "Password reset successfully"
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, "new valid password")
@@ -91,7 +91,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "does not reset password on invalid data", %{conn: conn, token: token} do
       conn =
-        put(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :update, token), %{
+        put(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}", %{
           "<%= schema.singular %>" => %{
             "password" => "too short",
             "password_confirmation" => "does not match"
@@ -105,8 +105,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "does not reset password with invalid token", %{conn: conn} do
-      conn = put(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :update, "oops"))
-      assert redirected_to(conn) == "/"
+      conn = put(conn, ~p"<%= schema.route_prefix %>/reset_password/oops")
+      assert redirected_to(conn) == ~p"/"
       assert get_flash(conn, :error) =~ "Reset password link is invalid or it has expired"
     end
   end

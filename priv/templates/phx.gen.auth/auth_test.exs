@@ -22,7 +22,7 @@ defmodule <%= inspect auth_module %>Test do
       conn = <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(conn, <%= schema.singular %>)
       assert token = get_session(conn, :<%= schema.singular %>_token)
       assert get_session(conn, :live_socket_id) == "<%= schema.plural %>_sessions:#{Base.url_encode64(token)}"
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == ~p"/"
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token)
     end
 
@@ -60,7 +60,7 @@ defmodule <%= inspect auth_module %>Test do
       refute get_session(conn, :<%= schema.singular %>_token)
       refute conn.cookies[@remember_me_cookie]
       assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == ~p"/"
       refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
     end
 
@@ -79,7 +79,7 @@ defmodule <%= inspect auth_module %>Test do
       conn = conn |> fetch_cookies() |> <%= inspect schema.alias %>Auth.log_out_<%= schema.singular %>()
       refute get_session(conn, :<%= schema.singular %>_token)
       assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == ~p"/"
     end
   end
 
@@ -128,7 +128,7 @@ defmodule <%= inspect auth_module %>Test do
       assert updated_socket.assigns.current_<%= schema.singular %>.id == <%= schema.singular %>.id
     end
 
-    test "assigns nil to current_user assign if there isn't a valid <%= schema.singular %>_token ", %{conn: conn} do
+    test "assigns nil to current_ <%= schema.singular %> assign if there isn't a valid <%= schema.singular %>_token ", %{conn: conn} do
       <%= schema.singular %>_token = "invalid_token"
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
@@ -138,7 +138,7 @@ defmodule <%= inspect auth_module %>Test do
       assert updated_socket.assigns.current_<%= schema.singular %> == nil
     end
 
-    test "assigns nil to current_user assign if there isn't a <%= schema.singular %>_token", %{conn: conn} do
+    test "assigns nil to current_ <%= schema.singular %> assign if there isn't a <%= schema.singular %>_token", %{conn: conn} do
       session = conn |> get_session()
 
       {:cont, updated_socket} =
@@ -162,16 +162,53 @@ defmodule <%= inspect auth_module %>Test do
     test "redirects to login page if there isn't a valid <%= schema.singular %>_token ", %{conn: conn} do
       <%= schema.singular %>_token = "invalid_token"
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
-      socket = %Phoenix.LiveView.Socket{endpoint: <%= inspect context.web_module %>.Endpoint}
+
+      socket = %LiveView.Socket{
+        endpoint: <%= inspect context.web_module %>.Endpoint,
+        assigns: %{__changed__: %{}, flash: %{}}
+      }
+
       {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_<%= schema.singular %> == nil
     end
 
     test "redirects to login page if there isn't a <%= schema.singular %>_token ", %{conn: conn} do
       session = conn |> get_session()
-      socket = %Phoenix.LiveView.Socket{endpoint: <%= inspect context.web_module %>.Endpoint}
+
+      socket = %LiveView.Socket{
+        endpoint: <%= inspect context.web_module %>.Endpoint,
+        assigns: %{__changed__: %{}, flash: %{}}
+      }
+
       {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_<%= schema.singular %> == nil
+    end
+  end
+
+  describe "on_mount: :redirect_if_<%= schema.singular %>_is_authenticated" do
+    test "redirects if there is an authenticated  <%= schema.singular %> ", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
+
+      assert {:halt, _updated_socket} =
+               <%= inspect schema.alias %>Auth.on_mount(
+                 :redirect_if_<%= schema.singular %>_is_authenticated,
+                 %{},
+                 session,
+                 %LiveView.Socket{}
+               )
+    end
+
+    test "Don't redirect is there is no authenticated <%= schema.singular %>", %{conn: conn} do
+      session = conn |> get_session()
+
+      assert {:cont, _updated_socket} =
+               <%= inspect schema.alias %>Auth.on_mount(
+                 :redirect_if_<%= schema.singular %>_is_authenticated,
+                 %{},
+                 session,
+                 %LiveView.Socket{}
+               )
     end
   end
 
@@ -179,7 +216,7 @@ defmodule <%= inspect auth_module %>Test do
     test "redirects if <%= schema.singular %> is authenticated", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn = conn |> assign(:current_<%= schema.singular %>, <%= schema.singular %>) |> <%= inspect schema.alias %>Auth.redirect_if_<%= schema.singular %>_is_authenticated([])
       assert conn.halted
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == ~p"/"
     end
 
     test "does not redirect if <%= schema.singular %> is not authenticated", %{conn: conn} do
@@ -193,7 +230,7 @@ defmodule <%= inspect auth_module %>Test do
     test "redirects if <%= schema.singular %> is not authenticated", %{conn: conn} do
       conn = conn |> fetch_flash() |> <%= inspect schema.alias %>Auth.require_authenticated_<%= schema.singular %>([])
       assert conn.halted
-      assert redirected_to(conn) == Routes.<%= schema.route_helper %>_session_path(conn, :new)
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log_in"
       assert get_flash(conn, :error) == "You must log in to access this page."
     end
 

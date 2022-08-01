@@ -1,12 +1,12 @@
 <h1>Confirm account</h1>
 
-<.form let={_f} for={:<%= schema.singular %>} action={Routes.<%= schema.route_helper %>_confirmation_path(@conn, :update, @token)}>
+<.form :let={_f} for={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirmation/#{@token}"}>
   <div>
     <%%= submit "Confirm my account" %>
   </div>
 </.form>
 
 <p>
-  <.link href={Routes.<%= schema.route_helper %>_registration_path(@conn, :new)}>Register</.link> |
-  <.link href={Routes.<%= schema.route_helper %>_session_path(@conn, :new)}>Log in</.link>
+  <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
+  <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
 </p>

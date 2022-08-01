@@ -15,7 +15,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     with {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} <- <%= inspect context.alias %>.create_<%= schema.singular %>(<%= schema.singular %>_params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", ~p"<%= schema.api_route_path %>/#{<%= schema.singular %>}")
+      |> put_resp_header("location", ~p"<%= schema.api_route_prefix %>/#{<%= schema.singular %>}")
       |> render("show.json", <%= schema.singular %>: <%= schema.singular %>)
     end
   end

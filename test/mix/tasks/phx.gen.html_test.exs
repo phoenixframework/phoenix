@@ -128,7 +128,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       end
 
       assert_file "lib/phoenix_web/templates/post/form.html.heex", fn file ->
-        assert file =~ ~s(<.form let={f} for={@changeset} action={@action}>)
+        assert file =~ ~s(<.form :let={f} for={@changeset} action={@action}>)
         assert file =~ ~s(<%= text_input f, :title %>)
         assert file =~ ~s(<%= number_input f, :votes %>)
         assert file =~ ~s(<%= number_input f, :cost, step: "any" %>)

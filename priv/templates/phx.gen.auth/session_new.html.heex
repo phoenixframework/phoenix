@@ -1,6 +1,6 @@
 <h1>Log in</h1>
 
-<.form let={f} for={@conn} action={Routes.<%= schema.route_helper %>_session_path(@conn, :create)} as={:<%= schema.singular %>}>
+<.form :let={f} for={@conn} action={~p"<%= schema.route_prefix %>/log_in"} as={:<%= schema.singular %>}>
   <%%= if @error_message do %>
     <div class="alert alert-danger">
       <p><%%= @error_message %></p>
@@ -22,6 +22,6 @@
 </.form>
 
 <p>
-  <.link href={Routes.<%= schema.route_helper %>_registration_path(@conn, :new)}>Register</.link> |
-  <.link href={Routes.<%= schema.route_helper %>_reset_password_path(@conn, :new)}>Forgot your password?</.link>
+  <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
+  <.link href={~p"<%= schema.route_prefix %>/reset_password"}>Forgot your password?</.link>
 </p>
