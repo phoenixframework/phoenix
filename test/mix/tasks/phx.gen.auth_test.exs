@@ -192,16 +192,16 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/templates/layout/root.html.heex", fn file ->
         assert file =~
-                 ~S|<.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link>|
+                 ~S|<.link href={~p"/users/settings"}>Settings</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link>|
+                 ~S|<.link href={~p"/users/log_out"} method="delete">Log out</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link>|
+                 ~S|<.link href={~p"/users/register"}>Register</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link>|
+                 ~S|<.link href={~p"/users/log_in"}>Log in</.link>|
       end)
 
       assert_file("test/support/conn_case.ex", fn file ->
@@ -294,7 +294,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                      on_mount: [{MyAppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
                      live "/users/register", UserRegistrationLive, :new
                      live "/users/log_in", UserLoginLive, :new
-                     live "/users/forgot_password", UserForgotPasswordLive, :new
+                     live "/users/reset_password", UserForgotPasswordLive, :new
                      live "/users/reset_password/:token", UserResetPasswordLive, :edit
                    end
 
@@ -315,24 +315,27 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    pipe_through [:browser]
 
                    delete "/users/log_out", UserSessionController, :delete
-                   live "/users/confirm/:token", UserConfirmationLive, :edit
-                   live "/users/confirm", UserConfirmationInstructionsLive, :new
+                   live_session :current_user,
+                     on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
+                     live "/users/confirm/:token", UserConfirmationLive, :edit
+                     live "/users/confirm", UserConfirmationInstructionsLive, :new
+                   end
                  end
                """
       end)
 
       assert_file("lib/my_app_web/templates/layout/root.html.heex", fn file ->
         assert file =~
-                 ~S|<.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link>|
+                 ~S|<.link href={~p"/users/settings"}>Settings</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link>|
+                 ~S|<.link href={~p"/users/log_out"} method="delete">Log out</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link>|
+                 ~S|<.link href={~p"/users/register"}>Register</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link>|
+                 ~S|<.link href={~p"/users/log_in"}>Log in</.link>|
       end)
 
       assert_file("test/support/conn_case.ex", fn file ->
@@ -362,16 +365,16 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/templates/layout/root.html.heex", fn file ->
         assert file =~
-                 ~S|<.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link>|
+                 ~S|<.link href={~p"/users/settings"}>Settings</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link>|
+                 ~S|<.link href={~p"/users/log_out"} method="delete">Log out</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link>|
+                 ~S|<.link href={~p"/users/register"}>Register</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_login_path(MyAppWeb.Endpoint, :new)}>Log in</.link>|
+                 ~S|<.link href={~p"/users/log_in"}>Log in</.link>|
       end)
 
       assert_file("lib/my_app_web/router.ex", fn file ->
@@ -388,7 +391,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                      on_mount: [{MyAppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
                      live "/users/register", UserRegistrationLive, :new
                      live "/users/log_in", UserLoginLive, :new
-                     live "/users/forgot_password", UserForgotPasswordLive, :new
+                     live "/users/reset_password", UserForgotPasswordLive, :new
                      live "/users/reset_password/:token", UserResetPasswordLive, :edit
                    end
 
@@ -409,8 +412,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    pipe_through [:browser]
 
                    delete "/users/log_out", UserSessionController, :delete
-                   live "/users/confirm/:token", UserConfirmationLive, :edit
-                   live "/users/confirm", UserConfirmationInstructionsLive, :new
+                   live_session :current_user,
+                     on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
+                     live "/users/confirm/:token", UserConfirmationLive, :edit
+                     live "/users/confirm", UserConfirmationInstructionsLive, :new
+                   end
                  end
                """
       end)
@@ -427,16 +433,16 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/templates/layout/root.html.heex", fn file ->
         assert file =~
-                 ~S|<.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link>|
+                 ~S|<.link href={~p"/users/settings"}>Settings</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link>|
+                 ~S|<.link href={~p"/users/log_out"} method="delete">Log out</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link>|
+                 ~S|<.link href={~p"/users/register"}>Register</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link>|
+                 ~S|<.link href={~p"/users/log_in"}>Log in</.link>|
       end)
 
       assert_file("lib/my_app_web/router.ex", fn file ->
@@ -517,13 +523,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/templates/warehouse/user_confirmation/new.html.heex", fn file ->
         assert file =~
-                 ~S|<.form :let={f} for={:user} action={Routes.warehouse_user_confirmation_path(@conn, :create)}>|
+                 ~S|<.form :let={f} for={:user} action={~p"/warehouse/users/confirm"}>|
 
         assert file =~
-                 ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+                 ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.warehouse_user_session_path(@conn, :new)}>Log in</.link>|
+                 ~S|<.link href={~p"/warehouse/users/log_in"}>Log in</.link>|
       end)
 
       assert_file(
@@ -542,16 +548,16 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/templates/layout/root.html.heex", fn file ->
         assert file =~
-                 ~S|<.link href={Routes.warehouse_user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link>|
+                 ~S|<.link href={~p"/warehouse/users/settings"}>Settings</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.warehouse_user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link>|
+                 ~S|<.link href={~p"/warehouse/users/log_out"} method="delete">Log out</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.warehouse_user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link>|
+                 ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.warehouse_user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link>|
+                 ~S|<.link href={~p"/warehouse/users/log_in"}>Log in</.link>|
       end)
 
       assert_file(
@@ -583,13 +589,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         "lib/my_app_web/templates/warehouse/user_reset_password/edit.html.heex",
         fn file ->
           assert file =~
-                   ~S|<.form :let={f} for={@changeset} action={Routes.warehouse_user_reset_password_path(@conn, :update, @token)}>|
+                   ~S|<.form :let={f} for={@changeset} action={~p"/warehouse/users/reset_password/#{@token}"}>|
 
           assert file =~
-                   ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+                   ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
 
           assert file =~
-                   ~S|<.link href={Routes.warehouse_user_session_path(@conn, :new)}>Log in</.link>|
+                   ~S|<.link href={~p"/warehouse/users/log_in"}>Log in</.link>|
         end
       )
 
@@ -597,13 +603,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         "lib/my_app_web/templates/warehouse/user_reset_password/new.html.heex",
         fn file ->
           assert file =~
-                   ~S|<.form :let={f} for={:user} action={Routes.warehouse_user_reset_password_path(@conn, :create)}>|
+                   ~S|<.form :let={f} for={:user} action={~p"/warehouse/users/reset_password"}>|
 
           assert file =~
-                   ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+                   ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
 
           assert file =~
-                   ~S|<.link href={Routes.warehouse_user_session_path(@conn, :new)}>Log in</.link>|
+                   ~S|<.link href={~p"/warehouse/users/log_in"}>Log in</.link>|
         end
       )
 
@@ -624,13 +630,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/templates/warehouse/user_session/new.html.heex", fn file ->
         assert file =~
-                 ~S|<.form :let={f} for={@conn} action={Routes.warehouse_user_session_path(@conn, :create)} as={:user}>|
+                 ~S|<.form :let={f} for={@conn} action={~p"/warehouse/users/log_in"} as={:user}>|
 
         assert file =~
-                 ~S|<.link href={Routes.warehouse_user_registration_path(@conn, :new)}>Register</.link>|
+                 ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
 
         assert file =~
-                 ~S|<.link href={Routes.warehouse_user_reset_password_path(@conn, :new)}>Forgot your password?</.link>|
+                 ~S|<.link href={~p"/warehouse/users/reset_password"}>Forgot your password?</.link>|
       end)
 
       assert_file(
@@ -650,10 +656,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/templates/warehouse/user_settings/edit.html.heex", fn file ->
         assert file =~
-                 ~S|<.form :let={f} for={@email_changeset} action={Routes.warehouse_user_settings_path(@conn, :update)} id="update_email">|
+                 ~S|<.form :let={f} for={@email_changeset} action={~p"/warehouse/users/settings"} id="update_email">|
 
         assert file =~
-                 ~S|<.form :let={f} for={@password_changeset} action={Routes.warehouse_user_settings_path(@conn, :update)} id="update_password">|
+                 ~S|<.form :let={f} for={@password_changeset} action={~p"/warehouse/users/settings"} id="update_password">|
       end)
 
       assert_file("lib/my_app_web/views/warehouse/user_settings_view.ex", fn file ->
@@ -1363,11 +1369,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
             <ul>
               <%= if @current_user do %>
                 <li><%= @current_user.email %></li>
-                <li><.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link></li>
-                <li><.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
+                <li><.link href={~p"/users/settings"}>Settings</.link></li>
+                <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
               <% else %>
-                <li><.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link></li>
-                <li><.link href={Routes.user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link></li>
+                <li><.link href={~p"/users/register"}>Register</.link></li>
+                <li><.link href={~p"/users/log_in"}>Log in</.link></li>
               <% end %>
             </ul>
         """
@@ -1397,11 +1403,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
             <ul>
               <%= if @current_user do %>
                 <li><%= @current_user.email %></li>
-                <li><.link href={Routes.user_settings_path(MyAppWeb.Endpoint, :edit)}>Settings</.link></li>
-                <li><.link href={Routes.user_session_path(MyAppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
+                <li><.link href={~p"/users/settings"}>Settings</.link></li>
+                <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
               <% else %>
-                <li><.link href={Routes.user_registration_path(MyAppWeb.Endpoint, :new)}>Register</.link></li>
-                <li><.link href={Routes.user_session_path(MyAppWeb.Endpoint, :new)}>Log in</.link></li>
+                <li><.link href={~p"/users/register"}>Register</.link></li>
+                <li><.link href={~p"/users/log_in"}>Log in</.link></li>
               <% end %>
             </ul>
 

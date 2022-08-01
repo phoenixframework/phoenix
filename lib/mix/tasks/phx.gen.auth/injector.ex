@@ -135,21 +135,20 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Injects a menu in the application layout
   """
-  def app_layout_menu_inject(%Schema{} = schema, template_str, web_mod) do
+  def app_layout_menu_inject(%Schema{} = schema, template_str) do
     with {:error, :unable_to_inject} <-
-           app_layout_menu_inject_at_end_of_nav_tag(template_str, schema, web_mod),
+           app_layout_menu_inject_at_end_of_nav_tag(template_str, schema),
          {:error, :unable_to_inject} <-
-           app_layout_menu_inject_after_opening_body_tag(template_str, schema, web_mod) do
+           app_layout_menu_inject_after_opening_body_tag(template_str, schema) do
       {:error, :unable_to_inject}
     end
   end
 
   @doc """
-  Instructions to provide the user when `app_layout_menu_inject/3` fails.
+  Instructions to provide the user when `app_layout_menu_inject/2` fails.
   """
-  @spec app_layout_menu_help_text(String.t(), schema, web_module :: atom) :: String.t()
-  def app_layout_menu_help_text(file_path, %Schema{} = schema, web_module) do
-    {_dup_check, code} = app_layout_menu_code_to_inject(schema, web_module)
+  def app_layout_menu_help_text(file_path, %Schema{} = schema) do
+    {_dup_check, code} = app_layout_menu_code_to_inject(schema)
     """
     Add the following #{schema.singular} menu items to your #{Path.relative_to_cwd(file_path)} layout file:
 
@@ -160,19 +159,18 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Menu code to inject into the application layout template.
   """
-  def app_layout_menu_code_to_inject(%Schema{} = schema, web_mod, padding \\ 4, newline \\ "\n") do
-    endpoint = inspect(Module.concat(web_mod, "Endpoint"))
-    already_injected_str = "#{schema.route_helper}_#{schema.login_path}"
+  def app_layout_menu_code_to_inject(%Schema{} = schema, padding \\ 4, newline \\ "\n") do
+    already_injected_str = "#{schema.route_prefix}/log_in"
 
     template = """
     <ul>
       <%= if @current_#{schema.singular} do %>
         <li><%= @current_#{schema.singular}.email %></li>
-        <li><.link href={Routes.#{schema.route_helper}_settings_path(#{endpoint}, :edit)}>Settings</.link></li>
-        <li><.link href={Routes.#{schema.route_helper}_session_path(#{endpoint}, :delete)} method="delete">Log out</.link></li>
+        <li><.link href={~p"#{schema.route_prefix}/settings"}>Settings</.link></li>
+        <li><.link href={~p"#{schema.route_prefix}/log_out"} method="delete">Log out</.link></li>
       <% else %>
-        <li><.link href={Routes.#{schema.route_helper}_registration_path(#{endpoint}, :new)}>Register</.link></li>
-        <li><.link href={Routes.#{schema.route_helper}_#{schema.login_path}(#{endpoint}, :new)}>Log in</.link></li>
+        <li><.link href={~p"#{schema.route_prefix}/register"}>Register</.link></li>
+        <li><.link href={~p"#{schema.route_prefix}/log_in"}>Log in</.link></li>
       <% end %>
     </ul>\
     """
@@ -191,9 +189,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     {String.length(padding), newline}
   end
 
-  defp app_layout_menu_inject_at_end_of_nav_tag(file, schema, web_mod) do
+  defp app_layout_menu_inject_at_end_of_nav_tag(file, schema) do
     {padding, newline} = formatting_info(file, "<\/nav>")
-    {dup_check, code} = app_layout_menu_code_to_inject(schema, web_mod, padding, newline)
+    {dup_check, code} = app_layout_menu_code_to_inject(schema, padding, newline)
 
     inject_unless_contains(
       file,
@@ -203,10 +201,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     )
   end
 
-  defp app_layout_menu_inject_after_opening_body_tag(file, schema, web_mod) do
+  defp app_layout_menu_inject_after_opening_body_tag(file, schema) do
     anchor_line = "<body"
     {padding, newline} = formatting_info(file, anchor_line)
-    {dup_check, code} = app_layout_menu_code_to_inject(schema, web_mod, padding, newline)
+    {dup_check, code} = app_layout_menu_code_to_inject(schema, padding, newline)
 
     inject_unless_contains(
       file,

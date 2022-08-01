@@ -646,7 +646,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       </html>
       """
 
-      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template, AppWeb)
+      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template)
 
       assert template_str ==
                """
@@ -668,11 +668,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          <ul>
                            <%= if @current_user do %>
                              <li><%= @current_user.email %></li>
-                             <li><.link href={Routes.user_settings_path(AppWeb.Endpoint, :edit)}>Settings</.link></li>
-                             <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
+                             <li><.link href={~p"/users/settings"}>Settings</.link></li>
+                             <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
                            <% else %>
-                             <li><.link href={Routes.user_registration_path(AppWeb.Endpoint, :new)}>Register</.link></li>
-                             <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :new)}>Log in</.link></li>
+                             <li><.link href={~p"/users/register"}>Register</.link></li>
+                             <li><.link href={~p"/users/log_in"}>Log in</.link></li>
                            <% end %>
                          </ul>
                        </nav>
@@ -709,7 +709,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       </html>\r
       """
 
-      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template, AppWeb)
+      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template)
 
       assert template_str ==
                """
@@ -731,11 +731,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          <ul>\r
                            <%= if @current_user do %>\r
                              <li><%= @current_user.email %></li>\r
-                             <li><.link href={Routes.user_settings_path(AppWeb.Endpoint, :edit)}>Settings</.link></li>\r
-                             <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>\r
+                             <li><.link href={~p"/users/settings"}>Settings</.link></li>\r
+                             <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>\r
                            <% else %>\r
-                             <li><.link href={Routes.user_registration_path(AppWeb.Endpoint, :new)}>Register</.link></li>\r
-                             <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :new)}>Log in</.link></li>\r
+                             <li><.link href={~p"/users/register"}>Register</.link></li>\r
+                             <li><.link href={~p"/users/log_in"}>Log in</.link></li>\r
                            <% end %>\r
                          </ul>\r
                        </nav>\r
@@ -765,7 +765,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       </html>
       """
 
-      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template, AppWeb)
+      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template)
 
       assert template_str ==
                """
@@ -778,11 +778,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <ul>
                      <%= if @current_user do %>
                        <li><%= @current_user.email %></li>
-                       <li><.link href={Routes.user_settings_path(AppWeb.Endpoint, :edit)}>Settings</.link></li>
-                       <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
+                       <li><.link href={~p"/users/settings"}>Settings</.link></li>
+                       <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
                      <% else %>
-                       <li><.link href={Routes.user_registration_path(AppWeb.Endpoint, :new)}>Register</.link></li>
-                       <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :new)}>Log in</.link></li>
+                       <li><.link href={~p"/users/register"}>Register</.link></li>
+                       <li><.link href={~p"/users/log_in"}>Log in</.link></li>
                      <% end %>
                    </ul>
                    <main class="container">
@@ -814,7 +814,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       </html>\r
       """
 
-      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template, AppWeb)
+      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template)
 
       assert template_str ==
                """
@@ -827,11 +827,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <ul>\r
                      <%= if @current_user do %>\r
                        <li><%= @current_user.email %></li>\r
-                       <li><.link href={Routes.user_settings_path(AppWeb.Endpoint, :edit)}>Settings</.link></li>\r
-                       <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>\r
+                       <li><.link href={~p"/users/settings"}>Settings</.link></li>\r
+                       <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>\r
                      <% else %>\r
-                       <li><.link href={Routes.user_registration_path(AppWeb.Endpoint, :new)}>Register</.link></li>\r
-                       <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :new)}>Log in</.link></li>\r
+                       <li><.link href={~p"/users/register"}>Register</.link></li>\r
+                       <li><.link href={~p"/users/log_in"}>Log in</.link></li>\r
                      <% end %>\r
                    </ul>\r
                    <main class="container">\r
@@ -858,11 +858,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
             <ul>
               <%= if @current_user do %>
                 <li><%= @current_user.email %></li>
-                <li><.link href={Routes.user_settings_path(AppWeb.Endpoint, :edit)}>Settings</.link></li>
-                <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :delete)} method="delete">Log out</.link></li>
+                <li><.link href={~p"/users/settings"}>Settings</.link></li>
+                <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
               <% else %>
-                <li><.link href={Routes.user_registration_path(AppWeb.Endpoint, :new)}>Register</.link></li>
-                <li><.link href={Routes.user_session_path(AppWeb.Endpoint, :new)}>Log in</.link></li>
+                <li><.link href={~p"/users/register"}>Register</.link></li>
+                <li><.link href={~p"/users/log_in"}>Log in</.link></li>
               <% end %>
             </ul>
           </div>
@@ -875,12 +875,12 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       </html>
       """
 
-      assert :already_injected = Injector.app_layout_menu_inject(schema, template, AppWeb)
+      assert :already_injected = Injector.app_layout_menu_inject(schema, template)
     end
 
     test "returns {:error, :unable_to_inject} when the body tag isn't found" do
       schema = Schema.new("Accounts.User", "users", [], [])
-      assert {:error, :unable_to_inject} = Injector.app_layout_menu_inject(schema, "", AppWeb)
+      assert {:error, :unable_to_inject} = Injector.app_layout_menu_inject(schema, "")
     end
   end
 
@@ -889,7 +889,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       schema = Schema.new("Accounts.User", "users", [], [])
       file_path = Path.expand("foo.ex")
 
-      assert Injector.app_layout_menu_help_text(file_path, schema, AppWeb) =~
+      assert Injector.app_layout_menu_help_text(file_path, schema) =~
                "Add the following user menu"
     end
   end

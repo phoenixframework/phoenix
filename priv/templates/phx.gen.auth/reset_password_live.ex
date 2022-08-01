@@ -27,8 +27,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     </.form>
 
     <p>
-      <.link href={Routes.<%= schema.route_helper %>_registration_path(@socket, :new)}>Register</.link> |
-      <.link href={Routes.<%= schema.route_helper %>_login_path(@socket, :new)}>Log in</.link>
+      <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
+      <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
     </p>
     """
   end
@@ -56,7 +56,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "Password reset successfully.")
-         |> redirect(to: Routes.<%= schema.route_helper %>_login_path(socket, :new))}
+         |> redirect(to: ~p"<%= schema.route_prefix %>/log_in")}
 
       {:error, changeset} ->
         {:noreply, assign(socket, :changeset, Map.put(changeset, :action, :insert))}
@@ -74,7 +74,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     else
       socket
       |> put_flash(:error, "Reset password link is invalid or it has expired.")
-      |> redirect(to: "/")
+      |> redirect(to: ~p"/")
     end
   end
 end

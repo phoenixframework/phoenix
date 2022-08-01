@@ -19,23 +19,22 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "Reset password page" do
     test "renders reset password with valid token", %{conn: conn, token: token} do
-      {:ok, _lv, html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
+      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
 
       assert html =~ "<h1>Reset password</h1>"
     end
 
     test "does not render reset password with invalid token", %{conn: conn} do
-      {:error, {:redirect, redirect}} =
-        live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, "invalid"))
+      {:error, {:redirect, to}} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/invalid")
 
-      assert redirect == %{
+      assert to == %{
                flash: %{"error" => "Reset password link is invalid or it has expired."},
-               to: "/"
+               to: ~p"/"
              }
     end
 
     test "renders errors for invalid data", %{conn: conn, token: token} do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
 
       result =
         lv
@@ -51,7 +50,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "Reset password" do
     test "resets password once", %{conn: conn, token: token, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
 
       {:ok, conn} =
         lv
@@ -62,7 +61,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           }
         )
         |> render_submit()
-        |> follow_redirect(conn, Routes.<%= schema.route_helper %>_login_path(conn, :new))
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log_in")
 
       refute get_session(conn, :<%= schema.singular %>_token)
       assert get_flash(conn, :info) =~ "Password reset successfully"
@@ -70,7 +69,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "does not reset password on invalid data", %{conn: conn, token: token} do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
 
       result =
         lv
@@ -90,13 +89,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "Reset password navigation" do
     test "redirects to login page when the Log in button is clicked", %{conn: conn, token: token} do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
 
       {:ok, conn} =
         lv
         |> element(~s{a:fl-contains('Log in')})
         |> render_click()
-        |> follow_redirect(conn, "/<%= schema.plural %>/log_in")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log_in")
 
       assert conn.resp_body =~ "<h1>Log in</h1>"
     end
@@ -105,13 +104,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn: conn,
       token: token
     } do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_reset_password_path(conn, :edit, token))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
 
       {:ok, conn} =
         lv
         |> element(~s{a:fl-contains('Register')})
         |> render_click()
-        |> follow_redirect(conn, "/<%= schema.plural %>/register")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/register")
 
       assert conn.resp_body =~ "<h1>Register</h1>"
     end

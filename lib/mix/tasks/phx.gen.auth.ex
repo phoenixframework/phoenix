@@ -467,7 +467,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     schema = context.schema
 
     if file_path = get_layout_html_path(context) do
-      case Injector.app_layout_menu_inject(schema, File.read!(file_path), context.web_module) do
+      case Injector.app_layout_menu_inject(schema, File.read!(file_path)) do
         {:ok, new_content} ->
           print_injecting(file_path)
           File.write!(file_path, new_content)
@@ -478,11 +478,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         {:error, :unable_to_inject} ->
           Mix.shell().info("""
 
-          #{Injector.app_layout_menu_help_text(file_path, schema, context.web_module)}
+          #{Injector.app_layout_menu_help_text(file_path, schema)}
           """)
       end
     else
-      {_dup, inject} = Injector.app_layout_menu_code_to_inject(schema, context.web_module)
+      {_dup, inject} = Injector.app_layout_menu_code_to_inject(schema)
 
       missing =
         context

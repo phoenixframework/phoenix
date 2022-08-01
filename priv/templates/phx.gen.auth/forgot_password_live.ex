@@ -16,8 +16,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </div>
     </.form>
 
-    <.link href={Routes.<%= schema.route_helper %>_registration_path(@socket, :new)}>Register</.link> |
-    <.link href={Routes.<%= schema.route_helper %>_login_path(@socket, :new)}>Log in</.link>
+    <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
+    <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
     """
   end
 
@@ -29,7 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email) do
       <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(
         <%= schema.singular %>,
-        &Routes.<%= schema.route_helper %>_reset_password_url(socket, :edit, &1)
+        &url(~p"<%= schema.route_prefix %>/reset_password/#{&1}")
       )
     end
 

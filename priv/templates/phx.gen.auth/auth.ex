@@ -1,10 +1,11 @@
 defmodule <%= inspect auth_module %> do
+  use <%= inspect context.web_module %>, :verified_routes
+
   import Plug.Conn
   import Phoenix.Controller
 
   alias Phoenix.LiveView
   alias <%= inspect context.module %>
-  alias <%= inspect context.web_module %>.Router.Helpers, as: Routes
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -156,7 +157,7 @@ defmodule <%= inspect auth_module %> do
       socket =
         socket
         |> LiveView.put_flash(:error, "You must log in to access this page.")
-        |> LiveView.redirect(to: Routes.<%= schema.route_helper %>_<%= schema.login_path %>(socket, :new))
+        |> LiveView.redirect(to: ~p"<%= schema.route_prefix %>/log_in")
 
       {:halt, socket}
     end
@@ -210,7 +211,7 @@ defmodule <%= inspect auth_module %> do
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
-      |> redirect(to: Routes.<%= schema.route_helper %>_<%= schema.login_path %>(conn, :new))
+      |> redirect(to: ~p"<%= schema.route_prefix %>/log_in")
       |> halt()
     end
   end
@@ -227,5 +228,5 @@ defmodule <%= inspect auth_module %> do
 
   defp maybe_store_return_to(conn), do: conn
 
-  defp signed_in_path(_conn), do: "/"
+  defp signed_in_path(_conn), do: ~p"/"
 end

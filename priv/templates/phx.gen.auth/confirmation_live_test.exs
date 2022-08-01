@@ -13,7 +13,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "Confirm <%= schema.singular %>" do
     test "renders confirmation page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :edit, "some-token"))
+      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/some-token")
       assert html =~ "<h1>Confirm account</h1>"
     end
 
@@ -23,7 +23,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, url)
         end)
 
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :edit, token))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/#{token}")
 
       result =
         lv
@@ -38,7 +38,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert Repo.all(<%= inspect context.alias %>.<%= inspect schema.alias %>Token) == []
 
       # when not logged in
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :edit, token))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/#{token}")
 
       result =
         lv
@@ -53,7 +53,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, lv, _html} =
         build_conn()
         |> log_in_<%= schema.singular %>(<%= schema.singular %>)
-        |> live(Routes.<%= schema.route_helper %>_confirmation_path(conn, :edit, token))
+        |> live(~p"<%= schema.route_prefix %>/confirm/#{token}")
 
       result =
         lv
@@ -66,13 +66,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "does not confirm email with invalid token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_confirmation_path(conn, :edit, "invalid-token"))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/invalid-token")
 
       {:ok, conn} =
         lv
         |> form("#confirmation_form")
         |> render_submit()
-        |> follow_redirect(conn, "/")
+        |> follow_redirect(conn, ~p"/")
 
       assert get_flash(conn, :error) =~ "User confirmation link is invalid or it has expired"
       refute <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).confirmed_at

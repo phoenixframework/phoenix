@@ -1,14 +1,14 @@
 <h1>Show <%= schema.human_singular %></h1>
 
 <%%= if @live_action in [:edit] do %>
-  <.modal return_to={~p"<%= schema.route_path %>/#{@<%= schema.singular %>}"}>
+  <.modal return_to={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}"}>
     <.live_component
       module={<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent}
       id={@<%= schema.singular %>.id}
       title={@page_title}
       action={@live_action}
       <%= schema.singular %>={@<%= schema.singular %>}
-      return_to={~p"<%= schema.route_path %>/#{@<%= schema.singular %>}"}
+      return_to={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}"}
     />
   </.modal>
 <%% end %>
@@ -22,5 +22,5 @@
 <% end %>
 </ul>
 
-<span><.link patch={~p"<%= schema.route_path %>/#{@<%= schema.singular %>}/show/edit"} class="button">Edit</.link></span> |
-<span><.link navigate={~p"<%= schema.route_path %>"}>Back</.link></span>
+<span><.link patch={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/show/edit"} class="button">Edit</.link></span> |
+<span><.link navigate={~p"<%= schema.route_prefix %>"}>Back</.link></span>

@@ -15,7 +15,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-submit="save"
       phx-change="validate"
       phx-trigger-action={@trigger_submit}
-      action={Routes.<%= schema.route_helper %>_session_path(@socket, :create, %{_action: "registered"})}
+      action={~p"<%= schema.route_prefix %>/log_in?_action=registered"}
       method="post"
       as={:<%= schema.singular %>}
     >
@@ -39,8 +39,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     </.form>
 
     <p>
-      <.link href={Routes.<%= schema.route_helper %>_login_path(@socket, :new)}>Log in</.link> |
-      <.link href={Routes.<%= schema.route_helper %>_forgot_password_path(@socket, :new)}>Forgot your password?</.link>
+      <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link> |
+      <.link href={~p"<%= schema.route_prefix %>/reset_password"}>Forgot your password?</.link>
     </p>
     """
   end
@@ -57,7 +57,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:ok, _} =
           <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(
             <%= schema.singular %>,
-            &Routes.<%= schema.route_helper %>_confirmation_url(socket, :edit, &1)
+            &url(~p"<%= schema.route_prefix %>/confirm/#{&1}")
           )
 
         changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_registration(<%= schema.singular %>)

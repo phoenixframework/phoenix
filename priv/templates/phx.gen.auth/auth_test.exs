@@ -22,7 +22,7 @@ defmodule <%= inspect auth_module %>Test do
       conn = <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(conn, <%= schema.singular %>)
       assert token = get_session(conn, :<%= schema.singular %>_token)
       assert get_session(conn, :live_socket_id) == "<%= schema.plural %>_sessions:#{Base.url_encode64(token)}"
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == ~p"/"
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token)
     end
 
@@ -60,7 +60,7 @@ defmodule <%= inspect auth_module %>Test do
       refute get_session(conn, :<%= schema.singular %>_token)
       refute conn.cookies[@remember_me_cookie]
       assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == ~p"/"
       refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
     end
 
@@ -79,7 +79,7 @@ defmodule <%= inspect auth_module %>Test do
       conn = conn |> fetch_cookies() |> <%= inspect schema.alias %>Auth.log_out_<%= schema.singular %>()
       refute get_session(conn, :<%= schema.singular %>_token)
       assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == ~p"/"
     end
   end
 
@@ -216,7 +216,7 @@ defmodule <%= inspect auth_module %>Test do
     test "redirects if <%= schema.singular %> is authenticated", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn = conn |> assign(:current_<%= schema.singular %>, <%= schema.singular %>) |> <%= inspect schema.alias %>Auth.redirect_if_<%= schema.singular %>_is_authenticated([])
       assert conn.halted
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == ~p"/"
     end
 
     test "does not redirect if <%= schema.singular %> is not authenticated", %{conn: conn} do
@@ -230,7 +230,7 @@ defmodule <%= inspect auth_module %>Test do
     test "redirects if <%= schema.singular %> is not authenticated", %{conn: conn} do
       conn = conn |> fetch_flash() |> <%= inspect schema.alias %>Auth.require_authenticated_<%= schema.singular %>([])
       assert conn.halted
-      assert redirected_to(conn) == Routes.<%= schema.route_helper %>_<%= schema.login_path %>(conn, :new)
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log_in"
       assert get_flash(conn, :error) == "You must log in to access this page."
     end
 

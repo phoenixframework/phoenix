@@ -1,5 +1,5 @@
 <h1>New <%= schema.human_singular %></h1>
 
-<%%= render "form.html", Map.put(assigns, :action, ~p"<%= schema.route_path %>") %>
+<%%= render "form.html", Map.put(assigns, :action, ~p"<%= schema.route_prefix %>") %>
 
-<span><.link href={~p"<%= schema.route_path %>"}>Back</.link></span>
+<span><.link href={~p"<%= schema.route_prefix %>"}>Back</.link></span>

@@ -6,7 +6,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "Log in page" do
     test "renders log in page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, Routes.<%= schema.route_helper %>_login_path(conn, :new))
+      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
 
       assert html =~ "<h1>Log in</h1>"
       assert html =~ "Register</a>"
@@ -17,7 +17,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       result =
         conn
         |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture())
-        |> live(Routes.<%= schema.route_helper %>_login_path(conn, :new))
+        |> live(~p"<%= schema.route_prefix %>/log_in")
         |> follow_redirect(conn, "/")
 
       assert {:ok, _conn} = result
@@ -29,20 +29,20 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       password = "123456789abcd"
       <%= schema.singular %> = <%= schema.singular %>_fixture(%{password: password})
 
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_login_path(conn, :new))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
 
       form =
         form(lv, "#login_form", <%= schema.singular %>: %{email: <%= schema.singular %>.email, password: password, remember_me: true})
 
       conn = submit_form(form, conn)
 
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == ~p"/"
     end
 
     test "redirects to login page with a flash error if there are no valid credentials", %{
       conn: conn
     } do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_login_path(conn, :new))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
 
       form =
         form(lv, "#login_form",
@@ -53,19 +53,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert get_flash(conn, :error) == "Invalid email or password"
 
-      assert redirected_to(conn) == "/<%= schema.plural %>/log_in"
+      assert redirected_to(conn) == "<%= schema.route_prefix %>/log_in"
     end
   end
 
   describe "login navigation" do
     test "redirects to registration page when the Register button is clicked", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_login_path(conn, :new))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
 
       {:ok, conn} =
         lv
         |> element(~s{a:fl-contains('Register')})
         |> render_click()
-        |> follow_redirect(conn, "/<%= schema.plural %>/register")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/register")
 
       assert conn.resp_body =~ "<h1>Register</h1>"
     end
@@ -73,13 +73,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "redirects to forgot password page when the Forgot Password button is clicked", %{
       conn: conn
     } do
-      {:ok, lv, _html} = live(conn, Routes.<%= schema.route_helper %>_login_path(conn, :new))
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
 
       {:ok, conn} =
         lv
         |> element(~s{a:fl-contains('Forgot your password?')})
         |> render_click()
-        |> follow_redirect(conn, "/<%= schema.plural %>/forgot_password")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/reset_password")
 
       assert conn.resp_body =~ "<h1>Forgot your password?</h1>"
     end

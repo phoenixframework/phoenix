@@ -11,7 +11,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email) do
       <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(
         <%= schema.singular %>,
-        &Routes.<%= schema.route_helper %>_confirmation_url(conn, :edit, &1)
+        &url(~p"<%= schema.route_prefix %>/confirm/#{&1}")
       )
     end
 
@@ -21,7 +21,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       "If your email is in our system and it has not been confirmed yet, " <>
         "you will receive an email with instructions shortly."
     )
-    |> redirect(to: "/")
+    |> redirect(to: ~p"/")
   end
 
   def edit(conn, %{"token" => token}) do
@@ -35,7 +35,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, _} ->
         conn
         |> put_flash(:info, "<%= schema.human_singular %> confirmed successfully.")
-        |> redirect(to: "/")
+        |> redirect(to: ~p"/")
 
       :error ->
         # If there is a current <%= schema.singular %> and the account was already confirmed,
@@ -44,12 +44,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         # a warning message.
         case conn.assigns do
           %{current_<%= schema.singular %>: %{confirmed_at: confirmed_at}} when not is_nil(confirmed_at) ->
-            redirect(conn, to: "/")
+            redirect(conn, to: ~p"/")
 
           %{} ->
             conn
             |> put_flash(:error, "<%= schema.human_singular %> confirmation link is invalid or it has expired.")
-            |> redirect(to: "/")
+            |> redirect(to: ~p"/")
         end
     end
   end

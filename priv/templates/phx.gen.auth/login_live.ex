@@ -9,7 +9,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       id="login_form"
       :let={f}
       for={:<%= schema.singular %>}
-      action={Routes.<%= schema.route_helper %>_session_path(@socket, :create)}
+      action={~p"<%= schema.route_prefix %>/log_in"}
       as={:<%= schema.singular %>}
       phx-update="ignore"
     >
@@ -27,8 +27,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     </.form>
 
     <p>
-      <.link href={Routes.<%= schema.route_helper %>_registration_path(@socket, :new)}>Register</.link> |
-      <.link href={Routes.<%= schema.route_helper %>_forgot_password_path(@socket, :new)}>Forgot your password?</.link>
+      <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
+      <.link href={~p"<%= schema.route_prefix %>/reset_password"}>Forgot your password?</.link>
     </p>
     """
   end

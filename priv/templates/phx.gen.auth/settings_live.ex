@@ -41,7 +41,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       id="password_form"
       :let={f}
       for={@password_changeset}
-      action={Routes.<%= schema.route_helper %>_session_path(@socket, :create, %{_action: "password_updated"})}
+      action={~p"<%= schema.route_prefix %>/log_in?_action=password_updated"}
       method="post"
       phx-change="validate_password"
       phx-submit="update_password"
@@ -84,7 +84,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           put_flash(socket, :error, "Email change link is invalid or it has expired.")
       end
 
-    {:ok, push_redirect(socket, to: Routes.<%= schema.route_helper %>_settings_path(socket, :edit))}
+    {:ok, push_redirect(socket, to: ~p"<%= schema.route_prefix %>/settings")}
   end
 
   def mount(_params, _session, socket) do
@@ -124,7 +124,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <%= inspect context.alias %>.deliver_<%= schema.singular %>_update_email_instructions(
           applied_<%= schema.singular %>,
           <%= schema.singular %>.email,
-          &Routes.<%= schema.route_helper %>_settings_url(socket, :confirm_email, &1)
+          &url(~p"<%= schema.route_prefix %>/settings/confirm_email/#{&1}")
         )
 
         info = "A link to confirm your email change has been sent to the new address."
