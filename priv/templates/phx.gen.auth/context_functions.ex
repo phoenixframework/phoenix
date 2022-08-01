@@ -149,7 +149,7 @@
     |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [context]))
   end
 
-  @doc """
+  @doc ~S"""
   Delivers the update email instructions to the given <%= schema.singular %>.
 
   ## Examples
@@ -283,7 +283,7 @@
 
   ## Reset password
 
-  @doc """
+  @doc ~S"""
   Delivers the reset password email to the given <%= schema.singular %>.
 
   ## Examples

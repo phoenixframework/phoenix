@@ -39,6 +39,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:noreply,
      socket
      |> put_flash(:info, info)
-     |> redirect(to: "/")}
+     |> redirect(to: ~p"/")}
   end
 end

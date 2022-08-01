@@ -20,7 +20,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "redirects if <%= schema.singular %> is not logged in", %{conn: conn} do
       assert {:error, redirect} = live(conn, ~p"<%= schema.route_prefix %>/settings")
 
-      assert {:redirect, %{to: ~p"<%= schema.route_prefix %>/log_in" = _to, flash: flash}} = redirect
+      assert {:redirect, %{to: path, flash: flash}} = redirect
+      assert path == ~p"<%= schema.route_prefix %>/log_in"
       assert %{"error" => "You must log in to access this page."} = flash
     end
   end
@@ -170,7 +171,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "updates the <%= schema.singular %> email once", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>, token: token, email: email} do
       {:error, redirect} = live(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/#{token}")
 
-      assert {:live_redirect, %{flash: flash, to: ~p"<%= schema.route_prefix %>/settings"}} = redirect
+      assert {:live_redirect, %{to: path, flash: flash}} = redirect
+      assert path == ~p"<%= schema.route_prefix %>/settings"
       assert %{"info" => message} = flash
       assert message == "Email changed successfully."
       refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(<%= schema.singular %>.email)
@@ -178,14 +180,16 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       # use confirm token again
       {:error, redirect} = live(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/#{token}")
-      assert {:live_redirect, %{flash: flash, to: ~p"<%= schema.route_prefix %>/settings"}} = redirect
+      assert {:live_redirect, %{to: path, flash: flash}} = redirect
+      assert path == ~p"<%= schema.route_prefix %>/settings"
       assert %{"error" => message} = flash
       assert message == "Email change link is invalid or it has expired."
     end
 
     test "does not update email with invalid token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       {:error, redirect} = live(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/oops")
-      assert {:live_redirect, %{flash: flash, to: ~p"<%= schema.route_prefix %>/settings"}} = redirect
+      assert {:live_redirect, %{to: path, flash: flash}} = redirect
+      assert path == ~p"<%= schema.route_prefix %>/settings"
       assert %{"error" => message} = flash
       assert message == "Email change link is invalid or it has expired."
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(<%= schema.singular %>.email)
@@ -194,7 +198,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "redirects if <%= schema.singular %> is not logged in", %{token: token} do
       conn = build_conn()
       {:error, redirect} = live(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/#{token}")
-      assert {:redirect, %{flash: flash, to: ~p"<%= schema.route_prefix %>/log_in"}} = redirect
+      assert {:redirect, %{to: path, flash: flash}} = redirect
+      assert path == ~p"<%= schema.route_prefix %>/log_in"
       assert %{"error" => message} = flash
       assert message == "You must log in to access this page."
     end

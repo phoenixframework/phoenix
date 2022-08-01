@@ -7,7 +7,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <h1>Confirm account</h1>
 
-    <.form id="confirmation_form" :let={f} for={:<%= schema.singular %>} phx-submit="confirm_account"}>
+    <.form id="confirmation_form" :let={f} for={:<%= schema.singular %>} phx-submit="confirm_account">
       <div>
         <%%= hidden_input f, :token, value: @token %>
         <%%= submit "Confirm my account" %>
@@ -33,7 +33,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "User confirmed successfully.")
-         |> redirect(to: "/")}
+         |> redirect(to: ~p"/")}
 
       :error ->
         # If there is a current <%= schema.singular %> and the account was already confirmed,
@@ -42,7 +42,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         # a warning message.
         case socket.assigns do
           %{current_<%= schema.singular %>: %{confirmed_at: confirmed_at}} when not is_nil(confirmed_at) ->
-            {:noreply, redirect(socket, to: "/")}
+            {:noreply, redirect(socket, to: ~p"/")}
 
           %{} ->
             {:noreply,
