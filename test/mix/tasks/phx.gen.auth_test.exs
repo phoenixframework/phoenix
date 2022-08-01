@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   use ExUnit.Case
 
   @moduletag :mix_phx_new
-  @liveview_option_message "Do you want to create a LiveView based authentication system?"
+  @liveview_option_message "Do you want to create a LiveView based authentication system? [Y/n]"
 
   import MixHelper
   alias Mix.Tasks.Phx.Gen
