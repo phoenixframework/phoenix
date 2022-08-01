@@ -100,8 +100,7 @@ defmodule Phoenix.VerifiedRoutes do
       $ mix compile --all-warnigns
 
   *Note: Elixir >= 1.14.0 is required for comprehensive warnings. Older versions
-  will work properly and warn on new compilations, but changes to the router file
-  will not issue new warnings.
+  will compile properly, but no warnings will be issued.
   """
   @doc false
   defstruct router: nil,
