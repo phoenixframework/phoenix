@@ -150,7 +150,7 @@ defmodule HelloWeb.ProductController do
       {:ok, product} ->
         conn
         |> put_flash(:info, "Product created successfully.")
-        |> redirect(to: Routes.product_path(conn, :show, product))
+        |> redirect(to: ~p"/products/#{product}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
@@ -167,7 +167,7 @@ end
 
 We've seen how controllers work in our [controller guide](controllers.html), so the code probably isn't too surprising. What is worth noticing is how our controller calls into the `Catalog` context. We can see that the `index` action fetches a list of products with `Catalog.list_products/0`, and how products are persisted in the `create` action with `Catalog.create_product/1`. We haven't yet looked at the catalog context, so we don't yet know how product fetching and creation is happening under the hood – *but that's the point*. Our Phoenix controller is the web interface into our greater application. It shouldn't be concerned with the details of how products are fetched from the database or persisted into storage. We only care about telling our application to perform some work for us. This is great because our business logic and storage details are decoupled from the web layer of our application. If we move to a full-text storage engine later for fetching products instead of a SQL query, our controller doesn't need to be changed. Likewise, we can reuse our context code from any other interface in our application, be it a channel, mix task, or long-running process importing CSV data.
 
-In the case of our `create` action, when we successfully create a product, we use `Phoenix.Controller.put_flash/3` to show a success message, and then we redirect to the router's `product_path` show page. Conversely, if `Catalog.create_product/1` fails, we render our `"new.html"` template and pass along the Ecto changeset for the template to lift error messages from.
+In the case of our `create` action, when we successfully create a product, we use `Phoenix.Controller.put_flash/3` to show a success message, and then we redirect to the router's product show page. Conversely, if `Catalog.create_product/1` fails, we render our `"new.html"` template and pass along the Ecto changeset for the template to lift error messages from.
 
 Next, let's dig deeper and check out our `Catalog` context in `lib/hello/catalog.ex`:
 
@@ -786,18 +786,18 @@ defmodule HelloWeb.CartItemController do
       {:ok, _item} ->
         conn
         |> put_flash(:info, "Item added to your cart")
-        |> redirect(to: Routes.cart_path(conn, :show))
+        |> redirect(to: ~p"/cart")
 
       {:error, _changeset} ->
         conn
         |> put_flash(:error, "There was an error adding the item to your cart")
-        |> redirect(to: Routes.cart_path(conn, :show))
+        |> redirect(to: ~p"/cart")
     end
   end
 
   def delete(conn, %{"id" => product_id}) do
     {:ok, _cart} = ShoppingCart.remove_item_from_cart(conn.assigns.cart, product_id)
-    redirect(conn, to: Routes.cart_path(conn, :show))
+    redirect(conn, to: ~p"/cart")
   end
 end
 ```
@@ -874,7 +874,7 @@ With our new cart functions in place, we can now expose the "Add to cart" button
 ```diff
 <h1>Show Product</h1>
 
-+<.link href={Routes.cart_item_path(@conn, :create, product_id: @product.id)} method="post">Add to cart</.link>
++<.link href={~p"/cart_items?product_id=#{@product.id}"} method="post">Add to cart</.link>
 ...
 ```
 
@@ -944,7 +944,7 @@ Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`
 <%= if @cart.items == [] do %>
   Your cart is empty
 <% else %>
-  <.form :let={f} for={@changeset} action={Routes.cart_path(@conn, :update)}>
+  <.form :let={f} for={@changeset} action={~p"/cart"}>
     <ul>
       <%= for item_form <- inputs_for(f, :items), item = item_form.data do %>
         <li>
@@ -999,12 +999,12 @@ Let's head back to our `CartController` at `lib/hello_web/controllers/cart_contr
   def update(conn, %{"cart" => cart_params}) do
     case ShoppingCart.update_cart(conn.assigns.cart, cart_params) do
       {:ok, _cart} ->
-        redirect(conn, to: Routes.cart_path(conn, :show))
+        redirect(conn, to: ~p"/cart")
 
       {:error, _changeset} ->
         conn
         |> put_flash(:error, "There was an error updating your cart")
-        |> redirect(to: Routes.cart_path(conn, :show))
+        |> redirect(to: ~p"/cart")
     end
   end
 ```
@@ -1216,12 +1216,12 @@ To complete an order, our cart page can issue a POST to the `OrderController.cre
       {:ok, order} ->
         conn
         |> put_flash(:info, "Order created successfully.")
-        |> redirect(to: Routes.order_path(conn, :show, order))
+        |> redirect(to: ~p"/orders/#{order}")
 
       {:error, _reason} ->
         conn
         |> put_flash(:error, "There was an error processing your order")
-        |> redirect(to: Routes.cart_path(conn, :show))
+        |> redirect(to: ~p"/cart")
     end
   end
 ```
@@ -1316,7 +1316,7 @@ We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order
 
 </ul>
 
-<span><.link href={Routes.cart_path(@conn, :show)}>Back</.link></span>
+<span><.link href={~p"/cart"}>Back</.link></span>
 ```
 
 To show our completed order, we displayed the order's user, followed by the line item listing with product title, quantity, and the price we "transacted" when completing the order, along with the total price.
@@ -1326,7 +1326,7 @@ Our last addition will be to add the "complete order" button to our cart page to
 ```diff
   <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>
 
-+ <.link href={Routes.order_path(@conn, :create)} method="post">complete order</.link>
++ <.link href={~p"/orders"} method="post">complete order</.link>
 <% end %>
 ```
 

@@ -74,14 +74,14 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-Important: If we don't do this, we will see the following warnings in our logs, and our application will error when trying to execute the function.
+Important: If we don't do this, we will see the following warnings in our logs, and our application will error when compiling.
 
 ```console
 $ mix phx.server
 Compiling 17 files (.ex)
 
-warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
-  lib/hello_web/controllers/post_controller.ex:22:
+warning: no route path for HelloWeb.Router matches \"/posts\"
+  lib/hello_web/controllers/post_controller.ex:22: HelloWeb.PostController.index/2
 ```
 
 If we don't want to create a context or schema for our resource we can use the `--no-context` flag. Note that this still requires a context module name as a parameter.
@@ -163,14 +163,14 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-Important: If we don't do this, we'll get the following warning in our logs and the application will error when attempting to load the page:
+Important: If we don't do this, we'll get the following warning in our logs and the application will error when attempting to compile:
 
 ```console
 $ mix phx.server
 Compiling 19 files (.ex)
 
-warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
-  lib/hello_web/controllers/post_controller.ex:18
+warning: no route path for HelloWeb.Router matches \"/posts\"
+  lib/hello_web/controllers/post_controller.ex:22: HelloWeb.PostController.index/2
 ```
 
 `mix phx.gen.json` also supports `--no-context`, `--no-schema`, and others, as in `mix phx.gen.html`.
@@ -223,7 +223,7 @@ $ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id
 
 Phoenix also offers the ability to generate all of the code to stand up a complete authentication system — Ecto migration, phoenix context, controllers, templates, etc. This can be a huge time saver, allowing you to quickly add authentication to your system and shift your focus back to the primary problems your application is trying to solve.
 
-The `mix phx.gen.auth` task takes the following arguments: the module name of the context, the module name of the schema, and a plural version of the schema name used to generate database tables and route helpers.
+The `mix phx.gen.auth` task takes the following arguments: the module name of the context, the module name of the schema, and a plural version of the schema name used to generate database tables and route paths.
 
 Here is an example version of the command:
 
@@ -360,13 +360,13 @@ If we don't specify a router for this task, it will default to the router Phoeni
 
 ```console
 $ mix phx.routes
-page_path  GET  /  TaskTester.PageController.index/2
+GET  /  TaskTester.PageController.index/2
 ```
 We can also specify an individual router if we have more than one for our application.
 
 ```console
 $ mix phx.routes TaskTesterWeb.Router
-page_path  GET  /  TaskTesterWeb.PageController.index/2
+GET  /  TaskTesterWeb.PageController.index/2
 ```
 
 ### `mix phx.server`

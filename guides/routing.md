@@ -61,13 +61,11 @@ Let's see how this works. Go to the root of a newly-generated Phoenix applicatio
 
 ```console
 $ mix phx.routes
-page_path  GET  /  HelloWeb.PageController :index
+GET  /  HelloWeb.PageController :index
 ...
 ```
 
 The route above tells us that any HTTP GET request for the root of the application will be handled by the `index` action of the `HelloWeb.PageController`.
-
-`page_path` is an example of what Phoenix calls a path helper, and we'll talk about those very soon.
 
 ## Resources
 
@@ -89,14 +87,14 @@ Run `mix phx.routes` once again at the root of your project. You should see some
 
 ```console
 ...
-user_path  GET     /users           HelloWeb.UserController :index
-user_path  GET     /users/:id/edit  HelloWeb.UserController :edit
-user_path  GET     /users/new       HelloWeb.UserController :new
-user_path  GET     /users/:id       HelloWeb.UserController :show
-user_path  POST    /users           HelloWeb.UserController :create
-user_path  PATCH   /users/:id       HelloWeb.UserController :update
-           PUT     /users/:id       HelloWeb.UserController :update
-user_path  DELETE  /users/:id       HelloWeb.UserController :delete
+GET     /users           HelloWeb.UserController :index
+GET     /users/:id/edit  HelloWeb.UserController :edit
+GET     /users/new       HelloWeb.UserController :new
+GET     /users/:id       HelloWeb.UserController :show
+POST    /users           HelloWeb.UserController :create
+PATCH   /users/:id       HelloWeb.UserController :update
+PUT     /users/:id       HelloWeb.UserController :update
+DELETE  /users/:id       HelloWeb.UserController :delete
 ...
 ```
 
@@ -121,9 +119,9 @@ resources "/posts", PostController, only: [:index, :show]
 
 Running `mix phx.routes` shows that we now only have the routes to the index and show actions defined.
 
-```elixir
-post_path  GET     /posts      HelloWeb.PostController :index
-post_path  GET     /posts/:id  HelloWeb.PostController :show
+```
+GET     /posts      HelloWeb.PostController :index
+GET     /posts/:id  HelloWeb.PostController :show
 ```
 
 Similarly, if we have a comments resource, and we don't want to provide a route to delete one, we could define a route like this.
@@ -135,89 +133,76 @@ resources "/comments", CommentController, except: [:delete]
 Running `mix phx.routes` now shows that we have all the routes except the DELETE request to the delete action.
 
 ```console
-comment_path  GET    /comments           HelloWeb.CommentController :index
-comment_path  GET    /comments/:id/edit  HelloWeb.CommentController :edit
-comment_path  GET    /comments/new       HelloWeb.CommentController :new
-comment_path  GET    /comments/:id       HelloWeb.CommentController :show
-comment_path  POST   /comments           HelloWeb.CommentController :create
-comment_path  PATCH  /comments/:id       HelloWeb.CommentController :update
-              PUT    /comments/:id       HelloWeb.CommentController :update
+GET    /comments           HelloWeb.CommentController :index
+GET    /comments/:id/edit  HelloWeb.CommentController :edit
+GET    /comments/new       HelloWeb.CommentController :new
+GET    /comments/:id       HelloWeb.CommentController :show
+POST   /comments           HelloWeb.CommentController :create
+PATCH  /comments/:id       HelloWeb.CommentController :update
+PUT    /comments/:id       HelloWeb.CommentController :update
 ```
 
 The `Phoenix.Router.resources/4` macro describes additional options for customizing resource routes.
 
-## Path helpers
+## Verified Routes
 
-Path helpers are dynamically defined functions. They allow us to retrieve the path corresponding to a given controller-action pair. The name of each path helper is derived from the name of the controller used in the route definition. For our controller `HelloWeb.PageController`, `page_path` is the function that will return the path, which in this case is the root of our application.
+Phoenix includes `Phoenix.VerifiedRoutes` module which provides compile-time checks of router paths against your router by usign the `~p` sigil. For example, you can write paths in controllers, tests, and templates and the compile will make sure those actually match routes defined in your router.
 
-Let's see it in action. Run `iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the endpoint or connection and action as arguments, it returns the path to us.
+Let's see it in action. Run `iex -S mix` at the root of the project. We'll define a throwaway example module that builds a couple `~p` route paths.
 
 ```elixir
-iex> HelloWeb.Router.Helpers.page_path(HelloWeb.Endpoint, :index)
-"/"
+iex> defmodule RouteExample do
+...>   use GenTestWeb, :verified_routes
+...>
+...>   def example do
+...>     ~p"/comments"
+...>     ~p"/unknown/123"
+...>   end
+...> end
+warning: no route path for GenTestWeb.Router matches "/unknown/123"
+  iex:5: RouteExample.example/0
+
+{:module, RouteExample, ...}
+iex>
 ```
 
-This is significant because we can use the `page_path` function in a template to link to the root of our application. We can then use this helper in our templates:
+Notice how the first call to an existing route, `~p"/comments"` gave no warning, but a bad route path `~p"/unknown/123"` produced a compiler warning, just as it should. This is significant because it allows us to write otherwise hard-coded paths in our application and the compiler will let us know whenever we write a bad route or change our routing structure.
+
+Phoenix projects are set up out of the box to allow use of verified routes throughout your web layer, including tests. For example in your templates you can render `~p` links:
 
 ```heex
-<.link href={Routes.page_path(@conn, :index)}>Welcome Page!</.link>
+<.link href={~p"/"}>Welcome Page!</.link>
+<.link href={~p"/comments"}>View Comments</.link>
 ```
 
-Note that path helpers are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloWeb.Router.Helpers`.
-
-The reason we can use `Routes.page_path` instead of the full `HelloWeb.Router.Helpers.page_path` name is because `HelloWeb.Router.Helpers` is aliased as `Routes` by default in the `view_helpers/0` block defined inside `lib/hello_web.ex`. This definition is made available to our templates through `use HelloWeb, :view`.
-
-We can, of course, use `HelloWeb.Router.Helpers.page_path(@conn, :index)` instead, but the convention is to use the aliased version for conciseness. Note that the alias is only set automatically for use in views, controllers and templates - outside these, you need either the full name, or to alias it yourself inside the module definition with `alias HelloWeb.Router.Helpers, as: Routes`.
-
-Using path helpers makes it easy to ensure our controllers, views, and templates link to pages our router can actually handle.
-
-### More on path helpers
-
-When we ran `mix phx.routes` for our user resource, it listed the `user_path` as the path helper function for each output line. Here is what that translates to for each action:
+Or in a controller, issue a redirect:
 
 ```elixir
-iex> alias HelloWeb.Router.Helpers, as: Routes
-iex> alias HelloWeb.Endpoint
-
-iex> Routes.user_path(Endpoint, :index)
-"/users"
-
-iex> Routes.user_path(Endpoint, :show, 17)
-"/users/17"
-
-iex> Routes.user_path(Endpoint, :new)
-"/users/new"
-
-iex> Routes.user_path(Endpoint, :create)
-"/users"
-
-iex> Routes.user_path(Endpoint, :edit, 37)
-"/users/37/edit"
-
-iex> Routes.user_path(Endpoint, :update, 37)
-"/users/37"
-
-iex> Routes.user_path(Endpoint, :delete, 17)
-"/users/17"
+redirect(conn, to: ~p"/comments/#{comment}")
 ```
 
-What about paths with query strings? By adding an optional fourth argument of key-value pairs, the path helpers will return those pairs in the query string.
+Using `~p` for route paths ensures our application paths and URLs stay up to date with the router definitions. The compiler will catch bugs for us, and let us know when we change routes that are referenced elsewhere in our application.
+
+### More on verified routes
+
+What about paths with query strings? You can either add query string key values directly, or provide a dictionary of key-value pairs, for example:
 
 ```elixir
-iex> Routes.user_path(Endpoint, :show, 17, admin: true, active: false)
+~p"/users/17?admin=true&active=false"
 "/users/17?admin=true&active=false"
+
+~p"/users/17?#{[admin: true]"
+"/users/17?admin=true"
 ```
 
-What if we need a full URL instead of a path? Just replace `_path` with `_url`:
+What if we need a full URL instead of a path? Just wrap your path with a call to `Phoenix.VerifiedRoutes.url/1`, which is imported everywhere that `~p` is available:
 
 ```elixir
-iex> Routes.user_url(Endpoint, :index)
+url(~p"/users")
 "http://localhost:4000/users"
 ```
 
-The `*_url` functions will get the host, port, proxy port, and SSL information needed to construct the full URL from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `config/dev.exs` file in your own project to see those values.
-
-Whenever possible, prefer to pass a `conn` (or `@conn` in your views) in place of an endpoint module.
+The `url` calls will get the host, port, proxy port, and SSL information needed to construct the full URL from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `config/dev.exs` file in your own project to see those values.
 
 ## Nested resources
 
@@ -232,42 +217,36 @@ When we run `mix phx.routes` now, in addition to the routes we saw for `users` a
 
 ```elixir
 ...
-user_post_path  GET     /users/:user_id/posts           HelloWeb.PostController :index
-user_post_path  GET     /users/:user_id/posts/:id/edit  HelloWeb.PostController :edit
-user_post_path  GET     /users/:user_id/posts/new       HelloWeb.PostController :new
-user_post_path  GET     /users/:user_id/posts/:id       HelloWeb.PostController :show
-user_post_path  POST    /users/:user_id/posts           HelloWeb.PostController :create
-user_post_path  PATCH   /users/:user_id/posts/:id       HelloWeb.PostController :update
-                PUT     /users/:user_id/posts/:id       HelloWeb.PostController :update
-user_post_path  DELETE  /users/:user_id/posts/:id       HelloWeb.PostController :delete
+GET     /users/:user_id/posts           HelloWeb.PostController :index
+GET     /users/:user_id/posts/:id/edit  HelloWeb.PostController :edit
+GET     /users/:user_id/posts/new       HelloWeb.PostController :new
+GET     /users/:user_id/posts/:id       HelloWeb.PostController :show
+POST    /users/:user_id/posts           HelloWeb.PostController :create
+PATCH   /users/:user_id/posts/:id       HelloWeb.PostController :update
+PUT     /users/:user_id/posts/:id       HelloWeb.PostController :update
+DELETE  /users/:user_id/posts/:id       HelloWeb.PostController :delete
 ...
 ```
 
 We see that each of these routes scopes the posts to a user ID. For the first one, we will invoke `PostController`'s `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
 
-When calling path helper functions for nested routes, we will need to pass the IDs in the order they came in the route definition. For the following `show` route, `42` is the `user_id`, and `17` is the `post_id`. Let's remember to alias our `HelloWeb.Endpoint` before we begin.
+When building paths for nested routes, we will need to interpolate the IDs where they belong in route definition. For the following `show` route, `42` is the `user_id`, and `17` is the `post_id`.
 
 ```elixir
-iex> alias HelloWeb.Endpoint
-iex> HelloWeb.Router.Helpers.user_post_path(Endpoint, :show, 42, 17)
+user_id = 42
+post_id = 17
+~p"/users/#{user_id}/#{post_id}"
 "/users/42/posts/17"
 ```
 
-Again, if we add a key-value pair to the end of the function call, it is added to the query string.
+Verified routes also support the `Phoenix.Param` protocol, but we don't need to concern ourselves with elixir protocols just yet. Just know that once we start building our application with structs like `%User{}` and `%Post{}`, we'll be able to interpolate those datastructures directly into our `~p` paths and phoenix will pluck out the correct fields to use in the route.
 
 ```elixir
-iex> HelloWeb.Router.Helpers.user_post_path(Endpoint, :index, 42, active: true)
-"/users/42/posts?active=true"
-```
+~p"/users/#{user}/#{post}"
+"/users/42/posts/17"
+`
 
-If we hadn't aliased the `Helpers` module as we did before (remember it is only automatically aliased for views, templates and controllers), and since we are inside `iex`, we'll have to do it ourselves:
-
-```elixir
-iex> alias HelloWeb.Router.Helpers, as: Routes
-iex> alias HelloWeb.Endpoint
-iex> Routes.user_post_path(Endpoint, :index, 42, active: true)
-"/users/42/posts?active=true"
-```
+Notice how we didn't need to interpolate `user.id` or `post.id`? This is particularly nice if we decide later we want to make our URLs a little nicer and start using slugs instead. We don't need to change any of our `~p`'s!
 
 ## Scoped routes
 
@@ -307,14 +286,14 @@ Running `mix phx.routes` again, in addition to the previous set of routes we get
 
 ```console
 ...
-review_path  GET     /admin/reviews           HelloWeb.Admin.ReviewController :index
-review_path  GET     /admin/reviews/:id/edit  HelloWeb.Admin.ReviewController :edit
-review_path  GET     /admin/reviews/new       HelloWeb.Admin.ReviewController :new
-review_path  GET     /admin/reviews/:id       HelloWeb.Admin.ReviewController :show
-review_path  POST    /admin/reviews           HelloWeb.Admin.ReviewController :create
-review_path  PATCH   /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
-             PUT     /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
-review_path  DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
+GET     /admin/reviews           HelloWeb.Admin.ReviewController :index
+GET     /admin/reviews/:id/edit  HelloWeb.Admin.ReviewController :edit
+GET     /admin/reviews/new       HelloWeb.Admin.ReviewController :new
+GET     /admin/reviews/:id       HelloWeb.Admin.ReviewController :show
+POST    /admin/reviews           HelloWeb.Admin.ReviewController :create
+PATCH   /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+PUT     /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
 ...
 ```
 
@@ -335,78 +314,33 @@ scope "/admin", HelloWeb.Admin do
 end
 ```
 
-and we run `mix phx.routes`, we get this output:
+and we run `mix phx.routes`, we get output for each scoped route:
 
 ```console
 ...
-review_path  GET     /reviews                 HelloWeb.ReviewController :index
-review_path  GET     /reviews/:id/edit        HelloWeb.ReviewController :edit
-review_path  GET     /reviews/new             HelloWeb.ReviewController :new
-review_path  GET     /reviews/:id             HelloWeb.ReviewController :show
-review_path  POST    /reviews                 HelloWeb.ReviewController :create
-review_path  PATCH   /reviews/:id             HelloWeb.ReviewController :update
-             PUT     /reviews/:id             HelloWeb.ReviewController :update
-review_path  DELETE  /reviews/:id             HelloWeb.ReviewController :delete
+GET     /reviews                 HelloWeb.ReviewController :index
+GET     /reviews/:id/edit        HelloWeb.ReviewController :edit
+GET     /reviews/new             HelloWeb.ReviewController :new
+GET     /reviews/:id             HelloWeb.ReviewController :show
+POST    /reviews                 HelloWeb.ReviewController :create
+PATCH   /reviews/:id             HelloWeb.ReviewController :update
+PUT     /reviews/:id             HelloWeb.ReviewController :update
+DELETE  /reviews/:id             HelloWeb.ReviewController :delete
 ...
-review_path  GET     /admin/reviews           HelloWeb.Admin.ReviewController :index
-review_path  GET     /admin/reviews/:id/edit  HelloWeb.Admin.ReviewController :edit
-review_path  GET     /admin/reviews/new       HelloWeb.Admin.ReviewController :new
-review_path  GET     /admin/reviews/:id       HelloWeb.Admin.ReviewController :show
-review_path  POST    /admin/reviews           HelloWeb.Admin.ReviewController :create
-review_path  PATCH   /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
-             PUT     /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
-review_path  DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
-```
-
-The actual routes we get all look right, except for the path helper `review_path` at the beginning of each line. We are getting the same helper for both the user facing review routes and the admin ones, which is not correct.
-
-We can fix this problem by adding an `as: :admin` option to our admin scope:
-
-```elixir
-scope "/admin", HelloWeb.Admin, as: :admin do
-  pipe_through :browser
-
-  resources "/reviews", ReviewController
-end
-```
-
-`mix phx.routes` now shows us we have what we are looking for.
-
-```console
-...
-      review_path  GET     /reviews                        HelloWeb.ReviewController :index
-      review_path  GET     /reviews/:id/edit               HelloWeb.ReviewController :edit
-      review_path  GET     /reviews/new                    HelloWeb.ReviewController :new
-      review_path  GET     /reviews/:id                    HelloWeb.ReviewController :show
-      review_path  POST    /reviews                        HelloWeb.ReviewController :create
-      review_path  PATCH   /reviews/:id                    HelloWeb.ReviewController :update
-                   PUT     /reviews/:id                    HelloWeb.ReviewController :update
-      review_path  DELETE  /reviews/:id                    HelloWeb.ReviewController :delete
-...
-admin_review_path  GET     /admin/reviews                  HelloWeb.Admin.ReviewController :index
-admin_review_path  GET     /admin/reviews/:id/edit         HelloWeb.Admin.ReviewController :edit
-admin_review_path  GET     /admin/reviews/new              HelloWeb.Admin.ReviewController :new
-admin_review_path  GET     /admin/reviews/:id              HelloWeb.Admin.ReviewController :show
-admin_review_path  POST    /admin/reviews                  HelloWeb.Admin.ReviewController :create
-admin_review_path  PATCH   /admin/reviews/:id              HelloWeb.Admin.ReviewController :update
-                   PUT     /admin/reviews/:id              HelloWeb.Admin.ReviewController :update
-admin_review_path  DELETE  /admin/reviews/:id              HelloWeb.Admin.ReviewController :delete
-```
-
-The path helpers now return what we want them to as well. Run `iex -S mix` and give it a try yourself.
-
-```elixir
-iex> HelloWeb.Router.Helpers.review_path(HelloWeb.Endpoint, :index)
-"/reviews"
-
-iex> HelloWeb.Router.Helpers.admin_review_path(HelloWeb.Endpoint, :show, 1234)
-"/admin/reviews/1234"
+GET     /admin/reviews           HelloWeb.Admin.ReviewController :index
+GET     /admin/reviews/:id/edit  HelloWeb.Admin.ReviewController :edit
+GET     /admin/reviews/new       HelloWeb.Admin.ReviewController :new
+GET     /admin/reviews/:id       HelloWeb.Admin.ReviewController :show
+POST    /admin/reviews           HelloWeb.Admin.ReviewController :create
+PATCH   /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+PUT     /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
 ```
 
 What if we had a number of resources that were all handled by admins? We could put all of them inside the same scope like this:
 
 ```elixir
-scope "/admin", HelloWeb.Admin, as: :admin do
+scope "/admin", HelloWeb.Admin do
   pipe_through :browser
 
   resources "/images",  ImageController
@@ -419,33 +353,33 @@ Here's what `mix phx.routes` tells us:
 
 ```console
 ...
- admin_image_path  GET     /admin/images            HelloWeb.Admin.ImageController :index
- admin_image_path  GET     /admin/images/:id/edit   HelloWeb.Admin.ImageController :edit
- admin_image_path  GET     /admin/images/new        HelloWeb.Admin.ImageController :new
- admin_image_path  GET     /admin/images/:id        HelloWeb.Admin.ImageController :show
- admin_image_path  POST    /admin/images            HelloWeb.Admin.ImageController :create
- admin_image_path  PATCH   /admin/images/:id        HelloWeb.Admin.ImageController :update
-                   PUT     /admin/images/:id        HelloWeb.Admin.ImageController :update
- admin_image_path  DELETE  /admin/images/:id        HelloWeb.Admin.ImageController :delete
-admin_review_path  GET     /admin/reviews           HelloWeb.Admin.ReviewController :index
-admin_review_path  GET     /admin/reviews/:id/edit  HelloWeb.Admin.ReviewController :edit
-admin_review_path  GET     /admin/reviews/new       HelloWeb.Admin.ReviewController :new
-admin_review_path  GET     /admin/reviews/:id       HelloWeb.Admin.ReviewController :show
-admin_review_path  POST    /admin/reviews           HelloWeb.Admin.ReviewController :create
-admin_review_path  PATCH   /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
-                   PUT     /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
-admin_review_path  DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
-  admin_user_path  GET     /admin/users             HelloWeb.Admin.UserController :index
-  admin_user_path  GET     /admin/users/:id/edit    HelloWeb.Admin.UserController :edit
-  admin_user_path  GET     /admin/users/new         HelloWeb.Admin.UserController :new
-  admin_user_path  GET     /admin/users/:id         HelloWeb.Admin.UserController :show
-  admin_user_path  POST    /admin/users             HelloWeb.Admin.UserController :create
-  admin_user_path  PATCH   /admin/users/:id         HelloWeb.Admin.UserController :update
-                   PUT     /admin/users/:id         HelloWeb.Admin.UserController :update
-  admin_user_path  DELETE  /admin/users/:id         HelloWeb.Admin.UserController :delete
+GET     /admin/images            HelloWeb.Admin.ImageController :index
+GET     /admin/images/:id/edit   HelloWeb.Admin.ImageController :edit
+GET     /admin/images/new        HelloWeb.Admin.ImageController :new
+GET     /admin/images/:id        HelloWeb.Admin.ImageController :show
+POST    /admin/images            HelloWeb.Admin.ImageController :create
+PATCH   /admin/images/:id        HelloWeb.Admin.ImageController :update
+PUT     /admin/images/:id        HelloWeb.Admin.ImageController :update
+DELETE  /admin/images/:id        HelloWeb.Admin.ImageController :delete
+GET     /admin/reviews           HelloWeb.Admin.ReviewController :index
+GET     /admin/reviews/:id/edit  HelloWeb.Admin.ReviewController :edit
+GET     /admin/reviews/new       HelloWeb.Admin.ReviewController :new
+GET     /admin/reviews/:id       HelloWeb.Admin.ReviewController :show
+POST    /admin/reviews           HelloWeb.Admin.ReviewController :create
+PATCH   /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+PUT     /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
+DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
+GET     /admin/users             HelloWeb.Admin.UserController :index
+GET     /admin/users/:id/edit    HelloWeb.Admin.UserController :edit
+GET     /admin/users/new         HelloWeb.Admin.UserController :new
+GET     /admin/users/:id         HelloWeb.Admin.UserController :show
+POST    /admin/users             HelloWeb.Admin.UserController :create
+PATCH   /admin/users/:id         HelloWeb.Admin.UserController :update
+PUT     /admin/users/:id         HelloWeb.Admin.UserController :update
+DELETE  /admin/users/:id         HelloWeb.Admin.UserController :delete
 ```
 
-This is great, exactly what we want. Note how every route, path helper and controller is properly namespaced.
+This is great, exactly what we want. Note how every route and controller is properly namespaced.
 
 Scopes can also be arbitrarily nested, but you should do it carefully as nesting can sometimes make our code confusing and less clear. With that said, suppose that we had a versioned API with resources defined for images, reviews, and users. Then technically, we could set up routes for the versioned API like this:
 
@@ -484,7 +418,7 @@ defmodule HelloWeb.Router do
 end
 ```
 
-If we do duplicate a route — which means two routes having the same path and the same alias — we'll get this familiar warning:
+If we do duplicate a route — which means two routes having the same path — we'll get this familiar warning:
 
 ```console
 warning: this clause cannot match because a previous clause at line 16 always matches
@@ -694,5 +628,4 @@ Routing is a big topic, and we have covered a lot of ground here. The important 
 - Resources may restrict the number of match function clauses by using the `only:` or `except:` options.
 - Any of these routes may be nested.
 - Any of these routes may be scoped to a given path.
-- Using the `as:` option in a scope can reduce duplication.
-- Using the helper option for scoped routes eliminates unreachable paths.
+- Using verified routes with `~p` for compile-time route checks
