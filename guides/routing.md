@@ -540,7 +540,7 @@ Note that pipelines themselves are plugs, so we can plug a pipeline inside anoth
 
 In Phoenix, we tend to define several pipelines, that provide specific functionality. For example, the `:browser` and `:api` pipelines are meant to be accessed by specific clients, browsers and http clients respectively.
 
-Perhaps more importantly, it is also very common to define pipelines specific to authentication and authorization. For example, you might have a pipeline that requires all users are authenticated. Another pipeline may enforce only admin users can acess certain routes.
+Perhaps more importantly, it is also very common to define pipelines specific to authentication and authorization. For example, you might have a pipeline that requires all users are authenticated. Another pipeline may enforce only admin users can access certain routes.
 
 Once your pipelines are defined, you reuse the pipelines in the desired scopes, grouping your routes around their pipelines. For example, going back to our reviews example. Let's say anyone can read a review, but only authenticated users can create them. Your routes could look like this:
 

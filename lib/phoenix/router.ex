@@ -273,7 +273,7 @@ defmodule Phoenix.Router do
   Perhaps more importantly, it is also very common to define pipelines specific
   to authentication and authorization. For example, you might have a pipeline
   that requires all users are authenticated. Another pipeline may enforce only
-  admin users can acess certain routes.
+  admin users can access certain routes.
 
   Once your pipelines are defined, you reuse the pipelines in the desired
   scopes, grouping your routes around their pipelines. For example, imagine
