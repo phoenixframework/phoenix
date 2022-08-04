@@ -101,8 +101,8 @@ Then add to your main application's supervision tree
 
 ```elixir
 children = [
-  MyApp.Repo,
   MyAppWeb.Telemetry,
+  MyApp.Repo,
   MyAppWeb.Endpoint,
   ...
 ]
