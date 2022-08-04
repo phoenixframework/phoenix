@@ -71,7 +71,7 @@ defmodule Phoenix.VerifiedRoutes do
       - `Phoenix.Controller.put_router_url/2` is used to override the endpoint's URL
       - `Phoenix.Controller.put_static_url/2` is used to override the endpoint's static URL
 
-    * When the Router module differs from the the one passed to `use Phoenix.VerifiedRoutes`,
+    * When the Router module differs from the one passed to `use Phoenix.VerifiedRoutes`,
       such as library code, or application code that relies on multiple routers. In such cases,
       the router module can be provided explicitly to `path/3` and `url/3`.
 

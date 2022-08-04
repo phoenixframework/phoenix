@@ -871,7 +871,7 @@ defmodule Phoenix.Controller do
   Puts the URL or `%URI{}` to be used for the static url generation.
 
   Using this function on a `%Plug.Conn{}` struct tells `static_url/2` to use
-  the given information for URL generation instead of the the `%Plug.Conn{}`'s
+  the given information for URL generation instead of the `%Plug.Conn{}`'s
   endpoint configuration (much like `put_router_url/2` but for static URLs).
   """
   def put_static_url(conn, %URI{} = uri) do
