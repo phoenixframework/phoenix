@@ -142,7 +142,7 @@ describe("with transport", function(){
       assert.equal(joinPush.timeout, newTimeout)
     })
 
-    it("leaves existings duplicate topic on new join", function(done){
+    it("leaves existing duplicate topic on new join", function(done){
       channel.join()
         .receive("ok", () => {
           let newChannel = socket.channel("topic")
