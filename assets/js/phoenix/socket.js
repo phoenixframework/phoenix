@@ -46,7 +46,7 @@ import Timer from "./timer"
  *
  * Defaults `DEFAULT_TIMEOUT`
  * @param {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
- * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millsec
+ * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millisec
  * socket reconnect interval.
  *
  * Defaults to stepped backoff of:
@@ -57,7 +57,7 @@ import Timer from "./timer"
  * }
  * ````
  *
- * @param {number} [opts.rejoinAfterMs] - The optional function that returns the millsec
+ * @param {number} [opts.rejoinAfterMs] - The optional function that returns the millisec
  * rejoin interval for individual channels.
  *
  * ```javascript
