@@ -84,7 +84,7 @@ $ yarn add --dev esbuild
 $ yarn add ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view
 ```
 
-Next, add a custom Javascript build script. We'll call the example `assets/build.js`:
+Next, add a custom JavaScript build script. We'll call the example `assets/build.js`:
 
 ```js
 const esbuild = require('esbuild')
