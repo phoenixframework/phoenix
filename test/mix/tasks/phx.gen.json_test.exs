@@ -156,7 +156,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     end
   end
 
-  test "with json --web namespace generates namedspaced web modules and directories", config do
+  test "with json --web namespace generates namespaced web modules and directories", config do
     in_tmp_project config.test, fn ->
       Gen.Json.run(~w(Blog Post posts title:string --web Blog))
 
