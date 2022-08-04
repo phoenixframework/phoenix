@@ -239,7 +239,7 @@ post_id = 17
 "/users/42/posts/17"
 ```
 
-Verified routes also support the `Phoenix.Param` protocol, but we don't need to concern ourselves with elixir protocols just yet. Just know that once we start building our application with structs like `%User{}` and `%Post{}`, we'll be able to interpolate those datastructures directly into our `~p` paths and phoenix will pluck out the correct fields to use in the route.
+Verified routes also support the `Phoenix.Param` protocol, but we don't need to concern ourselves with elixir protocols just yet. Just know that once we start building our application with structs like `%User{}` and `%Post{}`, we'll be able to interpolate those data structures directly into our `~p` paths and phoenix will pluck out the correct fields to use in the route.
 
 ```elixir
 ~p"/users/#{user}/#{post}"
