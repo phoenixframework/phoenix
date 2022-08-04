@@ -97,7 +97,7 @@ defmodule Phoenix.VerifiedRoutes do
   the `mix compile` task. For the following will show all warnings the compiler
   has previously encountered when compiling the current application code:
 
-      $ mix compile --all-warnigns
+      $ mix compile --all-warnings
 
   *Note: Elixir >= 1.14.0 is required for comprehensive warnings. Older versions
   will compile properly, but no warnings will be issued.
