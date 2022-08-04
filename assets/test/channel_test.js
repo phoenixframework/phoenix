@@ -594,7 +594,7 @@ describe("with transport", function(){
       assert.equal(channel.state, "errored")
     })
 
-    it("does not trigger redudant errors during backoff", function(){
+    it("does not trigger redundant errors during backoff", function(){
       const spy = sinon.stub(joinPush, "send")
 
       assert.equal(spy.callCount, 0)
