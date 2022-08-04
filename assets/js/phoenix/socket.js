@@ -181,7 +181,7 @@ export default class Socket {
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
 
   /**
-   * The fully qualifed socket url
+   * The fully qualified socket url
    *
    * @returns {string}
    */
