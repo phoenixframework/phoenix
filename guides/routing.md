@@ -146,7 +146,7 @@ The `Phoenix.Router.resources/4` macro describes additional options for customiz
 
 ## Verified Routes
 
-Phoenix includes `Phoenix.VerifiedRoutes` module which provides compile-time checks of router paths against your router by usign the `~p` sigil. For example, you can write paths in controllers, tests, and templates and the compile will make sure those actually match routes defined in your router.
+Phoenix includes `Phoenix.VerifiedRoutes` module which provides compile-time checks of router paths against your router by using the `~p` sigil. For example, you can write paths in controllers, tests, and templates and the compile will make sure those actually match routes defined in your router.
 
 Let's see it in action. Run `iex -S mix` at the root of the project. We'll define a throwaway example module that builds a couple `~p` route paths.
 
