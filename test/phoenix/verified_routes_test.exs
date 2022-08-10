@@ -176,7 +176,7 @@ defmodule Phoenix.VerifiedRoutesTest do
     end
   end
 
-  test "~p raises on dynamic dynamic interpolation" do
+  test "~p raises on dynamic interpolation" do
     msg = ~S|a dynamic ~p interpolation must follow a static segment, got: "/posts/#{1}#{2}"|
 
     assert_raise ArgumentError, msg, fn ->

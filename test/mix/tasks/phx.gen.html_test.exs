@@ -224,7 +224,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end
   end
 
-  test "with --web namespace generates namedspaced web modules and directories", config do
+  test "with --web namespace generates namespaced web modules and directories", config do
     in_tmp_project config.test, fn ->
       Gen.Html.run(~w(Blog Post posts title:string --web Blog))
 
