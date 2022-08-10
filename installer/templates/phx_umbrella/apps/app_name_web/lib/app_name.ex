@@ -22,14 +22,12 @@ defmodule <%= @web_namespace %> do
   def controller do
     quote do
       use Phoenix.Controller, namespace: <%= @web_namespace %>
-      use Phoenix.VerifiedRoutes,
-        endpoint: <%= @endpoint_module %>,
-        router: <%= @web_namespace %>.Router,
-        statics: <%= @web_namespace %>.static_paths()
 
       import Plug.Conn<%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %>
       alias <%= @web_namespace %>.Router.Helpers, as: Routes
+
+      unquote(verified_routes())
     end
   end
 
@@ -90,30 +88,31 @@ defmodule <%= @web_namespace %> do
     end
   end
 
-  defp view_helpers do
-    quote do<%= if @html do %>
-      # Use all HTML functionality (forms, tags, etc)
-      use Phoenix.HTML
+  def verified_routes do
+    quote do
       use Phoenix.VerifiedRoutes,
         endpoint: <%= @endpoint_module %>,
         router: <%= @web_namespace %>.Router,
         statics: <%= @web_namespace %>.static_paths()
+    end
+  end
+
+  defp view_helpers do
+    quote do<%= if @html do %>
+      # Use all HTML functionality (forms, tags, etc)
+      use Phoenix.HTML
 
       # Import and alias LiveView and .heex helpers (live_render, <.link>, <.form>, etc)
       import Phoenix.LiveView.Helpers
       alias Phoenix.LiveView.JS
 <% end %>
-      use Phoenix.VerifiedRoutes,
-        endpoint: <%= @endpoint_module %>,
-        router: <%= @web_namespace %>.Router,
-        statics: <%= @web_namespace %>.static_paths()
-
       # Import basic rendering functionality (render, render_layout, etc)
       import Phoenix.View
 
       import <%= @web_namespace %>.ErrorHelpers<%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %><%= if @html do %>
       alias Phoenix.LiveView.JS<% end %>
+      unquote(verified_routes())
     end
   end
 
