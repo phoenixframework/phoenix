@@ -6,14 +6,13 @@ defmodule Mix.Tasks.Compile.Phoenix do
 
   @doc false
   def run(_args) do
-    IO.warn """
+    IO.warn("""
     the :phoenix compiler is no longer required in your mix.exs.
 
     Please find the following line in your mix.exs and remove the :phoenix entry:
 
         compilers: [..., :phoenix, ...] ++ Mix.compilers(),
-
-    """
+    """)
 
     {:ok, _} = Application.ensure_all_started(:phoenix)
 

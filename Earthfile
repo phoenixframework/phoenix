@@ -8,6 +8,7 @@ all-test:
     BUILD --build-arg ELIXIR=1.13.3 --build-arg OTP=24.3.4 --build-arg RUN_INSTALLER_TESTS=1 +test
 
 test:
+    ARG RUN_INSTALLER_TESTS=0
     FROM +test-setup
     COPY --dir config installer ./
     RUN MIX_ENV=test mix deps.compile

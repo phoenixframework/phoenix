@@ -80,7 +80,7 @@ defmodule Phoenix.MixProject do
       {:ex_doc, "~> 0.24", only: :docs},
       {:ecto, "~> 3.0", only: :docs},
       {:ecto_sql, "~> 3.6", only: :docs},
-      {:gettext, "~> 0.18", only: :docs},
+      {:gettext, "~> 0.20", only: :docs},
       {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 0.6", only: :docs},
       {:makeup_eex, ">= 0.1.1", only: :docs},

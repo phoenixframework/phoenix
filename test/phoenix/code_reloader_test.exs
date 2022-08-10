@@ -4,7 +4,7 @@ defmodule Phoenix.CodeReloaderTest do
 
   defmodule Endpoint do
     def config(:reloadable_compilers) do
-      [:gettext, :unknown_compiler, :elixir]
+      [:unknown_compiler, :elixir]
     end
 
     def config(:reloadable_apps) do

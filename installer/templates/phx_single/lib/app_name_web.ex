@@ -101,8 +101,9 @@ defmodule <%= @web_namespace %> do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      # Import LiveView and .heex helpers (live_render, <.link>, <.form>, etc)
+      # Import and alias LiveView and .heex helpers (live_render, <.link>, <.form>, etc)
       import Phoenix.LiveView.Helpers
+      alias Phoenix.LiveView.JS
 <% end %>
       # Import basic rendering functionality (render, render_layout, etc)
       import Phoenix.View
