@@ -27,16 +27,15 @@ defmodule <%= @web_namespace %>.Router do
 
   scope "/api", <%= @web_namespace %> do
     pipe_through :api
-  end<% end %><%= if @dashboard do %>
+  end<% end %><%= if @dashboard || @mailer do %>
 
-  # Enables LiveDashboard only for development
-  #
-  # If you want to use the LiveDashboard in production, you should put
-  # it behind authentication and allow only admins to access it.
-  # If your application does not have an admins-only section yet,
-  # you can use Plug.BasicAuth to set up some basic authentication
-  # as long as you are also using SSL (which you should anyway).
-  if Mix.env() in [:dev, :test] do
+  # Enable <%= [@dashboard && "LiveDashboard", @mailer && "Swoosh mailbox preview"] |> Enum.filter(&(&1)) |> Enum.join(" and ") %> in development
+  if Application.compile_env(:<%= @app_name %>, :dev_routes) do<% end %><%= if @dashboard do %>
+    # If you want to use the LiveDashboard in production, you should put
+    # it behind authentication and allow only admins to access it.
+    # If your application does not have an admins-only section yet,
+    # you can use Plug.BasicAuth to set up some basic authentication
+    # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
 
     scope "/" do<%= if @html do %>
@@ -45,13 +44,7 @@ defmodule <%= @web_namespace %>.Router do
 
       live_dashboard "/dashboard", metrics: <%= @web_namespace %>.Telemetry
     end
-  end<% end %><%= if @mailer do %>
-
-  # Enables the Swoosh mailbox preview in development.
-  #
-  # Note that preview only shows emails that were sent by the same
-  # node running the Phoenix server.
-  if Mix.env() == :dev do
+  <% end %><%= if @mailer do %>
     scope "/dev" do<%= if @html do %>
       pipe_through :browser<% else %>
       pipe_through [:fetch_session, :protect_from_forgery]<% end %>

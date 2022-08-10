@@ -54,6 +54,9 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
     ]
   ]<% end %>
 
+# Enable dev routes for dashboard and mailbox
+config :<%= @app_name %>, dev_routes: true
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 

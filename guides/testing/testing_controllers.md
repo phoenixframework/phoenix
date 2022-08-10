@@ -54,13 +54,13 @@ The test looks like this:
 ```elixir
 describe "index" do
   test "lists all posts", %{conn: conn} do
-    conn = get(conn, Routes.post_path(conn, :index))
+    conn = get(conn, ~p"/posts")
     assert html_response(conn, 200) =~ "Listing Posts"
   end
 end
 ```
 
-The test for the `index` page is quite straight-forward. It uses the `get/2` helper to make a request to the "/posts" page, returned by `Routes.post_path(conn, :index)`, then we assert we got a successful HTML response and match on its contents.
+The test for the `index` page is quite straight-forward. It uses the `get/2` helper to make a request to the `"/posts"` page, which is verified against our router in the test thanks to `~p`, then we assert we got a successful HTML response and match on its contents.
 
 ### The create action
 
@@ -72,7 +72,7 @@ def create(conn, %{"post" => post_params}) do
     {:ok, post} ->
       conn
       |> put_flash(:info, "Post created successfully.")
-      |> redirect(to: Routes.post_path(conn, :show, post))
+      |> redirect(to: ~p"/posts/#{post}")
 
     {:error, %Ecto.Changeset{} = changeset} ->
       render(conn, "new.html", changeset: changeset)
@@ -85,17 +85,17 @@ Since there are two possible outcomes for the `create`, we will have at least tw
 ```elixir
 describe "create post" do
   test "redirects to show when data is valid", %{conn: conn} do
-    conn = post(conn, Routes.post_path(conn, :create), post: @create_attrs)
+    conn = post(conn, ~p"/posts", post: @create_attrs)
 
     assert %{id: id} = redirected_params(conn)
-    assert redirected_to(conn) == Routes.post_path(conn, :show, id)
+    assert redirected_to(conn) == ~p"/posts/#{id}"
 
-    conn = get(conn, Routes.post_path(conn, :show, id))
+    conn = get(conn, ~p"/posts/#{id}")
     assert html_response(conn, 200) =~ "Show Post"
   end
 
   test "renders errors when data is invalid", %{conn: conn} do
-    conn = post(conn, Routes.post_path(conn, :create), post: @invalid_attrs)
+    conn = post(conn, ~p"/posts", post: @invalid_attrs)
     assert html_response(conn, 200) =~ "New Post"
   end
 end
@@ -141,7 +141,7 @@ def delete(conn, %{"id" => id}) do
 
   conn
   |> put_flash(:info, "Post deleted successfully.")
-  |> redirect(to: Routes.post_path(conn, :index))
+  |> redirect(to: ~p"/posts")
 end
 ```
 
@@ -152,10 +152,10 @@ The test is written like this:
     setup [:create_post]
 
     test "deletes chosen post", %{conn: conn, post: post} do
-      conn = delete(conn, Routes.post_path(conn, :delete, post))
-      assert redirected_to(conn) == Routes.post_path(conn, :index)
+      conn = delete(conn, ~p"/posts/#{post}")
+      assert redirected_to(conn) == ~p"/posts"
       assert_error_sent 404, fn ->
-        get(conn, Routes.post_path(conn, :show, post))
+        get(conn, ~p"/posts/#{post}")
       end
     end
   end
@@ -176,7 +176,7 @@ The test uses `delete/2` to delete the post and then asserts that we redirected 
 
 ```elixir
 assert_error_sent 404, fn ->
-  get(conn, Routes.post_path(conn, :show, post))
+  get(conn, ~p"/posts/#{post}")
 end
 ```
 
@@ -200,7 +200,7 @@ We could, for example, have written this test as:
 
 ```elixir
 assert_raise Ecto.NotFoundError, fn ->
-  get(conn, Routes.post_path(conn, :show, post))
+  get(conn, ~p"/posts/#{post}")
 end
 ```
 
@@ -285,7 +285,7 @@ Let's take a look at the test for the `index` action then:
 ```elixir
 describe "index" do
   test "lists all articles", %{conn: conn} do
-    conn = get(conn, Routes.article_path(conn, :index))
+    conn = get(conn, ~p"/articles")
     assert json_response(conn, 200)["data"] == []
   end
 end
@@ -304,7 +304,7 @@ def create(conn, %{"article" => article_params}) do
   with {:ok, %Article{} = article} <- News.create_article(article_params) do
     conn
     |> put_status(:created)
-    |> put_resp_header("location", Routes.article_path(conn, :show, article))
+    |> put_resp_header("location", ~p"/articles/#{article}")
     |> render("show.json", article: article)
   end
 end
@@ -317,10 +317,10 @@ This is precisely what the first test for the `create` action verifies:
 ```elixir
 describe "create" do
   test "renders article when data is valid", %{conn: conn} do
-    conn = post(conn, Routes.article_path(conn, :create), article: @create_attrs)
+    conn = post(conn, ~p"/articles", article: @create_attrs)
     assert %{"id" => id} = json_response(conn, 201)["data"]
 
-    conn = get(conn, Routes.article_path(conn, :show, id))
+    conn = get(conn, ~p"/articles/#{id}")
 
     assert %{
              "id" => id,
@@ -375,7 +375,7 @@ With this in mind, let's look at our second test for `create`:
 
 ```elixir
 test "renders errors when data is invalid", %{conn: conn} do
-  conn = post(conn, Routes.article_path(conn, :create), article: @invalid_attrs)
+  conn = post(conn, ~p"/articles", article: @invalid_attrs)
   assert json_response(conn, 422)["errors"] != %{}
 end
 ```
@@ -407,11 +407,11 @@ describe "delete article" do
   setup [:create_article]
 
   test "deletes chosen article", %{conn: conn, article: article} do
-    conn = delete(conn, Routes.article_path(conn, :delete, article))
+    conn = delete(conn, ~p"/articles/#{article}")
     assert response(conn, 204)
 
     assert_error_sent 404, fn ->
-      get(conn, Routes.article_path(conn, :show, article))
+      get(conn, ~p"/articles/#{article}")
     end
   end
 end

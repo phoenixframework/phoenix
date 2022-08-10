@@ -88,7 +88,7 @@ npm:
     FROM node:12-alpine3.12
     WORKDIR /src
     RUN mkdir assets
-    # Copy package.json + lockfile separatelly to improve caching (JS changes don't trigger `npm install` anymore)
+    # Copy package.json + lockfile separately to improve caching (JS changes don't trigger `npm install` anymore)
     COPY assets/package* assets
     WORKDIR assets
     RUN npm install

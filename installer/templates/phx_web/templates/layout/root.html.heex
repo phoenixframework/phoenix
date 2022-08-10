@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="csrf-token" content={get_csrf_token()}>
     <%%= live_title_tag assigns[:page_title] || "<%= @app_module %>", suffix: " · Phoenix Framework" %>
-    <link phx-track-static rel="stylesheet" href={Routes.static_path(@conn, "/assets/app.css")}/>
-    <script defer phx-track-static type="text/javascript" src={Routes.static_path(@conn, "/assets/app.js")}></script>
+    <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"}/>
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}></script>
   </head>
   <body>
     <header>
@@ -15,13 +15,13 @@
         <nav>
           <ul>
             <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
-            <%= if @dashboard do %><%%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-              <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>
+            <%= if @dashboard do %><%%= if Application.get_env(:<%= @app_name %>, :dev_routes) do %>
+              <li><.link href={~p"/dashboard"}>LiveDashboard</.link></li>
             <%% end %><% end %>
           </ul>
         </nav>
         <a href="https://phoenixframework.org/" class="phx-logo">
-          <img src={Routes.static_path(@conn, "/images/phoenix.png")} alt="Phoenix Framework Logo"/>
+          <img src={~p"/images/phoenix.png"} alt="Phoenix Framework Logo"/>
         </a>
       </section>
     </header>

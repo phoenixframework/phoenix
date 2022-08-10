@@ -1,10 +1,11 @@
 defmodule <%= inspect auth_module %> do
+  use <%= inspect context.web_module %>, :verified_routes
+
   import Plug.Conn
   import Phoenix.Controller
 
   alias Phoenix.LiveView
   alias <%= inspect context.module %>
-  alias <%= inspect context.web_module %>.Router.Helpers, as: Routes
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -122,6 +123,9 @@ defmodule <%= inspect auth_module %> do
       on <%= schema.singular %>_token.
       Redirects to login page if there's no logged <%= schema.singular %>.
 
+    * `:redirect_if_<%= schema.singular %>_is_authenticated` - Authenticates the <%= schema.singular %> from the session.
+      Redirects to signed_in_path if there's a logged <%= schema.singular %>.
+
   ## Examples
 
   Use the `on_mount` lifecycle macro in LiveViews to mount or authenticate
@@ -147,12 +151,25 @@ defmodule <%= inspect auth_module %> do
   def on_mount(:ensure_authenticated, _params, session, socket) do
     socket = mount_current_<%= schema.singular %>(session, socket)
 
-    case socket.assigns.current_<%= schema.singular %> do
-      nil ->
-        {:halt, LiveView.redirect(socket, to: Routes.<%= schema.singular %>_session_path(socket, :new))}
+    if socket.assigns.current_<%= schema.singular %> do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> LiveView.put_flash(:error, "You must log in to access this page.")
+        |> LiveView.redirect(to: ~p"<%= schema.route_prefix %>/log_in")
 
-      _ ->
-        {:cont, socket}
+      {:halt, socket}
+    end
+  end
+
+  def on_mount(:redirect_if_<%= schema.singular %>_is_authenticated, _params, session, socket) do
+    socket = mount_current_<%= schema.singular %>(session, socket)
+
+    if socket.assigns.current_<%= schema.singular %> do
+      {:halt, LiveView.redirect(socket, to: signed_in_path(socket))}
+    else
+      {:cont, socket}
     end
   end
 
@@ -160,7 +177,7 @@ defmodule <%= inspect auth_module %> do
     case session do
       %{"<%= schema.singular %>_token" => <%= schema.singular %>_token} ->
         LiveView.assign_new(socket, :current_<%= schema.singular %>, fn ->
-          Accounts.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
+          <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
         end)
 
       %{} ->
@@ -194,7 +211,7 @@ defmodule <%= inspect auth_module %> do
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
-      |> redirect(to: Routes.<%= schema.route_helper %>_session_path(conn, :new))
+      |> redirect(to: ~p"<%= schema.route_prefix %>/log_in")
       |> halt()
     end
   end
@@ -211,5 +228,5 @@ defmodule <%= inspect auth_module %> do
 
   defp maybe_store_return_to(conn), do: conn
 
-  defp signed_in_path(_conn), do: "/"
+  defp signed_in_path(_conn), do: ~p"/"
 end

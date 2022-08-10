@@ -118,6 +118,9 @@ defmodule Phoenix.MixProject do
       groups_for_modules: groups_for_modules(),
       extras: extras(),
       groups_for_extras: groups_for_extras(),
+      groups_for_functions: [
+        "Reflection": &(&1[:type] == :reflection)
+      ],
       skip_undefined_reference_warnings_on: ["CHANGELOG.md"]
     ]
   end
@@ -182,6 +185,7 @@ defmodule Phoenix.MixProject do
     # Phoenix.Presence
     # Phoenix.Router
     # Phoenix.Token
+    # Phoenix.VerifiedRoutes
 
     [
       Testing: [
@@ -191,6 +195,10 @@ defmodule Phoenix.MixProject do
       "Adapters and Plugs": [
         Phoenix.CodeReloader,
         Phoenix.Endpoint.Cowboy2Adapter
+      ],
+      "Digester": [
+        Phoenix.Digester.Compressor,
+        Phoenix.Digester.Gzip
       ],
       "Socket and Transport": [
         Phoenix.Socket,

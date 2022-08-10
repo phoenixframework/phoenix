@@ -31,7 +31,7 @@ defmodule Phoenix.Socket.Transport do
 
   Whenever the transport receives a new connection, it should invoke
   the `c:connect/1` callback with a map of metadata. Different sockets
-  may require different metadatas.
+  may require different metadata.
 
   If the connection is accepted, the transport can move the connection
   to another process, if so desires, or keep using the same process. The

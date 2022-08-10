@@ -11,14 +11,14 @@ defmodule <%= inspect context.web_module %>.LiveHelpers do
 
   ## Examples
 
-      <.modal return_to={Routes.<%= schema.singular %>_index_path(@socket, :index)}>
+      <.modal return_to={Routes.<%= schema.route_helper %>_index_path(@socket, :index)}>
         <.live_component
           module={<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent}
           id={@<%= schema.singular %>.id || :new}
           title={@page_title}
           action={@live_action}
           <%= schema.singular %>={@<%= schema.singular %>}
-          return_to={Routes.<%= schema.singular %>_index_path(@socket, :index)}
+          return_to={Routes.<%= schema.route_helper %>_index_path(@socket, :index)}
         />
       </.modal>
   """

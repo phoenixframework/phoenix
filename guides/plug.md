@@ -240,16 +240,16 @@ defmodule HelloWeb.MessageController do
       {:ok, user} ->
         case find_message(params["id"]) do
           nil ->
-            conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/")
+            conn |> put_flash(:info, "That message wasn't found") |> redirect(to: ~p"/")
           message ->
             if Authorizer.can_access?(user, message) do
               render(conn, :show, page: message)
             else
-              conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/")
+              conn |> put_flash(:info, "You can't access that page") |> redirect(to: ~p"/")
             end
         end
       :error ->
-        conn |> put_flash(:info, "You must be logged in") |> redirect(to: "/")
+        conn |> put_flash(:info, "You must be logged in") |> redirect(to: ~p"/")
     end
   end
 end
@@ -274,14 +274,14 @@ defmodule HelloWeb.MessageController do
       {:ok, user} ->
         assign(conn, :user, user)
       :error ->
-        conn |> put_flash(:info, "You must be logged in") |> redirect(to: "/") |> halt()
+        conn |> put_flash(:info, "You must be logged in") |> redirect(to: ~p"/") |> halt()
     end
   end
 
   defp fetch_message(conn, _) do
     case find_message(conn.params["id"]) do
       nil ->
-        conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/") |> halt()
+        conn |> put_flash(:info, "That message wasn't found") |> redirect(to: ~p"/") |> halt()
       message ->
         assign(conn, :message, message)
     end
@@ -291,7 +291,7 @@ defmodule HelloWeb.MessageController do
     if Authorizer.can_access?(conn.assigns[:user], conn.assigns[:message]) do
       conn
     else
-      conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/") |> halt()
+      conn |> put_flash(:info, "You can't access that page") |> redirect(to: ~p"/") |> halt()
     end
   end
 end
