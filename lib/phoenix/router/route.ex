@@ -48,7 +48,7 @@ defmodule Phoenix.Router.Route do
   """
   @spec build(non_neg_integer, :match | :forward, atom, String.t, String.t | nil, atom, atom, atom | nil, list(atom), map, map, map, boolean, boolean) :: t
   def build(line, kind, verb, path, host, plug, plug_opts, helper, pipe_through, private, assigns, metadata, trailing_slash?, warn_on_verify?)
-      when is_atom(verb) and (is_binary(host) or is_nil(host)) and
+      when is_atom(verb) and (is_binary(host) or is_nil(host) or is_list(host)) and
            is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
            is_list(pipe_through) and is_map(private) and is_map(assigns) and
            is_map(metadata) and kind in [:match, :forward] and
@@ -64,12 +64,13 @@ defmodule Phoenix.Router.Route do
   """
   def exprs(route, forwards) do
     {path, binding} = build_path_and_binding(route)
+    hosts = if is_list(route.host), do: route.host, else: [route.host]
 
     %{
       path: path,
       binding: binding,
       dispatch: build_dispatch(route, forwards),
-      host: Plug.Router.Utils.build_host_match(route.host),
+      host: for(host <- hosts, do: Plug.Router.Utils.build_host_match(host)),
       path_params: build_path_params(binding),
       prepare: build_prepare(route),
       verb_match: verb_match(route.verb)

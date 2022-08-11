@@ -32,13 +32,16 @@ defmodule Phoenix.Router.RouteTest do
     assert exprs.verb_match == "GET"
     assert exprs.path == ["foo", {:arg0, [], Phoenix.Router.Route}]
     assert exprs.binding == [{"bar", {:arg0, [], Phoenix.Router.Route}}]
-    assert Macro.to_string(exprs.host) == "_"
+    assert Macro.to_string(exprs.host) == "[_]"
 
     exprs = build(1, :match, :get, "/", "foo.", Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true) |> exprs(%{})
-    assert Macro.to_string(exprs.host) == "\"foo.\" <> _"
+    assert Macro.to_string(exprs.host) == "[\"foo.\" <> _]"
+
+    exprs = build(1, :match, :get, "/", ["foo.", "example.com"], Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true) |> exprs(%{})
+    assert Macro.to_string(exprs.host) == "[\"foo.\" <> _, \"example.com\"]"
 
     exprs = build(1, :match, :get, "/", "foo.com", Hello, :world, "hello_world", [], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true) |> exprs(%{})
-    assert Macro.to_string(exprs.host) == "\"foo.com\""
+    assert Macro.to_string(exprs.host) == "[\"foo.com\"]"
   end
 
   test "builds a catch-all verb_match for match routes" do
