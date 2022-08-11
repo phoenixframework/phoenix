@@ -39,6 +39,9 @@ will continue to work and be generated. You can disable router helpers by passin
   * [Router] Add `Phoenix.VerifiedRoutes` for `~p`-based route generation with compile-time verification.
   * [Router] Support `helpers: false` to `use Phoenix.Router` to disable helper generation
 
+### JavaScript Client Bug Fixes
+  * Fix heartbeat being sent after disconnect and causing abnormal disconnects
+
 # Changelog for v1.6
 
 See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0f4de6decba7b) to upgrade from Phoenix 1.5.x.
