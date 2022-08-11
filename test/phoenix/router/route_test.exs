@@ -11,11 +11,11 @@ defmodule Phoenix.Router.RouteTest do
   end
 
   test "builds a route based on verb, path, plug, plug options and helper" do
-    route = build(1, :match, :get, "/foo/:bar", nil, Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{log: :debug}, true, true)
+    route = build(1, :match, :get, "/foo/:bar", [], Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{log: :debug}, true, true)
     assert route.kind == :match
     assert route.verb == :get
     assert route.path == "/foo/:bar"
-    assert route.host == nil
+    assert route.hosts == []
     assert route.line == 1
     assert route.plug == Hello
     assert route.plug_opts == :world
@@ -28,28 +28,31 @@ defmodule Phoenix.Router.RouteTest do
   end
 
   test "builds expressions based on the route" do
-    exprs = build(1, :match, :get, "/foo/:bar", nil, Hello, :world, "hello_world", [], %{}, %{}, %{}, false, true) |> exprs(%{})
+    exprs = build(1, :match, :get, "/foo/:bar", [], Hello, :world, "hello_world", [], %{}, %{}, %{}, false, true) |> exprs(%{})
     assert exprs.verb_match == "GET"
     assert exprs.path == ["foo", {:arg0, [], Phoenix.Router.Route}]
     assert exprs.binding == [{"bar", {:arg0, [], Phoenix.Router.Route}}]
-    assert Macro.to_string(exprs.host) == "_"
+    assert Macro.to_string(exprs.hosts) == "[_]"
 
-    exprs = build(1, :match, :get, "/", "foo.", Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true) |> exprs(%{})
-    assert Macro.to_string(exprs.host) == "\"foo.\" <> _"
+    exprs = build(1, :match, :get, "/", ["foo."], Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true) |> exprs(%{})
+    assert Macro.to_string(exprs.hosts) == "[\"foo.\" <> _]"
 
-    exprs = build(1, :match, :get, "/", "foo.com", Hello, :world, "hello_world", [], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true) |> exprs(%{})
-    assert Macro.to_string(exprs.host) == "\"foo.com\""
+    exprs = build(1, :match, :get, "/", ["foo.", "example.com"], Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true) |> exprs(%{})
+    assert Macro.to_string(exprs.hosts) == "[\"foo.\" <> _, \"example.com\"]"
+
+    exprs = build(1, :match, :get, "/", ["foo.com"], Hello, :world, "hello_world", [], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true) |> exprs(%{})
+    assert Macro.to_string(exprs.hosts) == "[\"foo.com\"]"
   end
 
   test "builds a catch-all verb_match for match routes" do
-    route = build(1, :match, :*, "/foo/:bar", nil, __MODULE__, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true)
+    route = build(1, :match, :*, "/foo/:bar", [], __MODULE__, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true)
     assert route.verb == :*
     assert route.kind == :match
     assert exprs(route, %{}).verb_match == {:_verb, [], nil}
   end
 
   test "builds a catch-all verb_match for forwarded routes" do
-    route = build(1, :forward, :*, "/foo", nil, __MODULE__, :world, "hello_world", [:foo], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true)
+    route = build(1, :forward, :*, "/foo", [], __MODULE__, :world, "hello_world", [:foo], %{foo: "bar"}, %{bar: "baz"}, %{}, false, true)
     assert route.verb == :*
     assert route.kind == :forward
     assert exprs(route, %{__MODULE__ => ["foo"]}).verb_match == {:_verb, [], nil}

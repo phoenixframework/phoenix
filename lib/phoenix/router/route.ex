@@ -13,7 +13,7 @@ defmodule Phoenix.Router.Route do
     * `:line` - the line the route was defined
     * `:kind` - the kind of route, one of `:match`, `:forward`
     * `:path` - the normalized path as string
-    * `:host` - the request host or host prefix
+    * `:hosts` - the this of request hosts or host prefixes
     * `:plug` - the plug module
     * `:plug_opts` - the plug options
     * `:helper` - the name of the helper as a string (may be nil)
@@ -24,7 +24,7 @@ defmodule Phoenix.Router.Route do
     * `:trailing_slash?` - whether or not the helper functions append a trailing slash
   """
 
-  defstruct [:verb, :line, :kind, :path, :host, :plug, :plug_opts,
+  defstruct [:verb, :line, :kind, :path, :hosts, :plug, :plug_opts,
              :helper, :private, :pipe_through, :assigns, :metadata,
              :trailing_slash?, :warn_on_verify?]
 
@@ -47,13 +47,13 @@ defmodule Phoenix.Router.Route do
   and returns a `Phoenix.Router.Route` struct.
   """
   @spec build(non_neg_integer, :match | :forward, atom, String.t, String.t | nil, atom, atom, atom | nil, list(atom), map, map, map, boolean, boolean) :: t
-  def build(line, kind, verb, path, host, plug, plug_opts, helper, pipe_through, private, assigns, metadata, trailing_slash?, warn_on_verify?)
-      when is_atom(verb) and (is_binary(host) or is_nil(host)) and
+  def build(line, kind, verb, path, hosts, plug, plug_opts, helper, pipe_through, private, assigns, metadata, trailing_slash?, warn_on_verify?)
+      when is_atom(verb) and is_list(hosts) and
            is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
            is_list(pipe_through) and is_map(private) and is_map(assigns) and
            is_map(metadata) and kind in [:match, :forward] and
            is_boolean(trailing_slash?) do
-    %Route{kind: kind, verb: verb, path: path, host: host, private: private,
+    %Route{kind: kind, verb: verb, path: path, hosts: hosts, private: private,
            plug: plug, plug_opts: plug_opts, helper: helper,
            pipe_through: pipe_through, assigns: assigns, line: line, metadata: metadata,
            trailing_slash?: trailing_slash?, warn_on_verify?: warn_on_verify?}
@@ -69,11 +69,16 @@ defmodule Phoenix.Router.Route do
       path: path,
       binding: binding,
       dispatch: build_dispatch(route, forwards),
-      host: Plug.Router.Utils.build_host_match(route.host),
+      hosts: build_host_match(route.hosts),
       path_params: build_path_params(binding),
       prepare: build_prepare(route),
       verb_match: verb_match(route.verb)
     }
+  end
+
+  def build_host_match([]), do: [Plug.Router.Utils.build_host_match(nil)]
+  def build_host_match([_ | _] = hosts) do
+    for host <- hosts, do: Plug.Router.Utils.build_host_match(host)
   end
 
   defp verb_match(:*), do: Macro.var(:_verb, nil)
