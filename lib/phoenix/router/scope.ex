@@ -6,7 +6,7 @@ defmodule Phoenix.Router.Scope do
   @pipes :phoenix_pipeline_scopes
   @top :phoenix_top_scopes
 
-  defstruct path: [], alias: [], as: [], pipes: [], host: nil, private: %{}, assigns: %{}, log: :debug, trailing_slash?: false
+  defstruct path: [], alias: [], as: [], pipes: [], hosts: [], private: %{}, assigns: %{}, log: :debug, trailing_slash?: false
 
   @doc """
   Initializes the scope.
@@ -50,7 +50,7 @@ defmodule Phoenix.Router.Scope do
       register_forwards(module, path, plug)
     end
 
-    Phoenix.Router.Route.build(line, kind, verb, path, top.host, alias, plug_opts, as, top.pipes, private, assigns, metadata, trailing_slash?, warn_on_verify?)
+    Phoenix.Router.Route.build(line, kind, verb, path, top.hosts, alias, plug_opts, as, top.pipes, private, assigns, metadata, trailing_slash?, warn_on_verify?)
   end
 
   defp register_forwards(module, path, plug) when is_atom(plug) do
@@ -133,7 +133,12 @@ defmodule Phoenix.Router.Scope do
 
     alias = append_unless_false(top, opts, :alias, &Atom.to_string(&1))
     as = append_unless_false(top, opts, :as, & &1)
-    host = Keyword.get(opts, :host)
+    hosts =
+      case Keyword.fetch(opts, :host) do
+        {:ok, val} -> validate_hosts!(val)
+        :error -> top.hosts
+      end
+
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
 
@@ -143,13 +148,28 @@ defmodule Phoenix.Router.Scope do
       path: top.path ++ path,
       alias: alias,
       as: as,
-      host: host || top.host,
+      hosts: hosts,
       pipes: top.pipes,
       private: Map.merge(top.private, private),
       assigns: Map.merge(top.assigns, assigns),
       log: Keyword.get(opts, :log, top.log),
       trailing_slash?: Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
     })
+  end
+
+  defp validate_hosts!(nil), do: []
+  defp validate_hosts!(host) when is_binary(host), do: [host]
+  defp validate_hosts!(hosts) when is_list(hosts) do
+    for host <- hosts do
+      unless is_binary(host), do: raise_invalid_host(host)
+
+      host
+    end
+  end
+  defp validate_hosts!(invalid), do: raise_invalid_host(invalid)
+
+  defp raise_invalid_host(host) do
+    raise ArgumentError, "expected router scope :host to be compile-time string or list of strings, got: #{inspect(host)}"
   end
 
   defp append_unless_false(top, opts, key, fun) do

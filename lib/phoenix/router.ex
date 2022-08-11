@@ -613,7 +613,7 @@ defmodule Phoenix.Router do
       dispatch: dispatch,
       verb_match: verb_match,
       path_params: path_params,
-      host: hosts
+      hosts: hosts
     } = expr
 
     new_acc_clauses =

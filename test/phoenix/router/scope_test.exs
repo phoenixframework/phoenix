@@ -193,6 +193,18 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     end
   end
 
+  test "bad host raises" do
+    assert_raise ArgumentError, "expected router scope :host to be compile-time string or list of strings, got: nil", fn ->
+      defmodule BadRouter do
+        use Phoenix.Router
+
+        scope "/admin", host: ["foo.", nil] do
+          get "/users/:id", Api.V1.UserController, :baz_host
+        end
+      end
+    end
+  end
+
   test "private data in scopes" do
     conn = call(Router, :get, "/api/users")
     assert conn.status == 200
