@@ -78,7 +78,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb do"
         assert file =~ "use Phoenix.View,\n        root: \"lib/phx_blog_web/templates\""
-        assert file =~ "use Phoenix.HTML"
+        assert file =~ "import Phoenix.HTML"
         assert file =~ "Phoenix.LiveView"
       end
 
