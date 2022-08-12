@@ -1,42 +1,116 @@
-<section class="phx-hero"><%= if @gettext do %>
-  <h1><%%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1><% else %>
-  <h1>Welcome to Phoenix!</h1><% end %>
-  <p>Peace of mind from prototype to production</p>
-</section>
+<div class="sm:text-center lg:text-center">
+  <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl"><%= if @gettext do %>
+    <span class="block xl:inline"><%%= gettext("Welcome to") %></span>
+    <span class="block text-indigo-600 xl:inline"><%%= gettext("Phoenix!") %></span><% else %>
+    <span class="block xl:inline">Welcome to</span>
+    <span class="block text-indigo-600 xl:inline">Phoenix!</span><% end %>
+  </h1>
+  <p class="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg lg:max-w-xl lg:mx-auto md:mt-5 md:text-xl">
+    Peace of mind from prototype to production
+  </p>
+  <div class="mt-5 sm:mt-8 lg:flex lg:justify-center">
+    <div class="lg:mr-3">
+      <a
+        href="https://hexdocs.pm/phoenix/overview.html"
+        class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
+      >
+        Get started
+      </a>
+    </div>
+    <div class="sm:mt-3 lg:mt-0">
+      <a
+        href="#"
+        class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10"
+      >
+        Live demo
+      </a>
+    </div>
+  </div>
+</div>
+<div class="py-12 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mt-10">
+      <dl class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+        <div class="relative">
+          <dt>
+            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Guides & Docs</p>
+          </dt>
+          <dd class="mt-2 ml-16 text-base text-gray-500">
+            View our step-by-step guides, or browse the comprehensive API docs
+          </dd>
+          <ul class="list-disc mt-2 ml-20 pl-1 text-base text-indigo-600">
+            <li>
+              <a href="https://hexdocs.pm/phoenix/overview.html">Guides &amp; Docs</a>
+            </li>
+            <li>
+              <a href="https://github.com/phoenixframework/phoenix">Source</a>
+            </li>
+            <li>
+              <a href="https://github.com/phoenixframework/phoenix/blob/">Changelog</a>
+            </li>
+          </ul>
+        </div>
 
-<section class="row">
-  <article class="column">
-    <h2>Resources</h2>
-    <ul>
-      <li>
-        <a href="https://hexdocs.pm/phoenix/overview.html">Guides &amp; Docs</a>
-      </li>
-      <li>
-        <a href="https://github.com/phoenixframework/phoenix">Source</a>
-      </li>
-      <li>
-        <a href="https://github.com/phoenixframework/phoenix/blob/<%= @phoenix_github_version_tag %>/CHANGELOG.md"><%= @phoenix_github_version_tag %> Changelog</a>
-      </li>
-    </ul>
-  </article>
-  <article class="column">
-    <h2>Help</h2>
-    <ul>
-      <li>
-        <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
-      </li>
-      <li>
-        <a href="https://web.libera.chat/#elixir">#elixir on Libera Chat (IRC)</a>
-      </li>
-      <li>
-        <a href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>
-      </li>
-      <li>
-        <a href="https://elixir-slackin.herokuapp.com/">Elixir on Slack</a>
-      </li>
-      <li>
-        <a href="https://discord.gg/elixir">Elixir on Discord</a>
-      </li>
-    </ul>
-  </article>
-</section>
+        <div class="relative">
+          <dt>
+            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+              <!-- Heroicon name: outline/annotation -->
+              <svg
+                class="h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                />
+              </svg>
+            </div>
+            <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Get Help</p>
+          </dt>
+          <dd class="mt-2 ml-16 text-base text-gray-500">
+            Our welcoming community is here to help get you started or discuss advanced topics. Come say hello on the forums or slack!
+          </dd>
+          <ul class="list-disc mt-2 ml-20 pl-1 text-base text-indigo-600">
+            <li>
+              <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
+            </li>
+            <li>
+              <a href="https://web.libera.chat/#elixir">#elixir on Libera Chat (IRC)</a>
+            </li>
+            <li>
+              <a href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>
+            </li>
+            <li>
+              <a href="https://elixir-slackin.herokuapp.com/">Elixir on Slack</a>
+            </li>
+            <li>
+              <a href="https://discord.gg/elixir">Elixir on Discord</a>
+            </li>
+          </ul>
+        </div>
+      </dl>
+    </div>
+  </div>
+</div>

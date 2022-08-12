@@ -1,10 +1,7 @@
-<h1>Confirm account</h1>
-
-<.form :let={_f} for={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirmation/#{@token}"}>
-  <div>
-    <%%= submit "Confirm my account" %>
-  </div>
-</.form>
+<.simple_form :let={_f} for={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirmation/#{@token}"}>
+  <:title>Confirm account</:title>
+  <:confirm>Confirm my account</:confirm>
+</.simple_form>
 
 <p>
   <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |

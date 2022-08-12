@@ -1,26 +1,12 @@
-<h1>Listing <%= schema.human_plural %></h1>
-
-<table>
-  <thead>
-    <tr>
-<%= for {k, _} <- schema.attrs do %>      <th><%= Phoenix.Naming.humanize(Atom.to_string(k)) %></th>
+<.table rows={@<%= schema.plural %>}>
+  <:title>Listing <%= schema.human_plural %></:title>
+<%= for {k, _} <- schema.attrs do %>    <:col :let={<%= schema.singular %>} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= <%= schema.singular %>.<%= k %> %></:col>
 <% end %>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-<%%= for <%= schema.singular %> <- @<%= schema.plural %> do %>
-    <tr>
-<%= for {k, _} <- schema.attrs do %>      <td><%%= <%= schema.singular %>.<%= k %> %></td>
-<% end %>
-      <td>
-        <span><.link href={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link></span>
-        <span><.link href={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit"}>Edit</.link></span>
-        <span><.link href={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"} method="delete" data-confirm="Are you sure?">Delete</.link></span>
-      </td>
-    </tr>
-<%% end %>
-  </tbody>
-</table>
+  <:col :let={<%= schema.singular %>} label="">
+    <span><.link href={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link></span>
+    <span><.link href={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit"}>Edit</.link></span>
+    <span><.link href={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"} method="delete" data-confirm="Are you sure?">Delete</.link></span>
+  </:col>
+</.table>
 
 <span><.link href={~p"<%= schema.route_prefix %>/new"}>New <%= schema.human_singular %></.link></span>

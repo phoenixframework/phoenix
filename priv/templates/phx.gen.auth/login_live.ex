@@ -3,9 +3,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <h1>Log in</h1>
-
-    <.form
+    <.simple_form
       id="login_form"
       :let={f}
       for={:<%= schema.singular %>}
@@ -13,18 +11,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       as={:<%= schema.singular %>}
       phx-update="ignore"
     >
-      <%%= label f, :email %>
-      <%%= email_input f, :email, required: true, value: @email %>
+      <:title>Log in</:title>
 
-      <%%= label f, :password %>
-      <%%= password_input f, :password, required: true %>
+      <.input field={{f, :email}} type="email" label="Email" required />
+      <.input field={{f, :password}} type="password" label="Password" required />
+      <.input field={{f, :remember_me}} type="checkbox" label="Keep me logged in for 60 days" />
 
-      <%%= label f, :remember_me, "Keep me logged in for 60 days" %>
-      <%%= checkbox f, :remember_me %>
-      <div>
-        <%%= submit "Log in" %>
-      </div>
-    </.form>
+      <:confirm>Log in</:confirm>
+    </.simple_form>
 
     <p>
       <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |

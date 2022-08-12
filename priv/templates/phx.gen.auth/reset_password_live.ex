@@ -5,26 +5,27 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <h1>Reset password</h1>
-    <.form id="reset_password_form" :let={f} for={@changeset} phx-submit="reset_password" phx-change="validate">
+    <.simple_form id="reset_password_form" :let={f} for={@changeset} phx-submit="reset_password" phx-change="validate">
+      <:title>Reset Password</:title>
       <%%= if @changeset.action == :insert do %>
-        <div class="alert alert-danger">
-          <p>Oops, something went wrong! Please check the errors below.</p>
-        </div>
+        <.error message="Oops, something went wrong! Please check the errors below." />
       <%% end %>
-
-      <%%= label f, :password, "New password" %>
-      <%%= password_input f, :password, required: true, value: input_value(f, :password) %>
-      <%%= error_tag f, :password %>
-
-      <%%= label f, :password_confirmation, "Confirm new password" %>
-      <%%= password_input f, :password_confirmation, required: true, value: input_value(f, :password_confirmation) %>
-      <%%= error_tag f, :password_confirmation %>
-
-      <div>
-        <%%= submit "Reset password" %>
-      </div>
-    </.form>
+      <.input
+        field={{f, :password}}
+        type="password"
+        label="New password"
+        value={input_value(f, :password)}
+        required
+      />
+      <.input
+        field={{f, :password_confirmation}}
+        type="password"
+        label="Confirm new password"
+        value={input_value(f, :password_confirmation)}
+        required
+      />
+      <:confirm>Reset password</:confirm>
+    </.simple_form>
 
     <p>
       <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |

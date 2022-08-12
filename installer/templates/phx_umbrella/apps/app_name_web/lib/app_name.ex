@@ -25,7 +25,6 @@ defmodule <%= @web_namespace %> do
 
       import Plug.Conn<%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %>
-      alias <%= @web_namespace %>.Router.Helpers, as: Routes
 
       unquote(verified_routes())
     end
@@ -34,7 +33,7 @@ defmodule <%= @web_namespace %> do
   def view do
     quote do
       use Phoenix.View,
-        root: "lib/<%= @web_app_name %>/templates",
+        root: "lib/<%= @lib_web_name %>/templates",
         namespace: <%= @web_namespace %>
 
       # Import convenience functions from controllers
@@ -73,7 +72,7 @@ defmodule <%= @web_namespace %> do
 
   def router do
     quote do
-      use Phoenix.Router
+      use Phoenix.Router, helpers: false
 
       import Plug.Conn
       import Phoenix.Controller<%= if @html do %>
@@ -99,8 +98,9 @@ defmodule <%= @web_namespace %> do
 
   defp view_helpers do
     quote do<%= if @html do %>
-      # Use all HTML functionality (forms, tags, etc)
-      use Phoenix.HTML
+      import Phoenix.HTML
+      import Phoenix.HTML.Form
+      import <%= @web_namespace %>.Components
 
       # Import and alias LiveView and .heex helpers (live_render, <.link>, <.form>, etc)
       import Phoenix.LiveView.Helpers
@@ -108,13 +108,13 @@ defmodule <%= @web_namespace %> do
 <% end %>
       # Import basic rendering functionality (render, render_layout, etc)
       import Phoenix.View
-
-      import <%= @web_namespace %>.ErrorHelpers<%= if @gettext do %>
+      <%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %><%= if @html do %>
       alias Phoenix.LiveView.JS<% end %>
       unquote(verified_routes())
     end
   end
+
 
   @doc """
   When used, dispatch to the appropriate controller/view/etc.

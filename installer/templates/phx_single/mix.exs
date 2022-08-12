@@ -44,7 +44,8 @@ defmodule <%= @app_module %>.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       # TODO bump to 0.18 on release
       {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", override: true},
-      {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
+      {:floki, ">= 0.30.0", only: :test},
+      {:tailwind, "~> 0.1.8", runtime: Mix.env() == :dev},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.6"},<% end %><%= if @assets do %>
       {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},<% end %><%= if @mailer do %>
       {:swoosh, "~> 1.3"},<% end %>
@@ -52,8 +53,7 @@ defmodule <%= @app_module %>.MixProject do
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 0.20"},<% end %>
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"},
-      {:tailwind, "~> 0.1.6", runtime: Mix.env() == :dev}
+      {:plug_cowboy, "~> 2.5"}
     ]
   end
 

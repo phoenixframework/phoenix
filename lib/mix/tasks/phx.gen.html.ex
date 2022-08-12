@@ -119,7 +119,6 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     [
       {:eex, "controller.ex",       Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_controller.ex"])},
       {:eex, "edit.html.heex",      Path.join([web_prefix, "templates", web_path, schema.singular, "edit.html.heex"])},
-      {:eex, "form.html.heex",      Path.join([web_prefix, "templates", web_path, schema.singular, "form.html.heex"])},
       {:eex, "index.html.heex",     Path.join([web_prefix, "templates", web_path, schema.singular, "index.html.heex"])},
       {:eex, "new.html.heex",       Path.join([web_prefix, "templates", web_path, schema.singular, "new.html.heex"])},
       {:eex, "show.html.heex",      Path.join([web_prefix, "templates", web_path, schema.singular, "show.html.heex"])},
@@ -164,41 +163,47 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   def inputs(%Schema{} = schema) do
     Enum.map(schema.attrs, fn
       {_, {:references, _}} ->
-        {nil, nil, nil}
+        nil
       {key, :integer} ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)} %>), error(key)}
+        ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" />)
       {key, :float} ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any" %>), error(key)}
+        ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" step="any" />)
       {key, :decimal} ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any" %>), error(key)}
+        ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" step="any" />)
       {key, :boolean} ->
-        {label(key), ~s(<%= checkbox f, #{inspect(key)} %>), error(key)}
+        ~s(<.input field={{f, #{inspect(key)}}} type="checkbox" label="#{label(key)}" />)
       {key, :text} ->
-        {label(key), ~s(<%= textarea f, #{inspect(key)} %>), error(key)}
+        ~s(<.input field={{f, #{inspect(key)}}} type="text" label="#{label(key)}" />)
       {key, :date} ->
-        {label(key), ~s(<%= date_select f, #{inspect(key)} %>), error(key)}
+        ~s(<.input field={{f, #{inspect(key)}}} type="date" label="#{label(key)}" />)
       {key, :time} ->
-        {label(key), ~s(<%= time_select f, #{inspect(key)} %>), error(key)}
+        ~s(<.input field={{f, #{inspect(key)}}} type="time" label="#{label(key)}" />)
       {key, :utc_datetime} ->
-        {label(key), ~s(<%= datetime_select f, #{inspect(key)} %>), error(key)}
+        ~s(<.input field={{f, #{inspect(key)}}} type="datetime-local" label="#{label(key)}" />)
       {key, :naive_datetime} ->
-        {label(key), ~s(<%= datetime_select f, #{inspect(key)} %>), error(key)}
+        ~s(<.input field={{f, #{inspect(key)}}} type="datetime-local" label="#{label(key)}" />)
       {key, {:array, :integer}} ->
-        {label(key), ~s(<%= multiple_select f, #{inspect(key)}, ["1": 1, "2": 2] %>), error(key)}
+        ~s(<.input field={{f, #{inspect(key)}}} type="datetime-local" label="#{label(key)}" />)
       {key, {:array, _}} ->
-        {label(key), ~s(<%= multiple_select f, #{inspect(key)}, ["Option 1": "option1", "Option 2": "option2"] %>), error(key)}
+        ~s"""
+        <.input field={{f, #{inspect(key)}}} type="select" multiple label="#{label(key)}">
+          <:option value="option1">Option 1</:option>
+          <:option value="option2">Option 2</:option>
+        </.input>
+        """
       {key, {:enum, _}}  ->
-        {label(key), ~s|<%= select f, #{inspect(key)}, Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)}), prompt: "Choose a value" %>|, error(key)}
+        ~s"""
+        <.input field={{f, #{inspect(key)}}} type="select" label="#{label(key)}">
+          <:option>Choose a value</:option>
+          <%= for value <- Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)}) do %>
+            <:option value={value}><%= value %></:option>
+          <% end %>
+        </.input>
+        """
       {key, _}  ->
-        {label(key), ~s(<%= text_input f, #{inspect(key)} %>), error(key)}
+        ~s(<.input field={{f, #{inspect(key)}}} type="text" label="#{label(key)}" />)
     end)
   end
 
-  defp label(key) do
-    ~s(<%= label f, #{inspect(key)} %>)
-  end
-
-  defp error(field) do
-    ~s(<%= error_tag f, #{inspect(field)} %>)
-  end
+  defp label(key), do: to_string(key)
 end

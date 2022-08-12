@@ -523,7 +523,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/templates/warehouse/user_confirmation/new.html.heex", fn file ->
         assert file =~
-                 ~S|<.form :let={f} for={:user} action={~p"/warehouse/users/confirm"}>|
+                 ~S|<.simple_form :let={f} for={:user} action={~p"/warehouse/users/confirm"}>|
 
         assert file =~
                  ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
@@ -589,7 +589,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         "lib/my_app_web/templates/warehouse/user_reset_password/edit.html.heex",
         fn file ->
           assert file =~
-                   ~S|<.form :let={f} for={@changeset} action={~p"/warehouse/users/reset_password/#{@token}"}>|
+                   ~S|<.simple_form :let={f} for={@changeset} action={~p"/warehouse/users/reset_password/#{@token}"}>|
 
           assert file =~
                    ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
@@ -603,7 +603,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         "lib/my_app_web/templates/warehouse/user_reset_password/new.html.heex",
         fn file ->
           assert file =~
-                   ~S|<.form :let={f} for={:user} action={~p"/warehouse/users/reset_password"}>|
+                   ~S|<.simple_form :let={f} for={:user} action={~p"/warehouse/users/reset_password"}>|
 
           assert file =~
                    ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
@@ -630,7 +630,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/templates/warehouse/user_session/new.html.heex", fn file ->
         assert file =~
-                 ~S|<.form :let={f} for={@conn} action={~p"/warehouse/users/log_in"} as={:user}>|
+                 ~S|<.simple_form :let={f} for={@conn} action={~p"/warehouse/users/log_in"} as={:user}>|
 
         assert file =~
                  ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
@@ -656,10 +656,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/templates/warehouse/user_settings/edit.html.heex", fn file ->
         assert file =~
-                 ~S|<.form :let={f} for={@email_changeset} action={~p"/warehouse/users/settings"} id="update_email">|
+                 ~S|<.simple_form :let={f} for={@email_changeset} action={~p"/warehouse/users/settings"} id="update_email">|
 
         assert file =~
-                 ~S|<.form :let={f} for={@password_changeset} action={~p"/warehouse/users/settings"} id="update_password">|
+                 ~S|<.simple_form :let={f} for={@password_changeset} action={~p"/warehouse/users/settings"} id="update_password">|
       end)
 
       assert_file("lib/my_app_web/views/warehouse/user_settings_view.ex", fn file ->

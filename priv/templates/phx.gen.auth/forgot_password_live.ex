@@ -5,16 +5,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <h1>Forgot your password?</h1>
+    <.simple_form id="reset_password_form" :let={f} for={:<%= schema.singular %>} phx-submit="send_email">
+      <:title>Forgot your password?</:title>
 
-    <.form id="reset_password_form" :let={f} for={:<%= schema.singular %>} phx-submit="send_email">
-      <%%= label f, :email %>
-      <%%= email_input f, :email, required: true %>
+      <.input field={{f, :email}} type="email" label="Email" required />
 
-      <div>
-        <%%= submit "Send instructions to reset password" %>
-      </div>
-    </.form>
+      <:confirm>Send instructions to reset password</:confirm>
+    </.simple_form>
 
     <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
     <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>

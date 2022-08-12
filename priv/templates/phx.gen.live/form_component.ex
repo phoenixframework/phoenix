@@ -3,6 +3,27 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   alias <%= inspect context.module %>
 
+  def render(assigns) do
+    ~H"""
+    <div>
+      <.simple_form
+        :let={f}
+        for={@changeset}
+        id="<%= schema.singular %>-form"
+        phx-target={@myself}
+        phx-change="validate"
+        phx-submit="save"
+      >
+        <:title><%%= @title %></:title>
+      <%= for input <- inputs, input do %>
+        <%= input %>
+      <% end %>
+        <:confirm phx-disable-with="Saving...">Save</:confirm>
+      </.simple_form>
+    </div>
+    """
+  end
+
   @impl true
   def update(%{<%= schema.singular %>: <%= schema.singular %>} = assigns, socket) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)

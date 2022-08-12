@@ -1,13 +1,10 @@
-<h1>Resend confirmation instructions</h1>
+<.simple_form :let={f} for={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirm"}>
+  <:title>Resend confirmation instructions</:title>
 
-<.form :let={f} for={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirm"}>
-  <%%= label f, :email %>
-  <%%= email_input f, :email, required: true %>
+  <.input field={{f, :email}} type="email" label="Email" required />
 
-  <div>
-    <%%= submit "Resend confirmation instructions" %>
-  </div>
-</.form>
+  <:confirm>Resend confirmation instructions</:confirm>
+</.simple_form>
 
 <p>
   <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
