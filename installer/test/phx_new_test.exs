@@ -312,7 +312,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file "phx_blog/priv/gettext/errors.pot"
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":gettext")
       assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"import AmsMockWeb.Gettext")
-      assert_file "phx_blog/lib/phx_blog_web/views/error_helpers.ex", &refute(&1 =~ ~r"gettext")
       assert_file "phx_blog/config/dev.exs", &refute(&1 =~ ~r"gettext")
 
       # No HTML

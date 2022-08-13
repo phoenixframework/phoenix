@@ -123,19 +123,20 @@ defmodule <%= @web_namespace %>.Components do
 
   attr :flash, :map
   attr :kind, :atom
+  attr :animate, :boolean, default: true
 
   def flash(%{kind: :error} = assigns) do
     ~H"""
-    <%%= if live_flash(@flash, @kind) do %>
+    <%%= if @flash[to_string(@kind)] do %>
       <div
         id="flash"
-        class="hidden rounded-md bg-red-50 p-4 fixed top-1 right-1 w-96 z-50 shadow shadow-red-200"
+        class={"#{@animate && "hidden"} rounded-md bg-red-50 p-4 fixed top-1 right-1 w-96 z-50 shadow shadow-red-200"}
         phx-mounted={show("#flash")}
         phx-click={JS.push("lv:clear-flash") |> hide("#flash")}
       >
         <div class="flex justify-between items-center space-x-3 pl-2 text-red-700">
           <p class="flex-1 text-sm font-medium" role="alert">
-            <%%= live_flash(@flash, @kind) %>
+            <%%= @flash[to_string(@kind)] %>
           </p>
           <button
             type="button"
@@ -164,17 +165,17 @@ defmodule <%= @web_namespace %>.Components do
 
   def flash(%{kind: :info} = assigns) do
     ~H"""
-    <%%= if live_flash(@flash, @kind) do %>
+    <%%= if @flash[to_string(@kind)] do %>
       <div
         id="flash"
-        class="hidden rounded-md bg-green-50 p-4 fixed top-2 right-2 w-96 z-50 shadow shadow-green-200"
+        class={"#{@animate && "hidden"} rounded-md bg-green-50 p-4 fixed top-2 right-2 w-96 z-50 shadow shadow-green-200"}
         phx-mounted={show("#flash")}
         phx-click={JS.push("lv:clear-flash") |> hide("#flash")}
         phx-value-key="info"
       >
         <div class="flex justify-between items-center space-x-3 text-green-700 pl-2">
           <p class="flex-1 text-sm font-medium" role="alert">
-            <%%= live_flash(@flash, @kind) %>
+            <%%= @flash[to_string(@kind)] %>
           </p>
           <button
             type="button"
@@ -351,6 +352,7 @@ defmodule <%= @web_namespace %>.Components do
         type={@type}
         name={@name}
         id={@id || @name}
+        value={@value}
         class={"#{input_border(@errors)} mt-1 block w-full shadow-sm sm:text-sm rounded-md phx-no-feedback:border-gray-300 phx-no-feedback:focus:ring-indigo-500"}
         {@rest}
       />
@@ -673,8 +675,11 @@ defmodule <%= @web_namespace %>.Components do
   @doc """
   Translates an error message.
   """
-  def translate_error({msg, _opts}) do
-    msg
-  end
-  <% end %>
+  def translate_error({msg, opts}) do
+    # Because the error messages we show in our forms and APIs
+    # are defined inside Ecto, we need to translate them dynamically.
+    Enum.reduce(opts, msg, fn {key, value}, acc ->
+      String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
+    end)
+  end<% end %>
 end

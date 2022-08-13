@@ -89,7 +89,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           put_flash(socket, :error, "Email change link is invalid or it has expired.")
       end
 
-    {:ok, push_redirect(socket, to: ~p"<%= schema.route_prefix %>/settings")}
+    {:ok, push_navigate(socket, to: ~p"<%= schema.route_prefix %>/settings")}
   end
 
   def mount(_params, _session, socket) do

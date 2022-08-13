@@ -1,6 +1,6 @@
 
 <%%= if @live_action in [:new, :edit] do %>
-  <.modal navigate={~p"<%= schema.route_prefix %>"}>
+  <.modal id="<%= schema.singular %>-modal" show navigate={~p"<%= schema.route_prefix %>"}>
     <.live_component
       module={<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent}
       id={@<%= schema.singular %>.id || :new}
