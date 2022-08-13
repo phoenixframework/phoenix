@@ -10,7 +10,7 @@ defmodule <%= @web_namespace %>.Components do
   """
   use Phoenix.Component
 
-  <%= if @gettext do %>import <%= @web_namespace %>.Gettext
+  <%= if @gettext do %>import <%= @web_namespace %>.Gettext, warn: false
   <% end %>
   alias Phoenix.LiveView.JS
 
@@ -23,11 +23,12 @@ defmodule <%= @web_namespace %>.Components do
   attr :navigate, :string, default: nil
   attr :on_cancel, JS, default: %JS{}
   attr :on_confirm, JS, default: %JS{}
-  # slots
-  attr :title, :list, default: []
-  attr :confirm, :list, default: []
-  attr :cancel, :list, default: []
   attr :rest, :global
+
+  slot :inner_block, required: true
+  slot :title
+  slot :confirm
+  slot :cancel
 
   def modal(assigns) do
     ~H"""
@@ -216,11 +217,12 @@ defmodule <%= @web_namespace %>.Components do
       </.simple_form>
   """
 
-  attr :title, :any, default: nil
+  slot :inner_block, required: true
+  slot :title
+  slot :subtitle
+  slot :cancel
+  slot :confirm
   attr :for, :any, default: nil
-  attr :subtitle, :any, default: nil
-  attr :confirm, :any, default: nil
-  attr :cancel, :any, default: nil
   attr :rest, :global
 
   def simple_form(assigns) do
@@ -257,6 +259,7 @@ defmodule <%= @web_namespace %>.Components do
     """
   end
 
+  slot :inner_block, required: true
   attr :type, :string, default: "button"
   attr :primary, :boolean, default: false
   attr :class, :string, default: nil
@@ -296,6 +299,7 @@ defmodule <%= @web_namespace %>.Components do
     """
   end
 
+  slot :inner_block
   attr :id, :any
   attr :name, :any
   attr :label, :string, default: nil
@@ -402,6 +406,7 @@ defmodule <%= @web_namespace %>.Components do
     """
   end
 
+  slot :inner_block, required: true
   attr :class, :string, default: nil
   attr :comment, :string, default: nil
   attr :bordered, :boolean, default: false
@@ -430,13 +435,13 @@ defmodule <%= @web_namespace %>.Components do
 
   attr :row_id, :any, default: nil
   attr :rest, :global
-  # slots
-  attr :title, :any, default: []
   attr :bordered, :boolean, default: false
-  attr :subtitle, :any, default: []
   attr :rows, :list, required: true
-  attr :col, :list, required: true
   attr :class, :string, default: nil
+
+  slot :col, required: true
+  slot :title
+  slot :subtitle
 
   def table(assigns) do
     ~H"""
@@ -479,10 +484,10 @@ defmodule <%= @web_namespace %>.Components do
     """
   end
 
-  attr :title, :list, default: []
-  attr :desc, :list, default: []
-  attr :icon, :list, default: []
-  attr :item, :list, default: []
+  slot :title
+  slot :desc
+  slot :icon
+  slot :item
 
   def list(assigns) do
     ~H"""
@@ -509,8 +514,10 @@ defmodule <%= @web_namespace %>.Components do
     """
   end
 
-  attr :title, :any, required: true
-  attr :subtitle, :any, default: []
+  slot :inner_block, required: true
+  slot :title, required: true
+  slot :subtitle
+
   attr :action, :any
   attr :em, :string, default: nil
 
