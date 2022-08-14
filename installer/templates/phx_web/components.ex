@@ -15,8 +15,30 @@ defmodule <%= @web_namespace %>.Components do
   alias Phoenix.LiveView.JS
 
   @doc """
-  Modal...
+  Renders a modal.
+
+  ## Examples
+
+      <.modal id="confirm-modal">
+        Are you sure you?
+        <:confirm>OK</:confirm>
+        <:cancel>Cancel</:confirm>
+      <.modal>
+
+  JS commands may be passed to the `:on_cancel` and `on_confirm` attributes
+  for the caller to reactor to each button press, for example:
+
+      <.modal id="confirm-modal" on_confirm={JS.push("delete-item")}>
+        Are you sure you?
+        <:confirm>OK</:confirm>
+        <:cancel>Cancel</:confirm>
+      <.modal>
+
+  Live navigation on close/cancel is supported via the `:navigate` and `:patch` attributes:
+
+      <.modal id="modal" navigate={~p"/posts"}>...
   """
+
   attr :id, :string, required: true
   attr :show, :boolean, default: false
   attr :patch, :string, default: nil
@@ -122,9 +144,17 @@ defmodule <%= @web_namespace %>.Components do
     """
   end
 
+  @doc """
+  Renders flash notices.
+
+  ## Examples
+
+      <.flash kind={:info} flash={@flash}/>
+      <.flash kind={:error} flash={get_flash(@conn)}/>
+  """
   attr :flash, :map
-  attr :kind, :atom
-  attr :animate, :boolean, default: true
+  attr :kind, :atom, doc: "one of :info, :error"
+  attr :animate, :boolean, default: true, doc: "animates in the flash"
 
   def flash(%{kind: :error} = assigns) do
     ~H"""
@@ -204,6 +234,9 @@ defmodule <%= @web_namespace %>.Components do
   end
 
   @doc """
+  Renders a simple form.
+
+  ## Examples
 
       <.simple_form :let={f} for={:user} phx-change="validate" phx-submit="save">
         <:title>Profile</:title>
@@ -259,6 +292,15 @@ defmodule <%= @web_namespace %>.Components do
     """
   end
 
+  @doc """
+  Renders a button.
+
+  ## Examples
+
+      <.button primary>Send!</.button>
+      <.button class="abc">Send!</.button>
+  """
+
   slot :inner_block, required: true
   attr :type, :string, default: "button"
   attr :primary, :boolean, default: false
@@ -299,13 +341,29 @@ defmodule <%= @web_namespace %>.Components do
     """
   end
 
+  @doc """
+  Renders an input with label and error messages.
+
+  A `%Phoenix.HTML.Form{}` and field name may be passed to the input
+  to build input names and error messages, or all the attributes and
+  errors may be passed explicitly.
+
+  ## Examples
+
+      <.input field={{f, :email}} type="email" />
+      <.input name="my-input" errors={["oh no!"]} />
+  """
   slot :inner_block
   attr :id, :any
   attr :name, :any
   attr :label, :string, default: nil
-  attr :type, :string, default: "text"
+
+  attr :type, :string,
+    default: "text",
+    doc: ~s|one of "text", "number" "email", "date", "time", "datetime", "select"|
+
   attr :value, :any
-  attr :field, :any
+  attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
   attr :errors, :list
   attr :class, :string, default: nil
   attr :rest, :global
@@ -429,8 +487,17 @@ defmodule <%= @web_namespace %>.Components do
     """
   end
 
-  @doc """
+  @doc ~S"""
   Renders a table with generic styling.
+
+  ## Examples
+
+      <.table rows={@users} row_id={&"user-#{&1.id}"}>
+        <:title>Users</:title>
+        <:subtitle>Active in the last 24 hours</:subtitle>
+        <:col :let={user} label="id"><%= user.id %></:col>
+        <:col :let={user} label="username"><%= user.username %></:col>
+      </.table>
   """
 
   attr :row_id, :any, default: nil
