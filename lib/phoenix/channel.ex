@@ -5,6 +5,8 @@ defmodule Phoenix.Channel do
   Channels provide a means for bidirectional communication from clients that
   integrate with the `Phoenix.PubSub` layer for soft-realtime functionality.
 
+  For a conceptual overview, see the [Channels guide](channels.html).
+
   ## Topics & Callbacks
 
   Every time you join a channel, you need to choose which particular topic you
