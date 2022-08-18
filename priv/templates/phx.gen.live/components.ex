@@ -49,8 +49,12 @@ defmodule <%= @web_namespace %>.Components do
 
   slot :inner_block, required: true
   slot :title
-  slot :confirm
-  slot :cancel
+  slot :confirm do
+    attr :if, :boolean
+  end
+  slot :cancel do
+    attr :if, :boolean
+  end
 
   def modal(assigns) do
     ~H"""
@@ -116,7 +120,7 @@ defmodule <%= @web_namespace %>.Components do
             </div>
           </div>
           <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <%%= for confirm <- @confirm do %>
+            <%%= for confirm <- @confirm, Map.get(confirm, :if, true) do %>
               <.button
                 primary
                 id={"#{@id}-confirm"}
@@ -128,7 +132,7 @@ defmodule <%= @web_namespace %>.Components do
                 <%%= render_slot(confirm) %>
               </.button>
             <%% end %>
-            <%%= for cancel <- @cancel do %>
+            <%%= for cancel <- @cancel, Map.get(confirm, :if, true) do %>
               <button
                 class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
                 phx-click={hide_modal(@on_cancel, @id)}
@@ -253,8 +257,12 @@ defmodule <%= @web_namespace %>.Components do
   slot :inner_block, required: true
   slot :title
   slot :subtitle
-  slot :cancel
-  slot :confirm
+  slot :confirm do
+    attr :if, :boolean
+  end
+  slot :cancel do
+    attr :if, :boolean
+  end
   attr :for, :any, default: nil
   attr :rest, :global
 
@@ -279,11 +287,11 @@ defmodule <%= @web_namespace %>.Components do
           <%%= render_slot(@inner_block, f) %>
 
           <div class="mt-2 flex justify-end col-span-full">
-            <%%= if @cancel do %>
-              <.button type="button"><%%= render_slot(@cancel) %></.button>
+            <%%= for cancel <- @cancel, Map.get(cancel, :if, true) do %>
+              <.button type="button"><%%= render_slot(cancel) %></.button>
             <%% end %>
-            <%%= if @confirm do %>
-              <.button type="submit" primary class="ml-3"><%%= render_slot(@confirm) %></.button>
+            <%%= for confirm <- @confirm, Map.get(confirm, :if, true) do %>
+              <.button type="submit" primary class="ml-3"><%%= render_slot(confirm) %></.button>
             <%% end %>
           </div>
         </div>

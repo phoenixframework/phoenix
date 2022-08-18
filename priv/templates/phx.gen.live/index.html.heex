@@ -7,14 +7,17 @@
       title={@page_title}
       action={@live_action}
       <%= schema.singular %>={@<%= schema.singular %>}
+      form_controls?={false}
       navigate={~p"<%= schema.route_prefix %>"}
     />
+    <:cancel>Cancel</:cancel>
+    <:confirm type="submit" form="<%= schema.singular %>-form" phx-disable-with="Saving...">Save</:confirm>
   </.modal>
 <%% end %>
 
 <.table id="<%= schema.plural %>" rows={@<%= schema.collection %>} row_id={&"<%= schema.singular %>-#{&1.id}"}>
   <:title>Listing <%= schema.human_plural %></:title>
-<%= for {k, _} <- schema.attrs do %>    <:col :let={<%= schema.singular %>} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= <%= schema.singular %>.<%= k %> %></:col>
+<%= for {k, _} <- schema.attrs do %>  <:col :let={<%= schema.singular %>} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= <%= schema.singular %>.<%= k %> %></:col>
 <% end %>
   <:col :let={<%= schema.singular %>} label="">
     <span><.link navigate={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link></span>
