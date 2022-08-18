@@ -109,8 +109,7 @@ defmodule <%= @web_namespace %> do
       import Phoenix.View
 
       import <%= @web_namespace %>.ErrorHelpers<%= if @gettext do %>
-      import <%= @web_namespace %>.Gettext<% end %><%= if @html do %>
-      alias Phoenix.LiveView.JS<% end %>
+      import <%= @web_namespace %>.Gettext<% end %>
       unquote(verified_routes())
     end
   end
