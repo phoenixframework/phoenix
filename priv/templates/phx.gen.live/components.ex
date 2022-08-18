@@ -495,8 +495,8 @@ defmodule <%= @web_namespace %>.Components do
       <.table rows={@users} row_id={&"user-#{&1.id}"}>
         <:title>Users</:title>
         <:subtitle>Active in the last 24 hours</:subtitle>
-        <:col :let={user} label="id"><%= user.id %></:col>
-        <:col :let={user} label="username"><%= user.username %></:col>
+        <:col :let={user} label="id"><%%= user.id %></:col>
+        <:col :let={user} label="username"><%%= user.username %></:col>
       </.table>
   """
 
