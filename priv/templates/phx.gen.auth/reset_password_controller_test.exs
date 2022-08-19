@@ -13,7 +13,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "renders the reset password page", %{conn: conn} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password")
       response = html_response(conn, 200)
-      assert response =~ "Forgot your password?</h"
+      assert response =~ "Forgot your password?"
     end
   end
 
@@ -54,7 +54,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "renders reset password", %{conn: conn, token: token} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
-      assert html_response(conn, 200) =~ "Reset password</h"
+      assert html_response(conn, 200) =~ "Reset password"
     end
 
     test "does not render reset password with invalid token", %{conn: conn} do
@@ -99,7 +99,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       response = html_response(conn, 200)
-      assert response =~ "Reset password</h"
+      assert response =~ "Reset password"
       assert response =~ "should be at least 12 character(s)"
       assert response =~ "does not match password"
     end

@@ -67,7 +67,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       {:ok, conn} =
         lv
-        |> element(~s{a:fl-contains('Log in')})
+        |> element(~s{main a:fl-contains('Log in')})
         |> render_click()
         |> follow_redirect(conn, "<%= schema.route_prefix %>/log_in")
 
@@ -79,7 +79,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       {:ok, conn} =
         lv
-        |> element(~s{a:fl-contains('Register')})
+        |> element(~s{main a:fl-contains('Register')})
         |> render_click()
         |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/register")
 

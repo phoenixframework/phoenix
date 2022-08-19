@@ -8,7 +8,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "renders registration page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/register")
 
-      assert html =~ "Register</h"
+      assert html =~ "Register"
       assert html =~ "Log in</a>"
       assert html =~ "Forgot your password?</a>"
     end
@@ -31,7 +31,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> element("#registration_form")
         |> render_change(<%= schema.singular %>: %{"email" => "with spaces", "password" => "too short"})
 
-      assert result =~ "Register</h"
+      assert result =~ "Register"
       assert result =~ "must have the @ sign and no spaces"
       assert result =~ "should be at least 12 character"
     end
@@ -75,11 +75,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       {:ok, conn} =
         lv
-        |> element(~s{a:fl-contains('Log in')})
+        |> element(~s{main a:fl-contains('Log in')})
         |> render_click()
         |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log_in")
 
-      assert conn.resp_body =~ "Log in</h"
+      assert conn.resp_body =~ "Log in"
     end
 
     test "redirects to forgot password page when the Forgot Password button is clicked", %{
@@ -89,11 +89,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       {:ok, conn} =
         lv
-        |> element(~s{a:fl-contains('Forgot your password?')})
+        |> element(~s{main a:fl-contains('Forgot your password?')})
         |> render_click()
         |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/reset_password")
 
-      assert conn.resp_body =~ "Forgot your password?</h"
+      assert conn.resp_body =~ "Forgot your password?"
     end
   end
 end
