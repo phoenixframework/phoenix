@@ -49,9 +49,11 @@ defmodule <%= @web_namespace %>.Components do
 
   slot :inner_block, required: true
   slot :title
+
   slot :confirm do
     attr :if, :boolean
   end
+
   slot :cancel do
     attr :if, :boolean
   end
@@ -132,7 +134,7 @@ defmodule <%= @web_namespace %>.Components do
                 <%%= render_slot(confirm) %>
               </.button>
             <%% end %>
-            <%%= for cancel <- @cancel, Map.get(confirm, :if, true) do %>
+            <%%= for cancel <- @cancel, Map.get(cancel, :if, true) do %>
               <button
                 class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
                 phx-click={hide_modal(@on_cancel, @id)}
@@ -257,12 +259,15 @@ defmodule <%= @web_namespace %>.Components do
   slot :inner_block, required: true
   slot :title
   slot :subtitle
+
   slot :confirm do
     attr :if, :boolean
   end
+
   slot :cancel do
     attr :if, :boolean
   end
+
   attr :for, :any, default: nil
   attr :rest, :global
 
