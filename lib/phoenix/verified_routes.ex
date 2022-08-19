@@ -712,7 +712,7 @@ defmodule Phoenix.VerifiedRoutes do
     {path_rewrite, query_rewrite} = verify_segment(segments, route, [])
 
     rewrite_route =
-      quote do
+      quote generated: true do
         query_str = unquote({:<<>>, meta, query_rewrite})
         path_str = unquote({:<<>>, meta, path_rewrite})
 
@@ -728,12 +728,12 @@ defmodule Phoenix.VerifiedRoutes do
     static? = static_path?(test_path, statics)
 
     path_ast =
-      quote do
+      quote generated: true do
         unquote(__MODULE__).unverified_path(unquote_splicing([endpoint, router, rewrite_route]))
       end
 
     static_ast =
-      quote do
+      quote generated: true do
         unquote(__MODULE__).static_path(unquote_splicing([endpoint, rewrite_route]))
       end
 
