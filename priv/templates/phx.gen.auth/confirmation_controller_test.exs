@@ -13,7 +13,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "renders the resend confirmation page", %{conn: conn} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/confirm")
       response = html_response(conn, 200)
-      assert response =~ "Resend confirmation instructions</h"
+      assert response =~ "Resend confirmation instructions"
     end
   end
 
@@ -60,7 +60,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       token_path = ~p"<%= schema.route_prefix %>/confirm/some-token"
       conn = get(conn, path)
       response = html_response(conn, 200)
-      assert response =~ "Confirm account</h"
+      assert response =~ "Confirm account"
 
       assert response =~ "action=\"#{token_path}\""
     end
