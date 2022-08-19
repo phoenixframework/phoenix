@@ -4,7 +4,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   Use of the `sigil_p` macro allows paths and URLs throughout your
   application to be compile-time verified against your Phoenix router(s).
-  For example the following path and URL usages:
+  For example, the following path and URL usages:
 
       <.link href={~p"/sessions/new"} method="post">Sign in</.link>
 
@@ -53,7 +53,7 @@ defmodule Phoenix.VerifiedRoutes do
       use Phoenix.VerifiedRoutes,
         router: AppWeb.Router,
         endpoint: AppWeb.Endpoint,
-        statics: ~(images)
+        statics: ~w(images)
 
   ## Usage
 
@@ -77,7 +77,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   ## Tracking Warnings
 
-  All static path segments must start with forward slash and you must have a static segment
+  All static path segments must start with forward slash, and you must have a static segment
   between dynamic interpolations in order for a route to be verified without warnings.
   For example, the following path generates proper warnings
 
