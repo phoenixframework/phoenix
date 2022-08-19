@@ -8,7 +8,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "renders log in page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
 
-      assert html =~ "<h1>Log in</h1>"
+      assert html =~ "Log in</h"
       assert html =~ "Register</a>"
       assert html =~ "Forgot your password?</a>"
     end
@@ -67,7 +67,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> render_click()
         |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/register")
 
-      assert conn.resp_body =~ "<h1>Register</h1>"
+      assert conn.resp_body =~ "Register</h"
     end
 
     test "redirects to forgot password page when the Forgot Password button is clicked", %{
@@ -81,7 +81,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> render_click()
         |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/reset_password")
 
-      assert conn.resp_body =~ "<h1>Forgot your password?</h1>"
+      assert conn.resp_body =~ "Forgot your password?</h"
     end
   end
 end

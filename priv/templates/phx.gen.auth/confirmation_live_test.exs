@@ -14,7 +14,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   describe "Confirm <%= schema.singular %>" do
     test "renders confirmation page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/some-token")
-      assert html =~ "<h1>Confirm account</h1>"
+      assert html =~ "Confirm account</h"
     end
 
     test "confirms the given token once", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do

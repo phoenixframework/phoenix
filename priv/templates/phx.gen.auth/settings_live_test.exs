@@ -12,9 +12,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture())
         |> live(~p"<%= schema.route_prefix %>/settings")
 
-      assert html =~ "<h1>Settings</h1>"
-      assert html =~ "<h3>Change email</h3>"
-      assert html =~ "<h3>Change password</h3>"
+      assert html =~ "Settings</h"
+      assert html =~ "Change email</h"
+      assert html =~ "Change password</h"
     end
 
     test "redirects if <%= schema.singular %> is not logged in", %{conn: conn} do
@@ -62,7 +62,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           "<%= schema.singular %>" => %{"email" => "with spaces"}
         })
 
-      assert result =~ "<h1>Settings</h1>"
+      assert result =~ "Settings</h"
       assert result =~ "must have the @ sign and no spaces"
     end
 
@@ -77,7 +77,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
         |> render_submit()
 
-      assert result =~ "<h1>Settings</h1>"
+      assert result =~ "Settings</h"
       assert result =~ "did not change"
       assert result =~ "is not valid"
     end
@@ -129,7 +129,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           }
         })
 
-      assert result =~ "<h1>Settings</h1>"
+      assert result =~ "Settings</h"
       assert result =~ "should be at least 12 character(s)"
       assert result =~ "does not match password"
     end
@@ -148,7 +148,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
         |> render_submit()
 
-      assert result =~ "<h1>Settings</h1>"
+      assert result =~ "Settings</h"
       assert result =~ "should be at least 12 character(s)"
       assert result =~ "does not match password"
       assert result =~ "is not valid"
