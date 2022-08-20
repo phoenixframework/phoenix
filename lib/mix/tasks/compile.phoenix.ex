@@ -2,7 +2,6 @@ defmodule Mix.Tasks.Compile.Phoenix do
   use Mix.Task
   @recursive true
   @moduledoc false
-  @mix_recompile Version.match?(System.version(), ">= 1.11.0")
 
   @doc false
   def run(_args) do
@@ -46,7 +45,7 @@ defmodule Mix.Tasks.Compile.Phoenix do
     function_exported?(mod, :__phoenix_recompile__?, 0) and mod.__phoenix_recompile__?()
   end
 
-  if @mix_recompile do
+  if Version.match?(System.version(), ">= 1.11.0") do
     # Recompile is provided by Mix, we don't need to do anything
     defp mix_recompile?(_mod), do: false
   else

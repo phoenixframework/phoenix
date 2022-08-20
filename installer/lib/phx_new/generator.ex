@@ -191,7 +191,6 @@ defmodule Phx.New.Generator do
     version = @phoenix_version
 
     binding = [
-      elixir_version: elixir_version(),
       app_name: project.app,
       app_module: inspect(project.app_mod),
       root_app_name: project.root_app,
@@ -225,10 +224,6 @@ defmodule Phx.New.Generator do
     ]
 
     %Project{project | binding: binding}
-  end
-
-  defp elixir_version do
-    System.version()
   end
 
   defp namespaced?(project) do
