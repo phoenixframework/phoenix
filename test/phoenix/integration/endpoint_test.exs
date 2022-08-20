@@ -21,7 +21,8 @@ defmodule Phoenix.Integration.EndpointTest do
     http: [port: @prod], url: [host: "example.com"], server: true, drainer: false,
     render_errors: [accepts: ~w(html json)])
   Application.put_env(:endpoint_int, DevEndpoint,
-    http: [port: @dev], debug_errors: true, drainer: false)
+    http: [port: @dev], debug_errors: true, drainer: false,
+    debug_banner_hooks: [{__MODULE__, :show_cheer_up_message, ["Frerich"]}])
 
   Application.put_env(:endpoint_int, ProdInet6Endpoint,
     http: [port: @prod_inet6, transport_options: [socket_opts: [:inet6]]],
@@ -171,9 +172,10 @@ defmodule Phoenix.Integration.EndpointTest do
       assert resp.status == 200
       assert resp.body == "ok"
 
-      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/unknown", %{})
+      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/unknown", %{"Accept" => "text/html"})
       assert resp.status == 404
       assert resp.body =~ "NoRouteError at GET /unknown"
+      assert resp.body =~ "<p>Don't worry, Frerich. It's not hard to fix this error.</p>"
 
       assert capture_log(fn ->
         {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/oops", %{})
@@ -202,5 +204,9 @@ defmodule Phoenix.Integration.EndpointTest do
 
   defp serve_endpoints(bool) do
     Application.put_env(:phoenix, :serve_endpoints, bool)
+  end
+
+  def show_cheer_up_message(conn, _status, _kind, _reason, _stack, name) do
+    "<p>Don't worry, #{name}. It's not hard to fix this error.</p>"
   end
 end

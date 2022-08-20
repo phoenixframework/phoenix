@@ -215,6 +215,25 @@ defmodule Phoenix.Endpoint do
 
     * `:log_access_url` - log the access url once the server boots
 
+    * `:debug_banner_hooks` - a list of functions provided as MFA (`{module,
+      function, args}`) tuples. These functions are invoked in case
+      `:debug_errors` is set to `true` and an error occurs, in which case they may
+      contribute additional markup to be included in the error page. Each function
+      receives the following arguments, with the passed `args` concatenated to the
+      end:
+
+          [conn, status, kind, reason, stack]
+
+      For example, the following `debug_banner_hooks` option:
+
+          config :your_app, YourAppWeb.Endpoint,
+            debug_errors: true,
+            debug_banner_hooks: [{YourAppWeb.Helpers, :show_friendly_message, ["Chris"]}]
+
+      Would invoke the function
+
+          YourAppWebHelpers.show_friendly_message(conn, status, kind, reason, stack, "Chris")
+
   ### Adapter configuration
 
   Phoenix allows you to choose which webserver adapter to use. The default

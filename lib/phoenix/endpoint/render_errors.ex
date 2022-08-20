@@ -88,13 +88,30 @@ defmodule Phoenix.Endpoint.RenderErrors do
   ## Rendering
 
   @doc false
-  def __debugger_banner__(_conn, _status, _kind, %NoRouteError{router: router}, _stack) do
+  def __debugger_banner__(conn, status, kind, %NoRouteError{router: router} = reason, stack) do
+    available_routes_markup =
     """
     <h3>Available routes</h3>
     <pre>#{Phoenix.Router.ConsoleFormatter.format(router)}</pre>
     """
+
+    hook_markup = render_debug_banner_hooks(conn, status, kind, reason, stack)
+
+    available_routes_markup <> hook_markup
   end
-  def __debugger_banner__(_conn, _status, _kind, _reason, _stack), do: nil
+  def __debugger_banner__(conn, status, kind, reason, stack) do
+    render_debug_banner_hooks(conn, status, kind, reason, stack)
+  end
+
+  defp render_debug_banner_hooks(conn, status, kind, reason, stack) do
+    endpoint_module = conn.private[:phoenix_endpoint]
+    hook_funs = endpoint_module.config(:debug_banner_hooks, [])
+
+    Enum.map_join(hook_funs, fn {mod, fun, args} ->
+      hook_args = [conn, status, kind, reason, stack | args]
+      apply(mod, fun, hook_args)
+    end)
+  end
 
   defp render(conn, status, kind, reason, stack, opts) do
     view = Keyword.fetch!(opts, :view)
