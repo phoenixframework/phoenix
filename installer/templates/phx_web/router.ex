@@ -44,7 +44,7 @@ defmodule <%= @web_namespace %>.Router do
 
       live_dashboard "/dashboard", metrics: <%= @web_namespace %>.Telemetry
     end
-  <% end %><%= if @mailer do %>
+<% end %><%= if @mailer do %>
     scope "/dev" do<%= if @html do %>
       pipe_through :browser<% else %>
       pipe_through [:fetch_session, :protect_from_forgery]<% end %>

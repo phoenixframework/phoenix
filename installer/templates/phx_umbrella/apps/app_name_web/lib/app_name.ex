@@ -81,13 +81,6 @@ defmodule <%= @web_namespace %> do
     end
   end
 
-  def channel do
-    quote do
-      use Phoenix.Channel<%= if @gettext do %>
-      import <%= @web_namespace %>.Gettext<% end %>
-    end
-  end
-
   def verified_routes do
     quote do
       use Phoenix.VerifiedRoutes,
@@ -97,22 +90,28 @@ defmodule <%= @web_namespace %> do
     end
   end
 
+  def channel do
+    quote do
+      use Phoenix.Channel<%= if @gettext do %>
+      import <%= @web_namespace %>.Gettext<% end %>
+    end
+  end
+
   defp view_helpers do
     quote do<%= if @html do %>
-      # Use all HTML functionality (forms, tags, etc)
+      # Import basic HTML rendering capabilities (tags, forms, etc)
       use Phoenix.HTML
 
-      # Import and alias LiveView and .heex helpers (live_render, <.link>, <.form>, etc)
+      # Import .heex helpers (<.link>, <.form>, etc) and alias JS module
       import Phoenix.LiveView.Helpers
       alias Phoenix.LiveView.JS
 <% end %>
-      # Import basic rendering functionality (render, render_layout, etc)
-      import Phoenix.View
-
-      import <%= @web_namespace %>.ErrorHelpers<%= if @gettext do %>
-      import <%= @web_namespace %>.Gettext<% end %><%= if @html do %>
-      alias Phoenix.LiveView.JS<% end %>
+      # Include the router functionality defined above
       unquote(verified_routes())
+
+      # All imports from the current project should be defined from here under
+      import <%= @web_namespace %>.ErrorHelpers<%= if @gettext do %>
+      import <%= @web_namespace %>.Gettext<% end %>
     end
   end
 
