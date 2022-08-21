@@ -2,6 +2,8 @@ defmodule Phoenix do
   @moduledoc """
   This is the documentation for the Phoenix project.
 
+  To get started, see our [overview guides](overview.html).
+  
   By default, Phoenix applications depend on the following packages
   across these categories.
 
@@ -44,7 +46,6 @@ defmodule Phoenix do
     * [Telemetry Metrics](https://hexdocs.pm/telemetry_metrics) - common
       interface for defining metrics based on Telemetry events
 
-  To get started, see our [overview guides](overview.html).
   """
   use Application
 
