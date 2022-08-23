@@ -985,12 +985,11 @@ var Socket = class {
     }, 150 * tries);
   }
   onConnClose(event) {
-    let closeCode = event && event.code;
     if (this.hasLogger())
       this.log("transport", "close", event);
     this.triggerChanError();
     this.clearHeartbeats();
-    if (!this.closeWasClean && closeCode !== 1e3) {
+    if (!this.closeWasClean) {
       this.reconnectTimer.scheduleTimeout();
     }
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event));
