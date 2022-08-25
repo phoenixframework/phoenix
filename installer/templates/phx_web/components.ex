@@ -49,6 +49,7 @@ defmodule <%= @web_namespace %>.Components do
 
   slot :inner_block, required: true
   slot :title
+  slot :subtitle
 
   slot :confirm do
     attr :if, :boolean
@@ -60,91 +61,96 @@ defmodule <%= @web_namespace %>.Components do
 
   def modal(assigns) do
     ~H"""
-    <div
-      id={@id}
-      phx-mounted={@show && show(@id)}
-      class="fixed z-10 inset-0 overflow-y-auto hidden"
-      {@rest}
-    >
+    <div id={@id} phx-mounted={@show && show_modal(@id)} class="relative z-50 hidden" {@rest}>
       <div
-        class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+        id={"#{@id}-backdrop"}
+        class="fixed inset-0 bg-zinc-50/90 transition-opacity"
+        aria-hidden="true"
+      >
+      </div>
+      <div
+        class="fixed inset-0 overflow-y-auto"
         aria-labelledby={"#{@id}-title"}
         aria-describedby={"#{@id}-description"}
         role="dialog"
         aria-modal="true"
         tabindex="0"
       >
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true">
-        </div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
-          &#8203;
-        </span>
-        <.focus_wrap
-          id={"#{@id}-container"}
-          phx-mounted={@show && show_modal(@id)}
-          phx-window-keydown={hide_modal(@on_cancel, @id)}
-          phx-key="escape"
-          phx-click-away={hide_modal(@on_cancel, @id)}
-          class="hidden sticky inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform sm:my-8 sm:align-middle sm:max-w-xl sm:w-full sm:p-6"
-        >
-          <%%= if @patch do %>
-            <.link patch={@patch} data-modal-return class="hidden"></.link>
-          <%% end %>
-          <%%= if @navigate do %>
-            <.link navigate={@navigate} data-modal-return class="hidden"></.link>
-          <%% end %>
-          <div class={"sm:flex sm:items-start #{if @confirm == [] && @cancel == [], do: "pt-3"}"}>
-            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 text-indigo-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full mr-12">
-              <h3 class="text-lg leading-6 font-medium text-gray-900" id={"#{@id}-title"}>
-                <%%= render_slot(@title) %>
-              </h3>
-              <div class="mt-2">
-                <p id={"#{@id}-content"} class="text-md text-gray-500">
-                  <%%= render_slot(@inner_block) %>
-                </p>
+        <div class="flex min-h-full items-center justify-center">
+          <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
+            <.focus_wrap
+              id={"#{@id}-container"}
+              phx-mounted={@show && show_modal(@id)}
+              phx-window-keydown={hide_modal(@on_cancel, @id)}
+              phx-key="escape"
+              phx-click-away={hide_modal(@on_cancel, @id)}
+              class="hidden relative rounded-2xl bg-white p-6 shadow-lg shadow-zinc-700/10 ring-1 ring-zinc-700/10 transition"
+            >
+              <div class="absolute top-6 right-6">
+                <button
+                  type="button"
+                  phx-click={hide_modal(@on_cancel, @id)}
+                  class="group -m-3 flex-none p-3"
+                  aria-label="Close"
+                >
+                  <svg
+                    viewBox="0 0 12 12"
+                    aria-hidden="true"
+                    class="h-3 w-3 stroke-zinc-300 group-hover:stroke-zinc-400"
+                  >
+                    <path d="M1 1L11 11M11 1L1 11" stroke-width="2" stroke-linecap="round" />
+                  </svg>
+                </button>
               </div>
-            </div>
+              <div id={"#{@id}-content"}>
+                <%= if @title != [] do %>
+                  <header>
+                    <h1 id={"#{@id}-title"} class="text-lg font-semibold leading-8 text-zinc-800">
+                      <%= render_slot(@title) %>
+                    </h1>
+                    <%= if @subtitle != [] do %>
+                      <p class="mt-2 text-sm leading-6 text-zinc-600">
+                        <%= render_slot(@subtitle) %>
+                      </p>
+                    <% end %>
+                  </header>
+                <% end %>
+                <%= render_slot(@inner_block) %>
+                <%= if @confirm != [] or @cancel != [] do %>
+                  <div class="mt-6 flex items-center gap-5">
+                    <%= for confirm <- @confirm, Map.get(confirm, :if, true) do %>
+                      <.button
+                        primary
+                        id={"#{@id}-confirm"}
+                        class="rounded-lg bg-zinc-900 py-2 px-3 text-sm font-semibold leading-6 text-white hover:bg-zinc-700 active:text-white/80"
+                        phx-click={@on_confirm}
+                        phx-disable-with
+                        {assigns_to_attributes(confirm)}
+                      >
+                        <%= render_slot(confirm) %>
+                      </.button>
+                    <% end %>
+                    <%= for cancel <- @cancel, Map.get(cancel, :if, true) do %>
+                      <.link
+                        class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+                        phx-click={hide_modal(@on_cancel, @id)}
+                        {assigns_to_attributes(cancel)}
+                      >
+                        <%= render_slot(cancel) %>
+                      </.link>
+                    <% end %>
+                  </div>
+                <% end %>
+                <%= if @patch do %>
+                  <.link patch={@patch} data-modal-return class="hidden"></.link>
+                <% end %>
+                <%= if @navigate do %>
+                  <.link navigate={@navigate} data-modal-return class="hidden"></.link>
+                <% end %>
+              </div>
+            </.focus_wrap>
           </div>
-          <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <%%= for confirm <- @confirm, Map.get(confirm, :if, true) do %>
-              <.button
-                primary
-                id={"#{@id}-confirm"}
-                class="w-full text-base text-base sm:ml-3 sm:w-auto sm:text-sm"
-                phx-click={@on_confirm}
-                phx-disable-with
-                {assigns_to_attributes(confirm)}
-              >
-                <%%= render_slot(confirm) %>
-              </.button>
-            <%% end %>
-            <%%= for cancel <- @cancel, Map.get(cancel, :if, true) do %>
-              <button
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
-                phx-click={hide_modal(@on_cancel, @id)}
-                {assigns_to_attributes(cancel)}
-              >
-                <%%= render_slot(cancel) %>
-              </button>
-            <%% end %>
-          </div>
-        </.focus_wrap>
+        </div>
       </div>
     </div>
     """
@@ -343,7 +349,7 @@ defmodule <%= @web_namespace %>.Components do
       type={@type}
       class={
         [
-          "phx-submit-loading:opacity-75 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm",
+          "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 py-2 px-3 text-sm font-semibold leading-6 text-white hover:bg-zinc-700 active:text-white/80",
           @class
         ]
       }
@@ -652,7 +658,6 @@ defmodule <%= @web_namespace %>.Components do
     JS.show(js,
       to: selector,
       time: 300,
-      display: "inline-block",
       transition:
         {"transition-all transform ease-out duration-300",
          "opacity-0 translate-y-4 sm:translate-y-0 scale-95",
@@ -673,26 +678,25 @@ defmodule <%= @web_namespace %>.Components do
   def show_modal(js \\ %JS{}, id) when is_binary(id) do
     js
     |> JS.push_focus()
+    |> JS.show(to: "##{id}")
     |> JS.show(
-      to: "##{id}",
-      display: "inline-block",
+      to: "##{id}-backdrop",
       transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
     )
     |> JS.show(
       to: "##{id}-container",
-      display: "inline-block",
       transition:
         {"transition-all transform ease-out duration-300",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
          "opacity-100 translate-y-0 sm:scale-100"}
     )
-    |> JS.focus_first(to: "##{id}")
+    |> JS.focus_first(to: "##{id}-content")
   end
 
   def hide_modal(js \\ %JS{}, id) do
     js
     |> JS.hide(
-      to: "##{id}",
+      to: "##{id}-backdrop",
       transition: {"transition-all transform ease-in duration-200", "opacity-100", "opacity-0"}
     )
     |> JS.hide(
@@ -702,9 +706,11 @@ defmodule <%= @web_namespace %>.Components do
          "opacity-100 translate-y-0 sm:scale-100",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
     )
+    |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
     |> JS.dispatch("click", to: "##{id} [data-modal-return]")
     |> JS.pop_focus()
   end
+
 
   def show_menu(js \\ %JS{}, id) when is_binary(id) do
     js
