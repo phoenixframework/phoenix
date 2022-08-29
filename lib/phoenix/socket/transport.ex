@@ -158,7 +158,10 @@ defmodule Phoenix.Socket.Transport do
   This must be executed from the process that will effectively
   operate the socket.
   """
-  @callback init(state) :: {:ok, state}
+  @callback init(state) ::
+              {:ok, state}
+              | {:push, {opcode :: atom, message :: term}, state}
+              | {:stop, reason :: term, state}
 
   @doc """
   Handles incoming socket messages.
@@ -200,7 +203,7 @@ defmodule Phoenix.Socket.Transport do
   """
   @callback handle_control({message :: term, opts :: keyword}, state) ::
               {:ok, state}
-              | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
+              | {:push, {opcode :: atom, message :: term}, state}
               | {:stop, reason :: term, state}
 
   @doc """
