@@ -137,8 +137,7 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
   ## Websocket callbacks
 
   def websocket_init([handler | state]) do
-    {:ok, state} = handler.init(state)
-    {:ok, [handler | state]}
+    handle_reply(handler, handler.init(state))
   end
 
   def websocket_handle({opcode, payload}, [handler | state]) when opcode in [:text, :binary] do
