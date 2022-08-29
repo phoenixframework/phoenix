@@ -1,4 +1,3 @@
-
 <%%= if @live_action in [:new, :edit] do %>
   <.modal id="<%= schema.singular %>-modal" show navigate={~p"<%= schema.route_prefix %>"}>
     <.live_component
@@ -15,15 +14,21 @@
   </.modal>
 <%% end %>
 
-<.table id="<%= schema.plural %>" rows={@<%= schema.collection %>} row_id={&"<%= schema.singular %>-#{&1.id}"}>
+<.table id="<%= schema.plural %>" rows={@<%= schema.plural %>} row_id={&"<%= schema.singular %>-#{&1.id}"} row_navigate={&~p"/<%= schema.plural %>/#{&1}"}>
   <:title>Listing <%= schema.human_plural %></:title>
-<%= for {k, _} <- schema.attrs do %>  <:col :let={<%= schema.singular %>} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= <%= schema.singular %>.<%= k %> %></:col>
-<% end %>
-  <:col :let={<%= schema.singular %>} label="">
-    <span><.link navigate={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link></span>
-    <span><.link patch={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit"}>Edit</.link></span>
-    <span><.link phx-click={JS.push("delete", value: %{id: <%= schema.singular %>.id})} data-confirm="Are you sure?">Delete</.link></span>
-  </:col>
+  <:header>
+    <.link patch={~p"<%= schema.route_prefix %>/new"}>
+      <.button primary>New <%= schema.human_singular %></.button>
+    </.link>
+  </:header>
+  <:col :let={<%= schema.singular %>} label="Title"><%= <%= schema.singular %>.title %></:col>
+  <:col :let={<%= schema.singular %>} label="Views"><%= <%= schema.singular %>.views %></:col>
+  <:actions :let={<%= schema.singular %>}>
+    <.dropdown id={"<%= schema.singular %>-#{<%= schema.singular %>.id}-actions"}>
+      <:link navigate={~p"/<%= schema.plural %>/#{<%= schema.singular %>}/edit"}>Edit</:link>
+      <:link phx-click={JS.push("delete", value: %{id: <%= schema.singular %>.id})} data-confirm="Are you sure?">Delete</:link>
+    </.dropdown>
+  </:actions>
 </.table>
 
-<span><.link patch={~p"<%= schema.route_prefix %>/new"}>New <%= schema.human_singular %></.link></span>
+

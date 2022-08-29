@@ -17,6 +17,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       >
         <:title><%%= @title %></:title><%= for input <- inputs, input do %>
         <%= input %><% end %>
+
+        <:actions>
+          <.button phx-disable-with="Saving..." if={@form_controls?}>Save</.button>
+        </:actions>
         <:confirm phx-disable-with="Saving..." if={@form_controls?}>Save</:confirm>
       </.simple_form>
     </div>

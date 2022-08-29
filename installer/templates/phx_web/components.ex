@@ -513,13 +513,13 @@ defmodule <%= @web_namespace %>.Components do
 
       <.table rows={@users} row_id={&"user-#{&1.id}"}>
         <:title>Users</:title>
-        <:subtitle>Active in the last 24 hours</:subtitle>
-        <:col :let={user} label="id"><%%= user.id %></:col>
-        <:col :let={user} label="username"><%%= user.username %></:col>
+        <:col :let={user} label="id"><%= user.id %></:col>
+        <:col :let={user} label="username"><%= user.username %></:col>
       </.table>
   """
 
   attr :row_id, :any, default: nil
+  attr :row_navigate, :any, default: nil
   attr :rest, :global
   attr :bordered, :boolean, default: false
   attr :rows, :list, required: true
@@ -527,130 +527,212 @@ defmodule <%= @web_namespace %>.Components do
 
   slot :col, required: true
   slot :title
-  slot :subtitle
+  slot :header
+  slot :actions
 
   def table(assigns) do
     ~H"""
-    <div class={["bg-white overflow-hidden", @class]}>
-      <div class="align-middle inline-block min-w-full border-b border-gray-200">
-        <%%= if @title != [] || @subtitle != [] do %>
-          <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900"><%%= render_slot(@title) %></h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500"><%%= render_slot(@subtitle) %></p>
-          </div>
-        <%% end %>
-        <table class="min-w-full">
-          <thead>
-            <tr class="border-t border-gray-200">
-              <%%= for col <- @col do %>
-                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <span class="lg:pl-2"><%%= col.label %></span>
-                </th>
+    <header class={["flex items-center justify-between gap-6", @class]}>
+      <h1 class="text-lg font-semibold leading-8 text-zinc-800"><%%= render_slot(@title) %></h1>
+      <div class="flex-none">
+        <%%= render_slot(@header) %>
+      </div>
+    </header>
+    <div class="-mx-4 overflow-y-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
+      <table class="mt-11 w-[40rem] sm:w-full">
+        <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
+          <tr>
+            <%%= for col <- @col do %>
+              <th class="p-0 pb-4 pr-6 font-normal"><%%= col.label %></th>
+            <%% end %>
+            <th class="relative p-0 pb-4"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
+          <%%= for row <- @rows do %>
+            <tr id={@row_id && @row_id.(row)} class="group">
+              <%%= for {col, i} <- Enum.with_index(@col) do %>
+                <.td index={i} count={length(@col)} navigate={@row_navigate.(row)} class={["relative p-0", col[:class]]}>
+                  <%%= render_slot(col, row) %>
+                </.td>
+              <%% end %>
+              <%%= if @actions !=[] do %>
+                <td class="pointer-events-none w-6 px-0 py-4">
+                  <div class="relative">
+                    <%%= render_slot(@actions, row) %>
+                  </div>
+                </td>
               <%% end %>
             </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-100">
-            <%%= for row <- @rows do %>
-              <tr id={@row_id && @row_id.(row)} class="hover:bg-gray-50">
-                <%%= for col <- @col do %>
-                  <td class={
-                    ["px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900", col[:class]]
-                  }>
-                    <div class="flex items-center space-x-3 lg:pl-2">
-                      <%%= render_slot(col, row) %>
-                    </div>
-                  </td>
-                <%% end %>
-              </tr>
-            <%% end %>
-          </tbody>
-        </table>
-      </div>
+          <%% end %>
+        </tbody>
+      </table>
     </div>
     """
   end
 
+  attr :class, :string, default: nil
+  slot :inner_block, required: true
+  attr :index, :integer, required: true
+  attr :count, :integer, required: true
+  attr :navigate, :any, default: nil
+
+  defp td(%{navigate: nil} = assigns) do
+    ~H"""
+    <td class={@class}>
+      <%%= cond do %>
+        <%% @index == 0 -> %>
+          <div class="block py-4 pr-6 font-semibold text-zinc-900">
+            <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl">
+            </span>
+            <span class="relative"><%%= render_slot(@inner_block) %></span>
+          </div>
+        <%% @index == @count - 1 -> %>
+          <div class="block py-4 pr-6">
+            <span class="absolute -inset-y-px -right-10 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl">
+            </span>
+            <span class="relative"><%%= render_slot(@inner_block) %></span>
+          </div>
+        <%% true -> %>
+          <div class="block py-4 pr-6">
+            <span class="absolute -inset-y-px inset-x-0 group-hover:bg-zinc-50"></span>
+            <span class="relative"><%%= render_slot(@inner_block) %></span>
+          </div>
+      <%% end %>
+    </td>
+    """
+  end
+
+  defp td(%{navigate: _} = assigns) do
+    ~H"""
+    <td class={@class}>
+      <%%= cond do %>
+        <%% @index == 0 -> %>
+          <.link navigate={@navigate} class="block py-4 pr-6 font-semibold text-zinc-900">
+            <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl">
+            </span>
+            <span class="relative"><%%= render_slot(@inner_block) %></span>
+          </.link>
+        <%% @index == @count - 1 -> %>
+          <.link navigate={@navigate} class="block py-4 pr-6">
+            <span class="absolute -inset-y-px -right-10 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl">
+            </span>
+            <span class="relative"><%%= render_slot(@inner_block) %></span>
+          </.link>
+        <%% true -> %>
+          <.link navigate={@navigate} class="block py-4 pr-6">
+            <span class="absolute -inset-y-px inset-x-0 group-hover:bg-zinc-50"></span>
+            <span class="relative"><%%= render_slot(@inner_block) %></span>
+          </.link>
+      <%% end %>
+    </td>
+    """
+  end
+
+  @doc """
+  TODO
+  """
+
   slot :title
-  slot :desc
-  slot :icon
+  slot :subtitle
+  slot :header
   slot :item
+  slot :nav
 
   def list(assigns) do
     ~H"""
-    <div class="relative">
-      <dt>
-        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-          <%%= for icon <- @icon do %>
-            <img class="h-6 w-6" src={icon.src} />
-          <%% end %>
-        </div>
-        <p class="ml-16 text-lg leading-6 font-medium text-gray-900"><%%= render_slot(@title) %></p>
-      </dt>
-      <dd class="mt-2 ml-16 text-base text-gray-500">
-        <%%= render_slot(@desc) %>
-      </dd>
-      <ul class="list-disc mt-2 ml-20 pl-1 text-base text-indigo-600">
-        <%%= for item <- @item do %>
-          <li>
-            <%%= render_slot(item) %>
-          </li>
-        <%% end %>
-      </ul>
-    </div>
-    """
-  end
-
-  slot :inner_block, required: true
-  slot :title, required: true
-  slot :subtitle
-
-  attr :action, :any
-  attr :em, :string, default: nil
-
-  def hero(assigns) do
-    ~H"""
-    <div class="sm:text-center lg:text-center">
-      <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-        <%%= for title <- @title do %>
-          <span class="block xl:inline"><%%= render_slot(title) %></span>
-          <%%= if title[:em] do %>
-            <span class="block text-indigo-600 xl:inline"><%%= title[:em] %></span>
-          <%% end %>
-        <%% end %>
-      </h1>
-      <p class="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg lg:max-w-xl lg:mx-auto md:mt-5 md:text-xl">
-        <%%= render_slot(@subtitle) %>
-      </p>
-      <div class="mt-5 sm:mt-8 lg:flex lg:justify-center">
-        <%%= for action <- @action do %>
-          <div class="mt-2 lg:mt-0 lg:mr-3">
-            <.link
-              href={action.href}
-              class={
-                if action[:primary] do
-                  "w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
-                else
-                  "w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10"
-                end
-              }
-            >
-              <%%= render_slot(action) %>
-            </.link>
+    <%= if @nav != [] do %>
+      <div class="mb-8 sm:hidden">
+        <%= render_slot(@nav) %>
+      </div>
+    <% end %>
+    <header class="flex items-center justify-between gap-6">
+      <div>
+        <h1 class="text-lg font-semibold leading-8 text-zinc-800"><%= render_slot(@title) %></h1>
+        <p class="mt-2 text-sm leading-6 text-zinc-600"><%= render_slot(@subtitle) %></p>
+      </div>
+      <div class="flex-none"><%= render_slot(@header) %></div>
+    </header>
+    <div class="mt-14">
+      <dl class="-my-4 divide-y divide-zinc-100">
+        <%= for item <- @item do %>
+          <div class="flex gap-4 py-4 sm:gap-8">
+            <dt class="w-1/4 flex-none text-[0.8125rem] leading-6 text-zinc-500"><%= item.title %></dt>
+            <dd class="text-sm leading-6 text-zinc-700"><%= render_slot(item) %></dd>
           </div>
-        <%% end %>
-      </div>
+        <% end %>
+      </dl>
     </div>
-    <div class="py-12 bg-white">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mt-10">
-          <dl class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-            <%%= render_slot(@inner_block) %>
-          </dl>
-        </div>
+    <%= if @nav != [] do %>
+      <div class="mt-16 hidden sm:block">
+        <%= render_slot(@nav) %>
       </div>
+    <% end %>
+    """
+  end
+
+  @doc """
+  Renders a back navigation link.
+  """
+
+  attr :navigate, :any, required: true
+  slot :inner_block, required: true
+
+  def back(assigns) do
+    ~H"""
+    <div class="mt-16">
+      <.link navigate={@navigate} class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
+        <span aria-hidden="true">&larr;</span>
+        <%= render_slot(@inner_block) %>
+      </.link>
     </div>
     """
   end
+
+  @doc """
+  TODO
+  """
+  attr :id, :any, required: true
+  slot :toggle
+  slot :link
+
+  def dropdown(assigns) do
+    ~H"""
+    <button
+      phx-click={show_dropdown(@id)}
+      aria-haspopup="true"
+      aria-label="Actions"
+      class="pointer-events-auto ml-auto flex items-center justify-center rounded-md hover:bg-zinc-700/5"
+    >
+      <%%= if @toggle == [] do %>
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="h-6 w-6 fill-zinc-600">
+          <circle cx="8" cy="12" r="1" />
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="16" cy="12" r="1" />
+        </svg>
+      <%% else %>
+        <%%= render_slot(@toggle) %>
+      <%% end %>
+    </button>
+    <div
+      id={@id}
+      phx-click-away={hide_dropdown(@id)}
+      role="menu"
+      aria-labelledby={@id}
+      class="hidden pointer-events-auto absolute right-0 top-full z-10 mt-2 w-28 origin-top-right rounded-lg shadow-md shadow-zinc-900/5 ring-1 ring-zinc-700/10 transition"
+    >
+      <%%= for {link, i} <- Enum.with_index(@link), count = length(@link) do %>
+        <.link
+          class={[i == 0 && "rounded-t-lg", i == count - 1 && "rounded-b-lg", "block bg-white py-1.5 px-3 text-sm leading-6 text-zinc-900 hover:bg-zinc-50 hover:text-zinc-700"]}
+          {assigns_to_attributes(link)}
+        >
+          <%%= render_slot(link) %>
+        </.link>
+      <%% end %>
+    </div>
+    """
+  end
+
 
   ## JS Commands
 
@@ -711,31 +793,31 @@ defmodule <%= @web_namespace %>.Components do
     |> JS.pop_focus()
   end
 
-
-  def show_menu(js \\ %JS{}, id) when is_binary(id) do
-    js
-    |> JS.push_focus()
-    |> JS.show(
+  @doc """
+  TODO
+  """
+  def show_dropdown(id) do
+    JS.show(
       to: "##{id}",
-      time: 150,
       transition:
-        {"transition-all transform ease-out duration-150", "opacity-0 scale-95",
-         "opacity-100 scale-100"}
+        {"transition ease-out duration-100", "transform opacity-0 scale-95",
+         "transform opacity-100 scale-100"}
     )
-    |> JS.focus_first(to: "##{id}")
+    |> JS.set_attribute({"aria-expanded", "true"}, to: "##{id}")
   end
 
-  def hide_menu(js \\ %JS{}, id) do
-    js
-    |> JS.hide(
+  @doc """
+  TODO
+  """
+  def hide_dropdown(id) do
+    JS.hide(
       to: "##{id}",
-      time: 100,
       transition:
-        {"transition-all transform ease-in duration-100", "opacity-100 scale-100",
-         "opacity-0 scale-95"}
+        {"transition ease-in duration-75", "transform opacity-100 scale-100",
+         "transform opacity-0 scale-95"}
     )
-    |> JS.pop_focus()
-  end <%= if @gettext do %>
+    |> JS.remove_attribute("aria-expanded", to: "##{id}")
+  end
 
   @doc """
   Translates an error message using gettext.

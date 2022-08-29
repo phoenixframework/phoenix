@@ -16,14 +16,17 @@
   </.modal>
 <%% end %>
 
-<ul>
+<.list>
+  <:title><%= shema.human_singular %> #<%= @<%= schema.singular %>.id %></:title>
+  <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
+  <:header>
+    <.link patch={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/show/edit"}>
+      <.button primary>Edit <%= schema.human_singular %></.button>
+    </.link>
+  </:header>
 <%= for {k, _} <- schema.attrs do %>
-  <li>
-    <strong><%= Phoenix.Naming.humanize(Atom.to_string(k)) %>:</strong>
-    <%%= @<%= schema.singular %>.<%= k %> %>
-  </li>
+  <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= @<%= schema.singular %>.<%= k %> %></:item>
 <% end %>
-</ul>
+</.list>
 
-<span><.link patch={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/show/edit"} class="button">Edit</.link></span> |
-<span><.link navigate={~p"<%= schema.route_prefix %>"}>Back</.link></span>
+<.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
