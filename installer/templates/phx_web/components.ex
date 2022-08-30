@@ -33,16 +33,10 @@ defmodule <%= @web_namespace %>.Components do
         <:confirm>OK</:confirm>
         <:cancel>Cancel</:confirm>
       <.modal>
-
-  Live navigation on close/cancel is supported via the `:navigate` and `:patch` attributes:
-
-      <.modal id="modal" navigate={~p"/posts"}>...
   """
 
   attr :id, :string, required: true
   attr :show, :boolean, default: false
-  attr :patch, :string, default: nil
-  attr :navigate, :string, default: nil
   attr :on_cancel, JS, default: %JS{}
   attr :on_confirm, JS, default: %JS{}
   attr :rest, :global
@@ -103,50 +97,41 @@ defmodule <%= @web_namespace %>.Components do
                 </button>
               </div>
               <div id={"#{@id}-content"}>
-                <%= if @title != [] do %>
+                <%%= if @title != [] do %>
                   <header>
                     <h1 id={"#{@id}-title"} class="text-lg font-semibold leading-8 text-zinc-800">
-                      <%= render_slot(@title) %>
+                      <%%= render_slot(@title) %>
                     </h1>
-                    <%= if @subtitle != [] do %>
+                    <%%= if @subtitle != [] do %>
                       <p class="mt-2 text-sm leading-6 text-zinc-600">
-                        <%= render_slot(@subtitle) %>
+                        <%%= render_slot(@subtitle) %>
                       </p>
-                    <% end %>
+                    <%% end %>
                   </header>
-                <% end %>
-                <%= render_slot(@inner_block) %>
-                <%= if @confirm != [] or @cancel != [] do %>
-                  <div class="mt-6 flex items-center gap-5">
-                    <%= for confirm <- @confirm, Map.get(confirm, :if, true) do %>
+                <%% end %>
+                <%%= render_slot(@inner_block) %>
+                <%%= if @confirm != [] or @cancel != [] do %>
+                  <div class="ml-6 mb-4 flex items-center gap-5">
+                    <%%= for confirm <- @confirm, Map.get(confirm, :if, true) do %>
                       <.button
-                        primary
                         id={"#{@id}-confirm"}
                         class="rounded-lg bg-zinc-900 py-2 px-3 text-sm font-semibold leading-6 text-white hover:bg-zinc-700 active:text-white/80"
                         phx-click={@on_confirm}
                         phx-disable-with
-                        {assigns_to_attributes(confirm)}
                       >
-                        <%= render_slot(confirm) %>
+                        <%%= render_slot(confirm) %>
                       </.button>
-                    <% end %>
-                    <%= for cancel <- @cancel, Map.get(cancel, :if, true) do %>
+                    <%% end %>
+                    <%%= for cancel <- @cancel, Map.get(cancel, :if, true) do %>
                       <.link
                         class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
                         phx-click={hide_modal(@on_cancel, @id)}
-                        {assigns_to_attributes(cancel)}
                       >
-                        <%= render_slot(cancel) %>
+                        <%%= render_slot(cancel) %>
                       </.link>
-                    <% end %>
+                    <%% end %>
                   </div>
-                <% end %>
-                <%= if @patch do %>
-                  <.link patch={@patch} data-modal-return class="hidden"></.link>
-                <% end %>
-                <%= if @navigate do %>
-                  <.link navigate={@navigate} data-modal-return class="hidden"></.link>
-                <% end %>
+                <%% end %>
               </div>
             </.focus_wrap>
           </div>
@@ -302,7 +287,7 @@ defmodule <%= @web_namespace %>.Components do
               <.button type="button"><%%= render_slot(cancel) %></.button>
             <%% end %>
             <%%= for confirm <- @confirm, Map.get(confirm, :if, true) do %>
-              <.button type="submit" primary class="ml-3"><%%= render_slot(confirm) %></.button>
+              <.button type="submit" class="ml-3"><%%= render_slot(confirm) %></.button>
             <%% end %>
           </div>
         </div>
@@ -316,34 +301,16 @@ defmodule <%= @web_namespace %>.Components do
 
   ## Examples
 
-      <.button primary>Send!</.button>
+      <.button>Send!</.button>
       <.button class="abc">Send!</.button>
   """
 
   slot :inner_block, required: true
   attr :type, :string, default: "button"
-  attr :primary, :boolean, default: false
   attr :class, :string, default: nil
   attr :rest, :global
 
-  def button(%{primary: false} = assigns) do
-    ~H"""
-    <button
-      type={@type}
-      class={
-        [
-          "phx-submit-loading:opacity-75 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 text-base font-medium bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm",
-          @class
-        ]
-      }
-      {@rest}
-    >
-      <%%= render_slot(@inner_block) %>
-    </button>
-    """
-  end
-
-  def button(%{primary: true} = assigns) do
+  def button(assigns) do
     ~H"""
     <button
       type={@type}
@@ -434,7 +401,7 @@ defmodule <%= @web_namespace %>.Components do
         name={@name}
         id={@id || @name}
         value={@value}
-        class={"#{input_border(@errors)} mt-1 block w-full shadow-sm sm:text-sm rounded-md phx-no-feedback:border-gray-300 phx-no-feedback:focus:ring-indigo-500"}
+        class={"#{input_border(@errors)} phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5 mt-2 block w-full rounded-lg border-zinc-300 py-[calc(theme(spacing.2)-1px)] px-[calc(theme(spacing.3)-1px)] text-zinc-900 focus:outline-none focus:ring-4 sm:text-sm sm:leading-6"}
         {@rest}
       />
       <%%= for error <- @errors do %>
@@ -445,10 +412,10 @@ defmodule <%= @web_namespace %>.Components do
   end
 
   defp input_border([] = _errors),
-    do: "border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+    do: "border-zinc-300 focus:border-zinc-400 focus:ring-zinc-800/5"
 
   defp input_border([_ | _] = _errors),
-    do: "border-red-300 focus:ring-red-500 focus:border-red-500"
+    do: "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10"
 
   @doc """
   Generates a generic error message.
@@ -459,50 +426,50 @@ defmodule <%= @web_namespace %>.Components do
 
   def error(assigns) do
     ~H"""
-    <div class={["rounded-md bg-red-50 p-2 my-2", @class]} {@rest}>
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <!-- Heroicon name: solid/x-circle -->
-          <svg
-            class="h-5 w-5 text-red-400"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </div>
-        <p class="pl-3 text-sm text-red-700"><%%= @message %></p>
-      </div>
-    </div>
+    <p class={["mt-3 flex gap-3 text-sm leading-6 text-rose-600", @class]} {@rest}>
+      <svg viewBox="0 0 20 20" aria-hidden="true" class="mt-0.5 h-5 w-5 flex-none fill-rose-500">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M18 10a8 8 0 1 1-16.001 0A8 8 0 0 1 18 10Zm-7 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm-1-9a1 1 0 0 0-1 1v4a1 1 0 1 0 2 0V6a1 1 0 0 0-1-1Z"></path>
+      </svg>
+      <%%= @message %>
+    </p>
     """
   end
 
-  slot :inner_block, required: true
-  attr :class, :string, default: nil
-  attr :comment, :string, default: nil
-  attr :bordered, :boolean, default: false
-  attr :rest, :global
 
-  def container(assigns) do
+  @doc """
+  Renders containers only for screen readers.
+  """
+
+  slot :inner_block, required: true
+
+  def screen_reader(assigns) do
     ~H"""
-    <div
-      class={
-        [
-          "bg-white mt-4 space-y-2 space-x-0 sm:space-x-2",
-          if(@bordered, do: "overflow-hidden shadow rounded-lg"),
-          @class
-        ]
-      }
-      {@rest}
-    >
-      <%%= render_slot(@inner_block) %>
-    </div>
+    <div class="sr-only"><%%= render_slot(@inner_block) %></div>
+    """
+  end
+
+  @doc """
+  Renders a header with title.
+  """
+
+  slot :title, required: true
+  slot :subtitle
+  slot :inner_block
+  attr :class, :string, default: nil
+
+  def header(assigns) do
+    ~H"""
+    <header class={["flex items-center justify-between gap-6", @class]}>
+      <div>
+        <h1 class="text-lg font-semibold leading-8 text-zinc-800"><%%= render_slot(@title) %></h1>
+        <%%= if @subtitle != [] do %>
+          <p class="mt-2 text-sm leading-6 text-zinc-600"><%%= render_slot(@subtitle) %></p>
+        <%% end %>
+      </div>
+      <div class="flex-none">
+        <%%= render_slot(@inner_block) %>
+      </div>
+    </header>
     """
   end
 
@@ -513,32 +480,25 @@ defmodule <%= @web_namespace %>.Components do
 
       <.table rows={@users} row_id={&"user-#{&1.id}"}>
         <:title>Users</:title>
+        <:subtitle>Active in the last 24 hours</:subtitle>
         <:col :let={user} label="id"><%= user.id %></:col>
         <:col :let={user} label="username"><%= user.username %></:col>
       </.table>
   """
 
-  attr :row_id, :any, default: nil
-  attr :row_navigate, :any, default: nil
+  attr :id, :string, required: true
+  attr :row_click, JS, default: nil
   attr :rest, :global
   attr :bordered, :boolean, default: false
   attr :rows, :list, required: true
   attr :class, :string, default: nil
 
   slot :col, required: true
-  slot :title
-  slot :header
-  slot :actions
+  slot :action
 
   def table(assigns) do
     ~H"""
-    <header class={["flex items-center justify-between gap-6", @class]}>
-      <h1 class="text-lg font-semibold leading-8 text-zinc-800"><%%= render_slot(@title) %></h1>
-      <div class="flex-none">
-        <%%= render_slot(@header) %>
-      </div>
-    </header>
-    <div class="-mx-4 overflow-y-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
+    <div id={@id} class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
       <table class="mt-11 w-[40rem] sm:w-full">
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
@@ -549,17 +509,27 @@ defmodule <%= @web_namespace %>.Components do
           </tr>
         </thead>
         <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
-          <%%= for row <- @rows do %>
-            <tr id={@row_id && @row_id.(row)} class="group">
+          <%%= for row <- @rows, row_id = "#{@id}-row-#{Phoenix.Param.to_param(row)}" do %>
+            <tr id={row_id} class="group hover:bg-zinc-50  hover:cursor-pointer" phx-click={@row_click && @row_click.(row)}>
               <%%= for {col, i} <- Enum.with_index(@col) do %>
-                <.td index={i} count={length(@col)} navigate={@row_navigate.(row)} class={["relative p-0", col[:class]]}>
-                  <%%= render_slot(col, row) %>
-                </.td>
+                <td class={["relative p-0", col[:class]]}>
+                  <div class="block py-4 pr-6">
+                    <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl"></span>
+                    <span class={["relative", if(i == 0, do: "font-semibold text-zinc-900")]}>
+                      <%%= render_slot(col, row) %>
+                    </span>
+                  </div>
+                </td>
               <%% end %>
-              <%%= if @actions !=[] do %>
-                <td class="pointer-events-none w-6 px-0 py-4">
-                  <div class="relative">
-                    <%%= render_slot(@actions, row) %>
+              <%%= if @action !=[] do %>
+                <td class="relative p-0">
+                  <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
+                    <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl"></span>
+                    <%%= for action <- @action do %>
+                      <span class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
+                        <%%= render_slot(action, row) %>
+                      </span>
+                    <%% end %>
                   </div>
                 </td>
               <%% end %>
@@ -568,64 +538,6 @@ defmodule <%= @web_namespace %>.Components do
         </tbody>
       </table>
     </div>
-    """
-  end
-
-  attr :class, :string, default: nil
-  slot :inner_block, required: true
-  attr :index, :integer, required: true
-  attr :count, :integer, required: true
-  attr :navigate, :any, default: nil
-
-  defp td(%{navigate: nil} = assigns) do
-    ~H"""
-    <td class={@class}>
-      <%%= cond do %>
-        <%% @index == 0 -> %>
-          <div class="block py-4 pr-6 font-semibold text-zinc-900">
-            <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl">
-            </span>
-            <span class="relative"><%%= render_slot(@inner_block) %></span>
-          </div>
-        <%% @index == @count - 1 -> %>
-          <div class="block py-4 pr-6">
-            <span class="absolute -inset-y-px -right-10 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl">
-            </span>
-            <span class="relative"><%%= render_slot(@inner_block) %></span>
-          </div>
-        <%% true -> %>
-          <div class="block py-4 pr-6">
-            <span class="absolute -inset-y-px inset-x-0 group-hover:bg-zinc-50"></span>
-            <span class="relative"><%%= render_slot(@inner_block) %></span>
-          </div>
-      <%% end %>
-    </td>
-    """
-  end
-
-  defp td(%{navigate: _} = assigns) do
-    ~H"""
-    <td class={@class}>
-      <%%= cond do %>
-        <%% @index == 0 -> %>
-          <.link navigate={@navigate} class="block py-4 pr-6 font-semibold text-zinc-900">
-            <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl">
-            </span>
-            <span class="relative"><%%= render_slot(@inner_block) %></span>
-          </.link>
-        <%% @index == @count - 1 -> %>
-          <.link navigate={@navigate} class="block py-4 pr-6">
-            <span class="absolute -inset-y-px -right-10 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl">
-            </span>
-            <span class="relative"><%%= render_slot(@inner_block) %></span>
-          </.link>
-        <%% true -> %>
-          <.link navigate={@navigate} class="block py-4 pr-6">
-            <span class="absolute -inset-y-px inset-x-0 group-hover:bg-zinc-50"></span>
-            <span class="relative"><%%= render_slot(@inner_block) %></span>
-          </.link>
-      <%% end %>
-    </td>
     """
   end
 
@@ -641,33 +553,33 @@ defmodule <%= @web_namespace %>.Components do
 
   def list(assigns) do
     ~H"""
-    <%= if @nav != [] do %>
+    <%%= if @nav != [] do %>
       <div class="mb-8 sm:hidden">
-        <%= render_slot(@nav) %>
+        <%%= render_slot(@nav) %>
       </div>
-    <% end %>
+    <%% end %>
     <header class="flex items-center justify-between gap-6">
       <div>
-        <h1 class="text-lg font-semibold leading-8 text-zinc-800"><%= render_slot(@title) %></h1>
-        <p class="mt-2 text-sm leading-6 text-zinc-600"><%= render_slot(@subtitle) %></p>
+        <h1 class="text-lg font-semibold leading-8 text-zinc-800"><%%= render_slot(@title) %></h1>
+        <p class="mt-2 text-sm leading-6 text-zinc-600"><%%= render_slot(@subtitle) %></p>
       </div>
-      <div class="flex-none"><%= render_slot(@header) %></div>
+      <div class="flex-none"><%%= render_slot(@header) %></div>
     </header>
     <div class="mt-14">
       <dl class="-my-4 divide-y divide-zinc-100">
-        <%= for item <- @item do %>
+        <%%= for item <- @item do %>
           <div class="flex gap-4 py-4 sm:gap-8">
-            <dt class="w-1/4 flex-none text-[0.8125rem] leading-6 text-zinc-500"><%= item.title %></dt>
-            <dd class="text-sm leading-6 text-zinc-700"><%= render_slot(item) %></dd>
+            <dt class="w-1/4 flex-none text-[0.8125rem] leading-6 text-zinc-500"><%%= item.title %></dt>
+            <dd class="text-sm leading-6 text-zinc-700"><%%= render_slot(item) %></dd>
           </div>
-        <% end %>
+        <%% end %>
       </dl>
     </div>
-    <%= if @nav != [] do %>
+    <%%= if @nav != [] do %>
       <div class="mt-16 hidden sm:block">
-        <%= render_slot(@nav) %>
+        <%%= render_slot(@nav) %>
       </div>
-    <% end %>
+    <%% end %>
     """
   end
 
@@ -683,7 +595,7 @@ defmodule <%= @web_namespace %>.Components do
     <div class="mt-16">
       <.link navigate={@navigate} class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
         <span aria-hidden="true">&larr;</span>
-        <%= render_slot(@inner_block) %>
+        <%%= render_slot(@inner_block) %>
       </.link>
     </div>
     """
@@ -694,7 +606,7 @@ defmodule <%= @web_namespace %>.Components do
   """
   attr :id, :any, required: true
   slot :toggle
-  slot :link
+  slot :link, required: true
 
   def dropdown(assigns) do
     ~H"""
@@ -732,7 +644,6 @@ defmodule <%= @web_namespace %>.Components do
     </div>
     """
   end
-
 
   ## JS Commands
 
@@ -789,13 +700,9 @@ defmodule <%= @web_namespace %>.Components do
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
     )
     |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
-    |> JS.dispatch("click", to: "##{id} [data-modal-return]")
     |> JS.pop_focus()
   end
 
-  @doc """
-  TODO
-  """
   def show_dropdown(id) do
     JS.show(
       to: "##{id}",
@@ -806,9 +713,6 @@ defmodule <%= @web_namespace %>.Components do
     |> JS.set_attribute({"aria-expanded", "true"}, to: "##{id}")
   end
 
-  @doc """
-  TODO
-  """
   def hide_dropdown(id) do
     JS.hide(
       to: "##{id}",
@@ -817,7 +721,7 @@ defmodule <%= @web_namespace %>.Components do
          "transform opacity-0 scale-95"}
     )
     |> JS.remove_attribute("aria-expanded", to: "##{id}")
-  end
+  end<%= if @gettext do %>
 
   @doc """
   Translates an error message using gettext.
