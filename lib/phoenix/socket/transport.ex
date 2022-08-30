@@ -72,7 +72,7 @@ defmodule Phoenix.Socket.Transport do
         end
 
         def handle_in({text, _opts}, state) do
-          {:reply, :ok, {:text, text}, state}
+          {:push, {:text, text}, state}
         end
 
         def handle_info(_, state) do
@@ -170,7 +170,7 @@ defmodule Phoenix.Socket.Transport do
   return one of:
 
     * `{:ok, state}` - continues the socket with no reply
-    * `{:reply, status, reply, state}` - continues the socket with reply
+    * `{:push, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
 
   The `reply` is a tuple contain an `opcode` atom and a message that can
@@ -180,7 +180,7 @@ defmodule Phoenix.Socket.Transport do
   """
   @callback handle_in({message :: term, opts :: keyword}, state) ::
               {:ok, state}
-              | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
+              | {:push, {opcode :: atom, message :: term}, state}
               | {:stop, reason :: term, state}
 
   @doc """
@@ -190,7 +190,7 @@ defmodule Phoenix.Socket.Transport do
   return one of:
 
     * `{:ok, state}` - continues the socket with no reply
-    * `{:reply, status, reply, state}` - continues the socket with reply
+    * `{:push, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
 
   Control frames only supported when using websockets.
