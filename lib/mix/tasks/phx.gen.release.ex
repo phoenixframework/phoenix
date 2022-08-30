@@ -75,7 +75,8 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     if opts.docker do
       Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
         {:eex, "Dockerfile.eex", "Dockerfile"},
-        {:eex, "dockerignore.eex", ".dockerignore"}
+        {:eex, "dockerignore.eex", ".dockerignore"},
+        {:text, "rel/vm.args.eex", "rel/vm.args.eex"}
       ])
     end
 
