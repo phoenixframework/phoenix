@@ -161,6 +161,7 @@ defmodule Phoenix.Socket.Transport do
   @callback init(state) ::
               {:ok, state}
               | {:push, {opcode :: atom, message :: term}, state}
+              | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
               | {:stop, reason :: term, state}
 
   @doc """
@@ -171,6 +172,7 @@ defmodule Phoenix.Socket.Transport do
 
     * `{:ok, state}` - continues the socket with no reply
     * `{:push, reply, state}` - continues the socket with reply
+    * `{:reply, status, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
 
   The `reply` is a tuple contain an `opcode` atom and a message that can
@@ -181,6 +183,7 @@ defmodule Phoenix.Socket.Transport do
   @callback handle_in({message :: term, opts :: keyword}, state) ::
               {:ok, state}
               | {:push, {opcode :: atom, message :: term}, state}
+              | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
               | {:stop, reason :: term, state}
 
   @doc """
@@ -191,6 +194,7 @@ defmodule Phoenix.Socket.Transport do
 
     * `{:ok, state}` - continues the socket with no reply
     * `{:push, reply, state}` - continues the socket with reply
+    * `{:reply, status, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
 
   Control frames only supported when using websockets.
@@ -204,6 +208,7 @@ defmodule Phoenix.Socket.Transport do
   @callback handle_control({message :: term, opts :: keyword}, state) ::
               {:ok, state}
               | {:push, {opcode :: atom, message :: term}, state}
+              | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
               | {:stop, reason :: term, state}
 
   @doc """
@@ -213,6 +218,7 @@ defmodule Phoenix.Socket.Transport do
 
     * `{:ok, state}` - continues the socket with no reply
     * `{:push, reply, state}` - continues the socket with reply
+    * `{:reply, status, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
 
   The `reply` is a tuple contain an `opcode` atom and a message that can
@@ -223,6 +229,7 @@ defmodule Phoenix.Socket.Transport do
   @callback handle_info(message :: term, state) ::
               {:ok, state}
               | {:push, {opcode :: atom, message :: term}, state}
+              | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
               | {:stop, reason :: term, state}
 
   @doc """
