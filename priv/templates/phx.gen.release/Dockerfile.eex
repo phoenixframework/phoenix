@@ -14,7 +14,7 @@
 #
 ARG ELIXIR_VERSION=<%= elixir_vsn %>
 ARG OTP_VERSION=<%= otp_vsn %>
-ARG DEBIAN_VERSION=bullseye-20210902-slim
+ARG DEBIAN_VERSION=bullseye-20220801-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
