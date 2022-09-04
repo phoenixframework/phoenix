@@ -559,7 +559,7 @@ It's not much to look at yet, but it works! We added relationships within our co
 
 Now that we have the beginnings of our product catalog features, let's begin to work on the other main features of our application – carting products from the catalog. In order to properly track products that have been added to a user's cart, we'll need a new place to persist this information, along with point-in-time product information like the price at time of carting. This is necessary so we can detect product price changes in the future. We know what we need to build, but now we need to decide where the cart functionality lives in our application.
 
-If we take a step back and think about the isolation of our application, the exhibition of products in our catalog distinctly differs from the responsibilities of managing a user's cart. A product catalog shouldn't care about the rules of a our shopping cart system, and vice-versa. There's a clear need here for a separate context to handle the new cart responsibilities. Let's call it `ShoppingCart`.
+If we take a step back and think about the isolation of our application, the exhibition of products in our catalog distinctly differs from the responsibilities of managing a user's cart. A product catalog shouldn't care about the rules of our shopping cart system, and vice-versa. There's a clear need here for a separate context to handle the new cart responsibilities. Let's call it `ShoppingCart`.
 
 Let's create a `ShoppingCart` context to handle basic cart duties. Before we write code, let's imagine we have the following feature requirements:
 
