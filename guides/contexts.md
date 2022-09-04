@@ -78,7 +78,7 @@ Phoenix generated the web files as expected in `lib/hello_web/`. We can also see
 
 With the new route in place, Phoenix reminds us to update our repo by running `mix ecto.migrate`, but first we need to make a few tweaks to the generated migration in `priv/repo/migrations/*_create_products.exs`:
 
-```elixir
+```diff
   def change do
     create table(:products) do
       add :title, :string
