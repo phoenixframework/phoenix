@@ -5,12 +5,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
+    <.header>Resend confirmation instructions</.header>
+
     <.simple_form id="resend_confirmation_form" :let={f} for={:<%= schema.singular %>} phx-submit="send_instructions">
-      <:title>Resend confirmation instructions</:title>
-
       <.input field={{f, :email}} type="email" label="Email" required />
-
-      <:confirm>Resend confirmation instructions</:confirm>
+      <:actions>
+        <.button phx-disable-with="Sending...">Resend confirmation instructions</.button>
+      </:actions>
     </.simple_form>
 
     <p>

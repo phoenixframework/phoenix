@@ -1,8 +1,10 @@
 <.header>
-  <:title>Listing <%= schema.human_plural %></:title>
-  <.link patch={~p"<%= schema.route_prefix %>/new"}>
-    <.button>New <%= schema.human_singular %></.button>
-  </.link>
+  Listing <%= schema.human_plural %>
+  <:actions>
+    <.link patch={~p"<%= schema.route_prefix %>/new"}>
+      <.button>New <%= schema.human_singular %></.button>
+    </.link>
+  </:actions>
 </.header>
 
 <.table id="<%= schema.plural %>" rows={@<%= schema.plural %>} row_click={&JS.navigate(~p"<%= schema.route_prefix %>/#{&1}")}><%= for {k, _} <- schema.attrs do %>

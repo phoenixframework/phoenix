@@ -4,7 +4,6 @@ defmodule <%= inspect auth_module %> do
   import Plug.Conn
   import Phoenix.Controller
 
-  alias Phoenix.LiveView
   alias <%= inspect context.module %>
 
   # Make the remember me cookie valid for 60 days.
@@ -156,8 +155,8 @@ defmodule <%= inspect auth_module %> do
     else
       socket =
         socket
-        |> LiveView.put_flash(:error, "You must log in to access this page.")
-        |> LiveView.redirect(to: ~p"<%= schema.route_prefix %>/log_in")
+        |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
+        |> Phoenix.LiveView.redirect(to: ~p"<%= schema.route_prefix %>/log_in")
 
       {:halt, socket}
     end
@@ -167,7 +166,7 @@ defmodule <%= inspect auth_module %> do
     socket = mount_current_<%= schema.singular %>(session, socket)
 
     if socket.assigns.current_<%= schema.singular %> do
-      {:halt, LiveView.redirect(socket, to: signed_in_path(socket))}
+      {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_path(socket))}
     else
       {:cont, socket}
     end
@@ -176,12 +175,12 @@ defmodule <%= inspect auth_module %> do
   defp mount_current_<%= schema.singular %>(session, socket) do
     case session do
       %{"<%= schema.singular %>_token" => <%= schema.singular %>_token} ->
-        LiveView.assign_new(socket, :current_<%= schema.singular %>, fn ->
+        Phoenix.Component.assign_new(socket, :current_<%= schema.singular %>, fn ->
           <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
         end)
 
       %{} ->
-        LiveView.assign_new(socket, :current_<%= schema.singular %>, fn -> nil end)
+        Phoenix.Component.assign_new(socket, :current_<%= schema.singular %>, fn -> nil end)
     end
   end
 

@@ -5,8 +5,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
+    <.header>Reset Password</.header>
+
     <.simple_form id="reset_password_form" :let={f} for={@changeset} phx-submit="reset_password" phx-change="validate">
-      <:title>Reset Password</:title>
       <%%= if @changeset.action == :insert do %>
         <.error message="Oops, something went wrong! Please check the errors below." />
       <%% end %>
@@ -24,7 +25,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         value={input_value(f, :password_confirmation)}
         required
       />
-      <:confirm>Reset password</:confirm>
+      <:actions>
+        <.button phx-disable-with="Resetting...">Reset Password</.button>
+      </:actions>
     </.simple_form>
 
     <p>

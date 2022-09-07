@@ -1,5 +1,6 @@
+<.header>Log in</.header>
+
 <.simple_form :let={f} for={@conn} action={~p"<%= schema.route_prefix %>/log_in"} as={:<%= schema.singular %>}>
-  <:title>Log in</:title>
   <%%= if @error_message do %>
     <.error message={@error_message} />
   <%% end %>
@@ -8,7 +9,9 @@
   <.input field={{f, :password}} type="password" label="Password" required />
   <.input field={{f, :remember_me}} type="checkbox" label="Keep me logged in for 60 days" />
 
-  <:confirm>Log in</:confirm>
+  <:actions>
+    <.button phx-disable-with="Logging in...">Log in</.button>
+  </:actions>
 </.simple_form>
 
 <p>

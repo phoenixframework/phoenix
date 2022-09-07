@@ -5,7 +5,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <h1>Settings</h1>
+    <.header>Change Email</.header>
 
     <.simple_form
       id="email_form"
@@ -14,7 +14,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-submit="update_email"
       phx-change="validate_email"
     >
-      <:title>Change email</:title>
       <%%= if @email_changeset.action == :insert do %>
         <.error message="Oops, something went wrong! Please check the errors below." />
       <%% end %>
@@ -30,8 +29,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         value={@email_form_current_password}
         required
       />
-      <:confirm>Change email</:confirm>
+      <:actions>
+        <.button phx-disable-with="Changing...">Change Email</.button>
+      </:actions>
     </.simple_form>
+
+    <.header>Change Password</.header>
 
     <.simple_form
       id="password_form"
@@ -43,7 +46,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-submit="update_password"
       phx-trigger-action={@trigger_submit}
     >
-      <:title>Change password</:title>
       <%%= if @password_changeset.action == :insert do %>
         <.error message="Oops, something went wrong! Please check the errors below." />
       <%% end %>
@@ -73,8 +75,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         value={@current_password}
         required
       />
-
-      <:confirm>Change password</:confirm>
+      <:actions>
+        <.button phx-disable-with="Changing...">Change Password</.button>
+      </:actions>
     </.simple_form>
     """
   end

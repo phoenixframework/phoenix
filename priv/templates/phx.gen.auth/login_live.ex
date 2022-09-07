@@ -3,6 +3,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
+    <.header>Log in</.header>
+
     <.simple_form
       id="login_form"
       :let={f}
@@ -11,13 +13,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       as={:<%= schema.singular %>}
       phx-update="ignore"
     >
-      <:title>Log in</:title>
-
       <.input field={{f, :email}} type="email" label="Email" required />
       <.input field={{f, :password}} type="password" label="Password" required />
       <.input field={{f, :remember_me}} type="checkbox" label="Keep me logged in for 60 days" />
-
-      <:confirm>Log in</:confirm>
+      <:actions>
+        <.button phx-disable-with="logging in...">Log in</.button>
+      </:actions>
     </.simple_form>
 
     <p>

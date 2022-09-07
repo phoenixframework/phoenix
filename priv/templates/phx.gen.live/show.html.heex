@@ -1,9 +1,11 @@
 <.header>
-  <:title><%= schema.human_singular %> <%%= @<%= schema.singular %>.id %></:title>
+  <%= schema.human_singular %> <%%= @<%= schema.singular %>.id %>
   <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
-  <.link patch={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/show/edit"} phx-click={JS.push_focus()}>
-    <.button>Edit <%= schema.singular %></.button>
-  </.link>
+  <:actions>
+    <.link patch={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit <%= schema.singular %></.button>
+    </.link>
+  </:actions>
 </.header>
 
 <.list><%= for {k, _} <- schema.attrs do %>

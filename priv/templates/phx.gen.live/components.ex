@@ -332,7 +332,7 @@ defmodule <%= @web_namespace %>.Components do
     |> assign_new(:id, fn -> Phoenix.HTML.Form.input_id(f, field) end)
     |> assign_new(:value, fn -> Phoenix.HTML.Form.input_value(f, field) end)
     |> assign_new(:errors, fn ->
-      Enum.map(Keyword.get_values(f.errors, field), &translate_error(&1))
+      Enum.map(Keyword.get_values(f.errors || [], field), &translate_error(&1))
     end)
     |> input()
   end

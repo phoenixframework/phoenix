@@ -1,9 +1,10 @@
+<.header>Resend confirmation instructions</.header>
+
 <.simple_form :let={f} for={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirm"}>
-  <:title>Resend confirmation instructions</:title>
-
   <.input field={{f, :email}} type="email" label="Email" required />
-
-  <:confirm>Resend confirmation instructions</:confirm>
+  <:actions>
+    <.button>Resend confirmation instructions</.button>
+  </:actions>
 </.simple_form>
 
 <p>
