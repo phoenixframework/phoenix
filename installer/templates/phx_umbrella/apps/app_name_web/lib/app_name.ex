@@ -98,6 +98,8 @@ defmodule <%= @web_namespace %> do
 
   defp view_helpers do
     quote do<%= if @html do %>
+      use Phoenix.Component
+
       import Phoenix.HTML
       import Phoenix.HTML.Form
       import <%= @web_namespace %>.Components
