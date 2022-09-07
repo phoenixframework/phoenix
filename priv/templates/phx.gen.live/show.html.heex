@@ -1,15 +1,13 @@
 <.header>
-  <:title><%= schema.human_singular %> <%= @<%= schema.singular %>.id %></:title>
+  <:title><%= schema.human_singular %> <%%= @<%= schema.singular %>.id %></:title>
   <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
   <.link patch={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/show/edit"} phx-click={JS.push_focus()}>
     <.button>Edit <%= schema.singular %></.button>
   </.link>
 </.header>
 
-<.list>
-<%= for {k, _} <- schema.attrs do %>
-  <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= @<%= schema.singular %>.<%= k %> %></:item>
-<% end %>
+<.list><%= for {k, _} <- schema.attrs do %>
+  <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= @<%= schema.singular %>.<%= k %> %></:item><% end %>
 </.list>
 
 <.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
@@ -22,11 +20,8 @@
       title={@page_title}
       action={@live_action}
       <%= schema.singular %>={@<%= schema.singular %>}
-      form_controls?={false}
       navigate={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}"}
     />
-    <:cancel>Cancel</:cancel>
-    <:confirm type="submit" form="<%= schema.singular %>-form" phx-disable-with="Saving...">Save</:confirm>
   </.modal>
 <%% end %>
 

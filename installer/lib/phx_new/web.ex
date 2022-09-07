@@ -36,7 +36,7 @@ defmodule Phx.New.Web do
   ]
 
   template :html, [
-    {:eex,  "phx_web/components.ex",                        :web, "lib/:web_app/components.ex"},
+    {:eex, "phx_web/components.ex",                         :web, "lib/:web_app/components.ex"},
     {:eex, "phx_web/controllers/page_controller.ex",        :web, "lib/:web_app/controllers/page_controller.ex"},
     {:eex, "phx_web/views/layout_view.ex",                  :web, "lib/:web_app/views/layout_view.ex"},
     {:eex, "phx_web/views/page_view.ex",                    :web, "lib/:web_app/views/page_view.ex"},

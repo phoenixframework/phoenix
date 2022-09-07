@@ -7,6 +7,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def render(assigns) do
     ~H"""
     <div>
+      <.header>
+        <:title><%= @title %></:title>
+        <:subtitle>Use this form manage <%= schema.singular %> records in your database.</:subtitle>
+      </.header>
+
       <.simple_form
         :let={f}
         for={@changeset}
@@ -15,13 +20,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         phx-change="validate"
         phx-submit="save"
       >
-        <:title><%%= @title %></:title><%= for input <- inputs, input do %>
         <%= input %><% end %>
 
         <:actions>
-          <.button phx-disable-with="Saving..." if={@form_controls?}>Save</.button>
+          <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
         </:actions>
-        <:confirm phx-disable-with="Saving..." if={@form_controls?}>Save</:confirm>
       </.simple_form>
     </div>
     """
@@ -34,7 +37,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:ok,
      socket
      |> assign(assigns)
-     |> assign_new(:form_controls?, fn -> true end)
      |> assign(:changeset, changeset)}
   end
 
