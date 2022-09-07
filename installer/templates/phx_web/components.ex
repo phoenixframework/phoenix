@@ -28,7 +28,7 @@ defmodule <%= @web_namespace %>.Components do
   JS commands may be passed to the `:on_cancel` and `on_confirm` attributes
   for the caller to reactor to each button press, for example:
 
-      <.modal id="confirm-modal" on_confirm={JS.push("delete-item")}>
+      <.modal id="confirm" on_confirm={JS.push("delete")} on_cancel={JS.navigate(~p"/posts")}>
         Are you sure you?
         <:confirm>OK</:confirm>
         <:cancel>Cancel</:confirm>
@@ -118,6 +118,7 @@ defmodule <%= @web_namespace %>.Components do
                         class="rounded-lg bg-zinc-900 py-2 px-3 text-sm font-semibold leading-6 text-white hover:bg-zinc-700 active:text-white/80"
                         phx-click={@on_confirm}
                         phx-disable-with
+                        {assigns_to_attributes(confirm, [:if])}
                       >
                         <%%= render_slot(confirm) %>
                       </.button>
@@ -126,6 +127,7 @@ defmodule <%= @web_namespace %>.Components do
                       <.link
                         class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
                         phx-click={hide_modal(@on_cancel, @id)}
+                        {assigns_to_attributes(cancel, [:if])}
                       >
                         <%%= render_slot(cancel) %>
                       </.link>
@@ -141,6 +143,20 @@ defmodule <%= @web_namespace %>.Components do
     """
   end
 
+  slot :connected
+  slot :disconnected
+  slot :loading
+
+  def connection(assigns) do
+    ~H"""
+    <div id="connection-status">
+      <div class="hidden phx-connected:block"><%%= render_slot(@connected) %></div>
+      <div class="hidden phx-error:block"><%%= render_slot(@disconnected) %></div>
+      <div class="hidden phx-loading:block"><%%= render_slot(@loading) %></div>
+    </div>
+    """
+  end
+
   @doc """
   Renders flash notices.
 
@@ -150,81 +166,71 @@ defmodule <%= @web_namespace %>.Components do
       <.flash kind={:error} flash={get_flash(@conn)}/>
   """
   attr :flash, :map
+  attr :class, :string, default: nil
+  attr :message, :string, default: nil
   attr :kind, :atom, doc: "one of :info, :error"
   attr :animate, :boolean, default: true, doc: "animates in the flash"
 
-  def flash(%{kind: :error} = assigns) do
+  def flash(assigns) do
     ~H"""
-    <%%= if @flash[to_string(@kind)] do %>
+    <%%= if msg = @message || @flash[to_string(@kind)] do %>
       <div
         id="flash"
-        class={"#{@animate && "hidden"} rounded-md bg-red-50 p-4 fixed top-1 right-1 w-96 z-50 shadow shadow-red-200"}
         phx-mounted={show("#flash")}
-        phx-click={JS.push("lv:clear-flash") |> hide("#flash")}
+        phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("#flash")}
+        class={
+          [
+            "fixed top-2 right-2 w-96 z-50 rounded-lg p-3 shadow-md shadow-zinc-900/5 ring-1",
+            @animate && "hidden",
+            @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500",
+            @kind == :error && "bg-rose-50 p-3 text-rose-900 shadow-md ring-rose-500",
+            @class
+          ]
+        }
       >
-        <div class="flex justify-between items-center space-x-3 pl-2 text-red-700">
-          <p class="flex-1 text-sm font-medium" role="alert">
-            <%%= @flash[to_string(@kind)] %>
-          </p>
-          <button
-            type="button"
-            class="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+        <button type="button" class="group absolute top-2 right-1 p-2" aria-label="Close">
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+            class={
+              [
+                "h-4 w-4",
+                @kind == :info && "stroke-emerald-900/40 group-hover:stroke-emerald-900/60",
+                @kind == :error && "stroke-rose-900/20 group-hover:stroke-rose-900/40"
+              ]
+            }
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-    <%% end %>
-    """
-  end
-
-  def flash(%{kind: :info} = assigns) do
-    ~H"""
-    <%%= if @flash[to_string(@kind)] do %>
-      <div
-        id="flash"
-        class={"#{@animate && "hidden"} rounded-md bg-green-50 p-4 fixed top-2 right-2 w-96 z-50 shadow shadow-green-200"}
-        phx-mounted={show("#flash")}
-        phx-click={JS.push("lv:clear-flash") |> hide("#flash")}
-        phx-value-key="info"
-      >
-        <div class="flex justify-between items-center space-x-3 text-green-700 pl-2">
-          <p class="flex-1 text-sm font-medium" role="alert">
-            <%%= @flash[to_string(@kind)] %>
-          </p>
-          <button
-            type="button"
-            class="inline-flex bg-green-50 rounded-md p-1.5 text-green-600 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-50 focus:ring-green-600"
+            <path d="m3 3 10 10m0-10L3 13" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+        <p class="flex items-center gap-1.5 text-[0.8125rem] font-semibold leading-6">
+          <svg
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+            class={
+              [
+                "h-5 w-5 flex-none",
+                @kind == :info && "fill-cyan-900",
+                @kind == :error && "fill-rose-900"
+              ]
+            }
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm1-9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm-2 3a1 1 0 1 1 2 0v1a1 1 0 1 1-2 0v-1Z"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </button>
-        </div>
+            </path>
+          </svg>
+          <%%= if @kind == :info do %>
+            Success!
+          <%% end %>
+          <%%= if @kind == :error do %>
+            Error!
+          <%% end %>
+        </p>
+        <p class="mt-2 text-[0.8125rem] leading-5"><%%= msg %></p>
       </div>
     <%% end %>
     """
@@ -428,23 +434,15 @@ defmodule <%= @web_namespace %>.Components do
     ~H"""
     <p class={["mt-3 flex gap-3 text-sm leading-6 text-rose-600", @class]} {@rest}>
       <svg viewBox="0 0 20 20" aria-hidden="true" class="mt-0.5 h-5 w-5 flex-none fill-rose-500">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M18 10a8 8 0 1 1-16.001 0A8 8 0 0 1 18 10Zm-7 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm-1-9a1 1 0 0 0-1 1v4a1 1 0 1 0 2 0V6a1 1 0 0 0-1-1Z"></path>
+        <path
+          fill-rule="evenodd"
+          clip-rule="evenodd"
+          d="M18 10a8 8 0 1 1-16.001 0A8 8 0 0 1 18 10Zm-7 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm-1-9a1 1 0 0 0-1 1v4a1 1 0 1 0 2 0V6a1 1 0 0 0-1-1Z"
+        >
+        </path>
       </svg>
       <%%= @message %>
     </p>
-    """
-  end
-
-
-  @doc """
-  Renders containers only for screen readers.
-  """
-
-  slot :inner_block, required: true
-
-  def screen_reader(assigns) do
-    ~H"""
-    <div class="sr-only"><%%= render_slot(@inner_block) %></div>
     """
   end
 
@@ -481,8 +479,8 @@ defmodule <%= @web_namespace %>.Components do
       <.table rows={@users} row_id={&"user-#{&1.id}"}>
         <:title>Users</:title>
         <:subtitle>Active in the last 24 hours</:subtitle>
-        <:col :let={user} label="id"><%= user.id %></:col>
-        <:col :let={user} label="username"><%= user.username %></:col>
+        <:col :let={user} label="id"><%%= user.id %></:col>
+        <:col :let={user} label="username"><%%= user.username %></:col>
       </.table>
   """
 
@@ -493,7 +491,9 @@ defmodule <%= @web_namespace %>.Components do
   attr :rows, :list, required: true
   attr :class, :string, default: nil
 
-  slot :col, required: true
+  slot :col, required: true do
+    attr :label, :string
+  end
   slot :action
 
   def table(assigns) do
@@ -510,11 +510,16 @@ defmodule <%= @web_namespace %>.Components do
         </thead>
         <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
           <%%= for row <- @rows, row_id = "#{@id}-row-#{Phoenix.Param.to_param(row)}" do %>
-            <tr id={row_id} class="group hover:bg-zinc-50  hover:cursor-pointer" phx-click={@row_click && @row_click.(row)}>
+            <tr
+              id={row_id}
+              class="group hover:bg-zinc-50  hover:cursor-pointer"
+              phx-click={@row_click && @row_click.(row)}
+            >
               <%%= for {col, i} <- Enum.with_index(@col) do %>
                 <td class={["relative p-0", col[:class]]}>
                   <div class="block py-4 pr-6">
-                    <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl"></span>
+                    <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl">
+                    </span>
                     <span class={["relative", if(i == 0, do: "font-semibold text-zinc-900")]}>
                       <%%= render_slot(col, row) %>
                     </span>
@@ -524,7 +529,8 @@ defmodule <%= @web_namespace %>.Components do
               <%%= if @action !=[] do %>
                 <td class="relative p-0">
                   <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
-                    <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl"></span>
+                    <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl">
+                    </span>
                     <%%= for action <- @action do %>
                       <span class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
                         <%%= render_slot(action, row) %>
@@ -569,7 +575,9 @@ defmodule <%= @web_namespace %>.Components do
       <dl class="-my-4 divide-y divide-zinc-100">
         <%%= for item <- @item do %>
           <div class="flex gap-4 py-4 sm:gap-8">
-            <dt class="w-1/4 flex-none text-[0.8125rem] leading-6 text-zinc-500"><%%= item.title %></dt>
+            <dt class="w-1/4 flex-none text-[0.8125rem] leading-6 text-zinc-500">
+              <%%= item.title %>
+            </dt>
             <dd class="text-sm leading-6 text-zinc-700"><%%= render_slot(item) %></dd>
           </div>
         <%% end %>
@@ -593,54 +601,13 @@ defmodule <%= @web_namespace %>.Components do
   def back(assigns) do
     ~H"""
     <div class="mt-16">
-      <.link navigate={@navigate} class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
+      <.link
+        navigate={@navigate}
+        class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+      >
         <span aria-hidden="true">&larr;</span>
         <%%= render_slot(@inner_block) %>
       </.link>
-    </div>
-    """
-  end
-
-  @doc """
-  TODO
-  """
-  attr :id, :any, required: true
-  slot :toggle
-  slot :link, required: true
-
-  def dropdown(assigns) do
-    ~H"""
-    <button
-      phx-click={show_dropdown(@id)}
-      aria-haspopup="true"
-      aria-label="Actions"
-      class="pointer-events-auto ml-auto flex items-center justify-center rounded-md hover:bg-zinc-700/5"
-    >
-      <%%= if @toggle == [] do %>
-        <svg viewBox="0 0 24 24" aria-hidden="true" class="h-6 w-6 fill-zinc-600">
-          <circle cx="8" cy="12" r="1" />
-          <circle cx="12" cy="12" r="1" />
-          <circle cx="16" cy="12" r="1" />
-        </svg>
-      <%% else %>
-        <%%= render_slot(@toggle) %>
-      <%% end %>
-    </button>
-    <div
-      id={@id}
-      phx-click-away={hide_dropdown(@id)}
-      role="menu"
-      aria-labelledby={@id}
-      class="hidden pointer-events-auto absolute right-0 top-full z-10 mt-2 w-28 origin-top-right rounded-lg shadow-md shadow-zinc-900/5 ring-1 ring-zinc-700/10 transition"
-    >
-      <%%= for {link, i} <- Enum.with_index(@link), count = length(@link) do %>
-        <.link
-          class={[i == 0 && "rounded-t-lg", i == count - 1 && "rounded-b-lg", "block bg-white py-1.5 px-3 text-sm leading-6 text-zinc-900 hover:bg-zinc-50 hover:text-zinc-700"]}
-          {assigns_to_attributes(link)}
-        >
-          <%%= render_slot(link) %>
-        </.link>
-      <%% end %>
     </div>
     """
   end
@@ -670,7 +637,6 @@ defmodule <%= @web_namespace %>.Components do
 
   def show_modal(js \\ %JS{}, id) when is_binary(id) do
     js
-    |> JS.push_focus()
     |> JS.show(to: "##{id}")
     |> JS.show(
       to: "##{id}-backdrop",
@@ -701,26 +667,6 @@ defmodule <%= @web_namespace %>.Components do
     )
     |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
     |> JS.pop_focus()
-  end
-
-  def show_dropdown(id) do
-    JS.show(
-      to: "##{id}",
-      transition:
-        {"transition ease-out duration-100", "transform opacity-0 scale-95",
-         "transform opacity-100 scale-100"}
-    )
-    |> JS.set_attribute({"aria-expanded", "true"}, to: "##{id}")
-  end
-
-  def hide_dropdown(id) do
-    JS.hide(
-      to: "##{id}",
-      transition:
-        {"transition ease-in duration-75", "transform opacity-100 scale-100",
-         "transform opacity-0 scale-95"}
-    )
-    |> JS.remove_attribute("aria-expanded", to: "##{id}")
   end<%= if @gettext do %>
 
   @doc """
