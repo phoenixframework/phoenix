@@ -181,8 +181,7 @@ defmodule <%= @web_namespace %>.Components do
             "fixed top-2 right-2 w-96 z-50 rounded-lg p-3 shadow-md shadow-zinc-900/5 ring-1",
             @animate && "hidden",
             @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500",
-            @kind == :error && "bg-rose-50 p-3 text-rose-900 shadow-md ring-rose-500",
-            @class
+            @kind == :error && "bg-rose-50 p-3 text-rose-900 shadow-md ring-rose-500"
           ]
         }
       >
@@ -252,16 +251,19 @@ defmodule <%= @web_namespace %>.Components do
   slot :actions, doc: "the slot for form actions, such as a submit button"
 
   attr :for, :any, default: nil, doc: "the datastructure for the form"
+  attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
   attr :rest, :global, doc: "the arbitraty HTML attributes to apply to the form tag"
 
   def simple_form(assigns) do
     ~H"""
-    <.form :let={f} for={@for} {@rest}>
+    <.form :let={f} for={@for} as={@as} {@rest}>
       <div class="space-y-8 bg-white mt-10">
         <%%= render_slot(@inner_block, f) %>
-        <div class="mt-2 flex items-center">
-          <%%= render_slot(@actions) %>
-        </div>
+        <%%= for action <- @actions do %>
+          <div class="mt-2 flex items-center justify-between gap-6">
+            <%%= render_slot(action, f) %>
+          </div>
+        <%% end %>
       </div>
     </.form>
     """
@@ -322,7 +324,6 @@ defmodule <%= @web_namespace %>.Components do
   attr :value, :any
   attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
   attr :errors, :list
-  attr :class, :string, default: nil
   attr :rest, :global
 
   def input(%{field: {f, field}} = assigns) do
@@ -337,9 +338,23 @@ defmodule <%= @web_namespace %>.Components do
     |> input()
   end
 
+  def input(%{type: "checkbox"} = assigns) do
+    ~H"""
+    <label phx-feedback-for={@name} class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
+      <input
+        type="checkbox"
+        id={@id || @name}
+        name={@name}
+        class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+      />
+      <%%= @label %>
+    </label>
+    """
+  end
+
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class={@class}>
+    <div>
       <label for={@id} class="block text-sm font-semibold leading-6 text-zinc-800">
         <%%= @label %>
       </label>
@@ -363,7 +378,7 @@ defmodule <%= @web_namespace %>.Components do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class={@class} phx-feedback-for={@name}>
+    <div phx-feedback-for={@name}>
       <label for={@id} class="block text-sm font-semibold leading-6 text-zinc-800">
         <%%= @label %>
       </label>
@@ -372,9 +387,7 @@ defmodule <%= @web_namespace %>.Components do
         name={@name}
         class={"#{input_border(@errors)} phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5 mt-2 block min-h-[6rem] w-full rounded-lg border-zinc-300 py-[calc(theme(spacing.2)-1px)] px-[calc(theme(spacing.3)-1px)] text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-800/5 sm:text-sm sm:leading-6"}
         {@rest}
-      >
-        <%%= @value %>
-      </textarea>
+      ><%%= @value %></textarea>
       <%%= for error <- @errors do %>
         <.error message={error} class="phx-no-feedback:hidden" />
       <%% end %>
@@ -384,7 +397,7 @@ defmodule <%= @web_namespace %>.Components do
 
   def input(assigns) do
     ~H"""
-    <div class={@class} phx-feedback-for={@name}>
+    <div phx-feedback-for={@name}>
       <label for={@id} class="block text-sm font-semibold leading-6 text-zinc-800">
         <%%= @label %>
       </label>
@@ -436,22 +449,40 @@ defmodule <%= @web_namespace %>.Components do
   Renders a header with title.
   """
 
-  slot :title, required: true
+  slot :inner_block, required: true
   slot :subtitle
-  slot :inner_block
+  slot :actions
+  attr :centered, :boolean, default: false
   attr :class, :string, default: nil
+
+  def header(%{actions: []} = assigns) do
+    ~H"""
+    <header class={@class}>
+      <div>
+        <h1 class="text-lg font-semibold leading-8 text-zinc-800">
+          <%%= render_slot(@inner_block) %>
+        </h1>
+        <%%= if @subtitle != [] do %>
+          <p class="mt-2 text-sm leading-6 text-zinc-600"><%%= render_slot(@subtitle) %></p>
+        <%% end %>
+      </div>
+    </header>
+    """
+  end
 
   def header(assigns) do
     ~H"""
     <header class={["flex items-center justify-between gap-6", @class]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8 text-zinc-800"><%%= render_slot(@title) %></h1>
+        <h1 class="text-lg font-semibold leading-8 text-zinc-800">
+          <%%= render_slot(@inner_block) %>
+        </h1>
         <%%= if @subtitle != [] do %>
           <p class="mt-2 text-sm leading-6 text-zinc-600"><%%= render_slot(@subtitle) %></p>
         <%% end %>
       </div>
       <div class="flex-none">
-        <%%= render_slot(@inner_block) %>
+        <%%= render_slot(@actions) %>
       </div>
     </header>
     """
@@ -643,7 +674,7 @@ defmodule <%= @web_namespace %>.Components do
     )
     |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
     |> JS.pop_focus()
-  end <%= if @gettext do %>
+  end<%= if @gettext do %>
 
   @doc """
   Translates an error message using gettext.
