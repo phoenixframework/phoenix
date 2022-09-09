@@ -36,16 +36,20 @@ defmodule Mix.Phoenix do
           if File.exists?(source), do: source
         end) || raise "could not find #{source_file_path} in any of the sources"
 
-      case format do
-        :text -> Mix.Generator.create_file(target, File.read!(source))
-        :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, binding))
-        :new_eex ->
-          if File.exists?(target) do
-            :ok
-          else
-            Mix.Generator.create_file(target, EEx.eval_file(source, binding))
-          end
-      end
+      file =
+        case format do
+          :text -> Mix.Generator.create_file(target, File.read!(source))
+          :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+          :new_eex ->
+            if File.exists?(target) do
+              :ok
+            else
+              Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+            end
+        end
+
+      :ok = Mix.Tasks.Format.run([target])
+      file
     end
   end
 

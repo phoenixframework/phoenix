@@ -178,6 +178,30 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         assert_tests_pass(app_root_path)
       end)
     end
+
+    test "auto format heex templates" do
+      with_installer_tmp("umbrella_app_with_defaults", fn tmp_dir ->
+        {app_root_path, _} = generate_phoenix_app(tmp_dir, "rainy_day", ["--umbrella", "--live"])
+        web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
+
+        modify_file(Path.join(web_root_path, ".formatter.exs"), fn _file ->
+          """
+          [
+            import_deps: [:phoenix],
+            plugins: [Phoenix.LiveView.HTMLFormatter],
+            inputs: ["*.{heex,ex,exs}", "{config,lib,test}/**/*.{heex,ex,exs}"],
+            heex_line_length: 1000
+          ]
+          """
+        end)
+
+        mix_run!(~w(phx.gen.live Blog Post posts title), web_root_path)
+
+        assert_file(Path.join([web_root_path, "lib/rainy_day_web/live/post_live/form_component.html.heex"]), fn file ->
+          assert file =~ ~S|<.form :let={f} for={@changeset} id="post-form" phx-target={@myself} phx-change="validate" phx-submit="save">|
+        end)
+      end)
+    end
   end
 
   describe "phx.gen.auth + bcrypt" do

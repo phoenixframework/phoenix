@@ -81,7 +81,9 @@ defmodule Phx.New.Generator do
 
         :eex ->
           contents = mod.render(name, source, project.binding)
-          create_file(target, contents)
+          file = create_file(target, contents)
+          :ok = Mix.Tasks.Format.run([target])
+          file
       end
     end
   end
