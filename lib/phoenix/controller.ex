@@ -724,7 +724,7 @@ defmodule Phoenix.Controller do
   `layout_formats/1` and `put_layout_formats/2` can be used to configure
   which formats support/require layout rendering (defaults to "html" only).
   """
-  @spec render(Plug.Conn.t, binary | atom, Keyword.t | map | binary | atom) :: Plug.Conn.t
+  @spec render(Plug.Conn.t, binary | atom, Keyword.t | map) :: Plug.Conn.t
   def render(conn, template, assigns)
       when is_atom(template) and (is_map(assigns) or is_list(assigns)) do
     format =
@@ -753,9 +753,9 @@ defmodule Phoenix.Controller do
   end
 
   @doc false
+  @deprecated "render/4 is deprecated. Use put_view + render/3"
   def render(conn, view, template, assigns)
       when is_atom(view) and (is_binary(template) or is_atom(template)) do
-    IO.warn "#{__MODULE__}.render/4 with a view is deprecated, see the documentation for render/3 for an alternative"
     conn
     |> put_view(view)
     |> render(template, assigns)
