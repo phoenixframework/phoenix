@@ -3,7 +3,8 @@ defmodule <%= inspect auth_module %> do
 
   import Plug.Conn
   import Phoenix.Controller
-
+  
+  alias Phoenix.Component
   alias Phoenix.LiveView
   alias <%= inspect context.module %>
 
@@ -176,12 +177,12 @@ defmodule <%= inspect auth_module %> do
   defp mount_current_<%= schema.singular %>(session, socket) do
     case session do
       %{"<%= schema.singular %>_token" => <%= schema.singular %>_token} ->
-        LiveView.assign_new(socket, :current_<%= schema.singular %>, fn ->
+        Component.assign_new(socket, :current_<%= schema.singular %>, fn ->
           <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
         end)
 
       %{} ->
-        LiveView.assign_new(socket, :current_<%= schema.singular %>, fn -> nil end)
+        Component.assign_new(socket, :current_<%= schema.singular %>, fn -> nil end)
     end
   end
 
