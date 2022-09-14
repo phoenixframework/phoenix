@@ -8,7 +8,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <div>
       <.header>
-        <%= @title %>
+        <%%= @title %>
         <:subtitle>Use this form manage <%= schema.singular %> records in your database.</:subtitle>
       </.header>
 
@@ -20,7 +20,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         phx-change="validate"
         phx-submit="save"
       >
-        <%= input %><% end %>
+
+        <%= for input <- inputs do %>
+          <%= input %>
+        <% end %>
 
         <:actions>
           <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
