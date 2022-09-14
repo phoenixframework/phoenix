@@ -698,9 +698,9 @@ defmodule <%= @web_namespace %>.Components do
     # should be written to the errors.po file. The :count option is
     # set by Ecto and indicates we should also apply plural rules.
     if count = opts[:count] do
-      Gettext.dngettext( @web_namespace %>.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(<%= @web_namespace %>.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext( @web_namespace %>.Gettext, "errors", msg, opts)
+      Gettext.dgettext(<%= @web_namespace %>.Gettext, "errors", msg, opts)
     end
   end<% else %>
 
