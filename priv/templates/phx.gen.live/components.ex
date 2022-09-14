@@ -18,18 +18,18 @@ defmodule <%= @web_namespace %>.Components do
   ## Examples
 
       <.modal id="confirm-modal">
-        Are you sure you?
+        Are you sure?
         <:confirm>OK</:confirm>
-        <:cancel>Cancel</:confirm>
+        <:cancel>Cancel</:cancel>
       <.modal>
 
   JS commands may be passed to the `:on_cancel` and `on_confirm` attributes
   for the caller to reactor to each button press, for example:
 
       <.modal id="confirm" on_confirm={JS.push("delete")} on_cancel={JS.navigate(~p"/posts")}>
-        Are you sure you?
+        Are you sure?
         <:confirm>OK</:confirm>
-        <:cancel>Cancel</:confirm>
+        <:cancel>Cancel</:cancel>
       <.modal>
   """
 
@@ -493,9 +493,7 @@ defmodule <%= @web_namespace %>.Components do
 
   ## Examples
 
-      <.table rows={@users} row_id={&"user-#{&1.id}"}>
-        <:title>Users</:title>
-        <:subtitle>Active in the last 24 hours</:subtitle>
+      <.table rows={@users}>
         <:col :let={user} label="id"><%%= user.id %></:col>
         <:col :let={user} label="username"><%%= user.username %></:col>
       </.table>
