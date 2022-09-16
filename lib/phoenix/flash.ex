@@ -24,10 +24,4 @@ defmodule Phoenix.Flash do
   def get(%{} = flash, key) when is_atom(key) or is_binary(key) do
     Map.get(flash, to_string(key))
   end
-
-  def get(other, key) do
-    raise ArgumentError, """
-    expected a flash map with atom or string key, but got: #{inspect(other)} with key: #{inspect(key)}\
-    """
-  end
 end
