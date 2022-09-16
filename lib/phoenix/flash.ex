@@ -11,9 +11,9 @@ defmodule Phoenix.Flash do
       <div id="info"><%= Phoenix.Flash.get(@flash, :info) %></div>
       <div id="error"><%= Phoenix.Flash.get(@flash, :error) %></div>
   """
-  def get(%Plug.Conn{}, key) when is_atom(key) or is_binary(key) do
+  def get(%mod{}, key) when is_atom(key) or is_binary(key) do
     raise ArgumentError, """
-    expected a map of flash data, but got a %Plug.Conn{}
+    expected a map of flash data, but got a %#{inspect(mod)}{}
 
     Use the @flash assign set by the :fetch_flash plug instead:
 
