@@ -1,1 +1,1 @@
-../priv/templates/phx.gen.live/components.ex
+../../../priv/templates/phx.gen.live/components.ex
