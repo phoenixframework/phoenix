@@ -1,0 +1,33 @@
+defmodule Phoenix.Flash do
+  @moduledoc """
+  Provides shared flash access.
+  """
+
+  @doc """
+  Gets the key from the map of flash data.
+
+  ## Examples
+
+      <div id="info"><%= Phoenix.Flash.get(@flash, :info) %></div>
+      <div id="error"><%= Phoenix.Flash.get(@flash, :error) %></div>
+  """
+  def get(%Plug.Conn{}, key) when is_atom(key) or is_binary(key) do
+    raise ArgumentError, """
+    expected a map of flash data, but got a %Plug.Conn{}
+
+    Use the @flash assign set by the :fetch_flash plug instead:
+
+        <%= Phoenix.Flash.get(@flash, :#{key}) %>
+    """
+  end
+
+  def get(%{} = flash, key) when is_atom(key) or is_binary(key) do
+    Map.get(flash, to_string(key))
+  end
+
+  def get(other, key) do
+    raise ArgumentError, """
+    expected a flash map with atom or string key, but got: #{inspect(other)} with key: #{inspect(key)}\
+    """
+  end
+end
