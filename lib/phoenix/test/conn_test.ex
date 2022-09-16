@@ -274,7 +274,7 @@ defmodule Phoenix.ConnTest do
   Gets the whole flash storage.
   """
   @spec get_flash(Conn.t) :: map
-  @deprecated "get_flash/1 is deprecated. Use the @flash assign provided by the :fetch_flash plug"
+  @deprecated "get_flash/1 is deprecated. Use conn.assigns.flash instead"
   def get_flash(conn), do: conn.assigns.flash
 
   @doc """
