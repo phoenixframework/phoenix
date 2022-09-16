@@ -24,13 +24,17 @@ defmodule Phoenix.Controller.FlashTest do
   end
 
   test "does not fetch flash twice" do
-    assert conn(:get, "/")
-           |> with_session()
-           |> put_session("phoenix_flash", %{"foo" => "bar"})
-           |> fetch_flash()
-           |> put_session("phoenix_flash", %{"foo" => "baz"})
-           |> fetch_flash()
-           |> get_flash() == %{"foo" => "bar"}
+    expected_flash = %{"foo" => "bar"}
+    conn =
+      conn(:get, "/")
+      |> with_session()
+      |> put_session("phoenix_flash", expected_flash)
+      |> fetch_flash()
+      |> put_session("phoenix_flash", %{"foo" => "baz"})
+      |> fetch_flash()
+
+    assert get_flash(conn) == expected_flash
+    assert conn.assigns.flash == expected_flash
   end
 
   test "flash is persisted when status is a redirect" do
@@ -114,14 +118,20 @@ defmodule Phoenix.Controller.FlashTest do
     end
   end
 
-  test "put_flash/3 adds the key/message pair to the flash" do
+  test "put_flash/3 adds the key/message pair to the flash and updates assigns" do
     conn =
       conn(:get, "/")
       |> with_session
       |> fetch_flash([])
+
+    assert conn.assigns.flash == %{}
+
+    conn =
+      conn
       |> put_flash(:error, "oh noes!")
       |> put_flash(:notice, "false alarm!")
 
+    assert conn.assigns.flash == %{"error" => "oh noes!", "notice" => "false alarm!"}
     assert get_flash(conn, :error) == "oh noes!"
     assert get_flash(conn, "error") == "oh noes!"
     assert get_flash(conn, :notice) == "false alarm!"
