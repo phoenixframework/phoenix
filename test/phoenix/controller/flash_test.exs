@@ -177,10 +177,6 @@ defmodule Phoenix.Controller.FlashTest do
       assert_raise ArgumentError, ~r/expected a map of flash data, but got a %Plug.Conn{}/, fn ->
         Flash.get(%Plug.Conn{}, :info)
       end
-
-      assert_raise ArgumentError, "expected a flash map with atom or string key, but got: :bad with key: :info", fn ->
-        Flash.get(:bad, :info)
-      end
     end
   end
 end
