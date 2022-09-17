@@ -7,7 +7,7 @@ Before we begin, please take a minute to read the [Installation Guide](installat
 We can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
 
 ```console
-$ mix phx.new hello
+$ mix phx.new hello --no-gettext
 ```
 
 > A note about [Ecto](ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL, MySQL, and others. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to `mix phx.new`.
