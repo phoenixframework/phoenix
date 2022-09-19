@@ -1328,14 +1328,14 @@ defmodule Phoenix.Controller do
   Fetches the flash storage.
   """
   def fetch_flash(conn, _opts \\ []) do
-    if Map.get(conn.private, :phoenix_flash) do
+    if Map.get(conn.assigns, :flash) do
       conn
     else
       session_flash = get_session(conn, "phoenix_flash")
       conn = persist_flash(conn, session_flash || %{})
 
       register_before_send conn, fn conn ->
-        flash = conn.private.phoenix_flash
+        flash = conn.assigns.flash
         flash_size = map_size(flash)
 
         cond do
@@ -1396,8 +1396,9 @@ defmodule Phoenix.Controller do
       %{"info" => "Welcome Back!"}
 
   """
+  @deprecated "get_flash/1 is deprecated. Use the @flash assign provided by the :fetch_flash plug"
   def get_flash(conn) do
-    Map.get(conn.private, :phoenix_flash) ||
+    Map.get(conn.assigns, :flash) ||
       raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
   end
 
@@ -1411,6 +1412,7 @@ defmodule Phoenix.Controller do
       "Welcome Back!"
 
   """
+  @deprecated "get_flash/2 is deprecated. Use Phoenix.Flash.get(@flash, key) instead"
   def get_flash(conn, key) do
     get_flash(conn)[flash_key(key)]
   end
@@ -1447,7 +1449,7 @@ defmodule Phoenix.Controller do
   defp flash_key(atom) when is_atom(atom), do: Atom.to_string(atom)
 
   defp persist_flash(conn, value) do
-    put_private(conn, :phoenix_flash, value)
+    assign(conn, :flash, value)
   end
 
   @doc """

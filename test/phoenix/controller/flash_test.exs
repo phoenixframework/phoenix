@@ -4,6 +4,8 @@ defmodule Phoenix.Controller.FlashTest do
 
   import Phoenix.Controller
 
+  alias Phoenix.Flash
+
   setup do
     Logger.disable(self())
     :ok
@@ -24,23 +26,27 @@ defmodule Phoenix.Controller.FlashTest do
   end
 
   test "does not fetch flash twice" do
-    assert conn(:get, "/")
-           |> with_session()
-           |> put_session("phoenix_flash", %{"foo" => "bar"})
-           |> fetch_flash()
-           |> put_session("phoenix_flash", %{"foo" => "baz"})
-           |> fetch_flash()
-           |> get_flash() == %{"foo" => "bar"}
+    expected_flash = %{"foo" => "bar"}
+    conn =
+      conn(:get, "/")
+      |> with_session()
+      |> put_session("phoenix_flash", expected_flash)
+      |> fetch_flash()
+      |> put_session("phoenix_flash", %{"foo" => "baz"})
+      |> fetch_flash()
+
+    assert conn.assigns.flash == expected_flash
+    assert conn.assigns.flash == expected_flash
   end
 
   test "flash is persisted when status is a redirect" do
     for status <- 300..308 do
       conn = conn(:get, "/") |> with_session |> fetch_flash()
                              |> put_flash(:notice, "elixir") |> send_resp(status, "ok")
-      assert get_flash(conn, :notice) == "elixir"
+      assert Flash.get(conn.assigns.flash, :notice) == "elixir"
       assert get_resp_header(conn, "set-cookie") != []
       conn = conn(:get, "/") |> recycle_cookies(conn) |> with_session |> fetch_flash()
-      assert get_flash(conn, :notice) == "elixir"
+      assert Flash.get(conn.assigns.flash, :notice) == "elixir"
     end
   end
 
@@ -48,10 +54,10 @@ defmodule Phoenix.Controller.FlashTest do
     for status <- [299, 309, 200, 404] do
       conn = conn(:get, "/") |> with_session |> fetch_flash()
                              |> put_flash(:notice, "elixir") |> send_resp(status, "ok")
-      assert get_flash(conn, :notice) == "elixir"
+      assert Flash.get(conn.assigns.flash, :notice) == "elixir"
       assert get_resp_header(conn, "set-cookie") != []
       conn = conn(:get, "/") |> recycle_cookies(conn) |> with_session |> fetch_flash()
-      assert get_flash(conn, :notice) == nil
+      assert Flash.get(conn.assigns.flash, :notice) == nil
     end
   end
 
@@ -85,27 +91,21 @@ defmodule Phoenix.Controller.FlashTest do
     assert ["_app=" <> _] = get_resp_header(conn, "set-cookie")
   end
 
-  test "get_flash/1 raises ArgumentError when flash not previously fetched" do
-    assert_raise ArgumentError, fn ->
-      conn(:get, "/") |> with_session |> get_flash()
-    end
-  end
-
-  test "get_flash/1 returns the map of messages" do
+  test "flash assigns contains the map of messages" do
     conn = conn(:get, "/") |> with_session |> fetch_flash([]) |> put_flash(:notice, "hi")
-    assert get_flash(conn) == %{"notice" => "hi"}
+    assert conn.assigns.flash == %{"notice" => "hi"}
   end
 
-  test "get_flash/2 returns the message by key" do
+  test "Flash.get/2 returns the message by key" do
     conn = conn(:get, "/") |> with_session |> fetch_flash([]) |> put_flash(:notice, "hi")
-    assert get_flash(conn, :notice) == "hi"
-    assert get_flash(conn, "notice") == "hi"
+    assert Flash.get(conn.assigns.flash, :notice) == "hi"
+    assert Flash.get(conn.assigns.flash, "notice") == "hi"
   end
 
-  test "get_flash/2 returns nil for missing key" do
+  test "Flash.get/2 returns nil for missing key" do
     conn = conn(:get, "/") |> with_session |> fetch_flash([])
-    assert get_flash(conn, :notice) == nil
-    assert get_flash(conn, "notice") == nil
+    assert Flash.get(conn.assigns.flash, :notice) == nil
+    assert Flash.get(conn.assigns.flash, "notice") == nil
   end
 
   test "put_flash/3 raises ArgumentError when flash not previously fetched" do
@@ -114,18 +114,24 @@ defmodule Phoenix.Controller.FlashTest do
     end
   end
 
-  test "put_flash/3 adds the key/message pair to the flash" do
+  test "put_flash/3 adds the key/message pair to the flash and updates assigns" do
     conn =
       conn(:get, "/")
       |> with_session
       |> fetch_flash([])
+
+    assert conn.assigns.flash == %{}
+
+    conn =
+      conn
       |> put_flash(:error, "oh noes!")
       |> put_flash(:notice, "false alarm!")
 
-    assert get_flash(conn, :error) == "oh noes!"
-    assert get_flash(conn, "error") == "oh noes!"
-    assert get_flash(conn, :notice) == "false alarm!"
-    assert get_flash(conn, "notice") == "false alarm!"
+    assert conn.assigns.flash == %{"error" => "oh noes!", "notice" => "false alarm!"}
+    assert Flash.get(conn.assigns.flash, :error) == "oh noes!"
+    assert Flash.get(conn.assigns.flash, "error") == "oh noes!"
+    assert Flash.get(conn.assigns.flash, :notice) == "false alarm!"
+    assert Flash.get(conn.assigns.flash, "notice") == "false alarm!"
   end
 
   test "clear_flash/1 clears the flash messages" do
@@ -136,9 +142,9 @@ defmodule Phoenix.Controller.FlashTest do
       |> put_flash(:error, "oh noes!")
       |> put_flash(:notice, "false alarm!")
 
-    refute get_flash(conn) == %{}
+    refute conn.assigns.flash == %{}
     conn = clear_flash(conn)
-    assert get_flash(conn) == %{}
+    assert conn.assigns.flash == %{}
   end
 
   test "merge_flash/2 adds kv-pairs to the flash" do
@@ -148,15 +154,29 @@ defmodule Phoenix.Controller.FlashTest do
       |> fetch_flash([])
       |> merge_flash(error: "oh noes!", notice: "false alarm!")
 
-    assert get_flash(conn, :error) == "oh noes!"
-    assert get_flash(conn, "error") == "oh noes!"
-    assert get_flash(conn, :notice) == "false alarm!"
-    assert get_flash(conn, "notice") == "false alarm!"
+    assert Flash.get(conn.assigns.flash, :error) == "oh noes!"
+    assert Flash.get(conn.assigns.flash, "error") == "oh noes!"
+    assert Flash.get(conn.assigns.flash, :notice) == "false alarm!"
+    assert Flash.get(conn.assigns.flash, "notice") == "false alarm!"
   end
 
   test "fetch_flash/2 raises ArgumentError when session not previously fetched" do
     assert_raise ArgumentError, fn ->
       conn(:get, "/") |> fetch_flash([])
+    end
+  end
+
+  describe "Flash" do
+    test "get/2" do
+      assert Flash.get(%{}, :info) == nil
+      assert Flash.get(%{"info" => "hi"}, :info) == "hi"
+      assert Flash.get(%{"info" => "hi", "error" => "ohno"}, :error) == "ohno"
+    end
+
+    test "invalid access" do
+      assert_raise ArgumentError, ~r/expected a map of flash data, but got a %Plug.Conn{}/, fn ->
+        Flash.get(%Plug.Conn{}, :info)
+      end
     end
   end
 end
