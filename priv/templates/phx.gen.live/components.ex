@@ -78,13 +78,13 @@ defmodule <%= @web_namespace %>.Components do
               <div id={"#{@id}-content"}>
                 <header :if={@title != []}>
                   <h1 id={"#{@id}-title"} class="text-lg font-semibold leading-8 text-zinc-800">
-                    <%= render_slot(@title) %>
+                    <%%= render_slot(@title) %>
                   </h1>
                   <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
-                    <%= render_slot(@subtitle) %>
+                    <%%= render_slot(@subtitle) %>
                   </p>
                 </header>
-                <%= render_slot(@inner_block) %>
+                <%%= render_slot(@inner_block) %>
                 <div :if={@confirm != [] or @cancel != []} class="ml-6 mb-4 flex items-center gap-5">
                   <.button
                     :for={confirm <- @confirm}
@@ -93,14 +93,14 @@ defmodule <%= @web_namespace %>.Components do
                     phx-disable-with
                     class="py-2 px-3"
                   >
-                    <%= render_slot(confirm) %>
+                    <%%= render_slot(confirm) %>
                   </.button>
                   <.link
                     :for={cancel <- @cancel}
                     phx-click={hide_modal(@on_cancel, @id)}
                     class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
                   >
-                    <%= render_slot(cancel) %>
+                    <%%= render_slot(cancel) %>
                   </.link>
                 </div>
               </div>
@@ -151,9 +151,9 @@ defmodule <%= @web_namespace %>.Components do
       <p :if={@title} class="flex items-center gap-1.5 text-[0.8125rem] font-semibold leading-6">
         <Heroicons.information_circle :if={@kind == :info} mini class="h-4 w-4" />
         <Heroicons.exclamation_circle :if={@kind == :error} mini class="h-4 w-4" />
-        <%= @title %>
+        <%%= @title %>
       </p>
-      <p class="mt-2 text-[0.8125rem] leading-5"><%= msg %></p>
+      <p class="mt-2 text-[0.8125rem] leading-5"><%%= msg %></p>
     </div>
     """
   end
@@ -182,9 +182,9 @@ defmodule <%= @web_namespace %>.Components do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
       <div class="space-y-8 bg-white mt-10">
-        <%= render_slot(@inner_block, f) %>
+        <%%= render_slot(@inner_block, f) %>
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
-          <%= render_slot(action, f) %>
+          <%%= render_slot(action, f) %>
         </div>
       </div>
     </.form>
@@ -216,7 +216,7 @@ defmodule <%= @web_namespace %>.Components do
       ]}
       {@rest}
     >
-      <%= render_slot(@inner_block) %>
+      <%%= render_slot(@inner_block) %>
     </button>
     """
   end
@@ -268,7 +268,7 @@ defmodule <%= @web_namespace %>.Components do
         name={@name}
         class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
       />
-      <%= @label %>
+      <%%= @label %>
     </label>
     """
   end
@@ -276,7 +276,7 @@ defmodule <%= @web_namespace %>.Components do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id}><%%= @label %></.label>
       <select
         id={@id}
         name={@name}
@@ -284,7 +284,7 @@ defmodule <%= @web_namespace %>.Components do
         class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
         {@rest}
       >
-        <option :for={opt <- @option} {assigns_to_attributes(opt)}><%= render_slot(opt) %></option>
+        <option :for={opt <- @option} {assigns_to_attributes(opt)}><%%= render_slot(opt) %></option>
       </select>
       <.error :for={msg <- @errors} message={msg} />
     </div>
@@ -294,7 +294,7 @@ defmodule <%= @web_namespace %>.Components do
   def input(%{type: "textarea"} = assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id}><%%= @label %></.label>
       <textarea
         id={@id || @name}
         name={@name}
@@ -305,7 +305,7 @@ defmodule <%= @web_namespace %>.Components do
           "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
         ]}
         {@rest}
-      ><%= @value %></textarea>
+      ><%%= @value %></textarea>
       <.error :for={msg <- @errors} message={msg} />
     </div>
     """
@@ -314,7 +314,7 @@ defmodule <%= @web_namespace %>.Components do
   def input(assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id}><%%= @label %></.label>
       <input
         type={@type}
         name={@name}
@@ -348,7 +348,7 @@ defmodule <%= @web_namespace %>.Components do
   def label(assigns) do
     ~H"""
     <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
-      <%= render_slot(@inner_block) %>
+      <%%= render_slot(@inner_block) %>
     </label>
     """
   end
@@ -362,7 +362,7 @@ defmodule <%= @web_namespace %>.Components do
     ~H"""
     <p class="phx-no-feedback:hidden mt-3 flex gap-3 text-sm leading-6 text-rose-600">
       <Heroicons.exclamation_circle mini class="mt-0.5 h-5 w-5 flex-none fill-rose-500" />
-      <%= @message %>
+      <%%= @message %>
     </p>
     """
   end
@@ -381,13 +381,13 @@ defmodule <%= @web_namespace %>.Components do
     <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
       <div>
         <h1 class="text-lg font-semibold leading-8 text-zinc-800">
-          <%= render_slot(@inner_block) %>
+          <%%= render_slot(@inner_block) %>
         </h1>
         <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
-          <%= render_slot(@subtitle) %>
+          <%%= render_slot(@subtitle) %>
         </p>
       </div>
-      <div class="flex-none"><%= render_slot(@actions) %></div>
+      <div class="flex-none"><%%= render_slot(@actions) %></div>
     </header>
     """
   end
@@ -398,8 +398,8 @@ defmodule <%= @web_namespace %>.Components do
   ## Examples
 
       <.table rows={@users}>
-        <:col :let={user} label="id"><%= user.id %></:col>
-        <:col :let={user} label="username"><%= user.username %></:col>
+        <:col :let={user} label="id"><%%= user.id %></:col>
+        <:col :let={user} label="username"><%%= user.username %></:col>
       </.table>
   """
   attr :id, :string, required: true
@@ -418,7 +418,7 @@ defmodule <%= @web_namespace %>.Components do
       <table class="mt-11 w-[40rem] sm:w-full">
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
-            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%= col.label %></th>
+            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%%= col.label %></th>
             <th class="relative p-0 pb-4"><span class="sr-only">Actions</span></th>
           </tr>
         </thead>
@@ -436,7 +436,7 @@ defmodule <%= @web_namespace %>.Components do
               <div class="block py-4 pr-6">
                 <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
                 <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
-                  <%= render_slot(col, row) %>
+                  <%%= render_slot(col, row) %>
                 </span>
               </div>
             </td>
@@ -447,7 +447,7 @@ defmodule <%= @web_namespace %>.Components do
                   :for={action <- @action}
                   class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
                 >
-                  <%= render_slot(action, row) %>
+                  <%%= render_slot(action, row) %>
                 </span>
               </div>
             </td>
@@ -464,8 +464,8 @@ defmodule <%= @web_namespace %>.Components do
   ## Examples
 
       <.list>
-        <:item title="Title"><%= @post.title %></:item>
-        <:item title="Views"><%= @post.views %></:item>
+        <:item title="Title"><%%= @post.title %></:item>
+        <:item title="Views"><%%= @post.views %></:item>
       </.list>
   """
   slot :item, required: true do
@@ -477,8 +477,8 @@ defmodule <%= @web_namespace %>.Components do
     <div class="mt-14">
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 sm:gap-8">
-          <dt class="w-1/4 flex-none text-[0.8125rem] leading-6 text-zinc-500"><%= item.title %></dt>
-          <dd class="text-sm leading-6 text-zinc-700"><%= render_slot(item) %></dd>
+          <dt class="w-1/4 flex-none text-[0.8125rem] leading-6 text-zinc-500"><%%= item.title %></dt>
+          <dd class="text-sm leading-6 text-zinc-700"><%%= render_slot(item) %></dd>
         </div>
       </dl>
     </div>
@@ -503,7 +503,7 @@ defmodule <%= @web_namespace %>.Components do
         class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
       >
         <Heroicons.arrow_left solid class="w-3 h-3 stroke-current inline" />
-        <%= render_slot(@inner_block) %>
+        <%%= render_slot(@inner_block) %>
       </.link>
     </div>
     """
