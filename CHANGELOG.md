@@ -35,9 +35,13 @@ will continue to work and be generated. You can disable router helpers by passin
 
 ## 1.7.0-dev
 
+### Deprecations
+  * `Phoenix.Controller.get_flash` has been deprecated in favor of the new `Phoenix.Flash` module, which provides unified flash access
+
 ### Enhancements
   * [Router] Add `Phoenix.VerifiedRoutes` for `~p`-based route generation with compile-time verification.
   * [Router] Support `helpers: false` to `use Phoenix.Router` to disable helper generation
+  * [Flash] Add `Phoenix.Flash` for unfied flash access
 
 ### JavaScript Client Bug Fixes
   * Fix heartbeat being sent after disconnect and causing abnormal disconnects
