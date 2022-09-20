@@ -239,12 +239,8 @@ defmodule Mix.Phoenix.Schema do
   @doc """
   Generates an invalid error message according to the params present in the schema.
   """
-  def failed_render_change_message(schema) do
-    if schema.params.create |> Map.values() |> Enum.any?(&date_value?/1) do
-      "is invalid"
-    else
-      "can&#39;t be blank"
-    end
+  def failed_render_change_message(_schema) do
+    "can&#39;t be blank"
   end
 
   def type_for_migration({:enum, _}), do: :string
@@ -261,9 +257,6 @@ defmodule Mix.Phoenix.Schema do
 
   def maybe_redact_field(true), do: ", redact: true"
   def maybe_redact_field(false), do: ""
-
-  defp date_value?(%{day: _day, month: _month, year: _year}), do: true
-  defp date_value?(_value), do: false
 
   @doc """
   Returns the string value for use in EEx templates.
