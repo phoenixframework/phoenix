@@ -1,12 +1,23 @@
-<.table rows={@<%= schema.plural %>}>
-  <:title>Listing <%= schema.human_plural %></:title>
-<%= for {k, _} <- schema.attrs do %>    <:col :let={<%= schema.singular %>} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= <%= schema.singular %>.<%= k %> %></:col>
-<% end %>
-  <:col :let={<%= schema.singular %>} label="">
-    <span><.link href={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link></span>
-    <span><.link href={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit"}>Edit</.link></span>
-    <span><.link href={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"} method="delete" data-confirm="Are you sure?">Delete</.link></span>
-  </:col>
-</.table>
+<.header>
+  Listing <%= schema.human_plural %>
+  <:actions>
+    <.link href={~p"<%= schema.route_prefix %>/new"}>
+      <.button>New <%= schema.human_singular %></.button>
+    </.link>
+  </:actions>
+</.header>
 
-<span><.link href={~p"<%= schema.route_prefix %>/new"}>New <%= schema.human_singular %></.link></span>
+<.table id="<%= schema.plural %>" rows={@<%= schema.collection %>} row_click={&JS.navigate(~p"<%= schema.route_prefix %>/#{&1}")}><%= for {k, _} <- schema.attrs do %>
+  <:col :let={<%= schema.singular %>} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= <%= schema.singular %>.<%= k %> %></:col><% end %>
+  <:action :let={<%= schema.singular %>}>
+    <div class="sr-only">
+      <.link navigate={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link>
+    </div>
+    <.link navigate={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={<%= schema.singular %>}>
+    <.link href={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"} method="delete" data-confirm="Are you sure?">
+      Delete
+    </.link>
+  </:action>
+</.table>

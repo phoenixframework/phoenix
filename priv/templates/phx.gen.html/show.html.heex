@@ -1,13 +1,15 @@
-<h1>Show <%= schema.human_singular %></h1>
+<.header>
+  <%= schema.human_singular %> <%%= @<%= schema.singular %>.id %>
+  <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
+  <:actions>
+    <.link href={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
+      <.button>Edit <%= schema.singular %></.button>
+    </.link>
+  </:actions>
+</.header>
 
-<ul>
-<%= for {k, _} <- schema.attrs do %>
-  <li>
-    <strong><%= Phoenix.Naming.humanize(Atom.to_string(k)) %>:</strong>
-    <%%= @<%= schema.singular %>.<%= k %> %>
-  </li>
-<% end %>
-</ul>
+<.list><%= for {k, _} <- schema.attrs do %>
+  <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= @<%= schema.singular %>.<%= k %> %></:item><% end %>
+</.list>
 
-<span><.link href={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>Edit</.link></span> |
-<span><.link href={~p"<%= schema.route_prefix %>"}>Back</.link></span>
+<.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>

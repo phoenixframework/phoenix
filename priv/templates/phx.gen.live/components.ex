@@ -428,7 +428,7 @@ defmodule <%= @web_namespace %>.Components do
         <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
           <tr
             :for={row <- @rows}
-            id={"#{@id}-row-#{Phoenix.Param.to_param(row)}"}
+            id={"#{@id}-#{Phoenix.Param.to_param(row)}"}
             class="group hover:bg-zinc-50"
           >
             <td
