@@ -1,26 +1,29 @@
-<h1>Show <%= schema.human_singular %></h1>
+<.header>
+  <%= schema.human_singular %> <%%= @<%= schema.singular %>.id %>
+  <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit <%= schema.singular %></.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list><%= for {k, _} <- schema.attrs do %>
+  <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= @<%= schema.singular %>.<%= k %> %></:item><% end %>
+</.list>
+
+<.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
 
 <%%= if @live_action in [:edit] do %>
-  <.modal return_to={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}"}>
+  <.modal id="<%= schema.singular %>-modal" show on_cancel={JS.patch(~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}")}>
     <.live_component
       module={<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent}
       id={@<%= schema.singular %>.id}
       title={@page_title}
       action={@live_action}
       <%= schema.singular %>={@<%= schema.singular %>}
-      return_to={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}"}
+      navigate={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}"}
     />
   </.modal>
 <%% end %>
 
-<ul>
-<%= for {k, _} <- schema.attrs do %>
-  <li>
-    <strong><%= Phoenix.Naming.humanize(Atom.to_string(k)) %>:</strong>
-    <%%= @<%= schema.singular %>.<%= k %> %>
-  </li>
-<% end %>
-</ul>
-
-<span><.link patch={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/show/edit"} class="button">Edit</.link></span> |
-<span><.link navigate={~p"<%= schema.route_prefix %>"}>Back</.link></span>

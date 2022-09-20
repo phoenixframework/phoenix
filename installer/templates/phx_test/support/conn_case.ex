@@ -22,10 +22,7 @@ defmodule <%= @web_namespace %>.ConnCase do
       # The default endpoint for testing
       @endpoint <%= @endpoint_module %>
 
-      use Phoenix.VerifiedRoutes,
-        endpoint: @endpoint,
-        router: <%= @web_namespace %>.Router,
-        statics: <%= @web_namespace %>.static_paths()
+      use <%= @web_namespace %>, :verified_routes
 
       # Import conveniences for testing with connections
       import Plug.Conn

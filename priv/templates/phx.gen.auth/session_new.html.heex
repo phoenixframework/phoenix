@@ -1,27 +1,32 @@
-<h1>Log in</h1>
+<div class="mx-auto max-w-sm">
+  <.header class="text-center">
+    Sign in to account
+    <:subtitle>
+      Don't have an account?
+      <.link navigate={~p"<%= schema.route_prefix %>/register"} class="font-semibold text-brand hover:underline">
+        Sign up
+      </.link>
+      for an account now.
+    </:subtitle>
+  </.header>
 
-<.form :let={f} for={@conn} action={~p"<%= schema.route_prefix %>/log_in"} as={:<%= schema.singular %>}>
-  <%%= if @error_message do %>
-    <div class="alert alert-danger">
-      <p><%%= @error_message %></p>
-    </div>
-  <%% end %>
+  <.simple_form :let={f} for={@conn} action={~p"<%= schema.route_prefix %>/log_in"} as={:<%= schema.singular %>}>
+    <%%= if @error_message do %>
+      <.error message={@error_message} />
+    <%% end %>
+    <.input field={{f, :email}} type="email" label="Email" required />
+    <.input field={{f, :password}} type="password" label="Password" required />
 
-  <%%= label f, :email %>
-  <%%= email_input f, :email, required: true %>
-
-  <%%= label f, :password %>
-  <%%= password_input f, :password, required: true %>
-
-  <%%= label f, :remember_me, "Keep me logged in for 60 days" %>
-  <%%= checkbox f, :remember_me %>
-
-  <div>
-    <%%= submit "Log in" %>
-  </div>
-</.form>
-
-<p>
-  <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
-  <.link href={~p"<%= schema.route_prefix %>/reset_password"}>Forgot your password?</.link>
-</p>
+    <:actions :let={f}>
+      <.input field={{f, :remember_me}} type="checkbox" label="Keep me logged in" />
+      <.link href={~p"<%= schema.route_prefix %>/reset_password"} class="text-sm font-semibold">
+        Forgot your password?
+      </.link>
+    </:actions>
+    <:actions>
+      <.button phx-disable-with="Sigining in..." class="w-full">
+        Sign in <span aria-hidden="true">→</span>
+      </.button>
+    </:actions>
+  </.simple_form>
+</div>

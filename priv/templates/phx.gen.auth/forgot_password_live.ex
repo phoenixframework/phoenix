@@ -5,19 +5,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <h1>Forgot your password?</h1>
+    <div class="mx-auto max-w-sm">
+      <.header class="text-center">
+        Forgot your password?
+        <:subtitle>We'll send a password reset link to your inbox</:subtitle>
+      </.header>
 
-    <.form id="reset_password_form" :let={f} for={:<%= schema.singular %>} phx-submit="send_email">
-      <%%= label f, :email %>
-      <%%= email_input f, :email, required: true %>
-
-      <div>
-        <%%= submit "Send instructions to reset password" %>
-      </div>
-    </.form>
-
-    <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
-    <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
+      <.simple_form id="reset_password_form" :let={f} for={:<%= schema.singular %>} phx-submit="send_email">
+        <.input field={{f, :email}} type="email" placeholder="Email" required />
+        <:actions>
+          <.button phx-disable-with="Sending..." class="w-full">Send password reset instructions</.button>
+        </:actions>
+      </.simple_form>
+    </div>
     """
   end
 

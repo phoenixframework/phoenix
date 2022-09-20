@@ -13,7 +13,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "renders the reset password page", %{conn: conn} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password")
       response = html_response(conn, 200)
-      assert response =~ "<h1>Forgot your password?</h1>"
+      assert response =~ "Forgot your password?"
     end
   end
 
@@ -26,7 +26,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert redirected_to(conn) == ~p"/"
-      assert get_flash(conn, :info) =~ "If your email is in our system"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
+        "If your email is in our system"
+
       assert Repo.get_by!(<%= inspect context.alias %>.<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id).context == "reset_password"
     end
 
@@ -37,7 +39,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert redirected_to(conn) == ~p"/"
-      assert get_flash(conn, :info) =~ "If your email is in our system"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
+        "If your email is in our system"
+
       assert Repo.all(<%= inspect context.alias %>.<%= inspect schema.alias %>Token) == []
     end
   end
@@ -54,13 +58,15 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "renders reset password", %{conn: conn, token: token} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
-      assert html_response(conn, 200) =~ "<h1>Reset password</h1>"
+      assert html_response(conn, 200) =~ "Reset password"
     end
 
     test "does not render reset password with invalid token", %{conn: conn} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password/oops")
       assert redirected_to(conn) == ~p"/"
-      assert get_flash(conn, :error) =~ "Reset password link is invalid or it has expired"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+        "Reset password link is invalid or it has expired"
+
     end
   end
 
@@ -85,7 +91,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log_in"
       refute get_session(conn, :<%= schema.singular %>_token)
-      assert get_flash(conn, :info) =~ "Password reset successfully"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
+        "Password reset successfully"
+
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, "new valid password")
     end
 
@@ -99,7 +107,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       response = html_response(conn, 200)
-      assert response =~ "<h1>Reset password</h1>"
+      assert response =~ "Reset password"
       assert response =~ "should be at least 12 character(s)"
       assert response =~ "does not match password"
     end
@@ -107,7 +115,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "does not reset password with invalid token", %{conn: conn} do
       conn = put(conn, ~p"<%= schema.route_prefix %>/reset_password/oops")
       assert redirected_to(conn) == ~p"/"
-      assert get_flash(conn, :error) =~ "Reset password link is invalid or it has expired"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+        "Reset password link is invalid or it has expired"
+
     end
   end
 end

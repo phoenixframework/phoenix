@@ -5,14 +5,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(%{live_action: :edit} = assigns) do
     ~H"""
-    <h1>Confirm account</h1>
+    <.header>Confirm Account</.header>
 
-    <.form id="confirmation_form" :let={f} for={:<%= schema.singular %>} phx-submit="confirm_account">
-      <div>
-        <%%= hidden_input f, :token, value: @token %>
-        <%%= submit "Confirm my account" %>
-      </div>
-    </.form>
+    <.simple_form id="confirmation_form" :let={f} for={:<%= schema.singular %>} phx-submit="confirm_account">
+      <.input field={{f, :token}} type="hidden" value={@token} />
+      <:actions>
+        <.button phx-disable-with="Confirming...">Confirm my account</.button>
+      </:actions>
+    </.simple_form>
 
     <p>
       <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |

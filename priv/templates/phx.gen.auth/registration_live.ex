@@ -6,42 +6,47 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <h1>Register</h1>
+    <div class="mx-auto max-w-sm">
+      <.header class="text-center">
+        Register for an account
+        <:subtitle>
+          Already registered?
+          <.link navigate={~p"<%= schema.route_prefix %>/log_in"} class="font-semibold text-brand hover:underline">
+            Sign in
+          </.link>
+          to your account now.
+        </:subtitle>
+      </.header>
 
-    <.form
-      id="registration_form"
-      :let={f}
-      for={@changeset}
-      phx-submit="save"
-      phx-change="validate"
-      phx-trigger-action={@trigger_submit}
-      action={~p"<%= schema.route_prefix %>/log_in?_action=registered"}
-      method="post"
-      as={:<%= schema.singular %>}
-    >
-      <%%= if @changeset.action == :insert do %>
-        <div class="alert alert-danger">
-          <p>Oops, something went wrong! Please check the errors below.</p>
-        </div>
-      <%% end %>
+      <.simple_form
+        :let={f}
+        id="registration_form"
+        for={@changeset}
+        phx-submit="save"
+        phx-change="validate"
+        phx-trigger-action={@trigger_submit}
+        action={~p"<%= schema.route_prefix %>/log_in?_action=registered"}
+        method="post"
+        as={:user}
+      >
+        <%%= if @changeset.action == :insert do %>
+          <.error message="Oops, something went wrong! Please check the errors below." />
+        <%% end %>
 
-      <%%= label f, :email %>
-      <%%= email_input f, :email, required: true %>
-      <%%= error_tag f, :email %>
+        <.input field={{f, :email}} type="email" label="Email" required />
+        <.input
+          field={{f, :password}}
+          type="password"
+          label="Password"
+          value={input_value(f, :password)}
+          required
+        />
 
-      <%%= label f, :password %>
-      <%%= password_input f, :password, required: true, value: input_value(f, :password) %>
-      <%%= error_tag f, :password %>
-
-      <div>
-        <%%= submit "Register" %>
-      </div>
-    </.form>
-
-    <p>
-      <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link> |
-      <.link href={~p"<%= schema.route_prefix %>/reset_password"}>Forgot your password?</.link>
-    </p>
+        <:actions>
+          <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
+        </:actions>
+      </.simple_form>
+    </div>
     """
   end
 

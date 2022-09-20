@@ -25,7 +25,6 @@ defmodule <%= @web_namespace %> do
 
       import Plug.Conn<%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %>
-      alias <%= @web_namespace %>.Router.Helpers, as: Routes
 
       unquote(verified_routes())
     end
@@ -34,12 +33,12 @@ defmodule <%= @web_namespace %> do
   def view do
     quote do
       use Phoenix.View,
-        root: "lib/<%= @web_app_name %>/templates",
+        root: "lib/<%= @lib_web_name %>/templates",
         namespace: <%= @web_namespace %>
 
       # Import convenience functions from controllers
       import Phoenix.Controller,
-        only: [get_csrf_token: 0, get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
+        only: [get_csrf_token: 0, view_module: 1, view_template: 1]
 
       # Include shared imports and aliases for views
       unquote(view_helpers())
@@ -49,7 +48,7 @@ defmodule <%= @web_namespace %> do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {<%= @web_namespace %>.LayoutView, "live.html"}
+        layout: {<%= @web_namespace %>.LayoutView, "app.html"}
 
       unquote(view_helpers())
     end
@@ -73,11 +72,18 @@ defmodule <%= @web_namespace %> do
 
   def router do
     quote do
-      use Phoenix.Router
+      use Phoenix.Router, helpers: false
 
       import Plug.Conn
       import Phoenix.Controller<%= if @html do %>
       import Phoenix.LiveView.Router<% end %>
+    end
+  end
+
+  def channel do
+    quote do
+      use Phoenix.Channel<%= if @gettext do %>
+      import <%= @web_namespace %>.Gettext<% end %>
     end
   end
 
@@ -90,30 +96,27 @@ defmodule <%= @web_namespace %> do
     end
   end
 
-  def channel do
-    quote do
-      use Phoenix.Channel<%= if @gettext do %>
-      import <%= @web_namespace %>.Gettext<% end %>
-    end
-  end
-
   defp view_helpers do
     quote do<%= if @html do %>
-      # Import basic HTML rendering capabilities (tags, forms, etc)
-      use Phoenix.HTML
+      use Phoenix.Component
 
-      # Import .heex helpers (<.link>, <.form>, etc) and alias JS module
+      import Phoenix.HTML
+      import Phoenix.HTML.Form
+      import <%= @web_namespace %>.Components
+
+      # Import and alias LiveView and .heex helpers (live_render, <.link>, <.form>, etc)
       import Phoenix.LiveView.Helpers
       alias Phoenix.LiveView.JS
 <% end %>
-      # Include the router functionality defined above
+      # Import basic rendering functionality (render, render_layout, etc)
+      import Phoenix.View
+      <%= if @gettext do %>
+      import <%= @web_namespace %>.Gettext<% end %><%= if @html do %>
+      alias Phoenix.LiveView.JS<% end %>
       unquote(verified_routes())
-
-      # All imports from the current project should be defined from here under
-      import <%= @web_namespace %>.ErrorHelpers<%= if @gettext do %>
-      import <%= @web_namespace %>.Gettext<% end %>
     end
   end
+
 
   @doc """
   When used, dispatch to the appropriate controller/view/etc.

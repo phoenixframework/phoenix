@@ -29,7 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/#{id}"
 
       conn = get(conn, ~p"<%= schema.route_prefix %>/#{id}")
-      assert html_response(conn, 200) =~ "Show <%= schema.human_singular %>"
+      assert html_response(conn, 200) =~ "<%= schema.human_singular %> #{id}"
     end
 
     test "renders errors when data is invalid", %{conn: conn} do

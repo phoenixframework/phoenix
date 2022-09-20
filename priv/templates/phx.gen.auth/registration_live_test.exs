@@ -8,9 +8,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "renders registration page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/register")
 
-      assert html =~ "<h1>Register</h1>"
-      assert html =~ "Log in</a>"
-      assert html =~ "Forgot your password?</a>"
+      assert html =~ "Register"
+      assert html =~ "Log in"
     end
 
     test "redirects if already logged in", %{conn: conn} do
@@ -31,7 +30,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> element("#registration_form")
         |> render_change(<%= schema.singular %>: %{"email" => "with spaces", "password" => "too short"})
 
-      assert result =~ "<h1>Register</h1>"
+      assert result =~ "Register"
       assert result =~ "must have the @ sign and no spaces"
       assert result =~ "should be at least 12 character"
     end
@@ -52,8 +51,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = get(conn, "/")
       response = html_response(conn, 200)
       assert response =~ email
-      assert response =~ "Settings</a>"
-      assert response =~ "Log out</a>"
+      assert response =~ "Settings"
+      assert response =~ "Log out"
     end
 
     test "renders errors for duplicated email", %{conn: conn} do
@@ -73,27 +72,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "redirects to login page when the Log in button is clicked", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/register")
 
-      {:ok, conn} =
+      {:ok, _login_live, login_html} =
         lv
-        |> element(~s{a:fl-contains('Log in')})
+        |> element(~s|main a:fl-contains("Sign in")|)
         |> render_click()
         |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log_in")
 
-      assert conn.resp_body =~ "<h1>Log in</h1>"
-    end
-
-    test "redirects to forgot password page when the Forgot Password button is clicked", %{
-      conn: conn
-    } do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/register")
-
-      {:ok, conn} =
-        lv
-        |> element(~s{a:fl-contains('Forgot your password?')})
-        |> render_click()
-        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/reset_password")
-
-      assert conn.resp_body =~ "<h1>Forgot your password?</h1>"
+      assert login_html =~ "Log in"
     end
   end
 end

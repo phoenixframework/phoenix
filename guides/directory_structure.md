@@ -98,7 +98,6 @@ lib/hello_web
 ├── templates
 │   ├── layout
 │   │   ├── app.html.heex
-│   │   ├── live.html.heex
 │   │   └── root.html.heex
 │   └── page
 │       └── index.html.heex

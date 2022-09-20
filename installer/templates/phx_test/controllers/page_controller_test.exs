@@ -3,6 +3,6 @@ defmodule <%= @web_namespace %>.PageControllerTest do
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Welcome to Phoenix!"
+    assert html_response(conn, 200) =~ "Peace of mind from prototype to production"
   end
 end

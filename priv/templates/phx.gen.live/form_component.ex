@@ -4,6 +4,32 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect context.module %>
 
   @impl true
+  def render(assigns) do
+    ~H"""
+    <div>
+      <.header>
+        <%%= @title %>
+        <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
+      </.header>
+
+      <.simple_form
+        :let={f}
+        for={@changeset}
+        id="<%= schema.singular %>-form"
+        phx-target={@myself}
+        phx-change="validate"
+        phx-submit="save"
+      >
+        <%= for input <- inputs, input do %><%= input %>
+        <% end %><:actions>
+          <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
+        </:actions>
+      </.simple_form>
+    </div>
+    """
+  end
+
+  @impl true
   def update(%{<%= schema.singular %>: <%= schema.singular %>} = assigns, socket) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)
 
@@ -33,7 +59,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> updated successfully")
-         |> push_redirect(to: socket.assigns.return_to)}
+         |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, :changeset, changeset)}
@@ -46,7 +72,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> created successfully")
-         |> push_redirect(to: socket.assigns.return_to)}
+         |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}

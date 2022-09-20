@@ -12,9 +12,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture())
         |> live(~p"<%= schema.route_prefix %>/settings")
 
-      assert html =~ "<h1>Settings</h1>"
-      assert html =~ "<h3>Change email</h3>"
-      assert html =~ "<h3>Change password</h3>"
+      assert html =~ "Change Email"
+      assert html =~ "Change Password"
     end
 
     test "redirects if <%= schema.singular %> is not logged in", %{conn: conn} do
@@ -62,7 +61,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           "<%= schema.singular %>" => %{"email" => "with spaces"}
         })
 
-      assert result =~ "<h1>Settings</h1>"
+      assert result =~ "Change Email"
       assert result =~ "must have the @ sign and no spaces"
     end
 
@@ -77,7 +76,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
         |> render_submit()
 
-      assert result =~ "<h1>Settings</h1>"
+      assert result =~ "Change Email"
       assert result =~ "did not change"
       assert result =~ "is not valid"
     end
@@ -111,7 +110,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert redirected_to(new_password_conn) == ~p"<%= schema.route_prefix %>/settings"
       assert get_session(new_password_conn, :<%= schema.singular %>_token) != get_session(conn, :<%= schema.singular %>_token)
-      assert get_flash(new_password_conn, :info) =~ "Password updated successfully"
+      assert Phoenix.Flash.get(new_password_conn.assigns.flash, :info) =~
+        "Password updated successfully"
+
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, new_password)
     end
 
@@ -129,7 +130,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           }
         })
 
-      assert result =~ "<h1>Settings</h1>"
+      assert result =~ "Change Password"
       assert result =~ "should be at least 12 character(s)"
       assert result =~ "does not match password"
     end
@@ -148,7 +149,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
         |> render_submit()
 
-      assert result =~ "<h1>Settings</h1>"
+      assert result =~ "Change Password"
       assert result =~ "should be at least 12 character(s)"
       assert result =~ "does not match password"
       assert result =~ "is not valid"

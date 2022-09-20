@@ -5,11 +5,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <h1>Settings</h1>
+    <.header>Change Email</.header>
 
-    <h3>Change email</h3>
-
-    <.form
+    <.simple_form
       id="email_form"
       :let={f}
       for={@email_changeset}
@@ -17,27 +15,28 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-change="validate_email"
     >
       <%%= if @email_changeset.action == :insert do %>
-        <div class="alert alert-danger">
-          <p>Oops, something went wrong! Please check the errors below.</p>
-        </div>
+        <.error message="Oops, something went wrong! Please check the errors below." />
       <%% end %>
 
-      <%%= label f, :email %>
-      <%%= email_input f, :email, required: true, value: input_value(f, :email) %>
-      <%%= error_tag f, :email %>
+      <.input field={{f, :email}} type="email" label="Email" required value={input_value(f, :email)} />
 
-      <%%= label f, :current_password, for: "current_password_for_email" %>
-      <%%= password_input f, :current_password, required: true, name: "current_password", id: "current_password_for_email", value: @email_form_current_password %>
-      <%%= error_tag f, :current_password %>
+      <.input
+        field={{f, :current_password}}
+        name="current_password"
+        id="current_password_for_email"
+        type="password"
+        label="Current password"
+        value={@email_form_current_password}
+        required
+      />
+      <:actions>
+        <.button phx-disable-with="Changing...">Change Email</.button>
+      </:actions>
+    </.simple_form>
 
-      <div>
-        <%%= submit "Change email" %>
-      </div>
-    </.form>
+    <.header>Change Password</.header>
 
-    <h3>Change password</h3>
-
-    <.form
+    <.simple_form
       id="password_form"
       :let={f}
       for={@password_changeset}
@@ -48,29 +47,38 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-trigger-action={@trigger_submit}
     >
       <%%= if @password_changeset.action == :insert do %>
-        <div class="alert alert-danger">
-          <p>Oops, something went wrong! Please check the errors below.</p>
-        </div>
+        <.error message="Oops, something went wrong! Please check the errors below." />
       <%% end %>
 
-      <%%= hidden_input f, :email, value: @current_email %>
+      <.input field={{f, :email}} type="hidden" value={@current_email} />
 
-      <%%= label f, :password, "New password" %>
-      <%%= password_input f, :password, required: true,  value: input_value(f, :password) %>
-      <%%= error_tag f, :password %>
-
-      <%%= label f, :password_confirmation, "Confirm new password" %>
-      <%%= password_input f, :password_confirmation, required: true, value: input_value(f, :password_confirmation) %>
-      <%%= error_tag f, :password_confirmation %>
-
-      <%%= label f, :current_password, for: "current_password_for_password" %>
-      <%%= password_input f, :current_password, required: true, name: "current_password", id: "current_password_for_password", value: @current_password%>
-      <%%= error_tag f, :current_password %>
-
-      <div>
-        <%%= submit "Change password" %>
-      </div>
-    </.form>
+      <.input
+        field={{f, :password}}
+        type="password"
+        label="New password"
+        value={input_value(f, :password)}
+        required
+      />
+      <.input
+        field={{f, :password_confirmation}}
+        type="password"
+        label="Confirm new password"
+        value={input_value(f, :password_confirmation)}
+      />
+      <.input
+        field={{f, :current_password}}
+        name="current_password"
+        type="password"
+        label="Confirm new password"
+        for="current_password_for_password"
+        id="current_password_for_password"
+        value={@current_password}
+        required
+      />
+      <:actions>
+        <.button phx-disable-with="Changing...">Change Password</.button>
+      </:actions>
+    </.simple_form>
     """
   end
 
@@ -84,7 +92,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           put_flash(socket, :error, "Email change link is invalid or it has expired.")
       end
 
-    {:ok, push_redirect(socket, to: ~p"<%= schema.route_prefix %>/settings")}
+    {:ok, push_navigate(socket, to: ~p"<%= schema.route_prefix %>/settings")}
   end
 
   def mount(_params, _session, socket) do

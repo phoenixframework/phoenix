@@ -11,7 +11,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "renders log in page", %{conn: conn} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/log_in")
       response = html_response(conn, 200)
-      assert response =~ "<h1>Log in</h1>"
+      assert response =~ "Log in"
       assert response =~ "Register</a>"
       assert response =~ "Forgot your password?</a>"
     end
@@ -66,7 +66,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert redirected_to(conn) == "/foo/bar"
-      assert get_flash(conn, :info) =~ "Welcome back!"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Welcome back!"
     end<%= if live? do %>
 
     test "login following registration", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
@@ -81,7 +81,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert redirected_to(conn) == ~p"/"
-      assert get_flash(conn, :info) =~ "Account created successfully"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Account created successfully"
     end
 
     test "login following password update", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
@@ -96,7 +96,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/settings"
-      assert get_flash(conn, :info) =~ "Password updated successfully"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Password updated successfully"
     end
 
     test "redirects to login page with invalid credentials", %{conn: conn} do
@@ -105,7 +105,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           "<%= schema.singular %>" => %{"email" => "invalid@email.com", "password" => "invalid_password"}
         })
 
-      assert get_flash(conn, :error) == "Invalid email or password"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log_in"
     end<% else %>
 
@@ -116,7 +116,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       response = html_response(conn, 200)
-      assert response =~ "<h1>Log in</h1>"
+      assert response =~ "Log in"
       assert response =~ "Invalid email or password"
     end<% end %>
   end
@@ -126,14 +126,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = conn |> log_in_<%= schema.singular %>(<%= schema.singular %>) |> delete(~p"<%= schema.route_prefix %>/log_out")
       assert redirected_to(conn) == ~p"/"
       refute get_session(conn, :<%= schema.singular %>_token)
-      assert get_flash(conn, :info) =~ "Logged out successfully"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Logged out successfully"
     end
 
     test "succeeds even if the <%= schema.singular %> is not logged in", %{conn: conn} do
       conn = delete(conn, ~p"<%= schema.route_prefix %>/log_out")
       assert redirected_to(conn) == ~p"/"
       refute get_session(conn, :<%= schema.singular %>_token)
-      assert get_flash(conn, :info) =~ "Logged out successfully"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Logged out successfully"
     end
   end
 end

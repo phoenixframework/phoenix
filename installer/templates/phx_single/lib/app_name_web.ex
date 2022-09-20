@@ -38,7 +38,7 @@ defmodule <%= @web_namespace %> do
 
       # Import convenience functions from controllers
       import Phoenix.Controller,
-        only: [get_csrf_token: 0, get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
+        only: [get_csrf_token: 0, view_module: 1, view_template: 1]
 
       # Include shared imports and aliases for views
       unquote(view_helpers())
@@ -48,7 +48,7 @@ defmodule <%= @web_namespace %> do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {<%= @web_namespace %>.LayoutView, "live.html"}
+        layout: {<%= @web_namespace %>.LayoutView, "app.html"}
 
       unquote(view_helpers())
     end
@@ -80,6 +80,13 @@ defmodule <%= @web_namespace %> do
     end
   end
 
+  def channel do
+    quote do
+      use Phoenix.Channel<%= if @gettext do %>
+      import <%= @web_namespace %>.Gettext<% end %>
+    end
+  end
+
   def verified_routes do
     quote do
       use Phoenix.VerifiedRoutes,
@@ -89,28 +96,24 @@ defmodule <%= @web_namespace %> do
     end
   end
 
-  def channel do
-    quote do
-      use Phoenix.Channel<%= if @gettext do %>
-      import <%= @web_namespace %>.Gettext<% end %>
-    end
-  end
-
   defp view_helpers do
     quote do<%= if @html do %>
-      # Import basic HTML rendering capabilities (tags, forms, etc)
-      use Phoenix.HTML
+      use Phoenix.Component
 
-      # Import .heex helpers (<.link>, <.form>, etc) and alias JS module
+      import Phoenix.HTML
+      import Phoenix.HTML.Form
+      import <%= @web_namespace %>.Components
+
+      # Import and alias LiveView and .heex helpers (live_render, <.link>, <.form>, etc)
       import Phoenix.LiveView.Helpers
       alias Phoenix.LiveView.JS
 <% end %>
-      # Include the router functionality defined above
+      # Import basic rendering functionality (render, render_layout, etc)
+      import Phoenix.View
+      <%= if @gettext do %>
+      import <%= @web_namespace %>.Gettext<% end %><%= if @html do %>
+      alias Phoenix.LiveView.JS<% end %>
       unquote(verified_routes())
-
-      # All imports from the current project should be defined from here under
-      import <%= @web_namespace %>.ErrorHelpers<%= if @gettext do %>
-      import <%= @web_namespace %>.Gettext<% end %>
     end
   end
 

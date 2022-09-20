@@ -10,7 +10,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "renders settings page", %{conn: conn} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/settings")
       response = html_response(conn, 200)
-      assert response =~ "<h1>Settings</h1>"
+      assert response =~ "Settings"
     end
 
     test "redirects if <%= schema.singular %> is not logged in" do
@@ -34,7 +34,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert redirected_to(new_password_conn) == ~p"<%= schema.route_prefix %>/settings"
       assert get_session(new_password_conn, :<%= schema.singular %>_token) != get_session(conn, :<%= schema.singular %>_token)
-      assert get_flash(new_password_conn, :info) =~ "Password updated successfully"
+      assert Phoenix.Flash.get(new_password_conn.assigns.flash, :info) =~
+        "Password updated successfully"
+
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, "new valid password")
     end
 
@@ -50,7 +52,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       response = html_response(old_password_conn, 200)
-      assert response =~ "<h1>Settings</h1>"
+      assert response =~ "Settings"
       assert response =~ "should be at least 12 character(s)"
       assert response =~ "does not match password"
       assert response =~ "is not valid"
@@ -70,7 +72,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/settings"
-      assert get_flash(conn, :info) =~ "A link to confirm your email"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
+        "A link to confirm your email"
+
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(<%= schema.singular %>.email)
     end
 
@@ -83,7 +87,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
 
       response = html_response(conn, 200)
-      assert response =~ "<h1>Settings</h1>"
+      assert response =~ "Settings"
       assert response =~ "must have the @ sign and no spaces"
       assert response =~ "is not valid"
     end
@@ -104,19 +108,25 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "updates the <%= schema.singular %> email once", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>, token: token, email: email} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/#{token}")
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/settings"
-      assert get_flash(conn, :info) =~ "Email changed successfully"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
+        "Email changed successfully"
+
       refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(<%= schema.singular %>.email)
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email)
 
       conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/#{token}")
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/settings"
-      assert get_flash(conn, :error) =~ "Email change link is invalid or it has expired"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+        "Email change link is invalid or it has expired"
+
     end
 
     test "does not update email with invalid token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/oops")
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/settings"
-      assert get_flash(conn, :error) =~ "Email change link is invalid or it has expired"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+        "Email change link is invalid or it has expired"
+
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(<%= schema.singular %>.email)
     end
 

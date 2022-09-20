@@ -1,7 +1,3 @@
-// We import the CSS which is extracted to its own file by esbuild.
-// Remove this line if you add your own CSS build pipeline (e.g postcss).
-import "../css/app.css"
-
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 // to get started and then uncomment the line below.
 // import "./user_socket.js"
