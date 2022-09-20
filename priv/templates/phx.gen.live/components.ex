@@ -121,7 +121,6 @@ defmodule <%= @web_namespace %>.Components do
   ## Examples
 
       <.flash kind={:info} flash={@flash} />
-      <.flash kind={:error} flash={get_flash(@conn)} />
       <.flash kind={:info} phx-mounted={show("#flash")}>Welcome Back!</.flash>
   """
   attr :id, :string, default: "flash", doc: "the optional id of flash container"

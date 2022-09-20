@@ -1358,13 +1358,13 @@ defmodule Phoenix.Controller do
   ## Examples
 
       iex> conn = merge_flash(conn, info: "Welcome Back!")
-      iex> get_flash(conn, :info)
+      iex> Phoenix.Flash.get(conn.assigns.flash, :info)
       "Welcome Back!"
 
   """
   def merge_flash(conn, enumerable) do
     map = for {k, v} <- enumerable, into: %{}, do: {flash_key(k), v}
-    persist_flash(conn, Map.merge(get_flash(conn), map))
+    persist_flash(conn, Map.merge(Map.get(conn.assigns, :flash, %{}), map))
   end
 
   @doc """
@@ -1375,12 +1375,15 @@ defmodule Phoenix.Controller do
   ## Examples
 
       iex> conn = put_flash(conn, :info, "Welcome Back!")
-      iex> get_flash(conn, :info)
+      iex> Phoenix.Flash.get(conn.assigns.flash, :info)
       "Welcome Back!"
 
   """
   def put_flash(conn, key, message) do
-    persist_flash(conn, Map.put(get_flash(conn), flash_key(key), message))
+    flash = Map.get(conn.assigns, :flash) ||
+      raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
+
+    persist_flash(conn, Map.put(flash, flash_key(key), message))
   end
 
   @doc """

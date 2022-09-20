@@ -757,8 +757,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
         </head>
         <body>
           <main class="container">
-            <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-            <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+            <p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@conn, :info) %></p>
+            <p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@conn, :error) %></p>
             <%= @inner_content %>
           </main>
         </body>
@@ -786,8 +786,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                      <% end %>
                    </ul>
                    <main class="container">
-                     <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-                     <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+                     <p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@conn, :info) %></p>
+                     <p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@conn, :error) %></p>
                      <%= @inner_content %>
                    </main>
                  </body>
@@ -806,8 +806,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
         </head>\r
         <body>\r
           <main class="container">\r
-            <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>\r
-            <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>\r
+            <p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@conn, :info) %></p>\r
+            <p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@conn, :error) %></p>\r
             <%= @inner_content %>\r
           </main>\r
         </body>\r
@@ -835,8 +835,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                      <% end %>\r
                    </ul>\r
                    <main class="container">\r
-                     <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>\r
-                     <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>\r
+                     <p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@conn, :info) %></p>\r
+                     <p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@conn, :error) %></p>\r
                      <%= @inner_content %>\r
                    </main>\r
                  </body>\r
@@ -867,8 +867,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
             </ul>
           </div>
           <main class="container">
-            <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-            <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+            <p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@conn, :info) %></p>
+            <p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@conn, :error) %></p>
             <%= @inner_content %>
           </main>
         </body>
