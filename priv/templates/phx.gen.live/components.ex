@@ -21,9 +21,9 @@ defmodule <%= @web_namespace %>.Components do
   ## Examples
 
       <.modal id="confirm-modal">
-        Are you sure you?
+        Are you sure?
         <:confirm>OK</:confirm>
-        <:cancel>Cancel</:confirm>
+        <:cancel>Cancel</:cancel>
       <.modal>
 
   JS commands may be passed to the `:on_cancel` and `on_confirm` attributes

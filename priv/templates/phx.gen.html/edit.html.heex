@@ -1,6 +1,6 @@
 <.header>
   Edit <%= schema.human_singular %> <%%= @<%= schema.singular %>.id %>
-  <:subtitle>Use this form manage <%= schema.singular %> records in your database.</:subtitle>
+  <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
 </.header>
 
 <.simple_form :let={f} for={@changeset} method="put" action={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}"}>
