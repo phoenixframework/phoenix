@@ -9,8 +9,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
 
       assert html =~ "Log in"
-      assert html =~ "Register</a>"
-      assert html =~ "Forgot your password?</a>"
+      assert html =~ "Register"
+      assert html =~ "Forgot your password?"
     end
 
     test "redirects if already logged in", %{conn: conn} do
@@ -51,7 +51,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       conn = submit_form(form, conn)
 
-      assert get_flash(conn, :error) == "Invalid email or password"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
 
       assert redirected_to(conn) == "<%= schema.route_prefix %>/log_in"
     end
@@ -61,13 +61,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "redirects to registration page when the Register button is clicked", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
 
-      {:ok, conn} =
+      {:ok, _login_live, login_html} =
         lv
-        |> element(~s{a:fl-contains('Register')})
+        |> element(~s|a:fl-contains("Sign up")|)
         |> render_click()
         |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/register")
 
-      assert conn.resp_body =~ "Register"
+      assert login_html =~ "Register"
     end
 
     test "redirects to forgot password page when the Forgot Password button is clicked", %{

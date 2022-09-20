@@ -127,10 +127,16 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ ~s|~p"/posts|
       end
 
-      files = [{"new.html.heex", ~S|~p"/posts"|}, {"edit.html.heex", ~S|~p"/posts/#{@post}"|}]
-      for {filename, action} <- files do
+      assert_file "lib/phoenix_web/templates/post/new.html.heex", fn file ->
+        assert file =~ ~S(<.simple_form :let={f} for={@changeset} action={~p"/posts"}>)
+      end
+
+      assert_file "lib/phoenix_web/templates/post/edit.html.heex", fn file ->
+        assert file =~ ~S(<.simple_form :let={f} for={@changeset} method="put" action={~p"/posts/#{@post}"}>)
+      end
+
+      for filename <- ["new.html.heex", "edit.html.heex"] do
         assert_file "lib/phoenix_web/templates/post/#{filename}", fn file ->
-          assert file =~ ~s(<.simple_form :let={f} for={@changeset} action={#{action}}>)
           assert file =~ ~s(<.input field={{f, :title}} type="text")
           assert file =~ ~s(<.input field={{f, :votes}} type="number")
           assert file =~ ~s(<.input field={{f, :cost}} type="number" label="cost" step="any")

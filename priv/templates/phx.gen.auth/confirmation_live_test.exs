@@ -32,7 +32,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> follow_redirect(conn, "/")
 
       assert {:ok, conn} = result
-      assert get_flash(conn, :info) =~ "User confirmed successfully"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
+        "User confirmed successfully"
+
       assert <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).confirmed_at
       refute get_session(conn, :<%= schema.singular %>_token)
       assert Repo.all(<%= inspect context.alias %>.<%= inspect schema.alias %>Token) == []
@@ -47,7 +49,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> follow_redirect(conn, "/")
 
       assert {:ok, conn} = result
-      assert get_flash(conn, :error) =~ "User confirmation link is invalid or it has expired"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+        "User confirmation link is invalid or it has expired"
+
 
       # when logged in
       {:ok, lv, _html} =
@@ -62,8 +66,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> follow_redirect(conn, "/")
 
       assert {:ok, conn} = result
-      refute get_flash(conn, :error)
-    end
+      refute Phoenix.Flash.get(conn.assigns.flash, :error)
+    en
+
+
 
     test "does not confirm email with invalid token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/invalid-token")
@@ -74,7 +80,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> render_submit()
         |> follow_redirect(conn, ~p"/")
 
-      assert get_flash(conn, :error) =~ "User confirmation link is invalid or it has expired"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+        "User confirmation link is invalid or it has expired"
+
       refute <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).confirmed_at
     end
   end

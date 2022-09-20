@@ -41,7 +41,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> render_submit()
         |> follow_redirect(conn, "/")
 
-      assert get_flash(conn, :info) =~ "If your email is in our system"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "If your email is in our system"
 
       assert Repo.get_by!(<%= inspect context.alias %>.<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id).context ==
                "reset_password"
@@ -56,34 +56,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> render_submit()
         |> follow_redirect(conn, "/")
 
-      assert get_flash(conn, :info) =~ "If your email is in our system"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "If your email is in our system"
       assert Repo.all(<%= inspect context.alias %>.<%= inspect schema.alias %>Token) == []
-    end
-  end
-
-  describe "Forgot password navigation" do
-    test "redirects to login page when the Log in button is clicked", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password")
-
-      {:ok, conn} =
-        lv
-        |> element(~s{main a:fl-contains('Log in')})
-        |> render_click()
-        |> follow_redirect(conn, "<%= schema.route_prefix %>/log_in")
-
-      assert conn.resp_body =~ "Log in"
-    end
-
-    test "redirects to password reset page when the Register button is clicked", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password")
-
-      {:ok, conn} =
-        lv
-        |> element(~s{main a:fl-contains('Register')})
-        |> render_click()
-        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/register")
-
-      assert conn.resp_body =~ "Register"
     end
   end
 end

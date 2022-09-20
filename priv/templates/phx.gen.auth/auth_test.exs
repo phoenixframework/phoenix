@@ -231,7 +231,8 @@ defmodule <%= inspect auth_module %>Test do
       conn = conn |> fetch_flash() |> <%= inspect schema.alias %>Auth.require_authenticated_<%= schema.singular %>([])
       assert conn.halted
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log_in"
-      assert get_flash(conn, :error) == "You must log in to access this page."
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+        "You must log in to access this page."
     end
 
     test "stores the path to redirect to on GET", %{conn: conn} do
