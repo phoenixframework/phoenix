@@ -45,7 +45,6 @@ defmodule Phx.New.Web do
     {:eex, "phx_live/assets/topbar.js",                     :web, "assets/vendor/topbar.js"},
     {:eex, "phx_web/templates/layout/root.html.heex",       :web, "lib/:web_app/templates/layout/root.html.heex"},
     {:eex, "phx_web/templates/layout/app.html.heex",        :web, "lib/:web_app/templates/layout/app.html.heex"},
-    {:eex, "phx_web/templates/layout/live.html.heex",       :web, "lib/:web_app/templates/layout/live.html.heex"},
     {:eex, "phx_web/templates/page/index.html.heex",        :web, "lib/:web_app/templates/page/index.html.heex"},
     {:eex, "phx_test/views/layout_view_test.exs",           :web, "test/:web_app/views/layout_view_test.exs"},
   ]

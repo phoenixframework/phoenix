@@ -211,7 +211,7 @@ defmodule Mix.Phoenix.Schema do
   def live_form_value(%Time{} = time), do: "#{time.hour}:#{time.minute}"
 
   def live_form_value(%NaiveDateTime{} = naive) do
-    DateTime.to_iso8601(naive)
+    NaiveDateTime.to_iso8601(naive)
   end
 
   def live_form_value(%DateTime{} = naive) do
@@ -232,7 +232,7 @@ defmodule Mix.Phoenix.Schema do
   def invalid_form_value(%{day: _day, month: _month, year: _year} = _date),
     do: "2022-00"
 
-  def invalid_form_value(%{hour: _hour, minute: _minute} = value), do: value
+  def invalid_form_value(%{hour: _hour, minute: _minute}), do: %{hour: 14, minute: 00}
   def invalid_form_value(true), do: false
   def invalid_form_value(_value), do: nil
 

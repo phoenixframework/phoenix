@@ -590,12 +590,6 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         fn file ->
           assert file =~
                    ~S|<.simple_form :let={f} for={@changeset} action={~p"/warehouse/users/reset_password/#{@token}"}>|
-
-          assert file =~
-                   ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
-
-          assert file =~
-                   ~S|<.link href={~p"/warehouse/users/log_in"}>Log in</.link>|
         end
       )
 
@@ -604,12 +598,6 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         fn file ->
           assert file =~
                    ~S|<.simple_form :let={f} for={:user} action={~p"/warehouse/users/reset_password"}>|
-
-          assert file =~
-                   ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
-
-          assert file =~
-                   ~S|<.link href={~p"/warehouse/users/log_in"}>Log in</.link>|
         end
       )
 
@@ -633,10 +621,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  ~S|<.simple_form :let={f} for={@conn} action={~p"/warehouse/users/log_in"} as={:user}>|
 
         assert file =~
-                 ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
+                 ~S|<.link navigate={~p"/warehouse/users/register"}|
 
         assert file =~
-                 ~S|<.link href={~p"/warehouse/users/reset_password"}>Forgot your password?</.link>|
+                 ~S|<.link href={~p"/warehouse/users/reset_password"}|
       end)
 
       assert_file(

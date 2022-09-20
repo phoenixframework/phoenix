@@ -42,7 +42,6 @@ defmodule Phx.New.Single do
     {:eex, "phx_live/assets/topbar.js",                      :web,     "assets/vendor/topbar.js"},
     {:eex, "phx_web/templates/layout/root.html.heex",        :project, "lib/:lib_web_name/templates/layout/root.html.heex"},
     {:eex, "phx_web/templates/layout/app.html.heex",         :project, "lib/:lib_web_name/templates/layout/app.html.heex"},
-    {:eex, "phx_web/templates/layout/live.html.heex",        :project, "lib/:lib_web_name/templates/layout/live.html.heex"},
     {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
     {:eex, "phx_web/templates/page/index.html.heex",         :project, "lib/:lib_web_name/templates/page/index.html.heex"},
     {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:lib_web_name/views/layout_view_test.exs"},
