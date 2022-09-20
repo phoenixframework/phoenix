@@ -4,7 +4,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   Use of the `sigil_p` macro allows paths and URLs throughout your
   application to be compile-time verified against your Phoenix router(s).
-  For example the following path and URL usages:
+  For example, the following path and URL usages:
 
       <.link href={~p"/sessions/new"} method="post">Sign in</.link>
 
@@ -53,7 +53,7 @@ defmodule Phoenix.VerifiedRoutes do
       use Phoenix.VerifiedRoutes,
         router: AppWeb.Router,
         endpoint: AppWeb.Endpoint,
-        statics: ~(images)
+        statics: ~w(images)
 
   ## Usage
 
@@ -77,7 +77,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   ## Tracking Warnings
 
-  All static path segments must start with forward slash and you must have a static segment
+  All static path segments must start with forward slash, and you must have a static segment
   between dynamic interpolations in order for a route to be verified without warnings.
   For example, the following path generates proper warnings
 
@@ -139,8 +139,10 @@ defmodule Phoenix.VerifiedRoutes do
     Module.put_attribute(mod, :phoenix_verified_statics, statics)
   end
 
+  @after_verify_supported Version.match?(System.version(), ">= 1.14.0-dev")
+
   defmacro __before_compile__(_env) do
-    if Version.match?(System.version(), ">= 1.14.0-dev") do
+    if @after_verify_supported do
       quote do
         @after_verify {__MODULE__, :__phoenix_verify_routes__}
 
@@ -712,7 +714,7 @@ defmodule Phoenix.VerifiedRoutes do
     {path_rewrite, query_rewrite} = verify_segment(segments, route, [])
 
     rewrite_route =
-      quote do
+      quote generated: true do
         query_str = unquote({:<<>>, meta, query_rewrite})
         path_str = unquote({:<<>>, meta, path_rewrite})
 
@@ -728,12 +730,12 @@ defmodule Phoenix.VerifiedRoutes do
     static? = static_path?(test_path, statics)
 
     path_ast =
-      quote do
+      quote generated: true do
         unquote(__MODULE__).unverified_path(unquote_splicing([endpoint, router, rewrite_route]))
       end
 
     static_ast =
-      quote do
+      quote generated: true do
         unquote(__MODULE__).static_path(unquote_splicing([endpoint, rewrite_route]))
       end
 

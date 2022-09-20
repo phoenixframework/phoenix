@@ -23,7 +23,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "create <%= schema.singular %>" do
     test "redirects to show when data is valid", %{conn: conn} do
-      conn = post(conn,  ~p"<%= schema.route_prefix %>", <%= schema.singular %>: @create_attrs)
+      conn = post(conn, ~p"<%= schema.route_prefix %>", <%= schema.singular %>: @create_attrs)
 
       assert %{id: id} = redirected_params(conn)
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/#{id}"

@@ -181,7 +181,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # assets
       assert_file web_path(@app, ".gitignore"), "/priv/static/assets/"
       assert_file web_path(@app, ".gitignore"), "#{@app}_web-*.tar"
-      assert_file web_path(@app, ".gitignore"),  ~r/\n$/
+      assert_file web_path(@app, ".gitignore"), ~r/\n$/
       assert_file web_path(@app, "assets/css/app.css")
       assert_file web_path(@app, "assets/css/phoenix.css")
 
@@ -745,7 +745,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/lib/another/templates/layout/app.html.heex"
 
         # assets
-        assert_file "another/.gitignore",  ~r/\n$/
+        assert_file "another/.gitignore", ~r/\n$/
         assert_file "another/priv/static/favicon.ico"
         assert_file "another/priv/static/images/phoenix.png"
         assert_file "another/assets/css/app.css"

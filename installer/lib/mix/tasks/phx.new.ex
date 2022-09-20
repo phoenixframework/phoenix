@@ -211,6 +211,7 @@ defmodule Mix.Tasks.Phx.New do
     maybe_cmd(project, "mix deps.get", true, install? && hex_available?())
   end
 
+  # TODO: Elixir v1.15 automatically installs Hex/Rebar if missing, so we can simplify this.
   defp hex_available? do
     Code.ensure_loaded?(Hex)
   end

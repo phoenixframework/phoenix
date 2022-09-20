@@ -703,7 +703,7 @@ defmodule Phoenix.Router do
 
   """
   defmacro match(verb, path, plug, plug_opts, options \\ []) do
-    add_route(:match, verb, path, plug, plug_opts, options)
+    add_route(:match, verb, path, expand_alias(plug, __CALLER__), plug_opts, options)
   end
 
   for verb <- @http_methods do
@@ -715,7 +715,7 @@ defmodule Phoenix.Router do
     See `match/5` for options.
     """
     defmacro unquote(verb)(path, plug, plug_opts, options \\ []) do
-      add_route(:match, unquote(verb), path, plug, plug_opts, options)
+      add_route(:match, unquote(verb), path, expand_alias(plug, __CALLER__), plug_opts, options)
     end
   end
 
