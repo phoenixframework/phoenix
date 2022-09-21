@@ -18,7 +18,8 @@ jobs:
 
           - elixir: 1.14.0
             otp: 24.3.4
-            lint: lint
+            lint: true
+            installer: true
 
     runs-on: ubuntu-latest
 
@@ -47,10 +48,6 @@ jobs:
 
     - name: Remove compiled application files
       run: mix clean
-
-    - name: Compile dependencies
-      run: mix compile
-      if: ${{ !matrix.lint }}
 
     - name: Compile & lint dependencies
       run: mix compile --warnings-as-errors
