@@ -587,6 +587,60 @@ defmodule Phoenix.Test.ChannelTest do
                        %{socket: %Socket{id: @socket_id}}, _}
     end
 
+    test "phoenix.channel.handle_in.start and .stop are emitted on reply", %{
+      socket: socket
+    } do
+      {:ok, _reply, socket} = subscribe_and_join(socket, "foo:ok")
+
+      ref = push(socket, "reply", %{"req" => "foo"})
+      assert_reply ref, :ok, %{"resp" => "foo"}
+
+      assert_receive {:telemetry_event, @channel_handle_in_start_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
+
+      assert_receive {:telemetry_event, @channel_handle_in_stop_event, _,
+                       %{socket: %Socket{id: @socket_id}, result: {:reply, {:ok, %{"resp" => "foo"}}, _}}, _}
+
+      refute_receive {:telemetry_event, @channel_handle_in_exception_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
+    end
+
+    test "phoenix.channel.handle_in.start and .stop are emitted on stop with reply", %{socket: socket} do
+      {:ok, _reply, socket} = subscribe_and_join(socket, "foo:ok")
+
+      Process.flag(:trap_exit, true)
+      ref = push(socket, "stop_and_reply", %{"req" => "foo"})
+      assert_reply ref, :ok, %{"resp" => "foo"}
+
+      assert_receive {:telemetry_event, @channel_handle_in_start_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
+
+      assert_receive {:telemetry_event, @channel_handle_in_stop_event, _,
+                       %{socket: %Socket{id: @socket_id}, result: {:stop, :shutdown, {:ok, %{"resp" => "foo"}}, _}}, _}
+
+      refute_receive {:telemetry_event, @channel_handle_in_exception_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
+    end
+
+
+    test "phoenix.channel.handle_in.start and .stop are emitted on stop", %{socket: socket} do
+      {:ok, _reply, socket} = subscribe_and_join(socket, "foo:ok")
+
+      Process.flag(:trap_exit, true)
+      push(socket, "stop", %{"reason" => "foo"})
+      assert_receive {:EXIT, _, _}
+
+      assert_received {:telemetry_event, @channel_handle_in_start_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
+
+      assert_received {:telemetry_event, @channel_handle_in_stop_event, _,
+                       %{socket: %Socket{id: @socket_id}, result: {:stop, "foo", _}}, _}
+
+      refute_received {:telemetry_event, @channel_handle_in_exception_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
+    end
+
+
     test "phoenix.channel.handle_in.start and .exception are emitted on craash", %{socket: socket} do
       {:ok, _reply, socket} = subscribe_and_join(socket, "foo:ok")
 
