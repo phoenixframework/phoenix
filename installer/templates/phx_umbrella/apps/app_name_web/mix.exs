@@ -41,8 +41,7 @@ defmodule <%= @web_namespace %>.MixProject do
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.18"},
-      # TODO bump to hex release
-      {:heroicons, github: "chrismccord/heroicons_elixir", branch: "cm-generate-module"},
+      {:heroicons, "~> 0.5"},
       {:floki, ">= 0.30.0", only: :test},
       {:tailwind, "~> 0.1.8", runtime: Mix.env() == :dev},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.7"},<% end %><%= if @assets do %>
