@@ -1,6 +1,8 @@
 /**
  * @license MIT
- * topbar 1.0.0, 2021-01-06 (modified 2022-09-21)
+ * topbar 1.0.0, 2021-01-06
+ * Modifications:
+ *   - add delayedShow(time) (2022-09-21)
  * http://buunguyen.github.io/topbar
  * Copyright (c) 2021 Buu Nguyen
  */
