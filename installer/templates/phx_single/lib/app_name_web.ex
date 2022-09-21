@@ -100,7 +100,6 @@ defmodule <%= @web_namespace %> do
     quote do<%= if @html do %>
       # Import basic HTML rendering capabilities (tags, forms, etc)
       use Phoenix.HTML
-      use Phoenix.Component
 
       # Import .heex helpers (<.link>, <.form>, etc) and alias JS module
       import Phoenix.LiveView.Helpers
