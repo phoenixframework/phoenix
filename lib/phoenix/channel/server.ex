@@ -297,12 +297,37 @@ defmodule Phoenix.Channel.Server do
     }
 
     start = System.monotonic_time()
-    {reply, state} = channel_join(channel, topic, auth_payload, socket)
-    duration = System.monotonic_time() - start
-    metadata = %{params: auth_payload, socket: socket, result: elem(reply, 0)}
-    :telemetry.execute([:phoenix, :channel_joined], %{duration: duration}, metadata)
-    GenServer.reply(from, reply)
-    state
+    measurements = %{system_time: System.system_time()}
+    metadata = %{topic: topic, params: auth_payload, socket: socket}
+    :telemetry.execute([:phoenix, :channel, :join, :start], measurements, metadata)
+
+    try do
+      {{result, reply}, state} = channel_join(channel, topic, auth_payload, socket)
+
+      measurements = %{duration: System.monotonic_time() - start}
+
+      :telemetry.execute(
+        [:phoenix, :channel, :join, :stop],
+        measurements,
+        Map.merge(metadata, %{result: result, reply: reply, socket: get_socket(state)})
+      )
+
+      :telemetry.execute([:phoenix, :channel_joined], measurements, %{
+        params: auth_payload,
+        socket: socket,
+        result: result
+      })
+
+      GenServer.reply(from, {result, reply})
+      state
+    catch
+      kind, reason ->
+        measurements = %{duration: System.monotonic_time() - start}
+        stacktrace = __STACKTRACE__
+        metadata = Map.merge(metadata, %{kind: kind, reason: reason, stacktrace: stacktrace})
+        :telemetry.execute([:phoenix, :channel, :join, :exception], measurements, metadata)
+        :erlang.raise(kind, reason, stacktrace)
+    end
   end
 
   def handle_info(%Message{topic: topic, event: "phx_leave", ref: ref}, %{topic: topic} = socket) do

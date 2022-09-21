@@ -502,4 +502,67 @@ defmodule Phoenix.Test.ChannelTest do
     {:ok, socket} = connect(UserSocket, %{})
     assert {:ok, _, _socket} = subscribe_and_join(socket, "foo:payload", %{string: nil})
   end
+
+  describe "telemetry" do
+    @channel_join_start_event [:phoenix, :channel, :join, :start]
+    @channel_join_stop_event [:phoenix, :channel, :join, :stop]
+    @channel_join_exception_event [:phoenix, :channel, :join, :exception]
+
+    @channel_events [
+      @channel_join_start_event,
+      @channel_join_stop_event,
+      @channel_join_exception_event
+    ]
+
+    @socket_id "channel-telemetry-test"
+
+    setup context do
+      test_pid = self()
+      test_name = context.test
+
+      :telemetry.attach_many(
+        test_name,
+        @channel_events,
+        fn event, measurements, metadata, config ->
+          send(test_pid, {:telemetry_event, event, measurements, metadata, config})
+        end,
+        nil
+      )
+    end
+
+    test "phoenix.channel.join.start and .stop are emitted on success" do
+      {:ok, _socket, _client} =
+        join(socket(UserSocket, @socket_id, original: :assign), Channel, "foo:socket")
+
+      assert_received {:telemetry_event, @channel_join_start_event, _,
+                       %{socket: %Socket{id: @socket_id, assigns: start_assigns}}, _}
+
+      refute Map.has_key?(start_assigns, :hello)
+
+      assert_received {:telemetry_event, @channel_join_stop_event, _,
+                       %{socket: %Socket{id: @socket_id, assigns: stop_assigns}}, _}
+
+      assert stop_assigns.hello == :world
+
+      refute_received {:telemetry_event, @channel_join_exception_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
+    end
+
+    test "phoenix.channel.join.start and .exception are emitted on crash" do
+      Process.flag(:trap_exit, true)
+      Logger.disable(self())
+
+      {:error, %{reason: "join crashed"}} =
+        join(socket(UserSocket, @socket_id, original: :assign), Channel, "foo:crash")
+
+      assert_received {:telemetry_event, @channel_join_start_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
+
+      assert_received {:telemetry_event, @channel_join_exception_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
+
+      refute_received {:telemetry_event, @channel_join_stop_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
+    end
+  end
 end
