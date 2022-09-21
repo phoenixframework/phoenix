@@ -255,7 +255,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
-        assert file =~ "import Phoenix.LiveView.Helpers"
         assert file =~ "def live_view do"
         assert file =~ "def live_component do"
       end

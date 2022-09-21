@@ -34,10 +34,10 @@ defmodule <%= @web_namespace %> do
     quote do
       use Phoenix.View,
         root: "lib/<%= @lib_web_name %>/templates",
-        namespace: <%= @web_namespace %>
+        namespace: <%= @web_namespace %><%= if @html do %>
 
       use Phoenix.Component
-
+<% end %>
       # Import convenience functions from controllers
       import Phoenix.Controller,
         only: [get_csrf_token: 0, view_module: 1, view_template: 1]
@@ -59,14 +59,6 @@ defmodule <%= @web_namespace %> do
   def live_component do
     quote do
       use Phoenix.LiveComponent
-
-      unquote(view_helpers())
-    end
-  end
-
-  def component do
-    quote do
-      use Phoenix.Component
 
       unquote(view_helpers())
     end
