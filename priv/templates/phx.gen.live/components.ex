@@ -241,7 +241,7 @@ defmodule <%= @web_namespace %>.Components do
 
   attr :type, :string,
     default: "text",
-    doc: ~s|one of "text", "textarea", "number" "email", "date", "time", "datetime", "select"|
+    doc: ~s|one of "text", "textarea", "number" "email", "date", "time", "datetime", "select", "password"|
 
   attr :value, :any
   attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
