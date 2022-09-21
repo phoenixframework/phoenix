@@ -507,11 +507,15 @@ defmodule Phoenix.Test.ChannelTest do
     @channel_join_start_event [:phoenix, :channel, :join, :start]
     @channel_join_stop_event [:phoenix, :channel, :join, :stop]
     @channel_join_exception_event [:phoenix, :channel, :join, :exception]
+    @channel_handle_in_start_event [:phoenix, :channel, :handle_in, :start]
+    @channel_handle_in_stop_event [:phoenix, :channel, :handle_in, :stop]
 
     @channel_events [
       @channel_join_start_event,
       @channel_join_stop_event,
-      @channel_join_exception_event
+      @channel_join_exception_event,
+      @channel_handle_in_start_event,
+      @channel_handle_in_stop_event
     ]
 
     @socket_id "channel-telemetry-test"
@@ -528,11 +532,12 @@ defmodule Phoenix.Test.ChannelTest do
         end,
         nil
       )
+
+      [socket: socket(UserSocket, @socket_id, [])]
     end
 
-    test "phoenix.channel.join.start and .stop are emitted on success" do
-      {:ok, _socket, _client} =
-        join(socket(UserSocket, @socket_id, original: :assign), Channel, "foo:socket")
+    test "phoenix.channel.join.start and .stop are emitted on success", %{socket: socket} do
+      {:ok, _reply, _socket} = subscribe_and_join(socket, "foo:socket")
 
       assert_received {:telemetry_event, @channel_join_start_event, _,
                        %{socket: %Socket{id: @socket_id, assigns: start_assigns}}, _}
@@ -548,12 +553,11 @@ defmodule Phoenix.Test.ChannelTest do
                        %{socket: %Socket{id: @socket_id}}, _}
     end
 
-    test "phoenix.channel.join.start and .exception are emitted on crash" do
+    test "phoenix.channel.join.start and .exception are emitted on crash", %{socket: socket} do
       Process.flag(:trap_exit, true)
       Logger.disable(self())
 
-      {:error, %{reason: "join crashed"}} =
-        join(socket(UserSocket, @socket_id, original: :assign), Channel, "foo:crash")
+      {:error, %{reason: "join crashed"}} = subscribe_and_join(socket, "foo:crash")
 
       assert_received {:telemetry_event, @channel_join_start_event, _,
                        %{socket: %Socket{id: @socket_id}}, _}
