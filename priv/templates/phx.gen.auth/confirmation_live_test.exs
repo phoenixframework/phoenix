@@ -67,7 +67,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert {:ok, conn} = result
       refute Phoenix.Flash.get(conn.assigns.flash, :error)
-    en
+    end
 
 
 
