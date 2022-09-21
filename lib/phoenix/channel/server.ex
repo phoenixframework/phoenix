@@ -592,4 +592,9 @@ defmodule Phoenix.Channel.Server do
       [channel, proc, msg]
     )
   end
+
+  defp get_socket({:reply, _reply, socket}), do: socket
+  defp get_socket({:noreply, socket}), do: socket
+  defp get_socket({:noreply, socket, _timeout_or_hibernate}), do: socket
+  defp get_socket({:stop, _reason, socket}), do: socket
 end
