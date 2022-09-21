@@ -568,5 +568,37 @@ defmodule Phoenix.Test.ChannelTest do
       refute_received {:telemetry_event, @channel_join_stop_event, _,
                        %{socket: %Socket{id: @socket_id}}, _}
     end
+
+    test "phoenix.channel.handle_in.start and .stop are emitted on noreply", %{socket: socket} do
+      {:ok, _reply, socket} = subscribe_and_join(socket, "foo:ok")
+
+      push(socket, "noreply", %{"req" => "foo"})
+      assert_push "noreply", %{"resp" => "foo"}
+
+      assert_received {:telemetry_event, @channel_handle_in_start_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
+
+      assert_received {:telemetry_event, @channel_handle_in_stop_event, _,
+                       %{socket: %Socket{id: @socket_id}, result: {:noreply, _}}, _}
+
+      # refute_received {:telemetry_event, @channel_join_stop_event, _,
+      #                  %{socket: %Socket{id: @socket_id}}, _}
+    end
+
+    test "phoenix.channel.handle_in.stop and carries updated socket in metadata", %{socket: socket} do
+      {:ok, _reply, socket} = subscribe_and_join(socket, "foo:ok")
+
+      push(socket, "assign", %{"value" => "foo"})
+
+      assert_receive {:telemetry_event, @channel_handle_in_start_event, _,
+                       %{socket: %Socket{id: @socket_id, assigns: start_assigns}}, _}
+
+      refute Map.has_key?(start_assigns, :key)
+
+      assert_receive {:telemetry_event, @channel_handle_in_stop_event, _,
+                       %{socket: %Socket{id: @socket_id, assigns: stop_assigns}, result: {:noreply, _}}, _}
+
+      assert stop_assigns.key == "foo"
+    end
   end
 end
