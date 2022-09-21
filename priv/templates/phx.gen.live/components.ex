@@ -7,7 +7,7 @@ defmodule <%= @web_namespace %>.Components do
   customize the generated components in this module.
 
   Icons are provided by [heroicons](https://heroicons.com), using the
-  [heroicons_elixir](https://github.com/mveytsman/) project.
+  [heroicons_elixir](https://github.com/mveytsman/heroicons_elixir) project.
   """
   use Phoenix.Component
 
@@ -420,7 +420,7 @@ defmodule <%= @web_namespace %>.Components do
       <table class="mt-11 w-[40rem] sm:w-full">
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
-            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%%= col.label %></th>
+            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%%= col[:label] %></th>
             <th class="relative p-0 pb-4"><span class="sr-only">Actions</span></th>
           </tr>
         </thead>
@@ -433,7 +433,7 @@ defmodule <%= @web_namespace %>.Components do
             <td
               :for={{col, i} <- Enum.with_index(@col)}
               phx-click={@row_click && @row_click.(row)}
-              class="relative p-0 hover:cursor-pointer"
+              class={["relative p-0", @row_click && "hover:cursor-pointer"]}
             >
               <div class="block py-4 pr-6">
                 <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
