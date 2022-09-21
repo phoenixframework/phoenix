@@ -40,8 +40,7 @@ defmodule <%= @web_namespace %>.MixProject do
       {:phoenix_ecto, "~> 4.4"},<% end %><%= if @html do %>
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      # TODO bump to 0.18 on release
-      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", override: true},
+      {:phoenix_live_view, "~> 0.18"},
       # TODO bump to hex release
       {:heroicons, github: "chrismccord/heroicons_elixir", branch: "cm-generate-module"},
       {:floki, ">= 0.30.0", only: :test},
