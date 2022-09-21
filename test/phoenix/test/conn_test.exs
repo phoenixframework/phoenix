@@ -200,7 +200,7 @@ defmodule Phoenix.Test.ConnTest do
     test "peer data is persisted" do
       peer_data = %{
         address: {127, 0, 0, 1},
-        port: 111317,
+        port: 111_317,
         ssl_cert: <<1, 2, 3, 4>>
       }
       conn =
