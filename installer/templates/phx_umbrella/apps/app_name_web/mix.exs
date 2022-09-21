@@ -45,7 +45,7 @@ defmodule <%= @web_namespace %>.MixProject do
       {:heroicons, github: "chrismccord/heroicons_elixir", branch: "cm-generate-module"},
       {:floki, ">= 0.30.0", only: :test},
       {:tailwind, "~> 0.1.8", runtime: Mix.env() == :dev},<% end %><%= if @dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.6"},<% end %><%= if @assets do %>
+      {:phoenix_live_dashboard, "~> 0.7"},<% end %><%= if @assets do %>
       {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>

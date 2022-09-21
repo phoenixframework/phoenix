@@ -229,8 +229,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     unless Code.ensure_loaded?(Phoenix.LiveView.JS) do
       Mix.shell().info """
 
-      You must update :phoenix_live_view to v0.17 or later and
-      :phoenix_live_dashboard to v0.6 or later to use the features
+      You must update :phoenix_live_view to v0.18 or later and
+      :phoenix_live_dashboard to v0.7 or later to use the features
       in this generator.
       """
     end
