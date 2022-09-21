@@ -343,20 +343,29 @@ defmodule Phoenix.Channel.Server do
     measurements = %{system_time: System.system_time()}
     :telemetry.execute([:phoenix, :channel, :handle_in, :start], measurements, metadata)
 
-    result = socket.channel.handle_in(event, payload, put_in(socket.ref, ref))
-    state = handle_in(result)
+    try do
+      result = socket.channel.handle_in(event, payload, put_in(socket.ref, ref))
+      state = handle_in(result)
 
-    measurements = %{duration: System.monotonic_time() - start}
+      measurements = %{duration: System.monotonic_time() - start}
 
-    :telemetry.execute(
-      [:phoenix, :channel, :handle_in, :stop],
-      measurements,
-      Map.merge(metadata, %{socket: get_socket(state), result: result})
-    )
+      :telemetry.execute(
+        [:phoenix, :channel, :handle_in, :stop],
+        measurements,
+        Map.merge(metadata, %{socket: get_socket(state), result: result})
+      )
 
-    :telemetry.execute([:phoenix, :channel_handled_in], measurements, metadata)
+      :telemetry.execute([:phoenix, :channel_handled_in], measurements, metadata)
 
-    state
+      state
+    catch
+      kind, reason ->
+        measurements = %{duration: System.monotonic_time() - start}
+        stacktrace = __STACKTRACE__
+        metadata = Map.merge(metadata, %{kind: kind, reason: reason, stacktrace: stacktrace})
+        :telemetry.execute([:phoenix, :channel, :handle_in, :exception], measurements, metadata)
+        :erlang.raise(kind, reason, stacktrace)
+    end
   end
 
   def handle_info(

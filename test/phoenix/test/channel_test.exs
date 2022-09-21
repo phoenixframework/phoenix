@@ -509,13 +509,15 @@ defmodule Phoenix.Test.ChannelTest do
     @channel_join_exception_event [:phoenix, :channel, :join, :exception]
     @channel_handle_in_start_event [:phoenix, :channel, :handle_in, :start]
     @channel_handle_in_stop_event [:phoenix, :channel, :handle_in, :stop]
+    @channel_handle_in_exception_event [:phoenix, :channel, :handle_in, :exception]
 
     @channel_events [
       @channel_join_start_event,
       @channel_join_stop_event,
       @channel_join_exception_event,
       @channel_handle_in_start_event,
-      @channel_handle_in_stop_event
+      @channel_handle_in_stop_event,
+      @channel_handle_in_exception_event
     ]
 
     @socket_id "channel-telemetry-test"
@@ -581,22 +583,44 @@ defmodule Phoenix.Test.ChannelTest do
       assert_received {:telemetry_event, @channel_handle_in_stop_event, _,
                        %{socket: %Socket{id: @socket_id}, result: {:noreply, _}}, _}
 
-      # refute_received {:telemetry_event, @channel_join_stop_event, _,
-      #                  %{socket: %Socket{id: @socket_id}}, _}
+      refute_received {:telemetry_event, @channel_handle_in_exception_event, _,
+                       %{socket: %Socket{id: @socket_id}}, _}
     end
 
-    test "phoenix.channel.handle_in.stop and carries updated socket in metadata", %{socket: socket} do
+    test "phoenix.channel.handle_in.start and .exception are emitted on craash", %{socket: socket} do
+      {:ok, _reply, socket} = subscribe_and_join(socket, "foo:ok")
+
+      Process.flag(:trap_exit, true)
+      Logger.disable(self())
+      push(socket, "crash")
+
+      assert_receive {:telemetry_event, @channel_handle_in_start_event, _,
+                      %{socket: %Socket{id: @socket_id}}, _}
+
+      assert_receive {:telemetry_event, @channel_handle_in_exception_event, _,
+                      %{socket: %Socket{id: @socket_id}}, _}
+
+      refute_receive {:telemetry_event, @channel_handle_in_stop_event, _,
+                      %{socket: %Socket{id: @socket_id}}, _}
+    end
+
+    test "phoenix.channel.handle_in.stop and carries updated socket in metadata", %{
+      socket: socket
+    } do
       {:ok, _reply, socket} = subscribe_and_join(socket, "foo:ok")
 
       push(socket, "assign", %{"value" => "foo"})
 
       assert_receive {:telemetry_event, @channel_handle_in_start_event, _,
-                       %{socket: %Socket{id: @socket_id, assigns: start_assigns}}, _}
+                      %{socket: %Socket{id: @socket_id, assigns: start_assigns}}, _}
 
       refute Map.has_key?(start_assigns, :key)
 
       assert_receive {:telemetry_event, @channel_handle_in_stop_event, _,
-                       %{socket: %Socket{id: @socket_id, assigns: stop_assigns}, result: {:noreply, _}}, _}
+                      %{
+                        socket: %Socket{id: @socket_id, assigns: stop_assigns},
+                        result: {:noreply, _}
+                      }, _}
 
       assert stop_assigns.key == "foo"
     end
