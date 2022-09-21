@@ -60,9 +60,9 @@ jobs:
       run: mix test
 
     - name: Run installer test
-      run:
-        - cd installer
-        - mix test
+      run: |
+        cd installer
+        mix test
       if: ${{ matrix.installer }}
 
   npm_test:
