@@ -36,6 +36,8 @@ defmodule <%= @web_namespace %> do
         root: "lib/<%= @lib_web_name %>/templates",
         namespace: <%= @web_namespace %>
 
+      use Phoenix.Component
+
       # Import convenience functions from controllers
       import Phoenix.Controller,
         only: [get_csrf_token: 0, view_module: 1, view_template: 1]
@@ -98,21 +100,16 @@ defmodule <%= @web_namespace %> do
 
   defp view_helpers do
     quote do<%= if @html do %>
-      use Phoenix.Component
-
       import Phoenix.HTML
       import Phoenix.HTML.Form
       import <%= @web_namespace %>.Components
 
-      # Import and alias LiveView and .heex helpers (live_render, <.link>, <.form>, etc)
-      import Phoenix.LiveView.Helpers
       alias Phoenix.LiveView.JS
 <% end %>
       # Import basic rendering functionality (render, render_layout, etc)
       import Phoenix.View
       <%= if @gettext do %>
-      import <%= @web_namespace %>.Gettext<% end %><%= if @html do %>
-      alias Phoenix.LiveView.JS<% end %>
+      import <%= @web_namespace %>.Gettext<% end %>
       unquote(verified_routes())
     end
   end
