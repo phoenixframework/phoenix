@@ -298,7 +298,7 @@ defmodule Phoenix.Channel.Server do
 
     start = System.monotonic_time()
     measurements = %{system_time: System.system_time()}
-    metadata = %{topic: topic, params: auth_payload, socket: socket}
+    metadata = %{params: auth_payload, socket: socket}
     :telemetry.execute([:phoenix, :channel, :join, :start], measurements, metadata)
 
     try do
