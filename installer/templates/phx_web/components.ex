@@ -543,7 +543,7 @@ defmodule <%= @web_namespace %>.Components do
       transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
     )
     |> show("##{id}-container")
-    |> JS.focus_first(to: "##{id}-container")
+    |> JS.focus_first(to: "##{id}-content")
   end
 
   def hide_modal(js \\ %JS{}, id) do
