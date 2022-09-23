@@ -14,11 +14,16 @@ defmodule Mix.Tasks.Phx.NewTest do
     :ok
   end
 
-  test "assets are in sync with installer" do
+  test "assets are in sync with priv" do
     for file <- ~w(favicon.ico phoenix.png) do
       assert File.read!("../priv/static/#{file}") ==
         File.read!("templates/phx_static/#{file}")
     end
+  end
+
+  test "components are in sync with priv" do
+    assert File.read!("../priv/templates/phx.gen.live/components.ex") ==
+            File.read!("templates/phx_web/components.ex")
   end
 
   test "returns the version" do
