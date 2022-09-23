@@ -36,7 +36,7 @@ defmodule <%= @web_namespace %>.Components do
       <.modal>
   """
   attr :id, :string, required: true
-  attr :show, :boolean, default: false
+  attr :show, :boolean, default: false, doc: "show the modal automatically"
   attr :on_cancel, JS, default: %JS{}
   attr :on_confirm, JS, default: %JS{}
 
