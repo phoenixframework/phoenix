@@ -140,6 +140,7 @@ defmodule <%= @web_namespace %>.Components do
       id={@id}
       phx-mounted={@autoshow && show("##{@id}")}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("#flash")}
+      role="alert"
       class={[
         "fixed hidden top-2 right-2 w-96 z-50 rounded-lg p-3 shadow-md shadow-zinc-900/5 ring-1",
         @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
@@ -147,15 +148,15 @@ defmodule <%= @web_namespace %>.Components do
       ]}
       {@rest}
     >
-      <button :if={@close} type="button" class="group absolute top-2 right-1 p-2" aria-label="Close">
-        <Heroicons.x_mark solid class="h-5 w-5 stroke-current opacity-40 group-hover:opacity-70" />
-      </button>
       <p :if={@title} class="flex items-center gap-1.5 text-[0.8125rem] font-semibold leading-6">
         <Heroicons.information_circle :if={@kind == :info} mini class="h-4 w-4" />
         <Heroicons.exclamation_circle :if={@kind == :error} mini class="h-4 w-4" />
         <%%= @title %>
       </p>
       <p class="mt-2 text-[0.8125rem] leading-5"><%%= msg %></p>
+      <button :if={@close} type="button" class="group absolute top-2 right-1 p-2" aria-label="Close">
+        <Heroicons.x_mark solid class="h-5 w-5 stroke-current opacity-40 group-hover:opacity-70" />
+      </button>
     </div>
     """
   end
