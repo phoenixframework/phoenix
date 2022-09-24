@@ -724,7 +724,7 @@ defmodule Phoenix.Controller do
   `layout_formats/1` and `put_layout_formats/2` can be used to configure
   which formats support/require layout rendering (defaults to "html" only).
   """
-  @spec render(Plug.Conn.t, binary | atom, Keyword.t | map | binary | atom) :: Plug.Conn.t
+  @spec render(Plug.Conn.t, binary | atom, Keyword.t | map) :: Plug.Conn.t
   def render(conn, template, assigns)
       when is_atom(template) and (is_map(assigns) or is_list(assigns)) do
     format =
@@ -753,9 +753,9 @@ defmodule Phoenix.Controller do
   end
 
   @doc false
+  @deprecated "render/4 is deprecated. Use put_view + render/3"
   def render(conn, view, template, assigns)
       when is_atom(view) and (is_binary(template) or is_atom(template)) do
-    IO.warn "#{__MODULE__}.render/4 with a view is deprecated, see the documentation for render/3 for an alternative"
     conn
     |> put_view(view)
     |> render(template, assigns)
@@ -871,7 +871,7 @@ defmodule Phoenix.Controller do
   Puts the URL or `%URI{}` to be used for the static url generation.
 
   Using this function on a `%Plug.Conn{}` struct tells `static_url/2` to use
-  the given information for URL generation instead of the the `%Plug.Conn{}`'s
+  the given information for URL generation instead of the `%Plug.Conn{}`'s
   endpoint configuration (much like `put_router_url/2` but for static URLs).
   """
   def put_static_url(conn, %URI{} = uri) do
@@ -1006,7 +1006,7 @@ defmodule Phoenix.Controller do
 
   defp warn_if_ajax(conn) do
     if ajax?(conn) do
-      Logger.warn "send_download/3 has been invoked during an AJAX request. " <>
+      Logger.warning "send_download/3 has been invoked during an AJAX request. " <>
                   "The download may not work as expected under XMLHttpRequest"
     end
   end
@@ -1207,7 +1207,7 @@ defmodule Phoenix.Controller do
       plug :accepts, ["html", "json-api"]
 
   """
-  @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t | no_return()
+  @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t
   def accepts(conn, [_|_] = accepted) do
     case Map.fetch(conn.params, "_format") do
       {:ok, format} ->
@@ -1328,14 +1328,14 @@ defmodule Phoenix.Controller do
   Fetches the flash storage.
   """
   def fetch_flash(conn, _opts \\ []) do
-    if Map.get(conn.private, :phoenix_flash) do
+    if Map.get(conn.assigns, :flash) do
       conn
     else
       session_flash = get_session(conn, "phoenix_flash")
       conn = persist_flash(conn, session_flash || %{})
 
       register_before_send conn, fn conn ->
-        flash = conn.private.phoenix_flash
+        flash = conn.assigns.flash
         flash_size = map_size(flash)
 
         cond do
@@ -1358,13 +1358,13 @@ defmodule Phoenix.Controller do
   ## Examples
 
       iex> conn = merge_flash(conn, info: "Welcome Back!")
-      iex> get_flash(conn, :info)
+      iex> Phoenix.Flash.get(conn.assigns.flash, :info)
       "Welcome Back!"
 
   """
   def merge_flash(conn, enumerable) do
     map = for {k, v} <- enumerable, into: %{}, do: {flash_key(k), v}
-    persist_flash(conn, Map.merge(get_flash(conn), map))
+    persist_flash(conn, Map.merge(Map.get(conn.assigns, :flash, %{}), map))
   end
 
   @doc """
@@ -1375,12 +1375,15 @@ defmodule Phoenix.Controller do
   ## Examples
 
       iex> conn = put_flash(conn, :info, "Welcome Back!")
-      iex> get_flash(conn, :info)
+      iex> Phoenix.Flash.get(conn.assigns.flash, :info)
       "Welcome Back!"
 
   """
   def put_flash(conn, key, message) do
-    persist_flash(conn, Map.put(get_flash(conn), flash_key(key), message))
+    flash = Map.get(conn.assigns, :flash) ||
+      raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
+
+    persist_flash(conn, Map.put(flash, flash_key(key), message))
   end
 
   @doc """
@@ -1396,8 +1399,9 @@ defmodule Phoenix.Controller do
       %{"info" => "Welcome Back!"}
 
   """
+  @deprecated "get_flash/1 is deprecated. Use the @flash assign provided by the :fetch_flash plug"
   def get_flash(conn) do
-    Map.get(conn.private, :phoenix_flash) ||
+    Map.get(conn.assigns, :flash) ||
       raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
   end
 
@@ -1411,6 +1415,7 @@ defmodule Phoenix.Controller do
       "Welcome Back!"
 
   """
+  @deprecated "get_flash/2 is deprecated. Use Phoenix.Flash.get(@flash, key) instead"
   def get_flash(conn, key) do
     get_flash(conn)[flash_key(key)]
   end
@@ -1447,7 +1452,7 @@ defmodule Phoenix.Controller do
   defp flash_key(atom) when is_atom(atom), do: Atom.to_string(atom)
 
   defp persist_flash(conn, value) do
-    put_private(conn, :phoenix_flash, value)
+    assign(conn, :flash, value)
   end
 
   @doc """
@@ -1514,7 +1519,7 @@ defmodule Phoenix.Controller do
   See `current_url/2` to override the default parameters.
   """
   def current_url(%Plug.Conn{} = conn) do
-    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn)
+    Phoenix.VerifiedRoutes.unverified_url(conn, current_path(conn))
   end
 
   @doc ~S"""
@@ -1551,17 +1556,16 @@ defmodule Phoenix.Controller do
   For example, to get the current URL always in HTTPS format:
 
       def current_secure_url(conn, params \\ %{}) do
-        cur_uri  = MyAppWeb.Endpoint.struct_url()
-        cur_path = Phoenix.Controller.current_path(conn, params)
-
-        MyAppWeb.Router.Helpers.url(%URI{cur_uri | scheme: "https"}) <> cur_path
+        current_uri = MyAppWeb.Endpoint.struct_url()
+        current_path = Phoenix.Controller.current_path(conn, params)
+        Phoenix.VerifiedRoutes.unverified_url(%URI{current_uri | scheme: "https"}, current_path)
       end
 
   However, if you want all generated URLs to always have a certain schema,
   host, etc, you may use `put_router_url/2`.
   """
   def current_url(%Plug.Conn{} = conn, %{} = params) do
-    Phoenix.Router.Helpers.url(router_module(conn), conn) <> current_path(conn, params)
+    Phoenix.VerifiedRoutes.unverified_url(conn, current_path(conn, params))
   end
 
   @doc false

@@ -7,11 +7,11 @@ defmodule <%= @app_module %>.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [<%= if @ecto do %>
+    children = [
+      # Start the Telemetry supervisor
+      <%= @web_namespace %>.Telemetry,<%= if @ecto do %>
       # Start the Ecto repository
       <%= @app_module %>.Repo,<% end %>
-      # Start the Telemetry supervisor
-      <%= @web_namespace %>.Telemetry,
       # Start the PubSub system
       {Phoenix.PubSub, name: <%= @app_module %>.PubSub},
       # Start the Endpoint (http/https)

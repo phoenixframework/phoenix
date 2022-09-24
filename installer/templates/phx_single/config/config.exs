@@ -26,10 +26,7 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Local
-
-# Swoosh API client is needed for adapters other than SMTP.
-config :swoosh, :api_client, false<% end %><%= if @assets do %>
+config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Local<% end %><%= if @assets do %>
 
 # Configure esbuild (the version is required)
 config :esbuild,
@@ -40,6 +37,18 @@ config :esbuild,
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]<% end %>
+
+# Configure tailwind (the version is required)
+config :tailwind,
+  version: "3.1.0",
+  default: [
+    args: ~w(
+      --config=tailwind.config.js
+      --input=css/app.css
+      --output=../priv/static/assets/app.css
+    ),
+    cd: Path.expand("../assets", __DIR__)
+  ]
 
 # Configures Elixir's Logger
 config :logger, :console,

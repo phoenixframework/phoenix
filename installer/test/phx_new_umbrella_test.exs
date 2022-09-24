@@ -150,7 +150,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
         assert file =~ "defmodule PhxUmbWeb do"
         assert file =~ ~r/use Phoenix.View,\s+root: "lib\/phx_umb_web\/templates"/
-        assert file =~ "use Phoenix.HTML"
+        assert file =~ "import Phoenix.HTML"
         assert file =~ "Phoenix.LiveView"
       end
 
@@ -181,7 +181,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # assets
       assert_file web_path(@app, ".gitignore"), "/priv/static/assets/"
       assert_file web_path(@app, ".gitignore"), "#{@app}_web-*.tar"
-      assert_file web_path(@app, ".gitignore"),  ~r/\n$/
+      assert_file web_path(@app, ".gitignore"), ~r/\n$/
       assert_file web_path(@app, "assets/css/app.css")
       assert_file web_path(@app, "assets/css/phoenix.css")
 
@@ -255,7 +255,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
-        assert file =~ "import Phoenix.LiveView.Helpers"
         assert file =~ "def live_view do"
         assert file =~ "def live_component do"
       end
@@ -278,12 +277,16 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file root_path(@app, "config/config.exs"), fn file ->
-        assert file =~ "config :swoosh"
         assert file =~ "config :phx_umb, PhxUmb.Mailer, adapter: Swoosh.Adapters.Local"
       end
 
       assert_file root_path(@app, "config/test.exs"), fn file ->
+        assert file =~ "config :swoosh"
         assert file =~ "config :phx_umb, PhxUmb.Mailer, adapter: Swoosh.Adapters.Test"
+      end
+
+      assert_file root_path(@app, "config/dev.exs"), fn file ->
+        assert file =~ "config :swoosh"
       end
 
       # Install dependencies?
@@ -410,7 +413,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_dashboard")
 
       assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.heex"), fn file ->
-        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
+        refute file =~ ~s|LiveDashboard|
       end
 
       assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), fn file ->
@@ -741,7 +744,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/lib/another/templates/layout/app.html.heex"
 
         # assets
-        assert_file "another/.gitignore",  ~r/\n$/
+        assert_file "another/.gitignore", ~r/\n$/
         assert_file "another/priv/static/favicon.ico"
         assert_file "another/priv/static/images/phoenix.png"
         assert_file "another/assets/css/app.css"

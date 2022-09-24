@@ -359,7 +359,7 @@ defmodule Phoenix.Endpoint do
 
   Raises in case of failures.
   """
-  @callback broadcast!(topic, event, msg) :: :ok | no_return
+  @callback broadcast!(topic, event, msg) :: :ok
 
   @doc """
   Broadcasts a `msg` from the given `from` as `event` in the given `topic` to all nodes.
@@ -371,7 +371,7 @@ defmodule Phoenix.Endpoint do
 
   Raises in case of failures.
   """
-  @callback broadcast_from!(from :: pid, topic, event, msg) :: :ok | no_return
+  @callback broadcast_from!(from :: pid, topic, event, msg) :: :ok
 
   @doc """
   Broadcasts a `msg` as `event` in the given `topic` within the current node.
@@ -730,13 +730,15 @@ defmodule Phoenix.Endpoint do
 
     * `:websocket` - controls the websocket configuration.
       Defaults to `true`. May be false or a keyword list
-      of options. See "Common configuration" and
-      "WebSocket configuration" for the whole list
+      of options. See ["Common configuration"](#socket/3-common-configuration)
+      and ["WebSocket configuration"](#socket/3-websocket-configuration)
+      for the whole list
 
     * `:longpoll` - controls the longpoll configuration.
       Defaults to `false`. May be true or a keyword list
-      of options. See "Common configuration" and
-      "Longpoll configuration" for the whole list
+      of options. See ["Common configuration"](#socket/3-common-configuration)
+      and ["Longpoll configuration"](#socket/3-longpoll-configuration)
+      for the whole list
 
   If your socket is implemented using `Phoenix.Socket`,
   you can also pass to each transport above all options
@@ -897,10 +899,10 @@ defmodule Phoenix.Endpoint do
   The following configuration applies only to `:longpoll`:
 
     * `:window_ms` - how long the client can wait for new messages
-      in its poll request, defaults to 10_000ms.
+      in its poll request in milliseconds (ms). Defaults to `10_000`.
 
     * `:pubsub_timeout_ms` - how long a request can wait for the
-      pubsub layer to respond, defaults to 2000ms.
+      pubsub layer to respond in milliseconds (ms). Defaults to `2000`.
 
     * `:crypto` - options for verifying and signing the token, accepted
       by `Phoenix.Token`. By default tokens are valid for 2 weeks

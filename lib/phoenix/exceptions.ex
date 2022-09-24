@@ -46,12 +46,14 @@ defmodule Phoenix.ActionClauseError do
 
   defexception exception_keys
 
+  @impl true
   def message(exception) do
     exception
     |> Map.put(:__struct__, FunctionClauseError)
     |> FunctionClauseError.message()
   end
 
+  @impl true
   def blame(exception, stacktrace) do
     {exception, stacktrace} =
       exception

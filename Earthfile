@@ -1,35 +1,8 @@
-VERSION 0.6
-
 all:
-    BUILD +all-test
     BUILD +all-integration-test
-    BUILD +npm
-
-all-test:
-    BUILD --build-arg ELIXIR=1.10.0 --build-arg OTP=21.3.8.24 +test
-    BUILD --build-arg ELIXIR=1.13.4 --build-arg OTP=24.3.4 --build-arg ALPINE=3.15.3 --build-arg RUN_INSTALLER_TESTS=1 +test
-
-test:
-    FROM +test-setup
-    COPY --dir installer ./
-    RUN MIX_ENV=test mix deps.compile
-    COPY --dir assets config lib integration_test priv test ./
-
-    # Run unit tests
-    RUN mix test
-
-    ARG RUN_INSTALLER_TESTS
-
-    IF [ "$RUN_INSTALLER_TESTS" = "1" ]
-        WORKDIR /src/installer
-        RUN mix test
-    ELSE
-        RUN echo "Skipping installer tests"
-    END
 
 all-integration-test:
-    BUILD --build-arg ELIXIR=1.12.1 --build-arg OTP=22.3.4.19 +integration-test
-    BUILD --build-arg ELIXIR=1.13.4 --build-arg OTP=24.3.4 --build-arg ALPINE=3.15.3 +integration-test
+    BUILD --build-arg ELIXIR=1.14.0 --build-arg OTP=24.3.4 +integration-test
 
 integration-test:
     FROM +setup-base
@@ -71,8 +44,8 @@ integration-test:
     # RUN MIX_ENV=test mix deps.compile
 
     # Run integration tests
-    COPY integration_test/test ./test
-    COPY integration_test/config/config.exs ./config/config.exs
+    COPY integration_test/test  ./test
+    COPY integration_test/config/config.exs  ./config/config.exs
 
     WITH DOCKER
         # Start docker compose
@@ -87,32 +60,10 @@ integration-test:
             mix test --include database
     END
 
-npm:
-    FROM node:12-alpine3.12
-    WORKDIR /src
-    RUN mkdir assets
-    # Copy package.json + lockfile separatelly to improve caching (JS changes don't trigger `npm install` anymore)
-    COPY assets/package* assets
-    WORKDIR assets
-    RUN npm install
-    COPY assets/ .
-    RUN npm test
-
 setup-base:
-   ARG ELIXIR=1.12.1
-   ARG OTP=24.0.2
-   ARG ALPINE=3.13.3
-   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-$ALPINE
+   ARG ELIXIR=1.13.3
+   ARG OTP=24.3.4
+   FROM hexpm/elixir:$ELIXIR-erlang-$OTP-alpine-3.16.0
    RUN apk add --no-progress --update git build-base
    ENV ELIXIR_ASSERT_TIMEOUT=10000
    WORKDIR /src
-
-test-setup:
-   FROM +setup-base
-   COPY mix.exs .
-   COPY mix.lock .
-   COPY .formatter.exs .
-   COPY package.json .
-   RUN mix local.rebar --force
-   RUN mix local.hex --force
-   RUN mix deps.get

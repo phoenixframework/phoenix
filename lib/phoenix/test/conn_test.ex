@@ -274,13 +274,17 @@ defmodule Phoenix.ConnTest do
   Gets the whole flash storage.
   """
   @spec get_flash(Conn.t) :: map
-  defdelegate get_flash(conn), to: Phoenix.Controller
+  @deprecated "get_flash/1 is deprecated. Use conn.assigns.flash instead"
+  def get_flash(conn), do: conn.assigns.flash
 
   @doc """
   Gets the given key from the flash storage.
   """
   @spec get_flash(Conn.t, term) :: term
-  defdelegate get_flash(conn, key), to: Phoenix.Controller
+  @deprecated "get_flash/2 is deprecated. Use Phoenix.Flash.get/2 instead"
+  def get_flash(conn, key) do
+    Phoenix.Flash.get(conn.assigns.flash, key)
+  end
 
   @doc """
   Puts the given value under key in the flash storage.
@@ -303,7 +307,7 @@ defmodule Phoenix.ConnTest do
       assert response_content_type(conn, :html) =~ "charset=utf-8"
 
   """
-  @spec response_content_type(Conn.t, atom) :: String.t | no_return
+  @spec response_content_type(Conn.t, atom) :: String.t
   def response_content_type(conn, format) when is_atom(format) do
     case Conn.get_resp_header(conn, "content-type") do
       [] ->
@@ -349,7 +353,7 @@ defmodule Phoenix.ConnTest do
       assert response(conn, 200) =~ "hello world"
 
   """
-  @spec response(Conn.t, status :: integer | atom) :: binary | no_return
+  @spec response(Conn.t, status :: integer | atom) :: binary
   def response(%Conn{state: :unset}, _status) do
     raise """
     expected connection to have a response but no response was set/sent.
@@ -378,7 +382,7 @@ defmodule Phoenix.ConnTest do
 
       assert html_response(conn, 200) =~ "<html>"
   """
-  @spec html_response(Conn.t, status :: integer | atom) :: String.t | no_return
+  @spec html_response(Conn.t, status :: integer | atom) :: String.t
   def html_response(conn, status) do
     body = response(conn, status)
     _    = response_content_type(conn, :html)
@@ -393,7 +397,7 @@ defmodule Phoenix.ConnTest do
 
       assert text_response(conn, 200) =~ "hello"
   """
-  @spec text_response(Conn.t, status :: integer | atom) :: String.t | no_return
+  @spec text_response(Conn.t, status :: integer | atom) :: String.t
   def text_response(conn, status) do
     body = response(conn, status)
     _    = response_content_type(conn, :text)
@@ -410,7 +414,7 @@ defmodule Phoenix.ConnTest do
       assert "can't be blank" in body["errors"]
 
   """
-  @spec json_response(Conn.t, status :: integer | atom) :: term | no_return
+  @spec json_response(Conn.t, status :: integer | atom) :: term
   def json_response(conn, status) do
     body = response(conn, status)
     _    = response_content_type(conn, :json)

@@ -54,7 +54,7 @@ defmodule HelloWeb.PageControllerTest do
   use HelloWeb.ConnCase
 
   test "GET /", %{conn: conn} do
-    conn = get(conn, "/")
+    conn = get(conn, ~p"/")
     assert html_response(conn, 200) =~ "Welcome to Phoenix!"
   end
 end
@@ -91,13 +91,18 @@ defmodule HelloWeb.ConnCase do
 
   using do
     quote do
+      # The default endpoint for testing
+      @endpoint HelloWeb.Endpoint
+
+      use Phoenix.VerifiedRoutes,
+        endpoint: @endpoint,
+        router: HelloWeb.Router,
+        statics: HelloWeb.static_paths()
+
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
-      alias HelloWeb.Router.Helpers, as: Routes
-
-      # The default endpoint for testing
-      @endpoint HelloWeb.Endpoint
+      import HelloWeb.ConnCase
     end
   end
 
@@ -111,11 +116,14 @@ end
 
 There is a lot to unpack here.
 
+
 The second line says this is a case template. This is a ExUnit feature that allows developers to replace the built-in `use ExUnit.Case` by their own case. This line is pretty much what allows us to write `use HelloWeb.ConnCase` at the top of our controller tests.
 
-Now that we have made this module a case template, we can define callbacks that are invoked on certain occasions. The `using` callback defines code to be injected on every module that calls `use HelloWeb.ConnCase`. In this case, we import [`Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html), so all of the connection helpers available in controllers are also available in tests, and then imports [`Phoenix.ConnTest`](https://hexdocs.pm/phoenix/Phoenix.ConnTest.html). You can consult these modules to learn all functionality available.
+Now that we have made this module a case template, we can define callbacks that are invoked on certain occasions. The `using` callback defines code to be injected on every module that calls `use HelloWeb.ConnCase`. In this case, it starts by setting the `@endpoint` module attribute with the name of our endpoint.
 
-Then it aliases the module with all path helpers, so we can easily generate URLs in our tests. Finally, it sets the `@endpoint` module attribute with the name of our endpoint.
+Next, it wires up `Phoenix.VerifiedRoutes` to allow use to use `~p` based paths in our test just like we do in the rest of our application to easily generate paths and URLs in our tests.
+
+Finally, we import [`Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html), so all of the connection helpers available in controllers are also available in tests, and then imports [`Phoenix.ConnTest`](https://hexdocs.pm/phoenix/Phoenix.ConnTest.html). You can consult these modules to learn all functionality available.
 
 Then our case template defines a `setup` block. The `setup` block will be called before test. Most of the setup block is on setting up the SQL Sandbox, which we will talk about it later. In the last line of the `setup` block, we will find this:
 

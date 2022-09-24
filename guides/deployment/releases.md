@@ -10,13 +10,6 @@ Our main goal for this guide is to package your Phoenix application into a self-
 
 ## Releases, assemble!
 
-To assemble a release, you will need at least Elixir v1.9, however this guide assumes you are using Elixir v1.12 or later to take advantage of latest releases improvements:
-
-```console
-$ elixir -v
-1.12.0
-```
-
 If you are not familiar with Elixir releases yet, we recommend you to read [Elixir's excellent docs](https://hexdocs.pm/mix/Mix.Tasks.Release.html) before continuing.
 
 Once that is done, you can assemble a release by going through all of the steps in our general [deployment guide](deployment.html) with `mix release` at the end. Let's recap.

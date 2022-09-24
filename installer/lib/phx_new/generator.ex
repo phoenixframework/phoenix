@@ -188,15 +188,9 @@ defmodule Phx.New.Generator do
         :error -> adapter_config
       end
 
-    compilers =
-      for {compiler, enabled?} <- [gettext: gettext, phoenix_live_view: html],
-          enabled?,
-          do: inspect(compiler)
-
     version = @phoenix_version
 
     binding = [
-      elixir_version: elixir_version(),
       app_name: project.app,
       app_module: inspect(project.app_mod),
       root_app_name: project.root_app,
@@ -226,15 +220,10 @@ defmodule Phx.New.Generator do
       adapter_module: adapter_module,
       adapter_config: adapter_config,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
-      namespaced?: namespaced?(project),
-      compilers: compilers
+      namespaced?: namespaced?(project)
     ]
 
     %Project{project | binding: binding}
-  end
-
-  defp elixir_version do
-    System.version()
   end
 
   defp namespaced?(project) do

@@ -14,11 +14,16 @@ defmodule Mix.Tasks.Phx.NewTest do
     :ok
   end
 
-  test "assets are in sync with installer" do
+  test "assets are in sync with priv" do
     for file <- ~w(favicon.ico phoenix.png) do
       assert File.read!("../priv/static/#{file}") ==
         File.read!("templates/phx_static/#{file}")
     end
+  end
+
+  test "components are in sync with priv" do
+    assert File.read!("../priv/templates/phx.gen.live/components.ex") ==
+            File.read!("templates/phx_web/components.ex")
   end
 
   test "returns the version" do
@@ -78,7 +83,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog_web.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb do"
         assert file =~ "use Phoenix.View,\n        root: \"lib/phx_blog_web/templates\""
-        assert file =~ "use Phoenix.HTML"
+        assert file =~ "import Phoenix.HTML"
         assert file =~ "Phoenix.LiveView"
       end
 
@@ -222,12 +227,16 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/config/config.exs", fn file ->
-        assert file =~ "config :swoosh"
         assert file =~ "config :phx_blog, PhxBlog.Mailer, adapter: Swoosh.Adapters.Local"
       end
 
       assert_file "phx_blog/config/test.exs", fn file ->
+        assert file =~ "config :swoosh"
         assert file =~ "config :phx_blog, PhxBlog.Mailer, adapter: Swoosh.Adapters.Test"
+      end
+
+      assert_file "phx_blog/config/dev.exs", fn file ->
+        assert file =~ "config :swoosh"
       end
 
       # Install dependencies?
@@ -308,7 +317,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file "phx_blog/priv/gettext/errors.pot"
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":gettext")
       assert_file "phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"import AmsMockWeb.Gettext")
-      assert_file "phx_blog/lib/phx_blog_web/views/error_helpers.ex", &refute(&1 =~ ~r"gettext")
       assert_file "phx_blog/config/dev.exs", &refute(&1 =~ ~r"gettext")
 
       # No HTML
@@ -360,6 +368,15 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ "config :swoosh"
         refute file =~ "config :phx_blog, PhxBlog.Mailer, adapter: Swoosh.Adapters.Local"
       end
+
+      assert_file "phx_blog/config/test.exs", fn file ->
+        refute file =~ "config :swoosh"
+        refute file =~ "config :phx_blog, PhxBlog.Mailer, adapter: Swoosh.Adapters.Test"
+      end
+
+      assert_file "phx_blog/config/dev.exs", fn file ->
+        refute file =~ "config :swoosh"
+      end
     end
   end
 
@@ -370,7 +387,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard")
 
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.heex", fn file ->
-        refute file =~ ~s|<%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home)|
+        refute file =~ ~s|LiveDashboard|
       end
 
       assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
@@ -446,6 +463,10 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/config/config.exs", fn file ->
         refute file =~ "config :esbuild"
+      end
+
+      assert_file "phx_blog/config/prod.exs", fn file ->
+        refute file =~ "config :phx_blog, PhxBlogWeb.Endpoint, cache_static_manifest:"
       end
     end
   end

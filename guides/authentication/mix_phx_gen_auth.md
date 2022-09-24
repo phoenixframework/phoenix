@@ -10,7 +10,7 @@ Let's start by running the following command from the root of our app (or `apps/
 $ mix phx.gen.auth Accounts User users
 ```
 
-This creates an `Accounts` context with an `Accounts.User` schema module. The final argument is the plural version of the schema module, which is used for generating database table names and route helpers. The `mix phx.gen.auth` generator is similar to `mix phx.gen.html` except it does not accept a list of additional fields to add to the schema, and it generates many more context functions.
+This creates an `Accounts` context with an `Accounts.User` schema module. The final argument is the plural version of the schema module, which is used for generating database table names and route paths. The `mix phx.gen.auth` generator is similar to `mix phx.gen.html` except it does not accept a list of additional fields to add to the schema, and it generates many more context functions.
 
 Since this generator installed additional dependencies in `mix.exs`, let's fetch those:
 
@@ -73,6 +73,8 @@ The generated functionality ships with an account confirmation mechanism, where 
 ### Notifiers
 
 The generated code is not integrated with any system to send SMSes or emails for confirming accounts, resetting passwords, etc. Instead, it simply logs a message to the terminal. It is your responsibility to integrate with the proper system after generation.
+
+Note that if you generated your Phoenix project with `mix phx.new`, your project is configured to use [Swoosh](https://hexdocs.pm/swoosh/Swoosh.html) mailer by default. To view notifier emails during development with Swoosh, navigate to `/dev/mailbox`.
 
 ### Tracking sessions
 

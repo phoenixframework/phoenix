@@ -12,7 +12,6 @@ defmodule Phx.New.Single do
     {:eex,  "phx_single/lib/app_name/application.ex",   :project, "lib/:app/application.ex"},
     {:eex,  "phx_single/lib/app_name.ex",               :project, "lib/:app.ex"},
     {:keep, "phx_web/controllers",                      :project, "lib/:lib_web_name/controllers"},
-    {:eex,  "phx_web/views/error_helpers.ex",           :project, "lib/:lib_web_name/views/error_helpers.ex"},
     {:eex,  "phx_web/views/error_view.ex",              :project, "lib/:lib_web_name/views/error_view.ex"},
     {:eex,  "phx_web/endpoint.ex",                      :project, "lib/:lib_web_name/endpoint.ex"},
     {:eex,  "phx_web/router.ex",                        :project, "lib/:lib_web_name/router.ex"},
@@ -35,6 +34,7 @@ defmodule Phx.New.Single do
   ]
 
   template :html, [
+    {:eex, "phx_web/components.ex",                         :project, "lib/:lib_web_name/components.ex"},
     {:eex, "phx_web/controllers/page_controller.ex",         :project, "lib/:lib_web_name/controllers/page_controller.ex"},
     {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:lib_web_name/views/page_view.ex"},
     {:eex, "phx_test/controllers/page_controller_test.exs",  :project, "test/:lib_web_name/controllers/page_controller_test.exs"},
@@ -42,7 +42,6 @@ defmodule Phx.New.Single do
     {:eex, "phx_live/assets/topbar.js",                      :web,     "assets/vendor/topbar.js"},
     {:eex, "phx_web/templates/layout/root.html.heex",        :project, "lib/:lib_web_name/templates/layout/root.html.heex"},
     {:eex, "phx_web/templates/layout/app.html.heex",         :project, "lib/:lib_web_name/templates/layout/app.html.heex"},
-    {:eex, "phx_web/templates/layout/live.html.heex",        :project, "lib/:lib_web_name/templates/layout/live.html.heex"},
     {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
     {:eex, "phx_web/templates/page/index.html.heex",         :project, "lib/:lib_web_name/templates/page/index.html.heex"},
     {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:lib_web_name/views/layout_view_test.exs"},
@@ -57,10 +56,11 @@ defmodule Phx.New.Single do
   ]
 
   template :assets, [
-    {:eex,  "phx_static/phoenix.css", :web, "assets/css/phoenix.css"},
-    {:eex,  "phx_assets/app.css",     :web, "assets/css/app.css"},
-    {:eex,  "phx_assets/app.js",      :web, "assets/js/app.js"},
-    {:keep, "phx_assets/vendor",      :web, "assets/vendor"},
+    {:eex,  "phx_static/phoenix.css",        :web, "assets/css/phoenix.css"},
+    {:eex,  "phx_assets/app.css",            :web, "assets/css/app.css"},
+    {:eex,  "phx_assets/app.js",             :web, "assets/js/app.js"},
+    {:eex,  "phx_assets/tailwind.config.js", :web, "assets/tailwind.config.js"},
+    {:keep, "phx_assets/vendor",             :web, "assets/vendor"},
   ]
 
   template :no_assets, [

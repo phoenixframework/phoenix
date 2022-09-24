@@ -6,31 +6,32 @@ defmodule Phoenix.Router.ConsoleFormatter do
   """
   def format(router, endpoint \\ nil) do
     routes = Phoenix.Router.routes(router)
-    column_widths = calculate_column_widths(routes, endpoint)
+    column_widths = calculate_column_widths(router, routes, endpoint)
 
     routes
-    |> Enum.map_join("", &format_route(&1, column_widths))
-    |> Kernel.<>(format_endpoint(endpoint, column_widths))
+    |> Enum.map_join("", &format_route(&1, router, column_widths))
+    |> Kernel.<>(format_endpoint(endpoint, router, column_widths))
   end
 
-  defp format_endpoint(nil, _), do: ""
-  defp format_endpoint(endpoint, widths) do
+  defp format_endpoint(nil, _router, _), do: ""
+  defp format_endpoint(endpoint, router, widths) do
     case endpoint.__sockets__() do
       [] -> ""
       sockets ->
         Enum.map_join(sockets, "", fn socket ->
-          format_websocket(socket, widths) <>
-          format_longpoll(socket, widths)
+          format_websocket(socket, router, widths) <>
+          format_longpoll(socket, router, widths)
         end)
       end
   end
 
-  defp format_websocket({_path, Phoenix.LiveReloader.Socket, _opts}, _), do: ""
-  defp format_websocket({path, module, opts}, widths) do
+  defp format_websocket({_path, Phoenix.LiveReloader.Socket, _opts}, _router, _), do: ""
+  defp format_websocket({path, module, opts}, router, widths) do
     if opts[:websocket] != false do
+      prefix = if router.__helpers__(), do: "websocket", else: ""
       {verb_len, path_len, route_name_len} = widths
 
-      String.pad_leading("websocket", route_name_len) <> "  " <>
+      String.pad_leading(prefix, route_name_len) <> "  " <>
       String.pad_trailing("WS", verb_len) <> "  " <>
       String.pad_trailing(path <> "/websocket", path_len) <> "  " <>
       inspect(module) <>
@@ -40,13 +41,14 @@ defmodule Phoenix.Router.ConsoleFormatter do
     end
   end
 
-  defp format_longpoll({_path, Phoenix.LiveReloader.Socket, _opts}, _), do: ""
-  defp format_longpoll({path, module, opts}, widths) do
+  defp format_longpoll({_path, Phoenix.LiveReloader.Socket, _opts}, _router, _), do: ""
+  defp format_longpoll({path, module, opts}, router, widths) do
     if opts[:longpoll] != false do
+      prefix = if router.__helpers__(), do: "longpoll", else: ""
       for method <- ["GET", "POST"], into: "" do
         {verb_len, path_len, route_name_len} = widths
 
-        String.pad_leading("longpoll", route_name_len) <> "  " <>
+        String.pad_leading(prefix, route_name_len) <> "  " <>
         String.pad_trailing(method, verb_len) <> "  " <>
         String.pad_trailing(path <> "/longpoll", path_len) <> "  " <>
         inspect(module) <>
@@ -57,7 +59,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
     end
   end
 
-  defp calculate_column_widths(routes, endpoint) do
+  defp calculate_column_widths(router, routes, endpoint) do
     sockets = endpoint && endpoint.__sockets__() || []
 
     widths =
@@ -65,8 +67,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
         %{verb: verb, path: path, helper: helper} = route
         verb = verb_name(verb)
         {verb_len, path_len, route_name_len} = acc
-        route_name = route_name(helper)
-
+        route_name = route_name(router, helper)
         {max(verb_len, String.length(verb)),
         max(path_len, String.length(path)),
         max(route_name_len, String.length(route_name))}
@@ -74,17 +75,18 @@ defmodule Phoenix.Router.ConsoleFormatter do
 
     Enum.reduce(sockets, widths, fn {path, _mod, _opts}, acc ->
       {verb_len, path_len, route_name_len} = acc
+      prefix = if router.__helpers__(), do: "websocket", else: ""
 
       {verb_len,
-       max(path_len, String.length(path <> "/websocket")),
-       max(route_name_len, String.length("websocket"))}
+      max(path_len, String.length(path <> "/websocket")),
+      max(route_name_len, String.length(prefix))}
     end)
   end
 
-  defp format_route(route, column_widths) do
+  defp format_route(route, router, column_widths) do
     %{verb: verb, path: path, plug: plug, metadata: metadata, plug_opts: plug_opts, helper: helper} = route
     verb = verb_name(verb)
-    route_name = route_name(helper)
+    route_name = route_name(router, helper)
     {verb_len, path_len, route_name_len} = column_widths
     log_module = metadata[:log_module] || plug
 
@@ -94,8 +96,14 @@ defmodule Phoenix.Router.ConsoleFormatter do
     "#{inspect(log_module)} #{inspect(plug_opts)}\n"
   end
 
-  defp route_name(nil),  do: ""
-  defp route_name(name), do: name <> "_path"
+  defp route_name(_router, nil),  do: ""
+  defp route_name(router, name) do
+    if router.__helpers__() do
+      name <> "_path"
+    else
+      ""
+    end
+  end
 
   defp verb_name(verb), do: verb |> to_string() |> String.upcase()
 end

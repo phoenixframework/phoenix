@@ -10,7 +10,7 @@ defmodule Phoenix.Integration.MixProject do
     [
       app: :phoenix_integration,
       version: "0.1.0",
-      elixir: "~> 1.12",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -47,7 +47,7 @@ defmodule Phoenix.Integration.MixProject do
       {:phoenix_live_dashboard, "~> 0.6"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 0.18"},
+      {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:swoosh, "~> 1.3"},
       {:plug_cowboy, "~> 2.5"},

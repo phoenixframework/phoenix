@@ -369,10 +369,10 @@ var Ajax = class {
   static request(method, endPoint, accept, body, timeout, ontimeout, callback) {
     if (global.XDomainRequest) {
       let req = new global.XDomainRequest();
-      this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
+      return this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
     } else {
       let req = new global.XMLHttpRequest();
-      this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback);
+      return this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback);
     }
   }
   static xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback) {
@@ -388,14 +388,13 @@ var Ajax = class {
     req.onprogress = () => {
     };
     req.send(body);
+    return req;
   }
   static xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback) {
     req.open(method, endPoint, true);
     req.timeout = timeout;
     req.setRequestHeader("Content-Type", accept);
-    req.onerror = () => {
-      callback && callback(null);
-    };
+    req.onerror = () => callback && callback(null);
     req.onreadystatechange = () => {
       if (req.readyState === XHR_STATES.complete && callback) {
         let response = this.parseJSON(req.responseText);
@@ -406,6 +405,7 @@ var Ajax = class {
       req.ontimeout = ontimeout;
     }
     req.send(body);
+    return req;
   }
   static parseJSON(resp) {
     if (!resp || resp === "") {
@@ -449,6 +449,7 @@ var LongPoll = class {
     this.endPoint = null;
     this.token = null;
     this.skipHeartbeat = true;
+    this.reqs = /* @__PURE__ */ new Set();
     this.onopen = function() {
     };
     this.onerror = function() {
@@ -475,11 +476,11 @@ var LongPoll = class {
     this.onerror("timeout");
     this.closeAndRetry(1005, "timeout", false);
   }
+  isActive() {
+    return this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting;
+  }
   poll() {
-    if (!(this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting)) {
-      return;
-    }
-    Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), (resp) => {
+    this.ajax("GET", null, () => this.ontimeout(), (resp) => {
       if (resp) {
         var { status, token, messages } = resp;
         this.token = token;
@@ -489,9 +490,7 @@ var LongPoll = class {
       switch (status) {
         case 200:
           messages.forEach((msg) => {
-            setTimeout(() => {
-              this.onmessage({ data: msg });
-            }, 0);
+            setTimeout(() => this.onmessage({ data: msg }), 0);
           });
           this.poll();
           break;
@@ -518,7 +517,7 @@ var LongPoll = class {
     });
   }
   send(body) {
-    Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), (resp) => {
+    this.ajax("POST", body, () => this.onerror("timeout"), (resp) => {
       if (!resp || resp.status !== 200) {
         this.onerror(resp && resp.status);
         this.closeAndRetry(1011, "internal server error", false);
@@ -526,6 +525,9 @@ var LongPoll = class {
     });
   }
   close(code, reason, wasClean) {
+    for (let req of this.reqs) {
+      req.abort();
+    }
     this.readyState = SOCKET_STATES.closed;
     let opts = Object.assign({ code: 1e3, reason: void 0, wasClean: true }, { code, reason, wasClean });
     if (typeof CloseEvent !== "undefined") {
@@ -533,6 +535,20 @@ var LongPoll = class {
     } else {
       this.onclose(opts);
     }
+  }
+  ajax(method, body, onCallerTimeout, callback) {
+    let req;
+    let ontimeout = () => {
+      this.reqs.delete(req);
+      onCallerTimeout();
+    };
+    req = Ajax.request(method, this.endpointURL(), "application/json", body, this.timeout, ontimeout, (resp) => {
+      this.reqs.delete(req);
+      if (this.isActive()) {
+        callback(resp);
+      }
+    });
+    this.reqs.add(req);
   }
 };
 
@@ -827,14 +843,25 @@ var Socket = class {
     this.params = closure(opts.params || {});
     this.endPoint = `${endPoint}/${TRANSPORTS.websocket}`;
     this.vsn = opts.vsn || DEFAULT_VSN;
+    this.heartbeatTimeoutTimer = null;
     this.heartbeatTimer = null;
     this.pendingHeartbeatRef = null;
     this.reconnectTimer = new Timer(() => {
       this.teardown(() => this.connect());
     }, this.reconnectAfterMs);
   }
+  getLongPollTransport() {
+    return LongPoll;
+  }
   replaceTransport(newTransport) {
-    this.disconnect();
+    this.connectClock++;
+    this.closeWasClean = true;
+    this.reconnectTimer.reset();
+    this.sendBuffer = [];
+    if (this.conn) {
+      this.conn.close();
+      this.conn = null;
+    }
     this.transport = newTransport;
   }
   protocol() {
@@ -857,7 +884,6 @@ var Socket = class {
     this.teardown(callback, code, reason);
   }
   connect(params) {
-    this.connectClock++;
     if (params) {
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor");
       this.params = closure(params);
@@ -865,6 +891,7 @@ var Socket = class {
     if (this.conn) {
       return;
     }
+    this.connectClock++;
     this.closeWasClean = false;
     this.conn = new this.transport(this.endPointURL());
     this.conn.binaryType = this.binaryType;
@@ -915,6 +942,10 @@ var Socket = class {
     });
     return true;
   }
+  clearHeartbeats() {
+    clearTimeout(this.heartbeatTimer);
+    clearTimeout(this.heartbeatTimeoutTimer);
+  }
   onConnOpen() {
     if (this.hasLogger())
       this.log("transport", `connected to ${this.endPointURL()}`);
@@ -939,8 +970,8 @@ var Socket = class {
       return;
     }
     this.pendingHeartbeatRef = null;
-    clearTimeout(this.heartbeatTimer);
-    setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs);
+    this.clearHeartbeats();
+    this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs);
   }
   teardown(callback, code, reason) {
     if (!this.conn) {
@@ -987,7 +1018,7 @@ var Socket = class {
     if (this.hasLogger())
       this.log("transport", "close", event);
     this.triggerChanError();
-    clearTimeout(this.heartbeatTimer);
+    this.clearHeartbeats();
     if (!this.closeWasClean && closeCode !== 1e3) {
       this.reconnectTimer.scheduleTimeout();
     }
@@ -1069,7 +1100,7 @@ var Socket = class {
     }
     this.pendingHeartbeatRef = this.makeRef();
     this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef });
-    this.heartbeatTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs);
+    this.heartbeatTimeoutTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs);
   }
   abnormalClose(reason) {
     this.closeWasClean = false;
@@ -1087,9 +1118,9 @@ var Socket = class {
     this.decode(rawMessage.data, (msg) => {
       let { topic, event, payload, ref, join_ref } = msg;
       if (ref && ref === this.pendingHeartbeatRef) {
-        clearTimeout(this.heartbeatTimer);
+        this.clearHeartbeats();
         this.pendingHeartbeatRef = null;
-        setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs);
+        this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs);
       }
       if (this.hasLogger())
         this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload);

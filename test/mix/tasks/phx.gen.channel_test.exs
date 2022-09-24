@@ -88,7 +88,10 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
       end)
 
       assert_received {:mix_shell, :info,
-                       ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
+                       [
+                         "\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <>
+                           _
+                       ]}
 
       assert_received {:mix_shell, :yes?, [question]}
       assert question =~ "Do you want to create it?"
@@ -120,7 +123,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
     end)
 
     assert_received {:mix_shell, :info,
-                       ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
+                     ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
 
     assert_received {:mix_shell, :yes?, [question]}
     assert question =~ "Do you want to create it?"
@@ -132,7 +135,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
     in_tmp_umbrella_project("generates channels", fn ->
       send(self(), {:mix_shell_input, :yes?, false})
       Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
-      Gen.Channel.run(["room"])
+      Gen.Channel.run(["Room"])
 
       assert_file("lib/phoenix/channels/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule PhoenixWeb.RoomChannel do|
@@ -152,7 +155,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
     end)
 
     assert_received {:mix_shell, :info,
-                       ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
+                     ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
 
     assert_received {:mix_shell, :yes?, [question]}
     assert question =~ "Do you want to create it?"
@@ -178,7 +181,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
     end)
 
     assert_received {:mix_shell, :info,
-                       ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
+                     ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
 
     assert_received {:mix_shell, :yes?, [question]}
     assert question =~ "Do you want to create it?"
@@ -189,6 +192,12 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
   test "passing no args raises error" do
     assert_raise Mix.Error, fn ->
       Gen.Channel.run([])
+    end
+  end
+
+  test "passing invalid name raises error" do
+    assert_raise Mix.Error, fn ->
+      Gen.Channel.run(["room"])
     end
   end
 

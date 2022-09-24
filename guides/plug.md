@@ -115,7 +115,7 @@ defmodule HelloWeb.Router do
 
 In the [`init/1`] callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple [`call/2`] function heads to validate the locale in the params, and fall back to `"en"` if there is no match. The [`assign/3`] is a part of the `Plug.Conn` module and it's how we store values in the `conn` data structure.
 
-To see the assign in action, go to the layout in `lib/hello_web/templates/layout/app.html.heex` and add the following close to the main container:
+To see the assign in action, go to the layout in `lib/hello_web/templates/layout/app.html.heex` and add the following code to the main container:
 
 ```heex
 <main class="container">
@@ -240,16 +240,16 @@ defmodule HelloWeb.MessageController do
       {:ok, user} ->
         case find_message(params["id"]) do
           nil ->
-            conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/")
+            conn |> put_flash(:info, "That message wasn't found") |> redirect(to: ~p"/")
           message ->
             if Authorizer.can_access?(user, message) do
               render(conn, :show, page: message)
             else
-              conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/")
+              conn |> put_flash(:info, "You can't access that page") |> redirect(to: ~p"/")
             end
         end
       :error ->
-        conn |> put_flash(:info, "You must be logged in") |> redirect(to: "/")
+        conn |> put_flash(:info, "You must be logged in") |> redirect(to: ~p"/")
     end
   end
 end
@@ -274,14 +274,14 @@ defmodule HelloWeb.MessageController do
       {:ok, user} ->
         assign(conn, :user, user)
       :error ->
-        conn |> put_flash(:info, "You must be logged in") |> redirect(to: "/") |> halt()
+        conn |> put_flash(:info, "You must be logged in") |> redirect(to: ~p"/") |> halt()
     end
   end
 
   defp fetch_message(conn, _) do
     case find_message(conn.params["id"]) do
       nil ->
-        conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/") |> halt()
+        conn |> put_flash(:info, "That message wasn't found") |> redirect(to: ~p"/") |> halt()
       message ->
         assign(conn, :message, message)
     end
@@ -291,7 +291,7 @@ defmodule HelloWeb.MessageController do
     if Authorizer.can_access?(conn.assigns[:user], conn.assigns[:message]) do
       conn
     else
-      conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/") |> halt()
+      conn |> put_flash(:info, "You can't access that page") |> redirect(to: ~p"/") |> halt()
     end
   end
 end

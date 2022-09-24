@@ -149,6 +149,14 @@ Passing more than one value to our template is as simple as connecting [`assign/
   end
 ```
 
+Or you can pass the assigns directly to `render` instead:
+
+```elixir
+  def show(conn, %{"messenger" => messenger}) do
+    render(conn, "show.html", messenger: messenger, receiver: "Dweezil")
+  end
+```
+
 Generally speaking, once all assigns are configured, we invoke the view layer. The view layer then renders `show.html` alongside the layout and a response is sent back to the browser.
 
 [Views and templates](views.html) have their own guide, so we won't spend much time on them here. What we will look at is how to assign a different layout, or none at all, from inside a controller action.
@@ -181,7 +189,7 @@ Remove these lines:
 
 ```heex
 <a href="https://phoenixframework.org/" class="phx-logo">
-  <img src={Routes.static_path(@conn, "/images/phoenix.png")} alt="Phoenix Framework Logo"/>
+  <img src={~p"/images/phoenix.png"} alt="Phoenix Framework Logo"/>
 </a>
 ```
 
@@ -341,19 +349,13 @@ defmodule HelloWeb.PageController do
   use HelloWeb, :controller
 
   def index(conn, _params) do
-    redirect(conn, to: "/redirect_test")
+    redirect(conn, to: ~p"/redirect_test")
   end
 end
 
 ```
 
-Actually, we should make use of the path helpers, which are the preferred approach to link to any page within our application, as we learned about in the [routing guide](routing.html).
-
-```elixir
-def index(conn, _params) do
-  redirect(conn, to: Routes.page_path(conn, :redirect_test))
-end
-```
+We made use of `Phoenix.VerifiedRoutes.sigil_p/2` to build our redirect path, which is the preferred approach to reference any path within our application. We learned about verified routes in the [routing guide](routing.html).
 
 Finally, let's define in the same file the action we redirect to, which simply renders the index, but now under a new address:
 
@@ -367,7 +369,7 @@ When we reload our [welcome page], we see that we've been redirected to `/redire
 
 If we care to, we can open up our developer tools, click on the network tab, and visit our root route again. We see two main requests for this page - a get to `/` with a status of `302`, and a get to `/redirect_test` with a status of `200`.
 
-Notice that the redirect function takes `conn` as well as a string representing a relative path within our application. For security reasons, the `:to` helper can only redirect to paths within your application. If you want to redirect to a fully-qualified path or an external URL, you should use `:external` instead:
+Notice that the redirect function takes `conn` as well as a string representing a relative path within our application. For security reasons, the `:to` option can only redirect to paths within your application. If you want to redirect to a fully-qualified path or an external URL, you should use `:external` instead:
 
 ```elixir
 def index(conn, _params) do
@@ -379,7 +381,7 @@ end
 
 Sometimes we need to communicate with users during the course of an action. Maybe there was an error updating a schema, or maybe we just want to welcome them back to the application. For this, we have flash messages.
 
-The `Phoenix.Controller` module provides the [`put_flash/3`] and [`get_flash/2`] functions to help us set and retrieve flash messages as a key-value pair. Let's set two flash messages in our `HelloWeb.PageController` to try this out.
+The `Phoenix.Controller` module provides the [`put_flash/3`] to set flash messages as a key-value pair and placing them into a `@flash` assign in the connection. Let's set two flash messages in our `HelloWeb.PageController` to try this out.
 
 To do this we modify the `index` action as follows:
 
@@ -395,13 +397,13 @@ defmodule HelloWeb.PageController do
 end
 ```
 
-In order to see our flash messages, we need to be able to retrieve them and display them in a template layout. One way to do the first part is with [`get_flash/2`] which takes `conn` and the key we care about. It then returns the value for that key.
+In order to see our flash messages, we need to be able to retrieve them and display them in a template layout. We can do that using [`Phoenix.Flash.get/2`] which takes the flash data and the key we care about. It then returns the value for that key.
 
 For our convenience, the application layout, `lib/hello_web/templates/layout/app.html.heex`, already has markup for displaying flash messages.
 
 ```heex
-<p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-<p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+<p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@flash, :info) %></p>
+<p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@flash, :error) %></p>
 ```
 
 When we reload the [welcome page], our messages should appear just above "Welcome to Phoenix!"
@@ -413,13 +415,13 @@ The flash functionality is handy when mixed with redirects. Perhaps you want to 
     conn
     |> put_flash(:info, "Welcome to Phoenix, from flash info!")
     |> put_flash(:error, "Let's pretend we have an error.")
-    |> redirect(to: Routes.page_path(conn, :redirect_test))
+    |> redirect(to: ~p"/redirect_test"))
   end
 ```
 
 Now if you reload the [welcome page], you will be redirected and the flash messages will be shown once more.
 
-Besides [`put_flash/3`] and [`get_flash/2`], the `Phoenix.Controller` module has another useful function worth knowing about. [`clear_flash/1`] takes only `conn` and removes any flash messages which might be stored in the session.
+Besides [`put_flash/3`], the `Phoenix.Controller` module has another useful function worth knowing about. [`clear_flash/1`] takes only `conn` and removes any flash messages which might be stored in the session.
 
 Phoenix does not enforce which keys are stored in the flash. As long as we are internally consistent, all will be well. `:info` and `:error`, however, are common and are handled by default in our templates.
 
@@ -501,7 +503,7 @@ Whenever the `with` conditions do not match, `HelloWeb.MyFallbackController` wil
 [`/hello/Frank`]:  http://localhost:4000/hello/Frank
 [`assign/3`]: `Plug.Conn.assign/3`
 [`clear_flash/1`]: `Phoenix.Controller.clear_flash/1`
-[`get_flash/2`]: `Phoenix.Controller.get_flash/2`
+[`Phoenix.Flash.get/2`]: `Phoenix.Flash.get/2`
 [`html/2`]: `Phoenix.Controller.html/2`
 [`json/2`]: `Phoenix.Controller.json/2`
 [`put_flash/3`]: `Phoenix.Controller.put_flash/3`

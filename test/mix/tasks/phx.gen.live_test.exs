@@ -91,49 +91,38 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       end
 
       assert_file "lib/phoenix_web/live/post_live/index.html.heex", fn file ->
-        assert file =~ "Routes.post_index_path(@socket, :index)"
+        assert file =~ ~S|~p"/posts"|
       end
 
       assert_file "lib/phoenix_web/live/post_live/show.html.heex", fn file ->
-        assert file =~ "Routes.post_index_path(@socket, :index)"
+        assert file =~ ~S|~p"/posts"|
       end
 
-      assert_file "lib/phoenix_web/live/post_live/form_component.html.heex", fn file ->
-        assert file =~ ~s|<%= text_input(f, :title) %>|
-        assert file =~ ~s|<%= number_input(f, :votes) %>|
-        assert file =~ ~s|<%= number_input(f, :cost, step: "any") %>|
-        assert file =~ ~s|<%= multiple_select(f, :tags, ["Option 1": "option1", "Option 2": "option2"]) %>|
-        assert file =~ ~s|<%= checkbox(f, :popular) %>|
-        assert file =~ ~s|<%= datetime_select(f, :drafted_at) %>|
-        assert file =~ ~s|<%= select(f, :status, Ecto.Enum.values(Phoenix.Blog.Post, :status), prompt: "Choose a value") %>|
-        assert file =~ ~s|<%= datetime_select(f, :published_at) %>|
-        assert file =~ ~s|<%= datetime_select(f, :deleted_at) %>|
-        assert file =~ ~s|<%= date_select(f, :announcement_date) %>|
-        assert file =~ ~s|<%= time_select(f, :alarm) %>|
-        assert file =~ ~s|<%= text_input(f, :secret) %>|
+      assert_file "lib/phoenix_web/live/post_live/form_component.ex", fn file ->
+        assert file =~ ~s(<.simple_form\n        :let={f}\n        for={@changeset}\n)
+        assert file =~ ~s(<.input field={{f, :title}} type="text")
+        assert file =~ ~s(<.input field={{f, :votes}} type="number")
+        assert file =~ ~s(<.input field={{f, :cost}} type="number" label="cost" step="any")
+        assert file =~ ~s(<.input field={{f, :tags}} type="select" multiple)
+        assert file =~ ~s(<.input field={{f, :popular}} type="checkbox")
+        assert file =~ ~s(<.input field={{f, :drafted_at}} type="datetime-local")
+        assert file =~ ~s(<.input field={{f, :published_at}} type="datetime-local")
+        assert file =~ ~s(<.input field={{f, :deleted_at}} type="datetime-local")
+        assert file =~ ~s(<.input field={{f, :announcement_date}} type="date")
+        assert file =~ ~s(<.input field={{f, :alarm}} type="time")
+        assert file =~ ~s(<.input field={{f, :secret}} type="text" label="secret" />)
+        assert file =~ ~s(<.input field={{f, :status}} type="select")
+        assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
 
-        assert file =~ ~s|<%= label(f, :title) %>|
-        assert file =~ ~s|<%= label(f, :votes) %>|
-        assert file =~ ~s|<%= label(f, :cost) %>|
-        assert file =~ ~s|<%= label(f, :tags) %>|
-        assert file =~ ~s|<%= label(f, :popular) %>|
-        assert file =~ ~s|<%= label(f, :drafted_at) %>|
-        assert file =~ ~s|<%= label(f, :published_at) %>|
-        assert file =~ ~s|<%= label(f, :deleted_at) %>|
-        assert file =~ ~s|<%= label(f, :announcement_date) %>|
-        assert file =~ ~s|<%= label(f, :alarm) %>|
-        assert file =~ ~s|<%= label(f, :secret) %>|
-
-        refute file =~ ~s|<%= label(f, :user_id|
-        refute file =~ ~s|<%= number_input(f, :user_id|
+        refute file =~ ~s(<.input field={{f, :user_id}})
       end
 
       assert_file "test/phoenix_web/live/post_live_test.exs", fn file ->
         assert file =~ ~r"@invalid_attrs.*popular: false"
-        assert file =~ "Routes.post_index_path(conn, :index)"
-        assert file =~ "Routes.post_index_path(conn, :new)"
-        assert file =~ "Routes.post_show_path(conn, :show, post)"
-        assert file =~ "Routes.post_show_path(conn, :edit, post)"
+        assert file =~ ~S|~p"/posts"|
+        assert file =~ ~S|~p"/posts/new"|
+        assert file =~ ~S|~p"/posts/#{post}"|
+        assert file =~ ~S|~p"/posts/#{post}/show/edit"|
       end
 
       send self(), {:mix_shell_input, :yes?, true}
@@ -177,8 +166,8 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
       assert_receive({:mix_shell, :info, ["""
 
-      You must update :phoenix_live_view to v0.17 or later and
-      :phoenix_live_dashboard to v0.6 or later to use the features
+      You must update :phoenix_live_view to v0.18 or later and
+      :phoenix_live_dashboard to v0.7 or later to use the features
       in this generator.
       """]})
     end
@@ -239,25 +228,23 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       end
 
       assert_file "lib/phoenix_web/live/blog/post_live/index.html.heex", fn file ->
-        assert file =~ "Routes.blog_post_index_path(@socket, :index)"
-        assert file =~ "Routes.blog_post_index_path(@socket, :edit, post)"
-        assert file =~ "Routes.blog_post_index_path(@socket, :new)"
-        assert file =~ "Routes.blog_post_show_path(@socket, :show, post)"
+        assert file =~ ~S|~p"/blog/posts"|
+        assert file =~ ~S|~p"/blog/posts/#{post}/edit"|
+        assert file =~ ~S|~p"/blog/posts/new"|
+        assert file =~ ~S|~p"/blog/posts/#{post}"|
       end
 
       assert_file "lib/phoenix_web/live/blog/post_live/show.html.heex", fn file ->
-        assert file =~ "Routes.blog_post_index_path(@socket, :index)"
-        assert file =~ "Routes.blog_post_show_path(@socket, :show, @post)"
-        assert file =~ "Routes.blog_post_show_path(@socket, :edit, @post)"
+        assert file =~ ~S|~p"/blog/posts"|
+        assert file =~ ~S|~p"/blog/posts/#{@post}"|
+        assert file =~ ~S|~p"/blog/posts/#{@post}/show/edit"|
       end
 
-      assert_file "lib/phoenix_web/live/blog/post_live/form_component.html.heex"
-
       assert_file "test/phoenix_web/live/blog/post_live_test.exs", fn file ->
-        assert file =~ "Routes.blog_post_index_path(conn, :index)"
-        assert file =~ "Routes.blog_post_index_path(conn, :new)"
-        assert file =~ "Routes.blog_post_show_path(conn, :show, post)"
-        assert file =~ "Routes.blog_post_show_path(conn, :edit, post)"
+        assert file =~ ~S|~p"/blog/posts"|
+        assert file =~ ~S|~p"/blog/posts/new"|
+        assert file =~ ~S|~p"/blog/posts/#{post}"|
+        assert file =~ ~S|~p"/blog/posts/#{post}/show/edit"|
       end
 
       assert_receive {:mix_shell, :info, ["""
@@ -293,7 +280,6 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
       assert_file "lib/phoenix_web/live/post_live/index.html.heex"
       assert_file "lib/phoenix_web/live/post_live/show.html.heex"
-      assert_file "lib/phoenix_web/live/post_live/form_component.html.heex"
       assert_file "test/phoenix_web/live/post_live_test.exs"
     end
   end
@@ -312,7 +298,6 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
       assert_file "lib/phoenix_web/live/post_live/index.html.heex"
       assert_file "lib/phoenix_web/live/post_live/show.html.heex"
-      assert_file "lib/phoenix_web/live/post_live/form_component.html.heex"
       assert_file "test/phoenix_web/live/post_live_test.exs"
     end
   end
@@ -333,7 +318,6 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
       assert_file "lib/phoenix_web/live/comment_live/index.html.heex"
       assert_file "lib/phoenix_web/live/comment_live/show.html.heex"
-      assert_file "lib/phoenix_web/live/comment_live/form_component.html.heex"
       assert_file "test/phoenix_web/live/comment_live_test.exs"
     end
   end
@@ -353,11 +337,10 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "lib/phoenix_web/live/series_live/form_component.ex"
 
       assert_file "lib/phoenix_web/live/series_live/index.html.heex", fn file ->
-        assert file =~ "for series <- @series_collection do"
+        assert file =~ "@series_collection"
       end
 
       assert_file "lib/phoenix_web/live/series_live/show.html.heex"
-      assert_file "lib/phoenix_web/live/series_live/form_component.html.heex"
       assert_file "test/phoenix_web/live/series_live_test.exs"
     end
   end
@@ -402,8 +385,6 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
           assert file =~ "use PhoenixWeb, :live_component"
         end
 
-        assert_file "lib/phoenix_web/live/user_live/form_component.html.heex"
-
         assert_file "test/phoenix_web/live/user_live_test.exs", fn file ->
           assert file =~ "defmodule PhoenixWeb.UserLiveTest"
         end
@@ -446,8 +427,6 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
           assert file =~ "defmodule Phoenix.UserLive.FormComponent"
           assert file =~ "use Phoenix, :live_component"
         end
-
-        assert_file "lib/phoenix/live/user_live/form_component.html.heex"
 
         assert_file "test/phoenix/live/user_live_test.exs", fn file ->
           assert file =~ "defmodule Phoenix.UserLiveTest"

@@ -16,10 +16,24 @@ As we progress through this guide, it would help to have a concrete example we c
 $ mix phx.gen.channel Room
 * creating lib/hello_web/channels/room_channel.ex
 * creating test/hello_web/channels/room_channel_test.exs
+* creating test/support/channel_case.ex
 
-Add the channel to your `lib/hello_web/channels/user_socket.ex` handler, for example:
+The default socket handler - HelloWeb.UserSocket - was not found.
 
-    channel "room:lobby", HelloWeb.RoomChannel
+Do you want to create it? [Yn]  
+* creating lib/hello_web/channels/user_socket.ex
+* creating assets/js/user_socket.js
+
+Add the socket handler to your `lib/hello_web/endpoint.ex`, for example:
+
+    socket "/socket", HelloWeb.UserSocket,
+      websocket: true,
+      longpoll: false
+
+For the front-end integration, you need to import the `user_socket.js`
+in your `assets/js/app.js` file:
+
+    import "./user_socket.js"
 ```
 
 This creates a channel, its test and instructs us to add a channel route in `lib/hello_web/channels/user_socket.ex`. It is important to add the channel route or our channel won't function at all!
@@ -43,15 +57,14 @@ defmodule HelloWeb.ChannelCase do
     quote do
       # Import conveniences for testing with channels
       import Phoenix.ChannelTest
+      import HelloWeb.ChannelCase
 
       # The default endpoint for testing
       @endpoint HelloWeb.Endpoint
     end
   end
 
-  setup tags do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Demo.Repo, shared: not tags[:async])
-    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+  setup _tags do
     :ok
   end
 end
@@ -69,7 +82,7 @@ First off, is the setup block:
 ```elixir
 setup do
   {:ok, _, socket} =
-    UserSocket
+    HelloWeb.UserSocket
     |> socket("user_id", %{some: :assign})
     |> subscribe_and_join(RoomChannel, "room:lobby")
 

@@ -9,9 +9,8 @@ defmodule <%= @app_module %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",<% end %>
-      elixir: "~> 1.12",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: <%= if @compilers != [] do %>[<%= Enum.join(@compilers, ", ") %>] ++ <% end %>Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -43,15 +42,16 @@ defmodule <%= @app_module %>.MixProject do
       {<%= inspect @adapter_app %>, ">= 0.0.0"},<% end %><%= if @html do %>
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      # TODO bump to 0.18 on release
-      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", override: true},
-      {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.6"},<% end %><%= if @assets do %>
+      {:phoenix_live_view, "~> 0.18"},
+      {:heroicons, "~> 0.5"},
+      {:floki, ">= 0.30.0", only: :test},
+      {:tailwind, "~> 0.1.8", runtime: Mix.env() == :dev},<% end %><%= if @dashboard do %>
+      {:phoenix_live_dashboard, "~> 0.7"},<% end %><%= if @assets do %>
       {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},<% end %><%= if @mailer do %>
       {:swoosh, "~> 1.3"},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
-      {:gettext, "~> 0.18"},<% end %>
+      {:gettext, "~> 0.20"},<% end %>
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"}
     ]
@@ -69,7 +69,7 @@ defmodule <%= @app_module %>.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %><%= if @assets do %>,
-      "assets.deploy": ["esbuild default --minify", "phx.digest"]<% end %>
+      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]<% end %>
     ]
   end
 end

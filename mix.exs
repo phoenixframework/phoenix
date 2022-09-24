@@ -8,13 +8,13 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.6.4"
+  @version "1.7.0-dev"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
   # installer is ahead of Phoenix itself.
-  @elixir_requirement "~> 1.9"
+  @elixir_requirement "~> 1.11"
 
   def project do
     [
@@ -80,7 +80,7 @@ defmodule Phoenix.MixProject do
       {:ex_doc, "~> 0.24", only: :docs},
       {:ecto, "~> 3.0", only: :docs},
       {:ecto_sql, "~> 3.6", only: :docs},
-      {:gettext, "~> 0.18", only: :docs},
+      {:gettext, "~> 0.20", only: :docs},
       {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 0.6", only: :docs},
       {:makeup_eex, ">= 0.1.1", only: :docs},
@@ -118,6 +118,9 @@ defmodule Phoenix.MixProject do
       groups_for_modules: groups_for_modules(),
       extras: extras(),
       groups_for_extras: groups_for_extras(),
+      groups_for_functions: [
+        "Reflection": &(&1[:type] == :reflection)
+      ],
       skip_undefined_reference_warnings_on: ["CHANGELOG.md"]
     ]
   end
@@ -182,6 +185,7 @@ defmodule Phoenix.MixProject do
     # Phoenix.Presence
     # Phoenix.Router
     # Phoenix.Token
+    # Phoenix.VerifiedRoutes
 
     [
       Testing: [
@@ -191,6 +195,10 @@ defmodule Phoenix.MixProject do
       "Adapters and Plugs": [
         Phoenix.CodeReloader,
         Phoenix.Endpoint.Cowboy2Adapter
+      ],
+      "Digester": [
+        Phoenix.Digester.Compressor,
+        Phoenix.Digester.Gzip
       ],
       "Socket and Transport": [
         Phoenix.Socket,

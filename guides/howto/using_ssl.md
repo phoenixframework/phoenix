@@ -70,6 +70,8 @@ config :my_app, MyAppWeb.Endpoint,
 
 In these examples, the `rewrite_on:` key specifies the HTTP header used by a reverse proxy or load balancer in front of the application to indicate whether the request was received over HTTP or HTTPS. For more information on the implications of offloading TLS to an external element, in particular relating to secure cookies, refer to the [Plug HTTPS Guide](https://hexdocs.pm/plug/https.html#offloading-tls). Keep in mind that the options passed to `Plug.SSL` in that document should be set using the `force_ssl:` endpoint option in a Phoenix application.
 
+It is important to note that `force_ssl:` is a *compile* time config, so it normally is set in `prod.exs`, it will not work when set from `runtime.exs`.
+
 ## HSTS
 
 HSTS or "strict-transport-security" is a mechanism that allows a website to declare itself as only accessible via a secure connection (HTTPS). It was introduced to prevent man-in-the-middle attacks that strip SSL/TLS. It causes web browsers to redirect from HTTP to HTTPS and refuse to connect unless the connection uses SSL/TLS.

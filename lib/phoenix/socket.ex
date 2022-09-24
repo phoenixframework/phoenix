@@ -610,7 +610,7 @@ defmodule Phoenix.Socket do
         end
 
       _ ->
-        Logger.warn fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(socket.handler)}" end
+        Logger.warning "Ignoring unmatched topic \"#{topic}\" in #{inspect(socket.handler)}"
         {:reply, :error, encode_ignore(socket, message), {state, socket}}
     end
   end

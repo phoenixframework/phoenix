@@ -16,7 +16,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:ok, _} =
           <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(
             <%= schema.singular %>,
-            &Routes.<%= schema.route_helper %>_confirmation_url(conn, :edit, &1)
+            &url(~p"<%= schema.route_prefix %>/confirm/#{&1}")
           )
 
         conn

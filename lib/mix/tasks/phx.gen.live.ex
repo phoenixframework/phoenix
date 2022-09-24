@@ -18,10 +18,10 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   table name), and an optional list of attributes as their respective names and
   types.  See `mix help phx.gen.schema` for more information on attributes.
 
-  When this command is run for the first time, a `LiveHelpers` module will be
-  created, along with the resource level LiveViews and components, including
-  `UserLive.Index`, `UserLive.Show`, and `UserLive.FormComponent` modules for
-  the new resource.
+  When this command is run for the first time, a `Components` module will be
+  created if it does not exist, along with the resource level LiveViews and
+  components, including `UserLive.Index`, `UserLive.Show`, and
+  `UserLive.FormComponent` modules for the new resource.
 
   > Note: A resource may also be split
   > over distinct contexts (such as `Accounts.User` and `Payments.User`).
@@ -111,7 +111,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
     context
     |> copy_new_files(binding, paths)
-    |> maybe_inject_helpers()
+    |> maybe_inject_imports()
     |> print_shell_instructions()
   end
 
@@ -138,39 +138,42 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       {:eex, "show.ex",                   Path.join([web_prefix, "live", web_path, live_subdir, "show.ex"])},
       {:eex, "index.ex",                  Path.join([web_prefix, "live", web_path, live_subdir, "index.ex"])},
       {:eex, "form_component.ex",         Path.join([web_prefix, "live", web_path, live_subdir, "form_component.ex"])},
-      {:eex, "form_component.html.heex",  Path.join([web_prefix, "live", web_path, live_subdir, "form_component.html.heex"])},
       {:eex, "index.html.heex",           Path.join([web_prefix, "live", web_path, live_subdir, "index.html.heex"])},
       {:eex, "show.html.heex",            Path.join([web_prefix, "live", web_path, live_subdir, "show.html.heex"])},
       {:eex, "live_test.exs",             Path.join([test_prefix, "live", web_path, "#{schema.singular}_live_test.exs"])},
-      {:new_eex, "live_helpers.ex",       Path.join([web_prefix, "live", "live_helpers.ex"])},
+      {:new_eex, "components.ex",         Path.join([web_prefix, "components.ex"])}
     ]
   end
 
   defp copy_new_files(%Context{} = context, binding, paths) do
     files = files_to_be_generated(context)
+    binding = Keyword.merge(binding, assigns: %{
+      web_namespace: context.web_module,
+      gettext: true,
+    })
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.live", binding, files)
     if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
 
     context
   end
 
-  defp maybe_inject_helpers(%Context{context_app: ctx_app} = context) do
+  defp maybe_inject_imports(%Context{context_app: ctx_app} = context) do
     web_prefix = Mix.Phoenix.web_path(ctx_app)
     [lib_prefix, web_dir] = Path.split(web_prefix)
     file_path = Path.join(lib_prefix, "#{web_dir}.ex")
     file = File.read!(file_path)
-    inject = "import #{inspect(context.web_module)}.LiveHelpers"
+    inject = "import #{inspect(context.web_module)}.Components"
 
     if String.contains?(file, inject) do
       :ok
     else
-      do_inject_helpers(context, file, file_path, inject)
+      do_inject_imports(context, file, file_path, inject)
     end
 
     context
   end
 
-  defp do_inject_helpers(context, file, file_path, inject) do
+  defp do_inject_imports(context, file, file_path, inject) do
     Mix.shell().info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
 
     new_file = String.replace(file, "import Phoenix.LiveView.Helpers", "import Phoenix.LiveView.Helpers\n      #{inject}")
@@ -188,7 +191,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
       Please make sure LiveView is installed and that #{inspect(context.web_module)}
       defines both `live_view/0` and `live_component/0` functions,
-      and that both functions import #{inspect(context.web_module)}.LiveHelpers.
+      and that both functions import #{inspect(context.web_module)}.Components.
       """
     end
   end
@@ -226,8 +229,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     unless Code.ensure_loaded?(Phoenix.LiveView.JS) do
       Mix.shell().info """
 
-      You must update :phoenix_live_view to v0.17 or later and
-      :phoenix_live_dashboard to v0.6 or later to use the features
+      You must update :phoenix_live_view to v0.18 or later and
+      :phoenix_live_dashboard to v0.7 or later to use the features
       in this generator.
       """
     end
