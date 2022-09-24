@@ -149,6 +149,7 @@ However, implementing the `Plug.Exception` protocol by hand can be convenient in
 Exception actions are functions that can be triggered by the error page, and they're basically a list of maps defining a `label` and a `handler` to be executed.
 
 They are rendered in the error page as a collection of buttons and follow the format of:
+
 ```elixir
 [
   %{

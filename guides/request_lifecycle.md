@@ -10,11 +10,11 @@ Let's get on with our first new Phoenix page!
 
 When your browser accesses [http://localhost:4000/](http://localhost:4000/), it sends a HTTP request to whatever service is running on that address, in this case our Phoenix application. The HTTP request is made of a verb and a path. For example, the following browser requests translate into:
 
-| Browser address bar                | Verb | Path          |
-|:-----------------------------------|:-----|:--------------|
-| http://localhost:4000/             | GET  | /             |
-| http://localhost:4000/hello        | GET  | /hello        |
-| http://localhost:4000/hello/world  | GET  | /hello/world  |
+| Browser address bar                 | Verb | Path          |
+|:------------------------------------|:-----|:--------------|
+| <http://localhost:4000/>            | GET  | /             |
+| <http://localhost:4000/hello>       | GET  | /hello        |
+| <http://localhost:4000/hello/world> | GET  | /hello/world  |
 
 There are other HTTP verbs. For example, submitting a form typically uses the POST verb.
 

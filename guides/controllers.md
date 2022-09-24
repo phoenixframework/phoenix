@@ -274,7 +274,6 @@ Reloading [http://localhost:4000](http://localhost:4000) should show us a comple
 
 To be specific about the content type, we can use [`put_resp_content_type/2`] in conjunction with [`send_resp/3`].
 
-
 ```elixir
 def index(conn, _params) do
   conn
@@ -498,7 +497,6 @@ end
 ```
 
 Whenever the `with` conditions do not match, `HelloWeb.MyFallbackController` will receive the original `conn` as well as the result of the action and respond accordingly.
-
 
 [`/hello/Frank`]:  http://localhost:4000/hello/Frank
 [`assign/3`]: `Plug.Conn.assign/3`
