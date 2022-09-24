@@ -119,7 +119,7 @@ resources "/posts", PostController, only: [:index, :show]
 
 Running `mix phx.routes` shows that we now only have the routes to the index and show actions defined.
 
-```
+```console
 GET     /posts      HelloWeb.PostController :index
 GET     /posts/:id  HelloWeb.PostController :show
 ```
@@ -213,6 +213,7 @@ resources "/users", UserController do
   resources "/posts", PostController
 end
 ```
+
 When we run `mix phx.routes` now, in addition to the routes we saw for `users` above, we get the following set of routes:
 
 ```elixir

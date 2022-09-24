@@ -14,13 +14,17 @@ Finally, all other assets, that usually don't have to be preprocessed, go direct
 
 If you want to import JavaScript dependencies, you have two options to add them to your application:
 
-  1. Vendor those dependencies inside your project and import them in your "assets/js/app.js" using a relative path:
+1. Vendor those dependencies inside your project and import them in your "assets/js/app.js" using a relative path:
 
-         import topbar from "../vendor/topbar"
+   ```js
+   import topbar from "../vendor/topbar"
+   ```
 
-  2. Call `npm install topbar --save` inside your assets directory and `esbuild` will be able to automatically pick them up:
+2. Call `npm install topbar --save` inside your assets directory and `esbuild` will be able to automatically pick them up:
 
-         import topbar from "topbar"
+   ```js
+   import topbar from "topbar"
+   ```
 
 ## CSS
 

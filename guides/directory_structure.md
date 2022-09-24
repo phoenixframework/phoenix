@@ -68,7 +68,6 @@ You can learn more about applications in [Elixir's official docs for Application
 
 The `lib/hello/mailer.ex` file holds the `Hello.Mailer` module, which defines the main interface to deliver e-mails:
 
-
 ```elixir
 defmodule Hello.Mailer do
   use Swoosh.Mailer, otp_app: :hello
