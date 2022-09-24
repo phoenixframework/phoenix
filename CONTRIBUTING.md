@@ -217,7 +217,8 @@ complete, the better.
 For formatting the guides:
 
 - We use the "elixir" code fence for all module code.
-- We use the "console" code fence for iex and shell commands.
+- We use the "iex" for IEx sessions.
+- We use the "console" code fence for shell commands.
 - We use the "html" code fence for html templates, even if there is elixir code
   in the template.
 - We use backticks for filenames and directory paths.
