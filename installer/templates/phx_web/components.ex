@@ -128,7 +128,7 @@ defmodule <%= @web_namespace %>.Components do
   attr :title, :string, default: nil
   attr :rest, :global
   attr :kind, :atom, doc: "one of :info, :error used for styling and flash lookup"
-  attr :autoshow, :boolean, default: true, doc: "wether to auto show the flash on mount"
+  attr :autoshow, :boolean, default: true, doc: "whether to auto show the flash on mount"
   attr :close, :boolean, default: true, doc: "whether the flash can be closed"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
@@ -176,7 +176,7 @@ defmodule <%= @web_namespace %>.Components do
   """
   attr :for, :any, default: nil, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
-  attr :rest, :global, doc: "the arbitraty HTML attributes to apply to the form tag"
+  attr :rest, :global, doc: "the arbitrary HTML attributes to apply to the form tag"
 
   slot :inner_block, required: true
   slot :actions, doc: "the slot for form actions, such as a submit button"
@@ -204,7 +204,7 @@ defmodule <%= @web_namespace %>.Components do
   """
   attr :type, :string, default: nil
   attr :class, :string, default: nil
-  attr :rest, :global, doc: "the arbitraty HTML attributes to apply to the button tag"
+  attr :rest, :global, doc: "the arbitrary HTML attributes to apply to the button tag"
 
   slot :inner_block, required: true
 

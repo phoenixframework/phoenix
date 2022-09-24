@@ -278,7 +278,7 @@ defmodule Phoenix.Router.Helpers do
       |> Enum.map(fn {_, bindings} -> length(bindings) end)
       |> Enum.uniq()
 
-    # Each helper defines catch alls like this:
+    # Each helper defines catch all like this:
     #
     #     def helper_path(context, action, ...binding)
     #     def helper_path(context, action, ...binding, params)
@@ -299,7 +299,7 @@ defmodule Phoenix.Router.Helpers do
   end
 
   @doc """
-  Callback for generate router catch alls.
+  Callback for generate router catch all.
   """
   def raise_route_error(mod, fun, arity, action, routes, params) do
     cond do
