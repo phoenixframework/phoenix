@@ -36,7 +36,7 @@ defmodule <%= @web_namespace %>.Components do
       <.modal>
   """
   attr :id, :string, required: true
-  attr :show, :boolean, default: false, doc: "show the modal automatically"
+  attr :show, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
   attr :on_confirm, JS, default: %JS{}
 
@@ -128,7 +128,7 @@ defmodule <%= @web_namespace %>.Components do
   attr :title, :string, default: nil
   attr :rest, :global
   attr :kind, :atom, doc: "one of :info, :error used for styling and flash lookup"
-  attr :autoshow, :boolean, default: true, doc: "wether to auto show the flash on mount"
+  attr :autoshow, :boolean, default: true, doc: "whether to auto show the flash on mount"
   attr :close, :boolean, default: true, doc: "whether the flash can be closed"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
@@ -140,6 +140,7 @@ defmodule <%= @web_namespace %>.Components do
       id={@id}
       phx-mounted={@autoshow && show("##{@id}")}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("#flash")}
+      role="alert"
       class={[
         "fixed hidden top-2 right-2 w-96 z-50 rounded-lg p-3 shadow-md shadow-zinc-900/5 ring-1",
         @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
@@ -147,15 +148,15 @@ defmodule <%= @web_namespace %>.Components do
       ]}
       {@rest}
     >
-      <button :if={@close} type="button" class="group absolute top-2 right-1 p-2" aria-label="Close">
-        <Heroicons.x_mark solid class="h-5 w-5 stroke-current opacity-40 group-hover:opacity-70" />
-      </button>
       <p :if={@title} class="flex items-center gap-1.5 text-[0.8125rem] font-semibold leading-6">
         <Heroicons.information_circle :if={@kind == :info} mini class="h-4 w-4" />
         <Heroicons.exclamation_circle :if={@kind == :error} mini class="h-4 w-4" />
         <%%= @title %>
       </p>
       <p class="mt-2 text-[0.8125rem] leading-5"><%%= msg %></p>
+      <button :if={@close} type="button" class="group absolute top-2 right-1 p-2" aria-label="Close">
+        <Heroicons.x_mark solid class="h-5 w-5 stroke-current opacity-40 group-hover:opacity-70" />
+      </button>
     </div>
     """
   end
@@ -175,7 +176,7 @@ defmodule <%= @web_namespace %>.Components do
   """
   attr :for, :any, default: nil, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
-  attr :rest, :global, doc: "the arbitraty HTML attributes to apply to the form tag"
+  attr :rest, :global, doc: "the arbitrary HTML attributes to apply to the form tag"
 
   slot :inner_block, required: true
   slot :actions, doc: "the slot for form actions, such as a submit button"
@@ -203,7 +204,7 @@ defmodule <%= @web_namespace %>.Components do
   """
   attr :type, :string, default: nil
   attr :class, :string, default: nil
-  attr :rest, :global, doc: "the arbitraty HTML attributes to apply to the button tag"
+  attr :rest, :global, doc: "the arbitrary HTML attributes to apply to the button tag"
 
   slot :inner_block, required: true
 
@@ -542,7 +543,7 @@ defmodule <%= @web_namespace %>.Components do
       transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
     )
     |> show("##{id}-container")
-    |> JS.focus_first(to: "##{id}-container")
+    |> JS.focus_first(to: "##{id}-content")
   end
 
   def hide_modal(js \\ %JS{}, id) do
