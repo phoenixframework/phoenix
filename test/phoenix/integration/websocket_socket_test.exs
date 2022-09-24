@@ -11,15 +11,6 @@ defmodule Phoenix.Integration.WebSocketTest do
   @port 5907
   @path "ws://127.0.0.1:#{@port}/ws/websocket"
 
-  Application.put_env(
-    :phoenix,
-    Endpoint,
-    https: false,
-    http: [port: @port],
-    debug_errors: false,
-    server: true
-  )
-
   defmodule UserSocket do
     @behaviour Phoenix.Socket.Transport
 
@@ -99,87 +90,122 @@ defmodule Phoenix.Integration.WebSocketTest do
       websocket: true
   end
 
-  setup_all do
-    capture_log(fn -> Endpoint.start_link() end)
+  def cowboy_setup(_) do
+    Application.put_env(
+      :phoenix,
+      Endpoint,
+      adapter: Phoenix.Endpoint.Cowboy2Adapter,
+      https: false,
+      http: [port: @port],
+      debug_errors: false,
+      server: true
+    )
+
+    capture_log(fn -> start_supervised!(Endpoint) end)
     :ok
   end
 
-  test "refuses unallowed origins" do
-    capture_log(fn ->
-      headers = [{"origin", "https://example.com"}]
-      assert {:ok, _} = WebsocketClient.connect(self(), @path, :noop, headers)
+  def bandit_setup(_) do
+    Application.put_env(
+      :phoenix,
+      Endpoint,
+      adapter: Bandit.PhoenixAdapter,
+      https: false,
+      http: [port: @port],
+      debug_errors: false,
+      server: true
+    )
 
-      headers = [{"origin", "http://notallowed.com"}]
-      assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
-        WebsocketClient.connect(self(), @path, :noop, headers)
-    end)
+    capture_log(fn -> start_supervised!(Endpoint) end)
+    :ok
   end
 
-  test "refuses unallowed Websocket subprotocols" do
-    assert capture_log(fn ->
-      headers = [{"sec-websocket-protocol", "sip"}]
-      assert {:ok, _} = WebsocketClient.connect(self(), @path, :noop, headers)
+  # TODO: The two implementations here essentially test different code paths - cowboy via Cowboy2Handler
+  # and bandit via SockEndpoint. Once Plug.Cowboy has been updated to support Sock (and the
+  # attendant Cowboy-specific code removed from this project), this can be collapsed back to
+  # a single case (modulo discrepancies in Sock implementations between servers).
+  for setup_fn <- [:cowboy_setup, :bandit_setup] do
+    describe "Using #{setup_fn}" do
+      setup setup_fn
 
-      headers = []
-      assert {:ok, _} = WebsocketClient.connect(self(), @path, :noop, headers)
+      test "refuses unallowed origins" do
+        capture_log(fn ->
+          headers = [{"origin", "https://example.com"}]
+          assert {:ok, _} = WebsocketClient.connect(self(), @path, :noop, headers)
 
-      headers = [{"sec-websocket-protocol", "mqtt"}]
-      assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
-        WebsocketClient.connect(self(), @path, :noop, headers)
-    end) =~ "Could not check Websocket subprotocols"
-  end
+          headers = [{"origin", "http://notallowed.com"}]
+          assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
+            WebsocketClient.connect(self(), @path, :noop, headers)
+        end)
+      end
 
-  test "returns params with sync request" do
-    assert {:ok, client} = WebsocketClient.connect(self(), "#{@path}?key=value", :noop)
-    WebsocketClient.send(client, {:text, "params"})
-    assert_receive {:text, ~s(%{"key" => "value"})}
-  end
+      test "refuses unallowed Websocket subprotocols" do
+        assert capture_log(fn ->
+          headers = [{"sec-websocket-protocol", "sip"}]
+          assert {:ok, _} = WebsocketClient.connect(self(), @path, :noop, headers)
 
-  test "ignores control frames when handle_control/2 is not defined" do
-    assert {:ok, client} = WebsocketClient.connect(self(), @path, :noop)
-    WebsocketClient.send(client, :ping)
-    WebsocketClient.send(client, {:text, "ping"})
-    assert_receive {:text, "pong"}
-  end
+          headers = []
+          assert {:ok, _} = WebsocketClient.connect(self(), @path, :noop, headers)
 
-  test "returns pong from async request" do
-    assert {:ok, client} = WebsocketClient.connect(self(), "#{@path}?key=value", :noop)
-    WebsocketClient.send(client, {:text, "ping"})
-    assert_receive {:text, "pong"}
-  end
+          headers = [{"sec-websocket-protocol", "mqtt"}]
+          assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
+            WebsocketClient.connect(self(), @path, :noop, headers)
+        end) =~ "Could not check Websocket subprotocols"
+      end
 
-  test "allows a custom path" do
-    path = "ws://127.0.0.1:#{@port}/custom/some_path/nested/path"
-    assert {:ok, _} = WebsocketClient.connect(self(), "#{path}?key=value", :noop)
-  end
+      test "returns params with sync request" do
+        assert {:ok, client} = WebsocketClient.connect(self(), "#{@path}?key=value", :noop)
+        WebsocketClient.send(client, {:text, "params"})
+        assert_receive {:text, ~s(%{"key" => "value"})}
+      end
 
-  test "allows a path with variables" do
-    path = "ws://127.0.0.1:#{@port}/custom/123/456/path"
-    assert {:ok, client} = WebsocketClient.connect(self(), "#{path}?key=value", :noop)
-    WebsocketClient.send(client, {:text, "params"})
-    assert_receive {:text, params}
-    assert params =~ ~s("key" => "value")
-    assert params =~ ~s("socket_var" => "123")
-    assert params =~ ~s(path_var" => "456")
-  end
+      test "ignores control frames when handle_control/2 is not defined" do
+        assert {:ok, client} = WebsocketClient.connect(self(), @path, :noop)
+        WebsocketClient.send(client, :ping)
+        WebsocketClient.send(client, {:text, "ping"})
+        assert_receive {:text, "pong"}
+      end
 
-  test "allows using control frames with a payload" do
-    path = "ws://127.0.0.1:#{@port}/ws/ping/websocket"
-    assert {:ok, client} = WebsocketClient.connect(self(), path, :noop)
-    WebsocketClient.send(client, {:ping, ""})
-    assert_receive {:pong, ""}
-    assert_receive {:text, "ping:"}
+      test "returns pong from async request" do
+        assert {:ok, client} = WebsocketClient.connect(self(), "#{@path}?key=value", :noop)
+        WebsocketClient.send(client, {:text, "ping"})
+        assert_receive {:text, "pong"}
+      end
 
-    WebsocketClient.send(client, {:ping, "123"})
-    assert_receive {:pong, "123"}
-    assert_receive {:text, "ping:123"}
+      test "allows a custom path" do
+        path = "ws://127.0.0.1:#{@port}/custom/some_path/nested/path"
+        assert {:ok, _} = WebsocketClient.connect(self(), "#{path}?key=value", :noop)
+      end
 
-    WebsocketClient.send(client, {:text, "ping:start"})
-    assert_receive {:ping, ""}
-    assert_receive {:text, "pong:"}
+      test "allows a path with variables" do
+        path = "ws://127.0.0.1:#{@port}/custom/123/456/path"
+        assert {:ok, client} = WebsocketClient.connect(self(), "#{path}?key=value", :noop)
+        WebsocketClient.send(client, {:text, "params"})
+        assert_receive {:text, params}
+        assert params =~ ~s("key" => "value")
+        assert params =~ ~s("socket_var" => "123")
+        assert params =~ ~s(path_var" => "456")
+      end
 
-    WebsocketClient.send(client, {:text, "ping:start:123"})
-    assert_receive {:ping, "123"}
-    assert_receive {:text, "pong:123"}
+      test "allows using control frames with a payload" do
+        path = "ws://127.0.0.1:#{@port}/ws/ping/websocket"
+        assert {:ok, client} = WebsocketClient.connect(self(), path, :noop)
+        WebsocketClient.send(client, {:ping, ""})
+        assert_receive {:pong, ""}
+        assert_receive {:text, "ping:"}
+
+        WebsocketClient.send(client, {:ping, "123"})
+        assert_receive {:pong, "123"}
+        assert_receive {:text, "ping:123"}
+
+        WebsocketClient.send(client, {:text, "ping:start"})
+        assert_receive {:ping, ""}
+        assert_receive {:text, "pong:"}
+
+        WebsocketClient.send(client, {:text, "ping:start:123"})
+        assert_receive {:ping, "123"}
+        assert_receive {:text, "pong:123"}
+      end
+    end
   end
 end

@@ -11,15 +11,6 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
   @moduletag :capture_log
   @port 5807
 
-  Application.put_env(:phoenix, Endpoint, [
-    https: false,
-    http: [port: @port],
-    debug_errors: false,
-    server: true,
-    pubsub_server: __MODULE__,
-    secret_key_base: String.duplicate("a", 64)
-  ])
-
   defp lobby do
     "room:lobby#{System.unique_integer()}"
   end
@@ -205,21 +196,58 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     end
   end
 
-  setup_all do
-    capture_log fn -> start_supervised! Endpoint end
-    start_supervised! {Phoenix.PubSub, name: __MODULE__}
+  def cowboy_setup(_) do
+    Application.put_env(
+      :phoenix,
+      Endpoint,
+      adapter: Phoenix.Endpoint.Cowboy2Adapter,
+      https: false,
+      http: [port: @port],
+      debug_errors: false,
+      server: true,
+      pubsub_server: __MODULE__,
+      secret_key_base: String.duplicate("a", 64)
+    )
+
+    capture_log(fn -> start_supervised!(Endpoint) end)
+    start_supervised!({Phoenix.PubSub, name: __MODULE__})
+    :ok
+  end
+
+  def bandit_setup(_) do
+    Application.put_env(
+      :phoenix,
+      Endpoint,
+      adapter: Bandit.PhoenixAdapter,
+      https: false,
+      http: [port: @port],
+      debug_errors: false,
+      server: true,
+      pubsub_server: __MODULE__,
+      secret_key_base: String.duplicate("a", 64)
+    )
+
+    capture_log(fn -> start_supervised!(Endpoint) end)
+    start_supervised!({Phoenix.PubSub, name: __MODULE__})
     :ok
   end
 
   @endpoint Endpoint
 
-  for {serializer, vsn, join_ref} <- [{V1.JSONSerializer, "1.0.0", nil}, {V2.JSONSerializer, "2.0.0", "11"}] do
+  # TODO: The two implementations here essentially test different code paths - cowboy via Cowboy2Handler
+  # and bandit via SockEndpoint. Once Plug.Cowboy has been updated to support Sock (and the
+  # attendant Cowboy-specific code removed from this project), this can be collapsed back to
+  # a single case (modulo discrepancies in Sock implementations between servers).
+  for {serializer, vsn, join_ref} <- [{V1.JSONSerializer, "1.0.0", nil}, {V2.JSONSerializer, "2.0.0", "11"}],
+    setup_fn <- [:cowboy_setup, :bandit_setup] do
     @serializer serializer
     @vsn vsn
     @vsn_path "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}"
     @join_ref join_ref
 
-    describe "with #{vsn} serializer #{inspect serializer}" do
+    describe "#{setup_fn} with #{vsn} serializer #{inspect(serializer)}" do
+      setup setup_fn
+
       test "endpoint handles multiple mount segments" do
         {:ok, sock} = WebsocketClient.connect(self(), "ws://127.0.0.1:#{@port}/ws/admin/websocket?vsn=#{@vsn}", @serializer)
         WebsocketClient.join(sock, "room:admin-lobby1", %{})
@@ -482,7 +510,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         WebsocketClient.close(sock)
 
         assert_receive {:DOWN, _, :process, ^channel, shutdown}
-                       when shutdown in [:shutdown, {:shutdown, :closed}]
+                       when shutdown in [:shutdown, {:shutdown, :closed}, {:shutdown, :local_closed}]
       end
 
       test "refuses websocket events that haven't joined" do
@@ -540,9 +568,9 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         assert_receive {:DOWN, _, :process, ^sock, :normal}
         assert_receive {:DOWN, _, :process, ^chan1, shutdown}
         #shutdown for cowboy, {:shutdown, :closed} for cowboy 2
-        assert shutdown in [:shutdown, {:shutdown, :closed}]
+        assert shutdown in [:shutdown, {:shutdown, :closed}, {:shutdown, :peer_closed}]
         assert_receive {:DOWN, _, :process, ^chan2, shutdown}
-        assert shutdown in [:shutdown, {:shutdown, :closed}]
+        assert shutdown in [:shutdown, {:shutdown, :closed}, {:shutdown, :peer_closed}]
       end
 
       test "duplicate join event closes existing channel" do
@@ -599,77 +627,85 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
   # it is best to assert custom channels work throughout the whole stack,
   # compared to only testing the socket <-> channel communication. Which
   # is why test them under the latest websocket transport.
-  describe "custom channels" do
+  for setup_fn <- [:cowboy_setup, :bandit_setup] do
     @serializer V2.JSONSerializer
     @vsn "2.0.0"
     @vsn_path "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}"
 
-    test "join, ignore, error, and event messages" do
-      {:ok, sock} = WebsocketClient.connect(self(), @vsn_path, @serializer)
+    describe "custom channels with #{setup_fn}" do
+      setup setup_fn
 
-      WebsocketClient.join(sock, "custom:ignore", %{"action" => "ignore"})
+      test "join, ignore, error, and event messages" do
+        {:ok, sock} = WebsocketClient.connect(self(), @vsn_path, @serializer)
 
-      assert_receive %Message{event: "phx_reply",
-                              join_ref: "11",
-                              payload: %{"response" => %{"action" => "ignore"}, "status" => "error"},
-                              ref: "1",
-                              topic: "custom:ignore"}
+        WebsocketClient.join(sock, "custom:ignore", %{"action" => "ignore"})
 
-      WebsocketClient.join(sock, "custom:error", %{"action" => "error"})
+        assert_receive %Message{event: "phx_reply",
+                                join_ref: "11",
+                                payload: %{"response" => %{"action" => "ignore"}, "status" => "error"},
+                                ref: "1",
+                                topic: "custom:ignore"}
 
-      assert_receive %Message{event: "phx_reply",
-                              join_ref: "12",
-                              payload: %{"response" => %{"reason" => "join crashed"}, "status" => "error"},
-                              ref: "2",
-                              topic: "custom:error"}
+        WebsocketClient.join(sock, "custom:error", %{"action" => "error"})
 
-      WebsocketClient.join(sock, "custom:ok", %{"action" => "ok"})
+        assert_receive %Message{event: "phx_reply",
+                                join_ref: "12",
+                                payload: %{"response" => %{"reason" => "join crashed"}, "status" => "error"},
+                                ref: "2",
+                                topic: "custom:error"}
 
-      assert_receive %Message{event: "phx_reply",
-                              join_ref: "13",
-                              payload: %{"response" => %{"action" => "ok"}, "status" => "ok"},
-                              ref: "3",
-                              topic: "custom:ok"}
+        WebsocketClient.join(sock, "custom:ok", %{"action" => "ok"})
 
-      WebsocketClient.send_event(sock, "custom:ok", "close", %{body: "bye!"})
-      assert_receive %Message{event: "phx_close", payload: %{}}
+        assert_receive %Message{event: "phx_reply",
+                                join_ref: "13",
+                                payload: %{"response" => %{"action" => "ok"}, "status" => "ok"},
+                                ref: "3",
+                                topic: "custom:ok"}
+
+        WebsocketClient.send_event(sock, "custom:ok", "close", %{body: "bye!"})
+        assert_receive %Message{event: "phx_close", payload: %{}}
+      end
     end
   end
 
-  describe "binary" do
+  for setup_fn <- [:cowboy_setup, :bandit_setup] do
     @serializer V2.JSONSerializer
     @vsn "2.0.0"
     @join_ref "11"
 
-    test "messages can be pushed and received" do
-      topic = "room:bin"
+    describe "binary with #{setup_fn}" do
+      setup setup_fn
 
-      {:ok, socket} =
-        WebsocketClient.connect(
-          self(),
-          "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}",
-          @serializer
-        )
+      test "messages can be pushed and received" do
+        topic = "room:bin"
 
-      WebsocketClient.join(socket, topic, %{})
+        {:ok, socket} =
+          WebsocketClient.connect(
+            self(),
+            "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}",
+            @serializer
+          )
 
-      assert_receive %Message{
-        event: "phx_reply",
-        payload: %{"response" => %{}, "status" => "ok"},
-        join_ref: @join_ref,
-        ref: "1",
-        topic: ^topic
-      }
+        WebsocketClient.join(socket, topic, %{})
 
-      WebsocketClient.send_event(socket, topic, "binary_event", {:binary, <<1, 2>>})
-      assert_receive %Message{
-        event: "phx_reply",
-        payload: %{"response" => {:binary, <<1, 2, 3, 4>>}, "status" => "ok"},
-        join_ref: @join_ref,
-        ref: "2",
-        topic: ^topic
-      }
-      assert_receive %Message{event: "binary_event", join_ref: @join_ref, payload: {:binary, <<0, 1>>}}
+        assert_receive %Message{
+          event: "phx_reply",
+          payload: %{"response" => %{}, "status" => "ok"},
+          join_ref: @join_ref,
+          ref: "1",
+          topic: ^topic
+        }
+
+        WebsocketClient.send_event(socket, topic, "binary_event", {:binary, <<1, 2>>})
+        assert_receive %Message{
+          event: "phx_reply",
+          payload: %{"response" => {:binary, <<1, 2, 3, 4>>}, "status" => "ok"},
+          join_ref: @join_ref,
+          ref: "2",
+          topic: ^topic
+        }
+        assert_receive %Message{event: "binary_event", join_ref: @join_ref, payload: {:binary, <<0, 1>>}}
+      end
     end
   end
 end

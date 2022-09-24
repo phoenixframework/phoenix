@@ -68,12 +68,14 @@ defmodule Phoenix.MixProject do
     [
       {:plug, "~> 1.10"},
       {:plug_crypto, "~> 1.2"},
+      {:sock, "~> 0.2.5"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
       {:phoenix_view, "~> 1.0"},
 
       # Optional deps
       {:plug_cowboy, "~> 2.2", optional: true},
+      {:bandit, ">= 0.5.5", optional: true},
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies (some for cross references)
