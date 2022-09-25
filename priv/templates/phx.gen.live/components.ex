@@ -250,7 +250,9 @@ defmodule <%= @web_namespace %>.Components do
   attr :rest, :global, doc: "the arbitrary HTML attributes for the input tag"
 
   slot :inner_block
-  slot :option, doc: "the slot for select input options"
+  slot :option, doc: "the slot for select input options" do
+    attr :value, :any
+  end
 
   def input(%{field: {f, field}} = assigns) do
     assigns
