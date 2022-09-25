@@ -24,7 +24,7 @@ defmodule <%= @web_namespace %>.Components do
         Are you sure?
         <:confirm>OK</:confirm>
         <:cancel>Cancel</:cancel>
-      <.modal>
+      </.modal>
 
   JS commands may be passed to the `:on_cancel` and `on_confirm` attributes
   for the caller to reactor to each button press, for example:
@@ -33,7 +33,7 @@ defmodule <%= @web_namespace %>.Components do
         Are you sure you?
         <:confirm>OK</:confirm>
         <:cancel>Cancel</:confirm>
-      <.modal>
+      </.modal>
   """
   attr :id, :string, required: true
   attr :show, :boolean, default: false
@@ -171,7 +171,7 @@ defmodule <%= @web_namespace %>.Components do
         <.input field={{f, :username}} label="Username" />
         <:actions>
           <.button>Save</.button>
-        <:actions>
+        </:actions>
       </.simple_form>
   """
   attr :for, :any, default: nil, doc: "the datastructure for the form"
