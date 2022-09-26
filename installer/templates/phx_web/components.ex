@@ -239,6 +239,9 @@ defmodule <%= @web_namespace %>.Components do
   attr :id, :any
   attr :name, :any
   attr :label, :string, default: nil
+  attr :autocomplete, :boolean, default: false
+  attr :required, :boolean, default: false
+  attr :pattern, :string, default: nil
 
   attr :type, :string,
     default: "text",
@@ -269,6 +272,8 @@ defmodule <%= @web_namespace %>.Components do
         type="checkbox"
         id={@id || @name}
         name={@name}
+        autocomplete={@autocomplete}
+        required={@required}
         class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
       />
       <%%= @label %>
@@ -283,7 +288,8 @@ defmodule <%= @web_namespace %>.Components do
       <select
         id={@id}
         name={@name}
-        autocomplete={@name}
+        autocomplete={@autocomplete || @name}
+        required={@required}
         class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
         {@rest}
       >
@@ -301,6 +307,8 @@ defmodule <%= @web_namespace %>.Components do
       <textarea
         id={@id || @name}
         name={@name}
+        autocomplete={@autocomplete}
+        required={@required}
         class={[
           input_border(@errors),
           "mt-2 block min-h-[6rem] w-full rounded-lg border-zinc-300 py-[calc(theme(spacing.2)-1px)] px-[calc(theme(spacing.3)-1px)]",
@@ -322,6 +330,7 @@ defmodule <%= @web_namespace %>.Components do
         type={@type}
         name={@name}
         id={@id || @name}
+        pattern={@pattern}
         value={@value}
         class={[
           input_border(@errors),
