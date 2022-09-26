@@ -177,13 +177,14 @@ defmodule <%= @web_namespace %>.Components do
   attr :for, :any, default: nil, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
   attr :rest, :global, doc: "the arbitrary HTML attributes to apply to the form tag"
+  attr :autocomplete, :boolean, default: nil
 
   slot :inner_block, required: true
   slot :actions, doc: "the slot for form actions, such as a submit button"
 
   def simple_form(assigns) do
     ~H"""
-    <.form :let={f} for={@for} as={@as} {@rest}>
+    <.form :let={f} for={@for} as={@as} autocomplete={@autocomplete} {@rest}>
       <div class="space-y-8 bg-white mt-10">
         <%%= render_slot(@inner_block, f) %>
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
@@ -239,7 +240,6 @@ defmodule <%= @web_namespace %>.Components do
   attr :id, :any
   attr :name, :any
   attr :label, :string, default: nil
-  attr :autocomplete, :boolean, default: false
   attr :required, :boolean, default: false
   attr :pattern, :string, default: nil
 
@@ -272,7 +272,6 @@ defmodule <%= @web_namespace %>.Components do
         type="checkbox"
         id={@id || @name}
         name={@name}
-        autocomplete={@autocomplete}
         required={@required}
         class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
       />
@@ -288,7 +287,7 @@ defmodule <%= @web_namespace %>.Components do
       <select
         id={@id}
         name={@name}
-        autocomplete={@autocomplete || @name}
+        autocomplete={@name}
         required={@required}
         class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
         {@rest}
@@ -307,7 +306,6 @@ defmodule <%= @web_namespace %>.Components do
       <textarea
         id={@id || @name}
         name={@name}
-        autocomplete={@autocomplete}
         required={@required}
         class={[
           input_border(@errors),
