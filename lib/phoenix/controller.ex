@@ -508,20 +508,7 @@ defmodule Phoenix.Controller do
   """
   @spec view_module(Plug.Conn.t) :: atom
   def view_module(conn) do
-    case conn.private.phoenix_view do
-      %{:_ => view} ->
-        view
-
-      single_format when map_size(single_format) == 1 ->
-        {_format, view} = Enum.at(single_format, 0)
-        view
-
-      formats ->
-        case Map.fetch(formats, get_format(conn)) do
-          {:ok, view} -> view
-          :error -> raise ArgumentError, "no format set to select view module from #{inspect(Map.keys(formats))}"
-        end
-    end
+    get_private_format(conn, :phoenix_view)
   end
 
   @doc """
