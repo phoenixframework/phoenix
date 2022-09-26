@@ -33,7 +33,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert {:ok, conn} = result
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
-        "#{<%= inspect schema.alias %>} confirmed successfully"
+        "<%= inspect schema.alias %> confirmed successfully"
 
       assert <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).confirmed_at
       refute get_session(conn, :<%= schema.singular %>_token)
@@ -50,7 +50,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert {:ok, conn} = result
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-        "#{<%= inspect schema.alias %>} confirmation link is invalid or it has expired"
+        "<%= inspect schema.alias %> confirmation link is invalid or it has expired"
 
 
       # when logged in
@@ -81,7 +81,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> follow_redirect(conn, ~p"/")
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-        "#{<%= inspect schema.alias %>} confirmation link is invalid or it has expired"
+        "<%= inspect schema.alias %> confirmation link is invalid or it has expired"
 
       refute <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).confirmed_at
     end
