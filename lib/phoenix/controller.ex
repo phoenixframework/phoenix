@@ -168,8 +168,8 @@ defmodule Phoenix.Controller do
       use Phoenix.Controller.Pipeline
 
       if Keyword.get(opts, :put_default_views, true) do
-        plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, opts), :app}
-        plug :put_new_view, Phoenix.Controller.__view__(__MODULE__)
+        plug :put_new_layout, Phoenix.Controller.__layout__(__MODULE__, opts)
+        plug :put_new_view, Phoenix.Controller.__view__(__MODULE__, opts)
       end
     end
   end
@@ -462,12 +462,29 @@ defmodule Phoenix.Controller do
     end)
   end
 
-  defp get_private_formats(conn, priv_key) do
-    format = view_format(conn)
+  defp get_private_format(conn, priv_key) do
+    format = conn.private[:phoenix_format]
+
     case conn.private[priv_key] do
-      %{^format => layout} -> layout
-      %{:_ => layout} -> layout
-      layout when layout in [nil, false] -> false
+      %{:_ => value} ->
+        value
+
+      %{^format => value} ->
+        value
+
+      value when value in [nil, false] ->
+        false
+
+      %{} = formats when map_size(formats) == 1 ->
+        {_format, value} = (Enum.at(formats, 0))
+        value
+
+      %{} = formats ->
+        # fallback to potentially checking _format query string
+        case Map.fetch(formats, get_format(conn)) do
+          {:ok, value} -> value
+          :error -> raise ArgumentError, "no format set to select view module from #{inspect(Map.keys(formats))}"
+        end
     end
   end
 
@@ -491,8 +508,20 @@ defmodule Phoenix.Controller do
   """
   @spec view_module(Plug.Conn.t) :: atom
   def view_module(conn) do
-    phx_view = conn.private.phoenix_view
-    Map.get(phx_view, :_) || Map.fetch!(phx_view, view_format(conn))
+    case conn.private.phoenix_view do
+      %{:_ => view} ->
+        view
+
+      single_format when map_size(single_format) == 1 ->
+        {_format, view} = Enum.at(single_format, 0)
+        view
+
+      formats ->
+        case conn.private[:phoenix_format] do
+          nil -> raise ArgumentError, "no format set to select view module from #{inspect(Map.keys(formats))}"
+          format -> Map.fetch!(formats, format)
+        end
+    end
   end
 
   @doc """
@@ -554,10 +583,9 @@ defmodule Phoenix.Controller do
     put_private_formats(conn, private_key, kind, formats)
   end
 
-  # TODO remove on Phoenix 2.0
-  defp do_put_layout(conn, private_key, kind, deprecated) do
-    # TODO warn?
-    case deprecated do
+  defp do_put_layout(conn, private_key, kind, no_format) do
+    # TODO: Deprecate calls to put_layout_format
+    case no_format do
       false ->
         do_put_layout(conn, private_key, kind, [{:_, false}])
 
@@ -660,7 +688,7 @@ defmodule Phoenix.Controller do
   """
   @spec layout(Plug.Conn.t) :: {atom, String.t | atom} | false
   def layout(conn) do
-    get_private_formats(conn, :phoenix_layout)
+    get_private_format(conn, :phoenix_layout)
   end
 
   @doc """
@@ -668,7 +696,7 @@ defmodule Phoenix.Controller do
   """
   @spec root_layout(Plug.Conn.t) :: {atom, String.t | atom} | false
   def root_layout(conn) do
-    get_private_formats(conn, :phoenix_root_layout)
+    get_private_format(conn, :phoenix_root_layout)
   end
 
   @doc """
@@ -964,14 +992,6 @@ defmodule Phoenix.Controller do
   """
   def get_format(conn) do
     conn.private[:phoenix_format] || conn.params["_format"]
-  end
-
-  defp view_format(conn) do
-    case conn do
-      %Plug.Conn{private: %{phoenix_format: format}} -> format
-      %Plug.Conn{params: %{"_format" => format}} -> format
-      %Plug.Conn{} -> :_
-    end
   end
 
   @doc """
@@ -1638,11 +1658,15 @@ defmodule Phoenix.Controller do
   end
 
   @doc false
-  def __view__(controller_module) do
-    controller_module
-    |> Phoenix.Naming.unsuffix("Controller")
-    |> Kernel.<>("View")
-    |> String.to_atom()
+  def __view__(controller_module, opts) do
+    view_base = Phoenix.Naming.unsuffix(controller_module, "Controller")
+    case Keyword.fetch(opts, :formats) do
+      {:ok, formats} when is_list(formats) ->
+        for format <- formats, do: {format, :"#{view_base}#{String.upcase(to_string(format))}"}
+
+      :error ->
+        :"#{view_base}View"
+    end
   end
 
   @doc false
@@ -1658,6 +1682,26 @@ defmodule Phoenix.Controller do
         |> Enum.take(2)
         |> Module.concat()
       end
-    Module.concat(namespace, "LayoutView")
+
+    case Keyword.fetch(opts, :layouts) do
+      {:ok, formats} when is_list(formats) ->
+        Enum.map(formats, fn
+          {format, mod} when is_atom(mod) ->
+            {format, {mod, :app}}
+
+          {format, {mod, template}} when is_atom(mod) and is_atom(template) ->
+            {format, {mod, template}}
+
+          other ->
+            raise ArgumentError, """
+            expected :layouts to be a list of format module pairs of the form: [html: LayoutHTML] or [html: {LayoutHTML, :app}]
+
+            Got: #{inspect(other)}
+            """
+        end)
+
+      :error ->
+        {Module.concat(namespace, "LayoutView"), :app}
+    end
   end
 end
