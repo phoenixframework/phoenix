@@ -34,7 +34,7 @@ jobs:
         otp-version: ${{ matrix.otp }}
 
     - name: Restore deps and _build cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           deps
@@ -70,7 +70,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Restore deps and _build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             deps
@@ -85,7 +85,7 @@ jobs:
           node-version: 12.x
 
       - name: Restore npm cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
