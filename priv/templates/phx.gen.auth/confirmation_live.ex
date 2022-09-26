@@ -32,7 +32,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, _} ->
         {:noreply,
          socket
-         |> put_flash(:info, "User confirmed successfully.")
+         |> put_flash(:info, "#{<%= inspect schema.alias %>} confirmed successfully.")
          |> redirect(to: ~p"/")}
 
       :error ->
@@ -47,7 +47,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           %{} ->
             {:noreply,
              socket
-             |> put_flash(:error, "User confirmation link is invalid or it has expired.")
+             |> put_flash(:error, "#{<%= inspect schema.alias %>} confirmation link is invalid or it has expired.")
              |> redirect(to: ~p"/")}
         end
     end
