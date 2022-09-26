@@ -212,11 +212,19 @@ defmodule Phoenix.Controller.ControllerTest do
   end
 
   test "put_view/2 and put_new_view/2 with formats" do
-    conn = put_new_view(conn(:get, "/"), html: Hello, json: HelloJSON)
+    conn =
+      conn(:get, "/")
+      |> put_format("print")
+      |> put_new_view(html: Hello, json: HelloJSON)
 
     assert_raise ArgumentError, ~r/no format set to select view module/, fn ->
       view_module(conn) == Hello
     end
+
+    conn =
+      conn(:get, "/")
+      |> put_format("html")
+      |> put_new_view(html: Hello, json: HelloJSON)
 
     conn = put_format(conn, "html")
     assert view_module(conn) == Hello

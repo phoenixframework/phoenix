@@ -517,9 +517,9 @@ defmodule Phoenix.Controller do
         view
 
       formats ->
-        case conn.private[:phoenix_format] do
-          nil -> raise ArgumentError, "no format set to select view module from #{inspect(Map.keys(formats))}"
-          format -> Map.fetch!(formats, format)
+        case Map.fetch(formats, get_format(conn)) do
+          {:ok, view} -> view
+          :error -> raise ArgumentError, "no format set to select view module from #{inspect(Map.keys(formats))}"
         end
     end
   end
