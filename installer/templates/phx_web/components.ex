@@ -126,10 +126,10 @@ defmodule <%= @web_namespace %>.Components do
   attr :id, :string, default: "flash", doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
-  attr :rest, :global
-  attr :kind, :atom, doc: "one of :info, :error used for styling and flash lookup"
+  attr :kind, :atom, values: [:info, :error], doc: "Used for styling and flash lookup"
   attr :autoshow, :boolean, default: true, doc: "whether to auto show the flash on mount"
   attr :close, :boolean, default: true, doc: "whether the flash can be closed"
+  attr :rest, :global, doc: "the aribtrary HTML attributes to add to the flash container"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
 
@@ -176,15 +176,16 @@ defmodule <%= @web_namespace %>.Components do
   """
   attr :for, :any, default: nil, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
-  attr :rest, :global, doc: "the arbitrary HTML attributes to apply to the form tag"
-  attr :autocomplete, :string, default: nil
+  attr :rest, :global,
+    include: ~w(autocomplete name rel action enctype method novalidate target),
+    doc: "the arbitrary HTML attributes to apply to the form tag"
 
   slot :inner_block, required: true
   slot :actions, doc: "the slot for form actions, such as a submit button"
 
   def simple_form(assigns) do
     ~H"""
-    <.form :let={f} for={@for} as={@as} autocomplete={@autocomplete} {@rest}>
+    <.form :let={f} for={@for} as={@as} {@rest}>
       <div class="space-y-8 bg-white mt-10">
         <%%= render_slot(@inner_block, f) %>
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
@@ -205,7 +206,7 @@ defmodule <%= @web_namespace %>.Components do
   """
   attr :type, :string, default: nil
   attr :class, :string, default: nil
-  attr :rest, :global, doc: "the arbitrary HTML attributes to apply to the button tag"
+  attr :rest, :global, include: ~w(disabled form name value)
 
   slot :inner_block, required: true
 
@@ -240,18 +241,16 @@ defmodule <%= @web_namespace %>.Components do
   attr :id, :any
   attr :name, :any
   attr :label, :string, default: nil
-  attr :required, :boolean, default: false
-  attr :pattern, :string, default: nil
 
   attr :type, :string,
     default: "text",
-    doc: ~s|one of "text", "textarea", "number" "email", "date", "time", "datetime", "select"|
+    values: ~w(text textarea number email date time datetime select)
 
   attr :value, :any
   attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
   attr :errors, :list
-  attr :rest, :global, doc: "the arbitrary HTML attributes for the input tag"
-
+  attr :rest, :global, include: ~w(autocomplete checked disabled form max maxlength min minlength
+                                   multiple pattern placeholder readonly required size step)
   slot :inner_block
   slot :option, doc: "the slot for select input options"
 
@@ -272,7 +271,6 @@ defmodule <%= @web_namespace %>.Components do
         type="checkbox"
         id={@id || @name}
         name={@name}
-        required={@required}
         class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
       />
       <%%= @label %>
@@ -287,8 +285,6 @@ defmodule <%= @web_namespace %>.Components do
       <select
         id={@id}
         name={@name}
-        autocomplete={@name}
-        required={@required}
         class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
         {@rest}
       >
@@ -306,7 +302,6 @@ defmodule <%= @web_namespace %>.Components do
       <textarea
         id={@id || @name}
         name={@name}
-        required={@required}
         class={[
           input_border(@errors),
           "mt-2 block min-h-[6rem] w-full rounded-lg border-zinc-300 py-[calc(theme(spacing.2)-1px)] px-[calc(theme(spacing.3)-1px)]",
@@ -328,7 +323,6 @@ defmodule <%= @web_namespace %>.Components do
         type={@type}
         name={@name}
         id={@id || @name}
-        pattern={@pattern}
         value={@value}
         class={[
           input_border(@errors),
