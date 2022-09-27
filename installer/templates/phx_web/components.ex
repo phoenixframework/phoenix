@@ -177,7 +177,7 @@ defmodule <%= @web_namespace %>.Components do
   attr :for, :any, default: nil, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
   attr :rest, :global, doc: "the arbitrary HTML attributes to apply to the form tag"
-  attr :autocomplete, :boolean, default: nil
+  attr :autocomplete, :string, default: nil
 
   slot :inner_block, required: true
   slot :actions, doc: "the slot for form actions, such as a submit button"
