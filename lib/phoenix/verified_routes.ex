@@ -642,7 +642,7 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   @doc false
-  def __encode_query__(dict) when is_list(dict) or is_map(dict) do
+  def __encode_query__(dict) when is_list(dict) or (is_map(dict) and not is_struct(dict)) do
     case Plug.Conn.Query.encode(dict, &to_param/1) do
       "" -> ""
       query_str -> query_str
