@@ -125,6 +125,10 @@ defmodule Phoenix.VerifiedRoutesTest do
 
     assert path(@endpoint, @router, ~p"/posts/bottom/#{dir}/#{id}?foo=bar") ==
              "/posts/bottom/asc/123?foo=bar"
+
+    # dynamic query params
+    assert ~p"/posts/1?other_post=#{id}" == "/posts/1?other_post=123"
+    assert ~p"/posts/1?other_post=#{struct}" == "/posts/1?other_post=post-123"
   end
 
   test "~p with dynamic string and static query params" do
