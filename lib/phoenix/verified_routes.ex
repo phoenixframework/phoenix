@@ -188,7 +188,7 @@ defmodule Phoenix.VerifiedRoutes do
       redirect(to: ~p"/users/#{@user}")
 
       ~H"""
-      <.link to={~p"/users??page=#{@page}"}>profile</.link>
+      <.link to={~p"/users?page=#{@page}"}>profile</.link>
 
       <.link to={~p"/users?#{@params}"}>profile</.link>
       """
