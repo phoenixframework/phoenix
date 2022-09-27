@@ -24,7 +24,7 @@ defmodule <%= @web_namespace %>.Components do
         Are you sure?
         <:confirm>OK</:confirm>
         <:cancel>Cancel</:cancel>
-      <.modal>
+      </.modal>
 
   JS commands may be passed to the `:on_cancel` and `on_confirm` attributes
   for the caller to reactor to each button press, for example:
@@ -32,8 +32,8 @@ defmodule <%= @web_namespace %>.Components do
       <.modal id="confirm" on_confirm={JS.push("delete")} on_cancel={JS.navigate(~p"/posts")}>
         Are you sure you?
         <:confirm>OK</:confirm>
-        <:cancel>Cancel</:confirm>
-      <.modal>
+        <:cancel>Cancel</:cancel>
+      </.modal>
   """
   attr :id, :string, required: true
   attr :show, :boolean, default: false
@@ -126,10 +126,10 @@ defmodule <%= @web_namespace %>.Components do
   attr :id, :string, default: "flash", doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
-  attr :rest, :global
-  attr :kind, :atom, doc: "one of :info, :error used for styling and flash lookup"
+  attr :kind, :atom, values: [:info, :error], doc: "Used for styling and flash lookup"
   attr :autoshow, :boolean, default: true, doc: "whether to auto show the flash on mount"
   attr :close, :boolean, default: true, doc: "whether the flash can be closed"
+  attr :rest, :global, doc: "the aribtrary HTML attributes to add to the flash container"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
 
@@ -171,12 +171,14 @@ defmodule <%= @web_namespace %>.Components do
         <.input field={{f, :username}} label="Username" />
         <:actions>
           <.button>Save</.button>
-        <:actions>
+        </:actions>
       </.simple_form>
   """
   attr :for, :any, default: nil, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
-  attr :rest, :global, doc: "the arbitrary HTML attributes to apply to the form tag"
+  attr :rest, :global,
+    include: ~w(autocomplete name rel action enctype method novalidate target),
+    doc: "the arbitrary HTML attributes to apply to the form tag"
 
   slot :inner_block, required: true
   slot :actions, doc: "the slot for form actions, such as a submit button"
@@ -204,7 +206,7 @@ defmodule <%= @web_namespace %>.Components do
   """
   attr :type, :string, default: nil
   attr :class, :string, default: nil
-  attr :rest, :global, doc: "the arbitrary HTML attributes to apply to the button tag"
+  attr :rest, :global, include: ~w(disabled form name value)
 
   slot :inner_block, required: true
 
@@ -242,13 +244,14 @@ defmodule <%= @web_namespace %>.Components do
 
   attr :type, :string,
     default: "text",
-    doc: ~s|one of "text", "textarea", "number" "email", "date", "time", "datetime", "select"|
+    values: ~w(checkbox color date datetime-local email file hidden month number password
+               range radio search tel text time url week)
 
   attr :value, :any
   attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
   attr :errors, :list
-  attr :rest, :global, doc: "the arbitrary HTML attributes for the input tag"
-
+  attr :rest, :global, include: ~w(autocomplete checked disabled form max maxlength min minlength
+                                   multiple pattern placeholder readonly required size step)
   slot :inner_block
   slot :option, doc: "the slot for select input options"
 
@@ -283,7 +286,6 @@ defmodule <%= @web_namespace %>.Components do
       <select
         id={@id}
         name={@name}
-        autocomplete={@name}
         class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
         {@rest}
       >

@@ -32,7 +32,7 @@ defmodule <%= @web_namespace %>.Components do
       <.modal id="confirm" on_confirm={JS.push("delete")} on_cancel={JS.navigate(~p"/posts")}>
         Are you sure you?
         <:confirm>OK</:confirm>
-        <:cancel>Cancel</:confirm>
+        <:cancel>Cancel</:cancel>
       </.modal>
   """
   attr :id, :string, required: true
