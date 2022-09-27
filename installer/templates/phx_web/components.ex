@@ -171,7 +171,7 @@ defmodule <%= @web_namespace %>.Components do
         <.input field={{f, :username}} label="Username" />
         <:actions>
           <.button>Save</.button>
-        <:actions>
+        </:actions>
       </.simple_form>
   """
   attr :for, :any, default: nil, doc: "the datastructure for the form"
