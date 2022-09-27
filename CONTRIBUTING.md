@@ -225,3 +225,4 @@ For formatting the guides:
   in the template.
 - We use backticks for filenames and directory paths.
 - We use backticks for module names, function names, and variable names.
+- Documentation line length should hard wrapped at around 100 characters if possible.
