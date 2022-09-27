@@ -253,7 +253,9 @@ defmodule <%= @web_namespace %>.Components do
   attr :rest, :global, include: ~w(autocomplete checked disabled form max maxlength min minlength
                                    multiple pattern placeholder readonly required size step)
   slot :inner_block
-  slot :option, doc: "the slot for select input options"
+  slot :option, doc: "the slot for select input options" do
+    attr :value, :any
+  end
 
   def input(%{field: {f, field}} = assigns) do
     assigns
