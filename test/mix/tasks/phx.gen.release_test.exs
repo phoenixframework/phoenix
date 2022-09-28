@@ -5,6 +5,8 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
   import MixHelper
   alias Mix.Tasks.Phx.Gen
 
+  @moduletag :capture_log
+
   setup do
     Mix.Task.clear()
     :ok
