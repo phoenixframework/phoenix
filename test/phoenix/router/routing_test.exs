@@ -257,7 +257,7 @@ defmodule Phoenix.Router.RoutingTest do
 
     test "logs plug with pipeline and custom level" do
       assert capture_log(fn -> call(Router, :get, "/plug") end) =~ """
-             [info]  Processing with Phoenix.Router.RoutingTest.SomePlug
+             [info] Processing with Phoenix.Router.RoutingTest.SomePlug
                Parameters: %{}
                Pipelines: [:noop]
              """
@@ -275,7 +275,7 @@ defmodule Phoenix.Router.RoutingTest do
 
     test "logs custom level when log is set to a 1-arity function" do
       assert capture_log(fn -> call(Router, :get, "/fun_log", level: "info") end) =~
-               "[info]  Processing with Phoenix.Router.RoutingTest.SomePlug"
+               "[info] Processing with Phoenix.Router.RoutingTest.SomePlug"
 
       assert capture_log(fn -> call(Router, :get, "/fun_log", level: "error") end) =~
                "[error] Processing with Phoenix.Router.RoutingTest.SomePlug"
