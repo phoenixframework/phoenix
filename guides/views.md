@@ -388,7 +388,6 @@ end
 
 Phoenix has a view called `ErrorView` which lives in `lib/hello_web/views/error_view.ex`. The purpose of `ErrorView` is to handle errors in a general way, from one centralized location.  Similar to the views we built in this guide, error views can return both HTML and JSON responses. See the [Custom Error Pages How-To](custom_error_pages.html) for more information.
 
-
 [welcome page]: http://localhost:4000
 [`render/3`]: `Phoenix.View.render/3`
 [`render_many/3`]: `Phoenix.View.render_many/3`

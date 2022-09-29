@@ -25,7 +25,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up Elixir
       uses: erlef/setup-beam@v1
@@ -34,7 +34,7 @@ jobs:
         otp-version: ${{ matrix.otp }}
 
     - name: Restore deps and _build cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           deps
@@ -67,10 +67,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Restore deps and _build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             deps
@@ -80,12 +80,12 @@ jobs:
             deps-${{ runner.os }}-npm
 
       - name: Set up Node.js 12.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 12.x
 
       - name: Restore npm cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}

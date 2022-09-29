@@ -1,6 +1,6 @@
 <.header>Confirm account</.header>
 
-<.simple_form :let={_f} for={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirmation/#{@token}"}>
+<.simple_form :let={_f} for={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirm/#{@token}"}>
   <:actions>
     <.button>Confirm my account</.button>
   </:actions>

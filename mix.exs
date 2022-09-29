@@ -32,7 +32,9 @@ defmodule Phoenix.MixProject do
           :ranch,
           :cowboy_req,
           Plug.Cowboy.Conn,
-          Plug.Cowboy
+          Plug.Cowboy,
+          :httpc,
+          :public_key
         ]
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -71,6 +73,8 @@ defmodule Phoenix.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
       {:phoenix_view, "~> 1.0"},
+      # TODO drop castore when we require OTP 25+
+      {:castore, ">= 0.0.0"},
 
       # Optional deps
       {:plug_cowboy, "~> 2.2", optional: true},

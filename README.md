@@ -1,19 +1,20 @@
 ![phoenix logo](https://raw.githubusercontent.com/phoenixframework/phoenix/master/priv/static/phoenix.png)
+
 > Peace of mind from prototype to production.
 
 [![Build Status](https://github.com/phoenixframework/phoenix/workflows/CI/badge.svg)](https://github.com/phoenixframework/phoenix/actions/workflows/ci.yml) [![Hex.pm](https://img.shields.io/hexpm/v/phoenix.svg)](https://hex.pm/packages/phoenix) [![Documentation](https://img.shields.io/badge/documentation-gray)](https://hexdocs.pm/phoenix)
 
 ## Getting started
 
-See the official site at https://www.phoenixframework.org/
+See the official site at <https://www.phoenixframework.org/>.
 
-Install the latest version of Phoenix by following the instructions at https://hexdocs.pm/phoenix/installation.html#phoenix
+Install the latest version of Phoenix by following the instructions at <https://hexdocs.pm/phoenix/installation.html#phoenix>.
 
 ## Documentation
 
-API documentation is available at [https://hexdocs.pm/phoenix](https://hexdocs.pm/phoenix)
+API documentation is available at <https://hexdocs.pm/phoenix>.
 
-Phoenix.js documentation is available at [https://hexdocs.pm/phoenix/js](https://hexdocs.pm/phoenix/js)
+Phoenix.js documentation is available at <https://hexdocs.pm/phoenix/js>.
 
 ## Contributing
 
@@ -28,8 +29,8 @@ You can create a new project using the latest Phoenix source installer (the `phx
 3. Run the `phx.new` Mix task from within the `installer` directory, for example:
 
 ```bash
-$ cd phoenix/installer
-$ mix phx.new dev_app --dev
+cd phoenix/installer
+mix phx.new dev_app --dev
 ```
 
 The `--dev` flag will configure your new project's `:phoenix` dep as a relative path dependency, pointing to your local Phoenix checkout:
@@ -44,30 +45,30 @@ To create projects outside of the `installer/` directory, add the latest archive
 To build the documentation from source:
 
 ```bash
-$ npm install --prefix assets
-$ MIX_ENV=docs mix docs
+npm install --prefix assets
+MIX_ENV=docs mix docs
 ```
 
 To build Phoenix from source:
 
 ```bash
-$ mix deps.get
-$ mix compile
+mix deps.get
+mix compile
 ```
 
 To build the Phoenix installer from source:
 
 ```bash
-$ mix deps.get
-$ mix compile
-$ mix archive.build
+mix deps.get
+mix compile
+mix archive.build
 ```
 
 ### Building phoenix.js
 
 ```bash
-$ cd assets
-$ npm install
+cd assets
+npm install
 ```
 
 ## Important links

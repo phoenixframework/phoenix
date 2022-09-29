@@ -145,6 +145,7 @@ Topics are string identifiers - names that the various layers use in order to ma
 ### Messages
 
 The `Phoenix.Socket.Message` module defines a struct with the following keys which denotes a valid message. From the [Phoenix.Socket.Message docs](https://hexdocs.pm/phoenix/Phoenix.Socket.Message.html).
+
 - `topic` - The string topic or `"topic:subtopic"` pair namespace, such as `"messages"` or `"messages:123"`
 - `event` - The string event name, for example `"phx_join"`
 - `payload` - The message payload
@@ -383,7 +384,7 @@ That's all there is to our basic chat app. Fire up multiple browser tabs and you
 
 When we connect, we'll often need to authenticate the client. Fortunately, this is a 4-step process with [Phoenix.Token](https://hexdocs.pm/phoenix/Phoenix.Token.html).
 
-**Step 1 - Assign a Token in the Connection**
+### Step 1 - Assign a Token in the Connection
 
 Let's say we have an authentication plug in our app called `OurAuth`. When `OurAuth` authenticates a user, it sets a value for the `:current_user` key in `conn.assigns`. Since the `current_user` exists, we can simply assign the user's token in the connection for use in the layout. We can wrap that behavior up in a private function plug, `put_user_token/2`. This could also be put in its own module as well. To make this all work, we just add `OurAuth` and `put_user_token/2` to the browser pipeline.
 
@@ -406,7 +407,7 @@ end
 
 Now our `conn.assigns` contains the `current_user` and `user_token`.
 
-**Step 2 - Pass the Token to the JavaScript**
+### Step 2 - Pass the Token to the JavaScript
 
 Next, we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.heex` right above the app.js script, as follows:
 
@@ -415,7 +416,7 @@ Next, we need to pass this token to JavaScript. We can do so inside a script tag
 <script src={~p"/assets/app.js"}></script>
 ```
 
-**Step 3 - Pass the Token to the Socket Constructor and Verify**
+### Step 3 - Pass the Token to the Socket Constructor and Verify
 
 We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/3` function. To do so, edit `web/channels/user_socket.ex`, as follows:
 
@@ -439,7 +440,7 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 
 We used `Phoenix.Token.verify/4` to verify the user token provided by the client. `Phoenix.Token.verify/4` returns either `{:ok, user_id}` or `{:error, reason}`. We can pattern match on that return in a `case` statement. With a verified token, we set the user's id as the value to `:current_user` in the socket. Otherwise, we return `:error`.
 
-**Step 4 - Connect to the socket in JavaScript**
+### Step 4 - Connect to the socket in JavaScript
 
 With authentication set up, we can connect to sockets and channels from JavaScript.
 

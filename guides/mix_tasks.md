@@ -362,6 +362,7 @@ If we don't specify a router for this task, it will default to the router Phoeni
 $ mix phx.routes
 GET  /  TaskTester.PageController.index/2
 ```
+
 We can also specify an individual router if we have more than one for our application.
 
 ```console
@@ -377,12 +378,14 @@ This is the task we use to get our application running. It takes no arguments at
 $ mix phx.server
 [info] Running TaskTesterWeb.Endpoint with Cowboy on port 4000 (http)
 ```
+
 It will silently ignore our `DoesNotExist` argument:
 
 ```console
 $ mix phx.server DoesNotExist
 [info] Running TaskTesterWeb.Endpoint with Cowboy on port 4000 (http)
 ```
+
 If we would like to start our application and also have an `IEx` session open to it, we can run the Mix task within `iex` like this, `iex -S mix phx.server`.
 
 ```console

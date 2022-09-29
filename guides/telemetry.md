@@ -449,7 +449,6 @@ Hopefully, this gives you some inspiration on how to use the `:tag_values`
 option. Just remember to keep this function fast since it is called on every
 event.
 
-
 ## Periodic measurements
 
 You might want to periodically measure key-value pairs within
@@ -530,7 +529,7 @@ their own (in alphabetical order, please):
 
 If you need custom metrics and instrumentation in your
 application, you can utilize the `:telemetry` package
-(https://hexdocs.pm/telemetry) just like your favorite
+(<https://hexdocs.pm/telemetry>) just like your favorite
 frameworks and libraries.
 
 Here is an example of a simple GenServer that emits telemetry
