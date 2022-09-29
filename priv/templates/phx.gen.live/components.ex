@@ -250,7 +250,7 @@ defmodule <%= @web_namespace %>.Components do
   attr :value, :any
   attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
   attr :errors, :list
-  attr :rest, :global, include: ~w(autocomplete checked disabled form max maxlength min minlength
+  attr :rest, :global, include: ~w(autocomplete checked disabled for form max maxlength min minlength
                                    multiple pattern placeholder readonly required size step)
   slot :inner_block
   slot :option, doc: "the slot for select input options" do
