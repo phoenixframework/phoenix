@@ -95,7 +95,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         end
 
         assert_file app_path(@app, ".formatter.exs"), fn file ->
-          assert file =~ "import_deps: [:ecto]"
+          assert file =~ "import_deps: [:ecto, :ecto_sql]"
           assert file =~ "subdirectories: [\"priv/*/migrations\"]"
           assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
           assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\", \"priv/*/seeds.exs\"]"
