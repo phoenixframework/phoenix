@@ -315,6 +315,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    pipe_through [:browser]
 
                    delete "/users/log_out", UserSessionController, :delete
+
                    live_session :current_user,
                      on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
                      live "/users/confirm/:token", UserConfirmationLive, :edit
@@ -412,6 +413,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    pipe_through [:browser]
 
                    delete "/users/log_out", UserSessionController, :delete
+
                    live_session :current_user,
                      on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
                      live "/users/confirm/:token", UserConfirmationLive, :edit

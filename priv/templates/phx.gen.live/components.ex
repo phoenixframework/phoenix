@@ -11,8 +11,7 @@ defmodule <%= @web_namespace %>.Components do
   """
   use Phoenix.Component
 
-  <%= if @gettext do %>import <%= @web_namespace %>.Gettext, warn: false
-  <% end %>
+  <%= if @gettext do %>import <%= @web_namespace %>.Gettext, warn: false<% end %>
   alias Phoenix.LiveView.JS
 
   @doc """
@@ -176,6 +175,7 @@ defmodule <%= @web_namespace %>.Components do
   """
   attr :for, :any, default: nil, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
+
   attr :rest, :global,
     include: ~w(autocomplete name rel action enctype method novalidate target),
     doc: "the arbitrary HTML attributes to apply to the form tag"
@@ -253,6 +253,7 @@ defmodule <%= @web_namespace %>.Components do
   attr :rest, :global, include: ~w(autocomplete checked disabled form max maxlength min minlength
                                    multiple pattern placeholder readonly required size step)
   slot :inner_block
+
   slot :option, doc: "the slot for select input options" do
     attr :value, :any
   end

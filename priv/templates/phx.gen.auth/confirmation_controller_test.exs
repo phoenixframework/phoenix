@@ -103,9 +103,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert redirected_to(conn) == ~p"/"
       refute Phoenix.Flash.get(conn.assigns.flash, :error)
-    en
-
-
+    end
 
     test "does not confirm email with invalid token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn = post(conn, ~p"<%= schema.route_prefix %>/confirm/oops")
