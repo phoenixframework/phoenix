@@ -64,7 +64,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   describe "GET <%= schema.route_prefix %>/confirm/:token" do
     test "renders the confirmation page", %{conn: conn} do
       token_path = ~p"<%= schema.route_prefix %>/confirm/some-token"
-      conn = get(conn, path)
+      conn = get(conn, token_path)
       response = html_response(conn, 200)
       assert response =~ "Confirm account"
 
