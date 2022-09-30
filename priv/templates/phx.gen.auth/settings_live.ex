@@ -69,7 +69,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         field={{f, :current_password}}
         name="current_password"
         type="password"
-        label="Confirm new password"
+        label="Current password"
         id="current_password_for_password"
         value={@current_password}
         required
