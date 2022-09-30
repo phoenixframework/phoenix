@@ -245,7 +245,7 @@ defmodule <%= @web_namespace %>.Components do
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file hidden month number password
-               range radio search tel text time url week)
+               range radio search select tel text time url week)
 
   attr :value, :any
   attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
