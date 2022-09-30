@@ -9,9 +9,8 @@ defmodule <%= @web_namespace %>.Components do
   Icons are provided by [heroicons](https://heroicons.com), using the
   [heroicons_elixir](https://github.com/mveytsman/heroicons_elixir) project.
   """
-  use Phoenix.Component
-
-  <%= if @gettext do %>import <%= @web_namespace %>.Gettext, warn: false<% end %>
+  use Phoenix.Component<%= if @gettext do %>
+  import <%= @web_namespace %>.Gettext, warn: false<% end %>
   alias Phoenix.LiveView.JS
 
   @doc """
