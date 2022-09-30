@@ -70,7 +70,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         name="current_password"
         type="password"
         label="Confirm new password"
-        for="current_password_for_password"
         id="current_password_for_password"
         value={@current_password}
         required
