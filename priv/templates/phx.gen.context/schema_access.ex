@@ -17,7 +17,28 @@
   @doc """
   Gets a single <%= schema.singular %>.
 
-  Raises `Ecto.NoResultsError` if the <%= schema.human_singular %> does not exist.
+  Returns {:error, :no_results} if the <%= schema.human_singular %> does not exist.
+
+  ## Examples
+
+      iex> get_<%= schema.singular %>(123)
+      {:ok, %<%= inspect schema.alias %>{}}
+
+      iex> get_<%= schema.singular %>(456)
+      {:error, :no_results}
+
+  """
+  def get_<%= schema.singular %>(id) do
+    case(Repo.get(<%= inspect schema.alias %>, id)) do
+      nil -> {:error, :no_results}
+      <%= schema.singular %> -> {:ok, <%= schema.singular %>}
+    end
+  end
+
+  @doc """
+  Gets a single <%= schema.singular %>.
+
+  Similar to `get/1` but raises `Ecto.NoResultsError` if the <%= schema.human_singular %> does not exist.
 
   ## Examples
 

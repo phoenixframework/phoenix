@@ -142,6 +142,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       end
 
       assert_file "lib/phoenix/blog.ex", fn file ->
+        assert file =~ "def get_post"
         assert file =~ "def get_post!"
         assert file =~ "def list_posts"
         assert file =~ "def create_post"
@@ -175,7 +176,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       Gen.Context.run(~w(Blog Comment comments title:string))
 
       assert_received {:mix_shell, :info, ["You are generating into an existing context" <> notice]}
-      assert notice =~ "Phoenix.Blog context currently has 6 functions and 1 file in its directory"
+      assert notice =~ "Phoenix.Blog context currently has 7 functions and 1 file in its directory"
       assert_received {:mix_shell, :yes?, ["Would you like to proceed?"]}
 
       assert_file "lib/phoenix/blog/comment.ex", fn file ->
@@ -201,6 +202,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       end
 
       assert_file "lib/phoenix/blog.ex", fn file ->
+        assert file =~ "def get_comment"
         assert file =~ "def get_comment!"
         assert file =~ "def list_comments"
         assert file =~ "def create_comment"
@@ -291,6 +293,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       Gen.Context.run(~w(Blog Post posts title))
 
       assert_file "lib/phoenix/blog.ex", fn file ->
+        assert file =~ "def get_post"
         assert file =~ "def get_post!"
         assert file =~ "def list_posts"
         assert file =~ "def create_post"
@@ -304,6 +307,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       refute_received {:mix_shell, :info, ["You are generating into an existing context" <> _notice]}
 
       assert_file "lib/phoenix/blog.ex", fn file ->
+        assert file =~ "def get_comment"
         assert file =~ "def get_comment!"
         assert file =~ "def list_comments"
         assert file =~ "def create_comment"
@@ -333,6 +337,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       refute_file "lib/phoenix/blog/post.ex"
 
       assert_file "lib/phoenix/blog.ex", fn file ->
+        assert file =~ "def get_post"
         assert file =~ "def get_post!"
         assert file =~ "def list_posts"
         assert file =~ "def create_post"

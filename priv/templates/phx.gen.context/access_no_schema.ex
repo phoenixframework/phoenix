@@ -17,12 +17,33 @@
   @doc """
   Gets a single <%= schema.singular %>.
 
-  Raises if the <%= schema.human_singular %> does not exist.
+  Returns {:err, :no_results} if the <%= schema.human_singular %> does not exist.
+
+  ## Examples
+
+      iex> get_<%= schema.singular %>(123)
+      {:ok, %<%= inspect schema.alias %>{}}
+
+      iex> get_<%= schema.singular %>(456)
+      {:err, :no_results}
+
+  """
+  def get_<%= schema.singular %>(id) do
+    raise "TODO"
+  end
+
+  @doc """
+  Gets a single <%= schema.singular %>.
+
+  Similar to `get/1` but raises `Ecto.NoResultsError` if the <%= schema.human_singular %> does not exist.
 
   ## Examples
 
       iex> get_<%= schema.singular %>!(123)
       %<%= inspect schema.alias %>{}
+
+      iex> get_<%= schema.singular %>!(456)
+      ** (Ecto.NoResultsError)
 
   """
   def get_<%= schema.singular %>!(id), do: raise "TODO"
