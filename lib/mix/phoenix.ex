@@ -40,18 +40,11 @@ defmodule Mix.Phoenix do
         :text -> Mix.Generator.create_file(target, File.read!(source))
         :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, binding))
         :new_eex ->
-          if !File.exists?(target) do
+          if File.exists?(target) do
+            :ok
+          else
             Mix.Generator.create_file(target, EEx.eval_file(source, binding))
           end
-      end
-
-      if Path.extname(target) in [".ex", ".exs"] do
-        try do
-          :ok = Mix.Tasks.Format.run([target])
-          true
-        rescue
-          _ -> true
-        end
       end
     end
   end
