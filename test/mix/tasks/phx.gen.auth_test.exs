@@ -649,7 +649,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  ~S|<.simple_form :let={f} for={@email_changeset} action={~p"/warehouse/users/settings"} id="update_email">|
 
         assert file =~
-                 ~S|<.simple_form :let={f} for={@password_changeset} action={~p"/warehouse/users/settings"} id="update_password">|
+                 ~s|<.simple_form\n      :let={f}\n      for={@password_changeset}\n      action={~p"/warehouse/users/settings"}\n      id="update_password"\n    >|
       end)
 
       assert_file("lib/my_app_web/views/warehouse/user_settings_view.ex", fn file ->
@@ -1358,12 +1358,22 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
             <ul>
               <%= if @current_user do %>
-                <li><%= @current_user.email %></li>
-                <li><.link href={~p"/users/settings"}>Settings</.link></li>
-                <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
+                <li>
+                  <%= @current_user.email %>
+                </li>
+                <li>
+                  <.link href={~p"/users/settings"}>Settings</.link>
+                </li>
+                <li>
+                  <.link href={~p"/users/log_out"} method="delete">Log out</.link>
+                </li>
               <% else %>
-                <li><.link href={~p"/users/register"}>Register</.link></li>
-                <li><.link href={~p"/users/log_in"}>Log in</.link></li>
+                <li>
+                  <.link href={~p"/users/register"}>Register</.link>
+                </li>
+                <li>
+                  <.link href={~p"/users/log_in"}>Log in</.link>
+                </li>
               <% end %>
             </ul>
         """
@@ -1392,16 +1402,27 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
             <ul>
               <%= if @current_user do %>
-                <li><%= @current_user.email %></li>
-                <li><.link href={~p"/users/settings"}>Settings</.link></li>
-                <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
+                <li>
+                  <%= @current_user.email %>
+                </li>
+                <li>
+                  <.link href={~p"/users/settings"}>Settings</.link>
+                </li>
+                <li>
+                  <.link href={~p"/users/log_out"} method="delete">Log out</.link>
+                </li>
               <% else %>
-                <li><.link href={~p"/users/register"}>Register</.link></li>
-                <li><.link href={~p"/users/log_in"}>Log in</.link></li>
+                <li>
+                  <.link href={~p"/users/register"}>Register</.link>
+                </li>
+                <li>
+                  <.link href={~p"/users/log_in"}>Log in</.link>
+                </li>
               <% end %>
             </ul>
 
         """
+
         assert_received {:mix_shell, :info, [^help_text]}
       end)
     end
