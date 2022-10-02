@@ -7,7 +7,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <.header>Reset Password</.header>
 
-    <.simple_form id="reset_password_form" :let={f} for={@changeset} phx-submit="reset_password" phx-change="validate">
+    <.simple_form
+      :let={f}
+      for={@changeset}
+      id="reset_password_form"
+      phx-submit="reset_password"
+      phx-change="validate"
+    >
       <%%= if @changeset.action == :insert do %>
         <.error message="Oops, something went wrong! Please check the errors below." />
       <%% end %>
@@ -31,7 +37,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     </.simple_form>
 
     <p>
-      <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
+      <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
+      |
       <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
     </p>
     """
