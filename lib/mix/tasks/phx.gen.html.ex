@@ -208,17 +208,22 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   defp label(key), do: to_string(key)
 
   @doc false
-  def indent_multiline(input, initial_padding) do
-    lines = String.split(input, "\n")
+  def indent_inputs(inputs, column_padding) do
+    columns = String.duplicate(" ", column_padding)
 
-    case lines do
-      [] ->
-        input
+    inputs
+    |> Enum.map(fn input ->
+      lines = input |> String.split("\n") |> Enum.reject(& &1 == "")
 
-      [open | rest] ->
-        indent = String.duplicate(" ", initial_padding)
-        rest =   Enum.map_join(rest, "\n", &(indent <> &1))
-        [open, "\n", rest]
-    end
+      case lines do
+        [line] ->
+          [columns, line]
+
+        [first_line | rest] ->
+          rest = Enum.map_join(rest, "\n", &(columns <> &1))
+          [columns, first_line, "\n", rest]
+      end
+    end)
+    |> Enum.intersperse("\n")
   end
 end
