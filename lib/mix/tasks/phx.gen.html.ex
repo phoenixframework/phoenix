@@ -194,11 +194,11 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       {key, {:enum, _}}  ->
         ~s"""
         <.input field={{f, #{inspect(key)}}} type="select" label="#{label(key)}">
-            <:option>Choose a value</:option>
-            <:option :for={value <- Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})} value={value}>
-              <%= value %>
-            </:option>
-          </.input>
+          <:option>Choose a value</:option>
+          <:option :for={value <- Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})} value={value}>
+            <%= value %>
+          </:option>
+        </.input>
         """
       {key, _}  ->
         ~s(<.input field={{f, #{inspect(key)}}} type="text" label="#{label(key)}" />)
@@ -206,4 +206,19 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   defp label(key), do: to_string(key)
+
+  @doc false
+  def indent_multiline(input, initial_padding) do
+    lines = String.split(input, "\n")
+
+    case lines do
+      [] ->
+        input
+
+      [open | rest] ->
+        indent = String.duplicate(" ", initial_padding)
+        rest =   Enum.map_join(rest, "\n", &(indent <> &1))
+        [open, "\n", rest]
+    end
+  end
 end
