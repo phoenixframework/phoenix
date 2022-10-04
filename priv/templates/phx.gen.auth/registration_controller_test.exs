@@ -13,7 +13,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "redirects if already logged in", %{conn: conn} do
-      conn = conn |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture()) |> get(Routes.<%= schema.route_helper %>_registration_path(conn, :new))
+      conn = conn |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture()) |> get(~p"<%= schema.route_prefix %>/register")
+
       assert redirected_to(conn) == ~p"/"
     end
   end

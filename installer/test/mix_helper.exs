@@ -35,6 +35,12 @@ defmodule MixHelper do
       File.mkdir_p!(path)
       File.cd!(path, fn ->
         File.touch!("mix.exs")
+        File.write!(".formatter.exs", """
+        [
+          import_deps: [:phoenix, :ecto, :ecto_sql],
+          inputs: ["*.exs"]
+        ]
+        """)
         function.()
       end)
     after

@@ -8,8 +8,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <.header>Change Email</.header>
 
     <.simple_form
-      id="email_form"
       :let={f}
+      id="email_form"
       for={@email_changeset}
       phx-submit="update_email"
       phx-change="validate_email"
@@ -37,8 +37,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <.header>Change Password</.header>
 
     <.simple_form
-      id="password_form"
       :let={f}
+      id="password_form"
       for={@password_changeset}
       action={~p"<%= schema.route_prefix %>/log_in?_action=password_updated"}
       method="post"

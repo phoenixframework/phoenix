@@ -99,13 +99,11 @@ defmodule <%= @web_namespace %> do
       alias Phoenix.LiveView.JS
 <% end %>
       # Import basic rendering functionality (render, render_layout, etc)
-      import Phoenix.View
-      <%= if @gettext do %>
+      import Phoenix.View<%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %>
       unquote(verified_routes())
     end
   end
-
 
   @doc """
   When used, dispatch to the appropriate controller/view/etc.

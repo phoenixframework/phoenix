@@ -20,8 +20,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         phx-change="validate"
         phx-submit="save"
       >
-        <%= for input <- inputs, input do %><%= input %>
-        <% end %><:actions>
+<%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 8) %>
+        <:actions>
           <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
         </:actions>
       </.simple_form>

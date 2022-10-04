@@ -7,7 +7,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <.header>Confirm Account</.header>
 
-    <.simple_form id="confirmation_form" :let={f} for={:<%= schema.singular %>} phx-submit="confirm_account">
+    <.simple_form :let={f} for={:<%= schema.singular %>} id="confirmation_form" phx-submit="confirm_account">
       <.input field={{f, :token}} type="hidden" value={@token} />
       <:actions>
         <.button phx-disable-with="Confirming...">Confirm my account</.button>
@@ -15,7 +15,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     </.simple_form>
 
     <p>
-      <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
+      <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
+      |
       <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
     </p>
     """
