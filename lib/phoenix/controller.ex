@@ -830,7 +830,7 @@ defmodule Phoenix.Controller do
   def render(conn, view, template, assigns)
       when is_atom(view) and (is_binary(template) or is_atom(template)) do
     conn
-    |> put_view(any: view)
+    |> put_view(view)
     |> render(template, assigns)
   end
 
@@ -838,8 +838,8 @@ defmodule Phoenix.Controller do
     template = template_name(template, format)
     view =
       case Map.get(conn.private, :phoenix_view) do
-        %{^format => view} -> view
         %{:_ => view} when is_atom(view) and not is_nil(view) -> view
+        %{^format => view} -> view
         _ -> raise "a view module was not specified for #{format}, set one with put_view/2"
       end
 
