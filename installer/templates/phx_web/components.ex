@@ -27,7 +27,7 @@ defmodule <%= @web_namespace %>.Components do
       </.modal>
 
   JS commands may be passed to the `:on_cancel` and `on_confirm` attributes
-  for the caller to reactor to each button press, for example:
+  for the caller to react to each button press, for example:
 
       <.modal id="confirm" on_confirm={JS.push("delete")} on_cancel={JS.navigate(~p"/posts")}>
         Are you sure you?
@@ -126,10 +126,10 @@ defmodule <%= @web_namespace %>.Components do
   attr :id, :string, default: "flash", doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
-  attr :kind, :atom, values: [:info, :error], doc: "Used for styling and flash lookup"
+  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
   attr :autoshow, :boolean, default: true, doc: "whether to auto show the flash on mount"
   attr :close, :boolean, default: true, doc: "whether the flash can be closed"
-  attr :rest, :global, doc: "the aribtrary HTML attributes to add to the flash container"
+  attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
 
