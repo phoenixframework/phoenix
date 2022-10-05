@@ -37,20 +37,11 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/README.md"
 
-      if Version.match?(System.version(), ">= 1.13.4") do
-        assert_file "phx_blog/.formatter.exs", fn file ->
-          assert file =~ "import_deps: [:ecto, :ecto_sql, :phoenix]"
-          assert file =~ "subdirectories: [\"priv/*/migrations\"]"
-          assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
-          assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\", \"priv/*/seeds.exs\"]"
-        end
-      else
-        assert_file "phx_blog/.formatter.exs", fn file ->
-          assert file =~ "import_deps: [:ecto, :ecto_sql, :phoenix]"
-          assert file =~ "subdirectories: [\"priv/*/migrations\"]"
-          assert file =~ "inputs: [\"*.{ex,exs}\", \"{config,lib,test}/**/*.{ex,exs}\", \"priv/*/seeds.exs\"]"
-          refute file =~ "plugins:"
-        end
+      assert_file "phx_blog/.formatter.exs", fn file ->
+        assert file =~ "import_deps: [:ecto, :ecto_sql, :phoenix]"
+        assert file =~ "subdirectories: [\"priv/*/migrations\"]"
+        assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
+        assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\", \"priv/*/seeds.exs\"]"
       end
 
       assert_file "phx_blog/mix.exs", fn file ->
@@ -475,13 +466,11 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp "new with no_ecto", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--no-ecto"])
 
-      if Version.match?(System.version(), ">= 1.13.4") do
-        assert_file "phx_blog/.formatter.exs", fn file ->
-          assert file =~ "import_deps: [:phoenix]"
-          assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
-          assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\"]"
-          refute file =~ "subdirectories:"
-        end
+      assert_file "phx_blog/.formatter.exs", fn file ->
+        assert file =~ "import_deps: [:phoenix]"
+        assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
+        assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\"]"
+        refute file =~ "subdirectories:"
       end
     end
   end
