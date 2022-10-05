@@ -165,12 +165,22 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     template = """
     <ul>
       <%= if @current_#{schema.singular} do %>
-        <li><%= @current_#{schema.singular}.email %></li>
-        <li><.link href={~p"#{schema.route_prefix}/settings"}>Settings</.link></li>
-        <li><.link href={~p"#{schema.route_prefix}/log_out"} method="delete">Log out</.link></li>
+        <li>
+          <%= @current_#{schema.singular}.email %>
+        </li>
+        <li>
+          <.link href={~p"#{schema.route_prefix}/settings"}>Settings</.link>
+        </li>
+        <li>
+          <.link href={~p"#{schema.route_prefix}/log_out"} method="delete">Log out</.link>
+        </li>
       <% else %>
-        <li><.link href={~p"#{schema.route_prefix}/register"}>Register</.link></li>
-        <li><.link href={~p"#{schema.route_prefix}/log_in"}>Log in</.link></li>
+        <li>
+          <.link href={~p"#{schema.route_prefix}/register"}>Register</.link>
+        </li>
+        <li>
+          <.link href={~p"#{schema.route_prefix}/log_in"}>Log in</.link>
+        </li>
       <% end %>
     </ul>\
     """

@@ -39,14 +39,14 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       if Version.match?(System.version(), ">= 1.13.4") do
         assert_file "phx_blog/.formatter.exs", fn file ->
-          assert file =~ "import_deps: [:ecto, :phoenix]"
+          assert file =~ "import_deps: [:ecto, :ecto_sql, :phoenix]"
           assert file =~ "subdirectories: [\"priv/*/migrations\"]"
           assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
           assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\", \"priv/*/seeds.exs\"]"
         end
       else
         assert_file "phx_blog/.formatter.exs", fn file ->
-          assert file =~ "import_deps: [:ecto, :phoenix]"
+          assert file =~ "import_deps: [:ecto, :ecto_sql, :phoenix]"
           assert file =~ "subdirectories: [\"priv/*/migrations\"]"
           assert file =~ "inputs: [\"*.{ex,exs}\", \"{config,lib,test}/**/*.{ex,exs}\", \"priv/*/seeds.exs\"]"
           refute file =~ "plugins:"
@@ -113,7 +113,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/root.html.heex", fn file ->
-        assert file =~ ~s|<meta name="csrf-token" content={get_csrf_token()}>|
+        assert file =~ ~s|<meta name="csrf-token" content={get_csrf_token()} />|
       end
 
       assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.heex"
@@ -421,7 +421,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
 
       assert_file "phx_blog/.formatter.exs", fn file ->
-        assert file =~ "import_deps: [:ecto, :phoenix]"
+        assert file =~ "import_deps: [:ecto, :ecto_sql, :phoenix]"
         assert file =~ "subdirectories: [\"priv/*/migrations\"]"
         assert file =~ "inputs: [\"*.{ex,exs}\", \"{config,lib,test}/**/*.{ex,exs}\", \"priv/*/seeds.exs\"]"
         refute file =~ "plugins:"

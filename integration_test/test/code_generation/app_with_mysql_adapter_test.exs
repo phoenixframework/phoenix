@@ -39,7 +39,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithMySqlAdapterTest do
         modify_file(Path.join(app_root_path, "lib/default_mysql_app_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
-            scope "/", DefaultMysqlAppWeb do
+            scope "/api", DefaultMysqlAppWeb do
               pipe_through [:api]
 
               resources "/posts", PostController, except: [:new, :edit]

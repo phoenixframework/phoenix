@@ -11,10 +11,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <:subtitle>We'll send a password reset link to your inbox</:subtitle>
       </.header>
 
-      <.simple_form id="reset_password_form" :let={f} for={:<%= schema.singular %>} phx-submit="send_email">
+      <.simple_form :let={f} id="reset_password_form" for={:<%= schema.singular %>} phx-submit="send_email">
         <.input field={{f, :email}} type="email" placeholder="Email" required />
         <:actions>
-          <.button phx-disable-with="Sending..." class="w-full">Send password reset instructions</.button>
+          <.button phx-disable-with="Sending..." class="w-full">
+            Send password reset instructions
+          </.button>
         </:actions>
       </.simple_form>
     </div>
