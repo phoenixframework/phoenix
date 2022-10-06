@@ -667,12 +667,22 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          </ul>
                          <ul>
                            <%= if @current_user do %>
-                             <li><%= @current_user.email %></li>
-                             <li><.link href={~p"/users/settings"}>Settings</.link></li>
-                             <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
+                             <li>
+                               <%= @current_user.email %>
+                             </li>
+                             <li>
+                               <.link href={~p"/users/settings"}>Settings</.link>
+                             </li>
+                             <li>
+                               <.link href={~p"/users/log_out"} method="delete">Log out</.link>
+                             </li>
                            <% else %>
-                             <li><.link href={~p"/users/register"}>Register</.link></li>
-                             <li><.link href={~p"/users/log_in"}>Log in</.link></li>
+                             <li>
+                               <.link href={~p"/users/register"}>Register</.link>
+                             </li>
+                             <li>
+                               <.link href={~p"/users/log_in"}>Log in</.link>
+                             </li>
                            <% end %>
                          </ul>
                        </nav>
@@ -730,12 +740,22 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          </ul>\r
                          <ul>\r
                            <%= if @current_user do %>\r
-                             <li><%= @current_user.email %></li>\r
-                             <li><.link href={~p"/users/settings"}>Settings</.link></li>\r
-                             <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>\r
+                             <li>\r
+                               <%= @current_user.email %>\r
+                             </li>\r
+                             <li>\r
+                               <.link href={~p"/users/settings"}>Settings</.link>\r
+                             </li>\r
+                             <li>\r
+                               <.link href={~p"/users/log_out"} method="delete">Log out</.link>\r
+                             </li>\r
                            <% else %>\r
-                             <li><.link href={~p"/users/register"}>Register</.link></li>\r
-                             <li><.link href={~p"/users/log_in"}>Log in</.link></li>\r
+                             <li>\r
+                               <.link href={~p"/users/register"}>Register</.link>\r
+                             </li>\r
+                             <li>\r
+                               <.link href={~p"/users/log_in"}>Log in</.link>\r
+                             </li>\r
                            <% end %>\r
                          </ul>\r
                        </nav>\r
@@ -777,12 +797,22 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  <body>
                    <ul>
                      <%= if @current_user do %>
-                       <li><%= @current_user.email %></li>
-                       <li><.link href={~p"/users/settings"}>Settings</.link></li>
-                       <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
+                       <li>
+                         <%= @current_user.email %>
+                       </li>
+                       <li>
+                         <.link href={~p"/users/settings"}>Settings</.link>
+                       </li>
+                       <li>
+                         <.link href={~p"/users/log_out"} method="delete">Log out</.link>
+                       </li>
                      <% else %>
-                       <li><.link href={~p"/users/register"}>Register</.link></li>
-                       <li><.link href={~p"/users/log_in"}>Log in</.link></li>
+                       <li>
+                         <.link href={~p"/users/register"}>Register</.link>
+                       </li>
+                       <li>
+                         <.link href={~p"/users/log_in"}>Log in</.link>
+                       </li>
                      <% end %>
                    </ul>
                    <main class="container">
@@ -826,12 +856,22 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  <body>\r
                    <ul>\r
                      <%= if @current_user do %>\r
-                       <li><%= @current_user.email %></li>\r
-                       <li><.link href={~p"/users/settings"}>Settings</.link></li>\r
-                       <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>\r
+                       <li>\r
+                         <%= @current_user.email %>\r
+                       </li>\r
+                       <li>\r
+                         <.link href={~p"/users/settings"}>Settings</.link>\r
+                       </li>\r
+                       <li>\r
+                         <.link href={~p"/users/log_out"} method="delete">Log out</.link>\r
+                       </li>\r
                      <% else %>\r
-                       <li><.link href={~p"/users/register"}>Register</.link></li>\r
-                       <li><.link href={~p"/users/log_in"}>Log in</.link></li>\r
+                       <li>\r
+                         <.link href={~p"/users/register"}>Register</.link>\r
+                       </li>\r
+                       <li>\r
+                         <.link href={~p"/users/log_in"}>Log in</.link>\r
+                       </li>\r
                      <% end %>\r
                    </ul>\r
                    <main class="container">\r

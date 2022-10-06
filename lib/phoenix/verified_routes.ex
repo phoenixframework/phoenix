@@ -139,7 +139,7 @@ defmodule Phoenix.VerifiedRoutes do
     Module.put_attribute(mod, :phoenix_verified_statics, statics)
   end
 
-  @after_verify_supported Version.match?(System.version(), ">= 1.14.0-dev")
+  @after_verify_supported Version.match?(System.version(), ">= 1.14.0")
 
   defmacro __before_compile__(_env) do
     if @after_verify_supported do

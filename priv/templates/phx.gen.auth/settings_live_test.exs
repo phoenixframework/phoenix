@@ -109,9 +109,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       new_password_conn = follow_trigger_action(form, conn)
 
       assert redirected_to(new_password_conn) == ~p"<%= schema.route_prefix %>/settings"
+
       assert get_session(new_password_conn, :<%= schema.singular %>_token) != get_session(conn, :<%= schema.singular %>_token)
+
       assert Phoenix.Flash.get(new_password_conn.assigns.flash, :info) =~
-        "Password updated successfully"
+               "Password updated successfully"
 
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, new_password)
     end

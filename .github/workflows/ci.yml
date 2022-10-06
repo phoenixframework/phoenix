@@ -16,7 +16,7 @@ jobs:
           - elixir: 1.12.0
             otp: 22.3
 
-          - elixir: 1.14.0
+          - elixir: 1.14.0 # TODO: bump to 1.15 to leverage format diffs https://github.com/elixir-lang/elixir/pull/12109
             otp: 24.3.4
             lint: true
             installer: true

@@ -40,11 +40,11 @@ defmodule Phoenix.Integration.MixProject do
       {:myxql, ">= 0.0.0"},
       {:tds, ">= 0.0.0"},
       {:ecto_sqlite3, ">= 0.0.0"},
-      # TODO bump to 0.18 on release
-      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", override: true},
+      {:phoenix_html, "~> 3.0"},
+      {:phoenix_live_view, "~> 0.18.1"},
       {:floki, ">= 0.30.0"},
       {:phoenix_live_reload, "~> 1.2"},
-      {:phoenix_live_dashboard, "~> 0.6"},
+      {:phoenix_live_dashboard, "~> 0.7"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
@@ -53,7 +53,9 @@ defmodule Phoenix.Integration.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:bcrypt_elixir, "~> 3.0"},
       {:argon2_elixir, "~> 3.0"},
-      {:pbkdf2_elixir, "~> 2.0"}
+      {:pbkdf2_elixir, "~> 2.0"},
+      {:heroicons, "~> 0.5"},
+      {:tailwind, "~> 0.1"}
     ]
   end
 end

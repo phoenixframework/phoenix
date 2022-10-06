@@ -46,14 +46,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       # Phoenix.LiveView.HTMLFormatter
-      if Version.match?(System.version(), ">= 1.13.4") do
-        assert_file root_path(@app, "mix.exs"), fn file ->
-          assert file =~ "{:phoenix_live_view, \">= 0.0.0\"}"
-        end
-      else
-        assert_file root_path(@app, "mix.exs"), fn file ->
-          assert file =~ "defp deps do\n    []"
-        end
+      assert_file root_path(@app, "mix.exs"), fn file ->
+        assert file =~ "{:phoenix_live_view, \">= 0.0.0\"}"
       end
 
       assert_file app_path(@app, "mix.exs"), fn file ->
@@ -87,48 +81,25 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file root_path(@app, "config/runtime.exs"), ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
 
-      if Version.match?(System.version(), ">= 1.13.4") do
-        assert_file root_path(@app, ".formatter.exs"), fn file ->
-          assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
-          assert file =~ "inputs: [\"mix.exs\", \"config/*.exs\"]"
-          assert file =~ "subdirectories: [\"apps/*\"]"
-        end
+      assert_file root_path(@app, ".formatter.exs"), fn file ->
+        assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
+        assert file =~ "inputs: [\"mix.exs\", \"config/*.exs\"]"
+        assert file =~ "subdirectories: [\"apps/*\"]"
+      end
 
-        assert_file app_path(@app, ".formatter.exs"), fn file ->
-          assert file =~ "import_deps: [:ecto]"
-          assert file =~ "subdirectories: [\"priv/*/migrations\"]"
-          assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
-          assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\", \"priv/*/seeds.exs\"]"
-        end
+      assert_file app_path(@app, ".formatter.exs"), fn file ->
+        assert file =~ "import_deps: [:ecto, :ecto_sql]"
+        assert file =~ "subdirectories: [\"priv/*/migrations\"]"
+        assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
+        assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\", \"priv/*/seeds.exs\"]"
+      end
 
-        assert_file web_path(@app, ".formatter.exs"), fn file ->
-          assert file =~ "import_deps: [:phoenix]"
-          assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
-          assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\"]"
-          refute file =~ "import_deps: [:ecto]"
-          refute file =~ "subdirectories:"
-        end
-      else
-        assert_file root_path(@app, ".formatter.exs"), fn file ->
-          assert file =~ "inputs: [\"mix.exs\", \"config/*.exs\"]"
-          assert file =~ "subdirectories: [\"apps/*\"]"
-          refute file =~ "plugins:"
-        end
-
-        assert_file app_path(@app, ".formatter.exs"), fn file ->
-          assert file =~ "import_deps: [:ecto]"
-          assert file =~ "subdirectories: [\"priv/*/migrations\"]"
-          assert file =~ "inputs: [\"*.{ex,exs}\", \"{config,lib,test}/**/*.{ex,exs}\", \"priv/*/seeds.exs\"]"
-          refute file =~ "plugins:"
-        end
-
-        assert_file web_path(@app, ".formatter.exs"), fn file ->
-          assert file =~ "import_deps: [:phoenix]"
-          assert file =~ "inputs: [\"*.{ex,exs}\", \"{config,lib,test}/**/*.{ex,exs}\"]"
-          refute file =~ "import_deps: [:ecto]"
-          refute file =~ "subdirectories:"
-          refute file =~ "plugins:"
-        end
+      assert_file web_path(@app, ".formatter.exs"), fn file ->
+        assert file =~ "import_deps: [:phoenix]"
+        assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
+        assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\"]"
+        refute file =~ "import_deps: [:ecto]"
+        refute file =~ "subdirectories:"
       end
 
       assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/defmodule PhxUmb.Application do/
@@ -171,7 +142,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "lib/#{@app}_web/router.ex"), "defmodule PhxUmbWeb.Router"
 
       assert_file web_path(@app, "lib/#{@app}_web/templates/layout/root.html.heex"), fn file ->
-        assert file =~ ~s|<meta name="csrf-token" content={get_csrf_token()}>|
+        assert file =~ ~s|<meta name="csrf-token" content={get_csrf_token()} />|
       end
 
       assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.heex")
