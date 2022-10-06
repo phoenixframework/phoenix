@@ -89,21 +89,42 @@ defmodule Phoenix.Channel.Server do
       {pid, _}, cache when pid == from ->
         cache
 
-      {pid, {:fastlane, fastlane_pid, serializer, event_intercepts}}, cache ->
-        if event in event_intercepts do
-          send(pid, msg)
-          cache
-        else
-          case cache do
-            %{^serializer => encoded_msg} ->
-              send(fastlane_pid, encoded_msg)
-              cache
+      {pid, {:fastlane, fastlane_pid, serializer, event_intercepts, event_filters}}, cache ->
+        cond do
+          event in event_filters ->
 
-            %{} ->
-              encoded_msg = serializer.fastlane!(msg)
-              send(fastlane_pid, encoded_msg)
-              Map.put(cache, serializer, encoded_msg)
-          end
+            send? = GenServer.call(pid, {:filter_event, msg})
+
+            if send? do
+              case cache do
+                %{^serializer => encoded_msg} ->
+                  send(fastlane_pid, encoded_msg)
+                  cache
+
+                %{} ->
+                  encoded_msg = serializer.fastlane!(msg)
+                  send(fastlane_pid, encoded_msg)
+                  Map.put(cache, serializer, encoded_msg)
+              end
+            else
+              cache
+            end
+
+          event in event_intercepts ->
+            send(pid, msg)
+            cache
+
+          :else ->
+            case cache do
+              %{^serializer => encoded_msg} ->
+                send(fastlane_pid, encoded_msg)
+                cache
+
+              %{} ->
+                encoded_msg = serializer.fastlane!(msg)
+                send(fastlane_pid, encoded_msg)
+                Map.put(cache, serializer, encoded_msg)
+            end
         end
 
       {pid, _}, cache ->
@@ -266,6 +287,14 @@ defmodule Phoenix.Channel.Server do
   end
 
   @doc false
+  def handle_call({:filter_event, %Broadcast{event: event, payload: payload}}, _from, socket) do
+    res = socket.channel.handle_filter_event?(event, payload, socket)
+
+    {:reply, res, socket}
+    |> handle_result(:handle_call)
+  end
+
+  @doc false
   def handle_call(msg, from, socket) do
     msg
     |> socket.channel.handle_call(from, socket)
@@ -417,7 +446,7 @@ defmodule Phoenix.Channel.Server do
     end
 
     Process.monitor(transport_pid)
-    fastlane = {:fastlane, transport_pid, serializer, channel.__intercepts__()}
+    fastlane = {:fastlane, transport_pid, serializer, channel.__intercepts__(), channel.__filters__()}
     PubSub.subscribe(pubsub_server, topic, metadata: fastlane)
 
     {:noreply, %{socket | joined: true}}

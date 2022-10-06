@@ -417,6 +417,7 @@ defmodule Phoenix.Channel do
       @on_definition unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
       @phoenix_intercepts []
+      @phoenix_filters []
       @phoenix_log_join Keyword.get(opts, :log_join, :info)
       @phoenix_log_handle_in Keyword.get(opts, :log_handle_in, :debug)
       @phoenix_hibernate_after Keyword.get(opts, :hibernate_after, 15_000)
@@ -449,6 +450,8 @@ defmodule Phoenix.Channel do
   defmacro __before_compile__(_) do
     quote do
       def __intercepts__, do: @phoenix_intercepts
+
+      def __filters__, do: @phoenix_filters
     end
   end
 
@@ -463,6 +466,10 @@ defmodule Phoenix.Channel do
   *Note*: intercepting events can introduce significantly more overhead if a
   large number of subscribers must customize a message since the broadcast will
   be encoded N times instead of a single shared encoding across all subscribers.
+
+  If you only want to determine whether a message should be broadcasted to a subscriber
+  `filter` is a better approach as you don't have the overhead of encoding a message
+  N times.
 
   ## Examples
 
@@ -485,6 +492,39 @@ defmodule Phoenix.Channel do
   defmacro intercept(events) do
     quote do
       @phoenix_intercepts unquote(events)
+    end
+  end
+
+  @doc """
+  Defines which Channel events to filter for `handle_filter_event?/3` callbacks.
+
+    ## Examples
+
+      filter ["new_msg"]
+
+      def handle_filter_event?("new_msg", payload, socket) do
+        User.wants_message?(socket.assigns[:user], payload)
+      end
+
+  `handle_filter_event?/3` callbacks must return one of:
+      true |
+      false
+  """
+  defmacro filter(events) do
+    quote do
+      @phoenix_filters unquote(events)
+    end
+  end
+
+  @doc false
+  def __on_definition__(env, :def, :handle_filter_event?, [event, _payload, _socket], _, _)
+      when is_binary(event) do
+    unless event in Module.get_attribute(env.module, :phoenix_filters) do
+      IO.write(
+        "#{Path.relative_to(env.file, File.cwd!())}:#{env.line}: [warning] " <>
+          "A filter for event \"#{event}\" has not yet been defined in #{env.module}.handle_filter_event?/3. " <>
+          "Add \"#{event}\" to your list of filter events with filters/1"
+      )
     end
   end
 

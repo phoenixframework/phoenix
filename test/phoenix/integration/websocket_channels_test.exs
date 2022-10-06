@@ -29,6 +29,15 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
     intercept ["new_msg"]
 
+    filter ["filter_msg"]
+
+    def handle_filter_event?("filter_msg", payload, _socket) do
+      case payload do
+        %{country: "DE"} -> false
+        _ -> true
+      end
+    end
+
     def join(topic, message, socket) do
       Process.register(self(), String.to_atom(topic))
       send(self(), {:after_join, message})
@@ -254,6 +263,12 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         WebsocketClient.send_event(sock, lobby, "new_msg", %{body: "hi!"})
         assert_receive %Message{event: "new_msg", payload: %{"transport" => ":websocket", "body" => "hi!"}}
 
+        Endpoint.broadcast(lobby, "filter_msg", %{body: "hi!", country: "DE"})
+        refute_receive %Message{event: "filter_msg"}
+
+        Endpoint.broadcast(lobby, "filter_msg", %{body: "hi!", country: "US"})
+        assert_receive %Message{event: "filter_msg", payload: %{"body" => "hi!", "country" => "US"}}
+
         WebsocketClient.leave(sock, lobby, %{})
         assert_receive %Message{event: "you_left", payload: %{"message" => "bye!"}}
         assert_receive %Message{event: "phx_reply", payload: %{"status" => "ok"}}
@@ -266,6 +281,8 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
         WebsocketClient.send_event(sock, lobby, "new_msg", %{body: "Should ignore"})
         refute_receive %Message{event: "new_msg"}
+
+
       end
 
       test "transport x_headers are extracted to the socket connect_info" do
