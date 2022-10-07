@@ -805,18 +805,13 @@ defmodule Phoenix.Controller do
       raise "cannot render template #{inspect template} because conn.params[\"_format\"] is not set. " <>
             "Please set `plug :accepts, ~w(html json ...)` in your pipeline."
 
-    render_and_send(conn, format, template, assigns)
+    render_and_send(conn, format, Atom.to_string(template), assigns)
   end
 
   def render(conn, template, assigns)
       when is_binary(template) and (is_map(assigns) or is_list(assigns)) do
-    case Path.extname(template) do
-      "." <> format ->
-        render_and_send(conn, format, template, assigns)
-      "" ->
-        raise "cannot render template #{inspect template} without format. Use an atom if the " <>
-              "template format is meant to be set dynamically based on the request format"
-    end
+    {base, format} = split_template(template)
+    render_and_send(conn, format, base, assigns)
   end
 
   def render(conn, view, template)
@@ -835,7 +830,6 @@ defmodule Phoenix.Controller do
   end
 
   defp render_and_send(conn, format, template, assigns) do
-    template = template_name(template, format)
     view =
       case Map.get(conn.private, :phoenix_view) do
         %{:_ => view} when is_atom(view) and not is_nil(view) -> view
@@ -857,12 +851,13 @@ defmodule Phoenix.Controller do
 
     case layout_format? and root_layout(conn) do
       {layout_mod, layout_tpl} ->
-        inner = Phoenix.View.render(view, template, render_assigns)
+        {layout_base, _} = split_template(layout_tpl)
+        inner = Phoenix.Template.render(view, template, format, render_assigns)
         root_assigns = render_assigns |> Map.put(:inner_content, inner) |> Map.delete(:layout)
-        Phoenix.View.render_to_iodata(layout_mod, template_name(layout_tpl, format), root_assigns)
+        Phoenix.Template.render_to_iodata(layout_mod, layout_base, format, root_assigns)
 
       false ->
-        Phoenix.View.render_to_iodata(view, template, render_assigns)
+        Phoenix.Template.render_to_iodata(view, template, format, render_assigns)
     end
   end
 
@@ -876,7 +871,7 @@ defmodule Phoenix.Controller do
       end
 
     conn
-    |> put_private(:phoenix_template, template)
+    |> put_private(:phoenix_template, template <> "." <> format)
     |> Map.update!(:assigns, fn prev ->
       prev
       |> Map.merge(assigns)
@@ -893,6 +888,21 @@ defmodule Phoenix.Controller do
 
   defp to_map(assigns) when is_map(assigns), do: assigns
   defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
+
+  defp split_template(name) when is_atom(name), do: {Atom.to_string(name), nil}
+  defp split_template(name) when is_binary(name) do
+    case :binary.split(name, ".") do
+      [base, format] ->
+        {base, format}
+
+      [^name] ->
+        raise "cannot render template #{inspect(name)} without format. Use an atom if the " <>
+              "template format is meant to be set dynamically based on the request format"
+
+      [base | formats] ->
+        {base, List.last(formats)}
+    end
+  end
 
   defp template_name(name, format) when is_atom(name), do:
     Atom.to_string(name) <> "." <> format

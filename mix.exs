@@ -70,7 +70,12 @@ defmodule Phoenix.MixProject do
       {:plug_crypto, "~> 1.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
-      {:phoenix_view, "~> 1.0"},
+
+      # TODO bump to hex before 1.7 release
+      # {:phoenix_view, github: "phoenixframework/phoenix_view", branch: "cm-formats", optional: true, override: true},
+      {:phoenix_view, path: "~/oss/phoenix_view", override: true},
+      # {:phoenix_template, github: "phoenixframework/phoenix_template", branch: "cm-renders", override: true},
+      {:phoenix_template, path: "~/oss/phoenix_template", override: true},
 
       # Optional deps
       {:plug_cowboy, "~> 2.2", optional: true},
