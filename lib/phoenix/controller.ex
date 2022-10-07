@@ -866,7 +866,8 @@ defmodule Phoenix.Controller do
 
     layout =
       case layout_format? and assigns_layout(conn, assigns) do
-        {mod, layout} -> {mod, template_name(layout, format)}
+        {mod, layout} when is_binary(layout) -> {mod, Path.rootname(layout)}
+        {mod, layout} when is_atom(layout) -> {mod, Atom.to_string(layout)}
         false -> false
       end
 
@@ -903,11 +904,6 @@ defmodule Phoenix.Controller do
         {base, List.last(formats)}
     end
   end
-
-  defp template_name(name, format) when is_atom(name), do:
-    Atom.to_string(name) <> "." <> format
-  defp template_name(name, _format) when is_binary(name), do:
-    name
 
   defp send_resp(conn, default_status, default_content_type, body) do
     conn

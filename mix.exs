@@ -72,10 +72,8 @@ defmodule Phoenix.MixProject do
       {:phoenix_pubsub, "~> 2.1"},
 
       # TODO bump to hex before 1.7 release
-      # {:phoenix_view, github: "phoenixframework/phoenix_view", branch: "cm-formats", optional: true, override: true},
-      {:phoenix_view, path: "~/oss/phoenix_view", override: true},
-      # {:phoenix_template, github: "phoenixframework/phoenix_template", branch: "cm-renders", override: true},
-      {:phoenix_template, path: "~/oss/phoenix_template", override: true},
+      {:phoenix_view, github: "phoenixframework/phoenix_view", optional: true, override: true},
+      {:phoenix_template, github: "phoenixframework/phoenix_template"},
 
       # Optional deps
       {:plug_cowboy, "~> 2.2", optional: true},
