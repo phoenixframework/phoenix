@@ -219,9 +219,12 @@ defmodule Phoenix.Router.Helpers do
         defp segments(segments, query, reserved, trailing_slash?, _opts)
              when is_list(query) or is_map(query) do
           dict =
-            for {k, v} <- query,
-                (k = to_string(k)) not in reserved,
-                do: {k, v}
+            for {k, v} <- query, (k = to_string(k)) not in reserved do
+              {k, case v do
+                [] -> nil
+                _ -> v
+              end}
+            end
 
           case Conn.Query.encode(dict, &to_param/1) do
             "" -> maybe_append_slash(segments, trailing_slash?)
