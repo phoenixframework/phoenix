@@ -624,7 +624,7 @@ defmodule Phoenix.Socket.Transport do
   defp compare_host?(_request_host, nil),
     do: true
   defp compare_host?(request_host, "*." <> allowed_host),
-    do: String.ends_with?(request_host, allowed_host)
+    do: request_host == allowed_host or String.ends_with?(request_host, "." <> allowed_host)
   defp compare_host?(request_host, allowed_host),
     do: request_host == allowed_host
 
