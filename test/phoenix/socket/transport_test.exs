@@ -85,6 +85,12 @@ defmodule Phoenix.Socket.TransportTest do
       refute conn.halted
       conn = check_origin("https://org1.ex.com", check_origin: origins)
       refute conn.halted
+
+      conn = check_origin("https://ex.com", check_origin: origins)
+      refute conn.halted
+
+      conn = check_origin("https://org1.prefix-ex.com", check_origin: origins)
+      assert conn.halted
     end
 
     test "nested wildcard subdomains" do
@@ -92,6 +98,15 @@ defmodule Phoenix.Socket.TransportTest do
 
       conn = check_origin("http://org1.foo.example.com", check_origin: origins)
       refute conn.halted
+
+      conn = check_origin("http://foo.example.com", check_origin: origins)
+      refute conn.halted
+
+      conn = check_origin("http://bad.example.com", check_origin: origins)
+      assert conn.halted
+
+      conn = check_origin("http://org1.prefix-foo.example.com", check_origin: origins)
+      assert conn.halted
 
       conn = check_origin("http://org1.bar.example.com", check_origin: origins)
       assert conn.halted
