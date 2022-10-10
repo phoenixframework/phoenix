@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.5 (2022-10-10)
+  * Fix security vulnerability in wildcard `check_origin` configurations
+
 ## 1.3.4 (2018-08-06)
 
 * Bug Fixes
