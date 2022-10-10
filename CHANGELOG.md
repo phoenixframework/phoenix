@@ -12,6 +12,9 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+### 1.5.14 (2022-10-10)
+  * Fix security vulnerability in wildcard `check_origin` configurations
+
 ### 1.5.13 (2021-09-22)
 
 ### Bug Fixes
