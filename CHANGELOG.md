@@ -28,6 +28,9 @@ Note the `:websocket`/`:longpoll` configuration given to `socket/3` will only ap
 
 The old APIs for building transports are also deprecated. The good news is: adapting an existing transport to the new API is a less error prone process where you should mostly remove code.
 
+## 1.4.18 (2022-10-10)
+ * Fix security vulnerability in wildcard `check_origin` configurations
+
 ## 1.4.17 (2020-04-23)
 
 ### Bug Fixes
