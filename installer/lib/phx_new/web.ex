@@ -58,6 +58,7 @@ defmodule Phx.New.Web do
              project_path: project_path,
              web_path: web_path,
              web_app: app,
+             lib_web_name: app,
              generators: [context_app: false],
              web_namespace: project.app_mod}
   end
