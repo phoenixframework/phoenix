@@ -1,9 +1,9 @@
 defmodule <%= @web_namespace %>.PageController do
   use <%= @web_namespace %>, :controller
 
-  plug :put_layout, false when action in [:index]
+  plug :put_layout, false when action in [:home]
 
-  def index(conn, _params) do
-    render(conn, "index.html")
+  def home(conn, _params) do
+    render(conn, "home.html")
   end
 end

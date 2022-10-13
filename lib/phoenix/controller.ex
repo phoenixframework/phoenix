@@ -1687,7 +1687,7 @@ defmodule Phoenix.Controller do
 
           other ->
             raise ArgumentError, """
-            expected :layouts to be a list of format module pairs of the form: [html: LayoutHTML] or [html: {LayoutHTML, :app}]
+            expected :layouts to be a list of format module pairs of the form: [html: DemoWEb.Layouts] or [html: {DemoWeb.Layouts, :app}]
 
             Got: #{inspect(other)}
             """

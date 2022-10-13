@@ -24,7 +24,10 @@ defmodule Phx.New.Generator do
 
     templates_ast =
       for {name, mappings} <- Module.get_attribute(env.module, :templates) do
-        for {format, source, _, _} <- mappings, format != :keep do
+        for {format, _proj_location, files} <- mappings,
+            format != :keep,
+            {source, _target} <- files,
+            source = to_string(source) do
           path = Path.join(root, source)
 
           if format in [:config, :prod_config, :eex] do
@@ -61,7 +64,9 @@ defmodule Phx.New.Generator do
   def copy_from(%Project{} = project, mod, name) when is_atom(name) do
     mapping = mod.template_files(name)
 
-    for {format, source, project_location, target_path} <- mapping do
+    for {format, project_location, files} <- mapping,
+        {source, target_path} <- files,
+        source = to_string(source) do
       target = Project.join_path(project, project_location, target_path)
 
       case format do
