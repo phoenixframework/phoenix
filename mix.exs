@@ -72,7 +72,11 @@ defmodule Phoenix.MixProject do
       {:plug_crypto, "~> 1.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
-      {:phoenix_view, "~> 1.0"},
+
+      # TODO bump to hex before 1.7 release
+      {:phoenix_view, github: "phoenixframework/phoenix_view", optional: true, override: true},
+      {:phoenix_template, github: "phoenixframework/phoenix_template"},
+
       # TODO drop castore when we require OTP 25+
       {:castore, ">= 0.0.0"},
 
@@ -123,7 +127,7 @@ defmodule Phoenix.MixProject do
       extras: extras(),
       groups_for_extras: groups_for_extras(),
       groups_for_functions: [
-        "Reflection": &(&1[:type] == :reflection)
+        Reflection: &(&1[:type] == :reflection)
       ],
       skip_undefined_reference_warnings_on: ["CHANGELOG.md"]
     ]
@@ -200,7 +204,7 @@ defmodule Phoenix.MixProject do
         Phoenix.CodeReloader,
         Phoenix.Endpoint.Cowboy2Adapter
       ],
-      "Digester": [
+      Digester: [
         Phoenix.Digester.Compressor,
         Phoenix.Digester.Gzip
       ],

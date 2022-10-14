@@ -1,8 +1,8 @@
 defmodule Mix.Tasks.Phx.Gen.Html do
-  @shortdoc "Generates controller, views, and context for an HTML resource"
+  @shortdoc "Generates controller, HTML views, and context for an HTML resource"
 
   @moduledoc """
-  Generates controller, views, and context for an HTML resource.
+  Generates controller, HTML views, and context for an HTML resource.
 
       mix phx.gen.html Accounts User users name:string age:integer
 
@@ -26,16 +26,16 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
     * a context module in `lib/app/accounts.ex` for the accounts API
     * a schema in `lib/app/accounts/user.ex`, with an `users` table
-    * a view in `lib/app_web/views/user_view.ex`
     * a controller in `lib/app_web/controllers/user_controller.ex`
-    * default CRUD templates in `lib/app_web/templates/user`
+    * an HTML view collocated with the controller in `lib/app_web/controllers/user_html.ex`
+    * default CRUD templates in `lib/app_web/controllers/user_html`
 
   ## The context app
 
   A migration file for the repository and test files for the context and
   controller features will also be generated.
 
-  The location of the web files (controllers, views, templates, etc) in an
+  The location of the web files (controllers, HTML views, templates, etc) in an
   umbrella application will vary based on the `:context_app` config located
   in your applications `:generators` configuration. When set, the Phoenix
   generators will generate web files directly in your lib and test folders
@@ -53,14 +53,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   ## Web namespace
 
-  By default, the controller and view will be namespaced by the schema name.
+  By default, the controller and HTML view will be namespaced by the schema name.
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
       mix phx.gen.html Sales User users --web Sales
 
   Which would generate a `lib/app_web/controllers/sales/user_controller.ex` and
-  `lib/app_web/views/sales/user_view.ex`.
+  `lib/app_web/controllers/sales/user_html.ex`.
 
   ## Customizing the context, schema, tables and migrations
 
@@ -81,7 +81,9 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.html must be invoked from within your *_web application root directory"
+      Mix.raise(
+        "mix phx.gen.html must be invoked from within your *_web application root directory"
+      )
     end
 
     {context, schema} = Gen.Context.build(args)
@@ -103,27 +105,33 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     |> Kernel.++(context_files(context))
     |> Mix.Phoenix.prompt_for_conflicts()
   end
+
   defp context_files(%Context{generate?: true} = context) do
     Gen.Context.files_to_be_generated(context)
   end
+
   defp context_files(%Context{generate?: false}) do
     []
   end
 
   @doc false
   def files_to_be_generated(%Context{schema: schema, context_app: context_app}) do
+    singular = schema.singular
     web_prefix = Mix.Phoenix.web_path(context_app)
     test_prefix = Mix.Phoenix.web_test_path(context_app)
     web_path = to_string(schema.web_path)
+    controller_pre = Path.join([web_prefix, "controllers", web_path])
+    test_pre = Path.join([test_prefix, "controllers", web_path])
 
     [
-      {:eex, "controller.ex",       Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_controller.ex"])},
-      {:eex, "edit.html.heex",      Path.join([web_prefix, "templates", web_path, schema.singular, "edit.html.heex"])},
-      {:eex, "index.html.heex",     Path.join([web_prefix, "templates", web_path, schema.singular, "index.html.heex"])},
-      {:eex, "new.html.heex",       Path.join([web_prefix, "templates", web_path, schema.singular, "new.html.heex"])},
-      {:eex, "show.html.heex",      Path.join([web_prefix, "templates", web_path, schema.singular, "show.html.heex"])},
-      {:eex, "view.ex",             Path.join([web_prefix, "views", web_path, "#{schema.singular}_view.ex"])},
-      {:eex, "controller_test.exs", Path.join([test_prefix, "controllers", web_path, "#{schema.singular}_controller_test.exs"])},
+      {:eex, "controller.ex", Path.join([controller_pre, "#{singular}_controller.ex"])},
+      {:eex, "edit.html.heex", Path.join([controller_pre, "#{singular}_html", "edit.html.heex"])},
+      {:eex, "index.html.heex",
+       Path.join([controller_pre, "#{singular}_html", "index.html.heex"])},
+      {:eex, "new.html.heex", Path.join([controller_pre, "#{singular}_html", "new.html.heex"])},
+      {:eex, "show.html.heex", Path.join([controller_pre, "#{singular}_html", "show.html.heex"])},
+      {:eex, "html.ex", Path.join([controller_pre, "#{singular}_html.ex"])},
+      {:eex, "controller_test.exs", Path.join([test_pre, "#{singular}_controller_test.exs"])}
     ]
   end
 
@@ -138,24 +146,25 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
     if schema.web_namespace do
-      Mix.shell().info """
+      Mix.shell().info("""
 
       Add the resource to your #{schema.web_namespace} :browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          scope "/#{schema.web_path}", #{inspect Module.concat(context.web_module, schema.web_namespace)}, as: :#{schema.web_path} do
+          scope "/#{schema.web_path}", #{inspect(Module.concat(context.web_module, schema.web_namespace))}, as: :#{schema.web_path} do
             pipe_through :browser
             ...
-            resources "/#{schema.plural}", #{inspect schema.alias}Controller
+            resources "/#{schema.plural}", #{inspect(schema.alias)}Controller
           end
-      """
+      """)
     else
-      Mix.shell().info """
+      Mix.shell().info("""
 
       Add the resource to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          resources "/#{schema.plural}", #{inspect schema.alias}Controller
-      """
+          resources "/#{schema.plural}", #{inspect(schema.alias)}Controller
+      """)
     end
+
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end
 
@@ -164,26 +173,37 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     Enum.map(schema.attrs, fn
       {_, {:references, _}} ->
         nil
+
       {key, :integer} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" />)
+
       {key, :float} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" step="any" />)
+
       {key, :decimal} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" step="any" />)
+
       {key, :boolean} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="checkbox" label="#{label(key)}" />)
+
       {key, :text} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="text" label="#{label(key)}" />)
+
       {key, :date} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="date" label="#{label(key)}" />)
+
       {key, :time} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="time" label="#{label(key)}" />)
+
       {key, :utc_datetime} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="datetime-local" label="#{label(key)}" />)
+
       {key, :naive_datetime} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="datetime-local" label="#{label(key)}" />)
+
       {key, {:array, :integer}} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="datetime-local" label="#{label(key)}" />)
+
       {key, {:array, _}} ->
         ~s"""
         <.input field={{f, #{inspect(key)}}} type="select" multiple label="#{label(key)}">
@@ -191,7 +211,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
           <:option value="option2">Option 2</:option>
         </.input>
         """
-      {key, {:enum, _}}  ->
+
+      {key, {:enum, _}} ->
         ~s"""
         <.input field={{f, #{inspect(key)}}} type="select" label="#{label(key)}">
           <:option>Choose a value</:option>
@@ -200,7 +221,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
           </:option>
         </.input>
         """
-      {key, _}  ->
+
+      {key, _} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="text" label="#{label(key)}" />)
     end)
   end

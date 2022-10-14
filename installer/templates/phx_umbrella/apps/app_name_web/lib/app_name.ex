@@ -21,7 +21,10 @@ defmodule <%= @web_namespace %> do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: <%= @web_namespace %>
+      use Phoenix.Controller,
+        namespace: <%= @web_namespace %>,
+        formats: [:html, :json],
+        layouts: [html: <%= @web_namespace %>.Layouts]
 
       import Plug.Conn<%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %>
@@ -43,16 +46,16 @@ defmodule <%= @web_namespace %> do
         only: [get_csrf_token: 0, view_module: 1, view_template: 1]
 
       # Include shared imports and aliases for views
-      unquote(view_helpers())
+      unquote(html_helpers())
     end
   end<%= if @html do %>
 
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {<%= @web_namespace %>.LayoutView, "app.html"}
+        layout: {<%= @web_namespace %>.Layouts, :app}
 
-      unquote(view_helpers())
+      unquote(html_helpers())
     end
   end
 
@@ -60,7 +63,7 @@ defmodule <%= @web_namespace %> do
     quote do
       use Phoenix.LiveComponent
 
-      unquote(view_helpers())
+      unquote(html_helpers())
     end
   end<% end %>
 
@@ -90,16 +93,14 @@ defmodule <%= @web_namespace %> do
     end
   end
 
-  defp view_helpers do
+  defp html_helpers do
     quote do<%= if @html do %>
       import Phoenix.HTML
       import Phoenix.HTML.Form
-      import <%= @web_namespace %>.Components
+      import <%= @web_namespace %>.CoreComponents
 
       alias Phoenix.LiveView.JS
-<% end %>
-      # Import basic rendering functionality (render, render_layout, etc)
-      import Phoenix.View<%= if @gettext do %>
+<% end %><%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %>
       unquote(verified_routes())
     end

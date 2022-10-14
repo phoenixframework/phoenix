@@ -168,8 +168,8 @@ defmodule Phoenix.Controller do
       use Phoenix.Controller.Pipeline
 
       if Keyword.get(opts, :put_default_views, true) do
-        plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, opts), :app}
-        plug :put_new_view, Phoenix.Controller.__view__(__MODULE__)
+        plug :put_new_layout, Phoenix.Controller.__layout__(__MODULE__, opts)
+        plug :put_new_view, Phoenix.Controller.__view__(__MODULE__, opts)
       end
     end
   end
@@ -433,12 +433,60 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_view(Plug.Conn.t, atom) :: Plug.Conn.t
+  @spec put_view(Plug.Conn.t, [{atom | String.t(), atom}] | atom) :: Plug.Conn.t
+  def put_view(%Plug.Conn{state: state} = conn, formats) when state in @unsent and is_list(formats) do
+    put_private_formats(conn, :phoenix_view, :replace, formats)
+  end
   def put_view(%Plug.Conn{state: state} = conn, module) when state in @unsent do
-    put_private(conn, :phoenix_view, module)
+    put_private_formats(conn, :phoenix_view, :replace, _: module)
   end
 
   def put_view(%Plug.Conn{}, _module), do: raise AlreadySentError
+
+  defp put_private_formats(conn, priv_key, kind, formats) when kind in [:new, :replace] do
+    formats =
+      Enum.into(formats, %{}, fn
+        {:_, layout} -> {:_, layout}
+        {format, layout} -> {to_string(format), layout}
+      end)
+
+    update_in(conn.private, fn private ->
+      existing = private[priv_key] || %{}
+      new_formats =
+        case kind do
+          :new -> Map.merge(formats, existing)
+          :replace -> Map.merge(existing, formats)
+        end
+
+      Map.put(private, priv_key, new_formats)
+    end)
+  end
+
+  defp get_private_format(conn, priv_key) do
+    format = conn.private[:phoenix_format]
+
+    case conn.private[priv_key] do
+      %{:_ => value} ->
+        value
+
+      %{^format => value} ->
+        value
+
+      value when value in [nil, false] ->
+        false
+
+      %{} = formats when map_size(formats) == 1 ->
+        {_format, value} = (Enum.at(formats, 0))
+        value
+
+      %{} = formats ->
+        # fallback to potentially checking _format query string
+        case Map.fetch(formats, get_format(conn)) do
+          {:ok, value} -> value
+          :error -> raise ArgumentError, "no format set to select view module from #{inspect(Map.keys(formats))}"
+        end
+    end
+  end
 
   @doc """
   Stores the view for rendering if one was not stored yet.
@@ -446,9 +494,11 @@ defmodule Phoenix.Controller do
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
   @spec put_new_view(Plug.Conn.t, atom) :: Plug.Conn.t
-  def put_new_view(%Plug.Conn{state: state} = conn, module)
-      when state in @unsent do
-    update_in conn.private, &Map.put_new(&1, :phoenix_view, module)
+  def put_new_view(%Plug.Conn{state: state} = conn, formats) when state in @unsent and is_list(formats) do
+    put_private_formats(conn, :phoenix_view, :new, formats)
+  end
+  def put_new_view(%Plug.Conn{state: state} = conn, module) when state in @unsent do
+    put_new_view(conn, _: module)
   end
 
   def put_new_view(%Plug.Conn{}, _module), do: raise AlreadySentError
@@ -457,7 +507,9 @@ defmodule Phoenix.Controller do
   Retrieves the current view.
   """
   @spec view_module(Plug.Conn.t) :: atom
-  def view_module(conn), do: conn.private.phoenix_view
+  def view_module(conn) do
+    get_private_format(conn, :phoenix_view)
+  end
 
   @doc """
   Stores the layout for rendering.
@@ -492,26 +544,46 @@ defmodule Phoenix.Controller do
   @spec put_layout(Plug.Conn.t, {atom, binary | atom} | atom | binary | false) :: Plug.Conn.t
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
-      do_put_layout(conn, :phoenix_layout, layout)
+      do_put_layout(conn, :phoenix_layout, :replace, layout)
     else
       raise AlreadySentError
     end
   end
 
-  defp do_put_layout(conn, private_key, false) do
-    put_private(conn, private_key, false)
+  defp do_put_layout(conn, private_key, kind, layouts) when is_list(layouts) do
+    formats =
+      Enum.map(layouts, fn
+        {format, false} ->
+          {format, false}
+
+        {format, {mod, layout}} when is_atom(mod) and (is_atom(layout) or is_binary(layout)) ->
+          {format, {mod, layout}}
+
+        {format, other} ->
+          raise ArgumentError, """
+          put_layout and put_root_layout expects an module and template per format, such as: #{format}: {MyView, :app}
+
+            got: #{inspect(other)}
+          """
+      end)
+
+    put_private_formats(conn, private_key, kind, formats)
   end
 
-  defp do_put_layout(conn, private_key, {mod, layout}) when is_atom(mod) do
-    put_private(conn, private_key, {mod, layout})
-  end
+  defp do_put_layout(conn, private_key, kind, no_format) do
+    # TODO: Deprecate calls to put_layout_format
+    case no_format do
+      false ->
+        do_put_layout(conn, private_key, kind, [{:_, false}])
 
-  defp do_put_layout(conn, private_key, layout) when is_binary(layout) or is_atom(layout) do
-    update_in conn.private, fn private ->
-      case Map.get(private, private_key, false) do
-        {mod, _} -> Map.put(private, private_key, {mod, layout})
-        false    -> raise "cannot use put_layout/2  or put_root_layout/2 with atom/binary when layout is false, use a tuple instead"
-      end
+      {mod, layout} when is_atom(mod) ->
+        do_put_layout(conn, private_key, kind, [{:_, {mod, layout}}])
+
+      layout when is_binary(layout) or is_atom(layout) ->
+        case Map.get(conn.private, private_key, %{:_ => false}) do
+          %{:_ => {mod, _}} -> do_put_layout(conn, private_key, kind, [{:_, {mod, layout}}])
+          %{:_ => false} -> raise "cannot use put_layout/2 or put_root_layout/2 with atom/binary when layout is false, use a tuple instead"
+        end
     end
   end
 
@@ -522,12 +594,9 @@ defmodule Phoenix.Controller do
   """
   @spec put_new_layout(Plug.Conn.t, {atom, binary | atom} | false) :: Plug.Conn.t
   def put_new_layout(%Plug.Conn{state: state} = conn, layout)
-      when (is_tuple(layout) and tuple_size(layout) == 2) or layout == false do
-    if state in @unsent do
-      update_in conn.private, &Map.put_new(&1, :phoenix_layout, layout)
-    else
-      raise AlreadySentError
-    end
+      when (is_tuple(layout) and tuple_size(layout) == 2) or is_list(layout) or layout == false do
+    unless state in @unsent, do: raise AlreadySentError
+    do_put_layout(conn, :phoenix_layout, :new, layout)
   end
 
   @doc """
@@ -565,7 +634,7 @@ defmodule Phoenix.Controller do
   @spec put_root_layout(Plug.Conn.t, {atom, binary | atom} | atom | binary | false) :: Plug.Conn.t
   def put_root_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
-      do_put_layout(conn, :phoenix_root_layout, layout)
+      do_put_layout(conn, :phoenix_root_layout, :replace, layout)
     else
       raise AlreadySentError
     end
@@ -605,13 +674,17 @@ defmodule Phoenix.Controller do
   Retrieves the current layout.
   """
   @spec layout(Plug.Conn.t) :: {atom, String.t | atom} | false
-  def layout(conn), do: conn.private |> Map.get(:phoenix_layout, false)
+  def layout(conn) do
+    get_private_format(conn, :phoenix_layout)
+  end
 
   @doc """
   Retrieves the current root layout.
   """
   @spec root_layout(Plug.Conn.t) :: {atom, String.t | atom} | false
-  def root_layout(conn), do: conn.private |> Map.get(:phoenix_root_layout, false)
+  def root_layout(conn) do
+    get_private_format(conn, :phoenix_root_layout)
+  end
 
   @doc """
   Render the given template or the default template
@@ -696,7 +769,7 @@ defmodule Phoenix.Controller do
       defmodule MyAppWeb.UserController do
         use Phoenix.Controller
 
-        plug :put_view, MyAppWeb.SpecialView
+        plug :put_view, html: MyAppWeb.SpecialView
 
         def show(conn, _params) do
           render(conn, :show, message: "Hello")
@@ -732,18 +805,13 @@ defmodule Phoenix.Controller do
       raise "cannot render template #{inspect template} because conn.params[\"_format\"] is not set. " <>
             "Please set `plug :accepts, ~w(html json ...)` in your pipeline."
 
-    render_and_send(conn, format, template, assigns)
+    render_and_send(conn, format, Atom.to_string(template), assigns)
   end
 
   def render(conn, template, assigns)
       when is_binary(template) and (is_map(assigns) or is_list(assigns)) do
-    case Path.extname(template) do
-      "." <> format ->
-        render_and_send(conn, format, template, assigns)
-      "" ->
-        raise "cannot render template #{inspect template} without format. Use an atom if the " <>
-              "template format is meant to be set dynamically based on the request format"
-    end
+    {base, format} = split_template(template)
+    render_and_send(conn, format, base, assigns)
   end
 
   def render(conn, view, template)
@@ -762,10 +830,12 @@ defmodule Phoenix.Controller do
   end
 
   defp render_and_send(conn, format, template, assigns) do
-    template = template_name(template, format)
     view =
-      Map.get(conn.private, :phoenix_view) ||
-        raise "a view module was not specified, set one with put_view/2"
+      case Map.get(conn.private, :phoenix_view) do
+        %{:_ => view} when is_atom(view) and not is_nil(view) -> view
+        %{^format => view} -> view
+        _ -> raise "a view module was not specified for #{format}, set one with put_view/2"
+      end
 
     layout_format? = format in layout_formats(conn)
     conn = prepare_assigns(conn, assigns, template, format, layout_format?)
@@ -781,12 +851,13 @@ defmodule Phoenix.Controller do
 
     case layout_format? and root_layout(conn) do
       {layout_mod, layout_tpl} ->
-        inner = Phoenix.View.render(view, template, render_assigns)
+        {layout_base, _} = split_template(layout_tpl)
+        inner = Phoenix.Template.render(view, template, format, render_assigns)
         root_assigns = render_assigns |> Map.put(:inner_content, inner) |> Map.delete(:layout)
-        Phoenix.View.render_to_iodata(layout_mod, template_name(layout_tpl, format), root_assigns)
+        Phoenix.Template.render_to_iodata(layout_mod, layout_base, format, root_assigns)
 
       false ->
-        Phoenix.View.render_to_iodata(view, template, render_assigns)
+        Phoenix.Template.render_to_iodata(view, template, format, render_assigns)
     end
   end
 
@@ -795,12 +866,13 @@ defmodule Phoenix.Controller do
 
     layout =
       case layout_format? and assigns_layout(conn, assigns) do
-        {mod, layout} -> {mod, template_name(layout, format)}
+        {mod, layout} when is_binary(layout) -> {mod, Path.rootname(layout)}
+        {mod, layout} when is_atom(layout) -> {mod, Atom.to_string(layout)}
         false -> false
       end
 
     conn
-    |> put_private(:phoenix_template, template)
+    |> put_private(:phoenix_template, template <> "." <> format)
     |> Map.update!(:assigns, fn prev ->
       prev
       |> Map.merge(assigns)
@@ -818,10 +890,20 @@ defmodule Phoenix.Controller do
   defp to_map(assigns) when is_map(assigns), do: assigns
   defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
 
-  defp template_name(name, format) when is_atom(name), do:
-    Atom.to_string(name) <> "." <> format
-  defp template_name(name, _format) when is_binary(name), do:
-    name
+  defp split_template(name) when is_atom(name), do: {Atom.to_string(name), nil}
+  defp split_template(name) when is_binary(name) do
+    case :binary.split(name, ".") do
+      [base, format] ->
+        {base, format}
+
+      [^name] ->
+        raise "cannot render template #{inspect(name)} without format. Use an atom if the " <>
+              "template format is meant to be set dynamically based on the request format"
+
+      [base | formats] ->
+        {base, List.last(formats)}
+    end
+  end
 
   defp send_resp(conn, default_status, default_content_type, body) do
     conn
@@ -891,7 +973,7 @@ defmodule Phoenix.Controller do
 
   See `get_format/1` for retrieval.
   """
-  def put_format(conn, format), do: put_private(conn, :phoenix_format, format)
+  def put_format(conn, format), do: put_private(conn, :phoenix_format, to_string(format))
 
   @doc """
   Returns the request format, such as "json", "html".
@@ -1569,11 +1651,15 @@ defmodule Phoenix.Controller do
   end
 
   @doc false
-  def __view__(controller_module) do
-    controller_module
-    |> Phoenix.Naming.unsuffix("Controller")
-    |> Kernel.<>("View")
-    |> String.to_atom()
+  def __view__(controller_module, opts) do
+    view_base = Phoenix.Naming.unsuffix(controller_module, "Controller")
+    case Keyword.fetch(opts, :formats) do
+      {:ok, formats} when is_list(formats) ->
+        for format <- formats, do: {format, :"#{view_base}#{String.upcase(to_string(format))}"}
+
+      :error ->
+        :"#{view_base}View"
+    end
   end
 
   @doc false
@@ -1589,6 +1675,26 @@ defmodule Phoenix.Controller do
         |> Enum.take(2)
         |> Module.concat()
       end
-    Module.concat(namespace, "LayoutView")
+
+    case Keyword.fetch(opts, :layouts) do
+      {:ok, formats} when is_list(formats) ->
+        Enum.map(formats, fn
+          {format, mod} when is_atom(mod) ->
+            {format, {mod, :app}}
+
+          {format, {mod, template}} when is_atom(mod) and is_atom(template) ->
+            {format, {mod, template}}
+
+          other ->
+            raise ArgumentError, """
+            expected :layouts to be a list of format module pairs of the form: [html: DemoWEb.Layouts] or [html: {DemoWeb.Layouts, :app}]
+
+            Got: #{inspect(other)}
+            """
+        end)
+
+      :error ->
+        {Module.concat(namespace, "LayoutView"), :app}
+    end
   end
 end

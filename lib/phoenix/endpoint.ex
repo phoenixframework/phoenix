@@ -207,7 +207,10 @@ defmodule Phoenix.Endpoint do
     * `:render_errors` - responsible for rendering templates whenever there
       is a failure in the application. For example, if the application crashes
       with a 500 error during a HTML request, `render("500.html", assigns)`
-      will be called in the view given to `:render_errors`. Defaults to:
+      will be called in the view given to `:render_errors`.
+      A `:view` may be passed to render errors with an `:accept` listing which
+      formats the view supports. Alternatively, each a `:formats` list can be provided
+      to specify a module per format to handle error rendering. Defaults to:
 
           [view: MyApp.ErrorView, accepts: ~w(html), layout: false, log: :debug]
 

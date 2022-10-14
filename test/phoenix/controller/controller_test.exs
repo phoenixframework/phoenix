@@ -83,6 +83,31 @@ defmodule Phoenix.Controller.ControllerTest do
     end
   end
 
+  test "put_layout/2 and layout/1 with formats" do
+    conn = conn(:get, "/")
+    assert layout(conn) == false
+
+    conn = put_layout(conn, html: {AppView, :app})
+    assert layout(conn) == {AppView, :app}
+
+    conn = put_layout(conn, html: {AppView, :app}, print: {AppView, :print})
+
+    conn = put_format(conn, "html")
+    assert layout(conn) == {AppView, :app}
+
+
+    conn = put_format(conn, "print")
+    assert layout(conn) == {AppView, :print}
+
+    assert_raise ArgumentError, fn ->
+      put_layout(conn, html: :app)
+    end
+
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_layout(sent_conn(), {AppView, :print})
+    end
+  end
+
   test "put_root_layout/2 and root_layout/1" do
     conn = conn(:get, "/")
     assert root_layout(conn) == false
@@ -108,6 +133,31 @@ defmodule Phoenix.Controller.ControllerTest do
     end
   end
 
+  test "put_root_layout/2 and root_layout/1 with formats" do
+    conn = conn(:get, "/")
+    assert root_layout(conn) == false
+
+    conn = put_root_layout(conn, html: {AppView, :app})
+    assert root_layout(conn) == {AppView, :app}
+
+    conn = put_root_layout(conn, html: {AppView, :app}, print: {AppView, :print})
+
+    conn = put_format(conn, "html")
+    assert root_layout(conn) == {AppView, :app}
+
+
+    conn = put_format(conn, "print")
+    assert root_layout(conn) == {AppView, :print}
+
+    assert_raise ArgumentError, fn ->
+      put_root_layout(conn, html: :app)
+    end
+
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_root_layout(sent_conn(), {AppView, :print})
+    end
+  end
+
   test "put_new_layout/2" do
     conn = put_new_layout(conn(:get, "/"), false)
     assert layout(conn) == false
@@ -124,6 +174,27 @@ defmodule Phoenix.Controller.ControllerTest do
     end
   end
 
+  test "put_new_layout/2 with formats" do
+    conn = put_new_layout(conn(:get, "/"), html: false, json: false)
+    conn = put_format(conn, "html")
+    assert layout(conn) == false
+    conn = put_new_layout(conn, html: {AppView, :app})
+    assert layout(conn) == false
+
+    conn = put_new_layout(conn(:get, "/"), html: {AppView, :app}, json: false)
+    conn = put_format(conn, "html")
+    assert layout(conn) == {AppView, :app}
+    conn = put_new_layout(conn, false)
+    assert layout(conn) == false
+
+    conn = put_format(conn, "json")
+    assert layout(conn) == false
+
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_new_layout(sent_conn(), {AppView, :app})
+    end
+  end
+
   test "put_view/2 and put_new_view/2" do
     conn = put_new_view(conn(:get, "/"), Hello)
     assert view_module(conn) == Hello
@@ -137,6 +208,44 @@ defmodule Phoenix.Controller.ControllerTest do
     end
     assert_raise Plug.Conn.AlreadySentError, fn ->
       put_view sent_conn(), Hello
+    end
+  end
+
+  test "put_view/2 and put_new_view/2 with formats" do
+    conn =
+      conn(:get, "/")
+      |> put_format("print")
+      |> put_new_view(html: Hello, json: HelloJSON)
+
+    assert_raise ArgumentError, ~r/no format set to select view module/, fn ->
+      view_module(conn) == Hello
+    end
+
+    conn =
+      conn(:get, "/")
+      |> put_format("html")
+      |> put_new_view(html: Hello, json: HelloJSON)
+
+    conn = put_format(conn, "html")
+    assert view_module(conn) == Hello
+
+    conn = put_new_view(conn, html: World)
+    assert view_module(conn) == Hello
+    conn = put_view(conn, html: World)
+    assert view_module(conn) == World
+
+    conn = put_format(conn, "json")
+    assert view_module(conn) == HelloJSON
+
+    conn = put_format(conn, "json")
+    conn = put_new_view(conn, Hello)
+    assert view_module(conn) == Hello
+
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_new_view sent_conn(), html: Hello
+    end
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_view sent_conn(), html: Hello
     end
   end
 
@@ -602,19 +711,29 @@ defmodule Phoenix.Controller.ControllerTest do
   end
 
   test "__view__ returns the view module based on controller module" do
-    assert Phoenix.Controller.__view__(MyApp.UserController) == MyApp.UserView
-    assert Phoenix.Controller.__view__(MyApp.Admin.UserController) == MyApp.Admin.UserView
+    assert Phoenix.Controller.__view__(MyApp.UserController, []) == MyApp.UserView
+    assert Phoenix.Controller.__view__(MyApp.Admin.UserController, []) == MyApp.Admin.UserView
+    assert Phoenix.Controller.__view__(MyApp.Admin.UserController, formats: [:html, :json]) ==
+      [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserJSON]
   end
 
   test "__layout__ returns the layout module based on controller module" do
     assert Phoenix.Controller.__layout__(UserController, []) ==
-           LayoutView
+           {LayoutView, :app}
     assert Phoenix.Controller.__layout__(MyApp.UserController, []) ==
-           MyApp.LayoutView
+           {MyApp.LayoutView, :app}
     assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, []) ==
-           MyApp.LayoutView
+           {MyApp.LayoutView, :app}
     assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, namespace: MyApp.Admin) ==
-           MyApp.Admin.LayoutView
+           {MyApp.Admin.LayoutView, :app}
+
+    opts = [layouts: [html: MyApp.LayoutHTML]]
+    assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, opts) ==
+           [html: {MyApp.LayoutHTML, :app}]
+
+    opts = [layouts: [html: {MyApp.LayoutHTML, :application}]]
+    assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, opts) ==
+           [html: {MyApp.LayoutHTML, :application}]
   end
 
   defp sent_conn do

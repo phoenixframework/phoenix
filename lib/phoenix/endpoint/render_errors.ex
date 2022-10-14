@@ -35,7 +35,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
   @doc false
   defmacro __before_compile__(_) do
     quote location: :keep do
-      defoverridable [call: 2]
+      defoverridable call: 2
 
       def call(conn, opts) do
         try do
@@ -59,8 +59,8 @@ defmodule Phoenix.Endpoint.RenderErrors do
       @already_sent ->
         send(self(), @already_sent)
         %Plug.Conn{conn | state: :sent}
-
-      after 0 ->
+    after
+      0 ->
         instrument_render_and_send(conn, kind, reason, stack, opts)
     end
 
@@ -72,7 +72,15 @@ defmodule Phoenix.Endpoint.RenderErrors do
     status = status(kind, reason)
     conn = error_conn(conn, kind, reason)
     start = System.monotonic_time()
-    metadata = %{conn: conn, status: status, kind: kind, reason: reason, stacktrace: stack, log: level}
+
+    metadata = %{
+      conn: conn,
+      status: status,
+      kind: kind,
+      reason: reason,
+      stacktrace: stack,
+      log: level
+    }
 
     try do
       render(conn, status, kind, reason, stack, opts)
@@ -94,27 +102,25 @@ defmodule Phoenix.Endpoint.RenderErrors do
     <pre>#{Phoenix.Router.ConsoleFormatter.format(router)}</pre>
     """
   end
+
   def __debugger_banner__(_conn, _status, _kind, _reason, _stack), do: nil
 
   defp render(conn, status, kind, reason, stack, opts) do
-    view = Keyword.fetch!(opts, :view)
     conn =
       conn
       |> maybe_fetch_query_params()
-      |> maybe_fetch_format(opts)
+      |> fetch_view_format(opts)
       |> Plug.Conn.put_status(status)
       |> Controller.put_root_layout(opts[:root_layout] || false)
       |> Controller.put_layout(opts[:layout] || false)
-      |> Controller.put_view(view)
+
+    format = Controller.get_format(conn)
 
     reason = Exception.normalize(kind, reason, stack)
-    format = Controller.get_format(conn)
     template = "#{conn.status}.#{format}"
     assigns = %{kind: kind, reason: reason, stack: stack, status: conn.status}
 
-    conn
-    |> Controller.put_view(view)
-    |> Controller.render(template, assigns)
+    Controller.render(conn, template, assigns)
   end
 
   defp maybe_fetch_query_params(conn) do
@@ -127,23 +133,56 @@ defmodule Phoenix.Endpoint.RenderErrors do
       end
   end
 
-  defp maybe_fetch_format(conn, opts) do
+  defp fetch_view_format(conn, opts) do
     # We ignore params["_format"] although we respect any already stored.
-    case conn.private do
-      %{phoenix_format: format} when is_binary(format) -> conn
-      _ -> Controller.accepts(conn, Keyword.fetch!(opts, :accepts))
+    view = opts[:view]
+    formats = opts[:formats]
+    accepts = opts[:accepts]
+
+    cond do
+      formats ->
+        accepts = for {key, _} <- formats, do: to_string(key)
+
+        put_accepts(conn, accepts, fn format ->
+          {_format, view} = Enum.find(formats, fn {key, _} -> to_string(key) == format end)
+          view
+        end)
+
+      view && accepts ->
+        put_accepts(conn, accepts, fn _format -> view end)
+
+      true ->
+        raise ArgumentError,
+              "expected :render_errors to have :formats or :view/:accept, but got: #{inspect(opts)}"
     end
+  end
+
+  defp put_accepts(conn, accepts, view_selector) when is_function(view_selector) do
+    conn =
+      case conn.private do
+        %{phoenix_format: format} when is_binary(format) -> conn
+        _ -> Controller.accepts(conn, accepts)
+      end
+
+    format = Phoenix.Controller.get_format(conn)
+    Controller.put_view(conn, view_selector.(format))
   rescue
     e in Phoenix.NotAcceptableError ->
-      fallback_format = Keyword.fetch!(opts, :accepts) |> List.first()
-      Logger.debug("Could not render errors due to #{Exception.message(e)}. " <>
-                   "Errors will be rendered using the first accepted format #{inspect fallback_format} as fallback. " <>
-                   "Please customize the :accepts option under the :render_errors configuration " <>
-                   "in your endpoint if you want to support other formats or choose another fallback")
-      Controller.put_format(conn, fallback_format)
+      fallback_format = List.first(accepts)
+
+      Logger.debug(
+        "Could not render errors due to #{Exception.message(e)}. " <>
+          "Errors will be rendered using the first accepted format #{inspect(fallback_format)} as fallback. " <>
+          "Please customize the :accepts or :formats option under the :render_errors configuration " <>
+          "in your endpoint if you want to support other formats or choose another fallback"
+      )
+
+      conn
+      |> Controller.put_format(fallback_format)
+      |> Controller.put_view(view_selector.(fallback_format))
   end
 
   defp status(:error, error), do: Plug.Exception.status(error)
   defp status(:throw, _throw), do: 500
-  defp status(:exit, _exit),   do: 500
+  defp status(:exit, _exit), do: 500
 end

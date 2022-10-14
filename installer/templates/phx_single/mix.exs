@@ -42,7 +42,8 @@ defmodule <%= @app_module %>.MixProject do
       {<%= inspect @adapter_app %>, ">= 0.0.0"},<% end %><%= if @html do %>
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.18"},
+      # TODO bump to hex dep on release
+      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", override: true},
       {:heroicons, "~> 0.5"},
       {:floki, ">= 0.30.0", only: :test},
       {:tailwind, "~> 0.1.8", runtime: Mix.env() == :dev},<% end %><%= if @dashboard do %>

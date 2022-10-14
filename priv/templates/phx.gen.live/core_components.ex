@@ -1,4 +1,4 @@
-defmodule <%= @web_namespace %>.Components do
+defmodule <%= @web_namespace %>.CoreComponents do
   @moduledoc """
   Provides core UI components.
 
