@@ -607,7 +607,7 @@ describe("with transports", function(){
     it("schedules reconnectTimer timeout if abnormal close", function(){
       const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
 
-      const event = {code: 1006}
+      const event = {code: 1001}
 
       socket.onConnClose(event)
 

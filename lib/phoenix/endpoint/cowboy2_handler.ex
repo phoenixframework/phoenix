@@ -111,8 +111,12 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
   defp handle_reply(handler, {:reply, _status, data, state}),
     do: {:reply, data, [handler | state]}
 
+  defp handle_reply(handler, {:stop, {:shutdown, :disconnected}, state}) do
+    {:reply, {:close, 3000, "disconnected"}, [handler | state]}
+  end
+
   defp handle_reply(handler, {:stop, reason, state}) do
-    {:reply, {:close, 3000, reason}, [handler | state]}
+    {:stop, reason, [handler | state]}
   end
 
   defp handle_control_frame(payload_with_opts, handler_state) do
