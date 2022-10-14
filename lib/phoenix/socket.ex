@@ -487,7 +487,7 @@ defmodule Phoenix.Socket do
   end
 
   def __info__(%Broadcast{event: "disconnect"}, state) do
-    {:stop, {:shutdown, :disconnected}, state}
+    {:stop, "disconnected", state}
   end
 
   def __info__({:socket_push, opcode, payload}, state) do

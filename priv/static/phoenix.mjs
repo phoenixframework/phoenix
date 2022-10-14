@@ -986,11 +986,12 @@ var Socket = class {
   }
   onConnClose(event) {
     let closeCode = event && event.code;
+    let isTrusted = event && event.isTrusted;
     if (this.hasLogger())
       this.log("transport", "close", event);
-    this.triggerChanError();
     this.clearHeartbeats();
-    if (!this.closeWasClean && closeCode !== 1e3) {
+    if (!this.closeWasClean && closeCode !== 3e3 && (closeCode !== 1001 && isTrusted)) {
+      this.triggerChanError();
       this.reconnectTimer.scheduleTimeout();
     }
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event));
