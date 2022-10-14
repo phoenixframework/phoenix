@@ -41,10 +41,12 @@ defmodule Phoenix.Integration.MixProject do
       {:tds, ">= 0.0.0"},
       {:ecto_sqlite3, ">= 0.0.0"},
       {:phoenix_html, "~> 3.0"},
-      {:phoenix_live_view, "~> 0.18.1"},
+      # TODO bump on hex release
+      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", override: true},
       {:floki, ">= 0.30.0"},
       {:phoenix_live_reload, "~> 1.2"},
-      {:phoenix_live_dashboard, "~> 0.7"},
+      # TODO bump on hex release
+      {:phoenix_live_dashboard, github: "phoenixframework/phoenix_live_dashboard", override: true},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
