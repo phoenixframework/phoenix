@@ -691,6 +691,32 @@ describe("with transports", function(){
 
       assert.ok(!spy.calledWith("phx_error"))
     })
+<<<<<<< HEAD
+=======
+
+    it("does not send heartbeat after explicit disconnect", function(done){
+      let clock = sinon.useFakeTimers()
+      const spy = sinon.spy(socket, "sendHeartbeat")
+      socket.onConnOpen()
+      socket.disconnect()
+      clock.tick(30000)
+      assert.ok(spy.notCalled)
+      clock.restore()
+      done()
+    })
+
+    it("does not timeout the heartbeat after explicit disconnect", function(done){
+      let clock = sinon.useFakeTimers()
+      const spy = sinon.spy(socket, "heartbeatTimeout")
+      socket.onConnOpen()
+      socket.disconnect()
+      clock.tick(30000)
+      clock.tick(30000)
+      assert.ok(spy.notCalled)
+      clock.restore()
+      done()
+    })
+>>>>>>> 1a0e70a7 (Fix reconnecting websockets on heartbeat timeout (#4921))
   })
 
   describe("onConnError", function(){

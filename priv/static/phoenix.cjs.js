@@ -957,7 +957,9 @@ var Socket = class {
       if (this.hasLogger()) {
         this.log("transport", "heartbeat timeout. Attempting to re-establish connection");
       }
-      this.abnormalClose("heartbeat timeout");
+      this.triggerChanError();
+      this.closeWasClean = false;
+      this.teardown(() => this.reconnectTimer.scheduleTimeout(), WS_CLOSE_NORMAL, "heartbeat timeout");
     }
   }
   resetHeartbeat() {
@@ -982,6 +984,12 @@ var Socket = class {
       }
       this.waitForSocketClosed(() => {
         if (this.conn) {
+          this.conn.onopen = function() {
+          };
+          this.conn.onerror = function() {
+          };
+          this.conn.onmessage = function() {
+          };
           this.conn.onclose = function() {
           };
           this.conn = null;
@@ -1096,12 +1104,6 @@ var Socket = class {
     this.pendingHeartbeatRef = this.makeRef();
     this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef });
     this.heartbeatTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs);
-  }
-  abnormalClose(reason) {
-    this.closeWasClean = false;
-    if (this.isConnected()) {
-      this.conn.close(WS_CLOSE_NORMAL, reason);
-    }
   }
   flushSendBuffer() {
     if (this.isConnected() && this.sendBuffer.length > 0) {
