@@ -399,14 +399,19 @@ export default class Socket {
   onConnClose(event){
     let closeCode = event && event.code
     let isTrusted = event && event.isTrusted
+    let goingAway = closeCode === 1001 && isTrusted
+
     if(this.hasLogger()) this.log("transport", "close", event)
     this.clearHeartbeats()
+
+    if(!goingAway) {
+      this.triggerChanError()
+    }
 
     // 3000 means the server disconnected you. 
     // 1001 means the browser is navigating away.
     // isTrusted means a user kicked it off.  
-    if(!this.closeWasClean && closeCode !== 3000 && (closeCode !== 1001 && isTrusted)) {
-      this.triggerChanError()
+    if(!this.closeWasClean && closeCode !== 3000 && !goingAway) {
       this.reconnectTimer.scheduleTimeout()
     }
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event))

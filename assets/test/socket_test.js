@@ -593,10 +593,20 @@ describe("with transports", function(){
       socket.connect()
     })
 
-    it("does not schedule reconnectTimer if normal close", function(){
+    it("does not not show error if user initiated a close ", function(){
+      const spy = sinon.spy(socket, "triggerChanError")
+
+      const event = {code: 1001, isTrusted: true}
+
+      socket.onConnClose(event)
+
+      assert.equal(spy.calledOnce, false)
+    })
+
+    it("does not schedule reconnectTimer if user was force disconnected from socket", function(){
       const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
 
-      const event = {code: 1000}
+      const event = {code: 3000}
 
       socket.onConnClose(event)
 
@@ -607,7 +617,7 @@ describe("with transports", function(){
     it("schedules reconnectTimer timeout if abnormal close", function(){
       const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
 
-      const event = {code: 1001}
+      const event = {code: 1006}
 
       socket.onConnClose(event)
 
