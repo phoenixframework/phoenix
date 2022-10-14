@@ -139,7 +139,7 @@ defmodule Phoenix.VerifiedRoutes do
     Module.put_attribute(mod, :phoenix_verified_statics, statics)
   end
 
-  @after_verify_supported Version.match?(System.version(), ">= 1.14.0-dev")
+  @after_verify_supported Version.match?(System.version(), ">= 1.14.0")
 
   defmacro __before_compile__(_env) do
     if @after_verify_supported do
@@ -188,7 +188,7 @@ defmodule Phoenix.VerifiedRoutes do
       redirect(to: ~p"/users/#{@user}")
 
       ~H"""
-      <.link to={~p"/users??page=#{@page}"}>profile</.link>
+      <.link to={~p"/users?page=#{@page}"}>profile</.link>
 
       <.link to={~p"/users?#{@params}"}>profile</.link>
       """
@@ -642,7 +642,7 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   @doc false
-  def __encode_query__(dict) when is_list(dict) or is_map(dict) do
+  def __encode_query__(dict) when is_list(dict) or (is_map(dict) and not is_struct(dict)) do
     case Plug.Conn.Query.encode(dict, &to_param/1) do
       "" -> ""
       query_str -> query_str

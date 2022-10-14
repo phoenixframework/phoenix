@@ -18,9 +18,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <.simple_form
         :let={f}
         id="login_form"
-        for={:user}
+        for={:<%= schema.singular %>}
         action={~p"<%= schema.route_prefix %>/log_in"}
-        as={:user}
+        as={:<%= schema.singular %>}
         phx-update="ignore"
       >
         <.input field={{f, :email}} type="email" label="Email" required />

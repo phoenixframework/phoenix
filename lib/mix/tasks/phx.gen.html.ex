@@ -216,9 +216,9 @@ defmodule Mix.Tasks.Phx.Gen.Html do
         ~s"""
         <.input field={{f, #{inspect(key)}}} type="select" label="#{label(key)}">
           <:option>Choose a value</:option>
-          <%= for value <- Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)}) do %>
-            <:option value={value}><%= value %></:option>
-          <% end %>
+          <:option :for={value <- Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})} value={value}>
+            <%= value %>
+          </:option>
         </.input>
         """
 
@@ -228,4 +228,24 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   defp label(key), do: to_string(key)
+
+  @doc false
+  def indent_inputs(inputs, column_padding) do
+    columns = String.duplicate(" ", column_padding)
+
+    inputs
+    |> Enum.map(fn input ->
+      lines = input |> String.split("\n") |> Enum.reject(& &1 == "")
+
+      case lines do
+        [line] ->
+          [columns, line]
+
+        [first_line | rest] ->
+          rest = Enum.map_join(rest, "\n", &(columns <> &1))
+          [columns, first_line, "\n", rest]
+      end
+    end)
+    |> Enum.intersperse("\n")
+  end
 end

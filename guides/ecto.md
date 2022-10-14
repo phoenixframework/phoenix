@@ -307,7 +307,7 @@ iex> changeset = User.changeset(%User{}, params)
   errors: [],
   data: #Hello.User<>,
   valid?: true
-> 
+>
 ```
 
 Our new changeset is valid.

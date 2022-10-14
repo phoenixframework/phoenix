@@ -34,8 +34,8 @@ defmodule <%= @web_namespace %> do
   end
 
   def html do
-    quote do
-     <%= if @html do %>use Phoenix.Component<% end %>
+    quote do<%= if @html do %>
+      use Phoenix.Component<% end %>
       # Import convenience functions from controllers
       import Phoenix.Controller,
         only: [get_csrf_token: 0, view_module: 1, view_template: 1]
@@ -95,8 +95,7 @@ defmodule <%= @web_namespace %> do
       import <%= @web_namespace %>.CoreComponents
 
       alias Phoenix.LiveView.JS
-<% end %>
-      <%= if @gettext do %>
+<% end %><%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %>
       unquote(verified_routes())
     end

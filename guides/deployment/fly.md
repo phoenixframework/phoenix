@@ -6,7 +6,7 @@ The only thing we'll need for this guide is a working Phoenix application. For t
 
 You can just:
 
-```
+```console
 $ mix phx.new my_app
 ```
 
@@ -208,18 +208,17 @@ Our next step is to add the `topologies` configuration to `config/runtime.exs`.
 
 This configures `libcluster` to use the `DNSPoll` strategy and look for other deployed apps using the `$FLY_APP_NAME` on the `.internal` private network.
 
-
 #### Controlling the name for our node
 
 We need to control the naming of our Elixir nodes. To help them connect up, we'll name them using this pattern: `your-fly-app-name@the.ipv6.address.on.fly`. To do this, we'll generate the release config.
 
-```
+```console
 $ mix release.init
 ```
 
 Then edit the generated `rel/env.sh.eex` file and add the following lines:
 
-```
+```console
 ip=$(grep fly-local-6pn /etc/hosts | cut -f 1)
 export RELEASE_DISTRIBUTION=name
 export RELEASE_NODE=$FLY_APP_NAME@$ip
@@ -227,7 +226,7 @@ export RELEASE_NODE=$FLY_APP_NAME@$ip
 
 After making the change, deploy your app!
 
-```
+```console
 $ fly deploy
 ```
 

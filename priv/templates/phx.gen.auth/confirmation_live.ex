@@ -7,7 +7,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <.header>Confirm Account</.header>
 
-    <.simple_form id="confirmation_form" :let={f} for={:<%= schema.singular %>} phx-submit="confirm_account">
+    <.simple_form :let={f} for={:<%= schema.singular %>} id="confirmation_form" phx-submit="confirm_account">
       <.input field={{f, :token}} type="hidden" value={@token} />
       <:actions>
         <.button phx-disable-with="Confirming...">Confirm my account</.button>
@@ -15,7 +15,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     </.simple_form>
 
     <p>
-      <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link> |
+      <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
+      |
       <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
     </p>
     """
@@ -32,7 +33,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, _} ->
         {:noreply,
          socket
-         |> put_flash(:info, "User confirmed successfully.")
+         |> put_flash(:info, "<%= inspect schema.alias %> confirmed successfully.")
          |> redirect(to: ~p"/")}
 
       :error ->
@@ -47,7 +48,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           %{} ->
             {:noreply,
              socket
-             |> put_flash(:error, "User confirmation link is invalid or it has expired.")
+             |> put_flash(:error, "<%= inspect schema.alias %> confirmation link is invalid or it has expired.")
              |> redirect(to: ~p"/")}
         end
     end

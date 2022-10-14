@@ -65,11 +65,19 @@ defmodule Phoenix.VerifiedRoutesTest do
     def static_path(path), do: "/api" <> path
   end
 
-  defp conn_with_endpoint do
-    conn(:get, "/") |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
+  defmodule StaticPath do
+    def url, do: "https://example.com"
+    def static_url, do: "https://example.com"
+    def path(path), do: path
+    def static_path(path), do: "/static" <> path
+    def static_integrity(_path), do: nil
   end
 
-  defp socket_with_endpoint, do: %Phoenix.Socket{endpoint: Endpoint}
+  defp conn_with_endpoint(endpoint \\ Endpoint) do
+    conn(:get, "/") |> Plug.Conn.put_private(:phoenix_endpoint, endpoint)
+  end
+
+  defp socket_with_endpoint(endpoint \\ Endpoint), do: %Phoenix.Socket{endpoint: endpoint}
 
   def conn_with_script_name(script_name \\ ~w(api)) do
     conn = Plug.Conn.put_private(conn(:get, "/"), :phoenix_endpoint, ScriptName)
@@ -125,6 +133,10 @@ defmodule Phoenix.VerifiedRoutesTest do
 
     assert path(@endpoint, @router, ~p"/posts/bottom/#{dir}/#{id}?foo=bar") ==
              "/posts/bottom/asc/123?foo=bar"
+
+    # dynamic query params
+    assert ~p"/posts/1?other_post=#{id}" == "/posts/1?other_post=123"
+    assert ~p"/posts/1?other_post=#{struct}" == "/posts/1?other_post=post-123"
   end
 
   test "~p with dynamic string and static query params" do
@@ -315,6 +327,26 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/5/?#{[id: 5]}" == "/posts/5/?id=5"
     assert ~p"/posts/5/?#{%{"id" => "foo"}}" == "/posts/5/?id=foo"
     assert ~p"/posts/5/?#{%{"id" => "foo bar"}}" == "/posts/5/?id=foo+bar"
+  end
+
+  describe "with static path" do
+    @endpoint StaticPath
+    @router Router
+    test "paths use static prefix" do
+      assert ~p"/images/foo.png" == "/static/images/foo.png"
+
+      assert path(conn_with_endpoint(StaticPath), ~p"/images/foo.png") ==
+               "/static/images/foo.png"
+
+      assert path(socket_with_endpoint(StaticPath), ~p"/images/foo.png") ==
+               "/static/images/foo.png"
+
+      assert url(conn_with_endpoint(StaticPath), ~p"/images/foo.png") ==
+               "https://example.com/static/images/foo.png"
+
+      assert url(socket_with_endpoint(StaticPath), ~p"/images/foo.png") ==
+               "https://example.com/static/images/foo.png"
+    end
   end
 
   describe "with script name" do

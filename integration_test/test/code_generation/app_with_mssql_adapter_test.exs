@@ -39,7 +39,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithMSSQLAdapterTest do
         modify_file(Path.join(app_root_path, "lib/default_mssql_app_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
-            scope "/", DefaultMssqlAppWeb do
+            scope "/api", DefaultMssqlAppWeb do
               pipe_through [:api]
 
               resources "/posts", PostController, except: [:new, :edit]

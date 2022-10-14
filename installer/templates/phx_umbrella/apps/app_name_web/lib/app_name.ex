@@ -100,13 +100,11 @@ defmodule <%= @web_namespace %> do
       import <%= @web_namespace %>.CoreComponents
 
       alias Phoenix.LiveView.JS
-<% end %>
-      <%= if @gettext do %>
+<% end %><%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %>
       unquote(verified_routes())
     end
   end
-
 
   @doc """
   When used, dispatch to the appropriate controller/view/etc.

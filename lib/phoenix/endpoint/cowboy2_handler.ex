@@ -24,25 +24,16 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
               cowboy_opts =
                 opts
                 |> Enum.flat_map(fn
-                  {:timeout, timeout} ->
-                    [idle_timeout: timeout]
-
-                  {:compress, _} = opt ->
-                    [opt]
-
-                  {:max_frame_size, _} = opt ->
-                    [opt]
-
-                  {:fullsweep_after, value} ->
-                    :erlang.process_flag(:fullsweep_after, value)
-                    []
-
-                  _other ->
-                    []
+                  {:timeout, timeout} -> [idle_timeout: timeout]
+                  {:compress, _} = opt -> [opt]
+                  {:max_frame_size, _} = opt -> [opt]
+                  _other -> []
                 end)
                 |> Map.new()
 
-              {:cowboy_websocket, copy_resp_headers(conn, req), [handler | state], cowboy_opts}
+              handler_opts = Keyword.take(opts, [:fullsweep_after])
+              triplet = {handler, handler_opts, state}
+              {:cowboy_websocket, copy_resp_headers(conn, req), triplet, cowboy_opts}
 
             {:error, %Plug.Conn{adapter: {@connection, req}} = conn} ->
               {:ok, copy_resp_headers(conn, req), {handler, opts}}
@@ -136,7 +127,11 @@ defmodule Phoenix.Endpoint.Cowboy2Handler do
 
   ## Websocket callbacks
 
-  def websocket_init([handler | state]) do
+  def websocket_init({handler, process_flags, state}) do
+    for {key, value} <- process_flags do
+      :erlang.process_flag(key, value)
+    end
+
     {:ok, state} = handler.init(state)
     {:ok, [handler | state]}
   end

@@ -42,6 +42,7 @@
     pipe_through [:browser]
 
     delete "/<%= schema.plural %>/log_out", <%= inspect schema.alias %>SessionController, :delete<%= if live? do %>
+
     live_session :current_<%= schema.singular %>,
       on_mount: [{<%= inspect auth_module %>, :mount_current_<%= schema.singular %>}] do
       live "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationLive, :edit

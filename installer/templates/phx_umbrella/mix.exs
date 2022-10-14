@@ -23,10 +23,11 @@ defmodule <%= @root_app_module %>.MixProject do
   #
   # Dependencies listed here are available only for this project
   # and cannot be accessed from applications inside the apps/ folder.
-  defp deps do<%= if @html and Version.match?(System.version(), ">= 1.13.4") do %>
+  defp deps do<%= if @html do %>
     [
       # required to run "mix format" on ~H/.heex files from the umbrella root
-      {:phoenix_live_view, ">= 0.0.0"}
+      <%= if @dev do %><%= @phoenix_dep_umbrella_root %>,
+      <% end %>{:phoenix_live_view, ">= 0.0.0"}
     ]<% else %>
     []<% end %>
   end

@@ -123,6 +123,8 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
       {addr, port} ->
         "#{:inet.ntoa(addr)}:#{port} (#{scheme})"
     end
+  rescue
+    _ -> scheme
   end
 
   # TODO: Remove this once {:system, env_var} deprecation is removed
