@@ -180,13 +180,12 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, ".gitignore"), "#{@app}_web-*.tar")
       assert_file(web_path(@app, ".gitignore"), ~r/\n$/)
       assert_file(web_path(@app, "assets/css/app.css"))
-      assert_file(web_path(@app, "assets/css/phoenix.css"))
+
 
       assert_file(web_path(@app, "priv/static/favicon.ico"))
       assert_file(web_path(@app, "priv/static/images/phoenix.png"))
 
       refute File.exists?(web_path(@app, "priv/static/assets/app.css"))
-      refute File.exists?(web_path(@app, "priv/static/assets/phoenix.css"))
       refute File.exists?(web_path(@app, "priv/static/assets/app.js"))
       assert File.exists?(web_path(@app, "assets/vendor"))
 
@@ -335,7 +334,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # No assets & No HTML
       refute_file(web_path(@app, "priv/static/assets/app.js"))
       refute_file(web_path(@app, "priv/static/assets/app.css"))
-      refute_file(web_path(@app, "priv/static/assets/phoenix.css"))
       refute_file(web_path(@app, "priv/static/favicon.ico"))
       refute_file(web_path(@app, "priv/static/images/phoenix.png"))
 
@@ -492,7 +490,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, ".gitignore"), ~r/\n$/)
       assert_file(web_path(@app, "priv/static/assets/app.js"))
       assert_file(web_path(@app, "priv/static/assets/app.css"))
-      assert_file(web_path(@app, "priv/static/assets/phoenix.css"))
       assert_file(web_path(@app, "priv/static/favicon.ico"))
       assert_file(web_path(@app, "priv/static/images/phoenix.png"))
     end)
@@ -819,10 +816,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file("another/priv/static/favicon.ico")
         assert_file("another/priv/static/images/phoenix.png")
         assert_file("another/assets/css/app.css")
-        assert_file("another/assets/css/phoenix.css")
 
         refute File.exists?("another/priv/static/assets/app.css")
-        refute File.exists?("another/priv/static/assets/phoenix.css")
         refute File.exists?("another/priv/static/assets/app.js")
         assert File.exists?("another/assets/vendor")
 
