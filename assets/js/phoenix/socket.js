@@ -397,8 +397,11 @@ export default class Socket {
   }
 
   onConnClose(event){
+    console.log(event)
     let closeCode = event && event.code
     let isTrusted = event && event.isTrusted
+    // 1001 means the browser is navigating away.
+    // isTrusted means a user kicked it off.  
     let goingAway = closeCode === 1001 && isTrusted
 
     if(this.hasLogger()) this.log("transport", "close", event)
@@ -409,8 +412,6 @@ export default class Socket {
     }
 
     // 3000 means the server disconnected you. 
-    // 1001 means the browser is navigating away.
-    // isTrusted means a user kicked it off.  
     if(!this.closeWasClean && closeCode !== 3000 && !goingAway) {
       this.reconnectTimer.scheduleTimeout()
     }

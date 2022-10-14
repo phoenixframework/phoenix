@@ -985,6 +985,7 @@ var Socket = class {
     }, 150 * tries);
   }
   onConnClose(event) {
+    console.log(event);
     let closeCode = event && event.code;
     let isTrusted = event && event.isTrusted;
     let goingAway = closeCode === 1001 && isTrusted;
