@@ -105,8 +105,8 @@ defmodule Hello.DataCase do
     end
   end
 
-  setup tags do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Demo.Repo, shared: not tags[:async])
+  setup context do
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Demo.Repo, shared: not context[:async])
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
     :ok
   end

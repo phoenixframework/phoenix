@@ -28,12 +28,12 @@ defmodule <%= web_module %>.ChannelCase do
     end
   end<%= if Code.ensure_loaded?(Ecto.Adapters.SQL) do %>
 
-  setup tags do
-    <%= base %>.DataCase.setup_sandbox(tags)
+  setup context do
+    <%= base %>.DataCase.setup_sandbox(context)
     :ok
   end<% else %>
 
-  setup _tags do
+  setup _context do
     :ok
   end<% end %>
 end

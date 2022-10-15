@@ -305,7 +305,7 @@ defmodule Phx.New.Generator do
       ],
       test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect(module)}.Repo, :manual)",
       test_setup: """
-          pid = Ecto.Adapters.SQL.Sandbox.start_owner!(#{inspect(module)}.Repo, shared: not tags[:async])
+          pid = Ecto.Adapters.SQL.Sandbox.start_owner!(#{inspect(module)}.Repo, shared: not context[:async])
           on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)\
       """,
       prod_variables: """
@@ -344,7 +344,7 @@ defmodule Phx.New.Generator do
       ],
       test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect(module)}.Repo, :manual)",
       test_setup: """
-          pid = Ecto.Adapters.SQL.Sandbox.start_owner!(#{inspect(module)}.Repo, shared: not tags[:async])
+          pid = Ecto.Adapters.SQL.Sandbox.start_owner!(#{inspect(module)}.Repo, shared: not context[:async])
           on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)\
       """,
       prod_variables: """

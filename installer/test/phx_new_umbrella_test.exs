@@ -609,7 +609,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(root_path(app, "config/runtime.exs"), [~r/url: database_url/])
 
-      assert_file(web_path(app, "test/support/conn_case.ex"), "DataCase.setup_sandbox(tags)")
+      assert_file(web_path(app, "test/support/conn_case.ex"), "DataCase.setup_sandbox(context)")
     end)
   end
 
@@ -626,7 +626,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(root_path(app, "config/test.exs"), [~r/username: "root"/, ~r/password: ""/])
       assert_file(root_path(app, "config/runtime.exs"), [~r/url: database_url/])
 
-      assert_file(web_path(app, "test/support/conn_case.ex"), "DataCase.setup_sandbox(tags)")
+      assert_file(web_path(app, "test/support/conn_case.ex"), "DataCase.setup_sandbox(context)")
     end)
   end
 
@@ -643,7 +643,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(root_path(app, "config/test.exs"), [~r/database: .*_test.db/])
       assert_file(root_path(app, "config/runtime.exs"), [~r/database: database_path/])
 
-      assert_file(web_path(app, "test/support/conn_case.ex"), "DataCase.setup_sandbox(tags)")
+      assert_file(web_path(app, "test/support/conn_case.ex"), "DataCase.setup_sandbox(context)")
 
       assert_file(root_path(app, ".gitignore"), "*.db")
       assert_file(root_path(app, ".gitignore"), "*.db-*")
@@ -671,7 +671,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(root_path(app, "config/runtime.exs"), [~r/url: database_url/])
 
-      assert_file(web_path(app, "test/support/conn_case.ex"), "DataCase.setup_sandbox(tags)")
+      assert_file(web_path(app, "test/support/conn_case.ex"), "DataCase.setup_sandbox(context)")
     end)
   end
 

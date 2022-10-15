@@ -64,7 +64,7 @@ defmodule HelloWeb.ChannelCase do
     end
   end
 
-  setup _tags do
+  setup _context do
     :ok
   end
 end

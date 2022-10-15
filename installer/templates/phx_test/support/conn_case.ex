@@ -31,12 +31,12 @@ defmodule <%= @web_namespace %>.ConnCase do
     end
   end<%= if @ecto do %>
 
-  setup tags do
-    <%= @app_module %>.DataCase.setup_sandbox(tags)
+  setup context do
+    <%= @app_module %>.DataCase.setup_sandbox(context)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end<% else %>
 
-  setup _tags do
+  setup _context do
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end<% end %>
 end
