@@ -64,6 +64,8 @@ locals_without_parens = [
   assert_error_sent: 2,
 
   # Phoenix.Live{Dashboard,View}
+  embed_templates: 1,
+  embed_templates: 2,
   attr: 2,
   attr: 3,
   slot: 1,
