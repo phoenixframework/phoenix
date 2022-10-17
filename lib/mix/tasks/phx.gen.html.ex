@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Phx.Gen.Html do
-  @shortdoc "Generates controller, HTML views, and context for an HTML resource"
+  @shortdoc "Generates context and controller for an HTML resource"
 
   @moduledoc """
   Generates controller, HTML views, and context for an HTML resource.

@@ -208,13 +208,10 @@ defmodule Phoenix.Endpoint do
       is a failure in the application. For example, if the application crashes
       with a 500 error during a HTML request, `render("500.html", assigns)`
       will be called in the view given to `:render_errors`.
-      A `:view` may be passed to render errors with an `:accept` listing which
-      formats the view supports. Alternatively, each a `:formats` list can be provided
-      to specify a module per format to handle error rendering. Defaults to:
+      A `:formats` list can be provided to specify a module per format to handle
+      error rendering. Example:
 
-          [view: MyApp.ErrorView, accepts: ~w(html), layout: false, log: :debug]
-
-      The default format is used when none is set in the connection
+          [formats: [html: MyApp.ErrorHTML], layout: false, log: :debug]
 
     * `:log_access_url` - log the access url once the server boots
 

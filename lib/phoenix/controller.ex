@@ -1077,7 +1077,7 @@ defmodule Phoenix.Controller do
 
   defp get_disposition_type(:attachment), do: "attachment"
   defp get_disposition_type(:inline), do: "inline"
-  defp get_disposition_type(other), do: raise ArgumentError, "expected :disposition to be :attachment or :inline, got: #{inspect(other)}"
+  defp get_disposition_type(other), do: raise(ArgumentError, "expected :disposition to be :attachment or :inline, got: #{inspect(other)}")
 
   defp ajax?(conn) do
     case get_req_header(conn, "x-requested-with") do
@@ -1291,10 +1291,11 @@ defmodule Phoenix.Controller do
   """
   @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t
   def accepts(conn, [_|_] = accepted) do
-    case Map.fetch(conn.params, "_format") do
-      {:ok, format} ->
+    case conn.params do
+      %{"_format" => format} ->
         handle_params_accept(conn, format, accepted)
-      :error ->
+
+      %{} ->
         handle_header_accept(conn, get_req_header(conn, "accept"), accepted)
     end
   end
@@ -1664,18 +1665,6 @@ defmodule Phoenix.Controller do
 
   @doc false
   def __layout__(controller_module, opts) do
-    namespace =
-      if given = Keyword.get(opts, :namespace) do
-        given
-      else
-        controller_module
-        |> Atom.to_string()
-        |> String.split(".")
-        |> Enum.drop(-1)
-        |> Enum.take(2)
-        |> Module.concat()
-      end
-
     case Keyword.fetch(opts, :layouts) do
       {:ok, formats} when is_list(formats) ->
         Enum.map(formats, fn
@@ -1694,6 +1683,18 @@ defmodule Phoenix.Controller do
         end)
 
       :error ->
+        namespace =
+          if given = Keyword.get(opts, :namespace) do
+            given
+          else
+            controller_module
+            |> Atom.to_string()
+            |> String.split(".")
+            |> Enum.drop(-1)
+            |> Enum.take(2)
+            |> Module.concat()
+          end
+
         {Module.concat(namespace, "LayoutView"), :app}
     end
   end

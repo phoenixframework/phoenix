@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Phx.Gen.Json do
-  @shortdoc "Generates controller, JSON views, and context for a JSON resource"
+  @shortdoc "Generates context and controller for a JSON resource"
 
   @moduledoc """
   Generates controller, JSON view, and context for a JSON resource.

@@ -7,9 +7,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
   #
   # ## Options
   #
-  #   * `:view` - the name of the view we render templates against
-  #   * `:format` - the format to use when none is available from the request
-  #   * `:accepts` - list of accepted formats errors will be rendered for
+  #   * `:formats` - the format to use when none is available from the request
   #   * `:log` - the `t:Logger.level/0` or `false` to disable logging rendered errors
   #
   @moduledoc false
@@ -141,15 +139,10 @@ defmodule Phoenix.Endpoint.RenderErrors do
 
     cond do
       formats ->
-        accepts = for {key, _} <- formats, do: to_string(key)
-
-        put_accepts(conn, accepts, fn format ->
-          {_format, view} = Enum.find(formats, fn {key, _} -> to_string(key) == format end)
-          view
-        end)
+        put_formats(conn, Enum.map(formats, fn {k, v} -> {Atom.to_string(k), v} end))
 
       view && accepts ->
-        put_accepts(conn, accepts, fn _format -> view end)
+        put_formats(conn, Enum.map(accepts, &{&1, view}))
 
       true ->
         raise ArgumentError,
@@ -157,29 +150,30 @@ defmodule Phoenix.Endpoint.RenderErrors do
     end
   end
 
-  defp put_accepts(conn, accepts, view_selector) when is_function(view_selector) do
+  defp put_formats(conn, formats) do
     conn =
       case conn.private do
         %{phoenix_format: format} when is_binary(format) -> conn
-        _ -> Controller.accepts(conn, accepts)
+        _ -> Controller.accepts(conn, Enum.map(formats, &elem(&1, 0)))
       end
 
     format = Phoenix.Controller.get_format(conn)
-    Controller.put_view(conn, view_selector.(format))
+    {_, view} = List.keyfind(formats, format, 0)
+    Controller.put_view(conn, view)
   rescue
     e in Phoenix.NotAcceptableError ->
-      fallback_format = List.first(accepts)
+      [{format, view} | _] = formats
 
       Logger.debug(
         "Could not render errors due to #{Exception.message(e)}. " <>
-          "Errors will be rendered using the first accepted format #{inspect(fallback_format)} as fallback. " <>
-          "Please customize the :accepts or :formats option under the :render_errors configuration " <>
+          "Errors will be rendered using the first accepted format #{inspect(format)} as fallback. " <>
+          "Please customize the :formats option under the :render_errors configuration " <>
           "in your endpoint if you want to support other formats or choose another fallback"
       )
 
       conn
-      |> Controller.put_format(fallback_format)
-      |> Controller.put_view(view_selector.(fallback_format))
+      |> Controller.put_format(format)
+      |> Controller.put_view(view)
   end
 
   defp status(:error, error), do: Plug.Exception.status(error)
