@@ -377,7 +377,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_reload"))
 
       assert_file("phx_blog/lib/phx_blog_web.ex", fn file ->
-        assert file =~ "defp html_helpers do"
+        refute file =~ "html_helpers"
         refute file =~ "Phoenix.HTML"
         refute file =~ "Phoenix.LiveView"
       end)

@@ -23,8 +23,6 @@ defmodule Phx.New.Single do
      "phx_single/gitignore": ".gitignore",
      "phx_test/support/conn_case.ex": "test/support/conn_case.ex",
      "phx_single/test/test_helper.exs": "test/test_helper.exs",
-     "phx_test/controllers/error_html_test.exs":
-       "test/:lib_web_name/controllers/error_html_test.exs",
      "phx_test/controllers/error_json_test.exs":
        "test/:lib_web_name/controllers/error_json_test.exs"},
     {:keep, :project,
@@ -42,6 +40,8 @@ defmodule Phx.New.Single do
   template(:html, [
     {:eex, :project,
      "phx_web/controllers/error_html.ex": "lib/:lib_web_name/controllers/error_html.ex",
+     "phx_test/controllers/error_html_test.exs":
+       "test/:lib_web_name/controllers/error_html_test.exs",
      "phx_web/components/core_components.ex": "lib/:lib_web_name/components/core_components.ex",
      "phx_web/controllers/page_controller.ex": "lib/:lib_web_name/controllers/page_controller.ex",
      "phx_web/controllers/page_html.ex": "lib/:lib_web_name/controllers/page_html.ex",
