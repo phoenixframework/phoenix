@@ -55,15 +55,19 @@ defmodule Mix.Tasks.Phx.Digest do
     Mix.Task.run "deps.loadpaths", all_args
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
-    case Phoenix.Digester.compile(input_path, output_path, with_vsn?) do
-      :ok ->
+    phoenix_project? = :phoenix in Mix.Project.deps_apps()
+
+    case {phoenix_project?, Phoenix.Digester.compile(input_path, output_path, with_vsn?)} do
+      {false, _} ->
+        Mix.shell().info [:yellow, "Not a phoenix project. Skipping digest."]
+      {_, :ok} ->
         # We need to call build structure so everything we have
         # generated into priv is copied to _build in case we have
         # build_embedded set to true. In case it's not true,
         # build structure is mostly a no-op, so we are fine.
         Mix.Project.build_structure()
         Mix.shell().info [:green, "Check your digested files at #{inspect output_path}"]
-      {:error, :invalid_path} ->
+      {_, {:error, :invalid_path}} ->
         Mix.shell().error "The input path #{inspect input_path} does not exist"
         exit({:shutdown, 1})
     end
