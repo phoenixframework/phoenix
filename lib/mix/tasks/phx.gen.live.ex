@@ -147,7 +147,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       {:eex, "index.html.heex", Path.join(web_live, "index.html.heex")},
       {:eex, "show.html.heex", Path.join(web_live, "show.html.heex")},
       {:eex, "live_test.exs", Path.join(test_live, "#{schema.singular}_live_test.exs")},
-      {:new_eex, "core_components.ex", Path.join([web_prefix, "core_components.ex"])}
+      {:new_eex, "core_components.ex", Path.join([web_prefix, "components", "core_components.ex"])}
     ]
   end
 
