@@ -1,6 +1,7 @@
 defmodule <%= @web_namespace %>.ErrorJSON do
-  # If you want to customize a particular status code
-  # for a certain format, you may uncomment below.
+  # If you want to customize a particular status code,
+  # you may add your own clauses, such as:
+  #
   # def render("500.json", _assigns) do
   #   %{errors: %{detail: "Internal Server Error"}}
   # end
