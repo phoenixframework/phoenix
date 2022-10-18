@@ -471,7 +471,7 @@ defmodule Phoenix.VerifiedRoutesTest do
 
         warnings = String.replace(warnings, ~r/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/, "")
 
-        assert warnings ==
+        assert warnings =~
                 "warning: no route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:#{line}: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
       end
 

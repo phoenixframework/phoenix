@@ -7,7 +7,6 @@ defmodule Phoenix.Controller.RenderTest do
   import Phoenix.Controller
 
   defp conn() do
-    # conn(:get, "/") |> fetch_query_params() |> put_view(html: MyApp.UserView, json: MyApp.UserView)
     conn(:get, "/") |> fetch_query_params() |> put_view(MyApp.UserView)
   end
 
@@ -50,19 +49,6 @@ defmodule Phoenix.Controller.RenderTest do
       |> render("index.html", title: "Hello")
 
     assert conn.resp_body == "ROOTSTART[Hello]<html>\n  <title>Hello</title>\n  Hello\n\n</html>\nROOTEND\n"
-    assert html_response?(conn)
-  end
-
-  test "renders string template without put_root_layout based on layout_formats" do
-    conn =
-      conn()
-      |> put_layout_formats(["not_html"])
-      |> put_layout({MyApp.LayoutView, "app.html"})
-      |> put_root_layout({MyApp.LayoutView, "root.html"})
-      |> render("index.html", title: "Hello")
-
-    refute conn.resp_body =~ "ROOTSTART"
-    refute conn.resp_body =~ "<html>"
     assert html_response?(conn)
   end
 
@@ -116,27 +102,6 @@ defmodule Phoenix.Controller.RenderTest do
     conn = %Plug.Conn{conn() | status: 404}
     conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, "app.html"})
     assert conn.status == 404
-  end
-
-  test "skips layout depending on layout_formats with string template" do
-    conn = layout_conn() |> put_layout_formats([]) |> render("index.html", title: "Hello")
-    assert conn.resp_body == "Hello\n"
-    assert html_response?(conn)
-
-    conn = render(conn(), "show.json", layout: {MyApp.LayoutView, :app})
-    assert conn.resp_body == ~s({"foo":"bar"})
-  end
-
-  test "skips layout depending on layout_formats with atom template" do
-    conn = put_format(layout_conn(), "html")
-    conn = conn |> put_layout_formats([]) |> render(:index, title: "Hello")
-    assert conn.resp_body == "Hello\n"
-    assert html_response?(conn)
-
-    conn = put_format(layout_conn(), "json")
-
-    conn = render(conn, :show, layout: {MyApp.LayoutView, :app})
-    assert conn.resp_body == ~s({"foo":"bar"})
   end
 
   test "merges render assigns" do
@@ -193,7 +158,7 @@ defmodule Phoenix.Controller.RenderTest do
   end
 
   test "errors when rendering without view" do
-    assert_raise RuntimeError, ~r/a view module was not specified/, fn ->
+    assert_raise RuntimeError, ~r/no view was found for the format: html/, fn ->
       render(conn() |> put_view(nil), "index.html")
     end
   end

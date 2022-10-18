@@ -46,18 +46,6 @@ defmodule Phoenix.Controller.ControllerTest do
     assert status_message_from_template("whatever.html") == "Internal Server Error"
   end
 
-  test "put_layout_formats/2 and layout_formats/1" do
-    conn = conn(:get, "/")
-    assert layout_formats(conn) == ~w(html)
-
-    conn = put_layout_formats conn, ~w(json xml)
-    assert layout_formats(conn) == ~w(json xml)
-
-    assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_layout_formats sent_conn(), ~w(json)
-    end
-  end
-
   test "put_layout/2 and layout/1" do
     conn = conn(:get, "/")
     assert layout(conn) == false
@@ -84,7 +72,7 @@ defmodule Phoenix.Controller.ControllerTest do
   end
 
   test "put_layout/2 and layout/1 with formats" do
-    conn = conn(:get, "/")
+    conn = conn(:get, "/") |> put_format("html")
     assert layout(conn) == false
 
     conn = put_layout(conn, html: {AppView, :app})
@@ -94,7 +82,6 @@ defmodule Phoenix.Controller.ControllerTest do
 
     conn = put_format(conn, "html")
     assert layout(conn) == {AppView, :app}
-
 
     conn = put_format(conn, "print")
     assert layout(conn) == {AppView, :print}
@@ -134,7 +121,7 @@ defmodule Phoenix.Controller.ControllerTest do
   end
 
   test "put_root_layout/2 and root_layout/1 with formats" do
-    conn = conn(:get, "/")
+    conn = conn(:get, "/") |> put_format("html")
     assert root_layout(conn) == false
 
     conn = put_root_layout(conn, html: {AppView, :app})
@@ -144,7 +131,6 @@ defmodule Phoenix.Controller.ControllerTest do
 
     conn = put_format(conn, "html")
     assert root_layout(conn) == {AppView, :app}
-
 
     conn = put_format(conn, "print")
     assert root_layout(conn) == {AppView, :print}
@@ -217,8 +203,10 @@ defmodule Phoenix.Controller.ControllerTest do
       |> put_format("print")
       |> put_new_view(html: Hello, json: HelloJSON)
 
-    assert_raise ArgumentError, ~r/no format set to select view module/, fn ->
-      view_module(conn) == Hello
+    assert view_module(conn, "html") == Hello
+
+    assert_raise RuntimeError, ~r/no view was found for the format: print/, fn ->
+      view_module(conn)
     end
 
     conn =
@@ -236,14 +224,17 @@ defmodule Phoenix.Controller.ControllerTest do
 
     conn = put_format(conn, "json")
     assert view_module(conn) == HelloJSON
+    assert view_module(conn, "json") == HelloJSON
 
     conn = put_format(conn, "json")
     conn = put_new_view(conn, Hello)
     assert view_module(conn) == Hello
+    assert view_module(conn, "json") == Hello
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
       put_new_view sent_conn(), html: Hello
     end
+
     assert_raise Plug.Conn.AlreadySentError, fn ->
       put_view sent_conn(), html: Hello
     end
