@@ -411,7 +411,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       </.table>
   """
   attr :id, :string, required: true
-  attr :row_click, JS, default: nil
+  attr :row_click, :any, default: nil
   attr :rows, :list, required: true
 
   slot :col, required: true do
