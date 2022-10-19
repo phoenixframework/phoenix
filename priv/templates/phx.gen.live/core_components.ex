@@ -405,7 +405,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   ## Examples
 
-      <.table rows={@users}>
+      <.table id="users" rows={@users}>
         <:col :let={user} label="id"><%%= user.id %></:col>
         <:col :let={user} label="username"><%%= user.username %></:col>
       </.table>
