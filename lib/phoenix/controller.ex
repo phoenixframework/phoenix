@@ -474,12 +474,14 @@ defmodule Phoenix.Controller do
     end)
   end
 
+  @type view :: {format :: atom, view :: atom}
+
   @doc """
   Stores the view for rendering if one was not stored yet.
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_new_view(Plug.Conn.t(), atom) :: Plug.Conn.t()
+  @spec put_new_view(Plug.Conn.t(), view | [view]) :: Plug.Conn.t()
   def put_new_view(%Plug.Conn{state: state} = conn, formats) when state in @unsent do
     put_private_view(conn, :phoenix_view, :new, formats)
   end
@@ -591,12 +593,14 @@ defmodule Phoenix.Controller do
     end
   end
 
+  @type layout :: {format :: atom, {module, layout_name :: atom} | false}
+
   @doc """
   Stores the layout for rendering if one was not stored yet.
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_new_layout(Plug.Conn.t(), {atom, binary | atom} | false) :: Plug.Conn.t()
+  @spec put_new_layout(Plug.Conn.t(), layout | [layout] | false) :: Plug.Conn.t()
   def put_new_layout(%Plug.Conn{state: state} = conn, layout)
       when (is_tuple(layout) and tuple_size(layout) == 2) or is_list(layout) or layout == false do
     unless state in @unsent, do: raise(AlreadySentError)
