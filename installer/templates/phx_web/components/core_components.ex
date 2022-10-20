@@ -308,7 +308,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         name={@name}
         class={[
           input_border(@errors),
-          "mt-2 block min-h-[6rem] w-full rounded-lg border-zinc-300 py-[calc(theme(spacing.2)-1px)] px-[calc(theme(spacing.3)-1px)]",
+          "mt-2 block min-h-[6rem] w-full rounded-lg border-zinc-300 py-[7px] px-[11px]",
           "text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-800/5 sm:text-sm sm:leading-6",
           "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
         ]}
@@ -330,7 +330,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         value={@value}
         class={[
           input_border(@errors),
-          "mt-2 block w-full rounded-lg border-zinc-300 py-[calc(theme(spacing.2)-1px)] px-[calc(theme(spacing.3)-1px)]",
+          "mt-2 block w-full rounded-lg border-zinc-300 py-[7px] px-[11px]",
           "text-zinc-900 focus:outline-none focus:ring-4 sm:text-sm sm:leading-6",
           "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
         ]}
