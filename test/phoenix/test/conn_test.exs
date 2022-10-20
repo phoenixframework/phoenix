@@ -460,6 +460,18 @@ defmodule Phoenix.Test.ConnTest do
         |> redirected_params()
       end
     end
+    
+    test "with custom status code" do
+      Enum.each(300..308, fn status ->
+        conn =
+          build_conn(:get, "/")
+          |> RedirRouter.call(RedirRouter.init([]))
+          |> put_resp_header("location", "/posts/123")
+          |> send_resp(status, "foo")
+
+        assert redirected_params(conn) == %{id: "123"}
+      end)
+    end
   end
 
   describe "path_params/1" do

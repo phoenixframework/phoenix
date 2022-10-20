@@ -586,7 +586,7 @@ defmodule Phoenix.ConnTest do
   @spec redirected_params(Conn.t) :: map
   def redirected_params(%Plug.Conn{} = conn) do
     router = Phoenix.Controller.router_module(conn)
-    %URI{path: path, host: host} = conn |> redirected_to() |> URI.parse()
+    %URI{path: path, host: host} = conn |> redirected_to(conn.status) |> URI.parse()
 
     case Phoenix.Router.route_info(router, "GET", path, host || conn.host) do
       :error ->
