@@ -82,16 +82,14 @@ defmodule <%= @web_namespace %> do
 
   defp html_helpers do
     quote do
-      # HTML escaping and forms functionality
+      # HTML escaping functionality
       import Phoenix.HTML
-      import Phoenix.HTML.Form
-
-      # Shortcut for generating JS commands
-      alias Phoenix.LiveView.JS
-
       # Core UI components and translation
       import <%= @web_namespace %>.CoreComponents<%= if @gettext do %>
       import <%= @web_namespace %>.Gettext<% end %>
+
+      # Shortcut for generating JS commands
+      alias Phoenix.LiveView.JS
 
       # Routes generation with the ~p sigil
       unquote(verified_routes())

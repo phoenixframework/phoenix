@@ -2,11 +2,11 @@
 
 Beside producing HTML, most web applications have various assets (JavaScript, CSS, images, fonts and so on).
 
-From Phoenix v1.6, new applications use [esbuild](https://esbuild.github.io/) to prepare assets via the [Elixir esbuild wrapper](https://github.com/phoenixframework/esbuild). This direct integration with `esbuild` means that newly generated applications do not have dependencies on Node.js or an external build system (e.g. Webpack).
+From Phoenix v1.7, new applications use [esbuild](https://esbuild.github.io/) to prepare assets via the [Elixir esbuild wrapper](https://github.com/phoenixframework/esbuild), and [tailwindcss](https://tailwindcss.com) via the [Elixir tailwindcss wrapper](https://github.com/phoenixframework/esbuild) for CSS. The direct integration with `esbuild` and `tailwind` means that newly generated applications do not have dependencies on Node.js or an external build system (e.g. Webpack).
 
 Your JavaScript is typically placed at "assets/js/app.js" and `esbuild` will extract it to "priv/static/assets/app.js". In development, this is done automatically via the `esbuild` watcher. In production, this is done by running `mix assets.deploy`.
 
-`esbuild` can also handle your CSS files. For this, there is typically an `import "../css/app.css"` at the top of your "assets/js/app.js". We will explore alternatives below.
+`esbuild` can also handle your CSS files, but by default `tailwind` handles all CSS building.
 
 Finally, all other assets, that usually don't have to be preprocessed, go directly to "priv/static".
 
@@ -28,15 +28,13 @@ If you want to import JavaScript dependencies, you have two options to add them 
 
 ## CSS
 
-`esbuild` has basic support for CSS. If you import a `.css` file at the top of your main `.js` file, `esbuild` will also bundle it, and write it to the same directory as your final `app.js`. That's what Phoenix does by default:
+By default, Phoenix generates CSS with the `tailwind` library, but esbuild has basic support for CSS which you can use if you aren't using tailwind. If you import a `.css` file at the top of your main `.js` file, `esbuild` will bundle it, and write it to the same directory as your final `app.js`.
 
 ```js
 import "../css/app.css"
 ```
 
 However, if you want to use a CSS framework, you will need to use a separate tool. Here are some options to do so:
-
-  * Use [standalone Tailwind](https://github.com/phoenixframework/tailwind) or [standalone SASS](https://github.com/CargoSense/dart_sass). Both similar to `esbuild`.
 
   * You can use `esbuild` plugins (requires `npm`). See the "Esbuild plugins" section below
 
