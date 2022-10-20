@@ -184,7 +184,15 @@ defmodule Mix.Tasks.Phx.Gen.Html do
         ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" step="any" />)
 
       {key, :boolean} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="checkbox" label="#{label(key)}" />)
+        ~s"""
+        <.input
+          field={{f, #{inspect(key)}}}
+          type="checkbox"
+          label="#{label(key)}"
+          value="true"
+          checked={to_string(input_value(f, #{inspect(key)})) == "true"}
+        />
+        """
 
       {key, :text} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="text" label="#{label(key)}" />)
@@ -215,7 +223,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       {key, {:enum, _}} ->
         ~s"""
         <.input field={{f, #{inspect(key)}}} type="select" label="#{label(key)}">
-          <:option>Choose a value</:option>
+          <:option value="">Choose a value</:option>
           <:option :for={value <- Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})} value={value}>
             <%= value %>
           </:option>

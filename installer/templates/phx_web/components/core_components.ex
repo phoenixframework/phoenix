@@ -252,9 +252,15 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :errors, :list
   attr :rest, :global, include: ~w(autocomplete checked disabled form max maxlength min minlength
                                    multiple pattern placeholder readonly required size step)
+
+  attr :hidden_input, :boolean,
+    default: true,
+    doc: "wether to show or not a hidden input for the unchecked checkbox input"
+
   slot :inner_block
 
   slot :option, doc: "the slot for select input options" do
+    attr :selected, :any
     attr :value, :any
   end
 
@@ -271,11 +277,14 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(%{type: "checkbox"} = assigns) do
     ~H"""
     <label phx-feedback-for={@name} class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
+      <input :if={@hidden_input} type="hidden" name={@name} value="false" />
       <input
         type="checkbox"
         id={@id || @name}
         name={@name}
+        value={@value}
         class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+        {@rest}
       />
       <%%= @label %>
     </label>
@@ -292,7 +301,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
         class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
         {@rest}
       >
-        <option :for={opt <- @option} {assigns_to_attributes(opt)}><%%= render_slot(opt) %></option>
+        <option
+          :for={opt <- @option}
+          selected={option_selected(opt, @value)}
+          {assigns_to_attributes(opt, [:selected])}
+        >
+          <%%= render_slot(opt) %>
+        </option>
       </select>
       <.error :for={msg <- @errors} message={msg} />
     </div>
@@ -340,6 +355,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
     </div>
     """
   end
+
+  defp option_selected(%{selected: selected}, _value), do: selected
+
+  defp option_selected(%{value: option_value}, value),
+    do: to_string(option_value) == to_string(value)
 
   defp input_border([] = _errors),
     do: "border-zinc-300 focus:border-zinc-400 focus:ring-zinc-800/5"
