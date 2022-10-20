@@ -12,7 +12,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS<%= if @gettext do %>
-  import <%= @web_namespace %>.Gettext
+  import <%= @web_namespace %>.Gettext<% end %>
 
   @doc """
   Renders a modal.
@@ -427,7 +427,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
             <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%%= col[:label] %></th>
-            <th class="relative p-0 pb-4"><span class="sr-only"><%= gettext("Actions") %></span></th>
+            <th class="relative p-0 pb-4"><span class="sr-only"><%%= gettext("Actions") %></span></th>
           </tr>
         </thead>
         <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
