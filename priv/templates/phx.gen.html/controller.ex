@@ -6,12 +6,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def index(conn, _params) do
     <%= schema.plural %> = <%= inspect context.alias %>.list_<%= schema.plural %>()
-    render(conn, "index.html", <%= schema.plural %>: <%= schema.plural %>)
+    render(conn, :index, <%= schema.plural %>: <%= schema.plural %>)
   end
 
   def new(conn, _params) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(%<%= inspect schema.alias %>{})
-    render(conn, "new.html", changeset: changeset)
+    render(conn, :new, changeset: changeset)
   end
 
   def create(conn, %{<%= inspect schema.singular %> => <%= schema.singular %>_params}) do
@@ -22,19 +22,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> redirect(to: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, "new.html", changeset: changeset)
+        render(conn, :new, changeset: changeset)
     end
   end
 
   def show(conn, %{"id" => id}) do
     <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
-    render(conn, "show.html", <%= schema.singular %>: <%= schema.singular %>)
+    render(conn, :show, <%= schema.singular %>: <%= schema.singular %>)
   end
 
   def edit(conn, %{"id" => id}) do
     <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)
-    render(conn, "edit.html", <%= schema.singular %>: <%= schema.singular %>, changeset: changeset)
+    render(conn, :edit, <%= schema.singular %>: <%= schema.singular %>, changeset: changeset)
   end
 
   def update(conn, %{"id" => id, <%= inspect schema.singular %> => <%= schema.singular %>_params}) do
@@ -47,7 +47,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> redirect(to: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, "edit.html", <%= schema.singular %>: <%= schema.singular %>, changeset: changeset)
+        render(conn, :edit, <%= schema.singular %>: <%= schema.singular %>, changeset: changeset)
     end
   end
 

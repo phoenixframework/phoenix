@@ -6,7 +6,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   plug :get_<%= schema.singular %>_by_reset_password_token when action in [:edit, :update]
 
   def new(conn, _params) do
-    render(conn, "new.html")
+    render(conn, :new)
   end
 
   def create(conn, %{"<%= schema.singular %>" => %{"email" => email}}) do
@@ -26,7 +26,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def edit(conn, _params) do
-    render(conn, "edit.html", changeset: <%= inspect context.alias %>.change_<%= schema.singular %>_password(conn.assigns.<%= schema.singular %>))
+    render(conn, :edit, changeset: <%= inspect context.alias %>.change_<%= schema.singular %>_password(conn.assigns.<%= schema.singular %>))
   end
 
   # Do not log in the <%= schema.singular %> after reset password to avoid a
@@ -39,7 +39,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> redirect(to: ~p"<%= schema.route_prefix %>/log_in")
 
       {:error, changeset} ->
-        render(conn, "edit.html", changeset: changeset)
+        render(conn, :edit, changeset: changeset)
     end
   end
 

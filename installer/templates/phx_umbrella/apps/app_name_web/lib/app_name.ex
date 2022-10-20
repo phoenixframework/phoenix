@@ -96,7 +96,6 @@ defmodule <%= @web_namespace %> do
   defp html_helpers do
     quote do<%= if @html do %>
       import Phoenix.HTML
-      import Phoenix.HTML.Form
       import <%= @web_namespace %>.CoreComponents
 
       alias Phoenix.LiveView.JS
