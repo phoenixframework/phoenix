@@ -15,7 +15,9 @@ defmodule <%= @app_module %>.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: <%= @app_module %>.PubSub},
       # Start the Endpoint (http/https)
-      <%= @endpoint_module %>
+      <%= @endpoint_module %>,<%= if @mailer do %>
+      # Start Finch for Swoosh
+      {Finch, name: Swoosh.Finch}<% end %>
       # Start a worker by calling: <%= @app_module %>.Worker.start_link(arg)
       # {<%= @app_module %>.Worker, arg}
     ]

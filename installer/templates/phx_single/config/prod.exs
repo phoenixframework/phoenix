@@ -11,6 +11,12 @@ import Config
 # before starting your production server.
 config :<%= @web_app_name %>, <%= @endpoint_module %>, cache_static_manifest: "priv/static/cache_manifest.json"
 <% end %>
+
+<%= if @mailer do %>
+# Configures Swoosh API Client
+config :swoosh, :api_client, Swoosh.ApiClient.Finch
+<% end %>
+
 # Do not print debug messages in production
 config :logger, level: :info
 
