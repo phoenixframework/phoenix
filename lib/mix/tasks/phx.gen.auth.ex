@@ -51,6 +51,15 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     * `test/my_app_web/controllers/warehouse/user_confirmation_controller_test.exs`
     * and so on...
 
+  ## Multiple invocations
+
+  You can invoke this generator multiple times. This is typically useful
+  if you have distinct resources that go through distinct authentication
+  workflows:
+
+      $ mix phx.gen.auth Store User users
+      $ mix phx.gen.auth Backoffice Admin admins
+
   ## Binary ids
 
   The `--binary-id` option causes the generated migration to use

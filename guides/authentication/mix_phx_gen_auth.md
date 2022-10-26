@@ -1,8 +1,10 @@
 # mix phx.gen.auth
 
-The `mix phx.gen.auth` command generates a flexible, pre-built authentication system into your Phoenix app. This simple generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve.
+The `mix phx.gen.auth` command generates a flexible, pre-built authentication system into your Phoenix app. This generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve.
 
 ## Getting started
+
+> Before running this command, consider committing your work as it generates multiple files.
 
 Let's start by running the following command from the root of our app (or `apps/my_app_web` in an umbrella app):
 
