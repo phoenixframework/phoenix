@@ -35,7 +35,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end<% else %>
 
   def new(conn, _params) do
-    render(conn, "new.html", error_message: nil)
+    render(conn, :new, error_message: nil)
   end
 
   def create(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params}) do
@@ -47,7 +47,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params)
     else
       # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
-      render(conn, "new.html", error_message: "Invalid email or password")
+      render(conn, :new, error_message: "Invalid email or password")
     end
   end<% end %>
 

@@ -1,4 +1,4 @@
-defmodule <%= @web_namespace %>.Components do
+defmodule <%= @web_namespace %>.CoreComponents do
   @moduledoc """
   Provides core UI components.
 
@@ -9,9 +9,10 @@ defmodule <%= @web_namespace %>.Components do
   Icons are provided by [heroicons](https://heroicons.com), using the
   [heroicons_elixir](https://github.com/mveytsman/heroicons_elixir) project.
   """
-  use Phoenix.Component<%= if @gettext do %>
-  import <%= @web_namespace %>.Gettext, warn: false<% end %>
-  alias Phoenix.LiveView.JS
+  use Phoenix.Component
+
+  alias Phoenix.LiveView.JS<%= if @gettext do %>
+  import <%= @web_namespace %>.Gettext<% end %>
 
   @doc """
   Renders a modal.
@@ -71,7 +72,7 @@ defmodule <%= @web_namespace %>.Components do
                   phx-click={hide_modal(@on_cancel, @id)}
                   type="button"
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
-                  aria-label="Close"
+                  aria-label={gettext("close")}
                 >
                   <Heroicons.x_mark solid class="h-5 w-5 stroke-current" />
                 </button>
@@ -152,7 +153,7 @@ defmodule <%= @web_namespace %>.Components do
         <%%= @title %>
       </p>
       <p class="mt-2 text-[0.8125rem] leading-5"><%%= msg %></p>
-      <button :if={@close} type="button" class="group absolute top-2 right-1 p-2" aria-label="Close">
+      <button :if={@close} type="button" class="group absolute top-2 right-1 p-2" aria-label={gettext("close")}>
         <Heroicons.x_mark solid class="h-5 w-5 stroke-current opacity-40 group-hover:opacity-70" />
       </button>
     </div>
@@ -244,7 +245,7 @@ defmodule <%= @web_namespace %>.Components do
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file hidden month number password
-               range radio search select tel text time url week)
+               range radio search select tel text textarea time url week)
 
   attr :value, :any
   attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
@@ -307,7 +308,7 @@ defmodule <%= @web_namespace %>.Components do
         name={@name}
         class={[
           input_border(@errors),
-          "mt-2 block min-h-[6rem] w-full rounded-lg border-zinc-300 py-[calc(theme(spacing.2)-1px)] px-[calc(theme(spacing.3)-1px)]",
+          "mt-2 block min-h-[6rem] w-full rounded-lg border-zinc-300 py-[7px] px-[11px]",
           "text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-800/5 sm:text-sm sm:leading-6",
           "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
         ]}
@@ -329,7 +330,7 @@ defmodule <%= @web_namespace %>.Components do
         value={@value}
         class={[
           input_border(@errors),
-          "mt-2 block w-full rounded-lg border-zinc-300 py-[calc(theme(spacing.2)-1px)] px-[calc(theme(spacing.3)-1px)]",
+          "mt-2 block w-full rounded-lg border-zinc-300 py-[7px] px-[11px]",
           "text-zinc-900 focus:outline-none focus:ring-4 sm:text-sm sm:leading-6",
           "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
         ]}
@@ -426,7 +427,7 @@ defmodule <%= @web_namespace %>.Components do
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
             <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%%= col[:label] %></th>
-            <th class="relative p-0 pb-4"><span class="sr-only">Actions</span></th>
+            <th class="relative p-0 pb-4"><span class="sr-only"><%%= gettext("Actions") %></span></th>
           </tr>
         </thead>
         <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">

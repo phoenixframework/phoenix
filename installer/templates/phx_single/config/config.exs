@@ -15,7 +15,7 @@ config :<%= @app_name %><%= if @namespaced? do %>,
 # Configures the endpoint
 config :<%= @app_name %>, <%= @endpoint_module %>,
   url: [host: "localhost"],
-  render_errors: [view: <%= @web_namespace %>.ErrorView, accepts: ~w(<%= if @html do %>html <% end %>json), layout: false],
+  render_errors: [formats: [<%= if @html do%>html: <%= @web_namespace %>.ErrorHTML, <% end %>json: <%= @web_namespace %>.ErrorJSON], layout: false],
   pubsub_server: <%= @app_module %>.PubSub,
   live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @mailer do %>
 
@@ -36,7 +36,7 @@ config :esbuild,
       ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
-  ]<% end %>
+  ]
 
 # Configure tailwind (the version is required)
 config :tailwind,
@@ -48,7 +48,7 @@ config :tailwind,
       --output=../priv/static/assets/app.css
     ),
     cd: Path.expand("../assets", __DIR__)
-  ]
+  ]<% end %>
 
 # Configures Elixir's Logger
 config :logger, :console,

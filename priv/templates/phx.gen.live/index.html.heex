@@ -22,15 +22,13 @@
   </:action>
 </.table>
 
-<%%= if @live_action in [:new, :edit] do %>
-  <.modal id="<%= schema.singular %>-modal" show on_cancel={JS.navigate(~p"<%= schema.route_prefix %>")}>
-    <.live_component
-      module={<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent}
-      id={@<%= schema.singular %>.id || :new}
-      title={@page_title}
-      action={@live_action}
-      <%= schema.singular %>={@<%= schema.singular %>}
-      navigate={~p"<%= schema.route_prefix %>"}
-    />
-  </.modal>
-<%% end %>
+<.modal :if={@live_action in [:new, :edit]} id="<%= schema.singular %>-modal" show on_cancel={JS.navigate(~p"<%= schema.route_prefix %>")}>
+  <.live_component
+    module={<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent}
+    id={@<%= schema.singular %>.id || :new}
+    title={@page_title}
+    action={@live_action}
+    <%= schema.singular %>={@<%= schema.singular %>}
+    navigate={~p"<%= schema.route_prefix %>"}
+  />
+</.modal>

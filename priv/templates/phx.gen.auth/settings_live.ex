@@ -14,9 +14,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-submit="update_email"
       phx-change="validate_email"
     >
-      <%%= if @email_changeset.action == :insert do %>
-        <.error message="Oops, something went wrong! Please check the errors below." />
-      <%% end %>
+      <.error :if={@email_changeset.action == :insert} message="Oops, something went wrong! Please check the errors below." />
 
       <.input field={{f, :email}} type="email" label="Email" required value={input_value(f, :email)} />
 
@@ -46,9 +44,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-submit="update_password"
       phx-trigger-action={@trigger_submit}
     >
-      <%%= if @password_changeset.action == :insert do %>
-        <.error message="Oops, something went wrong! Please check the errors below." />
-      <%% end %>
+      <.error :if={@password_changeset.action == :insert} message="Oops, something went wrong! Please check the errors below." />
 
       <.input field={{f, :email}} type="hidden" value={@current_email} />
 

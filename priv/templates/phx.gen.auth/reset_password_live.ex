@@ -14,9 +14,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-submit="reset_password"
       phx-change="validate"
     >
-      <%%= if @changeset.action == :insert do %>
-        <.error message="Oops, something went wrong! Please check the errors below." />
-      <%% end %>
+      <.error :if={@changeset.action == :insert} message="Oops, something went wrong! Please check the errors below." />
+
       <.input
         field={{f, :password}}
         type="password"

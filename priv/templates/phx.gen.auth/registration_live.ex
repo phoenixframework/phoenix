@@ -29,9 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         method="post"
         as={:<%= schema.singular %>}
       >
-        <%%= if @changeset.action == :insert do %>
-          <.error message="Oops, something went wrong! Please check the errors below." />
-        <%% end %>
+        <.error :if={@changeset.action == :insert} message="Oops, something went wrong! Please check the errors below." />
 
         <.input field={{f, :email}} type="email" label="Email" required />
         <.input

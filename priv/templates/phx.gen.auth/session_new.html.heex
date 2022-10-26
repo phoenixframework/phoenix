@@ -11,9 +11,8 @@
   </.header>
 
   <.simple_form :let={f} for={@conn} action={~p"<%= schema.route_prefix %>/log_in"} as={:<%= schema.singular %>}>
-    <%%= if @error_message do %>
-      <.error message={@error_message} />
-    <%% end %>
+    <.error :if={@error_message} message={@error_message} />
+
     <.input field={{f, :email}} type="email" label="Email" required />
     <.input field={{f, :password}} type="password" label="Password" required />
 

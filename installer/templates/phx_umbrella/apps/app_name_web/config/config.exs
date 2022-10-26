@@ -7,7 +7,7 @@ config :<%= @web_app_name %><%= if @namespaced? do %>,
 <% end %># Configures the endpoint
 config :<%= @web_app_name %>, <%= @endpoint_module %>,
   url: [host: "localhost"],
-  render_errors: [view: <%= @web_namespace %>.ErrorView, accepts: ~w(<%= if @html do %>html <% end %>json), layout: false],
+  render_errors: [formats: [<%= if @html do%>html: <%= @web_namespace %>.ErrorHTML, <% end %>json: <%= @web_namespace %>.ErrorJSON], layout: false],
   pubsub_server: <%= @app_module %>.PubSub,
   live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @assets do %>
 
@@ -31,4 +31,4 @@ config :tailwind,
       --output=../priv/static/assets/app.css
     ),
     cd: Path.expand("../apps/<%= @web_app_name %>/assets", __DIR__)
-]<% end %>
+  ]<% end %>
