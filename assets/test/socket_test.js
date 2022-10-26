@@ -691,8 +691,6 @@ describe("with transports", function(){
 
       assert.ok(!spy.calledWith("phx_error"))
     })
-<<<<<<< HEAD
-=======
 
     it("does not send heartbeat after explicit disconnect", function(done){
       let clock = sinon.useFakeTimers()
@@ -716,7 +714,6 @@ describe("with transports", function(){
       clock.restore()
       done()
     })
->>>>>>> 1a0e70a7 (Fix reconnecting websockets on heartbeat timeout (#4921))
   })
 
   describe("onConnError", function(){
