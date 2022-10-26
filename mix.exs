@@ -74,7 +74,7 @@ defmodule Phoenix.MixProject do
       {:plug_crypto, "~> 1.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.0"},
-      {:phoenix_view, "~> 1.0"},
+      {:phoenix_view, "~> 1.0 or ~> 2.0"},
       # TODO drop castore when we require OTP 25+
       {:castore, ">= 0.0.0"},
 
