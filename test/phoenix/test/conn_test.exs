@@ -427,7 +427,7 @@ defmodule Phoenix.Test.ConnTest do
     end
   end
 
-  describe "redirected_params/1" do
+  describe "redirected_params/2" do
     test "with matching route" do
       conn =
         build_conn(:get, "/")
@@ -459,6 +459,18 @@ defmodule Phoenix.Test.ConnTest do
         |> send_resp(200, "ok")
         |> redirected_params()
       end
+    end
+
+    test "with custom status code" do
+      Enum.each(300..308, fn status ->
+        conn =
+          build_conn(:get, "/")
+          |> RedirRouter.call(RedirRouter.init([]))
+          |> put_resp_header("location", "/posts/123")
+          |> send_resp(status, "foo")
+
+        assert redirected_params(conn, status) == %{id: "123"}
+      end)
     end
   end
 

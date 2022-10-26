@@ -576,17 +576,19 @@ defmodule Phoenix.ConnTest do
   Returns the matched params from the URL the connection was redirected to.
 
   Uses the provided `%Plug.Conn{}`s router matched in the previous request.
-  Raises if the response's location header is not set.
+  Raises if the response's location header is not set or if the response does
+  not match the redirect status code (defaults to 302).
 
   ## Examples
 
       assert redirected_to(conn) =~ "/posts/123"
       assert %{id: "123"} = redirected_params(conn)
+      assert %{id: "123"} = redirected_params(conn, 303)
   """
-  @spec redirected_params(Conn.t) :: map
-  def redirected_params(%Plug.Conn{} = conn) do
+  @spec redirected_params(Conn.t, status :: non_neg_integer) :: map
+  def redirected_params(%Plug.Conn{} = conn, status \\ 302) do
     router = Phoenix.Controller.router_module(conn)
-    %URI{path: path, host: host} = conn |> redirected_to() |> URI.parse()
+    %URI{path: path, host: host} = conn |> redirected_to(status) |> URI.parse()
 
     case Phoenix.Router.route_info(router, "GET", path, host || conn.host) do
       :error ->
