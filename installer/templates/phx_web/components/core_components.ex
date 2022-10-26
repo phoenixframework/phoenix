@@ -255,7 +255,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   attr :hidden_input, :boolean,
     default: true,
-    doc: "wether to show or not a hidden input for the unchecked checkbox input"
+    doc: "whether to show or not a hidden input for the unchecked checkbox input"
 
   slot :inner_block
 
