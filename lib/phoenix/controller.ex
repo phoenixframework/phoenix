@@ -6,6 +6,9 @@ defmodule Phoenix.Controller do
   require Phoenix.Endpoint
 
   @unsent [:unset, :set, :set_chunked, :set_file]
+  
+  @type view :: atom()
+  @type layout :: {module(), layout_name :: atom()} | false
 
   @moduledoc """
   Controllers are used to group common functionality in the same
@@ -444,7 +447,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_view(Plug.Conn.t(), [{atom | String.t(), atom}] | atom) :: Plug.Conn.t()
+  @spec put_view(Plug.Conn.t(), [{format :: atom, view}] | view) :: Plug.Conn.t()
   def put_view(%Plug.Conn{state: state} = conn, formats) when state in @unsent do
     put_private_view(conn, :phoenix_view, :replace, formats)
   end
@@ -474,14 +477,12 @@ defmodule Phoenix.Controller do
     end)
   end
 
-  @type view :: {format :: atom, view :: atom}
-
   @doc """
   Stores the view for rendering if one was not stored yet.
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_new_view(Plug.Conn.t(), view | [view]) :: Plug.Conn.t()
+  @spec put_new_view(Plug.Conn.t(), [{format :: atom, view}] | view) :: Plug.Conn.t()
   def put_new_view(%Plug.Conn{state: state} = conn, formats) when state in @unsent do
     put_private_view(conn, :phoenix_view, :new, formats)
   end
@@ -540,7 +541,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_layout(Plug.Conn.t(), {atom, binary | atom} | atom | binary | false) :: Plug.Conn.t()
+  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}]) :: Plug.Conn.t()
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
       put_private_layout(conn, :phoenix_layout, :replace, layout)
@@ -593,14 +594,12 @@ defmodule Phoenix.Controller do
     end
   end
 
-  @type layout :: {format :: atom, {module, layout_name :: atom} | false}
-
   @doc """
   Stores the layout for rendering if one was not stored yet.
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_new_layout(Plug.Conn.t(), layout | [layout] | false) :: Plug.Conn.t()
+  @spec put_new_layout(Plug.Conn.t(), [{format :: atom, layout}]) :: Plug.Conn.t()
   def put_new_layout(%Plug.Conn{state: state} = conn, layout)
       when (is_tuple(layout) and tuple_size(layout) == 2) or is_list(layout) or layout == false do
     unless state in @unsent, do: raise(AlreadySentError)
@@ -639,7 +638,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_root_layout(Plug.Conn.t(), {atom, binary | atom} | atom | binary | false) ::
+  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}]) ::
           Plug.Conn.t()
   def put_root_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
