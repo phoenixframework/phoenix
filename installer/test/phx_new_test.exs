@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/config/prod.exs", fn file ->
-        assert file =~ "port: 443"
+        assert file =~ "config :logger, level: :info"
       end)
 
       assert_file("phx_blog/config/runtime.exs", ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/)
