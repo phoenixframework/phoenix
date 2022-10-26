@@ -68,7 +68,6 @@ defmodule Phx.New.Single do
 
   template(:assets, [
     {:eex, :web,
-     "phx_static/phoenix.css": "assets/css/phoenix.css",
      "phx_assets/app.css": "assets/css/app.css",
      "phx_assets/app.js": "assets/js/app.js",
      "phx_assets/tailwind.config.js": "assets/tailwind.config.js"},
@@ -77,7 +76,6 @@ defmodule Phx.New.Single do
 
   template(:no_assets, [
     {:text, :web,
-     "phx_static/phoenix.css": "priv/static/assets/phoenix.css",
      "phx_static/app.css": "priv/static/assets/app.css",
      "phx_static/app.js": "priv/static/assets/app.js"}
   ])
