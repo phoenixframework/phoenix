@@ -71,7 +71,9 @@ locals_without_parens = [
   live: 4,
   live_dashboard: 1,
   live_dashboard: 2,
-  on_mount: 1
+  on_mount: 1,
+  embed_templates: 1,
+  embed_templates: 2
 ]
 
 [
