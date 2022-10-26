@@ -250,12 +250,23 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :value, :any
   attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
   attr :errors, :list
-  attr :rest, :global, include: ~w(autocomplete checked disabled form max maxlength min minlength
+  attr :rest, :global, include: ~w(autocomplete disabled form max maxlength min minlength
                                    multiple pattern placeholder readonly required size step)
+
+  attr :checked, :boolean
 
   attr :hidden_input, :boolean,
     default: true,
-    doc: "wether to show or not a hidden input for the unchecked checkbox input"
+    doc:
+      "controls if this component will generate a hidden input to submit the unchecked value or not. Defaults to `true`"
+
+  attr :checked_value, :any,
+    default: "true",
+    doc: "the value to be sent when the checkbox is checked. Defaults to \"true\""
+
+  attr :unchecked_value, :any,
+    default: "false",
+    doc: "the value to be sent when the checkbox is unchecked, Defaults to \"false\""
 
   slot :inner_block
 
@@ -271,19 +282,23 @@ defmodule <%= @web_namespace %>.CoreComponents do
     |> assign_new(:id, fn -> Phoenix.HTML.Form.input_id(f, field) end)
     |> assign_new(:value, fn -> Phoenix.HTML.Form.input_value(f, field) end)
     |> assign_new(:errors, fn -> translate_errors(f.errors || [], field) end)
+    |> assign_new(:checked, fn %{value: value, checked_value: checked_value} ->
+      to_string(value) == to_string(checked_value)
+    end)
     |> input()
   end
 
   def input(%{type: "checkbox"} = assigns) do
     ~H"""
     <label phx-feedback-for={@name} class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
-      <input :if={@hidden_input} type="hidden" name={@name} value="false" />
+      <input :if={@hidden_input} type="hidden" name={@name} value={@unchecked_value} />
       <input
         type="checkbox"
         id={@id || @name}
         name={@name}
-        value={@value}
+        value={@checked_value}
         class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+        checked={@checked}
         {@rest}
       />
       <%%= @label %>

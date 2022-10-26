@@ -184,15 +184,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
         ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" step="any" />)
 
       {key, :boolean} ->
-        ~s"""
-        <.input
-          field={{f, #{inspect(key)}}}
-          type="checkbox"
-          label="#{label(key)}"
-          value="true"
-          checked={to_string(input_value(f, #{inspect(key)})) == "true"}
-        />
-        """
+        ~s(<.input field={{f, #{inspect(key)}}} type="checkbox" label="#{label(key)}" />)
 
       {key, :text} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="text" label="#{label(key)}" />)

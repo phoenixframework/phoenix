@@ -104,7 +104,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ ~s(<.input field={{f, :votes}} type="number")
         assert file =~ ~s(<.input field={{f, :cost}} type="number" label="cost" step="any")
         assert file =~ ~s(<.input field={{f, :tags}} type="select" multiple)
-        assert file =~ ~s(<.input\n          field={{f, :popular}}\n          type="checkbox")
+        assert file =~ ~s(<.input field={{f, :popular}} type="checkbox")
         assert file =~ ~s(<.input field={{f, :drafted_at}} type="datetime-local")
         assert file =~ ~s(<.input field={{f, :published_at}} type="datetime-local")
         assert file =~ ~s(<.input field={{f, :deleted_at}} type="datetime-local")
