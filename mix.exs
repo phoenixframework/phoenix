@@ -73,9 +73,8 @@ defmodule Phoenix.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
 
-      # TODO bump to hex before 1.7 release
-      {:phoenix_view, github: "phoenixframework/phoenix_view", optional: true, override: true},
-      {:phoenix_template, github: "phoenixframework/phoenix_template"},
+      {:phoenix_view, "~> 2.0", optional: true},
+      {:phoenix_template, "~> 1.0"},
 
       # TODO drop castore when we require OTP 25+
       {:castore, ">= 0.0.0"},
