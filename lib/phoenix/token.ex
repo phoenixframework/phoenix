@@ -99,7 +99,7 @@ defmodule Phoenix.Token do
           | {:key_length, pos_integer}
           | {:key_digest, :sha256 | :sha384 | :sha512}
 
-  @type max_age_opt :: {:max_age, pos_integer}
+  @type max_age_opt :: {:max_age, pos_integer | :infinity}
   @type signed_at_opt :: {:signed_at, pos_integer}
 
   @doc """
