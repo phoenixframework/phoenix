@@ -65,7 +65,7 @@ defmodule Mix.Tasks.Phx.Digest do
         Mix.shell().info [:green, "Check your digested files at #{inspect output_path}"]
 
       {:error, :invalid_path} ->
-        # Do not exit with status code on purporse because
+        # Do not exit with status code on purpose because
         # in an umbrella not all apps are digestable.
         Mix.shell().error "The input path #{inspect input_path} does not exist"
     end
