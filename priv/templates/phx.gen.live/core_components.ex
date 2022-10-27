@@ -248,6 +248,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                range radio search select tel text textarea time url week)
 
   attr :value, :any
+  attr :checked, :boolean
   attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
   attr :errors, :list
   attr :rest, :global, include: ~w(autocomplete checked disabled form max maxlength min minlength
@@ -270,6 +271,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   def input(%{type: "checkbox"} = assigns) do
+    assigns = assign_new(assigns, :checked, fn -> input_equals?(assigns.value, "true") end)
+
     ~H"""
     <label phx-feedback-for={@name} class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
       <input type="hidden" name={@name} value="false" />
@@ -278,8 +281,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
         id={@id || @name}
         name={@name}
         value="true"
+        checked={@checked}
         class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
-        checked={!Map.has_key?(@rest, :checked) && input_equals?(@value, "true")}
         {@rest}
       />
       <%%= @label %>
