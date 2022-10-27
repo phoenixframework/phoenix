@@ -25,9 +25,9 @@ Unmatched routes will issue compiler warnings:
     warning: no route path for AppWeb.Router matches "/postz/#{post}"
       lib/app_web/controllers/post_controller.ex:100: AppWeb.PostController.show/2
 
-*Note: Elixir >= 1.14.0 is required for comprehensive warnings. Older versions
+*Note: Elixir v1.14+ is required for comprehensive warnings. Older versions
 will work properly and warn on new compilations, but changes to the router file
-will not issue new warnings.
+will not issue new warnings.*
 
 This feature replaces the `Helpers` module generated in your Phoenix router, but helpers
 will continue to work and be generated. You can disable router helpers by passing the
