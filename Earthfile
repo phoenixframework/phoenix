@@ -30,8 +30,7 @@ integration-test:
     RUN mix local.hex --force
 
     # Ensure integration_test/mix.lock contains all of the dependencies we need and none we don't
-    RUN mix deps.unlock phoenix_view && \
-        cp mix.lock mix.lock.orig && \
+    RUN cp mix.lock mix.lock.orig && \
         mix deps.get && \
         mix deps.unlock --check-unused && \
         diff -u mix.lock.orig mix.lock && \
