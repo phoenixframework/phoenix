@@ -72,7 +72,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                   phx-click={hide_modal(@on_cancel, @id)}
                   type="button"
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
-                  aria-label="close"
+                  aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
                 >
                   <Heroicons.x_mark solid class="h-5 w-5 stroke-current" />
                 </button>
@@ -157,7 +157,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         :if={@close}
         type="button"
         class="group absolute top-2 right-1 p-2"
-        aria-label="close"
+        aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
       >
         <Heroicons.x_mark solid class="h-5 w-5 stroke-current opacity-40 group-hover:opacity-70" />
       </button>
@@ -443,7 +443,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
             <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%%= col[:label] %></th>
-            <th class="relative p-0 pb-4"><span class="sr-only">Actions</span></th>
+            <th class="relative p-0 pb-4"><span class="sr-only"><%= if @gettext do %><%%= gettext("Actions") %><% else %>Actions<% end %></span></th>
           </tr>
         </thead>
         <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
