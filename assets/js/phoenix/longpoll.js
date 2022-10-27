@@ -73,7 +73,7 @@ export default class LongPoll {
             // next message event handler is run.
             //
             // In order to emulate this behaviour, we need to make sure each
-            // onmessage handler is run within it's own macrotask.
+            // onmessage handler is run within its own macrotask.
             setTimeout(() => this.onmessage({data: msg}), 0)
           })
           this.poll()
