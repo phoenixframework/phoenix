@@ -333,7 +333,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         ]}
         {@rest}
       >
-    <%!-- Force textarea newline. Do not delete or indent --%>
+    <!-- Force textarea newline. Do not delete or indent -->
     <%%= @value %></textarea>
       <.error :for={msg <- @errors} message={msg} />
     </div>
