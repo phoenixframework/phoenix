@@ -255,6 +255,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   slot :inner_block
 
   slot :option, doc: "the slot for select input options" do
+    attr :selected, :boolean
     attr :value, :any
   end
 
@@ -271,11 +272,15 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(%{type: "checkbox"} = assigns) do
     ~H"""
     <label phx-feedback-for={@name} class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
+      <input type="hidden" name={@name} value="false" />
       <input
         type="checkbox"
         id={@id || @name}
         name={@name}
+        value="true"
         class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+        checked={!Map.has_key?(@rest, :checked) && input_equals?(@value, "true")}
+        {@rest}
       />
       <%%= @label %>
     </label>
@@ -292,7 +297,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
         class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
         {@rest}
       >
-        <option :for={opt <- @option} {assigns_to_attributes(opt)}><%%= render_slot(opt) %></option>
+        <option
+          :for={opt <- @option}
+          selected={Map.get_lazy(opt, :selected, fn -> input_equals?(opt[:value], @value) end)}
+          {assigns_to_attributes(opt, [:selected])}
+        >
+           <%%= render_slot(opt) %>
+        </option>
       </select>
       <.error :for={msg <- @errors} message={msg} />
     </div>
@@ -560,7 +571,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     |> hide("##{id}-container")
     |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
     |> JS.pop_focus()
-  end<%= if @gettext do %>
+  end
 
   @doc """
   Translates an error message using gettext.
@@ -584,27 +595,20 @@ defmodule <%= @web_namespace %>.CoreComponents do
     # should be written to the errors.po file. The :count option is
     # set by Ecto and indicates we should also apply plural rules.
     if count = opts[:count] do
-      Gettext.dngettext(<%= @web_namespace %>.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(DemoWeb.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(<%= @web_namespace %>.Gettext, "errors", msg, opts)
+      Gettext.dgettext(DemoWeb.Gettext, "errors", msg, opts)
     end
-  end<% else %>
-
-  @doc """
-  Translates an error message.
-  """
-  def translate_error({msg, opts}) do
-    # Because the error messages we show in our forms and APIs
-    # are defined inside Ecto, we need to translate them dynamically.
-    Enum.reduce(opts, msg, fn {key, value}, acc ->
-      String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
-    end)
-  end<% end %>
+  end
 
   @doc """
   Translates the errors for a field from a keyword list of errors.
   """
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
+  end
+
+  defp input_equals?(val1, val2) do
+    Phoenix.HTML.html_escape(val1) == Phoenix.HTML.html_escape(val2)
   end
 end
