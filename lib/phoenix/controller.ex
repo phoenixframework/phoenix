@@ -541,7 +541,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}]) :: Plug.Conn.t()
+  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) :: Plug.Conn.t()
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
       put_private_layout(conn, :phoenix_layout, :replace, layout)
@@ -575,15 +575,17 @@ defmodule Phoenix.Controller do
   end
 
   defp put_private_layout(conn, private_key, kind, no_format) do
-    # TODO: Deprecate put_layout without formats
     case no_format do
       false ->
         put_private_formats(conn, private_key, kind, %{_: false})
 
       {mod, layout} when is_atom(mod) ->
+        # TODO: Temporarily deprecate this to point users to the correct
+        # direction while get_layout_formats/put_layout_formats is removed.
         put_private_formats(conn, private_key, kind, %{_: {mod, layout}})
 
       layout when is_binary(layout) or is_atom(layout) ->
+        # TODO: Deprecate this branch permanently.
         case Map.get(conn.private, private_key, %{_: false}) do
           %{_: {mod, _}} ->
             put_private_formats(conn, private_key, kind, %{_: {mod, layout}})
@@ -599,7 +601,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_new_layout(Plug.Conn.t(), [{format :: atom, layout}]) :: Plug.Conn.t()
+  @spec put_new_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) :: Plug.Conn.t()
   def put_new_layout(%Plug.Conn{state: state} = conn, layout)
       when (is_tuple(layout) and tuple_size(layout) == 2) or is_list(layout) or layout == false do
     unless state in @unsent, do: raise(AlreadySentError)
@@ -638,7 +640,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}]) ::
+  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) ::
           Plug.Conn.t()
   def put_root_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
@@ -704,15 +706,9 @@ defmodule Phoenix.Controller do
     format = format || get_safe_format(conn)
 
     case conn.private[priv_key] do
-      # TODO: Remove me when layout without format is used
-      %{_: value} ->
-        if format in [nil | layout_formats(conn)], do: value, else: false
-
-      %{^format => value} ->
-        value
-
-      _ ->
-        false
+      %{_: value} -> if format in [nil | layout_formats(conn)], do: value, else: false
+      %{^format => value} -> value
+      _ -> false
     end
   end
 
