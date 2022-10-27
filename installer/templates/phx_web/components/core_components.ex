@@ -153,7 +153,12 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <%%= @title %>
       </p>
       <p class="mt-2 text-[0.8125rem] leading-5"><%%= msg %></p>
-      <button :if={@close} type="button" class="group absolute top-2 right-1 p-2" aria-label={gettext("close")}>
+      <button
+        :if={@close}
+        type="button"
+        class="group absolute top-2 right-1 p-2"
+        aria-label={gettext("close")}
+      >
         <Heroicons.x_mark solid class="h-5 w-5 stroke-current opacity-40 group-hover:opacity-70" />
       </button>
     </div>
@@ -302,7 +307,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
           selected={Map.get_lazy(opt, :selected, fn -> input_equals?(opt[:value], @value) end)}
           {assigns_to_attributes(opt, [:selected])}
         >
-           <%%= render_slot(opt) %>
+          <%%= render_slot(opt) %>
         </option>
       </select>
       <.error :for={msg <- @errors} message={msg} />
