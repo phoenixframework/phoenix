@@ -206,20 +206,24 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
       {key, {:array, _}} ->
         ~s"""
-        <.input field={{f, #{inspect(key)}}} type="select" multiple label="#{label(key)}">
-          <:option value="option1">Option 1</:option>
-          <:option value="option2">Option 2</:option>
-        </.input>
+        <.input
+          field={{f, #{inspect(key)}}}
+          type="select"
+          multiple
+          label="#{label(key)}"
+          options={[{"Option 1", "option1"}, {"Option 2", "option2"}]}
+        />
         """
 
       {key, {:enum, _}} ->
         ~s"""
-        <.input field={{f, #{inspect(key)}}} type="select" label="#{label(key)}">
-          <:option>Choose a value</:option>
-          <:option :for={value <- Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})} value={value}>
-            <%= value %>
-          </:option>
-        </.input>
+        <.input
+          field={{f, #{inspect(key)}}}
+          type="select"
+          label="#{label(key)}"
+          prompt="Choose a value"
+          options={Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})}
+        />
         """
 
       {key, _} ->
@@ -235,7 +239,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
     inputs
     |> Enum.map(fn input ->
-      lines = input |> String.split("\n") |> Enum.reject(& &1 == "")
+      lines = input |> String.split("\n") |> Enum.reject(&(&1 == ""))
 
       case lines do
         [line] ->

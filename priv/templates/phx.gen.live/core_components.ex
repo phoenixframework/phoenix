@@ -253,17 +253,14 @@ defmodule <%= @web_namespace %>.CoreComponents do
                range radio search select tel text textarea time url week)
 
   attr :value, :any
-  attr :checked, :boolean
   attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
   attr :errors, :list
-  attr :rest, :global, include: ~w(autocomplete checked disabled form max maxlength min minlength
+  attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
+  attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
+  attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
+  attr :rest, :global, include: ~w(autocomplete disabled form max maxlength min minlength
                                    multiple pattern placeholder readonly required size step)
   slot :inner_block
-
-  slot :option, doc: "the slot for select input options" do
-    attr :selected, :boolean
-    attr :value, :any
-  end
 
   def input(%{field: {f, field}} = assigns) do
     assigns
@@ -305,13 +302,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
         class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
         {@rest}
       >
-        <option
-          :for={opt <- @option}
-          selected={Map.get_lazy(opt, :selected, fn -> input_equals?(opt[:value], @value) end)}
-          {assigns_to_attributes(opt, [:selected])}
-        >
-          <%%= render_slot(opt) %>
-        </option>
+        <option :if={@prompt}><%%= @prompt %></option>
+        <%%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
       </select>
       <.error :for={msg <- @errors} message={msg} />
     </div>
