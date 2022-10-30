@@ -412,11 +412,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # Without mailer
       assert_file(web_path(@app, "mix.exs"), fn file ->
         refute file =~ "{:swoosh, \"~> 1.3\"}"
-        refute file =~ "{:finch, \"~> 0.13.0\"}"
+        refute file =~ "{:finch, \"~> 0.13\"}"
       end)
 
       assert_file(app_path(@app, "lib/#{@app}/application.ex"), fn file ->
-        refute file =~ "{Finch, name: Swoosh.Finch}"
+        refute file =~ "{Finch, name: #{@app}.Finch}"
       end)
 
       refute File.exists?(app_path(@app, "lib/#{@app}/mailer.ex"))
@@ -431,7 +431,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end)
 
       assert_file(root_path(@app, "config/prod.exs"), fn file ->
-        refute file =~ "config :swoosh, :api_client, Swoosh.ApiClient.Finch"
+        refute file =~ "config :swoosh"
       end)
     end)
   end

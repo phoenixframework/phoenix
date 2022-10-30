@@ -413,11 +413,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       # No mailer or emails
       assert_file("phx_blog/mix.exs", fn file ->
         refute file =~ "{:swoosh, \"~> 1.3\"}"
-        refute file =~ "{:finch, \"~> 0.13.0\""
+        refute file =~ "{:finch, \"~> 0.13\""
       end)
 
       assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
-        refute file =~ "{Finch, name: Swoosh.Finch}"
+        refute file =~ "{Finch, name: #{@app_name}.Finch"
       end)
 
       refute File.exists?("phx_blog/lib/phx_blog/mailer.ex")
@@ -437,7 +437,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/config/prod.exs", fn file ->
-        refute file =~ "config :swoosh, :api_client, Swoosh.ApiClient.Finch"
+        refute file =~ "config :swoosh"
       end)
     end)
   end
