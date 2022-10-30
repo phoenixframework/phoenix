@@ -14,7 +14,7 @@ defmodule <%= @app_module %>.Application do
       <%= @app_module %>.Repo,<% end %>
       # Start the PubSub system
       {Phoenix.PubSub, name: <%= @app_module %>.PubSub},<%= if @mailer do %>
-      # Start Finch for Swoosh
+      # Start Finch
       {Finch, name: <%= @app_module %>.Finch}<% end %>
       # Start the Endpoint (http/https)
       <%= @endpoint_module %>
