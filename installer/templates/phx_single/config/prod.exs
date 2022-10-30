@@ -14,7 +14,7 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>, cache_static_manifest: "p
 
 <%= if @mailer do %>
 # Configures Swoosh API Client
-config :swoosh, :api_client, Swoosh.ApiClient.Finch<% end %>
+config :swoosh, :api_client, <%= @app_name %>.Finch<% end %>
 
 # Do not print debug messages in production
 config :logger, level: :info

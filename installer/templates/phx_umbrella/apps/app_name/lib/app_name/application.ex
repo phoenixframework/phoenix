@@ -13,7 +13,7 @@ defmodule <%= @app_module %>.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: <%= @app_module %>.PubSub},<%= if @mailer do %>
       # Start Finch for Swoosh
-      {Finch, name: Swoosh.Finch}<% end %>
+      {Finch, name: <%= @app_module %>.Finch}<% end %>
       # Start a worker by calling: <%= @app_module %>.Worker.start_link(arg)
       # {<%= @app_module %>.Worker, arg}
     ]

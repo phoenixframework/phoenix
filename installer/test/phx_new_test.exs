@@ -253,11 +253,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       # Mailer
       assert_file("phx_blog/mix.exs", fn file ->
         assert file =~ "{:swoosh, \"~> 1.3\"}"
-        assert file =~ "{:finch, \"~> 0.13.0\""
+        assert file =~ "{:finch, \"~> 0.13\""
       end)
 
       assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
-        assert file =~ "{Finch, name: Swoosh.Finch}"
+        assert file =~ "{Finch, name: #{@app_name}.Finch}"
       end)
 
       assert_file("phx_blog/lib/phx_blog/mailer.ex", fn file ->
@@ -279,7 +279,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/config/prod.exs", fn file ->
-        assert file =~ "config :swoosh, :api_client, Swoosh.ApiClient.Finch"
+        assert file =~ "config :swoosh, :api_client, #{@app_name}.Finch"
       end)
 
       # Install dependencies?

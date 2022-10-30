@@ -13,11 +13,11 @@ defmodule <%= @app_module %>.Application do
       # Start the Ecto repository
       <%= @app_module %>.Repo,<% end %>
       # Start the PubSub system
-      {Phoenix.PubSub, name: <%= @app_module %>.PubSub},
-      # Start the Endpoint (http/https)
-      <%= @endpoint_module %>,<%= if @mailer do %>
+      {Phoenix.PubSub, name: <%= @app_module %>.PubSub},<%= if @mailer do %>
       # Start Finch for Swoosh
-      {Finch, name: Swoosh.Finch}<% end %>
+      {Finch, name: <%= @app_module %>.Finch}<% end %>
+      # Start the Endpoint (http/https)
+      <%= @endpoint_module %>
       # Start a worker by calling: <%= @app_module %>.Worker.start_link(arg)
       # {<%= @app_module %>.Worker, arg}
     ]

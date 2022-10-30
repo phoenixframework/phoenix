@@ -41,7 +41,7 @@ defmodule <%= @app_module %>.MixProject do
       {:<%= @adapter_app %>, ">= 0.0.0"},
       {:jason, "~> 1.2"}<% end %><%= if @mailer do %>,
       {:swoosh, "~> 1.3"},
-      {:finch, "~> 0.13.0"}<% end %>
+      {:finch, "~> 0.13"}<% end %>
     ]
   end
 

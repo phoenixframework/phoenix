@@ -2,7 +2,7 @@ import Config
 
 <%= if @mailer do %>
 # Configures Swoosh API Client
-config :swoosh, :api_client, Swoosh.ApiClient.Finch<% end %>
+config :swoosh, :api_client, <%= @app_name %>.Finch<% end %>
 
 # Do not print debug messages in production
 config :logger, level: :info
