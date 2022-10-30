@@ -253,7 +253,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       # Mailer
       assert_file("phx_blog/mix.exs", fn file ->
         assert file =~ "{:swoosh, \"~> 1.3\"}"
-        assert file =~ "{:finch, \"~> 0.13\""
+        assert file =~ "{:finch, \"~> 0.13\"}"
       end)
 
       assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
@@ -413,7 +413,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       # No mailer or emails
       assert_file("phx_blog/mix.exs", fn file ->
         refute file =~ "{:swoosh, \"~> 1.3\"}"
-        refute file =~ "{:finch, \"~> 0.13\""
+        refute file =~ "{:finch, \"~> 0.13\"}"
       end)
 
       assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
