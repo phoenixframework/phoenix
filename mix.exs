@@ -201,7 +201,8 @@ defmodule Phoenix.MixProject do
       ],
       "Adapters and Plugs": [
         Phoenix.CodeReloader,
-        Phoenix.Endpoint.Cowboy2Adapter
+        Phoenix.Endpoint.Cowboy2Adapter,
+        Phoenix.Endpoint.SyncCodeReloadPlug
       ],
       Digester: [
         Phoenix.Digester.Compressor,
