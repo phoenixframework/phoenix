@@ -630,7 +630,7 @@ defmodule Phoenix.Endpoint do
       for {path, socket, socket_opts} <- sockets,
           {path, plug, conn_ast, plug_opts} <- socket_paths(module, path, socket, socket_opts) do
         quote do
-          defp do_handler(unquote(path), conn) do
+          defp do_socket_dispatch(unquote(path), conn) do
             unquote(plug).call(unquote(conn_ast), unquote(Macro.escape(plug_opts)))
           end
         end
@@ -661,9 +661,9 @@ defmodule Phoenix.Endpoint do
       def __sockets__, do: unquote(Macro.escape(sockets))
 
       @doc false
-      def socket_dispatch(%{path_info: path} = conn, _opts), do: do_handler(path, conn)
+      def socket_dispatch(%{path_info: path} = conn, _opts), do: do_socket_dispatch(path, conn)
       unquote(dispatches)
-      defp do_handler(_path, conn), do: conn
+      defp do_socket_dispatch(_path, conn), do: conn
     end
   end
 
