@@ -60,8 +60,6 @@ defmodule Phoenix.Transports.WebSocket do
 
         case handler.connect(config) do
           {:ok, state} ->
-            # Cures a Cowboy race condition where it doesn't see our declared websocket_init/1
-            _ = Code.ensure_loaded?(Phoenix.Endpoint.Cowboy2Handler)
             handler_args = {handler, process_flags, state}
             upgrade_args = {Phoenix.Endpoint.Cowboy2Handler, handler_args, cowboy_opts}
 

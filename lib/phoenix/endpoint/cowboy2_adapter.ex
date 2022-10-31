@@ -80,6 +80,9 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
       Application.ensure_all_started(:ssl)
     end
 
+    # Cures a Cowboy race condition where it doesn't see our declared websocket_init/1
+    _ = Code.ensure_loaded?(Phoenix.Endpoint.Cowboy2Handler)
+
     ref = Module.concat(endpoint, scheme |> Atom.to_string() |> String.upcase())
 
     plug =
