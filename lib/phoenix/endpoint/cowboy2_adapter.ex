@@ -31,7 +31,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
   options, you will need to manually wire the Phoenix endpoint by
   adding the following rule:
 
-      {:_, Phoenix.Endpoint.Cowboy2Handler, {MyAppWeb.Endpoint, []}}
+      {:_, Plug.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
 
   For example:
 
@@ -39,7 +39,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
         http: [dispatch: [
                 {:_, [
                     {"/foo", MyAppWeb.CustomHandler, []},
-                    {:_, Phoenix.Endpoint.Cowboy2Handler, {MyAppWeb.Endpoint, []}}
+                    {:_, Plug.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
                   ]}]]
 
   It is also important to specify your handlers first, otherwise
