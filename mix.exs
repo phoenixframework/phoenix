@@ -68,7 +68,7 @@ defmodule Phoenix.MixProject do
 
   defp deps do
     [
-      {:plug, "~> 1.10"},
+      {:plug, "~> 1.14"},
       {:plug_crypto, "~> 1.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
@@ -80,7 +80,7 @@ defmodule Phoenix.MixProject do
       {:castore, ">= 0.0.0"},
 
       # Optional deps
-      {:plug_cowboy, "~> 2.2", optional: true},
+      {:plug_cowboy, "~> 2.6", optional: true},
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies (some for cross references)
