@@ -43,23 +43,23 @@ defmodule Phoenix.Transports.WebSocket do
           connect_info: connect_info
         }
 
-        cowboy_opts =
-          opts
-          |> Enum.flat_map(fn
-            {:timeout, timeout} -> [idle_timeout: timeout]
-            {:compress, _} = opt -> [opt]
-            {:max_frame_size, _} = opt -> [opt]
-            _other -> []
-          end)
-          |> Map.new()
-
-        process_flags =
-          opts
-          |> Keyword.take([:fullsweep_after])
-          |> Map.new()
-
         case handler.connect(config) do
           {:ok, state} ->
+            cowboy_opts =
+              opts
+              |> Enum.flat_map(fn
+                {:timeout, timeout} -> [idle_timeout: timeout]
+                {:compress, _} = opt -> [opt]
+                {:max_frame_size, _} = opt -> [opt]
+                _other -> []
+              end)
+              |> Map.new()
+
+            process_flags =
+              opts
+              |> Keyword.take([:fullsweep_after])
+              |> Map.new()
+
             handler_args = {handler, process_flags, state}
             upgrade_args = {Phoenix.Endpoint.Cowboy2Handler, handler_args, cowboy_opts}
 
