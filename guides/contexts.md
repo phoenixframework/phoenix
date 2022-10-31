@@ -37,12 +37,12 @@ $ mix phx.gen.html Catalog Product products title:string \
 description:string price:decimal views:integer
 
 * creating lib/hello_web/controllers/product_controller.ex
-* creating lib/hello_web/templates/product/edit.html.heex
-* creating lib/hello_web/templates/product/form.html.heex
-* creating lib/hello_web/templates/product/index.html.heex
-* creating lib/hello_web/templates/product/new.html.heex
-* creating lib/hello_web/templates/product/show.html.heex
-* creating lib/hello_web/views/product_view.ex
+* creating lib/hello_web/controllers/product_html/edit.html.heex
+* creating lib/hello_web/controllers/product_html/form.html.heex
+* creating lib/hello_web/controllers/product_html/index.html.heex
+* creating lib/hello_web/controllers/product_html/new.html.heex
+* creating lib/hello_web/controllers/product_html/show.html.heex
+* creating lib/hello_web/controllers/product_html.ex
 * creating test/hello_web/controllers/product_controller_test.exs
 * creating lib/hello/catalog/product.ex
 * creating priv/repo/migrations/20210201185747_create_products.exs
@@ -487,11 +487,11 @@ With our schema associations set up, we can implement the selection of categorie
 
 First, we added `Repo.preload` to preload our categories when we fetch a product. This will allow us to reference `product.categories` in our controllers, templates, and anywhere else we want to make use of category information. Next, we modified our `create_product` and `update_product` functions to call into our existing `change_product` function to produce a changeset. Within `change_product` we added a lookup to find all categories if the `"category_ids"` attribute is present. Then we preloaded categories and called `Ecto.Changeset.put_assoc` to place the fetched categories into the changeset. Finally, we implemented the `list_categories_by_id/1` function to query the categories matching the category IDs, or return an empty list if no `"category_ids"` attribute is present. Now our `create_product` and `update_product` functions receive a changeset with the category associations all ready to go once we attempt an insert or update against our repo.
 
-Next, let's expose our new feature to the web by adding the category input to our product form. To keep our form template tidy, let's write a new function to wrap up the details of rendering a category select input for our product. Open up your `ProductView` in `lib/hello_web/views/product_view.ex` and key this in:
+Next, let's expose our new feature to the web by adding the category input to our product form. To keep our form template tidy, let's write a new function to wrap up the details of rendering a category select input for our product. Open up your `ProductHTML` view in `lib/hello_web/controllers/product_html.ex` and key this in:
 
 ```elixir
-defmodule HelloWeb.ProductView do
-  use HelloWeb, :view
+defmodule HelloWeb.ProductHTML do
+  use HelloWeb, :html
 
   def category_select(f, changeset) do
     existing_ids =
@@ -510,33 +510,31 @@ end
 
 We added a new `category_select/2` function which uses `Phoenix.HTML`'s `multiple_select/3` to generate a multiple select tag. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
 
-With our `category_select` function in place, we can open up `lib/hello_web/templates/product/form.html.heex` and add:
+With our `category_select` function in place, we can open up `lib/hello_web/controllers/product_html/form.html.heex` and add:
 
 ```diff
   ...
-  <%= label f, :views %>
-  <%= number_input f, :views %>
-  <%= error_tag f, :views %>
+  <.input type="number" field={{f, :views}} label="Views" />
 
 + <%= category_select f, @changeset %>
 
-  <div>
-    <%= submit "Save" %>
-  </div>
+  <:actions>
+    <.button>Save Product</.button>
+  </:actions>
 ```
 
-We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to `lib/hello_web/templates/product/show.html.heex`:
+We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to the list in `lib/hello_web/controllers/product_html/show.html.heex`:
 
 ```heex
+<.list>
   ...
-+ <li>
-+   <strong>Categories:</strong>
++ <:item title="Categories">
 +   <%= for cat <- @product.categories do %>
 +     <%= cat.title %>
-+     <br>
++     <br/>
 +   <% end %>
-+ </li>
-</ul>
++ </:item>
+</.list>
 ```
 
 Now if we start the server with `mix phx.server` and visit [http://localhost:4000/products/new](http://localhost:4000/products/new), we'll see the new category multiple select input. Enter some valid product details, select a category or two, and click save.
@@ -920,11 +918,11 @@ end
 
 We defined a new cart controller to handle the `get "/cart"` route. For showing a cart, we render a `"show.html"` template which we'll create in moment. We know we need to allow the cart items to be changed by quantity updates, so right away we know we'll need a cart changeset. Fortunately, the context generator included a `ShoppingChart.change_cart/1` function, which we'll use. We pass it our cart struct which is already in the connection assigns thanks to the `fetch_current_cart` plug we defined in the router.
 
-Next, we can implement the view and template. Create a new view file at `lib/hello_web/views/cart_view.ex` with the following content:
+Next, we can implement the view and template. Create a new view file at `lib/hello_web/controllers/cart_html.ex` with the following content:
 
 ```elixir
-defmodule HelloWeb.CartView do
-  use HelloWeb, :view
+defmodule HelloWeb.CartHTML do
+  use HelloWeb, :html
 
   alias Hello.ShoppingCart
 
@@ -934,7 +932,7 @@ end
 
 We created a view to render our `show.html` template and aliased our `ShoppingCart` context so it will be in scope for our template. We'll need to display the cart prices like product item price, cart total, etc, so we defined a `currency_to_str/1` which takes our decimal struct, rounds it properly for display, and prepends a USD dollar sign.
 
-Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`:
+Next we can create the template at `lib/hello_web/controllers/cart_html/show.html.heex`:
 
 ```heex
 <h1>My Cart</h1>
@@ -1049,12 +1047,12 @@ Naming wise, `Orders` clearly defines the scope of our context, so let's get sta
 $ mix phx.gen.html Orders Order orders user_uuid:uuid total_price:decimal
 
 * creating lib/hello_web/controllers/order_controller.ex
-* creating lib/hello_web/templates/order/edit.html.heex
-* creating lib/hello_web/templates/order/form.html.heex
-* creating lib/hello_web/templates/order/index.html.heex
-* creating lib/hello_web/templates/order/new.html.heex
-* creating lib/hello_web/templates/order/show.html.heex
-* creating lib/hello_web/views/order_view.ex
+* creating lib/hello_web/controllers/order_html/edit.html.heex
+* creating lib/hello_web/controllers/order_html/form.html.heex
+* creating lib/hello_web/controllers/order_html/index.html.heex
+* creating lib/hello_web/controllers/order_html/new.html.heex
+* creating lib/hello_web/controllers/order_html/show.html.heex
+* creating lib/hello_web/controllers/order_html.ex
 * creating test/hello_web/controllers/order_controller_test.exs
 * creating lib/hello/orders/order.ex
 * creating priv/repo/migrations/20210209214612_create_orders.exs
@@ -1284,11 +1282,11 @@ Our new function accepts the cart struct and issues a `Repo.delete_all` which ac
   def show(conn, %{"id" => id}) do
 -   order = Orders.get_order!(id)
 +   order = Orders.get_order!(conn.assigns.current_uuid, id)
-    render(conn, "show.html", order: order)
+    render(conn, :show, order: order)
   end
 ```
 
-We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can replace the order show template in `lib/hello_web/templates/order/show.html.heex`:
+We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can replace the order show template in `lib/hello_web/controllers/order_html/show.html.heex`:
 
 ```heex
 <h1>Thank you for your order!</h1>
@@ -1299,12 +1297,10 @@ We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order
     <%= @order.user_uuid %>
   </li>
 
-  <%= for item <- @order.line_items do %>
-    <li>
-      <%= item.product.title %>
-      (<%= item.quantity %>) - <%= HelloWeb.CartView.currency_to_str(item.price) %>
-    </li>
-  <% end %>
+  <li :for={item <- @order.line_items}>
+    <%= item.product.title %>
+    (<%= item.quantity %>) - <%= HelloWeb.CartView.currency_to_str(item.price) %>
+  </li>
 
   <li>
     <strong>Total price:</strong>
@@ -1318,7 +1314,7 @@ We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order
 
 To show our completed order, we displayed the order's user, followed by the line item listing with product title, quantity, and the price we "transacted" when completing the order, along with the total price.
 
-Our last addition will be to add the "complete order" button to our cart page to allow completing an order. Add the following button to the bottom of the cart show template in `lib/hello_web/templates/cart/show.html.heex`:
+Our last addition will be to add the "complete order" button to our cart page to allow completing an order. Add the following button to the bottom of the cart show template in `lib/hello_web/controllers/cart_html/show.html.heex`:
 
 ```diff
   <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>

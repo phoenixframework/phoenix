@@ -194,9 +194,9 @@ defmodule Phoenix.Endpoint do
           live_reload: [
             url: "ws://localhost:4000",
             patterns: [
-              ~r{priv/static/.*(js|css|png|jpeg|jpg|gif)$},
-              ~r{web/views/.*(ex)$},
-              ~r{web/templates/.*(eex)$}
+              ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
+              ~r"lib/app_web/(live|views)/.*(ex)$",
+              ~r"lib/app_web/templates/.*(eex)$"
             ]
           ]
 

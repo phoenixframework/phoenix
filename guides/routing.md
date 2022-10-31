@@ -245,7 +245,7 @@ Verified routes also support the `Phoenix.Param` protocol, but we don't need to 
 ```elixir
 ~p"/users/#{user}/#{post}"
 "/users/42/posts/17"
-`
+```
 
 Notice how we didn't need to interpolate `user.id` or `post.id`? This is particularly nice if we decide later we want to make our URLs a little nicer and start using slugs instead. We don't need to change any of our `~p`'s!
 

@@ -143,7 +143,7 @@ defmodule Phoenix.MixProject do
       "guides/plug.md",
       "guides/routing.md",
       "guides/controllers.md",
-      "guides/views.md",
+      "guides/components.md",
       "guides/ecto.md",
       "guides/contexts.md",
       "guides/mix_tasks.md",

@@ -131,7 +131,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(web_path(@app, "lib/#{@app}_web.ex"), fn file ->
         assert file =~ "defmodule PhxUmbWeb do"
-        assert file =~ ~r/use Phoenix.View,\s+root: "lib\/phx_umb_web\/templates"/
         assert file =~ "import Phoenix.HTML"
         assert file =~ "Phoenix.LiveView"
       end)
@@ -381,7 +380,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_reload"))
 
       assert_file(web_path(@app, "lib/#{@app}_web.ex"), fn file ->
-        assert file =~ "defp html_helpers do"
+        refute file =~ "defp html_helpers do"
         refute file =~ "Phoenix.HTML"
         refute file =~ "Phoenix.LiveView"
       end)

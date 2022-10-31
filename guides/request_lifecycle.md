@@ -94,7 +94,7 @@ defmodule HelloWeb.HelloController do
   use HelloWeb, :controller
 
   def index(conn, _params) do
-    render(conn, "index.html")
+    render(conn, :index)
   end
 end
 ```
@@ -103,27 +103,60 @@ We'll save a discussion of `use HelloWeb, :controller` for the [Controllers guid
 
 All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params`, and we avoid compiler warnings by prefixing it with `_`.
 
-The core of this action is `render(conn, "index.html")`. It tells Phoenix to render `"index.html"`. The modules responsible for rendering are called views. By default, Phoenix views are named after the controller, so Phoenix is expecting a `HelloWeb.HelloView` to exist and handle `"index.html"` for us.
-
-> Note: Using an atom as the template name also works `render(conn, :index)`. In these cases, the template will be chosen based off the Accept headers, e.g. `"index.html"` or `"index.json"`.
+The core of this action is `render(conn, :index)`. It tells Phoenix to render the `index` template. The modules responsible for rendering are called views. By default, Phoenix views are named after the controller and format they support, so Phoenix is expecting a `HelloWeb.HelloHTML` to exist and define an `index/1` function for us.
 
 ### A new view
 
-Phoenix views act as the presentation layer. For example, we expect the output of rendering `"index.html"` to be a complete HTML page. To make our lives easier, we often use templates for creating those HTML pages.
+Phoenix views act as the presentation layer. For example, we expect the output of rendering `index` to be a complete HTML page. To make our lives easier, we often use templates for creating those HTML pages.
 
-Let's create a new view. Create `lib/hello_web/views/hello_view.ex` and make it look like this:
+Let's create a new view. Create `lib/hello_web/controllers/hello_html.ex` and make it look like this:
 
 ```elixir
-defmodule HelloWeb.HelloView do
-  use HelloWeb, :view
+defmodule HelloWeb.HelloHTML do
+  use HelloWeb, :html
 end
 ```
 
-Now in order to add templates to this view, we need to add files to the `lib/hello_web/templates/hello` directory. Note the controller name (`HelloController`), the view name (`HelloView`), and the template directory (`hello`) all follow the same naming convention and are named after each other.
+Now in order to add templates to this view, we can either define them as function components directly in the module:
 
-A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, we will create an `index.html.heex` file at `lib/hello_web/templates/hello/index.html.heex`. ".heex" stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
+```elixir
+defmodule HelloWeb.HelloHTML do
+  use HelloWeb, :html
 
-Create `lib/hello_web/templates/hello/index.html.heex` and make it look like this:
+  def index(assigns) do
+    ~H"""
+    Hello!
+    """
+  end
+end
+```
+
+You can read more about function components and the `~H` heex templates in the `Phoenix.Component` documentation. For larger templates with a lot of markup, we often want to define them in their own file. We can do that now.
+
+Let's delete our `def index(assigns)` function and replace it with an `embed_templates` declaration:
+
+```elixir
+defmodule HelloWeb.HelloHTML do
+  use HelloWeb, :html
+
+  embed_templates "hello/*"
+end
+```
+
+ Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello` directory into our module as function definitions. Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory. Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
+
+```
+lib/hello_web
+├── controllers
+│   ├── hello_controller.ex
+│   ├── hello_html.ex
+│   ├── hello_html
+|       ├── index.html.heex
+```
+
+A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, we will create an `index.html.heex` file at `lib/hello_web/controllers/hello_html/index.html.heex`. ".heex" stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
+
+Create `lib/hello_web/controllers/hello_html/index.html.heex` and make it look like this:
 
 ```heex
 <section class="phx-hero">
@@ -135,7 +168,7 @@ Now that we've got the route, controller, view, and template, we should be able 
 
 ![Phoenix Greets Us](assets/images/hello-from-phoenix.png)
 
-There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is rendered into the application layout: `lib/hello_web/templates/layout/app.html.heex`. If you open it, you'll see a line that looks like this:
+There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is rendered into the application layout: `lib/hello_web/components/layouts/app.html.heex`. If you open it, you'll see a line that looks like this:
 
 ```heex
 <%= @inner_content %>
@@ -178,7 +211,7 @@ At this moment, you may be thinking this can be a lot of steps to simply render 
 
   * controller (`Phoenix.Controller`) - the job of the controller is to retrieve request information, talk to your business domain, and prepare data for the presentation layer.
 
-  * view  (`Phoenix.View`) - the view handles the structured data from the controller and converts it to a presentation to be shown to users.
+  * view - the view handles the structured data from the controller and converts it to a presentation to be shown to users.
 
 Let's do a quick recap and how the last three components work together by adding another page.
 
@@ -210,7 +243,7 @@ Requests to our new route will be handled by the `HelloWeb.HelloController` `sho
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
-  render(conn, "show.html", messenger: messenger)
+  render(conn, :show, messenger: messenger)
 end
 ```
 
@@ -228,7 +261,7 @@ It's good to remember that the keys of the `params` map will always be strings, 
 
 ### Another new template
 
-For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of `HelloController`, it will go into the `lib/hello_web/templates/hello` directory and be called `show.html.heex`. It will look surprisingly like our `index.html.heex` template, except that we will need to display the name of our messenger.
+For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of `HelloController`, it will go into the `lib/hello_web/controllers/hello_html` directory and be called `show.html.heex`. It will look surprisingly like our `index.html.heex` template, except that we will need to display the name of our messenger.
 
 To do that, we'll use the special EEx tags for executing Elixir expressions: `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag in the HTML output. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
 
