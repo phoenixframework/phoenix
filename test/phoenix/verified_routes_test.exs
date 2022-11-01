@@ -180,7 +180,7 @@ defmodule Phoenix.VerifiedRoutesTest do
   end
 
   test "~p raises on leftover sigil" do
-    assert_raise ArgumentError, "~p does not support trailing fragment, got: 'foo'", fn ->
+    assert_raise ArgumentError, "~p does not support modifiers after closing, got: foo", fn ->
       defmodule LeftOver do
         use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
         def test, do: ~p"/posts/1"foo

@@ -194,9 +194,9 @@ defmodule Phoenix.Endpoint do
           live_reload: [
             url: "ws://localhost:4000",
             patterns: [
-              ~r{priv/static/.*(js|css|png|jpeg|jpg|gif)$},
-              ~r{web/views/.*(ex)$},
-              ~r{web/templates/.*(eex)$}
+              ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
+              ~r"lib/app_web/(live|views)/.*(ex)$",
+              ~r"lib/app_web/templates/.*(eex)$"
             ]
           ]
 
@@ -475,6 +475,8 @@ defmodule Phoenix.Endpoint do
           ]
       end
 
+      plug :socket_dispatch
+
       # Compile after the debugger so we properly wrap it.
       @before_compile Phoenix.Endpoint
     end
@@ -626,10 +628,10 @@ defmodule Phoenix.Endpoint do
 
     dispatches =
       for {path, socket, socket_opts} <- sockets,
-          {path, type, conn_ast, socket, opts} <- socket_paths(module, path, socket, socket_opts) do
+          {path, plug, conn_ast, plug_opts} <- socket_paths(module, path, socket, socket_opts) do
         quote do
-          defp do_handler(unquote(path), conn, _opts) do
-            {unquote(type), unquote(conn_ast), unquote(socket), unquote(Macro.escape(opts))}
+          defp do_socket_dispatch(unquote(path), conn) do
+            unquote(plug).call(unquote(conn_ast), unquote(Macro.escape(plug_opts)))
           end
         end
       end
@@ -659,9 +661,9 @@ defmodule Phoenix.Endpoint do
       def __sockets__, do: unquote(Macro.escape(sockets))
 
       @doc false
-      def __handler__(%{path_info: path} = conn, opts), do: do_handler(path, conn, opts)
+      def socket_dispatch(%{path_info: path} = conn, _opts), do: do_socket_dispatch(path, conn)
       unquote(dispatches)
-      defp do_handler(_path, conn, opts), do: {:plug, conn, __MODULE__, opts}
+      defp do_socket_dispatch(_path, conn), do: conn
     end
   end
 
@@ -673,8 +675,9 @@ defmodule Phoenix.Endpoint do
     paths =
       if websocket do
         config = Phoenix.Socket.Transport.load_config(websocket, Phoenix.Transports.WebSocket)
+        plug_init = {endpoint, socket, config}
         {conn_ast, match_path} = socket_path(path, config)
-        [{match_path, :websocket, conn_ast, socket, config} | paths]
+        [{match_path, Phoenix.Transports.WebSocket, conn_ast, plug_init} | paths]
       else
         paths
       end
@@ -684,7 +687,7 @@ defmodule Phoenix.Endpoint do
         config = Phoenix.Socket.Transport.load_config(longpoll, Phoenix.Transports.LongPoll)
         plug_init = {endpoint, socket, config}
         {conn_ast, match_path} = socket_path(path, config)
-        [{match_path, :plug, conn_ast, Phoenix.Transports.LongPoll, plug_init} | paths]
+        [{match_path, Phoenix.Transports.LongPoll, conn_ast, plug_init} | paths]
       else
         paths
       end
@@ -909,7 +912,7 @@ defmodule Phoenix.Endpoint do
 
   """
   defmacro socket(path, module, opts \\ []) do
-    module = Macro.expand(module, %{__CALLER__ | function: {:__handler__, 2}})
+    module = Macro.expand(module, %{__CALLER__ | function: {:socket_dispatch, 2}})
 
     quote do
       @phoenix_sockets {unquote(path), unquote(module), unquote(opts)}

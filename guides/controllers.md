@@ -15,7 +15,7 @@ defmodule HelloWeb.PageController do
   use HelloWeb, :controller
 
   def index(conn, _params) do
-    render(conn, "index.html")
+    render(conn, :index)
   end
 end
 ```
@@ -47,7 +47,7 @@ defmodule HelloWeb.PageController do
   ...
 
   def home(conn, _params) do
-    render(conn, "index.html")
+    render(conn, :index)
   end
 end
 ```
@@ -73,7 +73,7 @@ defmodule HelloWeb.HelloController do
   ...
 
   def show(conn, %{"messenger" => messenger}) do
-    render(conn, "show.html", messenger: messenger)
+    render(conn, :show, messenger: messenger)
   end
 end
 ```
@@ -117,12 +117,12 @@ defmodule HelloWeb.HelloController do
   use HelloWeb, :controller
 
   def show(conn, %{"messenger" => messenger}) do
-    render(conn, "show.html", messenger: messenger)
+    render(conn, :show, messenger: messenger)
   end
 end
 ```
 
-In order for the [`render/3`] function to work correctly, the controller and view must share the same root name (in this case `Hello`), and it also must have the same root name as the template directory (in this case `hello`) where the `show.html.heex` template lives. In other words, `HelloController` requires `HelloView`, and `HelloView` requires the existence of the `lib/hello_web/templates/hello` directory, which must contain the `show.html.heex` template.
+In order for the [`render/3`] function to work correctly, the controller and view must share the same root name (in this case `Hello`), and the `HelloHTML` module must include an `embed_templates` definition specifying where its templates live. By default the controller, view module, and templates are collocated together in the same controller directory. In other words, `HelloController` requires `HelloHTML`, and `HelloHTML` requires the existence of the `lib/hello_web/controllers/hello_html/` directory, which must contain the `show.html.heex` template.
 
 [`render/3`] will also pass the value which the `show` action received for `messenger` from the parameters as an assign.
 
@@ -132,7 +132,7 @@ If we need to pass values into the template when using `render`, that's easy. We
   def show(conn, %{"messenger" => messenger}) do
     conn
     |> Plug.Conn.assign(:messenger, messenger)
-    |> render("show.html")
+    |> render(:show)
   end
 ```
 
@@ -145,7 +145,7 @@ Passing more than one value to our template is as simple as connecting [`assign/
     conn
     |> assign(:messenger, messenger)
     |> assign(:receiver, "Dweezil")
-    |> render("show.html")
+    |> render(:show)
   end
 ```
 
@@ -153,19 +153,19 @@ Or you can pass the assigns directly to `render` instead:
 
 ```elixir
   def show(conn, %{"messenger" => messenger}) do
-    render(conn, "show.html", messenger: messenger, receiver: "Dweezil")
+    render(conn, :show, messenger: messenger, receiver: "Dweezil")
   end
 ```
 
 Generally speaking, once all assigns are configured, we invoke the view layer. The view layer then renders `show.html` alongside the layout and a response is sent back to the browser.
 
-[Views and templates](views.html) have their own guide, so we won't spend much time on them here. What we will look at is how to assign a different layout, or none at all, from inside a controller action.
+[Views, Components, and templates](views.html) have their own guide, so we won't spend much time on them here. What we will look at is how to assign a different layout, or none at all, from inside a controller action.
 
 ### Assigning layouts
 
-Layouts are just a special subset of templates. They live in the `templates/layout` folder (`lib/hello_web/templates/layout`). Phoenix created three for us when we generated our app. The default _root layout_ is called `root.html.heex`, and it is the layout into which all templates will be rendered by default.
+Layouts are just a special subset of templates. They live in the `lib/hello_web/components/layouts` folder. Phoenix created two for us when we generated our app. The default _root layout_ is called `root.html.heex`, and it is the layout into which all templates will be rendered by default.
 
-Since layouts are really just templates, they need a view to render them. This one is `LayoutView` which is defined in `lib/hello_web/views/layout_view.ex`. Since Phoenix generated this view for us, we won't have to create a new one as long as we put the layouts we want to render inside the `lib/hello_web/templates/layout` directory.
+Since layouts are really just templates, they need a module to render them. This one is `Layouts` which is defined in `lib/hello_web/components/layouts.ex`. Since Phoenix generated this module for us, we won't have to create a new one as long as we put the layouts we want to render inside the `lib/hello_web/components/layouts` directory.
 
 Before we create a new layout, though, let's do the simplest possible thing and render a template with no layout at all.
 
@@ -177,13 +177,13 @@ You can edit the `index` action of `PageController` in `lib/hello_web/controller
 def index(conn, _params) do
   conn
   |> put_root_layout(false)
-  |> render("index.html")
+  |> render(:index)
 end
 ```
 
 After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or CSS styling at all.
 
-Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `root.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/templates/layout`. Then let's replace the lines in `admin.html.heex` that displays the logo with the word "Administration".
+Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `root.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/components/layouts`. Then let's replace the lines in `admin.html.heex` that displays the logo with the word "Administration".
 
 Remove these lines:
 
@@ -204,8 +204,8 @@ Then, pass the basename of the new layout into [`put_root_layout/2`] in our `ind
 ```elixir
 def index(conn, _params) do
   conn
-  |> put_root_layout("admin.html")
-  |> render("index.html")
+  |> put_root_layout(:admin)
+  |> render(:index)
 end
 ```
 
@@ -217,21 +217,46 @@ Rendering HTML through a template is fine, but what if we need to change the ren
 
 Phoenix allows us to change formats on the fly with the `_format` query string parameter. To make this happen, Phoenix requires an appropriately named view and an appropriately named template in the correct directory.
 
-As an example, let's take `PageController`'s `index` action from a newly generated app. Out of the box, this has the right view `PageView`, the right templates directory (`lib/hello_web/templates/page`), and the right template for rendering HTML (`index.html.heex`.)
+As an example, let's take `PageController`'s `index` action from a newly generated app. Out of the box, this has the right view `PageHTML`, the embedded templates from (`lib/hello_web/controllers/page_html`), and the right template for rendering HTML (`index.html.heex`.)
 
 ```elixir
 def index(conn, _params) do
-  render(conn, "index.html")
+  render(conn, :index)
 end
 ```
 
-What it doesn't have is an alternative template for rendering text. Let's add one at `lib/hello_web/templates/page/index.text.eex`. Here is our example `index.text.eex` template.
+What it doesn't have is an alternative template for rendering JSON. Phoenix Controller hands off to a view module to render templates, and it does so per format. We already have a view for the HTML format, but we need to instruct Phoenix how to render the JSON format as well. By default, you can see which formats your controllers support in `lib/hello_web.ex`:
 
-```heex
-OMG, this is actually some text.
+```elixir
+  def controller do
+    quote do
+      use Phoenix.Controller,
+        namespace: HelloWeb,
+        formats: [:html, :json]
+      ...
+    end
+  end
 ```
 
-There are just a few more things we need to do to make this work. We need to tell our router that it should accept the `text` format. We do that by adding `text` to the list of accepted formats in the `:browser` pipeline. Let's open up `lib/hello_web/router.ex` and change `plug :accepts` to include `text` as well as `html` like this.
+So out of the box Phoenix will look for a `HelloHTML` and `HelloJSON` view module based on the request format. We can also explicitly tell Phoenix in our controller which view(s) to use for each format. For example, what Phoenix does by default can be explicitly set with the following in your controller:
+
+```elixir
+plug :put_view, html: HelloWeb.PageHTML, json: HelloWeb.PageJSON
+```
+
+Let's add a `PageJSON` view module at `lib/hello_web/controllers/page_json.ex`:
+
+```elixir
+defmodule HelloWeb.PageJSON do
+  def index(_assigns) do
+    %{message: "this is some JSON"}
+  end
+end
+```
+
+Since the Phoenix View layer is simply a function that the controller renders, passing connection assigns, we can define a regular `index/1` function and return a map to be serialized as JSON.
+
+There are just a few more things we need to do to make this work. We need to tell our router that it should accept the `json` format. We do that by adding `json` to the list of accepted formats in the `:browser` pipeline. Let's open up `lib/hello_web/router.ex` and change `plug :accepts` to include `json` as well as `html` like this.
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -248,15 +273,7 @@ defmodule HelloWeb.Router do
 ...
 ```
 
-We also need to tell the controller to render a template with the same format as the one returned by `Phoenix.Controller.get_format/1`. We do that by substituting the name of the template "index.html" with the atom version `:index`.
-
-```elixir
-def index(conn, _params) do
-  render(conn, :index)
-end
-```
-
-If we go to [`http://localhost:4000/?_format=text`](http://localhost:4000/?_format=text), we will see "OMG, this is actually some text.".
+If we go to [`http://localhost:4000/?_format=text`](http://localhost:4000/?_format=text), we will see %{"message": "this is some JSON"}.
 
 ### Sending responses directly
 
@@ -294,7 +311,7 @@ If we wanted to render an XML version of our `index` action, we might implement 
 def index(conn, _params) do
   conn
   |> put_resp_content_type("text/xml")
-  |> render("index.xml", content: some_xml_content)
+  |> render(:index, content: some_xml_content)
 end
 ```
 
@@ -314,7 +331,7 @@ Let's change the status in our `PageController` `index` action.
 def index(conn, _params) do
   conn
   |> put_status(202)
-  |> render("index.html")
+  |> render(:index)
 end
 ```
 
@@ -360,7 +377,7 @@ Finally, let's define in the same file the action we redirect to, which simply r
 
 ```elixir
 def redirect_test(conn, _params) do
-  render(conn, "index.html")
+  render(conn, :index)
 end
 ```
 
@@ -391,18 +408,29 @@ defmodule HelloWeb.PageController do
     conn
     |> put_flash(:info, "Welcome to Phoenix, from flash info!")
     |> put_flash(:error, "Let's pretend we have an error.")
-    |> render("index.html")
+    |> render(:index)
   end
 end
 ```
 
 In order to see our flash messages, we need to be able to retrieve them and display them in a template layout. We can do that using [`Phoenix.Flash.get/2`] which takes the flash data and the key we care about. It then returns the value for that key.
 
-For our convenience, the application layout, `lib/hello_web/templates/layout/app.html.heex`, already has markup for displaying flash messages.
+For our convenience, the application layout, `lib/hello_web/components/layouts/app.html.heex`, already has markup for displaying flash messages.
 
 ```heex
-<p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@flash, :info) %></p>
-<p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@flash, :error) %></p>
+<.flash kind={:info} title="Success!" flash={@flash} />
+<.flash kind={:error} title="Error!" flash={@flash} />
+<.flash
+  id="disconnected"
+  kind={:error}
+  title="We can't find the internet"
+  close={false}
+  autoshow={false}
+  phx-disconnected={show("#disconnected")}
+  phx-connected={hide("#disconnected")}
+>
+  Attempting to reconnect <Heroicons.arrow_path class="ml-1 w-3 h-3 inline animate-spin" />
+</.flash>
 ```
 
 When we reload the [welcome page], our messages should appear just above "Welcome to Phoenix!"
@@ -428,7 +456,7 @@ Phoenix does not enforce which keys are stored in the flash. As long as we are i
 
 Action fallback allows us to centralize error handling code in plugs, which are called when a controller action fails to return a [`%Plug.Conn{}`](`t:Plug.Conn.t/0`) struct. These plugs receive both the `conn` which was originally passed to the controller action along with the return value of the action.
 
-Let's say we have a `show` action which uses [`with`](`with/1`) to fetch a blog post and then authorize the current user to view that blog post. In this example we might expect `fetch_post/1` to return `{:error, :not_found}` if the post is not found and `authorize_user/3` might return `{:error, :unauthorized}` if the user is unauthorized. We could use `ErrorView` which is generated by Phoenix for every new application to handle these error paths accordingly:
+Let's say we have a `show` action which uses [`with`](`with/1`) to fetch a blog post and then authorize the current user to view that blog post. In this example we might expect `fetch_post/1` to return `{:error, :not_found}` if the post is not found and `authorize_user/3` might return `{:error, :unauthorized}` if the user is unauthorized. We could use our `ErrorHTML` and `ErrorJSON` views which are generated by Phoenix for every new application to handle these error paths accordingly:
 
 ```elixir
 defmodule HelloWeb.MyController do
@@ -437,18 +465,18 @@ defmodule HelloWeb.MyController do
   def show(conn, %{"id" => id}, current_user) do
     with {:ok, post} <- fetch_post(id),
          :ok <- authorize_user(current_user, :view, post) do
-      render(conn, "show.json", post: post)
+      render(conn, :show, post: post)
     else
       {:error, :not_found} ->
         conn
         |> put_status(:not_found)
-        |> put_view(HelloWeb.ErrorView)
+        |> put_view(html: HelloWeb.ErrorHTML, json: HelloWeb.ErrorJSON)
         |> render(:"404")
 
       {:error, :unauthorized} ->
         conn
         |> put_status(403)
-        |> put_view(HelloWeb.ErrorView)
+        |> put_view(html: HelloWeb.ErrorHTML, json: HelloWeb.ErrorJSON)
         |> render(:"403")
     end
   end
@@ -466,14 +494,14 @@ defmodule HelloWeb.MyFallbackController do
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)
-    |> put_view(HelloWeb.ErrorView)
+    |> put_view(json: HelloWeb.ErrorJSON)
     |> render(:"404")
   end
 
   def call(conn, {:error, :unauthorized}) do
     conn
     |> put_status(403)
-    |> put_view(HelloWeb.ErrorView)
+    |> put_view(json: HelloWeb.ErrorJSON)
     |> render(:"403")
   end
 end
@@ -490,7 +518,7 @@ defmodule HelloWeb.MyController do
   def show(conn, %{"id" => id}, current_user) do
     with {:ok, post} <- fetch_post(id),
          :ok <- authorize_user(current_user, :view, post) do
-      render(conn, "show.json", post: post)
+      render(conn, :show, post: post)
     end
   end
 end

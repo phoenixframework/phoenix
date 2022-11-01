@@ -45,12 +45,12 @@ The `mix phx.gen.html` task takes the following arguments: the module name of th
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer
 * creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/templates/post/edit.html.heex
-* creating lib/hello_web/templates/post/form.html.heex
-* creating lib/hello_web/templates/post/index.html.heex
-* creating lib/hello_web/templates/post/new.html.heex
-* creating lib/hello_web/templates/post/show.html.heex
-* creating lib/hello_web/views/post_view.ex
+* creating lib/hello_web/controllers/post_html/edit.html.heex
+* creating lib/hello_web/controllers/post_html/form.html.heex
+* creating lib/hello_web/controllers/post_html/index.html.heex
+* creating lib/hello_web/controllers/post_html/new.html.heex
+* creating lib/hello_web/controllers/post_html/show.html.heex
+* creating lib/hello_web/controllers/post_html.ex
 * creating test/hello_web/controllers/post_controller_test.exs
 * creating lib/hello/blog/post.ex
 * creating priv/repo/migrations/20211001233016_create_posts.exs
@@ -89,12 +89,12 @@ If we don't want to create a context or schema for our resource we can use the `
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-context
 * creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/templates/post/edit.html.heex
-* creating lib/hello_web/templates/post/form.html.heex
-* creating lib/hello_web/templates/post/index.html.heex
-* creating lib/hello_web/templates/post/new.html.heex
-* creating lib/hello_web/templates/post/show.html.heex
-* creating lib/hello_web/views/post_view.ex
+* creating lib/hello_web/controllers/post_html/edit.html.heex
+* creating lib/hello_web/controllers/post_html/form.html.heex
+* creating lib/hello_web/controllers/post_html/index.html.heex
+* creating lib/hello_web/controllers/post_html/new.html.heex
+* creating lib/hello_web/controllers/post_html/show.html.heex
+* creating lib/hello_web/controllers/post_html.ex
 * creating test/hello_web/controllers/post_controller_test.exs
 ```
 
@@ -111,12 +111,12 @@ Similarly, if we want a context created without a schema for our resource we can
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-schema
 * creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/templates/post/edit.html.heex
-* creating lib/hello_web/templates/post/form.html.heex
-* creating lib/hello_web/templates/post/index.html.heex
-* creating lib/hello_web/templates/post/new.html.heex
-* creating lib/hello_web/templates/post/show.html.heex
-* creating lib/hello_web/views/post_view.ex
+* creating lib/hello_web/controllers/post_html/edit.html.heex
+* creating lib/hello_web/controllers/post_html/form.html.heex
+* creating lib/hello_web/controllers/post_html/index.html.heex
+* creating lib/hello_web/controllers/post_html/new.html.heex
+* creating lib/hello_web/controllers/post_html/show.html.heex
+* creating lib/hello_web/controllers/post_html.ex
 * creating test/hello_web/controllers/post_controller_test.exs
 * creating lib/hello/blog.ex
 * injecting lib/hello/blog.ex
@@ -137,9 +137,9 @@ The `mix phx.gen.json` task takes the following arguments: the module name of th
 ```console
 $ mix phx.gen.json Blog Post posts title:string content:string
 * creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/views/post_view.ex
+* creating lib/hello_web/controllers/post_json.ex
 * creating test/hello_web/controllers/post_controller_test.exs
-* creating lib/hello_web/views/changeset_view.ex
+* creating lib/hello_web/controllers/changeset_json.ex
 * creating lib/hello_web/controllers/fallback_controller.ex
 * creating lib/hello/blog/post.ex
 * creating priv/repo/migrations/20170906153323_create_posts.exs
@@ -235,7 +235,7 @@ $ mix phx.gen.auth Accounts User users
 * creating lib/hello/accounts/user_token.ex
 * creating lib/hello_web/controllers/user_auth.ex
 * creating test/hello_web/controllers/user_auth_test.exs
-* creating lib/hello_web/views/user_confirmation_view.ex
+* creating lib/hello_web/controllers/user_confirmation_html.ex
 * creating lib/hello_web/templates/user_confirmation/new.html.heex
 * creating lib/hello_web/templates/user_confirmation/edit.html.heex
 * creating lib/hello_web/controllers/user_confirmation_controller.ex
@@ -243,17 +243,17 @@ $ mix phx.gen.auth Accounts User users
 * creating lib/hello_web/templates/user_registration/new.html.heex
 * creating lib/hello_web/controllers/user_registration_controller.ex
 * creating test/hello_web/controllers/user_registration_controller_test.exs
-* creating lib/hello_web/views/user_registration_view.ex
-* creating lib/hello_web/views/user_reset_password_view.ex
+* creating lib/hello_web/controllers/user_registration_html.ex
+* creating lib/hello_web/controllers/user_reset_password_html.ex
 * creating lib/hello_web/controllers/user_reset_password_controller.ex
 * creating test/hello_web/controllers/user_reset_password_controller_test.exs
 * creating lib/hello_web/templates/user_reset_password/edit.html.heex
 * creating lib/hello_web/templates/user_reset_password/new.html.heex
-* creating lib/hello_web/views/user_session_view.ex
+* creating lib/hello_web/controllers/user_session_html.ex
 * creating lib/hello_web/controllers/user_session_controller.ex
 * creating test/hello_web/controllers/user_session_controller_test.exs
 * creating lib/hello_web/templates/user_session/new.html.heex
-* creating lib/hello_web/views/user_settings_view.ex
+* creating lib/hello_web/controllers/user_settings_html.ex
 * creating lib/hello_web/templates/user_settings/edit.html.heex
 * creating lib/hello_web/controllers/user_settings_controller.ex
 * creating test/hello_web/controllers/user_settings_controller_test.exs

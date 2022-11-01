@@ -251,34 +251,34 @@ Open up `test/hello_web/controllers/article_controller_test.exs`. The initial st
 ```elixir
 def index(conn, _params) do
   articles = News.list_articles()
-  render(conn, "index.json", articles: articles)
+  render(conn, :index, articles: articles)
 end
 ```
 
-The action gets all articles and renders `index.json`. Since we are talking about JSON, we don't have a `index.json.eex` template. Instead, the code that converts `articles` into JSON can be found directly in the ArticleView module, defined at `lib/hello_web/views/article_view.ex` like this:
+The action gets all articles and renders the index template. Since we are talking about JSON, we don't have a `index.json.heex` template. Instead, the code that converts `articles` into JSON can be found directly in the ArticleJSON module, defined at `lib/hello_web/controllers/article_json.ex` like this:
 
 ```elixir
-defmodule HelloWeb.ArticleView do
-  use HelloWeb, :view
-  alias HelloWeb.ArticleView
+defmodule HelloWeb.ArticleJSON do
 
-  def render("index.json", %{articles: articles}) do
-    %{data: render_many(articles, ArticleView, "article.json")}
+  def index(%{articles: articles}) do
+    %{data: for(article <- article, do: data(article))}
   end
 
-  def render("show.json", %{article: article}) do
-    %{data: render_one(article, ArticleView, "article.json")}
+  def show(%{article: article}) do
+    %{data: data(article)
   end
 
-  def render("article.json", %{article: article}) do
-    %{id: article.id,
+  defp data(article) do
+    %{
+      id: article.id,
       title: article.title,
-      body: article.body}
+      body: article.body
+    }
   end
 end
 ```
 
-We talked about `render_many` in the [Views and templates guide](views.html). All we need to know for now is that all JSON replies have a "data" key with either a list of posts (for index) or a single post inside of it.
+Since a controller render is a regular function call, we don't need any extra features to render JSON. We simply define functions for our `index` and `show` actions that return the map of JSON for articles.
 
 Let's take a look at the test for the `index` action then:
 
@@ -305,7 +305,7 @@ def create(conn, %{"article" => article_params}) do
     conn
     |> put_status(:created)
     |> put_resp_header("location", ~p"/articles/#{article}")
-    |> render("show.json", article: article)
+    |> render(:show, article: article)
   end
 end
 ```
@@ -356,14 +356,14 @@ defmodule HelloWeb.FallbackController do
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)
-    |> put_view(HelloWeb.ChangesetView)
-    |> render("error.json", changeset: changeset)
+    |> put_view(json: HelloWeb.ChangesetJSON)
+    |> render(:error, changeset: changeset)
   end
 
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)
-    |> put_view(HelloWeb.ErrorView)
+    |> put_view(json: HelloWeb.ErrorJSON)
     |> render(:"404")
   end
 end

@@ -269,28 +269,6 @@ defmodule Phoenix.Socket.TransportTest do
     end
   end
 
-  describe "force_ssl/4" do
-    test "forces SSL" do
-      # Halts
-      conn = Transport.force_ssl(conn(:get, "http://foo.com/"), make_ref(), Endpoint, [])
-      assert conn.halted
-      assert get_resp_header(conn, "location") == ["https://host.com/"]
-
-      # Disabled
-      conn = Transport.force_ssl(conn(:get, "http://foo.com/"), make_ref(), Endpoint, force_ssl: false)
-      refute conn.halted
-
-      # No-op when already halted
-      conn = Transport.force_ssl(conn(:get, "http://foo.com/") |> halt(), make_ref(), Endpoint, [])
-      assert conn.halted
-      assert get_resp_header(conn, "location") == []
-
-      # Valid
-      conn = Transport.force_ssl(conn(:get, "https://foo.com/"), make_ref(), Endpoint, [])
-      refute conn.halted
-    end
-  end
-
   describe "connect_info/3" do
     defp load_connect_info(connect_info) do
       [connect_info: connect_info] = Transport.load_config(connect_info: connect_info)

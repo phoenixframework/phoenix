@@ -16,7 +16,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     >
       <.error :if={@email_changeset.action == :insert} message="Oops, something went wrong! Please check the errors below." />
 
-      <.input field={{f, :email}} type="email" label="Email" required value={input_value(f, :email)} />
+      <.input field={{f, :email}} type="email" label="Email" required />
 
       <.input
         field={{f, :current_password}}
@@ -52,14 +52,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         field={{f, :password}}
         type="password"
         label="New password"
-        value={input_value(f, :password)}
         required
       />
       <.input
         field={{f, :password_confirmation}}
         type="password"
         label="Confirm new password"
-        value={input_value(f, :password_confirmation)}
       />
       <.input
         field={{f, :current_password}}
