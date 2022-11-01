@@ -24,7 +24,6 @@ defmodule Phoenix.Transports.WebSocket do
     |> fetch_query_params()
     |> Transport.code_reload(endpoint, opts)
     |> Transport.transport_log(opts[:transport_log])
-    |> Transport.force_ssl(handler, endpoint, opts)
     |> Transport.check_origin(handler, endpoint, opts)
     |> Transport.check_subprotocols(opts[:subprotocols])
     |> case do
