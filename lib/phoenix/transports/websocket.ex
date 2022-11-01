@@ -43,27 +43,13 @@ defmodule Phoenix.Transports.WebSocket do
         }
 
         case handler.connect(config) do
-          {:ok, state} ->
-            cowboy_opts =
-              opts
-              |> Enum.flat_map(fn
-                {:timeout, timeout} -> [idle_timeout: timeout]
-                {:compress, _} = opt -> [opt]
-                {:max_frame_size, _} = opt -> [opt]
-                _other -> []
-              end)
-              |> Map.new()
-
-            process_flags =
-              opts
-              |> Keyword.take([:fullsweep_after])
-              |> Map.new()
-
-            handler_args = {handler, process_flags, state}
-            upgrade_args = {Phoenix.Endpoint.Cowboy2Handler, handler_args, cowboy_opts}
+          {:ok, arg} ->
+            upgrade =
+              conn.private[:phoenix_websocket_upgrade] ||
+                (&Phoenix.Endpoint.Cowboy2Adapter.websocket_upgrade/4)
 
             conn
-            |> upgrade_adapter(:websocket, upgrade_args)
+            |> upgrade.(handler, arg, opts)
             |> halt()
 
           :error ->

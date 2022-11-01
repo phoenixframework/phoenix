@@ -137,4 +137,26 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
+
+  @doc false
+  def websocket_upgrade(conn, handler, state, opts) do
+    cowboy_opts =
+      opts
+      |> Enum.flat_map(fn
+        {:timeout, timeout} -> [idle_timeout: timeout]
+        {:compress, _} = opt -> [opt]
+        {:max_frame_size, _} = opt -> [opt]
+        _other -> []
+      end)
+      |> Map.new()
+
+    process_flags =
+      opts
+      |> Keyword.take([:fullsweep_after])
+      |> Map.new()
+
+    handler_args = {handler, process_flags, state}
+    upgrade_args = {Phoenix.Endpoint.Cowboy2Handler, handler_args, cowboy_opts}
+    Plug.Conn.upgrade_adapter(conn, :websocket, upgrade_args)
+  end
 end
