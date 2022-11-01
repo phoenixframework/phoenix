@@ -190,7 +190,12 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
   @debian "bullseye"
   defp gen_docker(binding) do
-    elixir_vsn = System.version()
+    elixir_vsn =
+      case Version.parse!(System.version()) do
+        %{major: major, minor: minor, pre: ["dev"]} -> "#{major}.#{minor - 1}.0"
+        _ -> System.version()
+      end
+
     otp_vsn = otp_vsn()
 
     url =
