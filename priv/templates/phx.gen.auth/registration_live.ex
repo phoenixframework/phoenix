@@ -36,7 +36,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           field={{f, :password}}
           type="password"
           label="Password"
-          value={input_value(f, :password)}
           required
         />
 
