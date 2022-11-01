@@ -235,7 +235,7 @@ defmodule Phoenix.VerifiedRoutes do
   defp validate_sigil_p!([]), do: :ok
 
   defp validate_sigil_p!(extra) do
-    raise ArgumentError, "~p does not support trailing fragment, got: #{inspect(extra)}"
+    raise ArgumentError, "~p does not support modifiers after closing, got: #{extra}"
   end
 
   defp raise_invalid_route(ast) do
