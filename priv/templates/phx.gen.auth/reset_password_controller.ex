@@ -6,14 +6,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   plug :get_<%= schema.singular %>_by_reset_password_token when action in [:edit, :update]
 
   def new(conn, _params) do
-    render(conn, "new.html")
+    render(conn, :new)
   end
 
   def create(conn, %{"<%= schema.singular %>" => %{"email" => email}}) do
     if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email) do
       <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(
         <%= schema.singular %>,
-        &Routes.<%= schema.route_helper %>_reset_password_url(conn, :edit, &1)
+        &url(~p"<%= schema.route_prefix %>/reset_password/#{&1}")
       )
     end
 
@@ -22,11 +22,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       :info,
       "If your email is in our system, you will receive instructions to reset your password shortly."
     )
-    |> redirect(to: "/")
+    |> redirect(to: ~p"/")
   end
 
   def edit(conn, _params) do
-    render(conn, "edit.html", changeset: <%= inspect context.alias %>.change_<%= schema.singular %>_password(conn.assigns.<%= schema.singular %>))
+    render(conn, :edit, changeset: <%= inspect context.alias %>.change_<%= schema.singular %>_password(conn.assigns.<%= schema.singular %>))
   end
 
   # Do not log in the <%= schema.singular %> after reset password to avoid a
@@ -36,10 +36,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, _} ->
         conn
         |> put_flash(:info, "Password reset successfully.")
-        |> redirect(to: Routes.<%= schema.route_helper %>_session_path(conn, :new))
+        |> redirect(to: ~p"<%= schema.route_prefix %>/log_in")
 
       {:error, changeset} ->
-        render(conn, "edit.html", changeset: changeset)
+        render(conn, :edit, changeset: changeset)
     end
   end
 
@@ -51,7 +51,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     else
       conn
       |> put_flash(:error, "Reset password link is invalid or it has expired.")
-      |> redirect(to: "/")
+      |> redirect(to: ~p"/")
       |> halt()
     end
   end

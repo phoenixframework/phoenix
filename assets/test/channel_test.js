@@ -42,7 +42,7 @@ describe("with transport", function(){
       assert.deepEqual(channel.pushBuffer, [])
     })
 
-    it("sets up joinPush objec with literal params", function(){
+    it("sets up joinPush object with literal params", function(){
       channel = new Channel("topic", {one: "two"}, socket)
       const joinPush = channel.joinPush
 
@@ -52,7 +52,7 @@ describe("with transport", function(){
       assert.equal(joinPush.timeout, 1234)
     })
 
-    it("sets up joinPush objec with closure params", function(){
+    it("sets up joinPush object with closure params", function(){
       channel = new Channel("topic", function(){ return ({one: "two"}) }, socket)
       const joinPush = channel.joinPush
 
@@ -142,7 +142,7 @@ describe("with transport", function(){
       assert.equal(joinPush.timeout, newTimeout)
     })
 
-    it("leaves existings duplicate topic on new join", function(done){
+    it("leaves existing duplicate topic on new join", function(done){
       channel.join()
         .receive("ok", () => {
           let newChannel = socket.channel("topic")
@@ -594,7 +594,7 @@ describe("with transport", function(){
       assert.equal(channel.state, "errored")
     })
 
-    it("does not trigger redudant errors during backoff", function(){
+    it("does not trigger redundant errors during backoff", function(){
       const spy = sinon.stub(joinPush, "send")
 
       assert.equal(spy.callCount, 0)

@@ -24,7 +24,6 @@ defmodule Phoenix.Transports.LongPoll do
     |> put_resp_header("access-control-allow-origin", "*")
     |> Transport.code_reload(endpoint, opts)
     |> Transport.transport_log(opts[:transport_log])
-    |> Transport.force_ssl(handler, endpoint, opts)
     |> Transport.check_origin(handler, endpoint, opts, &status_json/1)
     |> dispatch(endpoint, handler, opts)
   end

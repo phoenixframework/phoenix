@@ -291,7 +291,7 @@ defmodule Phoenix.Presence do
 
   ## Examples
 
-  Uses the same data format as `c:list/1`, but only
+  Uses the same data format as each presence in `c:list/1`, but only
   returns metadata for the presences under a topic and key pair. For example,
   a user with key `"user1"`, connected to the same chat room `"room:1"` from two
   devices, could return:
@@ -302,7 +302,7 @@ defmodule Phoenix.Presence do
   Like `c:list/1`, the presence metadata is passed to the `fetch`
   callback of your presence module to fetch any additional information.
   """
-  @callback get_by_key(Phoenix.Socket.t() | topic, key :: String.t()) :: presences
+  @callback get_by_key(Phoenix.Socket.t() | topic, key :: String.t()) :: [presence]
 
   @doc """
   Extend presence information with additional data.

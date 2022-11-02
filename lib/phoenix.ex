@@ -2,6 +2,8 @@ defmodule Phoenix do
   @moduledoc """
   This is the documentation for the Phoenix project.
 
+  To get started, see our [overview guides](overview.html).
+  
   By default, Phoenix applications depend on the following packages
   across these categories.
 
@@ -24,12 +26,8 @@ defmodule Phoenix do
     * [Phoenix HTML](https://hexdocs.pm/phoenix_html) - conveniences for
       working with HTML in Phoenix
 
-    * [Phoenix View](https://hexdocs.pm/phoenix_view) - a set of functions
-      for building `Phoenix.View` and working with template languages such
-      as Elixir's own `EEx`
-
     * [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) - rich,
-      real-time user experiences with server-rendered HTML
+      real-time user experiences with server-rendered HTML and components
 
     * [Phoenix LiveDashboard](https://hexdocs.pm/phoenix_live_dashboard) -
       real-time performance monitoring and debugging tools for Phoenix
@@ -39,12 +37,11 @@ defmodule Phoenix do
       for composable modules in between web applications
 
     * [Swoosh](https://hexdocs.pm/swoosh) - a library for composing,
-    delivering and testing emails, also used by `mix phx.gen.auth`
+      delivering and testing emails, also used by `mix phx.gen.auth`
 
     * [Telemetry Metrics](https://hexdocs.pm/telemetry_metrics) - common
       interface for defining metrics based on Telemetry events
 
-  To get started, see our [overview guides](overview.html).
   """
   use Application
 

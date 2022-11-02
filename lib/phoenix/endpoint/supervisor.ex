@@ -25,43 +25,6 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp check_compile_configs!(mod, runtime_configs) do
-    compile_configs = mod.__compile_config__()
-
-    bad_keys =
-      Enum.filter(Phoenix.Endpoint.Supervisor.compile_config_keys(), fn key ->
-        compile_config = Keyword.get(compile_configs, key)
-        runtime_config = Keyword.get(runtime_configs, key)
-
-        if compile_config != runtime_config do
-          require Logger
-
-          Logger.error("""
-          #{inspect(key)} mismatch for #{inspect(mod)}.
-
-          Compile time configuration: #{inspect(compile_config)}
-          Runtime configuration     : #{inspect(runtime_config)}
-
-          #{inspect(key)} is a compile-time configuration, so setting
-          it at runtime has no effect. Therefore you must set it in your
-          config/prod.exs or similar (not in your config/releases.exs)
-          and make sure the value doesn't change.
-          """)
-
-          true
-        else
-          false
-        end
-      end)
-
-    unless Enum.empty?(bad_keys) do
-      raise ArgumentError,
-            "expected these options to be unchanged from compile time: #{inspect(bad_keys)}"
-    end
-
-    :ok
-  end
-
   @doc false
   def init({otp_app, mod, opts}) do
     default_conf = Phoenix.Config.merge(defaults(otp_app, mod), opts)
@@ -71,7 +34,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       case mod.init(:supervisor, env_conf) do
         {:ok, init_conf} ->
           if is_nil(Application.get_env(otp_app, mod)) and init_conf == env_conf do
-            Logger.warn("no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}")
+            Logger.warning("no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}")
           end
 
           init_conf
@@ -92,10 +55,9 @@ defmodule Phoenix.Endpoint.Supervisor do
     # Drop all secrets from secret_conf before passing it around
     conf = Keyword.drop(secret_conf, [:secret_key_base])
     server? = server?(conf)
-    check_compile_configs!(mod, conf)
 
     if conf[:instrumenters] do
-      Logger.warn(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
+      Logger.warning(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
     end
 
     if server? and conf[:code_reloader] do
@@ -103,6 +65,8 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
 
     # TODO: Remove this once {:system, env_var} tuples are removed
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :http)
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :https)
     warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :url)
     warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :static_url)
 
@@ -120,7 +84,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     pub_conf = conf[:pubsub]
 
     if pub_conf do
-      Logger.warn """
+      Logger.warning """
       The :pubsub key in your #{inspect mod} is deprecated.
 
       You must now start the pubsub in your application supervision tree.
@@ -209,7 +173,9 @@ defmodule Phoenix.Endpoint.Supervisor do
       http: false,
       https: false,
       reloadable_apps: nil,
-      reloadable_compilers: [:gettext, :elixir],
+      # TODO: Gettext had a compiler in earlier versions,
+      # but not since v0.20, so we can remove it here eventually.
+      reloadable_compilers: [:gettext, :elixir, :app],
       secret_key_base: nil,
       static_url: nil,
       url: [host: "localhost", path: "/"],
@@ -309,7 +275,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     port   = port_to_integer(url[:port] || port)
 
     if host =~ ~r"[^:]:\d" do
-      Logger.warn("url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid")
+      Logger.warning("url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid")
     end
 
     %URI{scheme: scheme, port: port, host: host}
@@ -375,7 +341,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       deprecated_config_lines = for {k, v} <- deprecated_configs, do: "#{k}: #{inspect(v)}"
       runtime_exs_config_lines = for {key, {:system, env_var}} <- deprecated_configs, do: ~s|#{key}: System.get_env("#{env_var}")|
 
-      Logger.warn """
+      Logger.warning """
       #{inspect(key)} configuration containing {:system, env_var} tuples for #{inspect(mod)} is deprecated.
 
       Configuration with deprecated values:
@@ -463,7 +429,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       else
         Logger.error "Could not find static manifest at #{inspect outer}. " <>
                      "Run \"mix phx.digest\" after building your static files " <>
-                     "or remove the configuration from \"config/prod.exs\"."
+                     "or remove the \"cache_static_manifest\" configuration from your config files."
       end
     else
       %{}
@@ -489,15 +455,5 @@ defmodule Phoenix.Endpoint.Supervisor do
 
       System.cmd(cmd, args)
     end
-  end
-
-  @doc """
-  List of keys which we ensure are unchanged from compile time to runtime. For
-  example, the :force_ssl option must be available at compile time in order to
-  work properly. We check these keys so we can warn the user that changing the
-  option at runtime may lead to undesirable behavior.
-  """
-  def compile_config_keys do
-    [:force_ssl]
   end
 end

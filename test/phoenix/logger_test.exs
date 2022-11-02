@@ -69,7 +69,7 @@ defmodule Phoenix.LoggerTest do
     def log_level(conn) do
       case conn.path_info do
         [] -> :debug
-        ["warn" | _] -> :warn
+        ["warn" | _] -> :warning
         ["error" | _] -> :error
         ["false" | _] -> false
         _ -> :info

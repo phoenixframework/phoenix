@@ -14,7 +14,6 @@ defmodule Phoenix.Router.ForwardTest do
 
     def index(conn, _params), do: text(conn, "admin index")
     def stats(conn, _params), do: text(conn, "stats")
-    def params(conn, params), do: text(conn, inspect(params))
     def api_users(conn, _params), do: text(conn, "api users")
     def api_root(conn, _params), do: text(conn, "api root")
     defp assign_fwd_script(conn, _), do: assign(conn, :fwd_script, conn.script_name)
@@ -57,10 +56,6 @@ defmodule Phoenix.Router.ForwardTest do
       forward "/admin", AdminDashboard
       forward "/init", InitPlug
       forward "/assign/opts", AssignOptsPlug, %{foo: "bar"}
-
-      scope "/params/:param" do
-        forward "/", Controller, :params
-      end
     end
   end
 
@@ -70,7 +65,7 @@ defmodule Phoenix.Router.ForwardTest do
   end
 
   test "forwards path to plug" do
-    conn = call(Router, :get, "admin")
+    conn = call(Router, :get, "/admin")
     assert conn.script_name == []
     assert conn.assigns[:fwd_script] == ["admin"]
     assert conn.status == 200
@@ -78,7 +73,7 @@ defmodule Phoenix.Router.ForwardTest do
   end
 
   test "forwards any request starting with forward path" do
-    conn = call(Router, :get, "admin/stats")
+    conn = call(Router, :get, "/admin/stats")
     assert conn.script_name == []
     assert conn.assigns[:fwd_script] == ["admin"]
     assert conn.status == 200
@@ -112,56 +107,45 @@ defmodule Phoenix.Router.ForwardTest do
     end
   end
 
-  test "accumulates phoenix_forwards" do
-    conn = call(Router, :get, "admin")
-    assert conn.private[Router] == {[], %{
-      Phoenix.Router.ForwardTest.AdminDashboard => ["admin"],
-      Phoenix.Router.ForwardTest.InitPlug => ["init"],
-      Phoenix.Router.ForwardTest.AssignOptsPlug => ["assign", "opts"],
-      Phoenix.Router.ForwardTest.Controller => []
-    }}
-    assert conn.private[AdminDashboard] ==
-      {["admin"], %{Phoenix.Router.ForwardTest.ApiRouter => ["api-admin"]}}
-
+  test "accumulates script names" do
+    conn = call(Router, :get, "/admin")
+    assert conn.private[Router] == []
+    assert conn.private[AdminDashboard] == ["admin"]
   end
 
   test "helpers cascade script name across forwards based on main router" do
     import AdminDashboard.Helpers
     assert page_path(%Plug.Conn{}, :stats) == "/stats"
 
-    conn = call(Router, :get, "stats")
+    conn = call(Router, :get, "/stats")
     assert page_path(conn, :stats) == "/admin/stats"
 
-    conn = call(Router, :get, "stats", _params = nil, ["phx"])
+    conn = call(Router, :get, "/stats", _params = nil, ["phx"])
     assert page_path(conn, :stats) == "/phx/admin/stats"
 
-    conn = call(Router, :get, "admin/stats")
+    conn = call(Router, :get, "/admin/stats")
     assert page_path(conn, :stats) == "/admin/stats"
 
-    conn = call(Router, :get, "admin/stats", _params = nil, ["phx"])
+    conn = call(Router, :get, "/admin/stats", _params = nil, ["phx"])
     assert page_path(conn, :stats) == "/phx/admin/stats"
   end
 
   test "forward can handle plugs with non-literal init returns" do
-    assert call(Router, :get, "init").assigns.opts == %{non: :literal}
+    assert call(Router, :get, "/init").assigns.opts == %{non: :literal}
   end
 
   test "forward can handle plugs with custom options" do
-    assert call(Router, :get, "assign/opts").assigns.opts == %{foo: "bar"}
-  end
-
-  test "forward can handle params" do
-    assert call(Router, :get, "params/hello_world").resp_body =~ ~s["param" => "hello_world"]
+    assert call(Router, :get, "/assign/opts").assigns.opts == %{foo: "bar"}
   end
 
   test "forward with scoped alias" do
-    conn = call(ApiRouter, :get, "health")
+    conn = call(ApiRouter, :get, "/health")
     assert conn.resp_body == "health"
-    assert conn.private[ApiRouter] == {[], %{Phoenix.Test.HealthController => []}}
+    assert conn.private[ApiRouter] == []
   end
 
   test "forwards raises if using the plug to arguments" do
-    error_message = ~r/expects a module/
+    error_message = ~r/expect a module/
     assert_raise(ArgumentError, error_message, fn ->
       defmodule BrokenRouter do
         use Phoenix.Router

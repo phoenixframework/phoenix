@@ -147,9 +147,9 @@
 
     test "validates email uniqueness", %{<%= schema.singular %>: <%= schema.singular %>} do
       %{email: email} = <%= schema.singular %>_fixture()
+      password = valid_<%= schema.singular %>_password()
 
-      {:error, changeset} =
-        <%= inspect context.alias %>.apply_<%= schema.singular %>_email(<%= schema.singular %>, valid_<%= schema.singular %>_password(), %{email: email})
+      {:error, changeset} = <%= inspect context.alias %>.apply_<%= schema.singular %>_email(<%= schema.singular %>, password, %{email: email})
 
       assert "has already been taken" in errors_on(changeset).email
     end

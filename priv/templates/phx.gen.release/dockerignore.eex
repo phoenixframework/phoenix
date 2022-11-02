@@ -15,15 +15,21 @@
 # https://docs.docker.com/engine/reference/builder/#dockerignore-file
 
 .dockerignore
-# There are valid reasons to keep .git, namely so that you can get the
-# current commit hash
-#/.git/
+
+# Ignore git, but keep git HEAD and refs to access current commit hash if needed:
+#
+# $ cat .git/HEAD | awk '{print ".git/"$2}' | xargs cat
+# d0b8727759e1e0e7aa3d41707d12376e373d5ecc
+.git
+!.git/HEAD
+!.git/refs
 
 # Common development/test artifacts
 /cover/
 /doc/
 /test/
 /tmp/
+.elixir_ls
 
 # Mix artifacts
 /_build/

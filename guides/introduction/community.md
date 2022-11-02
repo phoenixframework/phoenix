@@ -7,7 +7,7 @@ There are a number of places to connect with community members at all experience
   * We're on Libera IRC in the [\#elixir](https://web.libera.chat/?channels=#elixir) channel.
 
   * [Request an invitation](https://elixir-slackin.herokuapp.com/) and join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
-  
+
   * Feel free to join and check out the #phoenix channel on [Discord](https://discord.gg/elixir).
 
   * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/master/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
@@ -21,6 +21,7 @@ There are a number of places to connect with community members at all experience
   * The source for these guides is [on GitHub](https://github.com/phoenixframework/phoenix/tree/master/guides). To help improve the guides, please report an [issue](https://github.com/phoenixframework/phoenix/issues) or open a [pull request](https://github.com/phoenixframework/phoenix/pulls).
 
 ## Books
+
   * [Programming Phoenix LiveView - Interactive Elixir Web Programming Without Writing Any JavaScript - 2021 (by Bruce Tate and Sophie DeBenedetto)](https://pragprog.com/titles/liveview/programming-phoenix-liveview/)
 
   * [Real-Time Phoenix - Build Highly Scalable Systems with Channels (by Stephen Bussey - 2020)](https://pragprog.com/book/sbsockets/real-time-phoenix)
@@ -38,7 +39,7 @@ There are a number of places to connect with community members at all experience
   * [Phoenix LiveView Free Course (by The Pragmatic Studio - 2020)](https://pragmaticstudio.com/courses/phoenix-liveview)
 
   * [Groxio LiveView: Self Study Program (by Bruce Tate - 2020)](https://grox.io/language/liveview/course)
-  
+
   * [Alchemist Camp: Learn Elixir and Phoenix by building (2018-2022)](https://alchemist.camp/episodes)
 
   * [The Complete Elixir and Phoenix Bootcamp Master Functional Programming Techniques with Elixir and Phoenix while Learning to Build Compelling Web Applications (by Stephen Grider - 2017)](https://www.udemy.com/the-complete-elixir-and-phoenix-bootcamp-and-tutorial/)

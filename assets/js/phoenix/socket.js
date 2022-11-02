@@ -46,7 +46,7 @@ import Timer from "./timer"
  *
  * Defaults `DEFAULT_TIMEOUT`
  * @param {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
- * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millsec
+ * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millisec
  * socket reconnect interval.
  *
  * Defaults to stepped backoff of:
@@ -57,7 +57,7 @@ import Timer from "./timer"
  * }
  * ````
  *
- * @param {number} [opts.rejoinAfterMs] - The optional function that returns the millsec
+ * @param {number} [opts.rejoinAfterMs] - The optional function that returns the millisec
  * rejoin interval for individual channels.
  *
  * ```javascript
@@ -143,6 +143,7 @@ export default class Socket {
     this.params = closure(opts.params || {})
     this.endPoint = `${endPoint}/${TRANSPORTS.websocket}`
     this.vsn = opts.vsn || DEFAULT_VSN
+    this.heartbeatTimeoutTimer = null
     this.heartbeatTimer = null
     this.pendingHeartbeatRef = null
     this.reconnectTimer = new Timer(() => {
@@ -151,13 +152,25 @@ export default class Socket {
   }
 
   /**
+   * Returns the LongPoll transport reference
+   */
+  getLongPollTransport(){ return LongPoll }
+
+  /**
    * Disconnects and replaces the active transport
    *
    * @param {Function} newTransport - The new transport class to instantiate
    *
    */
   replaceTransport(newTransport){
-    this.disconnect()
+    this.connectClock++
+    this.closeWasClean = true
+    this.reconnectTimer.reset()
+    this.sendBuffer = []
+    if(this.conn){
+      this.conn.close()
+      this.conn = null
+    }
     this.transport = newTransport
   }
 
@@ -169,7 +182,7 @@ export default class Socket {
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
 
   /**
-   * The fully qualifed socket url
+   * The fully qualified socket url
    *
    * @returns {string}
    */
@@ -206,12 +219,13 @@ export default class Socket {
    * `new Socket("/socket", {params: {user_id: userToken}})`.
    */
   connect(params){
-    this.connectClock++
     if(params){
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
       this.params = closure(params)
     }
     if(this.conn){ return }
+
+    this.connectClock++
     this.closeWasClean = false
     this.conn = new this.transport(this.endPointURL())
     this.conn.binaryType = this.binaryType
@@ -282,8 +296,34 @@ export default class Socket {
   }
 
   /**
+   * Pings the server and invokes the callback with the RTT in milliseconds
+   * @param {Function} callback
+   *
+   * Returns true if the ping was pushed or false if unable to be pushed.
+   */
+  ping(callback){
+    if(!this.isConnected()){ return false }
+    let ref = this.makeRef()
+    let startTime = Date.now()
+    this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: ref})
+    let onMsgRef = this.onMessage(msg => {
+      if(msg.ref === ref){
+        this.off([onMsgRef])
+        callback(Date.now() - startTime)
+      }
+    })
+    return true
+  }
+
+  /**
    * @private
    */
+
+  clearHeartbeats(){
+    clearTimeout(this.heartbeatTimer)
+    clearTimeout(this.heartbeatTimeoutTimer)
+  }
+
   onConnOpen(){
     if(this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
     this.closeWasClean = false
@@ -302,15 +342,17 @@ export default class Socket {
     if(this.pendingHeartbeatRef){
       this.pendingHeartbeatRef = null
       if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Attempting to re-establish connection") }
-      this.abnormalClose("heartbeat timeout")
+      this.triggerChanError()
+      this.closeWasClean = false
+      this.teardown(() => this.reconnectTimer.scheduleTimeout(), WS_CLOSE_NORMAL, "heartbeat timeout")
     }
   }
 
   resetHeartbeat(){
     if(this.conn && this.conn.skipHeartbeat){ return }
     this.pendingHeartbeatRef = null
-    clearTimeout(this.heartbeatTimer)
-    setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
+    this.clearHeartbeats()
+    this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
   }
 
   teardown(callback, code, reason){
@@ -325,6 +367,9 @@ export default class Socket {
 
       this.waitForSocketClosed(() => {
         if(this.conn){
+          this.conn.onopen = function (){ } // noop
+          this.conn.onerror = function (){ } // noop
+          this.conn.onmessage = function (){ } // noop
           this.conn.onclose = function (){ } // noop
           this.conn = null
         }
@@ -360,7 +405,7 @@ export default class Socket {
     let closeCode = event && event.code
     if(this.hasLogger()) this.log("transport", "close", event)
     this.triggerChanError()
-    clearTimeout(this.heartbeatTimer)
+    this.clearHeartbeats()
     if(!this.closeWasClean && closeCode !== 1000){
       this.reconnectTimer.scheduleTimeout()
     }
@@ -478,12 +523,7 @@ export default class Socket {
     if(this.pendingHeartbeatRef && !this.isConnected()){ return }
     this.pendingHeartbeatRef = this.makeRef()
     this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef})
-    this.heartbeatTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs)
-  }
-
-  abnormalClose(reason){
-    this.closeWasClean = false
-    if(this.isConnected()){ this.conn.close(WS_CLOSE_NORMAL, reason) }
+    this.heartbeatTimeoutTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs)
   }
 
   flushSendBuffer(){
@@ -497,9 +537,9 @@ export default class Socket {
     this.decode(rawMessage.data, msg => {
       let {topic, event, payload, ref, join_ref} = msg
       if(ref && ref === this.pendingHeartbeatRef){
-        clearTimeout(this.heartbeatTimer)
+        this.clearHeartbeats()
         this.pendingHeartbeatRef = null
-        setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
+        this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
       }
 
       if(this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)

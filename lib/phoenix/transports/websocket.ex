@@ -1,5 +1,9 @@
 defmodule Phoenix.Transports.WebSocket do
   @moduledoc false
+  @behaviour Plug
+
+  import Plug.Conn
+
   alias Phoenix.Socket.{V1, V2, Transport}
 
   def default_config() do
@@ -13,36 +17,52 @@ defmodule Phoenix.Transports.WebSocket do
     ]
   end
 
-  def connect(%{method: "GET"} = conn, endpoint, handler, opts) do
+  def init(opts), do: opts
+
+  def call(%{method: "GET"} = conn, {endpoint, handler, opts}) do
     conn
-    |> Plug.Conn.fetch_query_params()
+    |> fetch_query_params()
     |> Transport.code_reload(endpoint, opts)
     |> Transport.transport_log(opts[:transport_log])
-    |> Transport.force_ssl(handler, endpoint, opts)
     |> Transport.check_origin(handler, endpoint, opts)
     |> Transport.check_subprotocols(opts[:subprotocols])
     |> case do
       %{halted: true} = conn ->
-        {:error, conn}
+        conn
 
       %{params: params} = conn ->
         keys = Keyword.get(opts, :connect_info, [])
         connect_info = Transport.connect_info(conn, endpoint, keys)
-        config = %{endpoint: endpoint, transport: :websocket, options: opts, params: params, connect_info: connect_info}
+
+        config = %{
+          endpoint: endpoint,
+          transport: :websocket,
+          options: opts,
+          params: params,
+          connect_info: connect_info
+        }
 
         case handler.connect(config) do
-          {:ok, state} -> {:ok, conn, state}
-          :error -> {:error, Plug.Conn.send_resp(conn, 403, "")}
+          {:ok, arg} ->
+            upgrade =
+              conn.private[:phoenix_websocket_upgrade] ||
+                (&Phoenix.Endpoint.Cowboy2Adapter.websocket_upgrade/4)
+
+            conn
+            |> upgrade.(handler, arg, opts)
+            |> halt()
+
+          :error ->
+            send_resp(conn, 403, "")
+
           {:error, reason} ->
             {m, f, args} = opts[:error_handler]
-            {:error, apply(m, f, [conn, reason | args])}
+            apply(m, f, [conn, reason | args])
         end
     end
   end
 
-  def connect(conn, _, _, _) do
-    {:error, Plug.Conn.send_resp(conn, 400, "")}
-  end
+  def call(conn, _), do: send_resp(conn, 400, "")
 
-  def handle_error(conn, _reason), do: Plug.Conn.send_resp(conn, 403, "")
+  def handle_error(conn, _reason), do: send_resp(conn, 403, "")
 end

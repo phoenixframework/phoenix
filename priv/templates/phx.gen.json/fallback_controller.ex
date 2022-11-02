@@ -10,7 +10,7 @@ defmodule <%= inspect context.web_module %>.FallbackController do
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)
-    |> put_view(<%= inspect context.web_module %>.ChangesetView)
+    |> put_view(json: <%= inspect context.web_module %>.ChangesetJSON)
     |> render("error.json", changeset: changeset)
   end
 
@@ -18,7 +18,7 @@ defmodule <%= inspect context.web_module %>.FallbackController do
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)
-    |> put_view(<%= inspect context.web_module %>.ErrorView)
+    |> put_view(html: <%= inspect context.web_module %>.ErrorHTML, json: <%= inspect context.web_module %>.ErrorJSON)
     |> render(:"404")
   end
 end

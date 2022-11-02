@@ -35,6 +35,12 @@ defmodule MixHelper do
       File.mkdir_p!(path)
       File.cd!(path, fn ->
         File.touch!("mix.exs")
+        File.write!(".formatter.exs", """
+        [
+          import_deps: [:phoenix, :ecto, :ecto_sql],
+          inputs: ["*.exs"]
+        ]
+        """)
         function.()
       end)
     after
@@ -89,7 +95,7 @@ defmodule MixHelper do
     cond do
       is_list(match) ->
         assert_file file, &(Enum.each(match, fn(m) -> assert &1 =~ m end))
-      is_binary(match) or Regex.regex?(match) ->
+      is_binary(match) or is_struct(match, Regex) ->
         assert_file file, &(assert &1 =~ match)
       is_function(match, 1) ->
         assert_file(file)

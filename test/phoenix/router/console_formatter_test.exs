@@ -17,6 +17,14 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
     delete "/images", RouteFormatter.ImageController, :delete, as: :remove_image
   end
 
+  def __sockets__, do: []
+
+  defmodule FormatterEndpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+
+    socket "/socket", TestSocket, websocket: true
+  end
+
   test "format multiple routes" do
     assert draw(RouterTestSingleRoutes) == """
             page_path  GET     /        RouteFormatter.PageController :index
@@ -65,14 +73,6 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
   end
 
   describe "endpoint sockets" do
-    def __sockets__, do: []
-
-    defmodule FormatterEndpoint do
-      use Phoenix.Endpoint, otp_app: :phoenix
-
-      socket "/socket", TestSocket, websocket: true
-    end
-
     test "format with sockets" do
       assert draw(RouterTestSingleRoutes, FormatterEndpoint) == """
               page_path  GET     /                  RouteFormatter.PageController :index
@@ -92,6 +92,38 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
       remove_image_path  DELETE  /images  RouteFormatter.ImageController :delete
       """
     end
+  end
+
+  defmodule HelpersFalseRouter do
+    use Phoenix.Router, helpers: false
+    resources "/image", RouteFormatter.ImageController
+  end
+
+  test "helpers: false" do
+    assert draw(HelpersFalseRouter) == """
+      GET     /image           RouteFormatter.ImageController :index
+      GET     /image/:id/edit  RouteFormatter.ImageController :edit
+      GET     /image/new       RouteFormatter.ImageController :new
+      GET     /image/:id       RouteFormatter.ImageController :show
+      POST    /image           RouteFormatter.ImageController :create
+      PATCH   /image/:id       RouteFormatter.ImageController :update
+      PUT     /image/:id       RouteFormatter.ImageController :update
+      DELETE  /image/:id       RouteFormatter.ImageController :delete
+    """
+
+    assert draw(HelpersFalseRouter, FormatterEndpoint) == """
+      GET     /image             RouteFormatter.ImageController :index
+      GET     /image/:id/edit    RouteFormatter.ImageController :edit
+      GET     /image/new         RouteFormatter.ImageController :new
+      GET     /image/:id         RouteFormatter.ImageController :show
+      POST    /image             RouteFormatter.ImageController :create
+      PATCH   /image/:id         RouteFormatter.ImageController :update
+      PUT     /image/:id         RouteFormatter.ImageController :update
+      DELETE  /image/:id         RouteFormatter.ImageController :delete
+      WS      /socket/websocket  TestSocket
+      GET     /socket/longpoll   TestSocket
+      POST    /socket/longpoll   TestSocket
+    """
   end
 
   defp draw(router, endpoint \\ nil) do

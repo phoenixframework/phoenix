@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.DigestTest do
   use ExUnit.Case
   import MixHelper
 
-  test "fails when the given paths are invalid" do
+  test "logs when the path is invalid" do
     Mix.Tasks.Phx.Digest.run(["invalid_path", "--no-deps-check"])
     assert_received {:mix_shell, :error, ["The input path \"invalid_path\" does not exist"]}
   end

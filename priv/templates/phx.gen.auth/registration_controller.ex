@@ -7,7 +7,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def new(conn, _params) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_registration(%<%= inspect schema.alias %>{})
-    render(conn, "new.html", changeset: changeset)
+    render(conn, :new, changeset: changeset)
   end
 
   def create(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params}) do
@@ -16,7 +16,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:ok, _} =
           <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(
             <%= schema.singular %>,
-            &Routes.<%= schema.route_helper %>_confirmation_url(conn, :edit, &1)
+            &url(~p"<%= schema.route_prefix %>/confirm/#{&1}")
           )
 
         conn
@@ -24,7 +24,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>)
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, "new.html", changeset: changeset)
+        render(conn, :new, changeset: changeset)
     end
   end
 end

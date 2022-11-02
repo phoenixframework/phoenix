@@ -11,6 +11,8 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     def edit(conn, _params), do: text(conn, "api v1 users edit")
     def foo_host(conn, _params), do: text(conn, "foo request from #{conn.host}")
     def baz_host(conn, _params), do: text(conn, "baz request from #{conn.host}")
+    def multi_host(conn, _params), do: text(conn, "multi_host request from #{conn.host}")
+    def other_subdomain(conn, _params), do: text(conn, "other_subdomain request from #{conn.host}")
     def proxy(conn, _) do
       {controller, action} = conn.private.proxy_to
       controller.call(conn, controller.init(action))
@@ -89,6 +91,16 @@ defmodule Phoenix.Router.ScopedRoutingTest do
         end
       end
     end
+
+    # match www, no subdomain, and localhost
+    scope "/multi_host", host: ["www.", "example.com", "localhost"] do
+      get "/", Api.V1.UserController, :multi_host
+    end
+
+    # matched logged in subdomain user homepages
+    scope "/multi_host" do
+      get "/", Api.V1.UserController, :other_subdomain
+    end
   end
 
   setup do
@@ -147,6 +159,24 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     assert conn.resp_body == "baz request from baz.pang.com"
   end
 
+  test "host scopes allows list of hosts" do
+    conn = call(Router, :get, "http://www.example.com/multi_host")
+    assert conn.status == 200
+    assert conn.resp_body == "multi_host request from www.example.com"
+
+    conn = call(Router, :get, "http://www.anotherwww.com/multi_host")
+    assert conn.status == 200
+    assert conn.resp_body == "multi_host request from www.anotherwww.com"
+
+    conn = call(Router, :get, "http://localhost/multi_host")
+    assert conn.status == 200
+    assert conn.resp_body == "multi_host request from localhost"
+
+    conn = call(Router, :get, "http://subdomain.example.com/multi_host")
+    assert conn.status == 200
+    assert conn.resp_body == "other_subdomain request from subdomain.example.com"
+  end
+
   test "host 404s when failed match" do
     conn = call(Router, :get, "http://foobar.com/host/users/1")
     assert conn.status == 200
@@ -160,6 +190,18 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
     assert_raise Phoenix.Router.NoRouteError, fn ->
       call(Router, :get, "http://ba.pang.com/host/users/1")
+    end
+  end
+
+  test "bad host raises" do
+    assert_raise ArgumentError, "expected router scope :host to be compile-time string or list of strings, got: nil", fn ->
+      defmodule BadRouter do
+        use Phoenix.Router
+
+        scope "/admin", host: ["foo.", nil] do
+          get "/users/:id", Api.V1.UserController, :baz_host
+        end
+      end
     end
   end
 
@@ -192,20 +234,19 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   end
 
   test "string paths are enforced" do
-    assert_raise ArgumentError, ~r{router paths must be strings, got: '/bar'}, fn ->
+    assert_raise ArgumentError, ~r{router paths must be strings, got: :bar}, fn ->
       defmodule SomeRouter do
         use Phoenix.Router, otp_app: :phoenix
-        get "/foo", Router, []
-        get '/bar', Router, []
+        get :bar, Router, []
       end
     end
 
-    assert_raise ArgumentError, ~r{router paths must be strings, got: '/bar'}, fn ->
+    assert_raise ArgumentError, ~r{router paths must be strings, got: :bar}, fn ->
       defmodule SomeRouter do
         use Phoenix.Router, otp_app: :phoenix
         get "/foo", Router, []
         scope "/another" do
-          resources '/bar', Router, []
+          resources :bar, Router, []
         end
       end
     end
