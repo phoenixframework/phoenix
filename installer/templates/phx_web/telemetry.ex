@@ -40,9 +40,6 @@ defmodule <%= @web_namespace %>.Telemetry do
         tags: [:route],
         unit: {:native, :millisecond}
       ),
-      summary("phoenix.error_rendered.duration",
-        unit: {:native, :millisecond}
-      ),
       summary("phoenix.socket_connected.duration",
         unit: {:native, :millisecond}
       ),
