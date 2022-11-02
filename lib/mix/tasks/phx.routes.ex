@@ -61,19 +61,19 @@ defmodule Mix.Tasks.Phx.Routes do
     {opts, args, _} =
       OptionParser.parse(args, switches: [endpoint: :string, router: :string, info: :string])
 
-    {router, endpoint} =
+    {router_mod, endpoint_mod} =
       case args do
-        {opts, [passed_router], _} -> {passed_router, opts[:endpoint]}
-        {opts, [], _} -> {router(opts[:router], base), endpoint(opts[:endpoint], base)}
+        [passed_router] -> {router(passed_router, base), opts[:endpoint]}
+        [] -> {router(opts[:router], base), endpoint(opts[:endpoint], base)}
       end
 
     case Keyword.fetch(opts, :info) do
       {:ok, url} ->
-        get_url_info(url, {router, opts})
+        get_url_info(url, {router_mod, opts})
 
       :error ->
-        router
-        |> ConsoleFormatter.format(endpoint)
+        router_mod
+        |> ConsoleFormatter.format(endpoint_mod)
         |> Mix.shell().info()
     end
   end
