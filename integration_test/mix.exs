@@ -55,7 +55,8 @@ defmodule Phoenix.Integration.MixProject do
       {:argon2_elixir, "~> 3.0"},
       {:pbkdf2_elixir, "~> 2.0"},
       {:heroicons, "~> 0.5"},
-      {:tailwind, "~> 0.1"}
+      {:tailwind, "~> 0.1"},
+      {:finch, "~> 0.13"}
     ]
   end
 end
