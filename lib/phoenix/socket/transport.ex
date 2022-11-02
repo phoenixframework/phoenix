@@ -2,51 +2,16 @@ defmodule Phoenix.Socket.Transport do
   @moduledoc """
   Outlines the Socket <-> Transport communication.
 
-  This module specifies a behaviour that all sockets must implement.
+  Each transport, such as websockets and longpolling, must interact
+  with a socket. This module defines said behaviour.
+
   `Phoenix.Socket` is just one possible implementation of a socket
-  that multiplexes events over multiple channels. Developers can
-  implement their own sockets as long as they implement the behaviour
-  outlined here.
+  that multiplexes events over multiple channels. If you implement
+  this behaviour, then a transport can directly invoke your
+  implementation, without passing through channels.
 
-  Developers interested in implementing custom transports must invoke
-  the socket API defined in this module. This module also provides
-  many conveniences that invokes the underlying socket API to make
-  it easier to build custom transports.
-
-  ## Booting sockets
-
-  Whenever your endpoint starts, it will automatically invoke the
-  `child_spec/1` on each listed socket and start that specification
-  under the endpoint supervisor.
-
-  Since the socket supervision tree is started by the endpoint,
-  any custom transport must be started after the endpoint in a
-  supervision tree.
-
-  ## Operating sockets
-
-  Sockets are operated by a transport. When a transport is defined,
-  it usually receives a socket module and the module will be invoked
-  when certain events happen at the transport level.
-
-  Whenever the transport receives a new connection, it should invoke
-  the `c:connect/1` callback with a map of metadata. Different sockets
-  may require different metadata.
-
-  If the connection is accepted, the transport can move the connection
-  to another process, if so desires, or keep using the same process. The
-  process responsible for managing the socket should then call `c:init/1`.
-
-  For each message received from the client, the transport must call
-  `c:handle_in/2` on the socket. For each informational message the
-  transport receives, it should call `c:handle_info/2` on the socket.
-
-  Transports can optionally implement `c:handle_control/2` for handling
-  control frames such as `:ping` and `:pong`.
-
-  On termination, `c:terminate/2` must be called. A special atom with
-  reason `:closed` can be used to specify that the client terminated
-  the connection.
+  This module also provides convenience functions for implementing
+  transports.
 
   ## Example
 
@@ -91,13 +56,40 @@ defmodule Phoenix.Socket.Transport do
   You can now interact with the socket under `/socket/websocket`
   and `/socket/longpoll`.
 
-  ## Security
+  ## Custom transports
 
-  This module also provides functions to enable a secure environment
-  on transports that, at some point, have access to a `Plug.Conn`.
+  Sockets are operated by a transport. When a transport is defined,
+  it usually receives a socket module and the module will be invoked
+  when certain events happen at the transport level.
 
-  The functionality provided by this module helps in performing "origin"
-  header checks and ensuring only SSL connections are allowed.
+  Whenever the transport receives a new connection, it should invoke
+  the `c:connect/1` callback with a map of metadata. Different sockets
+  may require different metadata.
+
+  If the connection is accepted, the transport can move the connection
+  to another process, if so desires, or keep using the same process. The
+  process responsible for managing the socket should then call `c:init/1`.
+
+  For each message received from the client, the transport must call
+  `c:handle_in/2` on the socket. For each informational message the
+  transport receives, it should call `c:handle_info/2` on the socket.
+
+  Transports can optionally implement `c:handle_control/2` for handling
+  control frames such as `:ping` and `:pong`.
+
+  On termination, `c:terminate/2` must be called. A special atom with
+  reason `:closed` can be used to specify that the client terminated
+  the connection.
+
+  ## Booting
+
+  Whenever your endpoint starts, it will automatically invoke the
+  `child_spec/1` on each listed socket and start that specification
+  under the endpoint supervisor.
+
+  Since the socket supervision tree is started by the endpoint,
+  any custom transport must be started after the endpoint in a
+  supervision tree.
   """
 
   @type state :: term()

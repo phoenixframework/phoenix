@@ -2,14 +2,11 @@ defmodule Phoenix.Socket do
   @moduledoc ~S"""
   A socket implementation that multiplexes messages over channels.
 
-  `Phoenix.Socket` is used as a module for establishing and maintaining
-  the socket state via the `Phoenix.Socket` struct.
+  `Phoenix.Socket` is used as a module for establishing a connection
+  between client and server. Once the connection is established,
+  the initial state is stored in the `Phoenix.Socket` struct.
 
-  Once connected to a socket, incoming and outgoing events are routed to
-  channels. The incoming client data is routed to channels via transports.
-  It is the responsibility of the socket to tie transports and channels
-  together.
-
+  The same socket can be used to receive events from different transports.
   Phoenix supports `websocket` and `longpoll` options when invoking
   `Phoenix.Endpoint.socket/3` in your endpoint. `websocket` is set by default
   and `longpoll` can also be configured explicitly.
@@ -17,7 +14,8 @@ defmodule Phoenix.Socket do
       socket "/socket", MyAppWeb.Socket, websocket: true, longpoll: false
 
   The command above means incoming socket connections can be made via
-  a WebSocket connection. Events are routed by topic to channels:
+  a WebSocket connection. Incoming and outgoing events are routed to
+  channels by topic:
 
       channel "room:lobby", MyAppWeb.LobbyChannel
 
@@ -30,6 +28,7 @@ defmodule Phoenix.Socket do
     * `connect/3` - receives the socket params, connection info if any, and
       authenticates the connection. Must return a `Phoenix.Socket` struct,
       often with custom assigns
+
     * `id/1` - receives the socket returned by `connect/3` and returns the
       id of this connection as a string. The `id` is used to identify socket
       connections, often to a particular user, allowing us to force disconnections.

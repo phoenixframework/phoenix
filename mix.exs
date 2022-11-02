@@ -191,6 +191,7 @@ defmodule Phoenix.MixProject do
     # Phoenix.Param
     # Phoenix.Presence
     # Phoenix.Router
+    # Phoenix.Socket
     # Phoenix.Token
     # Phoenix.VerifiedRoutes
 
@@ -208,8 +209,7 @@ defmodule Phoenix.MixProject do
         Phoenix.Digester.Compressor,
         Phoenix.Digester.Gzip
       ],
-      "Socket and Transport": [
-        Phoenix.Socket,
+      "Socket": [
         Phoenix.Socket.Broadcast,
         Phoenix.Socket.Message,
         Phoenix.Socket.Reply,
