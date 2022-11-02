@@ -41,6 +41,7 @@ will continue to work and be generated. You can disable router helpers by passin
 ### Enhancements
   * [Router] Add `Phoenix.VerifiedRoutes` for `~p`-based route generation with compile-time verification.
   * [Router] Support `helpers: false` to `use Phoenix.Router` to disable helper generation
+  * [Router] Add `--info [url]` switch to `phx.routes` to get route information about a url/path
   * [Flash] Add `Phoenix.Flash` for unfied flash access
 
 ### JavaScript Client Bug Fixes
