@@ -151,29 +151,39 @@ defmodule Phoenix.Endpoint.RenderErrors do
   end
 
   defp put_formats(conn, formats) do
-    conn =
-      case conn.private do
-        %{phoenix_format: format} when is_binary(format) -> conn
-        _ -> Controller.accepts(conn, Enum.map(formats, &elem(&1, 0)))
+    [{fallback_format, fallback_view} | _] = formats
+
+    try do
+      conn =
+        case conn.private do
+          %{phoenix_format: format} when is_binary(format) -> conn
+          _ -> Controller.accepts(conn, Enum.map(formats, &elem(&1, 0)))
+        end
+
+      format = Phoenix.Controller.get_format(conn)
+
+      case List.keyfind(formats, format, 0) do
+        {_, view} ->
+          Controller.put_view(conn, view)
+
+        nil ->
+          conn
+          |> Controller.put_format(fallback_format)
+          |> Controller.put_view(fallback_view)
       end
+    rescue
+      e in Phoenix.NotAcceptableError ->
+        Logger.debug(
+          "Could not render errors due to #{Exception.message(e)}. " <>
+            "Errors will be rendered using the first accepted format #{inspect(fallback_format)} as fallback. " <>
+            "Please customize the :formats option under the :render_errors configuration " <>
+            "in your endpoint if you want to support other formats or choose another fallback"
+        )
 
-    format = Phoenix.Controller.get_format(conn)
-    {_, view} = List.keyfind(formats, format, 0)
-    Controller.put_view(conn, view)
-  rescue
-    e in Phoenix.NotAcceptableError ->
-      [{format, view} | _] = formats
-
-      Logger.debug(
-        "Could not render errors due to #{Exception.message(e)}. " <>
-          "Errors will be rendered using the first accepted format #{inspect(format)} as fallback. " <>
-          "Please customize the :formats option under the :render_errors configuration " <>
-          "in your endpoint if you want to support other formats or choose another fallback"
-      )
-
-      conn
-      |> Controller.put_format(format)
-      |> Controller.put_view(view)
+        conn
+        |> Controller.put_format(fallback_format)
+        |> Controller.put_view(fallback_view)
+    end
   end
 
   defp status(:error, error), do: Plug.Exception.status(error)
