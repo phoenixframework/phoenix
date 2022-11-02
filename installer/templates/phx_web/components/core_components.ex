@@ -612,7 +612,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
     #   Gettext.dgettext(<%= @web_namespace %>.Gettext, "errors", msg, opts)
     # end
 
-    msg
+    Enum.reduce(opts, msg, fn {key, value}, acc ->
+      String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
+    end)
   end<% end %>
 
   @doc """
