@@ -6,9 +6,9 @@ defmodule Mix.Tasks.Phx.Routes do
 
   @moduledoc """
   Prints all routes for the default or a given router.
+  Can also locate the controller function behind a specified url.
 
-      $ mix phx.routes
-      $ mix phx.routes MyApp.AnotherRouter
+      $ mix phx.routes [ROUTER] [--info URL]
 
   The default router is inflected from the application
   name unless a configuration named `:namespace`
@@ -31,6 +31,26 @@ defmodule Mix.Tasks.Phx.Routes do
           # aliases...
         ]
 
+  ## Options
+
+    * `--info` - locate the controller function definition called by the given url
+
+  ## Examples
+
+  Print all routes for the default router:
+
+      $ mix phx.routes
+
+  Print all routes for the given router:
+
+      $ mix phx.routes MyApp.AnotherRouter
+
+  Print information about the controller function called by a specified url:
+
+      $ mix phx.routes --info http://0.0.0.0:4000/home
+        Module: RouteInfoTestWeb.PageController
+        Function: :index
+        /home/my_app/controllers/page_controller.ex:4
   """
 
   @doc false
@@ -38,12 +58,48 @@ defmodule Mix.Tasks.Phx.Routes do
     Mix.Task.run("compile", args)
     Mix.Task.reenable("phx.routes")
 
-    case OptionParser.parse(args, switches: [endpoint: :string, router: :string]) do
-      {opts, [passed_router], _} ->
-        ConsoleFormatter.format(passed_router, opts[:endpoint])
+    {opts, args, _} =
+      OptionParser.parse(args, switches: [endpoint: :string, router: :string, info: :string])
 
-      {opts, [], _} ->
-        ConsoleFormatter.format(router(opts[:router], base), endpoint(opts[:endpoint], base))
+    {router, endpoint} =
+      case args do
+        {opts, [passed_router], _} -> {passed_router, opts[:endpoint]}
+        {opts, [], _} -> {router(opts[:router], base), endpoint(opts[:endpoint], base)}
+      end
+
+    case Keyword.fetch(opts, :info) do
+      {:ok, url} ->
+        get_url_info(url, {router, opts})
+
+      :error ->
+        router
+        |> ConsoleFormatter.format(endpoint)
+        |> Mix.shell().info()
+    end
+  end
+
+  def get_url_info(url, {router_mod, _opts}) do
+    %{path: path} = URI.parse(url)
+
+    meta = Phoenix.Router.route_info(router_mod, "GET", path, "")
+    %{plug: plug, plug_opts: plug_opts} = meta
+
+    {module, func_name} =
+      if log_mod = meta[:log_module] do
+        {log_mod, meta[:log_function]}
+      else
+        {plug, plug_opts}
+      end
+
+    Mix.shell().info("Module: #{inspect(module)}")
+    if func_name, do: Mix.shell().info("Function: #{inspect(func_name)}")
+
+    file_path = get_file_path(module)
+
+    if line = get_line_number(module, func_name) do
+      Mix.shell().info("#{file_path}:#{line}")
+    else
+      Mix.shell().info("#{file_path}")
     end
   end
 
@@ -98,4 +154,27 @@ defmodule Mix.Tasks.Phx.Routes do
   defp app_mod(base, name), do: Module.concat([base, name])
 
   defp web_mod(base, name), do: Module.concat(["#{base}Web", name])
+
+  defp get_file_path(module_name) do
+    [compile_infos] = Keyword.get_values(module_name.module_info(), :compile)
+    [source] = Keyword.get_values(compile_infos, :source)
+    source
+  end
+
+  defp get_line_number(_, nil), do: nil
+
+  defp get_line_number(module, function_name) do
+    {_, _, _, _, _, _, functions_list} = Code.fetch_docs(module)
+
+    function_infos =
+      functions_list
+      |> Enum.find(fn {{type, name, _}, _, _, _, _} ->
+        type == :function and name == function_name
+      end)
+
+    case function_infos do
+      {_, line, _, _, _} -> line
+      nil -> nil
+    end
+  end
 end
