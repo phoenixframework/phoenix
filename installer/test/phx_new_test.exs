@@ -256,7 +256,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
-        assert file =~ "{Finch, name: #{@app_name}.Finch}"
+        assert file =~ "{Finch, name: PhxBlog.Finch}"
       end)
 
       assert_file("phx_blog/lib/phx_blog/mailer.ex", fn file ->

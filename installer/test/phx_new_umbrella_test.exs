@@ -276,7 +276,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end)
 
       assert_file(app_path(@app, "lib/#{@app}/application.ex"), fn file ->
-        assert file =~ "{Finch, name: #{@app}.Finch}"
+        assert file =~ "{Finch, name: PhxUmb.Finch}"
       end)
 
       assert_file(app_path(@app, "lib/#{@app}/mailer.ex"), fn file ->
