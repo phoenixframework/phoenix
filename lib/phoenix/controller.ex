@@ -541,7 +541,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) :: Plug.Conn.t()
+  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) :: Plug.Conn.t()
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
       put_private_layout(conn, :phoenix_layout, :replace, layout)
@@ -601,7 +601,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_new_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) :: Plug.Conn.t()
+  @spec put_new_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) :: Plug.Conn.t()
   def put_new_layout(%Plug.Conn{state: state} = conn, layout)
       when (is_tuple(layout) and tuple_size(layout) == 2) or is_list(layout) or layout == false do
     unless state in @unsent, do: raise(AlreadySentError)
@@ -640,7 +640,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) ::
+  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) ::
           Plug.Conn.t()
   def put_root_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
