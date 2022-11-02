@@ -48,7 +48,6 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
 
       assert File.stat!(Path.join(app_root_path, "lib/phx_blog_web/components/core_components.ex")) > @epoch
       assert File.stat!(Path.join(app_root_path, "lib/phx_blog_web/controllers/page_html.ex")) > @epoch
-      assert_passes_formatter_check(app_root_path)
       assert_tests_pass(app_root_path)
     end)
   end

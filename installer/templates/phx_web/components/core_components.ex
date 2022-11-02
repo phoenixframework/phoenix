@@ -305,7 +305,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <option :if={@prompt}><%%= @prompt %></option>
         <%%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
       </select>
-      <.error :for={msg <- @errors} message={msg} />
+      <.error :for={msg <- @errors}><%%= msg %></.error>
     </div>
     """
   end
@@ -325,9 +325,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
         ]}
         {@rest}
       >
-    <%%!-- Force textarea newline. Do not delete or indent --%>
+
     <%%= @value %></textarea>
-      <.error :for={msg <- @errors} message={msg} />
+      <.error :for={msg <- @errors}><%%= msg %></.error>
     </div>
     """
   end
@@ -349,7 +349,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         ]}
         {@rest}
       />
-      <.error :for={msg <- @errors} message={msg} />
+      <.error :for={msg <- @errors}><%%= msg %></.error>
     </div>
     """
   end
@@ -377,7 +377,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   @doc """
   Generates a generic error message.
   """
-  attr :message, :string, required: true
+  slot :inner_block, required: true
 
   def error(assigns) do
     ~H"""

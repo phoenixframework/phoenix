@@ -29,15 +29,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         method="post"
         as={:<%= schema.singular %>}
       >
-        <.error :if={@changeset.action == :insert} message="Oops, something went wrong! Please check the errors below." />
+        <.error :if={@changeset.action == :insert}>
+          Oops, something went wrong! Please check the errors below.
+        </.error>
 
         <.input field={{f, :email}} type="email" label="Email" required />
-        <.input
-          field={{f, :password}}
-          type="password"
-          label="Password"
-          required
-        />
+        <.input field={{f, :password}} type="password" label="Password" required />
 
         <:actions>
           <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
