@@ -48,7 +48,8 @@ defmodule <%= @app_module %>.MixProject do
       {:phoenix_live_dashboard, "~> 0.7.2"},<% end %><%= if @assets do %>
       {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.1.8", runtime: Mix.env() == :dev},<% end %><%= if @mailer do %>
-      {:swoosh, "~> 1.3"},<% end %>
+      {:swoosh, "~> 1.3"},
+      {:finch, "~> 0.13"},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 0.20"},<% end %>
