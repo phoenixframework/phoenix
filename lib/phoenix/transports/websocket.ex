@@ -44,12 +44,8 @@ defmodule Phoenix.Transports.WebSocket do
 
         case handler.connect(config) do
           {:ok, arg} ->
-            upgrade =
-              conn.private[:phoenix_websocket_upgrade] ||
-                (&Phoenix.Endpoint.Cowboy2Adapter.websocket_upgrade/4)
-
             conn
-            |> upgrade.(handler, arg, opts)
+            |> WebSock.upgrade(handler, arg, opts)
             |> halt()
 
           :error ->
