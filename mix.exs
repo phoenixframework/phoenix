@@ -74,7 +74,7 @@ defmodule Phoenix.MixProject do
       {:phoenix_pubsub, "~> 2.1"},
       {:phoenix_view, "~> 2.0", optional: true},
       {:phoenix_template, "~> 1.0"},
-      {:websock, "~> 0.4"},
+      {:websock_adapter, "~> 0.4"},
 
       # TODO drop castore when we require OTP 25+
       {:castore, ">= 0.0.0"},

@@ -3,15 +3,15 @@ defmodule Phoenix.Transports.WebSocket do
   #
   # How WebSockets Work In Phoenix
   #
-  # WebSocket support in Phoenix is implemented on top of the `WebSock` library. Upgrade requests from
-  # clients originate as regular HTTP requests that get routed to this module via Plug. These
-  # requests are then upgraded to WebSocket connections via `WebSock.upgrade/4`, which takes as
-  # an argument the handler for a given socket endpoint as configured in the application's
-  # Endpoint. This handler module must implement the transport-agnostic `Phoenix.Socket.Transport` 
-  # behaviour (this same behaviour is also used for other transports such as long polling). Because 
-  # this behaviour is a superset of the `WebSock` behaviour, the `WebSock` library is able to use
-  # the callbacks in the `WebSock` behaviour to call this handler module directly for the rest of
-  # the WebSocket connection's lifetime.
+  # WebSocket support in Phoenix is implemented on top of the `WebSockAdapter` library. Upgrade
+  # requests from clients originate as regular HTTP requests that get routed to this module via
+  # Plug. These requests are then upgraded to WebSocket connections via
+  # `WebSockAdapter.upgrade/4`, which takes as an argument the handler for a given socket endpoint
+  # as configured in the application's Endpoint. This handler module must implement the
+  # transport-agnostic `Phoenix.Socket.Transport` behaviour (this same behaviour is also used for
+  # other transports such as long polling). Because this behaviour is a superset of the `WebSock`
+  # behaviour, the `WebSock` library is able to use the callbacks in the `WebSock` behaviour to
+  # call this handler module directly for the rest of the WebSocket connection's lifetime.
   #
   @behaviour Plug
 
@@ -58,7 +58,7 @@ defmodule Phoenix.Transports.WebSocket do
         case handler.connect(config) do
           {:ok, arg} ->
             conn
-            |> WebSock.upgrade(handler, arg, opts)
+            |> WebSockAdapter.upgrade(handler, arg, opts)
             |> halt()
 
           :error ->
