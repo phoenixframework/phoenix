@@ -117,7 +117,11 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-Now in order to add templates to this view, we can either define them as function components directly in the module:
+To add templates to this view, we can define them as function components in the module or in separate files. Function components are great for smaller templates and separate files are a good choice when you have a lot of markup or your functions start to feel unmanageable.
+
+Both functional components and template files are compiled to an internal format, there is no runtime or performance difference between them.
+
+Here's how you would define a template a function component:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -131,9 +135,9 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-You can read more about function components and the `~H` heex templates in the `Phoenix.Component` documentation. For larger templates with a lot of markup, we often want to define them in their own file. We can do that now.
+You can read more about function components and the `~H` heex templates in the `Phoenix.Component` documentation.
 
-Let's delete our `def index(assigns)` function and replace it with an `embed_templates` declaration:
+Now lets define a template in its own file. First delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -143,7 +147,11 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
- Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello` directory into our module as function definitions. Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory. Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello_html`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
+ Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello` directory into our module as function definitions.
+
+ Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory.
+
+ Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello_html`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
 
 ```
 lib/hello_web
