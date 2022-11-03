@@ -27,7 +27,7 @@ defmodule HelloWeb.ErrorHTML do
   end
 end
 
-defmodule HelloWeb.ErrorJSOn do
+defmodule HelloWeb.ErrorJSON do
   # If you want to customize a particular status code,
   # you may add your own clauses, such as:
   #
