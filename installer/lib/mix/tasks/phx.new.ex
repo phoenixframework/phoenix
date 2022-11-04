@@ -31,6 +31,13 @@ defmodule Mix.Tasks.Phx.New do
       Please check the driver docs for more information
       and requirements. Defaults to "postgres".
 
+    * `--adapter` - specify the http adapter. One of:
+        * `cowboy` - via https://github.com/elixir-plug/plug_cowboy
+        * `bandit` - via https://github.com/mtrudel/bandit
+
+      Please check the adapter docs for more information
+      and requirements. Defaults to "cowboy".
+
     * `--no-assets` - do not generate the assets folder.
       When choosing this option, you will need to manually
       handle JavaScript/CSS if building HTML apps
@@ -110,7 +117,7 @@ defmodule Mix.Tasks.Phx.New do
              database: :string, binary_id: :boolean, html: :boolean,
              gettext: :boolean, umbrella: :boolean, verbose: :boolean,
              live: :boolean, dashboard: :boolean, install: :boolean,
-             prefix: :string, mailer: :boolean]
+             prefix: :string, mailer: :boolean, adapter: :string]
 
   @impl true
   def run([version]) when version in ~w(-v --version) do
