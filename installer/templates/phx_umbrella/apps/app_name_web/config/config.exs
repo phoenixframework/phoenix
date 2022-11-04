@@ -7,6 +7,7 @@ config :<%= @web_app_name %><%= if @namespaced? do %>,
 <% end %># Configures the endpoint
 config :<%= @web_app_name %>, <%= @endpoint_module %>,
   url: [host: "localhost"],
+  adapter: <%= inspect @web_adapter_module %>,
   render_errors: [
     formats: [<%= if @html do%>html: <%= @web_namespace %>.ErrorHTML, <% end %>json: <%= @web_namespace %>.ErrorJSON],
     layout: false
