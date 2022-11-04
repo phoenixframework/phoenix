@@ -258,8 +258,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
+  attr :multiple, :boolean, doc: "the multiple flag for select inputs"
   attr :rest, :global, include: ~w(autocomplete disabled form max maxlength min minlength
-                                   multiple pattern placeholder readonly required size step)
+                                   pattern placeholder readonly required size step)
   slot :inner_block
 
   def input(%{field: {f, field}} = assigns) do
@@ -293,6 +294,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   def input(%{type: "select"} = assigns) do
+    assigns =
+      update(assigns, :name, fn name ->
+        if assigns.multiple, do: name <> "[]", else: name
+      end)
+
     ~H"""
     <div phx-feedback-for={@name}>
       <.label for={@id}><%%= @label %></.label>
@@ -300,6 +306,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         id={@id}
         name={@name}
         class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
+        multiple={@multiple}
         {@rest}
       >
         <option :if={@prompt}><%%= @prompt %></option>
