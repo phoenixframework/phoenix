@@ -740,7 +740,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([project_path, "--adapter", "bandit"])
       assert_file("custom_path/mix.exs", ":bandit")
 
-      assert_file("custom_path/config/config.exs", "Bandit.PhoenixAdapter")
+      assert_file("custom_path/config/config.exs", "adapter: Bandit.PhoenixAdapter")
     end)
   end
 

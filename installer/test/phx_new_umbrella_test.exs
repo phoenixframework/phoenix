@@ -706,7 +706,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--adapter", "bandit"])
       assert_file(web_path(app, "mix.exs"), ":bandit")
 
-      assert_file(root_path(app, "config/config.exs"), "Bandit.PhoenixAdapter")
+      assert_file(root_path(app, "config/config.exs"), "adapter: Bandit.PhoenixAdapter")
     end)
   end
 
