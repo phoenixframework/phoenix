@@ -699,6 +699,17 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end)
   end
 
+  test "new with bandit web adapter" do
+    in_tmp("new with bandit web adapter", fn ->
+      app = "custom_path"
+      project_path = Path.join(File.cwd!(), app)
+      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--adapter", "bandit"])
+      assert_file(web_path(app, "mix.exs"), ":bandit")
+
+      assert_file(root_path(app, "config/config.exs"), "Bandit.PhoenixAdapter")
+    end)
+  end
+
   test "new with invalid args" do
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
       Mix.Tasks.Phx.New.run(["007invalid", "--umbrella"])
