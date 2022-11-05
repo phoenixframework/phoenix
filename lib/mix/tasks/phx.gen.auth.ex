@@ -853,7 +853,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
           Mix.shell().info("""
           An authentication system can be created in two different ways:
           - Using Phoenix.LiveView (default)
-          - Using Phoenix.View
+          - Using Phoenix.Controller only\
           """)
 
           if Mix.shell().yes?("Do you want to create a LiveView based authentication system?") do
