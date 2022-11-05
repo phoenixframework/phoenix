@@ -10,8 +10,8 @@ defmodule MyApp.LayoutView do
   use Phoenix.View, root: "test/fixtures/templates"
   import Phoenix.HTML
 
-  def render("root.html", assigns) do
-    ~E"""
+  def render("root.html", _assigns) do
+    ~H"""
     ROOTSTART[<%= @title %>]<%= @inner_content %>ROOTEND
     """
   end
