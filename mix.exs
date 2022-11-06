@@ -81,6 +81,7 @@ defmodule Phoenix.MixProject do
 
       # Optional deps
       {:plug_cowboy, "~> 2.6", optional: true},
+      {:bandit, "~> 0.5", optional: true},
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies (some for cross references)
@@ -209,7 +210,7 @@ defmodule Phoenix.MixProject do
         Phoenix.Digester.Compressor,
         Phoenix.Digester.Gzip
       ],
-      "Socket": [
+      Socket: [
         Phoenix.Socket.Broadcast,
         Phoenix.Socket.Message,
         Phoenix.Socket.Reply,

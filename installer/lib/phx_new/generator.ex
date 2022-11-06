@@ -187,7 +187,7 @@ defmodule Phx.New.Generator do
     {adapter_app, adapter_module, adapter_config} =
       get_ecto_adapter(db, String.downcase(project.app), project.app_mod)
 
-    {web_adapter_app, web_adapter_version, web_adapter_module} = get_web_adapter(web_adapter)
+    {web_adapter_app, web_adapter_module} = get_web_adapter(web_adapter)
 
     pubsub_server = get_pubsub_server(project.app_mod)
 
@@ -230,7 +230,6 @@ defmodule Phx.New.Generator do
       adapter_module: adapter_module,
       adapter_config: adapter_config,
       web_adapter_app: web_adapter_app,
-      web_adapter_version: web_adapter_version,
       web_adapter_module: web_adapter_module,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
       namespaced?: namespaced?(project),
@@ -296,8 +295,8 @@ defmodule Phx.New.Generator do
     Mix.raise("Unknown database #{inspect(db)}")
   end
 
-  defp get_web_adapter("cowboy"), do: {:plug_cowboy, "~> 2.5", Phoenix.Endpoint.Cowboy2Adapter}
-  defp get_web_adapter("bandit"), do: {:bandit, "~> 0.5", Bandit.PhoenixAdapter}
+  defp get_web_adapter("cowboy"), do: {:plug_cowboy, Phoenix.Endpoint.Cowboy2Adapter}
+  defp get_web_adapter("bandit"), do: {:bandit, Bandit.PhoenixAdapter}
   defp get_web_adapter(other), do: Mix.raise("Unknown web adapter #{inspect(other)}")
 
   defp fs_db_config(app, module) do

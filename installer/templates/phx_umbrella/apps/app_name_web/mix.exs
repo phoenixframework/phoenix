@@ -51,7 +51,7 @@ defmodule <%= @web_namespace %>.MixProject do
       {:gettext, "~> 0.20"},<% end %><%= if @app_name != @web_app_name do %>
       {:<%= @app_name %>, in_umbrella: true},<% end %>
       {:jason, "~> 1.2"},
-      {<%= inspect @web_adapter_app %>, <%= inspect @web_adapter_version %>}
+      {<%= inspect @web_adapter_app %>, ">= 0.0.0"}
     ]
   end
 
