@@ -180,7 +180,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, ".gitignore"), ~r/\n$/)
       assert_file(web_path(@app, "assets/css/app.css"))
 
-
       assert_file(web_path(@app, "priv/static/favicon.ico"))
       assert_file(web_path(@app, "priv/static/images/phoenix.png"))
 
@@ -298,7 +297,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end)
 
       assert_file(root_path(@app, "config/prod.exs"), fn file ->
-        assert file =~ "config :swoosh, :api_client, #{@app}.Finch"
+        assert file =~ "config :swoosh, :api_client, PhxUmb.Finch"
       end)
 
       # Install dependencies?
@@ -413,7 +412,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end)
 
       assert_file(app_path(@app, "lib/#{@app}/application.ex"), fn file ->
-        refute file =~ "{Finch, name: #{@app}.Finch}"
+        refute file =~ "{Finch, name: PhxUmb.Finch}"
       end)
 
       refute File.exists?(app_path(@app, "lib/#{@app}/mailer.ex"))

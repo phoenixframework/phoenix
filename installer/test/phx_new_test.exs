@@ -155,7 +155,6 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/assets/css/app.css")
 
-
       refute File.exists?("phx_blog/priv/static/assets/app.css")
       refute File.exists?("phx_blog/priv/static/assets/app.js")
       assert File.exists?("phx_blog/assets/vendor")
@@ -278,7 +277,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/config/prod.exs", fn file ->
-        assert file =~ "config :swoosh, :api_client, #{@app_name}.Finch"
+        assert file =~ "config :swoosh, :api_client, PhxBlog.Finch"
       end)
 
       # Install dependencies?
@@ -415,7 +414,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
-        refute file =~ "{Finch, name: #{@app_name}.Finch"
+        refute file =~ "{Finch, name: PhxBlog.Finch"
       end)
 
       refute File.exists?("phx_blog/lib/phx_blog/mailer.ex")
