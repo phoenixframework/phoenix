@@ -446,6 +446,15 @@ defmodule Phoenix.Controller do
   Stores the view for rendering.
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
+  
+  ## Examples
+  
+      # Use single view module
+      iex> put_view(conn, AppView)
+      
+      # Use multiple view module for content negotiation
+      iex> put_view(conn, html: AppHTML, json: AppJSON)
+      
   """
   @spec put_view(Plug.Conn.t(), [{format :: atom, view}] | view) :: Plug.Conn.t()
   def put_view(%Plug.Conn{state: state} = conn, formats) when state in @unsent do
