@@ -33,7 +33,7 @@ This feature replaces the `Helpers` module generated in your Phoenix router, but
 will continue to work and be generated. You can disable router helpers by passing the
 `helpers: false` option to `use Phoenix.Router`.
 
-## 1.7.0-dev
+## 1.7.0-rc.0 (2022-11-07)
 
 ### Deprecations
   * `Phoenix.Controller.get_flash` has been deprecated in favor of the new `Phoenix.Flash` module, which provides unified flash access
