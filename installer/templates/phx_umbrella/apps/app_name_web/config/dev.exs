@@ -50,3 +50,6 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
       ~r"lib/<%= @web_app_name %>/templates/.*(eex)$"
     ]
   ]<% end %>
+
+# Enable dev routes for dashboard and mailbox
+config :<%= @web_app_name %>, dev_routes: true

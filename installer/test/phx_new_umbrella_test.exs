@@ -73,6 +73,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ~r[esbuild: {Esbuild]
         assert file =~ "lib/#{@app}_web/(live|views)/.*(ex)"
         assert file =~ "lib/#{@app}_web/templates/.*(eex)"
+        assert file =~ "config :#{@app}_web, dev_routes: true"
       end)
 
       assert_file(root_path(@app, "config/prod.exs"), fn file ->
@@ -156,7 +157,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         ~r/defmodule PhxUmbWeb.PageHTML/
       )
 
-      assert_file(web_path(@app, "lib/#{@app}_web/router.ex"), "defmodule PhxUmbWeb.Router")
+      assert_file(web_path(@app, "lib/#{@app}_web/router.ex"), fn file ->
+        assert file =~ "defmodule PhxUmbWeb.Router"
+        assert file =~ "Application.compile_env(:#{@app}_web, :dev_routes)"
+      end)
 
       assert_file(
         web_path(@app, "lib/#{@app}_web/components/core_components.ex"),

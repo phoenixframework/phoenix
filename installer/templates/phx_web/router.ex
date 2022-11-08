@@ -30,7 +30,7 @@ defmodule <%= @web_namespace %>.Router do
   end<% end %><%= if @dashboard || @mailer do %>
 
   # Enable <%= [@dashboard && "LiveDashboard", @mailer && "Swoosh mailbox preview"] |> Enum.filter(&(&1)) |> Enum.join(" and ") %> in development
-  if Application.compile_env(:<%= @app_name %>, :dev_routes) do<%= if @dashboard do %>
+  if Application.compile_env(:<%= @web_app_name %>, :dev_routes) do<%= if @dashboard do %>
     # If you want to use the LiveDashboard in production, you should put
     # it behind authentication and allow only admins to access it.
     # If your application does not have an admins-only section yet,

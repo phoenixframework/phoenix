@@ -209,6 +209,7 @@ defmodule Phx.New.Generator do
       phoenix_dep: phoenix_dep(phoenix_path, version),
       phoenix_dep_umbrella_root: phoenix_dep(phoenix_path_umbrella_root, version),
       phoenix_js_path: phoenix_js_path(phoenix_path),
+      phoenix_version: version,
       pubsub_server: pubsub_server,
       secret_key_base_dev: random_string(64),
       secret_key_base_test: random_string(64),
