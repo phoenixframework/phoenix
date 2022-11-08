@@ -139,11 +139,11 @@ Let's delete our `def index(assigns)` function and replace it with an `embed_tem
 defmodule HelloWeb.HelloHTML do
   use HelloWeb, :html
 
-  embed_templates "hello/*"
+  embed_templates "hello_html/*"
 end
 ```
 
- Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello` directory into our module as function definitions. Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory. Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
+ Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello` directory into our module as function definitions. Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory. Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello_html`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
 
 ```
 lib/hello_web
