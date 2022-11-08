@@ -145,7 +145,7 @@ The error view test case, `test/hello_web/controllers/error_html_test.exs`, illu
 defmodule HelloWeb.ErrorHTMLTest do
   use HelloWeb.ConnCase, async: true
 
-  # Bring render_to_string/3 for testing custom views
+  # Bring render_to_string/4 for testing custom views
   import Phoenix.Template
 
   test "renders 404.html" do
@@ -337,18 +337,18 @@ defmodule HelloWeb.ErrorHTMLTest do
 
   @moduletag :error_view_case
 
-  # Bring render/3 and render_to_string/3 for testing custom views
-  import Phoenix.View
+  # Bring render/4 and render_to_string/4 for testing custom views
+  import Phoenix.Template
 
   @tag individual_test: "yup"
   test "renders 404.html" do
-    assert render_to_string(HelloWeb.ErrorView, "404.html", []) ==
+    assert render_to_string(HelloWeb.ErrorView, "404", "html", []) ==
            "Not Found"
   end
 
   @tag individual_test: "nope"
   test "renders 500.html" do
-    assert render_to_string(HelloWeb.ErrorView, "500.html", []) ==
+    assert render_to_string(HelloWeb.ErrorView, "500", "html", []) ==
            "Internal Server Error"
   end
 end
