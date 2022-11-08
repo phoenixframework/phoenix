@@ -33,7 +33,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           </.link>
         </:actions>
         <:actions>
-          <.button phx-disable-with="Sigining in..." class="w-full">
+          <.button phx-disable-with="Signing in..." class="w-full">
             Sign in <span aria-hidden="true">→</span>
           </.button>
         </:actions>
