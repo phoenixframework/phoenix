@@ -147,7 +147,7 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
- Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello` directory into our module as function definitions.
+ Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello_html` directory into our module as function definitions.
 
  Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory.
 
