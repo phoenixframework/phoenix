@@ -117,7 +117,11 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-Now in order to add templates to this view, we can either define them as function components directly in the module:
+To add templates to this view, we can define them as function components in the module or in separate files. Function components are great for smaller templates and separate files are a good choice when you have a lot of markup or your functions start to feel unmanageable.
+
+Template files are compiled into the module as function components themselves, there is no runtime or performance difference between the two styles.
+
+Here's how you would define a template a function component:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -131,9 +135,9 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-You can read more about function components and the `~H` heex templates in the `Phoenix.Component` documentation. For larger templates with a lot of markup, we often want to define them in their own file. We can do that now.
+You can read more about function components and `~H` heex templates in the `Phoenix.Component` documentation.
 
-Let's delete our `def index(assigns)` function and replace it with an `embed_templates` declaration:
+Now lets define a template in its own file. First delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -143,7 +147,11 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
- Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello` directory into our module as function definitions. Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory. Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello_html`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
+ Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello` directory into our module as function definitions.
+
+ Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory.
+
+ Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello_html`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
 
 ```
 lib/hello_web
@@ -265,6 +273,8 @@ For the last piece of this puzzle, we'll need a new template. Since it is for th
 
 To do that, we'll use the special EEx tags for executing Elixir expressions: `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag in the HTML output. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
 
+Remember our templates are written in HEEx (HTML+EEx). HEEx is a superset of EEx which is why it shares the `<%= %>` syntax.
+
 And this is what the template should look like:
 
 ```heex
@@ -273,7 +283,9 @@ And this is what the template should look like:
 </section>
 ```
 
-Our messenger appears as `@messenger`. We call "assigns" the values passed from the controller to views. It is a special bit of metaprogrammed syntax which stands in for `assigns.messenger`. The result is much nicer on the eyes and much easier to work with in a template.
+Our messenger appears as `@messenger`.
+
+The values we passed to the view from the controller are collectively called our "assigns". We could access our messenger value via `assigns.messenger` but through some metaprogramming, Phoenix gives us the much cleaner `@` syntax for use in templates.
 
 We're done. If you point your browser to [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), you should see a page that looks like this:
 
