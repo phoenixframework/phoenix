@@ -191,7 +191,7 @@ What about paths with query strings? You can either add query string key values 
 ~p"/users/17?admin=true&active=false"
 "/users/17?admin=true&active=false"
 
-~p"/users/17?#{[admin: true]"
+~p"/users/17?#{[admin: true]}"
 "/users/17?admin=true"
 ```
 
