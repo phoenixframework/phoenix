@@ -119,7 +119,7 @@ end
 
 To add templates to this view, we can define them as function components in the module or in separate files. Function components are great for smaller templates and separate files are a good choice when you have a lot of markup or your functions start to feel unmanageable.
 
-Both functional components and template files are compiled to an internal format, there is no runtime or performance difference between them.
+Template files are compiled into the module as function components themselves, there is no runtime or performance difference between the two styles.
 
 Here's how you would define a template a function component:
 
@@ -135,7 +135,7 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-You can read more about function components and the `~H` heex templates in the `Phoenix.Component` documentation.
+You can read more about function components and `~H` heex templates in the `Phoenix.Component` documentation.
 
 Now lets define a template in its own file. First delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
 
