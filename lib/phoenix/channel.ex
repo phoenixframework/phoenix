@@ -79,11 +79,11 @@ defmodule Phoenix.Channel do
 
   ## Replies
 
-  Replies are useful for acking a client's message or responding with the
-  results of an operation. A reply is sent only to the client connected to the
-  current channel process. Behind the scenes, they include the client messsage
-  `ref`, which allows the client to correlate the reply it receives with the
-  message it sent.
+  Replies are useful for acknowledging a client's message or responding with
+  the results of an operation. A reply is sent only to the client connected to
+  the current channel process. Behind the scenes, they include the client
+  message `ref`, which allows the client to correlate the reply it receives
+  with the message it sent.
 
   For example, imagine creating a resource and replying with the created record:
 
@@ -100,7 +100,7 @@ defmodule Phoenix.Channel do
         end
       end
 
-  Alternatively, you may just want to ack the status of the operation:
+  Or you may just want to confirm that the operation succeeded:
 
       def handle_in("create:post", attrs, socket) do
         changeset = Post.changeset(%Post{}, attrs)
@@ -117,7 +117,12 @@ defmodule Phoenix.Channel do
 
       {:reply, {:ok, {:binary, bin}}, socket}
 
-  Finally, if you need to reply asynchronously, you can use `reply/2`.
+  If you don't want to send a reply to the client, you can return:
+
+      {:noreply, socket}
+
+  One situation when you might do this is if you need to reply later; see
+  `reply/2`.
 
   ## Pushes
   
@@ -633,11 +638,11 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Replies to a socket push. This is useful for asynchronous replies.
+  Replies to a socket push.
 
-  Sometimes you need to reply to a push after your `handle_in` callback
-  completes; for example, in the rare case that you need to perform work in
-  another process and reply when it's finished.
+  Sometimes you need to reply to a push asynchronously - that is, after your
+  `handle_in/3` callback completes. For example, you might need to perform work
+  in another process and reply when it's finished.
 
   You can do this by generating a reference to the socket with `socket_ref/1`
   and calling `reply/2` with that ref when you're ready to reply.
