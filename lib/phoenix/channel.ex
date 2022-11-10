@@ -643,7 +643,7 @@ defmodule Phoenix.Channel do
   The usual way of replying to a client's message is to return a tuple from `handle_in/3`
   like:
 
-      {:reply, value, socket}
+      {:reply, {status, payload}, socket}
 
   But sometimes you need to reply to a push asynchronously - that is, after
   your `handle_in/3` callback completes. For example, you might need to perform
