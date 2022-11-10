@@ -102,7 +102,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ ~s(<.simple_form\n        :let={f}\n        for={@changeset}\n)
         assert file =~ ~s(<.input field={{f, :title}} type="text")
         assert file =~ ~s(<.input field={{f, :votes}} type="number")
-        assert file =~ ~s(<.input field={{f, :cost}} type="number" label="cost" step="any")
+        assert file =~ ~s(<.input field={{f, :cost}} type="number" label="Cost" step="any")
         assert file =~ """
                 <.input
                   field={{f, :tags}}
@@ -115,7 +115,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ ~s(<.input field={{f, :deleted_at}} type="datetime-local")
         assert file =~ ~s(<.input field={{f, :announcement_date}} type="date")
         assert file =~ ~s(<.input field={{f, :alarm}} type="time")
-        assert file =~ ~s(<.input field={{f, :secret}} type="text" label="secret" />)
+        assert file =~ ~s(<.input field={{f, :secret}} type="text" label="Secret" />)
         assert file =~ """
                 <.input
                   field={{f, :status}}
