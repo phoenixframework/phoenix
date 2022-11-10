@@ -535,6 +535,14 @@ defmodule Phoenix.VerifiedRoutes do
     |> URI.encode(&URI.char_unreserved?/1)
   end
 
+  # Segments must always start with /
+  defp verify_segment(["/" <> _ | _] = segments, route), do: verify_segment(segments, route, [])
+
+  defp verify_segment(_, route) do
+    raise ArgumentError, "paths must begin with /, got: #{Macro.to_string(route)}"
+  end
+
+  # separator followed by dynamic
   defp verify_segment(["/" | rest], route, acc), do: verify_segment(rest, route, ["/" | acc])
 
   # we've found a static segment, return to caller with rewritten query if found
@@ -561,7 +569,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp verify_segment([segment | _], route, _acc) when is_binary(segment) do
     raise ArgumentError,
-          "path segments must begin with /, got: #{inspect(segment)} in #{Macro.to_string(route)}"
+          "path segments after interpolation must begin with /, got: #{inspect(segment)} in #{Macro.to_string(route)}"
   end
 
   defp verify_segment(
@@ -711,7 +719,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp rewrite_path(route, endpoint, router, statics) do
     {:<<>>, meta, segments} = route
-    {path_rewrite, query_rewrite} = verify_segment(segments, route, [])
+    {path_rewrite, query_rewrite} = verify_segment(segments, route)
 
     rewrite_route =
       quote generated: true do

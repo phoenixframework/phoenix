@@ -201,7 +201,7 @@ defmodule Phoenix.VerifiedRoutesTest do
 
   test "~p raises when not prefixed by /" do
     assert_raise ArgumentError,
-                 ~s|path segments must begin with /, got: "posts/1" in "posts/1"|,
+                 ~s|paths must begin with /, got: "posts/1"|,
                  fn ->
                    defmodule SigilPPrefix do
                      use Phoenix.VerifiedRoutes,
