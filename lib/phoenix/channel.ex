@@ -638,11 +638,16 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Replies to a socket push.
+  Replies asynchronously to a socket push.
 
-  Sometimes you need to reply to a push asynchronously - that is, after your
-  `handle_in/3` callback completes. For example, you might need to perform work
-  in another process and reply when it's finished.
+  The usual way of replying to a client's message is to return a tuple from `handle_in/3`
+  like:
+
+      {:reply, value, socket}
+
+  But sometimes you need to reply to a push asynchronously - that is, after
+  your `handle_in/3` callback completes. For example, you might need to perform
+  work in another process and reply when it's finished.
 
   You can do this by generating a reference to the socket with `socket_ref/1`
   and calling `reply/2` with that ref when you're ready to reply.
