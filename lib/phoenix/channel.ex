@@ -611,6 +611,13 @@ defmodule Phoenix.Channel do
   The event's message must be a serializable map or a tagged `{:binary, data}`
   tuple where `data` is binary data.
 
+  Note that unlike some in client libraries, this server-side `push/3` does not
+  return a reference. If you need to get a reply from the client and to
+  correlate that reply with the message you pushed, you'll need to include a
+  unique identifier in the message, track it in the Channel's state, have the
+  client include it in its reply, and examine the ref when the reply comes to
+  `handle_in/3`.
+
   ## Examples
 
       iex> push(socket, "new_message", %{id: 1, content: "hello"})
