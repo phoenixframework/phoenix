@@ -65,19 +65,21 @@ Open up our application layout template, `lib/hello_web/components/layouts/root.
 </.live_title>
 ```
 
-to call a `title/0` function, like this.
+to call a `title/1` function, like this.
 
 ```heex
 <.title suffix=" · Phoenix Framework" />
 ```
 
-Now let's add a `title/0` function to our `Layouts` module:
+Now let's add a `title/1` function to our `Layouts` module:
 
 ```elixir
 defmodule HelloWeb.Layouts do
-  use HelloWeb, :view
+  use HelloWeb, :html
 
-  attr :suffix, default: nil
+  embed_templates "layouts/*"
+
+  attr :suffix, :string, default: nil
 
   def title(assigns) do
     ~H"""
