@@ -17,7 +17,7 @@ defmodule <%= @web_namespace %> do
   and import those modules here.
   """
 
-  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+  def static_paths, do: ~w(assets fonts images robots.txt)
 
   def controller do
     quote do

@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   end
 
   test "assets are in sync with priv" do
-    for file <- ~w(favicon.ico phoenix.png) do
+    for file <- ~w(phoenix.png) do
       assert File.read!("../priv/static/#{file}") ==
         File.read!("templates/phx_static/#{file}")
     end
@@ -272,7 +272,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       # No assets & No HTML
       refute_file "phx_blog/priv/static/assets/app.css"
       refute_file "phx_blog/priv/static/assets/phoenix.css"
-      refute_file "phx_blog/priv/static/favicon.ico"
       refute_file "phx_blog/priv/static/images/phoenix.png"
       refute_file "phx_blog/priv/static/assets/app.js"
 
@@ -458,7 +457,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/priv/static/assets/app.css"
       assert_file "phx_blog/priv/static/assets/phoenix.css"
       assert_file "phx_blog/priv/static/assets/app.js"
-      assert_file "phx_blog/priv/static/favicon.ico"
       assert_file "phx_blog/priv/static/images/phoenix.png"
 
       assert_file "phx_blog/config/config.exs", fn file ->
