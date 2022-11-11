@@ -568,6 +568,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
     )
     |> show("##{id}-container")
+    |> JS.add_class("overflow-hidden", to: "body")
     |> JS.focus_first(to: "##{id}-content")
   end
 
@@ -579,6 +580,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     )
     |> hide("##{id}-container")
     |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
+    |> JS.remove_class("overflow-hidden", to: "body")
     |> JS.pop_focus()
   end
 
