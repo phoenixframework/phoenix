@@ -149,8 +149,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/dev.exs", fn file ->
         assert file =~ "esbuild: {Esbuild,"
-        assert file =~ "lib/phx_blog_web/(live|views)/.*(ex)"
-        assert file =~ "lib/phx_blog_web/templates/.*(eex)"
+        assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*(ex|heex)"
       end)
 
       assert_file("phx_blog/assets/css/app.css")

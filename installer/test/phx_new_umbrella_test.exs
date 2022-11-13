@@ -71,8 +71,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(root_path(@app, "config/dev.exs"), fn file ->
         assert file =~ ~r[esbuild: {Esbuild]
-        assert file =~ "lib/#{@app}_web/(live|views)/.*(ex)"
-        assert file =~ "lib/#{@app}_web/templates/.*(eex)"
+        assert file =~ "lib/#{@app}_web/(controllers|live|components)/.*(ex|heex)"
         assert file =~ "config :#{@app}_web, dev_routes: true"
       end)
 
