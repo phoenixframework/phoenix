@@ -18,6 +18,7 @@ defmodule Mix.PhoenixTest do
   test "attrs/1 defaults each type" do
     attrs = [
       "logins:array:string",
+      "lottery_numbers:array:integer",
       "age:integer",
       "temp:float",
       "temp_2:decimal",
@@ -32,6 +33,7 @@ defmodule Mix.PhoenixTest do
 
     assert Mix.Phoenix.Schema.attrs(attrs) == [
              logins: {:array, :string},
+             lottery_numbers: {:array, :integer},
              age: :integer,
              temp: :float,
              temp_2: :decimal,
@@ -71,7 +73,7 @@ defmodule Mix.PhoenixTest do
     ]
 
     assert Mix.Phoenix.Schema.params(params) == %{
-             logins: [],
+             logins: ["option1", "option2"],
              age: 42,
              temp: 120.5,
              temp_2: "120.5",
@@ -109,6 +111,9 @@ defmodule Mix.PhoenixTest do
 
     assert Mix.Phoenix.Schema.live_form_value(~U[2020-10-09T14:00:00Z]) ==
              "2020-10-09T14:00:00Z"
+
+    assert Mix.Phoenix.Schema.live_form_value([1]) == [1]
+    assert Mix.Phoenix.Schema.live_form_value(["option1"]) == ["option1"]
 
     assert Mix.Phoenix.Schema.live_form_value(:value) == :value
   end
