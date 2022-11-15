@@ -11,7 +11,7 @@ defmodule <%= inspect context.web_module %>.FallbackController do
     conn
     |> put_status(:unprocessable_entity)
     |> put_view(json: <%= inspect context.web_module %>.ChangesetJSON)
-    |> render("error.json", changeset: changeset)
+    |> render(:error, changeset: changeset)
   end
 
   <% end %># This clause is an example of how to handle resources that cannot be found.
