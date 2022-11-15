@@ -121,4 +121,74 @@ defmodule Phoenix.Endpoint.SupervisorTest do
              end)
     end
   end
+
+  defmodule TestEndpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+  end
+
+  defmodule TestEndpoint1 do
+    use Phoenix.Endpoint, otp_app: :phoenix
+  end
+
+  defmodule TestEndpoint2 do
+    use Phoenix.Endpoint, otp_app: :phoenix
+  end
+
+  # This is just here to silence the warnings about no config for TestEndpoint:
+  Application.put_env(:phoenix, __MODULE__.TestEndpoint, server: false)
+  Application.put_env(:phoenix, __MODULE__.TestEndpoint1, server: false)
+  Application.put_env(:phoenix, __MODULE__.TestEndpoint2, server: false)
+
+  describe "optional name config for Endpoint and EndpointConfig" do
+    test "can start multiple Endpoint supervisors if they have different names - endpoint name is an atom" do
+      {:ok, endpoint1_pid} =
+        Phoenix.Endpoint.Supervisor.start_link(:phoenix, TestEndpoint,
+          strategy: :one_for_one,
+          name: :endpoint1
+        )
+
+      assert Process.alive?(endpoint1_pid)
+      assert Process.whereis(:endpoint1) == endpoint1_pid
+      assert Process.whereis(:endpoint1_config) |> Process.alive?()
+
+      {:ok, endpoint2_pid} =
+        Phoenix.Endpoint.Supervisor.start_link(:phoenix, TestEndpoint,
+          strategy: :one_for_one,
+          name: :endpoint2
+        )
+
+      assert Process.alive?(endpoint2_pid)
+      assert Process.whereis(:endpoint2) == endpoint2_pid
+      assert Process.whereis(:endpoint2_config) |> Process.alive?()
+    end
+
+    test "can start multiple Endpoint supervisors if they have different names - endpoint name is a Module" do
+      {:ok, endpoint1_pid} =
+        Phoenix.Endpoint.Supervisor.start_link(:phoenix, TestEndpoint1, strategy: :one_for_one)
+
+      assert Process.alive?(endpoint1_pid)
+      assert Process.whereis(TestEndpoint1) == endpoint1_pid
+      assert Process.whereis(TestEndpoint1.Config) |> Process.alive?()
+
+      {:ok, endpoint2_pid} =
+        Phoenix.Endpoint.Supervisor.start_link(:phoenix, TestEndpoint2,
+          strategy: :one_for_one,
+          name: TestEndpoint2
+        )
+
+      assert Process.alive?(endpoint2_pid)
+      assert Process.whereis(TestEndpoint2) == endpoint2_pid
+      assert Process.whereis(TestEndpoint2.Config) |> Process.alive?()
+    end
+
+    test "cannot start multiple Endpoint supervisors if they have the same name (default behavior)" do
+      {:ok, endpoint1_pid} = Phoenix.Endpoint.Supervisor.start_link(:phoenix, TestEndpoint)
+      assert Process.alive?(endpoint1_pid)
+
+      {:error, {:already_started, pid}} =
+        Phoenix.Endpoint.Supervisor.start_link(:phoenix, TestEndpoint)
+
+      assert pid == endpoint1_pid
+    end
+  end
 end

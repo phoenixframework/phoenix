@@ -10,7 +10,9 @@ defmodule Phoenix.Endpoint.Supervisor do
   Starts the endpoint supervision tree.
   """
   def start_link(otp_app, mod, opts \\ []) do
-    with {:ok, pid} = ok <- Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
+    name = Keyword.get(opts, :name, mod)
+
+    with {:ok, pid} = ok <- Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: name) do
       # We don't use the defaults in the checks below
       conf = Keyword.merge(Application.get_env(otp_app, mod, []), opts)
       warmup(mod)
@@ -72,10 +74,10 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     children =
       config_children(mod, secret_conf, default_conf) ++
-      pubsub_children(mod, conf) ++
-      socket_children(mod) ++
-      server_children(mod, conf, server?) ++
-      watcher_children(mod, conf, server?)
+        pubsub_children(mod, conf) ++
+        socket_children(mod) ++
+        server_children(mod, conf, server?) ++
+        watcher_children(mod, conf, server?)
 
     Supervisor.init(children, strategy: :one_for_one)
   end
@@ -113,7 +115,17 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp config_children(mod, conf, default_conf) do
-    args = {mod, conf, default_conf, name: Module.concat(mod, "Config")}
+    provided_name = Keyword.get(conf, :name)
+    endpoint_name = provided_name || mod
+
+    config_name =
+      cond do
+        provided_name == mod -> Module.concat(mod, "Config")
+        provided_name == nil -> Module.concat(mod, "Config")
+        true -> "#{provided_name}_config" |> String.to_atom()
+      end
+
+    args = {endpoint_name, conf, default_conf, name: config_name}
     [{Phoenix.Config, args}]
   end
 
@@ -184,12 +196,12 @@ defmodule Phoenix.Endpoint.Supervisor do
       # Supervisor config
       watchers: [],
       force_watchers: false
-   ]
+    ]
   end
 
   defp render_errors(module) do
     module
-    |> Module.split
+    |> Module.split()
     |> Enum.at(0)
     |> Module.concat("ErrorView")
   end
@@ -258,24 +270,28 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   defp build_url(endpoint, url) do
     https = endpoint.config(:https)
-    http  = endpoint.config(:http)
+    http = endpoint.config(:http)
 
     {scheme, port} =
       cond do
         https ->
           {"https", https[:port]}
+
         http ->
           {"http", http[:port]}
+
         true ->
           {"http", 80}
       end
 
     scheme = url[:scheme] || scheme
-    host   = host_to_binary(url[:host] || "localhost")
-    port   = port_to_integer(url[:port] || port)
+    host = host_to_binary(url[:host] || "localhost")
+    port = port_to_integer(url[:port] || port)
 
     if host =~ ~r"[^:]:\d" do
-      Logger.warning("url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid")
+      Logger.warning(
+        "url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid"
+      )
     end
 
     %URI{scheme: scheme, port: port, host: host}
@@ -311,7 +327,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   def static_lookup(_endpoint, "/" <> _ = path) do
     if String.contains?(path, @invalid_local_url_chars) do
-      raise ArgumentError, "unsafe characters detected for path #{inspect path}"
+      raise ArgumentError, "unsafe characters detected for path #{inspect(path)}"
     else
       {:nocache, {path, nil}}
     end
@@ -322,7 +338,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp raise_invalid_path(path) do
-    raise ArgumentError, "expected a path starting with a single / but got #{inspect path}"
+    raise ArgumentError, "expected a path starting with a single / but got #{inspect(path)}"
   end
 
   # TODO: Remove the first function clause once {:system, env_var} tuples are removed
@@ -339,9 +355,12 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     if Enum.any?(deprecated_configs) do
       deprecated_config_lines = for {k, v} <- deprecated_configs, do: "#{k}: #{inspect(v)}"
-      runtime_exs_config_lines = for {key, {:system, env_var}} <- deprecated_configs, do: ~s|#{key}: System.get_env("#{env_var}")|
 
-      Logger.warning """
+      runtime_exs_config_lines =
+        for {key, {:system, env_var}} <- deprecated_configs,
+            do: ~s|#{key}: System.get_env("#{env_var}")|
+
+      Logger.warning("""
       #{inspect(key)} configuration containing {:system, env_var} tuples for #{inspect(mod)} is deprecated.
 
       Configuration with deprecated values:
@@ -358,7 +377,7 @@ defmodule Phoenix.Endpoint.Supervisor do
             #{key}: [
               #{runtime_exs_config_lines |> Enum.join(",\r\n        ")}
             ]
-      """
+      """)
     end
   end
 
@@ -399,7 +418,8 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warmup_static(_endpoint, _manifest) do
-    raise ArgumentError, "expected warmup_static/2 to include 'latest' and 'digests' keys in manifest"
+    raise ArgumentError,
+          "expected warmup_static/2 to include 'latest' and 'digests' keys in manifest"
   end
 
   defp static_cache(digests, value, true) do
@@ -427,9 +447,11 @@ defmodule Phoenix.Endpoint.Supervisor do
       if File.exists?(outer) do
         outer |> File.read!() |> Phoenix.json_library().decode!()
       else
-        Logger.error "Could not find static manifest at #{inspect outer}. " <>
-                     "Run \"mix phx.digest\" after building your static files " <>
-                     "or remove the \"cache_static_manifest\" configuration from your config files."
+        Logger.error(
+          "Could not find static manifest at #{inspect(outer)}. " <>
+            "Run \"mix phx.digest\" after building your static files " <>
+            "or remove the \"cache_static_manifest\" configuration from your config files."
+        )
       end
     else
       %{}
