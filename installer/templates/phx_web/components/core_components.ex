@@ -82,7 +82,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                   <h1 id={"#{@id}-title"} class="text-lg font-semibold leading-8 text-zinc-800">
                     <%%= render_slot(@title) %>
                   </h1>
-                  <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
+                  <p :if={@subtitle != []} id={"#{@id}-description"} class="mt-2 text-sm leading-6 text-zinc-600">
                     <%%= render_slot(@subtitle) %>
                   </p>
                 </header>
