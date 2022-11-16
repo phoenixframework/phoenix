@@ -128,7 +128,7 @@ defmodule <%= inspect auth_module %>Test do
       assert updated_socket.assigns.current_<%= schema.singular %>.id == <%= schema.singular %>.id
     end
 
-    test "assigns nil to current_ <%= schema.singular %> assign if there isn't a valid <%= schema.singular %>_token ", %{conn: conn} do
+    test "assigns nil to current_<%= schema.singular %> assign if there isn't a valid <%= schema.singular %>_token ", %{conn: conn} do
       <%= schema.singular %>_token = "invalid_token"
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
@@ -138,7 +138,7 @@ defmodule <%= inspect auth_module %>Test do
       assert updated_socket.assigns.current_<%= schema.singular %> == nil
     end
 
-    test "assigns nil to current_ <%= schema.singular %> assign if there isn't a <%= schema.singular %>_token", %{conn: conn} do
+    test "assigns nil to current_<%= schema.singular %> assign if there isn't a <%= schema.singular %>_token", %{conn: conn} do
       session = conn |> get_session()
 
       {:cont, updated_socket} =
