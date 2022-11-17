@@ -161,7 +161,6 @@ end
 `HelloWeb.ErrorHTMLTest` sets `async: true` which means that this test case will be run in parallel with other test cases. While individual tests within the case still run serially, this can greatly increase overall test speeds.
 
 It also imports `Phoenix.Template` in order to use the `render_to_string/4` function. With that, all the assertions can be simple string equality tests.
-```
 
 ## Running tests per directory/file
 
