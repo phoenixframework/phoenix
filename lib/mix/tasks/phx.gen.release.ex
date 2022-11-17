@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     * `.dockerignore` - A docker ignore file with standard elixir defaults
 
-  For extended release configuration, the `mix release.init`task can be used
+  For extended release configuration, the `mix release.init` task can be used
   in addition to this task. See the `Mix.Release` docs for more details.
   """
 
