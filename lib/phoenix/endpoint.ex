@@ -398,11 +398,16 @@ defmodule Phoenix.Endpoint do
   defp config(opts) do
     quote do
       @otp_app unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
-      var!(config) = Phoenix.Endpoint.Supervisor.config(@otp_app, __MODULE__)
-      var!(code_reloading?) = var!(config)[:code_reloader]
+
+      # Compile-time configuration checking
+      # This ensures that if a compile-time configuration is overwritten at runtime the application won't boot.
+      var!(code_reloading?) = Application.compile_env(@otp_app, [__MODULE__, :code_reloader], false)
+      var!(debug_errors?) =  Application.compile_env(@otp_app, [__MODULE__, :debug_errors], false)
+      var!(force_ssl) =  Application.compile_env(@otp_app, [__MODULE__, :force_ssl])
 
       # Avoid unused variable warnings
       _ = var!(code_reloading?)
+      _ = var!(force_ssl)
 
       @doc false
       def init(_key, config) do
@@ -461,11 +466,11 @@ defmodule Phoenix.Endpoint do
 
       Module.register_attribute(__MODULE__, :phoenix_sockets, accumulate: true)
 
-      if force_ssl = Phoenix.Endpoint.__force_ssl__(__MODULE__, var!(config)) do
+      if force_ssl = Phoenix.Endpoint.__force_ssl__(__MODULE__, var!(force_ssl)) do
         plug Plug.SSL, force_ssl
       end
 
-      if var!(config)[:debug_errors] do
+      if var!(debug_errors?) do
         use Plug.Debugger,
           otp_app: @otp_app,
           banner: {Phoenix.Endpoint.RenderErrors, :__debugger_banner__, []},
@@ -616,8 +621,8 @@ defmodule Phoenix.Endpoint do
   end
 
   @doc false
-  def __force_ssl__(module, config) do
-    if force_ssl = config[:force_ssl] do
+  def __force_ssl__(module, force_ssl) do
+    if force_ssl do
       Keyword.put_new(force_ssl, :host, {module, :host, []})
     end
   end

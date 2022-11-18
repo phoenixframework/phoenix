@@ -9,15 +9,6 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     :ok
   end
 
-  test "loads router configuration" do
-    config = Supervisor.config(:phoenix, SupervisorApp.Endpoint)
-    assert config[:otp_app] == :phoenix
-    assert config[:custom] == true
-
-    assert config[:render_errors] ==
-             [view: SupervisorApp.ErrorView, accepts: ~w(html), layout: false]
-  end
-
   defmodule HTTPSEndpoint do
     def path(path), do: path
     def config(:http), do: false
