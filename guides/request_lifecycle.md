@@ -135,7 +135,8 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-You can read more about function components and `~H` heex templates in the `Phoenix.Component` documentation.
+You can read more about function components and `~H` heex templates in the
+[Components and HEEx Templates guide](components.html).
 
 Now lets define a template in its own file. First delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
 
