@@ -890,14 +890,18 @@ defmodule Phoenix.Controller do
   end
 
   defp template_render(view, template, format, assigns) do
-    :telemetry.span([:phoenix_template, :render], %{view: view, template: template, format: format}, fn() ->
-      {Phoenix.Template.render(view, template, format, assigns), %{}}
+    metadata = %{view: view, template: template, format: format}
+
+    :telemetry.span([:phoenix, :controller, :render], metadata, fn ->
+      {Phoenix.Template.render(view, template, format, assigns), metadata}
     end)
   end
 
   defp template_render_to_iodata(view, template, format, assigns) do
-    :telemetry.span([:phoenix_template, :render], %{view: view, template: template, format: format}, fn() ->
-      {Phoenix.Template.render_to_iodata(view, template, format, assigns), %{}}
+    metadata = %{view: view, template: template, format: format}
+
+    :telemetry.span([:phoenix, :controller, :render], metadata, fn ->
+      {Phoenix.Template.render_to_iodata(view, template, format, assigns), metadata}
     end)
   end
 
