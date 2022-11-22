@@ -220,7 +220,7 @@ defmodule Phoenix.Controller.RenderTest do
                           format: "html",
                           template: "index",
                           view: MyApp.UserView,
-                          kind: error,
+                          kind: :error,
                           reason: %ArgumentError{}
                         }, _}}
     end
