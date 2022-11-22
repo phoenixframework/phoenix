@@ -307,7 +307,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         multiple={@multiple}
         {@rest}
       >
-        <option :if={@prompt}><%%= @prompt %></option>
+        <option :if={@prompt} value=""><%%= @prompt %></option>
         <%%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
       </select>
       <.error :for={msg <- @errors}><%%= msg %></.error>
