@@ -159,7 +159,7 @@ Or you can pass the assigns directly to `render` instead:
 
 Generally speaking, once all assigns are configured, we invoke the view layer. The view layer then renders `show.html` alongside the layout and a response is sent back to the browser.
 
-[Views, Components, and templates](views.html) have their own guide, so we won't spend much time on them here. What we will look at is how to assign a different layout, or none at all, from inside a controller action.
+[Components and templates](components.html) have their own guide, so we won't spend much time on them here. What we will look at is how to assign a different layout, or none at all, from inside a controller action.
 
 ### Assigning layouts
 
