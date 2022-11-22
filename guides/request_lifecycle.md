@@ -29,7 +29,7 @@ Phoenix generates a router file for us in new applications at `lib/hello_web/rou
 The route for our "Welcome to Phoenix!" page from the previous [Up And Running Guide](up_and_running.html) looks like this.
 
 ```elixir
-get "/", PageController, :index
+get "/", PageController, :home
 ```
 
 Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an HTTP `GET` request to the root path. All requests like this will be handled by the `index/2` function in the `HelloWeb.PageController` module defined in `lib/hello_web/controllers/page_controller.ex`.
@@ -58,7 +58,7 @@ defmodule HelloWeb.Router do
   scope "/", HelloWeb do
     pipe_through :browser
 
-    get "/", PageController, :index
+    get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.
@@ -78,7 +78,7 @@ Let's add a new route to the router that maps a `GET` request for `/hello` to th
 scope "/", HelloWeb do
   pipe_through :browser
 
-  get "/", PageController, :index
+  get "/", PageController, :home
   get "/hello", HelloController, :index
 end
 ```
@@ -237,7 +237,7 @@ For this exercise, we're going to reuse `HelloController` created at the [previo
 scope "/", HelloWeb do
   pipe_through :browser
 
-  get "/", PageController, :index
+  get "/", PageController, :home
   get "/hello", HelloController, :index
   get "/hello/:messenger", HelloController, :show
 end
