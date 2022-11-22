@@ -526,7 +526,7 @@ defmodule Phoenix.Endpoint do
 
       defp persistent!() do
         :persistent_term.get({Phoenix.Endpoint, __MODULE__}, nil) ||
-          raise "could not find persistern term for endpoint #{inspect(__MODULE__)}. Make sure your endpoint is started and note you cannot access endpoint functions at compile-time"
+          raise "could not find persistent term for endpoint #{inspect(__MODULE__)}. Make sure your endpoint is started and note you cannot access endpoint functions at compile-time"
       end
 
       @doc """
