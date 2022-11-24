@@ -263,7 +263,7 @@ defmodule HelloWeb.Router do
   use HelloWeb, :router
 
   pipeline :browser do
-    plug :accepts, ["html", "text"]
+    plug :accepts, ["html", "json"]
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, {HelloWeb.LayoutView, :root}
@@ -273,7 +273,7 @@ defmodule HelloWeb.Router do
 ...
 ```
 
-If we go to [`http://localhost:4000/?_format=text`](http://localhost:4000/?_format=text), we will see %{"message": "this is some JSON"}.
+If we go to [`http://localhost:4000/?_format=json`](http://localhost:4000/?_format=json), we will see %{"message": "this is some JSON"}.
 
 ### Sending responses directly
 
