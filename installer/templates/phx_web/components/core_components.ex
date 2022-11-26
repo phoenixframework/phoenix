@@ -259,8 +259,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
-  attr :rest, :global, include: ~w(autocomplete disabled form max maxlength min minlength
-                                   pattern placeholder readonly required size step)
+  attr :rest, :global, include: ~w(autocomplete cols disabled form max maxlength min minlength
+                                   pattern placeholder readonly required rows size step)
   slot :inner_block
 
   def input(%{field: {f, field}} = assigns) do
