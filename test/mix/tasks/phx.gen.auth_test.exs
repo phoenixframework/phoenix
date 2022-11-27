@@ -591,7 +591,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         "lib/my_app_web/controllers/warehouse/user_reset_password_html/edit.html.heex",
         fn file ->
           assert file =~
-                   ~S|<.simple_form :let={f} for={@changeset} action={~p"/warehouse/users/reset_password/#{@token}"} method="put">|
+                   ~S|<.simple_form :let={f} for={@changeset} action={~p"/warehouse/users/reset_password/#{@token}"}>|
         end
       )
 
