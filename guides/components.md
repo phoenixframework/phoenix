@@ -4,7 +4,7 @@
 
 > **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
 
-The Phoenix endpoint pipeline takes a request, routes it with a router to a controller, and calls a view module to render a template. The view interface from the controller is simple – the controller calls a view function with the connection's assigns, and the function's job is to return a HEEx template. We call functions that accept assigns and return HEEx, *function components*, which are provided by the [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) module.
+The Phoenix endpoint pipeline takes a request, routes it with a router to a controller, and calls a view module to render a template. The view interface from the controller is simple – the controller calls a view function with the connection's `assigns`, and the function's job is to return a HEEx template. We call functions that accept assigns and return HEEx, *function components*, which are provided by the [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) module.
 
 Function components are the essential building block for any kind of markup-based template rendering you'll perform in Phoenix. They served as a shared abstraction for the standard MVC controller-based applications, LiveView applications, layouts, and smaller UI definitions you'll use throughout other templates.
 
