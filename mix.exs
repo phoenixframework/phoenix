@@ -55,7 +55,6 @@ defmodule Phoenix.MixProject do
       mod: {Phoenix, []},
       extra_applications: [:logger, :eex, :crypto, :public_key],
       env: [
-        browser_open: false,
         logger: true,
         stacktrace_depth: nil,
         filter_parameters: ["password"],
