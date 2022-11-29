@@ -127,7 +127,7 @@ Once you render the template, you will see the literal `<b>` on the page. This m
 <%= raw "<b>Bold?</b>" %>
 ```
 
-Another superpower of HEEx templates is HTML validation and lean interpolation syntax of attributes. You can write:
+Other superpowers of HEEx templates are HTML validation and lean interpolation syntax of attributes. You can write:
 
 ```heex
 <div title="My div" class={@class}>
