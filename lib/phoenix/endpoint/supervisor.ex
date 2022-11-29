@@ -406,7 +406,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp browser_open(endpoint, conf) do
-    if Application.get_env(:phoenix, :browser_open) && server?(conf) do
+    if Application.get_env(:phoenix, :browser_open, false) && server?(conf) do
       url = endpoint.url()
 
       {cmd, args} =
