@@ -117,11 +117,9 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-To add templates to this view, we can define them as function components in the module or in separate files. Function components are great for smaller templates and separate files are a good choice when you have a lot of markup or your functions start to feel unmanageable.
+To add templates to this view, we can define them as function components in the module or in separate files.
 
-Template files are compiled into the module as function components themselves, there is no runtime or performance difference between the two styles.
-
-Here's how you would define a template a function component:
+Let's start by defining a function component:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -135,10 +133,11 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-You can read more about function components and `~H` heex templates in the
-[Components and HEEx Templates guide](components.html).
+We defined a function that receives `assigns` as arguments and use [the `~H` sigil](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2) to put the contents we want to render. Inside the `~H` sigil, we use a templating language called HEEx, which stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
 
-Now lets define a template in its own file. First delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
+A template file works in the same way. Function components are great for smaller templates and separate files are a good choice when you have a lot of markup or your functions start to feel unmanageable.
+
+Let's give it a try by defining a template in its own file. First delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -148,11 +147,11 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
- Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello_html` directory into our module as function definitions.
+Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello_html` directory into our module as function definitions.
 
- Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory.
+Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory.
 
- Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello_html`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
+Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello_html`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
 
 ```
 lib/hello_web
@@ -163,27 +162,27 @@ lib/hello_web
 |       ├── index.html.heex
 ```
 
-A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, we will create an `index.html.heex` file at `lib/hello_web/controllers/hello_html/index.html.heex`. ".heex" stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
-
-Create `lib/hello_web/controllers/hello_html/index.html.heex` and make it look like this:
+A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, let's create an `index.html.heex` file at `lib/hello_web/controllers/hello_html/index.html.heex`:
 
 ```heex
-<section class="phx-hero">
+<section>
   <h2>Hello World, from Phoenix!</h2>
 </section>
 ```
+
+Template files are compiled into the module as function components themselves, there is no runtime or performance difference between the two styles.
 
 Now that we've got the route, controller, view, and template, we should be able to point our browsers at [http://localhost:4000/hello](http://localhost:4000/hello) and see our greeting from Phoenix! (In case you stopped the server along the way, the task to restart it is `mix phx.server`.)
 
 ![Phoenix Greets Us](assets/images/hello-from-phoenix.png)
 
-There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is rendered into the application layout: `lib/hello_web/components/layouts/app.html.heex`. If you open it, you'll see a line that looks like this:
+There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is actually rendered into layouts: first it renders `lib/hello_web/components/layouts/root.html.heex` which renders `lib/hello_web/components/layouts/app.html.heex` which finally includes our contents. If you open those files, you'll see a line that looks like this at the bottom:
 
 ```heex
 <%= @inner_content %>
 ```
 
-Which injects our template into the layout before the HTML is sent off to the browser.
+Which injects our template into the layout before the HTML is sent off to the browser. We will talk more about layouts in the Controllers guide.
 
 > A note on hot code reloading: Some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the discussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
 
@@ -220,7 +219,7 @@ At this moment, you may be thinking this can be a lot of steps to simply render 
 
   * controller (`Phoenix.Controller`) - the job of the controller is to retrieve request information, talk to your business domain, and prepare data for the presentation layer.
 
-  * view - the view handles the structured data from the controller and converts it to a presentation to be shown to users.
+  * view - the view handles the structured data from the controller and converts it to a presentation to be shown to users. Views are often named after the content format they are rendering.
 
 Let's do a quick recap and how the last three components work together by adding another page.
 
@@ -246,7 +245,7 @@ end
 
 Notice that we use the `:messenger` syntax in the path. Phoenix will take whatever value that appears in that position in the URL and convert it into a parameter. For example, if we point the browser at: `http://localhost:4000/hello/Frank`, the value of `"messenger"` will be `"Frank"`.
 
-### Another new Action
+### Another new action
 
 Requests to our new route will be handled by the `HelloWeb.HelloController` `show` action. We already have the controller at `lib/hello_web/controllers/hello_controller.ex`, so all we need to do is edit that controller and add a `show` action to it. This time, we'll need to extract the messenger from the parameters so that we can pass it (the messenger) to the template. To do that, we add this show function to the controller:
 
@@ -272,14 +271,14 @@ It's good to remember that the keys of the `params` map will always be strings, 
 
 For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of `HelloController`, it will go into the `lib/hello_web/controllers/hello_html` directory and be called `show.html.heex`. It will look surprisingly like our `index.html.heex` template, except that we will need to display the name of our messenger.
 
-To do that, we'll use the special EEx tags for executing Elixir expressions: `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag in the HTML output. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
+To do that, we'll use the special HEEx tags for executing Elixir expressions: `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag in the HTML output. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
 
 Remember our templates are written in HEEx (HTML+EEx). HEEx is a superset of EEx which is why it shares the `<%= %>` syntax.
 
 And this is what the template should look like:
 
 ```heex
-<section class="phx-hero">
+<section>
   <h2>Hello World, from <%= @messenger %>!</h2>
 </section>
 ```
