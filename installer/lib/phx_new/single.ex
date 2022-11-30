@@ -83,7 +83,6 @@ defmodule Phx.New.Single do
   template(:static, [
     {:text, :web,
      "phx_static/robots.txt": "priv/static/robots.txt",
-     "phx_static/phoenix.png": "priv/static/images/phoenix.png",
      "phx_static/favicon.ico": "priv/static/favicon.ico"}
   ])
 
