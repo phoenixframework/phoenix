@@ -1,5 +1,7 @@
 # Changelog for v1.7
 
+See the [upgrade guide](https://gist.github.com/chrismccord/00a6ea2a96bc57df0cce526bd20af8a7) to upgrade from Phoenix 1.6.x.
+
 Phoenix v1.7 requires Elixir v1.11+.
 
 ## Introduction of Verified Routes
