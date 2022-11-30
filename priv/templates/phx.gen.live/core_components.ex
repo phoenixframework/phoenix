@@ -47,7 +47,12 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def modal(assigns) do
     ~H"""
-    <div id={@id} phx-mounted={@show && show_modal(@id)} class="relative z-50 hidden">
+    <div
+      id={@id}
+      phx-mounted={@show && show_modal(@id)}
+      phx-remove={hide_modal(@id)}
+      class="relative z-50 hidden"
+    >
       <div id={"#{@id}-bg"} class="fixed inset-0 bg-zinc-50/90 transition-opacity" aria-hidden="true" />
       <div
         class="fixed inset-0 overflow-y-auto"
@@ -572,6 +577,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
     )
     |> show("##{id}-container")
+    |> JS.add_class("overflow-hidden", to: "body")
     |> JS.focus_first(to: "##{id}-content")
   end
 
@@ -583,6 +589,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     )
     |> hide("##{id}-container")
     |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
+    |> JS.remove_class("overflow-hidden", to: "body")
     |> JS.pop_focus()
   end
 
