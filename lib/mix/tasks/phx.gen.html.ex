@@ -231,7 +231,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     end)
   end
 
-  defp label(key), do: to_string(key)
+  defp label(key), do: Phoenix.Naming.humanize(to_string(key))
 
   @doc false
   def indent_inputs(inputs, column_padding) do
