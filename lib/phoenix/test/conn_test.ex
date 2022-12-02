@@ -589,12 +589,24 @@ defmodule Phoenix.ConnTest do
   def redirected_params(%Plug.Conn{} = conn, status \\ 302) do
     router = Phoenix.Controller.router_module(conn)
     %URI{path: path, host: host} = conn |> redirected_to(status) |> URI.parse()
+    path = remove_script_name(conn, router, path)
 
     case Phoenix.Router.route_info(router, "GET", path, host || conn.host) do
       :error ->
         raise Phoenix.Router.NoRouteError, conn: conn, router: router
       %{path_params: path_params} ->
         Enum.into(path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
+    end
+  end
+
+  defp remove_script_name(conn, router, path) do
+    case conn.private[router] do
+      [] ->
+        path
+
+      list ->
+        script_name = "/" <> Enum.join(list, ",")
+        String.replace_leading(path, script_name, "")
     end
   end
 

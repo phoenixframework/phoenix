@@ -39,6 +39,7 @@ defmodule Phoenix.Test.ConnTest.Router do
   scope "/" do
     pipe_through :browser
     get "/stat", CatchAll, :stat, private: %{route: :stat}
+    forward "/redir", Phoenix.Test.ConnTest.RedirRouter
     forward "/", CatchAll
   end
 
@@ -433,6 +434,16 @@ defmodule Phoenix.Test.ConnTest do
         build_conn(:get, "/")
         |> RedirRouter.call(RedirRouter.init([]))
         |> put_resp_header("location", "/posts/123")
+        |> send_resp(302, "foo")
+
+      assert redirected_params(conn) == %{id: "123"}
+    end
+
+    test "with matching forwarded route" do
+      conn =
+        build_conn(:get, "/redir")
+        |> Router.call(Router.init([]))
+        |> put_resp_header("location", "/redir/posts/123")
         |> send_resp(302, "foo")
 
       assert redirected_params(conn) == %{id: "123"}
