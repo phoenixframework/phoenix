@@ -258,7 +258,7 @@ With this knowledge in hand, we can explore the `FallbackController` (`lib/hello
     conn
     |> put_status(:unprocessable_entity)
     |> put_view(json: HelloWeb.ChangesetJSON)
-    |> render("error.json", changeset: changeset)
+    |> render(:error, changeset: changeset)
   end
 ```
 
@@ -270,10 +270,10 @@ defmodule HelloWeb.ChangesetJSON do
   Traverses and translates changeset errors.
 
   See `Ecto.Changeset.traverse_errors/2` and
-  `HelloWeb.CoreCompponents.translate_error/1` for more details.
+  `HelloWeb.ErrorHelpers.translate_error/1` for more details.
   """
   def translate_errors(changeset) do
-    Ecto.Changeset.traverse_errors(changeset, &HelloWeb.CoreComponents.translate_error/1)
+    Ecto.Changeset.traverse_errors(changeset, &HelloWeb.ErrorHelpers.translate_error/1)
   end
 
   @doc """

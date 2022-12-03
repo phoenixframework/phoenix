@@ -109,6 +109,12 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ ~s|~p"/api/posts|
       end)
 
+      assert_file("lib/phoenix_web/controllers/changeset_json.ex", fn file ->
+        assert file =~ "def translate_errors"
+        assert file =~ "def error"
+        assert file =~ "ErrorHelpers"
+      end)
+
       assert_receive {:mix_shell, :info,
                       [
                         """

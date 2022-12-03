@@ -401,6 +401,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(web_path(@app, "lib/#{@app}_web/controllers/error_json.ex"), ~r".json")
 
+      assert_file(web_path(@app, "lib/#{@app}_web/controllers/error_helpers.ex"), fn file ->
+        assert file =~ "translate_errors"
+        assert file =~ "translate_error("
+      end)
+
       assert_file(
         web_path(@app, "lib/#{@app}_web/router.ex"),
         &refute(&1 =~ ~r"pipeline :browser")

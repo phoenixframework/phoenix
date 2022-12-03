@@ -23,6 +23,7 @@ defmodule Phx.New.Web do
      "phx_web/router.ex": "lib/:web_app/router.ex",
      "phx_web/telemetry.ex": "lib/:web_app/telemetry.ex",
      "phx_web/controllers/error_json.ex": "lib/:web_app/controllers/error_json.ex",
+     "phx_web/controllers/error_helpers.ex": "lib/:web_app/controllers/error_helpers.ex",
      "#{@pre}/mix.exs": "mix.exs",
      "#{@pre}/README.md": "README.md",
      "#{@pre}/gitignore": ".gitignore",

@@ -393,6 +393,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       refute_file("phx_blog/lib/phx_blog_web/controllers/error_html.ex")
       assert_file("phx_blog/lib/phx_blog_web/controllers/error_json.ex")
+      assert_file("phx_blog/lib/phx_blog_web/controllers/error_helpers.ex")
       assert_file("phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~r"pipeline :browser"))
 
       # No Dashboard
