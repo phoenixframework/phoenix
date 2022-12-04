@@ -115,7 +115,7 @@ defmodule Phoenix.Endpoint do
       detect if the client is running on the latest version of all assets.
 
     * `:cache_manifest_skip_vsn` - when true, skips the appended query string
-      "?vsn=d" when generatic paths to static assets. This query string is used
+      "?vsn=d" when generating paths to static assets. This query string is used
       by `Plug.Static` to set long expiry dates, therefore, you should set this
       option to true only if you are not using `Plug.Static` to serve assets,
       for example, if you are using a CDN. If you are setting this option, you
