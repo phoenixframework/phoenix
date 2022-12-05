@@ -29,7 +29,7 @@ defmodule <%= @endpoint_module %> do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader<% end %>
     plug Phoenix.CodeReloader<%= if @ecto do %>
-    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :<%= @web_app_name %><% end %>
+    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :<%= @web_app_name %>, migration_lock: false<% end %>
   end<%= if @dashboard do %>
 
   plug Phoenix.LiveDashboard.RequestLogger,
