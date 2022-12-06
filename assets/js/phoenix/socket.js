@@ -86,6 +86,12 @@ import Timer from "./timer"
  * @param {vsn} [opts.vsn] - The serializer's protocol version to send on connect.
  *
  * Defaults to DEFAULT_VSN.
+ * 
+ * @param {Function} [opts.shouldReconnectAfterClose] - A function to decide
+ * whether or not to attempt a reconnection after the socket is closed due to an error.
+ * 
+ * It takes the close event as its single argument. If it returns `false`, the
+ * connection will be closed and no reconnections will be attempteds
 */
 export default class Socket {
   constructor(endPoint, opts = {}){
@@ -149,6 +155,7 @@ export default class Socket {
     this.reconnectTimer = new Timer(() => {
       this.teardown(() => this.connect())
     }, this.reconnectAfterMs)
+    this.shouldReconnectAfterClose = opts.shouldReconnectAfterClose || (() => true )
   }
 
   /**
@@ -406,7 +413,7 @@ export default class Socket {
     if(this.hasLogger()) this.log("transport", "close", event)
     this.triggerChanError()
     this.clearHeartbeats()
-    if(!this.closeWasClean && closeCode !== 1000){
+    if(!this.closeWasClean && closeCode !== 1000 && this.shouldReconnectAfterClose(event)){
       this.reconnectTimer.scheduleTimeout()
     }
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event))
