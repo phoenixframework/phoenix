@@ -1,5 +1,7 @@
 # Changelog for v1.7
 
+See the [upgrade guide](https://gist.github.com/chrismccord/00a6ea2a96bc57df0cce526bd20af8a7) to upgrade from Phoenix 1.6.x.
+
 Phoenix v1.7 requires Elixir v1.11+.
 
 ## Introduction of Verified Routes
@@ -52,6 +54,17 @@ will continue to work and be generated. You can disable router helpers by passin
 See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0f4de6decba7b) to upgrade from Phoenix 1.5.x.
 
 Phoenix v1.6 requires Elixir v1.9+.
+
+## 1.6.15 (2022-10-26)
+
+### Enhancements
+  * Support for Phoenix.View 2.0
+
+### JavaScript Client Bug Fixes
+  * Fix heartbeat reconnect
+
+## 1.6.14 (2022-10-10)
+  * Fix security vulnerability in wildcard `check_origin` configurations
 
 ## 1.6.13 (2022-09-29)
 

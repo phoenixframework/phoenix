@@ -24,7 +24,7 @@ defmodule Phoenix.ConfigTest do
 
   test "raises with warning about compile time when table not started" do
     assert_raise RuntimeError,
-                 "could not find ets table for endpoint Fooz. Make sure your endpoint is started and note you cannot access endpoint functions at compile-time.",
+                 "could not find ets table for endpoint Fooz. Make sure your endpoint is started and note you cannot access endpoint functions at compile-time",
                  fn -> cache(Fooz, :foo, fn _ -> {:nocache, :bar} end) end
   end
 

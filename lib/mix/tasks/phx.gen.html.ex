@@ -236,7 +236,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   defp default_options({:array, _}), do: []
 
-  defp label(key), do: to_string(key)
+  defp label(key), do: Phoenix.Naming.humanize(to_string(key))
 
   @doc false
   def indent_inputs(inputs, column_padding) do

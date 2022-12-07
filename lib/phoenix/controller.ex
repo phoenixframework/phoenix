@@ -880,13 +880,29 @@ defmodule Phoenix.Controller do
     case root_layout(conn, format) do
       {layout_mod, layout_tpl} ->
         {layout_base, _} = split_template(layout_tpl)
-        inner = Phoenix.Template.render(view, template, format, render_assigns)
+        inner = template_render(view, template, format, render_assigns)
         root_assigns = render_assigns |> Map.put(:inner_content, inner) |> Map.delete(:layout)
-        Phoenix.Template.render_to_iodata(layout_mod, layout_base, format, root_assigns)
+        template_render_to_iodata(layout_mod, layout_base, format, root_assigns)
 
       false ->
-        Phoenix.Template.render_to_iodata(view, template, format, render_assigns)
+        template_render_to_iodata(view, template, format, render_assigns)
     end
+  end
+
+  defp template_render(view, template, format, assigns) do
+    metadata = %{view: view, template: template, format: format}
+
+    :telemetry.span([:phoenix, :controller, :render], metadata, fn ->
+      {Phoenix.Template.render(view, template, format, assigns), metadata}
+    end)
+  end
+
+  defp template_render_to_iodata(view, template, format, assigns) do
+    metadata = %{view: view, template: template, format: format}
+
+    :telemetry.span([:phoenix, :controller, :render], metadata, fn ->
+      {Phoenix.Template.render_to_iodata(view, template, format, assigns), metadata}
+    end)
   end
 
   defp prepare_assigns(conn, assigns, template, format) do

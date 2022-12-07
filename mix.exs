@@ -55,7 +55,6 @@ defmodule Phoenix.MixProject do
       mod: {Phoenix, []},
       extra_applications: [:logger, :eex, :crypto, :public_key],
       env: [
-        browser_open: false,
         logger: true,
         stacktrace_depth: nil,
         filter_parameters: ["password"],
@@ -146,6 +145,7 @@ defmodule Phoenix.MixProject do
       "guides/components.md",
       "guides/ecto.md",
       "guides/contexts.md",
+      "guides/json_and_apis.md",
       "guides/mix_tasks.md",
       "guides/telemetry.md",
       "guides/asset_management.md",

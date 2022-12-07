@@ -595,7 +595,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp verify_query(
          [
-           {:"::", m1, [{{:., m2, [Kernel, :to_string]}, m2, [arg]}, {:binary, _, _} = bin]}
+           {:"::", m1, [{{:., m2, [Kernel, :to_string]}, m3, [arg]}, {:binary, _, _} = bin]}
            | rest
          ],
          route,
@@ -606,7 +606,7 @@ defmodule Phoenix.VerifiedRoutes do
             "interpolated query string params must be separated by &, got: #{Macro.to_string(route)}"
     end
 
-    rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m2, [arg]}, bin]}
+    rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m3, [arg]}, bin]}
     verify_query(rest, route, [rewrite | acc])
   end
 

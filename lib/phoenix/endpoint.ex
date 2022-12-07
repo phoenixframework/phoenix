@@ -115,7 +115,7 @@ defmodule Phoenix.Endpoint do
       detect if the client is running on the latest version of all assets.
 
     * `:cache_manifest_skip_vsn` - when true, skips the appended query string
-      "?vsn=d" when generatic paths to static assets. This query string is used
+      "?vsn=d" when generating paths to static assets. This query string is used
       by `Plug.Static` to set long expiry dates, therefore, you should set this
       option to true only if you are not using `Plug.Static` to serve assets,
       for example, if you are using a CDN. If you are setting this option, you
@@ -524,16 +524,17 @@ defmodule Phoenix.Endpoint do
         Phoenix.Endpoint.Supervisor.config_change(__MODULE__, changed, removed)
       end
 
+      defp persistent!() do
+        :persistent_term.get({Phoenix.Endpoint, __MODULE__}, nil) ||
+          raise "could not find persistent term for endpoint #{inspect(__MODULE__)}. Make sure your endpoint is started and note you cannot access endpoint functions at compile-time"
+      end
+
       @doc """
       Generates the endpoint base URL without any path information.
 
       It uses the configuration under `:url` to generate such.
       """
-      def url do
-        Phoenix.Config.cache(__MODULE__,
-          :__phoenix_url__,
-          &Phoenix.Endpoint.Supervisor.url/1)
-      end
+      def url, do: persistent!().url
 
       @doc """
       Generates the static URL without any path information.
@@ -541,11 +542,7 @@ defmodule Phoenix.Endpoint do
       It uses the configuration under `:static_url` to generate
       such. It falls back to `:url` if `:static_url` is not set.
       """
-      def static_url do
-        Phoenix.Config.cache(__MODULE__,
-          :__phoenix_static_url__,
-          &Phoenix.Endpoint.Supervisor.static_url/1)
-      end
+      def static_url, do: persistent!().static_url
 
       @doc """
       Generates the endpoint base URL but as a `URI` struct.
@@ -554,55 +551,33 @@ defmodule Phoenix.Endpoint do
       Useful for manipulating the URL data and passing it to
       URL helpers.
       """
-      def struct_url do
-        Phoenix.Config.cache(__MODULE__,
-          :__phoenix_struct_url__,
-          &Phoenix.Endpoint.Supervisor.struct_url/1)
-      end
+      def struct_url, do: persistent!().struct_url
 
       @doc """
       Returns the host for the given endpoint.
       """
-      def host do
-        Phoenix.Config.cache(__MODULE__,
-          :__phoenix_host__,
-          &Phoenix.Endpoint.Supervisor.host/1)
-      end
+      def host, do: persistent!().host
 
       @doc """
       Generates the path information when routing to this endpoint.
       """
-      def path(path) do
-        Phoenix.Config.cache(__MODULE__,
-          :__phoenix_path__,
-          &Phoenix.Endpoint.Supervisor.path/1) <> path
-      end
+      def path(path), do: persistent!().path <> path
 
       @doc """
       Generates the script name.
       """
-      def script_name do
-        Phoenix.Config.cache(__MODULE__,
-          :__phoenix_script_name__,
-          &Phoenix.Endpoint.Supervisor.script_name/1)
-      end
+      def script_name, do: persistent!().script_name
 
       @doc """
       Generates a route to a static file in `priv/static`.
       """
-      def static_path(path) do
-        Phoenix.Config.cache(__MODULE__, :__phoenix_static__,
-                             &Phoenix.Endpoint.Supervisor.static_path/1) <>
-        elem(static_lookup(path), 0)
-      end
+      def static_path(path), do: persistent!().static_path <> elem(static_lookup(path), 0)
 
       @doc """
       Generates a base64-encoded cryptographic hash (sha512) to a static file
       in `priv/static`. Meant to be used for Subresource Integrity with CDNs.
       """
-      def static_integrity(path) do
-        elem(static_lookup(path), 1)
-      end
+      def static_integrity(path), do: elem(static_lookup(path), 1)
 
       @doc """
       Returns a two item tuple with the first item being the `static_path`

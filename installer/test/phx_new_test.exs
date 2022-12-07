@@ -149,8 +149,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/dev.exs", fn file ->
         assert file =~ "esbuild: {Esbuild,"
-        assert file =~ "lib/phx_blog_web/(live|views)/.*(ex)"
-        assert file =~ "lib/phx_blog_web/templates/.*(eex)"
+        assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*(ex|heex)"
       end)
 
       assert_file("phx_blog/assets/css/app.css")
@@ -321,7 +320,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       # No assets & No HTML
       refute_file("phx_blog/priv/static/assets/app.css")
       refute_file("phx_blog/priv/static/favicon.ico")
-      refute_file("phx_blog/priv/static/images/phoenix.png")
       refute_file("phx_blog/priv/static/assets/app.js")
 
       # No Ecto
@@ -520,7 +518,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/priv/static/assets/app.css")
       assert_file("phx_blog/priv/static/assets/app.js")
       assert_file("phx_blog/priv/static/favicon.ico")
-      assert_file("phx_blog/priv/static/images/phoenix.png")
 
       assert_file("phx_blog/config/config.exs", fn file ->
         refute file =~ "config :esbuild"

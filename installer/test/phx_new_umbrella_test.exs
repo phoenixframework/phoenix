@@ -71,8 +71,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(root_path(@app, "config/dev.exs"), fn file ->
         assert file =~ ~r[esbuild: {Esbuild]
-        assert file =~ "lib/#{@app}_web/(live|views)/.*(ex)"
-        assert file =~ "lib/#{@app}_web/templates/.*(eex)"
+        assert file =~ "lib/#{@app}_web/(controllers|live|components)/.*(ex|heex)"
         assert file =~ "config :#{@app}_web, dev_routes: true"
       end)
 
@@ -185,7 +184,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, "assets/css/app.css"))
 
       assert_file(web_path(@app, "priv/static/favicon.ico"))
-      assert_file(web_path(@app, "priv/static/images/phoenix.png"))
 
       refute File.exists?(web_path(@app, "priv/static/assets/app.css"))
       refute File.exists?(web_path(@app, "priv/static/assets/app.js"))
@@ -346,7 +344,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       refute_file(web_path(@app, "priv/static/assets/app.js"))
       refute_file(web_path(@app, "priv/static/assets/app.css"))
       refute_file(web_path(@app, "priv/static/favicon.ico"))
-      refute_file(web_path(@app, "priv/static/images/phoenix.png"))
 
       # No Ecto
       config = ~r/config :phx_umb, PhxUmb.Repo,/
@@ -511,7 +508,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, "priv/static/assets/app.js"))
       assert_file(web_path(@app, "priv/static/assets/app.css"))
       assert_file(web_path(@app, "priv/static/favicon.ico"))
-      assert_file(web_path(@app, "priv/static/images/phoenix.png"))
     end)
   end
 
@@ -834,7 +830,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         # assets
         assert_file("another/.gitignore", ~r/\n$/)
         assert_file("another/priv/static/favicon.ico")
-        assert_file("another/priv/static/images/phoenix.png")
         assert_file("another/assets/css/app.css")
 
         refute File.exists?("another/priv/static/assets/app.css")

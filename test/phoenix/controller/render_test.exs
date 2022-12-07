@@ -162,4 +162,67 @@ defmodule Phoenix.Controller.RenderTest do
       render(conn() |> put_view(nil), "index.html")
     end
   end
+
+  describe "telemetry" do
+    @render_start_event [:phoenix, :controller, :render, :start]
+    @render_stop_event [:phoenix, :controller, :render, :stop]
+    @render_exception_event [:phoenix, :controller, :render, :exception]
+
+    @render_events [
+      @render_start_event,
+      @render_stop_event,
+      @render_exception_event
+    ]
+
+    setup context do
+      test_pid = self()
+      test_name = context.test
+
+      :telemetry.attach_many(
+        test_name,
+        @render_events,
+        fn event, measures, metadata, config ->
+          send(test_pid, {:telemetry_event, event, {measures, metadata, config}})
+        end,
+        nil
+      )
+    end
+
+    test "phoenix.controller.render.start and .stop are emitted on success" do
+      render(conn(), "index.html", title: "Hello")
+
+      assert_received {:telemetry_event, [:phoenix, :controller, :render, :start],
+                       {_, %{format: "html", template: "index", view: MyApp.UserView}, _}}
+
+      assert_received {:telemetry_event, [:phoenix, :controller, :render, :stop],
+                       {_, %{format: "html", template: "index", view: MyApp.UserView}, _}}
+
+      refute_received {:telemetry_event, [:phoenix, :controller, :render, :exception], _}
+    end
+
+    test "phoenix.controller.render.exception is emitted on failure" do
+      :ok =
+        try do
+          render(conn(), "index.html")
+        rescue
+          ArgumentError ->
+            :ok
+        end
+
+      assert_received {:telemetry_event, [:phoenix, :controller, :render, :start],
+                       {_, %{format: "html", template: "index", view: MyApp.UserView}, _}}
+
+      refute_received {:telemetry_event, [:phoenix, :controller, :render, :stop], _}
+
+      assert_received {:telemetry_event, [:phoenix, :controller, :render, :exception],
+                       {_,
+                        %{
+                          format: "html",
+                          template: "index",
+                          view: MyApp.UserView,
+                          kind: :error,
+                          reason: %ArgumentError{}
+                        }, _}}
+    end
+  end
 end

@@ -1,55 +1,32 @@
-# Components and HEEx Templates
+# Components and HEEx
 
 > **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
 > **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
 
-The Phoenix endpoint pipeline takes a request, routes it with a router to a controller, and calls a view module to render a template. The view interface from the controller is simple – the controller calls a view function with the connections assigns, and the functions job is to return a HEEx template. We call functions that accept assigns and return HEEx, *function components*, which are provided by the `Phoenix.Component` module.
+The Phoenix endpoint pipeline takes a request, routes it with a router to a controller, and calls a view module to render a template. The view interface from the controller is simple – the controller calls a view function with the connections assigns, and the functions job is to return a HEEx template. We call functions that accept assigns and return HEEx, *function components*, which are provided by the [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) module.
 
-Function components allow you to define reusable components in your application for building up your user interfaces. A function component is any function that receives an assigns map as an argument and returns
-a rendered struct built with [the `~H` sigil](`Phoenix.Component.sigil_H/2`):
+Function components are the essential building block for any kind of markup-based template rendering you'll perform in Phoenix. They served a shared abstraction for the standard MVC controller-based applications, LiveView applications, layouts, and smaller UI definition you'll use throughout other templates.
 
-```elixir
-defmodule MyComponent do
-  use Phoenix.Component
+In this chapter, we will recap how components were used in previous chapters and find new use cases for them.
 
-  def greet(assigns) do
-    ~H"""
-    <p>Hello, <%= @name %>!</p>
-    """
-  end
-end
+## Function components
+
+At the end of the Request life-cycle chapter, we created a template at `lib/hello_web/controllers/hello_html/show.html.heex`, let's open it up:
+
+```heex
+<section>
+  <h2>Hello World, from <%= @messenger %>!</h2>
+</section>
 ```
 
-Functions components can also be defined in `.heex` files by using `Phoenix.Component.embed_templates/2`:
+This template, is embedded as part of `HelloHTML`, at `lib/hello_web/controllers/hello_html.ex`:
 
 ```elixir
-defmodule MyComponent do
-  use Phoenix.Component
-
-  # embed all .heex templates in current directory, such as "greet.html.heex"
-  embed_templates "*"
-end
-```
-
-Function components are the essential building block for any kind of markup-based template rendering you'll perform in Phoenix. They served a shared abstraction for the standard MVC controller-based applications, LiveView applications, and smaller UI definition you'll use throughout other templates.
-
-We'll cover function components and HEEx in detail in a moment, but first let's learn how templates are rendered from the endpoint pipeline.
-
-## Rendering templates from the controller
-
-Phoenix assumes a strong naming convention from controllers to views to the templates they render. `PageController` requires a `PageHTML` to render templates in the `lib/hello_web/controllers/page_html/` directory. While all of these can be customizable (see `Phoenix.Component.embed_templates/2` and `Phoenix.Template` for more information), we recommend users stick with Phoenix' convention.
-
-A newly generated Phoenix application has two view modules - `HelloWeb.ErrorHTML` and `HelloWeb.PageHTML`, which are collocated by the controller in `lib/hello_web/controllers`. Phoenix also includes a `lib/hello_web/components` directory which holds all your shared HEEx function components for the application. Out of the box, a `HelloWeb.Layouts` module is defined at `lib/hello_web/components/layouts.ex`, which defines application layouts, and a `HelloWeb.CoreComponents` module at `lib/hello_web/components/core_components.ex` holds a base set of UI components such as forms, buttons, and modals which are used by the `phx.gen.*` generators and provide a bootstrapped core component building blocks.
-
-
-Let's take a quick look at `HelloWeb.Layouts`.
-
-```elixir
-defmodule HelloWeb.Layouts do
+defmodule HelloWeb.HelloHTML do
   use HelloWeb, :html
 
-  embed_templates "layouts/*"
+  embed_templates "hello_html/*"
 end
 ```
 
@@ -57,41 +34,49 @@ That's simple enough. There's only two lines, `use HelloWeb, :html`. This line c
 
 All of the imports and aliases we make in our module will also be available in our templates. That's because templates are effectively compiled into functions inside their respective module. For example, if you define a function in your module, you will be able to invoke it directly from the template. Let's see this in practice.
 
-Open up our application layout template, `lib/hello_web/components/layouts/root.html.heex`, and change this line,
-
-```heex
-<.live_title suffix=" · Phoenix Framework">
-  <%= assigns[:page_title] || "Hello" %>
-</.live_title>
-```
-
-to call a `title/1` function, like this.
-
-```heex
-<.title suffix=" · Phoenix Framework" />
-```
-
-Now let's add a `title/1` function to our `Layouts` module:
+Imagine we want to refator our `show.html.heex` to move the rendering of `<h2>Hello World, from <%= @messenger %>!</h2>` to its own function. We can move it to a function component inside `HelloHTML`:
 
 ```elixir
-defmodule HelloWeb.Layouts do
+defmodule HelloWeb.HelloHTML do
   use HelloWeb, :html
 
-  embed_templates "layouts/*"
+  embed_templates "hello_html/*"
 
-  attr :suffix, :string, default: nil
+  attr :messenger, :string
 
-  def title(assigns) do
+  def greet(assigns) do
     ~H"""
-    Welcome to HelloWeb! <%= @suffix %>
+    <h2>Hello World, from <%= @messenger %>!</h2>
     """
   end
 end
 ```
 
-We declared the attributes we accept via `attr` provided by `Phoenix.Component`, then we defined our `title/1` function which returns the HEEx template. When we reload our home page, we should see our new title. Since templates are compiled inside the view, we can invoke the view function simply as `<.title suffix="..." />`, but we can also type `<HelloWeb.LayoutView.title suffix="..." />` if the component was defined elsewhere.
+We declared the attributes we accept via `attr` provided by `Phoenix.Component`, then we defined our `title/1` function which returns the HEEx template. When we reload our home page, we should see our new title. Since templates are compiled inside the view, we can invoke the view function simply as `<.greet messenger="..." />`, but we can also type `<HelloWeb.HelloHTML.greet messenger="..." />` if the component was defined elsewhere.
 
-Our layouts and templates use the `.heex` extension, which stands for  "HTML+EEx". EEx is an Elixir library that uses `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. In your controller, if you invoke:
+By declaring attributes, Phoenix will warn if we call the `<.greet />` component without passing attributes. If an attribute is optional, you can specify the `:default` option with a value:
+
+```
+attr :messenger, :string, default: nil
+```
+
+Although this is a quick example, it shows the different roles function components play in Phoenix:
+
+* Function components can be defined as functions that receive `assigns` as argument and call the `~H` sigil, as we did in `greet/1`
+
+* Function components can be embedded from template files, that's how we load `show.html.heex` into `HelloWeb.HelloHTML`
+
+* Function components can declare which attributes are expected, which are validated at compilation time
+
+* Function components can be directly rendered from controllers
+
+* Function components can be directly rendered from other function components, as we called `<.greet messenger={@messenger} />` from `show.html.heex`
+
+And there's more. Before we go deeper, let's fully understand the expressive power behind the HEEx template language.
+
+## HEEx
+
+Function components and templates files are powered by [the HEEx template language](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2), which stands for  "HTML+EEx". EEx is an Elixir library that uses `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. In your controller, if you invoke:
 
 ```elixir
   render(conn, :show, username: "joe")
@@ -184,205 +169,76 @@ Likewise, for comprehensions may be written as:
 </ul>
 ```
 
-### HTML components
-
-The last feature provided by HEEx is the idea of components. Components are pure functions that can be either local (same module) or remote (external module).
-
-HEEx allows invoking those function components directly in the template using an HTML-like notation. For example, a remote function:
-
-```heex
-<MyApp.Weather.city name="Kraków"/>
-```
-
-A local function can be invoked with a leading dot:
-
-```heex
-<.city name="Kraków"/>
-```
-
-where the component could be defined as follows:
-
-```elixir
-defmodule MyApp.Weather do
-  use Phoenix.Component
-
-  def city(assigns) do
-    ~H"""
-    The chosen city is: <%= @name %>.
-    """
-  end
-
-  def country(assigns) do
-    ~H"""
-    The chosen country is: <%= @name %>.
-    """
-  end
-end
-```
-
-In the example above, we used the `~H` sigil syntax to embed HEEx templates directly into our modules. We have already invoked the `city` component and calling the `country` component wouldn't be different:
-
-```heex
-<div title="My div" {@many_attributes}>
-  <p>Hello <%= @username %></p>
-  <MyApp.Weather.country name="Brazil" />
-</div>
-```
-
-You can learn more about components in [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html).
-
-### Understanding template compilation
-
-Phoenix templates are compiled into Elixir code, which make them extremely performant. Let's learn more about this.
-
-When a template is compiled into a view, it is simply compiled as a `render/2` function that expects two arguments: the template name and the assigns.
-
-You can prove this by temporarily adding this function clause to your `PageHTML` module in `lib/hello_web/controllers/page_html.ex`.
-
-```elixir
-defmodule HelloWeb.PageHTML do
-  use HelloWeb, :view
-
-  def render("index.html", assigns) do
-    "rendering with assigns #{inspect Map.keys(assigns)}"
-  end
-end
-```
-
-Now if you fire up the server with `mix phx.server` and visit [`http://localhost:4000`](http://localhost:4000), you should see the following text below your layout header instead of the main template page:
-
-```console
-rendering with assigns [:conn]
-```
-
-By defining our own clause in `render/2`, it takes higher priority than the template, but the template is still there, which you can verify by simply removing the newly added clause.
-
-Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.heex` templates and turns them into `render/2` function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved.
-
-### Manually rendering templates
-
-So far, Phoenix has taken care of putting everything in place and rendering views for us. However, we can also render views directly.
-
-Let's create a new template to play around with, `lib/hello_web/templates/page/test.html.heex`:
-
-```heex
-This is the message: <%= @message %>
-```
-
-This doesn't correspond to any action in our controller, which is fine. We'll exercise it in an `IEx` session. At the root of our project, we can run `iex -S mix`, and then explicitly render our template. Let's give it a try by calling `Phoenix.Template.render/4` with the view name, the template name, format, and a set of assigns we might have wanted to pass and we got the rendered template as a string:
-
-```elixir
-iex(1)> Phoenix.Template.render(HelloWeb.PageHTML, "test", "html", message: "Hello from IEx!")
-%Phoenix.LiveView.Rendered{
-  dynamic: #Function<1.71437968/1 in Hello16Web.PageHTML."test.html"/1>,
-  fingerprint: 142353463236917710626026938006893093300,
-  root: false,
-  static: ["This is the message: ", ""]
-}
-```
-
-The output we got above is not very helpful. That's the internal representation of how Phoenix keeps our rendered templates. Luckily, we can convert them into strings with `render_to_string/3`:
-
-```elixir
-iex(2)> Phoenix.Template.render_to_string(HelloWeb.PageHTML, "test", "html", message: "Hello from IEx!")
-"This is the message: Hello from IEx!"
-```
-
-That's much better! Let's test out the HTML escaping, just for fun:
-
-```elixir
-iex(3)> Phoenix.Template.render_to_string(HelloWeb.PageHTML, "test", "html", message: "<script>badThings();</script>")
-"This is the message: &lt;script&gt;badThings();&lt;/script&gt;"
-```
-
 ## Layouts
 
-Layouts are just function components. They are defined in a module, just like all other function component templates. In a newly generated app, this is `lib/hello_web/components/layouts.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/components/layouts/root.html.heex`, just about at the end of the `<body>`, we will see this.
+Layouts are just function components. They are defined in a module, just like all other function component templates. In a newly generated app, this is `lib/hello_web/components/layouts.ex`. You will also find in a `layouts` folder with the two built-in layouts generated by Phoenix. The default _root layout_ is called `root.html.heex`, and it is the layout into which all templates will be rendered by default. The second is the _app layout_, called `app.html.heex`, which is rendered within the root layout and includes our contents.
+
+You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/components/layouts/root.html.heex`, just about at the end of the `<body>`, we will see this.
 
 ```heex
 <%= @inner_content %>
 ```
 
-In other words, the inner template is placed in the `@inner_content` assign.
+In other words, the resulting of rendering your page is placed in the `@inner_content` assign.
 
-## Rendering JSON
+Phoenix provides all kinds of conveniences to control which layout should be rendered. For example, the `Phoenix.Controller` module provides the [`put_root_layout/2`] function for us to switch _root layouts_. This takes `conn` as its first argument and a string for the basename of the layout we want to render. It also accepts `false` to disable the layout altogether.
 
-The view's job is not only to render HTML templates. Views are about data presentation. Given a bag of data, the view's purpose is to present that in a meaningful way given some format, be it HTML, JSON, CSV, or others. Many web apps today return JSON to remote clients, and Phoenix views are *great* for JSON rendering.
-
-Phoenix uses the `Jason` library to encode JSON, so all we need to do in our views is to format the data we would like to respond with as a list or a map, and Phoenix will do the rest.
-
-While it is possible to respond with JSON back directly from the controller and skip the view, Phoenix views provide a much more structured approach for doing  so. Let's take our `PageController`, and see what it may look like when we respond with some static page maps as JSON, instead of HTML.
+You can edit the `index` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this.
 
 ```elixir
-defmodule HelloWeb.PageController do
-  use HelloWeb, :controller
-
-  def show(conn, _params) do
-    page = %{title: "foo"}
-
-    render(conn, :show, page: page)
-  end
-
-  def index(conn, _params) do
-    pages = [%{title: "foo"}, %{title: "bar"}]
-
-    render(conn, :index, pages: pages)
-  end
-end
-```
-Here we are calling `render` with a `:show` or `:index` template. We can have the show and index actions fetch the same data but render different formats by defining a view specific to HTML or JSON. By default, Phoenix applications specify the `:html`, and `:json` formats when calling `use Phoenix.Controller` in your `lib/hello_web.ex` file. This will look for a `PageHTML` and `PageJSON` view module when a request comes into `PageController`. These can be overridden by calling `put_view` directly and specify the view modules per format:
-
-```elixir
-defmodule HelloWeb.PageController do
-  use HelloWeb, :controller
-
-  plug :put_view, html: HelloWeb.PageHTML, json: HelloWeb.PageJSON
+def index(conn, _params) do
+  conn
+  |> put_root_layout(false)
+  |> render(:index)
 end
 ```
 
-For JSON support, we simply define a `PageJSON` module and template functions, just like our HTML templates except this time we'll return a map to be serialized as JSON:
+After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or CSS styling at all.
+
+Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `root.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/components/layouts`. Then let's replace the lines in `admin.html.heex` that displays the logo with the word "Administration".
+
+Remove these lines:
+
+```heex
+<a href="https://phoenixframework.org/" class="phx-logo">
+  <img src={~p"/images/phoenix.png"} alt="Phoenix Framework Logo"/>
+</a>
+```
+
+Replace them with:
+
+```heex
+<p>Administration</p>
+```
+
+Then, pass the basename of the new layout into [`put_root_layout/2`] in our `index` action in `lib/hello_web/controllers/page_controller.ex`.
 
 ```elixir
-defmodule HelloWeb.PageJSON do
-
-  def index(%{pages: pages}) do
-    %{data: Enum.map(pages, fn page -> %{title: page.title} end)}
-  end
-
-  def show(%{page: page}) do
-    %{data: %{title: page.title}}
-  end
+def index(conn, _params) do
+  conn
+  |> put_root_layout(:admin)
+  |> render(:index)
 end
 ```
 
-Just like HTML function components, our JSON functions receive assigns from the controller, and here can match on the assigns passed in. Phoenix handles content negotiation and will take care of converting the data-structures we return into JSON. A JSON request to the index action will respond like this:
+When we load the page, we should be rendering the admin layout without a logo and with the word "Administration".
 
-```json
-{
-  "data": [
-    {
-     "title": "foo"
-    },
-    {
-     "title": "bar"
-    },
- ]
-}
-```
+The app layout, placed at `app.html.heex`, works similarly and you can customize it using `put_layout`, instead of `put_root_layout`. At this point, you may be wondering, why does Phoenix have two layouts?
 
-And the show action like this:
+First of all, it gives us flexibility. In practice, we will hardly have multiple root layouts, as they often contain only HTML headers. This allows us to focus on different application layouts with only the parts that changes between them. Second of all, Phoenix ships with a feature called LiveView, which allows us to build rich and real-time user experiences with server-rendered HTML. LiveView is capable of dynamically changing the contents of the page, but it only ever changes the app layout, never the root layout. We will learn about LiveView in future guides.
 
-```json
-{
-  "data": {
-    "title": "foo"
-  }
-}
-```
+We'll cover function components and HEEx in detail in a moment, but first let's learn how templates are rendered from the endpoint pipeline.
 
-## Error pages
+## CoreComponents
 
-Phoenix has two views called `ErrorHTML` and `ErrorJSON` which live in `lib/hello_web/controllers/`. The purpose of these views is to handle errors in a general way for incoming HTML or JSON requests. Similar to the views we built in this guide, error views can return both HTML and JSON responses. See the [Custom Error Pages How-To](custom_error_pages.html) for more information.
+In a new Phoenix application, you will also find a `core_components.ex` module inside the `components` folder. This module is a great example of defining function components to be reused throughout our application. This guarantees that, as our application evolves, our components will look consistent.
 
-[welcome page]: http://localhost:4000
-[`render/4`]: `Phoenix.Template.render/4`
+If you look inside `def html` in `HelloWeb` placed at `lib/hello_web.ex`, you will see that `CoreComponents` are automatically imported into all HTML views via `use HelloWeb, :html`. This is also the reason why `CoreComponents` itself performs `use Phoenix.Component` instead `use HelloWeb, :html` at the top: doing the latter would cause a deadlock as we would try to import `CoreComponents` into itself.
+
+CoreComponents also play an important role in Phoenix code generators, as the code generator assume those components are available in order to quickly scaffold your application. In case you want to learn more about all of these pieces, you may:
+
+  * Exploring the generated `CoreComponents` module to learn more from practical examples
+
+  * Read the official documentation for [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html)
+
+  * Read the official documentation for [HEEx and the ~H sigils](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2)
