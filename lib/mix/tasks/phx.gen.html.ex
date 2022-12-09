@@ -201,17 +201,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       {key, :naive_datetime} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="datetime-local" label="#{label(key)}" />)
 
-      {key, {:array, :integer}} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="datetime-local" label="#{label(key)}" />)
-
-      {key, {:array, _}} ->
+      {key, {:array, _} = type} ->
         ~s"""
         <.input
           field={{f, #{inspect(key)}}}
           type="select"
           multiple
           label="#{label(key)}"
-          options={[{"Option 1", "option1"}, {"Option 2", "option2"}]}
+          options={#{inspect(default_options(type))}}
         />
         """
 
@@ -230,6 +227,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
         ~s(<.input field={{f, #{inspect(key)}}} type="text" label="#{label(key)}" />)
     end)
   end
+
+  defp default_options({:array, :string}),
+    do: Enum.map([1,2], &({"Option #{&1}", "option#{&1}"}))
+
+  defp default_options({:array, :integer}),
+    do: Enum.map([1,2], &({"#{&1}", &1}))
+
+  defp default_options({:array, _}), do: []
 
   defp label(key), do: Phoenix.Naming.humanize(to_string(key))
 

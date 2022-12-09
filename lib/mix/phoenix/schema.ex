@@ -279,7 +279,7 @@ defmodule Mix.Phoenix.Schema do
 
   defp type_to_default(key, t, :create) do
     case t do
-        {:array, _}     -> []
+        {:array, type} -> build_array_values(type, :create)
         {:enum, values} -> build_enum_values(values, :create)
         :integer        -> 42
         :float          -> 120.5
@@ -300,7 +300,7 @@ defmodule Mix.Phoenix.Schema do
   end
   defp type_to_default(key, t, :update) do
     case t do
-        {:array, _}     -> []
+        {:array, type}  -> build_array_values(type, :update)
         {:enum, values} -> build_enum_values(values, :update)
         :integer        -> 43
         :float          -> 456.7
@@ -319,6 +319,17 @@ defmodule Mix.Phoenix.Schema do
         _               -> "some updated #{key}"
     end
   end
+
+  defp build_array_values(:string, :create),
+    do: Enum.map([1,2], &("option#{&1}"))
+  defp build_array_values(:integer, :create),
+    do: [1,2]
+  defp build_array_values(:string, :update),
+    do: ["option1"]
+  defp build_array_values(:integer, :update),
+    do: [1]
+  defp build_array_values(_, _),
+    do: []
 
   defp build_enum_values(values, action) do
     case {action, translate_enum_vals(values)} do
