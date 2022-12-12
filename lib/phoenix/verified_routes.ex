@@ -111,8 +111,14 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro __using__(opts) do
     opts =
-      if Macro.quoted_literal?(opts) do
-        Macro.prewalk(opts, &expand_alias(&1, __CALLER__))
+      if Keyword.keyword?(opts) do
+        for {k, v} <- opts do
+          if Macro.quoted_literal?(v) do
+            {k, Macro.prewalk(v, &expand_alias(&1, __CALLER__))}
+          else
+            {k, v}
+          end
+        end
       else
         opts
       end
