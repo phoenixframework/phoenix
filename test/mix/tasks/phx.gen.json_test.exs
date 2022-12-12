@@ -181,6 +181,10 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ "defmodule PhoenixWeb.Blog.PostJSON"
       end)
 
+      assert_file("lib/phoenix_web/controllers/blog/changeset_json.ex", fn file ->
+        assert file =~ ~s|Gettext.dngettext(PhoenixWeb.Gettext, "errors"|
+      end)
+
       assert_receive {:mix_shell, :info,
                       [
                         """
@@ -325,5 +329,25 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         end)
       end)
     end
+  end
+
+  test "with existing core_components.ex file", config do
+    in_tmp_project(config.test, fn ->
+      File.mkdir_p!("lib/phoenix_web/components")
+
+      File.write!("lib/phoenix_web/components/core_components.ex", """
+      defmodule PhoenixWeb.CoreComponents do
+      end
+      """)
+
+      Code.compile_file("lib/phoenix_web/components/core_components.ex")
+
+      Gen.Json.run(~w(Blog Post posts title:string --web Blog))
+
+      assert_file("lib/phoenix_web/controllers/blog/changeset_json.ex", fn file ->
+        assert file =~
+                 "Ecto.Changeset.traverse_errors(changeset, &PhoenixWeb.CoreComponents.translate_error/1)"
+      end)
+    end)
   end
 end

@@ -97,7 +97,13 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
-    binding = [context: context, schema: schema]
+    binding = [
+      context: context,
+      schema: schema,
+      core_components?: Code.ensure_loaded?(Module.concat(context.web_module, "CoreComponents")),
+      gettext?: Code.ensure_loaded?(Module.concat(context.web_module, "Gettext"))
+    ]
+
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
