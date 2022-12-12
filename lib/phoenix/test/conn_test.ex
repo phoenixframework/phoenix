@@ -601,12 +601,12 @@ defmodule Phoenix.ConnTest do
 
   defp remove_script_name(conn, router, path) do
     case conn.private[router] do
-      [] ->
-        path
-
-      list ->
+      [_ | _] = list ->
         script_name = "/" <> Enum.join(list, ",")
         String.replace_leading(path, script_name, "")
+
+      _ ->
+        path
     end
   end
 
