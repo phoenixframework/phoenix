@@ -324,7 +324,7 @@ defmodule Phoenix.Channel do
 
   ## Shutdown
 
-  You can configure the shutdown manner of each channel used when your
+  You can configure the shutdown behavior of each channel used when your
   application is shutting down by setting the `:shutdown` value on use:
 
       use Phoenix.Channel, shutdown: 5_000
