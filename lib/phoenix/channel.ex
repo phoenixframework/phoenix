@@ -68,7 +68,7 @@ defmodule Phoenix.Channel do
       end
 
   ## Broadcasts
- 
+
   Here's an example of receiving an incoming `"new_msg"` event from one client,
   and broadcasting the message to all topic subscribers for this socket.
 
@@ -125,7 +125,7 @@ defmodule Phoenix.Channel do
   `reply/2`.
 
   ## Pushes
-  
+
   Calling `push/3` allows you to send a message to the client which is not a
   reply to a specific client message. Because it is not a reply, a pushed
   message does not contain a client message `ref`; there is no prior client
@@ -228,12 +228,12 @@ defmodule Phoenix.Channel do
   `terminate/2`, however, won't be invoked in case of errors nor in
   case of exits. This is the same behaviour as you find in Elixir
   abstractions like `GenServer` and others. Similar to `GenServer`,
-  it would also be possible `:trap_exit` to guarantee that `terminate/2`
+  it would also be possible to `:trap_exit` to guarantee that `terminate/2`
   is invoked. This practice is not encouraged though.
 
-  Typically speaking, if you want to clean something up, it is better to
+  Generally speaking, if you want to clean something up, it is better to
   monitor your channel process and do the clean up from another process.
-  All channel callbacks including `join/3` are called from within the
+  All channel callbacks, including `join/3`, are called from within the
   channel process. Therefore, `self()` in any of them returns the PID to
   be monitored.
 
@@ -324,12 +324,13 @@ defmodule Phoenix.Channel do
 
   ## Shutdown
 
-  You can configure the shutdown of each channel used when your application
-  is shutting down by setting the `:shutdown` value on use:
+  You can configure the shutdown behavior of each channel used when your
+  application is shutting down by setting the `:shutdown` value on use:
 
       use Phoenix.Channel, shutdown: 5_000
 
-  It defaults to 5_000.
+  It defaults to 5_000. The supported values are described under the
+  in the `Supervisor` module docs.
 
   ## Logging
 
