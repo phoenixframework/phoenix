@@ -330,7 +330,7 @@ defmodule Phoenix.Channel do
       use Phoenix.Channel, shutdown: 5_000
 
   It defaults to 5_000. The supported values are described under the
-  "Shutdown values" section in the `Supervisor` module docs.
+  in the `Supervisor` module docs.
 
   ## Logging
 
