@@ -8,7 +8,7 @@ defmodule Phoenix.Controller do
   @unsent [:unset, :set, :set_chunked, :set_file]
   
   @type view :: atom()
-  @type layout :: {module(), layout_name :: atom()} | false
+  @type layout :: {module(), layout_name :: atom() | String.t()} | atom() | String.t() | false
 
   @moduledoc """
   Controllers are used to group common functionality in the same
@@ -536,15 +536,15 @@ defmodule Phoenix.Controller do
       iex> layout(conn)
       false
 
-      iex> conn = put_layout conn, {AppView, "application.html"}
+      iex> conn = put_layout(conn, {AppView, "application.html"})
       iex> layout(conn)
       {AppView, "application.html"}
 
-      iex> conn = put_layout conn, "print.html"
+      iex> conn = put_layout(conn, "print.html")
       iex> layout(conn)
       {AppView, "print.html"}
 
-      iex> conn = put_layout conn, :print
+      iex> conn = put_layout(conn, :print)
       iex> layout(conn)
       {AppView, :print}
 
@@ -635,15 +635,15 @@ defmodule Phoenix.Controller do
       iex> root_layout(conn)
       false
 
-      iex> conn = put_root_layout conn, {AppView, "root.html"}
+      iex> conn = put_root_layout(conn, {AppView, "root.html"})
       iex> root_layout(conn)
       {AppView, "root.html"}
 
-      iex> conn = put_root_layout conn, "bare.html"
+      iex> conn = put_root_layout(conn, "bare.html")
       iex> root_layout(conn)
       {AppView, "bare.html"}
 
-      iex> conn = put_root_layout conn, :bare
+      iex> conn = put_root_layout(conn, :bare)
       iex> root_layout(conn)
       {AppView, :bare}
 
