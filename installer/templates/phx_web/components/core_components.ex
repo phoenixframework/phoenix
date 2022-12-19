@@ -339,7 +339,6 @@ defmodule <%= @web_namespace %>.CoreComponents do
         ]}
         {@rest}
       >
-
     <%%= @value %></textarea>
       <.error :for={msg <- @errors}><%%= msg %></.error>
     </div>
