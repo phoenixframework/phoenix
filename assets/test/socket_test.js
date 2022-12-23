@@ -392,6 +392,36 @@ describe("with transports", function(){
     })
   })
 
+  describe("offAll", function(){
+    it("removes all the callback registrations from the socket", function(){
+      socket = new Socket("/socket") 
+ 
+      const onOpenSpy = sinon.spy()
+      const onMessageSpy = sinon.spy()
+      const onCloseSpy = sinon.spy()
+      const onErrorSpy = sinon.spy()
+
+      socket.onOpen(onOpenSpy)
+      socket.onMessage(onMessageSpy)
+      socket.onClose(onCloseSpy)
+      socket.onError(onErrorSpy)
+
+      socket.offAll()
+
+      const message = {data:encode({topic: "topic", event: "event", payload: "payload", ref: "ref"})}
+
+      socket.onConnOpen()
+      socket.onConnClose({code: 1001})
+      socket.onConnMessage(message)
+      socket.onConnError("error")
+
+      assert.ok(onOpenSpy.notCalled)
+      assert.ok(onMessageSpy.notCalled)
+      assert.ok(onCloseSpy.notCalled)
+      assert.ok(onErrorSpy.notCalled)
+    })
+  })
+
   describe("push", function(){
     let data, json
 

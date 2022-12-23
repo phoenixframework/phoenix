@@ -480,6 +480,15 @@ export default class Socket {
   }
 
   /**
+   * Removes all callback registrations.
+   */
+  offAll(){
+    for(let key in this.stateChangeCallbacks){
+      this.stateChangeCallbacks[key] = []
+    }
+  }
+
+  /**
    * Initiates a new channel for the given topic
    *
    * @param {string} topic
