@@ -338,6 +338,17 @@ defmodule Phoenix.Socket.TransportTest do
                 |> put_req_cookie("_hello_key", session_cookie)
                 |> fetch_query_params()
                 |> Transport.connect_info(Endpoint, connect_info)
+
+        connect_info = load_connect_info(
+          session: {Endpoint, :session_config, []},
+          csrf_token_session_key: "bad-key"
+        )
+
+        assert %{session: nil} =
+                conn(:get, "https://foo.com/", _csrf_token: csrf_token)
+                |> put_req_cookie("_hello_key", session_cookie)
+                |> fetch_query_params()
+                |> Transport.connect_info(Endpoint, connect_info)
       after
         GenServer.stop(pid)
       end
