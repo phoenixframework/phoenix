@@ -315,12 +315,13 @@ defmodule Phoenix.Socket.TransportTest do
 
     Application.put_env :phoenix, __MODULE__.EndpointWithCustomCSRFToken,
       force_ssl: [],
-      url: [host: {:system, "TRANSPORT_TEST_HOST"}],
+      url: [host: "host.com"],
       check_origin: ["//endpoint.com"],
       secret_key_base: @secret_key_base
 
     test "loads the session with custom :csrf_token_session_key" do
       {:ok, pid} = EndpointWithCustomCSRFToken.start_link()
+      Process.sleep(500)
 
       try do
         conn = conn(:get, "https://foo.com/") |> EndpointWithCustomCSRFToken.call([])
