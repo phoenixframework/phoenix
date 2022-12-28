@@ -456,7 +456,11 @@ defmodule Phoenix.Socket.Transport do
           {:user_agent, fetch_user_agent(conn)}
 
         {:session, session} ->
-          {:session, connect_session(conn, endpoint, session)}
+          csrf_token_session_key = Enum.find_value(keys, "_csrf_token", fn
+            {:csrf_token_session_key, csrf_token_session_key} -> csrf_token_session_key
+            _ -> false
+          end)
+          {:session, connect_session(conn, endpoint, session, csrf_token_session_key)}
 
         {key, val} ->
           {key, val}
@@ -464,7 +468,7 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp connect_session(conn, endpoint, {key, store, store_config}) do
+  defp connect_session(conn, endpoint, {key, store, store_config}, csrf_token_session_key) do
     conn = Plug.Conn.fetch_cookies(conn)
 
     with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
@@ -472,7 +476,7 @@ defmodule Phoenix.Socket.Transport do
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
          {_, session} <- store.get(conn, cookie, store_config),
          csrf_state when is_binary(csrf_state) <-
-           Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]),
+          Plug.CSRFProtection.dump_state_from_session(session[csrf_token_session_key]),
          true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
       session
     else
@@ -480,10 +484,10 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp connect_session(conn, endpoint, {:mfa, {module, function, args}}) do
+  defp connect_session(conn, endpoint, {:mfa, {module, function, args}}, csrf_token_session_key) do
     case apply(module, function, args) do
       session_config when is_list(session_config) ->
-        connect_session(conn, endpoint, init_session(session_config))
+        connect_session(conn, endpoint, init_session(session_config), csrf_token_session_key)
 
       other ->
         raise ArgumentError,

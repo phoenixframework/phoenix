@@ -288,5 +288,58 @@ defmodule Phoenix.Socket.TransportTest do
                |> fetch_query_params()
                |> Transport.connect_info(Endpoint, connect_info)
     end
+
+
+    defmodule EndpointWithCustomCSRFToken do
+      use Phoenix.Endpoint, otp_app: :phoenix
+
+      @session_config [
+        store: :cookie,
+        key: "_hello_key",
+        signing_salt: "change_me"
+      ]
+
+      def session_config, do: @session_config
+
+      plug Plug.Session, @session_config
+      plug :fetch_session
+      plug Plug.CSRFProtection, session_key: "_custom_csrf_token"
+      plug :put_session
+
+      defp put_session(conn, _) do
+        conn
+        |> put_session(:from_session, "123")
+        |> send_resp(200, Plug.CSRFProtection.get_csrf_token())
+      end
+    end
+
+    Application.put_env :phoenix, __MODULE__.EndpointWithCustomCSRFToken,
+      force_ssl: [],
+      url: [host: {:system, "TRANSPORT_TEST_HOST"}],
+      check_origin: ["//endpoint.com"],
+      secret_key_base: @secret_key_base
+
+    test "loads the session with custom :csrf_token_session_key" do
+      {:ok, pid} = EndpointWithCustomCSRFToken.start_link()
+
+      try do
+        conn = conn(:get, "https://foo.com/") |> EndpointWithCustomCSRFToken.call([])
+        csrf_token = conn.resp_body
+        session_cookie = conn.cookies["_hello_key"]
+
+        connect_info = load_connect_info(
+          session: {Endpoint, :session_config, []},
+          csrf_token_session_key: "_custom_csrf_token"
+        )
+
+        assert %{session: %{"from_session" => "123"}} =
+                conn(:get, "https://foo.com/", _csrf_token: csrf_token)
+                |> put_req_cookie("_hello_key", session_cookie)
+                |> fetch_query_params()
+                |> Transport.connect_info(Endpoint, connect_info)
+      after
+        GenServer.stop(pid)
+      end
+    end
   end
 end
