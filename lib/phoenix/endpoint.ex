@@ -814,9 +814,9 @@ defmodule Phoenix.Endpoint do
           config in runtime `{MyAppWeb.Auth, :get_session_config, []}`. Otherwise
           the session will be `nil`.
 
-        * `{:csrf_token_session_key, csrf_token_session_key}` - Name of the session
-          key that holds the CSRF token. This is useful if you use the `:protect_from_forgery`
-          plug with the `:session_key` option. Defaults to `"_csrf_token"`.
+          `session_config` may take a `{:csrf_token_key, csrf_token key}` option
+          which is useful when using `:protect_from_forgery` with a custom
+          `:session_key`. If not given, it defaults to `"_csrf_token"`.
 
       Arbitrary keywords may also appear following the above valid keys, which
       is useful for passing custom connection information to the socket.
@@ -838,6 +838,8 @@ defmodule Phoenix.Endpoint do
               connect_info: [:uri, custom_value: "abcdef"]
             ]
       ```
+
+
 
   ## Websocket configuration
 

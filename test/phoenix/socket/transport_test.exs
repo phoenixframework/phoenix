@@ -296,7 +296,8 @@ defmodule Phoenix.Socket.TransportTest do
       @session_config [
         store: :cookie,
         key: "_hello_key",
-        signing_salt: "change_me"
+        signing_salt: "change_me",
+        csrf_token_key: "_custom_csrf_token"
       ]
 
       def session_config, do: @session_config
@@ -319,9 +320,8 @@ defmodule Phoenix.Socket.TransportTest do
       check_origin: ["//endpoint.com"],
       secret_key_base: @secret_key_base
 
-    test "loads the session with custom :csrf_token_session_key" do
+    test "loads the session with custom :csrf_token_key" do
       {:ok, pid} = EndpointWithCustomCSRFToken.start_link()
-      Process.sleep(500)
 
       try do
         conn = conn(:get, "https://foo.com/") |> EndpointWithCustomCSRFToken.call([])
@@ -329,8 +329,7 @@ defmodule Phoenix.Socket.TransportTest do
         session_cookie = conn.cookies["_hello_key"]
 
         connect_info = load_connect_info(
-          session: {Endpoint, :session_config, []},
-          csrf_token_session_key: "_custom_csrf_token"
+          session: {EndpointWithCustomCSRFToken, :session_config, []}
         )
 
         assert %{session: %{"from_session" => "123"}} =
@@ -339,9 +338,11 @@ defmodule Phoenix.Socket.TransportTest do
                 |> fetch_query_params()
                 |> Transport.connect_info(Endpoint, connect_info)
 
+        session_config = EndpointWithCustomCSRFToken.session_config()
+        |> Keyword.put(:csrf_token_key, "bad key")
+
         connect_info = load_connect_info(
-          session: {Endpoint, :session_config, []},
-          csrf_token_session_key: "bad-key"
+          session: session_config
         )
 
         assert %{session: nil} =
