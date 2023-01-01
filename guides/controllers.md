@@ -181,8 +181,8 @@ What it doesn't have is a view for rendering JSON. Phoenix Controller hands off 
   def controller do
     quote do
       use Phoenix.Controller,
-        namespace: HelloWeb,
-        formats: [:html, :json]
+        formats: [:html, :json],
+        layouts: [html: HelloWeb.Layouts]
       ...
     end
   end

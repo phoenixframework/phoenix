@@ -576,11 +576,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("custom_path/mix.exs", ~r/app: :phx_blog/)
       assert_file("custom_path/lib/phx_blog_web/endpoint.ex", ~r/app: :phx_blog/)
       assert_file("custom_path/config/config.exs", ~r/namespace: PhoteuxBlog/)
-
-      assert_file(
-        "custom_path/lib/phx_blog_web.ex",
-        ~r/use Phoenix.Controller,\n.*namespace: PhoteuxBlogWeb/
-      )
     end)
   end
 

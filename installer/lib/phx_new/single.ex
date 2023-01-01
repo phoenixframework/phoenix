@@ -54,7 +54,7 @@ defmodule Phx.New.Single do
      "phx_web/components/layouts/app.html.heex":
        "lib/:lib_web_name/components/layouts/app.html.heex",
      "phx_web/components/layouts.ex": "lib/:lib_web_name/components/layouts.ex"},
-    {:eex, :web, "phx_live/assets/topbar.js": "assets/vendor/topbar.js"}
+    {:eex, :web, "phx_assets/topbar.js": "assets/vendor/topbar.js"}
   ])
 
   template(:ecto, [

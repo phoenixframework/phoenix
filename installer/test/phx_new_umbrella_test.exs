@@ -557,11 +557,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       )
 
       assert_file(
-        "custom_path_umbrella/apps/phx_umb_web/lib/#{@app}_web.ex",
-        ~r/use Phoenix.Controller,\n.*namespace: PhoteuxBlogWeb/
-      )
-
-      assert_file(
         "custom_path_umbrella/apps/phx_umb/lib/phx_umb/application.ex",
         ~r/defmodule PhoteuxBlog.Application/
       )
