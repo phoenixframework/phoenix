@@ -60,7 +60,7 @@ defmodule <%= @web_namespace %>.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get"]<%= if @ecto do %>,
+      setup: ["deps.get"<%= if @assets do %>, "tailwind.install --if-missing", "esbuild.install --if-missing"<% end %>]<%= if @ecto do %>,
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %><%= if @assets do %>,
       "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]<% end %>
     ]

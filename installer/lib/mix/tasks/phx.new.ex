@@ -170,8 +170,25 @@ defmodule Mix.Tasks.Phx.New do
     maybe_cd(path, fn ->
       mix_step = install_mix(project, install?)
 
-      if mix_step == [] and rebar_available?() do
-        cmd(project, "mix deps.compile")
+      if mix_step == [] do
+        tasks =
+          if Keyword.get(project.opts, :assets, true) do
+            # First compile only esbuild and tailwind so we can install in parallel
+            cmd(project, "mix deps.compile esbuild tailwind")
+
+            Enum.map(
+              ["mix tailwind.install", "mix esbuild.install"],
+              &Task.async(fn -> cmd(project, &1) end)
+            )
+          else
+            []
+          end
+
+        if rebar_available?() do
+          cmd(project, "mix deps.compile")
+        end
+
+        Task.await_many(tasks, :infinity)
       end
 
       print_missing_steps(cd_step ++ mix_step)
@@ -208,7 +225,11 @@ defmodule Mix.Tasks.Phx.New do
   defp switch_to_string({name, val}), do: name <> "=" <> val
 
   defp install_mix(project, install?) do
-    maybe_cmd(project, "mix deps.get", true, install? && hex_available?())
+    if install? && hex_available?() do
+      cmd(project, "mix deps.get")
+    else
+      ["$ mix deps.get"]
+    end
   end
 
   # TODO: Elixir v1.15 automatically installs Hex/Rebar if missing, so we can simplify this.
@@ -266,24 +287,12 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Helpers
 
-  defp maybe_cmd(project, cmd, should_run?, can_run?) do
-    cond do
-      should_run? && can_run? ->
-        cmd(project, cmd)
-      should_run? ->
-        ["$ #{cmd}"]
-      true ->
-        []
-    end
-  end
-
   defp cmd(%Project{} = project, cmd) do
     Mix.shell().info [:green, "* running ", :reset, cmd]
+
     case Mix.shell().cmd(cmd, cmd_opts(project)) do
-      0 ->
-        []
-      _ ->
-        ["$ #{cmd}"]
+      0 -> []
+      _ -> ["$ #{cmd}"]
     end
   end
 
