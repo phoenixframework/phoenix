@@ -598,15 +598,11 @@ defmodule Phoenix.Controller do
       iex> layout(conn)
       false
 
-      iex> conn = put_layout conn, {AppView, "application.html"}
+      iex> conn = put_layout(conn, {AppView, :application})
       iex> layout(conn)
-      {AppView, "application.html"}
+      {AppView, :application}
 
-      iex> conn = put_layout conn, "print.html"
-      iex> layout(conn)
-      {AppView, "print.html"}
-
-      iex> conn = put_layout conn, :print
+      iex> conn = put_layout(conn, :print)
       iex> layout(conn)
       {AppView, :print}
 
@@ -697,15 +693,11 @@ defmodule Phoenix.Controller do
       iex> root_layout(conn)
       false
 
-      iex> conn = put_root_layout conn, {AppView, "root.html"}
+      iex> conn = put_root_layout(conn, {AppView, :root})
       iex> root_layout(conn)
-      {AppView, "root.html"}
+      {AppView, :root}
 
-      iex> conn = put_root_layout conn, "bare.html"
-      iex> root_layout(conn)
-      {AppView, "bare.html"}
-
-      iex> conn = put_root_layout conn, :bare
+      iex> conn = put_root_layout(conn, :bare)
       iex> root_layout(conn)
       {AppView, :bare}
 
