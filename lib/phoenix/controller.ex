@@ -6,7 +6,7 @@ defmodule Phoenix.Controller do
   require Phoenix.Endpoint
 
   @unsent [:unset, :set, :set_chunked, :set_file]
-  
+
   @type view :: atom()
   @type layout :: {module(), layout_name :: atom()} | false
 
@@ -25,7 +25,7 @@ defmodule Phoenix.Controller do
 
         def show(conn, %{"id" => id}) do
           user = Repo.get(User, id)
-          render(conn, "show.html", user: user)
+          render(conn, :show, user: user)
         end
       end
 
@@ -33,16 +33,9 @@ defmodule Phoenix.Controller do
   and the request parameters as arguments. The connection is a
   `Plug.Conn` struct, as specified by the Plug library.
 
-  ## Options
-
-  When used, the controller supports the following options:
-
-    * `:namespace` - sets the namespace to properly inflect
-      the layout view. By default it uses the base alias
-      in your controller name
-
-    * `:put_default_views` - controls whether the default view
-      and layout should be set or not
+  Then we invoke `render/3`, passing the connection, the template
+  to render (typically named after the action), and the `user: user`
+  as assigns. We will explore all of those concepts next.
 
   ## Connection
 
@@ -60,6 +53,73 @@ defmodule Phoenix.Controller do
   If you want to have functions that manipulate the connection
   without fully implementing the controller, you can import both
   modules directly instead of `use Phoenix.Controller`.
+
+  ## Rendering and layouts
+
+  One of the main features provided by controllers is the ability
+  to perform content negotiation and render templates based on
+  information sent by the client.
+
+  There are two ways to render content in a controller. One option
+  is to invoke format-specific functions, such as `html/2` and `json/2`.
+
+  However, most commonly controllers invoke custom modules called
+  views. Views are modules capable of rendering a custom format.
+  This is done by specifying the option `:formats` when defining
+  the controller:
+
+      use Phoenix.Controller,
+        formats: [:html, :json]
+
+   Now, when invoking `render/3`, a controller named `MyAppWeb.UserController`
+   will invoke `MyAppWeb.UserHTML` and `MyAppWeb.UserJSON` respectively
+   when rendering each format:
+
+      def show(conn, %{"id" => id}) do
+        user = Repo.get(User, id)
+        # Will invoke UserHTML.show(%{user: user}) for html requests
+        # Will invoke UserJSON.show(%{user: user}) for json requests
+        render(conn, :show, user: user)
+      end
+
+  Some formats are also handy to have layouts, which render content
+  shared across all pages. We can also specify layouts on `use`:
+
+      use Phoenix.Controller,
+        formats: [:html, :json],
+        layouts: [html: MyAppWeb.Layouts]
+
+  You can also specify formats and layouts to render by calling
+  `put_view/2` and `put_layout/2` directly with a connection.
+  The line above can also be written directly in your actions as:
+
+      conn
+      |> put_view(html: MyAppWeb.UserHTML, json: MyAppWeb.UserJSON)
+      |> put_layout(html: MyAppWeb.Layouts)
+
+  ### Options
+
+  When used, the controller supports the following options to customize
+  template rendering:
+
+    * `:formats` - the formats this controller will render
+      by default. For example, specifying `formats: [:html, :json]`
+      for a controller named `MyAppWeb.UserController` will
+      invoke `MyAppWeb.UserHTML` and `MyAppWeb.UserJSON` when
+      respectively rendering each format. If `:formats` is not
+      set, the default view is set to `MyAppWeb.UserView`
+
+    * `:layouts` - which layouts to render for each format,
+      for example: `[html: DemoWeb.Layouts]`
+
+  Deprecated options:
+
+    * `:namespace` - sets the namespace for the layout. Use
+      `:layouts` instead
+
+    * `:put_default_views` - controls whether the default view
+      and layout should be set or not. Set `formats: []` and
+      `layouts: []` instead
 
   ## Plug pipeline
 
@@ -150,18 +210,15 @@ defmodule Phoenix.Controller do
         # ...
       end
 
-  ## Rendering and layouts
-
-  One of the main features provided by controllers is the ability
-  to perform content negotiation and render templates based on
-  information sent by the client. Read `render/3` to learn more.
-
-  It is also important not to confuse `Phoenix.Controller.render/3`
-  with `Phoenix.View.render/3`. The former expects
-  a connection and relies on content negotiation while the latter is
-  connection-agnostic and typically invoked from your views.
   """
   defmacro __using__(opts) do
+    opts =
+      if Macro.quoted_literal?(opts) do
+        Macro.prewalk(opts, &expand_alias(&1, __CALLER__))
+      else
+        opts
+      end
+
     quote bind_quoted: [opts: opts] do
       import Phoenix.Controller
 
@@ -176,6 +233,11 @@ defmodule Phoenix.Controller do
       end
     end
   end
+
+  defp expand_alias({:__aliases__, _, _} = alias, env),
+    do: Macro.expand(alias, %{env | function: {:action, 2}})
+
+  defp expand_alias(other, _env), do: other
 
   @doc """
   Registers the plug to call as a fallback to the controller action.
@@ -446,15 +508,15 @@ defmodule Phoenix.Controller do
   Stores the view for rendering.
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
-  
+
   ## Examples
-  
+
       # Use single view module
       iex> put_view(conn, AppView)
-      
+
       # Use multiple view module for content negotiation
       iex> put_view(conn, html: AppHTML, json: AppJSON)
-      
+
   """
   @spec put_view(Plug.Conn.t(), [{format :: atom, view}] | view) :: Plug.Conn.t()
   def put_view(%Plug.Conn{state: state} = conn, formats) when state in @unsent do
@@ -1758,7 +1820,7 @@ defmodule Phoenix.Controller do
 
           other ->
             raise ArgumentError, """
-            expected :layouts to be a list of format module pairs of the form: [html: DemoWEb.Layouts] or [html: {DemoWeb.Layouts, :app}]
+            expected :layouts to be a list of format module pairs of the form: [html: DemoWeb.Layouts] or [html: {DemoWeb.Layouts, :app}]
 
             Got: #{inspect(other)}
             """
