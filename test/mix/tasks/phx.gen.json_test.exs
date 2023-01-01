@@ -181,7 +181,9 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ "defmodule PhoenixWeb.Blog.PostJSON"
       end)
 
-      assert_file("lib/phoenix_web/controllers/blog/changeset_json.ex")
+      assert_file("lib/phoenix_web/controllers/blog/changeset_json.ex", fn file ->
+        assert file =~ "Ecto.Changeset.traverse_errors(changeset, &translate_error/1)"
+      end)
 
       assert_receive {:mix_shell, :info,
                       [
