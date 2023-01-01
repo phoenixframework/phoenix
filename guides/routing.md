@@ -28,7 +28,7 @@ defmodule HelloWeb.Router do
   scope "/", HelloWeb do
     pipe_through :browser
 
-    get "/", PageController, :index
+    get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.
@@ -48,7 +48,7 @@ Scopes have their own section in this guide, so we won't spend time on the `scop
 Inside the scope block, however, we have our first actual route:
 
 ```elixir
-get "/", PageController, :index
+get "/", PageController, :home
 ```
 
 `get` is a Phoenix macro that corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs, including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE, and HEAD.
@@ -61,11 +61,11 @@ Let's see how this works. Go to the root of a newly-generated Phoenix applicatio
 
 ```console
 $ mix phx.routes
-GET  /  HelloWeb.PageController :index
+GET  /  HelloWeb.PageController :home
 ...
 ```
 
-The route above tells us that any HTTP GET request for the root of the application will be handled by the `index` action of the `HelloWeb.PageController`.
+The route above tells us that any HTTP GET request for the root of the application will be handled by the `home` action of the `HelloWeb.PageController`.
 
 ## Resources
 
@@ -75,7 +75,7 @@ The router supports other macros besides those for HTTP verbs like [`get`](`Phoe
 scope "/", HelloWeb do
   pipe_through :browser
 
-  get "/", PageController, :index
+  get "/", PageController, :home
   resources "/users", UserController
   ...
 end
@@ -469,7 +469,7 @@ defmodule HelloWeb.Router do
   scope "/", HelloWeb do
     pipe_through :browser
 
-    get "/", PageController, :index
+    get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.
@@ -484,7 +484,7 @@ end
 
 When the server accepts a request, the request will always first pass through the plugs in our endpoint, after which it will attempt to match on the path and HTTP verb.
 
-Let's say that the request matches our first route: a GET to `/`. The router will first pipe that request through the `:browser` pipeline - which will fetch the session data, fetch the flash, and execute forgery protection - before it dispatches the request to `PageController`'s `index` action.
+Let's say that the request matches our first route: a GET to `/`. The router will first pipe that request through the `:browser` pipeline - which will fetch the session data, fetch the flash, and execute forgery protection - before it dispatches the request to `PageController`'s `home` action.
 
 Conversely, suppose the request matches any of the routes defined by the [`resources/2`](`Phoenix.Router.resources/2`) macro. In that case, the router will pipe it through the `:api` pipeline — which currently only performs content negotiation — before it dispatches further to the correct action of the `HelloWeb.ReviewController`.
 
