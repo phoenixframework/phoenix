@@ -338,7 +338,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
           "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
         ]}
         {@rest}
-      ><%%= @value %></textarea>
+      >
+    <%%= @value %></textarea>
       <.error :for={msg <- @errors}><%%= msg %></.error>
     </div>
     """
