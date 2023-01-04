@@ -606,7 +606,7 @@ defmodule Phoenix.Endpoint do
           {path, plug, conn_ast, plug_opts} <- socket_paths(module, path, socket, socket_opts) do
         quote do
           defp do_socket_dispatch(unquote(path), conn) do
-            unquote(plug).call(unquote(conn_ast), unquote(Macro.escape(plug_opts)))
+            halt(unquote(plug).call(unquote(conn_ast), unquote(Macro.escape(plug_opts))))
           end
         end
       end

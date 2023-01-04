@@ -26,7 +26,6 @@ defmodule Phoenix.Transports.LongPoll do
     |> Transport.transport_log(opts[:transport_log])
     |> Transport.check_origin(handler, endpoint, opts, &status_json/1)
     |> dispatch(endpoint, handler, opts)
-    |> halt()
   end
 
   defp dispatch(%{halted: true} = conn, _, _, _) do
