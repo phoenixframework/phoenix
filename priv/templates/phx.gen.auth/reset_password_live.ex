@@ -5,36 +5,38 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <.header>Reset Password</.header>
+    <div class="mx-auto max-w-sm">
+      <.header class="text-center">Reset Password</.header>
 
-    <.simple_form
-      :let={f}
-      for={@changeset}
-      id="reset_password_form"
-      phx-submit="reset_password"
-      phx-change="validate"
-    >
-      <.error :if={@changeset.action == :insert}>
-        Oops, something went wrong! Please check the errors below.
-      </.error>
+      <.simple_form
+        :let={f}
+        for={@changeset}
+        id="reset_password_form"
+        phx-submit="reset_password"
+        phx-change="validate"
+      >
+        <.error :if={@changeset.action == :insert}>
+          Oops, something went wrong! Please check the errors below.
+        </.error>
 
-      <.input field={{f, :password}} type="password" label="New password" required />
-      <.input
-        field={{f, :password_confirmation}}
-        type="password"
-        label="Confirm new password"
-        required
-      />
-      <:actions>
-        <.button phx-disable-with="Resetting...">Reset Password</.button>
-      </:actions>
-    </.simple_form>
+        <.input field={{f, :password}} type="password" label="New password" required />
+        <.input
+          field={{f, :password_confirmation}}
+          type="password"
+          label="Confirm new password"
+          required
+        />
+        <:actions>
+          <.button phx-disable-with="Resetting..." class="w-full">Reset Password</.button>
+        </:actions>
+      </.simple_form>
 
-    <p>
-      <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
-      |
-      <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
-    </p>
+      <p class="text-center mt-4">
+        <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
+        |
+        <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
+      </p>
+    </div>
     """
   end
 
