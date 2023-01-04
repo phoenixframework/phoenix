@@ -60,7 +60,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "renders reset password", %{conn: conn, token: token} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
-      assert html_response(conn, 200) =~ "Send password reset instructions"
+      assert html_response(conn, 200) =~ "Reset password"
     end
 
     test "does not render reset password with invalid token", %{conn: conn} do
