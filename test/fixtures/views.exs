@@ -8,13 +8,6 @@ end
 
 defmodule MyApp.LayoutView do
   use Phoenix.View, root: "test/fixtures/templates"
-  import Phoenix.HTML
-
-  def render("root.html", assigns) do
-    ~E"""
-    ROOTSTART[<%= @title %>]<%= @inner_content %>ROOTEND
-    """
-  end
 
   def default_title do
     "MyApp"
