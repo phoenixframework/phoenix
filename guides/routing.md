@@ -98,7 +98,7 @@ DELETE  /users/:id       HelloWeb.UserController :delete
 ...
 ```
 
-This is the standard matrix of HTTP verbs, paths, and controller actions. For a while, this was known as RESTful routes, but most consider this a misnomer nowadays. Let's look at them individually, in a slightly different order.
+This is the standard matrix of HTTP verbs, paths, and controller actions. For a while, this was known as RESTful routes, but most consider this a misnomer nowadays. Let's look at them individually in the same order.
 
 - A GET request to `/users` will invoke the `index` action to show all the users.
 - A GET request to `/users/:id/edit` will invoke the `edit` action with an ID to retrieve an individual user from the data store and present the information in a form for editing.
