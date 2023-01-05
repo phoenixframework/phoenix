@@ -756,6 +756,10 @@ defmodule Phoenix.VerifiedRoutes do
     {static?, test_path, path_ast, static_ast}
   end
 
+  defp attr!(%{function: nil}, _) do
+    raise "Phoenix.VerifiedRoutes can only be used inside functions, please move your usage of ~p to functions"
+  end
+
   defp attr!(env, :endpoint) do
     Module.get_attribute(env.module, :endpoint) ||
       raise """
