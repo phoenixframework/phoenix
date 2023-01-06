@@ -188,8 +188,6 @@ defmodule Phoenix.Endpoint do
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of
       file patterns to watch. When these files change, it will trigger a reload.
-      If you are using a tool like [pow](http://pow.cx) in development,
-      you may need to set the `:url` option appropriately.
 
           live_reload: [
             url: "ws://localhost:4000",
