@@ -35,6 +35,20 @@ This feature replaces the `Helpers` module generated in your Phoenix router, but
 will continue to work and be generated. You can disable router helpers by passing the
 `helpers: false` option to `use Phoenix.Router`.
 
+## 1.7.0-rc.1 (2023-01-06)
+
+### Enhancements
+  * Raise if using verified routes outside of functions
+  * Add tailwind.install/esbuild.install to mix setup
+
+### Bug Fixes
+  * [Presence] fix task shutdown match causing occasional presence errors
+  * [VerifiedRoutes] Fix expansion causing more compile-time deps than necessary
+  * [phx.gen.auth] Add password inputs to password reset edit form
+  * [phx.gen.embedded] Fixes missing :references generation to phx.gen.embedded
+  * Fix textarea rendering in core components
+  * Halt all sockets on intercept to fix longpoll response already sent error
+
 ## 1.7.0-rc.0 (2022-11-07)
 
 ### Deprecations
