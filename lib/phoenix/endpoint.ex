@@ -864,7 +864,10 @@ defmodule Phoenix.Endpoint do
       the error handler must be a MFA tuple that receives a `Plug.Conn`, the
       error reason, and returns a `Plug.Conn` with a response. For example:
 
-          error_handler: {MySocket, :handle_error, []}
+          socket "/socket", MySocket,
+              websocket: [
+                error_handler: {MySocket, :handle_error, []}
+              ]
 
       and a `{:error, :rate_limit}` return may be handled on `MySocket` as:
 
