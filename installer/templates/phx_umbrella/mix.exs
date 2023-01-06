@@ -23,8 +23,13 @@ defmodule <%= @root_app_module %>.MixProject do
   #
   # Dependencies listed here are available only for this project
   # and cannot be accessed from applications inside the apps/ folder.
-  defp deps do
-    []
+  defp deps do<%= if @html do %>
+    [
+      <%= if @dev or @phoenix_version.pre != [] do %><%= @phoenix_dep_umbrella_root %>,
+      <% end %># Required to run "mix format" on ~H/.heex files from the umbrella root
+      {:phoenix_live_view, ">= 0.0.0"}
+    ]<% else %>
+    []<% end %>
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

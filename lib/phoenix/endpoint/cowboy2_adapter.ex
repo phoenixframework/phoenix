@@ -31,7 +31,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
   options, you will need to manually wire the Phoenix endpoint by
   adding the following rule:
 
-      {:_, Phoenix.Endpoint.Cowboy2Handler, {MyAppWeb.Endpoint, []}}
+      {:_, Plug.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
 
   For example:
 
@@ -39,7 +39,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
         http: [dispatch: [
                 {:_, [
                     {"/foo", MyAppWeb.CustomHandler, []},
-                    {:_, Phoenix.Endpoint.Cowboy2Handler, {MyAppWeb.Endpoint, []}}
+                    {:_, Plug.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
                   ]}]]
 
   It is also important to specify your handlers first, otherwise
@@ -61,8 +61,9 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
           raise "aborting due to nil port"
         end
 
-        opts = [port: port_to_integer(port), otp_app: otp_app] ++ :proplists.delete(:port, opts)
-        child_spec(scheme, endpoint, opts)
+        # Ranch options are read from the top, so we keep the user opts first.
+        opts = :proplists.delete(:port, opts) ++ [port: port_to_integer(port), otp_app: otp_app]
+        child_spec(scheme, endpoint, opts, config[:code_reloader])
       end
 
     {refs, child_specs} = Enum.unzip(refs_and_specs)
@@ -74,15 +75,21 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
     end
   end
 
-  defp child_spec(scheme, endpoint, config) do
+  defp child_spec(scheme, endpoint, config, code_reloader?) do
     if scheme == :https do
       Application.ensure_all_started(:ssl)
     end
 
-    dispatches = [{:_, Phoenix.Endpoint.Cowboy2Handler, {endpoint, endpoint.init([])}}]
-    config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
     ref = Module.concat(endpoint, scheme |> Atom.to_string() |> String.upcase())
-    spec = Plug.Cowboy.child_spec(ref: ref, scheme: scheme, plug: {endpoint, []}, options: config)
+
+    plug =
+      if code_reloader? do
+        {Phoenix.Endpoint.SyncCodeReloadPlug, {endpoint, []}}
+      else
+        {endpoint, []}
+      end
+
+    spec = Plug.Cowboy.child_spec(ref: ref, scheme: scheme, plug: plug, options: config)
     spec = update_in(spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]})
     {ref, spec}
   end
@@ -93,11 +100,15 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
     # to plug.HTTP and plug.HTTPS and overridable by users.
     case apply(m, f, a) do
       {:ok, pid} ->
-        Logger.info(fn -> info(scheme, endpoint, ref) end)
+        Logger.info(info(scheme, endpoint, ref))
         {:ok, pid}
 
+      {:error, {:shutdown, {_, _, {:listen_error, _, :eaddrinuse}}}} = error ->
+        Logger.error([info(scheme, endpoint, ref), " failed, port already in use"])
+        error
+
       {:error, {:shutdown, {_, _, {{_, {:error, :eaddrinuse}}, _}}}} = error ->
-        Logger.error [info(scheme, endpoint, ref), " failed, port already in use"]
+        Logger.error([info(scheme, endpoint, ref), " failed, port already in use"])
         error
 
       {:error, _} = error ->
@@ -118,9 +129,11 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
       {addr, port} ->
         "#{:inet.ntoa(addr)}:#{port} (#{scheme})"
     end
+  rescue
+    _ -> scheme
   end
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
+  # TODO: Remove this once {:system, env_var} deprecation is removed
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port

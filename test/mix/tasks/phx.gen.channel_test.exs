@@ -3,6 +3,9 @@ Code.require_file("../../../installer/test/mix_helper.exs", __DIR__)
 defmodule PhoenixWeb.DupChannel do
 end
 
+defmodule Ecto.Adapters.SQL do
+end
+
 defmodule Mix.Tasks.Phx.Gen.ChannelTest do
   use ExUnit.Case
   import MixHelper
@@ -29,6 +32,12 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
         assert file =~ ~S|def handle_in("shout", payload, socket) do|
         assert file =~ ~S|broadcast(socket, "shout", payload)|
         assert file =~ ~S|{:noreply, socket}|
+      end)
+
+      assert_file("test/support/channel_case.ex", fn file ->
+        assert file =~ ~S|defmodule PhoenixWeb.ChannelCase|
+        assert file =~ ~S|@endpoint PhoenixWeb.Endpoint|
+        assert file =~ ~S|Phoenix.DataCase.setup_sandbox|
       end)
 
       assert_file("test/phoenix_web/channels/room_channel_test.exs", fn file ->
@@ -79,7 +88,10 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
       end)
 
       assert_received {:mix_shell, :info,
-                       ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
+                       [
+                         "\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <>
+                           _
+                       ]}
 
       assert_received {:mix_shell, :yes?, [question]}
       assert question =~ "Do you want to create it?"
@@ -111,7 +123,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
     end)
 
     assert_received {:mix_shell, :info,
-                       ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
+                     ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
 
     assert_received {:mix_shell, :yes?, [question]}
     assert question =~ "Do you want to create it?"
@@ -123,11 +135,17 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
     in_tmp_umbrella_project("generates channels", fn ->
       send(self(), {:mix_shell_input, :yes?, false})
       Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
-      Gen.Channel.run(["room"])
+      Gen.Channel.run(["Room"])
 
       assert_file("lib/phoenix/channels/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule PhoenixWeb.RoomChannel do|
         assert file =~ ~S|use PhoenixWeb, :channel|
+      end)
+
+      assert_file("test/support/channel_case.ex", fn file ->
+        assert file =~ ~S|defmodule PhoenixWeb.ChannelCase|
+        assert file =~ ~S|@endpoint PhoenixWeb.Endpoint|
+        assert file =~ ~S|Phoenix.DataCase.setup_sandbox|
       end)
 
       assert_file("test/phoenix/channels/room_channel_test.exs", fn file ->
@@ -137,7 +155,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
     end)
 
     assert_received {:mix_shell, :info,
-                       ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
+                     ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
 
     assert_received {:mix_shell, :yes?, [question]}
     assert question =~ "Do you want to create it?"
@@ -163,7 +181,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
     end)
 
     assert_received {:mix_shell, :info,
-                       ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
+                     ["\nThe default socket handler - PhoenixWeb.UserSocket - was not found" <> _]}
 
     assert_received {:mix_shell, :yes?, [question]}
     assert question =~ "Do you want to create it?"
@@ -174,6 +192,12 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
   test "passing no args raises error" do
     assert_raise Mix.Error, fn ->
       Gen.Channel.run([])
+    end
+  end
+
+  test "passing invalid name raises error" do
+    assert_raise Mix.Error, fn ->
+      Gen.Channel.run(["room"])
     end
   end
 

@@ -10,13 +10,6 @@ Our main goal for this guide is to package your Phoenix application into a self-
 
 ## Releases, assemble!
 
-To assemble a release, you will need at least Elixir v1.9, however this guide assumes you are using Elixir v1.12 or later to take advantage of latest releases improvements:
-
-```console
-$ elixir -v
-1.12.0
-```
-
 If you are not familiar with Elixir releases yet, we recommend you to read [Elixir's excellent docs](https://hexdocs.pm/mix/Mix.Tasks.Release.html) before continuing.
 
 Once that is done, you can assemble a release by going through all of the steps in our general [deployment guide](deployment.html) with `mix release` at the end. Let's recap.
@@ -107,7 +100,7 @@ But before we finish this guide, there is one more feature from releases that mo
 
 A common need in production systems is to execute custom commands required to set up the production environment. One of such commands is precisely migrating the database. Since we don't have `Mix`, a *build* tool, inside releases, which are a production artifact, we need to bring said commands directly into the release.
 
-The `phx.gen.release` command created the following `release.ex` file in your projet `lib/my_app/release.ex`, with the following content:
+The `phx.gen.release` command created the following `release.ex` file in your project `lib/my_app/release.ex`, with the following content:
 
 ```elixir
 defmodule MyApp.Release do
@@ -146,7 +139,7 @@ $ _build/prod/rel/my_app/bin/my_app eval "MyApp.Release.migrate"
 
 And that's it! If you peek inside the `migrate` script, you'll see it wraps exactly this invocation.
 
-You can use this approach to create any custom command to run in production. In this case, we used `load_app`, which calls `Application.load/1` to load the current application without starting it. However, you may want to write a custom command that starts the whole application. In such cases, `Application.ensure_all_started/1` must be used. Keep in mind starting the application will start all processes for the current application, including the Phoenix endpoint. This can be circumvented by changing your supervision tree to not start certain children under certain conditions. For example, in the release commands file you could do:
+You can use this approach to create any custom command to run in production. In this case, we used `load_app`, which calls `Application.load/1` to load the current application without starting it. However, you may want to write a custom command that starts the whole application. In such cases, `Application.ensure_all_started/1` must be used. Keep in mind, starting the application will start all processes for the current application, including the Phoenix endpoint. This can be circumvented by changing your supervision tree to not start certain children under certain conditions. For example, in the release commands file you could do:
 
 ```elixir
 defp start_app do
@@ -177,10 +170,14 @@ If you call `mix phx.gen.release --docker` you'll see a new file with these cont
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
 #   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20210902-slim - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:1.12.0-erlang-24.0.1-debian-bullseye-20210902-slim
+#   - Ex: hexpm/elixir:1.14.0-erlang-24.3.4-debian-bullseye-20210902-slim
 #
-ARG BUILDER_IMAGE="hexpm/elixir:1.12.0-erlang-24.0.1-debian-bullseye-20210902-slim"
-ARG RUNNER_IMAGE="debian:bullseye-20210902-slim"
+ARG ELIXIR_VERSION=1.14.0
+ARG OTP_VERSION=24.3.4
+ARG DEBIAN_VERSION=bullseye-20210902-slim
+
+ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
+ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
 FROM ${BUILDER_IMAGE} as builder
 

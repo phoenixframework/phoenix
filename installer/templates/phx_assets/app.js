@@ -1,7 +1,3 @@
-// We import the CSS which is extracted to its own file by esbuild.
-// Remove this line if you add a your own CSS build pipeline (e.g postcss).
-import "../css/app.css"
-
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 // to get started and then uncomment the line below.
 // import "./user_socket.js"
@@ -31,7 +27,7 @@ import "phoenix_html"
 
 // Show progress bar on live navigation and form submits
 <%= @live_comment %>topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
-<%= @live_comment %>window.addEventListener("phx:page-loading-start", info => topbar.show())
+<%= @live_comment %>window.addEventListener("phx:page-loading-start", info => topbar.delayedShow(200))
 <%= @live_comment %>window.addEventListener("phx:page-loading-stop", info => topbar.hide())
 
 // connect if there are any LiveViews on the page

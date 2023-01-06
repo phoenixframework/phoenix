@@ -2,6 +2,8 @@ defmodule Phoenix do
   @moduledoc """
   This is the documentation for the Phoenix project.
 
+  To get started, see our [overview guides](overview.html).
+  
   By default, Phoenix applications depend on the following packages
   across these categories.
 
@@ -24,12 +26,8 @@ defmodule Phoenix do
     * [Phoenix HTML](https://hexdocs.pm/phoenix_html) - conveniences for
       working with HTML in Phoenix
 
-    * [Phoenix View](https://hexdocs.pm/phoenix_view) - a set of functions
-      for building `Phoenix.View` and working with template languages such
-      as Elixir's own `EEx`
-
     * [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) - rich,
-      real-time user experiences with server-rendered HTML
+      real-time user experiences with server-rendered HTML and components
 
     * [Phoenix LiveDashboard](https://hexdocs.pm/phoenix_live_dashboard) -
       real-time performance monitoring and debugging tools for Phoenix
@@ -39,12 +37,11 @@ defmodule Phoenix do
       for composable modules in between web applications
 
     * [Swoosh](https://hexdocs.pm/swoosh) - a library for composing,
-    delivering and testing emails, also used by `mix phx.gen.auth`
+      delivering and testing emails, also used by `mix phx.gen.auth`
 
     * [Telemetry Metrics](https://hexdocs.pm/telemetry_metrics) - common
       interface for defining metrics based on Telemetry events
 
-  To get started, see our [overview guides](overview.html).
   """
   use Application
 
@@ -73,19 +70,17 @@ defmodule Phoenix do
     Supervisor.start_link(children, strategy: :one_for_one, name: Phoenix.Supervisor)
   end
 
-  # TODO v2: swap Poison default with Jason
-  # From there we can ditch explicit config for new projects
   @doc """
   Returns the configured JSON encoding library for Phoenix.
 
   To customize the JSON library, including the following
   in your `config/config.exs`:
 
-      config :phoenix, :json_library, Jason
+      config :phoenix, :json_library, AlternativeJsonLibrary
 
   """
   def json_library do
-    Application.get_env(:phoenix, :json_library, Poison)
+    Application.get_env(:phoenix, :json_library, Jason)
   end
 
   @doc """
@@ -105,32 +100,12 @@ defmodule Phoenix do
   defp warn_on_missing_json_library do
     configured_lib = Application.get_env(:phoenix, :json_library)
 
-    cond do
-      configured_lib && Code.ensure_loaded?(configured_lib) ->
-        true
-
-      configured_lib && not Code.ensure_loaded?(configured_lib) ->
-        IO.warn """
-        found #{inspect(configured_lib)} in your application configuration
-        for Phoenix JSON encoding, but module #{inspect(configured_lib)} is not available.
-        Ensure #{inspect(configured_lib)} is listed as a dependency in mix.exs.
-        """
-
-      true ->
-        IO.warn """
-        Phoenix now requires you to explicitly list which engine to use
-        for Phoenix JSON encoding. We recommend everyone to upgrade to
-        Jason by setting in your config/config.exs:
-
-            config :phoenix, :json_library, Jason
-
-        And then adding {:jason, "~> 1.0"} as a dependency.
-
-        If instead you would rather continue using Poison, then add to
-        your config/config.exs:
-
-            config :phoenix, :json_library, Poison
-        """
+    if configured_lib && not Code.ensure_loaded?(configured_lib) do
+      IO.warn """
+      found #{inspect(configured_lib)} in your application configuration
+      for Phoenix JSON encoding, but module #{inspect(configured_lib)} is not available.
+      Ensure #{inspect(configured_lib)} is listed as a dependency in mix.exs.
+      """
     end
   end
 end

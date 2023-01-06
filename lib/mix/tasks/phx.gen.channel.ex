@@ -35,17 +35,31 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
     [channel_name] = validate_args!(args)
     context_app = Mix.Phoenix.context_app()
     web_prefix = Mix.Phoenix.web_path(context_app)
-    test_prefix = Mix.Phoenix.web_test_path(context_app)
+    web_test_prefix = Mix.Phoenix.web_test_path(context_app)
     binding = Mix.Phoenix.inflect(channel_name)
     binding = Keyword.put(binding, :module, "#{binding[:web_module]}.#{binding[:scoped]}")
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")
 
-    Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.channel", binding, [
-      {:eex, "channel.ex", Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
-      {:eex, "channel_test.exs",
-       Path.join(test_prefix, "channels/#{binding[:path]}_channel_test.exs")}
-    ])
+    test_path = Path.join(web_test_prefix, "channels/#{binding[:path]}_channel_test.exs")
+    case_path = Path.join(Path.dirname(web_test_prefix), "support/channel_case.ex")
+
+    maybe_case =
+      if File.exists?(case_path) do
+        []
+      else
+        [{:eex, "channel_case.ex", case_path}]
+      end
+
+    Mix.Phoenix.copy_from(
+      paths(),
+      "priv/templates/phx.gen.channel",
+      binding,
+      [
+        {:eex, "channel.ex", Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
+        {:eex, "channel_test.exs", test_path}
+      ] ++ maybe_case
+    )
 
     user_socket_path = Mix.Phoenix.web_path(context_app, "channels/user_socket.ex")
 
@@ -82,7 +96,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
   @spec raise_with_help() :: no_return()
   defp raise_with_help do
     Mix.raise("""
-    mix phx.gen.channel expects just the module name:
+    mix phx.gen.channel expects just the module name, following capitalization:
 
         mix phx.gen.channel Room
 
@@ -90,11 +104,15 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
   end
 
   defp validate_args!(args) do
-    unless length(args) == 1 do
+    unless length(args) == 1 and args |> hd() |> valid_name?() do
       raise_with_help()
     end
 
     args
+  end
+
+  defp valid_name?(name) do
+    name =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
   end
 
   defp paths do

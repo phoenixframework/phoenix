@@ -9,10 +9,13 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
 
 # In test we don't send emails.
 config :<%= @app_name %>, <%= @app_module %>.Mailer,
-  adapter: Swoosh.Adapters.Test<% end %>
+  adapter: Swoosh.Adapters.Test
+
+# Disable swoosh api client as it is only required for production adapters.
+config :swoosh, :api_client, false<% end %>
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime

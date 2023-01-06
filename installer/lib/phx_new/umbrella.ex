@@ -3,18 +3,19 @@ defmodule Phx.New.Umbrella do
   use Phx.New.Generator
   alias Phx.New.{Ecto, Web, Project, Mailer}
 
-  template :new, [
-    {:eex,    "phx_umbrella/gitignore",               :project, ".gitignore"},
-    {:eex,    "phx_umbrella/config/config.exs",       :project, "config/config.exs"},
-    {:config, "phx_umbrella/config/extra_config.exs", :project, "config/config.exs"},
-    {:eex,    "phx_umbrella/config/dev.exs",          :project, "config/dev.exs"},
-    {:eex,    "phx_umbrella/config/test.exs",         :project, "config/test.exs"},
-    {:eex,    "phx_umbrella/config/prod.exs",         :project, "config/prod.exs"},
-    {:eex,    "phx_umbrella/config/runtime.exs",      :project, "config/runtime.exs"},
-    {:eex,    "phx_umbrella/mix.exs",                 :project, "mix.exs"},
-    {:eex,    "phx_umbrella/README.md",               :project, "README.md"},
-    {:eex,    "phx_umbrella/formatter.exs",           :project, ".formatter.exs"},
-  ]
+  template(:new, [
+    {:eex, :project,
+     "phx_umbrella/gitignore": ".gitignore",
+     "phx_umbrella/config/config.exs": "config/config.exs",
+     "phx_umbrella/config/dev.exs": "config/dev.exs",
+     "phx_umbrella/config/test.exs": "config/test.exs",
+     "phx_umbrella/config/prod.exs": "config/prod.exs",
+     "phx_umbrella/config/runtime.exs": "config/runtime.exs",
+     "phx_umbrella/mix.exs": "mix.exs",
+     "phx_umbrella/README.md": "README.md",
+     "phx_umbrella/formatter.exs": ".formatter.exs"},
+    {:config, :project, "phx_umbrella/config/extra_config.exs": "config/config.exs"}
+  ])
 
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do
     project
@@ -22,38 +23,42 @@ defmodule Phx.New.Umbrella do
     |> put_web()
     |> put_root_app()
   end
+
   defp put_app(project) do
     project_path = Path.expand(project.base_path <> "_umbrella")
     app_path = Path.join(project_path, "apps/#{project.app}")
 
-    %Project{project |
-             in_umbrella?: true,
-             app_path: app_path,
-             project_path: project_path}
+    %Project{project | in_umbrella?: true, app_path: app_path, project_path: project_path}
   end
+
   def put_web(%Project{app: app, opts: opts} = project) do
     web_app = :"#{app}_web"
     web_namespace = Module.concat([opts[:web_module] || "#{project.app_mod}Web"])
 
-    %Project{project |
-             web_app: web_app,
-             lib_web_name: web_app,
-             web_namespace: web_namespace,
-             generators: [context_app: :"#{app}"],
-             web_path: Path.join(project.project_path, "apps/#{web_app}/")}
+    %Project{
+      project
+      | web_app: web_app,
+        lib_web_name: web_app,
+        web_namespace: web_namespace,
+        generators: [context_app: :"#{app}"],
+        web_path: Path.join(project.project_path, "apps/#{web_app}/")
+    }
   end
 
   defp put_root_app(%Project{app: app} = project) do
-    %Project{project |
-             root_app: :"#{app}_umbrella",
-             root_mod: Module.concat(project.app_mod, "Umbrella")}
+    %Project{
+      project
+      | root_app: :"#{app}_umbrella",
+        root_mod: Module.concat(project.app_mod, "Umbrella")
+    }
   end
 
   def generate(%Project{} = project) do
     if in_umbrella?(project.project_path) do
-      Mix.raise "Unable to nest umbrella project within apps"
+      Mix.raise("Unable to nest umbrella project within apps")
     end
-    copy_from project, __MODULE__, :new
+
+    copy_from(project, __MODULE__, :new)
 
     project
     |> Web.generate()

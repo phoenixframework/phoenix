@@ -1,4 +1,7 @@
 System.put_env("ENDPOINT_TEST_HOST", "example.com")
+System.put_env("ENDPOINT_TEST_PORT", "80")
+System.put_env("ENDPOINT_TEST_ASSET_HOST", "assets.example.com")
+System.put_env("ENDPOINT_TEST_ASSET_PORT", "443")
 
 defmodule Phoenix.Endpoint.EndpointTest do
   use ExUnit.Case, async: true
@@ -21,10 +24,17 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert is_list(config)
     assert @otp_app == :phoenix
     assert code_reloading? == false
-    assert @compile_config == [force_ssl: [subdomains: true]]
   end
 
   defmodule NoConfigEndpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+  end
+
+  defmodule SystemTupleEndpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+  end
+
+  defmodule TelemetryEventEndpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
 
@@ -73,6 +83,53 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.path("/") == "/api/"
     assert Endpoint.static_url() == "https://static.example.com:456"
     assert Endpoint.struct_url() == %URI{scheme: "https", host: "example.com", port: 1234}
+  end
+
+  test "{:system, env_var} tuples are deprecated" do
+    Application.put_env(:phoenix, __MODULE__.SystemTupleEndpoint,
+      url: [
+        host: {:system, "ENDPOINT_TEST_HOST"},
+        port: {:system, "ENDPOINT_TEST_PORT"}
+      ],
+      static_url: [
+        host: {:system, "ENDPOINT_TEST_ASSET_HOST"},
+        port: {:system, "ENDPOINT_TEST_ASSET_PORT"}
+      ]
+    )
+
+    log =
+      ExUnit.CaptureLog.capture_log(fn ->
+        start_supervised!(SystemTupleEndpoint)
+      end)
+
+    assert log =~ ~S|host: System.get_env("ENDPOINT_TEST_HOST")|
+    assert log =~ ~S|port: System.get_env("ENDPOINT_TEST_PORT")|
+    assert log =~ ~S|host: System.get_env("ENDPOINT_TEST_ASSET_HOST")|
+    assert log =~ ~S|port: System.get_env("ENDPOINT_TEST_ASSET_PORT")|
+  end
+
+  test "start_link/2 should emit an Endpoint init event" do
+    # Set up the test telemetry event
+    :telemetry.attach(
+      [:test, :endpoint, :init, :handler],
+      [:phoenix, :endpoint, :init],
+      &__MODULE__.validate_init_event/4,
+      nil
+    )
+
+    Application.put_env(:phoenix, __MODULE__.TelemetryEventEndpoint, server: false)
+    start_supervised!(TelemetryEventEndpoint)
+  after
+    :telemetry.detach([:test, :endpoint, :init, :handler])
+  end
+
+  def validate_init_event(event, measurements, metadata, _config) do
+    assert event == [:phoenix, :endpoint, :init]
+    assert Process.whereis(TelemetryEventEndpoint) == metadata.pid
+    assert metadata.module == TelemetryEventEndpoint
+    assert metadata.otp_app == :phoenix
+    assert metadata.config == [server: false]
+    assert Map.has_key?(measurements, :system_time)
   end
 
   test "sets script name when using path" do
@@ -245,9 +302,5 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
       Endpoint.static_integrity("//invalid_path")
     end
-  end
-
-  test "__compile_config__/0 returns selected configs from compile time" do
-    assert Endpoint.__compile_config__() == [force_ssl: [subdomains: true]]
   end
 end

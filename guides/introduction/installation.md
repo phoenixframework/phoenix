@@ -3,12 +3,12 @@
 In order to build a Phoenix application, we will need a few dependencies installed in our Operating System:
 
   * the Erlang VM and the Elixir programming language
-  * a database - Phoenix recommends PostgreSQL but you can pick others or not use a database at all
+  * a database - Phoenix recommends PostgreSQL, but you can pick others or not use a database at all
   * and other optional packages.
 
 Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.
 
-## Elixir 1.12 or later
+## Elixir 1.14 or later
 
 Phoenix is written in Elixir, and our application code will also be written in Elixir. We won't get far in a Phoenix app without it! The Elixir site maintains a great [Installation Page](https://elixir-lang.org/install.html) to help.
 
@@ -20,7 +20,7 @@ Here's the command to install Hex (If you have Hex already installed, it will up
 $ mix local.hex
 ```
 
-## Erlang 22 or later
+## Erlang 24 or later
 
 Elixir code compiles to Erlang byte code to run on the Erlang virtual machine. Without Erlang, Elixir code has no virtual machine to run on, so we need to install Erlang as well.
 
@@ -28,13 +28,13 @@ When we install Elixir using instructions from the Elixir [Installation Page](ht
 
 ## Phoenix
 
-To check that we are on Elixir 1.12 and Erlang 22 or later, run:
+To check that we are on Elixir 1.14 and Erlang 24 or later, run:
 
 ```console
 elixir -v
-Erlang/OTP 22 [erts-10.7] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
+Erlang/OTP 24 [erts-12.0] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
-Elixir 1.12.1
+Elixir 1.14.0
 ```
 
 Once we have Elixir and Erlang, we are ready to install the Phoenix application generator:
@@ -57,7 +57,7 @@ However, if you are just getting started with Phoenix, we recommend you to insta
 
 Phoenix provides a very handy feature called Live Reloading. As you change your views or your assets, it automatically reloads the page in the browser. In order for this functionality to work, you need a filesystem watcher.
 
-macOS and Windows users already have a filesystem watcher but Linux users must install inotify-tools. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
+macOS and Windows users already have a filesystem watcher, but Linux users must install inotify-tools. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
 
 ## Summary
 

@@ -1,14 +1,14 @@
 {
   "name": "phoenix",
-  "version": "1.6.4",
+  "version": "1.7.0-rc.0",
   "description": "The official JavaScript client for the Phoenix web framework.",
   "license": "MIT",
-  "module": "./priv/static/phoenix.esm.js",
+  "module": "./priv/static/phoenix.mjs",
   "main": "./priv/static/phoenix.cjs.js",
   "unpkg": "./priv/static/phoenix.min.js",
   "jsdelivr": "./priv/static/phoenix.min.js",
   "exports": {
-    "import": "./priv/static/phoenix.esm.js",
+    "import": "./priv/static/phoenix.mjs",
     "require": "./priv/static/phoenix.cjs.js"
   },
   "repository": {

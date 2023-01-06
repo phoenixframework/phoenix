@@ -9,7 +9,7 @@ defmodule <%= @app_module %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.12",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -36,11 +36,12 @@ defmodule <%= @app_module %>.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix_pubsub, "~> 2.0"}<%= if @ecto do %>,
+      {:phoenix_pubsub, "~> 2.1"}<%= if @ecto do %>,
       {:ecto_sql, "~> 3.6"},
       {:<%= @adapter_app %>, ">= 0.0.0"},
       {:jason, "~> 1.2"}<% end %><%= if @mailer do %>,
-      {:swoosh, "~> 1.3"}<% end %>
+      {:swoosh, "~> 1.3"},
+      {:finch, "~> 0.13"}<% end %>
     ]
   end
 

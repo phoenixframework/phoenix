@@ -10,53 +10,19 @@ defmodule Phoenix.Endpoint.Supervisor do
   Starts the endpoint supervision tree.
   """
   def start_link(otp_app, mod, opts \\ []) do
-    case Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
-      {:ok, _} = ok ->
-        warmup(mod)
-        log_access_url(otp_app, mod, opts)
-        browser_open(otp_app, mod)
-        ok
+    with {:ok, pid} = ok <- Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
+      # We don't use the defaults in the checks below
+      conf = Keyword.merge(Application.get_env(otp_app, mod, []), opts)
+      warmup(mod)
+      log_access_url(mod, conf)
+      browser_open(mod, conf)
 
-      {:error, _} = error ->
-        error
+      measurements = %{system_time: System.system_time()}
+      metadata = %{pid: pid, config: conf, module: mod, otp_app: otp_app}
+      :telemetry.execute([:phoenix, :endpoint, :init], measurements, metadata)
+
+      ok
     end
-  end
-
-  defp check_compile_configs!(mod, runtime_configs) do
-    compile_configs = mod.__compile_config__()
-
-    bad_keys =
-      Enum.filter(Phoenix.Endpoint.Supervisor.compile_config_keys(), fn key ->
-        compile_config = Keyword.get(compile_configs, key)
-        runtime_config = Keyword.get(runtime_configs, key)
-
-        if compile_config != runtime_config do
-          require Logger
-
-          Logger.error("""
-          #{inspect(key)} mismatch for #{inspect(mod)}.
-
-          Compile time configuration: #{inspect(compile_config)}
-          Runtime configuration     : #{inspect(runtime_config)}
-
-          #{inspect(key)} is a compile-time configuration, so setting
-          it at runtime has no effect. Therefore you must set it in your
-          config/prod.exs or similar (not in your config/releases.exs)
-          and make sure the value doesn't change.
-          """)
-
-          true
-        else
-          false
-        end
-      end)
-
-    unless Enum.empty?(bad_keys) do
-      raise ArgumentError,
-            "expected these options to be unchanged from compile time: #{inspect(bad_keys)}"
-    end
-
-    :ok
   end
 
   @doc false
@@ -68,13 +34,16 @@ defmodule Phoenix.Endpoint.Supervisor do
       case mod.init(:supervisor, env_conf) do
         {:ok, init_conf} ->
           if is_nil(Application.get_env(otp_app, mod)) and init_conf == env_conf do
-            Logger.warn("no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}")
+            Logger.warning(
+              "no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}"
+            )
           end
 
           init_conf
 
         other ->
-          raise ArgumentError, "expected init/2 callback to return {:ok, config}, got: #{inspect other}"
+          raise ArgumentError,
+                "expected init/2 callback to return {:ok, config}, got: #{inspect(other)}"
       end
 
     extra_conf = [
@@ -89,22 +58,29 @@ defmodule Phoenix.Endpoint.Supervisor do
     # Drop all secrets from secret_conf before passing it around
     conf = Keyword.drop(secret_conf, [:secret_key_base])
     server? = server?(conf)
-    check_compile_configs!(mod, conf)
 
     if conf[:instrumenters] do
-      Logger.warn(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
+      Logger.warning(
+        ":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect"
+      )
     end
 
     if server? and conf[:code_reloader] do
       Phoenix.CodeReloader.Server.check_symlinks()
     end
 
+    # TODO: Remove this once {:system, env_var} tuples are removed
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :http)
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :https)
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :url)
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :static_url)
+
     children =
       config_children(mod, secret_conf, default_conf) ++
-      pubsub_children(mod, conf) ++
-      socket_children(mod) ++
-      server_children(mod, conf, server?) ++
-      watcher_children(mod, conf, server?)
+        pubsub_children(mod, conf) ++
+        socket_children(mod) ++
+        server_children(mod, conf, server?) ++
+        watcher_children(mod, conf, server?)
 
     Supervisor.init(children, strategy: :one_for_one)
   end
@@ -113,19 +89,19 @@ defmodule Phoenix.Endpoint.Supervisor do
     pub_conf = conf[:pubsub]
 
     if pub_conf do
-      Logger.warn """
-      The :pubsub key in your #{inspect mod} is deprecated.
+      Logger.warning("""
+      The :pubsub key in your #{inspect(mod)} is deprecated.
 
       You must now start the pubsub in your application supervision tree.
       Go to lib/my_app/application.ex and add the following:
 
-          {Phoenix.PubSub, #{inspect pub_conf}}
+          {Phoenix.PubSub, #{inspect(pub_conf)}}
 
       Now, back in your config files in config/*, you can remove the :pubsub
       key and add the :pubsub_server key, with the PubSub name:
 
-          pubsub_server: #{inspect pub_conf[:name]}
-      """
+          pubsub_server: #{inspect(pub_conf[:name])}
+      """)
     end
 
     if pub_conf[:adapter] do
@@ -178,42 +154,47 @@ defmodule Phoenix.Endpoint.Supervisor do
   Checks if Endpoint's web server has been configured to start.
   """
   def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
-    otp_app
-    |> config(endpoint)
-    |> server?()
+    server?(Application.get_env(otp_app, endpoint, []))
   end
-  def server?(conf) when is_list(conf) do
-    Keyword.get(conf, :server, Application.get_env(:phoenix, :serve_endpoints, false))
+
+  defp server?(conf) when is_list(conf) do
+    Keyword.get_lazy(conf, :server, fn ->
+      Application.get_env(:phoenix, :serve_endpoints, false)
+    end)
   end
 
   defp defaults(otp_app, module) do
-    [otp_app: otp_app,
+    [
+      otp_app: otp_app,
 
-     # Compile-time config
-     code_reloader: false,
-     debug_errors: false,
-     render_errors: [view: render_errors(module), accepts: ~w(html), layout: false],
+      # Compile-time config
+      code_reloader: false,
+      debug_errors: false,
+      render_errors: [view: render_errors(module), accepts: ~w(html), layout: false],
 
-     # Runtime config
-     cache_static_manifest: nil,
-     check_origin: true,
-     http: false,
-     https: false,
-     reloadable_apps: nil,
-     reloadable_compilers: [:gettext, :elixir],
-     secret_key_base: nil,
-     static_url: nil,
-     url: [host: "localhost", path: "/"],
-     cache_manifest_skip_vsn: false,
+      # Runtime config
+      cache_static_manifest: nil,
+      check_origin: true,
+      http: false,
+      https: false,
+      reloadable_apps: nil,
+      # TODO: Gettext had a compiler in earlier versions,
+      # but not since v0.20, so we can remove it here eventually.
+      reloadable_compilers: [:gettext, :elixir, :app],
+      secret_key_base: nil,
+      static_url: nil,
+      url: [host: "localhost", path: "/"],
+      cache_manifest_skip_vsn: false,
 
-     # Supervisor config
-     watchers: [],
-     force_watchers: false]
+      # Supervisor config
+      watchers: [],
+      force_watchers: false
+    ]
   end
 
   defp render_errors(module) do
     module
-    |> Module.split
+    |> Module.split()
     |> Enum.at(0)
     |> Module.concat("ErrorView")
   end
@@ -226,95 +207,6 @@ defmodule Phoenix.Endpoint.Supervisor do
     warmup(endpoint)
     res
   end
-
-  @doc """
-  Builds the endpoint url from its configuration.
-
-  The result is wrapped in a `{:cache, value}` tuple so
-  the `Phoenix.Config` layer knows how to cache it.
-  """
-  def url(endpoint) do
-    {:cache, build_url(endpoint, endpoint.config(:url)) |> String.Chars.URI.to_string()}
-  end
-
-  @doc """
-  Builds the host for caching.
-  """
-  def host(endpoint) do
-    {:cache, host_to_binary(endpoint.config(:url)[:host] || "localhost")}
-  end
-
-  @doc """
-  Builds the path for caching.
-  """
-  def path(endpoint) do
-    {:cache, empty_string_if_root(endpoint.config(:url)[:path] || "/")}
-  end
-
-  @doc """
-  Builds the script_name for caching.
-  """
-  def script_name(endpoint) do
-    {:cache, String.split(endpoint.config(:url)[:path] || "/", "/", trim: true)}
-  end
-
-  @doc """
-  Builds the static url from its configuration.
-
-  The result is wrapped in a `{:cache, value}` tuple so
-  the `Phoenix.Config` layer knows how to cache it.
-  """
-  def static_url(endpoint) do
-    url = endpoint.config(:static_url) || endpoint.config(:url)
-    {:cache, build_url(endpoint, url) |> String.Chars.URI.to_string()}
-  end
-
-  @doc """
-  Builds a struct url for user processing.
-
-  The result is wrapped in a `{:cache, value}` tuple so
-  the `Phoenix.Config` layer knows how to cache it.
-  """
-  def struct_url(endpoint) do
-    url = endpoint.config(:url)
-    {:cache, build_url(endpoint, url)}
-  end
-
-  defp build_url(endpoint, url) do
-    https = endpoint.config(:https)
-    http  = endpoint.config(:http)
-
-    {scheme, port} =
-      cond do
-        https ->
-          {"https", https[:port]}
-        http ->
-          {"http", http[:port]}
-        true ->
-          {"http", 80}
-      end
-
-    scheme = url[:scheme] || scheme
-    host   = host_to_binary(url[:host] || "localhost")
-    port   = port_to_integer(url[:port] || port)
-
-    if host =~ ~r"[^:]:\d" do
-      Logger.warn("url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid")
-    end
-
-    %URI{scheme: scheme, port: port, host: host}
-  end
-
-  @doc """
-  Returns the script path root.
-  """
-  def static_path(endpoint) do
-    script_path = (endpoint.config(:static_url) || endpoint.config(:url))[:path] || "/"
-    {:cache, empty_string_if_root(script_path)}
-  end
-
-  defp empty_string_if_root("/"), do: ""
-  defp empty_string_if_root(other), do: other
 
   @doc """
   Returns a two item tuple with the first element containing the
@@ -335,7 +227,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
   def static_lookup(_endpoint, "/" <> _ = path) do
     if String.contains?(path, @invalid_local_url_chars) do
-      raise ArgumentError, "unsafe characters detected for path #{inspect path}"
+      raise ArgumentError, "unsafe characters detected for path #{inspect(path)}"
     else
       {:nocache, {path, nil}}
     end
@@ -346,41 +238,113 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp raise_invalid_path(path) do
-    raise ArgumentError, "expected a path starting with a single / but got #{inspect path}"
+    raise ArgumentError, "expected a path starting with a single / but got #{inspect(path)}"
   end
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
+  # TODO: Remove the first function clause once {:system, env_var} tuples are removed
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
+  # TODO: Remove the first function clause once {:system, env_var} tuples are removed
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
+
+  defp warn_on_deprecated_system_env_tuples(otp_app, mod, conf, key) do
+    deprecated_configs = Enum.filter(conf[key] || [], &match?({_, {:system, _}}, &1))
+
+    if Enum.any?(deprecated_configs) do
+      deprecated_config_lines = for {k, v} <- deprecated_configs, do: "#{k}: #{inspect(v)}"
+
+      runtime_exs_config_lines =
+        for {key, {:system, env_var}} <- deprecated_configs,
+            do: ~s|#{key}: System.get_env("#{env_var}")|
+
+      Logger.warning("""
+      #{inspect(key)} configuration containing {:system, env_var} tuples for #{inspect(mod)} is deprecated.
+
+      Configuration with deprecated values:
+
+          config #{inspect(otp_app)}, #{inspect(mod)},
+            #{key}: [
+              #{deprecated_config_lines |> Enum.join(",\r\n        ")}
+            ]
+
+      Move this configuration into config/runtime.exs and replace the {:system, env_var} tuples
+      with System.get_env/1 function calls:
+
+          config #{inspect(otp_app)}, #{inspect(mod)},
+            #{key}: [
+              #{runtime_exs_config_lines |> Enum.join(",\r\n        ")}
+            ]
+      """)
+    end
+  end
 
   @doc """
   Invoked to warm up caches on start and config change.
   """
   def warmup(endpoint) do
-    endpoint.host()
-    endpoint.script_name()
-    endpoint.path("/")
-    warmup_url(endpoint)
-    warmup_static(endpoint)
-    :ok
-  rescue
-    _ -> :ok
-  end
-
-  defp warmup_url(endpoint) do
-    endpoint.url()
-    endpoint.static_url()
-    endpoint.struct_url()
-  end
-
-  defp warmup_static(endpoint) do
+    warmup_persistent(endpoint)
     warmup_static(endpoint, cache_static_manifest(endpoint))
-    endpoint.static_path("/")
+    true
+  rescue
+    _ -> false
+  end
+
+  defp warmup_persistent(endpoint) do
+    url_config = endpoint.config(:url)
+    static_url_config = endpoint.config(:static_url) || url_config
+
+    struct_url = build_url(endpoint, url_config)
+    host = host_to_binary(url_config[:host] || "localhost")
+    path = empty_string_if_root(url_config[:path] || "/")
+    script_name = String.split(path, "/", trim: true)
+
+    static_url = build_url(endpoint, static_url_config) |> String.Chars.URI.to_string()
+    static_path = empty_string_if_root(static_url_config[:path] || "/")
+
+    :persistent_term.put({Phoenix.Endpoint, endpoint}, %{
+      struct_url: struct_url,
+      url: String.Chars.URI.to_string(struct_url),
+      host: host,
+      path: path,
+      script_name: script_name,
+      static_path: static_path,
+      static_url: static_url
+    })
+  end
+
+  defp empty_string_if_root("/"), do: ""
+  defp empty_string_if_root(other), do: other
+
+  defp build_url(endpoint, url) do
+    https = endpoint.config(:https)
+    http = endpoint.config(:http)
+
+    {scheme, port} =
+      cond do
+        https ->
+          {"https", https[:port]}
+
+        http ->
+          {"http", http[:port]}
+
+        true ->
+          {"http", 80}
+      end
+
+    scheme = url[:scheme] || scheme
+    host = host_to_binary(url[:host] || "localhost")
+    port = port_to_integer(url[:port] || port)
+
+    if host =~ ~r"[^:]:\d" do
+      Logger.warning(
+        "url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid"
+      )
+    end
+
+    %URI{scheme: scheme, port: port, host: host}
   end
 
   defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests}) do
@@ -395,7 +359,8 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warmup_static(_endpoint, _manifest) do
-    raise ArgumentError, "expected warmup_static/2 to include 'latest' and 'digests' keys in manifest"
+    raise ArgumentError,
+          "expected warmup_static/2 to include 'latest' and 'digests' keys in manifest"
   end
 
   defp static_cache(digests, value, true) do
@@ -423,23 +388,25 @@ defmodule Phoenix.Endpoint.Supervisor do
       if File.exists?(outer) do
         outer |> File.read!() |> Phoenix.json_library().decode!()
       else
-        Logger.error "Could not find static manifest at #{inspect outer}. " <>
-                     "Run \"mix phx.digest\" after building your static files " <>
-                     "or remove the configuration from \"config/prod.exs\"."
+        Logger.error(
+          "Could not find static manifest at #{inspect(outer)}. " <>
+            "Run \"mix phx.digest\" after building your static files " <>
+            "or remove the \"cache_static_manifest\" configuration from your config files."
+        )
       end
     else
       %{}
     end
   end
 
-  defp log_access_url(otp_app, endpoint, opts) do
-    if Keyword.get(opts, :log_access_url, true) && server?(otp_app, endpoint) do
+  defp log_access_url(endpoint, conf) do
+    if Keyword.get(conf, :log_access_url, true) && server?(conf) do
       Logger.info("Access #{inspect(endpoint)} at #{endpoint.url()}")
     end
   end
 
-  defp browser_open(otp_app, endpoint) do
-    if Application.get_env(:phoenix, :browser_open) && server?(otp_app, endpoint) do
+  defp browser_open(endpoint, conf) do
+    if Application.get_env(:phoenix, :browser_open, false) && server?(conf) do
       url = endpoint.url()
 
       {cmd, args} =
@@ -451,15 +418,5 @@ defmodule Phoenix.Endpoint.Supervisor do
 
       System.cmd(cmd, args)
     end
-  end
-
-  @doc """
-  List of keys which we ensure are unchanged from compile time to runtime. For
-  example, the :force_ssl option must be available at compile time in order to
-  work properly. We check these keys so we can warn the user that changing the
-  option at runtime may lead to undesirable behavior.
-  """
-  def compile_config_keys do
-    [:force_ssl]
   end
 end

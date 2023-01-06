@@ -7,6 +7,12 @@ defmodule Phoenix.Logger do
   Phoenix uses the `:telemetry` library for instrumentation. The following events
   are published by Phoenix with the following measurements and metadata:
 
+    * `[:phoenix, :endpoint, :init]` - dispatched by `Phoenix.Endpoint` after your
+      Endpoint supervision tree successfully starts
+      * Measurement: `%{system_time: system_time}`
+      * Metadata: `%{pid: pid(), config: Keyword.t(), module: module(), otp_app: atom()}`
+      * Disable logging: This event is not logged
+
     * `[:phoenix, :endpoint, :start]` - dispatched by `Plug.Telemetry` in your endpoint,
       usually after code reloading
       * Measurement: `%{system_time: system_time}`
@@ -113,7 +119,7 @@ defmodule Phoenix.Logger do
   ## Disabling
 
   When you are using custom logging system it is not always desirable to enable
-  `#{inspect __MODULE__}` by default. You can always disable this in general by:
+  `#{inspect(__MODULE__)}` by default. You can always disable this in general by:
 
       config :phoenix, :logger, false
   """
@@ -261,19 +267,19 @@ defmodule Phoenix.Logger do
   def phoenix_router_dispatch_start(_, _, %{log: false}, _), do: :ok
 
   def phoenix_router_dispatch_start(_, _, metadata, _) do
-    %{log: level, conn: conn} = metadata
+    %{log: level, conn: conn, plug: plug} = metadata
     level = log_level(level, conn)
+    log_module = metadata[:log_module] || plug
 
     Logger.log(level, fn ->
       %{
         pipe_through: pipe_through,
-        plug: plug,
         plug_opts: plug_opts
       } = metadata
 
       [
         "Processing with ",
-        inspect(plug),
+        inspect(log_module),
         maybe_action(plug_opts),
         ?\n,
         "  Parameters: ",

@@ -101,8 +101,8 @@ Then add to your main application's supervision tree
 
 ```elixir
 children = [
-  MyApp.Repo,
   MyAppWeb.Telemetry,
+  MyApp.Repo,
   MyAppWeb.Endpoint,
   ...
 ]
@@ -180,7 +180,7 @@ or you could use a distribution metric to see how many
 requests were completed in particular time buckets:
 
 ```elixir
-Telemetry.Metrics.distribution("phoenix.endpoint.stop.duration", buckets: [100, 200, 300])
+Telemetry.Metrics.distribution("phoenix.endpoint.stop.duration")
 ```
 
 This ability to introspect HTTP requests is really powerful --
@@ -232,8 +232,7 @@ Or you could use the `Telemetry.Metrics.distribution/2` function to define a his
 
 ```elixir
 Telemetry.Metrics.distribution("my_app.repo.query.queue_time",
-  unit: {:native, :millisecond},
-  buckets: [10, 50, 100]
+  unit: {:native, :millisecond}
 )
 ```
 
@@ -450,7 +449,6 @@ Hopefully, this gives you some inspiration on how to use the `:tag_values`
 option. Just remember to keep this function fast since it is called on every
 event.
 
-
 ## Periodic measurements
 
 You might want to periodically measure key-value pairs within
@@ -520,6 +518,7 @@ Library authors are actively encouraged to send a PR adding
 their own (in alphabetical order, please):
 
 * [Absinthe](https://hexdocs.pm/absinthe) - [Events](https://hexdocs.pm/absinthe/telemetry.html)
+* [Ash Framework](https://hexdocs.pm/ash) - [Events](https://hexdocs.pm/ash/monitoring.html)
 * [Broadway](https://hexdocs.pm/broadway) - [Events](https://hexdocs.pm/broadway/Broadway.html#module-telemetry)
 * [Ecto](https://hexdocs.pm/ecto) - [Events](https://hexdocs.pm/ecto/Ecto.Repo.html#module-telemetry-events)
 * [Oban](https://hexdocs.pm/oban) - [Events](https://hexdocs.pm/oban/Oban.Telemetry.html)
@@ -531,7 +530,7 @@ their own (in alphabetical order, please):
 
 If you need custom metrics and instrumentation in your
 application, you can utilize the `:telemetry` package
-(https://hexdocs.pm/telemetry) just like your favorite
+(<https://hexdocs.pm/telemetry>) just like your favorite
 frameworks and libraries.
 
 Here is an example of a simple GenServer that emits telemetry

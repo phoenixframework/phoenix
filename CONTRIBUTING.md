@@ -26,7 +26,7 @@ making it easier for developers to [contribute to Phoenix](#pull-requests).
 ## Bug reports
 
 A bug is either a _demonstrable problem_ that is caused by the code in the repository,
-or indicate missing, unclear, or misleading documentation. Good bug reports are extremely 
+or indicate missing, unclear, or misleading documentation. Good bug reports are extremely
 helpful - thank you!
 
 Guidelines for bug reports:
@@ -134,8 +134,10 @@ in order to craft an excellent pull request:
    ```bash
    # Clone your fork of the repo into the current directory
    git clone https://github.com/<your-username>/phoenix
+
    # Navigate to the newly cloned directory
    cd phoenix
+
    # Assign the original repo to a remote called "upstream"
    git remote add upstream https://github.com/phoenixframework/phoenix
    ```
@@ -216,9 +218,11 @@ complete, the better.
 
 For formatting the guides:
 
-- We use the "elixir" code fence for all module code.
-- We use the "console" code fence for iex and shell commands.
-- We use the "html" code fence for html templates, even if there is elixir code
+- We use the `elixir` code fence for all module code.
+- We use the `iex` for IEx sessions.
+- We use the `console` code fence for shell commands.
+- We use the `html` code fence for html templates, even if there is elixir code
   in the template.
 - We use backticks for filenames and directory paths.
 - We use backticks for module names, function names, and variable names.
+- Documentation line length should hard wrapped at around 100 characters if possible.

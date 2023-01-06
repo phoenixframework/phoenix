@@ -45,12 +45,12 @@ The `mix phx.gen.html` task takes the following arguments: the module name of th
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer
 * creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/templates/post/edit.html.heex
-* creating lib/hello_web/templates/post/form.html.heex
-* creating lib/hello_web/templates/post/index.html.heex
-* creating lib/hello_web/templates/post/new.html.heex
-* creating lib/hello_web/templates/post/show.html.heex
-* creating lib/hello_web/views/post_view.ex
+* creating lib/hello_web/controllers/post_html/edit.html.heex
+* creating lib/hello_web/controllers/post_html/form.html.heex
+* creating lib/hello_web/controllers/post_html/index.html.heex
+* creating lib/hello_web/controllers/post_html/new.html.heex
+* creating lib/hello_web/controllers/post_html/show.html.heex
+* creating lib/hello_web/controllers/post_html.ex
 * creating test/hello_web/controllers/post_controller_test.exs
 * creating lib/hello/blog/post.ex
 * creating priv/repo/migrations/20211001233016_create_posts.exs
@@ -74,14 +74,14 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-Important: If we don't do this, we will see the following warnings in our logs, and our application will error when trying to execute the function.
+Important: If we don't do this, we will see the following warnings in our logs, and our application will error when compiling.
 
 ```console
 $ mix phx.server
 Compiling 17 files (.ex)
 
-warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
-  lib/hello_web/controllers/post_controller.ex:22:
+warning: no route path for HelloWeb.Router matches \"/posts\"
+  lib/hello_web/controllers/post_controller.ex:22: HelloWeb.PostController.index/2
 ```
 
 If we don't want to create a context or schema for our resource we can use the `--no-context` flag. Note that this still requires a context module name as a parameter.
@@ -89,12 +89,12 @@ If we don't want to create a context or schema for our resource we can use the `
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-context
 * creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/templates/post/edit.html.heex
-* creating lib/hello_web/templates/post/form.html.heex
-* creating lib/hello_web/templates/post/index.html.heex
-* creating lib/hello_web/templates/post/new.html.heex
-* creating lib/hello_web/templates/post/show.html.heex
-* creating lib/hello_web/views/post_view.ex
+* creating lib/hello_web/controllers/post_html/edit.html.heex
+* creating lib/hello_web/controllers/post_html/form.html.heex
+* creating lib/hello_web/controllers/post_html/index.html.heex
+* creating lib/hello_web/controllers/post_html/new.html.heex
+* creating lib/hello_web/controllers/post_html/show.html.heex
+* creating lib/hello_web/controllers/post_html.ex
 * creating test/hello_web/controllers/post_controller_test.exs
 ```
 
@@ -111,12 +111,12 @@ Similarly, if we want a context created without a schema for our resource we can
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-schema
 * creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/templates/post/edit.html.heex
-* creating lib/hello_web/templates/post/form.html.heex
-* creating lib/hello_web/templates/post/index.html.heex
-* creating lib/hello_web/templates/post/new.html.heex
-* creating lib/hello_web/templates/post/show.html.heex
-* creating lib/hello_web/views/post_view.ex
+* creating lib/hello_web/controllers/post_html/edit.html.heex
+* creating lib/hello_web/controllers/post_html/form.html.heex
+* creating lib/hello_web/controllers/post_html/index.html.heex
+* creating lib/hello_web/controllers/post_html/new.html.heex
+* creating lib/hello_web/controllers/post_html/show.html.heex
+* creating lib/hello_web/controllers/post_html.ex
 * creating test/hello_web/controllers/post_controller_test.exs
 * creating lib/hello/blog.ex
 * injecting lib/hello/blog.ex
@@ -137,9 +137,9 @@ The `mix phx.gen.json` task takes the following arguments: the module name of th
 ```console
 $ mix phx.gen.json Blog Post posts title:string content:string
 * creating lib/hello_web/controllers/post_controller.ex
-* creating lib/hello_web/views/post_view.ex
+* creating lib/hello_web/controllers/post_json.ex
 * creating test/hello_web/controllers/post_controller_test.exs
-* creating lib/hello_web/views/changeset_view.ex
+* creating lib/hello_web/controllers/changeset_json.ex
 * creating lib/hello_web/controllers/fallback_controller.ex
 * creating lib/hello/blog/post.ex
 * creating priv/repo/migrations/20170906153323_create_posts.exs
@@ -163,14 +163,14 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-Important: If we don't do this, we'll get the following warning in our logs and the application will error when attempting to load the page:
+Important: If we don't do this, we'll get the following warning in our logs and the application will error when attempting to compile:
 
 ```console
 $ mix phx.server
 Compiling 19 files (.ex)
 
-warning: function HelloWeb.Router.Helpers.post_path/3 is undefined or private
-  lib/hello_web/controllers/post_controller.ex:18
+warning: no route path for HelloWeb.Router matches \"/posts\"
+  lib/hello_web/controllers/post_controller.ex:22: HelloWeb.PostController.index/2
 ```
 
 `mix phx.gen.json` also supports `--no-context`, `--no-schema`, and others, as in `mix phx.gen.html`.
@@ -223,7 +223,7 @@ $ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id
 
 Phoenix also offers the ability to generate all of the code to stand up a complete authentication system — Ecto migration, phoenix context, controllers, templates, etc. This can be a huge time saver, allowing you to quickly add authentication to your system and shift your focus back to the primary problems your application is trying to solve.
 
-The `mix phx.gen.auth` task takes the following arguments: the module name of the context, the module name of the schema, and a plural version of the schema name used to generate database tables and route helpers.
+The `mix phx.gen.auth` task takes the following arguments: the module name of the context, the module name of the schema, and a plural version of the schema name used to generate database tables and route paths.
 
 Here is an example version of the command:
 
@@ -235,26 +235,25 @@ $ mix phx.gen.auth Accounts User users
 * creating lib/hello/accounts/user_token.ex
 * creating lib/hello_web/controllers/user_auth.ex
 * creating test/hello_web/controllers/user_auth_test.exs
-* creating lib/hello_web/views/user_confirmation_view.ex
+* creating lib/hello_web/controllers/user_confirmation_html.ex
 * creating lib/hello_web/templates/user_confirmation/new.html.heex
 * creating lib/hello_web/templates/user_confirmation/edit.html.heex
 * creating lib/hello_web/controllers/user_confirmation_controller.ex
 * creating test/hello_web/controllers/user_confirmation_controller_test.exs
-* creating lib/hello_web/templates/layout/_user_menu.html.heex
 * creating lib/hello_web/templates/user_registration/new.html.heex
 * creating lib/hello_web/controllers/user_registration_controller.ex
 * creating test/hello_web/controllers/user_registration_controller_test.exs
-* creating lib/hello_web/views/user_registration_view.ex
-* creating lib/hello_web/views/user_reset_password_view.ex
+* creating lib/hello_web/controllers/user_registration_html.ex
+* creating lib/hello_web/controllers/user_reset_password_html.ex
 * creating lib/hello_web/controllers/user_reset_password_controller.ex
 * creating test/hello_web/controllers/user_reset_password_controller_test.exs
 * creating lib/hello_web/templates/user_reset_password/edit.html.heex
 * creating lib/hello_web/templates/user_reset_password/new.html.heex
-* creating lib/hello_web/views/user_session_view.ex
+* creating lib/hello_web/controllers/user_session_html.ex
 * creating lib/hello_web/controllers/user_session_controller.ex
 * creating test/hello_web/controllers/user_session_controller_test.exs
 * creating lib/hello_web/templates/user_session/new.html.heex
-* creating lib/hello_web/views/user_settings_view.ex
+* creating lib/hello_web/controllers/user_settings_html.ex
 * creating lib/hello_web/templates/user_settings/edit.html.heex
 * creating lib/hello_web/controllers/user_settings_controller.ex
 * creating test/hello_web/controllers/user_settings_controller_test.exs
@@ -361,13 +360,14 @@ If we don't specify a router for this task, it will default to the router Phoeni
 
 ```console
 $ mix phx.routes
-page_path  GET  /  TaskTester.PageController.index/2
+GET  /  TaskTester.PageController.index/2
 ```
+
 We can also specify an individual router if we have more than one for our application.
 
 ```console
 $ mix phx.routes TaskTesterWeb.Router
-page_path  GET  /  TaskTesterWeb.PageController.index/2
+GET  /  TaskTesterWeb.PageController.index/2
 ```
 
 ### `mix phx.server`
@@ -378,12 +378,14 @@ This is the task we use to get our application running. It takes no arguments at
 $ mix phx.server
 [info] Running TaskTesterWeb.Endpoint with Cowboy on port 4000 (http)
 ```
+
 It will silently ignore our `DoesNotExist` argument:
 
 ```console
 $ mix phx.server DoesNotExist
 [info] Running TaskTesterWeb.Endpoint with Cowboy on port 4000 (http)
 ```
+
 If we would like to start our application and also have an `IEx` session open to it, we can run the Mix task within `iex` like this, `iex -S mix phx.server`.
 
 ```console

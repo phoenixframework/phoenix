@@ -1,5 +1,3 @@
-System.put_env("TRANSPORT_TEST_HOST", "host.com")
-
 defmodule Phoenix.Socket.TransportTest do
   use ExUnit.Case, async: true
   use RouterHelper
@@ -12,7 +10,7 @@ defmodule Phoenix.Socket.TransportTest do
 
   Application.put_env :phoenix, __MODULE__.Endpoint,
     force_ssl: [],
-    url: [host: {:system, "TRANSPORT_TEST_HOST"}],
+    url: [host: "host.com"],
     check_origin: ["//endpoint.com"],
     secret_key_base: @secret_key_base
 
@@ -87,6 +85,12 @@ defmodule Phoenix.Socket.TransportTest do
       refute conn.halted
       conn = check_origin("https://org1.ex.com", check_origin: origins)
       refute conn.halted
+
+      conn = check_origin("https://ex.com", check_origin: origins)
+      refute conn.halted
+
+      conn = check_origin("https://org1.prefix-ex.com", check_origin: origins)
+      assert conn.halted
     end
 
     test "nested wildcard subdomains" do
@@ -94,6 +98,15 @@ defmodule Phoenix.Socket.TransportTest do
 
       conn = check_origin("http://org1.foo.example.com", check_origin: origins)
       refute conn.halted
+
+      conn = check_origin("http://foo.example.com", check_origin: origins)
+      refute conn.halted
+
+      conn = check_origin("http://bad.example.com", check_origin: origins)
+      assert conn.halted
+
+      conn = check_origin("http://org1.prefix-foo.example.com", check_origin: origins)
+      assert conn.halted
 
       conn = check_origin("http://org1.bar.example.com", check_origin: origins)
       assert conn.halted
@@ -253,28 +266,6 @@ defmodule Phoenix.Socket.TransportTest do
       conn = check_subprotocols("sip", ["mqtt"])
       assert conn.halted
       assert conn.status == 403
-    end
-  end
-
-  describe "force_ssl/4" do
-    test "forces SSL" do
-      # Halts
-      conn = Transport.force_ssl(conn(:get, "http://foo.com/"), make_ref(), Endpoint, [])
-      assert conn.halted
-      assert get_resp_header(conn, "location") == ["https://host.com/"]
-
-      # Disabled
-      conn = Transport.force_ssl(conn(:get, "http://foo.com/"), make_ref(), Endpoint, force_ssl: false)
-      refute conn.halted
-
-      # No-op when already halted
-      conn = Transport.force_ssl(conn(:get, "http://foo.com/") |> halt(), make_ref(), Endpoint, [])
-      assert conn.halted
-      assert get_resp_header(conn, "location") == []
-
-      # Valid
-      conn = Transport.force_ssl(conn(:get, "https://foo.com/"), make_ref(), Endpoint, [])
-      refute conn.halted
     end
   end
 

@@ -24,7 +24,10 @@ defmodule Phx.New.Generator do
 
     templates_ast =
       for {name, mappings} <- Module.get_attribute(env.module, :templates) do
-        for {format, source, _, _} <- mappings, format != :keep do
+        for {format, _proj_location, files} <- mappings,
+            format != :keep,
+            {source, _target} <- files,
+            source = to_string(source) do
           path = Path.join(root, source)
 
           if format in [:config, :prod_config, :eex] do
@@ -61,7 +64,9 @@ defmodule Phx.New.Generator do
   def copy_from(%Project{} = project, mod, name) when is_atom(name) do
     mapping = mod.template_files(name)
 
-    for {format, source, project_location, target_path} <- mapping do
+    for {format, project_location, files} <- mapping,
+        {source, target_path} <- files,
+        source = to_string(source) do
       target = Project.join_path(project, project_location, target_path)
 
       case format do
@@ -171,7 +176,8 @@ defmodule Phx.New.Generator do
     assets = Keyword.get(opts, :assets, true)
     mailer = Keyword.get(opts, :mailer, true)
     dev = Keyword.get(opts, :dev, false)
-    phoenix_path = phoenix_path(project, dev)
+    phoenix_path = phoenix_path(project, dev, false)
+    phoenix_path_umbrella_root = phoenix_path(project, dev, true)
 
     # We lowercase the database name because according to the
     # SQL spec, they are case insensitive unless quoted, which
@@ -191,7 +197,6 @@ defmodule Phx.New.Generator do
     version = @phoenix_version
 
     binding = [
-      elixir_version: elixir_version(),
       app_name: project.app,
       app_module: inspect(project.app_mod),
       root_app_name: project.root_app,
@@ -202,7 +207,9 @@ defmodule Phx.New.Generator do
       web_namespace: inspect(project.web_namespace),
       phoenix_github_version_tag: "v#{version.major}.#{version.minor}",
       phoenix_dep: phoenix_dep(phoenix_path, version),
+      phoenix_dep_umbrella_root: phoenix_dep(phoenix_path_umbrella_root, version),
       phoenix_js_path: phoenix_js_path(phoenix_path),
+      phoenix_version: version,
       pubsub_server: pubsub_server,
       secret_key_base_dev: random_string(64),
       secret_key_base_test: random_string(64),
@@ -221,14 +228,11 @@ defmodule Phx.New.Generator do
       adapter_module: adapter_module,
       adapter_config: adapter_config,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
-      namespaced?: namespaced?(project)
+      namespaced?: namespaced?(project),
+      dev: dev
     ]
 
     %Project{project | binding: binding}
-  end
-
-  defp elixir_version do
-    System.version()
   end
 
   defp namespaced?(project) do
@@ -268,26 +272,26 @@ defmodule Phx.New.Generator do
   end
 
   defp get_ecto_adapter("mssql", app, module) do
-    {:tds, Ecto.Adapters.Tds, db_config(app, module, "sa", "some!Password")}
+    {:tds, Ecto.Adapters.Tds, socket_db_config(app, module, "sa", "some!Password")}
   end
 
   defp get_ecto_adapter("mysql", app, module) do
-    {:myxql, Ecto.Adapters.MyXQL, db_config(app, module, "root", "")}
+    {:myxql, Ecto.Adapters.MyXQL, socket_db_config(app, module, "root", "")}
   end
 
   defp get_ecto_adapter("postgres", app, module) do
-    {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
+    {:postgrex, Ecto.Adapters.Postgres, socket_db_config(app, module, "postgres", "postgres")}
   end
 
   defp get_ecto_adapter("sqlite3", app, module) do
-    {:ecto_sqlite3, Ecto.Adapters.SQLite3, db_config(app, module)}
+    {:ecto_sqlite3, Ecto.Adapters.SQLite3, fs_db_config(app, module)}
   end
 
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
   end
 
-  defp db_config(app, module) do
+  defp fs_db_config(app, module) do
     [
       dev: [
         database: {:literal, ~s|Path.expand("../#{app}_dev.db", Path.dirname(__ENV__.file))|},
@@ -320,7 +324,7 @@ defmodule Phx.New.Generator do
     ]
   end
 
-  defp db_config(app, module, user, pass) do
+  defp socket_db_config(app, module, user, pass) do
     [
       dev: [
         username: user,
@@ -337,7 +341,7 @@ defmodule Phx.New.Generator do
         hostname: "localhost",
         database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|},
         pool: Ecto.Adapters.SQL.Sandbox,
-        pool_size: 10,
+        pool_size: 10
       ],
       test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect(module)}.Repo, :manual)",
       test_setup: """
@@ -379,7 +383,7 @@ defmodule Phx.New.Generator do
   defp nil_if_empty([]), do: nil
   defp nil_if_empty(other), do: other
 
-  defp phoenix_path(%Project{} = project, true) do
+  defp phoenix_path(%Project{} = project, true = _dev, umbrella_root?) do
     absolute = Path.expand(project.project_path)
     relative = Path.relative_to(absolute, @phoenix)
 
@@ -388,25 +392,27 @@ defmodule Phx.New.Generator do
     end
 
     project
-    |> phoenix_path_prefix()
+    |> phoenix_path_prefix(umbrella_root?)
     |> Path.join(relative)
     |> Path.split()
     |> Enum.map(fn _ -> ".." end)
     |> Path.join()
   end
 
-  defp phoenix_path(%Project{}, false) do
+  defp phoenix_path(%Project{}, false = _dev, _umbrella_root?) do
     "deps/phoenix"
   end
 
-  defp phoenix_path_prefix(%Project{in_umbrella?: true}), do: "../../../"
-  defp phoenix_path_prefix(%Project{in_umbrella?: false}), do: ".."
+  defp phoenix_path_prefix(%Project{in_umbrella?: false}, _), do: ".."
+  defp phoenix_path_prefix(%Project{in_umbrella?: true}, true = _umbrella_root?), do: ".."
+  defp phoenix_path_prefix(%Project{in_umbrella?: true}, false = _umbrella_root?), do: "../../../"
 
   defp phoenix_dep("deps/phoenix", %{pre: ["dev"]}),
     do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
 
+  # TODO no override on final 1.7 release
   defp phoenix_dep("deps/phoenix", version),
-    do: ~s[{:phoenix, "~> #{version}"}]
+    do: ~s[{:phoenix, "~> #{version}", override: true}]
 
   defp phoenix_dep(path, _version),
     do: ~s[{:phoenix, path: #{inspect(path)}, override: true}]

@@ -134,7 +134,7 @@ channel "room:*", HelloWeb.RoomChannel
 
 ### Channels
 
-Channels handle events from clients, so they are similar to Controllers, but there are two key differences. Channel events can go both directions - incoming and outgoing. Channel connections also persist beyond a single request/response cycle. Channels are the highest level abstraction for realtime communication components in Phoenix.
+Channels handle events from clients, so they are similar to Controllers, but there are two key differences. Channel events can go both directions - incoming and outgoing. Channel connections also persist beyond a single request/response cycle. Channels are the highest level abstraction for real-time communication components in Phoenix.
 
 Each Channel will implement one or more clauses of each of these four callback functions - `join/3`, `terminate/2`, `handle_in/3`, and `handle_out/3`.
 
@@ -145,6 +145,7 @@ Topics are string identifiers - names that the various layers use in order to ma
 ### Messages
 
 The `Phoenix.Socket.Message` module defines a struct with the following keys which denotes a valid message. From the [Phoenix.Socket.Message docs](https://hexdocs.pm/phoenix/Phoenix.Socket.Message.html).
+
 - `topic` - The string topic or `"topic:subtopic"` pair namespace, such as `"messages"` or `"messages:123"`
 - `event` - The string event name, for example `"phx_join"`
 - `payload` - The message payload
@@ -267,18 +268,18 @@ channel.join()
 export default socket
 ```
 
-After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment the last line in `assets/js/app.js`.
+After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment this line in `assets/js/app.js`.
 
 ```javascript
 // ...
-import socket from "./user_socket"
+import "./user_socket.js"
 ```
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
 In `lib/hello_web/templates/page/index.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
-```html
+```heex
 <div id="messages" role="log" aria-live="polite"></div>
 <input id="chat-input" type="text">
 ```
@@ -305,7 +306,7 @@ channel.join()
 export default socket
 ```
 
-All we had to do is detect that enter was pressed and then `push` an event over the channel with the message body. We named the event `"new_msg"`. With this in place, let's handle the other piece of a chat application where we listen for new messages and append them to our messages container.
+All we had to do is detect that enter was pressed and then `push` an event over the channel with the message body. We named the event `"new_msg"`. With this in place, let's handle the other piece of a chat application, where we listen for new messages and append them to our messages container.
 
 ```javascript
 // ...
@@ -362,7 +363,7 @@ end
 
 ### Intercepting Outgoing Events
 
-We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this where we explicitly tell Phoenix which outgoing event we want to intercept and then define a `handle_out/3` callback for those events. (Of course, this assumes that we have an `Accounts` context with an `ignoring_user?/2` function, and that we pass a user in via the `assigns` map). It is important to note that the `handle_out/3` callback will be called for every recipient of a message, so more expensive operations like hitting the database should be considered carefully before being included in `handle_out/3`.
+We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this, where we explicitly tell Phoenix which outgoing event we want to intercept and then define a `handle_out/3` callback for those events. (Of course, this assumes that we have an `Accounts` context with an `ignoring_user?/2` function, and that we pass a user in via the `assigns` map). It is important to note that the `handle_out/3` callback will be called for every recipient of a message, so more expensive operations like hitting the database should be considered carefully before being included in `handle_out/3`.
 
 ```elixir
 intercept ["user_joined"]
@@ -383,7 +384,7 @@ That's all there is to our basic chat app. Fire up multiple browser tabs and you
 
 When we connect, we'll often need to authenticate the client. Fortunately, this is a 4-step process with [Phoenix.Token](https://hexdocs.pm/phoenix/Phoenix.Token.html).
 
-**Step 1 - Assign a Token in the Connection**
+### Step 1 - Assign a Token in the Connection
 
 Let's say we have an authentication plug in our app called `OurAuth`. When `OurAuth` authenticates a user, it sets a value for the `:current_user` key in `conn.assigns`. Since the `current_user` exists, we can simply assign the user's token in the connection for use in the layout. We can wrap that behavior up in a private function plug, `put_user_token/2`. This could also be put in its own module as well. To make this all work, we just add `OurAuth` and `put_user_token/2` to the browser pipeline.
 
@@ -406,16 +407,16 @@ end
 
 Now our `conn.assigns` contains the `current_user` and `user_token`.
 
-**Step 2 - Pass the Token to the JavaScript**
+### Step 2 - Pass the Token to the JavaScript
 
-Next we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.heex` right above the app.js script, as follows:
+Next, we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.heex` right above the app.js script, as follows:
 
-```html
+```heex
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
-<script src={Routes.static_path(@conn, "/assets/app.js")}></script>
+<script src={~p"/assets/app.js"}></script>
 ```
 
-**Step 3 - Pass the Token to the Socket Constructor and Verify**
+### Step 3 - Pass the Token to the Socket Constructor and Verify
 
 We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/3` function. To do so, edit `web/channels/user_socket.ex`, as follows:
 
@@ -439,7 +440,7 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 
 We used `Phoenix.Token.verify/4` to verify the user token provided by the client. `Phoenix.Token.verify/4` returns either `{:ok, user_id}` or `{:error, reason}`. We can pattern match on that return in a `case` statement. With a verified token, we set the user's id as the value to `:current_user` in the socket. Otherwise, we return `:error`.
 
-**Step 4 - Connect to the socket in JavaScript**
+### Step 4 - Connect to the socket in JavaScript
 
 With authentication set up, we can connect to sockets and channels from JavaScript.
 

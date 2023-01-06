@@ -1,9 +1,10 @@
 defmodule <%= inspect auth_module %> do
+  use <%= inspect context.web_module %>, :verified_routes
+
   import Plug.Conn
   import Phoenix.Controller
 
   alias <%= inspect context.module %>
-  alias <%= inspect context.web_module %>.Router.Helpers, as: Routes
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -30,8 +31,7 @@ defmodule <%= inspect auth_module %> do
 
     conn
     |> renew_session()
-    |> put_session(:<%= schema.singular %>_token, token)
-    |> put_session(:live_socket_id, "<%= schema.plural %>_sessions:#{Base.url_encode64(token)}")
+    |> put_token_in_session(token)
     |> maybe_write_remember_me_cookie(token, params)
     |> redirect(to: <%= schema.singular %>_return_to || signed_in_path(conn))
   end
@@ -72,7 +72,7 @@ defmodule <%= inspect auth_module %> do
   """
   def log_out_<%= schema.singular %>(conn) do
     <%= schema.singular %>_token = get_session(conn, :<%= schema.singular %>_token)
-    <%= schema.singular %>_token && <%= inspect context.alias %>.delete_session_token(<%= schema.singular %>_token)
+    <%= schema.singular %>_token && <%= inspect context.alias %>.delete_<%= schema.singular %>_session_token(<%= schema.singular %>_token)
 
     if live_socket_id = get_session(conn, :live_socket_id) do
       <%= inspect(endpoint_module) %>.broadcast(live_socket_id, "disconnect", %{})
@@ -95,16 +95,92 @@ defmodule <%= inspect auth_module %> do
   end
 
   defp ensure_<%= schema.singular %>_token(conn) do
-    if <%= schema.singular %>_token = get_session(conn, :<%= schema.singular %>_token) do
-      {<%= schema.singular %>_token, conn}
+    if token = get_session(conn, :<%= schema.singular %>_token) do
+      {token, conn}
     else
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
-      if <%= schema.singular %>_token = conn.cookies[@remember_me_cookie] do
-        {<%= schema.singular %>_token, put_session(conn, :<%= schema.singular %>_token, <%= schema.singular %>_token)}
+      if token = conn.cookies[@remember_me_cookie] do
+        {token, put_token_in_session(conn, token)}
       else
         {nil, conn}
       end
+    end
+  end
+
+  @doc """
+  Handles mounting and authenticating the current_<%= schema.singular %> in LiveViews.
+
+  ## `on_mount` arguments
+
+    * `:mount_current_<%= schema.singular %>` - Assigns current_<%= schema.singular %>
+      to socket assigns based on <%= schema.singular %>_token, or nil if
+      there's no <%= schema.singular %>_token or no matching <%= schema.singular %>.
+
+    * `:ensure_authenticated` - Authenticates the <%= schema.singular %> from the session,
+      and assigns the current_<%= schema.singular %> to socket assigns based
+      on <%= schema.singular %>_token.
+      Redirects to login page if there's no logged <%= schema.singular %>.
+
+    * `:redirect_if_<%= schema.singular %>_is_authenticated` - Authenticates the <%= schema.singular %> from the session.
+      Redirects to signed_in_path if there's a logged <%= schema.singular %>.
+
+  ## Examples
+
+  Use the `on_mount` lifecycle macro in LiveViews to mount or authenticate
+  the current_<%= schema.singular %>:
+
+      defmodule <%= inspect context.web_module %>.PageLive do
+        use <%= inspect context.web_module %>, :live_view
+
+        on_mount {<%= inspect auth_module %>, :mount_current_<%= schema.singular %>}
+        ...
+      end
+
+  Or use the `live_session` of your router to invoke the on_mount callback:
+
+      live_session :authenticated, on_mount: [{<%= inspect auth_module %>, :ensure_authenticated}] do
+        live "/profile", ProfileLive, :index
+      end
+  """
+  def on_mount(:mount_current_<%= schema.singular %>, _params, session, socket) do
+    {:cont, mount_current_<%= schema.singular %>(session, socket)}
+  end
+
+  def on_mount(:ensure_authenticated, _params, session, socket) do
+    socket = mount_current_<%= schema.singular %>(session, socket)
+
+    if socket.assigns.current_<%= schema.singular %> do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
+        |> Phoenix.LiveView.redirect(to: ~p"<%= schema.route_prefix %>/log_in")
+
+      {:halt, socket}
+    end
+  end
+
+  def on_mount(:redirect_if_<%= schema.singular %>_is_authenticated, _params, session, socket) do
+    socket = mount_current_<%= schema.singular %>(session, socket)
+
+    if socket.assigns.current_<%= schema.singular %> do
+      {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_path(socket))}
+    else
+      {:cont, socket}
+    end
+  end
+
+  defp mount_current_<%= schema.singular %>(session, socket) do
+    case session do
+      %{"<%= schema.singular %>_token" => <%= schema.singular %>_token} ->
+        Phoenix.Component.assign_new(socket, :current_<%= schema.singular %>, fn ->
+          <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
+        end)
+
+      %{} ->
+        Phoenix.Component.assign_new(socket, :current_<%= schema.singular %>, fn -> nil end)
     end
   end
 
@@ -134,9 +210,15 @@ defmodule <%= inspect auth_module %> do
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
-      |> redirect(to: Routes.<%= schema.route_helper %>_session_path(conn, :new))
+      |> redirect(to: ~p"<%= schema.route_prefix %>/log_in")
       |> halt()
     end
+  end
+
+  defp put_token_in_session(conn, token) do
+    conn
+    |> put_session(:<%= schema.singular %>_token, token)
+    |> put_session(:live_socket_id, "<%= schema.plural %>_sessions:#{Base.url_encode64(token)}")
   end
 
   defp maybe_store_return_to(%{method: "GET"} = conn) do
@@ -145,5 +227,5 @@ defmodule <%= inspect auth_module %> do
 
   defp maybe_store_return_to(conn), do: conn
 
-  defp signed_in_path(_conn), do: "/"
+  defp signed_in_path(_conn), do: ~p"/"
 end

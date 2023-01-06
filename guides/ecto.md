@@ -12,7 +12,6 @@ Phoenix uses Ecto to provide builtin support to the following databases:
 * ETS (via [`etso`](https://github.com/evadne/etso))
 * SQLite3 (via [`ecto_sqlite3`](https://github.com/elixir-sqlite/ecto_sqlite3))
 
-
 Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default. You can pass the `--database` option to change or `--no-ecto` flag to exclude this.
 
 Ecto also provides support for other databases and it has many learning resources available. Please check out [Ecto's README](https://github.com/elixir-ecto/ecto) for general information.
@@ -44,11 +43,11 @@ $ mix ecto.migrate
 Compiling 1 file (.ex)
 Generated hello app
 
-[info]  == Running Hello.Repo.Migrations.CreateUsers.change/0 forward
+[info] == Running Hello.Repo.Migrations.CreateUsers.change/0 forward
 
-[info]  create table users
+[info] create table users
 
-[info]  == Migrated in 0.0s
+[info] == Migrated in 0.0s
 ```
 
 Mix assumes that we are in the development environment unless we tell it otherwise with `MIX_ENV=prod mix ecto.migrate`.
@@ -185,7 +184,7 @@ Changesets define a pipeline of transformations our data needs to undergo before
 Let's take a closer look at our default changeset function.
 
 ```elixir
-def changeset(%User{} = user, attrs) do
+def changeset(user, attrs) do
   user
   |> cast(attrs, [:name, :email, :bio, :number_of_pets])
   |> validate_required([:name, :email, :bio, :number_of_pets])
@@ -308,7 +307,7 @@ iex> changeset = User.changeset(%User{}, params)
   errors: [],
   data: #Hello.User<>,
   valid?: true
-> 
+>
 ```
 
 Our new changeset is valid.
@@ -333,7 +332,7 @@ We can validate more than just whether a field is required or not. Let's take a 
 What if we had a requirement that all biographies in our system must be at least two characters long? We can do this easily by adding another transformation to the pipeline in our changeset which validates the length of the `bio` field.
 
 ```elixir
-def changeset(%User{} = user, attrs) do
+def changeset(user, attrs) do
   user
   |> cast(attrs, [:name, :email, :bio, :number_of_pets])
   |> validate_required([:name, :email, :bio, :number_of_pets])
@@ -342,7 +341,6 @@ end
 ```
 
 Now, if we try to cast data containing a value of `"A"` for our user's `bio`, we should see the failed validation in the changeset's errors.
-
 
 ```elixir
 iex> recompile()
@@ -357,7 +355,7 @@ iex> changeset.errors[:bio]
 If we also have a requirement for the maximum length that a bio can have, we can simply add another validation.
 
 ```elixir
-def changeset(%User{} = user, attrs) do
+def changeset(user, attrs) do
   user
   |> cast(attrs, [:name, :email, :bio, :number_of_pets])
   |> validate_required([:name, :email, :bio, :number_of_pets])
@@ -369,7 +367,7 @@ end
 Let's say we want to perform at least some rudimentary format validation on the `email` field. All we want to check for is the presence of the `@`. The `Ecto.Changeset.validate_format/3` function is just what we need.
 
 ```elixir
-def changeset(%User{} = user, attrs) do
+def changeset(user, attrs) do
   user
   |> cast(attrs, [:name, :email, :bio, :number_of_pets])
   |> validate_required([:name, :email, :bio, :number_of_pets])
@@ -564,7 +562,7 @@ The last change is to open up `lib/hello_phoenix/repo.ex` and make sure to set t
 Now all we need to do is fetch our new dependency, and we'll be ready to go.
 
 ```console
-$ mix do deps.get, compile
+$ mix deps.get
 ```
 
 With our new adapter installed and configured, we're ready to create our database.

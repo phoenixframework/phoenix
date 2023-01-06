@@ -7,7 +7,7 @@ defmodule Phoenix.Controller.RenderTest do
   import Phoenix.Controller
 
   defp conn() do
-    conn(:get, "/") |> put_view(MyApp.UserView) |> fetch_query_params()
+    conn(:get, "/") |> fetch_query_params() |> put_view(MyApp.UserView)
   end
 
   defp layout_conn() do
@@ -49,19 +49,6 @@ defmodule Phoenix.Controller.RenderTest do
       |> render("index.html", title: "Hello")
 
     assert conn.resp_body == "ROOTSTART[Hello]<html>\n  <title>Hello</title>\n  Hello\n\n</html>\nROOTEND\n"
-    assert html_response?(conn)
-  end
-
-  test "renders string template without put_root_layout based on layout_formats" do
-    conn =
-      conn()
-      |> put_layout_formats(["not_html"])
-      |> put_layout({MyApp.LayoutView, "app.html"})
-      |> put_root_layout({MyApp.LayoutView, "root.html"})
-      |> render("index.html", title: "Hello")
-
-    refute conn.resp_body =~ "ROOTSTART"
-    refute conn.resp_body =~ "<html>"
     assert html_response?(conn)
   end
 
@@ -115,27 +102,6 @@ defmodule Phoenix.Controller.RenderTest do
     conn = %Plug.Conn{conn() | status: 404}
     conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, "app.html"})
     assert conn.status == 404
-  end
-
-  test "skips layout depending on layout_formats with string template" do
-    conn = layout_conn() |> put_layout_formats([]) |> render("index.html", title: "Hello")
-    assert conn.resp_body == "Hello\n"
-    assert html_response?(conn)
-
-    conn = render(conn(), "show.json", layout: {MyApp.LayoutView, :app})
-    assert conn.resp_body == ~s({"foo":"bar"})
-  end
-
-  test "skips layout depending on layout_formats with atom template" do
-    conn = put_format(layout_conn(), "html")
-    conn = conn |> put_layout_formats([]) |> render(:index, title: "Hello")
-    assert conn.resp_body == "Hello\n"
-    assert html_response?(conn)
-
-    conn = put_format(layout_conn(), "json")
-
-    conn = render(conn, :show, layout: {MyApp.LayoutView, :app})
-    assert conn.resp_body == ~s({"foo":"bar"})
   end
 
   test "merges render assigns" do
@@ -192,8 +158,71 @@ defmodule Phoenix.Controller.RenderTest do
   end
 
   test "errors when rendering without view" do
-    assert_raise RuntimeError, ~r/a view module was not specified/, fn ->
+    assert_raise RuntimeError, ~r/no view was found for the format: html/, fn ->
       render(conn() |> put_view(nil), "index.html")
+    end
+  end
+
+  describe "telemetry" do
+    @render_start_event [:phoenix, :controller, :render, :start]
+    @render_stop_event [:phoenix, :controller, :render, :stop]
+    @render_exception_event [:phoenix, :controller, :render, :exception]
+
+    @render_events [
+      @render_start_event,
+      @render_stop_event,
+      @render_exception_event
+    ]
+
+    setup context do
+      test_pid = self()
+      test_name = context.test
+
+      :telemetry.attach_many(
+        test_name,
+        @render_events,
+        fn event, measures, metadata, config ->
+          send(test_pid, {:telemetry_event, event, {measures, metadata, config}})
+        end,
+        nil
+      )
+    end
+
+    test "phoenix.controller.render.start and .stop are emitted on success" do
+      render(conn(), "index.html", title: "Hello")
+
+      assert_received {:telemetry_event, [:phoenix, :controller, :render, :start],
+                       {_, %{format: "html", template: "index", view: MyApp.UserView}, _}}
+
+      assert_received {:telemetry_event, [:phoenix, :controller, :render, :stop],
+                       {_, %{format: "html", template: "index", view: MyApp.UserView}, _}}
+
+      refute_received {:telemetry_event, [:phoenix, :controller, :render, :exception], _}
+    end
+
+    test "phoenix.controller.render.exception is emitted on failure" do
+      :ok =
+        try do
+          render(conn(), "index.html")
+        rescue
+          ArgumentError ->
+            :ok
+        end
+
+      assert_received {:telemetry_event, [:phoenix, :controller, :render, :start],
+                       {_, %{format: "html", template: "index", view: MyApp.UserView}, _}}
+
+      refute_received {:telemetry_event, [:phoenix, :controller, :render, :stop], _}
+
+      assert_received {:telemetry_event, [:phoenix, :controller, :render, :exception],
+                       {_,
+                        %{
+                          format: "html",
+                          template: "index",
+                          view: MyApp.UserView,
+                          kind: :error,
+                          reason: %ArgumentError{}
+                        }, _}}
     end
   end
 end

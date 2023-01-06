@@ -37,8 +37,10 @@ defmodule Phoenix.Socket.V2.JSONSerializer do
   @impl true
   def encode!(%Reply{payload: {:binary, data}} = reply) do
     status = to_string(reply.status)
-    join_ref_size = byte_size!(reply.join_ref, :join_ref, 255)
-    ref_size = byte_size!(reply.ref, :ref, 255)
+    join_ref = to_string(reply.join_ref)
+    ref = to_string(reply.ref)
+    join_ref_size = byte_size!(join_ref, :join_ref, 255)
+    ref_size = byte_size!(ref, :ref, 255)
     topic_size = byte_size!(reply.topic, :topic, 255)
     status_size = byte_size!(status, :status, 255)
 
@@ -48,8 +50,8 @@ defmodule Phoenix.Socket.V2.JSONSerializer do
       ref_size::size(8),
       topic_size::size(8),
       status_size::size(8),
-      reply.join_ref::binary-size(join_ref_size),
-      reply.ref::binary-size(ref_size),
+      join_ref::binary-size(join_ref_size),
+      ref::binary-size(ref_size),
       reply.topic::binary-size(topic_size),
       status::binary-size(status_size),
       data::binary

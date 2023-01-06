@@ -7,7 +7,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   plug :assign_email_and_password_changesets
 
   def edit(conn, _params) do
-    render(conn, "edit.html")
+    render(conn, :edit)
   end
 
   def update(conn, %{"action" => "update_email"} = params) do
@@ -16,10 +16,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     case <%= inspect context.alias %>.apply_<%= schema.singular %>_email(<%= schema.singular %>, password, <%= schema.singular %>_params) do
       {:ok, applied_<%= schema.singular %>} ->
-        <%= inspect context.alias %>.deliver_update_email_instructions(
+        <%= inspect context.alias %>.deliver_<%= schema.singular %>_update_email_instructions(
           applied_<%= schema.singular %>,
           <%= schema.singular %>.email,
-          &Routes.<%= schema.route_helper %>_settings_url(conn, :confirm_email, &1)
+          &url(~p"<%= schema.route_prefix %>/settings/confirm_email/#{&1}")
         )
 
         conn
@@ -27,10 +27,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           :info,
           "A link to confirm your email change has been sent to the new address."
         )
-        |> redirect(to: Routes.<%= schema.route_helper %>_settings_path(conn, :edit))
+        |> redirect(to: ~p"<%= schema.route_prefix %>/settings")
 
       {:error, changeset} ->
-        render(conn, "edit.html", email_changeset: changeset)
+        render(conn, :edit, email_changeset: changeset)
     end
   end
 
@@ -42,11 +42,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, <%= schema.singular %>} ->
         conn
         |> put_flash(:info, "Password updated successfully.")
-        |> put_session(:<%= schema.singular %>_return_to, Routes.<%= schema.route_helper %>_settings_path(conn, :edit))
+        |> put_session(:<%= schema.singular %>_return_to, ~p"<%= schema.route_prefix %>/settings")
         |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>)
 
       {:error, changeset} ->
-        render(conn, "edit.html", password_changeset: changeset)
+        render(conn, :edit, password_changeset: changeset)
     end
   end
 
@@ -55,12 +55,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       :ok ->
         conn
         |> put_flash(:info, "Email changed successfully.")
-        |> redirect(to: Routes.<%= schema.route_helper %>_settings_path(conn, :edit))
+        |> redirect(to: ~p"<%= schema.route_prefix %>/settings")
 
       :error ->
         conn
         |> put_flash(:error, "Email change link is invalid or it has expired.")
-        |> redirect(to: Routes.<%= schema.route_helper %>_settings_path(conn, :edit))
+        |> redirect(to: ~p"<%= schema.route_prefix %>/settings")
     end
   end
 
