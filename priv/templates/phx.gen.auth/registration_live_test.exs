@@ -66,7 +66,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           <%= schema.singular %>: %{"email" => <%= schema.singular %>.email, "password" => "valid_password"}
         )
         |> render_submit()
-        
       assert result =~ "has already been taken"
     end
   end
