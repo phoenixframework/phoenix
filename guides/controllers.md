@@ -34,7 +34,7 @@ For example, in `lib/hello_web/router.ex` we could change the action name in the
 get "/", PageController, :home
 ```
 
-to `home`:
+to `index`:
 
 ```elixir
 get "/", PageController, :index
