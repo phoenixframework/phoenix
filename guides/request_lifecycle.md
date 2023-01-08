@@ -32,7 +32,7 @@ The route for our "Welcome to Phoenix!" page from the previous [Up And Running G
 get "/", PageController, :home
 ```
 
-Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an HTTP `GET` request to the root path. All requests like this will be handled by the `index/2` function in the `HelloWeb.PageController` module defined in `lib/hello_web/controllers/page_controller.ex`.
+Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an HTTP `GET` request to the root path. All requests like this will be handled by the `home/2` function in the `HelloWeb.PageController` module defined in `lib/hello_web/controllers/page_controller.ex`.
 
 The page we are going to build will say "Hello World, from Phoenix!" when we point our browser to [http://localhost:4000/hello](http://localhost:4000/hello).
 
