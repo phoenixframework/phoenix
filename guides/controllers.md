@@ -28,25 +28,25 @@ The first line below the module definition invokes the `__using__/1` macro of th
 
 Controller actions are just functions. We can name them anything we like as long as they follow Elixir's naming rules. The only requirement we must fulfill is that the action name matches a route defined in the router.
 
-For example, in `lib/hello_web/router.ex` we could change the action name in the default route that Phoenix gives us in a new app from `index`:
-
-```elixir
-get "/", PageController, :index
-```
-
-to `home`:
+For example, in `lib/hello_web/router.ex` we could change the action name in the default route that Phoenix gives us in a new app from `home`:
 
 ```elixir
 get "/", PageController, :home
 ```
 
-as long as we change the action name in `PageController` to `home` as well, the [welcome page] will load as before.
+to `index`:
+
+```elixir
+get "/", PageController, :index
+```
+
+as long as we change the action name in `PageController` to `index` as well, the [welcome page] will load as before.
 
 ```elixir
 defmodule HelloWeb.PageController do
   ...
 
-  def home(conn, _params) do
+  def index(conn, _params) do
     render(conn, :index)
   end
 end
