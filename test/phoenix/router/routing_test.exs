@@ -43,8 +43,9 @@ defmodule Phoenix.Router.RoutingTest do
 
     get "/", UserController, :index, as: :users
     get "/users/top", UserController, :top, as: :top
-    get "/users/:id", UserController, :show, as: :users, metadata: %{access: :user}
     post "/users/similar", UserController, :similar
+    get "/users/:id", UserController, :show, as: :users, metadata: %{access: :user}
+    post "/users/also_similar", UserController, :similar
     get "/spaced users/:id", UserController, :show
     get "/profiles/profile-:id", UserController, :show
     get "/route_that_crashes", UserController, :crash
@@ -527,5 +528,15 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "similar"
     assert conn.path_params["id"] == "similar"
+
+    conn = call(Router, :post, "/users/also_similar")
+    assert conn.status == 200
+    assert conn.resp_body == "users similar"
+
+    conn = call(Router, :get, "/users/also_similar")
+    assert conn.status == 200
+    assert conn.resp_body == "users show"
+    assert conn.params["id"] == "also_similar"
+    assert conn.path_params["id"] == "also_similar"
   end
 end

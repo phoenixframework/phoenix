@@ -475,7 +475,7 @@ defmodule Phoenix.Router do
           end
 
         with {_forward_plug, _warn_on_verify?, fun} <- __match_route__(decoded),
-             {_, _, _, _} = match <- fun.(method, host) do
+             {_, _, _, _} = match <- fun.(decoded, method, host) do
           Phoenix.Router.__call__(conn, match)
         else
           _ -> raise NoRouteError, conn: conn, router: __MODULE__
@@ -496,6 +496,12 @@ defmodule Phoenix.Router do
     if helpers?, do: Helpers.define(env, routes_with_exprs)
 
     group = Enum.group_by(routes_with_exprs, fn {_route, exprs} -> exprs.path end)
+
+    paths_in_order =
+      routes_with_exprs |> Enum.map(fn {_route, exprs} -> exprs.path end) |> Enum.uniq()
+
+    group = merge_overlapping_groups(group, paths_in_order)
+
     {matches, _} = Enum.flat_map_reduce(routes_with_exprs, {group, %{}}, &build_match/2)
 
     match_catch_all =
@@ -554,6 +560,37 @@ defmodule Phoenix.Router do
     end
   end
 
+
+  defp merge_overlapping_groups(groups, paths), do: merge_overlapping_groups(groups, paths, [])
+
+  defp merge_overlapping_groups(groups, [], _past_paths), do: groups
+  defp merge_overlapping_groups(groups, [path | paths], past_paths) do
+    past_paths
+    |> Enum.filter(&overlapping_path?(&1, path) or overlapping_path?(path, &1))
+    |> Enum.reduce(groups, &Map.update!(&2, &1, fn paths -> paths ++ &2[path] end))
+    |> merge_overlapping_groups(paths, [path | past_paths])
+  end
+
+  defp overlapping_path?(path_a, path_b) do
+    path_a = anonymize_path_segments(path_a)
+
+    {match, _} =
+      Code.eval_quoted(
+        quote do
+          match?(unquote(path_a), unquote(Macro.escape(path_b)))
+        end
+      )
+
+    match
+  end
+
+  defp anonymize_path_segments(path) do
+    Macro.postwalk(path, fn
+      {_, [], ctx} when is_atom(ctx) -> {:_, [], ctx}
+      segment -> segment
+    end)
+  end
+
   defp build_match({route, expr}, {groups, known_pipes}) do
     # We need to process the routes in the order they are defined
     # while grouping them. So we keep the original route ordering
@@ -572,14 +609,14 @@ defmodule Phoenix.Router do
 
       catch_all =
         quote generated: true do
-          _, _ -> :error
+          _, _, _ -> :error
         end
 
       block =
         quote line: route.line do
           unquote_splicing(pipes)
 
-          def __match_route__(unquote(expr.path)) do
+          def __match_route__(unquote(anonymize_path_segments(expr.path))) do
             {unquote(forward_plug), unquote(route.warn_on_verify?), unquote({:fn, [], Enum.reverse(clauses, catch_all)})}
           end
         end
@@ -613,14 +650,15 @@ defmodule Phoenix.Router do
       dispatch: dispatch,
       verb_match: verb_match,
       path_params: path_params,
-      hosts: hosts
+      hosts: hosts,
+      path: path
     } = expr
 
     new_acc_clauses =
       Enum.reduce(hosts, acc_clauses, fn host, acc_clauses ->
         [clause] =
           quote do
-            unquote(verb_match), unquote(host) ->
+            unquote(path), unquote(verb_match), unquote(host) ->
               {unquote(build_metadata(route, path_params)),
               fn var!(conn, :conn), %{path_params: var!(path_params, :conn)} -> unquote(prepare) end,
               &unquote(Macro.var(pipe_name, __MODULE__))/1,
@@ -1196,7 +1234,7 @@ defmodule Phoenix.Router do
 
   def route_info(router, method, split_path, host) when is_list(split_path) do
     with {_forward_plug, _warn_on_verify?, fun} <- router.__match_route__(split_path),
-         {metadata, _prepare, _pipeline, {_plug, _opts}} <- fun.(method, host) do
+         {metadata, _prepare, _pipeline, {_plug, _opts}} <- fun.(split_path, method, host) do
       Map.delete(metadata, :conn)
     end
   end
