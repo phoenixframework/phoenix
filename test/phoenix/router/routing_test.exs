@@ -21,6 +21,7 @@ defmodule Phoenix.Router.RoutingTest do
     def image(conn, _params), do: text(conn, conn.params["path"] || "show files")
     def move(conn, _params), do: text(conn, "users move")
     def any(conn, _params), do: text(conn, "users any")
+    def similar(conn, _params), do: text(conn, "users similar")
     def raise(_conn, _params), do: raise("boom")
     def exit(_conn, _params), do: exit(:boom)
 
@@ -43,6 +44,7 @@ defmodule Phoenix.Router.RoutingTest do
     get "/", UserController, :index, as: :users
     get "/users/top", UserController, :top, as: :top
     get "/users/:id", UserController, :show, as: :users, metadata: %{access: :user}
+    post "/users/similar", UserController, :similar
     get "/spaced users/:id", UserController, :show
     get "/profiles/profile-:id", UserController, :show
     get "/route_that_crashes", UserController, :crash
@@ -513,5 +515,17 @@ defmodule Phoenix.Router.RoutingTest do
              plug_opts: :not_found,
              route: "/*path"
            }
+  end
+
+  test "different verbs with similar paths" do
+    conn = call(Router, :post, "/users/similar")
+    assert conn.status == 200
+    assert conn.resp_body == "users similar"
+
+    conn = call(Router, :get, "/users/similar")
+    assert conn.status == 200
+    assert conn.resp_body == "users show"
+    assert conn.params["id"] == "similar"
+    assert conn.path_params["id"] == "similar"
   end
 end
