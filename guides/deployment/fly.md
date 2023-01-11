@@ -128,8 +128,7 @@ There are a couple prerequisites, we first need to establish an [SSH Shell](http
 This step sets up a root certificate for your account and then issues a certificate.
 
 ```console
-$ fly ssh establish
-$ fly ssh issue
+$ fly ssh issue --agent
 ```
 
 With SSH configured, let's open a console.
@@ -286,8 +285,7 @@ app[eb4119d3] sea [info] 21:50:21.924 [info] [libcluster:fly6pn] connected to :"
 But that's not as rewarding as seeing it from inside a node. From an IEx shell, we can ask the node we're connected to, what other nodes it can see.
 
 ```console
-$ fly ssh console
-$ /app/bin/my_app remote
+$ fly ssh console -C "/app/bin/my_app remote"
 ```
 
 ```elixir
@@ -346,8 +344,7 @@ cdf6c422 30      sea    run     running 1 total, 1 passing 0        6m47s ago
 Let's ensure they are clustered together.
 
 ```console
-$ fly ssh console
-$ /app/bin/my_app remote
+$ fly ssh console -C "/app/bin/my_app remote"
 ```
 
 ```elixir
