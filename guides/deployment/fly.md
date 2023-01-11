@@ -1,5 +1,8 @@
 # Deploying on Fly.io
 
+
+Fly.io maintains their own guide for Elixir/Phoenix here: [Fly.io/docs/elixir/getting-started/](https://fly.io/docs/elixir/getting-started/) we will keep this guide up but for the latest and greatest check with them!
+
 ## What we'll need
 
 The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](https://hexdocs.pm/phoenix/up_and_running.html).
