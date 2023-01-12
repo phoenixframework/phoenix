@@ -280,7 +280,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
       if assigns.multiple, do: name <> "[]", else: name
     end)
     |> assign_new(:id, fn -> Phoenix.HTML.Form.input_id(f, field) end)
-    |> assign_new(:value, fn -> maybe_format_input_value(Phoenix.HTML.Form.input_value(f, field)) end)
+    |> assign_new(:value, fn ->
+      maybe_format_input_value(Phoenix.HTML.Form.input_value(f, field))
+    end)
     |> assign_new(:errors, fn -> translate_errors(f.errors || [], field) end)
     |> input()
   end
