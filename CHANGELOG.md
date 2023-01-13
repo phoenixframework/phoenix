@@ -35,6 +35,12 @@ This feature replaces the `Helpers` module generated in your Phoenix router, but
 will continue to work and be generated. You can disable router helpers by passing the
 `helpers: false` option to `use Phoenix.Router`.
 
+## 1.7.0-rc.2 (2023-01-13)
+
+### Bug Fixes
+  * [Router] Fix routing bug causing incorrect matching order on similar routes
+  * [phx.new] Fix installation hanging in some cases
+
 ## 1.7.0-rc.1 (2023-01-06)
 
 ### Enhancements
