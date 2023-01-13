@@ -8,7 +8,7 @@ defmodule Phoenix.Controller do
   @unsent [:unset, :set, :set_chunked, :set_file]
 
   @type view :: atom()
-  @type layout :: {module(), layout_name :: atom()} | false
+  @type layout :: {module(), layout_name :: atom()} | atom() | false
 
   @moduledoc """
   Controllers are used to group common functionality in the same
