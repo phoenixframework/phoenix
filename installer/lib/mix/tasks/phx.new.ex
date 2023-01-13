@@ -174,10 +174,10 @@ defmodule Mix.Tasks.Phx.New do
         tasks =
           if Keyword.get(project.opts, :assets, true) do
             # First compile only esbuild and tailwind so we can install in parallel
-            cmd(project, "mix deps.compile esbuild tailwind")
+            cmd(project, "mix deps.compile castore esbuild tailwind")
 
             Enum.map(
-              ["mix tailwind.install", "mix esbuild.install"],
+              ["mix do loadpaths --no-compile + tailwind.install", "mix do loadpaths --no-compile + esbuild.install"],
               &Task.async(fn -> cmd(project, &1) end)
             )
           else
