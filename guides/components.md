@@ -181,7 +181,7 @@ You may be wondering how the string resulting from a rendered view ends up insid
 
 In other words, the resulting of rendering your page is placed in the `@inner_content` assign.
 
-Phoenix provides all kinds of conveniences to control which layout should be rendered. For example, the `Phoenix.Controller` module provides the [`put_root_layout/2`] function for us to switch _root layouts_. This takes `conn` as its first argument and a string for the basename of the layout we want to render. It also accepts `false` to disable the layout altogether.
+Phoenix provides all kinds of conveniences to control which layout should be rendered. For example, the `Phoenix.Controller` module provides the `put_root_layout/2` function for us to switch _root layouts_. This takes `conn` as its first argument and a string for the basename of the layout we want to render. It also accepts `false` to disable the layout altogether.
 
 You can edit the `index` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this.
 
@@ -195,35 +195,21 @@ end
 
 After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or CSS styling at all.
 
-Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `root.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/components/layouts`. Then let's replace the lines in `admin.html.heex` that displays the logo with the word "Administration".
+To customize the application layout, we invoke a similar function named `put_layout/2`. Let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, copy the existing `app.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/components/layouts`. Then remove everything inside the `<header>...</header>` tags (or change it to whatever you desire) in the new file.
 
-Remove these lines:
-
-```heex
-<a href="https://phoenixframework.org/" class="phx-logo">
-  <img src={~p"/images/phoenix.png"} alt="Phoenix Framework Logo"/>
-</a>
-```
-
-Replace them with:
-
-```heex
-<p>Administration</p>
-```
-
-Then, pass the basename of the new layout into [`put_root_layout/2`] in our `index` action in `lib/hello_web/controllers/page_controller.ex`.
+Now, in the `index` action of the controller of `lib/hello_web/controllers/page_controller.ex`, add the following:
 
 ```elixir
 def index(conn, _params) do
   conn
-  |> put_root_layout(:admin)
+  |> put_layout(:admin)
   |> render(:index)
 end
 ```
 
-When we load the page, we should be rendering the admin layout without a logo and with the word "Administration".
+When we load the page, we should be rendering the admin layout without the header (or a custom one that you wrote).
 
-The app layout, placed at `app.html.heex`, works similarly and you can customize it using `put_layout`, instead of `put_root_layout`. At this point, you may be wondering, why does Phoenix have two layouts?
+At this point, you may be wondering, why does Phoenix have two layouts?
 
 First of all, it gives us flexibility. In practice, we will hardly have multiple root layouts, as they often contain only HTML headers. This allows us to focus on different application layouts with only the parts that changes between them. Second of all, Phoenix ships with a feature called LiveView, which allows us to build rich and real-time user experiences with server-rendered HTML. LiveView is capable of dynamically changing the contents of the page, but it only ever changes the app layout, never the root layout. We will learn about LiveView in future guides.
 
