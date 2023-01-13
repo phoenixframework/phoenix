@@ -677,10 +677,10 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp match_route?(router, split_path) when is_list(split_path) do
-    case router.__match_route__(split_path) do
-      {_forward_plug, false = _warn_on_verify?, _} -> false
-      {nil = _forward_plug, true = _warn?, _} -> true
-      {forward_plug, true = _warn?, _} -> match_forward_route?(router, forward_plug, split_path)
+    case router.__verify_route__(split_path) do
+      {_forward_plug, false = _warn?} -> false
+      {nil = _forward_plug, true = _warn?} -> true
+      {forward_plug, true = _warn?} -> match_forward_route?(router, forward_plug, split_path)
       :error -> false
     end
   end
