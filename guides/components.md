@@ -34,7 +34,7 @@ That's simple enough. There's only two lines, `use HelloWeb, :html`. This line c
 
 All of the imports and aliases we make in our module will also be available in our templates. That's because templates are effectively compiled into functions inside their respective module. For example, if you define a function in your module, you will be able to invoke it directly from the template. Let's see this in practice.
 
-Imagine we want to refator our `show.html.heex` to move the rendering of `<h2>Hello World, from <%= @messenger %>!</h2>` to its own function. We can move it to a function component inside `HelloHTML`:
+Imagine we want to refactor our `show.html.heex` to move the rendering of `<h2>Hello World, from <%= @messenger %>!</h2>` to its own function. We can move it to a function component inside `HelloHTML`:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
