@@ -493,7 +493,7 @@ Next, let's expose our new feature to the web by adding the category input to ou
 defmodule HelloWeb.ProductHTML do
   use HelloWeb, :html
 
-  def category_select(changeset) do
+  def category_options(changeset) do
     existing_ids =
       changeset
       |> Ecto.Changeset.get_change(:categories, [])
@@ -505,22 +505,22 @@ defmodule HelloWeb.ProductHTML do
 end
 ```
 
-We added a new `category_select/1` to generate a list of options. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
+We added a new `category_options/1` to generate a list of options. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
 
-With our `category_select` function in place, we can open up `lib/hello_web/controllers/product_html/edit.html.heex` and `lib/hello_web/controllers/product_html/new.html.heex` and add:
+With our `category_options` function in place, we can open up `lib/hello_web/controllers/product_html/edit.html.heex` and `lib/hello_web/controllers/product_html/new.html.heex` and add:
 
 ```diff
   ...
   <.input type="number" field={{f, :views}} label="Views" />
 
-+ <.input type="select" field={{f, :category_ids}} label="Categories" multiple options={category_select(@changeset)} />
++ <.input type="select" field={{f, :category_ids}} label="Categories" multiple options={category_options(@changeset)} />
 
   <:actions>
     <.button>Save Product</.button>
   </:actions>
 ```
 
-We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to the list in `lib/hello_web/controllers/product_html/show.html.heex`:
+We added a `category_options` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to the list in `lib/hello_web/controllers/product_html/show.html.heex`:
 
 ```heex
 <.list>
