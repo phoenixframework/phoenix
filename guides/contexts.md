@@ -493,30 +493,27 @@ Next, let's expose our new feature to the web by adding the category input to ou
 defmodule HelloWeb.ProductHTML do
   use HelloWeb, :html
 
-  def category_select(f, changeset) do
+  def category_select(changeset) do
     existing_ids =
       changeset
       |> Ecto.Changeset.get_change(:categories, [])
       |> Enum.map(& &1.data.id)
 
-    category_opts =
-      for cat <- Hello.Catalog.list_categories(),
-          do: [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
-
-    multiple_select(f, :category_ids, category_opts)
+    for cat <- Hello.Catalog.list_categories(),
+        do: [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
   end
 end
 ```
 
-We added a new `category_select/2` function which uses `Phoenix.HTML`'s `multiple_select/3` to generate a multiple select tag. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
+We added a new `category_select/1` to generate a list of options. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
 
-With our `category_select` function in place, we can open up `lib/hello_web/controllers/product_html/form.html.heex` and add:
+With our `category_select` function in place, we can open up `lib/hello_web/controllers/product_html/edit.html.heex` and `lib/hello_web/controllers/product_html/new.html.heex` and add:
 
 ```diff
   ...
   <.input type="number" field={{f, :views}} label="Views" />
 
-+ <%= category_select f, @changeset %>
++ <.input type="select" field={{f, :category_ids}} label="Categories" multiple options={category_select(@changeset)} />
 
   <:actions>
     <.button>Save Product</.button>
