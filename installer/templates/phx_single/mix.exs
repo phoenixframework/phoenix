@@ -66,16 +66,12 @@ defmodule <%= @app_module %>.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get"<%= if @ecto do %>, "ecto.setup"<% end %><%= if @assets do %>, "assets.setup"<% end %>]<%= if @ecto do %>,
+      setup: ["deps.get"<%= if @ecto do %>, "ecto.setup"<% end %><%= if @assets do %>, "assets.setup", "assets.build"<% end %>]<%= if @ecto do %>,
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %><%= if @assets do %>,
-      "assets.setup": [
-        "esbuild.install --if-missing",
-        "tailwind.install --if-missing",
-        "esbuild default",
-        "tailwind default"
-      ],
+      "assets.setup": ["esbuild.install --if-missing", "tailwind.install --if-missing"],
+      "assets.build": ["esbuild default", "tailwind default"],
       "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]<% end %>
     ]
   end
