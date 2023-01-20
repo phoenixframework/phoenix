@@ -71,10 +71,10 @@ defmodule <%= @app_module %>.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %><%= if @assets do %>,
       "assets.setup": [
-        "tailwind.install --if-missing",
         "esbuild.install --if-missing",
-        "tailwind default",
-        "esbuild default"
+        "tailwind.install --if-missing",
+        "esbuild default",
+        "tailwind default"
       ],
       "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]<% end %>
     ]
