@@ -165,17 +165,20 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
+  @manual_purging? Version.match? System.version(), "< 1.15.0-dev"
+
   defp mix_compile({:module, Mix.Task}, compilers, apps_to_reload, timestamp) do
     config = Mix.Project.config()
     path = Mix.Project.consolidation_path(config)
 
-    if config[:consolidate_protocols] do
+    # TODO: Remove this check when requiring Elixir v1.15+
+    if @manual_purging? && config[:consolidate_protocols] do
       purge_modules(path)
       Code.delete_path(path)
     end
 
-    mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers, timestamp)
-    mix_compile_project(config[:app], apps_to_reload, compilers, timestamp)
+    mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers, timestamp, path)
+    mix_compile_project(config[:app], apps_to_reload, compilers, timestamp, path)
 
     if config[:consolidate_protocols] do
       Code.prepend_path(path)
@@ -191,23 +194,23 @@ defmodule Phoenix.CodeReloader.Server do
             "in such environments"
   end
 
-  defp mix_compile_deps(deps, apps_to_reload, compilers, timestamp) do
+  defp mix_compile_deps(deps, apps_to_reload, compilers, timestamp, path) do
     for dep <- deps, dep.app in apps_to_reload do
       Mix.Dep.in_dependency(dep, fn _ ->
-        mix_compile_unless_stale_config(compilers, timestamp)
+        mix_compile_unless_stale_config(compilers, timestamp, path)
       end)
     end
   end
 
-  defp mix_compile_project(nil, _, _, _), do: :ok
+  defp mix_compile_project(nil, _, _, _, _), do: :ok
 
-  defp mix_compile_project(app, apps_to_reload, compilers, timestamp) do
+  defp mix_compile_project(app, apps_to_reload, compilers, timestamp, path) do
     if app in apps_to_reload do
-      mix_compile_unless_stale_config(compilers, timestamp)
+      mix_compile_unless_stale_config(compilers, timestamp, path)
     end
   end
 
-  defp mix_compile_unless_stale_config(compilers, timestamp) do
+  defp mix_compile_unless_stale_config(compilers, timestamp, path) do
     manifests = Mix.Tasks.Compile.Elixir.manifests()
     configs = Mix.Project.config_files()
     config = Mix.Project.config()
@@ -220,7 +223,7 @@ defmodule Phoenix.CodeReloader.Server do
           purge_modules(Path.join(Mix.Project.app_path(config), "ebin"))
         end
 
-        mix_compile(compilers, config)
+        mix_compile(compilers, config, path)
 
       files ->
         raise """
@@ -234,7 +237,7 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  defp mix_compile(compilers, config) do
+  defp mix_compile(compilers, config, consolidation_path) do
     all = config[:compilers] || Mix.compilers()
 
     compilers =
@@ -246,7 +249,8 @@ defmodule Phoenix.CodeReloader.Server do
     # We call build_structure mostly for Windows so new
     # assets in priv are copied to the build directory.
     Mix.Project.build_structure(config)
-    results = Enum.map(compilers, &Mix.Task.run("compile.#{&1}", []))
+    args = ["--purge-consolidation-path-if-stale", consolidation_path]
+    results = Enum.map(compilers, &Mix.Task.run("compile.#{&1}", args))
 
     # Results are either {:ok, _} | {:error, _}, {:noop, _} or
     # :ok | :error | :noop. So we use proplists to do the unwrapping.
