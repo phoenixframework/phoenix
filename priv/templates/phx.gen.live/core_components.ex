@@ -280,7 +280,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       if assigns.multiple, do: name <> "[]", else: name
     end)
     |> assign_new(:id, fn -> Phoenix.HTML.Form.input_id(f, field) end)
-    |> assign_new(:value, fn -> maybe_format_input_value(Phoenix.HTML.Form.input_value(f, field)) end)
+    |> assign_new(:value, fn -> format_input_val(Phoenix.HTML.Form.input_value(f, field)) end)
     |> assign_new(:errors, fn -> translate_errors(f.errors || [], field) end)
     |> input()
   end
@@ -645,11 +645,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
     Phoenix.HTML.html_escape(val1) == Phoenix.HTML.html_escape(val2)
   end
 
-  defp maybe_format_input_value(%struct{} = value) when struct in [NaiveDateTime, DateTime] do
+  defp format_input_val(%struct{} = value) when struct in [NaiveDateTime, DateTime] do
     <<date::10-binary, ?\s, hour_minute::5-binary, _rest::binary>> = struct.to_string(value)
 
     [date, ?T, hour_minute]
   end
 
-  defp maybe_format_input_value(other), do: other
+  defp format_input_val(other), do: other
 end
