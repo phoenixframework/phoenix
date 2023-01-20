@@ -169,13 +169,13 @@ defmodule Phoenix.CodeReloader.Server do
     config = Mix.Project.config()
     path = Mix.Project.consolidation_path(config)
 
-    if config[:consolidate_protocols] do
-      purge_modules(path)
-      Code.delete_path(path)
-    end
+    cleanup_path =
+      if config[:consolidate_protocols] do
+        path
+      end
 
-    mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers, timestamp)
-    mix_compile_project(config[:app], apps_to_reload, compilers, timestamp)
+    cleanup_path = mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers, timestamp, cleanup_path)
+    mix_compile_project(config[:app], apps_to_reload, compilers, timestamp, cleanup_path)
 
     if config[:consolidate_protocols] do
       Code.prepend_path(path)
@@ -191,23 +191,26 @@ defmodule Phoenix.CodeReloader.Server do
             "in such environments"
   end
 
-  defp mix_compile_deps(deps, apps_to_reload, compilers, timestamp) do
-    for dep <- deps, dep.app in apps_to_reload do
-      Mix.Dep.in_dependency(dep, fn _ ->
-        mix_compile_unless_stale_config(compilers, timestamp)
-      end)
+  defp mix_compile_deps(deps, apps_to_reload, compilers, timestamp, cleanup_path) do
+    for dep <- deps, dep.app in apps_to_reload, reduce: cleanup_path do
+      cleanup_path ->
+        Mix.Dep.in_dependency(dep, fn _ ->
+          mix_compile_unless_stale_config(compilers, timestamp, cleanup_path)
+        end)
     end
   end
 
-  defp mix_compile_project(nil, _, _, _), do: :ok
+  defp mix_compile_project(nil, _, _, _, cleanup_path), do: cleanup_path
 
-  defp mix_compile_project(app, apps_to_reload, compilers, timestamp) do
+  defp mix_compile_project(app, apps_to_reload, compilers, timestamp, cleanup_path) do
     if app in apps_to_reload do
-      mix_compile_unless_stale_config(compilers, timestamp)
+      mix_compile_unless_stale_config(compilers, timestamp, cleanup_path)
+    else
+      cleanup_path
     end
   end
 
-  defp mix_compile_unless_stale_config(compilers, timestamp) do
+  defp mix_compile_unless_stale_config(compilers, timestamp, cleanup_path) do
     manifests = Mix.Tasks.Compile.Elixir.manifests()
     configs = Mix.Project.config_files()
     config = Mix.Project.config()
@@ -220,7 +223,15 @@ defmodule Phoenix.CodeReloader.Server do
           purge_modules(Path.join(Mix.Project.app_path(config), "ebin"))
         end
 
+        if cleanup_path do
+          purge_modules(cleanup_path)
+          Code.delete_path(cleanup_path)
+        end
+
         mix_compile(compilers, config)
+
+        # If there was a path to cleanup, we already did it
+        nil
 
       files ->
         raise """
