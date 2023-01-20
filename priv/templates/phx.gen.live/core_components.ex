@@ -646,9 +646,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   defp format_input_val(%struct{} = value) when struct in [NaiveDateTime, DateTime] do
-    <<date::10-binary, ?\s, hour_minute::5-binary, _rest::binary>> = struct.to_string(value)
-
-    [date, ?T, hour_minute]
+    Calendar.strftime(value, "%Y-%m-%dT%H:%M")
   end
 
   defp format_input_val(other), do: other
