@@ -645,7 +645,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     Phoenix.HTML.html_escape(val1) == Phoenix.HTML.html_escape(val2)
   end
 
-  defp maybe_format_input_value(%struct{} = value) when struct in [NaiveDateTime, DateTime] do
+  defp format_input_val(%struct{} = value) when struct in [NaiveDateTime, DateTime] do
     Calendar.strftime(value, "%Y-%m-%dT%H:%M")
   end
 
