@@ -27,8 +27,8 @@ import "phoenix_html"
 
 // Show progress bar on live navigation and form submits
 <%= @live_comment %>topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
-<%= @live_comment %>window.addEventListener("phx:page-loading-start", info => topbar.delayedShow(200))
-<%= @live_comment %>window.addEventListener("phx:page-loading-stop", info => topbar.hide())
+<%= @live_comment %>window.addEventListener("phx:page-loading-start", _info => topbar.delayedShow(200))
+<%= @live_comment %>window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
 // connect if there are any LiveViews on the page
 <%= @live_comment %>liveSocket.connect()
