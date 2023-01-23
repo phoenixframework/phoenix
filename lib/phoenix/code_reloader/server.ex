@@ -165,14 +165,22 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
+  if Version.match?(System.version(), "< 1.15.0-dev") do
+    defp purge_protocols(path) do
+      purge_modules(path)
+      Code.delete_path(path)
+    end
+  else
+    defp purge_protocols(_path), do: :ok
+  end
+
   defp mix_compile({:module, Mix.Task}, compilers, apps_to_reload, timestamp) do
     config = Mix.Project.config()
     path = Mix.Project.consolidation_path(config)
 
-    # TODO: Remove this check when requiring Elixir v1.15+
-    if Version.match?(System.version(), "< 1.15.0-dev") && config[:consolidate_protocols] do
-      purge_modules(path)
-      Code.delete_path(path)
+    # TODO: Remove this conditional when requiring Elixir v1.15+
+    if config[:consolidate_protocols] do
+      purge_protocols(config)
     end
 
     mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers, timestamp, path)
