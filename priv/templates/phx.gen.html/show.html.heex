@@ -8,7 +8,7 @@
   </:actions>
 </.header>
 
-<.list><%= for {k, _} <- schema.attrs do %>
+<.list><%= for {k, v} when not is_map(v) <- schema.attrs do %>
   <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= @<%= schema.singular %>.<%= k %> %></:item><% end %>
 </.list>
 
