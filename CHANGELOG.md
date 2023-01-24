@@ -32,8 +32,8 @@ will work properly and warn on new compilations, but changes to the router file
 will not issue new warnings.*
 
 This feature replaces the `Helpers` module generated in your Phoenix router, but helpers
-will continue to work and be generated. You can disable router helpers by passing the
-`helpers: false` option to `use Phoenix.Router`.
+will continue to work when enabled. You can enable router helpers by passing the
+`helpers: true` option to `use Phoenix.Router`.
 
 ## 1.7.0-rc.2 (2023-01-13)
 
