@@ -71,7 +71,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, index_live, _html} = live(conn, ~p"<%= schema.route_prefix %>")
 
       assert index_live |> element("#<%= schema.plural %>-#{<%= schema.singular %>.id} a", "Delete") |> render_click()
-      refute has_element?(index_live, "#<%= schema.singular %>-#{<%= schema.singular %>.id}")
+      refute has_element?(index_live, "#<%= schema.plural %>-#{<%= schema.singular %>.id}")
     end
   end
 
