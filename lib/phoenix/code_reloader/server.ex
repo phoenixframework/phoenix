@@ -180,7 +180,7 @@ defmodule Phoenix.CodeReloader.Server do
 
     # TODO: Remove this conditional when requiring Elixir v1.15+
     if config[:consolidate_protocols] do
-      purge_protocols(config)
+      purge_protocols(path)
     end
 
     mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers, timestamp, path)
