@@ -50,10 +50,13 @@ defmodule Phoenix.MixProject do
   defp elixirc_paths(:docs), do: ["lib", "installer/lib"]
   defp elixirc_paths(_), do: ["lib"]
 
+  defp extra_applications(:test), do: [:inets]
+  defp extra_applications(_), do: []
+
   def application do
     [
       mod: {Phoenix, []},
-      extra_applications: [:logger, :eex, :crypto, :public_key],
+      extra_applications: extra_applications(Mix.env()) ++ [:logger, :eex, :crypto, :public_key],
       env: [
         logger: true,
         stacktrace_depth: nil,
