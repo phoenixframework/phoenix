@@ -672,7 +672,13 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
   defp match_route?(router, test_path) when is_binary(test_path) do
-    split_path = for segment <- String.split(test_path, "/"), segment != "", do: segment
+    split_path =
+      test_path
+      |> String.split("#")
+      |> Enum.at(0)
+      |> String.split("/")
+      |> Enum.filter(fn segment -> segment != "" end)
+
     match_route?(router, split_path)
   end
 
