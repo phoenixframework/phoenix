@@ -28,7 +28,10 @@ defmodule Phoenix.Digester do
       digested_files = Enum.map(files, &digested_contents(&1, latest, with_vsn?))
 
       save_manifest(digested_files, latest, digests, output_path)
-      Enum.each(digested_files, &write_to_disk(&1, output_path))
+
+      digested_files
+      |> Task.async_stream(&write_to_disk(&1, output_path), ordered: false, timeout: :infinity)
+      |> Stream.run()
     else
       {:error, :invalid_path}
     end
