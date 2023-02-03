@@ -152,14 +152,14 @@ Let's see it in action. Run `iex -S mix` at the root of the project. We'll defin
 
 ```elixir
 iex> defmodule RouteExample do
-...>   use GenTestWeb, :verified_routes
+...>   use HelloWeb, :verified_routes
 ...>
 ...>   def example do
 ...>     ~p"/comments"
 ...>     ~p"/unknown/123"
 ...>   end
 ...> end
-warning: no route path for GenTestWeb.Router matches "/unknown/123"
+warning: no route path for HelloWeb.Router matches "/unknown/123"
   iex:5: RouteExample.example/0
 
 {:module, RouteExample, ...}
