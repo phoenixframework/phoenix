@@ -530,6 +530,7 @@ defmodule Phoenix.Controller do
     put_private_formats(conn, priv_key, kind, formats)
   end
 
+  # TODO: Deprecate this whole branch
   defp put_private_view(conn, priv_key, kind, value) do
     put_private_formats(conn, priv_key, kind, %{_: value})
   end
@@ -585,30 +586,35 @@ defmodule Phoenix.Controller do
   @doc """
   Stores the layout for rendering.
 
-  The layout must be a tuple, specifying the layout view and the layout
-  name, or false. In case a previous layout is set, `put_layout` also
-  accepts the layout name to be given as a string or as an atom. If a
-  string, it must contain the format. Passing an atom means the layout
-  format will be found at rendering time, similar to the template in
-  `render/3`. It can also be set to `false`. In this case, no layout
-  would be used.
+  The layout must be given as keyword list where the key is the request
+  format the layout will be applied to (such as `:html`) and the value
+  is one of:
+
+    * `{module, layout}` with the `module` the layout is defined and
+      the name of the `layout` as an atom
+
+    * `layout` when the name of the layout. This requires a layout for
+      the given format in the shape of `{module, layout}` to be previously
+      given
+
+    * `false` which disables the layout
 
   ## Examples
 
       iex> layout(conn)
       false
 
-      iex> conn = put_layout(conn, {AppView, :application})
+      iex> conn = put_layout(conn, html: {AppView, :application})
       iex> layout(conn)
       {AppView, :application}
 
-      iex> conn = put_layout(conn, :print)
+      iex> conn = put_layout(conn, html: :print)
       iex> layout(conn)
       {AppView, :print}
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) :: Plug.Conn.t()
+  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}]) :: Plug.Conn.t()
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
       put_private_layout(conn, :phoenix_layout, :replace, layout)
@@ -619,9 +625,21 @@ defmodule Phoenix.Controller do
 
   defp put_private_layout(conn, private_key, kind, layouts) when is_list(layouts) do
     formats =
-      Enum.into(layouts, %{}, fn
+      Map.new(layouts, fn
         {format, false} ->
           {Atom.to_string(format), false}
+
+        {format, layout} when is_atom(layout) ->
+          format = Atom.to_string(format)
+
+          case conn.private[private_key] do
+            %{^format => {mod, _}} ->
+              {format, {mod, layout}}
+
+            %{} ->
+              raise "cannot use put_layout/2 or put_root_layout/2 with atom because " <>
+                      "there is no previous layout set for format #{inspect(format)}"
+          end
 
         {format, {mod, layout}} when is_atom(mod) and is_atom(layout) ->
           {Atom.to_string(format), {mod, layout}}
@@ -641,24 +659,26 @@ defmodule Phoenix.Controller do
     put_private_formats(conn, private_key, kind, formats)
   end
 
+  # TODO: Deprecate this whole branch
   defp put_private_layout(conn, private_key, kind, no_format) do
     case no_format do
       false ->
         put_private_formats(conn, private_key, kind, %{_: false})
 
       {mod, layout} when is_atom(mod) ->
-        # TODO: Temporarily deprecate this to point users to the correct
-        # direction while get_layout_formats/put_layout_formats is removed.
         put_private_formats(conn, private_key, kind, %{_: {mod, layout}})
 
       layout when is_binary(layout) or is_atom(layout) ->
-        # TODO: Deprecate this branch permanently.
         case Map.get(conn.private, private_key, %{_: false}) do
           %{_: {mod, _}} ->
             put_private_formats(conn, private_key, kind, %{_: {mod, layout}})
 
           %{_: false} ->
             raise "cannot use put_layout/2 or put_root_layout/2 with atom/binary when layout is false, use a tuple instead"
+
+          %{} ->
+            raise "you must pass the format when using put_layout/2 or put_root_layout/2 and a previous format was set, " <>
+                    "such as: put_layout(conn, html: #{inspect(layout)})"
         end
     end
   end
@@ -666,9 +686,11 @@ defmodule Phoenix.Controller do
   @doc """
   Stores the layout for rendering if one was not stored yet.
 
+  See `put_layout/2` for more information.
+
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_new_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) :: Plug.Conn.t()
+  @spec put_new_layout(Plug.Conn.t(), [{format :: atom, layout}]) :: Plug.Conn.t()
   def put_new_layout(%Plug.Conn{state: state} = conn, layout)
       when (is_tuple(layout) and tuple_size(layout) == 2) or is_list(layout) or layout == false do
     unless state in @unsent, do: raise(AlreadySentError)
@@ -678,32 +700,35 @@ defmodule Phoenix.Controller do
   @doc """
   Stores the root layout for rendering.
 
-  Like `put_layout/2`, the layout must be a tuple,
-  specifying the layout view and the layout name, or false.
+  The layout must be given as keyword list where the key is the request
+  format the layout will be applied to (such as `:html`) and the value
+  is one of:
 
-  In case a previous layout is set, `put_root_layout` also
-  accepts the layout name to be given as a string or as an atom. If a
-  string, it must contain the format. Passing an atom means the layout
-  format will be found at rendering time, similar to the template in
-  `render/3`. It can also be set to `false`. In this case, no layout
-  would be used.
+    * `{module, layout}` with the `module` the layout is defined and
+      the name of the `layout` as an atom
+
+    * `layout` when the name of the layout. This requires a layout for
+      the given format in the shape of `{module, layout}` to be previously
+      given
+
+    * `false` which disables the layout
 
   ## Examples
 
       iex> root_layout(conn)
       false
 
-      iex> conn = put_root_layout(conn, {AppView, :root})
+      iex> conn = put_root_layout(conn, html: {AppView, :root})
       iex> root_layout(conn)
       {AppView, :root}
 
-      iex> conn = put_root_layout(conn, :bare)
+      iex> conn = put_root_layout(conn, html: :bare)
       iex> root_layout(conn)
       {AppView, :bare}
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) ::
+  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}]) ::
           Plug.Conn.t()
   def put_root_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do

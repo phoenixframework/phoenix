@@ -181,14 +181,14 @@ You may be wondering how the string resulting from a rendered view ends up insid
 
 In other words, the resulting of rendering your page is placed in the `@inner_content` assign.
 
-Phoenix provides all kinds of conveniences to control which layout should be rendered. For example, the `Phoenix.Controller` module provides the `put_root_layout/2` function for us to switch _root layouts_. This takes `conn` as its first argument and a string for the basename of the layout we want to render. It also accepts `false` to disable the layout altogether.
+Phoenix provides all kinds of conveniences to control which layout should be rendered. For example, the `Phoenix.Controller` module provides the `put_root_layout/2` function for us to switch _root layouts_. This takes `conn` as its first argument and a keyword list of formats and their layouts. You can set it to `false` to disable the layout altogether.
 
 You can edit the `index` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this.
 
 ```elixir
 def index(conn, _params) do
   conn
-  |> put_root_layout(false)
+  |> put_root_layout(html: false)
   |> render(:index)
 end
 ```
@@ -202,7 +202,7 @@ Now, in the `index` action of the controller of `lib/hello_web/controllers/page_
 ```elixir
 def index(conn, _params) do
   conn
-  |> put_layout(:admin)
+  |> put_layout(html: :admin)
   |> render(:index)
 end
 ```
