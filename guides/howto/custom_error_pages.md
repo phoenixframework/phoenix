@@ -190,7 +190,7 @@ defimpl Plug.Exception, for: HelloWeb.SomethingNotFoundError do
     [
       %{
         label: "Run seeds",
-        handler: {Code, :eval_file, "priv/repo/seeds.exs"}
+        handler: {Code, :eval_file, ["priv/repo/seeds.exs"]}
       }
     ]
   end
