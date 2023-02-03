@@ -192,12 +192,7 @@ defmodule Mix.Phoenix.Schema do
   Generates some sample params based on the parsed attributes.
   """
   def params(attrs, action \\ :create) when action in [:create, :update] do
-    attrs
-    |> Enum.reject(fn
-        {_, {:references, _}} -> true
-        {_, _} -> false
-       end)
-    |> Enum.into(%{}, fn {k, t} -> {k, type_to_default(k, t, action)} end)
+    Map.new(attrs, fn {k, t} -> {k, type_to_default(k, t, action)} end)
   end
 
   @doc """
@@ -532,12 +527,7 @@ defmodule Mix.Phoenix.Schema do
   end
 
   defp fixture_params(attrs, fixture_unique_functions) do
-    attrs
-    |> Enum.reject(fn
-      {_, {:references, _}} -> true
-      {_, _} -> false
-    end)
-    |> Enum.into(%{}, fn {attr, type} ->
+    Map.new(attrs, fn {attr, type} ->
       case Map.fetch(fixture_unique_functions, attr) do
         {:ok, {function_name, _function_def, _needs_impl?}} ->
           {attr, "#{function_name}()"}
