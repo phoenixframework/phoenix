@@ -3,57 +3,6 @@ defmodule Phoenix do
   This is the documentation for the Phoenix project.
 
   To get started, see our [overview guides](overview.html).
-
-  ## Dependencies
-
-  By default, Phoenix applications depend on several packages with
-  different purposes. The main packages are:
-
-    * [Ecto](https://hexdocs.pm/ecto) - a language integrated query and
-      database wrapper
-
-    * [Phoenix](https://hexdocs.pm/phoenix) - the Phoenix web framework
-      (these docs)
-
-    * [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) - build rich,
-      real-time user experiences with server-rendered HTML. The LiveView
-      project also defines `Phoenix.Component` and
-      [the HEEx template engine](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2),
-      used for rendering HTML content in both regular and real-time applications
-
-    * [Plug](https://hexdocs.pm/plug) - specification and conveniences for
-      building composable modules web applications. This is the package
-      responsible for the connection abstraction and the regular request-
-      response life-cycle
-
-  You will also work with the following:
-
-    * [ExUnit](https://hexdocs.pm/ex_unit) - Elixir's built-in test framework
-
-    * [Gettext](https://hexdocs.pm/gettext) - internationalization and
-      localization through [`gettext`](https://www.gnu.org/software/gettext/)
-
-    * [Swoosh](https://hexdocs.pm/swoosh) - a library for composing,
-      delivering and testing emails, also used by `mix phx.gen.auth`
-
-  When peaking under the covers, you will find those libraries play
-  an important role in Phoenix applications:
-
-    * [Phoenix HTML](https://hexdocs.pm/phoenix_html) - building blocks
-      for working with HTML and Forms safely
-
-    * [Phoenix PubSub](https://hexdocs.pm/phoenix_pubsub) - a distributed
-      pub/sub system with presence support
-
-  When it comes to instrumentation and monitoring, check out:
-
-    * [Phoenix LiveDashboard](https://hexdocs.pm/phoenix_live_dashboard) -
-      real-time performance monitoring and debugging tools for Phoenix
-      developers
-
-    * [Telemetry Metrics](https://hexdocs.pm/telemetry_metrics) - common
-      interface for defining metrics based on Telemetry events
-
   """
   use Application
 

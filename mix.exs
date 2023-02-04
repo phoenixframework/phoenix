@@ -141,6 +141,7 @@ defmodule Phoenix.MixProject do
       "guides/introduction/installation.md",
       "guides/introduction/up_and_running.md",
       "guides/introduction/community.md",
+      "guides/introduction/packages_glossary.md",
       "guides/directory_structure.md",
       "guides/request_lifecycle.md",
       "guides/plug.md",
