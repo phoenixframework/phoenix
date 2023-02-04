@@ -173,12 +173,14 @@ defmodule Mix.Tasks.Phx.New do
       if mix_step == [] do
         tasks =
           if Keyword.get(project.opts, :assets, true) do
+            Mix.shell().info([:green, "* running ", :reset, "mix assets.setup"])
+
             # First compile only esbuild and tailwind so we can install in parallel
-            cmd(project, "mix deps.compile castore esbuild tailwind")
+            cmd(project, "mix deps.compile castore esbuild tailwind", false)
 
             Enum.map(
               ["mix do loadpaths --no-compile + tailwind.install", "mix do loadpaths --no-compile + esbuild.install"],
-              &Task.async(fn -> cmd(project, &1) end)
+              &Task.async(fn -> cmd(project, &1, false) end)
             )
           else
             []
@@ -287,8 +289,10 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Helpers
 
-  defp cmd(%Project{} = project, cmd) do
-    Mix.shell().info [:green, "* running ", :reset, cmd]
+  defp cmd(%Project{} = project, cmd, log? \\ true) do
+    if log? do
+      Mix.shell().info [:green, "* running ", :reset, cmd]
+    end
 
     case Mix.shell().cmd(cmd, cmd_opts(project)) do
       0 -> []
