@@ -175,7 +175,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
           <.link href={~p"#{schema.route_prefix}/settings"} class="#{link_tailwind_classes}">Settings</.link>
         </li>
         <li>
-          <.link href={~p"#{schema.route_prefix}/log_out"} class="#{link_tailwind_classes}" method="delete">Log out</.link>
+          <.link href={~p"#{schema.route_prefix}/log_out"} method="delete" class="#{link_tailwind_classes}">Log out</.link>
         </li>
       <% else %>
         <li>
