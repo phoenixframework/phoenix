@@ -5,68 +5,74 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <.header>Change Email</.header>
+    <.header class="text-center">
+      Account Settings
+      <:subtitle>Manage your account email address and password settings</:subtitle>
+    </.header>
 
-    <.simple_form
-      :let={f}
-      id="email_form"
-      for={@email_changeset}
-      phx-submit="update_email"
-      phx-change="validate_email"
-    >
-      <.error :if={@email_changeset.action == :insert}>
-        Oops, something went wrong! Please check the errors below.
-      </.error>
+    <div class="space-y-12 divide-y">
+      <div>
+        <.simple_form
+          :let={f}
+          id="email_form"
+          for={@email_changeset}
+          phx-submit="update_email"
+          phx-change="validate_email"
+        >
+          <.error :if={@email_changeset.action == :insert}>
+            Oops, something went wrong! Please check the errors below.
+          </.error>
 
-      <.input field={{f, :email}} type="email" label="Email" required />
+          <.input field={{f, :email}} type="email" label="Email" required />
 
-      <.input
-        field={{f, :current_password}}
-        name="current_password"
-        id="current_password_for_email"
-        type="password"
-        label="Current password"
-        value={@email_form_current_password}
-        required
-      />
-      <:actions>
-        <.button phx-disable-with="Changing...">Change Email</.button>
-      </:actions>
-    </.simple_form>
+          <.input
+            field={{f, :current_password}}
+            name="current_password"
+            id="current_password_for_email"
+            type="password"
+            label="Current password"
+            value={@email_form_current_password}
+            required
+          />
+          <:actions>
+            <.button phx-disable-with="Changing...">Change Email</.button>
+          </:actions>
+        </.simple_form>
+      </div>
+      <div>
+        <.simple_form
+          :let={f}
+          id="password_form"
+          for={@password_changeset}
+          action={~p"<%= schema.route_prefix %>/log_in?_action=password_updated"}
+          method="post"
+          phx-change="validate_password"
+          phx-submit="update_password"
+          phx-trigger-action={@trigger_submit}
+        >
+          <.error :if={@password_changeset.action == :insert}>
+            Oops, something went wrong! Please check the errors below.
+          </.error>
 
-    <.header>Change Password</.header>
+          <.input field={{f, :email}} type="hidden" value={@current_email} />
 
-    <.simple_form
-      :let={f}
-      id="password_form"
-      for={@password_changeset}
-      action={~p"<%= schema.route_prefix %>/log_in?_action=password_updated"}
-      method="post"
-      phx-change="validate_password"
-      phx-submit="update_password"
-      phx-trigger-action={@trigger_submit}
-    >
-      <.error :if={@password_changeset.action == :insert}>
-        Oops, something went wrong! Please check the errors below.
-      </.error>
-
-      <.input field={{f, :email}} type="hidden" value={@current_email} />
-
-      <.input field={{f, :password}} type="password" label="New password" required />
-      <.input field={{f, :password_confirmation}} type="password" label="Confirm new password" />
-      <.input
-        field={{f, :current_password}}
-        name="current_password"
-        type="password"
-        label="Current password"
-        id="current_password_for_password"
-        value={@current_password}
-        required
-      />
-      <:actions>
-        <.button phx-disable-with="Changing...">Change Password</.button>
-      </:actions>
-    </.simple_form>
+          <.input field={{f, :password}} type="password" label="New password" required />
+          <.input field={{f, :password_confirmation}} type="password" label="Confirm new password" />
+          <.input
+            field={{f, :current_password}}
+            name="current_password"
+            type="password"
+            label="Current password"
+            id="current_password_for_password"
+            value={@current_password}
+            required
+          />
+          <:actions>
+            <.button phx-disable-with="Changing...">Change Password</.button>
+          </:actions>
+        </.simple_form>
+      </div>
+    </div>
     """
   end
 
