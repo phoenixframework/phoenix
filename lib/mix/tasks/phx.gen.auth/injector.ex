@@ -149,6 +149,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   """
   def app_layout_menu_help_text(file_path, %Schema{} = schema) do
     {_dup_check, code} = app_layout_menu_code_to_inject(schema)
+
     """
     Add the following #{schema.singular} menu items to your #{Path.relative_to_cwd(file_path)} layout file:
 
@@ -172,17 +173,38 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
           <%= @current_#{schema.singular}.email %>
         </li>
         <li>
-          <.link href={~p"#{schema.route_prefix}/settings"} class="#{link_tailwind_classes}">Settings</.link>
+          <.link
+            href={~p"#{schema.route_prefix}/settings"}
+            class="#{link_tailwind_classes}"
+          >
+            Settings
+          </.link>
         </li>
         <li>
-          <.link href={~p"#{schema.route_prefix}/log_out"} method="delete" class="#{link_tailwind_classes}">Log out</.link>
+          <.link
+            href={~p"#{schema.route_prefix}/log_out"}
+            method="delete"
+            class="#{link_tailwind_classes}"
+          >
+            Log out
+          </.link>
         </li>
       <% else %>
         <li>
-          <.link href={~p"#{schema.route_prefix}/register"} class="#{link_tailwind_classes}">Register</.link>
+          <.link
+            href={~p"#{schema.route_prefix}/register"}
+            class="#{link_tailwind_classes}"
+          >
+            Register
+          </.link>
         </li>
         <li>
-          <.link href={~p"#{schema.route_prefix}/log_in"} class="#{link_tailwind_classes}">Log in</.link>
+          <.link
+            href={~p"#{schema.route_prefix}/log_in"}
+            class="#{link_tailwind_classes}"
+          >
+            Log in
+          </.link>
         </li>
       <% end %>
     </ul>\
