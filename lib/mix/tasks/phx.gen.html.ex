@@ -171,9 +171,6 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @doc false
   def inputs(%Schema{} = schema) do
     Enum.map(schema.attrs, fn
-      {_, {:references, _}} ->
-        nil
-
       {key, :integer} ->
         ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" />)
 

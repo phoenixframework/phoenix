@@ -7,6 +7,8 @@ defmodule Phoenix.TokenTest do
     :ok
   end
 
+  defstruct [:endpoint]
+
   defmodule TokenEndpoint do
     def config(:secret_key_base), do: "abc123"
   end
@@ -29,6 +31,10 @@ defmodule Phoenix.TokenTest do
       id = 1
       token = Token.sign(socket(), "id", id)
       assert Token.verify(socket(), "id", token) == {:ok, id}
+
+      id = 1
+      token = Token.sign(%__MODULE__{endpoint: TokenEndpoint}, "id", id)
+      assert Token.verify(%__MODULE__{endpoint: TokenEndpoint}, "id", token) == {:ok, id}
     end
 
     test "fails on missing token" do

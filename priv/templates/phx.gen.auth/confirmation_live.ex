@@ -5,20 +5,22 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(%{live_action: :edit} = assigns) do
     ~H"""
-    <.header>Confirm Account</.header>
+    <div class="mx-auto max-w-sm">
+      <.header class="text-center">Confirm Account</.header>
 
-    <.simple_form :let={f} for={:<%= schema.singular %>} id="confirmation_form" phx-submit="confirm_account">
-      <.input field={{f, :token}} type="hidden" value={@token} />
-      <:actions>
-        <.button phx-disable-with="Confirming...">Confirm my account</.button>
-      </:actions>
-    </.simple_form>
+      <.simple_form :let={f} for={:<%= schema.singular %>} id="confirmation_form" phx-submit="confirm_account">
+        <.input field={{f, :token}} type="hidden" value={@token} />
+        <:actions>
+          <.button phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
+        </:actions>
+      </.simple_form>
 
-    <p>
-      <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
-      |
-      <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
-    </p>
+      <p class="text-center mt-4">
+        <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
+        |
+        <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
+      </p>
+    </div>
     """
   end
 

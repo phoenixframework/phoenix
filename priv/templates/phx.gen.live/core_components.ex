@@ -147,7 +147,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
       phx-mounted={@autoshow && show("##{@id}")}
-      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("#flash")}
+      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
       class={[
         "fixed hidden top-2 right-2 w-80 sm:w-96 z-50 rounded-lg p-3 shadow-md shadow-zinc-900/5 ring-1",
@@ -280,7 +280,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       if assigns.multiple, do: name <> "[]", else: name
     end)
     |> assign_new(:id, fn -> Phoenix.HTML.Form.input_id(f, field) end)
-    |> assign_new(:value, fn -> Phoenix.HTML.Form.input_value(f, field) end)
+    |> assign_new(:value, fn -> format_input_value(Phoenix.HTML.Form.input_value(f, field)) end)
     |> assign_new(:errors, fn -> translate_errors(f.errors || [], field) end)
     |> input()
   end
@@ -460,25 +460,23 @@ defmodule <%= @web_namespace %>.CoreComponents do
           <tr
             :for={row <- @rows}
             id={"#{@id}-#{Phoenix.Param.to_param(row)}"}
-            class="relative group hover:bg-zinc-50"
+            class="group hover:bg-zinc-50"
           >
             <td
               :for={{col, i} <- Enum.with_index(@col)}
               phx-click={@row_click && @row_click.(row)}
-              class={["p-0", @row_click && "hover:cursor-pointer"]}
+              class={["relative p-0", @row_click && "hover:cursor-pointer"]}
             >
-              <div :if={i == 0}>
-                <span class="absolute h-full w-4 top-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
-                <span class="absolute h-full w-4 top-0 -right-4 group-hover:bg-zinc-50 sm:rounded-r-xl" />
-              </div>
               <div class="block py-4 pr-6">
+                <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
                 <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
                   <%%= render_slot(col, row) %>
                 </span>
               </div>
             </td>
-            <td :if={@action != []} class="p-0 w-14">
+            <td :if={@action != []} class="relative p-0 w-14">
               <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
+                <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl" />
                 <span
                   :for={action <- @action}
                   class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
@@ -644,4 +642,10 @@ defmodule <%= @web_namespace %>.CoreComponents do
   defp input_equals?(val1, val2) do
     Phoenix.HTML.html_escape(val1) == Phoenix.HTML.html_escape(val2)
   end
+
+  defp format_input_value(%struct{} = value) when struct in [NaiveDateTime, DateTime] do
+    Calendar.strftime(value, "%Y-%m-%dT%H:%M")
+  end
+
+  defp format_input_value(other), do: other
 end

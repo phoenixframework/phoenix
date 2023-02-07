@@ -188,8 +188,6 @@ defmodule Phoenix.Endpoint do
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of
       file patterns to watch. When these files change, it will trigger a reload.
-      If you are using a tool like [pow](http://pow.cx) in development,
-      you may need to set the `:url` option appropriately.
 
           live_reload: [
             url: "ws://localhost:4000",
@@ -866,7 +864,10 @@ defmodule Phoenix.Endpoint do
       the error handler must be a MFA tuple that receives a `Plug.Conn`, the
       error reason, and returns a `Plug.Conn` with a response. For example:
 
-          error_handler: {MySocket, :handle_error, []}
+          socket "/socket", MySocket,
+              websocket: [
+                error_handler: {MySocket, :handle_error, []}
+              ]
 
       and a `{:error, :rate_limit}` return may be handled on `MySocket` as:
 

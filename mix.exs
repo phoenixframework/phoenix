@@ -3,12 +3,12 @@ defmodule Phoenix.MixProject do
 
   if Mix.env() != :prod do
     for path <- :code.get_path(),
-        Regex.match?(~r/phx_new\-\d+\.\d+\.\d.*\/ebin$/, List.to_string(path)) do
+        Regex.match?(~r/phx_new-[\w\.\-]+\/ebin$/, List.to_string(path)) do
       Code.delete_path(path)
     end
   end
 
-  @version "1.7.0-rc.0"
+  @version "1.7.0-rc.2"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -50,10 +50,13 @@ defmodule Phoenix.MixProject do
   defp elixirc_paths(:docs), do: ["lib", "installer/lib"]
   defp elixirc_paths(_), do: ["lib"]
 
+  defp extra_applications(:test), do: [:inets]
+  defp extra_applications(_), do: []
+
   def application do
     [
       mod: {Phoenix, []},
-      extra_applications: [:logger, :eex, :crypto, :public_key],
+      extra_applications: extra_applications(Mix.env()) ++ [:logger, :eex, :crypto, :public_key],
       env: [
         logger: true,
         stacktrace_depth: nil,
@@ -138,6 +141,7 @@ defmodule Phoenix.MixProject do
       "guides/introduction/installation.md",
       "guides/introduction/up_and_running.md",
       "guides/introduction/community.md",
+      "guides/introduction/packages_glossary.md",
       "guides/directory_structure.md",
       "guides/request_lifecycle.md",
       "guides/plug.md",

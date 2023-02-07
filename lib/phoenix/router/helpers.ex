@@ -237,7 +237,9 @@ defmodule Phoenix.Router.Helpers do
         defp maybe_append_slash(path, _), do: path
       end
 
-    Module.create(Module.concat(env.module, Helpers), code, line: env.line, file: env.file)
+    name = Module.concat(env.module, Helpers)
+    Module.create(name, code, line: env.line, file: env.file)
+    name
   end
 
   @doc """
