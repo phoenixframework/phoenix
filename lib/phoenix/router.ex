@@ -576,11 +576,11 @@ defmodule Phoenix.Router do
         _ -> nil
       end)
 
-    warn_on_verify? = Enum.all?(routes, & &1.warn_on_verify?)
+    verify? = Enum.all?(routes, & &1.verify?)
 
     quote generated: true do
       def __verify_route__(unquote(path)) do
-        {unquote(forward_plug), unquote(warn_on_verify?)}
+        {unquote(forward_plug), unquote(verify?)}
       end
     end
   end
@@ -684,9 +684,9 @@ defmodule Phoenix.Router do
     * `:assigns` - a map of data to merge into the connection when a route matches
     * `:metadata` - a map of metadata used by the telemetry events and returned by
       `route_info/4`
-    * `:warn_on_verify` - the boolean for whether matches to this route trigger
-      an unmatched route warning for `Phoenix.VerifiedRoutes`. Useful to ignore
-      an otherwise catch-all route definition from being matched when verifying routes.
+    * `:verify` - the boolean for whether matches to this route should be verified.
+      When false, matches to this route are ignored. This is useful to ignore an
+      otherwise catch-all route definition from being matched when verifying routes.
       Defaults `true`.
 
   ## Examples

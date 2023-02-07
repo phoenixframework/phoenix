@@ -33,7 +33,7 @@ defmodule Phoenix.VerifiedRoutesTest do
     get "/posts/:id/info", PostController, :show
     get "/posts/file/*file", PostController, :file
     get "/posts/skip", PostController, :skip
-    get "/should-warn/*all", PostController, :all, warn_on_verify: false
+    get "/should-warn/*all", PostController, :all, verify: false
 
     scope "/", host: "users." do
       post "/host_users/:id/info", UserController, :create
@@ -515,7 +515,7 @@ defmodule Phoenix.VerifiedRoutesTest do
                  ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/#{123}"|
       end
 
-      test "~p warns on warn_on_verify: true route" do
+      test "~p warns on verify: true route" do
         warnings =
           ExUnit.CaptureIO.capture_io(:stderr, fn ->
             defmodule VerifyFalse do
