@@ -525,7 +525,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/controllers/warehouse/user_confirmation_html/new.html.heex", fn file ->
         assert file =~
-                 ~S|<.simple_form :let={f} for={:user} action={~p"/warehouse/users/confirm"}>|
+                 ~S|<.simple_form :let={f} as={:user} action={~p"/warehouse/users/confirm"}>|
 
         assert file =~
                  ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
@@ -599,7 +599,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         "lib/my_app_web/controllers/warehouse/user_reset_password_html/new.html.heex",
         fn file ->
           assert file =~
-                   ~S|<.simple_form :let={f} for={:user} action={~p"/warehouse/users/reset_password"}>|
+                   ~S|<.simple_form :let={f} as={:user} action={~p"/warehouse/users/reset_password"}>|
         end
       )
 

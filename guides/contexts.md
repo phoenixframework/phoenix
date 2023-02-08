@@ -514,7 +514,7 @@ With our `category_select` function in place, we can open up `lib/hello_web/cont
 
 ```diff
   ...
-  <.input type="number" field={{f, :views}} label="Views" />
+  <.input type="number" field={f[:views]} label="Views" />
 
 + <%= category_select f, @changeset %>
 

@@ -99,31 +99,31 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       end
 
       assert_file "lib/phoenix_web/live/post_live/form_component.ex", fn file ->
-        assert file =~ ~s(<.simple_form\n        :let={f}\n        for={@changeset}\n)
-        assert file =~ ~s(<.input field={{f, :title}} type="text")
-        assert file =~ ~s(<.input field={{f, :votes}} type="number")
-        assert file =~ ~s(<.input field={{f, :cost}} type="number" label="Cost" step="any")
+        assert file =~ ~s(<.simple_form)
+        assert file =~ ~s(<.input field={@form[:title]} type="text")
+        assert file =~ ~s(<.input field={@form[:votes]} type="number")
+        assert file =~ ~s(<.input field={@form[:cost]} type="number" label="Cost" step="any")
         assert file =~ """
                 <.input
-                  field={{f, :tags}}
+                  field={@form[:tags]}
                   type="select"
                   multiple
         """
-        assert file =~ ~s(<.input field={{f, :popular}} type="checkbox")
-        assert file =~ ~s(<.input field={{f, :drafted_at}} type="datetime-local")
-        assert file =~ ~s(<.input field={{f, :published_at}} type="datetime-local")
-        assert file =~ ~s(<.input field={{f, :deleted_at}} type="datetime-local")
-        assert file =~ ~s(<.input field={{f, :announcement_date}} type="date")
-        assert file =~ ~s(<.input field={{f, :alarm}} type="time")
-        assert file =~ ~s(<.input field={{f, :secret}} type="text" label="Secret" />)
+        assert file =~ ~s(<.input field={@form[:popular]} type="checkbox")
+        assert file =~ ~s(<.input field={@form[:drafted_at]} type="datetime-local")
+        assert file =~ ~s(<.input field={@form[:published_at]} type="datetime-local")
+        assert file =~ ~s(<.input field={@form[:deleted_at]} type="datetime-local")
+        assert file =~ ~s(<.input field={@form[:announcement_date]} type="date")
+        assert file =~ ~s(<.input field={@form[:alarm]} type="time")
+        assert file =~ ~s(<.input field={@form[:secret]} type="text" label="Secret" />)
         assert file =~ """
                 <.input
-                  field={{f, :status}}
+                  field={@form[:status]}
                   type="select"
         """
         assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
 
-        refute file =~ ~s(<.input field={{f, :user_id}})
+        refute file =~ ~s(<.input field={@form[:user_id]})
       end
 
       assert_file "test/phoenix_web/live/post_live_test.exs", fn file ->

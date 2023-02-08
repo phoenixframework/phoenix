@@ -1,7 +1,7 @@
 <div class="mx-auto max-w-sm">
   <.header class="text-center">Confirm account</.header>
 
-  <.simple_form :let={_f} for={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirm/#{@token}"}>
+  <.simple_form :let={_f} as={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirm/#{@token}"}>
     <:actions>
       <.button class="w-full">Confirm my account</.button>
     </:actions>
