@@ -687,7 +687,7 @@ defmodule Phoenix.Router do
     * `:warn_on_verify` - the boolean for whether matches to this route trigger
       an unmatched route warning for `Phoenix.VerifiedRoutes`. Useful to ignore
       an otherwise catch-all route definition from being matched when verifying routes.
-      Defaults `true`.
+      Defaults `false`.
 
   ## Examples
 
