@@ -92,7 +92,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   """
   use Mix.Task
 
-  alias Mix.Phoenix.{Context}
+  alias Mix.Phoenix.{Context, Schema}
   alias Mix.Tasks.Phx.Gen
 
   @doc false
@@ -106,7 +106,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
-    binding = [context: context, schema: schema, inputs: Gen.Html.inputs(schema)]
+    binding = [context: context, schema: schema, inputs: inputs(schema)]
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
@@ -147,7 +147,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       {:eex, "index.html.heex", Path.join(web_live, "index.html.heex")},
       {:eex, "show.html.heex", Path.join(web_live, "show.html.heex")},
       {:eex, "live_test.exs", Path.join(test_live, "#{schema.singular}_live_test.exs")},
-      {:new_eex, "core_components.ex", Path.join([web_prefix, "components", "core_components.ex"])}
+      {:new_eex, "core_components.ex",
+       Path.join([web_prefix, "components", "core_components.ex"])}
     ]
   end
 
@@ -263,4 +264,74 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       ~s|live "/#{schema.plural}/:id/show/edit", #{inspect(schema.alias)}Live.Show, :edit|
     ]
   end
+
+  @doc false
+  def inputs(%Schema{} = schema) do
+    Enum.map(schema.attrs, fn
+      {_, {:references, _}} ->
+        nil
+
+      {key, :integer} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="number" label="#{label(key)}" />)
+
+      {key, :float} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="number" label="#{label(key)}" step="any" />)
+
+      {key, :decimal} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="number" label="#{label(key)}" step="any" />)
+
+      {key, :boolean} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="checkbox" label="#{label(key)}" />)
+
+      {key, :text} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="text" label="#{label(key)}" />)
+
+      {key, :date} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="date" label="#{label(key)}" />)
+
+      {key, :time} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="time" label="#{label(key)}" />)
+
+      {key, :utc_datetime} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="datetime-local" label="#{label(key)}" />)
+
+      {key, :naive_datetime} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="datetime-local" label="#{label(key)}" />)
+
+      {key, {:array, _} = type} ->
+        ~s"""
+        <.input
+          field={@form[#{inspect(key)}]}
+          type="select"
+          multiple
+          label="#{label(key)}"
+          options={#{inspect(default_options(type))}}
+        />
+        """
+
+      {key, {:enum, _}} ->
+        ~s"""
+        <.input
+          field={@form[#{inspect(key)}]}
+          type="select"
+          label="#{label(key)}"
+          prompt="Choose a value"
+          options={Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})}
+        />
+        """
+
+      {key, _} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="text" label="#{label(key)}" />)
+    end)
+  end
+
+  defp default_options({:array, :string}),
+    do: Enum.map([1, 2], &{"Option #{&1}", "option#{&1}"})
+
+  defp default_options({:array, :integer}),
+    do: Enum.map([1, 2], &{"#{&1}", &1})
+
+  defp default_options({:array, _}), do: []
+
+  defp label(key), do: Phoenix.Naming.humanize(to_string(key))
 end

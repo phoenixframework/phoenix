@@ -11,8 +11,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <:subtitle>We'll send a password reset link to your inbox</:subtitle>
       </.header>
 
-      <.simple_form :let={f} id="reset_password_form" for={:<%= schema.singular %>} phx-submit="send_email">
-        <.input field={{f, :email}} type="email" placeholder="Email" required />
+      <.simple_form id="reset_password_form" phx-submit="send_email">
+        <.input field={@form[:email]} type="email" placeholder="Email" required />
         <:actions>
           <.button phx-disable-with="Sending..." class="w-full">
             Send password reset instructions
@@ -29,7 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, form: to_form(%{}, as: "<%= schema.singular %>"))}
   end
 
   def handle_event("send_email", %{"<%= schema.singular %>" => %{"email" => email}}, socket) do

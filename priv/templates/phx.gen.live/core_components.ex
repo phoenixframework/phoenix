@@ -77,7 +77,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                   phx-click={hide_modal(@on_cancel, @id)}
                   type="button"
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
-                  aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
+                  aria-label={gettext("close")}
                 >
                   <Heroicons.x_mark solid class="h-5 w-5 stroke-current" />
                 </button>
@@ -166,7 +166,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         :if={@close}
         type="button"
         class="group absolute top-2 right-1 p-2"
-        aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
+        aria-label={gettext("close")}
       >
         <Heroicons.x_mark solid class="h-5 w-5 stroke-current opacity-40 group-hover:opacity-70" />
       </button>
@@ -175,13 +175,40 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   @doc """
+  Shows the flash group with standard titles and content.
+
+  ## Examples
+
+      <.flash_group flash={@flash} />
+  """
+  attr :flash, :map, required: true, doc: "the map of flash messages"
+
+  def flash_group(assigns) do
+    ~H"""
+    <.flash kind={:info} title="Success!" flash={@flash} />
+    <.flash kind={:error} title="Error!" flash={@flash} />
+    <.flash
+      id="disconnected"
+      kind={:error}
+      title="We can't find the internet"
+      close={false}
+      autoshow={false}
+      phx-disconnected={show("#disconnected")}
+      phx-connected={hide("#disconnected")}
+    >
+      Attempting to reconnect <Heroicons.arrow_path class="ml-1 w-3 h-3 inline animate-spin" />
+    </.flash>
+    """
+  end
+
+  @doc """
   Renders a simple form.
 
   ## Examples
 
-      <.simple_form :let={f} for={:user} phx-change="validate" phx-submit="save">
-        <.input field={{f, :email}} label="Email"/>
-        <.input field={{f, :username}} label="Username" />
+      <.simple_form phx-change="validate" phx-submit="save">
+        <.input field={@form[:email]} label="Email"/>
+        <.input field={@form[:username]} label="Username" />
         <:actions>
           <.button>Save</.button>
         </:actions>
@@ -189,7 +216,6 @@ defmodule <%= @web_namespace %>.CoreComponents do
   """
   attr :for, :any, default: nil, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
-
   attr :rest, :global,
     include: ~w(autocomplete name rel action enctype method novalidate target),
     doc: "the arbitrary HTML attributes to apply to the form tag"
@@ -249,10 +275,10 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   ## Examples
 
-      <.input field={{f, :email}} type="email" />
+      <.input field={@form[:email]} type="email" />
       <.input name="my-input" errors={["oh no!"]} />
   """
-  attr :id, :any
+  attr :id, :any, default: nil
   attr :name, :any
   attr :label, :string, default: nil
 
@@ -262,7 +288,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                range radio search select tel text textarea time url week)
 
   attr :value, :any
-  attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
+  attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: @form[:email]"
   attr :errors, :list
   attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
@@ -272,21 +298,17 @@ defmodule <%= @web_namespace %>.CoreComponents do
                                    pattern placeholder readonly required rows size step)
   slot :inner_block
 
-  def input(%{field: {f, field}} = assigns) do
+  def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
-    |> assign(field: nil)
-    |> assign_new(:name, fn ->
-      name = Phoenix.HTML.Form.input_name(f, field)
-      if assigns.multiple, do: name <> "[]", else: name
-    end)
-    |> assign_new(:id, fn -> Phoenix.HTML.Form.input_id(f, field) end)
-    |> assign_new(:value, fn -> format_input_value(Phoenix.HTML.Form.input_value(f, field)) end)
-    |> assign_new(:errors, fn -> translate_errors(f.errors || [], field) end)
+    |> assign(field: nil, id: assigns.id || field.id)
+    |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
+    |> assign_new(:value, fn -> Phoenix.HTML.Form.normalize_value(assigns.type, field.value) end)
+    |> assign_new(:errors, fn -> Enum.map(field.errors, &translate_error(&1)) end)
     |> input()
   end
 
   def input(%{type: "checkbox"} = assigns) do
-    assigns = assign_new(assigns, :checked, fn -> input_equals?(assigns.value, "true") end)
+    assigns = assign_new(assigns, :checked, fn -> assigns.value == "true" end)
 
     ~H"""
     <label phx-feedback-for={@name} class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
@@ -332,14 +354,14 @@ defmodule <%= @web_namespace %>.CoreComponents do
         id={@id || @name}
         name={@name}
         class={[
-          input_border(@errors),
           "mt-2 block min-h-[6rem] w-full rounded-lg border-zinc-300 py-[7px] px-[11px]",
           "text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-800/5 sm:text-sm sm:leading-6",
-          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
+          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5",
+          "border-zinc-300 focus:border-zinc-400 focus:ring-zinc-800/5",
+          @errors != [] && "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10"
         ]}
         {@rest}
-      >
-    <%%= @value %></textarea>
+      ><%%= @value %></textarea>
       <.error :for={msg <- @errors}><%%= msg %></.error>
     </div>
     """
@@ -355,10 +377,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
         id={@id || @name}
         value={@value}
         class={[
-          input_border(@errors),
           "mt-2 block w-full rounded-lg border-zinc-300 py-[7px] px-[11px]",
           "text-zinc-900 focus:outline-none focus:ring-4 sm:text-sm sm:leading-6",
-          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
+          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5",
+          "border-zinc-300 focus:border-zinc-400 focus:ring-zinc-800/5",
+          @errors != [] && "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10"
         ]}
         {@rest}
       />
@@ -366,12 +389,6 @@ defmodule <%= @web_namespace %>.CoreComponents do
     </div>
     """
   end
-
-  defp input_border([] = _errors),
-    do: "border-zinc-300 focus:border-zinc-400 focus:ring-zinc-800/5"
-
-  defp input_border([_ | _] = _errors),
-    do: "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10"
 
   @doc """
   Renders a label.
@@ -453,13 +470,14 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
             <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%%= col[:label] %></th>
-            <th class="relative p-0 pb-4"><span class="sr-only"><%= if @gettext do %><%%= gettext("Actions") %><% else %>Actions<% end %></span></th>
+            <th class="relative p-0 pb-4"><span class="sr-only"><%%= gettext("Actions") %></span></th>
           </tr>
         </thead>
         <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
           <tr
             :for={row <- @rows}
             id={"#{@id}-#{Phoenix.Param.to_param(row)}"}
+            badclass="relative group hover:bg-zinc-50"
             class="group hover:bg-zinc-50"
           >
             <td
@@ -638,14 +656,4 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
   end
-
-  defp input_equals?(val1, val2) do
-    Phoenix.HTML.html_escape(val1) == Phoenix.HTML.html_escape(val2)
-  end
-
-  defp format_input_value(%struct{} = value) when struct in [NaiveDateTime, DateTime] do
-    Calendar.strftime(value, "%Y-%m-%dT%H:%M")
-  end
-
-  defp format_input_value(other), do: other
 end
