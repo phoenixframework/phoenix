@@ -33,7 +33,7 @@ defmodule Phoenix.VerifiedRoutesTest do
     get "/posts/:id/info", PostController, :show
     get "/posts/file/*file", PostController, :file
     get "/posts/skip", PostController, :skip
-    get "/should-warn/*all", PostController, :all, warn_on_verify: false
+    get "/should-warn/*all", PostController, :all, warn_on_verify: true
 
     scope "/", host: "users." do
       post "/host_users/:id/info", UserController, :create
