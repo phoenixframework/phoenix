@@ -16,14 +16,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   
   Authentication views can either be generated to use LiveView by passing 
   the `--live` option, or they can use conventional Phoenix 
-  Controlers & Views by passing `--no-live`.
+  Controllers & Views by passing `--no-live`.
   
   If neither of these options are provided, a prompt will be displayed.
 
   Using the `--live` option is advised if you plan on using LiveView 
   elsewhere in your application. The user experience when navigating between 
   LiveViews can be tightly controlled, allowing you to let your users navigate
-  to authentication views without necessarily trigerring a new HTTP request
+  to authentication views without necessarily triggering a new HTTP request
   each time (which would result in a full page load).
   
   ## Password hashing
