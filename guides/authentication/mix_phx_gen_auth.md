@@ -22,6 +22,12 @@ The authentication generators support Phoenix LiveView, for enhanced UX, so we'l
 
 Either approach will create an `Accounts` context with an `Accounts.User` schema module. The final argument is the plural version of the schema module, which is used for generating database table names and route paths. The `mix phx.gen.auth` generator is similar to `mix phx.gen.html` except it does not accept a list of additional fields to add to the schema, and it generates many more context functions.
 
+If you are using LiveView in your application, you can add the `--live` option, to have all the authentication-related views generated as LiveViews in stead of conventional Phoenix controllers & views:
+
+```console
+$ mix phx.gen.auth Accounts User users --live
+```
+
 Since this generator installed additional dependencies in `mix.exs`, let's fetch those:
 
 ```console
@@ -118,6 +124,7 @@ Check out `mix phx.gen.auth` for more details, such as using a different passwor
 
 The following links have more information regarding the motivation and design of the code this generates.
 
+  * Berenice Medel's blog post on generating LiveViews for authentication (rather than conventional Controllers & Views) - [Bringing Phoenix Authentication to Life](https://fly.io/phoenix-files/phx-gen-auth/)
   * José Valim's blog post - [An upcoming authentication solution for Phoenix](https://dashbit.co/blog/a-new-authentication-solution-for-phoenix)
   * The [original `phx_gen_auth` repo][phx_gen_auth repo] (for Phoenix 1.5 applications) - This is a great resource to see discussions around decisions that have been made in earlier versions of the project.
   * [Original pull request on bare Phoenix app][auth PR]
