@@ -77,7 +77,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                   phx-click={hide_modal(@on_cancel, @id)}
                   type="button"
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
-                  aria-label={gettext("close")}
+                  aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
                 >
                   <Heroicons.x_mark solid class="h-5 w-5 stroke-current" />
                 </button>
@@ -166,7 +166,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         :if={@close}
         type="button"
         class="group absolute top-2 right-1 p-2"
-        aria-label={gettext("close")}
+        aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
       >
         <Heroicons.x_mark solid class="h-5 w-5 stroke-current opacity-40 group-hover:opacity-70" />
       </button>
@@ -216,6 +216,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   """
   attr :for, :any, default: nil, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
+
   attr :rest, :global,
     include: ~w(autocomplete name rel action enctype method novalidate target),
     doc: "the arbitrary HTML attributes to apply to the form tag"
@@ -288,8 +289,10 @@ defmodule <%= @web_namespace %>.CoreComponents do
                range radio search select tel text textarea time url week)
 
   attr :value, :any
-  attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: @form[:email]"
-  attr :errors, :list
+  attr :field, Phoenix.HTML.FormField,
+    doc: "a form field struct retrieved from the form, for example: @form[:email]"
+
+  attr :errors, :list, default: []
   attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
@@ -301,29 +304,33 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
     |> assign(field: nil, id: assigns.id || field.id)
+    |> assign(:errors, Enum.map(field.errors, &translate_error(&1)))
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
-    |> assign_new(:value, fn -> Phoenix.HTML.Form.normalize_value(assigns.type, field.value) end)
-    |> assign_new(:errors, fn -> Enum.map(field.errors, &translate_error(&1)) end)
+    |> assign_new(:value, fn -> field.value end)
     |> input()
   end
 
-  def input(%{type: "checkbox"} = assigns) do
-    assigns = assign_new(assigns, :checked, fn -> assigns.value == "true" end)
+  def input(%{type: "checkbox", value: value} = assigns) do
+    assigns =
+      assign_new(assigns, :checked, fn -> Phoenix.HTML.Form.normalize_value("checkbox", value) end)
 
     ~H"""
-    <label phx-feedback-for={@name} class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
-      <input type="hidden" name={@name} value="false" />
-      <input
-        type="checkbox"
-        id={@id || @name}
-        name={@name}
-        value="true"
-        checked={@checked}
-        class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
-        {@rest}
-      />
-      <%%= @label %>
-    </label>
+    <div phx-feedback-for={@name}>
+      <label class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
+        <input type="hidden" name={@name} value="false" />
+        <input
+          type="checkbox"
+          id={@id || @name}
+          name={@name}
+          value="true"
+          checked={@checked}
+          class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+          {@rest}
+        />
+        <%%= @label %>
+      </label>
+      <.error :for={msg <- @errors}><%%= msg %></.error>
+    </div>
     """
   end
 
@@ -361,7 +368,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
           @errors != [] && "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10"
         ]}
         {@rest}
-      ><%%= @value %></textarea>
+      ><%%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
       <.error :for={msg <- @errors}><%%= msg %></.error>
     </div>
     """
@@ -375,7 +382,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         type={@type}
         name={@name}
         id={@id || @name}
-        value={@value}
+        value={Phoenix.HTML.normalize_value(@type, @value)}
         class={[
           "mt-2 block w-full rounded-lg border-zinc-300 py-[7px] px-[11px]",
           "text-zinc-900 focus:outline-none focus:ring-4 sm:text-sm sm:leading-6",
@@ -454,7 +461,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
       </.table>
   """
   attr :id, :string, required: true
-  attr :row_click, :any, default: nil
+  attr :row_id, :any, default: nil, doc: "the function for generating the row id"
+  attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
   attr :rows, :list, required: true
 
   slot :col, required: true do
@@ -470,14 +478,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
             <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%%= col[:label] %></th>
-            <th class="relative p-0 pb-4"><span class="sr-only"><%%= gettext("Actions") %></span></th>
+            <th class="relative p-0 pb-4"><span class="sr-only"><%= if @gettext do %><%%= gettext("Actions") %><% else %>Actions<% end %></span></th>
           </tr>
         </thead>
         <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
           <tr
             :for={row <- @rows}
-            id={"#{@id}-#{Phoenix.Param.to_param(row)}"}
-            badclass="relative group hover:bg-zinc-50"
+            id={@row_id && @row_id.(row)}
             class="group hover:bg-zinc-50"
           >
             <td
