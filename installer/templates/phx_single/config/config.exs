@@ -14,6 +14,7 @@ config :<%= @app_name %><%= if @namespaced? do %>,
 
 # Configures the endpoint
 config :<%= @app_name %>, <%= @endpoint_module %>,
+  check_origin: :conn,
   url: [host: "localhost"],
   render_errors: [
     formats: [<%= if @html do%>html: <%= @web_namespace %>.ErrorHTML, <% end %>json: <%= @web_namespace %>.ErrorJSON],

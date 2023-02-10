@@ -123,7 +123,7 @@ defmodule Phoenix.Endpoint do
       `false`.
 
     * `:check_origin` - configure the default `:check_origin` setting for
-      transports. See `socket/3` for options. Defaults to `true`.
+      transports. See `socket/3` for options. Defaults to `:conn`.
 
     * `:secret_key_base` - a secret key used as a base to generate secrets
       for encrypting and signing data. For example, cookies and tokens

@@ -174,7 +174,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
       # Runtime config
       cache_static_manifest: nil,
-      check_origin: true,
+      check_origin: :conn,
       http: false,
       https: false,
       reloadable_apps: nil,
