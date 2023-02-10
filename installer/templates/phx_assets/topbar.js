@@ -1,9 +1,7 @@
 /**
  * @license MIT
- * topbar 1.0.0, 2021-01-06
- * Modifications:
- *   - add delayedShow(time) (2022-09-21)
- * http://buunguyen.github.io/topbar
+ * topbar 2.0.0, 2023-02-04
+ * https://buunguyen.github.io/topbar
  * Copyright (c) 2021 Buu Nguyen
  */
 (function (window, document) {
@@ -98,26 +96,26 @@
         for (var key in opts)
           if (options.hasOwnProperty(key)) options[key] = opts[key];
       },
-      delayedShow: function(time) {
+      show: function (delay) {
         if (showing) return;
-        if (delayTimerId) return;
-        delayTimerId = setTimeout(() => topbar.show(), time);
-      },
-      show: function () {
-        if (showing) return;
-        showing = true;
-        if (fadeTimerId !== null) window.cancelAnimationFrame(fadeTimerId);
-        if (!canvas) createCanvas();
-        canvas.style.opacity = 1;
-        canvas.style.display = "block";
-        topbar.progress(0);
-        if (options.autoRun) {
-          (function loop() {
-            progressTimerId = window.requestAnimationFrame(loop);
-            topbar.progress(
-              "+" + 0.05 * Math.pow(1 - Math.sqrt(currentProgress), 2)
-            );
-          })();
+        if (delay) {
+          if (delayTimerId) return;
+          delayTimerId = setTimeout(() => topbar.show(), delay);
+        } else  {
+          showing = true;
+          if (fadeTimerId !== null) window.cancelAnimationFrame(fadeTimerId);
+          if (!canvas) createCanvas();
+          canvas.style.opacity = 1;
+          canvas.style.display = "block";
+          topbar.progress(0);
+          if (options.autoRun) {
+            (function loop() {
+              progressTimerId = window.requestAnimationFrame(loop);
+              topbar.progress(
+                "+" + 0.05 * Math.pow(1 - Math.sqrt(currentProgress), 2)
+              );
+            })();
+          }
         }
       },
       progress: function (to) {
