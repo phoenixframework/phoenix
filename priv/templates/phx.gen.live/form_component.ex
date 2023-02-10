@@ -13,8 +13,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </.header>
 
       <.simple_form
-        :let={f}
-        for={@changeset}
         id="<%= schema.singular %>-form"
         phx-target={@myself}
         phx-change="validate"
@@ -36,7 +34,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:changeset, changeset)}
+     |> assign_form(changeset)}
   end
 
   @impl true
@@ -46,7 +44,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       |> <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    {:noreply, assign_form(socket, changeset)}
   end
 
   def handle_event("save", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
@@ -62,7 +60,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
          |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
+        {:noreply, assign_form(socket, changeset)}
     end
   end
 
@@ -75,7 +73,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
          |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
+        {:noreply, assign_form(socket, changeset)}
     end
+  end
+
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    assign(socket, :form, to_form(changeset))
   end
 end

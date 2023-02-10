@@ -11,8 +11,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <:subtitle>We'll send a new confirmation link to your inbox</:subtitle>
       </.header>
 
-      <.simple_form :let={f} for={:<%= schema.singular %>} id="resend_confirmation_form" phx-submit="send_instructions">
-        <.input field={{f, :email}} type="email" placeholder="Email" required />
+      <.simple_form id="resend_confirmation_form" phx-submit="send_instructions">
+        <.input field={@form[:email]} type="email" placeholder="Email" required />
         <:actions>
           <.button phx-disable-with="Sending..." class="w-full">
             Resend confirmation instructions
@@ -30,7 +30,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, form: to_form(%{}, as: "<%= schema.singular %>"))}
   end
 
   def handle_event("send_instructions", %{"<%= schema.singular %>" => %{"email" => email}}, socket) do

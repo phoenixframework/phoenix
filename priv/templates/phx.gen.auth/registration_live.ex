@@ -19,22 +19,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </.header>
 
       <.simple_form
-        :let={f}
         id="registration_form"
-        for={@changeset}
         phx-submit="save"
         phx-change="validate"
         phx-trigger-action={@trigger_submit}
         action={~p"<%= schema.route_prefix %>/log_in?_action=registered"}
         method="post"
-        as={:<%= schema.singular %>}
       >
-        <.error :if={@changeset.action == :insert}>
+        <.error :if={@check_errors}>
           Oops, something went wrong! Please check the errors below.
         </.error>
 
-        <.input field={{f, :email}} type="email" label="Email" required />
-        <.input field={{f, :password}} type="password" label="Password" required />
+        <.input field={@form[:email]} type="email" label="Email" required />
+        <.input field={@form[:password]} type="password" label="Password" required />
 
         <:actions>
           <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
@@ -46,8 +43,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def mount(_params, _session, socket) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_registration(%<%= inspect schema.alias %>{})
-    socket = assign(socket, changeset: changeset, trigger_submit: false)
-    {:ok, socket, temporary_assigns: [changeset: nil]}
+
+    socket =
+      socket
+      |> assign(trigger_submit: false, check_errors: false)
+      |> assign_form(changeset)
+
+    {:ok, socket, temporary_assigns: [form: nil]}
   end
 
   def handle_event("save", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
@@ -60,15 +62,25 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           )
 
         changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_registration(<%= schema.singular %>)
-        {:noreply, assign(socket, trigger_submit: true, changeset: changeset)}
+        {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
+        {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}
     end
   end
 
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_registration(%<%= inspect schema.alias %>{}, <%= schema.singular %>_params)
-    {:noreply, assign(socket, changeset: Map.put(changeset, :action, :validate))}
+    {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
+  end
+
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    form = to_form(changeset, as: "<%= schema.singular %>")
+
+    if changeset.valid? do
+      assign(socket, form: form, check_errors: false)
+    else
+      assign(socket, form: form)
+    end
   end
 end

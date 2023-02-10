@@ -156,30 +156,30 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       for filename <- ["new.html.heex", "edit.html.heex"] do
         assert_file("lib/phoenix_web/controllers/post_html/#{filename}", fn file ->
-          assert file =~ ~s(<.input field={{f, :title}} type="text")
-          assert file =~ ~s(<.input field={{f, :votes}} type="number")
-          assert file =~ ~s(<.input field={{f, :cost}} type="number" label="Cost" step="any")
+          assert file =~ ~s(<.input field={f[:title]} type="text")
+          assert file =~ ~s(<.input field={f[:votes]} type="number")
+          assert file =~ ~s(<.input field={f[:cost]} type="number" label="Cost" step="any")
           assert file =~ """
             <.input
-              field={{f, :tags}}
+              field={f[:tags]}
               type="select"
               multiple
           """
-          assert file =~ ~s(<.input field={{f, :popular}} type="checkbox")
-          assert file =~ ~s(<.input field={{f, :drafted_at}} type="datetime-local")
-          assert file =~ ~s(<.input field={{f, :published_at}} type="datetime-local")
-          assert file =~ ~s(<.input field={{f, :deleted_at}} type="datetime-local")
-          assert file =~ ~s(<.input field={{f, :announcement_date}} type="date")
-          assert file =~ ~s(<.input field={{f, :alarm}} type="time")
-          assert file =~ ~s(<.input field={{f, :secret}} type="text" label="Secret" />)
+          assert file =~ ~s(<.input field={f[:popular]} type="checkbox")
+          assert file =~ ~s(<.input field={f[:drafted_at]} type="datetime-local")
+          assert file =~ ~s(<.input field={f[:published_at]} type="datetime-local")
+          assert file =~ ~s(<.input field={f[:deleted_at]} type="datetime-local")
+          assert file =~ ~s(<.input field={f[:announcement_date]} type="date")
+          assert file =~ ~s(<.input field={f[:alarm]} type="time")
+          assert file =~ ~s(<.input field={f[:secret]} type="text" label="Secret" />)
           assert file =~ """
             <.input
-              field={{f, :status}}
+              field={f[:status]}
               type="select"
           """
           assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
 
-          refute file =~ ~s(<.input field={{f, :user_id}})
+          refute file =~ ~s(<.input field={f[:user_id]})
         end)
       end
 

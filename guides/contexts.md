@@ -514,7 +514,7 @@ With our `category_select` function in place, we can open up `lib/hello_web/cont
 
 ```diff
   ...
-  <.input type="number" field={{f, :views}} label="Views" />
+  <.input type="number" field={f[:views]} label="Views" />
 
 + <%= category_select f, @changeset %>
 
@@ -1299,12 +1299,12 @@ We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order
 
   <li :for={item <- @order.line_items}>
     <%= item.product.title %>
-    (<%= item.quantity %>) - <%= HelloWeb.CartView.currency_to_str(item.price) %>
+    (<%= item.quantity %>) - <%= HelloWeb.CartHTML.currency_to_str(item.price) %>
   </li>
 
   <li>
     <strong>Total price:</strong>
-    <%= HelloWeb.CartView.currency_to_str(@order.total_price) %>
+    <%= HelloWeb.CartHTML.currency_to_str(@order.total_price) %>
   </li>
 
 </ul>
