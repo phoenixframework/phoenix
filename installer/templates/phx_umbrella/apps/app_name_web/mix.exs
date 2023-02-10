@@ -38,9 +38,9 @@ defmodule <%= @web_namespace %>.MixProject do
     [
       <%= @phoenix_dep %>,<%= if @ecto do %>
       {:phoenix_ecto, "~> 4.4"},<% end %><%= if @html do %>
-      {:phoenix_html, "~> 3.0"},
+      {:phoenix_html, "~> 3.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.18.3"},
+      {:phoenix_live_view, "~> 0.18.12"},
       {:heroicons, "~> 0.5"},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.7.2"},<% end %><%= if @assets do %>
