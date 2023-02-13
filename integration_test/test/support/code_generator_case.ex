@@ -88,9 +88,8 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
   def assert_passes_formatter_check(app_path) do
     try do
       mix_run!(~w(format --check-formatted), app_path)
-    rescue
-      RuntimeError ->
-        System.cmd("git", ["--no-pager", "diff"], [stderr_to_stdout: true, cd: Path.expand(app_path)])
+    after
+      System.cmd("git", ["--no-pager", "diff"], [stderr_to_stdout: true, cd: Path.expand(app_path)])
     end
   end
 
