@@ -167,22 +167,33 @@ in order to craft an excellent pull request:
    [interactive rebase](https://help.github.com/articles/about-git-rebase/)
    feature to tidy up your commits before making them public.
 
-5. Make sure all the tests are still passing.
+5. Ensure you don't have any previously installed phx_new archives:
+
+   ```bash
+   mix archive.uninstall phx_new
+   ```
+6. Ensure you have all your dependencies downloaded:
+
+   ```bash
+   mix deps.get
+   ```
+
+7. Make sure all the tests are still passing.
 
    ```bash
    mix test
    ```
 
-6. Push your topic branch up to your fork:
+8. Push your topic branch up to your fork:
 
    ```bash
    git push origin <topic-branch-name>
    ```
 
-7. [Open a Pull Request](https://help.github.com/articles/about-pull-requests/)
+9. [Open a Pull Request](https://help.github.com/articles/about-pull-requests/)
     with a clear title and description.
 
-8. If you haven't updated your pull request for a while, you should consider
+10. If you haven't updated your pull request for a while, you should consider
    rebasing on master and resolving any conflicts.
 
    **IMPORTANT**: _Never ever_ merge upstream `master` into your branches. You
