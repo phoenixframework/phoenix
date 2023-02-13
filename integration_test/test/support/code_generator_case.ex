@@ -90,6 +90,13 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
   def assert_passes_formatter_check(app_path) do
     mix_run!(~w(format --check-formatted), app_path, [], fn ->
       System.cmd("git", ["--no-pager", "diff"], [stderr_to_stdout: true, cd: Path.expand(app_path)])
+      |> case do
+        {output, 0} ->
+          output
+
+        {output, _} ->
+          output
+      end
     end)
   end
 
