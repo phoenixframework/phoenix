@@ -26,28 +26,7 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
     {app_root_path, output}
   end
 
-  def mix_run!(args, app_path, opts \\ [])
-      when is_list(args) and is_binary(app_path) and is_list(opts) do
-    case mix_run(args, app_path, opts) do
-      {output, 0} ->
-        output
-
-      {output, exit_code} ->
-        raise """
-        mix command failed with exit code: #{inspect(exit_code)}
-
-        mix #{Enum.join(args, " ")}
-
-        #{output}
-
-        Options
-        cd: #{Path.expand(app_path)}
-        env: #{opts |> Keyword.get(:env, []) |> inspect()}
-        """
-    end
-  end
-
-  def mix_run!(args, app_path, after_callback, opts \\ [])
+  def mix_run!(args, app_path, opts \\ [], after_callback \\ fn -> "" end)
       when is_list(args) and is_binary(app_path) and is_list(opts) do
     case mix_run(args, app_path, opts) do
       {output, 0} ->
@@ -109,7 +88,7 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
   end
 
   def assert_passes_formatter_check(app_path) do
-    mix_run!(~w(format --check-formatted), app_path, fn ->
+    mix_run!(~w(format --check-formatted), app_path, [], fn ->
       System.cmd("git", ["--no-pager", "diff"], [stderr_to_stdout: true, cd: Path.expand(app_path)])
     end)
   end
