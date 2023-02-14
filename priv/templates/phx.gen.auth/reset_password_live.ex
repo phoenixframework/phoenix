@@ -8,11 +8,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <div class="mx-auto max-w-sm">
       <.header class="text-center">Reset Password</.header>
 
-      <.simple_form
-        id="reset_password_form"
-        phx-submit="reset_password"
-        phx-change="validate"
-      >
+      <.simple_form id="reset_password_form" phx-submit="reset_password" phx-change="validate">
         <.error :if={@form.errors != []}>
           Oops, something went wrong! Please check the errors below.
         </.error>

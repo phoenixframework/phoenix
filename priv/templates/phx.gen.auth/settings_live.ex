@@ -7,11 +7,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <.header>Change Email</.header>
 
-    <.simple_form
-      id="email_form"
-      phx-submit="update_email"
-      phx-change="validate_email"
-    >
+    <.simple_form id="email_form" phx-submit="update_email" phx-change="validate_email">
       <.input field={@email_form[:email]} type="email" label="Email" required />
       <.input
         field={@email_form[:current_password]}
