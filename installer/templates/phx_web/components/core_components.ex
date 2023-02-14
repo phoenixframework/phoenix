@@ -461,9 +461,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
       </.table>
   """
   attr :id, :string, required: true
+  attr :rows, :list, required: true
   attr :row_id, :any, default: nil, doc: "the function for generating the row id"
   attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
-  attr :rows, :list, required: true
+
+  attr :row_item, :any,
+    default: &Function.identity/1,
+    doc: "the function for mapping each row before calling the :col and :action slots"
 
   slot :col, required: true do
     attr :label, :string
@@ -472,8 +476,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
   slot :action, doc: "the slot for showing user actions in the last table column"
 
   def table(assigns) do
+    assigns =
+      with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
+        assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
+      end
+
     ~H"""
-    <div id={@id} class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
+    <div class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
       <table class="mt-11 w-[40rem] sm:w-full">
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
@@ -481,7 +490,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
             <th class="relative p-0 pb-4"><span class="sr-only"><%= if @gettext do %><%%= gettext("Actions") %><% else %>Actions<% end %></span></th>
           </tr>
         </thead>
-        <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
+        <tbody
+          id={@id}
+          phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
+          class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700"
+        >
           <tr
             :for={row <- @rows}
             id={@row_id && @row_id.(row)}
@@ -495,7 +508,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
               <div class="block py-4 pr-6">
                 <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
                 <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
-                  <%%= render_slot(col, row) %>
+                  <%%= render_slot(col, @row_item.(row)) %>
                 </span>
               </div>
             </td>
@@ -506,7 +519,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                   :for={action <- @action}
                   class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
                 >
-                  <%%= render_slot(action, row) %>
+                  <%%= render_slot(action, @row_item.(row)) %>
                 </span>
               </div>
             </td>

@@ -339,14 +339,14 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "lib/phoenix/tracker/series.ex"
 
       assert_file "lib/phoenix_web/live/series_live/index.ex", fn file ->
-        assert file =~ "assign(socket, :series_collection, list_series())"
+        assert file =~ "stream(socket, :series_collection, Tracker.list_series())"
       end
 
       assert_file "lib/phoenix_web/live/series_live/show.ex"
       assert_file "lib/phoenix_web/live/series_live/form_component.ex"
 
       assert_file "lib/phoenix_web/live/series_live/index.html.heex", fn file ->
-        assert file =~ "@series_collection"
+        assert file =~ "@streams.series_collection"
       end
 
       assert_file "lib/phoenix_web/live/series_live/show.html.heex"
