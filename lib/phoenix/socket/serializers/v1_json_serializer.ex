@@ -4,6 +4,10 @@ defmodule Phoenix.Socket.V1.JSONSerializer do
 
   alias Phoenix.Socket.{Broadcast, Message, Reply}
 
+  defmodule MessageFormatException do
+    defexception [:message]
+  end
+
   @impl true
   def fastlane!(%Broadcast{} = msg) do
     map = %Message{topic: msg.topic, event: msg.event, payload: msg.payload}
@@ -28,9 +32,15 @@ defmodule Phoenix.Socket.V1.JSONSerializer do
 
   @impl true
   def decode!(message, _opts) do
-    message
-    |> Phoenix.json_library().decode!()
-    |> Phoenix.Socket.Message.from_map!()
+    payload = Phoenix.json_library().decode!(message)
+
+    case payload do
+      %{} ->
+        Phoenix.Socket.Message.from_map!(payload)
+
+      other ->
+        raise MessageFormatException, "V1 JSON Serializer expected a map, got #{inspect(other)}"
+    end
   end
 
   defp encode_v1_fields_only(%Message{} = msg) do
