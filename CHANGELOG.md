@@ -39,6 +39,7 @@ will continue to work and be generated. You can disable router helpers by passin
 
 ### Enhancements
   * Use stream based collections for `phx.gen.live` generators
+  * Update `phx.gen.live` generators to use `Phoenix.Component.to_form`
 
 ## 1.7.0-rc.2 (2023-01-13)
 
