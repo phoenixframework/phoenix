@@ -7,7 +7,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <.header>Change Email</.header>
 
-    <.simple_form id="email_form" phx-submit="update_email" phx-change="validate_email">
+    <.simple_form
+      for={@email_form}
+      id="email_form"
+      phx-submit="update_email"
+      phx-change="validate_email"
+    >
       <.input field={@email_form[:email]} type="email" label="Email" required />
       <.input
         field={@email_form[:current_password]}
@@ -26,6 +31,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <.header>Change Password</.header>
 
     <.simple_form
+      for={@password_form}
       id="password_form"
       action={~p"<%= schema.route_prefix %>/log_in?_action=password_updated"}
       method="post"
@@ -35,7 +41,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     >
       <.input field={@password_form[:email]} type="hidden" value={@current_email} />
       <.input field={@password_form[:password]} type="password" label="New password" required />
-      <.input field={@password_form[:password_confirmation]} type="password" label="Confirm new password" />
+      <.input
+        field={@password_form[:password_confirmation]}
+        type="password"
+        label="Confirm new password"
+      />
       <.input
         field={@password_form[:current_password]}
         name="current_password"

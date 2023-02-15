@@ -206,7 +206,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   ## Examples
 
-      <.simple_form phx-change="validate" phx-submit="save">
+      <.simple_form for={@form} phx-change="validate" phx-submit="save">
         <.input field={@form[:email]} label="Email"/>
         <.input field={@form[:username]} label="Username" />
         <:actions>
@@ -214,7 +214,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         </:actions>
       </.simple_form>
   """
-  attr :for, :any, default: nil, doc: "the datastructure for the form"
+  attr :for, :any, required: true, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
 
   attr :rest, :global,

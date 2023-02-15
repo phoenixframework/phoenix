@@ -13,6 +13,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </.header>
 
       <.simple_form
+        for={@form}
         id="<%= schema.singular %>-form"
         phx-target={@myself}
         phx-change="validate"
