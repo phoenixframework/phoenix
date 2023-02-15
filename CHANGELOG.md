@@ -35,6 +35,11 @@ This feature replaces the `Helpers` module generated in your Phoenix router, but
 will continue to work and be generated. You can disable router helpers by passing the
 `helpers: false` option to `use Phoenix.Router`.
 
+## 1.7.0-rc.3 (2023-02-15)
+
+### Enhancements
+  * Use stream based collections for `phx.gen.live` generators
+
 ## 1.7.0-rc.2 (2023-01-13)
 
 ### Bug Fixes

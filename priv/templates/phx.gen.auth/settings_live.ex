@@ -94,6 +94,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def handle_event("validate_email", params, socket) do
     %{"current_password" => password, "<%= schema.singular %>" => <%= schema.singular %>_params} = params
+
     email_form =
       socket.assigns.current_<%= schema.singular %>
       |> <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>_params)
