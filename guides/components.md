@@ -4,10 +4,7 @@
 
 > **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
 
-In Phoenix, any function that accepts an _assigns_ parameter and returns 
-a HEEx template can be used as a *function component*, provided that it is defined in a module that declares `use Phoenix.Component` (see [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html)).
-
-These function components can be thought of as stateless, as opposed to LiveView's [`LiveComponent`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html) which can handle events and manage it's own state.
+The Phoenix endpoint pipeline takes a request, routes it to a controller, and calls a view module to render a template. The view interface from the controller is simple – the controller calls a view function with the connections assigns, and the functions job is to return a HEEx template. We call any function that accepts an `assigns` parameter and returns a HEEx template to be a *function component*. Function components are defined with the help of the [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) module.
 
 Function components are the essential building block for any kind of markup-based template rendering you'll perform in Phoenix. They serve as a shared abstraction for the standard MVC controller-based applications, LiveView applications, layouts, and smaller UI definitions you'll use throughout other templates.
 
