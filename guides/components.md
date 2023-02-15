@@ -4,9 +4,9 @@
 
 > **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
 
-The Phoenix endpoint pipeline takes a request, routes it with a router to a controller, and calls a view module to render a template. The view interface from the controller is simple – the controller calls a view function with the connections assigns, and the functions job is to return a HEEx template. We call functions that accept assigns and return HEEx, *function components*, which are provided by the [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) module.
+The Phoenix endpoint pipeline takes a request, routes it to a controller, and calls a view module to render a template. The view interface from the controller is simple – the controller calls a view function with the connections assigns, and the functions job is to return a HEEx template. We call any function that accepts an `assigns` parameter and returns a HEEx template to be a *function component*. Function components are defined with the help of the [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) module.
 
-Function components are the essential building block for any kind of markup-based template rendering you'll perform in Phoenix. They served a shared abstraction for the standard MVC controller-based applications, LiveView applications, layouts, and smaller UI definition you'll use throughout other templates.
+Function components are the essential building block for any kind of markup-based template rendering you'll perform in Phoenix. They serve as a shared abstraction for the standard MVC controller-based applications, LiveView applications, layouts, and smaller UI definitions you'll use throughout other templates.
 
 In this chapter, we will recap how components were used in previous chapters and find new use cases for them.
 
@@ -179,7 +179,7 @@ You may be wondering how the string resulting from a rendered view ends up insid
 <%= @inner_content %>
 ```
 
-In other words, the resulting of rendering your page is placed in the `@inner_content` assign.
+In other words, after rendering your page, the result is placed in the `@inner_content` assign.
 
 Phoenix provides all kinds of conveniences to control which layout should be rendered. For example, the `Phoenix.Controller` module provides the `put_root_layout/2` function for us to switch _root layouts_. This takes `conn` as its first argument and a keyword list of formats and their layouts. You can set it to `false` to disable the layout altogether.
 
@@ -212,8 +212,6 @@ When we load the page, we should be rendering the admin layout without the heade
 At this point, you may be wondering, why does Phoenix have two layouts?
 
 First of all, it gives us flexibility. In practice, we will hardly have multiple root layouts, as they often contain only HTML headers. This allows us to focus on different application layouts with only the parts that changes between them. Second of all, Phoenix ships with a feature called LiveView, which allows us to build rich and real-time user experiences with server-rendered HTML. LiveView is capable of dynamically changing the contents of the page, but it only ever changes the app layout, never the root layout. We will learn about LiveView in future guides.
-
-We'll cover function components and HEEx in detail in a moment, but first let's learn how templates are rendered from the endpoint pipeline.
 
 ## CoreComponents
 
