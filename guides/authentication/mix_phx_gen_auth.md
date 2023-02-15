@@ -10,9 +10,17 @@ Let's start by running the following command from the root of our app (or `apps/
 
 ```console
 $ mix phx.gen.auth Accounts User users
+
+An authentication system can be created in two different ways:
+- Using Phoenix.LiveView (default)
+- Using Phoenix.Controller only
+
+Do you want to create a LiveView based authentication system? [Y/n] Y
 ```
 
-This creates an `Accounts` context with an `Accounts.User` schema module. The final argument is the plural version of the schema module, which is used for generating database table names and route paths. The `mix phx.gen.auth` generator is similar to `mix phx.gen.html` except it does not accept a list of additional fields to add to the schema, and it generates many more context functions.
+The authentication generators support Phoenix LiveView, for enhanced UX, so we'll answer `Y` here. You may also answer `n` for a controller based authentication system.
+
+Either approach will create an `Accounts` context with an `Accounts.User` schema module. The final argument is the plural version of the schema module, which is used for generating database table names and route paths. The `mix phx.gen.auth` generator is similar to `mix phx.gen.html` except it does not accept a list of additional fields to add to the schema, and it generates many more context functions.
 
 Since this generator installed additional dependencies in `mix.exs`, let's fetch those:
 
