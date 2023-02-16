@@ -11,21 +11,21 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   Additional information and security considerations are detailed in the
   [`mix phx.gen.auth` guide](mix_phx_gen_auth.html).
-  
+
   ## LiveView vs conventional Controllers & Views
-  
-  Authentication views can either be generated to use LiveView by passing 
-  the `--live` option, or they can use conventional Phoenix 
+
+  Authentication views can either be generated to use LiveView by passing
+  the `--live` option, or they can use conventional Phoenix
   Controllers & Views by passing `--no-live`.
-  
+
   If neither of these options are provided, a prompt will be displayed.
 
-  Using the `--live` option is advised if you plan on using LiveView 
-  elsewhere in your application. The user experience when navigating between 
+  Using the `--live` option is advised if you plan on using LiveView
+  elsewhere in your application. The user experience when navigating between
   LiveViews can be tightly controlled, allowing you to let your users navigate
   to authentication views without necessarily triggering a new HTTP request
   each time (which would result in a full page load).
-  
+
   ## Password hashing
 
   The password hashing mechanism defaults to `bcrypt` for
