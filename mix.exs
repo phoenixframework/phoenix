@@ -8,7 +8,7 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.7.0-rc.2"
+  @version "1.7.0-rc.3"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -97,7 +97,7 @@ defmodule Phoenix.MixProject do
       {:makeup_elixir, "~> 0.16", only: :docs},
 
       # Test dependencies
-      {:phoenix_html, "~> 3.0", only: [:docs, :test]},
+      {:phoenix_html, "~> 3.3", only: [:docs, :test]},
       {:phx_new, path: "./installer", only: :test},
       {:mint, "~> 1.4", only: :test},
       {:mint_web_socket, "~> 1.0.0", only: :test},

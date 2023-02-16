@@ -19,6 +19,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </.header>
 
       <.simple_form
+        for={@form}
         id="registration_form"
         phx-submit="save"
         phx-change="validate"

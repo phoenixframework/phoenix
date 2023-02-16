@@ -8,7 +8,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <div class="mx-auto max-w-sm">
       <.header class="text-center">Confirm Account</.header>
 
-      <.simple_form id="confirmation_form" phx-submit="confirm_account">
+      <.simple_form for={@form} id="confirmation_form" phx-submit="confirm_account">
         <.input field={@form[:token]} type="hidden" />
         <:actions>
           <.button phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
@@ -25,7 +25,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def mount(%{"token" => token}, _session, socket) do
-    form = to_form(%{"token" => token}, as: "user")
+    form = to_form(%{"token" => token}, as: "<%= schema.singular %>")
     {:ok, assign(socket, form: form), temporary_assigns: [form: nil]}
   end
 

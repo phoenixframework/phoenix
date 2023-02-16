@@ -9,19 +9,21 @@
 
 <.table
   id="<%= schema.plural %>"
-  rows={@<%= schema.collection %>}
-  row_id={&"<%= schema.plural %>-#{&1.id}"}
-  row_click={&JS.navigate(~p"<%= schema.route_prefix %>/#{&1}")}
+  rows={@streams.<%= schema.collection %>}
+  row_click={fn {_id, <%= schema.singular %>} -> JS.navigate(~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}") end}
 ><%= for {k, _} <- schema.attrs do %>
-  <:col :let={<%= schema.singular %>} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= <%= schema.singular %>.<%= k %> %></:col><% end %>
-  <:action :let={<%= schema.singular %>}>
+  <:col :let={{_id, <%= schema.singular %>}} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= <%= schema.singular %>.<%= k %> %></:col><% end %>
+  <:action :let={{_id, <%= schema.singular %>}}>
     <div class="sr-only">
       <.link navigate={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link>
     </div>
     <.link patch={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit"}>Edit</.link>
   </:action>
-  <:action :let={<%= schema.singular %>}>
-    <.link phx-click={JS.push("delete", value: %{id: <%= schema.singular %>.id})} data-confirm="Are you sure?">
+  <:action :let={{id, <%= schema.singular %>}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: <%= schema.singular %>.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
       Delete
     </.link>
   </:action>
@@ -39,6 +41,6 @@
     title={@page_title}
     action={@live_action}
     <%= schema.singular %>={@<%= schema.singular %>}
-    navigate={~p"<%= schema.route_prefix %>"}
+    patch={~p"<%= schema.route_prefix %>"}
   />
 </.modal>

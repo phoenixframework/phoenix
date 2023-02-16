@@ -10,7 +10,7 @@
     </:subtitle>
   </.header>
 
-  <.simple_form :let={f} for={@conn} action={~p"<%= schema.route_prefix %>/log_in"} as={:<%= schema.singular %>}>
+  <.simple_form :let={f} for={@conn.params["<%= schema.singular %>"]} as={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/log_in"}>
     <.error :if={@error_message}><%%= @error_message %></.error>
 
     <.input field={f[:email]} type="email" label="Email" required />

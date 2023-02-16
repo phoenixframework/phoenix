@@ -4,7 +4,7 @@
     <:subtitle>We'll send a new confirmation link to your inbox</:subtitle>
   </.header>
 
-  <.simple_form :let={f} for={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirm"}>
+  <.simple_form :let={f} for={@conn.params["<%= schema.singular %>"]} as={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirm"}>
     <.input field={f[:email]} type="email" placeholder="Email" required />
     <:actions>
       <.button phx-disable-with="Sending..." class="w-full">

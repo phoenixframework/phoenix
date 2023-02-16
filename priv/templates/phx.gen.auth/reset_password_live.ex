@@ -9,6 +9,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <.header class="text-center">Reset Password</.header>
 
       <.simple_form
+        for={@form}
         id="reset_password_form"
         phx-submit="reset_password"
         phx-change="validate"

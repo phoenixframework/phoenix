@@ -11,7 +11,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <:subtitle>We'll send a new confirmation link to your inbox</:subtitle>
       </.header>
 
-      <.simple_form id="resend_confirmation_form" phx-submit="send_instructions">
+      <.simple_form for={@form} id="resend_confirmation_form" phx-submit="send_instructions">
         <.input field={@form[:email]} type="email" placeholder="Email" required />
         <:actions>
           <.button phx-disable-with="Sending..." class="w-full">

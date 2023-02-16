@@ -15,11 +15,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         </:subtitle>
       </.header>
 
-      <.simple_form
-        id="login_form"
-        action={~p"<%= schema.route_prefix %>/log_in"}
-        phx-update="ignore"
-      >
+      <.simple_form for={@form} id="login_form" action={~p"<%= schema.route_prefix %>/log_in"} phx-update="ignore">
         <.input field={@form[:email]} type="email" label="Email" required />
         <.input field={@form[:password]} type="password" label="Password" required />
 
