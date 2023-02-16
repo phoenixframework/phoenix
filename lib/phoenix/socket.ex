@@ -639,14 +639,14 @@ defmodule Phoenix.Socket do
   defp handle_in({pid, _ref, _status}, %{event: "phx_leave"} = msg, state, socket) do
     %{topic: topic, join_ref: join_ref} = msg
 
-    case Map.fetch(state.channels_inverse, pid) do
+    case state.channels_inverse do
       # we need to match on nil to handle v1 protocol
-      {:ok, {^topic, existing_join_ref}} when existing_join_ref in [join_ref, nil] ->
+      %{^pid => {^topic, existing_join_ref}} when existing_join_ref in [join_ref, nil] ->
         send(pid, msg)
         {:ok, {update_channel_status(state, pid, topic, :leaving), socket}}
 
       # the client has raced a server close. No need to reply since we already sent close
-      {:ok, {^topic, _old_join_ref}} ->
+      %{^pid => {^topic, _old_join_ref}} ->
         {:ok, {state, socket}}
     end
   end
