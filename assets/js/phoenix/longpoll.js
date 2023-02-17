@@ -49,7 +49,7 @@ export default class LongPoll {
   isActive(){ return this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting }
 
   poll(){
-    this.ajax("GET", null, () => this.ontimeout(), resp => {
+    this.ajax("GET", "application/json", null, () => this.ontimeout(), resp => {
       if(resp){
         var {status, token, messages} = resp
         this.token = token
@@ -123,7 +123,7 @@ export default class LongPoll {
 
   batchSend(messages){
     this.awaitingBatchAck = true
-    this.ajax("POST", JSON.stringify(messages), () => this.onerror("timeout"), resp => {
+    this.ajax("POST", "application/ndjson", messages.join("\n"), () => this.onerror("timeout"), resp => {
       this.awaitingBatchAck = false
       if(!resp || resp.status !== 200){
         this.onerror(resp && resp.status)
@@ -149,13 +149,13 @@ export default class LongPoll {
     }
   }
 
-  ajax(method, body, onCallerTimeout, callback){
+  ajax(method, contentType, body, onCallerTimeout, callback){
     let req
     let ontimeout = () => {
       this.reqs.delete(req)
       onCallerTimeout()
     }
-    req = Ajax.request(method, this.endpointURL(), "application/json", body, this.timeout, ontimeout, resp => {
+    req = Ajax.request(method, this.endpointURL(), contentType, body, this.timeout, ontimeout, resp => {
       this.reqs.delete(req)
       if(this.isActive()){ callback(resp) }
     })

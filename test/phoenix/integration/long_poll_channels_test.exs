@@ -159,7 +159,13 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
   """
   def poll(method, path, vsn, params, json \\ nil, headers \\ %{}) do
     {serializer, json} = serializer(vsn, json)
-    headers = Map.merge(%{"content-type" => "application/json"}, headers)
+    headers =
+      if is_list(json) do
+        Map.merge(%{"content-type" => "application/ndjson"}, headers)
+      else
+        Map.merge(%{"content-type" => "application/json"}, headers)
+      end
+
     body = encode(serializer, json)
     query_string = params |> Map.put("vsn", vsn) |> URI.encode_query()
     url = "http://127.0.0.1:#{@port}#{path}/longpoll?" <> query_string
@@ -189,17 +195,15 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
   defp encode(_vsn, nil), do: ""
 
   defp encode(V2.JSONSerializer = serializer, batch) when is_list(batch) do
-    Phoenix.json_library().encode!(for msg <- batch, do: encode(serializer, msg))
+    batch
+    |> Enum.map(&encode(serializer, &1))
+    |> Enum.join("\n")
   end
 
   defp encode(V2.JSONSerializer, %{} = map) do
     Phoenix.json_library().encode!(
       [map["join_ref"], map["ref"], map["topic"], map["event"], map["payload"]]
     )
-  end
-
-  defp encode(V1.JSONSerializer = serializer, batch) when is_list(batch) do
-    Phoenix.json_library().encode!(for msg <- batch, do: encode(serializer, msg))
   end
 
   defp encode(V1.JSONSerializer, %{} = map), do: Phoenix.json_library().encode!(map)
