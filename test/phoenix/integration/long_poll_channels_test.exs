@@ -161,7 +161,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     {serializer, json} = serializer(vsn, json)
     headers =
       if is_list(json) do
-        Map.merge(%{"content-type" => "application/ndjson"}, headers)
+        Map.merge(%{"content-type" => "application/x-ndjson"}, headers)
       else
         Map.merge(%{"content-type" => "application/json"}, headers)
       end

@@ -123,7 +123,7 @@ export default class LongPoll {
 
   batchSend(messages){
     this.awaitingBatchAck = true
-    this.ajax("POST", "application/ndjson", messages.join("\n"), () => this.onerror("timeout"), resp => {
+    this.ajax("POST", "application/x-ndjson", messages.join("\n"), () => this.onerror("timeout"), resp => {
       this.awaitingBatchAck = false
       if(!resp || resp.status !== 200){
         this.onerror(resp && resp.status)
