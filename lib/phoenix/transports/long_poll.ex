@@ -110,9 +110,11 @@ defmodule Phoenix.Transports.LongPoll do
 
   defp new_session(conn, endpoint, handler, opts) do
     priv_topic =
-      "phx:lp:"
-      <> Base.encode64(:crypto.strong_rand_bytes(16))
-      <> (System.system_time(:millisecond) |> Integer.to_string)
+      if not distributed_node?() do
+        "phx:lp:"
+        <> Base.encode64(:crypto.strong_rand_bytes(16))
+        <> (System.system_time(:millisecond) |> Integer.to_string)
+      end
 
     keys = Keyword.get(opts, :connect_info, [])
     connect_info = Transport.connect_info(conn, endpoint, keys)
@@ -182,8 +184,14 @@ defmodule Phoenix.Transports.LongPoll do
 
   ## Helpers
 
-  defp server_ref(endpoint_id, id, pid, topic) do
-    if endpoint_id == id and Process.alive?(pid), do: pid, else: topic
+  def distributed_node?, do: node() != :"nonode@nohost"
+
+  defp server_ref(endpoint_id, id, pid, topic) when is_pid(pid) do
+    if distributed_node?() do
+      pid
+    else
+      if endpoint_id == id and Process.alive?(pid), do: pid, else: topic
+    end
   end
 
   defp client_ref(topic) when is_binary(topic), do: topic

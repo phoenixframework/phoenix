@@ -32,7 +32,10 @@ defmodule Phoenix.Transports.LongPoll.Server do
           client_ref: nil
         }
 
-        :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
+        # only subscribe if we have a topic. Otherwise it's distributed mode
+        if priv_topic do
+          :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
+        end
         schedule_inactive_shutdown(state.window_ms)
         {:ok, state}
 
