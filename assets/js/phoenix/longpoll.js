@@ -104,6 +104,9 @@ export default class LongPoll {
     })
   }
 
+  // we collect all pushes within the current event loop by
+  // setTimeout 0, which optimizes back-to-back procedural
+  // pushes against an empty buffer
   send(body){
     if(this.currentBatch){
       this.currentBatch.push(body)
