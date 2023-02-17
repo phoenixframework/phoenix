@@ -4,6 +4,11 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.16 (2023-02-17)
+
+### Bug Fixes
+  * Fix race conditions in longpoll transport
+
 ## 1.6.15 (2022-10-26)
 
 ### Enhancements
