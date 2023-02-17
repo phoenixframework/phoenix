@@ -72,7 +72,21 @@ defmodule Phoenix.Transports.LongPoll do
   defp publish(conn, server_ref, endpoint, opts) do
     case read_body(conn, []) do
       {:ok, body, conn} ->
-        status = transport_dispatch(endpoint, server_ref, body, opts)
+        # we need to match on both v1 and v2 protocol, as well as wrap for backwards compat
+        batch =
+          case get_req_header(conn, "content-type") do
+            ["application/ndjson"] -> String.split(body, ["\n", "\r\n"])
+            _ -> [body]
+          end
+
+        {conn, status} =
+          Enum.reduce_while(batch, {conn, nil}, fn msg, {conn, _status} ->
+            case transport_dispatch(endpoint, server_ref, msg, opts) do
+              :ok -> {:cont, {conn, :ok}}
+              :request_timeout = timeout -> {:halt, {conn, timeout}}
+            end
+          end)
+
         conn |> put_status(status) |> status_json()
 
       _ ->

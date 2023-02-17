@@ -159,7 +159,13 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
   """
   def poll(method, path, vsn, params, json \\ nil, headers \\ %{}) do
     {serializer, json} = serializer(vsn, json)
-    headers = Map.merge(%{"content-type" => "application/json"}, headers)
+    headers =
+      if is_list(json) do
+        Map.merge(%{"content-type" => "application/ndjson"}, headers)
+      else
+        Map.merge(%{"content-type" => "application/json"}, headers)
+      end
+
     body = encode(serializer, json)
     query_string = params |> Map.put("vsn", vsn) |> URI.encode_query()
     url = "http://127.0.0.1:#{@port}#{path}/longpoll?" <> query_string
@@ -168,8 +174,12 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
   end
 
   defp serializer("2." <> _, json), do: {V2.JSONSerializer, json}
-  defp serializer(_, json) do
-    {V1.JSONSerializer, json && Map.delete(json, "join_ref")}
+  defp serializer(_, nil), do: {V1.JSONSerializer, nil}
+  defp serializer(_, batch) when is_list(batch) do
+    {V1.JSONSerializer, for(msg <- batch, do: Map.delete(msg, "join_ref"))}
+  end
+  defp serializer(_, %{} = json) do
+    {V1.JSONSerializer, json}
   end
 
   defp decode_body(serializer, %{} = resp) do
@@ -184,13 +194,19 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
   defp encode(_vsn, nil), do: ""
 
-  defp encode(V2.JSONSerializer, map) do
+  defp encode(V2.JSONSerializer = serializer, batch) when is_list(batch) do
+    batch
+    |> Enum.map(&encode(serializer, &1))
+    |> Enum.join("\n")
+  end
+
+  defp encode(V2.JSONSerializer, %{} = map) do
     Phoenix.json_library().encode!(
       [map["join_ref"], map["ref"], map["topic"], map["event"], map["payload"]]
     )
   end
 
-  defp encode(V1.JSONSerializer, map), do: Phoenix.json_library().encode!(map)
+  defp encode(V1.JSONSerializer, %{} = map), do: Phoenix.json_library().encode!(map)
 
   @doc """
   Joins a long poll socket.
@@ -383,6 +399,59 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           topic: "room:private-room"
         }
       end
+    end
+
+    test "#{@mode}: lonpoll publishing batch events on v2 protocol" do
+      vsn = "2.0.0"
+      Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
+      session = join("/ws", "room:lobby", vsn, "1", @mode)
+      # Publish successfully
+      resp =
+        poll(:post, "/ws", vsn, session, [
+          %{
+            "topic" => "room:lobby",
+            "event" => "new_msg",
+            "ref" => "2",
+            "join_ref" => "1",
+            "payload" => %{"body" => "hi1"}
+          },
+          %{
+            "topic" => "room:lobby",
+            "event" => "new_msg",
+            "ref" => "3",
+            "join_ref" => "1",
+            "payload" => %{"body" => "hi2"}
+          }
+        ])
+
+
+      assert resp.body["status"] == 200
+      assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi1"}}
+      assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi2"}}
+
+      # Get published message
+      resp = poll(:get, "/ws", vsn, session)
+      assert resp.body["status"] == 200
+
+      assert [
+               _phx_reply,
+               _user_entered,
+               _joined,
+               %Message{
+                 topic: "room:lobby",
+                 event: "new_msg",
+                 payload: %{"body" => "hi1", "transport" => ":longpoll"},
+                 ref: nil,
+                 join_ref: "1"
+               },
+               %Message{
+                 topic: "room:lobby",
+                 event: "new_msg",
+                 payload: %{"body" => "hi2", "transport" => ":longpoll"},
+                 ref: nil,
+                 join_ref: "1"
+               }
+             ] = resp.body["messages"]
     end
 
     test "#{@mode}: shuts down after timeout" do
