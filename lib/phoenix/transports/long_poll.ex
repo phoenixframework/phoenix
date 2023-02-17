@@ -187,10 +187,10 @@ defmodule Phoenix.Transports.LongPoll do
   def distributed_node?, do: node() != :"nonode@nohost"
 
   defp server_ref(endpoint_id, id, pid, topic) when is_pid(pid) do
-    if distributed_node?() do
-      pid
-    else
-      if endpoint_id == id and Process.alive?(pid), do: pid, else: topic
+    cond do
+      node(pid) in Node.list() -> pid
+      endpoint_id == id and Process.alive?(pid) -> pid
+      true -> topic
     end
   end
 
