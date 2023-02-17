@@ -72,7 +72,7 @@ defmodule Phoenix.Transports.LongPoll do
   defp publish(conn, server_ref, endpoint, opts) do
     case read_body(conn, []) do
       {:ok, body, conn} ->
-        # we need to match on both v1 and v2 protocol, as well as  for backwards compat
+        # we need to match on both v1 and v2 protocol, as well as wrap for backwards compat
         batch =
           if String.starts_with?(body, ~w(["[)) do
             Phoenix.json_library().decode!(body)
