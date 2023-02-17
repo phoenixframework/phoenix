@@ -182,8 +182,12 @@ defmodule Phoenix.Transports.LongPoll do
 
   ## Helpers
 
-  defp server_ref(endpoint_id, id, pid, topic) do
-    if endpoint_id == id and Process.alive?(pid), do: pid, else: topic
+  defp server_ref(endpoint_id, id, pid, topic) when is_pid(pid) do
+    cond do
+      node(pid) in Node.list() -> pid
+      endpoint_id == id and Process.alive?(pid) -> pid
+      true -> topic
+    end
   end
 
   defp client_ref(topic) when is_binary(topic), do: topic
