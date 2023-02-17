@@ -12,6 +12,10 @@ export default class LongPoll {
     this.token = null
     this.skipHeartbeat = true
     this.reqs = new Set()
+    this.awaitingBatchAck = false
+    this.currentBatch = null
+    this.currentBatchTimer = null
+    this.batchBuffer = []
     this.onopen = function (){ } // noop
     this.onerror = function (){ } // noop
     this.onmessage = function (){ } // noop
@@ -101,10 +105,29 @@ export default class LongPoll {
   }
 
   send(body){
-    this.ajax("POST", body, () => this.onerror("timeout"), resp => {
+    if(this.currentBatch){
+      this.currentBatch.push(body)
+    } else if(this.awaitingBatchAck){
+      this.batchBuffer.push(body)
+    } else {
+      this.currentBatch = [body]
+      this.currentBatchTimer = setTimeout(() => {
+        this.batchSend(this.currentBatch)
+        this.currentBatch = null
+      }, 0)
+    }
+  }
+
+  batchSend(messages){
+    this.awaitingBatchAck = true
+    this.ajax("POST", JSON.stringify(messages), () => this.onerror("timeout"), resp => {
+      this.awaitingBatchAck = false
       if(!resp || resp.status !== 200){
         this.onerror(resp && resp.status)
         this.closeAndRetry(1011, "internal server error", false)
+      } else if(this.batchBuffer.length > 0){
+        this.batchSend(this.batchBuffer)
+        this.batchBuffer = []
       }
     })
   }
@@ -113,6 +136,9 @@ export default class LongPoll {
     for(let req of this.reqs){ req.abort() }
     this.readyState = SOCKET_STATES.closed
     let opts = Object.assign({code: 1000, reason: undefined, wasClean: true}, {code, reason, wasClean})
+    this.batchBuffer = []
+    clearTimeout(this.currentBatchTimer)
+    this.currentBatchTimer = null
     if(typeof(CloseEvent) !== "undefined"){
       this.onclose(new CloseEvent("close", opts))
     } else {
