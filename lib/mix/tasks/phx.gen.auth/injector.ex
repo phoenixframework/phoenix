@@ -163,7 +163,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   def app_layout_menu_code_to_inject(%Schema{} = schema, padding \\ 4, newline \\ "\n") do
     already_injected_str = "#{schema.route_prefix}/log_in"
 
-    base_tailwind_classes = "text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700"
+    base_tailwind_classes = "text-[0.8125rem] leading-6 text-zinc-900"
     link_tailwind_classes = "#{base_tailwind_classes} font-semibold hover:text-zinc-700"
 
     template = """

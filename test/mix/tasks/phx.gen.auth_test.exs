@@ -1358,13 +1358,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
             <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
               <%= if @current_user do %>
-                <li class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700">
+                <li class="text-[0.8125rem] leading-6 text-zinc-900">
                   <%= @current_user.email %>
                 </li>
                 <li>
                   <.link
                     href={~p"/users/settings"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
                     Settings
                   </.link>
@@ -1373,7 +1373,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                   <.link
                     href={~p"/users/log_out"}
                     method="delete"
-                    class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
                     Log out
                   </.link>
@@ -1382,7 +1382,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                 <li>
                   <.link
                     href={~p"/users/register"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
                     Register
                   </.link>
@@ -1390,7 +1390,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                 <li>
                   <.link
                     href={~p"/users/log_in"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
                     Log in
                   </.link>
@@ -1423,13 +1423,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
             <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
               <%= if @current_user do %>
-                <li class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700">
+                <li class="text-[0.8125rem] leading-6 text-zinc-900">
                   <%= @current_user.email %>
                 </li>
                 <li>
                   <.link
                     href={~p"/users/settings"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
                     Settings
                   </.link>
@@ -1438,7 +1438,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                   <.link
                     href={~p"/users/log_out"}
                     method="delete"
-                    class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
                     Log out
                   </.link>
@@ -1447,7 +1447,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                 <li>
                   <.link
                     href={~p"/users/register"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
                     Register
                   </.link>
@@ -1455,7 +1455,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                 <li>
                   <.link
                     href={~p"/users/log_in"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
                     Log in
                   </.link>

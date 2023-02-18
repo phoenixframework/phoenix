@@ -667,13 +667,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          </ul>
                          <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
                            <%= if @current_user do %>
-                             <li class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700">
+                             <li class="text-[0.8125rem] leading-6 text-zinc-900">
                                <%= @current_user.email %>
                              </li>
                              <li>
                                <.link
                                  href={~p"/users/settings"}
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                                >
                                  Settings
                                </.link>
@@ -682,7 +682,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                                <.link
                                  href={~p"/users/log_out"}
                                  method="delete"
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                                >
                                  Log out
                                </.link>
@@ -691,7 +691,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li>
                                <.link
                                  href={~p"/users/register"}
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                                >
                                  Register
                                </.link>
@@ -699,7 +699,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li>
                                <.link
                                  href={~p"/users/log_in"}
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                                >
                                  Log in
                                </.link>
@@ -761,13 +761,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          </ul>\r
                          <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
                            <%= if @current_user do %>\r
-                             <li class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700">\r
+                             <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
                                <%= @current_user.email %>\r
                              </li>\r
                              <li>\r
                                <.link\r
                                  href={~p"/users/settings"}\r
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"\r
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                                >\r
                                  Settings\r
                                </.link>\r
@@ -776,7 +776,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                                <.link\r
                                  href={~p"/users/log_out"}\r
                                  method="delete"\r
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"\r
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                                >\r
                                  Log out\r
                                </.link>\r
@@ -785,7 +785,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li>\r
                                <.link\r
                                  href={~p"/users/register"}\r
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"\r
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                                >\r
                                  Register\r
                                </.link>\r
@@ -793,7 +793,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li>\r
                                <.link\r
                                  href={~p"/users/log_in"}\r
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"\r
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                                >\r
                                  Log in\r
                                </.link>\r
@@ -839,13 +839,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  <body>
                    <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
                      <%= if @current_user do %>
-                       <li class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700">
+                       <li class="text-[0.8125rem] leading-6 text-zinc-900">
                          <%= @current_user.email %>
                        </li>
                        <li>
                          <.link
                            href={~p"/users/settings"}
-                           class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                          >
                            Settings
                          </.link>
@@ -854,7 +854,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          <.link
                            href={~p"/users/log_out"}
                            method="delete"
-                           class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                          >
                            Log out
                          </.link>
@@ -863,7 +863,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                        <li>
                          <.link
                            href={~p"/users/register"}
-                           class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                          >
                            Register
                          </.link>
@@ -871,7 +871,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                        <li>
                          <.link
                            href={~p"/users/log_in"}
-                           class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                          >
                            Log in
                          </.link>
@@ -919,13 +919,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  <body>\r
                    <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
                      <%= if @current_user do %>\r
-                       <li class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700">\r
+                       <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
                          <%= @current_user.email %>\r
                        </li>\r
                        <li>\r
                          <.link\r
                            href={~p"/users/settings"}\r
-                           class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"\r
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                          >\r
                            Settings\r
                          </.link>\r
@@ -934,7 +934,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          <.link\r
                            href={~p"/users/log_out"}\r
                            method="delete"\r
-                           class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"\r
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                          >\r
                            Log out\r
                          </.link>\r
@@ -943,7 +943,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                        <li>\r
                          <.link\r
                            href={~p"/users/register"}\r
-                           class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"\r
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                          >\r
                            Register\r
                          </.link>\r
@@ -951,7 +951,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                        <li>\r
                          <.link\r
                            href={~p"/users/log_in"}\r
-                           class="text-[0.8125rem] leading-6 text-zinc-900 hover:text-zinc-700 font-semibold hover:text-zinc-700"\r
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                          >\r
                            Log in\r
                          </.link>\r
