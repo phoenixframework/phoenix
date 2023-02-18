@@ -183,13 +183,13 @@ In other words, after rendering your page, the result is placed in the `@inner_c
 
 Phoenix provides all kinds of conveniences to control which layout should be rendered. For example, the `Phoenix.Controller` module provides the `put_root_layout/2` function for us to switch _root layouts_. This takes `conn` as its first argument and a keyword list of formats and their layouts. You can set it to `false` to disable the layout altogether.
 
-You can edit the `index` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this.
+You can edit the `home` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this.
 
 ```elixir
-def index(conn, _params) do
+def home(conn, _params) do
   conn
   |> put_root_layout(html: false)
-  |> render(:index)
+  |> render(:home)
 end
 ```
 
