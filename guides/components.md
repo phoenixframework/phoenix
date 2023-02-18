@@ -197,13 +197,13 @@ After reloading [http://localhost:4000/](http://localhost:4000/), we should see 
 
 To customize the application layout, we invoke a similar function named `put_layout/2`. Let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, copy the existing `app.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/components/layouts`. Then remove everything inside the `<header>...</header>` tags (or change it to whatever you desire) in the new file.
 
-Now, in the `index` action of the controller of `lib/hello_web/controllers/page_controller.ex`, add the following:
+Now, in the `home` action of the controller of `lib/hello_web/controllers/page_controller.ex`, add the following:
 
 ```elixir
-def index(conn, _params) do
+def home(conn, _params) do
   conn
   |> put_layout(html: :admin)
-  |> render(:index)
+  |> render(:home)
 end
 ```
 
