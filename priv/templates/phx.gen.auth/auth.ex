@@ -173,15 +173,11 @@ defmodule <%= inspect auth_module %> do
   end
 
   defp mount_current_<%= schema.singular %>(session, socket) do
-    case session do
-      %{"<%= schema.singular %>_token" => <%= schema.singular %>_token} ->
-        Phoenix.Component.assign_new(socket, :current_<%= schema.singular %>, fn ->
-          <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-        end)
-
-      %{} ->
-        Phoenix.Component.assign_new(socket, :current_<%= schema.singular %>, fn -> nil end)
-    end
+    Phoenix.Component.assign_new(socket, :current_<%= schema.singular %>, fn ->
+      if <%= schema.singular %>_token = session["<%= schema.singular %>_token"] do
+        <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
+      end
+    end)
   end
 
   @doc """
