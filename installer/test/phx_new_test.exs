@@ -178,7 +178,10 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/runtime.exs", fn file ->
         assert file =~ config
-        assert file =~ ~S|maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []|
+
+        assert file =~
+                 ~S|maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []|
+
         assert file =~ ~S|socket_options: maybe_ipv6|
 
         assert file =~ """
