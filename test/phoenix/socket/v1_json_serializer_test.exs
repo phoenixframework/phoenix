@@ -39,7 +39,7 @@ defmodule Phoenix.Socket.V1.JSONSerializerTest do
 
   test "decode!/2 raise a PayloadFormatException if the JSON doesn't contain a map" do
     assert_raise(
-      V1.JSONSerializer.MessageFormatException,
+      RuntimeError,
       "V1 JSON Serializer expected a map, got [nil, nil, \"t\", \"e\", %{\"m\" => 1}]",
       fn -> decode!(@serializer, @v1_bad_json, opcode: :text) end
     )
