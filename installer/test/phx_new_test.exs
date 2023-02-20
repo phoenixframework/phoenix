@@ -180,7 +180,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ config
 
         assert file =~
-                 ~S|maybe_ipv6 = if System.get_env("ECTO_IPV6") in ["true", "1"], do: [:inet6], else: []|
+                 ~S|maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []|
 
         assert file =~ ~S|socket_options: maybe_ipv6|
 
