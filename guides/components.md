@@ -34,7 +34,7 @@ That's simple enough. There's only two lines, `use HelloWeb, :html`. This line c
 
 All of the imports and aliases we make in our module will also be available in our templates. That's because templates are effectively compiled into functions inside their respective module. For example, if you define a function in your module, you will be able to invoke it directly from the template. Let's see this in practice.
 
-Imagine we want to refactor our `show.html.heex` to move the rendering of `<h2>Hello World, from <%= @messenger %>!</h2>` to its own function. We can move it to a function component inside `HelloHTML`:
+Imagine we want to refactor our `show.html.heex` to move the rendering of `<h2>Hello World, from <%= @messenger %>!</h2>` to its own function. We can move it to a function component inside `HelloHTML`, let's do so:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -52,7 +52,7 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-We declared the attributes we accept via `attr` provided by `Phoenix.Component`, then we defined our `title/1` function which returns the HEEx template. When we reload our home page, we should see our new title. Since templates are compiled inside the view, we can invoke the view function simply as `<.greet messenger="..." />`, but we can also type `<HelloWeb.HelloHTML.greet messenger="..." />` if the component was defined elsewhere.
+In the example above, we defined a `greet/1` function which returns the HEEx template. Above the function, we called `attr`, provided by `Phoenix.Component`, which defines the attributes/assigns that function expects. Since templates are embedded inside the `HelloHTML` module, we can invoke the our component simply as `<.greet messenger="..." />`, but we can also type `<HelloWeb.HelloHTML.greet messenger="..." />` if the component was defined elsewhere.
 
 By declaring attributes, Phoenix will warn if we call the `<.greet />` component without passing attributes. If an attribute is optional, you can specify the `:default` option with a value:
 
