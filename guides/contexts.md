@@ -512,7 +512,7 @@ end
 
 We added a new `category_select/2` function which uses `Phoenix.HTML.Form`'s `multiple_select/3` to generate a multiple select tag. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
 
-With our `category_select` function in place, we can open up `lib/hello_web/controllers/product_html/form.html.heex` and add:
+With our `category_select` function in place, we can add the following lines both to `lib/hello_web/controllers/product_html/new.html.heex` and `lib/hello_web/controllers/product_html/edit.html.heex`:
 
 ```diff
   ...
