@@ -77,7 +77,7 @@ Module plugs are another type of plug that let us define a connection transforma
 - [`init/1`] which initializes any arguments or options to be passed to [`call/2`]
 - [`call/2`] which carries out the connection transformation. [`call/2`] is just a function plug that we saw earlier
 
-To see this in action, let's write a module plug that puts the `:locale` key and value into the connection assign for downstream use in other plugs, controller actions, and our views. Put the contents below in a file named `lib/hello_web/plugs/locale.ex`:
+To see this in action, let's write a module plug that puts the `:locale` key and value into the connection for downstream use in other plugs, controller actions, and our views. Put the contents below in a file named `lib/hello_web/plugs/locale.ex`:
 
 ```elixir
 defmodule HelloWeb.Plugs.Locale do
