@@ -9,7 +9,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       response = html_response(conn, 200)
       assert response =~ "Register"
       assert response =~ ~p"/users/log_in"
-      assert response =~ "/users/register"
+      assert response =~ ~p"/users/register"
     end
 
     test "redirects if already logged in", %{conn: conn} do
