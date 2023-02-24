@@ -1356,7 +1356,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         layout file, please add the following code to it where you'd
         like the user menu items to be rendered.
 
-            <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+            <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
               <%= if @current_user do %>
                 <li class="text-[0.8125rem] leading-6 text-zinc-900">
                   <%= @current_user.email %>
@@ -1421,7 +1421,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         Add the following user menu items to your lib/my_app_web/components/layouts/root.html.heex layout file:
 
-            <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+            <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
               <%= if @current_user do %>
                 <li class="text-[0.8125rem] leading-6 text-zinc-900">
                   <%= @current_user.email %>

@@ -665,7 +665,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>
                            <% end %>
                          </ul>
-                         <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+                         <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
                            <%= if @current_user do %>
                              <li class="text-[0.8125rem] leading-6 text-zinc-900">
                                <%= @current_user.email %>
@@ -759,7 +759,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>\r
                            <% end %>\r
                          </ul>\r
-                         <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
+                         <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
                            <%= if @current_user do %>\r
                              <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
                                <%= @current_user.email %>\r
@@ -837,7 +837,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <title>Demo · Phoenix Framework</title>
                  </head>
                  <body>
-                   <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+                   <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
                      <%= if @current_user do %>
                        <li class="text-[0.8125rem] leading-6 text-zinc-900">
                          <%= @current_user.email %>
@@ -917,7 +917,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <title>Demo · Phoenix Framework</title>\r
                  </head>\r
                  <body>\r
-                   <ul class="flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
+                   <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
                      <%= if @current_user do %>\r
                        <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
                          <%= @current_user.email %>\r
