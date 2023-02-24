@@ -37,7 +37,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       response = html_response(conn, 200)
       assert response =~ email
       assert response =~ ~p"/users/settings"
-      assert response =~ "/users/log_out"
+      assert response =~ ~p"/users/log_out"
     end
 
     test "render errors for invalid data", %{conn: conn} do
