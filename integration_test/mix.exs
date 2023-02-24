@@ -41,7 +41,7 @@ defmodule Phoenix.Integration.MixProject do
       {:tds, ">= 0.0.0"},
       {:ecto_sqlite3, ">= 0.0.0"},
       {:phoenix_html, "~> 3.3"},
-      {:phoenix_live_view, "~> 0.18.14"},
+      {:phoenix_live_view, "~> 0.18.16"},
       {:floki, ">= 0.30.0"},
       {:phoenix_live_reload, "~> 1.2"},
       {:phoenix_live_dashboard, "~> 0.7.2"},
