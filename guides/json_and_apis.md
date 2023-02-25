@@ -103,7 +103,7 @@ Now we can retrieve all links:
 curl -i http://localhost:4000/api/urls
 ```
 
-Or we can just retrieve a link it's `id`:
+Or we can just retrieve a link by its `id`:
 
 ```console
 curl -i http://localhost:4000/api/urls/1
