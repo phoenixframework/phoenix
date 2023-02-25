@@ -114,8 +114,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
         sample_binary_id: "11111111-1111-1111-1111-111111111111"
 
   You can override those options per invocation by providing corresponding
-  switches, e.g. `--no-binary-id` to use normal ids despite the default
-  configuration or `--migration` to force generation of the migration.
+  switches, e.g. `--binary-id` to use `binary_id` for its primary key and foreign keys.
   """
   use Mix.Task
 

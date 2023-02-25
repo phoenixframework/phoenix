@@ -75,8 +75,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         sample_binary_id: "11111111-1111-1111-1111-111111111111"
 
   You can override those options per invocation by providing corresponding
-  switches, e.g. `--no-binary-id` to use normal ids despite the default
-  configuration.
+  switches, e.g. `--binary-id` to use `binary_id` for its primary key and foreign keys.
 
   ## Custom table names
 
