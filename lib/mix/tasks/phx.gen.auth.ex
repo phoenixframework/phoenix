@@ -507,7 +507,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     web_prefix = Mix.Phoenix.web_path(ctx_app)
     file_path = Path.join(web_prefix, "router.ex")
     auth_module = Keyword.fetch!(binding, :auth_module)
-    inject = "import #{inspect(auth_module)}"
+    inject = String.trim("""
+          import #{inspect(auth_module)},
+           only: [
+             fetch_current_user: 2,
+             redirect_if_user_is_authenticated: 2,
+             require_authenticated_user: 2
+           ]
+    """)
     use_line = "use #{inspect(context.web_module)}, :router"
 
     help_text = """

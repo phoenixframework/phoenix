@@ -1282,7 +1282,12 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                                  use MyAppWeb, :router
 
                                  # Import authentication plugs
-                                 import MyAppWeb.UserAuth
+                                 import MyAppWeb.UserAuth,
+                                  only: [
+                                    fetch_current_user: 2,
+                                    redirect_if_user_is_authenticated: 2,
+                                    require_authenticated_user: 2
+                                  ]
 
                                  ...
                                end
