@@ -356,7 +356,8 @@ defmodule Phx.New.Generator do
           For example: ecto://USER:PASS@HOST/DATABASE
           \"""
 
-      maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+      maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
+
       """,
       prod_config: """
       # ssl: true,
@@ -410,9 +411,8 @@ defmodule Phx.New.Generator do
   defp phoenix_dep("deps/phoenix", %{pre: ["dev"]}),
     do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
 
-  # TODO no override on final 1.7 release
   defp phoenix_dep("deps/phoenix", version),
-    do: ~s[{:phoenix, "~> #{version}", override: true}]
+    do: ~s[{:phoenix, "~> #{version}"}]
 
   defp phoenix_dep(path, _version),
     do: ~s[{:phoenix, path: #{inspect(path)}, override: true}]

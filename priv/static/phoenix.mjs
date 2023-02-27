@@ -421,6 +421,10 @@ var LongPoll = class {
     this.token = null;
     this.skipHeartbeat = true;
     this.reqs = /* @__PURE__ */ new Set();
+    this.awaitingBatchAck = false;
+    this.currentBatch = null;
+    this.currentBatchTimer = null;
+    this.batchBuffer = [];
     this.onopen = function() {
     };
     this.onerror = function() {
@@ -451,7 +455,7 @@ var LongPoll = class {
     return this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting;
   }
   poll() {
-    this.ajax("GET", null, () => this.ontimeout(), (resp) => {
+    this.ajax("GET", "application/json", null, () => this.ontimeout(), (resp) => {
       if (resp) {
         var { status, token, messages } = resp;
         this.token = token;
@@ -488,10 +492,28 @@ var LongPoll = class {
     });
   }
   send(body) {
-    this.ajax("POST", body, () => this.onerror("timeout"), (resp) => {
+    if (this.currentBatch) {
+      this.currentBatch.push(body);
+    } else if (this.awaitingBatchAck) {
+      this.batchBuffer.push(body);
+    } else {
+      this.currentBatch = [body];
+      this.currentBatchTimer = setTimeout(() => {
+        this.batchSend(this.currentBatch);
+        this.currentBatch = null;
+      }, 0);
+    }
+  }
+  batchSend(messages) {
+    this.awaitingBatchAck = true;
+    this.ajax("POST", "application/x-ndjson", messages.join("\n"), () => this.onerror("timeout"), (resp) => {
+      this.awaitingBatchAck = false;
       if (!resp || resp.status !== 200) {
         this.onerror(resp && resp.status);
         this.closeAndRetry(1011, "internal server error", false);
+      } else if (this.batchBuffer.length > 0) {
+        this.batchSend(this.batchBuffer);
+        this.batchBuffer = [];
       }
     });
   }
@@ -501,19 +523,22 @@ var LongPoll = class {
     }
     this.readyState = SOCKET_STATES.closed;
     let opts = Object.assign({ code: 1e3, reason: void 0, wasClean: true }, { code, reason, wasClean });
+    this.batchBuffer = [];
+    clearTimeout(this.currentBatchTimer);
+    this.currentBatchTimer = null;
     if (typeof CloseEvent !== "undefined") {
       this.onclose(new CloseEvent("close", opts));
     } else {
       this.onclose(opts);
     }
   }
-  ajax(method, body, onCallerTimeout, callback) {
+  ajax(method, contentType, body, onCallerTimeout, callback) {
     let req;
     let ontimeout = () => {
       this.reqs.delete(req);
       onCallerTimeout();
     };
-    req = Ajax.request(method, this.endpointURL(), "application/json", body, this.timeout, ontimeout, (resp) => {
+    req = Ajax.request(method, this.endpointURL(), contentType, body, this.timeout, ontimeout, (resp) => {
       this.reqs.delete(req);
       if (this.isActive()) {
         callback(resp);

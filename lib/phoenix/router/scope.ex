@@ -40,7 +40,7 @@ defmodule Phoenix.Router.Scope do
     as = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
     alias? = Keyword.get(opts, :alias, true)
     trailing_slash? = Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
-    warn_on_verify? = Keyword.get(opts, :warn_on_verify, true)
+    warn_on_verify? = Keyword.get(opts, :warn_on_verify, false)
 
     if to_string(as) == "static" do
       raise ArgumentError,

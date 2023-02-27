@@ -672,15 +672,21 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
   defp match_route?(router, test_path) when is_binary(test_path) do
-    split_path = for segment <- String.split(test_path, "/"), segment != "", do: segment
+    split_path =
+      test_path
+      |> String.split("#")
+      |> Enum.at(0)
+      |> String.split("/")
+      |> Enum.filter(fn segment -> segment != "" end)
+
     match_route?(router, split_path)
   end
 
   defp match_route?(router, split_path) when is_list(split_path) do
     case router.__verify_route__(split_path) do
-      {_forward_plug, false = _warn?} -> false
-      {nil = _forward_plug, true = _warn?} -> true
-      {forward_plug, true = _warn?} -> match_forward_route?(router, forward_plug, split_path)
+      {_forward_plug, true = _warn_on_verify?} -> false
+      {nil = _forward_plug, false = _warn_on_verify?} -> true
+      {fwd_plug, false = _warn_on_verify?} -> match_forward_route?(router, fwd_plug, split_path)
       :error -> false
     end
   end

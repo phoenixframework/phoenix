@@ -1,12 +1,12 @@
 for path <- :code.get_path(),
-    Regex.match?(~r/phx_new\-\d+\.\d+\.\d.*\/ebin$/, List.to_string(path)) do
+    Regex.match?(~r/phx_new-[\w\.\-]+\/ebin$/, List.to_string(path)) do
   Code.delete_path(path)
 end
 
 defmodule Phx.New.MixProject do
   use Mix.Project
 
-  @version "1.7.0-rc.2"
+  @version "1.7.0"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to update:

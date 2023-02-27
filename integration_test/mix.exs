@@ -1,5 +1,5 @@
 for path <- :code.get_path(),
-    Regex.match?(~r/phx_new\-\d+\.\d+\.\d\/ebin$/, List.to_string(path)) do
+    Regex.match?(~r/phx_new-[\w\.\-]+\/ebin$/, List.to_string(path)) do
   Code.delete_path(path)
 end
 
@@ -22,7 +22,7 @@ defmodule Phoenix.Integration.MixProject do
 
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :inets]
     ]
   end
 
@@ -40,8 +40,8 @@ defmodule Phoenix.Integration.MixProject do
       {:myxql, ">= 0.0.0"},
       {:tds, ">= 0.0.0"},
       {:ecto_sqlite3, ">= 0.0.0"},
-      {:phoenix_html, "~> 3.0"},
-      {:phoenix_live_view, "~> 0.18.3"},
+      {:phoenix_html, "~> 3.3"},
+      {:phoenix_live_view, "~> 0.18.16"},
       {:floki, ">= 0.30.0"},
       {:phoenix_live_reload, "~> 1.2"},
       {:phoenix_live_dashboard, "~> 0.7.2"},

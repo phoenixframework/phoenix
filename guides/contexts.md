@@ -137,12 +137,12 @@ defmodule HelloWeb.ProductController do
 
   def index(conn, _params) do
     products = Catalog.list_products()
-    render(conn, "index.html", products: products)
+    render(conn, :index, products: products)
   end
 
   def new(conn, _params) do
     changeset = Catalog.change_product(%Product{})
-    render(conn, "new.html", changeset: changeset)
+    render(conn, :new, changeset: changeset)
   end
 
   def create(conn, %{"product" => product_params}) do
@@ -153,13 +153,13 @@ defmodule HelloWeb.ProductController do
         |> redirect(to: ~p"/products/#{product}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, "new.html", changeset: changeset)
+        render(conn, :new, changeset: changeset)
     end
   end
 
   def show(conn, %{"id" => id}) do
     product = Catalog.get_product!(id)
-    render(conn, "show.html", product: product)
+    render(conn, :show, product: product)
   end
   ...
 end
@@ -304,7 +304,7 @@ With our context function in place, let's make use of it in our product controll
       |> Catalog.get_product!()
       |> Catalog.inc_page_views()
 
-    render(conn, "show.html", product: product)
+    render(conn, :show, product: product)
   end
 ```
 
@@ -493,6 +493,8 @@ Next, let's expose our new feature to the web by adding the category input to ou
 defmodule HelloWeb.ProductHTML do
   use HelloWeb, :html
 
+  import Phoenix.HTML.Form
+
   def category_select(f, changeset) do
     existing_ids =
       changeset
@@ -508,13 +510,13 @@ defmodule HelloWeb.ProductHTML do
 end
 ```
 
-We added a new `category_select/2` function which uses `Phoenix.HTML`'s `multiple_select/3` to generate a multiple select tag. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
+We added a new `category_select/2` function which uses `Phoenix.HTML.Form`'s `multiple_select/3` to generate a multiple select tag. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
 
 With our `category_select` function in place, we can open up `lib/hello_web/controllers/product_html/form.html.heex` and add:
 
 ```diff
   ...
-  <.input type="number" field={{f, :views}} label="Views" />
+  <.input type="number" field={f[:views]} label="Views" />
 
 + <%= category_select f, @changeset %>
 
@@ -865,7 +867,7 @@ Next, we wrote our new `add_item_to_cart/2` function which accepts a cart struct
 
 Finally, we implemented `remove_item_from_cart/2` where we simply issue a `Repo.delete_all` call with a query to delete the cart item in our cart that matches the product ID. Finally, we reload the cart contents by calling `reload_cart/1`.
 
-With our new cart functions in place, we can now expose the "Add to cart" button on the product catalog show page. Open up your template in `lib/hello_web/templates/product/show.html.heex` and make the following changes:
+With our new cart functions in place, we can now expose the "Add to cart" button on the product catalog show page. Open up your template in `lib/hello_web/controllers/product_html/show.html.heex` and make the following changes:
 
 ```diff
 <h1>Show Product</h1>
@@ -911,7 +913,7 @@ defmodule HelloWeb.CartController do
   alias Hello.ShoppingCart
 
   def show(conn, _params) do
-    render(conn, "show.html", changeset: ShoppingCart.change_cart(conn.assigns.cart))
+    render(conn, :show, changeset: ShoppingCart.change_cart(conn.assigns.cart))
   end
 end
 ```
@@ -1299,12 +1301,12 @@ We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order
 
   <li :for={item <- @order.line_items}>
     <%= item.product.title %>
-    (<%= item.quantity %>) - <%= HelloWeb.CartView.currency_to_str(item.price) %>
+    (<%= item.quantity %>) - <%= HelloWeb.CartHTML.currency_to_str(item.price) %>
   </li>
 
   <li>
     <strong>Total price:</strong>
-    <%= HelloWeb.CartView.currency_to_str(@order.total_price) %>
+    <%= HelloWeb.CartHTML.currency_to_str(@order.total_price) %>
   </li>
 
 </ul>

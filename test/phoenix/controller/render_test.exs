@@ -175,27 +175,21 @@ defmodule Phoenix.Controller.RenderTest do
     ]
 
     setup context do
-      test_pid = self()
-      test_name = context.test
+      :telemetry.attach_many(context.test, @render_events, &__MODULE__.message_pid/4, self())
+    end
 
-      :telemetry.attach_many(
-        test_name,
-        @render_events,
-        fn event, measures, metadata, config ->
-          send(test_pid, {:telemetry_event, event, {measures, metadata, config}})
-        end,
-        nil
-      )
+    def message_pid(event, measures, metadata, test_pid) do
+      send(test_pid, {:telemetry_event, event, {measures, metadata}})
     end
 
     test "phoenix.controller.render.start and .stop are emitted on success" do
       render(conn(), "index.html", title: "Hello")
 
       assert_received {:telemetry_event, [:phoenix, :controller, :render, :start],
-                       {_, %{format: "html", template: "index", view: MyApp.UserView}, _}}
+                       {_, %{format: "html", template: "index", view: MyApp.UserView}}}
 
       assert_received {:telemetry_event, [:phoenix, :controller, :render, :stop],
-                       {_, %{format: "html", template: "index", view: MyApp.UserView}, _}}
+                       {_, %{format: "html", template: "index", view: MyApp.UserView}}}
 
       refute_received {:telemetry_event, [:phoenix, :controller, :render, :exception], _}
     end
@@ -210,7 +204,7 @@ defmodule Phoenix.Controller.RenderTest do
         end
 
       assert_received {:telemetry_event, [:phoenix, :controller, :render, :start],
-                       {_, %{format: "html", template: "index", view: MyApp.UserView}, _}}
+                       {_, %{format: "html", template: "index", view: MyApp.UserView}}}
 
       refute_received {:telemetry_event, [:phoenix, :controller, :render, :stop], _}
 
@@ -222,7 +216,7 @@ defmodule Phoenix.Controller.RenderTest do
                           view: MyApp.UserView,
                           kind: :error,
                           reason: %ArgumentError{}
-                        }, _}}
+                        }}}
     end
   end
 end

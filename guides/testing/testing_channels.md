@@ -65,6 +65,7 @@ defmodule HelloWeb.ChannelCase do
   end
 
   setup _tags do
+    Hello.DataCase.setup_sandbox(tags)
     :ok
   end
 end

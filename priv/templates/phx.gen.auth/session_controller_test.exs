@@ -12,7 +12,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = get(conn, ~p"<%= schema.route_prefix %>/log_in")
       response = html_response(conn, 200)
       assert response =~ "Log in"
-      assert response =~ "Register</a>"
+      assert response =~ ~p"/users/register"
       assert response =~ "Forgot your password?"
     end
 
@@ -36,8 +36,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = get(conn, ~p"/")
       response = html_response(conn, 200)
       assert response =~ <%= schema.singular %>.email
-      assert response =~ "Settings</a>"
-      assert response =~ "Log out</a>"
+      assert response =~ ~p"/users/settings"
+      assert response =~ ~p"/users/log_out"
     end
 
     test "logs the <%= schema.singular %> in with remember me", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do

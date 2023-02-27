@@ -78,6 +78,9 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = put_layout(conn, html: {AppView, :app})
     assert layout(conn) == {AppView, :app}
 
+    conn = put_layout(conn, html: :print)
+    assert layout(conn) == {AppView, :print}
+
     conn = put_layout(conn, html: {AppView, :app}, print: {AppView, :print})
 
     conn = put_format(conn, "html")
@@ -85,10 +88,6 @@ defmodule Phoenix.Controller.ControllerTest do
 
     conn = put_format(conn, "print")
     assert layout(conn) == {AppView, :print}
-
-    assert_raise ArgumentError, fn ->
-      put_layout(conn, html: :app)
-    end
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
       put_layout(sent_conn(), {AppView, :print})
@@ -127,6 +126,9 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = put_root_layout(conn, html: {AppView, :app})
     assert root_layout(conn) == {AppView, :app}
 
+    conn = put_root_layout(conn, html: :print)
+    assert root_layout(conn) == {AppView, :print}
+
     conn = put_root_layout(conn, html: {AppView, :app}, print: {AppView, :print})
 
     conn = put_format(conn, "html")
@@ -134,10 +136,6 @@ defmodule Phoenix.Controller.ControllerTest do
 
     conn = put_format(conn, "print")
     assert root_layout(conn) == {AppView, :print}
-
-    assert_raise ArgumentError, fn ->
-      put_root_layout(conn, html: :app)
-    end
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
       put_root_layout(sent_conn(), {AppView, :print})

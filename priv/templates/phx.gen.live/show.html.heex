@@ -21,6 +21,6 @@
     title={@page_title}
     action={@live_action}
     <%= schema.singular %>={@<%= schema.singular %>}
-    navigate={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}"}
+    patch={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}"}
   />
 </.modal>
