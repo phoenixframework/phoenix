@@ -38,10 +38,10 @@ We will break those files into four categories:
 
 In this guide, we will explore only the first category of files. To learn more about how Phoenix stores and manage data, check out [the Ecto guide](ecto.md) and [the Contexts guide](contexts.md) for more information. We also have a whole section dedicating on testing.
 
-At the end, the generator asks us to add the `/url` resource to our `:api` scope in `lib/links_web/router.ex`:
+At the end, the generator asks us to add the `/url` resource to our `:api` scope in `lib/hello_web/router.ex`:
 
 ```elixir
-scope "/api", LinksWeb do
+scope "/api", HelloWeb do
   pipe_through :api
   resources "/urls", UrlController, except: [:new, :edit]
 end
