@@ -92,7 +92,7 @@ defmodule Phoenix.Token do
 
   require Logger
 
-  @type context :: Plug.Conn.t() | %{endpoint: atom} | atom | binary
+  @type context :: Plug.Conn.t() | %{required(:endpoint) => atom, optional(atom()) => any()} | atom | binary
 
   @type shared_opt ::
           {:key_iterations, pos_integer}
