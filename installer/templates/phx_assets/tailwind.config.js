@@ -2,6 +2,8 @@
 // https://tailwindcss.com/docs/configuration
 
 const plugin = require("tailwindcss/plugin")
+const fs = require("fs")
+const path = require("path")
 
 module.exports = {
   content: [
@@ -18,9 +20,44 @@ module.exports = {
   },
   plugins: [
     require("@tailwindcss/forms"),
+    // Allows prefixing tailwind classes with LiveView classes to add rules
+    // only when LiveView classes are applied, for example:
+    //
+    //     <div class="phx-click-loading:animate-ping">
+    //
     plugin(({addVariant}) => addVariant("phx-no-feedback", [".phx-no-feedback&", ".phx-no-feedback &"])),
     plugin(({addVariant}) => addVariant("phx-click-loading", [".phx-click-loading&", ".phx-click-loading &"])),
     plugin(({addVariant}) => addVariant("phx-submit-loading", [".phx-submit-loading&", ".phx-submit-loading &"])),
-    plugin(({addVariant}) => addVariant("phx-change-loading", [".phx-change-loading&", ".phx-change-loading &"]))
+    plugin(({addVariant}) => addVariant("phx-change-loading", [".phx-change-loading&", ".phx-change-loading &"])),
+
+    // Embeds Hero Icons (https://heroicons.com) into your app.css bundle
+    // See your `CoreComponents.icon/1` for more information.
+    //
+    plugin(function({matchUtilities}) {
+      let iconsDir = path.join(__dirname, "../priv/hero_icons/optimized")
+      let readDir = (dir) => fs.readdirSync(path.join(iconsDir, dir))
+      let valuesMap = new Map([
+        ["", "/24/outline"],
+        ["-solid", "/24/solid"],
+        ["-mini", "/20/solid"]
+      ].flatMap(([suffix, dir]) => readDir(dir).map(file => [file, suffix, dir]))
+       .map(([file, suffix, dir]) => {
+        let name = path.basename(file, ".svg") + suffix
+        let fullPath = path.join(iconsDir, dir, file)
+        return [name, {name, fullPath}]
+      }))
+
+      matchUtilities({
+        "hero": ({name, fullPath}) => {
+          let content = fs.readFileSync(fullPath).toString().replace(/\r?\n|\r/g, "")
+          return {
+            [`--hero-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
+            "-webkit-mask": `var(--hero-${name})`,
+            "mask": `var(--hero-${name})`,
+            "display": "inline-block"
+          }
+        }
+      }, {values: Object.fromEntries(valuesMap)})
+    })
   ]
 }
