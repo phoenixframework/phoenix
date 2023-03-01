@@ -44,6 +44,7 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
     keep = opts[:keep] || @default_keep
     all? = opts[:all] || false
 
+    Mix.Task.run("compile", args)
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
     result =
