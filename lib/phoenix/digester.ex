@@ -138,7 +138,7 @@ defmodule Phoenix.Digester do
 
   defp compressed_extensions do
     compressors = Application.fetch_env!(:phoenix, :static_compressors)
-    Enum.flat_map(compressors, & &1.file_extensions)
+    Enum.flat_map(compressors, & &1.file_extensions())
   end
 
   defp map_file(file_path, input_path) do
