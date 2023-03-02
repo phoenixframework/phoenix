@@ -43,17 +43,18 @@ defmodule Mix.Tasks.Phx.Digest do
   """
 
   @default_opts [vsn: true]
+  @switches [output: :string, vsn: :boolean]
 
   @doc false
   def run(all_args) do
-    {opts, args, _} = OptionParser.parse(all_args, switches: [output: :string, vsn: :boolean], aliases: [o: :output])
-    input_path = List.first(args) || @default_input_path
-    output_path = opts[:output] || input_path
-    with_vsn? = Keyword.merge(@default_opts, opts)[:vsn]
-
     # Ensure all compressors are compiled.
     Mix.Task.run "compile", all_args
     {:ok, _} = Application.ensure_all_started(:phoenix)
+
+    {opts, args, _} = OptionParser.parse(all_args, switches: @switches, aliases: [o: :output])
+    input_path = List.first(args) || @default_input_path
+    output_path = opts[:output] || input_path
+    with_vsn? = Keyword.merge(@default_opts, opts)[:vsn]
 
     case Phoenix.Digester.compile(input_path, output_path, with_vsn?) do
       :ok ->
