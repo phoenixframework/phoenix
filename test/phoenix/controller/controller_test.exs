@@ -704,6 +704,8 @@ defmodule Phoenix.Controller.ControllerTest do
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController, []) == MyApp.Admin.UserView
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController, formats: [:html, :json]) ==
       [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserJSON]
+    assert Phoenix.Controller.__view__(MyApp.Admin.UserController, formats: [:html, json: "View"]) ==
+      [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserView]
   end
 
   test "__layout__ returns the layout module based on controller module" do

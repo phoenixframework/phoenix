@@ -7,6 +7,11 @@ defmodule Phoenix.Controller do
 
   @unsent [:unset, :set, :set_chunked, :set_file]
 
+  # View/Layout deprecation plan
+  # 1. Deprecate :namespace option in favor of :layouts on use
+  # 2. Deprecate setting a non-format view/layout on put_*
+  # 3. Deprecate rendering a view/layout from :_
+
   @type view :: atom()
   @type layout :: {module(), layout_name :: atom()} | atom() | false
 
@@ -96,6 +101,16 @@ defmodule Phoenix.Controller do
       conn
       |> put_view(html: MyAppWeb.UserHTML, json: MyAppWeb.UserJSON)
       |> put_layout(html: MyAppWeb.Layouts)
+
+  ### Backwards compatibility
+
+  In previous Phoenix versions, a controller you always render
+  `MyApp.UserView`. This behaviour can be explicitly retained by
+  passing a suffix to the formats options:
+
+      use Phoenix.Controller,
+        formats: [html: "View", json: "View"],
+        layouts: [html: MyAppWeb.Layouts]
 
   ### Options
 
@@ -571,9 +586,8 @@ defmodule Phoenix.Controller do
   def view_module(conn, format \\ nil) do
     format = format || get_safe_format(conn)
 
-    # TODO: Deprecate if we fall on the first branch.
-    # But we should only deprecate this after all places
-    # that set :_ have already been deprecated.
+    # TODO: Deprecate if we fall on the first branch
+    # But we should only deprecate this after non-format is deprecated on put_*
     case conn.private[:phoenix_view] do
       %{_: value} when value != nil ->
         value
@@ -603,6 +617,8 @@ defmodule Phoenix.Controller do
 
     * `false` which disables the layout
 
+  If `false` is given without a format, all layouts are disabled.
+
   ## Examples
 
       iex> layout(conn)
@@ -618,7 +634,6 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  # TODO: Remove | false from the spec once we deprecate put_new_layout on controllers
   @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) :: Plug.Conn.t()
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
@@ -664,15 +679,16 @@ defmodule Phoenix.Controller do
     put_private_formats(conn, private_key, kind, formats)
   end
 
-  # TODO: Deprecate this whole branch
   defp put_private_layout(conn, private_key, kind, no_format) do
     case no_format do
       false ->
         put_private_formats(conn, private_key, kind, %{_: false})
 
+      # TODO: Deprecate this branch
       {mod, layout} when is_atom(mod) ->
         put_private_formats(conn, private_key, kind, %{_: {mod, layout}})
 
+      # TODO: Deprecate this branch
       layout when is_binary(layout) or is_atom(layout) ->
         case Map.get(conn.private, private_key, %{_: false}) do
           %{_: {mod, _}} ->
@@ -799,9 +815,6 @@ defmodule Phoenix.Controller do
   defp get_private_layout(conn, priv_key, format) do
     format = format || get_safe_format(conn)
 
-    # TODO: Deprecate if we fall on the first branch
-    # But we should only deprecate this after all places
-    # that set :_ have already been deprecated.
     case conn.private[priv_key] do
       %{_: value} -> if format in [nil | layout_formats(conn)], do: value, else: false
       %{^format => value} -> value
@@ -1826,7 +1839,15 @@ defmodule Phoenix.Controller do
 
     case Keyword.fetch(opts, :formats) do
       {:ok, formats} when is_list(formats) ->
-        for format <- formats, do: {format, :"#{view_base}#{String.upcase(to_string(format))}"}
+        for format <- formats do
+          case format do
+            format when is_atom(format) ->
+              {format, :"#{view_base}#{String.upcase(to_string(format))}"}
+
+            {format, suffix} ->
+              {format, :"#{view_base}#{suffix}"}
+          end
+        end
 
       :error ->
         :"#{view_base}View"
