@@ -67,8 +67,8 @@ Since we generated an HTML resource, we can now start our server with `mix phx.s
 When we do that, this is what our `product_params` look like in the log.
 
 ```elixir
-%{"bio" => "Guitarist", "email" => "dweezil@example.com", "name" => "Dweezil Zappa", "number_of_pets" => "3",
-"photo" => %Plug.Upload{content_type: "image/jpg", filename: "cute-kitty.jpg", path: "/var/folders/_6/xbsnn7tx6g9dblyx149nrvbw0000gn/T//plug-1434/multipart-558399-917557-1"}}
+%{"title" => "Metaprogramming Elixir", "description" => "Write Less Code, Get More Done (and Have Fun!)", "price" => "15.000000", "views" => "0",
+"photo" => %Plug.Upload{content_type: "image/png", filename: "meta-cover.png", path: "/var/folders/_6/xbsnn7tx6g9dblyx149nrvbw0000gn/T//plug-1434/multipart-558399-917557-1"}}
 ```
 
 We have a "photo" key which maps to the pre-populated `Plug.Upload` struct representing our uploaded photo.
@@ -76,21 +76,21 @@ We have a "photo" key which maps to the pre-populated `Plug.Upload` struct repre
 To make this easier to read, let's just focus on the struct itself.
 
 ```elixir
-%Plug.Upload{content_type: "image/jpg", filename: "cute-kitty.jpg", path: "/var/folders/_6/xbsnn7tx6g9dblyx149nrvbw0000gn/T//plug-1434/multipart-558399-917557-1"}
+%Plug.Upload{content_type: "image/png", filename: "meta-cover.png", path: "/var/folders/_6/xbsnn7tx6g9dblyx149nrvbw0000gn/T//plug-1434/multipart-558399-917557-1"}
 ```
 
 `Plug.Upload` provides the file's content type, original filename, and path to the temporary file which Plug created for us. In our case, `"/var/folders/_6/xbsnn7tx6g9dblyx149nrvbw0000gn/T//plug-1434/"` is the directory which Plug created to put uploaded files in. It will persist across requests. `"multipart-558399-917557-1"` is the name Plug gave to our uploaded file. If we had multiple `file` inputs and if the user selected photos for all of them, we would have multiple files scattered in temporary directories. Plug will make sure all the filenames are unique.
 
 > Note: This file is temporary, and Plug will remove it from the directory as the request completes. If we need to do anything with this file, we need to do it before then.
 
-Once we have the `Plug.Upload` struct available in our controller, we can perform any operation on it we want. We can check to make sure the file exists with `File.exists?/1`, copy it somewhere else on the filesystem with `File.cp/2`, send it to S3 with an external library, or even send it back to the client with [Plug.Conn.send_file/5](http://hexdocs.pm/plug/Plug.Conn.html#send_file/5).
+Once we have the `Plug.Upload` struct available in our controller, we can perform any operation on it we want. We can check to make sure the file exists with `File.exists?/1`, copy it somewhere else on the filesystem with `File.cp/2`, send it to S3 with an external library, or even send it back to the client with `Plug.Conn.send_file/5`.
 
-For example, in production system, we may want to copy the file to a root directory, such as `/media`. When doing so, it is important to guarantee the names are unique. For instance, if we are allowing users to upload product catalog pictures, we could use the product id to generate a unique name:
+For example, in production system, we may want to copy the file to a root directory, such as `/media`. When doing so, it is important to guarantee the names are unique. For instance, if we are allowing users to upload product cover images, we could use the product id to generate a unique name:
 
 ```elixir
 if upload = product_params["photo"] do
   extension = Path.extname(upload.filename)
-  File.cp(upload.path, "/media/#{product.id}-catalog#{extension}")
+  File.cp(upload.path, "/media/#{product.id}-cover#{extension}")
 end
 ```
 
@@ -100,12 +100,12 @@ Then a Plug.Static plug could be set in your `lib/my_app/endpoint.ex` to serve t
 plug Plug.Static, at: "/uploads", from: "/media"
 ```
 
-The uploaded file can now be accessed from your browsers using a path such as "/uploads/1-profile.jpg". In practice, there are other concerns you want to handle when uploading files, such validating extensions, encoding names, and so on. Many times, using a library that already handles such cases, is prefered.
+The uploaded file can now be accessed from your browsers using a path such as "/uploads/1-cover.jpg". In practice, there are other concerns you want to handle when uploading files, such validating extensions, encoding names, and so on. Many times, using a library that already handles such cases, is preferred.
 
 Finally, notice that when there is no data from the `file` input, we get neither the "photo" key nor a `Plug.Upload` struct. Here are the `product_params` from the log.
 
 ```elixir
-%{"bio" => "Guitarist", "email" => "dweezil@example.com", "name" => "Dweezil Zappa", "number_of_pets" => "3"}
+%{"title" => "Metaprogramming Elixir", "description" => "Write Less Code, Get More Done (and Have Fun!)", "price" => "15.000000", "views" => "0"}
 ```
 
 ## Configuring upload limits
@@ -113,6 +113,7 @@ Finally, notice that when there is no data from the `file` input, we get neither
 The conversion from the data being sent by the form to an actual `Plug.Upload` is done by the `Plug.Parsers` plug which we can find inside `HelloWeb.Endpoint`:
 
 ```elixir
+# lib/hello_web/endpoint.ex
 plug Plug.Parsers,
   parsers: [:urlencoded, :multipart, :json],
   pass: ["*/*"],
