@@ -498,7 +498,7 @@ We've seen what Phoenix gives us with a newly generated app. Furthermore, whenev
 $ mix phx.gen.html Blog Post posts title body:text
 * creating lib/demo_web/controllers/post_controller.ex
 * creating lib/demo_web/templates/post/edit.html.heex
-* creating lib/demo_web/templates/post/form.html.heex
+* creating lib/demo_web/templates/post/form_component.html.heex
 * creating lib/demo_web/templates/post/index.html.heex
 * creating lib/demo_web/templates/post/new.html.heex
 * creating lib/demo_web/templates/post/show.html.heex
