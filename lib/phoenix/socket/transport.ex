@@ -122,9 +122,10 @@ defmodule Phoenix.Socket.Transport do
   Connects to the socket.
 
   The transport passes a map of metadata and the socket
-  returns `{:ok, state}` or `:error`. The state must be
-  stored by the transport and returned in all future
-  operations.
+  returns `{:ok, state}`. `{:error, reason}` or `:error`. 
+  The state must be stored by the transport and returned 
+  in all future operations. `{:error, reason}` can only 
+  be used with websockets.
 
   This function is used for authorization purposes and it
   may be invoked outside of the process that effectively
@@ -142,7 +143,7 @@ defmodule Phoenix.Socket.Transport do
       serializers and their requirements
 
   """
-  @callback connect(transport_info :: map) :: {:ok, state} | :error
+  @callback connect(transport_info :: map) :: {:ok, state} | {:error, term()} | :error
 
   @doc """
   Initializes the socket state.
