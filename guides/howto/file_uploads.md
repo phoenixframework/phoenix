@@ -6,59 +6,59 @@ Plug provides a `Plug.Upload` struct to hold the data from the `file` input. A `
 
 Let's take this one piece at a time.
 
-In the [`Ecto Models Guide`](ecto_models.html), we generated an HTML resource for users. We can reuse the form we generated there in order to demonstrate how file uploads work in Phoenix. Please see that guide for instructions on generating the users resource we'll be using here.
+In the [`Contexts guide`](contexts.md), we generated an HTML resource for users. We can reuse the form we generated there in order to demonstrate how file uploads work in Phoenix. Please see that guide for instructions on generating the users resource we'll be using here.
 
-The first thing we need to do is change our form into a multipart form. The `form_for/4` function accepts a keyword list of options where we can specify this.
+The first thing we need to do is change our form into a multipart form. The `form/1` component accepts a `multipart` attribute where we can specify this.
 
-Here is the form from `lib/hello_web/templates/user/form.html.eex` with that change in place.
+Here is the form from `lib/hello_web/controllers/product_html/product_form.html.heex` with that change in place.
 
 ```elixir
-<%= form_for @changeset, @action, [multipart: true], fn f -> %>
+<.form for={@form} action={~p"/products"} multipart>
 . . .
 ```
 
-Once we have a multipart form, we need a `file` input. Here's how we would do that, also in `form.html.eex`.
+Once we have a multipart form, we need a `file` input. Here's how we would do that, also in `product_form.html.heex`.
 
 ```html
 . . .
-  <div class="form-group">
+  <div>
     <label>Photo</label>
-    <%= file_input f, :photo, class: "form-control" %>
+    <%= file_input @form[:photo] %>
   </div>
 
-  <div class="form-group">
-    <%= submit "Submit", class: "btn btn-primary" %>
+  <div>
+    <button type="submit">Submit</button>
   </div>
-<% end %>
+</.form>
 ```
 
 When rendered, here's what the HTML for that input looks like.
 
 ```html
-<div class="form-group">
+<div>
   <label>Photo</label>
-  <input class="form-control" id="user_photo" name="user[photo]" type="file">
+  <input id="product_photo" name="product[photo]" type="file">
 </div>
 ```
 
-Note the `name` attribute of our `file` input. This will create the `"photo"` key in the `user_params` map which will be available in our controller action.
+Note the `name` attribute of our `file` input. This will create the `"photo"` key in the `product_params` map which will be available in our controller action.
 
-That's it from the form side. Now when users submit the form, a `POST` request will route to our `Hello.UserController` `create/2` action.
+That's it from the form side. Now when users submit the form, a `POST` request will route to our `HelloWeb.ProductController` `create/2` action.
 
-> Note: This photo input does not need to be part of our model for it to come across in the `user_params`. If we want to persist any properties of the photo in a database, however, we would need to add it to our `Hello.User` model's schema.
+> Note: This photo input does not need to be part of our schema for it to come across in the `product_params`. If we want to persist any properties of the photo in a database, however, we would need to add it to our `Hello.Product` schema.
 
-Before we begin, let's add `IO.inspect user_params` to the top of our `Hello.create/2` action in `lib/hello_web/controllers/user_controller.ex`. This will show the `user_params` in our development log so we can better see what's happening.
+Before we begin, let's add `IO.inspect product_params` to the top of our `Hello.create/2` action in `lib/hello_web/controllers/user_controller.ex`. This will show the `product_params` in our development log so we can better see what's happening.
 
 ```elixir
 . . .
-  def create(conn, %{"user" => user_params}) do
-    IO.inspect user_params
+  def create(conn, %{"product" => product_params}) do
+    IO.inspect product_params
 . . .
 ```
 
-Since we generated an HTML resource, we can now start our server with `mix phoenix.server`, visit [http://localhost:4000/users/new](http://localhost:4000/users/new), and create a new user with a photo.
+Since we generated an HTML resource, we can now start our server with `mix phx.server`, visit [http://localhost:4000/products/new](http://localhost:4000/products/new), and create a new product with a photo.
 
-When we do that, this is what our `user_params` look like in the log.
+When we do that, this is what our `product_params` look like in the log.
 
 ```elixir
 %{"bio" => "Guitarist", "email" => "dweezil@example.com", "name" => "Dweezil Zappa", "number_of_pets" => "3",
@@ -79,12 +79,12 @@ To make this easier to read, let's just focus on the struct itself.
 
 Once we have the `Plug.Upload` struct available in our controller, we can perform any operation on it we want. We can check to make sure the file exists with `File.exists?/1`, copy it somewhere else on the filesystem with `File.cp/2`, send it to S3 with an external library, or even send it back to the client with [Plug.Conn.send_file/5](http://hexdocs.pm/plug/Plug.Conn.html#send_file/5).
 
-For example, in production system, we may want to copy the file to a root directory, such as `/media`. When doing so, it is important to guarantee the names are unique. For instance, if we are allowing users to upload profile pictures, we could use the user id to generate a unique name:
+For example, in production system, we may want to copy the file to a root directory, such as `/media`. When doing so, it is important to guarantee the names are unique. For instance, if we are allowing users to upload product catalog pictures, we could use the product id to generate a unique name:
 
 ```elixir
-if upload = user_params["photo"] do
+if upload = product_params["photo"] do
   extension = Path.extname(upload.filename)
-  File.cp(upload.path, "/media/#{user.id}-profile#{extension}")
+  File.cp(upload.path, "/media/#{product.id}-catalog#{extension}")
 end
 ```
 
@@ -94,9 +94,9 @@ Then a Plug.Static plug could be set in your `lib/my_app/endpoint.ex` to serve t
 plug Plug.Static, at: "/uploads", from: "/media"
 ```
 
-The uploaded file can now be accessed from your browsers using a path such as "/uploads/1-profile.jpg". In practice, there are other concerns you want to handle when uploading files, such validating extensions, encoding names and so on. Many times, using a library that already handles such cases, is prefered.
+The uploaded file can now be accessed from your browsers using a path such as "/uploads/1-profile.jpg". In practice, there are other concerns you want to handle when uploading files, such validating extensions, encoding names, and so on. Many times, using a library that already handles such cases, is prefered.
 
-Finally, notice that when there is no data from the `file` input, we get neither the "photo" key nor a `Plug.Upload` struct. Here are the `user_params` from the log.
+Finally, notice that when there is no data from the `file` input, we get neither the "photo" key nor a `Plug.Upload` struct. Here are the `product_params` from the log.
 
 ```elixir
 %{"bio" => "Guitarist", "email" => "dweezil@example.com", "name" => "Dweezil Zappa", "number_of_pets" => "3"}
@@ -110,7 +110,7 @@ The conversion from the data being sent by the form to an actual `Plug.Upload` i
 plug Plug.Parsers,
   parsers: [:urlencoded, :multipart, :json],
   pass: ["*/*"],
-  json_decoder: Poison
+  json_decoder: Phoenix.json_library()
 ```
 
 Besides the options above, `Plug.Parsers` accepts other options to control data upload:
