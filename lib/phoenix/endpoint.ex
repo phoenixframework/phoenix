@@ -213,6 +213,11 @@ defmodule Phoenix.Endpoint do
 
     * `:log_access_url` - log the access url once the server boots
 
+  Note that you can also store your own configurations in the Phoenix.Endpoint.
+  For example, [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) expects
+  its own configuration under the `:live_view` key. In such cases, you should
+  consult the documentation of the respective projects.
+
   ### Adapter configuration
 
   Phoenix allows you to choose which webserver adapter to use. The default
