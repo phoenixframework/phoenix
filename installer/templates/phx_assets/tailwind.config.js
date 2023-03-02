@@ -33,7 +33,7 @@ module.exports = {
     // Embeds Hero Icons (https://heroicons.com) into your app.css bundle
     // See your `CoreComponents.icon/1` for more information.
     //
-    plugin(function({matchUtilities}) {
+    plugin(function({matchComponents, theme}) {
       let iconsDir = path.join(__dirname, "../priv/hero_icons/optimized")
       let readDir = (dir) => fs.readdirSync(path.join(iconsDir, dir))
       let valuesMap = new Map([
@@ -47,15 +47,18 @@ module.exports = {
         return [name, {name, fullPath}]
       }))
 
-      matchUtilities({
+      matchComponents({
         "hero": ({name, fullPath}) => {
           let content = fs.readFileSync(fullPath).toString().replace(/\r?\n|\r/g, "")
           return {
             [`--hero-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
             "-webkit-mask": `var(--hero-${name})`,
             "mask": `var(--hero-${name})`,
+            "background-color": "currentColor",
             "vertical-align": "middle",
-            "display": "inline-block"
+            "display": "inline-block",
+            "width": theme("spacing.5"),
+            "height": theme("spacing.5")
           }
         }
       }, {values: Object.fromEntries(valuesMap)})

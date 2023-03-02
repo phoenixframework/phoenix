@@ -78,7 +78,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
                   aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
                 >
-                  <.icon name="hero-x-mark-solid" class="h-5 w-5" />
+                  <.icon name="hero-x-mark-solid" class="w-5 h-5" />
                 </button>
               </div>
               <div id={"#{@id}-content"}>
@@ -156,8 +156,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
       {@rest}
     >
       <p :if={@title} class="flex items-center gap-1.5 text-[0.8125rem] font-semibold leading-6">
-        <.icon name="hero-information-circle-mini" :if={@kind == :info} class="h-4 w-4" />
-        <.icon name="hero-exclamation-circle-mini" :if={@kind == :error} class="h-4 w-4" />
+        <.icon name="hero-information-circle-mini" :if={@kind == :info} class="w-4 h-4" />
+        <.icon name="hero-exclamation-circle-mini" :if={@kind == :error} class="w-4 h-4" />
         <%%= @title %>
       </p>
       <p class="mt-2 text-[0.8125rem] leading-5"><%%= msg %></p>
@@ -167,7 +167,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         class="group absolute top-2 right-1 p-2"
         aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
       >
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
+        <.icon name="hero-x-mark-solid" class="w-5 h-5 opacity-40 group-hover:opacity-70" />
       </button>
     </div>
     """
@@ -418,7 +418,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def error(assigns) do
     ~H"""
     <p class="phx-no-feedback:hidden mt-3 flex gap-3 text-sm leading-6 text-rose-600">
-      <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none bg-rose-500" />
+      <.icon name="hero-exclamation-circle-mini" class="mt-0.5 w-5 h-5 flex-none" />
       <%%= render_slot(@inner_block) %>
     </p>
     """
@@ -601,7 +601,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
-    <span class={["bg-current w-5 h-5", @class, @name]} />
+    <span class={[@name, @class]} />
     """
   end
 
