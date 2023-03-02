@@ -44,6 +44,8 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
     keep = opts[:keep] || @default_keep
     all? = opts[:all] || false
 
+    # Ensure all compressors are compiled.
+    Mix.Task.run("compile", all_args)
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
     result =
