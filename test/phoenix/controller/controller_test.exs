@@ -203,7 +203,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
     assert view_module(conn, "html") == Hello
 
-    assert_raise RuntimeError, ~r/no view was found for the format: print/, fn ->
+    assert_raise RuntimeError, ~r/no view was found for the format: "print"/, fn ->
       view_module(conn)
     end
 

@@ -158,7 +158,7 @@ defmodule Phoenix.Controller.RenderTest do
   end
 
   test "errors when rendering without view" do
-    assert_raise RuntimeError, ~r/no view was found for the format: html/, fn ->
+    assert_raise RuntimeError, ~r/no view was found for the format: "html"/, fn ->
       render(conn() |> put_view(nil), "index.html")
     end
   end
