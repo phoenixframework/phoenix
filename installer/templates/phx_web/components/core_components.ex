@@ -156,8 +156,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
       {@rest}
     >
       <p :if={@title} class="flex items-center gap-1.5 text-[0.8125rem] font-semibold leading-6">
-        <.icon name="hero-information-circle-mini" :if={@kind == :info} class="w-4 h-4" />
-        <.icon name="hero-exclamation-circle-mini" :if={@kind == :error} class="w-4 h-4" />
+        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="w-4 h-4" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="w-4 h-4" />
         <%%= @title %>
       </p>
       <p class="mt-2 text-[0.8125rem] leading-5"><%%= msg %></p>
