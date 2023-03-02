@@ -10,7 +10,7 @@ There are a number of places to connect with community members at all experience
 
   * Feel free to join and check out the #phoenix channel on [Discord](https://discord.gg/elixir).
 
-  * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/master/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
+  * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/main/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
 
   * Ask or answer questions about Phoenix on [Elixir Forum](https://elixirforum.com/c/phoenix-forum) or [Stack Overflow](https://stackoverflow.com/questions/tagged/phoenix-framework).
 
@@ -18,7 +18,7 @@ There are a number of places to connect with community members at all experience
 
   * Follow the Phoenix Framework on [Twitter](https://twitter.com/elixirphoenix).
 
-  * The source for these guides is [on GitHub](https://github.com/phoenixframework/phoenix/tree/master/guides). To help improve the guides, please report an [issue](https://github.com/phoenixframework/phoenix/issues) or open a [pull request](https://github.com/phoenixframework/phoenix/pulls).
+  * The source for these guides is [on GitHub](https://github.com/phoenixframework/phoenix/tree/main/guides). To help improve the guides, please report an [issue](https://github.com/phoenixframework/phoenix/issues) or open a [pull request](https://github.com/phoenixframework/phoenix/pulls).
 
 ## Books
 
