@@ -35,6 +35,11 @@ This feature replaces the `Helpers` module generated in your Phoenix router, but
 will continue to work and be generated. You can disable router helpers by passing the
 `helpers: false` option to `use Phoenix.Router`.
 
+## 1.7.1 (2023-03-02)
+
+### Enhancements
+  * [phx.new] Embed heroicons in app.css bundle to optimize usage
+
 ## 1.7.0 (2023-02-24)
 
 ### Bug Fixes
