@@ -35,18 +35,18 @@ module.exports = {
     //
     plugin(function({matchComponents, theme}) {
       let iconsDir = path.join(__dirname, "../priv/hero_icons/optimized")
-      let readDir = (dir) => fs.readdirSync(path.join(iconsDir, dir))
-      let valuesMap = new Map([
+      let values = {}
+      let icons = [
         ["", "/24/outline"],
         ["-solid", "/24/solid"],
         ["-mini", "/20/solid"]
-      ].flatMap(([suffix, dir]) => readDir(dir).map(file => [file, suffix, dir]))
-       .map(([file, suffix, dir]) => {
-        let name = path.basename(file, ".svg") + suffix
-        let fullPath = path.join(iconsDir, dir, file)
-        return [name, {name, fullPath}]
-      }))
-
+      ]
+      icons.forEach(([suffix, dir]) => {
+        fs.readdirSync(path.join(iconsDir, dir)).map(file => {
+          let name = path.basename(file, ".svg") + suffix
+          values[name] = {name, fullPath: path.join(iconsDir, dir, file)}
+        })
+      })
       matchComponents({
         "hero": ({name, fullPath}) => {
           let content = fs.readFileSync(fullPath).toString().replace(/\r?\n|\r/g, "")
@@ -61,7 +61,7 @@ module.exports = {
             "height": theme("spacing.5")
           }
         }
-      }, {values: Object.fromEntries(valuesMap)})
+      }, {values})
     })
   ]
 }
