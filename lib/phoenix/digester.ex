@@ -131,12 +131,14 @@ defmodule Phoenix.Digester do
   defp manifest_join(path, filename), do: Path.join(path, filename)
 
   defp compiled_file?(file_path) do
-    compressors = Application.fetch_env!(:phoenix, :static_compressors)
-    compressed_extensions = Enum.flat_map(compressors, & &1.file_extensions)
-
     Regex.match?(@digested_file_regex, Path.basename(file_path)) ||
-      Path.extname(file_path) in compressed_extensions ||
+      Path.extname(file_path) in compressed_extensions() ||
       Path.basename(file_path) == "cache_manifest.json"
+  end
+
+  defp compressed_extensions do
+    compressors = Application.fetch_env!(:phoenix, :static_compressors)
+    Enum.flat_map(compressors, & &1.file_extensions())
   end
 
   defp map_file(file_path, input_path) do
@@ -381,8 +383,8 @@ defmodule Phoenix.Digester do
   end
 
   defp remove_compressed_file(file, output_path) do
-    output_path
-    |> Path.join("#{file}.gz")
-    |> File.rm()
+    compressed_extensions()
+    |> Enum.map(fn extension -> Path.join(output_path, file <> extension) end)
+    |> Enum.each(&File.rm/1)
   end
 end
