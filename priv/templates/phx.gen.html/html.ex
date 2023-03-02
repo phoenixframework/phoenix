@@ -9,5 +9,5 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   attr :changeset, Ecto.Changeset, required: true
   attr :action, :string, required: true
 
-  def form_component(assigns)
+  def <%= schema.singular %>_form(assigns)
 end

@@ -130,8 +130,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
        Path.join([controller_pre, "#{singular}_html", "index.html.heex"])},
       {:eex, "new.html.heex", Path.join([controller_pre, "#{singular}_html", "new.html.heex"])},
       {:eex, "show.html.heex", Path.join([controller_pre, "#{singular}_html", "show.html.heex"])},
-      {:eex, "form_component.html.heex",
-       Path.join([controller_pre, "#{singular}_html", "form_component.html.heex"])},
+      {:eex, "resource_form.html.heex",
+       Path.join([controller_pre, "#{singular}_html", "#{singular}_form.html.heex"])},
       {:eex, "html.ex", Path.join([controller_pre, "#{singular}_html.ex"])},
       {:eex, "controller_test.exs", Path.join([test_pre, "#{singular}_controller_test.exs"])}
     ]

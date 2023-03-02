@@ -137,7 +137,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ ~S(action={~p"/posts"})
       end)
 
-      assert_file("lib/phoenix_web/controllers/post_html/form_component.html.heex")
+      assert_file("lib/phoenix_web/controllers/post_html/post_form.html.heex")
 
       assert_file("lib/phoenix_web/controllers/post_html/show.html.heex", fn file ->
         assert file =~ ~s|~p"/posts|
@@ -147,7 +147,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ ~S(action={~p"/posts/#{@post}"})
       end)
 
-      assert_file("lib/phoenix_web/controllers/post_html/form_component.html.heex", fn file ->
+      assert_file("lib/phoenix_web/controllers/post_html/post_form.html.heex", fn file ->
         assert file =~ ~S(<.simple_form :let={f} for={@changeset} action={@action}>)
         assert file =~ ~s(<.input field={f[:title]} type="text")
         assert file =~ ~s(<.input field={f[:votes]} type="number")
@@ -446,7 +446,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       in_tmp_project(config.test, fn ->
         Gen.Html.run(~w(Blog Post posts status:enum:new))
 
-        assert_file("lib/phoenix_web/controllers/post_html/form_component.html.heex", fn file ->
+        assert_file("lib/phoenix_web/controllers/post_html/post_form.html.heex", fn file ->
           assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
         end)
       end)
