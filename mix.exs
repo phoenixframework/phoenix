@@ -167,6 +167,7 @@ defmodule Phoenix.MixProject do
       "guides/deployment/fly.md",
       "guides/deployment/heroku.md",
       "guides/howto/custom_error_pages.md",
+      "guides/howto/file_uploads.md",
       "guides/howto/using_ssl.md",
       "CHANGELOG.md"
     ]
