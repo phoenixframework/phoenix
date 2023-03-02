@@ -596,7 +596,7 @@ defmodule Phoenix.Controller do
         value
 
       formats ->
-        raise "no view was found for the format: #{format}. " <>
+        raise "no view was found for the format: #{inspect(format)}. " <>
                 "The supported formats are: #{inspect(Map.keys(formats || %{}))}"
     end
   end
