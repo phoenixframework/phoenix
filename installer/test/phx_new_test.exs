@@ -131,14 +131,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/lib/phx_blog_web/components/layouts/app.html.heex")
-
-      assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex", fn file ->
-        version = Application.spec(:phx_new, :vsn) |> to_string() |> Version.parse!()
-        changelog_vsn = "v#{version.major}.#{version.minor}"
-
-        assert file =~
-                 "https://github.com/phoenixframework/phoenix/blob/#{changelog_vsn}/CHANGELOG.md"
-      end)
+      assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex")
 
       # assets
       assert_file("phx_blog/.gitignore", fn file ->
@@ -286,7 +279,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/config/prod.exs", fn file ->
-        assert file =~ "config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PhxBlog.Finch"
+        assert file =~
+                 "config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PhxBlog.Finch"
       end)
 
       # Install dependencies?
