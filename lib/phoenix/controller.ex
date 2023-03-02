@@ -554,6 +554,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
+  # TODO: Remove | layout from the spec once we deprecate put_new_view on controllers
   @spec put_new_view(Plug.Conn.t(), [{format :: atom, view}] | view) :: Plug.Conn.t()
   def put_new_view(%Plug.Conn{state: state} = conn, formats) when state in @unsent do
     put_private_view(conn, :phoenix_view, :new, formats)
@@ -570,6 +571,9 @@ defmodule Phoenix.Controller do
   def view_module(conn, format \\ nil) do
     format = format || get_safe_format(conn)
 
+    # TODO: Deprecate if we fall on the first branch.
+    # But we should only deprecate this after all places
+    # that set :_ have already been deprecated.
     case conn.private[:phoenix_view] do
       %{_: value} when value != nil ->
         value
@@ -614,7 +618,8 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}]) :: Plug.Conn.t()
+  # TODO: Remove | false from the spec once we deprecate put_new_layout on controllers
+  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) :: Plug.Conn.t()
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
       put_private_layout(conn, :phoenix_layout, :replace, layout)
@@ -690,6 +695,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
+  # TODO: Remove | layout from the spec once we deprecate put_new_layout on controllers
   @spec put_new_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) :: Plug.Conn.t()
   def put_new_layout(%Plug.Conn{state: state} = conn, layout)
       when (is_tuple(layout) and tuple_size(layout) == 2) or is_list(layout) or layout == false do
@@ -793,6 +799,9 @@ defmodule Phoenix.Controller do
   defp get_private_layout(conn, priv_key, format) do
     format = format || get_safe_format(conn)
 
+    # TODO: Deprecate if we fall on the first branch
+    # But we should only deprecate this after all places
+    # that set :_ have already been deprecated.
     case conn.private[priv_key] do
       %{_: value} -> if format in [nil | layout_formats(conn)], do: value, else: false
       %{^format => value} -> value
