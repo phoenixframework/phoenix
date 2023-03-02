@@ -195,7 +195,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       phx-disconnected={show("#disconnected")}
       phx-connected={hide("#disconnected")}
     >
-      Attempting to reconnect <.icon name="hero-arrow-path" class="ml-1 w-3 h-3 inline animate-spin" />
+      Attempting to reconnect <.icon name="hero-arrow-path" class="ml-1 w-3 h-3 animate-spin" />
     </.flash>
     """
   end
@@ -569,7 +569,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         navigate={@navigate}
         class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
       >
-        <.icon name="hero-arrow-left-solid" class="w-3 h-3 inline" />
+        <.icon name="hero-arrow-left-solid" class="w-3 h-3" />
         <%%= render_slot(@inner_block) %>
       </.link>
     </div>
