@@ -122,7 +122,7 @@ Phoenix 1.7 introduced some changes in directory structure and the way template 
 
 For now, find the H1 tag in the home layout located in the controllers folder in `lib/hello_web/controllers/page_html/home.html.heex` and paste the locale below that:
 
-```heex
+```html
 <h1 class="mt-10 flex items-center text-sm font-semibold leading-6 text-brand">
   Phoenix Framework
   <small class="ml-3 rounded-full bg-brand/5 px-2 text-[0.8125rem] font-medium leading-6">
