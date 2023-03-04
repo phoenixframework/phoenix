@@ -116,11 +116,20 @@ defmodule HelloWeb.Router do
 
 In the [`init/1`] callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple [`call/2`] function heads to validate the locale in the params, and fall back to `"en"` if there is no match. The [`assign/3`] is a part of the `Plug.Conn` module and it's how we store values in the `conn` data structure.
 
-To see the assign in action, go to the layout in `lib/hello_web/components/layouts/app.html.heex` and add the following code to the main container:
+
+To see the assign in action, we are going to add the `@locale` to the home layout. 
+Phoenix 1.7 introduced some changes in directory structure and the way template files are rendered. We are unifying the approach to handling Static HTML and Liveview content. Components and layouts will be covered later in this guide. 
+
+For now, find the H1 tag in the home layout located in the controllers folder in `lib/hello_web/controllers/page_html/home.html.heex` and paste the locale below that:
 
 ```heex
-<main class="px-4 py-20 sm:px-6 lg:px-8">
-  <p>Locale: <%= @locale %></p>
+<h1 class="mt-10 flex items-center text-sm font-semibold leading-6 text-brand">
+  Phoenix Framework
+  <small class="ml-3 rounded-full bg-brand/5 px-2 text-[0.8125rem] font-medium leading-6">
+    v1.7
+  </small>
+</h1>
+<p>Locale: <%= @locale %></p> <!-- Add this line after the H1 -->
 ```
 
 Go to [http://localhost:4000/](http://localhost:4000/) and you should see the locale exhibited. Visit [http://localhost:4000/?locale=fr](http://localhost:4000/?locale=fr) and you should see the assign changed to `"fr"`. Someone can use this information alongside [Gettext](https://hexdocs.pm/gettext/Gettext.html) to provide a fully internationalized web application.
