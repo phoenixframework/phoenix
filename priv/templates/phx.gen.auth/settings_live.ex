@@ -42,7 +42,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <.input
         field={@password_form[:email]}
         type="hidden" value={@current_email}
-        id="hidden_<%= schema.singular %>_email"
+        id="hidden_email"
       />
       <.input field={@password_form[:password]} type="password" label="New password" required />
       <.input
