@@ -466,9 +466,9 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp connect_session(conn, endpoint, {key, store, {config, init}}) do
+  defp connect_session(conn, endpoint, {key, store, {session_config, init}}) do
     conn = Plug.Conn.fetch_cookies(conn)
-    csrf_token_key = Keyword.get(config, :csrf_token_key, "_csrf_token")
+    csrf_token_key = Keyword.get(session_config, :csrf_token_key, "_csrf_token")
 
     with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
          cookie when is_binary(cookie) <- conn.cookies[key],
