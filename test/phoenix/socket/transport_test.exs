@@ -23,7 +23,7 @@ defmodule Phoenix.Socket.TransportTest do
       signing_salt: "change_me"
     ]
 
-    def session_config, do: @session_config
+    def session_config(overrides \\ []), do: Keyword.merge(@session_config, overrides)
 
     plug Plug.Session, @session_config
     plug :fetch_session
@@ -296,14 +296,17 @@ defmodule Phoenix.Socket.TransportTest do
                |> Transport.connect_info(Endpoint, connect_info)
     end
 
-    test "loads the session with custom :csrf_session_key" do
+    test "loads the session with custom :csrf_token_key" do
       conn = conn(:get, "https://foo.com?session_key=_custom_csrf_token") |> Endpoint.call([])
       csrf_token = conn.resp_body
       session_cookie = conn.cookies["_hello_key"]
 
       connect_info = load_connect_info(
-        session: {Endpoint, :session_config, []},
-        csrf_session_key: "_custom_csrf_token"
+        session: {
+          Endpoint,
+          :session_config,
+          [[csrf_token_key: "_custom_csrf_token"]]
+        }
       )
 
       assert %{session: %{"from_session" => "123"}} =
@@ -313,8 +316,11 @@ defmodule Phoenix.Socket.TransportTest do
               |> Transport.connect_info(Endpoint, connect_info)
 
       connect_info = load_connect_info(
-        session: {Endpoint, :session_config, []},
-        csrf_session_key: "bad-key"
+        session: {
+          Endpoint,
+          :session_config,
+          [[csrf_token_key: "bad_key"]]
+        }
       )
 
       assert %{session: nil} =
