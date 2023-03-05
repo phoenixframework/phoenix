@@ -27,8 +27,15 @@ defmodule Phoenix.Socket.TransportTest do
 
     plug Plug.Session, @session_config
     plug :fetch_session
-    plug Plug.CSRFProtection
+    plug :put_csrf
     plug :put_session
+
+    defp put_csrf(conn, _opts) do
+      conn = Plug.Conn.fetch_query_params(conn)
+      session_key = Map.get(conn.query_params, "session_key", "_csrf_token")
+      opts = Plug.CSRFProtection.init(session_key: session_key)
+      Plug.CSRFProtection.call(conn, opts)
+    end
 
     defp put_session(conn, _) do
       conn
@@ -289,70 +296,33 @@ defmodule Phoenix.Socket.TransportTest do
                |> Transport.connect_info(Endpoint, connect_info)
     end
 
+    test "loads the session with custom :csrf_session_key" do
+      conn = conn(:get, "https://foo.com?session_key=_custom_csrf_token") |> Endpoint.call([])
+      csrf_token = conn.resp_body
+      session_cookie = conn.cookies["_hello_key"]
 
-    defmodule EndpointWithCustomCSRFToken do
-      use Phoenix.Endpoint, otp_app: :phoenix
+      connect_info = load_connect_info(
+        session: {Endpoint, :session_config, []},
+        csrf_session_key: "_custom_csrf_token"
+      )
 
-      @session_config [
-        store: :cookie,
-        key: "_hello_key",
-        signing_salt: "change_me",
-        csrf_token_key: "_custom_csrf_token"
-      ]
+      assert %{session: %{"from_session" => "123"}} =
+              conn(:get, "https://foo.com/", _csrf_token: csrf_token)
+              |> put_req_cookie("_hello_key", session_cookie)
+              |> fetch_query_params()
+              |> Transport.connect_info(Endpoint, connect_info)
 
-      def session_config, do: @session_config
+      connect_info = load_connect_info(
+        session: {Endpoint, :session_config, []},
+        csrf_session_key: "bad-key"
+      )
 
-      plug Plug.Session, @session_config
-      plug :fetch_session
-      plug Plug.CSRFProtection, session_key: "_custom_csrf_token"
-      plug :put_session
-
-      defp put_session(conn, _) do
-        conn
-        |> put_session(:from_session, "123")
-        |> send_resp(200, Plug.CSRFProtection.get_csrf_token())
-      end
+      assert %{session: nil} =
+              conn(:get, "https://foo.com/", _csrf_token: csrf_token)
+              |> put_req_cookie("_hello_key", session_cookie)
+              |> fetch_query_params()
+              |> Transport.connect_info(Endpoint, connect_info)
     end
 
-    Application.put_env :phoenix, __MODULE__.EndpointWithCustomCSRFToken,
-      force_ssl: [],
-      url: [host: "host.com"],
-      check_origin: ["//endpoint.com"],
-      secret_key_base: @secret_key_base
-
-    test "loads the session with custom :csrf_token_key" do
-      {:ok, pid} = EndpointWithCustomCSRFToken.start_link()
-
-      try do
-        conn = conn(:get, "https://foo.com/") |> EndpointWithCustomCSRFToken.call([])
-        csrf_token = conn.resp_body
-        session_cookie = conn.cookies["_hello_key"]
-
-        connect_info = load_connect_info(
-          session: {EndpointWithCustomCSRFToken, :session_config, []}
-        )
-
-        assert %{session: %{"from_session" => "123"}} =
-                conn(:get, "https://foo.com/", _csrf_token: csrf_token)
-                |> put_req_cookie("_hello_key", session_cookie)
-                |> fetch_query_params()
-                |> Transport.connect_info(Endpoint, connect_info)
-
-        session_config = EndpointWithCustomCSRFToken.session_config()
-        |> Keyword.put(:csrf_token_key, "bad key")
-
-        connect_info = load_connect_info(
-          session: session_config
-        )
-
-        assert %{session: nil} =
-                conn(:get, "https://foo.com/", _csrf_token: csrf_token)
-                |> put_req_cookie("_hello_key", session_cookie)
-                |> fetch_query_params()
-                |> Transport.connect_info(Endpoint, connect_info)
-      after
-        GenServer.stop(pid)
-      end
-    end
   end
 end
