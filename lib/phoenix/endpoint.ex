@@ -814,7 +814,7 @@ defmodule Phoenix.Endpoint do
           config in runtime `{MyAppWeb.Auth, :get_session_config, []}`. Otherwise
           the session will be `nil`.
 
-          `session_config` may take a `{:csrf_token_key, csrf_token_key}` option
+          `session_config` may take a `:csrf_token_key` option
           which is useful when using `:protect_from_forgery` with a custom
           `:session_key`. If not given, it defaults to `"_csrf_token"`.
 
@@ -838,8 +838,6 @@ defmodule Phoenix.Endpoint do
               connect_info: [:uri, custom_value: "abcdef"]
             ]
       ```
-
-
 
   ## Websocket configuration
 

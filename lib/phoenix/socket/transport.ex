@@ -264,7 +264,8 @@ defmodule Phoenix.Socket.Transport do
     key = Keyword.fetch!(session_config, :key)
     store = Plug.Session.Store.get(Keyword.fetch!(session_config, :store))
     init = store.init(Keyword.drop(session_config, [:store, :key]))
-    {key, store, {session_config, init}}
+    csrf_token_key = Keyword.get(session_config, :csrf_token_key, "_csrf_token")
+    {key, store, {csrf_token_key, init}}
   end
 
   defp init_session({_, _, _} = mfa) do
