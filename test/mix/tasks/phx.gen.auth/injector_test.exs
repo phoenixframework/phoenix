@@ -665,14 +665,45 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>
                            <% end %>
                          </ul>
-                         <ul>
+                         <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
                            <%= if @current_user do %>
-                             <li><%= @current_user.email %></li>
-                             <li><.link href={~p"/users/settings"}>Settings</.link></li>
-                             <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
+                             <li class="text-[0.8125rem] leading-6 text-zinc-900">
+                               <%= @current_user.email %>
+                             </li>
+                             <li>
+                               <.link
+                                 href={~p"/users/settings"}
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                               >
+                                 Settings
+                               </.link>
+                             </li>
+                             <li>
+                               <.link
+                                 href={~p"/users/log_out"}
+                                 method="delete"
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                               >
+                                 Log out
+                               </.link>
+                             </li>
                            <% else %>
-                             <li><.link href={~p"/users/register"}>Register</.link></li>
-                             <li><.link href={~p"/users/log_in"}>Log in</.link></li>
+                             <li>
+                               <.link
+                                 href={~p"/users/register"}
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                               >
+                                 Register
+                               </.link>
+                             </li>
+                             <li>
+                               <.link
+                                 href={~p"/users/log_in"}
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                               >
+                                 Log in
+                               </.link>
+                             </li>
                            <% end %>
                          </ul>
                        </nav>
@@ -728,14 +759,45 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>\r
                            <% end %>\r
                          </ul>\r
-                         <ul>\r
+                         <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
                            <%= if @current_user do %>\r
-                             <li><%= @current_user.email %></li>\r
-                             <li><.link href={~p"/users/settings"}>Settings</.link></li>\r
-                             <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>\r
+                             <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
+                               <%= @current_user.email %>\r
+                             </li>\r
+                             <li>\r
+                               <.link\r
+                                 href={~p"/users/settings"}\r
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
+                               >\r
+                                 Settings\r
+                               </.link>\r
+                             </li>\r
+                             <li>\r
+                               <.link\r
+                                 href={~p"/users/log_out"}\r
+                                 method="delete"\r
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
+                               >\r
+                                 Log out\r
+                               </.link>\r
+                             </li>\r
                            <% else %>\r
-                             <li><.link href={~p"/users/register"}>Register</.link></li>\r
-                             <li><.link href={~p"/users/log_in"}>Log in</.link></li>\r
+                             <li>\r
+                               <.link\r
+                                 href={~p"/users/register"}\r
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
+                               >\r
+                                 Register\r
+                               </.link>\r
+                             </li>\r
+                             <li>\r
+                               <.link\r
+                                 href={~p"/users/log_in"}\r
+                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
+                               >\r
+                                 Log in\r
+                               </.link>\r
+                             </li>\r
                            <% end %>\r
                          </ul>\r
                        </nav>\r
@@ -775,14 +837,45 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <title>Demo · Phoenix Framework</title>
                  </head>
                  <body>
-                   <ul>
+                   <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
                      <%= if @current_user do %>
-                       <li><%= @current_user.email %></li>
-                       <li><.link href={~p"/users/settings"}>Settings</.link></li>
-                       <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
+                       <li class="text-[0.8125rem] leading-6 text-zinc-900">
+                         <%= @current_user.email %>
+                       </li>
+                       <li>
+                         <.link
+                           href={~p"/users/settings"}
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                         >
+                           Settings
+                         </.link>
+                       </li>
+                       <li>
+                         <.link
+                           href={~p"/users/log_out"}
+                           method="delete"
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                         >
+                           Log out
+                         </.link>
+                       </li>
                      <% else %>
-                       <li><.link href={~p"/users/register"}>Register</.link></li>
-                       <li><.link href={~p"/users/log_in"}>Log in</.link></li>
+                       <li>
+                         <.link
+                           href={~p"/users/register"}
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                         >
+                           Register
+                         </.link>
+                       </li>
+                       <li>
+                         <.link
+                           href={~p"/users/log_in"}
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                         >
+                           Log in
+                         </.link>
+                       </li>
                      <% end %>
                    </ul>
                    <main class="container">
@@ -824,14 +917,45 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <title>Demo · Phoenix Framework</title>\r
                  </head>\r
                  <body>\r
-                   <ul>\r
+                   <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
                      <%= if @current_user do %>\r
-                       <li><%= @current_user.email %></li>\r
-                       <li><.link href={~p"/users/settings"}>Settings</.link></li>\r
-                       <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>\r
+                       <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
+                         <%= @current_user.email %>\r
+                       </li>\r
+                       <li>\r
+                         <.link\r
+                           href={~p"/users/settings"}\r
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
+                         >\r
+                           Settings\r
+                         </.link>\r
+                       </li>\r
+                       <li>\r
+                         <.link\r
+                           href={~p"/users/log_out"}\r
+                           method="delete"\r
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
+                         >\r
+                           Log out\r
+                         </.link>\r
+                       </li>\r
                      <% else %>\r
-                       <li><.link href={~p"/users/register"}>Register</.link></li>\r
-                       <li><.link href={~p"/users/log_in"}>Log in</.link></li>\r
+                       <li>\r
+                         <.link\r
+                           href={~p"/users/register"}\r
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
+                         >\r
+                           Register\r
+                         </.link>\r
+                       </li>\r
+                       <li>\r
+                         <.link\r
+                           href={~p"/users/log_in"}\r
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
+                         >\r
+                           Log in\r
+                         </.link>\r
+                       </li>\r
                      <% end %>\r
                    </ul>\r
                    <main class="container">\r

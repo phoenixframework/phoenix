@@ -35,16 +35,19 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
       will be removed. Note this overrides the age and keep switches.
   """
 
+  @switches [output: :string, age: :integer, keep: :integer, all: :boolean]
+
   @doc false
-  def run(args) do
-    switches = [output: :string, age: :integer, keep: :integer, all: :boolean]
-    {opts, _, _} = OptionParser.parse(args, switches: switches, aliases: [o: :output])
+  def run(all_args) do
+    # Ensure all compressors are compiled.
+    Mix.Task.run("compile", all_args)
+    {:ok, _} = Application.ensure_all_started(:phoenix)
+
+    {opts, _, _} = OptionParser.parse(all_args, switches: @switches, aliases: [o: :output])
     output_path = opts[:output] || @default_output_path
     age = opts[:age] || @default_age
     keep = opts[:keep] || @default_keep
     all? = opts[:all] || false
-
-    {:ok, _} = Application.ensure_all_started(:phoenix)
 
     result =
       if all?,

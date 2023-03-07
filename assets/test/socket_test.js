@@ -714,18 +714,6 @@ describe("with transports", function(){
       clock.restore()
       done()
     })
-
-    it("does not fail with abnormal close after explicit disconnect", function(done){
-      let clock = sinon.useFakeTimers()
-      const spy = sinon.spy(socket, "abnormalClose")
-      socket.onConnOpen()
-      socket.disconnect()
-      clock.tick(30000)
-      clock.tick(30000)
-      assert.ok(spy.notCalled)
-      clock.restore()
-      done()
-    })
   })
 
   describe("onConnError", function(){

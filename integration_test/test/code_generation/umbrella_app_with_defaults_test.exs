@@ -83,7 +83,7 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         modify_file(Path.join(web_root_path, "lib/rainy_day_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
-            scope "/", RainyDayWeb do
+            scope "/api", RainyDayWeb do
               pipe_through [:api]
 
               resources "/posts", PostController, except: [:new, :edit]
@@ -107,7 +107,7 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         modify_file(Path.join(web_root_path, "lib/rainy_day_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
-            scope "/", RainyDayWeb do
+            scope "/api", RainyDayWeb do
               pipe_through [:api]
 
               resources "/posts", PostController, except: [:new, :edit]

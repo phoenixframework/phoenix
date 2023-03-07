@@ -68,7 +68,6 @@ You can learn more about applications in [Elixir's official docs for Application
 
 The `lib/hello/mailer.ex` file holds the `Hello.Mailer` module, which defines the main interface to deliver e-mails:
 
-
 ```elixir
 defmodule Hello.Mailer do
   use Swoosh.Mailer, otp_app: :hello
@@ -94,29 +93,29 @@ The `lib/hello_web` directory holds the web-related parts of our application. It
 ```console
 lib/hello_web
 ├── controllers
-│   └── page_controller.ex
-├── templates
-│   ├── layout
-│   │   ├── app.html.heex
-│   │   └── root.html.heex
-│   └── page
-│       └── index.html.heex
-├── views
-│   ├── error_helpers.ex
-│   ├── error_view.ex
-│   ├── layout_view.ex
-│   └── page_view.ex
+│   ├── page_controller.ex
+│   ├── page_html.ex
+│   ├── error_html.ex
+│   ├── error_json.ex
+│   └── page_html
+│       └── home.html.heex
+├── components
+│   ├── core_components.ex
+│   ├── layouts.ex
+│   └── layouts
+│       ├── app.html.heex
+│       └── root.html.heex
 ├── endpoint.ex
 ├── gettext.ex
 ├── router.ex
 └── telemetry.ex
 ```
 
-All of the files which are currently in the `controllers`, `templates`, and `views` directories are there to create the "Welcome to Phoenix!" page we saw in the "[Up and running](up_and_running.html)" guide.
+All of the files which are currently in the `controllers` and `components` directories are there to create the "Welcome to Phoenix!" page we saw in the "[Up and running](up_and_running.html)" guide.
 
-By looking at `templates` and `views` directories, we can see Phoenix provides features for handling layouts and error pages out of the box.
+By looking at `controller` and `components` directories, we can see Phoenix provides features for handling layouts and HTML and error pages out of the box.
 
-Besides the directories mentioned, `lib/hello_web` has four files at its root. `lib/hello_web/endpoint.ex` is the entry-point for HTTP requests. Once the browser accesses [http://localhost:4000](http://localhost:4000), the endpoint starts processing the data, eventually leading to the router, which is defined in `lib/hello_web/router.ex`. The router defines the rules to dispatch requests to "controllers", which then uses "views" and "templates" to render HTML pages back to clients. We explore these layers in length in other guides, starting with the "[Request life-cycle](request_lifecycle.html)" guide coming next.
+Besides the directories mentioned, `lib/hello_web` has four files at its root. `lib/hello_web/endpoint.ex` is the entry-point for HTTP requests. Once the browser accesses [http://localhost:4000](http://localhost:4000), the endpoint starts processing the data, eventually leading to the router, which is defined in `lib/hello_web/router.ex`. The router defines the rules to dispatch requests to "controllers", which calls a view module to render HTML pages back to clients. We explore these layers in length in other guides, starting with the "[Request life-cycle](request_lifecycle.html)" guide coming next.
 
 Through _Telemetry_, Phoenix is able to collect metrics and send monitoring events of your application. The `lib/hello_web/telemetry.ex` file defines the supervisor responsible for managing the telemetry processes. You can find more information on this topic in the [Telemetry guide](telemetry.html).
 
@@ -132,4 +131,4 @@ Note that when you first create your Phoenix app using `mix phx.new` it is possi
 
 If the default esbuild integration does not cover your needs, for example because you want to use another build tool, you can switch to a [custom assets build](asset_management.html#custom_builds).
 
-As for CSS, Phoenix ships with a handful of custom styles as well as the [Milligram CSS Framework](https://milligram.io/), providing a minimal setup for projects. You may move to any CSS framework of your choice. Additional references can be found in the [asset management](asset_management.md#css) guide.
+As for CSS, Phoenix ships with the [Tailwind CSS Framework](https://tailwindcss.com/), providing a base setup for projects. You may move to any CSS framework of your choice. Additional references can be found in the [asset management](asset_management.md#css) guide.

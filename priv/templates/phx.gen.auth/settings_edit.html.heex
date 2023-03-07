@@ -6,19 +6,18 @@
 <div class="space-y-12 divide-y">
   <div>
     <.simple_form :let={f} for={@email_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="update_email">
-      <%%= if @email_changeset.action do %>
-        <.error message="Oops, something went wrong! Please check the errors below." />
-      <%% end %>
+      <.error :if={@email_changeset.action}>
+        Oops, something went wrong! Please check the errors below.
+      </.error>
 
-      <.input field={{f, :action}} type="hidden" name="action" value="update_email" />
+      <.input field={f[:action]} type="hidden" name="action" value="update_email" />
 
-      <.input field={{f, :email}} type="email" label="Email" required />
+      <.input field={f[:email]} type="email" label="Email" required />
       <.input
-        field={{f, :current_password}}
+        field={f[:current_password]}
         name="current_password"
         type="password"
         label="Current Password"
-        for="current_password_for_email"
         required
         id="current_password_for_email"
       />
@@ -28,22 +27,31 @@
     </.simple_form>
   </div>
   <div>
-    <.simple_form :let={f} for={@password_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="update_password">
-      <%%= if @password_changeset.action do %>
-        <.error message="Oops, something went wrong! Please check the errors below." />
-      <%% end %>
+    <.simple_form
+      :let={f}
+      for={@password_changeset}
+      action={~p"<%= schema.route_prefix %>/settings"}
+      id="update_password"
+    >
+      <.error :if={@password_changeset.action}>
+        Oops, something went wrong! Please check the errors below.
+      </.error>
 
-      <.input field={{f, :action}} type="hidden" name="action" value="update_password" />
+      <.input field={f[:action]} type="hidden" name="action" value="update_password" />
 
-      <.input field={{f, :password}} type="password" label="New password" required />
-      <.input field={{f, :password_confirmation}} type="password" label="Confirm new password" required />
+      <.input field={f[:password]} type="password" label="New password" required />
+      <.input
+        field={f[:password_confirmation]}
+        type="password"
+        label="Confirm new password"
+        required
+      />
 
       <.input
-        field={{f, :current_password}}
+        field={f[:current_password]}
         name="current_password"
         type="password"
         label="Current password"
-        for="current_password_for_password"
         id="current_password_for_password"
         required
       />

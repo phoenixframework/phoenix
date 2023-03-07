@@ -15,7 +15,6 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
   debug_errors: true,
   secret_key_base: "<%= @secret_key_base_dev %>",
   watchers: <%= if @assets do %>[
-    # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
   ]<% else %>[]<% end %>
@@ -28,7 +27,6 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
 #
 #     mix phx.gen.cert
 #
-# Note that this task requires Erlang/OTP 20 or later.
 # Run `mix help phx.gen.cert` for more information.
 #
 # The `http:` config above can be replaced with:
@@ -50,8 +48,7 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
       ~r"priv/gettext/.*(po)$",<% end %>
-      ~r"lib/<%= @lib_web_name %>/(live|views)/.*(ex)$",
-      ~r"lib/<%= @lib_web_name %>/templates/.*(eex)$"
+      ~r"lib/<%= @lib_web_name %>/(controllers|live|components)/.*(ex|heex)$"
     ]
   ]<% end %>
 

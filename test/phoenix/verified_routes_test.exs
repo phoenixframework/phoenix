@@ -30,9 +30,10 @@ defmodule Phoenix.VerifiedRoutesTest do
     get "/posts/top", PostController, :top
     get "/posts/bottom/:order/:count", PostController, :bottom
     get "/posts/:id", PostController, :show
+    get "/posts/:id/info", PostController, :show
     get "/posts/file/*file", PostController, :file
     get "/posts/skip", PostController, :skip
-    get "/should-warn/*all", PostController, :all, warn_on_verify: false
+    get "/should-warn/*all", PostController, :all, warn_on_verify: true
 
     scope "/", host: "users." do
       post "/host_users/:id/info", UserController, :create
@@ -65,11 +66,19 @@ defmodule Phoenix.VerifiedRoutesTest do
     def static_path(path), do: "/api" <> path
   end
 
-  defp conn_with_endpoint do
-    conn(:get, "/") |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
+  defmodule StaticPath do
+    def url, do: "https://example.com"
+    def static_url, do: "https://example.com"
+    def path(path), do: path
+    def static_path(path), do: "/static" <> path
+    def static_integrity(_path), do: nil
   end
 
-  defp socket_with_endpoint, do: %Phoenix.Socket{endpoint: Endpoint}
+  defp conn_with_endpoint(endpoint \\ Endpoint) do
+    conn(:get, "/") |> Plug.Conn.put_private(:phoenix_endpoint, endpoint)
+  end
+
+  defp socket_with_endpoint(endpoint \\ Endpoint), do: %Phoenix.Socket{endpoint: endpoint}
 
   def conn_with_script_name(script_name \\ ~w(api)) do
     conn = Plug.Conn.put_private(conn(:get, "/"), :phoenix_endpoint, ScriptName)
@@ -125,6 +134,10 @@ defmodule Phoenix.VerifiedRoutesTest do
 
     assert path(@endpoint, @router, ~p"/posts/bottom/#{dir}/#{id}?foo=bar") ==
              "/posts/bottom/asc/123?foo=bar"
+
+    # dynamic query params
+    assert ~p"/posts/1?other_post=#{id}" == "/posts/1?other_post=123"
+    assert ~p"/posts/1?other_post=#{struct}" == "/posts/1?other_post=post-123"
   end
 
   test "~p with dynamic string and static query params" do
@@ -153,6 +166,21 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/5?#{%{}}" == "/posts/5"
   end
 
+  test "~p with hash" do
+    assert ~p"/posts/123/info#bar" == "/posts/123/info#bar"
+
+    warnings =
+      ExUnit.CaptureIO.capture_io(:stderr, fn ->
+        defmodule Hash do
+          use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+
+          def test, do: ~p"/posts/123/info#bar"
+        end
+      end)
+
+    assert warnings == ""
+  end
+
   test "unverified_path" do
     assert unverified_path(conn_with_script_name(), @router, "/posts") == "/api/posts"
     assert unverified_path(@endpoint, @router, "/posts") == "/posts"
@@ -168,7 +196,7 @@ defmodule Phoenix.VerifiedRoutesTest do
   end
 
   test "~p raises on leftover sigil" do
-    assert_raise ArgumentError, "~p does not support trailing fragment, got: 'foo'", fn ->
+    assert_raise ArgumentError, "~p does not support modifiers after closing, got: foo", fn ->
       defmodule LeftOver do
         use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
         def test, do: ~p"/posts/1"foo
@@ -189,7 +217,7 @@ defmodule Phoenix.VerifiedRoutesTest do
 
   test "~p raises when not prefixed by /" do
     assert_raise ArgumentError,
-                 ~s|path segments must begin with /, got: "posts/1" in "posts/1"|,
+                 ~s|paths must begin with /, got: "posts/1"|,
                  fn ->
                    defmodule SigilPPrefix do
                      use Phoenix.VerifiedRoutes,
@@ -317,6 +345,26 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/5/?#{%{"id" => "foo bar"}}" == "/posts/5/?id=foo+bar"
   end
 
+  describe "with static path" do
+    @endpoint StaticPath
+    @router Router
+    test "paths use static prefix" do
+      assert ~p"/images/foo.png" == "/static/images/foo.png"
+
+      assert path(conn_with_endpoint(StaticPath), ~p"/images/foo.png") ==
+               "/static/images/foo.png"
+
+      assert path(socket_with_endpoint(StaticPath), ~p"/images/foo.png") ==
+               "/static/images/foo.png"
+
+      assert url(conn_with_endpoint(StaticPath), ~p"/images/foo.png") ==
+               "https://example.com/static/images/foo.png"
+
+      assert url(socket_with_endpoint(StaticPath), ~p"/images/foo.png") ==
+               "https://example.com/static/images/foo.png"
+    end
+  end
+
   describe "with script name" do
     @endpoint ScriptName
     @router Router
@@ -439,8 +487,8 @@ defmodule Phoenix.VerifiedRoutesTest do
 
         warnings = String.replace(warnings, ~r/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/, "")
 
-        assert warnings ==
-                "warning: no route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:#{line}: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
+        assert warnings =~
+                 "warning: no route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:#{line}: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
       end
 
       test "~p warns on unmatched path" do
@@ -457,13 +505,14 @@ defmodule Phoenix.VerifiedRoutesTest do
             end
           end)
 
-        assert warnings =~ ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown"|
+        assert warnings =~
+                 ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown"|
 
         assert warnings =~
-                ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/123"|
+                 ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/123"|
 
         assert warnings =~
-                ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/#{123}"|
+                 ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/#{123}"|
       end
 
       test "~p warns on warn_on_verify: true route" do
@@ -477,7 +526,7 @@ defmodule Phoenix.VerifiedRoutesTest do
           end)
 
         assert warnings =~
-                ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/should-warn/foobar"|
+                 ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/should-warn/foobar"|
       end
     end
   end

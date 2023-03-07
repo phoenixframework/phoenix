@@ -102,7 +102,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
         modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
-            scope "/", PhxBlogWeb do
+            scope "/api", PhxBlogWeb do
               pipe_through [:api]
 
               resources "/posts", PostController, except: [:new, :edit]

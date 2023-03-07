@@ -234,20 +234,19 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   end
 
   test "string paths are enforced" do
-    assert_raise ArgumentError, ~r{router paths must be strings, got: '/bar'}, fn ->
+    assert_raise ArgumentError, ~r{router paths must be strings, got: :bar}, fn ->
       defmodule SomeRouter do
         use Phoenix.Router, otp_app: :phoenix
-        get "/foo", Router, []
-        get '/bar', Router, []
+        get :bar, Router, []
       end
     end
 
-    assert_raise ArgumentError, ~r{router paths must be strings, got: '/bar'}, fn ->
+    assert_raise ArgumentError, ~r{router paths must be strings, got: :bar}, fn ->
       defmodule SomeRouter do
         use Phoenix.Router, otp_app: :phoenix
         get "/foo", Router, []
         scope "/another" do
-          resources '/bar', Router, []
+          resources :bar, Router, []
         end
       end
     end

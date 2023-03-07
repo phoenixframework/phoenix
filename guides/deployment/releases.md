@@ -10,13 +10,6 @@ Our main goal for this guide is to package your Phoenix application into a self-
 
 ## Releases, assemble!
 
-To assemble a release, you will need at least Elixir v1.9, however this guide assumes you are using Elixir v1.12 or later to take advantage of latest releases improvements:
-
-```console
-$ elixir -v
-1.12.0
-```
-
 If you are not familiar with Elixir releases yet, we recommend you to read [Elixir's excellent docs](https://hexdocs.pm/mix/Mix.Tasks.Release.html) before continuing.
 
 Once that is done, you can assemble a release by going through all of the steps in our general [deployment guide](deployment.html) with `mix release` at the end. Let's recap.
@@ -177,10 +170,10 @@ If you call `mix phx.gen.release --docker` you'll see a new file with these cont
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
 #   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20210902-slim - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:1.12.0-erlang-24.0.1-debian-bullseye-20210902-slim
+#   - Ex: hexpm/elixir:1.14.0-erlang-24.3.4-debian-bullseye-20210902-slim
 #
-ARG ELIXIR_VERSION=1.12.0
-ARG OTP_VERSION=24.0.1
+ARG ELIXIR_VERSION=1.14.0
+ARG OTP_VERSION=24.3.4
 ARG DEBIAN_VERSION=bullseye-20210902-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"

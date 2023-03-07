@@ -92,19 +92,21 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   """
   use Mix.Task
 
-  alias Mix.Phoenix.{Context}
+  alias Mix.Phoenix.{Context, Schema}
   alias Mix.Tasks.Phx.Gen
 
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.live must be invoked from within your *_web application root directory"
+      Mix.raise(
+        "mix phx.gen.live must be invoked from within your *_web application root directory"
+      )
     end
 
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
-    binding = [context: context, schema: schema, inputs: Gen.Html.inputs(schema)]
+    binding = [context: context, schema: schema, inputs: inputs(schema)]
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
@@ -121,9 +123,11 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     |> Kernel.++(context_files(context))
     |> Mix.Phoenix.prompt_for_conflicts()
   end
+
   defp context_files(%Context{generate?: true} = context) do
     Gen.Context.files_to_be_generated(context)
   end
+
   defp context_files(%Context{generate?: false}) do
     []
   end
@@ -133,24 +137,32 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     test_prefix = Mix.Phoenix.web_test_path(context_app)
     web_path = to_string(schema.web_path)
     live_subdir = "#{schema.singular}_live"
+    web_live = Path.join([web_prefix, "live", web_path, live_subdir])
+    test_live = Path.join([test_prefix, "live", web_path])
 
     [
-      {:eex, "show.ex",                   Path.join([web_prefix, "live", web_path, live_subdir, "show.ex"])},
-      {:eex, "index.ex",                  Path.join([web_prefix, "live", web_path, live_subdir, "index.ex"])},
-      {:eex, "form_component.ex",         Path.join([web_prefix, "live", web_path, live_subdir, "form_component.ex"])},
-      {:eex, "index.html.heex",           Path.join([web_prefix, "live", web_path, live_subdir, "index.html.heex"])},
-      {:eex, "show.html.heex",            Path.join([web_prefix, "live", web_path, live_subdir, "show.html.heex"])},
-      {:eex, "live_test.exs",             Path.join([test_prefix, "live", web_path, "#{schema.singular}_live_test.exs"])},
-      {:new_eex, "components.ex",         Path.join([web_prefix, "components.ex"])}
+      {:eex, "show.ex", Path.join(web_live, "show.ex")},
+      {:eex, "index.ex", Path.join(web_live, "index.ex")},
+      {:eex, "form_component.ex", Path.join(web_live, "form_component.ex")},
+      {:eex, "index.html.heex", Path.join(web_live, "index.html.heex")},
+      {:eex, "show.html.heex", Path.join(web_live, "show.html.heex")},
+      {:eex, "live_test.exs", Path.join(test_live, "#{schema.singular}_live_test.exs")},
+      {:new_eex, "core_components.ex",
+       Path.join([web_prefix, "components", "core_components.ex"])}
     ]
   end
 
   defp copy_new_files(%Context{} = context, binding, paths) do
     files = files_to_be_generated(context)
-    binding = Keyword.merge(binding, assigns: %{
-      web_namespace: context.web_module,
-      gettext: true,
-    })
+
+    binding =
+      Keyword.merge(binding,
+        assigns: %{
+          web_namespace: inspect(context.web_module),
+          gettext: true
+        }
+      )
+
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.live", binding, files)
     if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
 
@@ -162,7 +174,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     [lib_prefix, web_dir] = Path.split(web_prefix)
     file_path = Path.join(lib_prefix, "#{web_dir}.ex")
     file = File.read!(file_path)
-    inject = "import #{inspect(context.web_module)}.Components"
+    inject = "import #{inspect(context.web_module)}.CoreComponents"
 
     if String.contains?(file, inject) do
       :ok
@@ -176,13 +188,19 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   defp do_inject_imports(context, file, file_path, inject) do
     Mix.shell().info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
 
-    new_file = String.replace(file, "import Phoenix.LiveView.Helpers", "import Phoenix.LiveView.Helpers\n      #{inject}")
+    new_file =
+      String.replace(
+        file,
+        "use Phoenix.Component",
+        "use Phoenix.Component\n      #{inject}"
+      )
+
     if file != new_file do
       File.write!(file_path, new_file)
     else
-      Mix.shell().info """
+      Mix.shell().info("""
 
-      Could not find Phoenix.LiveView.Helpers imported in #{file_path}.
+      Could not find use Phoenix.Component in #{file_path}.
 
       This typically happens because your application was not generated
       with the --live flag:
@@ -191,8 +209,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
       Please make sure LiveView is installed and that #{inspect(context.web_module)}
       defines both `live_view/0` and `live_component/0` functions,
-      and that both functions import #{inspect(context.web_module)}.Components.
-      """
+      and that both functions import #{inspect(context.web_module)}.CoreComponents.
+      """)
     end
   end
 
@@ -202,37 +220,38 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     web_path = Mix.Phoenix.web_path(ctx_app)
 
     if schema.web_namespace do
-      Mix.shell().info """
+      Mix.shell().info("""
 
       Add the live routes to your #{schema.web_namespace} :browser scope in #{web_path}/router.ex:
 
-          scope "/#{schema.web_path}", #{inspect prefix}, as: :#{schema.web_path} do
+          scope "/#{schema.web_path}", #{inspect(prefix)}, as: :#{schema.web_path} do
             pipe_through :browser
             ...
 
       #{for line <- live_route_instructions(schema), do: "      #{line}"}
           end
-      """
+      """)
     else
-      Mix.shell().info """
+      Mix.shell().info("""
 
       Add the live routes to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
       #{for line <- live_route_instructions(schema), do: "    #{line}"}
-      """
+      """)
     end
+
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
     maybe_print_upgrade_info()
   end
 
   defp maybe_print_upgrade_info do
     unless Code.ensure_loaded?(Phoenix.LiveView.JS) do
-      Mix.shell().info """
+      Mix.shell().info("""
 
-      You must update :phoenix_live_view to v0.17 or later and
-      :phoenix_live_dashboard to v0.6 or later to use the features
+      You must update :phoenix_live_view to v0.18 or later and
+      :phoenix_live_dashboard to v0.7 or later to use the features
       in this generator.
-      """
+      """)
     end
   end
 
@@ -245,4 +264,74 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       ~s|live "/#{schema.plural}/:id/show/edit", #{inspect(schema.alias)}Live.Show, :edit|
     ]
   end
+
+  @doc false
+  def inputs(%Schema{} = schema) do
+    Enum.map(schema.attrs, fn
+      {_, {:references, _}} ->
+        nil
+
+      {key, :integer} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="number" label="#{label(key)}" />)
+
+      {key, :float} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="number" label="#{label(key)}" step="any" />)
+
+      {key, :decimal} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="number" label="#{label(key)}" step="any" />)
+
+      {key, :boolean} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="checkbox" label="#{label(key)}" />)
+
+      {key, :text} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="text" label="#{label(key)}" />)
+
+      {key, :date} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="date" label="#{label(key)}" />)
+
+      {key, :time} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="time" label="#{label(key)}" />)
+
+      {key, :utc_datetime} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="datetime-local" label="#{label(key)}" />)
+
+      {key, :naive_datetime} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="datetime-local" label="#{label(key)}" />)
+
+      {key, {:array, _} = type} ->
+        ~s"""
+        <.input
+          field={@form[#{inspect(key)}]}
+          type="select"
+          multiple
+          label="#{label(key)}"
+          options={#{inspect(default_options(type))}}
+        />
+        """
+
+      {key, {:enum, _}} ->
+        ~s"""
+        <.input
+          field={@form[#{inspect(key)}]}
+          type="select"
+          label="#{label(key)}"
+          prompt="Choose a value"
+          options={Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})}
+        />
+        """
+
+      {key, _} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="text" label="#{label(key)}" />)
+    end)
+  end
+
+  defp default_options({:array, :string}),
+    do: Enum.map([1, 2], &{"Option #{&1}", "option#{&1}"})
+
+  defp default_options({:array, :integer}),
+    do: Enum.map([1, 2], &{"#{&1}", &1})
+
+  defp default_options({:array, _}), do: []
+
+  defp label(key), do: Phoenix.Naming.humanize(to_string(key))
 end

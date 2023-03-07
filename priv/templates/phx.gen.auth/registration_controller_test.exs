@@ -8,12 +8,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = get(conn, ~p"<%= schema.route_prefix %>/register")
       response = html_response(conn, 200)
       assert response =~ "Register"
-      assert response =~ "Log in</a>"
-      assert response =~ "Register</a>"
+      assert response =~ ~p"/users/log_in"
+      assert response =~ ~p"/users/register"
     end
 
     test "redirects if already logged in", %{conn: conn} do
-      conn = conn |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture()) |> get(Routes.<%= schema.route_helper %>_registration_path(conn, :new))
+      conn = conn |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture()) |> get(~p"<%= schema.route_prefix %>/register")
+
       assert redirected_to(conn) == ~p"/"
     end
   end
@@ -35,8 +36,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = get(conn, ~p"/")
       response = html_response(conn, 200)
       assert response =~ email
-      assert response =~ "Settings</a>"
-      assert response =~ "Log out</a>"
+      assert response =~ ~p"/users/settings"
+      assert response =~ ~p"/users/log_out"
     end
 
     test "render errors for invalid data", %{conn: conn} do

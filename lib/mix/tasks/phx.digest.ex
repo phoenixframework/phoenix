@@ -43,17 +43,18 @@ defmodule Mix.Tasks.Phx.Digest do
   """
 
   @default_opts [vsn: true]
+  @switches [output: :string, vsn: :boolean]
 
   @doc false
   def run(all_args) do
+    # Ensure all compressors are compiled.
     Mix.Task.run "compile", all_args
-    {opts, args, _} = OptionParser.parse(all_args, switches: [output: :string, vsn: :boolean], aliases: [o: :output])
+    {:ok, _} = Application.ensure_all_started(:phoenix)
+
+    {opts, args, _} = OptionParser.parse(all_args, switches: @switches, aliases: [o: :output])
     input_path = List.first(args) || @default_input_path
     output_path = opts[:output] || input_path
     with_vsn? = Keyword.merge(@default_opts, opts)[:vsn]
-
-    Mix.Task.run "deps.loadpaths", all_args
-    {:ok, _} = Application.ensure_all_started(:phoenix)
 
     case Phoenix.Digester.compile(input_path, output_path, with_vsn?) do
       :ok ->
@@ -63,7 +64,10 @@ defmodule Mix.Tasks.Phx.Digest do
         # build structure is mostly a no-op, so we are fine.
         Mix.Project.build_structure()
         Mix.shell().info [:green, "Check your digested files at #{inspect output_path}"]
+
       {:error, :invalid_path} ->
+        # Do not exit with status code on purpose because
+        # in an umbrella not all apps are digestable.
         Mix.shell().error "The input path #{inspect input_path} does not exist"
     end
   end

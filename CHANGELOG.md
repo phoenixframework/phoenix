@@ -1,5 +1,7 @@
 # Changelog for v1.7
 
+See the [upgrade guide](https://gist.github.com/chrismccord/00a6ea2a96bc57df0cce526bd20af8a7) to upgrade from Phoenix 1.6.x.
+
 Phoenix v1.7 requires Elixir v1.11+.
 
 ## Introduction of Verified Routes
@@ -25,15 +27,51 @@ Unmatched routes will issue compiler warnings:
     warning: no route path for AppWeb.Router matches "/postz/#{post}"
       lib/app_web/controllers/post_controller.ex:100: AppWeb.PostController.show/2
 
-*Note: Elixir >= 1.14.0 is required for comprehensive warnings. Older versions
+*Note: Elixir v1.14+ is required for comprehensive warnings. Older versions
 will work properly and warn on new compilations, but changes to the router file
-will not issue new warnings.
+will not issue new warnings.*
 
 This feature replaces the `Helpers` module generated in your Phoenix router, but helpers
 will continue to work and be generated. You can disable router helpers by passing the
 `helpers: false` option to `use Phoenix.Router`.
 
-## 1.7.0-dev
+## 1.7.1 (2023-03-02)
+
+### Enhancements
+  * [phx.new] Embed heroicons in app.css bundle to optimize usage
+
+## 1.7.0 (2023-02-24)
+
+### Bug Fixes
+  * Fix race conditions in the longpoll transport by batching messages
+
+## 1.7.0-rc.3 (2023-02-15)
+
+### Enhancements
+  * Use stream based collections for `phx.gen.live` generators
+  * Update `phx.gen.live` generators to use `Phoenix.Component.to_form`
+
+## 1.7.0-rc.2 (2023-01-13)
+
+### Bug Fixes
+  * [Router] Fix routing bug causing incorrect matching order on similar routes
+  * [phx.new] Fix installation hanging in some cases
+
+## 1.7.0-rc.1 (2023-01-06)
+
+### Enhancements
+  * Raise if using verified routes outside of functions
+  * Add tailwind.install/esbuild.install to mix setup
+
+### Bug Fixes
+  * [Presence] fix task shutdown match causing occasional presence errors
+  * [VerifiedRoutes] Fix expansion causing more compile-time deps than necessary
+  * [phx.gen.auth] Add password inputs to password reset edit form
+  * [phx.gen.embedded] Fixes missing :references generation to phx.gen.embedded
+  * Fix textarea rendering in core components
+  * Halt all sockets on intercept to fix longpoll response already sent error
+
+## 1.7.0-rc.0 (2022-11-07)
 
 ### Deprecations
   * `Phoenix.Controller.get_flash` has been deprecated in favor of the new `Phoenix.Flash` module, which provides unified flash access
@@ -41,6 +79,7 @@ will continue to work and be generated. You can disable router helpers by passin
 ### Enhancements
   * [Router] Add `Phoenix.VerifiedRoutes` for `~p`-based route generation with compile-time verification.
   * [Router] Support `helpers: false` to `use Phoenix.Router` to disable helper generation
+  * [Router] Add `--info [url]` switch to `phx.routes` to get route information about a url/path
   * [Flash] Add `Phoenix.Flash` for unfied flash access
 
 ### JavaScript Client Bug Fixes
@@ -51,6 +90,27 @@ will continue to work and be generated. You can disable router helpers by passin
 See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0f4de6decba7b) to upgrade from Phoenix 1.5.x.
 
 Phoenix v1.6 requires Elixir v1.9+.
+
+## 1.6.15 (2022-10-26)
+
+### Enhancements
+  * Support for Phoenix.View 2.0
+
+### JavaScript Client Bug Fixes
+  * Fix heartbeat reconnect
+
+## 1.6.14 (2022-10-10)
+  * Fix security vulnerability in wildcard `check_origin` configurations
+
+## 1.6.13 (2022-09-29)
+
+### Enhancements
+  * [phx.gen.release] Fetch compatible docker image from API when passing `--docker` flag
+
+## 1.6.12 (2022-09-06)
+
+### Bug Fixes
+  * Fix `phx.gen.release` Dockerfile pointing to expired image
 
 ## 1.6.11 (2022-07-11)
 

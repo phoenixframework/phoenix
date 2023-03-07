@@ -29,11 +29,8 @@ test
 ├── hello_web
 │   ├── channels
 │   ├── controllers
-│   │   └── page_controller_test.exs
-│   └── views
-│       ├── error_view_test.exs
-│       ├── layout_view_test.exs
-│       └── page_view_test.exs
+│       ├── page_controller_test.exs
+│       └── error_html_test.exs
 ├── support
 │   ├── channel_case.ex
 │   ├── conn_case.ex
@@ -41,7 +38,7 @@ test
 └── test_helper.exs
 ```
 
-The test cases we get for free include `test/hello_web/controllers/page_controller_test.exs`, `test/hello_web/views/error_view_test.exs`, and `test/hello_web/views/page_view_test.exs`. They are testing our controllers and views. If you haven't read the guides for controllers and views, now is a good time.
+The test cases we get for free include `test/hello_web/controllers/page_controller_test.exs` and `test/hello_web/controllers/error_html_test.exs`. They are testing our controllers and views. If you haven't read the guides for controllers and views, now is a good time.
 
 ## Understanding test modules
 
@@ -116,7 +113,6 @@ end
 
 There is a lot to unpack here.
 
-
 The second line says this is a case template. This is a ExUnit feature that allows developers to replace the built-in `use ExUnit.Case` by their own case. This line is pretty much what allows us to write `use HelloWeb.ConnCase` at the top of our controller tests.
 
 Now that we have made this module a case template, we can define callbacks that are invoked on certain occasions. The `using` callback defines code to be injected on every module that calls `use HelloWeb.ConnCase`. In this case, it starts by setting the `@endpoint` module attribute with the name of our endpoint.
@@ -143,38 +139,28 @@ And that's where the connection comes from! At first, the testing structure does
 
 The other test files in our application are responsible for testing our views.
 
-The error view test case, `test/hello_web/views/error_view_test.exs`, illustrates a few interesting things of its own.
+The error view test case, `test/hello_web/controllers/error_html_test.exs`, illustrates a few interesting things of its own.
 
 ```elixir
-defmodule HelloWeb.ErrorViewTest do
+defmodule HelloWeb.ErrorHTMLTest do
   use HelloWeb.ConnCase, async: true
 
-  # Bring render/3 and render_to_string/3 for testing custom views
-  import Phoenix.View
+  # Bring render_to_string/4 for testing custom views
+  import Phoenix.Template
 
   test "renders 404.html" do
-    assert render_to_string(HelloWeb.ErrorView, "404.html", []) ==
-           "Not Found"
+    assert render_to_string(HelloWeb.ErrorHTML, "404", "html", []) == "Not Found"
   end
 
   test "renders 500.html" do
-    assert render_to_string(HelloWeb.ErrorView, "500.html", []) ==
-           "Internal Server Error"
+    assert render_to_string(HelloWeb.ErrorHTML, "500", "html", []) == "Internal Server Error"
   end
 end
 ```
 
-`HelloWeb.ErrorViewTest` sets `async: true` which means that this test case will be run in parallel with other test cases. While individual tests within the case still run serially, this can greatly increase overall test speeds.
+`HelloWeb.ErrorHTMLTest` sets `async: true` which means that this test case will be run in parallel with other test cases. While individual tests within the case still run serially, this can greatly increase overall test speeds.
 
-It also imports `Phoenix.View` in order to use the `render_to_string/3` function. With that, all the assertions can be simple string equality tests.
-
-The page view case, `test/hello_web/views/page_view_test.exs`, does not contain any tests by default, but it is here for us when we need to add functions to our `HelloWeb.PageView` module.
-
-```elixir
-defmodule HelloWeb.PageViewTest do
-  use HelloWeb.ConnCase, async: true
-end
-```
+It also imports `Phoenix.Template` in order to use the `render_to_string/4` function. With that, all the assertions can be simple string equality tests.
 
 ## Running tests per directory/file
 
@@ -207,7 +193,7 @@ Randomized with seed 652376
 In order to run all the tests in a specific file, we can pass the path to that file into `mix test`.
 
 ```console
-$ mix test test/hello_web/views/error_view_test.exs
+$ mix test test/hello_web/controllers/error_html_test.exs
 ...
 
 Finished in 0.2 seconds
@@ -218,10 +204,10 @@ Randomized with seed 220535
 
 And we can run a single test in a file by appending a colon and a line number to the filename.
 
-Let's say we only wanted to run the test for the way `HelloWeb.ErrorView` renders `500.html`. The test begins on line 11 of the file, so this is how we would do it.
+Let's say we only wanted to run the test for the way `HelloWeb.ErrorHTML` renders `500.html`. The test begins on line 11 of the file, so this is how we would do it.
 
 ```console
-$ mix test test/hello_web/views/error_view_test.exs:11
+$ mix test test/hello_web/controllers/error_html_test.exs:11
 Including tags: [line: "11"]
 Excluding tags: [:test]
 
@@ -241,10 +227,10 @@ ExUnit allows us to tag our tests individually or for the whole module. We can t
 
 Let's experiment with how this works.
 
-First, we'll add a `@moduletag` to `test/hello_web/views/error_view_test.exs`.
+First, we'll add a `@moduletag` to `test/hello_web/controllers/error_html_test.exs`.
 
 ```elixir
-defmodule HelloWeb.ErrorViewTest do
+defmodule HelloWeb.ErrorHTMLTest do
   use HelloWeb.ConnCase, async: true
 
   @moduletag :error_view_case
@@ -255,7 +241,7 @@ end
 If we use only an atom for our module tag, ExUnit assumes that it has a value of `true`. We could also specify a different value if we wanted.
 
 ```elixir
-defmodule HelloWeb.ErrorViewTest do
+defmodule HelloWeb.ErrorHTMLTest do
   use HelloWeb.ConnCase, async: true
 
   @moduletag error_view_case: "some_interesting_value"
@@ -283,7 +269,7 @@ Randomized with seed 125659
 > Note: ExUnit tells us exactly which tags it is including and excluding for each test run. If we look back to the previous section on running tests, we'll see that line numbers specified for individual tests are actually treated as tags.
 
 ```console
-$ mix test test/hello_web/views/error_view_test.exs:11
+$ mix test test/hello_web/controllers/error_html_test.exs:11
 Including tags: [line: "11"]
 Excluding tags: [:test]
 
@@ -345,23 +331,23 @@ Specifying values for a tag works the same way for `--exclude` as it does for `-
 We can tag individual tests as well as full test cases. Let's tag a few tests in the error view case to see how this works.
 
 ```elixir
-defmodule HelloWeb.ErrorViewTest do
+defmodule HelloWeb.ErrorHTMLTest do
   use HelloWeb.ConnCase, async: true
 
   @moduletag :error_view_case
 
-  # Bring render/3 and render_to_string/3 for testing custom views
-  import Phoenix.View
+  # Bring render/4 and render_to_string/4 for testing custom views
+  import Phoenix.Template
 
   @tag individual_test: "yup"
   test "renders 404.html" do
-    assert render_to_string(HelloWeb.ErrorView, "404.html", []) ==
+    assert render_to_string(HelloWeb.ErrorView, "404", "html", []) ==
            "Not Found"
   end
 
   @tag individual_test: "nope"
   test "renders 500.html" do
-    assert render_to_string(HelloWeb.ErrorView, "500.html", []) ==
+    assert render_to_string(HelloWeb.ErrorView, "500", "html", []) ==
            "Internal Server Error"
   end
 end
@@ -493,10 +479,12 @@ database: "hello_test#{System.get_env("MIX_TEST_PARTITION")}",
 
 By default, the `MIX_TEST_PARTITION` environment variable has no value, and therefore it has no effect. But in your CI server, you can, for example, split your test suite across machines by using four distinct commands:
 
-    $ MIX_TEST_PARTITION=1 mix test --partitions 4
-    $ MIX_TEST_PARTITION=2 mix test --partitions 4
-    $ MIX_TEST_PARTITION=3 mix test --partitions 4
-    $ MIX_TEST_PARTITION=4 mix test --partitions 4
+```console
+$ MIX_TEST_PARTITION=1 mix test --partitions 4
+$ MIX_TEST_PARTITION=2 mix test --partitions 4
+$ MIX_TEST_PARTITION=3 mix test --partitions 4
+$ MIX_TEST_PARTITION=4 mix test --partitions 4
+```
 
 That's all you need to do and ExUnit and Phoenix will take care of all rest, including setting up the database for each distinct partition with a distinct name.
 
@@ -508,20 +496,22 @@ We've seen what Phoenix gives us with a newly generated app. Furthermore, whenev
 
 ```console
 $ mix phx.gen.html Blog Post posts title body:text
-* creating lib/demo_web/controllers/post_controller.ex
-* creating lib/demo_web/templates/post/edit.html.heex
-* creating lib/demo_web/templates/post/form.html.heex
-* creating lib/demo_web/templates/post/index.html.heex
-* creating lib/demo_web/templates/post/new.html.heex
-* creating lib/demo_web/templates/post/show.html.heex
-* creating lib/demo_web/views/post_view.ex
-* creating test/demo_web/controllers/post_controller_test.exs
-* creating lib/demo/blog/post.ex
-* creating priv/repo/migrations/20200215122336_create_posts.exs
-* creating lib/demo/blog.ex
-* injecting lib/demo/blog.ex
-* creating test/demo/blog_test.exs
-* injecting test/demo/blog_test.exs
+* creating lib/hello_web/controllers/post_controller.ex
+* creating lib/hello_web/controllers/post_html/edit.html.heex
+* creating lib/hello_web/controllers/post_html/post_form.html.heex
+* creating lib/hello_web/controllers/post_html/index.html.heex
+* creating lib/hello_web/controllers/post_html/new.html.heex
+* creating lib/hello_web/controllers/post_html/show.html.heex
+* creating lib/hello_web/controllers/post_html.ex
+* creating test/hello_web/controllers/post_controller_test.exs
+* creating lib/hello/blog/post.ex
+* creating priv/repo/migrations/20211001233016_create_posts.exs
+* creating lib/hello/blog.ex
+* injecting lib/hello/blog.ex
+* creating test/hello/blog_test.exs
+* injecting test/hello/blog_test.exs
+* creating test/support/fixtures/blog_fixtures.ex
+* injecting test/support/fixtures/blog_fixtures.ex
 
 Add the resource to your browser scope in lib/demo_web/router.ex:
 

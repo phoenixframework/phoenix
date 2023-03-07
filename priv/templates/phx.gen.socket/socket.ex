@@ -30,7 +30,10 @@ defmodule <%= module %>Socket do
   #
   #     {:ok, assign(socket, :user_id, verified_user_id)}
   #
-  # To deny connection, return `:error`.
+  # To deny connection, return `:error` or `{:error, term}`. To control the
+  # response the client receives in that case, [define an error handler in the
+  # websocket
+  # configuration](https://hexdocs.pm/phoenix/Phoenix.Endpoint.html#socket/3-websocket-configuration).
   #
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.

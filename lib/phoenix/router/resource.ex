@@ -68,13 +68,15 @@ defmodule Phoenix.Router.Resource do
   defp validate_actions(type, singleton, actions) do
     supported_actions = default_actions(singleton)
 
-    unless actions -- supported_actions == [], do: raise ArgumentError, """
-    invalid :#{type} action(s) passed to resources.
+    unless actions -- supported_actions == [] do
+      raise ArgumentError, """
+      invalid :#{type} action(s) passed to resources.
 
-    supported#{if singleton, do: " singleton", else: ""} actions: #{inspect(supported_actions)}
+      supported#{if singleton, do: " singleton", else: ""} actions: #{inspect(supported_actions)}
 
-    got: #{inspect(actions)}
-    """
+      got: #{inspect(actions)}
+      """
+    end
 
     supported_actions
   end

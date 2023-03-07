@@ -66,15 +66,17 @@ locals_without_parens = [
   # Phoenix.Live{Dashboard,View}
   attr: 2,
   attr: 3,
-  slot: 1,
-  slot: 2,
-  slot: 3,
+  embed_templates: 1,
+  embed_templates: 2,
   live: 2,
   live: 3,
   live: 4,
   live_dashboard: 1,
   live_dashboard: 2,
-  on_mount: 1
+  on_mount: 1,
+  slot: 1,
+  slot: 2,
+  slot: 3
 ]
 
 [

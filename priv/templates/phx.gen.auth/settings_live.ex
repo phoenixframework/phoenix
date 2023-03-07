@@ -8,20 +8,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <.header>Change Email</.header>
 
     <.simple_form
+      for={@email_form}
       id="email_form"
-      :let={f}
-      for={@email_changeset}
       phx-submit="update_email"
       phx-change="validate_email"
     >
-      <%%= if @email_changeset.action == :insert do %>
-        <.error message="Oops, something went wrong! Please check the errors below." />
-      <%% end %>
-
-      <.input field={{f, :email}} type="email" label="Email" required value={input_value(f, :email)} />
-
+      <.input field={@email_form[:email]} type="email" label="Email" required />
       <.input
-        field={{f, :current_password}}
+        field={@email_form[:current_password]}
         name="current_password"
         id="current_password_for_email"
         type="password"
@@ -37,40 +31,26 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <.header>Change Password</.header>
 
     <.simple_form
+      for={@password_form}
       id="password_form"
-      :let={f}
-      for={@password_changeset}
       action={~p"<%= schema.route_prefix %>/log_in?_action=password_updated"}
       method="post"
       phx-change="validate_password"
       phx-submit="update_password"
       phx-trigger-action={@trigger_submit}
     >
-      <%%= if @password_changeset.action == :insert do %>
-        <.error message="Oops, something went wrong! Please check the errors below." />
-      <%% end %>
-
-      <.input field={{f, :email}} type="hidden" value={@current_email} />
-
+      <.input field={@password_form[:email]} type="hidden" value={@current_email} />
+      <.input field={@password_form[:password]} type="password" label="New password" required />
       <.input
-        field={{f, :password}}
-        type="password"
-        label="New password"
-        value={input_value(f, :password)}
-        required
-      />
-      <.input
-        field={{f, :password_confirmation}}
+        field={@password_form[:password_confirmation]}
         type="password"
         label="Confirm new password"
-        value={input_value(f, :password_confirmation)}
       />
       <.input
-        field={{f, :current_password}}
+        field={@password_form[:current_password]}
         name="current_password"
         type="password"
-        label="Confirm new password"
-        for="current_password_for_password"
+        label="Current password"
         id="current_password_for_password"
         value={@current_password}
         required
@@ -97,14 +77,16 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def mount(_params, _session, socket) do
     <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
+    email_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>)
+    password_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>)
 
     socket =
       socket
       |> assign(:current_password, nil)
       |> assign(:email_form_current_password, nil)
       |> assign(:current_email, <%= schema.singular %>.email)
-      |> assign(:email_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>))
-      |> assign(:password_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>))
+      |> assign(:email_form, to_form(email_changeset))
+      |> assign(:password_form, to_form(password_changeset))
       |> assign(:trigger_submit, false)
 
     {:ok, socket}
@@ -112,15 +94,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def handle_event("validate_email", params, socket) do
     %{"current_password" => password, "<%= schema.singular %>" => <%= schema.singular %>_params} = params
-    email_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(socket.assigns.current_<%= schema.singular %>, <%= schema.singular %>_params)
 
-    socket =
-      assign(socket,
-        email_changeset: Map.put(email_changeset, :action, :validate),
-        email_form_current_password: password
-      )
+    email_form =
+      socket.assigns.current_<%= schema.singular %>
+      |> <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>_params)
+      |> Map.put(:action, :validate)
+      |> to_form()
 
-    {:noreply, socket}
+    {:noreply, assign(socket, email_form: email_form, email_form_current_password: password)}
   end
 
   def handle_event("update_email", params, socket) do
@@ -136,21 +117,23 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         )
 
         info = "A link to confirm your email change has been sent to the new address."
-        {:noreply, put_flash(socket, :info, info)}
+        {:noreply, socket |> put_flash(:info, info) |> assign(email_form_current_password: nil)}
 
       {:error, changeset} ->
-        {:noreply, assign(socket, :email_changeset, Map.put(changeset, :action, :insert))}
+        {:noreply, assign(socket, :email_form, to_form(Map.put(changeset, :action, :insert)))}
     end
   end
 
   def handle_event("validate_password", params, socket) do
     %{"current_password" => password, "<%= schema.singular %>" => <%= schema.singular %>_params} = params
-    password_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(socket.assigns.current_<%= schema.singular %>, <%= schema.singular %>_params)
 
-    {:noreply,
-     socket
-     |> assign(:password_changeset, Map.put(password_changeset, :action, :validate))
-     |> assign(:current_password, password)}
+    password_form =
+      socket.assigns.current_<%= schema.singular %>
+      |> <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>_params)
+      |> Map.put(:action, :validate)
+      |> to_form()
+
+    {:noreply, assign(socket, password_form: password_form, current_password: password)}
   end
 
   def handle_event("update_password", params, socket) do
@@ -159,15 +142,15 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     case <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, password, <%= schema.singular %>_params) do
       {:ok, <%= schema.singular %>} ->
-        socket =
-          socket
-          |> assign(:trigger_submit, true)
-          |> assign(:password_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params))
+        password_form =
+          <%= schema.singular %>
+          |> <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>_params)
+          |> to_form()
 
-        {:noreply, socket}
+        {:noreply, assign(socket, trigger_submit: true, password_form: password_form)}
 
       {:error, changeset} ->
-        {:noreply, assign(socket, :password_changeset, changeset)}
+        {:noreply, assign(socket, password_form: to_form(changeset))}
     end
   end
 end

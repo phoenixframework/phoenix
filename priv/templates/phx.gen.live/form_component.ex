@@ -13,15 +13,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </.header>
 
       <.simple_form
-        :let={f}
-        for={@changeset}
+        for={@form}
         id="<%= schema.singular %>-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
       >
-        <%= for input <- inputs, input do %><%= input %>
-        <% end %><:actions>
+<%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 8) %>
+        <:actions>
           <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
         </:actions>
       </.simple_form>
@@ -36,7 +35,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:changeset, changeset)}
+     |> assign_form(changeset)}
   end
 
   @impl true
@@ -46,7 +45,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       |> <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    {:noreply, assign_form(socket, changeset)}
   end
 
   def handle_event("save", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
@@ -55,27 +54,37 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   defp save_<%= schema.singular %>(socket, :edit, <%= schema.singular %>_params) do
     case <%= inspect context.alias %>.update_<%= schema.singular %>(socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params) do
-      {:ok, _<%= schema.singular %>} ->
+      {:ok, <%= schema.singular %>} ->
+        notify_parent({:saved, <%= schema.singular %>})
+
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> updated successfully")
-         |> push_navigate(to: socket.assigns.navigate)}
+         |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
+        {:noreply, assign_form(socket, changeset)}
     end
   end
 
   defp save_<%= schema.singular %>(socket, :new, <%= schema.singular %>_params) do
     case <%= inspect context.alias %>.create_<%= schema.singular %>(<%= schema.singular %>_params) do
-      {:ok, _<%= schema.singular %>} ->
+      {:ok, <%= schema.singular %>} ->
+        notify_parent({:saved, <%= schema.singular %>})
+
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> created successfully")
-         |> push_navigate(to: socket.assigns.navigate)}
+         |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
+        {:noreply, assign_form(socket, changeset)}
     end
   end
+
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    assign(socket, :form, to_form(changeset))
+  end
+
+  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

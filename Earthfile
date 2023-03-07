@@ -1,32 +1,8 @@
 all:
-    BUILD +all-test
     BUILD +all-integration-test
-    BUILD +npm
-
-all-test:
-    BUILD --build-arg ELIXIR=1.11.4 --build-arg OTP=23.3.4 +test
-    BUILD --build-arg ELIXIR=1.13.3 --build-arg OTP=24.3.4 --build-arg RUN_INSTALLER_TESTS=1 +test
-
-test:
-    ARG RUN_INSTALLER_TESTS=0
-    FROM +test-setup
-    COPY --dir config installer ./
-    RUN MIX_ENV=test mix deps.compile
-    COPY --dir assets config installer lib integration_test priv test ./
-
-    # Run unit tests
-    RUN mix test
-
-    IF [ "$RUN_INSTALLER_TESTS" = "1" ]
-        WORKDIR /src/installer
-        RUN mix test
-    ELSE
-        RUN echo "Skipping installer tests"
-    END
 
 all-integration-test:
-    BUILD --build-arg ELIXIR=1.13.3 --build-arg OTP=22.3.4 +integration-test
-    BUILD --build-arg ELIXIR=1.13.3 --build-arg OTP=24.3.4 +integration-test
+    BUILD --build-arg ELIXIR=1.14.0 --build-arg OTP=24.3.4 +integration-test
 
 integration-test:
     FROM +setup-base
@@ -84,17 +60,6 @@ integration-test:
             mix test --include database
     END
 
-npm:
-    FROM node:12-alpine3.12
-    WORKDIR /src
-    RUN mkdir assets
-    # Copy package.json + lockfile separately to improve caching (JS changes don't trigger `npm install` anymore)
-    COPY assets/package* assets
-    WORKDIR assets
-    RUN npm install
-    COPY assets/ .
-    RUN npm test
-
 setup-base:
    ARG ELIXIR=1.13.3
    ARG OTP=24.3.4
@@ -102,13 +67,3 @@ setup-base:
    RUN apk add --no-progress --update git build-base
    ENV ELIXIR_ASSERT_TIMEOUT=10000
    WORKDIR /src
-
-test-setup:
-   FROM +setup-base
-   COPY mix.exs .
-   COPY mix.lock .
-   COPY .formatter.exs .
-   COPY package.json .
-   RUN mix local.rebar --force
-   RUN mix local.hex --force
-   RUN mix deps.get

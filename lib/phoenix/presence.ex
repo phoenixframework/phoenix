@@ -504,7 +504,7 @@ defmodule Phoenix.Presence do
   def handle_info({task_ref, {:phoenix, ref, computed_diffs}}, state) do
     %{current_task: current_task} = state
     {^ref, %Task{ref: ^task_ref} = task} = current_task
-    {:exit, _} = Task.shutdown(task)
+    Task.shutdown(task)
 
     Enum.each(computed_diffs, fn {topic, presence_diff} ->
       Phoenix.Channel.Server.local_broadcast(

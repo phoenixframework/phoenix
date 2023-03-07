@@ -95,13 +95,13 @@ https://mysterious-meadow-6277.herokuapp.com/ | https://git.heroku.com/mysteriou
 
 The buildpack uses a predefined Elixir and Erlang version, but to avoid surprises when deploying, it is best to explicitly list the Elixir and Erlang version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of Elixir and Erlang:
 
-```
+```console
 # Elixir version
-elixir_version=1.12.2
+elixir_version=1.14.0
 
 # Erlang version
 # https://github.com/HashNuke/heroku-buildpack-elixir-otp-builds/blob/master/otp-versions
-erlang_version=24.0.3
+erlang_version=24.3
 
 # Invoke assets.deploy defined in your mix.exs to deploy assets with esbuild
 # Note we nuke the esbuild executable from the image
@@ -110,7 +110,7 @@ hook_post_compile="eval mix assets.deploy && rm -f _build/esbuild*"
 
 Finally, let's tell the build pack how to start our webserver. Create a file named `Procfile` at the root of your project:
 
-```
+```console
 web: mix phx.server
 ```
 
@@ -139,7 +139,7 @@ When using this buildpack, you want to delegate all asset bundling to `npm`. So 
 
 The Phoenix Static buildpack uses a predefined Node.js version, but to avoid surprises when deploying, it is best to explicitly list the Node.js version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `phoenix_static_buildpack.config` in the root directory of your project with your target version of Node.js:
 
-```
+```text
 # Node.js version
 node_version=10.20.1
 ```
@@ -374,9 +374,11 @@ $ heroku run "POOL_SIZE=2 mix ecto.migrate"
 Heroku gives you the ability to connect to your dyno with an IEx shell which allows running Elixir code such as database queries.
 
 - Modify the `web` process in your Procfile to run a named node:
-  ```
+
+  ```text
   web: elixir --sname server -S mix phx.server
   ```
+
 - Redeploy to Heroku
 - Connect to the dyno with `heroku ps:exec` (if you have several applications on the same repository you will need to specify the app name or the remote name with `--app APP_NAME` or `--remote REMOTE_NAME`)
 - Launch an iex session with `iex --sname console --remsh server`
@@ -409,7 +411,7 @@ To https://git.heroku.com/mysterious-meadow-6277.git
 
 This has to do with stale dependencies which are not getting recompiled properly. It's possible to force Heroku to recompile all dependencies on each deploy, which should fix this problem. The way to do it is to add a new file called `elixir_buildpack.config` at the root of the application. The file should contain this line:
 
-```
+```text
 always_rebuild=true
 ```
 

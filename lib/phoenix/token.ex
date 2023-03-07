@@ -30,8 +30,8 @@ defmodule Phoenix.Token do
       the secret key base is extracted from the endpoint
     * `Plug.Conn` - where the secret key base is extracted from the
       endpoint stored in the connection
-    * `Phoenix.Socket` - where the secret key base is extracted from
-      the endpoint stored in the socket
+    * `Phoenix.Socket` or `Phoenix.LiveView.Socket` - where the secret
+      key base is extracted from the endpoint stored in the socket
     * a string, representing the secret key base itself. A key base
       with at least 20 randomly generated characters should be used
       to provide adequate entropy
@@ -92,14 +92,14 @@ defmodule Phoenix.Token do
 
   require Logger
 
-  @type context :: Plug.Conn.t() | Phoenix.Socket.t() | atom | binary
+  @type context :: Plug.Conn.t() | %{required(:endpoint) => atom, optional(atom()) => any()} | atom | binary
 
   @type shared_opt ::
           {:key_iterations, pos_integer}
           | {:key_length, pos_integer}
           | {:key_digest, :sha256 | :sha384 | :sha512}
 
-  @type max_age_opt :: {:max_age, pos_integer}
+  @type max_age_opt :: {:max_age, pos_integer | :infinity}
   @type signed_at_opt :: {:signed_at, pos_integer}
 
   @doc """
@@ -235,8 +235,8 @@ defmodule Phoenix.Token do
   defp get_key_base(%Plug.Conn{} = conn),
     do: conn |> Phoenix.Controller.endpoint_module() |> get_endpoint_key_base()
 
-  defp get_key_base(%Phoenix.Socket{} = socket),
-    do: get_endpoint_key_base(socket.endpoint)
+  defp get_key_base(%_{endpoint: endpoint}),
+    do: get_endpoint_key_base(endpoint)
 
   defp get_key_base(endpoint) when is_atom(endpoint),
     do: get_endpoint_key_base(endpoint)

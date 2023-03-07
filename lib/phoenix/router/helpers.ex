@@ -237,7 +237,9 @@ defmodule Phoenix.Router.Helpers do
         defp maybe_append_slash(path, _), do: path
       end
 
-    Module.create(Module.concat(env.module, Helpers), code, line: env.line, file: env.file)
+    name = Module.concat(env.module, Helpers)
+    Module.create(name, code, line: env.line, file: env.file)
+    name
   end
 
   @doc """
@@ -278,7 +280,7 @@ defmodule Phoenix.Router.Helpers do
       |> Enum.map(fn {_, bindings} -> length(bindings) end)
       |> Enum.uniq()
 
-    # Each helper defines catch alls like this:
+    # Each helper defines catch all like this:
     #
     #     def helper_path(context, action, ...binding)
     #     def helper_path(context, action, ...binding, params)
@@ -299,7 +301,7 @@ defmodule Phoenix.Router.Helpers do
   end
 
   @doc """
-  Callback for generate router catch alls.
+  Callback for generate router catch all.
   """
   def raise_route_error(mod, fun, arity, action, routes, params) do
     cond do

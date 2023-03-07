@@ -128,7 +128,7 @@ defmodule <%= inspect auth_module %>Test do
       assert updated_socket.assigns.current_<%= schema.singular %>.id == <%= schema.singular %>.id
     end
 
-    test "assigns nil to current_ <%= schema.singular %> assign if there isn't a valid <%= schema.singular %>_token ", %{conn: conn} do
+    test "assigns nil to current_<%= schema.singular %> assign if there isn't a valid <%= schema.singular %>_token ", %{conn: conn} do
       <%= schema.singular %>_token = "invalid_token"
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
@@ -138,7 +138,7 @@ defmodule <%= inspect auth_module %>Test do
       assert updated_socket.assigns.current_<%= schema.singular %> == nil
     end
 
-    test "assigns nil to current_ <%= schema.singular %> assign if there isn't a <%= schema.singular %>_token", %{conn: conn} do
+    test "assigns nil to current_<%= schema.singular %> assign if there isn't a <%= schema.singular %>_token", %{conn: conn} do
       session = conn |> get_session()
 
       {:cont, updated_socket} =
@@ -230,9 +230,11 @@ defmodule <%= inspect auth_module %>Test do
     test "redirects if <%= schema.singular %> is not authenticated", %{conn: conn} do
       conn = conn |> fetch_flash() |> <%= inspect schema.alias %>Auth.require_authenticated_<%= schema.singular %>([])
       assert conn.halted
+
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log_in"
+
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-        "You must log in to access this page."
+               "You must log in to access this page."
     end
 
     test "stores the path to redirect to on GET", %{conn: conn} do

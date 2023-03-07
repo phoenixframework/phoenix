@@ -7,7 +7,10 @@ config :<%= @web_app_name %><%= if @namespaced? do %>,
 <% end %># Configures the endpoint
 config :<%= @web_app_name %>, <%= @endpoint_module %>,
   url: [host: "localhost"],
-  render_errors: [view: <%= @web_namespace %>.ErrorView, accepts: ~w(<%= if @html do %>html <% end %>json), layout: false],
+  render_errors: [
+    formats: [<%= if @html do%>html: <%= @web_namespace %>.ErrorHTML, <% end %>json: <%= @web_namespace %>.ErrorJSON],
+    layout: false
+  ],
   pubsub_server: <%= @app_module %>.PubSub,
   live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @assets do %>
 
@@ -19,4 +22,16 @@ config :esbuild,
       ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
     cd: Path.expand("../apps/<%= @web_app_name %>/assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]
+
+# Configure tailwind (the version is required)
+config :tailwind,
+  version: "3.2.4",
+  default: [
+    args: ~w(
+      --config=tailwind.config.js
+      --input=css/app.css
+      --output=../priv/static/assets/app.css
+    ),
+    cd: Path.expand("../apps/<%= @web_app_name %>/assets", __DIR__)
   ]<% end %>

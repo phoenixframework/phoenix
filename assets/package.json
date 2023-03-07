@@ -1,6 +1,6 @@
 {
   "name": "phoenix",
-  "version": "1.6.6",
+  "version": "1.7.1",
   "description": "The official JavaScript client for the Phoenix web framework.",
   "license": "MIT",
   "main": "./assets/js/phoenix/index.js",
@@ -19,13 +19,13 @@
     "@babel/core": "7.14.3",
     "@babel/preset-env": "7.14.2",
     "@babel/register": "7.13.16",
-    "documentation": "^9.0.0",
+    "documentation": "^14.0.0",
     "eslint": "7.27.0",
     "eslint-plugin-mocha": "9.0.0",
     "growl": "~> 1.10.0",
     "jsdom": "9.8.3",
     "jsdom-global": "2.1.0",
-    "mocha": "^6.2.2",
+    "mocha": "^10.1.0",
     "mock-socket": "^9.0.0",
     "sinon": "^9.0.1"
   },

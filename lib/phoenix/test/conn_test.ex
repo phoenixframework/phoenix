@@ -576,23 +576,37 @@ defmodule Phoenix.ConnTest do
   Returns the matched params from the URL the connection was redirected to.
 
   Uses the provided `%Plug.Conn{}`s router matched in the previous request.
-  Raises if the response's location header is not set.
+  Raises if the response's location header is not set or if the response does
+  not match the redirect status code (defaults to 302).
 
   ## Examples
 
       assert redirected_to(conn) =~ "/posts/123"
       assert %{id: "123"} = redirected_params(conn)
+      assert %{id: "123"} = redirected_params(conn, 303)
   """
-  @spec redirected_params(Conn.t) :: map
-  def redirected_params(%Plug.Conn{} = conn) do
+  @spec redirected_params(Conn.t, status :: non_neg_integer) :: map
+  def redirected_params(%Plug.Conn{} = conn, status \\ 302) do
     router = Phoenix.Controller.router_module(conn)
-    %URI{path: path, host: host} = conn |> redirected_to() |> URI.parse()
+    %URI{path: path, host: host} = conn |> redirected_to(status) |> URI.parse()
+    path = remove_script_name(conn, router, path)
 
     case Phoenix.Router.route_info(router, "GET", path, host || conn.host) do
       :error ->
         raise Phoenix.Router.NoRouteError, conn: conn, router: router
       %{path_params: path_params} ->
         Enum.into(path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
+    end
+  end
+
+  defp remove_script_name(conn, router, path) do
+    case conn.private[router] do
+      [_ | _] = list ->
+        script_name = "/" <> Enum.join(list, ",")
+        String.replace_leading(path, script_name, "")
+
+      _ ->
+        path
     end
   end
 

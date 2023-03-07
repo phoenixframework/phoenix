@@ -24,7 +24,10 @@ defmodule Phx.New.Generator do
 
     templates_ast =
       for {name, mappings} <- Module.get_attribute(env.module, :templates) do
-        for {format, source, _, _} <- mappings, format != :keep do
+        for {format, _proj_location, files} <- mappings,
+            format != :keep,
+            {source, _target} <- files,
+            source = to_string(source) do
           path = Path.join(root, source)
 
           if format in [:config, :prod_config, :eex] do
@@ -61,12 +64,29 @@ defmodule Phx.New.Generator do
   def copy_from(%Project{} = project, mod, name) when is_atom(name) do
     mapping = mod.template_files(name)
 
-    for {format, source, project_location, target_path} <- mapping do
+    for {format, project_location, files} <- mapping,
+        {source, target_path} <- files,
+        source = to_string(source) do
       target = Project.join_path(project, project_location, target_path)
 
       case format do
         :keep ->
           File.mkdir_p!(target)
+
+        :zip ->
+          parent_dir = Path.dirname(target)
+          Mix.shell().info([:green, "* extracting ", :reset, Path.relative_to_cwd(target)])
+
+          File.mkdir_p!(parent_dir)
+          zip_contents = mod.render(name, source, project.binding)
+          {:ok, zip} = :zip.zip_open(zip_contents, [:memory])
+          {:ok, files} = :zip.zip_get(zip)
+
+          Enum.map(files, fn {path, contents} ->
+            full_path = Path.join(parent_dir, path)
+            File.mkdir_p!(Path.dirname(full_path))
+            File.write!(full_path, contents)
+          end)
 
         :text ->
           create_file(target, mod.render(name, source, project.binding))
@@ -171,7 +191,8 @@ defmodule Phx.New.Generator do
     assets = Keyword.get(opts, :assets, true)
     mailer = Keyword.get(opts, :mailer, true)
     dev = Keyword.get(opts, :dev, false)
-    phoenix_path = phoenix_path(project, dev)
+    phoenix_path = phoenix_path(project, dev, false)
+    phoenix_path_umbrella_root = phoenix_path(project, dev, true)
 
     # We lowercase the database name because according to the
     # SQL spec, they are case insensitive unless quoted, which
@@ -199,9 +220,10 @@ defmodule Phx.New.Generator do
       web_app_name: project.web_app,
       endpoint_module: inspect(Module.concat(project.web_namespace, Endpoint)),
       web_namespace: inspect(project.web_namespace),
-      phoenix_github_version_tag: "v#{version.major}.#{version.minor}",
       phoenix_dep: phoenix_dep(phoenix_path, version),
+      phoenix_dep_umbrella_root: phoenix_dep(phoenix_path_umbrella_root, version),
       phoenix_js_path: phoenix_js_path(phoenix_path),
+      phoenix_version: version,
       pubsub_server: pubsub_server,
       secret_key_base_dev: random_string(64),
       secret_key_base_test: random_string(64),
@@ -220,7 +242,8 @@ defmodule Phx.New.Generator do
       adapter_module: adapter_module,
       adapter_config: adapter_config,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
-      namespaced?: namespaced?(project)
+      namespaced?: namespaced?(project),
+      dev: dev
     ]
 
     %Project{project | binding: binding}
@@ -347,7 +370,8 @@ defmodule Phx.New.Generator do
           For example: ecto://USER:PASS@HOST/DATABASE
           \"""
 
-      maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+      maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
+
       """,
       prod_config: """
       # ssl: true,
@@ -374,7 +398,7 @@ defmodule Phx.New.Generator do
   defp nil_if_empty([]), do: nil
   defp nil_if_empty(other), do: other
 
-  defp phoenix_path(%Project{} = project, true) do
+  defp phoenix_path(%Project{} = project, true = _dev, umbrella_root?) do
     absolute = Path.expand(project.project_path)
     relative = Path.relative_to(absolute, @phoenix)
 
@@ -383,19 +407,20 @@ defmodule Phx.New.Generator do
     end
 
     project
-    |> phoenix_path_prefix()
+    |> phoenix_path_prefix(umbrella_root?)
     |> Path.join(relative)
     |> Path.split()
     |> Enum.map(fn _ -> ".." end)
     |> Path.join()
   end
 
-  defp phoenix_path(%Project{}, false) do
+  defp phoenix_path(%Project{}, false = _dev, _umbrella_root?) do
     "deps/phoenix"
   end
 
-  defp phoenix_path_prefix(%Project{in_umbrella?: true}), do: "../../../"
-  defp phoenix_path_prefix(%Project{in_umbrella?: false}), do: ".."
+  defp phoenix_path_prefix(%Project{in_umbrella?: false}, _), do: ".."
+  defp phoenix_path_prefix(%Project{in_umbrella?: true}, true = _umbrella_root?), do: ".."
+  defp phoenix_path_prefix(%Project{in_umbrella?: true}, false = _umbrella_root?), do: "../../../"
 
   defp phoenix_dep("deps/phoenix", %{pre: ["dev"]}),
     do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
