@@ -562,7 +562,7 @@ The last change is to open up `lib/hello_phoenix/repo.ex` and make sure to set t
 Now all we need to do is fetch our new dependency, and we'll be ready to go.
 
 ```console
-$ mix do deps.get, compile
+$ mix deps.get
 ```
 
 With our new adapter installed and configured, we're ready to create our database.

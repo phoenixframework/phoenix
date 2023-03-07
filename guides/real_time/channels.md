@@ -169,7 +169,7 @@ The following libraries exist today, and new ones are always welcome.
 
 #### Official
 
-Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [multiple js files](https://github.com/phoenixframework/phoenix/blob/master/assets/js/phoenix/).
+Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [multiple js files](https://github.com/phoenixframework/phoenix/blob/main/assets/js/phoenix/).
 
 #### 3rd Party
 

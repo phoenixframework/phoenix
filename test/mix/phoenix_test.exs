@@ -104,8 +104,10 @@ defmodule Mix.PhoenixTest do
       )
 
   test "live_form_value/1" do
-    assert Mix.Phoenix.Schema.live_form_value(~D[2020-10-09]) == "2020-10-9"
-    assert Mix.Phoenix.Schema.live_form_value(~T[14:00:00]) == "14:0"
+    assert Mix.Phoenix.Schema.live_form_value(~D[2020-10-09]) == "2020-10-09"
+    assert Mix.Phoenix.Schema.live_form_value(~T[14:00:00]) == "14:00"
+    assert Mix.Phoenix.Schema.live_form_value(~T[14:01:00]) == "14:01"
+    assert Mix.Phoenix.Schema.live_form_value(~T[14:15:40]) == "14:15"
 
     assert Mix.Phoenix.Schema.live_form_value(~N[2020-10-09 14:00:00]) == "2020-10-09T14:00:00"
 

@@ -188,8 +188,6 @@ defmodule Phoenix.Endpoint do
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of
       file patterns to watch. When these files change, it will trigger a reload.
-      If you are using a tool like [pow](http://pow.cx) in development,
-      you may need to set the `:url` option appropriately.
 
           live_reload: [
             url: "ws://localhost:4000",
@@ -214,6 +212,11 @@ defmodule Phoenix.Endpoint do
           [formats: [html: MyApp.ErrorHTML], layout: false, log: :debug]
 
     * `:log_access_url` - log the access url once the server boots
+
+  Note that you can also store your own configurations in the Phoenix.Endpoint.
+  For example, [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) expects
+  its own configuration under the `:live_view` key. In such cases, you should
+  consult the documentation of the respective projects.
 
   ### Adapter configuration
 
@@ -606,7 +609,7 @@ defmodule Phoenix.Endpoint do
           {path, plug, conn_ast, plug_opts} <- socket_paths(module, path, socket, socket_opts) do
         quote do
           defp do_socket_dispatch(unquote(path), conn) do
-            unquote(plug).call(unquote(conn_ast), unquote(Macro.escape(plug_opts)))
+            halt(unquote(plug).call(unquote(conn_ast), unquote(Macro.escape(plug_opts))))
           end
         end
       end
@@ -870,7 +873,10 @@ defmodule Phoenix.Endpoint do
       the error handler must be a MFA tuple that receives a `Plug.Conn`, the
       error reason, and returns a `Plug.Conn` with a response. For example:
 
-          error_handler: {MySocket, :handle_error, []}
+          socket "/socket", MySocket,
+              websocket: [
+                error_handler: {MySocket, :handle_error, []}
+              ]
 
       and a `{:error, :rate_limit}` return may be handled on `MySocket` as:
 

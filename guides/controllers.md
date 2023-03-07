@@ -28,25 +28,25 @@ The first line below the module definition invokes the `__using__/1` macro of th
 
 Controller actions are just functions. We can name them anything we like as long as they follow Elixir's naming rules. The only requirement we must fulfill is that the action name matches a route defined in the router.
 
-For example, in `lib/hello_web/router.ex` we could change the action name in the default route that Phoenix gives us in a new app from `index`:
-
-```elixir
-get "/", PageController, :index
-```
-
-to `home`:
+For example, in `lib/hello_web/router.ex` we could change the action name in the default route that Phoenix gives us in a new app from `home`:
 
 ```elixir
 get "/", PageController, :home
 ```
 
-as long as we change the action name in `PageController` to `home` as well, the [welcome page] will load as before.
+to `index`:
+
+```elixir
+get "/", PageController, :index
+```
+
+as long as we change the action name in `PageController` to `index` as well, the [welcome page] will load as before.
 
 ```elixir
 defmodule HelloWeb.PageController do
   ...
 
-  def home(conn, _params) do
+  def index(conn, _params) do
     render(conn, :index)
   end
 end
@@ -181,8 +181,8 @@ What it doesn't have is a view for rendering JSON. Phoenix Controller hands off 
   def controller do
     quote do
       use Phoenix.Controller,
-        namespace: HelloWeb,
-        formats: [:html, :json]
+        formats: [:html, :json],
+        layouts: [html: HelloWeb.Layouts]
       ...
     end
   end
@@ -223,7 +223,7 @@ defmodule HelloWeb.Router do
 ...
 ```
 
-Phoenix allows us to change formats on the fly with the `_format` query string parameter. If we go to [`http://localhost:4000/?_format=json`](http://localhost:4000/?_format=json), we will see `%{"message": "this is some JSON"}`. 
+Phoenix allows us to change formats on the fly with the `_format` query string parameter. If we go to [`http://localhost:4000/?_format=json`](http://localhost:4000/?_format=json), we will see `%{"message": "this is some JSON"}`.
 
 In practice, however, applications that need to render both formats typically use two distinct pipelines for each, such as the `pipeline :api` already defined in your router file. To learn more, see [our JSON and APIs guide](json_and_apis.md).
 
@@ -381,7 +381,7 @@ For our convenience, the application layout, `lib/hello_web/components/layouts/a
   phx-disconnected={show("#disconnected")}
   phx-connected={hide("#disconnected")}
 >
-  Attempting to reconnect <Heroicons.arrow_path class="ml-1 w-3 h-3 inline animate-spin" />
+  Attempting to reconnect <.icon name="hero-arrow-path" class="ml-1 w-3 h-3 inline animate-spin" />
 </.flash>
 ```
 

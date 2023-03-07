@@ -113,7 +113,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
       Add the following to your config/runtime.exs:
 
-          maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+          maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
           config :#{app}, #{app_namespace}.Repo,
             ...,

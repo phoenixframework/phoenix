@@ -54,7 +54,7 @@ defmodule Phx.New.Single do
      "phx_web/components/layouts/app.html.heex":
        "lib/:lib_web_name/components/layouts/app.html.heex",
      "phx_web/components/layouts.ex": "lib/:lib_web_name/components/layouts.ex"},
-    {:eex, :web, "phx_live/assets/topbar.js": "assets/vendor/topbar.js"}
+    {:eex, :web, "phx_assets/topbar.js": "assets/vendor/topbar.js"}
   ])
 
   template(:ecto, [
@@ -71,7 +71,10 @@ defmodule Phx.New.Single do
      "phx_assets/app.css": "assets/css/app.css",
      "phx_assets/app.js": "assets/js/app.js",
      "phx_assets/tailwind.config.js": "assets/tailwind.config.js"},
-    {:keep, :web, "phx_assets/vendor": "assets/vendor"}
+    {:keep, :web, "phx_assets/vendor": "assets/vendor"},
+    {:eex, :web, "phx_assets/hero_icons/LICENSE.md": "assets/vendor/hero_icons/LICENSE.md"},
+    {:eex, :web, "phx_assets/hero_icons/UPGRADE.md": "assets/vendor/hero_icons/UPGRADE.md"},
+    {:zip, :web, "phx_assets/hero_icons/optimized.zip": "assets/vendor/hero_icons/optimized"}
   ])
 
   template(:no_assets, [

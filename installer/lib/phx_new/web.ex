@@ -51,7 +51,7 @@ defmodule Phx.New.Web do
        "lib/:web_app/controllers/page_html/home.html.heex",
      "phx_test/controllers/page_controller_test.exs":
        "test/:web_app/controllers/page_controller_test.exs",
-     "phx_live/assets/topbar.js": "assets/vendor/topbar.js",
+     "phx_assets/topbar.js": "assets/vendor/topbar.js",
      "phx_web/components/layouts/root.html.heex": "lib/:web_app/components/layouts/root.html.heex",
      "phx_web/components/layouts/app.html.heex": "lib/:web_app/components/layouts/app.html.heex"}
   ])

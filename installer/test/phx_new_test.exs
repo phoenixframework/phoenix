@@ -131,14 +131,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/lib/phx_blog_web/components/layouts/app.html.heex")
-
-      assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex", fn file ->
-        version = Application.spec(:phx_new, :vsn) |> to_string() |> Version.parse!()
-        changelog_vsn = "v#{version.major}.#{version.minor}"
-
-        assert file =~
-                 "https://github.com/phoenixframework/phoenix/blob/#{changelog_vsn}/CHANGELOG.md"
-      end)
+      assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex")
 
       # assets
       assert_file("phx_blog/.gitignore", fn file ->
@@ -152,7 +145,14 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*(ex|heex)"
       end)
 
+      # tailwind
       assert_file("phx_blog/assets/css/app.css")
+      assert_file("phx_blog/assets/tailwind.config.js")
+      assert_file("phx_blog/assets/vendor/hero_icons/LICENSE.md")
+      assert_file("phx_blog/assets/vendor/hero_icons/UPGRADE.md")
+      assert_file("phx_blog/assets/vendor/hero_icons/optimized/24/outline/cake.svg")
+      assert_file("phx_blog/assets/vendor/hero_icons/optimized/24/solid/cake.svg")
+      assert_file("phx_blog/assets/vendor/hero_icons/optimized/20/solid/cake.svg")
 
       refute File.exists?("phx_blog/priv/static/assets/app.css")
       refute File.exists?("phx_blog/priv/static/assets/app.js")
@@ -178,7 +178,10 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/runtime.exs", fn file ->
         assert file =~ config
-        assert file =~ ~S|maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []|
+
+        assert file =~
+                 ~S|maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []|
+
         assert file =~ ~S|socket_options: maybe_ipv6|
 
         assert file =~ """
@@ -276,7 +279,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/config/prod.exs", fn file ->
-        assert file =~ "config :swoosh, :api_client, PhxBlog.Finch"
+        assert file =~
+                 "config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PhxBlog.Finch"
       end)
 
       # Install dependencies?
@@ -576,11 +580,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("custom_path/mix.exs", ~r/app: :phx_blog/)
       assert_file("custom_path/lib/phx_blog_web/endpoint.ex", ~r/app: :phx_blog/)
       assert_file("custom_path/config/config.exs", ~r/namespace: PhoteuxBlog/)
-
-      assert_file(
-        "custom_path/lib/phx_blog_web.ex",
-        ~r/use Phoenix.Controller,\n.*namespace: PhoteuxBlogWeb/
-      )
     end)
   end
 

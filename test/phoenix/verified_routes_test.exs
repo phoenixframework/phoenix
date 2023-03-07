@@ -30,9 +30,10 @@ defmodule Phoenix.VerifiedRoutesTest do
     get "/posts/top", PostController, :top
     get "/posts/bottom/:order/:count", PostController, :bottom
     get "/posts/:id", PostController, :show
+    get "/posts/:id/info", PostController, :show
     get "/posts/file/*file", PostController, :file
     get "/posts/skip", PostController, :skip
-    get "/should-warn/*all", PostController, :all, warn_on_verify: false
+    get "/should-warn/*all", PostController, :all, warn_on_verify: true
 
     scope "/", host: "users." do
       post "/host_users/:id/info", UserController, :create
@@ -163,6 +164,21 @@ defmodule Phoenix.VerifiedRoutesTest do
 
   test "~p with empty query string drops ?" do
     assert ~p"/posts/5?#{%{}}" == "/posts/5"
+  end
+
+  test "~p with hash" do
+    assert ~p"/posts/123/info#bar" == "/posts/123/info#bar"
+
+    warnings =
+      ExUnit.CaptureIO.capture_io(:stderr, fn ->
+        defmodule Hash do
+          use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+
+          def test, do: ~p"/posts/123/info#bar"
+        end
+      end)
+
+    assert warnings == ""
   end
 
   test "unverified_path" do
@@ -472,7 +488,7 @@ defmodule Phoenix.VerifiedRoutesTest do
         warnings = String.replace(warnings, ~r/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/, "")
 
         assert warnings =~
-                "warning: no route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:#{line}: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
+                 "warning: no route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:#{line}: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
       end
 
       test "~p warns on unmatched path" do
@@ -489,13 +505,14 @@ defmodule Phoenix.VerifiedRoutesTest do
             end
           end)
 
-        assert warnings =~ ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown"|
+        assert warnings =~
+                 ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown"|
 
         assert warnings =~
-                ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/123"|
+                 ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/123"|
 
         assert warnings =~
-                ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/#{123}"|
+                 ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/#{123}"|
       end
 
       test "~p warns on warn_on_verify: true route" do
@@ -509,7 +526,7 @@ defmodule Phoenix.VerifiedRoutesTest do
           end)
 
         assert warnings =~
-                ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/should-warn/foobar"|
+                 ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/should-warn/foobar"|
       end
     end
   end

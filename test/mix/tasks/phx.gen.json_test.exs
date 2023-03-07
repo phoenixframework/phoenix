@@ -182,7 +182,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       end)
 
       assert_file("lib/phoenix_web/controllers/blog/changeset_json.ex", fn file ->
-        assert file =~ ~s|Gettext.dngettext(PhoenixWeb.Gettext, "errors"|
+        assert file =~ "Ecto.Changeset.traverse_errors(changeset, &translate_error/1)"
       end)
 
       assert_receive {:mix_shell, :info,
@@ -340,7 +340,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       end
       """)
 
-      Code.compile_file("lib/phoenix_web/components/core_components.ex")
+      [{module, _}] = Code.compile_file("lib/phoenix_web/components/core_components.ex")
 
       Gen.Json.run(~w(Blog Post posts title:string --web Blog))
 
@@ -348,6 +348,10 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~
                  "Ecto.Changeset.traverse_errors(changeset, &PhoenixWeb.CoreComponents.translate_error/1)"
       end)
+
+      # Clean up test case specific compile artifact so it doesn't leak to other test cases
+      :code.purge(module)
+      :code.delete(module)
     end)
   end
 end

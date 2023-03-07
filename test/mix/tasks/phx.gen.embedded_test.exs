@@ -91,4 +91,18 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
       end)
     end)
   end
+
+  test "generates embedded schema with references", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Embedded.run(
+        ~w(Blog.Comment comments body word_count:integer author_id:references:author)
+      )
+
+      assert_file("lib/phoenix/blog/comment.ex", fn file ->
+        assert file =~ "field :author_id, :id"
+        assert file =~ "field :body, :string"
+        assert file =~ "field :word_count, :integer"
+      end)
+    end)
+  end
 end

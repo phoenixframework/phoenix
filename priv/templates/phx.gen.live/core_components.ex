@@ -6,8 +6,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   See the [Tailwind CSS documentation](https://tailwindcss.com) to learn how to
   customize the generated components in this module.
 
-  Icons are provided by [heroicons](https://heroicons.com), using the
-  [heroicons_elixir](https://github.com/mveytsman/heroicons_elixir) project.
+  Icons are provided by [heroicons](https://heroicons.com). See `icon/1` for usage.
   """
   use Phoenix.Component
 
@@ -79,7 +78,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
                   aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
                 >
-                  <Heroicons.x_mark solid class="h-5 w-5 stroke-current" />
+                  <.icon name="hero-x-mark-solid" class="w-5 h-5" />
                 </button>
               </div>
               <div id={"#{@id}-content"}>
@@ -147,7 +146,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
       phx-mounted={@autoshow && show("##{@id}")}
-      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("#flash")}
+      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
       class={[
         "fixed hidden top-2 right-2 w-80 sm:w-96 z-50 rounded-lg p-3 shadow-md shadow-zinc-900/5 ring-1",
@@ -157,8 +156,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
       {@rest}
     >
       <p :if={@title} class="flex items-center gap-1.5 text-[0.8125rem] font-semibold leading-6">
-        <Heroicons.information_circle :if={@kind == :info} mini class="h-4 w-4" />
-        <Heroicons.exclamation_circle :if={@kind == :error} mini class="h-4 w-4" />
+        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="w-4 h-4" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="w-4 h-4" />
         <%%= @title %>
       </p>
       <p class="mt-2 text-[0.8125rem] leading-5"><%%= msg %></p>
@@ -168,9 +167,36 @@ defmodule <%= @web_namespace %>.CoreComponents do
         class="group absolute top-2 right-1 p-2"
         aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
       >
-        <Heroicons.x_mark solid class="h-5 w-5 stroke-current opacity-40 group-hover:opacity-70" />
+        <.icon name="hero-x-mark-solid" class="w-5 h-5 opacity-40 group-hover:opacity-70" />
       </button>
     </div>
+    """
+  end
+
+  @doc """
+  Shows the flash group with standard titles and content.
+
+  ## Examples
+
+      <.flash_group flash={@flash} />
+  """
+  attr :flash, :map, required: true, doc: "the map of flash messages"
+
+  def flash_group(assigns) do
+    ~H"""
+    <.flash kind={:info} title="Success!" flash={@flash} />
+    <.flash kind={:error} title="Error!" flash={@flash} />
+    <.flash
+      id="disconnected"
+      kind={:error}
+      title="We can't find the internet"
+      close={false}
+      autoshow={false}
+      phx-disconnected={show("#disconnected")}
+      phx-connected={hide("#disconnected")}
+    >
+      Attempting to reconnect <.icon name="hero-arrow-path" class="ml-1 w-3 h-3 animate-spin" />
+    </.flash>
     """
   end
 
@@ -179,15 +205,15 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   ## Examples
 
-      <.simple_form :let={f} for={:user} phx-change="validate" phx-submit="save">
-        <.input field={{f, :email}} label="Email"/>
-        <.input field={{f, :username}} label="Username" />
+      <.simple_form for={@form} phx-change="validate" phx-submit="save">
+        <.input field={@form[:email]} label="Email"/>
+        <.input field={@form[:username]} label="Username" />
         <:actions>
           <.button>Save</.button>
         </:actions>
       </.simple_form>
   """
-  attr :for, :any, default: nil, doc: "the datastructure for the form"
+  attr :for, :any, required: true, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
 
   attr :rest, :global,
@@ -249,21 +275,23 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   ## Examples
 
-      <.input field={{f, :email}} type="email" />
+      <.input field={@form[:email]} type="email" />
       <.input name="my-input" errors={["oh no!"]} />
   """
-  attr :id, :any
+  attr :id, :any, default: nil
   attr :name, :any
   attr :label, :string, default: nil
+  attr :value, :any
 
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file hidden month number password
                range radio search select tel text textarea time url week)
 
-  attr :value, :any
-  attr :field, :any, doc: "a %Phoenix.HTML.Form{}/field name tuple, for example: {f, :email}"
-  attr :errors, :list
+  attr :field, Phoenix.HTML.FormField,
+    doc: "a form field struct retrieved from the form, for example: @form[:email]"
+
+  attr :errors, :list, default: []
   attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
@@ -272,36 +300,36 @@ defmodule <%= @web_namespace %>.CoreComponents do
                                    pattern placeholder readonly required rows size step)
   slot :inner_block
 
-  def input(%{field: {f, field}} = assigns) do
+  def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
-    |> assign(field: nil)
-    |> assign_new(:name, fn ->
-      name = Phoenix.HTML.Form.input_name(f, field)
-      if assigns.multiple, do: name <> "[]", else: name
-    end)
-    |> assign_new(:id, fn -> Phoenix.HTML.Form.input_id(f, field) end)
-    |> assign_new(:value, fn -> Phoenix.HTML.Form.input_value(f, field) end)
-    |> assign_new(:errors, fn -> translate_errors(f.errors || [], field) end)
+    |> assign(field: nil, id: assigns.id || field.id)
+    |> assign(:errors, Enum.map(field.errors, &translate_error(&1)))
+    |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
+    |> assign_new(:value, fn -> field.value end)
     |> input()
   end
 
-  def input(%{type: "checkbox"} = assigns) do
-    assigns = assign_new(assigns, :checked, fn -> input_equals?(assigns.value, "true") end)
+  def input(%{type: "checkbox", value: value} = assigns) do
+    assigns =
+      assign_new(assigns, :checked, fn -> Phoenix.HTML.Form.normalize_value("checkbox", value) end)
 
     ~H"""
-    <label phx-feedback-for={@name} class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
-      <input type="hidden" name={@name} value="false" />
-      <input
-        type="checkbox"
-        id={@id || @name}
-        name={@name}
-        value="true"
-        checked={@checked}
-        class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
-        {@rest}
-      />
-      <%%= @label %>
-    </label>
+    <div phx-feedback-for={@name}>
+      <label class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
+        <input type="hidden" name={@name} value="false" />
+        <input
+          type="checkbox"
+          id={@id || @name}
+          name={@name}
+          value="true"
+          checked={@checked}
+          class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+          {@rest}
+        />
+        <%%= @label %>
+      </label>
+      <.error :for={msg <- @errors}><%%= msg %></.error>
+    </div>
     """
   end
 
@@ -332,15 +360,14 @@ defmodule <%= @web_namespace %>.CoreComponents do
         id={@id || @name}
         name={@name}
         class={[
-          input_border(@errors),
           "mt-2 block min-h-[6rem] w-full rounded-lg border-zinc-300 py-[7px] px-[11px]",
           "text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-800/5 sm:text-sm sm:leading-6",
-          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
+          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5",
+          "border-zinc-300 focus:border-zinc-400 focus:ring-zinc-800/5",
+          @errors != [] && "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10"
         ]}
         {@rest}
-      >
-
-    <%%= @value %></textarea>
+      ><%%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
       <.error :for={msg <- @errors}><%%= msg %></.error>
     </div>
     """
@@ -354,12 +381,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
         type={@type}
         name={@name}
         id={@id || @name}
-        value={@value}
+        value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
-          input_border(@errors),
           "mt-2 block w-full rounded-lg border-zinc-300 py-[7px] px-[11px]",
           "text-zinc-900 focus:outline-none focus:ring-4 sm:text-sm sm:leading-6",
-          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
+          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5",
+          "border-zinc-300 focus:border-zinc-400 focus:ring-zinc-800/5",
+          @errors != [] && "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10"
         ]}
         {@rest}
       />
@@ -367,12 +395,6 @@ defmodule <%= @web_namespace %>.CoreComponents do
     </div>
     """
   end
-
-  defp input_border([] = _errors),
-    do: "border-zinc-300 focus:border-zinc-400 focus:ring-zinc-800/5"
-
-  defp input_border([_ | _] = _errors),
-    do: "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10"
 
   @doc """
   Renders a label.
@@ -396,7 +418,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def error(assigns) do
     ~H"""
     <p class="phx-no-feedback:hidden mt-3 flex gap-3 text-sm leading-6 text-rose-600">
-      <Heroicons.exclamation_circle mini class="mt-0.5 h-5 w-5 flex-none fill-rose-500" />
+      <.icon name="hero-exclamation-circle-mini" class="mt-0.5 w-5 h-5 flex-none" />
       <%%= render_slot(@inner_block) %>
     </p>
     """
@@ -438,8 +460,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
       </.table>
   """
   attr :id, :string, required: true
-  attr :row_click, :any, default: nil
   attr :rows, :list, required: true
+  attr :row_id, :any, default: nil, doc: "the function for generating the row id"
+  attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
+
+  attr :row_item, :any,
+    default: &Function.identity/1,
+    doc: "the function for mapping each row before calling the :col and :action slots"
 
   slot :col, required: true do
     attr :label, :string
@@ -448,8 +475,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
   slot :action, doc: "the slot for showing user actions in the last table column"
 
   def table(assigns) do
+    assigns =
+      with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
+        assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
+      end
+
     ~H"""
-    <div id={@id} class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
+    <div class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
       <table class="mt-11 w-[40rem] sm:w-full">
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
@@ -457,34 +489,32 @@ defmodule <%= @web_namespace %>.CoreComponents do
             <th class="relative p-0 pb-4"><span class="sr-only"><%= if @gettext do %><%%= gettext("Actions") %><% else %>Actions<% end %></span></th>
           </tr>
         </thead>
-        <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
-          <tr
-            :for={row <- @rows}
-            id={"#{@id}-#{Phoenix.Param.to_param(row)}"}
-            class="relative group hover:bg-zinc-50"
-          >
+        <tbody
+          id={@id}
+          phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
+          class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700"
+        >
+          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="group hover:bg-zinc-50">
             <td
               :for={{col, i} <- Enum.with_index(@col)}
               phx-click={@row_click && @row_click.(row)}
-              class={["p-0", @row_click && "hover:cursor-pointer"]}
+              class={["relative p-0", @row_click && "hover:cursor-pointer"]}
             >
-              <div :if={i == 0}>
-                <span class="absolute h-full w-4 top-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
-                <span class="absolute h-full w-4 top-0 -right-4 group-hover:bg-zinc-50 sm:rounded-r-xl" />
-              </div>
               <div class="block py-4 pr-6">
+                <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
                 <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
-                  <%%= render_slot(col, row) %>
+                  <%%= render_slot(col, @row_item.(row)) %>
                 </span>
               </div>
             </td>
-            <td :if={@action != []} class="p-0 w-14">
+            <td :if={@action != []} class="relative p-0 w-14">
               <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
+                <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl" />
                 <span
                   :for={action <- @action}
                   class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
                 >
-                  <%%= render_slot(action, row) %>
+                  <%%= render_slot(action, @row_item.(row)) %>
                 </span>
               </div>
             </td>
@@ -539,10 +569,39 @@ defmodule <%= @web_namespace %>.CoreComponents do
         navigate={@navigate}
         class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
       >
-        <Heroicons.arrow_left solid class="w-3 h-3 stroke-current inline" />
+        <.icon name="hero-arrow-left-solid" class="w-3 h-3" />
         <%%= render_slot(@inner_block) %>
       </.link>
     </div>
+    """
+  end
+
+  @doc """
+  Renders a [Hero Icon](https://heroicons.com).
+
+  Hero icons come in three styles – outline, solid, and mini.
+  By default, the outline style is used, but solid an mini may
+  be applied by using the `-solid` and `-mini` suffix.
+
+  You can customize the size and colors of the icons by setting
+  width, height, and background color classes.
+
+  Icons are extracted from your `priv/hero_icons` directory and bundled
+  within your compiled app.css by the plugin in your `assets/tailwind.config.js`.
+
+  ## Examples
+
+      <.icon name="hero-cake" />
+      <.icon name="hero-cake-solid" />
+      <.icon name="hero-cake-mini" />
+      <.icon name="hero-bolt" class="bg-blue-500 w-10 h-10" />
+  """
+  attr :name, :string, required: true
+  attr :class, :string, default: nil
+
+  def icon(%{name: "hero-" <> _} = assigns) do
+    ~H"""
+    <span class={[@name, @class]} />
     """
   end
 
@@ -640,9 +699,5 @@ defmodule <%= @web_namespace %>.CoreComponents do
   """
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
-  end
-
-  defp input_equals?(val1, val2) do
-    Phoenix.HTML.html_escape(val1) == Phoenix.HTML.html_escape(val2)
   end
 end

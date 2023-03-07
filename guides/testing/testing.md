@@ -496,20 +496,22 @@ We've seen what Phoenix gives us with a newly generated app. Furthermore, whenev
 
 ```console
 $ mix phx.gen.html Blog Post posts title body:text
-* creating lib/demo_web/controllers/post_controller.ex
-* creating lib/demo_web/templates/post/edit.html.heex
-* creating lib/demo_web/templates/post/form.html.heex
-* creating lib/demo_web/templates/post/index.html.heex
-* creating lib/demo_web/templates/post/new.html.heex
-* creating lib/demo_web/templates/post/show.html.heex
-* creating lib/demo_web/controllers/post_html.ex
-* creating test/demo_web/controllers/post_controller_test.exs
-* creating lib/demo/blog/post.ex
-* creating priv/repo/migrations/20200215122336_create_posts.exs
-* creating lib/demo/blog.ex
-* injecting lib/demo/blog.ex
-* creating test/demo/blog_test.exs
-* injecting test/demo/blog_test.exs
+* creating lib/hello_web/controllers/post_controller.ex
+* creating lib/hello_web/controllers/post_html/edit.html.heex
+* creating lib/hello_web/controllers/post_html/post_form.html.heex
+* creating lib/hello_web/controllers/post_html/index.html.heex
+* creating lib/hello_web/controllers/post_html/new.html.heex
+* creating lib/hello_web/controllers/post_html/show.html.heex
+* creating lib/hello_web/controllers/post_html.ex
+* creating test/hello_web/controllers/post_controller_test.exs
+* creating lib/hello/blog/post.ex
+* creating priv/repo/migrations/20211001233016_create_posts.exs
+* creating lib/hello/blog.ex
+* injecting lib/hello/blog.ex
+* creating test/hello/blog_test.exs
+* injecting test/hello/blog_test.exs
+* creating test/support/fixtures/blog_fixtures.ex
+* injecting test/support/fixtures/blog_fixtures.ex
 
 Add the resource to your browser scope in lib/demo_web/router.ex:
 
