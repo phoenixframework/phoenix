@@ -259,11 +259,14 @@ defmodule Phoenix.Socket.Transport do
     [connect_info: connect_info] ++ config
   end
 
+  # The original session_config is returned in addition to init value so we can
+  # access special config like :csrf_token_key downstream.
   defp init_session(session_config) when is_list(session_config) do
     key = Keyword.fetch!(session_config, :key)
     store = Plug.Session.Store.get(Keyword.fetch!(session_config, :store))
     init = store.init(Keyword.drop(session_config, [:store, :key]))
-    {key, store, init}
+    csrf_token_key = Keyword.get(session_config, :csrf_token_key, "_csrf_token")
+    {key, store, {csrf_token_key, init}}
   end
 
   defp init_session({_, _, _} = mfa) do
@@ -465,15 +468,15 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp connect_session(conn, endpoint, {key, store, store_config}) do
+  defp connect_session(conn, endpoint, {key, store, {csrf_token_key, init}}) do
     conn = Plug.Conn.fetch_cookies(conn)
 
     with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
          cookie when is_binary(cookie) <- conn.cookies[key],
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
-         {_, session} <- store.get(conn, cookie, store_config),
+         {_, session} <- store.get(conn, cookie, init),
          csrf_state when is_binary(csrf_state) <-
-           Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]),
+          Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]),
          true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
       session
     else
