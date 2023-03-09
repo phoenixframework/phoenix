@@ -256,15 +256,13 @@ defmodule Phoenix.CodeReloader.Server do
     # assets in priv are copied to the build directory.
     Mix.Project.build_structure(config)
     args = ["--purge-consolidation-path-if-stale", consolidation_path]
-    results = Enum.map(compilers, &Mix.Task.run("compile.#{&1}", args))
+    result = run_compilers(compilers, args, [])
 
-    # Results are either {:ok, _} | {:error, _}, {:noop, _} or
-    # :ok | :error | :noop. So we use proplists to do the unwrapping.
     cond do
-      :proplists.get_value(:error, results, false) ->
+      result == :error ->
         exit({:shutdown, 1})
 
-      :proplists.get_value(:ok, results, false) && config[:consolidate_protocols] ->
+      result == :ok && config[:consolidate_protocols] ->
         Mix.Task.reenable("compile.protocols")
         Mix.Task.run("compile.protocols", [])
         :ok
@@ -299,4 +297,38 @@ defmodule Phoenix.CodeReloader.Server do
       Process.exit(proxy_gl, :kill)
     end
   end
+
+  defp run_compilers([compiler | compilers], args, acc) do
+    with {status, diagnostics} <- Mix.Task.run("compile.#{compiler}", args) do
+      # Diagnostics are written to stderr and therefore not captured,
+      # so we print them to the group leader here
+      Enum.each(diagnostics, &print_diagnostic/1)
+      {status, diagnostics}
+    end
+    |> case do
+      :error -> :error
+      {:error, _} -> :error
+      result -> run_compilers(compilers, args, [result | acc])
+    end
+  end
+
+  defp run_compilers([], _args, results) do
+    if :proplists.get_value(:ok, results, false) do
+      :ok
+    else
+      :noop
+    end
+  end
+
+  defp print_diagnostic(%{severity: :error, message: "**" <> _ = message}) do
+    IO.write("\n#{message}\n")
+  end
+
+  defp print_diagnostic(%{severity: severity, message: message, file: file, position: position}) do
+    IO.write("\n#{severity}: #{message}\n  #{Path.relative_to_cwd(file)}#{position(position)}\n")
+  end
+
+  defp position({line, col}), do: ":#{line}:#{col}"
+  defp position(line) when is_integer(line) and line > 0, do: ":#{line}"
+  defp position(_), do: ""
 end
