@@ -120,5 +120,4 @@ defmodule Phoenix.Router.ConsoleFormatter do
       [@socket_verb]
     end
   end
-
 end
