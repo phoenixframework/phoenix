@@ -116,16 +116,9 @@ defmodule HelloWeb.Router do
 
 In the [`init/1`] callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple [`call/2`] function heads to validate the locale in the params, and fall back to `"en"` if there is no match. The [`assign/3`] is a part of the `Plug.Conn` module and it's how we store values in the `conn` data structure.
 
-To see the assign in action, go to the layout in `lib/hello_web/components/layouts/home.html.heex` and add the following code below the h1:
+To see the assign in action, go to the template in `lib/hello_web/components/layouts/home.html.heex` and add the following code after the closing of the `</h1>` tag:
 
 ```heex
-<h1 class="mt-10 flex items-center text-sm font-semibold leading-6 text-brand">
-  Phoenix Framework
-  <small class="ml-3 rounded-full bg-brand/5 px-2 text-[0.8125rem] font-medium leading-6">
-    v<%%= Application.spec(:phoenix, :vsn) %>
-  </small>
-</h1>
-
 <p>Locale: <%= @locale %></p>
 ```
 
