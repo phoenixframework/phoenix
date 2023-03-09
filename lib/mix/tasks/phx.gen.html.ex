@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
-    mix phx.gen.html Sales User users --context-app my_app
+      mix phx.gen.html Sales User users --context-app my_app
   
   If you delete the `:context_app` configuration option, Phoenix will automatically put generated web files in
   `my_app_umbrella/apps/my_app_web_web`.
