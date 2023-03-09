@@ -37,13 +37,11 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   ## Umbrella app configuration
 
-  `my_app_umbrella` assumes that `my_app_web` will handle both web and domain specific functionality. 
-  You can change the location of your controllers — with collocated views — and template files by
-  changing the value of the `:context_app` configuration option.
-  
-  Phoenix generators will generate web files directly in your lib and test folders since 
-  the application is assumed to be isolated to web specific functionality.
-  
+  By default, Phoenix injects both web and domain specific functionality into the same
+  application. When using umbrella applications, those concerns are typically broken
+  into separate apps. You can teach Phoenix to place your context and migration files
+  into a different application via the `:context_app` configuration option.
+
   Example configuration in `my_app_umbrella/config/config.exs`:
 
     config :my_app_web,
