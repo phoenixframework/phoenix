@@ -319,7 +319,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~r/\n$/
       end)
 
-      assert_file("phx_blog/config/dev.exs", ~r/watchers: \[\n  \]/)
+      assert_file("phx_blog/config/dev.exs", ~r/watchers: \[\]/)
 
       # No assets & No HTML
       refute_file("phx_blog/priv/static/assets/app.css")
