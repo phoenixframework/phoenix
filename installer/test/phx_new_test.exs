@@ -134,6 +134,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex")
 
       # assets
+      assert_file("phx_blog/priv/static/images/logo.svg")
+
       assert_file("phx_blog/.gitignore", fn file ->
         assert file =~ "/priv/static/assets/"
         assert file =~ "phx_blog-*.tar"
@@ -318,6 +320,8 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ "/priv/static/assets/"
         assert file =~ ~r/\n$/
       end)
+
+      refute File.exists?("phx_blog/priv/static/images/logo.svg")
 
       assert_file("phx_blog/config/dev.exs", ~r/watchers: \[\]/)
 

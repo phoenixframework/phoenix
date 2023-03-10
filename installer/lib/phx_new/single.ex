@@ -53,7 +53,8 @@ defmodule Phx.New.Single do
        "lib/:lib_web_name/components/layouts/root.html.heex",
      "phx_web/components/layouts/app.html.heex":
        "lib/:lib_web_name/components/layouts/app.html.heex",
-     "phx_web/components/layouts.ex": "lib/:lib_web_name/components/layouts.ex"}
+     "phx_web/components/layouts.ex": "lib/:lib_web_name/components/layouts.ex"},
+    {:eex, :web, "phx_assets/logo.svg": "priv/static/images/logo.svg"}
   ])
 
   template(:ecto, [
@@ -85,7 +86,9 @@ defmodule Phx.New.Single do
   ])
 
   template(:no_css, [
-    {:text, :web, "phx_static/app.css": "priv/static/assets/app.css", "phx_static/home.css": "priv/static/assets/home.css"}
+    {:text, :web,
+     "phx_static/app.css": "priv/static/assets/app.css",
+     "phx_static/home.css": "priv/static/assets/home.css"}
   ])
 
   template(:static, [
