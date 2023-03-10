@@ -50,6 +50,10 @@ defmodule Phoenix.Test.ChannelTest do
       {:ok, socket, socket}
     end
 
+    def join("foo:binary", {:binary, <<_::binary>>}, socket) do
+      {:ok, socket}
+    end
+
     def join("foo:error", %{"error" => reason}, _socket) do
       {:error, %{reason: reason}}
     end
@@ -78,6 +82,20 @@ defmodule Phoenix.Test.ChannelTest do
 
     def handle_in("reply", %{}, socket) do
       {:reply, :ok, socket}
+    end
+
+    def handle_in("binary_noreply", {:binary, <<_::binary>>} = payload, socket) do
+      push(socket, "binary_noreply", payload)
+      {:noreply, socket}
+    end
+
+    def handle_in("binary_reply", {:binary, <<_::binary>>} = payload, socket) do
+      {:reply, {:ok, payload}, socket}
+    end
+
+    def handle_in("binary_broadcast", {:binary, <<_::binary>>} = payload, socket) do
+      broadcast_from!(socket, "binary_broadcast", payload)
+      {:noreply, socket}
     end
 
     def handle_in("crash", %{}, _socket) do
@@ -241,6 +259,12 @@ defmodule Phoenix.Test.ChannelTest do
     assert %{socket | joined: true} == client
   end
 
+  test "join/3 with binary payload" do
+    socket = socket(UserSocket, "id", original: :assign)
+
+    assert {:ok, _, _socket} = join(socket, Channel, "foo:binary", {:binary, <<1, 2, 3>>})
+  end
+
   test "join/3 with error reply" do
     assert {:error, %{reason: "mybad"}} =
              join(socket(UserSocket), Channel, "foo:error", %{"error" => "mybad"})
@@ -358,6 +382,28 @@ defmodule Phoenix.Test.ChannelTest do
 
   test "connects with atom parameter keys as strings" do
     :error = connect(UserSocket, %{reject: true})
+  end
+
+  test "pushes and receives pushed binary messages" do
+    {:ok, _, socket} = join(socket(UserSocket), Channel, "foo:ok")
+    ref = push(socket, "binary_noreply", {:binary, <<1, 2, 3>>})
+    assert_push "binary_noreply", {:binary, <<1, 2, 3>>}
+    refute_reply ref, _status
+  end
+
+  test "pushes and receives replies to binary messages" do
+    {:ok, _, socket} = join(socket(UserSocket), Channel, "foo:ok")
+
+    ref = push(socket, "binary_reply", {:binary, <<1, 2, 3>>})
+    assert_reply ref, :ok, {:binary, <<1, 2, 3>>}
+    refute_push _status, _payload
+  end
+
+  test "pushes and broadcasts binary messages" do
+    socket = subscribe_and_join!(socket(UserSocket), Channel, "foo:ok")
+    refute_broadcast "binary_broadcast", _params
+    push(socket, "binary_broadcast", {:binary, <<1, 2, 3>>})
+    assert_broadcast "binary_broadcast", {:binary, <<1, 2, 3>>}
   end
 
   ## handle_out

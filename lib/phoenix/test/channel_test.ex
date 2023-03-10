@@ -322,6 +322,11 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc "See `subscribe_and_join!/4`."
+  def subscribe_and_join!(%Socket{} = socket, topic, {:binary, <<_::binary>>} = payload)
+      when is_binary(topic) do
+    subscribe_and_join!(socket, nil, topic, payload)
+  end
+
   def subscribe_and_join!(%Socket{} = socket, topic, payload)
       when is_binary(topic) and is_map(payload) do
     subscribe_and_join!(socket, nil, topic, payload)
@@ -334,12 +339,15 @@ defmodule Phoenix.ChannelTest do
   This is helpful when you are not testing joining the channel
   and just need the socket.
   """
-  def subscribe_and_join!(%Socket{} = socket, channel, topic, payload \\ %{})
+  def subscribe_and_join!(socket, channel, topic, payload \\ %{})
+
+  def subscribe_and_join!(%Socket{} = socket, channel, topic, {:binary, <<_::binary>>} = payload)
+      when is_atom(channel) and is_binary(topic),
+      do: do_subscribe_and_join!(socket, channel, topic, payload)
+
+  def subscribe_and_join!(%Socket{} = socket, channel, topic, payload)
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
-    case subscribe_and_join(socket, channel, topic, payload) do
-      {:ok, _, socket} -> socket
-      {:error, error}  -> raise "could not join channel, got error: #{inspect(error)}"
-    end
+    do_subscribe_and_join!(socket, channel, topic, payload)
   end
 
   @doc "See `subscribe_and_join/4`."
@@ -369,10 +377,16 @@ defmodule Phoenix.ChannelTest do
 
   It returns `{:ok, reply, socket}` or `{:error, reply}`.
   """
-  def subscribe_and_join(%Socket{} = socket, channel, topic, payload \\ %{})
+  def subscribe_and_join(socket, channel, topic, payload \\ %{})
+
+  def subscribe_and_join(%Socket{} = socket, channel, topic, {:binary, <<_::binary>>} = payload)
+      when is_atom(channel) and is_binary(topic) do
+    do_subscribe_and_join(socket, channel, topic, payload)
+  end
+
+  def subscribe_and_join(%Socket{} = socket, channel, topic, payload)
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
-    socket.endpoint.subscribe(topic)
-    join(socket, channel, topic, payload)
+    do_subscribe_and_join(socket, channel, topic, payload)
   end
 
   @doc "See `join/4`."
@@ -381,6 +395,10 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc "See `join/4`."
+  def join(%Socket{} = socket, topic, {:binary, <<_::binary>>} = payload) when is_binary(topic) do
+    join(socket, nil, topic, payload)
+  end
+
   def join(%Socket{} = socket, topic, payload) when is_binary(topic) and is_map(payload) do
     join(socket, nil, topic, payload)
   end
@@ -393,36 +411,15 @@ defmodule Phoenix.ChannelTest do
 
   It returns `{:ok, reply, socket}` or `{:error, reply}`.
   """
-  def join(%Socket{} = socket, channel, topic, payload \\ %{})
-      when is_atom(channel) and is_binary(topic) and is_map(payload) do
-    message = %Message{
-      event: "phx_join",
-      payload: __stringify__(payload),
-      topic: topic,
-      ref: System.unique_integer([:positive])
-    }
+  def join(socket, channel, topic, payload \\ %{})
 
-    {channel, opts} =
-      if channel do
-        {channel, []}
-      else
-        match_topic_to_channel!(socket, topic)
-      end
+  def join(%Socket{} = socket, channel, topic, {:binary, <<_::binary>>} = payload) do
+    do_join(socket, channel, topic, payload)
+  end
 
-    %Socket{transport: {__MODULE__, sup}} = socket
-
-    starter =
-      fn _, _, spec ->
-        Supervisor.start_child(sup, %{spec | id: make_ref()})
-      end
-
-    case Server.join(socket, channel, message, [starter: starter] ++ opts) do
-      {:ok, reply, pid} ->
-        Process.link(pid)
-        {:ok, reply, Server.socket(pid)}
-      {:error, _} = error ->
-        error
-    end
+  def join(%Socket{} = socket, channel, topic, payload)
+    when is_atom(channel) and is_binary(topic) and is_map(payload) do
+    do_join(socket, channel, topic, payload)
   end
 
   @doc """
@@ -633,6 +630,53 @@ defmodule Phoenix.ChannelTest do
     quote do
       refute_receive %Phoenix.Socket.Broadcast{event: unquote(event),
                                                payload: unquote(payload)}, unquote(timeout)
+    end
+  end
+
+  @doc false
+  defp do_join(%Socket{} = socket, channel, topic, payload)
+       when is_atom(channel) and is_binary(topic) do
+    message = %Message{
+      event: "phx_join",
+      payload: __stringify__(payload),
+      topic: topic,
+      ref: System.unique_integer([:positive])
+    }
+
+    {channel, opts} =
+      if channel do
+        {channel, []}
+      else
+        match_topic_to_channel!(socket, topic)
+      end
+
+    %Socket{transport: {__MODULE__, sup}} = socket
+
+    starter =
+      fn _, _, spec ->
+        Supervisor.start_child(sup, %{spec | id: make_ref()})
+      end
+
+    case Server.join(socket, channel, message, [starter: starter] ++ opts) do
+      {:ok, reply, pid} ->
+        Process.link(pid)
+        {:ok, reply, Server.socket(pid)}
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  @doc false
+  defp do_subscribe_and_join(socket, channel, topic, payload) do
+    socket.endpoint.subscribe(topic)
+    join(socket, channel, topic, payload)
+  end
+
+  @doc false
+  defp do_subscribe_and_join!(socket, channel, topic, payload) do
+    case subscribe_and_join(socket, channel, topic, payload) do
+      {:ok, _, socket} -> socket
+      {:error, error} -> raise "could not join channel, got error: #{inspect(error)}"
     end
   end
 
