@@ -103,7 +103,7 @@ We'll save a discussion of `use HelloWeb, :controller` for the [Controllers guid
 
 All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params`, and we avoid compiler warnings by prefixing it with `_`.
 
-The core of this action is `render(conn, :index)`. It tells Phoenix to render the `index` template. The modules responsible for rendering are called views. By default, Phoenix views are named after the controller and format(HTML in this case) they support - our controller name starts with `Hello`(HelloController) so Phoenix is expecting a `HelloWeb.HelloHTML` to exist and define an `index/1` function for us.
+The core of this action is `render(conn, :index)`. It tells Phoenix to render the `index` template. The modules responsible for rendering are called views. By default, Phoenix views are named after the controller (`HelloController`) and format (`HTML` in this case), so Phoenix is expecting a `HelloWeb.HelloHTML` to exist and define an `index/1` function.
 
 ### A new view
 
