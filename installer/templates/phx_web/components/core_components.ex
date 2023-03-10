@@ -42,7 +42,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     <div
       id={@id}
       phx-mounted={@show && show_modal(@id)}
-      phx-remove={hide_modal(@id)}
+      phx-remove={hide_modal(@on_cancel, @id)}
       class="relative z-50 hidden"
     >
       <div id={"#{@id}-bg"} class="fixed inset-0 bg-zinc-50/90 transition-opacity" aria-hidden="true" />
@@ -58,14 +58,14 @@ defmodule <%= @web_namespace %>.CoreComponents do
           <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
             <.focus_wrap
               id={"#{@id}-container"}
-              phx-window-keydown={hide_modal(@on_cancel, @id)}
+              phx-window-keydown={JS.exec("phx-remove", to: "##{@id}")}
               phx-key="escape"
-              phx-click-away={hide_modal(@on_cancel, @id)}
+              phx-click-away={JS.exec("phx-remove", to: "##{@id}")}
               class="hidden relative rounded-2xl bg-white p-14 shadow-lg shadow-zinc-700/10 ring-1 ring-zinc-700/10 transition"
             >
               <div class="absolute top-6 right-5">
                 <button
-                  phx-click={hide_modal(@on_cancel, @id)}
+                  phx-click={JS.exec("phx-remove", to: "##{@id}")}
                   type="button"
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
                   aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
