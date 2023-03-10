@@ -153,6 +153,8 @@ Next, we need to add files to the `lib/hello_web/controllers/hello_html` directo
 
 Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello_html`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
 
+> **Note**: We can rename the `hello_html` directory to whatever we want and put it in a subdirectory of `lib/hello_web/controllers`, as long as we update the `embed_templates` setting accordingly. However, it's best to keep the same naming convention to prevent any confusion.
+
 ```
 lib/hello_web
 ├── controllers
