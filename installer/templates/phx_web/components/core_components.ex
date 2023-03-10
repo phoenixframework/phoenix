@@ -540,7 +540,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   You can customize the size and colors of the icons by setting
   width, height, and background color classes.
 
-  Icons are extracted from your `priv/hero_icons` directory and bundled
+  Icons are extracted from your `assets/vendor/heroicons` directory and bundled
   within your compiled app.css by the plugin in your `assets/tailwind.config.js`.
 
   ## Examples
