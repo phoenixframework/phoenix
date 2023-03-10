@@ -72,9 +72,9 @@ defmodule Phx.New.Single do
      "phx_assets/app.js": "assets/js/app.js",
      "phx_assets/tailwind.config.js": "assets/tailwind.config.js"},
     {:keep, :web, "phx_assets/vendor": "assets/vendor"},
-    {:eex, :web, "phx_assets/hero_icons/LICENSE.md": "assets/vendor/hero_icons/LICENSE.md"},
-    {:eex, :web, "phx_assets/hero_icons/UPGRADE.md": "assets/vendor/hero_icons/UPGRADE.md"},
-    {:zip, :web, "phx_assets/hero_icons/optimized.zip": "assets/vendor/hero_icons/optimized"}
+    {:eex, :web, "phx_assets/heroicons/LICENSE.md": "assets/vendor/heroicons/LICENSE.md"},
+    {:eex, :web, "phx_assets/heroicons/UPGRADE.md": "assets/vendor/heroicons/UPGRADE.md"},
+    {:zip, :web, "phx_assets/heroicons/optimized.zip": "assets/vendor/heroicons/optimized"}
   ])
 
   template(:no_assets, [
