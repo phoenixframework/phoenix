@@ -166,7 +166,12 @@ defmodule Phoenix.Controller do
   ### Guards
 
   `plug/2` in controllers supports guards, allowing a developer to configure
-  a plug to only run in some particular action:
+  a plug to only run in some particular action.
+
+      plug :do_something when action in [:show, :edit]
+
+  Due to operator precedence in Elixir, if the second argument is a keyword list,
+  we need to wrap the keyword in `[...]` when using `when`:
 
       plug :authenticate, [usernames: ["jose", "eric", "sonny"]] when action in [:show, :edit]
       plug :authenticate, [usernames: ["admin"]] when not action in [:index]
