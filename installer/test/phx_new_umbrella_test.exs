@@ -343,7 +343,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # No assets & No HTML
       refute_file(web_path(@app, "priv/static/assets/app.js"))
       refute_file(web_path(@app, "priv/static/assets/app.css"))
-      refute_file(web_path(@app, "priv/static/favicon.ico"))
 
       # No Ecto
       config = ~r/config :phx_umb, PhxUmb.Repo,/
@@ -720,7 +719,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   end
 
   test "invalid options" do
-    assert_raise Mix.Error, ~r/Invalid option: -d/, fn ->
+    assert_raise OptionParser.ParseError, fn ->
       Mix.Tasks.Phx.New.run(["valid5", "-database", "mysql", "--umbrella"])
     end
   end

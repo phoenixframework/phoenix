@@ -12,7 +12,7 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
     layout: false
   ],
   pubsub_server: <%= @app_module %>.PubSub,
-  live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @assets do %>
+  live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @javascript do %>
 
 # Configure esbuild (the version is required)
 config :esbuild,
@@ -22,7 +22,7 @@ config :esbuild,
       ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
     cd: Path.expand("../apps/<%= @web_app_name %>/assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
-  ]
+  ]<% end %><%= if @css do %>
 
 # Configure tailwind (the version is required)
 config :tailwind,

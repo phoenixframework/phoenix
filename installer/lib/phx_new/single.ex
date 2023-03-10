@@ -53,8 +53,7 @@ defmodule Phx.New.Single do
        "lib/:lib_web_name/components/layouts/root.html.heex",
      "phx_web/components/layouts/app.html.heex":
        "lib/:lib_web_name/components/layouts/app.html.heex",
-     "phx_web/components/layouts.ex": "lib/:lib_web_name/components/layouts.ex"},
-    {:eex, :web, "phx_assets/topbar.js": "assets/vendor/topbar.js"}
+     "phx_web/components/layouts.ex": "lib/:lib_web_name/components/layouts.ex"}
   ])
 
   template(:ecto, [
@@ -66,21 +65,27 @@ defmodule Phx.New.Single do
     {:keep, :app, "phx_ecto/priv/repo/migrations": "priv/repo/migrations"}
   ])
 
-  template(:assets, [
+  template(:css, [
     {:eex, :web,
      "phx_assets/app.css": "assets/css/app.css",
-     "phx_assets/app.js": "assets/js/app.js",
      "phx_assets/tailwind.config.js": "assets/tailwind.config.js"},
-    {:keep, :web, "phx_assets/vendor": "assets/vendor"},
-    {:eex, :web, "phx_assets/hero_icons/LICENSE.md": "assets/vendor/hero_icons/LICENSE.md"},
-    {:eex, :web, "phx_assets/hero_icons/UPGRADE.md": "assets/vendor/hero_icons/UPGRADE.md"},
+    {:eex, :web,
+     "phx_assets/hero_icons/LICENSE.md": "assets/vendor/hero_icons/LICENSE.md",
+     "phx_assets/hero_icons/UPGRADE.md": "assets/vendor/hero_icons/UPGRADE.md"},
     {:zip, :web, "phx_assets/hero_icons/optimized.zip": "assets/vendor/hero_icons/optimized"}
   ])
 
-  template(:no_assets, [
-    {:text, :web,
-     "phx_static/app.css": "priv/static/assets/app.css",
-     "phx_static/app.js": "priv/static/assets/app.js"}
+  template(:js, [
+    {:eex, :web,
+     "phx_assets/app.js": "assets/js/app.js", "phx_assets/topbar.js": "assets/vendor/topbar.js"}
+  ])
+
+  template(:no_js, [
+    {:text, :web, "phx_static/app.js": "priv/static/assets/app.js"}
+  ])
+
+  template(:no_css, [
+    {:text, :web, "phx_static/app.css": "priv/static/assets/app.css", "phx_static/home.css": "priv/static/assets/home.css"}
   ])
 
   template(:static, [
@@ -148,10 +153,20 @@ defmodule Phx.New.Single do
   end
 
   def gen_assets(%Project{} = project) do
-    if Project.assets?(project) or Project.html?(project) do
-      command = if Project.assets?(project), do: :assets, else: :no_assets
+    javascript? = Project.javascript?(project)
+    css? = Project.css?(project)
+    html? = Project.html?(project)
+
+    copy_from(project, __MODULE__, :static)
+
+    if html? or javascript? do
+      command = if javascript?, do: :js, else: :no_js
       copy_from(project, __MODULE__, command)
-      copy_from(project, __MODULE__, :static)
+    end
+
+    if html? or css? do
+      command = if css?, do: :css, else: :no_css
+      copy_from(project, __MODULE__, command)
     end
   end
 

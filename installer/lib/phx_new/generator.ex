@@ -189,6 +189,8 @@ defmodule Phx.New.Generator do
     dashboard = Keyword.get(opts, :dashboard, true)
     gettext = Keyword.get(opts, :gettext, true)
     assets = Keyword.get(opts, :assets, true)
+    esbuild = Keyword.get(opts, :esbuild, assets)
+    tailwind = Keyword.get(opts, :tailwind, assets)
     mailer = Keyword.get(opts, :mailer, true)
     dev = Keyword.get(opts, :dev, false)
     phoenix_path = phoenix_path(project, dev, false)
@@ -230,7 +232,9 @@ defmodule Phx.New.Generator do
       signing_salt: random_string(8),
       lv_signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
-      assets: assets,
+      asset_builders: Enum.filter([tailwind && :tailwind, esbuild && :esbuild], & &1),
+      javascript: esbuild,
+      css: tailwind,
       mailer: mailer,
       ecto: ecto,
       html: html,

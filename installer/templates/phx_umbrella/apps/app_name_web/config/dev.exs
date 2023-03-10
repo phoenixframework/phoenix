@@ -12,10 +12,10 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
   code_reloader: true,
   debug_errors: true,
   secret_key_base: "<%= @secret_key_base_dev %>",
-  watchers: <%= if @assets do %>[
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
-  ]<% else %>[]<% end %>
+  watchers: [<%= if @javascript do %>
+    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}<%= if @css, do: "," %><% end %><%= if @css do %>
+    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}<% end %>
+  ]
 
 # ## SSL Support
 #

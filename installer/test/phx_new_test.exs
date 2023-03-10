@@ -319,11 +319,10 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~r/\n$/
       end)
 
-      assert_file("phx_blog/config/dev.exs", ~r/watchers: \[\]/)
+      assert_file("phx_blog/config/dev.exs", ~r/watchers: \[\n  \]/)
 
       # No assets & No HTML
       refute_file("phx_blog/priv/static/assets/app.css")
-      refute_file("phx_blog/priv/static/favicon.ico")
       refute_file("phx_blog/priv/static/assets/app.js")
 
       # No Ecto
@@ -756,7 +755,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   end
 
   test "invalid options" do
-    assert_raise Mix.Error, ~r/Invalid option: -d/, fn ->
+    assert_raise OptionParser.ParseError, fn ->
       Mix.Tasks.Phx.New.run(["valid", "-database", "mysql"])
     end
   end
