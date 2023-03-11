@@ -1,29 +1,23 @@
 <header class="px-4 sm:px-6 lg:px-8">
-  <div class="flex items-center justify-between border-b border-zinc-100 py-3">
+  <div class="flex items-center justify-between text-sm border-b border-zinc-100 py-3">
     <div class="flex items-center gap-4">
       <a href="/">
-        <img src={~p"/images/logo.svg"} class="h-6" />
+        <img src={~p"/images/logo.svg"} width="36" />
       </a>
-      <p class="rounded-full bg-brand/5 px-2 text-[0.8125rem] font-medium leading-6 text-brand">
+      <p class="rounded-full bg-brand/5 px-2 font-medium leading-6 text-brand">
         v<%%= Application.spec(:phoenix, :vsn) %>
       </p>
     </div>
-    <div class="flex items-center gap-4">
-      <a
-        href="https://twitter.com/elixirphoenix"
-        class="text-[0.8125rem] font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
-      >
+    <div class="flex items-center gap-4 text-zinc-900 font-semibold leading-6">
+      <a href="https://twitter.com/elixirphoenix" class="hover:text-zinc-700">
         @elixirphoenix
       </a>
-      <a
-        href="https://github.com/phoenixframework/phoenix"
-        class="text-[0.8125rem] font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
-      >
+      <a href="https://github.com/phoenixframework/phoenix" class="hover:text-zinc-700">
         GitHub
       </a>
       <a
         href="https://hexdocs.pm/phoenix/overview.html"
-        class="rounded-lg bg-zinc-100 px-2 py-1 text-[0.8125rem] font-semibold leading-6 text-zinc-900 hover:bg-zinc-200/80 active:text-zinc-900/70"
+        class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80"
       >
         Get Started <span aria-hidden="true">&rarr;</span>
       </a>

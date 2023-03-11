@@ -52,7 +52,9 @@ defmodule Mix.Tasks.Phx.New do
     * `--no-mailer` - do not generate Swoosh mailer files
 
     * `--no-tailwind` - do not include tailwind dependencies and assets.
-      The home page is still styled with Tailwind CSS, but it can safely deleted
+      The generated markup will still include Tailwind CSS classes, those
+      are left-in as reference for the subsequent styling of your layout
+      and components
 
     * `--binary-id` - use `binary_id` as primary key type in Ecto schemas
 

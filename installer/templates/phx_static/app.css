@@ -1,9 +1,1 @@
 /* This file is for your main application CSS */
-
-/* Alerts and form errors used by phx.new */
-
-.invalid-feedback {
-  color: #a94442;
-  display: block;
-  margin: -1rem 0 2rem;
-}
