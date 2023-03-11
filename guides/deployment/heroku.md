@@ -52,13 +52,13 @@ $ git add .
 $ git commit -m "Initial commit"
 ```
 
-Heroku offers some great information on how it is using Git [here](https://devcenter.heroku.com/articles/git#tracking-your-app-in-git).
+Heroku offers some great information on how it is using Git [here](https://devcenter.heroku.com/articles/git#prerequisites-install-git-and-the-heroku-cli).
 
 ## Signing up for Heroku
 
 Signing up to Heroku is very simple, just head over to [https://signup.heroku.com/](https://signup.heroku.com/) and fill in the form.
 
-The Free plan will give us one web [dyno](https://devcenter.heroku.com/articles/dynos#dynos) and one worker dyno, as well as a PostgreSQL and Redis instance for free.
+The Free plan will give us one web [dyno](https://devcenter.heroku.com/articles/dynos) and one worker dyno, as well as a PostgreSQL and Redis instance for free.
 
 These are meant to be used for testing and development, and come with some limitations. In order to run a production application, please consider upgrading to a paid plan.
 
