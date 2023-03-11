@@ -12,8 +12,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, lv, html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password")
 
       assert html =~ "Forgot your password?"
-      assert has_element?(lv, ~s|a[href="#{~p"/users/register"}"]|, "Register")
-      assert has_element?(lv, ~s|a[href="#{~p"/users/log_in"}"]|, "Log in")
+      assert has_element?(lv, ~s|a[href="#{~p"<%= schema.route_prefix %>/register"}"]|, "Register")
+      assert has_element?(lv, ~s|a[href="#{~p"<%= schema.route_prefix %>/log_in"}"]|, "Log in")
     end
 
     test "redirects if already logged in", %{conn: conn} do
