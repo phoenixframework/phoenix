@@ -1,6 +1,6 @@
 <%= unless @css do %><link phx-track-static rel="stylesheet" href={~p"/assets/home.css"} />
 <% end %><.flash_group flash={@flash} />
-<div class="fixed inset-y-0 right-0 left-[40rem] hidden lg:block xl:left-[50rem] z-0">
+<div class="left-[40rem] fixed inset-y-0 right-0 z-0 hidden lg:block xl:left-[50rem]">
   <svg
     viewBox="0 0 1480 957"
     fill="none"
@@ -39,7 +39,7 @@
     />
   </svg>
 </div>
-<div class="px-4 py-10 sm:py-28 sm:px-6 lg:px-8 xl:py-32 xl:px-28">
+<div class="px-4 py-10 sm:px-6 sm:py-28 lg:px-8 xl:px-28 xl:py-32">
   <div class="mx-auto max-w-xl lg:mx-0">
     <svg viewBox="0 0 71 48" class="h-12" aria-hidden="true">
       <path
@@ -47,13 +47,13 @@
         fill="#FD4F00"
       />
     </svg>
-    <h1 class="mt-10 flex items-center text-sm font-semibold leading-6 text-brand">
+    <h1 class="text-brand mt-10 flex items-center text-sm font-semibold leading-6">
       Phoenix Framework
-      <small class="ml-3 rounded-full bg-brand/5 px-2 text-[0.8125rem] font-medium leading-6">
+      <small class="bg-brand/5 text-[0.8125rem] ml-3 rounded-full px-2 font-medium leading-6">
         v<%%= Application.spec(:phoenix, :vsn) %>
       </small>
     </h1>
-    <p class="mt-4 text-[2rem] font-semibold leading-10 tracking-tighter text-zinc-900">
+    <p class="text-[2rem] mt-4 font-semibold leading-10 tracking-tighter text-zinc-900">
       Peace of mind from prototype to production.
     </p>
     <p class="mt-4 text-base leading-7 text-zinc-600">
