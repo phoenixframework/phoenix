@@ -1,6 +1,7 @@
 defmodule <%= @root_app_module %>.MixProject do
   use Mix.Project
 
+  <%= @phx_new_argv %>
   def project do
     [
       apps_path: "apps",

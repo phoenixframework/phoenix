@@ -181,7 +181,7 @@ defmodule Phx.New.Generator do
     File.exists?(mix_path) && File.exists?(apps_path)
   end
 
-  def put_binding(%Project{opts: opts} = project) do
+  def put_binding(%Project{opts: opts} = project, argv) do
     db = Keyword.get(opts, :database, "postgres")
     ecto = Keyword.get(opts, :ecto, true)
     html = Keyword.get(opts, :html, true)
@@ -247,7 +247,8 @@ defmodule Phx.New.Generator do
       adapter_config: adapter_config,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
       namespaced?: namespaced?(project),
-      dev: dev
+      dev: dev,
+      phx_new_argv: format_phx_new_argv(argv)
     ]
 
     %Project{project | binding: binding}
@@ -255,6 +256,10 @@ defmodule Phx.New.Generator do
 
   defp namespaced?(project) do
     Macro.camelize(project.app) != inspect(project.app_mod)
+  end
+
+  defp format_phx_new_argv(argv) do
+    "# Generated with:\n  #   phx.new #{Enum.intersperse(argv, " ")}"
   end
 
   def gen_ecto_config(%Project{project_path: project_path, binding: binding}) do

@@ -149,7 +149,7 @@ defmodule Mix.Tasks.Phx.New do
 
       {opts, [base_path | _]} ->
         generator = if opts[:umbrella], do: Umbrella, else: Single
-        generate(base_path, generator, :project_path, opts)
+        generate(base_path, generator, :project_path, opts, argv)
     end
   end
 
@@ -159,15 +159,15 @@ defmodule Mix.Tasks.Phx.New do
 
     case OptionParser.parse!(argv, strict: @switches) do
       {_opts, []} -> Mix.Tasks.Help.run(["phx.new"])
-      {opts, [base_path | _]} -> generate(base_path, generator, path, opts)
+      {opts, [base_path | _]} -> generate(base_path, generator, path, opts, argv)
     end
   end
 
-  defp generate(base_path, generator, path, opts) do
+  defp generate(base_path, generator, path, opts, argv) do
     base_path
     |> Project.new(opts)
     |> generator.prepare_project()
-    |> Generator.put_binding()
+    |> Generator.put_binding(argv)
     |> validate_project(path)
     |> generator.generate()
     |> prompt_to_install_deps(generator, path)
