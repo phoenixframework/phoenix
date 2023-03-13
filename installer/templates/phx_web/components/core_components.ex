@@ -440,7 +440,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <div class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
       <table class="w-[40rem] mt-11 sm:w-full">
-        <thead class="text-[0.8125rem] text-left leading-6 text-zinc-500">
+        <thead class="text-sm text-left leading-6 text-zinc-500">
           <tr>
             <th :for={col <- @col} class="p-0 pr-6 pb-4 font-normal"><%%= col[:label] %></th>
             <th class="relative p-0 pb-4"><span class="sr-only"><%= if @gettext do %><%%= gettext("Actions") %><% else %>Actions<% end %></span></th>
@@ -500,9 +500,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <div class="mt-14">
       <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={item <- @item} class="flex gap-4 py-4 sm:gap-8">
-          <dt class="text-[0.8125rem] w-1/4 flex-none leading-6 text-zinc-500"><%%= item.title %></dt>
-          <dd class="text-sm leading-6 text-zinc-700"><%%= render_slot(item) %></dd>
+        <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
+          <dt class="w-1/4 flex-none text-zinc-500"><%%= item.title %></dt>
+          <dd class="text-zinc-700"><%%= render_slot(item) %></dd>
         </div>
       </dl>
     </div>
