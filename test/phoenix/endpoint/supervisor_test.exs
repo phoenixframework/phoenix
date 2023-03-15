@@ -1,8 +1,10 @@
 defmodule Phoenix.Endpoint.SupervisorTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   alias Phoenix.Endpoint.Supervisor
 
   defmodule HTTPSEndpoint do
+    def init(:supervisor, config), do: {:ok, config}
+    def __sockets__(), do: []
     def config(:otp_app), do: :phoenix
     def config(:https), do: [port: 443]
     def config(:http), do: false
@@ -11,6 +13,8 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   end
 
   defmodule HTTPEndpoint do
+    def init(:supervisor, config), do: {:ok, config}
+    def __sockets__(), do: []
     def config(:otp_app), do: :phoenix
     def config(:https), do: false
     def config(:http), do: [port: 80]
@@ -38,6 +42,11 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(:http), do: false
     def config(:url), do: []
     def config(:static_url), do: [host: "static.example.com"]
+  end
+
+  defmodule ServerEndpoint do
+    def init(:supervisor, config), do: {:ok, config}
+    def __sockets__(), do: []
   end
 
   setup_all do
@@ -83,6 +92,38 @@ defmodule Phoenix.Endpoint.SupervisorTest do
 
     assert {:nocache, {"/images/unknown.png", nil}} =
              Supervisor.static_lookup(HTTPEndpoint, "/images/unknown.png")
+  end
+
+  import ExUnit.CaptureLog
+  test "logs info if :http or :https configuration is set but not :server" do
+    Logger.configure(level: :info)
+    Application.put_env(:phoenix, ServerEndpoint, [server: false, http: [], https: []])
+    assert capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: false, http: []])
+    assert capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: false, https: []])
+    assert capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: false])
+    refute capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: true])
+    refute capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.delete_env(:phoenix, ServerEndpoint)
+    Logger.configure(level: :warning)
   end
 
   describe "watchers" do

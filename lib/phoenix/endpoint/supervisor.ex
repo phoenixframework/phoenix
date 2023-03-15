@@ -127,6 +127,11 @@ defmodule Phoenix.Endpoint.Supervisor do
       adapter = config[:adapter] || Phoenix.Endpoint.Cowboy2Adapter
       adapter.child_specs(mod, config)
     else
+      if config[:http] || config[:https] do
+        Logger.info(
+          "Configuration :server is false or not set for #{inspect(mod)}, will not be starting a webserver"
+        )
+      end
       []
     end
   end
