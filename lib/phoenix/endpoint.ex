@@ -236,11 +236,11 @@ defmodule Phoenix.Endpoint do
       during application shutdown. It accepts the `:shutdown` and
       `:drain_check_interval` options as defined by `Plug.Cowboy.Drainer`.
       Note the draining does not terminate any existing connection, it simply
-      waits for them to finish. WebSocket connections run their own drainer
-      before this one is invoked. That's because WebSocket connections
-      are stateful and can be gracefully notified, which allows us to stagger
-      them over a longer period of time. See the documentation for `socket/3`
-      for more information
+      waits for them to finish. Socket connections run their own drainer
+      before this one is invoked. That's because sockets are stateful and
+      can be gracefully notified, which allows us to stagger them over a
+      longer period of time. See the documentation for `socket/3` for more
+      information
 
   ## Endpoint API
 
@@ -794,6 +794,21 @@ defmodule Phoenix.Endpoint do
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
 
+    * `:drainer` - a keyword list configuring how to drain sockets
+      on application shutdown. The goal is to notify all channels (and
+      LiveViews) clients to reconnect. The supported options are:
+
+      * `:shutdown` - How long to wait for connections to drain. Defaults to 15000ms.
+      * `:drain_check_interval` - The maximum frequency to terminate batches. Defaults to 1000ms.
+
+      For example, if you have 150k connections, the default values will
+      split them into 15 batches of 10k connections and notify each batch
+      within 1000ms. If the batch shutdowns faster, we move on to the next
+      one before the interval. If it takes longer, then we proceed anyway.
+      Note that, after the socket drainer runs, the lower level HTTP/HTTPS
+      connection drainer will still run, and apply to all connections.
+      Set it to `false` to disable draining.
+
     * `:connect_info` - a list of keys that represent data to be copied from
       the transport to be made available in the user socket `connect/3` callback.
       See the "Connect info" subsection for valid keys
@@ -866,22 +881,6 @@ defmodule Phoenix.Endpoint do
 
     * `:compress` - whether to enable per message compression on
       all data frames, defaults to false
-
-    * `:drainer` - a keyword list configuring how to drain WebSocket
-      connections on application shutdown. The goal is to notify all
-      channels and LiveViews running on WebSocket to reconnect.
-      The supported options are:
-
-      * `:shutdown` - How long to wait for connections to drain. Defaults to 15000ms.
-      * `:drain_check_interval` - The maximum frequency to terminate batches. Defaults to 1000ms.
-
-      For example, if you have 150k connections, the default values will
-      split them into 15 batches of 10k connections and notify each batch
-      within 1000ms. If the batch shutdowns faster, we move on to the next
-      one before the interval. If it takes longer, then we proceed anyway.
-      Note that, after the WebSocket drainer runs, the lower level HTTP/HTTPS
-      connection drainer will still run, and apply to all connections.
-      Set it to `false` to disable draining.
 
     * `:subprotocols` - a list of supported websocket subprotocols.
       Used for handshake `Sec-WebSocket-Protocol` response header, defaults to nil.

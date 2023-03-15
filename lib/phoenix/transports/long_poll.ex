@@ -12,8 +12,7 @@ defmodule Phoenix.Transports.LongPoll do
       pubsub_timeout_ms: 2_000,
       serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
       transport_log: false,
-      crypto: [max_age: 1_209_600],
-      drainer: false
+      crypto: [max_age: 1_209_600]
     ]
   end
 
