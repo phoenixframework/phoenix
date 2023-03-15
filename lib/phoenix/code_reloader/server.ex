@@ -48,8 +48,9 @@ defmodule Phoenix.CodeReloader.Server do
             Mix.Project.build_structure()
           else
             Logger.warning(
-              "Phoenix is unable to create symlinks. Phoenix' code reloader will run " <>
-                "considerably faster if symlinks are allowed." <> os_symlink(:os.type())
+              "Phoenix is unable to create a #{priv_path} symlink, so the code reloader will maintain a copy" <>
+                " of the priv path that does not automatically remove obsolete files and may lag behind newly added assets. " <>
+                os_symlink(:os.type())
             )
           end
       end
@@ -114,9 +115,9 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp os_symlink({:win32, _}),
     do:
-      " On Windows, the lack of symlinks may even cause empty assets to be served. " <>
-        "Luckily, you can address this issue by starting your Windows terminal at least " <>
-        "once with \"Run as Administrator\" and then running your Phoenix application."
+      " This can be solved by starting the Phoenix application once from a Windows terminal that was " <>
+        "\"Run as Administrator\" or executing the following command from current PowerShell instance:\n" <>
+        "PS> Start-Process powershell -ArgumentList \"-Command Set-Location '$PWD'; mix phx.server\" -Verb RunAs"
 
   defp os_symlink(_),
     do: ""
