@@ -232,14 +232,15 @@ defmodule Phoenix.Endpoint do
       as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
       to `false`
 
-    * `:drainer` - a drainer process that triggers when your application is
-      shutting down to wait for any on-going request to finish. It accepts the
-      `:shutdown` and `:drain_check_interval` options as defined by `Plug.Cowboy.Drainer`.
+    * `:drainer` - a drainer process waits for any on-going request to finish
+      during application shutdown. It accepts the `:shutdown` and
+      `:drain_check_interval` options as defined by `Plug.Cowboy.Drainer`.
       Note the draining does not terminate any existing connection, it simply
-      waits for them to finish. Note that WebSocket connections run their own
-      drainer before this one is invoked. That's because WebSocket connections
-      are stateful and we want to stagger them over a long period of time.
-      See the documentation for `socket/3` for more information
+      waits for them to finish. WebSocket connections run their own drainer
+      before this one is invoked. That's because WebSocket connections
+      are stateful and can be gracefully notified, which allows us to stagger
+      them over a longer period of time. See the documentation for `socket/3`
+      for more information
 
   ## Endpoint API
 
@@ -867,19 +868,20 @@ defmodule Phoenix.Endpoint do
       all data frames, defaults to false
 
     * `:drainer` - a keyword list configuring how to drain WebSocket
-      connections on application shutdown. The goal is to shutdown all
-      WebSocket connections in `:shutdown` time divided in batches of
-      `:drain_check_interval`. The subkeys are:
+      connections on application shutdown. The goal is to notify all
+      channels and LiveViews running on WebSocket to reconnect.
+      The supported options are:
 
       * `:shutdown` - How long to wait for connections to drain. Defaults to 15000ms.
       * `:drain_check_interval` - The maximum frequency to terminate batches. Defaults to 1000ms.
 
       For example, if you have 150k connections, the default values will
-      split them into 15 batches of 10k connections and shutdown each batch
+      split them into 15 batches of 10k connections and notify each batch
       within 1000ms. If the batch shutdowns faster, we move on to the next
       one before the interval. If it takes longer, then we proceed anyway.
       Note that, after the WebSocket drainer runs, the lower level HTTP/HTTPS
       connection drainer will still run, and apply to all connections.
+      Set it to `false` to disable draining.
 
     * `:subprotocols` - a list of supported websocket subprotocols.
       Used for handshake `Sec-WebSocket-Protocol` response header, defaults to nil.

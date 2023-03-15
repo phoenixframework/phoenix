@@ -10,7 +10,9 @@ defmodule Phoenix.Socket.PoolSupervisor do
     )
   end
 
-  def start_child(endpoint, name, key, spec) do
+  def start_child(socket, key, spec) do
+    %{endpoint: endpoint, handler: name} = socket
+
     case endpoint.config({:socket, name}) do
       ets when not is_nil(ets) ->
         partitions = :ets.lookup_element(ets, :partitions, 2)

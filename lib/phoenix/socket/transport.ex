@@ -238,7 +238,7 @@ defmodule Phoenix.Socket.Transport do
   """
   @callback terminate(reason :: term, state) :: :ok
 
-  @optional_callbacks handle_control: 2, terminator_spec: 1
+  @optional_callbacks handle_control: 2, drainer_spec: 1
 
   require Logger
 
