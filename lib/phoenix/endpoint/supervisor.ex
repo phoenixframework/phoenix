@@ -78,8 +78,9 @@ defmodule Phoenix.Endpoint.Supervisor do
     children =
       config_children(mod, secret_conf, default_conf) ++
         pubsub_children(mod, conf) ++
-        socket_children(mod) ++
+        socket_children(mod, :child_spec) ++
         server_children(mod, conf, server?) ++
+        socket_children(mod, :drainer_spec) ++
         watcher_children(mod, conf, server?)
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -111,10 +112,21 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp socket_children(endpoint) do
-    endpoint.__sockets__
-    |> Enum.uniq_by(&elem(&1, 1))
-    |> Enum.map(fn {_, socket, opts} -> socket.child_spec([endpoint: endpoint] ++ opts) end)
+  defp socket_children(endpoint, fun) do
+    for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__, &elem(&1, 1)),
+        spec = apply_or_ignore(socket, fun, [[endpoint: endpoint] ++ opts]),
+        spec != :ignore do
+      spec
+    end
+  end
+
+  defp apply_or_ignore(socket, fun, args) do
+    # If the module is not loaded, we want to invoke and crash
+    if not Code.ensure_loaded?(socket) or function_exported?(socket, fun, length(args)) do
+      apply(socket, fun, args)
+    else
+      :ignore
+    end
   end
 
   defp config_children(mod, conf, default_conf) do
