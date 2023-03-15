@@ -49,7 +49,7 @@ defmodule Phoenix.CodeReloader.Server do
           else
             Logger.warning(
               "Phoenix is unable to create a #{priv_path} symlink, so the code reloader will maintain a copy" <>
-                " of the priv path that does not automatically remove obsolete files and may lag behind newly added assets. " <>
+                " of the priv path that does not automatically remove obsolete files and may lag behind newly added assets." <>
                 os_symlink(:os.type())
             )
           end
