@@ -322,6 +322,14 @@ defmodule Phoenix.Channel.Server do
   end
 
   def handle_info(
+        %Broadcast{event: "phx_drain"},
+        %{transport_pid: transport_pid} = socket
+      ) do
+    send(transport_pid, :socket_drain)
+    {:stop, {:shutdown, :draining}, socket}
+  end
+
+  def handle_info(
         %Broadcast{topic: topic, event: event, payload: payload},
         %Socket{topic: topic} = socket
       ) do
