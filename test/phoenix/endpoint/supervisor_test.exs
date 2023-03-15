@@ -3,8 +3,6 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   alias Phoenix.Endpoint.Supervisor
 
   defmodule HTTPSEndpoint do
-    def init(:supervisor, config), do: {:ok, config}
-    def __sockets__(), do: []
     def config(:otp_app), do: :phoenix
     def config(:https), do: [port: 443]
     def config(:http), do: false
@@ -13,8 +11,6 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   end
 
   defmodule HTTPEndpoint do
-    def init(:supervisor, config), do: {:ok, config}
-    def __sockets__(), do: []
     def config(:otp_app), do: :phoenix
     def config(:https), do: false
     def config(:http), do: [port: 80]
