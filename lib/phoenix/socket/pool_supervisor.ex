@@ -119,7 +119,7 @@ defmodule Phoenix.Socket.PoolDrainer do
 
       spawn(fn ->
         for pid <- pids do
-          send(pid, %Phoenix.Socket.Broadcast{event: "phx_draining"})
+          send(pid, %Phoenix.Socket.Broadcast{event: "phx_drain"})
         end
       end)
 
