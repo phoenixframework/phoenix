@@ -1030,10 +1030,38 @@ defmodule Phoenix.Controller do
     end)
   end
 
-  defp assigns_layout(conn, assigns, format) do
-    case assigns do
-      %{layout: layout} -> layout
-      %{} -> layout(conn, format)
+  defp assigns_layout(_conn, %{layout: layout}, _format), do: layout
+
+  defp assigns_layout(conn, _assigns, format) do
+    case conn.private[:phoenix_layout] do
+      %{^format => bad_value, _: good_value} when good_value != false ->
+        IO.warn """
+        conflicting layouts found. A layout has been set with format, such as:
+
+            put_layout(conn, #{format}: #{inspect(bad_value)})
+
+        But also without format:
+
+            put_layout(conn, #{inspect(good_value)})
+
+        In this case, the layout without format will always win.
+        If you use layouts with formats, make sure that they are
+        used everywhere. Also remember to configure your controller
+        to use layouts with formats:
+
+            use Phoenix.Controller, layouts: [#{format}: #{inspect(bad_value)}]
+        """
+
+        if format in layout_formats(conn), do: good_value, else: false
+
+      %{_: value} ->
+        if format in layout_formats(conn), do: value, else: false
+
+      %{^format => value} ->
+        value
+
+      _ ->
+        false
     end
   end
 
