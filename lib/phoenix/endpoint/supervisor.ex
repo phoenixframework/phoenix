@@ -129,7 +129,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     else
       if config[:http] || config[:https] do
         Logger.info(
-          "Configuration :server is false or not set for #{inspect(mod)}, will not be starting a webserver"
+          "Configuration :server was not enabled for #{inspect(mod)}, http/https services won't start"
         )
       end
       []
