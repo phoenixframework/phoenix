@@ -132,8 +132,11 @@ defmodule Phoenix.Endpoint.Supervisor do
         Logger.info(
           "Configuration :server was not enabled for #{inspect(mod)}, http/https services won't start"
         )
+
         []
-      true -> []
+
+      true ->
+        []
     end
   end
 
