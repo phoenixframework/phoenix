@@ -129,59 +129,55 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "defmodule PhoenixWeb.PostHTML"
       end)
 
-      assert_file("lib/phoenix_web/controllers/post_html/edit.html.heex", fn file ->
-        assert file =~ ~s|~p"/posts|
-      end)
-
       assert_file("lib/phoenix_web/controllers/post_html/index.html.heex", fn file ->
         assert file =~ ~s|~p"/posts|
       end)
 
       assert_file("lib/phoenix_web/controllers/post_html/new.html.heex", fn file ->
-        assert file =~ ~s|~p"/posts|
+        assert file =~ ~S(action={~p"/posts"})
       end)
+
+      assert_file("lib/phoenix_web/controllers/post_html/post_form.html.heex")
 
       assert_file("lib/phoenix_web/controllers/post_html/show.html.heex", fn file ->
         assert file =~ ~s|~p"/posts|
       end)
 
-      assert_file("lib/phoenix_web/controllers/post_html/new.html.heex", fn file ->
-        assert file =~ ~S(<.simple_form :let={f} for={@changeset} action={~p"/posts"}>)
-      end)
-
       assert_file("lib/phoenix_web/controllers/post_html/edit.html.heex", fn file ->
-        assert file =~
-                 ~S(<.simple_form :let={f} for={@changeset} method="put" action={~p"/posts/#{@post}"}>)
+        assert file =~ ~S(action={~p"/posts/#{@post}"})
       end)
 
-      for filename <- ["new.html.heex", "edit.html.heex"] do
-        assert_file("lib/phoenix_web/controllers/post_html/#{filename}", fn file ->
-          assert file =~ ~s(<.input field={f[:title]} type="text")
-          assert file =~ ~s(<.input field={f[:votes]} type="number")
-          assert file =~ ~s(<.input field={f[:cost]} type="number" label="Cost" step="any")
-          assert file =~ """
-            <.input
-              field={f[:tags]}
-              type="select"
-              multiple
-          """
-          assert file =~ ~s(<.input field={f[:popular]} type="checkbox")
-          assert file =~ ~s(<.input field={f[:drafted_at]} type="datetime-local")
-          assert file =~ ~s(<.input field={f[:published_at]} type="datetime-local")
-          assert file =~ ~s(<.input field={f[:deleted_at]} type="datetime-local")
-          assert file =~ ~s(<.input field={f[:announcement_date]} type="date")
-          assert file =~ ~s(<.input field={f[:alarm]} type="time")
-          assert file =~ ~s(<.input field={f[:secret]} type="text" label="Secret" />)
-          assert file =~ """
-            <.input
-              field={f[:status]}
-              type="select"
-          """
-          assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
+      assert_file("lib/phoenix_web/controllers/post_html/post_form.html.heex", fn file ->
+        assert file =~ ~S(<.simple_form :let={f} for={@changeset} action={@action}>)
+        assert file =~ ~s(<.input field={f[:title]} type="text")
+        assert file =~ ~s(<.input field={f[:votes]} type="number")
+        assert file =~ ~s(<.input field={f[:cost]} type="number" label="Cost" step="any")
 
-          refute file =~ ~s(<.input field={f[:user_id]})
-        end)
-      end
+        assert file =~ """
+                 <.input
+                   field={f[:tags]}
+                   type="select"
+                   multiple
+               """
+
+        assert file =~ ~s(<.input field={f[:popular]} type="checkbox")
+        assert file =~ ~s(<.input field={f[:drafted_at]} type="datetime-local")
+        assert file =~ ~s(<.input field={f[:published_at]} type="datetime-local")
+        assert file =~ ~s(<.input field={f[:deleted_at]} type="datetime-local")
+        assert file =~ ~s(<.input field={f[:announcement_date]} type="date")
+        assert file =~ ~s(<.input field={f[:alarm]} type="time")
+        assert file =~ ~s(<.input field={f[:secret]} type="text" label="Secret" />)
+
+        assert file =~ """
+                 <.input
+                   field={f[:status]}
+                   type="select"
+               """
+
+        assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
+
+        refute file =~ ~s(<.input field={f[:user_id]})
+      end)
 
       send(self(), {:mix_shell_input, :yes?, true})
       Gen.Html.run(~w(Blog Comment comments title:string))
@@ -450,11 +446,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       in_tmp_project(config.test, fn ->
         Gen.Html.run(~w(Blog Post posts status:enum:new))
 
-        assert_file("lib/phoenix_web/controllers/post_html/new.html.heex", fn file ->
-          assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
-        end)
-
-        assert_file("lib/phoenix_web/controllers/post_html/edit.html.heex", fn file ->
+        assert_file("lib/phoenix_web/controllers/post_html/post_form.html.heex", fn file ->
           assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
         end)
       end)

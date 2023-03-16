@@ -412,7 +412,7 @@ defmodule Phoenix.ChannelTest do
     %Socket{transport: {__MODULE__, sup}} = socket
 
     starter =
-      fn _, _, _, spec ->
+      fn _, _, spec ->
         Supervisor.start_child(sup, %{spec | id: make_ref()})
       end
 

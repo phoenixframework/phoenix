@@ -223,7 +223,7 @@ defmodule HelloWeb.Router do
 ...
 ```
 
-Phoenix allows us to change formats on the fly with the `_format` query string parameter. If we go to [`http://localhost:4000/?_format=json`](http://localhost:4000/?_format=json), we will see `%{"message": "this is some JSON"}`. 
+Phoenix allows us to change formats on the fly with the `_format` query string parameter. If we go to [`http://localhost:4000/?_format=json`](http://localhost:4000/?_format=json), we will see `%{"message": "this is some JSON"}`.
 
 In practice, however, applications that need to render both formats typically use two distinct pipelines for each, such as the `pipeline :api` already defined in your router file. To learn more, see [our JSON and APIs guide](json_and_apis.md).
 
@@ -381,7 +381,7 @@ For our convenience, the application layout, `lib/hello_web/components/layouts/a
   phx-disconnected={show("#disconnected")}
   phx-connected={hide("#disconnected")}
 >
-  Attempting to reconnect <Heroicons.arrow_path class="ml-1 w-3 h-3 inline animate-spin" />
+  Attempting to reconnect <.icon name="hero-arrow-path" class="ml-1 w-3 h-3 inline animate-spin" />
 </.flash>
 ```
 

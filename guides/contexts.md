@@ -38,7 +38,7 @@ description:string price:decimal views:integer
 
 * creating lib/hello_web/controllers/product_controller.ex
 * creating lib/hello_web/controllers/product_html/edit.html.heex
-* creating lib/hello_web/controllers/product_html/form.html.heex
+* creating lib/hello_web/controllers/product_html/product_form.html.heex
 * creating lib/hello_web/controllers/product_html/index.html.heex
 * creating lib/hello_web/controllers/product_html/new.html.heex
 * creating lib/hello_web/controllers/product_html/show.html.heex
@@ -493,6 +493,8 @@ Next, let's expose our new feature to the web by adding the category input to ou
 defmodule HelloWeb.ProductHTML do
   use HelloWeb, :html
 
+  import Phoenix.HTML.Form
+
   def category_select(f, changeset) do
     existing_ids =
       changeset
@@ -508,9 +510,9 @@ defmodule HelloWeb.ProductHTML do
 end
 ```
 
-We added a new `category_select/2` function which uses `Phoenix.HTML`'s `multiple_select/3` to generate a multiple select tag. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
+We added a new `category_select/2` function which uses `Phoenix.HTML.Form`'s `multiple_select/3` to generate a multiple select tag. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
 
-With our `category_select` function in place, we can open up `lib/hello_web/controllers/product_html/form.html.heex` and add:
+With our `category_select` function in place, we can open up `lib/hello_web/controllers/product_html/product_form.html.heex` and add:
 
 ```diff
   ...
@@ -926,6 +928,10 @@ defmodule HelloWeb.CartHTML do
 
   alias Hello.ShoppingCart
 
+  import Phoenix.HTML.Form
+
+  embed_templates "cart_html/*"
+
   def currency_to_str(%Decimal{} = val), do: "$#{Decimal.round(val, 2)}"
 end
 ```
@@ -1048,7 +1054,7 @@ $ mix phx.gen.html Orders Order orders user_uuid:uuid total_price:decimal
 
 * creating lib/hello_web/controllers/order_controller.ex
 * creating lib/hello_web/controllers/order_html/edit.html.heex
-* creating lib/hello_web/controllers/order_html/form.html.heex
+* creating lib/hello_web/controllers/order_html/order_form.html.heex
 * creating lib/hello_web/controllers/order_html/index.html.heex
 * creating lib/hello_web/controllers/order_html/new.html.heex
 * creating lib/hello_web/controllers/order_html/show.html.heex

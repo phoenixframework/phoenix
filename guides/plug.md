@@ -77,7 +77,7 @@ Module plugs are another type of plug that let us define a connection transforma
 - [`init/1`] which initializes any arguments or options to be passed to [`call/2`]
 - [`call/2`] which carries out the connection transformation. [`call/2`] is just a function plug that we saw earlier
 
-To see this in action, let's write a module plug that puts the `:locale` key and value into the connection assign for downstream use in other plugs, controller actions, and our views. Put the contents below in a file named `lib/hello_web/plugs/locale.ex`:
+To see this in action, let's write a module plug that puts the `:locale` key and value into the connection for downstream use in other plugs, controller actions, and our views. Put the contents below in a file named `lib/hello_web/plugs/locale.ex`:
 
 ```elixir
 defmodule HelloWeb.Plugs.Locale do
@@ -116,11 +116,10 @@ defmodule HelloWeb.Router do
 
 In the [`init/1`] callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple [`call/2`] function heads to validate the locale in the params, and fall back to `"en"` if there is no match. The [`assign/3`] is a part of the `Plug.Conn` module and it's how we store values in the `conn` data structure.
 
-To see the assign in action, go to the layout in `lib/hello_web/templates/layout/app.html.heex` and add the following code to the main container:
+To see the assign in action, go to the template in `lib/hello_web/components/layouts/home.html.heex` and add the following code after the closing of the `</h1>` tag:
 
 ```heex
-<main class="px-4 py-20 sm:px-6 lg:px-8">
-  <p>Locale: <%= @locale %></p>
+<p>Locale: <%= @locale %></p>
 ```
 
 Go to [http://localhost:4000/](http://localhost:4000/) and you should see the locale exhibited. Visit [http://localhost:4000/?locale=fr](http://localhost:4000/?locale=fr) and you should see the assign changed to `"fr"`. Someone can use this information alongside [Gettext](https://hexdocs.pm/gettext/Gettext.html) to provide a fully internationalized web application.

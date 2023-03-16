@@ -130,6 +130,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
        Path.join([controller_pre, "#{singular}_html", "index.html.heex"])},
       {:eex, "new.html.heex", Path.join([controller_pre, "#{singular}_html", "new.html.heex"])},
       {:eex, "show.html.heex", Path.join([controller_pre, "#{singular}_html", "show.html.heex"])},
+      {:eex, "resource_form.html.heex",
+       Path.join([controller_pre, "#{singular}_html", "#{singular}_form.html.heex"])},
       {:eex, "html.ex", Path.join([controller_pre, "#{singular}_html.ex"])},
       {:eex, "controller_test.exs", Path.join([test_pre, "#{singular}_controller_test.exs"])}
     ]
@@ -226,10 +228,10 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   defp default_options({:array, :string}),
-    do: Enum.map([1,2], &({"Option #{&1}", "option#{&1}"}))
+    do: Enum.map([1, 2], &{"Option #{&1}", "option#{&1}"})
 
   defp default_options({:array, :integer}),
-    do: Enum.map([1,2], &({"#{&1}", &1}))
+    do: Enum.map([1, 2], &{"#{&1}", &1})
 
   defp default_options({:array, _}), do: []
 

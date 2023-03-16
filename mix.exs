@@ -8,7 +8,7 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.7.0-rc.3"
+  @version "1.7.1"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -103,7 +103,7 @@ defmodule Phoenix.MixProject do
       {:mint_web_socket, "~> 1.0.0", only: :test},
 
       # Dev dependencies
-      {:esbuild, "~> 0.5", only: :dev}
+      {:esbuild, "~> 0.7", only: :dev}
     ]
   end
 
@@ -228,12 +228,20 @@ defmodule Phoenix.MixProject do
     [
       docs: ["docs", &generate_js_docs/1],
       "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min", "esbuild main"],
-      "assets.watch": "esbuild module --watch"
+      "assets.watch": "esbuild module --watch",
+      "archive.build": &raise_on_archive_build/1
     ]
   end
 
-  def generate_js_docs(_) do
+  defp generate_js_docs(_) do
     Mix.Task.run("app.start")
     System.cmd("npm", ["run", "docs"], cd: "assets")
+  end
+
+  defp raise_on_archive_build(_) do
+    Mix.raise("""
+    You are trying to install "phoenix" as an archive, which is not supported. \
+    You probably meant to install "phx_new" instead
+    """)
   end
 end

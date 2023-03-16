@@ -23,12 +23,19 @@ defmodule Phoenix.Socket.TransportTest do
       signing_salt: "change_me"
     ]
 
-    def session_config, do: @session_config
+    def session_config(overrides \\ []), do: Keyword.merge(@session_config, overrides)
 
     plug Plug.Session, @session_config
     plug :fetch_session
-    plug Plug.CSRFProtection
+    plug :put_csrf
     plug :put_session
+
+    defp put_csrf(conn, _opts) do
+      conn = Plug.Conn.fetch_query_params(conn)
+      session_key = Map.get(conn.query_params, "session_key", "_csrf_token")
+      opts = Plug.CSRFProtection.init(session_key: session_key)
+      Plug.CSRFProtection.call(conn, opts)
+    end
 
     defp put_session(conn, _) do
       conn
@@ -288,5 +295,40 @@ defmodule Phoenix.Socket.TransportTest do
                |> fetch_query_params()
                |> Transport.connect_info(Endpoint, connect_info)
     end
+
+    test "loads the session with custom :csrf_token_key" do
+      conn = conn(:get, "https://foo.com?session_key=_custom_csrf_token") |> Endpoint.call([])
+      csrf_token = conn.resp_body
+      session_cookie = conn.cookies["_hello_key"]
+
+      connect_info = load_connect_info(
+        session: {
+          Endpoint,
+          :session_config,
+          [[csrf_token_key: "_custom_csrf_token"]]
+        }
+      )
+
+      assert %{session: %{"from_session" => "123"}} =
+              conn(:get, "https://foo.com/", _csrf_token: csrf_token)
+              |> put_req_cookie("_hello_key", session_cookie)
+              |> fetch_query_params()
+              |> Transport.connect_info(Endpoint, connect_info)
+
+      connect_info = load_connect_info(
+        session: {
+          Endpoint,
+          :session_config,
+          [[csrf_token_key: "bad_key"]]
+        }
+      )
+
+      assert %{session: nil} =
+              conn(:get, "https://foo.com/", _csrf_token: csrf_token)
+              |> put_req_cookie("_hello_key", session_cookie)
+              |> fetch_query_params()
+              |> Transport.connect_info(Endpoint, connect_info)
+    end
+
   end
 end

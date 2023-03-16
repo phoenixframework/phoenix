@@ -203,7 +203,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
     assert view_module(conn, "html") == Hello
 
-    assert_raise RuntimeError, ~r/no view was found for the format: print/, fn ->
+    assert_raise RuntimeError, ~r/no view was found for the format: "print"/, fn ->
       view_module(conn)
     end
 
@@ -704,6 +704,8 @@ defmodule Phoenix.Controller.ControllerTest do
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController, []) == MyApp.Admin.UserView
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController, formats: [:html, :json]) ==
       [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserJSON]
+    assert Phoenix.Controller.__view__(MyApp.Admin.UserController, formats: [:html, json: "View"]) ==
+      [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserView]
   end
 
   test "__layout__ returns the layout module based on controller module" do

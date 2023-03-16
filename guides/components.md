@@ -34,7 +34,7 @@ That's simple enough. There's only two lines, `use HelloWeb, :html`. This line c
 
 All of the imports and aliases we make in our module will also be available in our templates. That's because templates are effectively compiled into functions inside their respective module. For example, if you define a function in your module, you will be able to invoke it directly from the template. Let's see this in practice.
 
-Imagine we want to refactor our `show.html.heex` to move the rendering of `<h2>Hello World, from <%= @messenger %>!</h2>` to its own function. We can move it to a function component inside `HelloHTML`:
+Imagine we want to refactor our `show.html.heex` to move the rendering of `<h2>Hello World, from <%= @messenger %>!</h2>` to its own function. We can move it to a function component inside `HelloHTML`, let's do so:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -52,7 +52,7 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-We declared the attributes we accept via `attr` provided by `Phoenix.Component`, then we defined our `title/1` function which returns the HEEx template. When we reload our home page, we should see our new title. Since templates are compiled inside the view, we can invoke the view function simply as `<.greet messenger="..." />`, but we can also type `<HelloWeb.HelloHTML.greet messenger="..." />` if the component was defined elsewhere.
+In the example above, we defined a `greet/1` function which returns the HEEx template. Above the function, we called `attr`, provided by `Phoenix.Component`, which defines the attributes/assigns that function expects. Since templates are embedded inside the `HelloHTML` module, we can invoke the our component simply as `<.greet messenger="..." />`, but we can also type `<HelloWeb.HelloHTML.greet messenger="..." />` if the component was defined elsewhere.
 
 By declaring attributes, Phoenix will warn if we call the `<.greet />` component without passing attributes. If an attribute is optional, you can specify the `:default` option with a value:
 
@@ -183,13 +183,13 @@ In other words, after rendering your page, the result is placed in the `@inner_c
 
 Phoenix provides all kinds of conveniences to control which layout should be rendered. For example, the `Phoenix.Controller` module provides the `put_root_layout/2` function for us to switch _root layouts_. This takes `conn` as its first argument and a keyword list of formats and their layouts. You can set it to `false` to disable the layout altogether.
 
-You can edit the `index` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this.
+You can edit the `home` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this.
 
 ```elixir
-def index(conn, _params) do
+def home(conn, _params) do
   conn
   |> put_root_layout(html: false)
-  |> render(:index)
+  |> render(:home)
 end
 ```
 
@@ -197,13 +197,13 @@ After reloading [http://localhost:4000/](http://localhost:4000/), we should see 
 
 To customize the application layout, we invoke a similar function named `put_layout/2`. Let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, copy the existing `app.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/components/layouts`. Then remove everything inside the `<header>...</header>` tags (or change it to whatever you desire) in the new file.
 
-Now, in the `index` action of the controller of `lib/hello_web/controllers/page_controller.ex`, add the following:
+Now, in the `home` action of the controller of `lib/hello_web/controllers/page_controller.ex`, add the following:
 
 ```elixir
-def index(conn, _params) do
+def home(conn, _params) do
   conn
   |> put_layout(html: :admin)
-  |> render(:index)
+  |> render(:home)
 end
 ```
 

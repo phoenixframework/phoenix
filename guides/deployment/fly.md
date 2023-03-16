@@ -398,6 +398,6 @@ Refer to the [Fly.io Elixir documentation](https://fly.io/docs/getting-started/e
 
 ## Troubleshooting
 
-See [Troubleshooting](https://fly.io/docs/getting-started/troubleshooting/#welcome-message)
+See [Troubleshooting](https://fly.io/docs/getting-started/troubleshooting/) and [Elixir Troubleshooting](https://fly.io/docs/elixir/the-basics/troubleshooting/)
 
 Visit the [Fly.io Community](https://community.fly.io/) to find solutions and ask questions.

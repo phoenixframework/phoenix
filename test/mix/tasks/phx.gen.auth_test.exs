@@ -192,16 +192,16 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/components/layouts/root.html.heex", fn file ->
         assert file =~
-                 ~S|<.link href={~p"/users/settings"}>Settings</.link>|
+                 ~r|<.link.*href={~p"/users/settings"}.*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/log_out"} method="delete">Log out</.link>|
+                 ~r|<.link.*href={~p"/users/log_out"}.*method="delete".*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/register"}>Register</.link>|
+                 ~r|<.link.*href={~p"/users/register"}.*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/log_in"}>Log in</.link>|
+                 ~r|<.link.*href={~p"/users/log_in"}.*>|s
       end)
 
       assert_file("test/support/conn_case.ex", fn file ->
@@ -327,16 +327,16 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/components/layouts/root.html.heex", fn file ->
         assert file =~
-                 ~S|<.link href={~p"/users/settings"}>Settings</.link>|
+                 ~r|<\.link.*href={~p"/users/settings"}.*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/log_out"} method="delete">Log out</.link>|
+                 ~r|<\.link.*href={~p"/users/log_out"}.*method="delete".*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/register"}>Register</.link>|
+                 ~r|<\.link.*href={~p"/users/register"}.*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/log_in"}>Log in</.link>|
+                 ~r|<\.link.*href={~p"/users/log_in"}.*>|s
       end)
 
       assert_file("test/support/conn_case.ex", fn file ->
@@ -366,16 +366,16 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/components/layouts/root.html.heex", fn file ->
         assert file =~
-                 ~S|<.link href={~p"/users/settings"}>Settings</.link>|
+                 ~r|<.link.*href={~p"/users/settings"}.*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/log_out"} method="delete">Log out</.link>|
+                 ~r|<.link.*href={~p"/users/log_out"}.*method="delete".*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/register"}>Register</.link>|
+                 ~r|<.link.*href={~p"/users/register"}.*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/log_in"}>Log in</.link>|
+                 ~r|<.link.*href={~p"/users/log_in"}.*>|s
       end)
 
       assert_file("lib/my_app_web/router.ex", fn file ->
@@ -435,16 +435,16 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/components/layouts/root.html.heex", fn file ->
         assert file =~
-                 ~S|<.link href={~p"/users/settings"}>Settings</.link>|
+                 ~r|<.link.*href={~p"/users/settings"}.*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/log_out"} method="delete">Log out</.link>|
+                 ~r|<.link.*href={~p"/users/log_out"}.*method="delete".*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/register"}>Register</.link>|
+                 ~r|<.link.*href={~p"/users/register"}.*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/users/log_in"}>Log in</.link>|
+                 ~r|<.link.*href={~p"/users/log_in"}.*>|s
       end)
 
       assert_file("lib/my_app_web/router.ex", fn file ->
@@ -528,10 +528,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  ~S(<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/confirm"}>)
 
         assert file =~
-                 ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
+                 ~r|<\.link.*href={~p"/warehouse/users/register"}.*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/warehouse/users/log_in"}>Log in</.link>|
+                 ~r|<\.link.*href={~p"/warehouse/users/log_in"}.*>|s
       end)
 
       assert_file(
@@ -550,16 +550,16 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/components/layouts/root.html.heex", fn file ->
         assert file =~
-                 ~S|<.link href={~p"/warehouse/users/settings"}>Settings</.link>|
+                 ~r|<\.link.*href={~p"/warehouse/users/settings"}.*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/warehouse/users/log_out"} method="delete">Log out</.link>|
+                 ~r|<\.link.*href={~p"/warehouse/users/log_out"}.*method="delete".*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/warehouse/users/register"}>Register</.link>|
+                 ~r|<\.link.*href={~p"/warehouse/users/register"}.*>|s
 
         assert file =~
-                 ~S|<.link href={~p"/warehouse/users/log_in"}>Log in</.link>|
+                 ~r|<\.link.*href={~p"/warehouse/users/log_in"}.*>|s
       end)
 
       assert_file(
@@ -1356,23 +1356,44 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         layout file, please add the following code to it where you'd
         like the user menu items to be rendered.
 
-            <ul>
+            <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
               <%= if @current_user do %>
-                <li>
+                <li class="text-[0.8125rem] leading-6 text-zinc-900">
                   <%= @current_user.email %>
                 </li>
                 <li>
-                  <.link href={~p"/users/settings"}>Settings</.link>
+                  <.link
+                    href={~p"/users/settings"}
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                  >
+                    Settings
+                  </.link>
                 </li>
                 <li>
-                  <.link href={~p"/users/log_out"} method="delete">Log out</.link>
+                  <.link
+                    href={~p"/users/log_out"}
+                    method="delete"
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                  >
+                    Log out
+                  </.link>
                 </li>
               <% else %>
                 <li>
-                  <.link href={~p"/users/register"}>Register</.link>
+                  <.link
+                    href={~p"/users/register"}
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                  >
+                    Register
+                  </.link>
                 </li>
                 <li>
-                  <.link href={~p"/users/log_in"}>Log in</.link>
+                  <.link
+                    href={~p"/users/log_in"}
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                  >
+                    Log in
+                  </.link>
                 </li>
               <% end %>
             </ul>
@@ -1400,23 +1421,44 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         Add the following user menu items to your lib/my_app_web/components/layouts/root.html.heex layout file:
 
-            <ul>
+            <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
               <%= if @current_user do %>
-                <li>
+                <li class="text-[0.8125rem] leading-6 text-zinc-900">
                   <%= @current_user.email %>
                 </li>
                 <li>
-                  <.link href={~p"/users/settings"}>Settings</.link>
+                  <.link
+                    href={~p"/users/settings"}
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                  >
+                    Settings
+                  </.link>
                 </li>
                 <li>
-                  <.link href={~p"/users/log_out"} method="delete">Log out</.link>
+                  <.link
+                    href={~p"/users/log_out"}
+                    method="delete"
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                  >
+                    Log out
+                  </.link>
                 </li>
               <% else %>
                 <li>
-                  <.link href={~p"/users/register"}>Register</.link>
+                  <.link
+                    href={~p"/users/register"}
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                  >
+                    Register
+                  </.link>
                 </li>
                 <li>
-                  <.link href={~p"/users/log_in"}>Log in</.link>
+                  <.link
+                    href={~p"/users/log_in"}
+                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                  >
+                    Log in
+                  </.link>
                 </li>
               <% end %>
             </ul>

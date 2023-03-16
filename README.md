@@ -1,4 +1,4 @@
-![phoenix logo](https://raw.githubusercontent.com/phoenixframework/phoenix/master/priv/static/phoenix.png)
+![phoenix logo](https://raw.githubusercontent.com/phoenixframework/phoenix/main/priv/static/phoenix.png)
 
 > Peace of mind from prototype to production.
 
@@ -40,7 +40,7 @@ defp deps do
   [{:phoenix, path: "../..", override: true},
 ```
 
-To create projects outside of the `installer/` directory, add the latest archive to your machine by following the instructions in [installer/README.md](https://github.com/phoenixframework/phoenix/blob/master/installer/README.md)
+To create projects outside of the `installer/` directory, add the latest archive to your machine by following the instructions in [installer/README.md](https://github.com/phoenixframework/phoenix/blob/main/installer/README.md)
 
 To build the documentation from source:
 
