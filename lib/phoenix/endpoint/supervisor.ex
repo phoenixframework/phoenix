@@ -123,16 +123,17 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp server_children(mod, config, server?) do
-    if server? do
-      adapter = config[:adapter] || Phoenix.Endpoint.Cowboy2Adapter
-      adapter.child_specs(mod, config)
-    else
-      if config[:http] || config[:https] do
+    cond do
+      server? ->
+        adapter = config[:adapter] || Phoenix.Endpoint.Cowboy2Adapter
+        adapter.child_specs(mod, config)
+
+      config[:http] || config[:https] ->
         Logger.info(
           "Configuration :server was not enabled for #{inspect(mod)}, http/https services won't start"
         )
-      end
-      []
+        []
+      true -> []
     end
   end
 
