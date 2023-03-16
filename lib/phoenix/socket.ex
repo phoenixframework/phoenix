@@ -445,9 +445,7 @@ defmodule Phoenix.Socket do
     opts = Keyword.merge(socket_options, opts)
 
     if drainer = Keyword.get(opts, :drainer, []) do
-      shutdown = Keyword.get(drainer, :shutdown, 15_000)
-      interval = Keyword.get(drainer, :drain_check_interval, 1_000)
-      {Phoenix.Socket.PoolDrainer, {endpoint, handler, shutdown, interval}}
+      {Phoenix.Socket.PoolDrainer, {endpoint, handler, drainer}}
     else
       :ignore
     end

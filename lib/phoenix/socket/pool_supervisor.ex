@@ -69,14 +69,14 @@ defmodule Phoenix.Socket.PoolDrainer do
   use GenServer
   require Logger
 
-  def child_spec({_endpoint, name, shutdown, _interval} = tuple) do
+  def child_spec({_endpoint, name, opts} = tuple) do
     # The process should terminate within shutdown but,
     # in case it doesn't, we will be killed if we exceed
     # double of that
     %{
       id: {:terminator, name},
       start: {__MODULE__, :start_link, [tuple]},
-      shutdown: shutdown * 2
+      shutdown: Keyword.get(opts, :shutdown, 30_000)
     }
   end
 
@@ -85,13 +85,15 @@ defmodule Phoenix.Socket.PoolDrainer do
   end
 
   @impl true
-  def init(tuple) do
+  def init({endpoint, name, opts}) do
     Process.flag(:trap_exit, true)
-    {:ok, tuple}
+    size = Keyword.get(opts, :batch_size, 10_000)
+    interval = Keyword.get(opts, :batch_interval, 2_000)
+    {:ok, {endpoint, name, size, interval}}
   end
 
   @impl true
-  def terminate(_reason, {endpoint, name, shutdown, interval}) do
+  def terminate(_reason, {endpoint, name, size, interval}) do
     ets = endpoint.config({:socket, name})
     partitions = :ets.lookup_element(ets, :partitions, 2)
 
@@ -106,33 +108,23 @@ defmodule Phoenix.Socket.PoolDrainer do
         end
       end)
 
-    rounds = div(shutdown, interval)
-    batch = max(ceil(total / rounds), 1)
+    rounds = div(total, size) + 1
 
     if total != 0 do
-      Logger.info("Shutting down #{total} sockets in #{shutdown}ms in #{rounds} rounds")
+      Logger.info("Shutting down #{total} sockets in #{rounds} rounds of #{interval}ms")
     end
 
-    for pids <- collection |> Stream.concat() |> Stream.chunk_every(batch) do
-      {_pid, ref} =
-        spawn_monitor(fn ->
-          refs =
-            for pid <- pids do
-              send(pid, %Phoenix.Socket.Broadcast{event: "phx_draining"})
-              Process.monitor(pid)
-            end
+    for {pids, index} <-
+      collection |> Stream.concat() |> Stream.chunk_every(size) |> Stream.with_index(1) do
 
-          Enum.each(refs, fn _ ->
-            receive do
-              {:DOWN, _, _, _, _} -> :ok
-            end
-          end)
-        end)
+      spawn(fn ->
+        for pid <- pids do
+          send(pid, %Phoenix.Socket.Broadcast{event: "phx_draining"})
+        end
+      end)
 
-      receive do
-        {:DOWN, ^ref, _, _, _} -> :ok
-      after
-        interval -> Process.demonitor(ref, [:flush])
+      if index < rounds do
+        Process.sleep(interval)
       end
     end
   end
