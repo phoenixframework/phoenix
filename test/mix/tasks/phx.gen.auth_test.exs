@@ -1283,11 +1283,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                                  # Import authentication plugs
                                  import MyAppWeb.UserAuth,
-                                  only: [
-                                    fetch_current_user: 2,
-                                    redirect_if_user_is_authenticated: 2,
-                                    require_authenticated_user: 2
-                                  ]
+                                   only: [
+                                     fetch_current_user: 2,
+                                     redirect_if_user_is_authenticated: 2,
+                                     require_authenticated_user: 2
+                                   ]
 
                                  ...
                                end
