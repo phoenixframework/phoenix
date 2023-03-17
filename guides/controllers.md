@@ -14,15 +14,15 @@ A newly generated Phoenix app will have a single controller named `PageControlle
 defmodule HelloWeb.PageController do
   use HelloWeb, :controller
 
-  def index(conn, _params) do
-    render(conn, :index)
+  def home(conn, _params) do
+    render(conn, :home, layout: false)
   end
 end
 ```
 
 The first line below the module definition invokes the `__using__/1` macro of the `HelloWeb` module, which imports some useful modules.
 
-`PageController` gives us the `index` action to display the Phoenix [welcome page] associated with the default route Phoenix defines in the router.
+`PageController` gives us the `home` action to display the Phoenix [welcome page] associated with the default route Phoenix defines in the router.
 
 ## Actions
 
@@ -372,7 +372,7 @@ For our convenience, a `flash_group` component is already available and added to
 <.flash_group flash={@flash} />
 ```
 
-When we reload the [welcome page], our messages should appear in the top right corner of the page.
+When we reload the [welcome page], our message should appear in the top right corner of the page.
 
 The flash functionality is handy when mixed with redirects. Perhaps you want to redirect to a page with some extra information. If we reuse the redirect action from the previous section, we can do:
 
@@ -384,7 +384,7 @@ The flash functionality is handy when mixed with redirects. Perhaps you want to 
   end
 ```
 
-Now if you reload the [welcome page], you will be redirected and the flash messages will be shown once more.
+Now if you reload the [welcome page], you will be redirected and the flash message will be shown once more.
 
 Besides [`put_flash/3`], the `Phoenix.Controller` module has another useful function worth knowing about. [`clear_flash/1`] takes only `conn` and removes any flash messages which might be stored in the session.
 
