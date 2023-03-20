@@ -17,8 +17,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       <p class="text-center mt-4">
         <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
-        |
-        <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
+        | <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
       </p>
     </div>
     """

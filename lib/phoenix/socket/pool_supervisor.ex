@@ -2,7 +2,6 @@ defmodule Phoenix.Socket.PoolSupervisor do
   @moduledoc false
   use Supervisor
 
-  # TODO: Use PartitionSupervisor once we require Elixir v1.14
   def start_link({endpoint, name, partitions}) do
     Supervisor.start_link(
       __MODULE__,
@@ -11,7 +10,9 @@ defmodule Phoenix.Socket.PoolSupervisor do
     )
   end
 
-  def start_child(endpoint, name, key, spec) do
+  def start_child(socket, key, spec) do
+    %{endpoint: endpoint, handler: name} = socket
+
     case endpoint.config({:socket, name}) do
       ets when not is_nil(ets) ->
         partitions = :ets.lookup_element(ets, :partitions, 2)
@@ -31,7 +32,6 @@ defmodule Phoenix.Socket.PoolSupervisor do
     end
   end
 
-  @doc false
   def start_pooled(ref, i) do
     case DynamicSupervisor.start_link(strategy: :one_for_one) do
       {:ok, pid} ->
@@ -43,8 +43,9 @@ defmodule Phoenix.Socket.PoolSupervisor do
     end
   end
 
-  @doc false
+  @impl true
   def init({endpoint, name, partitions}) do
+    # TODO: Use persisent term on Elixir v1.12+
     ref = :ets.new(name, [:public, read_concurrency: true])
     :ets.insert(ref, {:partitions, partitions})
     Phoenix.Config.permanent(endpoint, {:socket, name}, ref)
@@ -60,5 +61,71 @@ defmodule Phoenix.Socket.PoolSupervisor do
       end
 
     Supervisor.init(children, strategy: :one_for_one)
+  end
+end
+
+defmodule Phoenix.Socket.PoolDrainer do
+  @moduledoc false
+  use GenServer
+  require Logger
+
+  def child_spec({_endpoint, name, opts} = tuple) do
+    # The process should terminate within shutdown but,
+    # in case it doesn't, we will be killed if we exceed
+    # double of that
+    %{
+      id: {:terminator, name},
+      start: {__MODULE__, :start_link, [tuple]},
+      shutdown: Keyword.get(opts, :shutdown, 30_000)
+    }
+  end
+
+  def start_link(tuple) do
+    GenServer.start_link(__MODULE__, tuple)
+  end
+
+  @impl true
+  def init({endpoint, name, opts}) do
+    Process.flag(:trap_exit, true)
+    size = Keyword.get(opts, :batch_size, 10_000)
+    interval = Keyword.get(opts, :batch_interval, 2_000)
+    {:ok, {endpoint, name, size, interval}}
+  end
+
+  @impl true
+  def terminate(_reason, {endpoint, name, size, interval}) do
+    ets = endpoint.config({:socket, name})
+    partitions = :ets.lookup_element(ets, :partitions, 2)
+
+    {collection, total} =
+      Enum.map_reduce(0..(partitions - 1), 0, fn index, total ->
+        try do
+          sup = :ets.lookup_element(ets, index, 2)
+          children = DynamicSupervisor.which_children(sup)
+          {Enum.map(children, &elem(&1, 1)), total + length(children)}
+        catch
+          _, _ -> {[], total}
+        end
+      end)
+
+    rounds = div(total, size) + 1
+
+    if total != 0 do
+      Logger.info("Shutting down #{total} sockets in #{rounds} rounds of #{interval}ms")
+    end
+
+    for {pids, index} <-
+      collection |> Stream.concat() |> Stream.chunk_every(size) |> Stream.with_index(1) do
+
+      spawn(fn ->
+        for pid <- pids do
+          send(pid, %Phoenix.Socket.Broadcast{event: "phx_drain"})
+        end
+      end)
+
+      if index < rounds do
+        Process.sleep(interval)
+      end
+    end
   end
 end

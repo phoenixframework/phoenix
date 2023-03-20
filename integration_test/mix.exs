@@ -34,7 +34,7 @@ defmodule Phoenix.Integration.MixProject do
       {:phx_new, path: "../installer"},
       {:phoenix, path: "..", override: true},
       {:phoenix_ecto, "~> 4.4"},
-      {:esbuild, "~> 0.5", runtime: false},
+      {:esbuild, "~> 0.7", runtime: false},
       {:ecto_sql, "~> 3.6"},
       {:postgrex, ">= 0.0.0"},
       {:myxql, ">= 0.0.0"},
@@ -54,7 +54,7 @@ defmodule Phoenix.Integration.MixProject do
       {:bcrypt_elixir, "~> 3.0"},
       {:argon2_elixir, "~> 3.0"},
       {:pbkdf2_elixir, "~> 2.0"},
-      {:tailwind, "~> 0.1"},
+      {:tailwind, "~> 0.2"},
       {:finch, "~> 0.13"}
     ]
   end

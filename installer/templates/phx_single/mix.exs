@@ -45,8 +45,8 @@ defmodule <%= @app_module %>.MixProject do
       {:phoenix_live_view, "~> 0.18.16"},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.7.2"},<% end %><%= if @javascript do %>
-      {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
-      {:tailwind, "~> 0.1.8", runtime: Mix.env() == :dev},<% end %><%= if @mailer do %>
+      {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
+      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},<% end %><%= if @mailer do %>
       {:swoosh, "~> 1.3"},
       {:finch, "~> 0.13"},<% end %>
       {:telemetry_metrics, "~> 0.6"},

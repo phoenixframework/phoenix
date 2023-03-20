@@ -21,8 +21,8 @@ defmodule Phoenix.Socket.Transport do
         @behaviour Phoenix.Socket.Transport
 
         def child_spec(opts) do
-          # We won't spawn any process, so let's return a dummy task
-          %{id: __MODULE__, start: {Task, :start_link, [fn -> :ok end]}, restart: :transient}
+          # We won't spawn any process, so let's ignore the child spec
+          :ignore
         end
 
         def connect(state) do
@@ -115,8 +115,22 @@ defmodule Phoenix.Socket.Transport do
       socket "/my_app", MyApp.Socket, shutdown: 5000
 
   means `child_spec([shutdown: 5000])` will be invoked.
+
+  `:ignore` means no child spec is necessary for this socket.
   """
-  @callback child_spec(keyword) :: :supervisor.child_spec()
+  @callback child_spec(keyword) :: :supervisor.child_spec() | :ignore
+
+  @doc """
+  Returns a child specification for terminating the socket.
+
+  This is a process that is started late in the supervision
+  tree with the specific goal of draining connections on
+  application shutdown.
+
+  Similar to `child_spec/1`, it receives the socket options
+  from the endpoint.
+  """
+  @callback drainer_spec(keyword) :: :supervisor.child_spec() | :ignore
 
   @doc """
   Connects to the socket.
@@ -224,7 +238,7 @@ defmodule Phoenix.Socket.Transport do
   """
   @callback terminate(reason :: term, state) :: :ok
 
-  @optional_callbacks handle_control: 2
+  @optional_callbacks handle_control: 2, drainer_spec: 1
 
   require Logger
 

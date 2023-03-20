@@ -164,6 +164,19 @@ defmodule Phoenix.Socket do
         {:stop, {:shutdown, :left}, socket}
       end
 
+  A special message delivered to all channels is a Broadcast with
+  event "phx_drain", which is sent when draining the socket during
+  application shutdown. Typically it is handled by sending a drain
+  message to the transport, causing it to shutdown:
+
+      def handle_info(
+            %Broadcast{event: "phx_drain"},
+            %{transport_pid: transport_pid} = socket
+          ) do
+        send(transport_pid, :socket_drain)
+        {:stop, {:shutdown, :draining}, socket}
+      end
+
   We also recommend all channels to monitor the `transport_pid`
   on `init` and exit if the transport exits. We also advise to rewrite
   `:normal` exit reasons (usually due to the socket being closed)
@@ -179,9 +192,7 @@ defmodule Phoenix.Socket do
   a `{:socket_close, pid, reason}` message is sent to the socket before
   shutdown.
 
-  Custom channel implementations cannot be tested with `Phoenix.ChannelTest`
-  and are currently considered experimental. The underlying API may be
-  changed at any moment.
+  Custom channel implementations cannot be tested with `Phoenix.ChannelTest`.
   """
 
   require Logger
@@ -287,6 +298,11 @@ defmodule Phoenix.Socket do
       @doc false
       def child_spec(opts) do
         Phoenix.Socket.__child_spec__(__MODULE__, opts, @phoenix_socket_options)
+      end
+
+      @doc false
+      def drainer_spec(opts) do
+        Phoenix.Socket.__drainer_spec__(__MODULE__, opts, @phoenix_socket_options)
       end
 
       @doc false
@@ -424,6 +440,17 @@ defmodule Phoenix.Socket do
     Supervisor.child_spec({Phoenix.Socket.PoolSupervisor, args}, id: handler)
   end
 
+  def __drainer_spec__(handler, opts, socket_options) do
+    endpoint = Keyword.fetch!(opts, :endpoint)
+    opts = Keyword.merge(socket_options, opts)
+
+    if drainer = Keyword.get(opts, :drainer, []) do
+      {Phoenix.Socket.PoolDrainer, {endpoint, handler, drainer}}
+    else
+      :ignore
+    end
+  end
+
   def __connect__(user_socket, map, socket_options) do
     %{
       endpoint: endpoint,
@@ -492,12 +519,16 @@ defmodule Phoenix.Socket do
     {:stop, {:shutdown, :disconnected}, state}
   end
 
+  def __info__(:socket_drain, state) do
+    {:stop, {:shutdown, :draining}, state}
+  end
+
   def __info__({:socket_push, opcode, payload}, state) do
     {:push, {opcode, payload}, state}
   end
 
-  def __info__({:socket_close, pid, _reason}, {state, socket}) do
-    socket_close(pid, {state, socket})
+  def __info__({:socket_close, pid, _reason}, state) do
+    socket_close(pid, state)
   end
 
   def __info__(:garbage_collect, state) do
