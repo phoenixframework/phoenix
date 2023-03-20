@@ -47,7 +47,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       id={@id}
       phx-mounted={@show && show_modal(@id)}
       phx-remove={hide_modal(@id)}
-      phx-cancel={JS.exec(@on_cancel, "phx-remove")}
+      data-cancel={JS.exec(@on_cancel, "phx-remove")}
       class="relative z-50 hidden"
     >
       <div id={"#{@id}-bg"} class="bg-zinc-50/90 fixed inset-0 transition-opacity" aria-hidden="true" />
@@ -63,14 +63,14 @@ defmodule <%= @web_namespace %>.CoreComponents do
           <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
             <.focus_wrap
               id={"#{@id}-container"}
-              phx-window-keydown={JS.exec("phx-cancel", to: "##{@id}")}
+              phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
-              phx-click-away={JS.exec("phx-cancel", to: "##{@id}")}
+              phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
               class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white p-14 shadow-lg ring-1 transition"
             >
               <div class="absolute top-6 right-5">
                 <button
-                  phx-click={JS.exec("phx-cancel", to: "##{@id}")}
+                  phx-click={JS.exec("data-cancel", to: "##{@id}")}
                   type="button"
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
                   aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>

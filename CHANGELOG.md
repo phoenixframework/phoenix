@@ -46,9 +46,10 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
-## 1.7.2-dev
+## 1.7.2 (2023-03-20)
 
 ### Enhancements
+  * [Endpoint] Add socket draining for batched and orchestrated Channel/LiveView socket shutdown
   * [code reloader] Improve the compilation error page to remove horizontal scrolling and include all warnings and errors from compilation
   * [phx.new] Support the `--no-tailwind` and `--no-esbuild` flags
   * [phx.new] Move heroicons to assets/vendor

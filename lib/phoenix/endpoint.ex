@@ -800,9 +800,9 @@ defmodule Phoenix.Endpoint do
 
       * `:batch_size` - How many clients to notify at once in a given batch.
         Defaults to 10000.
-      * `:batch_interval` - The amount of time in miliseconds given for a
+      * `:batch_interval` - The amount of time in milliseconds given for a
         batch to terminate. Defaults to 2000ms.
-      * `:shutdown` - The maximum amount of time in miliseconds allowed
+      * `:shutdown` - The maximum amount of time in milliseconds allowed
         to drain all batches. Defaults to 30000ms.
 
       For example, if you have 150k connections, the default values will
