@@ -100,7 +100,7 @@ defmodule <%= @web_namespace %> do
       use Phoenix.VerifiedRoutes,
         endpoint: <%= @endpoint_module %>,
         router: <%= @web_namespace %>.Router,
-        statics: <%= @web_namespace %>.static_paths()
+        statics: static_paths()
     end
   end
 
