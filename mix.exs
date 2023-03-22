@@ -8,7 +8,7 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.7.1"
+  @version "1.7.2"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -103,7 +103,7 @@ defmodule Phoenix.MixProject do
       {:mint_web_socket, "~> 1.0.0", only: :test},
 
       # Dev dependencies
-      {:esbuild, "~> 0.5", only: :dev}
+      {:esbuild, "~> 0.7", only: :dev}
     ]
   end
 

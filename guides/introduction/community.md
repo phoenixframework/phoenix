@@ -24,15 +24,15 @@ There are a number of places to connect with community members at all experience
 
   * [Programming Phoenix LiveView - Interactive Elixir Web Programming Without Writing Any JavaScript - 2021 (by Bruce Tate and Sophie DeBenedetto)](https://pragprog.com/titles/liveview/programming-phoenix-liveview/)
 
-  * [Real-Time Phoenix - Build Highly Scalable Systems with Channels (by Stephen Bussey - 2020)](https://pragprog.com/book/sbsockets/real-time-phoenix)
+  * [Real-Time Phoenix - Build Highly Scalable Systems with Channels (by Stephen Bussey - 2020)](https://pragprog.com/titles/sbsockets/real-time-phoenix/)
 
-  * [Programming Phoenix 1.4 (by Bruce Tate and Phoenix core team members Chris McCord and José Valim - 2019)](https://pragprog.com/book/phoenix14/programming-phoenix-1-4)
+  * [Programming Phoenix 1.4 (by Bruce Tate and Phoenix core team members Chris McCord and José Valim - 2019)](https://pragprog.com/titles/phoenix14/programming-phoenix-1-4/)
 
   * [Phoenix in Action (by Geoffrey Lessel - 2019)](https://manning.com/books/phoenix-in-action)
 
   * [Phoenix Inside Out - Book Series (by Shankar Dhanasekaran - 2017)](https://shankardevy.com/phoenix-book/)
 
-  * [Functional Web Development with Elixir, OTP, and Phoenix Rethink the Modern Web App (by Lance Halvorsen - 2017)](https://pragprog.com/book/lhelph/functional-web-development-with-elixir-otp-and-phoenix)
+  * [Functional Web Development with Elixir, OTP, and Phoenix Rethink the Modern Web App (by Lance Halvorsen - 2017)](https://pragprog.com/titles/lhelph/functional-web-development-with-elixir-otp-and-phoenix/)
 
 ## Screencasts/Courses
 

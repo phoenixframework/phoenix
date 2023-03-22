@@ -27,7 +27,7 @@ defmodule Phoenix.Integration.LongPollSocketTest do
 
     def child_spec(opts) do
       :value = Keyword.fetch!(opts, :custom)
-      Supervisor.child_spec({Task, fn -> :ok end}, [])
+      :ignore
     end
 
     def connect(map) do

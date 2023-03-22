@@ -5,20 +5,26 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <.header>Resend confirmation instructions</.header>
+    <div class="mx-auto max-w-sm">
+      <.header class="text-center">
+        No confirmation instructions received?
+        <:subtitle>We'll send a new confirmation link to your inbox</:subtitle>
+      </.header>
 
-    <.simple_form for={@form} id="resend_confirmation_form" phx-submit="send_instructions">
-      <.input field={@form[:email]} type="email" label="Email" required />
-      <:actions>
-        <.button phx-disable-with="Sending...">Resend confirmation instructions</.button>
-      </:actions>
-    </.simple_form>
+      <.simple_form for={@form} id="resend_confirmation_form" phx-submit="send_instructions">
+        <.input field={@form[:email]} type="email" placeholder="Email" required />
+        <:actions>
+          <.button phx-disable-with="Sending..." class="w-full">
+            Resend confirmation instructions
+          </.button>
+        </:actions>
+      </.simple_form>
 
-    <p>
-      <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
-      |
-      <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
-    </p>
+      <p class="text-center mt-4">
+        <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
+        | <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
+      </p>
+    </div>
     """
   end
 

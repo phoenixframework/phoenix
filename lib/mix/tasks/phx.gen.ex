@@ -5,19 +5,19 @@ defmodule Mix.Tasks.Phx.Gen do
 
   @moduledoc """
   Lists all available Phoenix generators.
-  
+
   ## CRUD related generators
 
   The table below shows a summary of the contents created by the CRUD generators:
 
   | Task | Schema | Migration | Context | Controller | View | LiveView |
   |:------------------ |:-:|:-:|:-:|:-:|:-:|:-:|
-  | `phx.gen.embedded` | ✓ |   |   |   |   |   |
-  | `phx.gen.schema`   | ✓ | ✓ |   |   |   |   |
-  | `phx.gen.context`  | ✓ | ✓ | ✓ |   |   |   |
-  | `phx.gen.live`     | ✓ | ✓ | ✓ |   |   | ✓ |
-  | `phx.gen.json`     | ✓ | ✓ | ✓ | ✓ | ✓ |   |
-  | `phx.gen.html`     | ✓ | ✓ | ✓ | ✓ | ✓ |   |
+  | `phx.gen.embedded` | x |   |   |   |   |   |
+  | `phx.gen.schema`   | x | x |   |   |   |   |
+  | `phx.gen.context`  | x | x | x |   |   |   |
+  | `phx.gen.live`     | x | x | x |   |   | x |
+  | `phx.gen.json`     | x | x | x | x | x |   |
+  | `phx.gen.html`     | x | x | x | x | x |   |
   """
 
   def run(_args) do

@@ -84,8 +84,6 @@ defmodule Phoenix.CodeReloader do
   end
 
   defp template(output) do
-    {error, headline} = get_error_details(output)
-
     """
     <!DOCTYPE html>
     <html>
@@ -212,8 +210,7 @@ defmodule Phoenix.CodeReloader do
         }
 
         .exception-info > .error,
-        .exception-info > .subtext,
-        .exception-info > .title {
+        .exception-info > .subtext {
             margin: 0;
             padding: 0;
         }
@@ -228,13 +225,6 @@ defmodule Phoenix.CodeReloader do
             font-size: 1em;
             font-weight: 400;
             color: #{@style.accent};
-        }
-
-        .exception-info > .title {
-            font-size: #{:math.pow(1.2, 4)}em;
-            line-height: 1.4;
-            font-weight: 300;
-            color: #{@style.primary};
         }
 
         @media (max-width: 768px) {
@@ -253,6 +243,7 @@ defmodule Phoenix.CodeReloader do
             margin: 0;
             font-size: .85em;
             line-height: 1.6;
+            white-space: pre-wrap;
         }
         </style>
     </head>
@@ -260,8 +251,7 @@ defmodule Phoenix.CodeReloader do
         <div class="heading-block">
             <aside class="exception-logo"></aside>
             <header class="exception-info">
-                <h5 class="error">#{error}</h5>
-                <h1 class="title">#{headline}</h1>
+                <h5 class="error">Compilation error</h5>
                 <h5 class="subtext">Console output is shown below.</h5>
             </header>
         </div>
@@ -277,12 +267,5 @@ defmodule Phoenix.CodeReloader do
     output
     |> String.trim
     |> Plug.HTML.html_escape
-  end
-
-  defp get_error_details(output) do
-    case Regex.run(~r/(?:\n|^)\*\* \(([^ ]+)\) (.*)(?:\n|$)/, output) do
-      [_, error, headline] -> {error, format_output(headline)}
-      _ -> {"CompileError", "Compilation error"}
-    end
   end
 end

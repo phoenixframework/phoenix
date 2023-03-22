@@ -134,6 +134,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex")
 
       # assets
+      assert_file("phx_blog/priv/static/images/logo.svg")
+
       assert_file("phx_blog/.gitignore", fn file ->
         assert file =~ "/priv/static/assets/"
         assert file =~ "phx_blog-*.tar"
@@ -148,11 +150,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       # tailwind
       assert_file("phx_blog/assets/css/app.css")
       assert_file("phx_blog/assets/tailwind.config.js")
-      assert_file("phx_blog/assets/vendor/hero_icons/LICENSE.md")
-      assert_file("phx_blog/assets/vendor/hero_icons/UPGRADE.md")
-      assert_file("phx_blog/assets/vendor/hero_icons/optimized/24/outline/cake.svg")
-      assert_file("phx_blog/assets/vendor/hero_icons/optimized/24/solid/cake.svg")
-      assert_file("phx_blog/assets/vendor/hero_icons/optimized/20/solid/cake.svg")
+      assert_file("phx_blog/assets/vendor/heroicons/LICENSE.md")
+      assert_file("phx_blog/assets/vendor/heroicons/UPGRADE.md")
+      assert_file("phx_blog/assets/vendor/heroicons/optimized/24/outline/cake.svg")
+      assert_file("phx_blog/assets/vendor/heroicons/optimized/24/solid/cake.svg")
+      assert_file("phx_blog/assets/vendor/heroicons/optimized/20/solid/cake.svg")
 
       refute File.exists?("phx_blog/priv/static/assets/app.css")
       refute File.exists?("phx_blog/priv/static/assets/app.js")
@@ -319,11 +321,12 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~r/\n$/
       end)
 
+      refute File.exists?("phx_blog/priv/static/images/logo.svg")
+
       assert_file("phx_blog/config/dev.exs", ~r/watchers: \[\]/)
 
       # No assets & No HTML
       refute_file("phx_blog/priv/static/assets/app.css")
-      refute_file("phx_blog/priv/static/favicon.ico")
       refute_file("phx_blog/priv/static/assets/app.js")
 
       # No Ecto
@@ -756,7 +759,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   end
 
   test "invalid options" do
-    assert_raise Mix.Error, ~r/Invalid option: -d/, fn ->
+    assert_raise OptionParser.ParseError, fn ->
       Mix.Tasks.Phx.New.run(["valid", "-database", "mysql"])
     end
   end
