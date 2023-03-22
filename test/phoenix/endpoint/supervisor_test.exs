@@ -91,8 +91,10 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   end
 
   import ExUnit.CaptureLog
-  test "logs info if :http or :https configuration is set but not :server" do
+  test "logs info if :http or :https configuration is set but not :server when running in release" do
     Logger.configure(level: :info)
+    # simulate running inside release
+    System.put_env("RELEASE_NAME", "phoenix-test")
     Application.put_env(:phoenix, ServerEndpoint, [server: false, http: [], https: []])
     assert capture_log(fn ->
       {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})

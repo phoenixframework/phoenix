@@ -141,9 +141,11 @@ defmodule Phoenix.Endpoint.Supervisor do
         adapter.child_specs(mod, config)
 
       config[:http] || config[:https] ->
-        Logger.info(
-          "Configuration :server was not enabled for #{inspect(mod)}, http/https services won't start"
-        )
+        if System.get_env("RELEASE_NAME") do
+          Logger.info(
+            "Configuration :server was not enabled for #{inspect(mod)}, http/https services won't start"
+          )
+        end
 
         []
 
