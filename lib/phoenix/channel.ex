@@ -347,7 +347,8 @@ defmodule Phoenix.Channel do
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
 
-  @type payload :: map | {:binary, binary}
+  @typedoc "Payload can be any term which the configured serializer can encode."
+  @type payload :: map | term | {:binary, binary}
   @type reply :: status :: atom | {status :: atom, response :: payload}
   @type socket_ref ::
           {transport_pid :: Pid, serializer :: module, topic :: binary, ref :: binary,
@@ -358,6 +359,8 @@ defmodule Phoenix.Channel do
 
   To authorize a socket, return `{:ok, socket}` or `{:ok, reply, socket}`. To
   refuse authorization, return `{:error, reason}`.
+
+  Payloads are serialized before sending with the configured serializer.
 
   ## Example
 
@@ -378,12 +381,13 @@ defmodule Phoenix.Channel do
   @doc """
   Handle incoming `event`s.
 
+  Payloads are serialized before sending with the configured serializer.
+
   ## Example
 
       def handle_in("ping", payload, socket) do
         {:reply, {:ok, payload}, socket}
       end
-
   """
   @callback handle_in(event :: String.t(), payload :: payload, socket :: Socket.t()) ::
               {:noreply, Socket.t()}
@@ -662,6 +666,8 @@ defmodule Phoenix.Channel do
   client message, and each reply will include the client message `ref`. But the
   client may expect only one reply; in that case, `push/3` would be preferable
   for the additional messages.
+
+  Payloads are serialized before sending with the configured serializer.
 
   ## Examples
 
