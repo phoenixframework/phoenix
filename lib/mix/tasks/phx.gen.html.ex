@@ -39,14 +39,15 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   By default, Phoenix injects both web and domain specific functionality into the same
   application. When using umbrella applications, those concerns are typically broken
-  into separate apps. You can teach Phoenix to place your context and migration files
-  into a different application via the `:context_app` configuration option.
+  into two separate apps, your context application - let's call it `my_app` - and its web
+  layer, which Phoenix assumes to be `my_app_web`.
 
-  Example configuration in `my_app_umbrella/config/config.exs`:
+  You can teach Phoenix to use this style via the `:context_app` configuration option
+  in your `my_app_umbrella/config/config.exs`:
 
-    config :my_app_web,
-      ecto_repos: [Stuff.Repo],
-      generators: [context_app: :my_app]
+      config :my_app_web,
+        ecto_repos: [Stuff.Repo],
+        generators: [context_app: :my_app]
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
