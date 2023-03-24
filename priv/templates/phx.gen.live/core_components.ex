@@ -537,9 +537,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   @doc """
-  Renders a [Hero Icon](https://heroicons.com).
+  Renders a [Heroicon](https://heroicons.com).
 
-  Hero icons come in three styles – outline, solid, and mini.
+  Heroicons come in three styles – outline, solid, and mini.
   By default, the outline style is used, but solid an mini may
   be applied by using the `-solid` and `-mini` suffix.
 
