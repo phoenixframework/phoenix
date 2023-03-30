@@ -7,7 +7,7 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(:https), do: [port: 443]
     def config(:http), do: false
     def config(:url), do: [host: "example.com"]
-    def config(:static_url), do: nil
+    def config(_), do: nil
   end
 
   defmodule HTTPEndpoint do
@@ -15,7 +15,7 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(:https), do: false
     def config(:http), do: [port: 80]
     def config(:url), do: [host: "example.com"]
-    def config(:static_url), do: nil
+    def config(_), do: nil
   end
 
   defmodule HTTPEnvVarEndpoint do
@@ -23,21 +23,22 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(:https), do: false
     def config(:http), do: [port: {:system, "PHOENIX_PORT"}]
     def config(:url), do: [host: {:system, "PHOENIX_HOST"}]
-    def config(:static_url), do: nil
+    def config(_), do: nil
   end
 
   defmodule URLEndpoint do
     def config(:https), do: false
     def config(:http), do: false
     def config(:url), do: [host: "example.com", port: 678, scheme: "random"]
-    def config(:static_url), do: nil
+    def config(_), do: nil
   end
 
   defmodule StaticURLEndpoint do
     def config(:https), do: false
-    def config(:http), do: false
+    def config(:http), do: []
     def config(:url), do: []
     def config(:static_url), do: [host: "static.example.com"]
+    def config(_), do: nil
   end
 
   defmodule ServerEndpoint do

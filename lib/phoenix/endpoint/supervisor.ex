@@ -309,10 +309,14 @@ defmodule Phoenix.Endpoint.Supervisor do
   """
   def warmup(endpoint) do
     warmup_persistent(endpoint)
-    warmup_static(endpoint, cache_static_manifest(endpoint))
-    true
-  rescue
-    _ -> false
+
+    try do
+      if manifest = cache_static_manifest(endpoint) do
+        warmup_static(endpoint, manifest)
+      end
+    rescue
+      e -> Logger.error("Could not warm up static assets: #{Exception.message(e)}")
+    end
   end
 
   defp warmup_persistent(endpoint) do
@@ -347,14 +351,9 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     {scheme, port} =
       cond do
-        https ->
-          {"https", https[:port]}
-
-        http ->
-          {"http", http[:port]}
-
-        true ->
-          {"http", 80}
+        https -> {"https", https[:port] || 443}
+        http -> {"http", http[:port] || 80}
+        true -> {"http", 80}
       end
 
     scheme = url[:scheme] || scheme
@@ -382,8 +381,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warmup_static(_endpoint, _manifest) do
-    raise ArgumentError,
-          "expected warmup_static/2 to include 'latest' and 'digests' keys in manifest"
+    raise ArgumentError, "expected cache manifest to include 'latest' and 'digests' keys"
   end
 
   defp static_cache(digests, value, true) do
@@ -411,14 +409,13 @@ defmodule Phoenix.Endpoint.Supervisor do
       if File.exists?(outer) do
         outer |> File.read!() |> Phoenix.json_library().decode!()
       else
-        Logger.error(
-          "Could not find static manifest at #{inspect(outer)}. " <>
-            "Run \"mix phx.digest\" after building your static files " <>
-            "or remove the \"cache_static_manifest\" configuration from your config files."
-        )
+        raise ArgumentError,
+              "could not find static manifest at #{inspect(outer)}. " <>
+                "Run \"mix phx.digest\" after building your static files " <>
+                "or remove the \"cache_static_manifest\" configuration from your config files."
       end
     else
-      %{}
+      nil
     end
   end
 
