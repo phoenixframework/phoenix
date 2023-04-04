@@ -103,42 +103,40 @@ const plugins = [
   // Add and configure plugins here
 ]
 
-let opts = {
-  entryPoints: ['js/app.js'],
-  bundle: true,
-  target: 'es2017',
-  outdir: '../priv/static/assets',
-  logLevel: 'info',
-  loader,
-  plugins
-}
+async function build() {
+  let opts = {
+    entryPoints: ['js/app.js'],
+    bundle: true,
+    target: 'es2017',
+    outdir: '../priv/static/assets',
+    logLevel: 'info',
+    loader,
+    plugins,
+  }
 
-if (watch) {
-  opts = {
-    ...opts,
-    watch,
-    sourcemap: 'inline'
+  if (deploy) {
+    opts = {
+      ...opts,
+      minify: true,
+    }
+  }
+
+  if (watch) {
+    opts = {
+      ...opts,
+      sourcemap: 'inline',
+    }
+
+    const context = await esbuild.context(opts)
+    await context.watch()
+  } else {
+    const context = await esbuild.context(opts)
+    await context.rebuild()
+    await context.dispose()
   }
 }
 
-if (deploy) {
-  opts = {
-    ...opts,
-    minify: true
-  }
-}
-
-const promise = esbuild.build(opts)
-
-if (watch) {
-  promise.then(_result => {
-    process.stdin.on('close', () => {
-      process.exit(0)
-    })
-
-    process.stdin.resume()
-  })
-}
+build()
 ```
 
 This script covers following use cases:
