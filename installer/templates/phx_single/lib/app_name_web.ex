@@ -103,10 +103,33 @@ defmodule <%= @web_namespace %> do
         statics: <%= @web_namespace %>.static_paths()
     end
   end
+  
+  def imports do
+    quote do
+      import Phoenix.Naming, only: [humanize: 1]
+      import Phoenix.HTML.Form, only: [options_for_select: 2]
+    end
+  end
+  
+  def aliases do
+    quote do
+      alias Phoenix.LiveView, as: LV
+      alias Phoenix.LiveView.{JS, Rendered, Socket, UploadEntry}
+      alias Phoenix.Socket.Broadcast
+    end
+  end
 
   @doc """
   When used, dispatch to the appropriate controller/view/etc.
   """
+  defmacro __using__(whiches) when is_list(whiches) do
+    for which <- whiches do
+      quote do
+        unquote(apply(__MODULE__, which, []))
+      end
+    end
+  end
+  
   defmacro __using__(which) when is_atom(which) do
     apply(__MODULE__, which, [])
   end
