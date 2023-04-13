@@ -3,4 +3,4 @@ where your `HERO_VSN` export is your desired version:
 
     export HERO_VSN="2.0.16" ; \
       curl -L "https://github.com/tailwindlabs/heroicons/archive/refs/tags/v${HERO_VSN}.tar.gz" | \
-      tar -xv --strip-components=1 heroicons-${HERO_VSN}/optimized
+      tar -xvz --strip-components=1 heroicons-${HERO_VSN}/optimized
