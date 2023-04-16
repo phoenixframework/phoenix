@@ -136,9 +136,9 @@ defmodule Phoenix.Socket.Transport do
   Connects to the socket.
 
   The transport passes a map of metadata and the socket
-  returns `{:ok, state}`. `{:error, reason}` or `:error`. 
-  The state must be stored by the transport and returned 
-  in all future operations. `{:error, reason}` can only 
+  returns `{:ok, state}`. `{:error, reason}` or `:error`.
+  The state must be stored by the transport and returned
+  in all future operations. `{:error, reason}` can only
   be used with websockets.
 
   This function is used for authorization purposes and it
@@ -176,16 +176,24 @@ defmodule Phoenix.Socket.Transport do
     * `{:ok, state}` - continues the socket with no reply
     * `{:reply, status, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
+    * `{:stop, reason, close_code, state}` - stops the socket with close code
+    * `{:stop, reason, {close_code, detail}, state}` - stops the socket with
+    close code and detail
 
   The `reply` is a tuple contain an `opcode` atom and a message that can
   be any term. The built-in websocket transport supports both `:text` and
   `:binary` opcode and the message must be always iodata. Long polling only
   supports text opcode.
+
+  When stopping the built-in websocket transport, specific `close_code` and
+  additional `detail` can be returned.
   """
   @callback handle_in({message :: term, opts :: keyword}, state) ::
               {:ok, state}
               | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
               | {:stop, reason :: term, state}
+              | {:stop, reason :: term, close_code :: integer(), state}
+              | {:stop, reason :: term, {close_code :: integer(), detail :: binary()}, state}
 
   @doc """
   Handles incoming control frames.
@@ -196,6 +204,9 @@ defmodule Phoenix.Socket.Transport do
     * `{:ok, state}` - continues the socket with no reply
     * `{:reply, status, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
+    * `{:stop, reason, close_code, state}` - stops the socket with close code
+    * `{:stop, reason, {close_code, detail}, state}` - stops the socket with
+    close code and detail
 
   Control frames only supported when using websockets.
 
@@ -209,6 +220,8 @@ defmodule Phoenix.Socket.Transport do
               {:ok, state}
               | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
               | {:stop, reason :: term, state}
+              | {:stop, reason :: term, close_code :: integer(), state}
+              | {:stop, reason :: term, {close_code :: integer(), detail :: binary()}, state}
 
   @doc """
   Handles info messages.
@@ -218,16 +231,24 @@ defmodule Phoenix.Socket.Transport do
     * `{:ok, state}` - continues the socket with no reply
     * `{:push, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
+    * `{:stop, reason, close_code, state}` - stops the socket with close code
+    * `{:stop, reason, {close_code, detail}, state}` - stops the socket with
+    close code and detail
 
   The `reply` is a tuple contain an `opcode` atom and a message that can
   be any term. The built-in websocket transport supports both `:text` and
   `:binary` opcode and the message must be always iodata. Long polling only
   supports text opcode.
+
+  When stopping the built-in websocket transport, specific `close_code` and
+  additional `detail` can be returned.
   """
   @callback handle_info(message :: term, state) ::
               {:ok, state}
               | {:push, {opcode :: atom, message :: term}, state}
               | {:stop, reason :: term, state}
+              | {:stop, reason :: term, close_code :: integer(), state}
+              | {:stop, reason :: term, {close_code :: integer(), detail :: binary()}, state}
 
   @doc """
   Invoked on termination.
@@ -490,7 +511,7 @@ defmodule Phoenix.Socket.Transport do
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
          {_, session} <- store.get(conn, cookie, init),
          csrf_state when is_binary(csrf_state) <-
-          Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]),
+           Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]),
          true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
       session
     else
