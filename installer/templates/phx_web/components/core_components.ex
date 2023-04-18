@@ -233,7 +233,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   ## Types
 
-  This function most HTML input types, considering that:
+  This function accepts all HTML input types, considering that:
 
     * You may also set `type="select"` to render a `<select>` tag
 
