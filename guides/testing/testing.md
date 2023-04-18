@@ -15,30 +15,29 @@ $ mix test
 ....
 
 Finished in 0.09 seconds
-3 tests, 0 failures
+5 tests, 0 failures
 
 Randomized with seed 652656
 ```
 
-We already have three tests!
+We already have five tests!
 
 In fact, we already have a directory structure completely set up for testing, including a test helper and support files.
 
 ```console
 test
 ├── hello_web
-│   ├── channels
-│   ├── controllers
-│       ├── page_controller_test.exs
-│       └── error_html_test.exs
+│   └── controllers
+│       ├── error_html_test.exs
+│       ├── error_json_test.exs
+│       └── page_controller_test.exs
 ├── support
-│   ├── channel_case.ex
 │   ├── conn_case.ex
 │   └── data_case.ex
 └── test_helper.exs
 ```
 
-The test cases we get for free include `test/hello_web/controllers/page_controller_test.exs` and `test/hello_web/controllers/error_html_test.exs`. They are testing our controllers and views. If you haven't read the guides for controllers and views, now is a good time.
+The test cases we get for free include those from `test/hello_web/controllers/`. They are testing our controllers and views. If you haven't read the guides for controllers and views, now is a good time.
 
 ## Understanding test modules
 
@@ -52,7 +51,7 @@ defmodule HelloWeb.PageControllerTest do
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Welcome to Phoenix!"
+    assert html_response(conn, 200) =~ "Peace of mind from prototype to production"
   end
 end
 ```
@@ -67,14 +66,14 @@ use HelloWeb.ConnCase
 
 If you were to write an Elixir library, outside of Phoenix, instead of `use HelloWeb.ConnCase` you would write `use ExUnit.Case`. However, Phoenix already ships with a bunch of functionality for testing controllers and `HelloWeb.ConnCase` builds on top of `ExUnit.Case` to bring these functionalities in. We will explore the `HelloWeb.ConnCase` module soon.
 
-Then we define each test using the `test/3` macro. The `test/3` macro receives three arguments: the test name, the testing context that we are pattern matching on, and the contents of the test. In this test, we access the root page of our application by a "GET" HTTP request on the path "/" with the `get/2` macro. Then we **assert** that the rendered page contains the string "Welcome to Phoenix!".
+Then we define each test using the `test/3` macro. The `test/3` macro receives three arguments: the test name, the testing context that we are pattern matching on, and the contents of the test. In this test, we access the root page of our application by a "GET" HTTP request on the path "/" with the `get/2` macro. Then we **assert** that the rendered page contains the string "Peace of mind from prototype to production".
 
-When writing tests in Elixir, we use assertions to check that something is true. In our case, `assert html_response(conn, 200) =~ "Welcome to Phoenix!"` is doing a couple things:
+When writing tests in Elixir, we use assertions to check that something is true. In our case, `assert html_response(conn, 200) =~ "Peace of mind from prototype to production"` is doing a couple things:
 
   * It asserts that `conn` has rendered a response
   * It asserts that the response has the 200 status code (which means OK in HTTP parlance)
   * It asserts that the type of the response is HTML
-  * It asserts that the result of `html_response(conn, 200)`, which is an HTML response, has the string "Welcome to Phoenix!" in it
+  * It asserts that the result of `html_response(conn, 200)`, which is an HTML response, has the string "Peace of mind from prototype to production" in it
 
 However, from where does the `conn` we use on `get` and `html_response` come from? To answer this question, let's take a look at `HelloWeb.ConnCase`.
 
@@ -91,10 +90,7 @@ defmodule HelloWeb.ConnCase do
       # The default endpoint for testing
       @endpoint HelloWeb.Endpoint
 
-      use Phoenix.VerifiedRoutes,
-        endpoint: @endpoint,
-        router: HelloWeb.Router,
-        statics: HelloWeb.static_paths()
+      use HelloWeb, :verified_routes
 
       # Import conveniences for testing with connections
       import Plug.Conn
@@ -102,11 +98,10 @@ defmodule HelloWeb.ConnCase do
       import HelloWeb.ConnCase
     end
   end
-
+  
   setup tags do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Demo.Repo, shared: not tags[:async])
-    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
-    %{conn: Phoenix.ConnTest.build_conn()}
+    Hello.DataCase.setup_sandbox(tags)
+    {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end
 ```
@@ -117,14 +112,14 @@ The second line says this is a case template. This is a ExUnit feature that allo
 
 Now that we have made this module a case template, we can define callbacks that are invoked on certain occasions. The `using` callback defines code to be injected on every module that calls `use HelloWeb.ConnCase`. In this case, it starts by setting the `@endpoint` module attribute with the name of our endpoint.
 
-Next, it wires up `Phoenix.VerifiedRoutes` to allow use to use `~p` based paths in our test just like we do in the rest of our application to easily generate paths and URLs in our tests.
+Next, it wires up `:verified_routes` to allow use to use `~p` based paths in our test just like we do in the rest of our application to easily generate paths and URLs in our tests.
 
 Finally, we import [`Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html), so all of the connection helpers available in controllers are also available in tests, and then imports [`Phoenix.ConnTest`](https://hexdocs.pm/phoenix/Phoenix.ConnTest.html). You can consult these modules to learn all functionality available.
 
 Then our case template defines a `setup` block. The `setup` block will be called before test. Most of the setup block is on setting up the SQL Sandbox, which we will talk about it later. In the last line of the `setup` block, we will find this:
 
 ```elixir
-%{conn: Phoenix.ConnTest.build_conn()}
+{:ok, conn: Phoenix.ConnTest.build_conn()}
 ```
 
 The last line of `setup` can return test metadata that will be available in each test. The metadata we are passing forward here is a newly built `Plug.Conn`. In our test, we extract the connection out of this metadata at the very beginning of our test:
@@ -173,7 +168,7 @@ $ mix test
 ....
 
 Finished in 0.2 seconds
-3 tests, 0 failures
+5 tests, 0 failures
 
 Randomized with seed 540755
 ```
@@ -185,7 +180,7 @@ $ mix test test/hello_web/controllers/
 .
 
 Finished in 0.2 seconds
-1 tests, 0 failures
+5 tests, 0 failures
 
 Randomized with seed 652376
 ```
@@ -261,7 +256,7 @@ Excluding tags: [:test]
 ...
 
 Finished in 0.1 seconds
-3 tests, 0 failures, 1 excluded
+5 tests, 0 failures, 3 excluded
 
 Randomized with seed 125659
 ```
@@ -291,7 +286,7 @@ Excluding tags: [:test]
 ...
 
 Finished in 0.1 seconds
-3 tests, 0 failures, 1 excluded
+5 tests, 0 failures, 3 excluded
 
 Randomized with seed 833356
 ```
@@ -306,7 +301,7 @@ Excluding tags: [:test]
 
 
 Finished in 0.1 seconds
-3 tests, 0 failures, 3 excluded
+5 tests, 0 failures, 5 excluded
 
 Randomized with seed 622422
 The --only option was given to "mix test" but no test executed
@@ -321,7 +316,7 @@ Excluding tags: [:error_view_case]
 .
 
 Finished in 0.2 seconds
-3 tests, 0 failures, 2 excluded
+5 tests, 0 failures, 2 excluded
 
 Randomized with seed 682868
 ```
@@ -363,7 +358,7 @@ Excluding tags: [:test]
 ..
 
 Finished in 0.1 seconds
-3 tests, 0 failures, 1 excluded
+5 tests, 0 failures, 3 excluded
 
 Randomized with seed 813729
 ```
@@ -378,7 +373,7 @@ Excluding tags: [:test]
 .
 
 Finished in 0.1 seconds
-3 tests, 0 failures, 2 excluded
+5 tests, 0 failures, 4 excluded
 
 Randomized with seed 770938
 ```
@@ -392,7 +387,7 @@ Excluding tags: [individual_test: "nope"]
 ...
 
 Finished in 0.2 seconds
-3 tests, 0 failures, 1 excluded
+5 tests, 0 failures, 1 excluded
 
 Randomized with seed 539324
 ```
@@ -407,7 +402,7 @@ Excluding tags: [:error_view_case]
 ..
 
 Finished in 0.2 seconds
-3 tests, 0 failures, 1 excluded
+5 tests, 0 failures, 1 excluded
 
 Randomized with seed 61472
 ```
@@ -420,7 +415,7 @@ ExUnit.start(exclude: [error_view_case: true])
 Ecto.Adapters.SQL.Sandbox.mode(Hello.Repo, :manual)
 ```
 
-Now when we run `mix test`, it only runs one spec from our `page_controller_test.exs`.
+Now when we run `mix test`, it only runs the specs from our `page_controller_test.exs` and `error_json_test.exs`.
 
 ```console
 $ mix test
@@ -429,7 +424,7 @@ Excluding tags: [error_view_case: true]
 .
 
 Finished in 0.2 seconds
-3 tests, 0 failures, 2 excluded
+5 tests, 0 failures, 2 excluded
 
 Randomized with seed 186055
 ```
@@ -444,7 +439,7 @@ Excluding tags: [error_view_case: true]
 ....
 
 Finished in 0.2 seconds
-3 tests, 0 failures
+5 tests, 0 failures
 
 Randomized with seed 748424
 ```
@@ -462,7 +457,7 @@ $ mix test --seed 401472
 ....
 
 Finished in 0.2 seconds
-3 tests, 0 failures
+5 tests, 0 failures
 
 Randomized with seed 401472
 ```
@@ -498,10 +493,10 @@ We've seen what Phoenix gives us with a newly generated app. Furthermore, whenev
 $ mix phx.gen.html Blog Post posts title body:text
 * creating lib/hello_web/controllers/post_controller.ex
 * creating lib/hello_web/controllers/post_html/edit.html.heex
-* creating lib/hello_web/controllers/post_html/post_form.html.heex
 * creating lib/hello_web/controllers/post_html/index.html.heex
 * creating lib/hello_web/controllers/post_html/new.html.heex
 * creating lib/hello_web/controllers/post_html/show.html.heex
+* creating lib/hello_web/controllers/post_html/post_form.html.heex
 * creating lib/hello_web/controllers/post_html.ex
 * creating test/hello_web/controllers/post_controller_test.exs
 * creating lib/hello/blog/post.ex
@@ -526,14 +521,14 @@ Remember to update your repository by running migrations:
 
 Now let's follow the directions and add the new resources route to our `lib/hello_web/router.ex` file and run the migrations.
 
-When we run `mix test` again, we see that we now have nineteen tests!
+When we run `mix test` again, we see that we now have twenty-one tests!
 
 ```console
 $ mix test
 ................
 
 Finished in 0.1 seconds
-19 tests, 0 failures
+21 tests, 0 failures
 
 Randomized with seed 537537
 ```
