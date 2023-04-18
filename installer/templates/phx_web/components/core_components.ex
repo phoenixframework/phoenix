@@ -227,9 +227,22 @@ defmodule <%= @web_namespace %>.CoreComponents do
   @doc """
   Renders an input with label and error messages.
 
-  A `%Phoenix.HTML.Form{}` and field name may be passed to the input
-  to build input names and error messages, or all the attributes and
-  errors may be passed explicitly.
+  A `Phoenix.HTML.FormField` may be passed as argument,
+  which is used to retrieve the input name, id, and values.
+  Otherwise all attributes may be passed explicitly.
+
+  ## Types
+
+  This function most HTML input types, considering that:
+
+    * You may also set `type="select"` to render a `<select>` tag
+
+    * `type="checkbox"` is used exclusively to render boolean values
+
+    * For live file uploads, see `Phoenix.Component.live_file_input/1`
+
+  See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
+  for more information.
 
   ## Examples
 
