@@ -481,5 +481,3 @@ Phoenix uses an at-most-once strategy when sending messages to clients. If the c
 ## Example Application
 
 To see an example of the application we just built, checkout the project [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
-
-You can also see a live demo at <https://phoenixchat.herokuapp.com/>.
