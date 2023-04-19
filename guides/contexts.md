@@ -509,7 +509,7 @@ With our `category_opts` function in place, we can open up `lib/hello_web/contro
   ...
   <.input field={f[:views]} type="number" label="Views" />
 
-+ <.input field={f[:category_ids]} type="select" multiple={true} options={category_opts @changeset} />
++ <.input field={f[:category_ids]} type="select" multiple={true} options={category_opts(@changeset)} />
 
   <:actions>
     <.button>Save Product</.button>
