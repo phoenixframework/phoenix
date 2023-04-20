@@ -8,15 +8,15 @@ One common task for web applications is uploading files. These files might be im
 > For more information about LiveView file uploads, including direct-to-cloud external uploads on
 > the client, refer to the [LiveView Uploads guide](https://hexdocs.pm/phoenix_live_view/uploads.html).
 
-Plug provides a `Plug.Upload` struct to hold the data from the `file` input. A `Plug.Upload` struct will automatically appear in our request parameters if a user has selected a file when they submit the form.
+Plug provides a `Plug.Upload` struct to hold the data from the `file` input. A `Plug.Upload` struct will automatically appear in your request parameters if a user has selected a file when they submit the form.
 
 In this guide you will do the following:
 
-  * Configure a form as a multipart form
+  * Configure a multipart form
 
   * Add a file input element to the form
 
-  * Test your form params
+  * Verify your upload params
 
   * Copy the uploaded file to a permanent location
 
@@ -26,12 +26,12 @@ In the [`Contexts guide`](contexts.md), we generated an HTML resource for produc
 
 ### Configure a multipart form
 
-The first thing you need to do is change your form into a multipart form. The `form/1` component accepts a `multipart` attribute where you can specify this.
+The first thing you need to do is change your form into a multipart form. The `HelloWeb.CoreComponents` `simple_form/1` component accepts a `multipart` attribute where you can specify this.
 
 Here is the form from `lib/hello_web/controllers/product_html/product_form.html.heex` with that change in place:
 
-```elixir
-<.form for={@form} action={~p"/products"} multipart>
+```heex
+<.simple_form :let={f} for={@changeset} action={@action} multipart>
 . . .
 ```
 
@@ -39,37 +39,38 @@ Here is the form from `lib/hello_web/controllers/product_html/product_form.html.
 
 Once you have a multipart form, you need a `file` input. Here's how you would do that, also in `product_form.html.heex`:
 
-```html
+```heex
 . . .
-  <div>
-    <label>Photo</label>
-    <%= Phoenix.HTML.Form.file_input @form[:photo] %>
-  </div>
+  <.input field={f[:photo]} type="file" label="Photo" />
 
-  <div>
-    <button type="submit">Submit</button>
-  </div>
-</.form>
+  <:actions>
+    <.button>Save Product</.button>
+  </:actions>
+</.simple_form>
 ```
 
-When rendered, here is the HTML for the file input:
+When rendered, here is the HTML for the default `HelloWeb.CoreComponents` `input/1` component:
 
 ```html
-<div>
-  <label>Photo</label>
-  <input id="product_photo" name="product[photo]" type="file">
+<div phx-feedback-for="product[photo]">
+  <label for="product_photo" class="block text-sm...">Photo</label>
+  <input type="file" name="product[photo]" id="product_photo" class="mt-2 block w-full...">
 </div>
 ```
 
 Note the `name` attribute of your `file` input. This will create the `"photo"` key in the `product_params` map which will be available in your controller action.
 
-That's it from the form side. Now when users submit the form, a `POST` request will route to your `HelloWeb.ProductController` `create/2` action.
+This is all from the form side. Now when users submit the form, a `POST` request will route to your `HelloWeb.ProductController` `create/2` action.
 
 > #### Should I add photo to my Ecto schema? {: .neutral}
 >
 > The photo input does not need to be part of your schema for it to come across in the `product_params`. If you want to persist any properties of the photo in a database, however, you would need to add it to your `Hello.Product` schema.
 
-Before you begin, add `IO.inspect product_params` to the top of your `Hello.create/2` action in `lib/hello_web/controllers/user_controller.ex`. This will show the `product_params` in your development log so you can get a better sense of what's happening.
+### Verify your upload params
+
+Since you generated an HTML resource, you can now start your server with `mix phx.server`, visit [http://localhost:4000/products/new](http://localhost:4000/products/new), and create a new product with a photo.
+
+Before you begin, add `IO.inspect product_params` to the top of your `ProductController.create/2` action in `lib/hello_web/controllers/product_controller.ex`. This will show the `product_params` in your development log so you can get a better sense of what's happening.
 
 ```elixir
 . . .
@@ -77,10 +78,6 @@ Before you begin, add `IO.inspect product_params` to the top of your `Hello.crea
     IO.inspect product_params
 . . .
 ```
-
-### Test your form params
-
-Since you generated an HTML resource, you can now start your server with `mix phx.server`, visit [http://localhost:4000/products/new](http://localhost:4000/products/new), and create a new product with a photo.
 
 When you do that, this is what your `product_params` will output in the log:
 
