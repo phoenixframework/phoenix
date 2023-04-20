@@ -12,15 +12,13 @@ Plug provides a `Plug.Upload` struct to hold the data from the `file` input. A `
 
 In this guide you will do the following:
 
-  * Configure a multipart form
+  1.  Configure a multipart form
 
-  * Add a file input element to the form
+  2. Add a file input element to the form
 
-  * Verify your upload params
+  3. Verify your upload params
 
-  * Copy the uploaded file to a permanent location
-
-  * Serve uploaded files with `Plug.Static`
+  4. Manage your uploaded files
 
 In the [`Contexts guide`](contexts.md), we generated an HTML resource for products. We can reuse the form we generated there in order to demonstrate how file uploads work in Phoenix. Please refer to that guide for instructions on generating the product resource you will be using here.
 
@@ -100,11 +98,21 @@ To make this easier to read, focus on the struct itself:
 >
 > Plug removes uploads from its directory as the request completes. If you need to do anything with this file, you need to do it before then (or [give it away](`Plug.Upload.give_away/3`), but that is outside the scope of this guide).
 
-### Copy the file to a permanent location
+### Manage your uploaded files
 
-Once you have the `Plug.Upload` struct available in your controller, you can perform any operation on it you want. You can check to make sure the file exists with `File.exists?/1`, copy it somewhere else on the filesystem with `File.cp/2`, send it to S3 with an external library, or even send it back to the client with `Plug.Conn.send_file/5`.
+Once you have the `Plug.Upload` struct available in your controller, you can perform any operation on it you want. For example, you may want to do one or more of the following:
 
-For example, in production system, you may want to copy the file to a root directory, such as `/media`. When doing so, it is important to guarantee the names are unique. For instance, if you are allowing users to upload product cover images, you could use the product id to generate a unique name:
+* Check to make sure the file exists with `File.exists?/1`
+
+* Copy the file somewhere else on the filesystem with `File.cp/2`
+
+* Give the file away to another Elixir process with `Plug.Upload.give_away/3`
+
+* Send it to S3 with an external library
+
+* Send it back to the client with `Plug.Conn.send_file/5`
+
+In a production system, you may want to copy the file to a root directory, such as `/media`. When doing so, it is important to guarantee the names are unique. For instance, if you are allowing users to upload product cover images, you could use the product id to generate a unique name:
 
 ```elixir
 if upload = product_params["photo"] do
@@ -113,15 +121,13 @@ if upload = product_params["photo"] do
 end
 ```
 
-### Serve uploaded files with Plug.Static
-
-Then a `Plug.Static` plug could be set in your `lib/my_app_web/endpoint.ex` to serve the files at `"/media"`:
+Then a `Plug.Static` plug could be added in your `lib/my_app_web/endpoint.ex` to serve the files at `"/media"`:
 
 ```elixir
 plug Plug.Static, at: "/uploads", from: "/media"
 ```
 
-The uploaded file can now be accessed from your browsers using a path such as `"/uploads/1-cover.jpg"`. In practice, there are other concerns you want to handle when uploading files, such validating extensions, encoding names, and so on. Many times, using a library that already handles such cases, is preferred.
+The uploaded file can now be accessed from your browsers using a path such as `"/uploads/1-cover.jpg"`. In practice, there are other concerns you want to handle when uploading files, such validating extensions, encoding names, and so on. Many times, using a library that already handles such cases is preferred.
 
 Finally, notice that when there is no data from the `file` input, you get neither the `"photo"` key nor a `Plug.Upload` struct. Here are the `product_params` from the log.
 
