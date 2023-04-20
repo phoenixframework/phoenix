@@ -85,7 +85,7 @@ setup do
   {:ok, _, socket} =
     HelloWeb.UserSocket
     |> socket("user_id", %{some: :assign})
-    |> subscribe_and_join(RoomChannel, "room:lobby")
+    |> subscribe_and_join(HelloWeb.RoomChannel, "room:lobby")
 
   %{socket: socket}
 end
@@ -106,7 +106,7 @@ test "ping replies with status ok", %{socket: socket} do
 end
 ```
 
-This tests the following code in our `MyAppWeb.RoomChannel`:
+This tests the following code in our `HelloWeb.RoomChannel`:
 
 ```elixir
 # Channels can be used in a request/response fashion
@@ -124,7 +124,7 @@ We emulate the client pushing a message to the channel with `push/3`. In the lin
 
 ### Testing a Broadcast
 
-It is common to receive messages from the client and broadcast to everyone subscribed to a current topic. This common pattern is simple to express in Phoenix and is one of the generated `handle_in/3` callbacks in our `MyAppWeb.RoomChannel`.
+It is common to receive messages from the client and broadcast to everyone subscribed to a current topic. This common pattern is simple to express in Phoenix and is one of the generated `handle_in/3` callbacks in our `HelloWeb.RoomChannel`.
 
 ```elixir
 def handle_in("shout", payload, socket) do
@@ -150,17 +150,10 @@ Since the `handle_in/3` callback for the `"shout"` event just broadcasts the sam
 
 ### Testing an asynchronous push from the server
 
-The last test in our `MyAppWeb.RoomChannelTest` verifies that broadcasts from the server are pushed to the client. Unlike the previous tests discussed, we are indirectly testing that our channel's `handle_out/3` callback is triggered. This `handle_out/3` is defined in our `MyApp.RoomChannel` as:
-
-```elixir
-def handle_out(event, payload, socket) do
-  push(socket, event, payload)
-  {:noreply, socket}
-end
-```
+The last test in our `HelloWeb.RoomChannelTest` verifies that broadcasts from the server are pushed to the client. Unlike the previous tests discussed, we are indirectly testing that the channel's `handle_out/3` callback is triggered. By default, `handle_out/3` is implemented for us and simply pushes the message on to the client.
 
 Since the `handle_out/3` event is only triggered when we call `broadcast/3` from our channel, we will need to emulate that in our test. We do that by calling `broadcast_from` or `broadcast_from!`. Both serve the same purpose with the only difference of `broadcast_from!` raising an error when broadcast fails.
 
-The line `broadcast_from!(socket, "broadcast", %{"some" => "data"})` will trigger our `handle_out/3` callback above which pushes the same event and payload back to the client. To test this, we do `assert_push "broadcast", %{"some" => "data"}`.
+The line `broadcast_from!(socket, "broadcast", %{"some" => "data"})` will trigger the `handle_out/3` callback which pushes the same event and payload back to the client. To test this, we do `assert_push "broadcast", %{"some" => "data"}`.
 
 That's it. Now you are ready to develop and fully test real-time applications. To learn more about other functionality provided when testing channels, check out the documentation for [`Phoenix.ChannelTest`](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html).
