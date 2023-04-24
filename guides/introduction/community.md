@@ -6,7 +6,7 @@ There are a number of places to connect with community members at all experience
 
   * We're on Libera IRC in the [\#elixir](https://web.libera.chat/?channels=#elixir) channel.
 
-  * [Request an invitation](https://elixir-slackin.herokuapp.com/) and join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
+  * [Request an invitation](https://elixir-lang.slack.com/join/shared_invite/zt-1f13hz7mb-N4KGjF523ONLCcHfb8jYgA#/shared-invite/email) and join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
 
   * Feel free to join and check out the #phoenix channel on [Discord](https://discord.gg/elixir).
 

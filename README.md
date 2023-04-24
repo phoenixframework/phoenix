@@ -83,7 +83,7 @@ npm install
 
   [1]: https://web.libera.chat/?channels=#elixir
   [2]: https://libera.chat/
-  [3]: https://elixir-slackin.herokuapp.com/
+  [3]: https://elixir-lang.slack.com/join/shared_invite/zt-1f13hz7mb-N4KGjF523ONLCcHfb8jYgA#/shared-invite/email
   [4]: https://github.com/phoenixframework/phoenix/issues
   [5]: https://elixirforum.com/c/phoenix-forum
   [6]: https://groups.google.com/group/phoenix-core
