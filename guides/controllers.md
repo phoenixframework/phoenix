@@ -216,7 +216,7 @@ defmodule HelloWeb.Router do
     plug :accepts, ["html", "json"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {HelloWeb.LayoutView, :root}
+    plug :put_root_layout, html: {HelloWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
