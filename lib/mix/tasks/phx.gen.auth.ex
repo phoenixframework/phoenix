@@ -852,14 +852,20 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         _ ->
           Mix.shell().info("""
           An authentication system can be created in two different ways:
-          - Using Phoenix.LiveView (default)
-          - Using Phoenix.Controller only\
+            1) Using Phoenix.LiveView (default)
+            2) Using Phoenix.Controller only\
           """)
 
-          if Mix.shell().yes?("Do you want to create a LiveView based authentication system?") do
-            Keyword.put_new(schema.opts, :live, true)
-          else
-            Keyword.put_new(schema.opts, :live, false)
+          case Mix.shell().prompt("Which option (1,2) do you want to use? (Leave empty for default):") do
+            "1\n" ->
+              Keyword.put_new(schema.opts, :live, true)
+
+            "2\n" ->
+              Keyword.put_new(schema.opts, :live, false)
+
+            _ ->
+              Mix.shell().info("Using Phoenix.LiveView (default)")
+              Keyword.put_new(schema.opts, :live, true)
           end
       end
 
