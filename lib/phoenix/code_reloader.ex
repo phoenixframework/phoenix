@@ -16,7 +16,8 @@ defmodule Phoenix.CodeReloader do
 
       config :your_app, YourAppWeb.Endpoint,
         reloadable_compilers: [:gettext, :elixir],
-        reloadable_apps: [:ui, :backend]
+        reloadable_apps: [:ui, :backend],
+        reloadable_args: ["--no-all-warnings"]
 
   Keep in mind `:reloadable_compilers` must be a subset of the
   `:compilers` specified in `project/0` in your `mix.exs`.
@@ -28,6 +29,9 @@ defmodule Phoenix.CodeReloader do
   applications to reload only some of them, an empty list - to
   effectively disable the code reloader, or include external
   applications from library dependencies.
+
+  `:reloadable_args` is a list of command line options to give
+  to `mix compile` and its underlying compilers.
 
   This function is a no-op and returns `:ok` if Mix is not available.
   """

@@ -3,13 +3,9 @@ defmodule Phoenix.CodeReloaderTest do
   use RouterHelper
 
   defmodule Endpoint do
-    def config(:reloadable_compilers) do
-      [:unknown_compiler, :elixir]
-    end
-
-    def config(:reloadable_apps) do
-      nil
-    end
+    def config(:reloadable_compilers), do: [:unknown_compiler, :elixir]
+    def config(:reloadable_apps), do: nil
+    def config(:reloadable_args), do: nil
   end
 
   def reload(_) do
