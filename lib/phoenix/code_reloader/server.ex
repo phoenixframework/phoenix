@@ -13,8 +13,8 @@ defmodule Phoenix.CodeReloader.Server do
     GenServer.call(__MODULE__, :check_symlinks, :infinity)
   end
 
-  def reload!(endpoint) do
-    GenServer.call(__MODULE__, {:reload!, endpoint}, :infinity)
+  def reload!(endpoint, opts) do
+    GenServer.call(__MODULE__, {:reload!, endpoint, opts}, :infinity)
   end
 
   def sync do
@@ -58,10 +58,10 @@ defmodule Phoenix.CodeReloader.Server do
     {:reply, :ok, %{state | check_symlinks: false}}
   end
 
-  def handle_call({:reload!, endpoint}, from, state) do
+  def handle_call({:reload!, endpoint, opts}, from, state) do
     compilers = endpoint.config(:reloadable_compilers)
     apps = endpoint.config(:reloadable_apps) || default_reloadable_apps()
-    args = endpoint.config(:reloadable_args) || []
+    args = Keyword.get(opts, :reloadable_args, [])
 
     # We do a backup of the endpoint in case compilation fails.
     # If so we can bring it back to finish the request handling.
@@ -160,7 +160,7 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp all_waiting(acc, endpoint) do
     receive do
-      {:"$gen_call", from, {:reload!, ^endpoint}} -> all_waiting([from | acc], endpoint)
+      {:"$gen_call", from, {:reload!, ^endpoint, _}} -> all_waiting([from | acc], endpoint)
     after
       0 -> acc
     end

@@ -5,7 +5,6 @@ defmodule Phoenix.CodeReloaderTest do
   defmodule Endpoint do
     def config(:reloadable_compilers), do: [:unknown_compiler, :elixir]
     def config(:reloadable_apps), do: nil
-    def config(:reloadable_args), do: nil
   end
 
   def reload(_) do
@@ -44,7 +43,7 @@ defmodule Phoenix.CodeReloaderTest do
            |> Phoenix.CodeReloader.call(opts)
     assert conn.state == :unset
 
-    assert_receive {:trace, ^pid, :receive, {_, _, {:reload!, Endpoint}}}
+    assert_receive {:trace, ^pid, :receive, {_, _, {:reload!, Endpoint, _}}}
   end
 
   test "renders compilation error on failure" do

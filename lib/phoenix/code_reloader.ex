@@ -16,8 +16,7 @@ defmodule Phoenix.CodeReloader do
 
       config :your_app, YourAppWeb.Endpoint,
         reloadable_compilers: [:gettext, :elixir],
-        reloadable_apps: [:ui, :backend],
-        reloadable_args: ["--no-all-warnings"]
+        reloadable_apps: [:ui, :backend]
 
   Keep in mind `:reloadable_compilers` must be a subset of the
   `:compilers` specified in `project/0` in your `mix.exs`.
@@ -30,21 +29,23 @@ defmodule Phoenix.CodeReloader do
   effectively disable the code reloader, or include external
   applications from library dependencies.
 
-  `:reloadable_args` is a list of command line options to give
-  to `mix compile` and its underlying compilers.
-
   This function is a no-op and returns `:ok` if Mix is not available.
+
+  ## Options
+
+    * `:reloadable_args` - additional CLI args to pass to the compiler tasks
+
   """
-  @spec reload(module) :: :ok | {:error, binary()}
-  def reload(endpoint) do
-    if Code.ensure_loaded?(Mix.Project), do: reload!(endpoint), else: :ok
+  @spec reload(module, keyword) :: :ok | {:error, binary()}
+  def reload(endpoint, opts \\ []) do
+    if Code.ensure_loaded?(Mix.Project), do: reload!(endpoint, opts), else: :ok
   end
 
   @doc """
   Same as `reload/1` but it will raise if Mix is not available.
   """
-  @spec reload!(module) :: :ok | {:error, binary()}
-  defdelegate reload!(endpoint), to: Phoenix.CodeReloader.Server
+  @spec reload!(module, keyword) :: :ok | {:error, binary()}
+  defdelegate reload!(endpoint, opts), to: Phoenix.CodeReloader.Server
 
   @doc """
   Synchronizes with the code server if it is alive.
