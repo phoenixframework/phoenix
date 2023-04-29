@@ -302,8 +302,8 @@ defmodule Phoenix.CodeReloader.Server do
   defp run_compilers([compiler | compilers], args, acc) do
     with {status, diagnostics} <- Mix.Task.run("compile.#{compiler}", args) do
       # Diagnostics are written to stderr and therefore not captured,
-      # so we print them to the group leader here
-      Enum.each(diagnostics, &print_diagnostic/1)
+      # so we send them to the group leader here
+      Proxy.diagnostics(Process.group_leader(), diagnostics)
       {status, diagnostics}
     end
     |> case do
@@ -320,16 +320,4 @@ defmodule Phoenix.CodeReloader.Server do
       :noop
     end
   end
-
-  defp print_diagnostic(%{severity: :error, message: "**" <> _ = message}) do
-    IO.write("\n#{message}\n")
-  end
-
-  defp print_diagnostic(%{severity: severity, message: message, file: file, position: position}) do
-    IO.write("\n#{severity}: #{message}\n  #{Path.relative_to_cwd(file)}#{position(position)}\n")
-  end
-
-  defp position({line, col}), do: ":#{line}:#{col}"
-  defp position(line) when is_integer(line) and line > 0, do: ":#{line}"
-  defp position(_), do: ""
 end
