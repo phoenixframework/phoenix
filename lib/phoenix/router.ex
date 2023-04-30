@@ -453,7 +453,7 @@ defmodule Phoenix.Router do
   end
 
   defp match_dispatch() do
-    quote location: :keep do
+    quote location: :keep, generated: true do
       @behaviour Plug
 
       @doc """
