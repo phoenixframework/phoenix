@@ -307,7 +307,7 @@ defmodule Phoenix.Controller do
 
         def call(conn, {:error, :unauthorized}) do
           conn
-          |> put_status(403)
+          |> put_status(:forbidden)
           |> put_view(MyErrorView)
           |> render(:"403")
         end
