@@ -4,7 +4,7 @@ To prepare an application to serve requests over SSL, we need to add a little bi
 
 The configuration consists of a new `https:` key for our endpoint whose value is a keyword list of port, path to the key file, and path to the cert (PEM) file. If we add the `otp_app:` key whose value is the name of our application, Plug will begin to look for them at the root of our application. We can then put those files in our `priv` directory and set the paths to `priv/our_keyfile.key` and `priv/our_cert.crt`.
 
-Here's an example configuration from `config/prod.exs`.
+Here's an example configuration from `config/runtime.exs`.
 
 ```elixir
 import Config
