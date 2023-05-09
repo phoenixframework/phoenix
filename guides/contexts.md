@@ -825,32 +825,32 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +   end
   end
 
-  defp reload_cart(%Cart{} = cart), do: get_cart_by_user_uuid(cart.user_uuid)
-
-  def add_item_to_cart(%Cart{} = cart, product_id) do
-    product = Catalog.get_product!(product_id)
-
-    %CartItem{quantity: 1, price_when_carted: product.price}
-    |> CartItem.changeset(%{})
-    |> Ecto.Changeset.put_assoc(:cart, cart)
-    |> Ecto.Changeset.put_assoc(:product, product)
-    |> Repo.insert(
-      on_conflict: [inc: [quantity: 1]],
-      conflict_target: [:cart_id, :product_id]
-    )
-  end
-
-  def remove_item_from_cart(%Cart{} = cart, product_id) do
-    {1, _} =
-      Repo.delete_all(
-        from(i in CartItem,
-          where: i.cart_id == ^cart.id,
-          where: i.product_id == ^product_id
-        )
-      )
-
-    {:ok, reload_cart(cart)}
-  end
++  defp reload_cart(%Cart{} = cart), do: get_cart_by_user_uuid(cart.user_uuid)
++
++  def add_item_to_cart(%Cart{} = cart, product_id) do
++    product = Catalog.get_product!(product_id)
++
++    %CartItem{quantity: 1, price_when_carted: product.price}
++    |> CartItem.changeset(%{})
++    |> Ecto.Changeset.put_assoc(:cart, cart)
++    |> Ecto.Changeset.put_assoc(:product, product)
++    |> Repo.insert(
++      on_conflict: [inc: [quantity: 1]],
++      conflict_target: [:cart_id, :product_id]
++    )
++  end
++
++  def remove_item_from_cart(%Cart{} = cart, product_id) do
++    {1, _} =
++      Repo.delete_all(
++        from(i in CartItem,
++          where: i.cart_id == ^cart.id,
++          where: i.product_id == ^product_id
++        )
++      )
++
++    {:ok, reload_cart(cart)}
++  end
 ```
 
 We started by implementing  `get_cart_by_user_uuid/1` which fetches our cart and joins the cart items, and their products so that we have the full cart populated with all preloaded data. Next, we modified our `create_cart` function to accept a user UUID instead of attributes, which we used to populate the `user_uuid` field. If the insert is successful, we reload the cart contents by calling a private `reload_cart/1` function, which simply calls `get_cart_by_user_uuid/1` to refetch data.
