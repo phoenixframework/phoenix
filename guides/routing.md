@@ -519,7 +519,7 @@ defmodule HelloWeb.Router do
 end
 ```
 
-The above assumes there is a plug called `MyApp.Authentication` that performs authentication and is now part of the `:auth` pipeline.
+The above assumes there is a plug called `HelloWeb.Authentication` that performs authentication and is now part of the `:auth` pipeline.
 
 Note that pipelines themselves are plugs, so we can plug a pipeline inside another pipeline. For example, we could rewrite the `review_checks` pipeline above to automatically invoke `browser`, simplifying the downstream pipeline call:
 
