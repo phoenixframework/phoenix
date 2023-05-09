@@ -38,10 +38,10 @@ description:string price:decimal views:integer
 
 * creating lib/hello_web/controllers/product_controller.ex
 * creating lib/hello_web/controllers/product_html/edit.html.heex
-* creating lib/hello_web/controllers/product_html/product_form.html.heex
 * creating lib/hello_web/controllers/product_html/index.html.heex
 * creating lib/hello_web/controllers/product_html/new.html.heex
 * creating lib/hello_web/controllers/product_html/show.html.heex
+* creating lib/hello_web/controllers/product_html/product_form.html.heex
 * creating lib/hello_web/controllers/product_html.ex
 * creating test/hello_web/controllers/product_controller_test.exs
 * creating lib/hello/catalog/product.ex
@@ -490,35 +490,26 @@ First, we added `Repo.preload` to preload our categories when we fetch a product
 Next, let's expose our new feature to the web by adding the category input to our product form. To keep our form template tidy, let's write a new function to wrap up the details of rendering a category select input for our product. Open up your `ProductHTML` view in `lib/hello_web/controllers/product_html.ex` and key this in:
 
 ```elixir
-defmodule HelloWeb.ProductHTML do
-  use HelloWeb, :html
-
-  import Phoenix.HTML.Form
-
-  def category_select(f, changeset) do
+  def category_opts(changeset) do
     existing_ids =
       changeset
       |> Ecto.Changeset.get_change(:categories, [])
       |> Enum.map(& &1.data.id)
 
-    category_opts =
-      for cat <- Hello.Catalog.list_categories(),
-          do: [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
-
-    multiple_select(f, :category_ids, category_opts)
+    for cat <- Hello.Catalog.list_categories(),
+        do: [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
   end
-end
 ```
 
-We added a new `category_select/2` function which uses `Phoenix.HTML.Form`'s `multiple_select/3` to generate a multiple select tag. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
+We added a new `category_opts/1` function which generates the select options for a multiple select tag we will add soon. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
 
-With our `category_select` function in place, we can open up `lib/hello_web/controllers/product_html/product_form.html.heex` and add:
+With our `category_opts` function in place, we can open up `lib/hello_web/controllers/product_html/product_form.html.heex` and add:
 
 ```diff
   ...
-  <.input type="number" field={f[:views]} label="Views" />
+  <.input field={f[:views]} type="number" label="Views" />
 
-+ <%= category_select f, @changeset %>
++ <.input field={f[:category_ids]} type="select" multiple={true} options={category_opts(@changeset)} />
 
   <:actions>
     <.button>Save Product</.button>
@@ -685,10 +676,10 @@ Now that our cart is associated to the items we place in it, let's set up the ca
 
 ```elixir
   schema "cart_items" do
--   field :cart_id, :id
--   field :product_id, :id
     field :price_when_carted, :decimal
     field :quantity, :integer
+-   field :cart_id, :id
+-   field :product_id, :id
 
 +   belongs_to :cart, Hello.ShoppingCart.Cart
 +   belongs_to :product, Hello.Catalog.Product
@@ -741,7 +732,7 @@ We won't focus on a real user authentication system at this point, but by the ti
 
 + alias Hello.ShoppingCart
 +
-+ def fetch_current_cart(conn, _opts) do
++ defp fetch_current_cart(conn, _opts) do
 +   if cart = ShoppingCart.get_cart_by_user_uuid(conn.assigns.current_uuid) do
 +     assign(conn, :cart, cart)
 +   else
@@ -777,7 +768,7 @@ With our routes in place, let's add the ability to add an item to our cart from 
 defmodule HelloWeb.CartItemController do
   use HelloWeb, :controller
 
-  alias Hello.{ShoppingCart, Catalog}
+  alias Hello.ShoppingCart
 
   def create(conn, %{"product_id" => product_id}) do
     case ShoppingCart.add_item_to_cart(conn.assigns.cart, product_id) do
@@ -805,8 +796,9 @@ We defined a new `CartItemController` with the create and delete actions that we
 Let's implement the new interface for the `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
 ```elixir
-  alias Hello.Catalog
-  alias Hello.ShoppingCart.{Cart, CartItem}
++  alias Hello.Catalog
+-  alias Hello.ShoppingCart.Cart
++  alias Hello.ShoppingCart.{Cart, CartItem}
 
   def get_cart_by_user_uuid(user_uuid) do
     Repo.one(
@@ -870,9 +862,13 @@ Finally, we implemented `remove_item_from_cart/2` where we simply issue a `Repo.
 With our new cart functions in place, we can now expose the "Add to cart" button on the product catalog show page. Open up your template in `lib/hello_web/controllers/product_html/show.html.heex` and make the following changes:
 
 ```diff
-<h1>Show Product</h1>
-
-+<.link href={~p"/cart_items?product_id=#{@product.id}"} method="post">Add to cart</.link>
+...
+     <.link href={~p"/products/#{@product}/edit"}>
+       <.button>Edit product</.button>
+     </.link>
++    <.link href={~p"/cart_items?product_id=#{@product.id}"} method="post">
++      <.button>Add to cart</.button>
++    </.link>
 ...
 ```
 
@@ -927,9 +923,7 @@ defmodule HelloWeb.CartHTML do
   use HelloWeb, :html
 
   alias Hello.ShoppingCart
-
-  import Phoenix.HTML.Form
-
+  
   embed_templates "cart_html/*"
 
   def currency_to_str(%Decimal{} = val), do: "$#{Decimal.round(val, 2)}"
@@ -941,31 +935,34 @@ We created a view to render our `show.html` template and aliased our `ShoppingCa
 Next we can create the template at `lib/hello_web/controllers/cart_html/show.html.heex`:
 
 ```heex
-<h1>My Cart</h1>
-
 <%= if @cart.items == [] do %>
-  Your cart is empty
+<.header>
+  My Cart
+  <:subtitle>Your cart is empty</:subtitle>
+</.header>
 <% else %>
-  <.form :let={f} for={@changeset} action={~p"/cart"}>
-    <ul>
-      <%= for item_form <- inputs_for(f, :items), item = item_form.data do %>
-        <li>
-          <%= hidden_inputs_for(item_form) %>
-          <%= item.product.title %>
-          <%= number_input item_form, :quantity %>
-          <%= currency_to_str(ShoppingCart.total_item_price(item)) %>
-        </li>
-      <% end %>
-    </ul>
+  <.header>
+    My Cart
+  </.header>
 
-    <%= submit "update cart" %>
-  </.form>
+  <.simple_form :let={f} for={@changeset} action={~p"/cart"}>
+    <.inputs_for :let={item_form} field={f[:items]}>
+	<% item = item_form.data %>
+      <.input field={item_form[:quantity]} type="number" label={item.product.title} />
+      <%= currency_to_str(ShoppingCart.total_item_price(item)) %>
+    </.inputs_for>
+    <:actions>
+      <.button>Update cart</.button>
+    </:actions>
+  </.simple_form>
 
   <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>
 <% end %>
+
+<.back navigate={~p"/products"}>Back to products</.back>
 ```
 
-We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the [`form`] component provided by (`Phoenix.Component`) to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use `Phoenix.HTML.Form.inputs_for/2` to render inputs for the nested cart items. For each item form input, we use [`hidden_inputs_for/1`](`Phoenix.HTML.Form.hidden_inputs_for/1`) which will render out the item ID as a hidden input tag. This will allow us to map item inputs back together when the form is submitted. Next, we display the product title for the item in the cart, followed by a number input for the item quantity. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment.
+We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `simple_form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](`Phoenix.Component.inputs_for/1`) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
 
 We're almost ready to try out our cart page, but first we need to implement our new currency calculation functions. Open up your shopping cart context at `lib/hello/shopping_cart.ex` and add these new functions:
 
@@ -1035,7 +1032,7 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
   end
 ```
 
-We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`hidden_inputs_for/1`](`Phoenix.HTML.Form.hidden_inputs_for/1`) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new/0`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
+We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`<.inputs_for />`](`Phoenix.Component.inputs_for/1`) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new/0`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
 
 For our multi operations, we start by issuing an update of our cart, which we named `:cart`. After the cart update is issued, we perform a multi `delete_all` operation, which takes the updated cart and applies our zero-quantity logic. We prune any items in the cart with zero quantity by returning an ecto query that finds all cart items for this cart with an empty quantity. Calling `Repo.transaction/1` with our multi will execute the operations in a new transaction and we return the success or failure result to the caller just like the original function.
 
@@ -1050,16 +1047,8 @@ If we stop and consider the order process, we'll see that orders involve related
 Naming wise, `Orders` clearly defines the scope of our context, so let's get started by again taking advantage of the context generators. Run the following command in your console:
 
 ```console
-$ mix phx.gen.html Orders Order orders user_uuid:uuid total_price:decimal
+$ mix phx.gen.context Orders Order orders user_uuid:uuid total_price:decimal
 
-* creating lib/hello_web/controllers/order_controller.ex
-* creating lib/hello_web/controllers/order_html/edit.html.heex
-* creating lib/hello_web/controllers/order_html/order_form.html.heex
-* creating lib/hello_web/controllers/order_html/index.html.heex
-* creating lib/hello_web/controllers/order_html/new.html.heex
-* creating lib/hello_web/controllers/order_html/show.html.heex
-* creating lib/hello_web/controllers/order_html.ex
-* creating test/hello_web/controllers/order_controller_test.exs
 * creating lib/hello/orders/order.ex
 * creating priv/repo/migrations/20210209214612_create_orders.exs
 * creating lib/hello/orders.ex
@@ -1069,17 +1058,12 @@ $ mix phx.gen.html Orders Order orders user_uuid:uuid total_price:decimal
 * creating test/support/fixtures/orders_fixtures.ex
 * injecting test/support/fixtures/orders_fixtures.ex
 
-Add the resource to your browser scope in lib/hello_web/router.ex:
-
-    resources "/orders", OrderController
-
-
 Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
 ```
 
-We generated a `Orders` context along with HTML controllers, views, etc. We added a `user_uuid` field to associate our placeholder current user to an order, along with a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` and make the following changes:
+We generated a `Orders` context. We added a `user_uuid` field to associate our placeholder current user to an order, along with a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` and make the following changes:
 
 ```elixir
   def change do
@@ -1103,6 +1087,7 @@ price:decimal quantity:integer \
 order_id:references:orders product_id:references:products
 
 You are generating into an existing context.
+...
 Would you like to proceed? [Yn] y
 * creating lib/hello/orders/line_item.ex
 * creating priv/repo/migrations/20210209215050_create_order_line_items.exs
@@ -1209,9 +1194,14 @@ Before we render information about our orders, we need to ensure our order data 
 
 We rewrote the function to accept a user UUID and query our repo for an order matching the user's ID for a given order ID. Then we populated the order by preloading our line item and product associations.
 
-To complete an order, our cart page can issue a POST to the `OrderController.create` action, but we need to implement the operations and logic to actually complete an order. Like before, we'll start at the web interface by rewriting the create function in `lib/hello_web/controllers/order_controller.ex`:
+To complete an order, our cart page can issue a POST to the `OrderController.create` action, but we need to implement the operations and logic to actually complete an order. Like before, we'll start at the web interface. Create a new file at `lib/hello_web/controllers/order_controller.ex` and key this in:
 
 ```elixir
+defmodule HelloWeb.OrderController do
+  use HelloWeb, :controller
+
+  alias Hello.Orders
+
   def create(conn, _) do
     case Orders.complete_order(conn.assigns.cart) do
       {:ok, order} ->
@@ -1225,9 +1215,10 @@ To complete an order, our cart page can issue a POST to the `OrderController.cre
         |> redirect(to: ~p"/cart")
     end
   end
+end
 ```
 
-We rewrote the `create` action to call an as-yet-implemented `Orders.complete_order/1` function. The code that phoenix generated had a generic `Orders.create_order/1` call. Our code is technically "creating" an order, but it's important to step back and consider the naming of your interfaces. The act of *completing* an order is extremely important in our system. Money changes hands in a transaction, physical goods could be automatically shipped, etc. Such an operation deserves a better, more obvious function name, such as `complete_order`. If the order is completed successfully we redirect to the show page, otherwise a flash error is shown as we redirect back to the cart page.
+We wrote the `create` action to call an as-yet-implemented `Orders.complete_order/1` function. Our code is technically "creating" an order, but it's important to step back and consider the naming of your interfaces. The act of *completing* an order is extremely important in our system. Money changes hands in a transaction, physical goods could be automatically shipped, etc. Such an operation deserves a better, more obvious function name, such as `complete_order`. If the order is completed successfully we redirect to the show page, otherwise a flash error is shown as we redirect back to the cart page.
 
 Here is also a good opportunity to highlight that contexts can naturally work with data defined by other contexts too. This will be specially common with data that is used throughout the application, such as the cart here (but it can also be the current user or the current project, and so forth, depending on your project).
 
@@ -1242,8 +1233,8 @@ Now we can implement our `Orders.complete_order/1` function. To complete an orde
 From our requirements alone, we can start to see why a generic `create_order` function doesn't cut it. Let's implement this new function in `lib/hello/orders.ex`:
 
 ```elixir
-  alias Hello.ShoppingCart
   alias Hello.Orders.LineItem
+  alias Hello.ShoppingCart
 
   def complete_order(%ShoppingCart.Cart{} = cart) do
     line_items =
@@ -1282,51 +1273,61 @@ To close out our order completion, we need to implement the `ShoppingCart.prune_
   end
 ```
 
-Our new function accepts the cart struct and issues a `Repo.delete_all` which accepts a query of all items for the provided cart. We return a success result by simply reloading the pruned cart to the caller. With our context complete, we now need to show the user their completed order. Head back to your order controller and modify the `show/2` action:
+Our new function accepts the cart struct and issues a `Repo.delete_all` which accepts a query of all items for the provided cart. We return a success result by simply reloading the pruned cart to the caller. With our context complete, we now need to show the user their completed order. Head back to your order controller and add the `show/2` action:
 
 ```elixir
   def show(conn, %{"id" => id}) do
--   order = Orders.get_order!(id)
-+   order = Orders.get_order!(conn.assigns.current_uuid, id)
+    order = Orders.get_order!(conn.assigns.current_uuid, id)
     render(conn, :show, order: order)
   end
 ```
 
-We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can replace the order show template in `lib/hello_web/controllers/order_html/show.html.heex`:
+We added the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can implement the view and template. Create a new view file at `lib/hello_web/controllers/order_html.ex` with the following content:
+
+```elixir
+defmodule HelloWeb.OrderHTML do
+  use HelloWeb, :html
+
+  embed_templates "order_html/*"
+end
+```
+Next we can create the template at `lib/hello_web/controllers/order_html/show.html.heex`:
 
 ```heex
-<h1>Thank you for your order!</h1>
+<.header>
+  Thank you for your order!
+  <:subtitle>
+     <strong>User uuid: </strong><%= @order.user_uuid %>
+  </:subtitle>
+</.header>
 
-<ul>
-  <li>
-    <strong>User uuid:</strong>
-    <%= @order.user_uuid %>
-  </li>
+<.table id="items" rows={@order.line_items}>
+  <:col :let={item} label="Title"><%= item.product.title %></:col>
+  <:col :let={item} label="Quantity"><%= item.quantity %></:col>
+  <:col :let={item} label="Price">
+    <%= HelloWeb.CartHTML.currency_to_str(item.price) %>
+  </:col>
+</.table>
 
-  <li :for={item <- @order.line_items}>
-    <%= item.product.title %>
-    (<%= item.quantity %>) - <%= HelloWeb.CartHTML.currency_to_str(item.price) %>
-  </li>
+<strong>Total price:</strong>
+<%= HelloWeb.CartHTML.currency_to_str(@order.total_price) %>
 
-  <li>
-    <strong>Total price:</strong>
-    <%= HelloWeb.CartHTML.currency_to_str(@order.total_price) %>
-  </li>
-
-</ul>
-
-<span><.link href={~p"/cart"}>Back</.link></span>
+<.back navigate={~p"/products"}>Back to products</.back>
 ```
 
 To show our completed order, we displayed the order's user, followed by the line item listing with product title, quantity, and the price we "transacted" when completing the order, along with the total price.
 
-Our last addition will be to add the "complete order" button to our cart page to allow completing an order. Add the following button to the bottom of the cart show template in `lib/hello_web/controllers/cart_html/show.html.heex`:
+Our last addition will be to add the "complete order" button to our cart page to allow completing an order. Add the following button to the <.header> of the cart show template in `lib/hello_web/controllers/cart_html/show.html.heex`:
 
 ```diff
-  <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>
-
-+ <.link href={~p"/orders"} method="post">complete order</.link>
-<% end %>
+  <.header>
+    My Cart
++    <:actions>
++      <.link href={~p"/orders"} method="post">
++        <.button>Complete order</.button>
++      </.link>
++    </:actions>
+  </.header>
 ```
 
 We added a link with `method="post"` to send a POST request to our `OrderController.create` action. If we head back to our cart page at [`http://localhost:4000/cart`](http://localhost:4000/cart) and complete an order, we'll be greeted by our rendered template:
@@ -1335,7 +1336,9 @@ We added a link with `method="post"` to send a POST request to our `OrderControl
 Thank you for your order!
 
 User uuid: 08964c7c-908c-4a55-bcd3-9811ad8b0b9d
-Metaprogramming Elixir (2) - $15.00
+Title                   Quantity Price
+Metaprogramming Elixir  2        $15.00
+
 Total price: $30.00
 ```
 
