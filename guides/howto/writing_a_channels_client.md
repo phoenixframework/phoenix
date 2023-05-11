@@ -48,7 +48,7 @@ First, `phx_join` is used join a channel. For example, to join the `miami:weathe
 ["0", "0", "miami:weather", "phx_join", {"some": "param"}]
 ```
 
-Second, `phx_leave` is used to leave a channel. For example, to join the `miami:weather` channel:
+Second, `phx_leave` is used to leave a channel. For example, to leave the `miami:weather` channel:
 
 ```json
 [null, "1", "miami:weather", "phx_leave", {}]
