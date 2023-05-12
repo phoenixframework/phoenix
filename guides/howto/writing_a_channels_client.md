@@ -12,7 +12,7 @@ A client must join at least one topic to begin sending and receiving messages, a
 
 ## Connecting
 
-To establish a WebSocket connect to Phoenix Channels, first make note of the `socket` declaration in the application's `Endpoint` module.
+To establish a WebSocket connection to Phoenix Channels, first make note of the `socket` declaration in the application's `Endpoint` module.
 For example, if you see: `socket "/mobile", MyAppWeb.MobileSocket`, the path for the initial HTTP request is:
 
     [host]:[port]/mobile/websocket?vsn=2.0.0
