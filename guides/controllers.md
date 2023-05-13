@@ -380,7 +380,7 @@ The flash functionality is handy when mixed with redirects. Perhaps you want to 
   def home(conn, _params) do
     conn
     |> put_flash(:error, "Let's pretend we have an error.")
-    |> redirect(to: ~p"/redirect_test"))
+    |> redirect(to: ~p"/redirect_test")
   end
 ```
 
