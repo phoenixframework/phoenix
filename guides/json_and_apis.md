@@ -258,7 +258,7 @@ With this knowledge in hand, we can explore the `FallbackController` (`lib/hello
     conn
     |> put_status(:unprocessable_entity)
     |> put_view(json: HelloWeb.ChangesetJSON)
-    |> render("error.json", changeset: changeset)
+    |> render(:error, changeset: changeset)
   end
 ```
 
@@ -272,7 +272,7 @@ defmodule HelloWeb.ChangesetJSON do
   def error(%{changeset: changeset}) do
     # When encoded, the changeset returns its errors
     # as a JSON object. So we just pass it forward.
-    %{errors: Ecto.Changeset.traverse_errors(changeset, &HelloWeb.CoreComponents.translate_error/1)}
+    %{errors: Ecto.Changeset.traverse_errors(changeset, &translate_error/1)}
   end
 end
 ```
@@ -316,12 +316,22 @@ mix help phx.new
 The output should contain the following:
 
 ```text
-  • --no-assets - do not generate the assets folder
-  • --no-ecto - do not generate Ecto files
-  • --no-html - do not generate HTML views
-  • --no-gettext - do not generate gettext files
+  • --no-assets - equivalent to --no-esbuild and --no-tailwind
   • --no-dashboard - do not include Phoenix.LiveDashboard
+  • --no-ecto - do not generate Ecto files
+  • --no-esbuild - do not include esbuild dependencies and
+    assets. We do not recommend setting this option, unless for API
+    only applications, as doing so requires you to manually add and
+    track JavaScript dependencies
+  • --no-gettext - do not generate gettext files
+  • --no-html - do not generate HTML views
+  • --no-live - comment out LiveView socket setup in
+    assets/js/app.js. Automatically disabled if --no-html is given
   • --no-mailer - do not generate Swoosh mailer files
+  • --no-tailwind - do not include tailwind dependencies and
+    assets. The generated markup will still include Tailwind CSS
+    classes, those are left-in as reference for the subsequent
+    styling of your layout and components
 ```
 
 The `--no-html` is the obvious one we want to use when creating any Phoenix application for an API in order to leave out all the unnecessary HTML scaffolding. You may also pass `--no-assets`, if you don't want any of the asset management bit, `--no-gettext` if you don't support internationalization, and so on.

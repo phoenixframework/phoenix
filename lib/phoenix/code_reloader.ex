@@ -30,17 +30,22 @@ defmodule Phoenix.CodeReloader do
   applications from library dependencies.
 
   This function is a no-op and returns `:ok` if Mix is not available.
+
+  ## Options
+
+    * `:reloadable_args` - additional CLI args to pass to the compiler tasks
+
   """
-  @spec reload(module) :: :ok | {:error, binary()}
-  def reload(endpoint) do
-    if Code.ensure_loaded?(Mix.Project), do: reload!(endpoint), else: :ok
+  @spec reload(module, keyword) :: :ok | {:error, binary()}
+  def reload(endpoint, opts \\ []) do
+    if Code.ensure_loaded?(Mix.Project), do: reload!(endpoint, opts), else: :ok
   end
 
   @doc """
   Same as `reload/1` but it will raise if Mix is not available.
   """
-  @spec reload!(module) :: :ok | {:error, binary()}
-  defdelegate reload!(endpoint), to: Phoenix.CodeReloader.Server
+  @spec reload!(module, keyword) :: :ok | {:error, binary()}
+  defdelegate reload!(endpoint, opts), to: Phoenix.CodeReloader.Server
 
   @doc """
   Synchronizes with the code server if it is alive.

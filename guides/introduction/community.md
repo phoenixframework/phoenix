@@ -6,7 +6,7 @@ There are a number of places to connect with community members at all experience
 
   * We're on Libera IRC in the [\#elixir](https://web.libera.chat/?channels=#elixir) channel.
 
-  * [Request an invitation](https://elixir-slackin.herokuapp.com/) and join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
+  * [Request an invitation](https://elixir-lang.slack.com/join/shared_invite/zt-1f13hz7mb-N4KGjF523ONLCcHfb8jYgA#/shared-invite/email) and join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
 
   * Feel free to join and check out the #phoenix channel on [Discord](https://discord.gg/elixir).
 
@@ -30,7 +30,7 @@ There are a number of places to connect with community members at all experience
 
   * [Phoenix in Action (by Geoffrey Lessel - 2019)](https://manning.com/books/phoenix-in-action)
 
-  * [Phoenix Inside Out - Book Series (by Shankar Dhanasekaran - 2017)](https://shankardevy.com/phoenix-book/)
+  * [Phoenix Inside Out - Book Series (by Shankar Dhanasekaran - 2017)](https://shankardevy.com/phoenix-book/). First book of the series Mastering Phoenix Framework is [free to read online](https://shankardevy.com/phoenix-inside-out-mpf/)
 
   * [Functional Web Development with Elixir, OTP, and Phoenix Rethink the Modern Web App (by Lance Halvorsen - 2017)](https://pragprog.com/titles/lhelph/functional-web-development-with-elixir-otp-and-phoenix/)
 

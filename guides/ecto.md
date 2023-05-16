@@ -155,7 +155,6 @@ Here's the `User` schema that Phoenix generated for us.
 defmodule Hello.User do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Hello.User
 
   schema "users" do
     field :bio, :string

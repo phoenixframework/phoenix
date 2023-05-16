@@ -14,7 +14,7 @@ Use the issues tracker for:
 Please **do not** use the issue tracker for personal support requests nor feature requests. Support requests should be sent to:
 
 * The [phoenix-talk mailing list](https://groups.google.com/group/phoenix-talk) (closed in favor of forum, but archive is still online)
-* [The Phoenix subforum on the Elixir forum](https://elixirforum.com/c/phoenix-forum)
+* [The Phoenix subforum on the Elixir Forum](https://elixirforum.com/c/phoenix-forum)
 * **[#elixir](irc://irc.libera.chat/elixir)** on [Libera](https://libera.chat/) IRC
 
 Development issues can be discussed on the [phoenix-core mailing list](https://groups.google.com/group/phoenix-core).

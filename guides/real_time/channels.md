@@ -277,7 +277,7 @@ import "./user_socket.js"
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
-In `lib/hello_web/templates/page/index.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
+In `lib/hello_web/controllers/page_html/home.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
 ```heex
 <div id="messages" role="log" aria-live="polite"></div>
@@ -481,5 +481,3 @@ Phoenix uses an at-most-once strategy when sending messages to clients. If the c
 ## Example Application
 
 To see an example of the application we just built, checkout the project [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
-
-You can also see a live demo at <https://phoenixchat.herokuapp.com/>.
