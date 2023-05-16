@@ -696,7 +696,7 @@ Now that our cart is associated to the items we place in it, let's set up the ca
   end
 ```
 
-First, we replaced the `cart_id` field with a standard `belongs_to` pointing at our `ShoppingCart.Cart` schema. Next, we replaced our `product_id` field by adding our first cross-context data dependency with a `belongs_to` for the `Catalog.Product` schema. Here, we intentionally coupled the data boundaries because it provides exactly what we need. An isolated context API with the bare minimum knowledge necessary to reference a product in our system. Next, we added a new validation to our changeset. With `validate_number/3`, we ensure any quantity provided by user input is between 0 and 100.
+First, we replaced the `cart_id` field with a standard `belongs_to` pointing at our `ShoppingCart.Cart` schema. Next, we replaced our `product_id` field by adding our first cross-context data dependency with a `belongs_to` for the `Catalog.Product` schema. Here, we intentionally coupled the data boundaries because it provides exactly what we need: an isolated context API with the bare minimum knowledge necessary to reference a product in our system. Next, we added a new validation to our changeset. With `validate_number/3`, we ensure any quantity provided by user input is between 0 and 100.
 
 With our schemas in place, we can start integrating the new data structures and `ShoppingCart` context APIs into our web-facing features.
 
@@ -1040,9 +1040,9 @@ Let's head back to the browser and try it out. Add a few products to your cart, 
 
 ## Adding an Orders context
 
-With our `Catalog` and `ShoppingCart` contexts, we're seeing first-hand how our well-considered modules and function names are yielding clear and maintainable code. Our last order of business is to allow the user to initiate the checkout process. We won't go as far as integrating payment processing or order fulfillment, but we'll get you started in that direction. Like before, we need to decide where code for completing an order should live. Is it part of the catalog? Clearly not, but what about the shopping cart? Shopping carts are related to orders – after all the user has to add items in order to purchase any products, but should the order checkout process be grouped here?
+With our `Catalog` and `ShoppingCart` contexts, we're seeing first-hand how our well-considered modules and function names are yielding clear and maintainable code. Our last order of business is to allow the user to initiate the checkout process. We won't go as far as integrating payment processing or order fulfillment, but we'll get you started in that direction. Like before, we need to decide where code for completing an order should live. Is it part of the catalog? Clearly not, but what about the shopping cart? Shopping carts are related to orders – after all, the user has to add items in order to purchase any products – but should the order checkout process be grouped here?
 
-If we stop and consider the order process, we'll see that orders involve related, but distinctly different data from the cart contents. Also, business rules around the checkout process are much different than carting. For example, we may allow a user to add a back-ordered item to their cart, but we could not allow an order with no inventory to be completed. Additionally, we need to capture point-in-time product information when an order is completed, such as the price of the items *at payment transaction time*. This is essential because a product price may change in the future, but the line items in our order must always record and display what we charged at time of purchase. For these reasons, we can start to see ordering can reasonably stand on its own with its own data concerns and business rules.
+If we stop and consider the order process, we'll see that orders involve related, but distinctly different data from the cart contents. Also, business rules around the checkout process are much different than carting. For example, we may allow a user to add a back-ordered item to their cart, but we could not allow an order with no inventory to be completed. Additionally, we need to capture point-in-time product information when an order is completed, such as the price of the items *at payment transaction time*. This is essential because a product price may change in the future, but the line items in our order must always record and display what we charged at time of purchase. For these reasons, we can start to see that ordering can stand on its own with its own data concerns and business rules.
 
 Naming wise, `Orders` clearly defines the scope of our context, so let's get started by again taking advantage of the context generators. Run the following command in your console:
 
@@ -1063,7 +1063,7 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-We generated a `Orders` context. We added a `user_uuid` field to associate our placeholder current user to an order, along with a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` and make the following changes:
+We generated an `Orders` context. We added a `user_uuid` field to associate our placeholder current user to an order, along with a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` and make the following changes:
 
 ```elixir
   def change do
@@ -1220,7 +1220,7 @@ end
 
 We wrote the `create` action to call an as-yet-implemented `Orders.complete_order/1` function. Our code is technically "creating" an order, but it's important to step back and consider the naming of your interfaces. The act of *completing* an order is extremely important in our system. Money changes hands in a transaction, physical goods could be automatically shipped, etc. Such an operation deserves a better, more obvious function name, such as `complete_order`. If the order is completed successfully we redirect to the show page, otherwise a flash error is shown as we redirect back to the cart page.
 
-Here is also a good opportunity to highlight that contexts can naturally work with data defined by other contexts too. This will be specially common with data that is used throughout the application, such as the cart here (but it can also be the current user or the current project, and so forth, depending on your project).
+Here is also a good opportunity to highlight that contexts can naturally work with data defined by other contexts too. This will be especially common with data that is used throughout the application, such as the cart here (but it can also be the current user or the current project, and so forth, depending on your project).
 
 Now we can implement our `Orders.complete_order/1` function. To complete an order, our job will require a few operations:
 
@@ -1262,7 +1262,7 @@ From our requirements alone, we can start to see why a generic `create_order` fu
   end
 ```
 
-We started by mapping the `%ShoppingCart.CartItem{}`'s in our shopping cart into a map of order line items structs. The job of the order line item record is to capture the price of the product *at payment transaction time*, so we reference the product's price here. Next, we create a bare order changeset with `Ecto.Changeset.change/2` and associate our user UUID, set our total price calculation, and place our order line items in the changeset. With a fresh order changeset ready to be inserted, we can again make use of `Ecto.Multi` to execute our operations in a database transaction. We start by inserting the order, followed by a `run` operation. The `Ecto.Multi.run/3` function allows us to run any code in the function which must either succeed with `{:ok, result}` or error, which halts and rolls back the transaction. Here, we simply can call into our shopping cart context and ask it to prune all items in a cart. Running the transaction will execute the multi as before and we return the result to the caller.
+We started by mapping the `%ShoppingCart.CartItem{}`'s in our shopping cart into a map of order line items structs. The job of the order line item record is to capture the price of the product *at payment transaction time*, so we reference the product's price here. Next, we create a bare order changeset with `Ecto.Changeset.change/2` and associate our user UUID, set our total price calculation, and place our order line items in the changeset. With a fresh order changeset ready to be inserted, we can again make use of `Ecto.Multi` to execute our operations in a database transaction. We start by inserting the order, followed by a `run` operation. The `Ecto.Multi.run/3` function allows us to run any code in the function which must either succeed with `{:ok, result}` or error, which halts and rolls back the transaction. Here, we simply call into our shopping cart context and ask it to prune all items in a cart. Running the transaction will execute the multi as before and we return the result to the caller.
 
 To close out our order completion, we need to implement the `ShoppingCart.prune_cart_items/1` function in `lib/hello/shopping_cart.ex`:
 
@@ -1356,6 +1356,6 @@ As we explored the context API, you might have wondered:
 
 Although Changesets are part of Ecto, they are not tied to the database, and they can be used to map data from and to any source, which makes it a general and useful data structure for tracking field changes, perform validations, and generate error messages.
 
-For those reasons, `%Ecto.Changeset{}` is a good choice to model the data changes between your contexts and your web layer. Regardless if you are talking to an API or the database.
+For those reasons, `%Ecto.Changeset{}` is a good choice to model the data changes between your contexts and your web layer - regardless if you are talking to an API or the database.
 
 Finally, note that your controllers and views are not hardcoded to work exclusively with Ecto either. Instead, Phoenix defines protocols such as `Phoenix.Param` and `Phoenix.HTML.FormData`, which allow any library to extend how Phoenix generates URL parameters or renders forms. Conveniently for us, the `phoenix_ecto` project implements those protocols, but you could as well bring your own data structures and implement them yourself.
