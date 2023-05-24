@@ -53,16 +53,18 @@ defmodule Phoenix.Endpoint.RenderErrors do
 
   @doc false
   def __catch__(conn, kind, reason, stack, opts) do
-    receive do
-      @already_sent ->
-        send(self(), @already_sent)
-        %Plug.Conn{conn | state: :sent}
-    after
-      0 ->
-        instrument_render_and_send(conn, kind, reason, stack, opts)
-    end
+    conn =
+      receive do
+        @already_sent ->
+          send(self(), @already_sent)
+          %Plug.Conn{conn | state: :sent}
+      after
+        0 ->
+          instrument_render_and_send(conn, kind, reason, stack, opts)
+      end
 
-    :erlang.raise(kind, reason, stack)
+    maybe_raise(kind, reason, stack)
+    conn
   end
 
   defp instrument_render_and_send(conn, kind, reason, stack, opts) do
@@ -90,6 +92,9 @@ defmodule Phoenix.Endpoint.RenderErrors do
 
   defp error_conn(_conn, :error, %NoRouteError{conn: conn}), do: conn
   defp error_conn(conn, _kind, _reason), do: conn
+
+  defp maybe_raise(:error, %NoRouteError{}, _stack), do: :ok
+  defp maybe_raise(kind, reason, stack), do: :erlang.raise(kind, reason, stack)
 
   ## Rendering
 
