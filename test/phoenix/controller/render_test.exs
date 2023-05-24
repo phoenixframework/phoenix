@@ -45,7 +45,7 @@ defmodule Phoenix.Controller.RenderTest do
     conn =
       conn()
       |> put_layout({MyApp.LayoutView, "app.html"})
-      |> put_root_layout(html: {MyApp.LayoutView, "root.html"})
+      |> put_root_layout({MyApp.LayoutView, "root.html"})
       |> render("index.html", title: "Hello")
 
     assert conn.resp_body == "ROOTSTART[Hello]<html>\n  <title>Hello</title>\n  Hello\n\n</html>\nROOTEND\n"
@@ -63,7 +63,7 @@ defmodule Phoenix.Controller.RenderTest do
     conn =
       conn()
       |> put_layout({MyApp.LayoutView, "app.html"})
-      |> put_root_layout(html: {MyApp.LayoutView, :root})
+      |> put_root_layout({MyApp.LayoutView, :root})
       |> render("index.html", title: "Hello")
 
     assert conn.resp_body == "ROOTSTART[Hello]<html>\n  <title>Hello</title>\n  Hello\n\n</html>\nROOTEND\n"

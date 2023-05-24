@@ -98,7 +98,7 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = conn(:get, "/")
     assert root_layout(conn) == false
 
-    conn = put_root_layout(conn, html: {AppView, "root.html"})
+    conn = put_root_layout(conn, {AppView, "root.html"})
     assert root_layout(conn) == {AppView, "root.html"}
 
     conn = put_root_layout(conn, "bare.html")
