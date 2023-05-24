@@ -89,7 +89,7 @@ defmodule Phoenix.CodeReloader.Server do
 
         :error ->
           write_backup(backup)
-          {:error, out}
+          {:error, IO.iodata_to_binary(out)}
       end
 
     Enum.each(froms, &GenServer.reply(&1, reply))
