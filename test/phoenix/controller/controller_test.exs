@@ -98,14 +98,15 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = conn(:get, "/")
     assert root_layout(conn) == false
 
-    conn = put_root_layout(conn, {AppView, "root.html"})
-    assert root_layout(conn) == {AppView, "root.html"}
+    conn = put_root_layout(conn, html: {AppView, :root})
+    assert root_layout(conn, "html") == {AppView, :root}
+    assert root_layout(conn, "json") == false
+    assert root_layout(conn) == false
 
-    conn = put_root_layout(conn, "bare.html")
-    assert root_layout(conn) == {AppView, "bare.html"}
-
-    conn = put_root_layout(conn, :print)
-    assert root_layout(conn) == {AppView, :print}
+    conn = put_root_layout(conn, html: :bare)
+    assert root_layout(conn, "html") == {AppView, :bare}
+    assert root_layout(conn, "json") == false
+    assert root_layout(conn) == false
 
     conn = put_root_layout(conn, false)
     assert root_layout(conn) == false
