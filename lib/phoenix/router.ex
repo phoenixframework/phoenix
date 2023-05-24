@@ -506,10 +506,15 @@ defmodule Phoenix.Router do
     {matches, {pipelines, _}} =
       Enum.map_reduce(routes_with_exprs, {[], %{}}, &build_match/2)
 
-    verifies =
+    routes_per_path =
       routes_with_exprs
       |> Enum.group_by(&elem(&1, 1).path, &elem(&1, 0))
-      |> Enum.map(&build_verify/1)
+
+    verifies =
+      routes_with_exprs
+      |> Enum.map(&elem(&1, 1).path)
+      |> Enum.uniq()
+      |> Enum.map(&build_verify(&1, routes_per_path))
 
     verify_catch_all =
       quote generated: true do
@@ -574,7 +579,9 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp build_verify({path, routes}) do
+  defp build_verify(path, routes_per_path) do
+    routes = Map.get(routes_per_path, path)
+
     forward_plug =
       Enum.find_value(routes, fn
         %{kind: :forward, plug: plug} -> plug

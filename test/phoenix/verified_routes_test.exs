@@ -49,6 +49,14 @@ defmodule Phoenix.VerifiedRoutesTest do
     forward "/plug_forward", UserController
   end
 
+  defmodule CatchAllWarningRouter do
+    use Phoenix.Router
+    alias Phoenix.VerifiedRoutesTest.PostController
+
+    get "/", PostController, :root
+    get "/*path", PostController, :root, warn_on_verify: true
+  end
+
   # Emulate regular endpoint functions
 
   defmodule Endpoint do
@@ -527,6 +535,19 @@ defmodule Phoenix.VerifiedRoutesTest do
 
         assert warnings =~
                  ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/should-warn/foobar"|
+      end
+
+      test "~p does not warn if route without warn_on_verify: true matches first" do
+        warnings =
+          ExUnit.CaptureIO.capture_io(:stderr, fn ->
+            defmodule VerifyFalse do
+              use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: CatchAllWarningRouter
+
+              def test, do: ~p"/"
+            end
+          end)
+
+        assert warnings == ""
       end
     end
   end
