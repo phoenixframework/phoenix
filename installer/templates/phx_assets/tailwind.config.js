@@ -54,6 +54,7 @@ module.exports = {
             [`--hero-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
             "-webkit-mask": `var(--hero-${name})`,
             "mask": `var(--hero-${name})`,
+            "mask-repeat": "no-repeat",
             "background-color": "currentColor",
             "vertical-align": "middle",
             "display": "inline-block",
