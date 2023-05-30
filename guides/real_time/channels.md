@@ -165,7 +165,7 @@ If your deployment environment does not support distributed Elixir or direct com
 ### Client Libraries
 
 Any networked device can connect to Phoenix Channels as long as it has a client library.
-The following libraries exist today, and new ones are always welcome.
+The following libraries exist today, and new ones are always welcome; to write your own, see our how-to guide "Writing a Channels Client".
 
 #### Official
 
@@ -183,6 +183,7 @@ Phoenix ships with a JavaScript client that is available when generating a new P
   - [PhoenixSharp](https://github.com/Mazyod/PhoenixSharp)
 + Elixir
   - [phoenix_gen_socket_client](https://github.com/Aircloak/phoenix_gen_socket_client)
+  - [slipstream](https://hexdocs.pm/slipstream/Slipstream.html)
 + GDScript (Godot Game Engine)
   - [GodotPhoenixChannels](https://github.com/alfredbaudisch/GodotPhoenixChannels)
 
