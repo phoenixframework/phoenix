@@ -540,7 +540,7 @@ defmodule Phoenix.VerifiedRoutesTest do
       test "~p does not warn if route without warn_on_verify: true matches first" do
         warnings =
           ExUnit.CaptureIO.capture_io(:stderr, fn ->
-            defmodule VerifyFalse do
+            defmodule VerifyFalseTrueMatchesFirst do
               use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: CatchAllWarningRouter
 
               def test, do: ~p"/"
