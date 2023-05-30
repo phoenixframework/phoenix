@@ -46,7 +46,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
         defp deps do
           [
             {:phoenix_pubsub, "~> 2.0-dev", github: "phoenixframework/phoenix_pubsub"},
-            {:ecto_sql, "~> 3.4"},
+            {:ecto_sql, "~> 3.10"},
             {:postgrex, ">= 0.0.0"},
             {:jason, "~> 1.0"}
           ]
@@ -113,7 +113,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  [
                    {:bcrypt_elixir, "~> 2.0"},
                    {:phoenix_pubsub, "~> 2.0-dev", github: "phoenixframework/phoenix_pubsub"},
-                   {:ecto_sql, "~> 3.4"},
+                   {:ecto_sql, "~> 3.10"},
                    {:postgrex, ">= 0.0.0"},
                    {:jason, "~> 1.0"}
                  ]

@@ -35,7 +35,7 @@ defmodule Phoenix.Integration.MixProject do
       {:phoenix, path: "..", override: true},
       {:phoenix_ecto, "~> 4.4"},
       {:esbuild, "~> 0.7", runtime: false},
-      {:ecto_sql, "~> 3.6"},
+      {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
       {:myxql, ">= 0.0.0"},
       {:tds, ">= 0.0.0"},

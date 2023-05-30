@@ -46,6 +46,15 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.3 (2023-05-30)
+
+### Enhancements
+  * Use LiveView 0.19 for new apps
+
+### Bug Fixes
+  * Fix compilation error page on plug debugger showing obscure error when app fails to compile
+  * Fix warnings being printed twice in route verification
+
 ## 1.7.2 (2023-03-20)
 
 ### Enhancements
