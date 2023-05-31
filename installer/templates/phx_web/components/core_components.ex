@@ -3,7 +3,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   Provides core UI components.
 
   At the first glance, this module may seem daunting, but its goal is
-  to provide some core building blocks in your application, such modals,
+  to provide some core building blocks in your application, such as modals,
   tables, and forms. The components are mostly markup and well documented
   with doc strings and declarative assigns. You may customize and style
   them in any way you want, based on your application growth and needs.
