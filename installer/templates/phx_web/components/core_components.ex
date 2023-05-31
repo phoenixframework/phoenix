@@ -565,7 +565,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   Renders a [Heroicon](https://heroicons.com).
 
   Heroicons come in three styles – outline, solid, and mini.
-  By default, the outline style is used, but solid an mini may
+  By default, the outline style is used, but solid and mini may
   be applied by using the `-solid` and `-mini` suffix.
 
   You can customize the size and colors of the icons by setting
