@@ -137,13 +137,22 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     controller_pre = Path.join([web, "controllers", web_path])
     test_pre = Path.join([test_prefix, "controllers", web_path])
 
-    [
+    # Check if changeset_json.ex already exists
+    changeset_json_path = Path.join([controller_pre, "changeset_json.ex"])
+    does_changeset_json_exists = File.exists?(changeset_json_path)
+
+    files_generated = [
       {:eex, "controller.ex", Path.join([controller_pre, "#{singular}_controller.ex"])},
       {:eex, "json.ex", Path.join([controller_pre, "#{singular}_json.ex"])},
-      {:new_eex, "changeset_json.ex", Path.join([controller_pre, "changeset_json.ex"])},
       {:eex, "controller_test.exs", Path.join([test_pre, "#{singular}_controller_test.exs"])},
       {:new_eex, "fallback_controller.ex", Path.join([web, "controllers/fallback_controller.ex"])}
     ]
+    if !does_changeset_json_exists do
+      files_generated ++ [{:new_eex, "changeset_json.ex", changeset_json_path}] # changeset_json.ex does not exist, adding it to the list
+    else
+      files_generated   # changeset_json.ex already exists returing the rest of the list
+    end
+
   end
 
   @doc false
