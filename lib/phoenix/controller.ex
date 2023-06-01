@@ -504,11 +504,11 @@ defmodule Phoenix.Controller do
     end
   end
 
-  @invalid_local_url_chars ["\\", "/%", "/\t"]
+  @invalid_local_url_regex ~r/\\|\t|\/%[0-1][0-9A-F]/
   defp validate_local_url("//" <> _ = to), do: raise_invalid_url(to)
 
   defp validate_local_url("/" <> _ = to) do
-    if String.contains?(to, @invalid_local_url_chars) do
+    if String.match?(to, @invalid_local_url_regex) do
       raise ArgumentError, "unsafe characters detected for local redirect in URL #{inspect(to)}"
     else
       to

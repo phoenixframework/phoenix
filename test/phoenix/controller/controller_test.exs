@@ -367,6 +367,9 @@ defmodule Phoenix.Controller.ControllerTest do
       conn = redirect(conn(:get, "/"), to: "/<foobar>")
       assert conn.resp_body =~ "/&lt;foobar&gt;"
 
+      conn = redirect(conn(:get, "/"), to: "/%D0%BFfoobar")
+      assert conn.resp_body =~ "/%D0%BFfoobar"
+
       assert_raise ArgumentError, ~r/the :to option in redirect expects a path/, fn ->
         redirect(conn(:get, "/"), to: "http://example.com")
       end
@@ -385,6 +388,10 @@ defmodule Phoenix.Controller.ControllerTest do
 
       assert_raise ArgumentError, ~r/unsafe/, fn ->
         redirect(conn(:get, "/"), to: "/%09/example.com")
+      end
+
+      assert_raise ArgumentError, ~r/unsafe/, fn ->
+        redirect(conn(:get, "/"), to: "/example.com/%1B")
       end
 
       assert_raise ArgumentError, ~r/unsafe/, fn ->
