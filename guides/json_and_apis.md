@@ -36,7 +36,7 @@ We will break those files into four categories:
   * Files in `priv/repo/migrations` responsible for updating our database
   * Files in `test` to test our controllers and contexts
 
-In this guide, we will explore only the first category of files. To learn more about how Phoenix stores and manage data, check out [the Ecto guide](ecto.md) and [the Contexts guide](contexts.md) for more information. We also have a whole section dedicating on testing.
+In this guide, we will explore only the first category of files. To learn more about how Phoenix stores and manage data, check out [the Ecto guide](ecto.md) and [the Contexts guide](contexts.md) for more information. We also have a whole section dedicated to testing.
 
 At the end, the generator asks us to add the `/url` resource to our `:api` scope in `lib/hello_web/router.ex`:
 
@@ -103,7 +103,7 @@ Now we can retrieve all links:
 curl -i http://localhost:4000/api/urls
 ```
 
-Or we can just retrieve a link it's `id`:
+Or we can just retrieve a link by its `id`:
 
 ```console
 curl -i http://localhost:4000/api/urls/1
@@ -117,7 +117,7 @@ curl -iX PUT http://localhost:4000/api/urls/2 \
    -d '{"url": {"title":"Elixir Programming Language"}}'
 ```
 
-The response should be a `200` with the update link in the body.
+The response should be a `200` with the updated link in the body.
 
 Finally, we need to try out the removal of a link:
 
