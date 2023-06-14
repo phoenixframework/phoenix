@@ -288,6 +288,7 @@ defmodule Phoenix.Channel.Server do
   def handle_info({Phoenix.Channel, auth_payload, {pid, _} = from, socket}, ref) do
     Process.demonitor(ref)
     %{channel: channel, topic: topic, private: private} = socket
+    Process.put(:"$initial_call", {channel, :join, 3})
     Process.put(:"$callers", [pid])
 
     socket = %{
