@@ -519,8 +519,12 @@ defmodule Phoenix.Socket do
     {:stop, {:shutdown, :disconnected}, state}
   end
 
-  def __info__(:socket_drain, state) do
-    {:stop, {:shutdown, :draining}, {1012, 'restart'}, state}
+  def __info__(:socket_drain, {_state, socket} = state) do
+    # TODO handle {:stop, :draining} reason inside websock_adapter and convert to 1012 there
+    case socket.transport do
+      :websocket -> {:stop, {:shutdown, :draining}, {1012, 'restart'}, state}
+      _ -> {:stop, {:shutdown, :draining}, state}
+    end
   end
 
   def __info__({:socket_push, opcode, payload}, state) do

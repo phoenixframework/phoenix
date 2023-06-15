@@ -102,10 +102,6 @@ defmodule Phoenix.Transports.LongPoll.Server do
         state = %{state | handler: {handler, handler_state}}
         {:noreply, state}
 
-      {:stop, reason, {_close_code, _msg}, handler_state} ->
-        state = %{state | handler: {handler, handler_state}}
-        {:stop, reason, state}
-
       {:stop, reason, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
         {:stop, reason, state}
