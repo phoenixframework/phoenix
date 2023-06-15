@@ -520,7 +520,7 @@ defmodule Phoenix.Socket do
   end
 
   def __info__(:socket_drain, state) do
-    {:stop, {:shutdown, :draining}, state}
+    {:stop, {:shutdown, :draining}, {1012, 'restart'}, state}
   end
 
   def __info__({:socket_push, opcode, payload}, state) do
