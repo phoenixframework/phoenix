@@ -46,6 +46,11 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.5 (2023-06-15)
+
+### Bug Fixes
+  * Fix LongPoll error when draining connections
+
 ## 1.7.4 (2023-06-15)
 
 ### Bug Fixes
