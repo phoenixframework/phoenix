@@ -46,6 +46,11 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.4 (2023-06-15)
+
+### Bug Fixes
+  * Fix the WebSocket draining sending incorrect close code when draining causing LiveViews to reload the page instead of reconnecting
+
 ## 1.7.3 (2023-05-30)
 
 ### Enhancements
