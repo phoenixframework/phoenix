@@ -206,6 +206,24 @@ defmodule Phoenix.Test.ChannelTest do
            } = socket(UserSocket, "user:id", %{hello: :world})
   end
 
+  test "socket/4" do
+    pid = self()
+
+    task =
+      Task.async(fn ->
+        assert %Socket{
+                 id: "user:id",
+                 assigns: %{hello: :world},
+                 endpoint: @endpoint,
+                 pubsub_server: Phoenix.Test.ChannelTest.PubSub,
+                 serializer: Phoenix.ChannelTest.NoopSerializer,
+                 handler: UserSocket
+               } = socket(UserSocket, "user:id", %{hello: :world}, test_process: pid)
+      end)
+
+    Task.await(task)
+  end
+
   ## join
 
   test "join/3 with success" do
@@ -341,6 +359,21 @@ defmodule Phoenix.Test.ChannelTest do
     assert_broadcast "broadcast", %{"foo" => "bar"}
   end
 
+  test "connects and joins topics directly, from another process" do
+    pid = self()
+
+    task =
+      Task.async(fn ->
+        {:ok, socket} = connect(UserSocket, %{}, test_process: pid)
+        socket = subscribe_and_join!(socket, "foo:ok")
+        push(socket, "broadcast", %{"foo" => "bar"})
+        assert socket.id == "123"
+        assert_broadcast "broadcast", %{"foo" => "bar"}
+      end)
+
+    Task.await(task)
+  end
+
   test "pushes atom parameter keys as strings" do
     {:ok, _, socket} = join(socket(UserSocket), Channel, "foo:ok")
 
@@ -366,6 +399,25 @@ defmodule Phoenix.Test.ChannelTest do
     socket = subscribe_and_join!(socket(UserSocket), Channel, "foo:ok")
     broadcast_from!(socket, "default", %{"foo" => "bar"})
     assert_push "default", %{"foo" => "bar"}
+  end
+
+  test "push broadcasts by default, outside of test process" do
+    pid = self()
+
+    task =
+      Task.async(fn ->
+        socket =
+          subscribe_and_join!(
+            socket(UserSocket, "user_id", %{some: :assign}, test_process: pid),
+            Channel,
+            "foo:ok"
+          )
+
+        broadcast_from!(socket, "default", %{"foo" => "bar"})
+        assert_push "default", %{"foo" => "bar"}
+      end)
+
+    Task.await(task)
   end
 
   test "handles broadcasts and stops" do
