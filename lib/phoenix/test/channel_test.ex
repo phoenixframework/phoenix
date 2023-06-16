@@ -274,7 +274,7 @@ defmodule Phoenix.ChannelTest do
   end
 
   defp fetch_test_supervisor!(options) do
-    case ExUnit.OnExitHandler.get_supervisor(Keyword.get(options, :test_process,self())) do
+    case ExUnit.OnExitHandler.get_supervisor(Keyword.get(options, :test_process, self())) do
       {:ok, nil} ->
         opts = [strategy: :one_for_one, max_restarts: 1_000_000, max_seconds: 1]
         {:ok, sup} = Supervisor.start_link([], opts)
