@@ -143,8 +143,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def flash_group(assigns) do
     ~H"""
-    <.flash kind={:info} title="Success!" flash={@flash} />
-    <.flash kind={:error} title="Error!" flash={@flash} />
+    <.flash id="flash-info" kind={:info} title="Success!" flash={@flash} />
+    <.flash if="flash-error" kind={:error} title="Error!" flash={@flash} />
     <.flash
       id="client-error"
       kind={:error}
