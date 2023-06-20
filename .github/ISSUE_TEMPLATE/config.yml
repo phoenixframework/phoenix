@@ -9,8 +9,3 @@ contact_links:
   - name: Propose new features
     url: https://elixirforum.com/c/phoenix-forum
     about: Propose new features on Elixir Forum
-
-  - name: Report a security vulnerability
-    url: https://github.com/phoenixframework/phoenix/security
-    about: Report a security vulnerability
-
