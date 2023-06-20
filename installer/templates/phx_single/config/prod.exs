@@ -8,7 +8,10 @@ import Config<%= if @javascript or @css do %>
 config :<%= @web_app_name %>, <%= @endpoint_module %>, cache_static_manifest: "priv/static/cache_manifest.json"<% end %><%= if @mailer do %>
 
 # Configures Swoosh API Client
-config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: <%= @app_module %>.Finch<% end %>
+config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: <%= @app_module %>.Finch
+
+# Disable Swoosh Local Memory Storage
+config :swoosh, local: false<% end %>
 
 # Do not print debug messages in production
 config :logger, level: :info
