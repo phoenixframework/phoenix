@@ -6,15 +6,13 @@ There are a number of places to connect with community members at all experience
 
   * We're on Libera IRC in the [\#elixir](https://web.libera.chat/?channels=#elixir) channel.
 
-  * [Request an invitation](https://elixir-lang.slack.com/join/shared_invite/zt-1f13hz7mb-N4KGjF523ONLCcHfb8jYgA#/shared-invite/email) and join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
+  * Join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
 
   * Feel free to join and check out the #phoenix channel on [Discord](https://discord.gg/elixir).
 
   * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/main/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
 
   * Ask or answer questions about Phoenix on [Elixir Forum](https://elixirforum.com/c/phoenix-forum) or [Stack Overflow](https://stackoverflow.com/questions/tagged/phoenix-framework).
-
-  * To discuss new features in the framework, email the [phoenix-core mailing list](https://groups.google.com/group/phoenix-core).
 
   * Follow the Phoenix Framework on [Twitter](https://twitter.com/elixirphoenix).
 

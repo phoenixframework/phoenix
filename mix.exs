@@ -8,7 +8,7 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.7.3"
+  @version "1.7.6"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -77,7 +77,7 @@ defmodule Phoenix.MixProject do
       # TODO drop phoenix_view as an optional dependency in Phoenix v2.0
       {:phoenix_view, "~> 2.0", optional: true},
       {:phoenix_template, "~> 1.0"},
-      {:websock_adapter, "~> 0.4"},
+      {:websock_adapter, "~> 0.5.3"},
 
       # TODO drop castore when we require OTP 25+
       {:castore, ">= 0.0.0"},

@@ -75,18 +75,15 @@ npm install
 
 * [#elixir][1] on [Libera][2] IRC
 * [elixir-lang Slack channel][3]
-* [Issue tracker][4]
-* [Phoenix Forum (questions)][5]
-* [phoenix-core Mailing list (development)][6]
-* Visit Phoenix's sponsor, DockYard, for expert [phoenix consulting](https://dockyard.com/phoenix-consulting)
-* Privately disclose security vulnerabilities to phoenix-security@googlegroups.com
+* [Issues tracker][4]
+* [Phoenix Forum (questions and proposals)][5]
+* Visit Phoenix's sponsor, DockYard, for expert [Phoenix Consulting](https://dockyard.com/phoenix-consulting)
 
   [1]: https://web.libera.chat/?channels=#elixir
   [2]: https://libera.chat/
-  [3]: https://elixir-lang.slack.com/join/shared_invite/zt-1f13hz7mb-N4KGjF523ONLCcHfb8jYgA#/shared-invite/email
+  [3]: https://elixir-lang.slack.com/
   [4]: https://github.com/phoenixframework/phoenix/issues
   [5]: https://elixirforum.com/c/phoenix-forum
-  [6]: https://groups.google.com/group/phoenix-core
 
 ## Copyright and License
 

@@ -520,7 +520,8 @@ defmodule Phoenix.Socket do
   end
 
   def __info__(:socket_drain, state) do
-    {:stop, {:shutdown, :draining}, state}
+    # downstream websock_adapter's will close with 1012 Service Restart
+    {:stop, {:shutdown, :restart}, state}
   end
 
   def __info__({:socket_push, opcode, payload}, state) do
