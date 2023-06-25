@@ -136,9 +136,13 @@ defmodule Phoenix.VerifiedRoutes do
     Module.put_attribute(mod, :router, Keyword.fetch!(opts, :router))
     Module.put_attribute(mod, :endpoint, Keyword.get(opts, :endpoint))
 
+    statics_at =
+      Keyword.get(opts, :statics_at, "/")
+      |> String.trim_leading("/")
+
     statics =
       case Keyword.get(opts, :statics, []) do
-        list when is_list(list) -> list
+        list when is_list(list) -> Enum.map(list, &Path.join(statics_at, &1))
         other -> raise ArgumentError, "expected statics to be a list, got: #{inspect(other)}"
       end
 

@@ -189,6 +189,20 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert warnings == ""
   end
 
+  test "with statics_at set" do
+    defmodule StaticsAtSet do
+      use Phoenix.VerifiedRoutes,
+        endpoint: unquote(@endpoint),
+        router: unquote(@router),
+        statics: ~w(images),
+        statics_at: "/banana"
+
+      def test, do: ~p"/banana/images/test.jpg"
+    end
+
+    assert StaticsAtSet.test() == "/banana/images/test.jpg"
+  end
+
   test "unverified_path" do
     assert unverified_path(conn_with_script_name(), @router, "/posts") == "/api/posts"
     assert unverified_path(@endpoint, @router, "/posts") == "/posts"

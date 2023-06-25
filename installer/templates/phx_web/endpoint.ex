@@ -18,7 +18,7 @@ defmodule <%= @endpoint_module %> do
   # You should set gzip to true if you are running phx.digest
   # when deploying your static files in production.
   plug Plug.Static,
-    at: "/",
+    at: <%= @web_namespace %>.static_at(),
     from: :<%= @web_app_name %>,
     gzip: false,
     only: <%= @web_namespace %>.static_paths()

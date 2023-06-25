@@ -18,6 +18,7 @@ defmodule <%= @web_namespace %> do
   """
 
   def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+  def static_at, do: "/"
 
   def router do
     quote do
@@ -100,7 +101,8 @@ defmodule <%= @web_namespace %> do
       use Phoenix.VerifiedRoutes,
         endpoint: <%= @endpoint_module %>,
         router: <%= @web_namespace %>.Router,
-        statics: <%= @web_namespace %>.static_paths()
+        statics: <%= @web_namespace %>.static_paths(),
+        statics_at: <%= @web_namespace %>.static_at()
     end
   end
 
