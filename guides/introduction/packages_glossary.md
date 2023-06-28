@@ -37,7 +37,10 @@ When peeking under the covers, you will find those libraries play
 an important role in Phoenix applications:
 
   * [Phoenix HTML](https://hexdocs.pm/phoenix_html) - building blocks
-    for working with HTML and Forms safely
+    for working with HTML and forms safely
+    
+  * [Phoenix Ecto](https://hex.pm/packages/phoenix_ecto) - plugs and
+    protocol implementations for using phoenix with ecto
 
   * [Phoenix PubSub](https://hexdocs.pm/phoenix_pubsub) - a distributed
     pub/sub system with presence support
