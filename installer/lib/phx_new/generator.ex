@@ -23,28 +23,27 @@ defmodule Phx.New.Generator do
     root = Path.expand("../../../priv/templates/phx.new", __DIR__)
 
     templates_ast =
-      for {name, mappings} <- Module.get_attribute(env.module, :templates) do
-        for {format, _proj_location, files} <- mappings,
-            format != :keep,
-            {source, _target} <- files,
-            source = to_string(source) do
-          path = Path.join(root, source)
+      for {name, mappings} <- Module.get_attribute(env.module, :templates),
+          {format, _proj_location, files} <- mappings,
+          format != :keep,
+          {source, _target} <- files,
+          source = to_string(source) do
+        path = Path.join(root, source)
 
-          if format in [:config, :prod_config, :eex] do
-            compiled = EEx.compile_file(path)
+        if format in [:config, :prod_config, :eex] do
+          compiled = EEx.compile_file(path)
 
-            quote do
-              @external_resource unquote(path)
-              @file unquote(path)
-              def render(unquote(name), unquote(source), var!(assigns))
-                  when is_list(var!(assigns)),
-                  do: unquote(compiled)
-            end
-          else
-            quote do
-              @external_resource unquote(path)
-              def render(unquote(name), unquote(source), _assigns), do: unquote(File.read!(path))
-            end
+          quote do
+            @external_resource unquote(path)
+            @file unquote(path)
+            def render(unquote(name), unquote(source), var!(assigns))
+                when is_list(var!(assigns)),
+                do: unquote(compiled)
+          end
+        else
+          quote do
+            @external_resource unquote(path)
+            def render(unquote(name), unquote(source), _assigns), do: unquote(File.read!(path))
           end
         end
       end
@@ -62,6 +61,7 @@ defmodule Phx.New.Generator do
   end
 
   def copy_from(%Project{} = project, mod, name) when is_atom(name) do
+    %Project{binding: binding} = project
     mapping = mod.template_files(name)
 
     for {format, project_location, files} <- mapping,
@@ -78,7 +78,7 @@ defmodule Phx.New.Generator do
           Mix.shell().info([:green, "* extracting ", :reset, Path.relative_to_cwd(target)])
 
           File.mkdir_p!(parent_dir)
-          zip_contents = mod.render(name, source, project.binding)
+          zip_contents = mod.render(name, source, binding)
           {:ok, zip} = :zip.zip_open(zip_contents, [:memory])
           {:ok, files} = :zip.zip_get(zip)
 
@@ -89,18 +89,18 @@ defmodule Phx.New.Generator do
           end)
 
         :text ->
-          create_file(target, mod.render(name, source, project.binding))
+          create_file(target, mod.render(name, source, binding))
 
         :config ->
-          contents = mod.render(name, source, project.binding)
+          contents = mod.render(name, source, binding)
           config_inject(Path.dirname(target), Path.basename(target), contents)
 
         :prod_config ->
-          contents = mod.render(name, source, project.binding)
+          contents = mod.render(name, source, binding)
           prod_only_config_inject(Path.dirname(target), Path.basename(target), contents)
 
         :eex ->
-          contents = mod.render(name, source, project.binding)
+          contents = mod.render(name, source, binding)
           create_file(target, contents)
       end
     end
@@ -193,6 +193,7 @@ defmodule Phx.New.Generator do
     tailwind = Keyword.get(opts, :tailwind, assets)
     mailer = Keyword.get(opts, :mailer, true)
     dev = Keyword.get(opts, :dev, false)
+    templates = Keyword.get(opts, :templates, false)
     phoenix_path = phoenix_path(project, dev, false)
     phoenix_path_umbrella_root = phoenix_path(project, dev, true)
 
@@ -247,7 +248,8 @@ defmodule Phx.New.Generator do
       adapter_config: adapter_config,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
       namespaced?: namespaced?(project),
-      dev: dev
+      dev: dev,
+      templates: templates
     ]
 
     %Project{project | binding: binding}
