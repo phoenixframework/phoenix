@@ -140,7 +140,8 @@ defmodule Mix.Tasks.Phx.New do
     dashboard: :boolean,
     install: :boolean,
     prefix: :string,
-    mailer: :boolean
+    mailer: :boolean,
+    templates: :string
   ]
 
   @impl true
