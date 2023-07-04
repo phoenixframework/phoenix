@@ -1,6 +1,8 @@
 defmodule <%= @app_module %>.MixProject do
   use Mix.Project
 
+  # TESTING 123
+
   def project do
     [
       app: :<%= @app_name %>,
