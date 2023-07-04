@@ -20,7 +20,7 @@ defmodule Phx.New.Generator do
   end
 
   defmacro __before_compile__(env) do
-    root = Path.expand("../../templates", __DIR__)
+    root = Path.expand("../../../priv/templates/phx.new", __DIR__)
 
     templates_ast =
       for {name, mappings} <- Module.get_attribute(env.module, :templates) do
