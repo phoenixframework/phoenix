@@ -61,12 +61,21 @@ defmodule Phx.New.Generator do
   end
 
   def copy_from(%Project{} = project, mod, name) when is_atom(name) do
-    %Project{binding: binding} = project
+    %Project{binding: binding, template_path: template_path} = project
     mapping = mod.template_files(name)
 
     for {format, project_location, files} <- mapping,
-        {source, target_path} <- files,
-        source = to_string(source) do
+        {source_atom, target_path} <- files,
+        source_string = to_string(source_atom) do
+      source =
+        if is_binary(template_path) and
+             template_path |> Path.join(source_string) |> File.exists?() do
+          Path.join(template_path, source_string)
+        else
+          root = Path.expand("../../templates", __DIR__)
+          Path.join(root, source_string)
+        end
+
       target = Project.join_path(project, project_location, target_path)
 
       case format do
@@ -74,34 +83,39 @@ defmodule Phx.New.Generator do
           File.mkdir_p!(target)
 
         :zip ->
-          parent_dir = Path.dirname(target)
           Mix.shell().info([:green, "* extracting ", :reset, Path.relative_to_cwd(target)])
 
-          File.mkdir_p!(parent_dir)
-          zip_contents = mod.render(name, source, binding)
-          {:ok, zip} = :zip.zip_open(zip_contents, [:memory])
-          {:ok, files} = :zip.zip_get(zip)
+          heroicons = File.read!(source)
+          {:ok, files} = :zip.extract(heroicons, [:memory])
 
-          Enum.map(files, fn {path, contents} ->
-            full_path = Path.join(parent_dir, path)
-            File.mkdir_p!(Path.dirname(full_path))
-            File.write!(full_path, contents)
+          parent_dir = Path.dirname(target)
+
+          Enum.map(files, fn {source, contents} ->
+            target = Path.join(parent_dir, source)
+            create_file(target, contents, quiet: true)
           end)
 
         :text ->
-          create_file(target, mod.render(name, source, binding))
+          copy_file(source, target)
 
         :config ->
-          contents = mod.render(name, source, binding)
-          config_inject(Path.dirname(target), Path.basename(target), contents)
+          if File.exists?(target) do
+            contents = mod.render(name, source, binding)
+            config_inject(Path.dirname(target), Path.basename(target), contents)
+          else
+            copy_template(source, target, binding)
+          end
 
         :prod_config ->
-          contents = mod.render(name, source, binding)
-          prod_only_config_inject(Path.dirname(target), Path.basename(target), contents)
+          if File.exists?(target) do
+            contents = mod.render(name, source, binding)
+            prod_only_config_inject(Path.dirname(target), Path.basename(target), contents)
+          else
+            copy_template(source, target, binding)
+          end
 
         :eex ->
-          contents = mod.render(name, source, binding)
-          create_file(target, contents)
+          copy_template(source, target, binding)
       end
     end
   end
@@ -193,7 +207,6 @@ defmodule Phx.New.Generator do
     tailwind = Keyword.get(opts, :tailwind, assets)
     mailer = Keyword.get(opts, :mailer, true)
     dev = Keyword.get(opts, :dev, false)
-    templates = Keyword.get(opts, :templates, false)
     phoenix_path = phoenix_path(project, dev, false)
     phoenix_path_umbrella_root = phoenix_path(project, dev, true)
 
