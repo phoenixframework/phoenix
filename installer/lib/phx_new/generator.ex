@@ -248,8 +248,7 @@ defmodule Phx.New.Generator do
       adapter_config: adapter_config,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
       namespaced?: namespaced?(project),
-      dev: dev,
-      templates: templates
+      dev: dev
     ]
 
     %Project{project | binding: binding}
