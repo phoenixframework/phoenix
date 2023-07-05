@@ -16,12 +16,14 @@ defmodule Phx.New.Project do
             opts: :unset,
             in_umbrella?: false,
             binding: [],
-            generators: []
+            generators: [],
+            template_path: nil
 
   def new(project_path, opts) do
     project_path = Path.expand(project_path)
     app = opts[:app] || Path.basename(project_path)
     app_mod = Module.concat([opts[:module] || Macro.camelize(app)])
+    template_path = opts[:template_path] || Path.expand("../../templates", __DIR__)
 
     %Project{
       base_path: project_path,
@@ -29,6 +31,7 @@ defmodule Phx.New.Project do
       app_mod: app_mod,
       root_app: app,
       root_mod: app_mod,
+      template_path: template_path,
       opts: opts
     }
   end

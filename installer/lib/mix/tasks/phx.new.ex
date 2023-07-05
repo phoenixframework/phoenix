@@ -133,7 +133,7 @@ defmodule Mix.Tasks.Phx.New do
     install: :boolean,
     prefix: :string,
     mailer: :boolean,
-    templates: :string
+    template_path: :string
   ]
 
   @impl true
