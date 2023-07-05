@@ -319,6 +319,23 @@ defmodule <%= @web_namespace %>.CoreComponents do
     """
   end
 
+  def input(%{type: "radio"} = assigns) do
+    ~H"""
+      <label class="flex items-center gap-2 text-sm leading-6 text-zinc-600">
+        <input
+          type="radio"
+          id={@id}
+          name={@name}
+          value={@value}
+          checked={@checked}
+          class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
+          {@rest}
+        />
+        <%= @label %>
+      </label>
+    """
+  end
+
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
