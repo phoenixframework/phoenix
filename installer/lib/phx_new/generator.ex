@@ -85,8 +85,8 @@ defmodule Phx.New.Generator do
         :zip ->
           Mix.shell().info([:green, "* extracting ", :reset, Path.relative_to_cwd(target)])
 
-          heroicons = File.read!(source)
-          {:ok, files} = :zip.extract(heroicons, [:memory])
+          zip_raw = File.read!(source)
+          {:ok, files} = :zip.extract(zip_raw, [:memory])
 
           parent_dir = Path.dirname(target)
 
