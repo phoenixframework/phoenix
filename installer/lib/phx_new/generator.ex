@@ -139,23 +139,15 @@ defmodule Phx.New.Generator do
           |> Enum.map(&elem(&1, 1))
           |> Enum.filter(fn string -> !String.match?(string, ~r/:/) end)
           |> Enum.map(&Path.basename/1)
-          |> IO.inspect(label: :formatted_filenames)
 
         Enum.map(template_files, fn file_name ->
           source = Path.join([source_dir, file_name])
-          IO.inspect(file_name: file_name, source: source, target: target)
 
           if !File.dir?(source) and file_name not in formatted_filenames do
             target = Path.join(target, file_name)
             copy_file(source, target)
           end
         end)
-
-        IO.inspect(
-          source_dir: source_dir,
-          template_path: template_path,
-          template_files: template_files
-        )
       end
     end
   end
