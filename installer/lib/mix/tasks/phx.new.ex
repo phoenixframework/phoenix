@@ -87,7 +87,7 @@ defmodule Mix.Tasks.Phx.New do
 
   When `--template-path` is provided, the generator will use the files in the path before falling back to default templates. This option is useful for developers and teams who routinely create new Phoenix projects.
 
-  The file and folder structure must match `installer/templates/*`. Because the generator falls back to default templates, the `template-path` only needs to include the files which are modified.
+  The file and folder structure for modified files must match `installer/templates/*`. Because the generator falls back to default templates, the `template-path` only needs to include the files which are modified. The default templates may be copied from this repo's `installer/templates` directory as needed.
 
   For example, additional dependencies may be added, additional files may be copied into new projects, and so on. This way, customizations can be applied without forking the Phoenix repo. To customize only `mix.exs`, the `template-path` must have a file located at `<template-path>/phx_single/mix.exs`.
 
