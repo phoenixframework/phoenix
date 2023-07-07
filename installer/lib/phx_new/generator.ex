@@ -97,14 +97,14 @@ defmodule Phx.New.Generator do
           end)
 
         :text ->
-          copy_file(source, target, force: true)
+          copy_file(source, target)
 
         :config ->
           if File.exists?(target) do
             contents = mod.render(name, source, binding)
             config_inject(Path.dirname(target), Path.basename(target), contents)
           else
-            copy_template(source, target, binding, force: true)
+            copy_template(source, target, binding)
           end
 
         :prod_config ->
@@ -112,11 +112,11 @@ defmodule Phx.New.Generator do
             contents = mod.render(name, source, binding)
             prod_only_config_inject(Path.dirname(target), Path.basename(target), contents)
           else
-            copy_template(source, target, binding, force: true)
+            copy_template(source, target, binding)
           end
 
         :eex ->
-          copy_template(source, target, binding, force: true)
+          copy_template(source, target, binding)
       end
     end
   end
@@ -143,7 +143,7 @@ defmodule Phx.New.Generator do
         Enum.map(template_files, fn file_name ->
           source = Path.join([source_dir, file_name])
 
-          if !File.dir?(source) and file_name not in formatted_filenames do
+          if !File.dir?(source) and file_name not in formatted_filenames and !File.exists?(target) do
             target = Path.join(target, file_name)
             copy_file(source, target)
           end
