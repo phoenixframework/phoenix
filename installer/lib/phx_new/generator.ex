@@ -63,6 +63,7 @@ defmodule Phx.New.Generator do
   def copy_from(%Project{} = project, mod, name) when is_atom(name) do
     %Project{binding: binding, template_path: template_path} = project
     mapping = mod.template_files(name)
+    load_custom_files(project, mapping)
 
     for {format, project_location, files} <- mapping,
         {source_atom, target_path} <- files,
@@ -96,14 +97,14 @@ defmodule Phx.New.Generator do
           end)
 
         :text ->
-          copy_file(source, target)
+          copy_file(source, target, force: true)
 
         :config ->
           if File.exists?(target) do
             contents = mod.render(name, source, binding)
             config_inject(Path.dirname(target), Path.basename(target), contents)
           else
-            copy_template(source, target, binding)
+            copy_template(source, target, binding, force: true)
           end
 
         :prod_config ->
@@ -111,11 +112,50 @@ defmodule Phx.New.Generator do
             contents = mod.render(name, source, binding)
             prod_only_config_inject(Path.dirname(target), Path.basename(target), contents)
           else
-            copy_template(source, target, binding)
+            copy_template(source, target, binding, force: true)
           end
 
         :eex ->
-          copy_template(source, target, binding)
+          copy_template(source, target, binding, force: true)
+      end
+    end
+  end
+
+  # For all template files not in the mapping files, copy file contents as-is.
+  defp load_custom_files(%Project{} = project, mapping) do
+    %Project{template_path: template_path} = project
+
+    for {_format, project_location, files} <- mapping,
+        {source, target_path} <- files,
+        source = to_string(source) do
+      source_dir = Path.join([template_path, Path.dirname(source)])
+
+      if File.dir?(source_dir) do
+        template_files = File.ls!(source_dir)
+        target = Project.join_path(project, project_location, target_path) |> Path.dirname()
+
+        formatted_filenames =
+          files
+          |> Enum.map(&elem(&1, 1))
+          |> Enum.filter(fn string -> !String.match?(string, ~r/:/) end)
+          |> Enum.map(&Path.basename/1)
+          |> IO.inspect(label: :formatted_filenames)
+
+        Enum.map(template_files, fn file_name ->
+          source = Path.join([source_dir, file_name])
+          IO.inspect(file_name: file_name, source: source, target: target)
+
+          if !File.dir?(source) and file_name not in formatted_filenames do
+            target = Path.join(target, file_name)
+            copy_file(source, target)
+          end
+        end)
+
+        IO.inspect(
+          source_dir: source_dir,
+          template_path: template_path,
+          template_files: template_files
+        )
       end
     end
   end
