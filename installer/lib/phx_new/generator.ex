@@ -92,20 +92,22 @@ defmodule Phx.New.Generator do
 
           Enum.map(files, fn {source, contents} ->
             target = Path.join(parent_dir, source)
-            create_file(target, contents, quiet: true)
+            create_file(target, contents, quiet: true, force: true)
           end)
 
         :text ->
-          copy_file(source, target)
+          create_file(target, mod.render(name, source_string, project.binding))
 
         :config ->
-          copy_template(source, target, binding)
+          contents = mod.render(name, source_string, project.binding)
+          config_inject(Path.dirname(target), Path.basename(target), contents)
 
         :prod_config ->
-          copy_template(source, target, binding)
+          contents = mod.render(name, source_string, project.binding)
+          prod_only_config_inject(Path.dirname(target), Path.basename(target), contents)
 
         :eex ->
-          copy_template(source, target, binding)
+          copy_template(source, target, binding, force: true)
       end
     end
   end
