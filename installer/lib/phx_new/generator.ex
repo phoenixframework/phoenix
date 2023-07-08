@@ -69,12 +69,12 @@ defmodule Phx.New.Generator do
         {source_atom, target_path} <- files,
         source_string = to_string(source_atom) do
       source =
-        if is_binary(template_path) and
-             template_path |> Path.join(source_string) |> File.exists?() do
+        if template_exists?(template_path, source_string) do
           Path.join(template_path, source_string)
         else
-          root = Path.expand("../../templates", __DIR__)
-          Path.join(root, source_string)
+          "../../templates"
+          |> Path.expand(__DIR__)
+          |> Path.join(source_string)
         end
 
       target = Project.join_path(project, project_location, target_path)
@@ -121,10 +121,16 @@ defmodule Phx.New.Generator do
     end
   end
 
-  # For all template files not in the mapping files, copy file contents as-is.
-  defp load_custom_files(%Project{} = project, mapping) do
-    %Project{template_path: template_path} = project
+  defp template_exists?(template_path, source)
+       when is_binary(template_path) and is_binary(source) do
+    template_path |> Path.join(source) |> File.exists?()
+  end
 
+  defp template_exists?(_template_path, _source), do: false
+
+  # For all template files not in the mapping files, copy file contents as-is.
+  defp load_custom_files(%Project{template_path: template_path} = project, mapping)
+       when is_binary(template_path) do
     for {_format, project_location, files} <- mapping,
         {source, target_path} <- files,
         source = to_string(source) do
@@ -151,6 +157,8 @@ defmodule Phx.New.Generator do
       end
     end
   end
+
+  defp load_custom_files(_project, _mapping), do: nil
 
   def config_inject(path, file, to_inject) do
     file = Path.join(path, file)

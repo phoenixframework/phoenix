@@ -23,7 +23,7 @@ defmodule Phx.New.Project do
     project_path = Path.expand(project_path)
     app = opts[:app] || Path.basename(project_path)
     app_mod = Module.concat([opts[:module] || Macro.camelize(app)])
-    template_path = opts[:template_path] || Path.expand("../../templates", __DIR__)
+    template_path = opts[:template_path]
 
     %Project{
       base_path: project_path,
