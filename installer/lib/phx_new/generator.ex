@@ -84,12 +84,11 @@ defmodule Phx.New.Generator do
           File.mkdir_p!(target)
 
         :zip ->
+          parent_dir = Path.dirname(target)
           Mix.shell().info([:green, "* extracting ", :reset, Path.relative_to_cwd(target)])
 
           zip_raw = File.read!(source)
           {:ok, files} = :zip.extract(zip_raw, [:memory])
-
-          parent_dir = Path.dirname(target)
 
           Enum.map(files, fn {source, contents} ->
             target = Path.join(parent_dir, source)
@@ -100,20 +99,10 @@ defmodule Phx.New.Generator do
           copy_file(source, target)
 
         :config ->
-          if File.exists?(target) do
-            contents = mod.render(name, source, binding)
-            config_inject(Path.dirname(target), Path.basename(target), contents)
-          else
-            copy_template(source, target, binding)
-          end
+          copy_template(source, target, binding)
 
         :prod_config ->
-          if File.exists?(target) do
-            contents = mod.render(name, source, binding)
-            prod_only_config_inject(Path.dirname(target), Path.basename(target), contents)
-          else
-            copy_template(source, target, binding)
-          end
+          copy_template(source, target, binding)
 
         :eex ->
           copy_template(source, target, binding)
