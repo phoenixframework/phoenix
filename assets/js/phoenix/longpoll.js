@@ -5,6 +5,14 @@ import {
 
 import Ajax from "./ajax"
 
+let arrayBufferToBase64 = (buffer) => {
+  let binary = ""
+  let bytes = new Uint8Array(buffer)
+  let len = bytes.byteLength
+  for(let i = 0; i < len; i++){ binary += String.fromCharCode(bytes[i]) }
+  return btoa(binary)
+}
+
 export default class LongPoll {
 
   constructor(endPoint){
@@ -107,7 +115,9 @@ export default class LongPoll {
   // we collect all pushes within the current event loop by
   // setTimeout 0, which optimizes back-to-back procedural
   // pushes against an empty buffer
+
   send(body){
+    if(typeof(body) !== "string"){ body = arrayBufferToBase64(body) }
     if(this.currentBatch){
       this.currentBatch.push(body)
     } else if(this.awaitingBatchAck){

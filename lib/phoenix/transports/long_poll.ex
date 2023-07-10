@@ -75,8 +75,16 @@ defmodule Phoenix.Transports.LongPoll do
         # we need to match on both v1 and v2 protocol, as well as wrap for backwards compat
         batch =
           case get_req_header(conn, "content-type") do
-            ["application/x-ndjson"] -> String.split(body, ["\n", "\r\n"])
-            _ -> [body]
+            ["application/x-ndjson"] ->
+              body
+              |> String.split(["\n", "\r\n"])
+              |> Enum.map(fn
+                "[" <> _ = txt -> {txt, :text}
+                base64 -> {Base.decode64!(base64), :binary}
+              end)
+
+            _ ->
+              [{body, :text}]
           end
 
         {conn, status} =
