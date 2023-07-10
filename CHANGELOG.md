@@ -46,6 +46,11 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.7 (2023-07-10)
+
+## Enhancements
+  * Support incoming binary payloads to channels over longpoll transport
+
 ## 1.7.6 (2023-06-16)
 
 ### Bug Fixes
