@@ -274,6 +274,12 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
 
+  attr :feedback, :atom,
+    values: [:eager, :auto, :none],
+    default: :auto,
+    doc:
+      "allows to configure if error messages are displayed, even if the user has not interacted"
+
   attr :errors, :list, default: []
   attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
@@ -300,7 +306,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       assign_new(assigns, :checked, fn -> Phoenix.HTML.Form.normalize_value("checkbox", value) end)
 
     ~H"""
-    <div phx-feedback-for={@name}>
+    <.feedback_wrapper for={@name} errors={@errors} feedback={@feedback}>
       <label class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
         <input type="hidden" name={@name} value="false" />
         <input
@@ -314,14 +320,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
         />
         <%%= @label %>
       </label>
-      <.error :for={msg <- @errors}><%%= msg %></.error>
-    </div>
+    </.feedback_wrapper>
     """
   end
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
+    <.feedback_wrapper for={@name} errors={@errors} feedback={@feedback}>
       <.label for={@id}><%%= @label %></.label>
       <select
         id={@id}
@@ -333,35 +338,37 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <option :if={@prompt} value=""><%%= @prompt %></option>
         <%%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
       </select>
-      <.error :for={msg <- @errors}><%%= msg %></.error>
-    </div>
+    </.feedback_wrapper>
     """
   end
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
+    <.feedback_wrapper for={@name} errors={@errors} feedback={@feedback}>
       <.label for={@id}><%%= @label %></.label>
       <textarea
         id={@id}
         name={@name}
         class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
-          "min-h-[6rem] phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6 min-h-[6rem]",
+          if(@feedback == :auto,
+            do: "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400"
+          ),
+          if(@errors != [] && @feedback != :none,
+            do: "border-rose-400 focus:border-rose-400",
+            else: "border-zinc-300 focus:border-zinc-400"
+          )
         ]}
         {@rest}
       ><%%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
-      <.error :for={msg <- @errors}><%%= msg %></.error>
-    </div>
+    </.feedback_wrapper>
     """
   end
 
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
+    <.feedback_wrapper for={@name} errors={@errors} feedback={@feedback}>
       <.label for={@id}><%%= @label %></.label>
       <input
         type={@type}
@@ -370,14 +377,18 @@ defmodule <%= @web_namespace %>.CoreComponents do
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
           "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
-          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          if(@feedback == :auto,
+            do:
+              "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
+          ),
+          if(@errors != [] && @feedback != :none,
+            do: "border-rose-400 focus:border-rose-400",
+            else: "border-zinc-300 focus:border-zinc-400"
+          )
         ]}
         {@rest}
       />
-      <.error :for={msg <- @errors}><%%= msg %></.error>
-    </div>
+    </.feedback_wrapper>
     """
   end
 
@@ -396,13 +407,36 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   @doc """
+  Wraps the input field inside a div with the phx-feedback-for attribute.
+  """
+  attr :for, :any, required: true
+  attr :errors, :list, required: true
+  attr :feedback, :atom, values: [:eager, :auto, :none], required: true
+  slot :inner_block, required: true
+
+  def feedback_wrapper(assigns) do
+    ~H"""
+    <div phx-feedback-for={@for}>
+      <%%= render_slot(@inner_block) %>
+      <.error :for={msg <- @errors} :if={@feedback in [:eager, :auto]} feedback={@feedback}>
+        <%%= msg %>
+      </.error>
+    </div>
+    """
+  end
+
+  @doc """
   Generates a generic error message.
   """
+  attr :feedback, :atom, values: [:eager, :auto], default: :auto
   slot :inner_block, required: true
 
   def error(assigns) do
     ~H"""
-    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600 phx-no-feedback:hidden">
+    <p class={[
+      "mt-3 flex gap-3 text-sm leading-6 text-rose-600",
+      @feedback == :auto && "phx-no-feedback:hidden"
+    ]}>
       <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
       <%%= render_slot(@inner_block) %>
     </p>
