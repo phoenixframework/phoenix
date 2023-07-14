@@ -54,7 +54,7 @@ future styling).
 ## 1.7.6 (2023-06-16)
 
 ### Bug Fixes
-  * Suport websock_adapter 0.5.3
+  * Support websock_adapter 0.5.3
 
 ## Enhancements
   *  Allow using Phoenix.ChannelTest socket/connect in another process
