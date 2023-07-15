@@ -376,8 +376,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # No HTML
       assert File.exists?(web_path(@app, "test/#{@app}_web/controllers"))
+      refute File.exists?(web_path(@app, "test/#{@app}_web/controllers/error_html_test.exs"))
       assert File.exists?(web_path(@app, "lib/#{@app}_web/controllers"))
-      refute File.exists?(web_path(@app, "test/controllers/pager_controller_test.exs"))
+      refute File.exists?(web_path(@app, "test/controllers/page_controller_test.exs"))
       refute File.exists?(web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex"))
       refute File.exists?(web_path(@app, "lib/#{@app}_web/controllers/error_html.ex"))
       refute File.exists?(web_path(@app, "lib/#{@app}_web/controllers/page_html.ex"))
@@ -474,6 +475,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(root_path(@app, "mix.exs"), fn file ->
         assert file =~ "defp deps do\n    []"
       end)
+
+      refute_file(web_path(@app, "test/#{@app}_web/controllers/error_html_test.exs"))
 
       assert_file(web_path(@app, "mix.exs"), fn file ->
         refute file =~ ~s|:phoenix_live_view|
