@@ -88,6 +88,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
       mix phx.gen.live Accounts User users --no-context --no-schema
 
+  In the cases above, tests are still generated, but they will all fail.
+
   You can also change the table name or configure the migrations to
   use binary ids for primary keys, see `mix help phx.gen.schema` for more
   information.
