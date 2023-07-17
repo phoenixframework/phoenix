@@ -13,10 +13,12 @@
 #
 ARG ELIXIR_VERSION=<%= elixir_vsn %>
 ARG OTP_VERSION=<%= otp_vsn %>
-ARG DEBIAN_VERSION=<%= debian %>-<%= debian_vsn %>-slim
+ARG DEBIAN_RELEASE=<%= debian %>
+ARG DEBIAN_VERSION=<%= debian_vsn %>-slim
+ARG DEBIAN_RUNNER_VERSION=<%= debian_vsn %>-slim
 
-ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
-ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
+ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_RELEASE}-${DEBIAN_VERSION}"
+ARG RUNNER_IMAGE="debian:${DEBIAN_RELEASE}-${DEBIAN_RUNNER_VERSION}"
 
 FROM ${BUILDER_IMAGE} as builder
 
