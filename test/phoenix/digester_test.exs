@@ -18,7 +18,8 @@ defmodule Phoenix.DigesterTest do
 
   describe "compile" do
     test "fails when the given paths are invalid" do
-      assert {:error, :invalid_path} = Phoenix.Digester.compile("nonexistent path", "/ ?? /path", true)
+      assert {:error, :invalid_path} =
+               Phoenix.Digester.compile("nonexistent path", "/ ?? /path", true)
     end
 
     test "digests and compress files" do
@@ -276,7 +277,7 @@ defmodule Phoenix.DigesterTest do
 
       digested_js_map_filename =
         assets_files(@output_path)
-        |> Enum.find(&(&1 =~ ~r"app.js-#{@hash_regex}.map"))
+        |> Enum.find(&(&1 =~ ~r"app-#{@hash_regex}.js.map"))
 
       digested_js_filename =
         assets_files(@output_path)
@@ -297,7 +298,7 @@ defmodule Phoenix.DigesterTest do
 
       digested_js_map_filename =
         assets_files(@output_path)
-        |> Enum.find(&(&1 =~ ~r"app.js-#{@hash_regex}.map"))
+        |> Enum.find(&(&1 =~ ~r"app-#{@hash_regex}.js.map"))
 
       digested_js_filename =
         assets_files(@output_path)

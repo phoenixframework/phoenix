@@ -146,8 +146,15 @@ defmodule Phoenix.Digester do
     content = File.read!(file_path)
 
     basename = Path.basename(file_path)
-    rootname = Path.rootname(basename)
-    extension = Path.extname(basename)
+
+    rootname =
+      if String.ends_with?(basename, ".js.map"),
+        do: Path.rootname(basename) |> Path.rootname(),
+        else: Path.rootname(basename)
+
+    extension =
+      if String.ends_with?(basename, ".js.map"), do: ".js.map", else: Path.extname(basename)
+
     digest = Base.encode16(:erlang.md5(content), case: :lower)
 
     %{
