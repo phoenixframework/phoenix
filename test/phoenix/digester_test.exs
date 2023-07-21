@@ -276,7 +276,7 @@ defmodule Phoenix.DigesterTest do
 
       digested_js_map_filename =
         assets_files(@output_path)
-        |> Enum.find(&(&1 =~ ~r"app.js-#{@hash_regex}.map"))
+        |> Enum.find(&(&1 =~ ~r"app-#{@hash_regex}.js.map"))
 
       digested_js_filename =
         assets_files(@output_path)
@@ -297,7 +297,7 @@ defmodule Phoenix.DigesterTest do
 
       digested_js_map_filename =
         assets_files(@output_path)
-        |> Enum.find(&(&1 =~ ~r"app.js-#{@hash_regex}.map"))
+        |> Enum.find(&(&1 =~ ~r"app-#{@hash_regex}.js.map"))
 
       digested_js_filename =
         assets_files(@output_path)
@@ -323,6 +323,15 @@ defmodule Phoenix.DigesterTest do
       assert undigested_css =~ ~r"\.\./images/relative\.png"
       refute undigested_css =~ ~r"/phoenix-#{@hash_regex}\.png"
       refute undigested_css =~ ~r"\.\./images/relative-#{@hash_regex}\.png"
+    end
+
+    test "digested sourcemaps and their asset share the same hash" do
+      input_path = "test/fixtures/digest/priv/static/"
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
+
+      json = Path.join(@output_path, "cache_manifest.json") |> json_read!()
+
+      assert json["latest"]["app.js.map"] == json["latest"]["app.js"] <> ".map"
     end
   end
 
