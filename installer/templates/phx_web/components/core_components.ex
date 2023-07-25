@@ -448,6 +448,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :rows, :list, required: true
   attr :row_id, :any, default: nil, doc: "the function for generating the row id"
   attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
+  attr :empty_message, :string, default: nil, doc: "the empty state message if table is empty"
 
   attr :row_item, :any,
     default: &Function.identity/1,
@@ -479,6 +480,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
           phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
           class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700"
         >
+          <tr :if={@empty_message} id={"#{@id}-empty-state"} class="hidden only:table-row">
+            <td colspan={length(@col)} class="pl-4 sm:pl-6 py-6 text-gray-500 text-sm">
+              <%= @empty_message %>
+            </td>
+          </tr>
           <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="group hover:bg-zinc-50">
             <td
               :for={{col, i} <- Enum.with_index(@col)}
