@@ -62,8 +62,12 @@ defmodule Phoenix.CodeReloader.Proxy do
     "\n#{message}\n"
   end
 
-  defp diagnostic_to_chars(%{severity: severity, message: message, file: file, position: position}) do
+  defp diagnostic_to_chars(%{severity: severity, message: message, file: file, position: position}) when is_binary(file) do
     "\n#{severity}: #{message}\n  #{Path.relative_to_cwd(file)}#{position(position)}\n"
+  end
+
+  defp diagnostic_to_chars(%{severity: severity, message: message}) do
+    "\n#{severity}: #{message}\n"
   end
 
   defp position({line, col}), do: ":#{line}:#{col}"
