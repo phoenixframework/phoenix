@@ -30,7 +30,14 @@ let channelStub = {
   ref: 1,
   events: {},
 
-  on(event, callback){ this.events[event] = callback },
+  on(event, callback){ 
+    this.events[event] = callback
+    return event
+  },
+
+  off(ref){
+    this.events[ref] = function(){}
+  },
 
   trigger(event, data){ this.events[event](data) },
 
@@ -234,6 +241,26 @@ describe("instance", function(){
     assert.deepEqual(presence.list(listByFirst), [{id: 1, phx_ref: "1"}])
     channelStub.trigger("the_diff", {joins: {}, leaves: {user1: user1}})
     assert.deepEqual(presence.list(listByFirst), [])
+  })
+
+  it("stops syncing after destroyed", function(){
+    let presence = new Presence(channelStub)
+    let user1 = {metas: [{id: 1, phx_ref: "1"}]}
+    let user2 = {metas: [{id: 2, phx_ref: "2"}]}
+    let newState = {u1: user1, u2: user2}
+
+    channelStub.trigger("presence_state", newState)
+    assert.deepEqual(presence.list(listByFirst), [{id: 1, phx_ref: 1},
+      {id: 2, phx_ref: 2}])
+
+    channelStub.trigger("presence_diff", {joins: {}, leaves: {u1: user1}})
+    assert.deepEqual(presence.list(listByFirst), [{id: 2, phx_ref: 2}])
+
+    presence.destroy()
+    channelStub.trigger("presence_diff", {joins: {u1: user1}, leaves: {}})
+    assert.deepEqual(presence.list(listByFirst), [{id: 2, phx_ref: 2}])
+    channelStub.trigger("presence_diff", {joins: {}, leaves: {u2: user2}})
+    assert.deepEqual(presence.list(listByFirst), [{id: 2, phx_ref: 2}])
   })
 
   it("updates existing meta for a presence update (leave + join)", function(){
