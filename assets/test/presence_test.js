@@ -32,11 +32,12 @@ let channelStub = {
 
   on(event, callback){ 
     this.events[event] = callback
-    return event
+    return `${event}-ref`
   },
 
-  off(ref){
-    this.events[ref] = function(){}
+  off(event, ref){
+    if(ref && ref !== `${event}-ref`) throw new Error("invalid ref")
+    this.events[event] = function(){}
   },
 
   trigger(event, data){ this.events[event](data) },

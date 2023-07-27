@@ -8,6 +8,7 @@ export default class Presence {
 
   constructor(channel, opts = {}){
     let events = opts.events || {state: "presence_state", diff: "presence_diff"}
+    this.refs = []
     this.state = {}
     this.pendingDiffs = []
     this.channel = channel
@@ -18,8 +19,7 @@ export default class Presence {
       onSync: function (){ }
     }
 
-    this.refs = []
-    this.refs.push(this.channel.on(events.state, newState => {
+    this.refs.push([events.state, this.channel.on(events.state, newState => {
       let {onJoin, onLeave, onSync} = this.caller
 
       this.joinRef = this.channel.joinRef()
@@ -30,9 +30,9 @@ export default class Presence {
       })
       this.pendingDiffs = []
       onSync()
-    }))
+    })])
 
-    this.refs.push(this.channel.on(events.diff, diff => {
+    this.refs.push([events.diff, this.channel.on(events.diff, diff => {
       let {onJoin, onLeave, onSync} = this.caller
 
       if(this.inPendingSyncState()){
@@ -41,7 +41,7 @@ export default class Presence {
         this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave)
         onSync()
       }
-    }))
+    })])
   }
 
   onJoin(callback){ this.caller.onJoin = callback }
@@ -57,7 +57,7 @@ export default class Presence {
   }
 
   destroy(){
-    this.refs.forEach(ref => this.channel.off(ref))
+    this.refs.forEach(([event, ref]) => this.channel.off(event, ref))
   }
 
   // lower-level public static API
