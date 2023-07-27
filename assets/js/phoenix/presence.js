@@ -18,7 +18,8 @@ export default class Presence {
       onSync: function (){ }
     }
 
-    this.channel.on(events.state, newState => {
+    this.refs = []
+    this.refs.push(this.channel.on(events.state, newState => {
       let {onJoin, onLeave, onSync} = this.caller
 
       this.joinRef = this.channel.joinRef()
@@ -29,9 +30,9 @@ export default class Presence {
       })
       this.pendingDiffs = []
       onSync()
-    })
+    }))
 
-    this.channel.on(events.diff, diff => {
+    this.refs.push(this.channel.on(events.diff, diff => {
       let {onJoin, onLeave, onSync} = this.caller
 
       if(this.inPendingSyncState()){
@@ -40,7 +41,7 @@ export default class Presence {
         this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave)
         onSync()
       }
-    })
+    }))
   }
 
   onJoin(callback){ this.caller.onJoin = callback }
@@ -53,6 +54,10 @@ export default class Presence {
 
   inPendingSyncState(){
     return !this.joinRef || (this.joinRef !== this.channel.joinRef())
+  }
+
+  destroy(){
+    this.refs.forEach(ref => this.channel.off(ref))
   }
 
   // lower-level public static API
