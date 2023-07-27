@@ -599,7 +599,7 @@ defmodule Phoenix.Socket do
             {:ok, {state, %{socket | id: id}}}
 
           invalid ->
-            Logger.warning() "#{inspect handler}.id/1 returned invalid identifier " <>
+            Logger.warning "#{inspect handler}.id/1 returned invalid identifier " <>
                            "#{inspect invalid}. Expected nil or a string."
             :error
         end
