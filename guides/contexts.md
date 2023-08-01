@@ -800,17 +800,17 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 -  alias Hello.ShoppingCart.Cart
 +  alias Hello.ShoppingCart.{Cart, CartItem}
 
-  def get_cart_by_user_uuid(user_uuid) do
-    Repo.one(
-      from(c in Cart,
-        where: c.user_uuid == ^user_uuid,
-        left_join: i in assoc(c, :items),
-        left_join: p in assoc(i, :product),
-        order_by: [asc: i.inserted_at],
-        preload: [items: {i, product: p}]
-      )
-    )
-  end
++  def get_cart_by_user_uuid(user_uuid) do
++    Repo.one(
++      from(c in Cart,
++        where: c.user_uuid == ^user_uuid,
++        left_join: i in assoc(c, :items),
++        left_join: p in assoc(i, :product),
++        order_by: [asc: i.inserted_at],
++        preload: [items: {i, product: p}]
++      )
++    )
++  end
 
 - def create_cart(attrs \\ %{}) do
 -   %Cart{}
