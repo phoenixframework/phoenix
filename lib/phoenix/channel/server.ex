@@ -235,6 +235,8 @@ defmodule Phoenix.Channel.Server do
   @doc """
   Pushes a message with the given topic, event and payload
   to the given process.
+
+  Payloads are serialized before sending with the configured serializer.
   """
   def push(pid, join_ref, topic, event, payload, serializer)
       when is_binary(topic) and is_binary(event) do
@@ -245,6 +247,8 @@ defmodule Phoenix.Channel.Server do
 
   @doc """
   Replies to a given ref to the transport process.
+
+  Payloads are serialized before sending with the configured serializer.
   """
   def reply(pid, join_ref, ref, topic, {status, payload}, serializer)
       when is_binary(topic) do
