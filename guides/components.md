@@ -183,27 +183,27 @@ In other words, after rendering your page, the result is placed in the `@inner_c
 
 Phoenix provides all kinds of conveniences to control which layout should be rendered. For example, the `Phoenix.Controller` module provides the `put_root_layout/2` function for us to switch _root layouts_. This takes `conn` as its first argument and a keyword list of formats and their layouts. You can set it to `false` to disable the layout altogether.
 
-You can edit the `home` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this.
+You can edit the `index` action of `HelloController` in `lib/hello_web/controllers/hello_controller.ex` to look like this.
 
 ```elixir
-def home(conn, _params) do
+def index(conn, _params) do
   conn
   |> put_root_layout(html: false)
-  |> render(:home)
+  |> render(:index)
 end
 ```
 
-After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or CSS styling at all.
+After reloading [http://localhost:4000/hello](http://localhost:4000/hello), we should see a very different page, one with no title or CSS styling at all.
 
 To customize the application layout, we invoke a similar function named `put_layout/2`. Let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, copy the existing `app.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/components/layouts`. Then remove everything inside the `<header>...</header>` tags (or change it to whatever you desire) in the new file.
 
-Now, in the `home` action of the controller of `lib/hello_web/controllers/page_controller.ex`, add the following:
+Now, in the `index` action of the controller of `lib/hello_web/controllers/hello_controller.ex`, add the following:
 
 ```elixir
-def home(conn, _params) do
+def index(conn, _params) do
   conn
   |> put_layout(html: :admin)
-  |> render(:home)
+  |> render(:index)
 end
 ```
 
