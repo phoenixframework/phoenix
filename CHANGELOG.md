@@ -52,7 +52,8 @@ future styling).
   * Fix `mix phx.gen.release --docker` failing with `:http_util` error on Elixir v1.15
 
 ## Enhancements
-  * Add support for static resources with fragments in `~p`
+  * [Phoenix.VerifiedRoutes] Add support for static resources with fragments in `~p`
+  * [phx.new] Add `--adapter` flag for generating application with webservers like bandit
 
 ## 1.7.7 (2023-07-10)
 
