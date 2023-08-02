@@ -578,7 +578,20 @@ defmodule Phoenix.Endpoint do
       @doc """
       Generates a route to a static file in `priv/static`.
       """
-      def static_path(path), do: persistent!().static_path <> elem(static_lookup(path), 0)
+      def static_path(path) do
+        {path, fragment} = path_and_fragment(path)
+
+        persistent!().static_path <> elem(static_lookup(path), 0) <> fragment
+      end
+
+      defp path_and_fragment(path_incl_fragment) do
+        path_incl_fragment
+        |> String.split("#", parts: 2)
+        |> case do
+          [path, fragment] -> {path, "#" <> fragment}
+          [path | _] -> {path, ""}
+        end
+      end
 
       @doc """
       Generates a base64-encoded cryptographic hash (sha512) to a static file
