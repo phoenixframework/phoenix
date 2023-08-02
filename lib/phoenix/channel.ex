@@ -347,7 +347,6 @@ defmodule Phoenix.Channel do
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
 
-  @typedoc "Payload can be any term which the configured serializer can encode."
   @type payload :: map | term | {:binary, binary}
   @type reply :: status :: atom | {status :: atom, response :: payload}
   @type socket_ref ::
