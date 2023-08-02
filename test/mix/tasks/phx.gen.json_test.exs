@@ -181,7 +181,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ "defmodule PhoenixWeb.Blog.PostJSON"
       end)
 
-      assert_file("lib/phoenix_web/controllers/blog/changeset_json.ex", fn file ->
+      assert_file("lib/phoenix_web/controllers/changeset_json.ex", fn file ->
         assert file =~ "Ecto.Changeset.traverse_errors(changeset, &translate_error/1)"
       end)
 
@@ -344,7 +344,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
       Gen.Json.run(~w(Blog Post posts title:string --web Blog))
 
-      assert_file("lib/phoenix_web/controllers/blog/changeset_json.ex", fn file ->
+      assert_file("lib/phoenix_web/controllers/changeset_json.ex", fn file ->
         assert file =~
                  "Ecto.Changeset.traverse_errors(changeset, &PhoenixWeb.CoreComponents.translate_error/1)"
       end)
