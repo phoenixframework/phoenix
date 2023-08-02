@@ -555,13 +555,13 @@ defmodule Phoenix.Socket do
             {:ok, serializer}
 
           :error ->
-            Logger.error "The client's requested transport version \"#{vsn}\" " <>
+            Logger.warning "The client's requested transport version \"#{vsn}\" " <>
                           "does not match server's version requirements of #{inspect serializers}"
             :error
         end
 
       :error ->
-        Logger.error "Client sent invalid transport version \"#{vsn}\""
+        Logger.warning "Client sent invalid transport version \"#{vsn}\""
         :error
     end
   end
@@ -599,7 +599,7 @@ defmodule Phoenix.Socket do
             {:ok, {state, %{socket | id: id}}}
 
           invalid ->
-            Logger.error "#{inspect handler}.id/1 returned invalid identifier " <>
+            Logger.warning "#{inspect handler}.id/1 returned invalid identifier " <>
                            "#{inspect invalid}. Expected nil or a string."
             :error
         end
