@@ -642,22 +642,22 @@ defmodule Phoenix.ConnTest do
   by your MyApp.ErrorView.
 
   The function accepts a status either as an integer HTTP status or
-  atom, such as `404` or `:not_found`. The list of allowed atoms is available
+  atom, such as `500` or `:internal_server_error`. The list of allowed atoms is available
   in `Plug.Conn.Status`. If an error is raised, a 3-tuple of the wrapped
   response is returned matching the status, headers, and body of the response:
 
-      {404, [{"content-type", "text/html"} | _], "Page not found"}
+      {500, [{"content-type", "text/html"} | _], "Internal Server Error"}
 
   ## Examples
 
-      assert_error_sent :not_found, fn ->
-        get(build_conn(), "/users/not-found")
+      assert_error_sent :internal_server_error, fn ->
+        get(build_conn(), "/broken/route")
       end
 
-      response = assert_error_sent 404, fn ->
-        get(build_conn(), "/users/not-found")
+      response = assert_error_sent 500, fn ->
+        get(build_conn(), "/broken/route")
       end
-      assert {404, [_h | _t], "Page not found"} = response
+      assert {500, [_h | _t], "Internal Server Error"} = response
   """
   @spec assert_error_sent(integer | atom, function) :: {integer, list, term}
   def assert_error_sent(status_int_or_atom, func) do
