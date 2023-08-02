@@ -111,8 +111,14 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro __using__(opts) do
     opts =
-      if Macro.quoted_literal?(opts) do
-        Macro.prewalk(opts, &expand_alias(&1, __CALLER__))
+      if Keyword.keyword?(opts) do
+        for {k, v} <- opts do
+          if Macro.quoted_literal?(v) do
+            {k, Macro.prewalk(v, &expand_alias(&1, __CALLER__))}
+          else
+            {k, v}
+          end
+        end
       else
         opts
       end
@@ -296,7 +302,7 @@ defmodule Phoenix.VerifiedRoutes do
   @doc ~S'''
   Generates the router url with route verification.
 
-  See `sigil_p/1` for more information.
+  See `sigil_p/2` for more information.
 
   Warns when the provided path does not match against the router specified
   in `use Phoenix.VerifiedRoutes` or the `@router` module attribute.
@@ -535,6 +541,14 @@ defmodule Phoenix.VerifiedRoutes do
     |> URI.encode(&URI.char_unreserved?/1)
   end
 
+  # Segments must always start with /
+  defp verify_segment(["/" <> _ | _] = segments, route), do: verify_segment(segments, route, [])
+
+  defp verify_segment(_, route) do
+    raise ArgumentError, "paths must begin with /, got: #{Macro.to_string(route)}"
+  end
+
+  # separator followed by dynamic
   defp verify_segment(["/" | rest], route, acc), do: verify_segment(rest, route, ["/" | acc])
 
   # we've found a static segment, return to caller with rewritten query if found
@@ -561,7 +575,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp verify_segment([segment | _], route, _acc) when is_binary(segment) do
     raise ArgumentError,
-          "path segments must begin with /, got: #{inspect(segment)} in #{Macro.to_string(route)}"
+          "path segments after interpolation must begin with /, got: #{inspect(segment)} in #{Macro.to_string(route)}"
   end
 
   defp verify_segment(
@@ -587,7 +601,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp verify_query(
          [
-           {:"::", m1, [{{:., m2, [Kernel, :to_string]}, m2, [arg]}, {:binary, _, _} = bin]}
+           {:"::", m1, [{{:., m2, [Kernel, :to_string]}, m3, [arg]}, {:binary, _, _} = bin]}
            | rest
          ],
          route,
@@ -598,7 +612,7 @@ defmodule Phoenix.VerifiedRoutes do
             "interpolated query string params must be separated by &, got: #{Macro.to_string(route)}"
     end
 
-    rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m2, [arg]}, bin]}
+    rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m3, [arg]}, bin]}
     verify_query(rest, route, [rewrite | acc])
   end
 
@@ -658,15 +672,21 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
   defp match_route?(router, test_path) when is_binary(test_path) do
-    split_path = for segment <- String.split(test_path, "/"), segment != "", do: segment
+    split_path =
+      test_path
+      |> String.split("#")
+      |> Enum.at(0)
+      |> String.split("/")
+      |> Enum.filter(fn segment -> segment != "" end)
+
     match_route?(router, split_path)
   end
 
   defp match_route?(router, split_path) when is_list(split_path) do
-    case router.__match_route__(split_path) do
-      {_forward_plug, false = _warn_on_verify?, _} -> false
-      {nil = _forward_plug, true = _warn?, _} -> true
-      {forward_plug, true = _warn?, _} -> match_forward_route?(router, forward_plug, split_path)
+    case router.__verify_route__(split_path) do
+      {_forward_plug, true = _warn_on_verify?} -> false
+      {nil = _forward_plug, false = _warn_on_verify?} -> true
+      {fwd_plug, false = _warn_on_verify?} -> match_forward_route?(router, fwd_plug, split_path)
       :error -> false
     end
   end
@@ -711,7 +731,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp rewrite_path(route, endpoint, router, statics) do
     {:<<>>, meta, segments} = route
-    {path_rewrite, query_rewrite} = verify_segment(segments, route, [])
+    {path_rewrite, query_rewrite} = verify_segment(segments, route)
 
     rewrite_route =
       quote generated: true do
@@ -740,6 +760,10 @@ defmodule Phoenix.VerifiedRoutes do
       end
 
     {static?, test_path, path_ast, static_ast}
+  end
+
+  defp attr!(%{function: nil}, _) do
+    raise "Phoenix.VerifiedRoutes can only be used inside functions, please move your usage of ~p to functions"
   end
 
   defp attr!(env, :endpoint) do

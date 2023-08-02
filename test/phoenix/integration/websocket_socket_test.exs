@@ -25,7 +25,7 @@ defmodule Phoenix.Integration.WebSocketTest do
 
     def child_spec(opts) do
       :value = Keyword.fetch!(opts, :custom)
-      Supervisor.child_spec({Task, fn -> :ok end}, [])
+      :ignore
     end
 
     def connect(map) do
@@ -60,7 +60,7 @@ defmodule Phoenix.Integration.WebSocketTest do
   defmodule PingSocket do
     @behaviour Phoenix.Socket.Transport
 
-    def child_spec(_opts), do: Supervisor.child_spec({Task, fn -> :ok end}, [id: :ping])
+    def child_spec(_opts), do: :ignore
     def connect(_), do: {:ok, %{}}
     def init(state), do: {:ok, state}
 

@@ -52,7 +52,7 @@ defmodule Phoenix.Config do
       e ->
         case :ets.info(module) do
           :undefined ->
-            raise "could not find ets table for endpoint #{inspect(module)}. Make sure your endpoint is started and note you cannot access endpoint functions at compile-time."
+            raise "could not find ets table for endpoint #{inspect(module)}. Make sure your endpoint is started and note you cannot access endpoint functions at compile-time"
 
           _ ->
             reraise e, __STACKTRACE__

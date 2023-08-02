@@ -1,13 +1,63 @@
 defmodule Phoenix.Endpoint.SupervisorTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   alias Phoenix.Endpoint.Supervisor
 
-  setup do
+  defmodule HTTPSEndpoint do
+    def config(:otp_app), do: :phoenix
+    def config(:https), do: [port: 443]
+    def config(:http), do: false
+    def config(:url), do: [host: "example.com"]
+    def config(_), do: nil
+  end
+
+  defmodule HTTPEndpoint do
+    def config(:otp_app), do: :phoenix
+    def config(:https), do: false
+    def config(:http), do: [port: 80]
+    def config(:url), do: [host: "example.com"]
+    def config(_), do: nil
+  end
+
+  defmodule HTTPEnvVarEndpoint do
+    def config(:otp_app), do: :phoenix
+    def config(:https), do: false
+    def config(:http), do: [port: {:system, "PHOENIX_PORT"}]
+    def config(:url), do: [host: {:system, "PHOENIX_HOST"}]
+    def config(_), do: nil
+  end
+
+  defmodule URLEndpoint do
+    def config(:https), do: false
+    def config(:http), do: false
+    def config(:url), do: [host: "example.com", port: 678, scheme: "random"]
+    def config(_), do: nil
+  end
+
+  defmodule StaticURLEndpoint do
+    def config(:https), do: false
+    def config(:http), do: []
+    def config(:url), do: []
+    def config(:static_url), do: [host: "static.example.com"]
+    def config(_), do: nil
+  end
+
+  defmodule ServerEndpoint do
+    def init(:supervisor, config), do: {:ok, config}
+    def __sockets__(), do: []
+  end
+
+  setup_all do
     Application.put_env(:phoenix, SupervisorApp.Endpoint, custom: true)
     System.put_env("PHOENIX_PORT", "8080")
     System.put_env("PHOENIX_HOST", "example.org")
+
+    [HTTPSEndpoint, HTTPEndpoint, HTTPEnvVarEndpoint, URLEndpoint, StaticURLEndpoint]
+    |> Enum.each(&Supervisor.warmup/1)
+
     :ok
   end
+
+  defp persistent!(endpoint), do: :persistent_term.get({Phoenix.Endpoint, endpoint})
 
   test "loads router configuration" do
     config = Supervisor.config(:phoenix, SupervisorApp.Endpoint)
@@ -18,61 +68,19 @@ defmodule Phoenix.Endpoint.SupervisorTest do
              [view: SupervisorApp.ErrorView, accepts: ~w(html), layout: false]
   end
 
-  defmodule HTTPSEndpoint do
-    def path(path), do: path
-    def config(:http), do: false
-    def config(:https), do: [port: 443]
-    def config(:url), do: [host: "example.com"]
-    def config(:otp_app), do: :phoenix
-  end
-
-  defmodule HTTPEndpoint do
-    def path(path), do: path
-    def config(:https), do: false
-    def config(:http), do: [port: 80]
-    def config(:url), do: [host: "example.com"]
-    def config(:otp_app), do: :phoenix
-  end
-
-  defmodule HTTPEnvVarEndpoint do
-    def config(:https), do: false
-    def config(:http), do: [port: {:system, "PHOENIX_PORT"}]
-    def config(:url), do: [host: {:system, "PHOENIX_HOST"}]
-    def config(:otp_app), do: :phoenix
-  end
-
-  defmodule URLEndpoint do
-    def config(:https), do: false
-    def config(:http), do: false
-    def config(:url), do: [host: "example.com", port: 678, scheme: "random"]
-    def config(:static_url), do: nil
-  end
-
-  defmodule StaticURLEndpoint do
-    def config(:https), do: false
-    def config(:http), do: false
-    def config(:static_url), do: [host: "static.example.com"]
-  end
-
-  defmodule WatchersEndpoint do
-    def init(:supervisor, config), do: {:ok, config}
-    def __sockets__(), do: []
-  end
-
   test "generates the static url based on the static host configuration" do
-    static_host = {:cache, "http://static.example.com"}
-    assert Supervisor.static_url(StaticURLEndpoint) == static_host
+    assert persistent!(StaticURLEndpoint).static_url == "http://static.example.com"
   end
 
   test "static url fallbacks to url when there is no configuration for static_url" do
-    assert Supervisor.static_url(URLEndpoint) == {:cache, "random://example.com:678"}
+    assert persistent!(URLEndpoint).static_url == "random://example.com:678"
   end
 
   test "generates url" do
-    assert Supervisor.url(URLEndpoint) == {:cache, "random://example.com:678"}
-    assert Supervisor.url(HTTPEndpoint) == {:cache, "http://example.com"}
-    assert Supervisor.url(HTTPSEndpoint) == {:cache, "https://example.com"}
-    assert Supervisor.url(HTTPEnvVarEndpoint) == {:cache, "http://example.org:8080"}
+    assert persistent!(URLEndpoint).url == "random://example.com:678"
+    assert persistent!(HTTPEndpoint).url == "http://example.com"
+    assert persistent!(HTTPSEndpoint).url == "https://example.com"
+    assert persistent!(HTTPEnvVarEndpoint).url == "http://example.org:8080"
   end
 
   test "static_path/2 returns file's path with lookup cache" do
@@ -83,7 +91,46 @@ defmodule Phoenix.Endpoint.SupervisorTest do
              Supervisor.static_lookup(HTTPEndpoint, "/images/unknown.png")
   end
 
+  import ExUnit.CaptureLog
+  test "logs info if :http or :https configuration is set but not :server when running in release" do
+    Logger.configure(level: :info)
+    # simulate running inside release
+    System.put_env("RELEASE_NAME", "phoenix-test")
+    Application.put_env(:phoenix, ServerEndpoint, [server: false, http: [], https: []])
+    assert capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: false, http: []])
+    assert capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: false, https: []])
+    assert capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: false])
+    refute capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: true])
+    refute capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.delete_env(:phoenix, ServerEndpoint)
+    Logger.configure(level: :warning)
+  end
+
   describe "watchers" do
+    defmodule WatchersEndpoint do
+      def init(:supervisor, config), do: {:ok, config}
+      def __sockets__(), do: []
+    end
+
     @watchers [esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}]
 
     test "init/1 starts watcher children when `:server` config is true" do

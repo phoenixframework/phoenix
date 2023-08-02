@@ -589,12 +589,24 @@ defmodule Phoenix.ConnTest do
   def redirected_params(%Plug.Conn{} = conn, status \\ 302) do
     router = Phoenix.Controller.router_module(conn)
     %URI{path: path, host: host} = conn |> redirected_to(status) |> URI.parse()
+    path = remove_script_name(conn, router, path)
 
     case Phoenix.Router.route_info(router, "GET", path, host || conn.host) do
       :error ->
         raise Phoenix.Router.NoRouteError, conn: conn, router: router
       %{path_params: path_params} ->
         Enum.into(path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
+    end
+  end
+
+  defp remove_script_name(conn, router, path) do
+    case conn.private[router] do
+      [_ | _] = list ->
+        script_name = "/" <> Enum.join(list, ",")
+        String.replace_leading(path, script_name, "")
+
+      _ ->
+        path
     end
   end
 
@@ -627,25 +639,38 @@ defmodule Phoenix.ConnTest do
 
   Useful for testing actions that you expect raise an error and have
   the response wrapped in an HTTP status, with content usually rendered
-  by your MyApp.ErrorView.
+  by your MyAppWeb.ErrorHTML view.
 
   The function accepts a status either as an integer HTTP status or
-  atom, such as `404` or `:not_found`. The list of allowed atoms is available
+  atom, such as `500` or `:internal_server_error`. The list of allowed atoms is available
   in `Plug.Conn.Status`. If an error is raised, a 3-tuple of the wrapped
   response is returned matching the status, headers, and body of the response:
 
-      {404, [{"content-type", "text/html"} | _], "Page not found"}
+      {500, [{"content-type", "text/html"} | _], "Internal Server Error"}
 
   ## Examples
 
-      assert_error_sent :not_found, fn ->
-        get(build_conn(), "/users/not-found")
+      assert_error_sent :internal_server_error, fn ->
+        get(build_conn(), "/broken/route")
       end
 
-      response = assert_error_sent 404, fn ->
-        get(build_conn(), "/users/not-found")
+      response = assert_error_sent 500, fn ->
+        get(build_conn(), "/broken/route")
       end
-      assert {404, [_h | _t], "Page not found"} = response
+      assert {500, [_h | _t], "Internal Server Error"} = response
+
+  This can also be used to test a route resulted in an error that was translated to a
+  specific response by the `Plug.Status` protocol, such as `Ecto.NoResultsError`:
+
+      assert_error_sent :not_found, fn ->
+        get(build_conn(), "/something-that-raises-no-results-error")
+      end
+
+  *Note*: for routes that don't raise an error, but instead return a status, you should test the
+  response directly:
+
+      conn = get(build_conn(), "/users/not-found")
+      assert response(conn, 404)
   """
   @spec assert_error_sent(integer | atom, function) :: {integer, list, term}
   def assert_error_sent(status_int_or_atom, func) do

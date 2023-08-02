@@ -2,7 +2,7 @@ Code.require_file "../../support/http_client.exs", __DIR__
 Code.require_file "../../support/endpoint_helper.exs", __DIR__
 
 defmodule Phoenix.Integration.EndpointTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   import ExUnit.CaptureLog
 
   import Phoenix.Integration.EndpointHelper

@@ -4,7 +4,7 @@ To prepare an application to serve requests over SSL, we need to add a little bi
 
 The configuration consists of a new `https:` key for our endpoint whose value is a keyword list of port, path to the key file, and path to the cert (PEM) file. If we add the `otp_app:` key whose value is the name of our application, Plug will begin to look for them at the root of our application. We can then put those files in our `priv` directory and set the paths to `priv/our_keyfile.key` and `priv/our_cert.crt`.
 
-Here's an example configuration from `config/prod.exs`.
+Here's an example configuration from `config/runtime.exs`.
 
 ```elixir
 import Config
@@ -31,7 +31,7 @@ Without the `otp_app:` key, we need to provide absolute paths to the files where
 Path.expand("../../../some/path/to/ssl/key.pem", __DIR__)
 ```
 
-The options under the `https:` key are passed to the Plug adapter, typically `Plug.Cowboy`, which in turn uses `Plug.SSL` to select the TLS socket options. Please refer to the documentation for [Plug.SSL.configure/1](https://hexdocs.pm/plug/Plug.SSL.html#configure/1) for more information on the available options and their defaults. The [Plug HTTPS Guide](https://hexdocs.pm/plug/https.html) and the [Erlang/OTP ssl](https://erlang.org/doc/man/ssl.html) documentation also provide valuable information.
+The options under the `https:` key are passed to the Plug adapter, typically `Plug.Cowboy`, which in turn uses `Plug.SSL` to select the TLS socket options. Please refer to the documentation for [Plug.SSL.configure/1](https://hexdocs.pm/plug/Plug.SSL.html#configure/1) for more information on the available options and their defaults. The [Plug HTTPS Guide](https://hexdocs.pm/plug/https.html) and the [Erlang/OTP ssl](https://www.erlang.org/doc/man/ssl.html) documentation also provide valuable information.
 
 ## SSL in Development
 

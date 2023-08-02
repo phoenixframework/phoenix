@@ -418,7 +418,7 @@ the previous example.
 defp live_view_metric_tag_values(metadata) do
   metadata
   |> Map.put(:view, metadata.socket.view)
-  |> Map.put(:connected?, metadata.socket.connected?)
+  |> Map.put(:connected?, Phoenix.LiveView.connected?(metadata.socket))
 end
 ```
 
@@ -435,11 +435,11 @@ convert the `connected?` boolean into human readable text.
 defp live_view_metric_tag_values(metadata) do
   metadata
   |> Map.put(:view, inspect(metadata.socket.view))
-  |> Map.put(:connected?, get_connection_status(metadata.socket))
+  |> Map.put(:connected?, get_connection_status(Phoenix.LiveView.connected?(metadata.socket)))
 end
 
-defp get_connection_status(%{connected?: true}), do: "Connected"
-defp get_connection_status(%{connected?: false}), do: "Disconnected"
+defp get_connection_status(true), do: "Connected"
+defp get_connection_status(false), do: "Disconnected"
 ```
 
 Now the value label will be rendered like `"Phoenix.LiveDashboard.MetricsLive
@@ -518,6 +518,7 @@ Library authors are actively encouraged to send a PR adding
 their own (in alphabetical order, please):
 
 * [Absinthe](https://hexdocs.pm/absinthe) - [Events](https://hexdocs.pm/absinthe/telemetry.html)
+* [Ash Framework](https://hexdocs.pm/ash) - [Events](https://hexdocs.pm/ash/monitoring.html)
 * [Broadway](https://hexdocs.pm/broadway) - [Events](https://hexdocs.pm/broadway/Broadway.html#module-telemetry)
 * [Ecto](https://hexdocs.pm/ecto) - [Events](https://hexdocs.pm/ecto/Ecto.Repo.html#module-telemetry-events)
 * [Oban](https://hexdocs.pm/oban) - [Events](https://hexdocs.pm/oban/Oban.Telemetry.html)

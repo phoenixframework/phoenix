@@ -6,9 +6,14 @@ defmodule Phoenix.Controller do
   require Phoenix.Endpoint
 
   @unsent [:unset, :set, :set_chunked, :set_file]
-  
+
+  # View/Layout deprecation plan
+  # 1. Deprecate :namespace option in favor of :layouts on use
+  # 2. Deprecate setting a non-format view/layout on put_*
+  # 3. Deprecate rendering a view/layout from :_
+
   @type view :: atom()
-  @type layout :: {module(), layout_name :: atom()} | false
+  @type layout :: {module(), layout_name :: atom()} | atom() | false
 
   @moduledoc """
   Controllers are used to group common functionality in the same
@@ -25,7 +30,7 @@ defmodule Phoenix.Controller do
 
         def show(conn, %{"id" => id}) do
           user = Repo.get(User, id)
-          render(conn, "show.html", user: user)
+          render(conn, :show, user: user)
         end
       end
 
@@ -33,16 +38,9 @@ defmodule Phoenix.Controller do
   and the request parameters as arguments. The connection is a
   `Plug.Conn` struct, as specified by the Plug library.
 
-  ## Options
-
-  When used, the controller supports the following options:
-
-    * `:namespace` - sets the namespace to properly inflect
-      the layout view. By default it uses the base alias
-      in your controller name
-
-    * `:put_default_views` - controls whether the default view
-      and layout should be set or not
+  Then we invoke `render/3`, passing the connection, the template
+  to render (typically named after the action), and the `user: user`
+  as assigns. We will explore all of those concepts next.
 
   ## Connection
 
@@ -60,6 +58,83 @@ defmodule Phoenix.Controller do
   If you want to have functions that manipulate the connection
   without fully implementing the controller, you can import both
   modules directly instead of `use Phoenix.Controller`.
+
+  ## Rendering and layouts
+
+  One of the main features provided by controllers is the ability
+  to perform content negotiation and render templates based on
+  information sent by the client.
+
+  There are two ways to render content in a controller. One option
+  is to invoke format-specific functions, such as `html/2` and `json/2`.
+
+  However, most commonly controllers invoke custom modules called
+  views. Views are modules capable of rendering a custom format.
+  This is done by specifying the option `:formats` when defining
+  the controller:
+
+      use Phoenix.Controller,
+        formats: [:html, :json]
+
+   Now, when invoking `render/3`, a controller named `MyAppWeb.UserController`
+   will invoke `MyAppWeb.UserHTML` and `MyAppWeb.UserJSON` respectively
+   when rendering each format:
+
+      def show(conn, %{"id" => id}) do
+        user = Repo.get(User, id)
+        # Will invoke UserHTML.show(%{user: user}) for html requests
+        # Will invoke UserJSON.show(%{user: user}) for json requests
+        render(conn, :show, user: user)
+      end
+
+  Some formats are also handy to have layouts, which render content
+  shared across all pages. We can also specify layouts on `use`:
+
+      use Phoenix.Controller,
+        formats: [:html, :json],
+        layouts: [html: MyAppWeb.Layouts]
+
+  You can also specify formats and layouts to render by calling
+  `put_view/2` and `put_layout/2` directly with a connection.
+  The line above can also be written directly in your actions as:
+
+      conn
+      |> put_view(html: MyAppWeb.UserHTML, json: MyAppWeb.UserJSON)
+      |> put_layout(html: MyAppWeb.Layouts)
+
+  ### Backwards compatibility
+
+  In previous Phoenix versions, a controller you always render
+  `MyApp.UserView`. This behaviour can be explicitly retained by
+  passing a suffix to the formats options:
+
+      use Phoenix.Controller,
+        formats: [html: "View", json: "View"],
+        layouts: [html: MyAppWeb.Layouts]
+
+  ### Options
+
+  When used, the controller supports the following options to customize
+  template rendering:
+
+    * `:formats` - the formats this controller will render
+      by default. For example, specifying `formats: [:html, :json]`
+      for a controller named `MyAppWeb.UserController` will
+      invoke `MyAppWeb.UserHTML` and `MyAppWeb.UserJSON` when
+      respectively rendering each format. If `:formats` is not
+      set, the default view is set to `MyAppWeb.UserView`
+
+    * `:layouts` - which layouts to render for each format,
+      for example: `[html: DemoWeb.Layouts]`
+
+  Deprecated options:
+
+    * `:namespace` - sets the namespace for the layout. Use
+      `:layouts` instead
+
+    * `:put_default_views` - controls whether the default view
+      and layout should be set or not. Set `formats: []` and
+      `layouts: []` instead
 
   ## Plug pipeline
 
@@ -91,7 +166,12 @@ defmodule Phoenix.Controller do
   ### Guards
 
   `plug/2` in controllers supports guards, allowing a developer to configure
-  a plug to only run in some particular action:
+  a plug to only run in some particular action.
+
+      plug :do_something when action in [:show, :edit]
+
+  Due to operator precedence in Elixir, if the second argument is a keyword list,
+  we need to wrap the keyword in `[...]` when using `when`:
 
       plug :authenticate, [usernames: ["jose", "eric", "sonny"]] when action in [:show, :edit]
       plug :authenticate, [usernames: ["admin"]] when not action in [:index]
@@ -150,22 +230,17 @@ defmodule Phoenix.Controller do
         # ...
       end
 
-  ## Rendering and layouts
-
-  One of the main features provided by controllers is the ability
-  to perform content negotiation and render templates based on
-  information sent by the client. Read `render/3` to learn more.
-
-  It is also important not to confuse `Phoenix.Controller.render/3`
-  with `Phoenix.View.render/3`. The former expects
-  a connection and relies on content negotiation while the latter is
-  connection-agnostic and typically invoked from your views.
   """
   defmacro __using__(opts) do
+    opts =
+      if Macro.quoted_literal?(opts) do
+        Macro.prewalk(opts, &expand_alias(&1, __CALLER__))
+      else
+        opts
+      end
+
     quote bind_quoted: [opts: opts] do
       import Phoenix.Controller
-
-      # TODO v2: No longer automatically import dependencies
       import Plug.Conn
 
       use Phoenix.Controller.Pipeline
@@ -176,6 +251,11 @@ defmodule Phoenix.Controller do
       end
     end
   end
+
+  defp expand_alias({:__aliases__, _, _} = alias, env),
+    do: Macro.expand(alias, %{env | function: {:action, 2}})
+
+  defp expand_alias(other, _env), do: other
 
   @doc """
   Registers the plug to call as a fallback to the controller action.
@@ -225,7 +305,7 @@ defmodule Phoenix.Controller do
 
         def call(conn, {:error, :unauthorized}) do
           conn
-          |> put_status(403)
+          |> put_status(:forbidden)
           |> put_view(MyErrorView)
           |> render(:"403")
         end
@@ -424,7 +504,7 @@ defmodule Phoenix.Controller do
     end
   end
 
-  @invalid_local_url_chars ["\\"]
+  @invalid_local_url_chars ["\\", "/%", "/\t"]
   defp validate_local_url("//" <> _ = to), do: raise_invalid_url(to)
 
   defp validate_local_url("/" <> _ = to) do
@@ -446,6 +526,15 @@ defmodule Phoenix.Controller do
   Stores the view for rendering.
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
+
+  ## Examples
+
+      # Use single view module
+      iex> put_view(conn, AppView)
+
+      # Use multiple view module for content negotiation
+      iex> put_view(conn, html: AppHTML, json: AppJSON)
+
   """
   @spec put_view(Plug.Conn.t(), [{format :: atom, view}] | view) :: Plug.Conn.t()
   def put_view(%Plug.Conn{state: state} = conn, formats) when state in @unsent do
@@ -459,6 +548,7 @@ defmodule Phoenix.Controller do
     put_private_formats(conn, priv_key, kind, formats)
   end
 
+  # TODO: Deprecate this whole branch
   defp put_private_view(conn, priv_key, kind, value) do
     put_private_formats(conn, priv_key, kind, %{_: value})
   end
@@ -482,6 +572,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
+  # TODO: Remove | layout from the spec once we deprecate put_new_view on controllers
   @spec put_new_view(Plug.Conn.t(), [{format :: atom, view}] | view) :: Plug.Conn.t()
   def put_new_view(%Plug.Conn{state: state} = conn, formats) when state in @unsent do
     put_private_view(conn, :phoenix_view, :new, formats)
@@ -498,6 +589,8 @@ defmodule Phoenix.Controller do
   def view_module(conn, format \\ nil) do
     format = format || get_safe_format(conn)
 
+    # TODO: Deprecate if we fall on the first branch
+    # But we should only deprecate this after non-format is deprecated on put_*
     case conn.private[:phoenix_view] do
       %{_: value} when value != nil ->
         value
@@ -506,42 +599,45 @@ defmodule Phoenix.Controller do
         value
 
       formats ->
-        raise "no view was found for the format: #{format}. " <>
-                "The supported formats are: #{inspect(Map.keys(formats || %{}))}"
+        raise "no view was found for the format: #{inspect(format)}. " <>
+                "The supported formats are: #{inspect(Map.keys(formats || %{}) -- [:_])}"
     end
   end
 
   @doc """
   Stores the layout for rendering.
 
-  The layout must be a tuple, specifying the layout view and the layout
-  name, or false. In case a previous layout is set, `put_layout` also
-  accepts the layout name to be given as a string or as an atom. If a
-  string, it must contain the format. Passing an atom means the layout
-  format will be found at rendering time, similar to the template in
-  `render/3`. It can also be set to `false`. In this case, no layout
-  would be used.
+  The layout must be given as keyword list where the key is the request
+  format the layout will be applied to (such as `:html`) and the value
+  is one of:
+
+    * `{module, layout}` with the `module` the layout is defined and
+      the name of the `layout` as an atom
+
+    * `layout` when the name of the layout. This requires a layout for
+      the given format in the shape of `{module, layout}` to be previously
+      given
+
+    * `false` which disables the layout
+
+  If `false` is given without a format, all layouts are disabled.
 
   ## Examples
 
       iex> layout(conn)
       false
 
-      iex> conn = put_layout conn, {AppView, "application.html"}
+      iex> conn = put_layout(conn, html: {AppView, :application})
       iex> layout(conn)
-      {AppView, "application.html"}
+      {AppView, :application}
 
-      iex> conn = put_layout conn, "print.html"
-      iex> layout(conn)
-      {AppView, "print.html"}
-
-      iex> conn = put_layout conn, :print
+      iex> conn = put_layout(conn, html: :print)
       iex> layout(conn)
       {AppView, :print}
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) :: Plug.Conn.t()
+  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) :: Plug.Conn.t()
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
       put_private_layout(conn, :phoenix_layout, :replace, layout)
@@ -552,9 +648,21 @@ defmodule Phoenix.Controller do
 
   defp put_private_layout(conn, private_key, kind, layouts) when is_list(layouts) do
     formats =
-      Enum.into(layouts, %{}, fn
+      Map.new(layouts, fn
         {format, false} ->
           {Atom.to_string(format), false}
+
+        {format, layout} when is_atom(layout) ->
+          format = Atom.to_string(format)
+
+          case conn.private[private_key] do
+            %{^format => {mod, _}} ->
+              {format, {mod, layout}}
+
+            %{} ->
+              raise "cannot use put_layout/2 or put_root_layout/2 with atom because " <>
+                      "there is no previous layout set for format #{inspect(format)}"
+          end
 
         {format, {mod, layout}} when is_atom(mod) and is_atom(layout) ->
           {Atom.to_string(format), {mod, layout}}
@@ -579,19 +687,22 @@ defmodule Phoenix.Controller do
       false ->
         put_private_formats(conn, private_key, kind, %{_: false})
 
+      # TODO: Deprecate this branch
       {mod, layout} when is_atom(mod) ->
-        # TODO: Temporarily deprecate this to point users to the correct
-        # direction while get_layout_formats/put_layout_formats is removed.
         put_private_formats(conn, private_key, kind, %{_: {mod, layout}})
 
+      # TODO: Deprecate this branch
       layout when is_binary(layout) or is_atom(layout) ->
-        # TODO: Deprecate this branch permanently.
         case Map.get(conn.private, private_key, %{_: false}) do
           %{_: {mod, _}} ->
             put_private_formats(conn, private_key, kind, %{_: {mod, layout}})
 
           %{_: false} ->
             raise "cannot use put_layout/2 or put_root_layout/2 with atom/binary when layout is false, use a tuple instead"
+
+          %{} ->
+            raise "you must pass the format when using put_layout/2 or put_root_layout/2 and a previous format was set, " <>
+                    "such as: put_layout(conn, html: #{inspect(layout)})"
         end
     end
   end
@@ -599,8 +710,11 @@ defmodule Phoenix.Controller do
   @doc """
   Stores the layout for rendering if one was not stored yet.
 
+  See `put_layout/2` for more information.
+
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
+  # TODO: Remove | layout from the spec once we deprecate put_new_layout on controllers
   @spec put_new_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) :: Plug.Conn.t()
   def put_new_layout(%Plug.Conn{state: state} = conn, layout)
       when (is_tuple(layout) and tuple_size(layout) == 2) or is_list(layout) or layout == false do
@@ -611,36 +725,35 @@ defmodule Phoenix.Controller do
   @doc """
   Stores the root layout for rendering.
 
-  Like `put_layout/2`, the layout must be a tuple,
-  specifying the layout view and the layout name, or false.
+  The layout must be given as keyword list where the key is the request
+  format the layout will be applied to (such as `:html`) and the value
+  is one of:
 
-  In case a previous layout is set, `put_root_layout` also
-  accepts the layout name to be given as a string or as an atom. If a
-  string, it must contain the format. Passing an atom means the layout
-  format will be found at rendering time, similar to the template in
-  `render/3`. It can also be set to `false`. In this case, no layout
-  would be used.
+    * `{module, layout}` with the `module` the layout is defined and
+      the name of the `layout` as an atom
+
+    * `layout` when the name of the layout. This requires a layout for
+      the given format in the shape of `{module, layout}` to be previously
+      given
+
+    * `false` which disables the layout
 
   ## Examples
 
       iex> root_layout(conn)
       false
 
-      iex> conn = put_root_layout conn, {AppView, "root.html"}
+      iex> conn = put_root_layout(conn, html: {AppView, :root})
       iex> root_layout(conn)
-      {AppView, "root.html"}
+      {AppView, :root}
 
-      iex> conn = put_root_layout conn, "bare.html"
-      iex> root_layout(conn)
-      {AppView, "bare.html"}
-
-      iex> conn = put_root_layout conn, :bare
+      iex> conn = put_root_layout(conn, html: :bare)
       iex> root_layout(conn)
       {AppView, :bare}
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) ::
+  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) ::
           Plug.Conn.t()
   def put_root_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
@@ -871,13 +984,29 @@ defmodule Phoenix.Controller do
     case root_layout(conn, format) do
       {layout_mod, layout_tpl} ->
         {layout_base, _} = split_template(layout_tpl)
-        inner = Phoenix.Template.render(view, template, format, render_assigns)
+        inner = template_render(view, template, format, render_assigns)
         root_assigns = render_assigns |> Map.put(:inner_content, inner) |> Map.delete(:layout)
-        Phoenix.Template.render_to_iodata(layout_mod, layout_base, format, root_assigns)
+        template_render_to_iodata(layout_mod, layout_base, format, root_assigns)
 
       false ->
-        Phoenix.Template.render_to_iodata(view, template, format, render_assigns)
+        template_render_to_iodata(view, template, format, render_assigns)
     end
+  end
+
+  defp template_render(view, template, format, assigns) do
+    metadata = %{view: view, template: template, format: format}
+
+    :telemetry.span([:phoenix, :controller, :render], metadata, fn ->
+      {Phoenix.Template.render(view, template, format, assigns), metadata}
+    end)
+  end
+
+  defp template_render_to_iodata(view, template, format, assigns) do
+    metadata = %{view: view, template: template, format: format}
+
+    :telemetry.span([:phoenix, :controller, :render], metadata, fn ->
+      {Phoenix.Template.render_to_iodata(view, template, format, assigns), metadata}
+    end)
   end
 
   defp prepare_assigns(conn, assigns, template, format) do
@@ -899,10 +1028,38 @@ defmodule Phoenix.Controller do
     end)
   end
 
-  defp assigns_layout(conn, assigns, format) do
-    case assigns do
-      %{layout: layout} -> layout
-      %{} -> layout(conn, format)
+  defp assigns_layout(_conn, %{layout: layout}, _format), do: layout
+
+  defp assigns_layout(conn, _assigns, format) do
+    case conn.private[:phoenix_layout] do
+      %{^format => bad_value, _: good_value} when good_value != false ->
+        IO.warn """
+        conflicting layouts found. A layout has been set with format, such as:
+
+            put_layout(conn, #{format}: #{inspect(bad_value)})
+
+        But also without format:
+
+            put_layout(conn, #{inspect(good_value)})
+
+        In this case, the layout without format will always win.
+        If you use layouts with formats, make sure that they are
+        used everywhere. Also remember to configure your controller
+        to use layouts with formats:
+
+            use Phoenix.Controller, layouts: [#{format}: #{inspect(bad_value)}]
+        """
+
+        if format in layout_formats(conn), do: good_value, else: false
+
+      %{_: value} ->
+        if format in layout_formats(conn), do: value, else: false
+
+      %{^format => value} ->
+        value
+
+      _ ->
+        false
     end
   end
 
@@ -1713,7 +1870,15 @@ defmodule Phoenix.Controller do
 
     case Keyword.fetch(opts, :formats) do
       {:ok, formats} when is_list(formats) ->
-        for format <- formats, do: {format, :"#{view_base}#{String.upcase(to_string(format))}"}
+        for format <- formats do
+          case format do
+            format when is_atom(format) ->
+              {format, :"#{view_base}#{String.upcase(to_string(format))}"}
+
+            {format, suffix} ->
+              {format, :"#{view_base}#{suffix}"}
+          end
+        end
 
       :error ->
         :"#{view_base}View"
@@ -1733,7 +1898,7 @@ defmodule Phoenix.Controller do
 
           other ->
             raise ArgumentError, """
-            expected :layouts to be a list of format module pairs of the form: [html: DemoWEb.Layouts] or [html: {DemoWeb.Layouts, :app}]
+            expected :layouts to be a list of format module pairs of the form: [html: DemoWeb.Layouts] or [html: {DemoWeb.Layouts, :app}]
 
             Got: #{inspect(other)}
             """

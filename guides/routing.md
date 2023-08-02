@@ -16,7 +16,7 @@ defmodule HelloWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {HelloWeb.LayoutView, :root}
+    plug :put_root_layout, html: {HelloWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -28,7 +28,7 @@ defmodule HelloWeb.Router do
   scope "/", HelloWeb do
     pipe_through :browser
 
-    get "/", PageController, :index
+    get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.
@@ -48,7 +48,7 @@ Scopes have their own section in this guide, so we won't spend time on the `scop
 Inside the scope block, however, we have our first actual route:
 
 ```elixir
-get "/", PageController, :index
+get "/", PageController, :home
 ```
 
 `get` is a Phoenix macro that corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs, including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE, and HEAD.
@@ -61,11 +61,11 @@ Let's see how this works. Go to the root of a newly-generated Phoenix applicatio
 
 ```console
 $ mix phx.routes
-GET  /  HelloWeb.PageController :index
+GET  /  HelloWeb.PageController :home
 ...
 ```
 
-The route above tells us that any HTTP GET request for the root of the application will be handled by the `index` action of the `HelloWeb.PageController`.
+The route above tells us that any HTTP GET request for the root of the application will be handled by the `home` action of the `HelloWeb.PageController`.
 
 ## Resources
 
@@ -75,7 +75,7 @@ The router supports other macros besides those for HTTP verbs like [`get`](`Phoe
 scope "/", HelloWeb do
   pipe_through :browser
 
-  get "/", PageController, :index
+  get "/", PageController, :home
   resources "/users", UserController
   ...
 end
@@ -98,7 +98,7 @@ DELETE  /users/:id       HelloWeb.UserController :delete
 ...
 ```
 
-This is the standard matrix of HTTP verbs, paths, and controller actions. For a while, this was known as RESTful routes, but most consider this a misnomer nowadays. Let's look at them individually, in a slightly different order.
+This is the standard matrix of HTTP verbs, paths, and controller actions. For a while, this was known as RESTful routes, but most consider this a misnomer nowadays. Let's look at them individually.
 
 - A GET request to `/users` will invoke the `index` action to show all the users.
 - A GET request to `/users/:id/edit` will invoke the `edit` action with an ID to retrieve an individual user from the data store and present the information in a form for editing.
@@ -146,20 +146,20 @@ The `Phoenix.Router.resources/4` macro describes additional options for customiz
 
 ## Verified Routes
 
-Phoenix includes `Phoenix.VerifiedRoutes` module which provides compile-time checks of router paths against your router by using the `~p` sigil. For example, you can write paths in controllers, tests, and templates and the compile will make sure those actually match routes defined in your router.
+Phoenix includes `Phoenix.VerifiedRoutes` module which provides compile-time checks of router paths against your router by using the `~p` sigil. For example, you can write paths in controllers, tests, and templates and the compiler will make sure those actually match routes defined in your router.
 
 Let's see it in action. Run `iex -S mix` at the root of the project. We'll define a throwaway example module that builds a couple `~p` route paths.
 
 ```elixir
 iex> defmodule RouteExample do
-...>   use GenTestWeb, :verified_routes
+...>   use HelloWeb, :verified_routes
 ...>
 ...>   def example do
 ...>     ~p"/comments"
 ...>     ~p"/unknown/123"
 ...>   end
 ...> end
-warning: no route path for GenTestWeb.Router matches "/unknown/123"
+warning: no route path for HelloWeb.Router matches "/unknown/123"
   iex:5: RouteExample.example/0
 
 {:module, RouteExample, ...}
@@ -191,7 +191,7 @@ What about paths with query strings? You can either add query string key values 
 ~p"/users/17?admin=true&active=false"
 "/users/17?admin=true&active=false"
 
-~p"/users/17?#{[admin: true]"
+~p"/users/17?#{[admin: true]}"
 "/users/17?admin=true"
 ```
 
@@ -236,14 +236,14 @@ When building paths for nested routes, we will need to interpolate the IDs where
 ```elixir
 user_id = 42
 post_id = 17
-~p"/users/#{user_id}/#{post_id}"
+~p"/users/#{user_id}/posts/#{post_id}"
 "/users/42/posts/17"
 ```
 
 Verified routes also support the `Phoenix.Param` protocol, but we don't need to concern ourselves with elixir protocols just yet. Just know that once we start building our application with structs like `%User{}` and `%Post{}`, we'll be able to interpolate those data structures directly into our `~p` paths and phoenix will pluck out the correct fields to use in the route.
 
 ```elixir
-~p"/users/#{user}/#{post}"
+~p"/users/#{user}/posts/#{post}"
 "/users/42/posts/17"
 ```
 
@@ -457,7 +457,7 @@ defmodule HelloWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {HelloWeb.LayoutView, :root}
+    plug :put_root_layout, html: {HelloWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -469,7 +469,7 @@ defmodule HelloWeb.Router do
   scope "/", HelloWeb do
     pipe_through :browser
 
-    get "/", PageController, :index
+    get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.
@@ -484,7 +484,7 @@ end
 
 When the server accepts a request, the request will always first pass through the plugs in our endpoint, after which it will attempt to match on the path and HTTP verb.
 
-Let's say that the request matches our first route: a GET to `/`. The router will first pipe that request through the `:browser` pipeline - which will fetch the session data, fetch the flash, and execute forgery protection - before it dispatches the request to `PageController`'s `index` action.
+Let's say that the request matches our first route: a GET to `/`. The router will first pipe that request through the `:browser` pipeline - which will fetch the session data, fetch the flash, and execute forgery protection - before it dispatches the request to `PageController`'s `home` action.
 
 Conversely, suppose the request matches any of the routes defined by the [`resources/2`](`Phoenix.Router.resources/2`) macro. In that case, the router will pipe it through the `:api` pipeline — which currently only performs content negotiation — before it dispatches further to the correct action of the `HelloWeb.ReviewController`.
 
@@ -502,7 +502,7 @@ defmodule HelloWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {HelloWeb.LayoutView, :root}
+    plug :put_root_layout, html: {HelloWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -519,7 +519,7 @@ defmodule HelloWeb.Router do
 end
 ```
 
-The above assumes there is a plug called `MyApp.Authentication` that performs authentication and is now part of the `:auth` pipeline.
+The above assumes there is a plug called `HelloWeb.Authentication` that performs authentication and is now part of the `:auth` pipeline.
 
 Note that pipelines themselves are plugs, so we can plug a pipeline inside another pipeline. For example, we could rewrite the `review_checks` pipeline above to automatically invoke `browser`, simplifying the downstream pipeline call:
 

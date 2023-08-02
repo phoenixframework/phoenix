@@ -155,7 +155,6 @@ Here's the `User` schema that Phoenix generated for us.
 defmodule Hello.User do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Hello.User
 
   schema "users" do
     field :bio, :string
@@ -538,7 +537,7 @@ defmodule HelloPhoenix.MixProject do
     [
       {:phoenix, "~> 1.4.0"},
       {:phoenix_ecto, "~> 4.4"},
-      {:ecto_sql, "~> 3.6"},
+      {:ecto_sql, "~> 3.10"},
       {:myxql, ">= 0.0.0"},
       ...
     ]
@@ -562,7 +561,7 @@ The last change is to open up `lib/hello_phoenix/repo.ex` and make sure to set t
 Now all we need to do is fetch our new dependency, and we'll be ready to go.
 
 ```console
-$ mix do deps.get, compile
+$ mix deps.get
 ```
 
 With our new adapter installed and configured, we're ready to create our database.

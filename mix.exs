@@ -3,12 +3,12 @@ defmodule Phoenix.MixProject do
 
   if Mix.env() != :prod do
     for path <- :code.get_path(),
-        Regex.match?(~r/phx_new\-\d+\.\d+\.\d.*\/ebin$/, List.to_string(path)) do
+        Regex.match?(~r/phx_new-[\w\.\-]+\/ebin$/, List.to_string(path)) do
       Code.delete_path(path)
     end
   end
 
-  @version "1.7.0-dev"
+  @version "1.7.7"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -50,12 +50,14 @@ defmodule Phoenix.MixProject do
   defp elixirc_paths(:docs), do: ["lib", "installer/lib"]
   defp elixirc_paths(_), do: ["lib"]
 
+  defp extra_applications(:test), do: [:inets]
+  defp extra_applications(_), do: []
+
   def application do
     [
       mod: {Phoenix, []},
-      extra_applications: [:logger, :eex, :crypto, :public_key],
+      extra_applications: extra_applications(Mix.env()) ++ [:logger, :eex, :crypto, :public_key],
       env: [
-        browser_open: false,
         logger: true,
         stacktrace_depth: nil,
         filter_parameters: ["password"],
@@ -72,9 +74,10 @@ defmodule Phoenix.MixProject do
       {:plug_crypto, "~> 1.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
+      # TODO drop phoenix_view as an optional dependency in Phoenix v2.0
       {:phoenix_view, "~> 2.0", optional: true},
       {:phoenix_template, "~> 1.0"},
-      {:websock_adapter, "~> 0.4"},
+      {:websock_adapter, "~> 0.5.3"},
 
       # TODO drop castore when we require OTP 25+
       {:castore, ">= 0.0.0"},
@@ -87,7 +90,7 @@ defmodule Phoenix.MixProject do
       # Docs dependencies (some for cross references)
       {:ex_doc, "~> 0.24", only: :docs},
       {:ecto, "~> 3.0", only: :docs},
-      {:ecto_sql, "~> 3.6", only: :docs},
+      {:ecto_sql, "~> 3.10", only: :docs},
       {:gettext, "~> 0.20", only: :docs},
       {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 0.6", only: :docs},
@@ -95,13 +98,13 @@ defmodule Phoenix.MixProject do
       {:makeup_elixir, "~> 0.16", only: :docs},
 
       # Test dependencies
-      {:phoenix_html, "~> 3.0", only: [:docs, :test]},
+      {:phoenix_html, "~> 3.3", only: [:docs, :test]},
       {:phx_new, path: "./installer", only: :test},
       {:mint, "~> 1.4", only: :test},
       {:mint_web_socket, "~> 1.0.0", only: :test},
 
       # Dev dependencies
-      {:esbuild, "~> 0.5", only: :dev}
+      {:esbuild, "~> 0.7", only: :dev}
     ]
   end
 
@@ -139,6 +142,7 @@ defmodule Phoenix.MixProject do
       "guides/introduction/installation.md",
       "guides/introduction/up_and_running.md",
       "guides/introduction/community.md",
+      "guides/introduction/packages_glossary.md",
       "guides/directory_structure.md",
       "guides/request_lifecycle.md",
       "guides/plug.md",
@@ -147,6 +151,7 @@ defmodule Phoenix.MixProject do
       "guides/components.md",
       "guides/ecto.md",
       "guides/contexts.md",
+      "guides/json_and_apis.md",
       "guides/mix_tasks.md",
       "guides/telemetry.md",
       "guides/asset_management.md",
@@ -163,7 +168,9 @@ defmodule Phoenix.MixProject do
       "guides/deployment/fly.md",
       "guides/deployment/heroku.md",
       "guides/howto/custom_error_pages.md",
+      "guides/howto/file_uploads.md",
       "guides/howto/using_ssl.md",
+      "guides/howto/writing_a_channels_client.md",
       "CHANGELOG.md"
     ]
   end
@@ -224,12 +231,20 @@ defmodule Phoenix.MixProject do
     [
       docs: ["docs", &generate_js_docs/1],
       "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min", "esbuild main"],
-      "assets.watch": "esbuild module --watch"
+      "assets.watch": "esbuild module --watch",
+      "archive.build": &raise_on_archive_build/1
     ]
   end
 
-  def generate_js_docs(_) do
+  defp generate_js_docs(_) do
     Mix.Task.run("app.start")
     System.cmd("npm", ["run", "docs"], cd: "assets")
+  end
+
+  defp raise_on_archive_build(_) do
+    Mix.raise("""
+    You are trying to install "phoenix" as an archive, which is not supported. \
+    You probably meant to install "phx_new" instead
+    """)
   end
 end

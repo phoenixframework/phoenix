@@ -44,10 +44,10 @@ defmodule Phoenix.Transports.LongPoll.Server do
     end
   end
 
-  def handle_info({:dispatch, client_ref, body, ref}, state) do
+  def handle_info({:dispatch, client_ref, {body, opcode}, ref}, state) do
     %{handler: {handler, handler_state}} = state
 
-    case handler.handle_in({body, opcode: :text}, handler_state) do
+    case handler.handle_in({body, opcode: opcode}, handler_state) do
       {:reply, status, {_, reply}, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
         status = if status == :ok, do: :ok, else: :error

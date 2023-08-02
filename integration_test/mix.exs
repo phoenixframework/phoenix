@@ -1,5 +1,5 @@
 for path <- :code.get_path(),
-    Regex.match?(~r/phx_new\-\d+\.\d+\.\d\/ebin$/, List.to_string(path)) do
+    Regex.match?(~r/phx_new-[\w\.\-]+\/ebin$/, List.to_string(path)) do
   Code.delete_path(path)
 end
 
@@ -22,7 +22,7 @@ defmodule Phoenix.Integration.MixProject do
 
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :inets]
     ]
   end
 
@@ -34,17 +34,17 @@ defmodule Phoenix.Integration.MixProject do
       {:phx_new, path: "../installer"},
       {:phoenix, path: "..", override: true},
       {:phoenix_ecto, "~> 4.4"},
-      {:esbuild, "~> 0.5", runtime: false},
-      {:ecto_sql, "~> 3.6"},
+      {:esbuild, "~> 0.7", runtime: false},
+      {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
       {:myxql, ">= 0.0.0"},
       {:tds, ">= 0.0.0"},
       {:ecto_sqlite3, ">= 0.0.0"},
-      {:phoenix_html, "~> 3.0"},
-      {:phoenix_live_view, "~> 0.18.3"},
+      {:phoenix_html, "~> 3.3"},
+      {:phoenix_live_view, "~> 0.19.0"},
       {:floki, ">= 0.30.0"},
       {:phoenix_live_reload, "~> 1.2"},
-      {:phoenix_live_dashboard, "~> 0.7.2"},
+      {:phoenix_live_dashboard, "~> 0.8.0"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
@@ -54,8 +54,7 @@ defmodule Phoenix.Integration.MixProject do
       {:bcrypt_elixir, "~> 3.0"},
       {:argon2_elixir, "~> 3.0"},
       {:pbkdf2_elixir, "~> 2.0"},
-      {:heroicons, "~> 0.5"},
-      {:tailwind, "~> 0.1"},
+      {:tailwind, "~> 0.2"},
       {:finch, "~> 0.13"}
     ]
   end

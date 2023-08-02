@@ -28,9 +28,15 @@ defmodule Phoenix.Socket.V1.JSONSerializer do
 
   @impl true
   def decode!(message, _opts) do
-    message
-    |> Phoenix.json_library().decode!()
-    |> Phoenix.Socket.Message.from_map!()
+    payload = Phoenix.json_library().decode!(message)
+
+    case payload do
+      %{} ->
+        Phoenix.Socket.Message.from_map!(payload)
+
+      other ->
+        raise "V1 JSON Serializer expected a map, got #{inspect(other)}"
+    end
   end
 
   defp encode_v1_fields_only(%Message{} = msg) do

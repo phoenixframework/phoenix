@@ -14,10 +14,10 @@ defmodule HelloWeb.ErrorHTML do
   # uncomment the embed_templates/1 call below
   # and add pages to the error directory:
   #
-  #   * lib/<%= @lib_web_name %>/controllers/error/404.html.heex
-  #   * lib/<%= @lib_web_name %>/controllers/error/500.html.heex
+  #   * lib/<%= @lib_web_name %>/controllers/error_html/404.html.heex
+  #   * lib/<%= @lib_web_name %>/controllers/error_html/500.html.heex
   #
-  # embed_templates "error/*"
+  # embed_templates "error_html/*"
 
   # The default is to render a plain text page based on
   # the template name. For example, "404.html" becomes
@@ -27,7 +27,7 @@ defmodule HelloWeb.ErrorHTML do
   end
 end
 
-defmodule HelloWeb.ErrorJSOn do
+defmodule HelloWeb.ErrorJSON do
   # If you want to customize a particular status code,
   # you may add your own clauses, such as:
   #
@@ -167,9 +167,9 @@ However, implementing the `Plug.Exception` protocol by hand can be convenient in
 
 ## Actionable errors
 
-Exception actions are functions that can be triggered by the error page, and they're basically a list of maps defining a `label` and a `handler` to be executed.
+Exception actions are functions that can be triggered from the error page, and they're basically a list of maps defining a `label` and a `handler` to be executed. As an example, Phoenix will display an error if you have pending migrations and will provide a button on the error page to perform the pending migrations.
 
-They are rendered in the error page as a collection of buttons and follow the format of:
+When `debug_errors` is `true`, they are rendered in the error page as a collection of buttons and follow the format of:
 
 ```elixir
 [
@@ -190,7 +190,7 @@ defimpl Plug.Exception, for: HelloWeb.SomethingNotFoundError do
     [
       %{
         label: "Run seeds",
-        handler: {Code, :eval_file, "priv/repo/seeds.exs"}
+        handler: {Code, :eval_file, ["priv/repo/seeds.exs"]}
       }
     ]
   end

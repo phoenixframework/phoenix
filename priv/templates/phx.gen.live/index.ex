@@ -6,7 +6,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :<%= schema.collection %>, list_<%= schema.plural %>())}
+    {:ok, stream(socket, :<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>())}
   end
 
   @impl true
@@ -33,14 +33,15 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   @impl true
+  def handle_info({<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent, {:saved, <%= schema.singular %>}}, socket) do
+    {:noreply, stream_insert(socket, :<%= schema.collection %>, <%= schema.singular %>)}
+  end
+
+  @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
     {:ok, _} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
 
-    {:noreply, assign(socket, :<%= schema.collection %>, list_<%=schema.plural %>())}
-  end
-
-  defp list_<%= schema.plural %> do
-    <%= inspect context.alias %>.list_<%= schema.plural %>()
+    {:noreply, stream_delete(socket, :<%= schema.collection %>, <%= schema.singular %>)}
   end
 end

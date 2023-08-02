@@ -2,8 +2,8 @@
 # debugging and code reloading.
 #
 # The watchers configuration can be used to run external
-# watchers to your application. For example, we use it
-# with esbuild to bundle .js and .css sources.
+# watchers to your application. For example, we can use it
+# to bundle .js and .css sources.
 config :<%= @web_app_name %>, <%= @endpoint_module %>,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
@@ -12,9 +12,9 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
   code_reloader: true,
   debug_errors: true,
   secret_key_base: "<%= @secret_key_base_dev %>",
-  watchers: <%= if @assets do %>[
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
+  watchers: <%= if @javascript or @css do %>[<%= if @javascript do %>
+    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}<%= if @css, do: "," %><% end %><%= if @css do %>
+    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}<% end %>
   ]<% else %>[]<% end %>
 
 # ## SSL Support
@@ -46,7 +46,9 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
       ~r"priv/gettext/.*(po)$",<% end %>
-      ~r"lib/<%= @web_app_name %>/(live|views)/.*(ex)$",
-      ~r"lib/<%= @web_app_name %>/templates/.*(eex)$"
+      ~r"lib/<%= @web_app_name %>/(controllers|live|components)/.*(ex|heex)$"
     ]
   ]<% end %>
+
+# Enable dev routes for dashboard and mailbox
+config :<%= @web_app_name %>, dev_routes: true

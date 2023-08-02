@@ -39,7 +39,6 @@ defmodule <%= @web_namespace %> do
   def controller do
     quote do
       use Phoenix.Controller,
-        namespace: <%= @web_namespace %>,
         formats: [:html, :json],
         layouts: [html: <%= @web_namespace %>.Layouts]
 
