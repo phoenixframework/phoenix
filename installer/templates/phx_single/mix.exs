@@ -53,7 +53,7 @@ defmodule <%= @app_module %>.MixProject do
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 0.20"},<% end %>
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"}
+      {<%= inspect @web_adapter_app %>, "<%= @web_adapter_vsn %>"}
     ]
   end
 

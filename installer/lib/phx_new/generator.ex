@@ -183,6 +183,7 @@ defmodule Phx.New.Generator do
 
   def put_binding(%Project{opts: opts} = project) do
     db = Keyword.get(opts, :database, "postgres")
+    web_adapter = Keyword.get(opts, :adapter, "cowboy")
     ecto = Keyword.get(opts, :ecto, true)
     html = Keyword.get(opts, :html, true)
     live = html && Keyword.get(opts, :live, true)
@@ -202,6 +203,8 @@ defmodule Phx.New.Generator do
     # some storages.
     {adapter_app, adapter_module, adapter_config} =
       get_ecto_adapter(db, String.downcase(project.app), project.app_mod)
+
+    {web_adapter_app, web_adapter_vsn, web_adapter_module} = get_web_adapter(web_adapter)
 
     pubsub_server = get_pubsub_server(project.app_mod)
 
@@ -245,6 +248,9 @@ defmodule Phx.New.Generator do
       adapter_app: adapter_app,
       adapter_module: adapter_module,
       adapter_config: adapter_config,
+      web_adapter_app: web_adapter_app,
+      web_adapter_module: web_adapter_module,
+      web_adapter_vsn: web_adapter_vsn,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
       namespaced?: namespaced?(project),
       dev: dev
@@ -308,6 +314,11 @@ defmodule Phx.New.Generator do
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
   end
+
+  defp get_web_adapter("cowboy"), do: {:plug_cowboy, "~> 2.5", Phoenix.Endpoint.Cowboy2Adapter}
+  # TODO bump bandit to 1.0 when it's released
+  defp get_web_adapter("bandit"), do: {:bandit, ">= 0.0.0", Bandit.PhoenixAdapter}
+  defp get_web_adapter(other), do: Mix.raise("Unknown web adapter #{inspect(other)}")
 
   defp fs_db_config(app, module) do
     [

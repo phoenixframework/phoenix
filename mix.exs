@@ -216,7 +216,7 @@ defmodule Phoenix.MixProject do
         Phoenix.Digester.Compressor,
         Phoenix.Digester.Gzip
       ],
-      "Socket": [
+      Socket: [
         Phoenix.Socket.Broadcast,
         Phoenix.Socket.Message,
         Phoenix.Socket.Reply,

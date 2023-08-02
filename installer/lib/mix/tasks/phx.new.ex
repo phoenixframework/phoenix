@@ -31,6 +31,13 @@ defmodule Mix.Tasks.Phx.New do
       Please check the driver docs for more information
       and requirements. Defaults to "postgres".
 
+    * `--adapter` - specify the http adapter. One of:
+        * `cowboy` - via https://github.com/elixir-plug/plug_cowboy
+        * `bandit` - via https://github.com/mtrudel/bandit
+
+      Please check the adapter docs for more information
+      and requirements. Defaults to "cowboy".
+
     * `--no-assets` - equivalent to `--no-esbuild` and `--no-tailwind`
 
     * `--no-dashboard` - do not include Phoenix.LiveDashboard
@@ -132,7 +139,8 @@ defmodule Mix.Tasks.Phx.New do
     dashboard: :boolean,
     install: :boolean,
     prefix: :string,
-    mailer: :boolean
+    mailer: :boolean,
+    adapter: :string
   ]
 
   @impl true

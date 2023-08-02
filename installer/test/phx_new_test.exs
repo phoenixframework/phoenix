@@ -732,6 +732,16 @@ defmodule Mix.Tasks.Phx.NewTest do
     end)
   end
 
+  test "new with bandit web adapter" do
+    in_tmp("new with bandit web adapter", fn ->
+      project_path = Path.join(File.cwd!(), "custom_path")
+      Mix.Tasks.Phx.New.run([project_path, "--adapter", "bandit"])
+      assert_file("custom_path/mix.exs", ":bandit")
+
+      assert_file("custom_path/config/config.exs", "adapter: Bandit.PhoenixAdapter")
+    end)
+  end
+
   test "new with invalid args" do
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
       Mix.Tasks.Phx.New.run(["007invalid"])
