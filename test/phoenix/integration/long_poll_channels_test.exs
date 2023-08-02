@@ -1,7 +1,7 @@
 Code.require_file("../../support/http_client.exs", __DIR__)
 
 defmodule Phoenix.Integration.LongPollChannelsTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   import ExUnit.CaptureLog
 
   alias Phoenix.Integration.HTTPClient
