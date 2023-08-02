@@ -40,7 +40,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> element("#reset_password_form")
         |> render_change(
-          <%= schema.singular %>: %{"password" => "secret12", "confirmation_password" => "secret123456"}
+          <%= schema.singular %>: %{"password" => "secret12", "password_confirmation" => "secret123456"}
         )
 
       assert result =~ "should be at least 12 character"

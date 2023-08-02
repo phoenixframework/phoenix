@@ -1,0 +1,11 @@
+---
+blank_issues_enabled: true
+
+contact_links:
+  - name: Ask questions, support, and general discussions
+    url: https://elixirforum.com/c/phoenix-forum
+    about: Ask questions, provide support, and more on Elixir Forum
+
+  - name: Propose new features
+    url: https://elixirforum.com/c/phoenix-forum
+    about: Propose new features on Elixir Forum

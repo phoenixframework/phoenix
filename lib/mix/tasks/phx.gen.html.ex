@@ -130,6 +130,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
        Path.join([controller_pre, "#{singular}_html", "index.html.heex"])},
       {:eex, "new.html.heex", Path.join([controller_pre, "#{singular}_html", "new.html.heex"])},
       {:eex, "show.html.heex", Path.join([controller_pre, "#{singular}_html", "show.html.heex"])},
+      {:eex, "resource_form.html.heex",
+       Path.join([controller_pre, "#{singular}_html", "#{singular}_form.html.heex"])},
       {:eex, "html.ex", Path.join([controller_pre, "#{singular}_html.ex"])},
       {:eex, "controller_test.exs", Path.join([test_pre, "#{singular}_controller_test.exs"])}
     ]
@@ -171,40 +173,37 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @doc false
   def inputs(%Schema{} = schema) do
     Enum.map(schema.attrs, fn
-      {_, {:references, _}} ->
-        nil
-
       {key, :integer} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" />)
+        ~s(<.input field={f[#{inspect(key)}]} type="number" label="#{label(key)}" />)
 
       {key, :float} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" step="any" />)
+        ~s(<.input field={f[#{inspect(key)}]} type="number" label="#{label(key)}" step="any" />)
 
       {key, :decimal} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="number" label="#{label(key)}" step="any" />)
+        ~s(<.input field={f[#{inspect(key)}]} type="number" label="#{label(key)}" step="any" />)
 
       {key, :boolean} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="checkbox" label="#{label(key)}" />)
+        ~s(<.input field={f[#{inspect(key)}]} type="checkbox" label="#{label(key)}" />)
 
       {key, :text} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="text" label="#{label(key)}" />)
+        ~s(<.input field={f[#{inspect(key)}]} type="text" label="#{label(key)}" />)
 
       {key, :date} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="date" label="#{label(key)}" />)
+        ~s(<.input field={f[#{inspect(key)}]} type="date" label="#{label(key)}" />)
 
       {key, :time} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="time" label="#{label(key)}" />)
+        ~s(<.input field={f[#{inspect(key)}]} type="time" label="#{label(key)}" />)
 
       {key, :utc_datetime} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="datetime-local" label="#{label(key)}" />)
+        ~s(<.input field={f[#{inspect(key)}]} type="datetime-local" label="#{label(key)}" />)
 
       {key, :naive_datetime} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="datetime-local" label="#{label(key)}" />)
+        ~s(<.input field={f[#{inspect(key)}]} type="datetime-local" label="#{label(key)}" />)
 
       {key, {:array, _} = type} ->
         ~s"""
         <.input
-          field={{f, #{inspect(key)}}}
+          field={f[#{inspect(key)}]}
           type="select"
           multiple
           label="#{label(key)}"
@@ -215,7 +214,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       {key, {:enum, _}} ->
         ~s"""
         <.input
-          field={{f, #{inspect(key)}}}
+          field={f[#{inspect(key)}]}
           type="select"
           label="#{label(key)}"
           prompt="Choose a value"
@@ -224,15 +223,15 @@ defmodule Mix.Tasks.Phx.Gen.Html do
         """
 
       {key, _} ->
-        ~s(<.input field={{f, #{inspect(key)}}} type="text" label="#{label(key)}" />)
+        ~s(<.input field={f[#{inspect(key)}]} type="text" label="#{label(key)}" />)
     end)
   end
 
   defp default_options({:array, :string}),
-    do: Enum.map([1,2], &({"Option #{&1}", "option#{&1}"}))
+    do: Enum.map([1, 2], &{"Option #{&1}", "option#{&1}"})
 
   defp default_options({:array, :integer}),
-    do: Enum.map([1,2], &({"#{&1}", &1}))
+    do: Enum.map([1, 2], &{"#{&1}", &1})
 
   defp default_options({:array, _}), do: []
 

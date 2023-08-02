@@ -1,7 +1,7 @@
 Code.require_file "../../support/websocket_client.exs", __DIR__
 
 defmodule Phoenix.Integration.WebSocketChannelsTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case
   import ExUnit.CaptureLog
 
   alias Phoenix.Integration.WebsocketClient

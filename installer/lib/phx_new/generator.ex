@@ -73,6 +73,21 @@ defmodule Phx.New.Generator do
         :keep ->
           File.mkdir_p!(target)
 
+        :zip ->
+          parent_dir = Path.dirname(target)
+          Mix.shell().info([:green, "* extracting ", :reset, Path.relative_to_cwd(target)])
+
+          File.mkdir_p!(parent_dir)
+          zip_contents = mod.render(name, source, project.binding)
+          {:ok, zip} = :zip.zip_open(zip_contents, [:memory])
+          {:ok, files} = :zip.zip_get(zip)
+
+          Enum.map(files, fn {path, contents} ->
+            full_path = Path.join(parent_dir, path)
+            File.mkdir_p!(Path.dirname(full_path))
+            File.write!(full_path, contents)
+          end)
+
         :text ->
           create_file(target, mod.render(name, source, project.binding))
 
@@ -174,6 +189,8 @@ defmodule Phx.New.Generator do
     dashboard = Keyword.get(opts, :dashboard, true)
     gettext = Keyword.get(opts, :gettext, true)
     assets = Keyword.get(opts, :assets, true)
+    esbuild = Keyword.get(opts, :esbuild, assets)
+    tailwind = Keyword.get(opts, :tailwind, assets)
     mailer = Keyword.get(opts, :mailer, true)
     dev = Keyword.get(opts, :dev, false)
     phoenix_path = phoenix_path(project, dev, false)
@@ -205,7 +222,6 @@ defmodule Phx.New.Generator do
       web_app_name: project.web_app,
       endpoint_module: inspect(Module.concat(project.web_namespace, Endpoint)),
       web_namespace: inspect(project.web_namespace),
-      phoenix_github_version_tag: "v#{version.major}.#{version.minor}",
       phoenix_dep: phoenix_dep(phoenix_path, version),
       phoenix_dep_umbrella_root: phoenix_dep(phoenix_path_umbrella_root, version),
       phoenix_js_path: phoenix_js_path(phoenix_path),
@@ -216,7 +232,9 @@ defmodule Phx.New.Generator do
       signing_salt: random_string(8),
       lv_signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
-      assets: assets,
+      asset_builders: Enum.filter([tailwind && :tailwind, esbuild && :esbuild], & &1),
+      javascript: esbuild,
+      css: tailwind,
       mailer: mailer,
       ecto: ecto,
       html: html,
@@ -356,7 +374,8 @@ defmodule Phx.New.Generator do
           For example: ecto://USER:PASS@HOST/DATABASE
           \"""
 
-      maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+      maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
+
       """,
       prod_config: """
       # ssl: true,
@@ -410,9 +429,8 @@ defmodule Phx.New.Generator do
   defp phoenix_dep("deps/phoenix", %{pre: ["dev"]}),
     do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
 
-  # TODO no override on final 1.7 release
   defp phoenix_dep("deps/phoenix", version),
-    do: ~s[{:phoenix, "~> #{version}", override: true}]
+    do: ~s[{:phoenix, "~> #{version}"}]
 
   defp phoenix_dep(path, _version),
     do: ~s[{:phoenix, path: #{inspect(path)}, override: true}]

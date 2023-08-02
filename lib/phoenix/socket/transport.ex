@@ -21,8 +21,8 @@ defmodule Phoenix.Socket.Transport do
         @behaviour Phoenix.Socket.Transport
 
         def child_spec(opts) do
-          # We won't spawn any process, so let's return a dummy task
-          %{id: __MODULE__, start: {Task, :start_link, [fn -> :ok end]}, restart: :transient}
+          # We won't spawn any process, so let's ignore the child spec
+          :ignore
         end
 
         def connect(state) do
@@ -115,16 +115,31 @@ defmodule Phoenix.Socket.Transport do
       socket "/my_app", MyApp.Socket, shutdown: 5000
 
   means `child_spec([shutdown: 5000])` will be invoked.
+
+  `:ignore` means no child spec is necessary for this socket.
   """
-  @callback child_spec(keyword) :: :supervisor.child_spec()
+  @callback child_spec(keyword) :: :supervisor.child_spec() | :ignore
+
+  @doc """
+  Returns a child specification for terminating the socket.
+
+  This is a process that is started late in the supervision
+  tree with the specific goal of draining connections on
+  application shutdown.
+
+  Similar to `child_spec/1`, it receives the socket options
+  from the endpoint.
+  """
+  @callback drainer_spec(keyword) :: :supervisor.child_spec() | :ignore
 
   @doc """
   Connects to the socket.
 
   The transport passes a map of metadata and the socket
-  returns `{:ok, state}` or `:error`. The state must be
-  stored by the transport and returned in all future
-  operations.
+  returns `{:ok, state}`. `{:error, reason}` or `:error`. 
+  The state must be stored by the transport and returned 
+  in all future operations. `{:error, reason}` can only 
+  be used with websockets.
 
   This function is used for authorization purposes and it
   may be invoked outside of the process that effectively
@@ -142,7 +157,7 @@ defmodule Phoenix.Socket.Transport do
       serializers and their requirements
 
   """
-  @callback connect(transport_info :: map) :: {:ok, state} | :error
+  @callback connect(transport_info :: map) :: {:ok, state} | {:error, term()} | :error
 
   @doc """
   Initializes the socket state.
@@ -223,7 +238,7 @@ defmodule Phoenix.Socket.Transport do
   """
   @callback terminate(reason :: term, state) :: :ok
 
-  @optional_callbacks handle_control: 2
+  @optional_callbacks handle_control: 2, drainer_spec: 1
 
   require Logger
 
@@ -258,11 +273,14 @@ defmodule Phoenix.Socket.Transport do
     [connect_info: connect_info] ++ config
   end
 
+  # The original session_config is returned in addition to init value so we can
+  # access special config like :csrf_token_key downstream.
   defp init_session(session_config) when is_list(session_config) do
     key = Keyword.fetch!(session_config, :key)
     store = Plug.Session.Store.get(Keyword.fetch!(session_config, :store))
     init = store.init(Keyword.drop(session_config, [:store, :key]))
-    {key, store, init}
+    csrf_token_key = Keyword.get(session_config, :csrf_token_key, "_csrf_token")
+    {key, store, {csrf_token_key, init}}
   end
 
   defp init_session({_, _, _} = mfa) do
@@ -273,8 +291,12 @@ defmodule Phoenix.Socket.Transport do
   Runs the code reloader if enabled.
   """
   def code_reload(conn, endpoint, opts) do
-    reload? = Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader))
-    reload? && Phoenix.CodeReloader.reload(endpoint)
+    if Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader)) do
+      # If the WebSocket reconnects, then often the page has already been reloaded
+      # and we don't want to print warnings twice, so we disable all warnings.
+      Phoenix.CodeReloader.reload(endpoint, reloadable_args: ~w(--no-all-warnings))
+    end
+
     conn
   end
 
@@ -464,15 +486,15 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp connect_session(conn, endpoint, {key, store, store_config}) do
+  defp connect_session(conn, endpoint, {key, store, {csrf_token_key, init}}) do
     conn = Plug.Conn.fetch_cookies(conn)
 
     with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
          cookie when is_binary(cookie) <- conn.cookies[key],
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
-         {_, session} <- store.get(conn, cookie, store_config),
+         {_, session} <- store.get(conn, cookie, init),
          csrf_state when is_binary(csrf_state) <-
-           Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]),
+          Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]),
          true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
       session
     else

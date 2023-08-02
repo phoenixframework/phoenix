@@ -8,8 +8,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <div class="mx-auto max-w-sm">
       <.header class="text-center">Confirm Account</.header>
 
-      <.simple_form :let={f} for={:<%= schema.singular %>} id="confirmation_form" phx-submit="confirm_account">
-        <.input field={{f, :token}} type="hidden" value={@token} />
+      <.simple_form for={@form} id="confirmation_form" phx-submit="confirm_account">
+        <.input field={@form[:token]} type="hidden" />
         <:actions>
           <.button phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
         </:actions>
@@ -17,15 +17,15 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       <p class="text-center mt-4">
         <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
-        |
-        <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
+        | <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
       </p>
     </div>
     """
   end
 
-  def mount(params, _session, socket) do
-    {:ok, assign(socket, token: params["token"]), temporary_assigns: [token: nil]}
+  def mount(%{"token" => token}, _session, socket) do
+    form = to_form(%{"token" => token}, as: "<%= schema.singular %>")
+    {:ok, assign(socket, form: form), temporary_assigns: [form: nil]}
   end
 
   # Do not log in the <%= schema.singular %> after confirmation to avoid a

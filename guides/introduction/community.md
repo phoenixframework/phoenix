@@ -6,37 +6,35 @@ There are a number of places to connect with community members at all experience
 
   * We're on Libera IRC in the [\#elixir](https://web.libera.chat/?channels=#elixir) channel.
 
-  * [Request an invitation](https://elixir-slackin.herokuapp.com/) and join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
+  * Join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
 
   * Feel free to join and check out the #phoenix channel on [Discord](https://discord.gg/elixir).
 
-  * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/master/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
+  * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/main/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
 
   * Ask or answer questions about Phoenix on [Elixir Forum](https://elixirforum.com/c/phoenix-forum) or [Stack Overflow](https://stackoverflow.com/questions/tagged/phoenix-framework).
 
-  * To discuss new features in the framework, email the [phoenix-core mailing list](https://groups.google.com/group/phoenix-core).
-
   * Follow the Phoenix Framework on [Twitter](https://twitter.com/elixirphoenix).
 
-  * The source for these guides is [on GitHub](https://github.com/phoenixframework/phoenix/tree/master/guides). To help improve the guides, please report an [issue](https://github.com/phoenixframework/phoenix/issues) or open a [pull request](https://github.com/phoenixframework/phoenix/pulls).
+  * The source for these guides is [on GitHub](https://github.com/phoenixframework/phoenix/tree/main/guides). To help improve the guides, please report an [issue](https://github.com/phoenixframework/phoenix/issues) or open a [pull request](https://github.com/phoenixframework/phoenix/pulls).
 
 ## Books
 
   * [Programming Phoenix LiveView - Interactive Elixir Web Programming Without Writing Any JavaScript - 2021 (by Bruce Tate and Sophie DeBenedetto)](https://pragprog.com/titles/liveview/programming-phoenix-liveview/)
 
-  * [Real-Time Phoenix - Build Highly Scalable Systems with Channels (by Stephen Bussey - 2020)](https://pragprog.com/book/sbsockets/real-time-phoenix)
+  * [Real-Time Phoenix - Build Highly Scalable Systems with Channels (by Stephen Bussey - 2020)](https://pragprog.com/titles/sbsockets/real-time-phoenix/)
 
-  * [Programming Phoenix 1.4 (by Bruce Tate and Phoenix core team members Chris McCord and José Valim - 2019)](https://pragprog.com/book/phoenix14/programming-phoenix-1-4)
+  * [Programming Phoenix 1.4 (by Bruce Tate and Phoenix core team members Chris McCord and José Valim - 2019)](https://pragprog.com/titles/phoenix14/programming-phoenix-1-4/)
 
   * [Phoenix in Action (by Geoffrey Lessel - 2019)](https://manning.com/books/phoenix-in-action)
 
-  * [Phoenix Inside Out - Book Series (by Shankar Dhanasekaran - 2017)](https://shankardevy.com/phoenix-book/)
+  * [Phoenix Inside Out - Book Series (by Shankar Dhanasekaran - 2017)](https://shankardevy.com/phoenix-book/). First book of the series Mastering Phoenix Framework is [free to read online](https://shankardevy.com/phoenix-inside-out-mpf/)
 
-  * [Functional Web Development with Elixir, OTP, and Phoenix Rethink the Modern Web App (by Lance Halvorsen - 2017)](https://pragprog.com/book/lhelph/functional-web-development-with-elixir-otp-and-phoenix)
+  * [Functional Web Development with Elixir, OTP, and Phoenix Rethink the Modern Web App (by Lance Halvorsen - 2017)](https://pragprog.com/titles/lhelph/functional-web-development-with-elixir-otp-and-phoenix/)
 
 ## Screencasts/Courses
 
-  * [Phoenix LiveView Free Course (by The Pragmatic Studio - 2020)](https://pragmaticstudio.com/courses/phoenix-liveview)
+  * [Phoenix LiveView Free Course (by The Pragmatic Studio - 2023)](https://pragmaticstudio.com/courses/phoenix-liveview)
 
   * [Groxio LiveView: Self Study Program (by Bruce Tate - 2020)](https://grox.io/language/liveview/course)
 
@@ -53,3 +51,5 @@ There are a number of places to connect with community members at all experience
   * [LearnPhoenix.tv: Learn how to Build Fast, Dependable Web Apps with Phoenix (2017)](https://www.learnphoenix.tv/)
 
   * [LearnPhoenix.io: Build Scalable, Real-Time Apps with Phoenix, React, and React Native (2016)](https://www.learnphoenix.io/)
+
+  * [Phoenix on Rails: Elixir and Phoenix for Ruby on Rails developers (by George Arrowsmith - 2023)](https://phoenixonrails.com)

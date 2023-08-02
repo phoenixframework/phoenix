@@ -4,6 +4,11 @@ defmodule Phoenix.Router.ConsoleFormatter do
   @doc """
   Format the routes for printing.
   """
+
+  @socket_verb "WS"
+
+  @longpoll_verbs ["GET", "POST"]
+
   def format(router, endpoint \\ nil) do
     routes = Phoenix.Router.routes(router)
     column_widths = calculate_column_widths(router, routes, endpoint)
@@ -32,7 +37,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
       {verb_len, path_len, route_name_len} = widths
 
       String.pad_leading(prefix, route_name_len) <> "  " <>
-      String.pad_trailing("WS", verb_len) <> "  " <>
+      String.pad_trailing(@socket_verb, verb_len) <> "  " <>
       String.pad_trailing(path <> "/websocket", path_len) <> "  " <>
       inspect(module) <>
       "\n"
@@ -45,7 +50,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
   defp format_longpoll({path, module, opts}, router, widths) do
     if opts[:longpoll] != false do
       prefix = if router.__helpers__(), do: "longpoll", else: ""
-      for method <- ["GET", "POST"], into: "" do
+      for method <- @longpoll_verbs, into: "" do
         {verb_len, path_len, route_name_len} = widths
 
         String.pad_leading(prefix, route_name_len) <> "  " <>
@@ -73,11 +78,12 @@ defmodule Phoenix.Router.ConsoleFormatter do
         max(route_name_len, String.length(route_name))}
       end)
 
-    Enum.reduce(sockets, widths, fn {path, _mod, _opts}, acc ->
+    Enum.reduce(sockets, widths, fn {path, _mod, opts}, acc ->
       {verb_len, path_len, route_name_len} = acc
       prefix = if router.__helpers__(), do: "websocket", else: ""
+      verb_length = socket_verbs(opts) |> Enum.map(&String.length/1) |> Enum.max(&>=/2, fn -> 0 end)
 
-      {verb_len,
+      {max(verb_len, verb_length),
       max(path_len, String.length(path <> "/websocket")),
       max(route_name_len, String.length(prefix))}
     end)
@@ -106,4 +112,12 @@ defmodule Phoenix.Router.ConsoleFormatter do
   end
 
   defp verb_name(verb), do: verb |> to_string() |> String.upcase()
+
+  defp socket_verbs(socket_opts) do
+    if socket_opts[:longpoll] != false do
+      [@socket_verb | @longpoll_verbs]
+    else
+      [@socket_verb]
+    end
+  end
 end

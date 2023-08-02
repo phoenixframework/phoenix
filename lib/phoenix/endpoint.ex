@@ -213,6 +213,11 @@ defmodule Phoenix.Endpoint do
 
     * `:log_access_url` - log the access url once the server boots
 
+  Note that you can also store your own configurations in the Phoenix.Endpoint.
+  For example, [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) expects
+  its own configuration under the `:live_view` key. In such cases, you should
+  consult the documentation of the respective projects.
+
   ### Adapter configuration
 
   Phoenix allows you to choose which webserver adapter to use. The default
@@ -227,11 +232,15 @@ defmodule Phoenix.Endpoint do
       as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
       to `false`
 
-    * `:drainer` - a drainer process that triggers when your application is
-      shutting down to wait for any on-going request to finish. It accepts all
-      options as defined by [`Plug.Cowboy.Drainer`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.html).
-      Defaults to `[]`, which will start a drainer process for each configured endpoint,
-      but can be disabled by setting it to `false`.
+    * `:drainer` - a drainer process waits for any on-going request to finish
+      during application shutdown. It accepts the `:shutdown` and
+      `:check_interval` options as defined by `Plug.Cowboy.Drainer`.
+      Note the draining does not terminate any existing connection, it simply
+      waits for them to finish. Socket connections run their own drainer
+      before this one is invoked. That's because sockets are stateful and
+      can be gracefully notified, which allows us to stagger them over a
+      longer period of time. See the documentation for `socket/3` for more
+      information
 
   ## Endpoint API
 
@@ -569,7 +578,20 @@ defmodule Phoenix.Endpoint do
       @doc """
       Generates a route to a static file in `priv/static`.
       """
-      def static_path(path), do: persistent!().static_path <> elem(static_lookup(path), 0)
+      def static_path(path) do
+        {path, fragment} = path_and_fragment(path)
+
+        persistent!().static_path <> elem(static_lookup(path), 0) <> fragment
+      end
+
+      defp path_and_fragment(path_incl_fragment) do
+        path_incl_fragment
+        |> String.split("#", parts: 2)
+        |> case do
+          [path, fragment] -> {path, "#" <> fragment}
+          [path | _] -> {path, ""}
+        end
+      end
 
       @doc """
       Generates a base64-encoded cryptographic hash (sha512) to a static file
@@ -785,53 +807,80 @@ defmodule Phoenix.Endpoint do
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
 
+    * `:drainer` - a keyword list configuring how to drain sockets
+      on application shutdown. The goal is to notify all channels (and
+      LiveViews) clients to reconnect. The supported options are:
+
+      * `:batch_size` - How many clients to notify at once in a given batch.
+        Defaults to 10000.
+      * `:batch_interval` - The amount of time in milliseconds given for a
+        batch to terminate. Defaults to 2000ms.
+      * `:shutdown` - The maximum amount of time in milliseconds allowed
+        to drain all batches. Defaults to 30000ms.
+
+      For example, if you have 150k connections, the default values will
+      split them into 15 batches of 10k connections. Each batch takes
+      2000ms before the next batch starts. In this case, we will do everything
+      right under the maximum shutdown time of 30000ms. Therefore, as
+      you increase the number of connections, remember to adjust the shutdown
+      accordingly. Finally, after the socket drainer runs, the lower level
+      HTTP/HTTPS connection drainer will still run, and apply to all connections.
+      Set it to `false` to disable draining.
+
     * `:connect_info` - a list of keys that represent data to be copied from
-      the transport to be made available in the user socket `connect/3` callback
+      the transport to be made available in the user socket `connect/3` callback.
+      See the "Connect info" subsection for valid keys
 
-      The valid keys are:
+  ### Connect info
 
-        * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
+  The valid keys are:
 
-        * `:trace_context_headers` - a list of all trace context headers. Supported
-          headers are defined by the [W3C Trace Context Specification](https://www.w3.org/TR/trace-context-1/).
-          These headers are necessary for libraries such as [OpenTelemetry](https://opentelemetry.io/) to extract
-          trace propagation information to know this request is part of a larger trace
-          in progress.
+    * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
 
-        * `:x_headers` - all request headers that have an "x-" prefix
+    * `:trace_context_headers` - a list of all trace context headers. Supported
+      headers are defined by the [W3C Trace Context Specification](https://www.w3.org/TR/trace-context-1/).
+      These headers are necessary for libraries such as [OpenTelemetry](https://opentelemetry.io/) to extract
+      trace propagation information to know this request is part of a larger trace
+      in progress.
 
-        * `:uri` - a `%URI{}` with information from the conn
+    * `:x_headers` - all request headers that have an "x-" prefix
 
-        * `:user_agent` - the value of the "user-agent" request header
+    * `:uri` - a `%URI{}` with information from the conn
 
-        * `{:session, session_config}` - the session information from `Plug.Conn`.
-          The `session_config` is an exact copy of the arguments given to `Plug.Session`.
-          This requires the "_csrf_token" to be given as request parameter with
-          the value of `URI.encode_www_form(Plug.CSRFProtection.get_csrf_token())`
-          when connecting to the socket. It can also be a MFA to allow loading
-          config in runtime `{MyAppWeb.Auth, :get_session_config, []}`. Otherwise
-          the session will be `nil`.
+    * `:user_agent` - the value of the "user-agent" request header
 
-      Arbitrary keywords may also appear following the above valid keys, which
-      is useful for passing custom connection information to the socket.
+    * `{:session, session_config}` - the session information from `Plug.Conn`.
+      The `session_config` is typically an exact copy of the arguments given
+      to `Plug.Session`. In order to validate the session, the "_csrf_token"
+      must be given as request parameter when connecting the socket with the
+      value of `URI.encode_www_form(Plug.CSRFProtection.get_csrf_token())`.
+      The CSRF token request parameter can be modified via the `:csrf_token_key`
+      option.
 
-      For example:
+      Additionally, `session_config` may be a MFA, such as
+      `{MyAppWeb.Auth, :get_session_config, []}`, to allow loading config in
+      runtime.
 
-      ```
-        socket "/socket", AppWeb.UserSocket,
-            websocket: [
-              connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri, session: [store: :cookie]]
-            ]
-      ```
+  Arbitrary keywords may also appear following the above valid keys, which
+  is useful for passing custom connection information to the socket.
 
-      With arbitrary keywords:
+  For example:
 
-      ```
-        socket "/socket", AppWeb.UserSocket,
-            websocket: [
-              connect_info: [:uri, custom_value: "abcdef"]
-            ]
-      ```
+  ```
+    socket "/socket", AppWeb.UserSocket,
+        websocket: [
+          connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri, session: [store: :cookie]]
+        ]
+  ```
+
+  With arbitrary keywords:
+
+  ```
+    socket "/socket", AppWeb.UserSocket,
+        websocket: [
+          connect_info: [:uri, custom_value: "abcdef"]
+        ]
+  ```
 
   ## Websocket configuration
 

@@ -30,8 +30,8 @@ defmodule Phoenix.Token do
       the secret key base is extracted from the endpoint
     * `Plug.Conn` - where the secret key base is extracted from the
       endpoint stored in the connection
-    * `Phoenix.Socket` - where the secret key base is extracted from
-      the endpoint stored in the socket
+    * `Phoenix.Socket` or `Phoenix.LiveView.Socket` - where the secret
+      key base is extracted from the endpoint stored in the socket
     * a string, representing the secret key base itself. A key base
       with at least 20 randomly generated characters should be used
       to provide adequate entropy
@@ -92,7 +92,7 @@ defmodule Phoenix.Token do
 
   require Logger
 
-  @type context :: Plug.Conn.t() | Phoenix.Socket.t() | atom | binary
+  @type context :: Plug.Conn.t() | %{required(:endpoint) => atom, optional(atom()) => any()} | atom | binary
 
   @type shared_opt ::
           {:key_iterations, pos_integer}
@@ -115,9 +115,11 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:signed_at` - set the timestamp of the token in seconds.
       Defaults to `System.system_time(:second)`
+    * `:max_age` - the default maximum age of the token. Defaults to
+      86400 seconds (1 day) and it may be overridden on verify/4.
 
   """
-  @spec sign(context, binary, term, [shared_opt | signed_at_opt]) :: binary
+  @spec sign(context, binary, term, [shared_opt | max_age_opt | signed_at_opt]) :: binary
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
     context
     |> get_key_base()
@@ -137,9 +139,11 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:signed_at` - set the timestamp of the token in seconds.
       Defaults to `System.system_time(:second)`
+    * `:max_age` - the default maximum age of the token. Defaults to
+      86400 seconds (1 day) and it may be overridden on verify/4.
 
   """
-  @spec encrypt(context, binary, term, [shared_opt | signed_at_opt]) :: binary
+  @spec encrypt(context, binary, term, [shared_opt | max_age_opt | signed_at_opt]) :: binary
   def encrypt(context, secret, data, opts \\ []) when is_binary(secret) do
     context
     |> get_key_base()
@@ -235,8 +239,8 @@ defmodule Phoenix.Token do
   defp get_key_base(%Plug.Conn{} = conn),
     do: conn |> Phoenix.Controller.endpoint_module() |> get_endpoint_key_base()
 
-  defp get_key_base(%Phoenix.Socket{} = socket),
-    do: get_endpoint_key_base(socket.endpoint)
+  defp get_key_base(%_{endpoint: endpoint}),
+    do: get_endpoint_key_base(endpoint)
 
   defp get_key_base(endpoint) when is_atom(endpoint),
     do: get_endpoint_key_base(endpoint)

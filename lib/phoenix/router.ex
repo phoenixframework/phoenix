@@ -100,16 +100,20 @@ defmodule Phoenix.Router do
       GET /pages/hey/there/world
       %{"page" => "y", "rest" => ["there" "world"]} = params
 
-  ## Helpers
+  ## Generating routes
 
-  Phoenix automatically generates a module `Helpers` inside your router
-  by default, which contains named helpers to help developers generate and keep
-  their routes up to date. Helpers can be disabled by passing `helpers: false`
-  to `use Phoenix.Router`.
+  For generating routes inside your application,  see the `Phoenix.VerifiedRoutes`
+  documentation for `~p` based route generation which is the preferred way to
+  generate route paths and URLs with compile-time verification.
 
-  See the `Phoenix.VerifiedRoutes` documentation for `~p` based route generation
-  which is the preferred way to generate route paths and URLs with compile-time
-  verification.
+  Phoenix also supports generating function helpers, which was the default
+  mechanism in Phoenix v1.6 and earlier. we will explore it next.
+
+  ### Helpers
+
+  Phoenix generates a module `Helpers` inside your router by default, which contains
+  named helpers to help developers generate and keep their routes up to date.
+  Helpers can be disabled by passing `helpers: false` to `use Phoenix.Router`.
 
   Helpers are automatically generated based on the controller name.
   For example, the route:
@@ -314,7 +318,7 @@ defmodule Phoenix.Router do
   and you can compose them as necessary on each scope you define.
   """
 
-  # TODO: Deprecate trailing_slash? and remove :as from the docs.
+  # TODO: Deprecate trailing_slash?
   alias Phoenix.Router.{Resource, Scope, Route, Helpers}
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
@@ -332,6 +336,7 @@ defmodule Phoenix.Router do
     quote do
       Module.register_attribute(__MODULE__, :phoenix_routes, accumulate: true)
       @phoenix_forwards %{}
+      # TODO: Require :helpers to be explicit given
       @phoenix_helpers Keyword.get(unquote(opts), :helpers, true)
 
       import Phoenix.Router
@@ -448,7 +453,7 @@ defmodule Phoenix.Router do
   end
 
   defp match_dispatch() do
-    quote location: :keep do
+    quote location: :keep, generated: true do
       @behaviour Plug
 
       @doc """
@@ -501,10 +506,15 @@ defmodule Phoenix.Router do
     {matches, {pipelines, _}} =
       Enum.map_reduce(routes_with_exprs, {[], %{}}, &build_match/2)
 
-    verifies =
+    routes_per_path =
       routes_with_exprs
       |> Enum.group_by(&elem(&1, 1).path, &elem(&1, 0))
-      |> Enum.map(&build_verify/1)
+
+    verifies =
+      routes_with_exprs
+      |> Enum.map(&elem(&1, 1).path)
+      |> Enum.uniq()
+      |> Enum.map(&build_verify(&1, routes_per_path))
 
     verify_catch_all =
       quote generated: true do
@@ -569,7 +579,9 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp build_verify({path, routes}) do
+  defp build_verify(path, routes_per_path) do
+    routes = Map.get(routes_per_path, path)
+
     forward_plug =
       Enum.find_value(routes, fn
         %{kind: :forward, plug: plug} -> plug
@@ -673,8 +685,8 @@ defmodule Phoenix.Router do
 
   ## Options
 
-    * `:as` - configures the named helper exclusively. If false, does not generate
-      a helper.
+    * `:as` - configures the named helper. If false, does not generate
+      a helper. Has no effect when using verified routes exclusively
     * `:alias` - configure if the scope alias should be applied to the route.
       Defaults to true, disables scoping if false.
     * `:log` - the level to log the route dispatching under,
@@ -687,7 +699,7 @@ defmodule Phoenix.Router do
     * `:warn_on_verify` - the boolean for whether matches to this route trigger
       an unmatched route warning for `Phoenix.VerifiedRoutes`. Useful to ignore
       an otherwise catch-all route definition from being matched when verifying routes.
-      Defaults `true`.
+      Defaults `false`.
 
   ## Examples
 
@@ -889,7 +901,8 @@ defmodule Phoenix.Router do
       and as the prefix for the parameter in nested resources. The default value
       is automatically derived from the controller name, i.e. `UserController` will
       have name `"user"`
-    * `:as` - configures the named helper exclusively
+    * `:as` - configures the named helper. If false, does not generate
+      a helper. Has no effect when using verified routes exclusively
     * `:singleton` - defines routes for a singleton resource that is looked up by
       the client without referencing an ID. Read below for more information
 
@@ -992,7 +1005,8 @@ defmodule Phoenix.Router do
 
     * `:path` - a string containing the path scope.
     * `:as` - a string or atom containing the named helper scope. When set to
-      false, it resets the nested helper scopes.
+      false, it resets the nested helper scopes. Has no effect when using verified
+      routes exclusively
     * `:alias` - an alias (atom) containing the controller scope. When set to
       false, it resets all nested aliases.
     * `:host` - a string or list of strings containing the host scope, or prefix host scope,

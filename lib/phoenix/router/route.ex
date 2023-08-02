@@ -13,7 +13,7 @@ defmodule Phoenix.Router.Route do
     * `:line` - the line the route was defined
     * `:kind` - the kind of route, one of `:match`, `:forward`
     * `:path` - the normalized path as string
-    * `:hosts` - the this of request hosts or host prefixes
+    * `:hosts` - the list of request hosts or host prefixes
     * `:plug` - the plug module
     * `:plug_opts` - the plug options
     * `:helper` - the name of the helper as a string (may be nil)
