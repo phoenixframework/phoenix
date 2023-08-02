@@ -97,7 +97,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <.flash kind={:info} flash={@flash} />
       <.flash kind={:info} phx-mounted={show("#flash")}>Welcome Back!</.flash>
   """
-  attr :id, :string, default: "flash", doc: "the optional id of flash container"
+  attr :id, :string, default: nil, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
   attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
@@ -109,7 +109,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
-      id={@id}
+      id={@id || "flash-#{@kind}"}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
       class={[
