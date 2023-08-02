@@ -51,6 +51,9 @@ future styling).
 ### Bug Fixes
   * Fix `mix phx.gen.release --docker` failing with `:http_util` error on Elixir v1.15
 
+## Enhancements
+  * Add support for static resources with fragments in `~p`
+
 ## 1.7.7 (2023-07-10)
 
 ## Enhancements
