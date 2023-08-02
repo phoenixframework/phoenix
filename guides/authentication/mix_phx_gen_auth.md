@@ -118,6 +118,7 @@ Check out `mix phx.gen.auth` for more details, such as using a different passwor
 
 The following links have more information regarding the motivation and design of the code this generates.
 
+  * Berenice Medel's blog post on generating LiveViews for authentication (rather than conventional Controllers & Views) - [Bringing Phoenix Authentication to Life](https://fly.io/phoenix-files/phx-gen-auth/)
   * José Valim's blog post - [An upcoming authentication solution for Phoenix](https://dashbit.co/blog/a-new-authentication-solution-for-phoenix)
   * The [original `phx_gen_auth` repo][phx_gen_auth repo] (for Phoenix 1.5 applications) - This is a great resource to see discussions around decisions that have been made in earlier versions of the project.
   * [Original pull request on bare Phoenix app][auth PR]
