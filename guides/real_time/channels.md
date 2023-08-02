@@ -410,7 +410,7 @@ Now our `conn.assigns` contains the `current_user` and `user_token`.
 
 ### Step 2 - Pass the Token to the JavaScript
 
-Next, we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.heex` right above the app.js script, as follows:
+Next, we need to pass this token to JavaScript. We can do so inside a script tag in `lib/hello_web/components/layouts/app.html.heex` right above the app.js script, as follows:
 
 ```heex
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
@@ -419,7 +419,7 @@ Next, we need to pass this token to JavaScript. We can do so inside a script tag
 
 ### Step 3 - Pass the Token to the Socket Constructor and Verify
 
-We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/3` function. To do so, edit `web/channels/user_socket.ex`, as follows:
+We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/3` function. To do so, edit `lib/hello_web/channels/user_socket.ex`, as follows:
 
 ```elixir
 def connect(%{"token" => token}, socket, _connect_info) do
@@ -461,7 +461,7 @@ channel.join()
 export default socket
 ```
 
-Note that token authentication is preferable since it's transport agnostic and well-suited for long running-connections like channels, as opposed to using sessions or authentication approaches.
+Note that token authentication is preferable since it's transport agnostic and well-suited for long running-connections like channels, as opposed to using sessions or other authentication approaches.
 
 ## Fault Tolerance and Reliability Guarantees
 
