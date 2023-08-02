@@ -23,7 +23,7 @@
     "eslint": "7.27.0",
     "eslint-plugin-mocha": "9.0.0",
     "growl": "~> 1.10.0",
-    "jsdom": "22.1.0",
+    "jsdom": "9.8.3",
     "jsdom-global": "2.1.0",
     "mocha": "^10.1.0",
     "mock-socket": "^9.0.0",
