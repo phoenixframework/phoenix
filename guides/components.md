@@ -54,7 +54,7 @@ end
 
 We declared the attributes we accept via `attr` provided by `Phoenix.Component`, then we defined our `greet/1` function which returns the HEEx template. 
 
-Next we need to recode `show.html.heex` to look like:
+Next we need to update `show.html.heex`:
 
 ```elixir
 <section>
