@@ -38,20 +38,19 @@ defmodule <%= @web_namespace %>.MixProject do
     [
       <%= @phoenix_dep %>,<%= if @ecto do %>
       {:phoenix_ecto, "~> 4.4"},<% end %><%= if @html do %>
-      {:phoenix_html, "~> 3.0"},
+      {:phoenix_html, "~> 3.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.18.3"},
-      {:heroicons, "~> 0.5"},
+      {:phoenix_live_view, "~> 0.19.0"},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.7.2"},<% end %><%= if @assets do %>
-      {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.1.8", runtime: Mix.env() == :dev},<% end %>
+      {:phoenix_live_dashboard, "~> 0.8.0"},<% end %><%= if @javascript do %>
+      {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
+      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 0.20"},<% end %><%= if @app_name != @web_app_name do %>
       {:<%= @app_name %>, in_umbrella: true},<% end %>
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"}
+      {<%= inspect @web_adapter_app %>, "<%= @web_adapter_vsn %>"}
     ]
   end
 
@@ -60,10 +59,11 @@ defmodule <%= @web_namespace %>.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get"<%= if @assets do %>, "assets.setup"<% end %>]<%= if @ecto do %>,
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %><%= if @assets do %>,
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]<% end %>
+      setup: ["deps.get"<%= if @asset_builders != [] do %>, "assets.setup", "assets.build"<% end %>]<%= if @ecto do %>,
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %><%= if @asset_builders != [] do %>,
+      "assets.setup": <%= inspect Enum.map(@asset_builders, &"#{&1}.install --if-missing") %>,
+      "assets.build": <%= inspect Enum.map(@asset_builders, &"#{&1} default") %>,
+      "assets.deploy": <%= inspect Enum.map(@asset_builders, &"#{&1} default --minify") ++ ["phx.digest"] %><% end %>
     ]
   end
 end

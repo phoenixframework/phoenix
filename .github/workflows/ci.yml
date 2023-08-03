@@ -16,8 +16,8 @@ jobs:
           - elixir: 1.12.0
             otp: 22.3
 
-          - elixir: 1.14.0
-            otp: 24.3.4
+          - elixir: 1.14.3
+            otp: 25.1
             lint: true
             installer: true
 

@@ -113,7 +113,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
       Add the following to your config/runtime.exs:
 
-          maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+          maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
           config :#{app}, #{app_namespace}.Repo,
             ...,
@@ -232,12 +232,19 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     end
   end
 
+  defp ensure_app!(app) do
+    if function_exported?(Mix, :ensure_application!, 1) do
+      apply(Mix, :ensure_application!, [app])
+    else
+      {:ok, _} = Application.ensure_all_started(app)
+    end
+  end
+
   defp fetch_body!(url) do
     url = String.to_charlist(url)
     Logger.debug("Fetching latest image information from #{url}")
-
-    {:ok, _} = Application.ensure_all_started(:inets)
-    {:ok, _} = Application.ensure_all_started(:ssl)
+    ensure_app!(:inets)
+    ensure_app!(:ssl)
 
     if proxy = System.get_env("HTTP_PROXY") || System.get_env("http_proxy") do
       Logger.debug("Using HTTP_PROXY: #{proxy}")

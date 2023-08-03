@@ -46,7 +46,7 @@ The `mix phx.gen.html` task takes the following arguments: the module name of th
 $ mix phx.gen.html Blog Post posts body:string word_count:integer
 * creating lib/hello_web/controllers/post_controller.ex
 * creating lib/hello_web/controllers/post_html/edit.html.heex
-* creating lib/hello_web/controllers/post_html/form.html.heex
+* creating lib/hello_web/controllers/post_html/post_form.html.heex
 * creating lib/hello_web/controllers/post_html/index.html.heex
 * creating lib/hello_web/controllers/post_html/new.html.heex
 * creating lib/hello_web/controllers/post_html/show.html.heex
@@ -90,7 +90,7 @@ If we don't want to create a context or schema for our resource we can use the `
 $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-context
 * creating lib/hello_web/controllers/post_controller.ex
 * creating lib/hello_web/controllers/post_html/edit.html.heex
-* creating lib/hello_web/controllers/post_html/form.html.heex
+* creating lib/hello_web/controllers/post_html/post_form.html.heex
 * creating lib/hello_web/controllers/post_html/index.html.heex
 * creating lib/hello_web/controllers/post_html/new.html.heex
 * creating lib/hello_web/controllers/post_html/show.html.heex
@@ -112,7 +112,7 @@ Similarly, if we want a context created without a schema for our resource we can
 $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-schema
 * creating lib/hello_web/controllers/post_controller.ex
 * creating lib/hello_web/controllers/post_html/edit.html.heex
-* creating lib/hello_web/controllers/post_html/form.html.heex
+* creating lib/hello_web/controllers/post_html/post_form.html.heex
 * creating lib/hello_web/controllers/post_html/index.html.heex
 * creating lib/hello_web/controllers/post_html/new.html.heex
 * creating lib/hello_web/controllers/post_html/show.html.heex
@@ -408,8 +408,10 @@ Before we run this task let's inspect the contents of two directories in our hel
 First `priv/static/` which should look similar to this:
 
 ```console
-├── images
-│   └── phoenix.png
+├── assets
+│   ├── app.css
+│   └── app.js
+├── favicon.ico
 └── robots.txt
 ```
 
@@ -417,11 +419,12 @@ And then `assets/` which should look similar to this:
 
 ```console
 ├── css
-│   └── app.css
+│   └── app.css
 ├── js
-│   └── app.js
+│   └── app.js
+├── tailwind.config.js
 └── vendor
-    └── phoenix.js
+    └── topbar.js
 ```
 
 All of these files are our static assets. Now let's run the `mix phx.digest` task.

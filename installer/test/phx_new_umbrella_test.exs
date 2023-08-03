@@ -266,7 +266,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(web_path(@app, "lib/phx_umb_web/router.ex"), fn file ->
         assert file =~ ~s[plug :fetch_live_flash]
-        assert file =~ ~s[plug :put_root_layout, {PhxUmbWeb.Layouts, :root}]
+        assert file =~ ~s[plug :put_root_layout, html: {PhxUmbWeb.Layouts, :root}]
         assert file =~ ~s[get "/", PageController]
       end)
 
@@ -343,7 +343,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # No assets & No HTML
       refute_file(web_path(@app, "priv/static/assets/app.js"))
       refute_file(web_path(@app, "priv/static/assets/app.css"))
-      refute_file(web_path(@app, "priv/static/favicon.ico"))
 
       # No Ecto
       config = ~r/config :phx_umb, PhxUmb.Repo,/
@@ -377,8 +376,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # No HTML
       assert File.exists?(web_path(@app, "test/#{@app}_web/controllers"))
+      refute File.exists?(web_path(@app, "test/#{@app}_web/controllers/error_html_test.exs"))
       assert File.exists?(web_path(@app, "lib/#{@app}_web/controllers"))
-      refute File.exists?(web_path(@app, "test/controllers/pager_controller_test.exs"))
+      refute File.exists?(web_path(@app, "test/controllers/page_controller_test.exs"))
       refute File.exists?(web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex"))
       refute File.exists?(web_path(@app, "lib/#{@app}_web/controllers/error_html.ex"))
       refute File.exists?(web_path(@app, "lib/#{@app}_web/controllers/page_html.ex"))
@@ -475,6 +475,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(root_path(@app, "mix.exs"), fn file ->
         assert file =~ "defp deps do\n    []"
       end)
+
+      refute_file(web_path(@app, "test/#{@app}_web/controllers/error_html_test.exs"))
 
       assert_file(web_path(@app, "mix.exs"), fn file ->
         refute file =~ ~s|:phoenix_live_view|
@@ -693,6 +695,17 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end)
   end
 
+  test "new with bandit web adapter" do
+    in_tmp("new with bandit web adapter", fn ->
+      app = "custom_path"
+      project_path = Path.join(File.cwd!(), app)
+      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--adapter", "bandit"])
+      assert_file(web_path(app, "mix.exs"), ":bandit")
+
+      assert_file(root_path(app, "config/config.exs"), "adapter: Bandit.PhoenixAdapter")
+    end)
+  end
+
   test "new with invalid args" do
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
       Mix.Tasks.Phx.New.run(["007invalid", "--umbrella"])
@@ -720,7 +733,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   end
 
   test "invalid options" do
-    assert_raise Mix.Error, ~r/Invalid option: -d/, fn ->
+    assert_raise OptionParser.ParseError, fn ->
       Mix.Tasks.Phx.New.run(["valid5", "-database", "mysql", "--umbrella"])
     end
   end

@@ -16,7 +16,7 @@ defmodule HelloWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {HelloWeb.LayoutView, :root}
+    plug :put_root_layout, html: {HelloWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -146,20 +146,20 @@ The `Phoenix.Router.resources/4` macro describes additional options for customiz
 
 ## Verified Routes
 
-Phoenix includes `Phoenix.VerifiedRoutes` module which provides compile-time checks of router paths against your router by using the `~p` sigil. For example, you can write paths in controllers, tests, and templates and the compile will make sure those actually match routes defined in your router.
+Phoenix includes `Phoenix.VerifiedRoutes` module which provides compile-time checks of router paths against your router by using the `~p` sigil. For example, you can write paths in controllers, tests, and templates and the compiler will make sure those actually match routes defined in your router.
 
 Let's see it in action. Run `iex -S mix` at the root of the project. We'll define a throwaway example module that builds a couple `~p` route paths.
 
 ```elixir
 iex> defmodule RouteExample do
-...>   use GenTestWeb, :verified_routes
+...>   use HelloWeb, :verified_routes
 ...>
 ...>   def example do
 ...>     ~p"/comments"
 ...>     ~p"/unknown/123"
 ...>   end
 ...> end
-warning: no route path for GenTestWeb.Router matches "/unknown/123"
+warning: no route path for HelloWeb.Router matches "/unknown/123"
   iex:5: RouteExample.example/0
 
 {:module, RouteExample, ...}
@@ -236,14 +236,14 @@ When building paths for nested routes, we will need to interpolate the IDs where
 ```elixir
 user_id = 42
 post_id = 17
-~p"/users/#{user_id}/#{post_id}"
+~p"/users/#{user_id}/posts/#{post_id}"
 "/users/42/posts/17"
 ```
 
 Verified routes also support the `Phoenix.Param` protocol, but we don't need to concern ourselves with elixir protocols just yet. Just know that once we start building our application with structs like `%User{}` and `%Post{}`, we'll be able to interpolate those data structures directly into our `~p` paths and phoenix will pluck out the correct fields to use in the route.
 
 ```elixir
-~p"/users/#{user}/#{post}"
+~p"/users/#{user}/posts/#{post}"
 "/users/42/posts/17"
 ```
 
@@ -457,7 +457,7 @@ defmodule HelloWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {HelloWeb.LayoutView, :root}
+    plug :put_root_layout, html: {HelloWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -502,7 +502,7 @@ defmodule HelloWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {HelloWeb.LayoutView, :root}
+    plug :put_root_layout, html: {HelloWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -519,7 +519,7 @@ defmodule HelloWeb.Router do
 end
 ```
 
-The above assumes there is a plug called `MyApp.Authentication` that performs authentication and is now part of the `:auth` pipeline.
+The above assumes there is a plug called `HelloWeb.Authentication` that performs authentication and is now part of the `:auth` pipeline.
 
 Note that pipelines themselves are plugs, so we can plug a pipeline inside another pipeline. For example, we could rewrite the `review_checks` pipeline above to automatically invoke `browser`, simplifying the downstream pipeline call:
 

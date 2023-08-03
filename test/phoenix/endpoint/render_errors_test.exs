@@ -96,33 +96,21 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     assert_received {:plug_conn, :sent}
   end
 
-  test "call/2 is overridden with no route match as HTML" do
-    assert_raise Phoenix.Router.NoRouteError,
-                 "no route found for GET /unknown (Phoenix.Endpoint.RenderErrorsTest.Router)",
-                 fn ->
-                   call(Router, :get, "/unknown")
-                 end
+  test "call/2 is overridden with no route match as HTML and does not reraise" do
+    call(Router, :get, "/unknown")
 
     assert_received {:plug_conn, :sent}
   end
 
-  test "call/2 is overridden with no route match as JSON" do
-    assert_raise Phoenix.Router.NoRouteError,
-                 "no route found for GET /unknown (Phoenix.Endpoint.RenderErrorsTest.Router)",
-                 fn ->
-                   call(Router, :get, "/unknown?_format=json")
-                 end
+  test "call/2 is overridden with no route match as JSON and does not reraise" do
+    call(Router, :get, "/unknown?_format=json")
 
     assert_received {:plug_conn, :sent}
   end
 
   @tag :capture_log
-  test "call/2 is overridden with no route match while malformed format" do
-    assert_raise Phoenix.Router.NoRouteError,
-                 "no route found for GET /unknown (Phoenix.Endpoint.RenderErrorsTest.Router)",
-                 fn ->
-                   call(Router, :get, "/unknown?_format=unknown")
-                 end
+  test "call/2 is overridden with no route match while malformed format and does not reraise" do
+    call(Router, :get, "/unknown?_format=unknown")
 
     assert_received {:plug_conn, :sent}
   end
@@ -321,12 +309,8 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
            end) =~ "Could not render errors due to unknown format \"unknown\""
   end
 
-  test "exception page for NoRouteError with plug_status 404" do
-    body =
-      assert_render(404, conn(:get, "/"), [], fn ->
-        raise Phoenix.Router.NoRouteError, conn: conn(:get, "/"), router: nil, plug_status: 404
-      end)
-
-    assert body == "Got 404 from error with GET"
+  test "exception page for NoRouteError with plug_status 404 renders and does not reraise" do
+    conn = call(Router, :get, "/unknown")
+    assert Phoenix.ConnTest.response(conn, 404) =~ "Got 404 from error with GET"
   end
 end

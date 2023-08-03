@@ -1,5 +1,5 @@
 defmodule Phoenix.Endpoint.SupervisorTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   alias Phoenix.Endpoint.Supervisor
 
   defmodule HTTPSEndpoint do
@@ -7,7 +7,7 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(:https), do: [port: 443]
     def config(:http), do: false
     def config(:url), do: [host: "example.com"]
-    def config(:static_url), do: nil
+    def config(_), do: nil
   end
 
   defmodule HTTPEndpoint do
@@ -15,7 +15,7 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(:https), do: false
     def config(:http), do: [port: 80]
     def config(:url), do: [host: "example.com"]
-    def config(:static_url), do: nil
+    def config(_), do: nil
   end
 
   defmodule HTTPEnvVarEndpoint do
@@ -23,21 +23,27 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(:https), do: false
     def config(:http), do: [port: {:system, "PHOENIX_PORT"}]
     def config(:url), do: [host: {:system, "PHOENIX_HOST"}]
-    def config(:static_url), do: nil
+    def config(_), do: nil
   end
 
   defmodule URLEndpoint do
     def config(:https), do: false
     def config(:http), do: false
     def config(:url), do: [host: "example.com", port: 678, scheme: "random"]
-    def config(:static_url), do: nil
+    def config(_), do: nil
   end
 
   defmodule StaticURLEndpoint do
     def config(:https), do: false
-    def config(:http), do: false
+    def config(:http), do: []
     def config(:url), do: []
     def config(:static_url), do: [host: "static.example.com"]
+    def config(_), do: nil
+  end
+
+  defmodule ServerEndpoint do
+    def init(:supervisor, config), do: {:ok, config}
+    def __sockets__(), do: []
   end
 
   setup_all do
@@ -83,6 +89,40 @@ defmodule Phoenix.Endpoint.SupervisorTest do
 
     assert {:nocache, {"/images/unknown.png", nil}} =
              Supervisor.static_lookup(HTTPEndpoint, "/images/unknown.png")
+  end
+
+  import ExUnit.CaptureLog
+  test "logs info if :http or :https configuration is set but not :server when running in release" do
+    Logger.configure(level: :info)
+    # simulate running inside release
+    System.put_env("RELEASE_NAME", "phoenix-test")
+    Application.put_env(:phoenix, ServerEndpoint, [server: false, http: [], https: []])
+    assert capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: false, http: []])
+    assert capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: false, https: []])
+    assert capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: false])
+    refute capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, [server: true])
+    refute capture_log(fn ->
+      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+    end) =~ "Configuration :server"
+
+    Application.delete_env(:phoenix, ServerEndpoint)
+    Logger.configure(level: :warning)
   end
 
   describe "watchers" do

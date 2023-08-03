@@ -34,6 +34,7 @@ defmodule Mix.Tasks.Phx.Routes do
   ## Options
 
     * `--info` - locate the controller function definition called by the given url
+    * `--method` - what HTTP method to use with the given url, only works when used with `--info` and defaults to `get`
 
   ## Examples
 
@@ -51,6 +52,13 @@ defmodule Mix.Tasks.Phx.Routes do
         Module: RouteInfoTestWeb.PageController
         Function: :index
         /home/my_app/controllers/page_controller.ex:4
+
+  Print information about the controller function called by a specified url and HTTP method:
+
+      $ mix phx.routes --info http://0.0.0.0:4000/users --method post
+        Module: RouteInfoTestWeb.UserController
+        Function: :create
+        /home/my_app/controllers/user_controller.ex:24
   """
 
   @doc false
@@ -78,10 +86,11 @@ defmodule Mix.Tasks.Phx.Routes do
     end
   end
 
-  def get_url_info(url, {router_mod, _opts}) do
+  def get_url_info(url, {router_mod, opts}) do
     %{path: path} = URI.parse(url)
 
-    meta = Phoenix.Router.route_info(router_mod, "GET", path, "")
+    method = opts |> Keyword.get(:method, "get") |> String.upcase()
+    meta = Phoenix.Router.route_info(router_mod, method, path, "")
     %{plug: plug, plug_opts: plug_opts} = meta
 
     {module, func_name} =

@@ -131,16 +131,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/lib/phx_blog_web/components/layouts/app.html.heex")
-
-      assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex", fn file ->
-        version = Application.spec(:phx_new, :vsn) |> to_string() |> Version.parse!()
-        changelog_vsn = "v#{version.major}.#{version.minor}"
-
-        assert file =~
-                 "https://github.com/phoenixframework/phoenix/blob/#{changelog_vsn}/CHANGELOG.md"
-      end)
+      assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex")
 
       # assets
+      assert_file("phx_blog/priv/static/images/logo.svg")
+
       assert_file("phx_blog/.gitignore", fn file ->
         assert file =~ "/priv/static/assets/"
         assert file =~ "phx_blog-*.tar"
@@ -152,7 +147,14 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*(ex|heex)"
       end)
 
+      # tailwind
       assert_file("phx_blog/assets/css/app.css")
+      assert_file("phx_blog/assets/tailwind.config.js")
+      assert_file("phx_blog/assets/vendor/heroicons/LICENSE.md")
+      assert_file("phx_blog/assets/vendor/heroicons/UPGRADE.md")
+      assert_file("phx_blog/assets/vendor/heroicons/optimized/24/outline/cake.svg")
+      assert_file("phx_blog/assets/vendor/heroicons/optimized/24/solid/cake.svg")
+      assert_file("phx_blog/assets/vendor/heroicons/optimized/20/solid/cake.svg")
 
       refute File.exists?("phx_blog/priv/static/assets/app.css")
       refute File.exists?("phx_blog/priv/static/assets/app.js")
@@ -178,7 +180,10 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/runtime.exs", fn file ->
         assert file =~ config
-        assert file =~ ~S|maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []|
+
+        assert file =~
+                 ~S|maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []|
+
         assert file =~ ~S|socket_options: maybe_ipv6|
 
         assert file =~ """
@@ -276,7 +281,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/config/prod.exs", fn file ->
-        assert file =~ "config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PhxBlog.Finch"
+        assert file =~
+                 "config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PhxBlog.Finch"
       end)
 
       # Install dependencies?
@@ -315,11 +321,12 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~r/\n$/
       end)
 
+      refute File.exists?("phx_blog/priv/static/images/logo.svg")
+
       assert_file("phx_blog/config/dev.exs", ~r/watchers: \[\]/)
 
       # No assets & No HTML
       refute_file("phx_blog/priv/static/assets/app.css")
-      refute_file("phx_blog/priv/static/favicon.ico")
       refute_file("phx_blog/priv/static/assets/app.js")
 
       # No Ecto
@@ -725,6 +732,16 @@ defmodule Mix.Tasks.Phx.NewTest do
     end)
   end
 
+  test "new with bandit web adapter" do
+    in_tmp("new with bandit web adapter", fn ->
+      project_path = Path.join(File.cwd!(), "custom_path")
+      Mix.Tasks.Phx.New.run([project_path, "--adapter", "bandit"])
+      assert_file("custom_path/mix.exs", ":bandit")
+
+      assert_file("custom_path/config/config.exs", "adapter: Bandit.PhoenixAdapter")
+    end)
+  end
+
   test "new with invalid args" do
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
       Mix.Tasks.Phx.New.run(["007invalid"])
@@ -752,7 +769,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   end
 
   test "invalid options" do
-    assert_raise Mix.Error, ~r/Invalid option: -d/, fn ->
+    assert_raise OptionParser.ParseError, fn ->
       Mix.Tasks.Phx.New.run(["valid", "-database", "mysql"])
     end
   end

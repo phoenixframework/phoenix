@@ -43,6 +43,7 @@ defmodule Phoenix.Router.RoutingTest do
     get "/", UserController, :index, as: :users
     get "/users/top", UserController, :top, as: :top
     get "/users/:id", UserController, :show, as: :users, metadata: %{access: :user}
+    match :*, "/users/fallback", UserController, :any
     get "/spaced users/:id", UserController, :show
     get "/profiles/profile-:id", UserController, :show
     get "/route_that_crashes", UserController, :crash
@@ -231,6 +232,18 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.method == "PUT"
     assert conn.status == 200
     assert conn.resp_body == "users any"
+  end
+
+  test "different verbs with similar paths" do
+    conn = call(Router, :post, "/users/fallback")
+    assert conn.status == 200
+    assert conn.resp_body == "users any"
+
+    conn = call(Router, :get, "/users/123")
+    assert conn.status == 200
+    assert conn.resp_body == "users show"
+    assert conn.params["id"] == "123"
+    assert conn.path_params["id"] == "123"
   end
 
   describe "logging" do

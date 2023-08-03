@@ -1,4 +1,6 @@
-<div class="fixed inset-y-0 right-0 left-[40rem] hidden lg:block xl:left-[50rem]">
+<%= unless @css do %><link phx-track-static rel="stylesheet" href={~p"/assets/home.css"} />
+<% end %><.flash_group flash={@flash} />
+<div class="left-[40rem] fixed inset-y-0 right-0 z-0 hidden lg:block xl:left-[50rem]">
   <svg
     viewBox="0 0 1480 957"
     fill="none"
@@ -37,7 +39,7 @@
     />
   </svg>
 </div>
-<div class="px-4 py-10 sm:py-28 sm:px-6 lg:px-8 xl:py-32 xl:px-28">
+<div class="px-4 py-10 sm:px-6 sm:py-28 lg:px-8 xl:px-28 xl:py-32">
   <div class="mx-auto max-w-xl lg:mx-0">
     <svg viewBox="0 0 71 48" class="h-12" aria-hidden="true">
       <path
@@ -45,13 +47,13 @@
         fill="#FD4F00"
       />
     </svg>
-    <h1 class="mt-10 flex items-center text-sm font-semibold leading-6 text-brand">
+    <h1 class="text-brand mt-10 flex items-center text-sm font-semibold leading-6">
       Phoenix Framework
-      <small class="ml-3 rounded-full bg-brand/5 px-2 text-[0.8125rem] font-medium leading-6">
-        <%= @phoenix_github_version_tag %>
+      <small class="bg-brand/5 text-[0.8125rem] ml-3 rounded-full px-2 font-medium leading-6">
+        v<%%= Application.spec(:phoenix, :vsn) %>
       </small>
     </h1>
-    <p class="mt-4 text-[2rem] font-semibold leading-10 tracking-tighter text-zinc-900">
+    <p class="text-[2rem] mt-4 font-semibold leading-10 tracking-tighter text-zinc-900">
       Peace of mind from prototype to production.
     </p>
     <p class="mt-4 text-base leading-7 text-zinc-600">
@@ -99,7 +101,7 @@
             </span>
           </a>
           <a
-            href="https://github.com/phoenixframework/phoenix/blob/<%= @phoenix_github_version_tag %>/CHANGELOG.md"
+            href={"https://github.com/phoenixframework/phoenix/blob/v#{Application.spec(:phoenix, :vsn)}/CHANGELOG.md"}
             class="group relative rounded-2xl px-6 py-4 text-sm font-semibold leading-6 text-zinc-900 sm:py-6"
           >
             <span class="absolute inset-0 rounded-2xl bg-zinc-50 transition group-hover:bg-zinc-100 sm:group-hover:scale-105">
@@ -157,22 +159,7 @@
               >
                 <path d="M8 13.833c3.866 0 7-2.873 7-6.416C15 3.873 11.866 1 8 1S1 3.873 1 7.417c0 1.081.292 2.1.808 2.995.606 1.05.806 2.399.086 3.375l-.208.283c-.285.386-.01.905.465.85.852-.098 2.048-.318 3.137-.81a3.717 3.717 0 0 1 1.91-.318c.263.027.53.041.802.041Z" />
               </svg>
-              Discuss on the Elixir forum
-            </a>
-          </div>
-          <div>
-            <a
-              href="https://elixir-slackin.herokuapp.com"
-              class="group -mx-2 -my-0.5 inline-flex items-center gap-3 rounded-lg px-2 py-0.5 hover:bg-zinc-50 hover:text-zinc-900"
-            >
-              <svg
-                viewBox="0 0 16 16"
-                aria-hidden="true"
-                class="h-4 w-4 fill-zinc-400 group-hover:fill-zinc-600"
-              >
-                <path d="M3.95 9.85a1.47 1.47 0 1 1-2.94 0 1.47 1.47 0 0 1 1.47-1.472h1.47v1.471Zm.735 0a1.47 1.47 0 1 1 2.94 0v3.678a1.47 1.47 0 1 1-2.94 0V9.85ZM6.156 3.942a1.47 1.47 0 0 1-1.47-1.472 1.47 1.47 0 1 1 2.94 0v1.472h-1.47Zm0 .747c.813 0 1.47.658 1.47 1.471a1.47 1.47 0 0 1-1.47 1.472H2.47A1.47 1.47 0 0 1 1 6.16 1.47 1.47 0 0 1 2.47 4.69h3.686ZM12.048 6.16a1.47 1.47 0 1 1 2.94 0 1.47 1.47 0 0 1-1.47 1.472h-1.47V6.16Zm-.735 0a1.47 1.47 0 1 1-2.94 0V2.47a1.47 1.47 0 1 1 2.94 0v3.69ZM9.843 12.057c.813 0 1.47.657 1.47 1.471a1.47 1.47 0 1 1-2.94 0v-1.471h1.47Zm0-.736a1.47 1.47 0 0 1-1.47-1.472 1.47 1.47 0 0 1 1.47-1.471h3.686c.813 0 1.47.658 1.47 1.471a1.47 1.47 0 0 1-1.47 1.472H9.843Z" />
-              </svg>
-              Join our Slack channel
+              Discuss on the Elixir Forum
             </a>
           </div>
           <div>
