@@ -52,7 +52,21 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-In the example above, we defined a `greet/1` function which returns the HEEx template. Above the function, we called `attr`, provided by `Phoenix.Component`, which defines the attributes/assigns that function expects. Since templates are embedded inside the `HelloHTML` module, we can invoke the component simply as `<.greet messenger={@messenger} />`, but we can also type `<HelloWeb.HelloHTML.greet messenger={@messenger} />` if the component was defined elsewhere.
+We declared the attributes we accept via `attr` provided by `Phoenix.Component`, then we defined our `greet/1` function which returns the HEEx template. 
+
+Next we need to update `show.html.heex`:
+
+```elixir
+<section>
+  <.greet messenger={@messenger} />
+</section>
+```
+
+When we reload `http://localhost:4000/hello/Frank`, we should see the same content as before. 
+
+Since templates are embedded inside the `HelloHTML` module, we were able to invoke the view function simply as `<.greet messenger="..." />`. 
+
+If the component was defined elsewhere, we can also type `<HelloWeb.HelloHTML.greet messenger="..." />`.
 
 By declaring attributes, Phoenix will warn if we call the `<.greet />` component without passing attributes. If an attribute is optional, you can specify the `:default` option with a value:
 
