@@ -58,7 +58,7 @@ Next we need to update `show.html.heex`:
 
 ```elixir
 <section>
-    <.greet messenger={@messenger} />
+  <.greet messenger={@messenger} />
 </section>
 ```
 
