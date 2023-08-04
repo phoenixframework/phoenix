@@ -224,10 +224,17 @@ defmodule Phoenix.Controller.ControllerTest do
     assert view_module(conn) == HelloJSON
     assert view_module(conn, "json") == HelloJSON
 
-    conn = put_format(conn, "json")
-    conn = put_new_view(conn, Hello)
+    conn =
+      conn(:get, "/")
+      |> put_format("json")
+      |> put_new_view(Hello)
+
     assert view_module(conn) == Hello
     assert view_module(conn, "json") == Hello
+
+    conn = put_view(conn, json: HelloJSON)
+    assert view_module(conn) == HelloJSON
+    assert view_module(conn, "json") == HelloJSON
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
       put_new_view sent_conn(), html: Hello

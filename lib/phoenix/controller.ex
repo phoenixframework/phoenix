@@ -589,13 +589,13 @@ defmodule Phoenix.Controller do
   def view_module(conn, format \\ nil) do
     format = format || get_safe_format(conn)
 
-    # TODO: Deprecate if we fall on the first branch
+    # TODO: Deprecate if we fall on the second branch
     # But we should only deprecate this after non-format is deprecated on put_*
     case conn.private[:phoenix_view] do
-      %{_: value} when value != nil ->
+      %{^format => value} ->
         value
 
-      %{^format => value} ->
+      %{_: value} when value != nil ->
         value
 
       formats ->
