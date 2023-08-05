@@ -33,6 +33,7 @@ When it's done, it will ask us if we want it to install our dependencies for us.
 ```console
 Fetch and install dependencies? [Yn] Y
 * running mix deps.get
+* running mix assets.setup
 * running mix deps.compile
 
 We are almost there! The following steps are missing:
