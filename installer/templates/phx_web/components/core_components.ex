@@ -106,10 +106,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
   slot :inner_block, doc: "the optional inner block that renders the flash message"
 
   def flash(assigns) do
+    assigns = assign(assigns, :id, assigns.id || "flash-#{assigns.kind}")
     ~H"""
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
-      id={@id || "flash-#{@kind}"}
+      id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
       class={[
