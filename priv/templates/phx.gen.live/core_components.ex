@@ -107,6 +107,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def flash(assigns) do
     assigns = assign(assigns, :id, assigns.id || "flash-#{assigns.kind}")
+
     ~H"""
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
