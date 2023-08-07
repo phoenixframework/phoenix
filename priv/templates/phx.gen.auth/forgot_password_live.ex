@@ -12,7 +12,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </.header>
 
       <.simple_form for={@form} id="reset_password_form" phx-submit="send_email">
-        <.input field={@form[:email]} type="email" placeholder="Email" required />
+        <.input field={@form[:email]} type="email" placeholder="Email" autocomplete="username" required />
         <:actions>
           <.button phx-disable-with="Sending..." class="w-full">
             Send password reset instructions
