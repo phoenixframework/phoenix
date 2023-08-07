@@ -18,7 +18,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           Oops, something went wrong! Please check the errors below.
         </.error>
 
-        <.input field={@form[:password]} type="password" label="New password" autocomplete="new-password" required />
+        <.input
+          field={@form[:password]}
+          type="password"
+          label="New password"
+          autocomplete="new-password"
+          required
+        />
         <.input
           field={@form[:password_confirmation]}
           type="password"

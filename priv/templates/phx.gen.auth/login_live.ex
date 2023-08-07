@@ -17,7 +17,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       <.simple_form for={@form} id="login_form" action={~p"<%= schema.route_prefix %>/log_in"} phx-update="ignore">
         <.input field={@form[:email]} type="email" label="Email" autocomplete="username" required />
-        <.input field={@form[:password]} type="password" label="Password" autocomplete="current-password" required />
+        <.input
+          field={@form[:password]}
+          type="password"
+          label="Password"
+          autocomplete="current-password"
+          required
+        />
 
         <:actions>
           <.input field={@form[:remember_me]} type="checkbox" label="Keep me logged in" />

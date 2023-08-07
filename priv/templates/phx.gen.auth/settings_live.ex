@@ -18,7 +18,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           phx-submit="update_email"
           phx-change="validate_email"
         >
-          <.input field={@email_form[:email]} type="email" label="Email"  autocomplete="username" required />
+          <.input
+            field={@email_form[:email]}
+            type="email"
+            label="Email"
+            autocomplete="username"
+            required
+          />
           <.input
             field={@email_form[:current_password]}
             name="current_password"
@@ -51,7 +57,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             autocomplete="username"
             value={@current_email}
           />
-          <.input field={@password_form[:password]} type="password" label="New password" autocomplete="new-password" required />
+          <.input
+            field={@password_form[:password]}
+            type="password"
+            label="New password"
+            autocomplete="new-password"
+            required
+          />
           <.input
             field={@password_form[:password_confirmation]}
             type="password"

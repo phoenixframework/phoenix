@@ -32,7 +32,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         </.error>
 
         <.input field={@form[:email]} type="email" label="Email" autocomplete="username" required />
-        <.input field={@form[:password]} type="password" label="Password" autocomplete="new-password" required />
+        <.input
+          field={@form[:password]}
+          type="password"
+          label="Password"
+          autocomplete="new-password"
+          required
+        />
 
         <:actions>
           <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>

@@ -14,7 +14,13 @@
     <.error :if={@error_message}><%%= @error_message %></.error>
 
     <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
-    <.input field={f[:password]} type="password" label="Password" autocomplete="current-password" required />
+    <.input
+      field={f[:password]}
+      type="password"
+      label="Password"
+      autocomplete="current-password"
+      required
+    />
 
     <:actions :let={f}>
       <.input field={f[:remember_me]} type="checkbox" label="Keep me logged in" />
