@@ -807,8 +807,12 @@ defmodule Phoenix.Endpoint do
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
 
-    * `:drainer` - a keyword list configuring how to drain sockets
-      on application shutdown. The goal is to notify all channels (and
+    * `:drainer` - a keyword list or a custom MFA function returning a keyword list, for example:
+
+          {MyAppWeb.Socket, :drainer_configuration, []}
+
+      configuring how to drain sockets on application shutdown.
+      The goal is to notify all channels (and
       LiveViews) clients to reconnect. The supported options are:
 
       * `:batch_size` - How many clients to notify at once in a given batch.

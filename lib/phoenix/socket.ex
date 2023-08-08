@@ -454,7 +454,7 @@ defmodule Phoenix.Socket do
         end
         {Phoenix.Socket.PoolDrainer, {endpoint, handler, drainer}}
     else
-        :ignore
+      :ignore
     end
   end
 
