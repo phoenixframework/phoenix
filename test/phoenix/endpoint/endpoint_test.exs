@@ -207,12 +207,12 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
   @tag :capture_log
   test "uses bound dynamic port if server is started" do
-    Application.put_env(:phoenix, __MODULE__.DynamicPortEndpoint, http: [port: 0], server: true)
-    defmodule DynamicPortEndpoint do
+    Application.put_env(:phoenix, __MODULE__.DynamicPortStartedEndpoint, http: [port: 0], server: true)
+    defmodule DynamicPortStartedEndpoint do
       use Phoenix.Endpoint, otp_app: :phoenix
     end
-    DynamicPortEndpoint.start_link()
-    assert %{port: port} = DynamicPortEndpoint.url() |> URI.parse()
+    DynamicPortStartedEndpoint.start_link()
+    assert %{port: port} = DynamicPortStartedEndpoint.url() |> URI.parse()
     assert port > 1023
   end
 
