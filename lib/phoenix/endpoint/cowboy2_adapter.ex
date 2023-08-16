@@ -80,7 +80,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
       Application.ensure_all_started(:ssl)
     end
 
-    ref = Module.concat(endpoint, scheme |> Atom.to_string() |> String.upcase())
+    ref = build_ref(endpoint, scheme)
 
     plug =
       if code_reloader? do
@@ -131,6 +131,18 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
     end
   rescue
     _ -> scheme
+  end
+
+  @doc false
+  def dynamic_port(endpoint, scheme) do
+    case :ranch.get_addr(build_ref(endpoint, scheme)) do
+      {:local, _unix_path} -> raise "Trying to determine dynamic port, but the adapter is configured to use unix sockets. Remove the configuration for `[port: 0]` on the #{scheme} scheme."
+      {_addr, port} -> port
+    end
+  end
+
+  defp build_ref(endpoint, scheme) do
+    Module.concat(endpoint, scheme |> Atom.to_string() |> String.upcase())
   end
 
   # TODO: Remove this once {:system, env_var} deprecation is removed

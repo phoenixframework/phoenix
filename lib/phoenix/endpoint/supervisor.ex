@@ -351,8 +351,8 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     {scheme, port} =
       cond do
-        https -> {"https", https[:port] || 443}
-        http -> {"http", http[:port] || 80}
+        https -> {"https", transport_port(endpoint, https, :https)}
+        http -> {"http", transport_port(endpoint, http, :http)}
         true -> {"http", 80}
       end
 
@@ -368,6 +368,38 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     %URI{scheme: scheme, port: port, host: host}
   end
+
+  defp transport_port(endpoint, config, scheme) do
+    cond do
+      value = config[:port] ->
+        value
+        |> port_to_integer()
+        |> handle_dynamic_port(endpoint, scheme)
+
+      scheme == :https ->
+        443
+
+      scheme == :http ->
+        80
+    end
+  end
+
+  def handle_dynamic_port(0, endpoint, scheme) do
+    config =
+      cond do
+        server = endpoint.config(:server) -> [server: server]
+        true -> []
+      end
+
+    if server?(config) do
+      adapter = endpoint.config(:adapter) || Phoenix.Endpoint.Cowboy2Adapter
+      adapter.dynamic_port(endpoint, scheme)
+    else
+      0
+    end
+  end
+
+  def handle_dynamic_port(port, _, _), do: port
 
   defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests}) do
     Phoenix.Config.put_new(endpoint, :cache_static_manifest_latest, latest)
