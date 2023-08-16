@@ -391,8 +391,9 @@ defmodule Phoenix.Endpoint.Supervisor do
         true -> []
       end
 
-    if server?(config) do
-      adapter = endpoint.config(:adapter) || Phoenix.Endpoint.Cowboy2Adapter
+    adapter = endpoint.config(:adapter) || Phoenix.Endpoint.Cowboy2Adapter
+
+    if function_exported?(adapter, :dynamic_port, 2) and server?(config) do
       adapter.dynamic_port(endpoint, scheme)
     else
       0
