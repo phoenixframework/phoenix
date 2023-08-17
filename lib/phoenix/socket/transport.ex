@@ -136,10 +136,12 @@ defmodule Phoenix.Socket.Transport do
   Connects to the socket.
 
   The transport passes a map of metadata and the socket
-  returns `{:ok, state}`. `{:error, reason}` or `:error`. 
-  The state must be stored by the transport and returned 
-  in all future operations. `{:error, reason}` can only 
-  be used with websockets.
+  returns `{:ok, state}`, `{:error, reason}` or `:error`.
+  The state must be stored by the transport and returned
+  in all future operations. When `{:error, reason}` is
+  returned, some transports - such as WebSockets - allow
+  customizing the response based on `reason` via a custom
+  `:error_handler`.
 
   This function is used for authorization purposes and it
   may be invoked outside of the process that effectively
@@ -494,7 +496,7 @@ defmodule Phoenix.Socket.Transport do
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
          {_, session} <- store.get(conn, cookie, init),
          csrf_state when is_binary(csrf_state) <-
-          Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]),
+           Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]),
          true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
       session
     else
