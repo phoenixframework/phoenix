@@ -187,6 +187,12 @@ defmodule HelloWeb.Endpoint do
 end
 ```
 
+Also set the host in Heroku:
+
+```console
+$ heroku config:set PHX_HOST="mysterious-meadow-6277.herokuapp.com"
+```
+
 This ensures that any idle connections are closed by Phoenix before they reach Heroku's 55-second timeout window.
 
 ## Creating Environment Variables in Heroku
@@ -244,7 +250,7 @@ $ git commit -a -m "Use production config from Heroku ENV variables and decrease
 And deploy:
 
 ```console
-$ git push heroku master
+$ git push heroku main
 Counting objects: 55, done.
 Delta compression using up to 8 threads.
 Compressing objects: 100% (49/49), done.
