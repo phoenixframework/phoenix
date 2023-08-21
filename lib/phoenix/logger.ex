@@ -230,7 +230,7 @@ defmodule Phoenix.Logger do
       level ->
         Logger.log(level, fn ->
           %{status: status, state: state} = conn
-          status = Integer.to_string(status)
+          status = status_to_string(status)
           [connection_type(state), ?\s, status, " in ", duration(duration)]
         end)
     end
@@ -252,10 +252,14 @@ defmodule Phoenix.Logger do
         ?\s,
         error_banner(kind, reason),
         " to ",
-        Integer.to_string(status),
+        status_to_string(status),
         " response"
       ]
     end)
+  end
+
+  defp status_to_string(status) do
+    status |> Plug.Conn.Status.code() |> Integer.to_string()
   end
 
   defp error_banner(:error, %type{}), do: inspect(type)
