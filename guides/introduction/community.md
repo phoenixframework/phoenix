@@ -35,7 +35,9 @@ There are a number of places to connect with community members at all experience
 ## Screencasts/Courses
 
   * [Phoenix LiveView Free Course (by The Pragmatic Studio - 2023)](https://pragmaticstudio.com/courses/phoenix-liveview)
-  
+
+  * [Build It With Phoenix video course (by Geoffrey Lessel - 2023)](https://builditwithphoenix.com)
+
   * [Free Crash Course: Phoenix LiveView (by Productive Programmer - 2023)](https://www.productiveprogrammer.com/learn-phoenix-liveview-free)
 
   * [Groxio LiveView: Self Study Program (by Bruce Tate - 2020)](https://grox.io/language/liveview/course)
