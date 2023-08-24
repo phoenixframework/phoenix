@@ -106,7 +106,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   slot :inner_block, doc: "the optional inner block that renders the flash message"
 
   def flash(assigns) do
-    assigns = assign(assigns, :id, assigns.id || "flash-#{assigns.kind}")
+    assigns = assign_new(assigns, :id, fn -> "flash-#{assigns.kind}" end)
 
     ~H"""
     <div
