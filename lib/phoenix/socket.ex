@@ -452,7 +452,14 @@ defmodule Phoenix.Socket do
     opts = Keyword.merge(socket_options, opts)
 
     if drainer = Keyword.get(opts, :drainer, []) do
-      {Phoenix.Socket.PoolDrainer, {endpoint, handler, drainer}}
+      drainer =
+        case drainer do
+          {module, function, arguments} ->
+            apply(module, function, arguments)
+          _ ->
+            drainer
+        end
+        {Phoenix.Socket.PoolDrainer, {endpoint, handler, drainer}}
     else
       :ignore
     end
