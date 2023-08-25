@@ -4,6 +4,7 @@ export default class DebugSocket {
   constructor(path, opts = {}){
     this.socket = new Socket(path, opts)
     this.debugChannel = this.socket.channel("phoenix:debugger")
+    this.debugChannel.on("log", ({msg, level}) => this.logsEnabled && this.log(level, msg))
     this.debugChannel.join()
     this.logsEnabled = false
   }
@@ -12,10 +13,7 @@ export default class DebugSocket {
 
   disconnect(){ this.socket.disconnect() }
 
-  enableLogs(){ if(this.debugChannel){ return }
-    this.logsEnabled = true
-    this.debugChannel.on("log", ({msg, level}) => this.logsEnabled && this.log(level, msg))
-  }
+  enableLogs(){ this.logsEnabled = true }
 
   disableLogs(){ this.logsEnabled = false }
 
@@ -47,3 +45,4 @@ export default class DebugSocket {
     if(node.parentNode){ return this.closestDebugFileLine(node.parentNode) }
   }
 }
+
