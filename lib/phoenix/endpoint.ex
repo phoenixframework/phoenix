@@ -89,6 +89,9 @@ defmodule Phoenix.Endpoint do
       only in development as it allows listing of the application source
       code during debugging. Defaults to `false`
 
+    * `:web_debugger` - when `true`, enables the client to use the `DebugSocket`
+      to receive server logs in the web console. Defaults to `false`.
+
     * `:force_ssl` - ensures no data is ever sent via HTTP, always redirecting
       to HTTPS. It expects a list of options which are forwarded to `Plug.SSL`.
       By default it sets the "strict-transport-security" header in HTTPS requests,

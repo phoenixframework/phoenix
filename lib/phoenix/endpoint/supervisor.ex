@@ -81,7 +81,8 @@ defmodule Phoenix.Endpoint.Supervisor do
         socket_children(mod, :child_spec) ++
         server_children(mod, conf, server?) ++
         socket_children(mod, :drainer_spec) ++
-        watcher_children(mod, conf, server?)
+        watcher_children(mod, conf, server?) ++
+        debugger_children(conf)
 
     Supervisor.init(children, strategy: :one_for_one)
   end
@@ -157,6 +158,14 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp watcher_children(_mod, conf, server?) do
     if server? || conf[:force_watchers] do
       Enum.map(conf[:watchers], &{Phoenix.Endpoint.Watcher, &1})
+    else
+      []
+    end
+  end
+
+  defp debugger_children(conf) do
+    if conf[:web_debugger] do
+      [{Registry, name: Phoenix.Debugger.WebConsoleLoggerRegistry, keys: :duplicate}]
     else
       []
     end
