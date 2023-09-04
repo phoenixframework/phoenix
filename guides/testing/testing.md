@@ -112,11 +112,11 @@ The second line says this is a case template. This is a ExUnit feature that allo
 
 Now that we have made this module a case template, we can define callbacks that are invoked on certain occasions. The `using` callback defines code to be injected on every module that calls `use HelloWeb.ConnCase`. In this case, it starts by setting the `@endpoint` module attribute with the name of our endpoint.
 
-Next, it wires up `:verified_routes` to allow use to use `~p` based paths in our test just like we do in the rest of our application to easily generate paths and URLs in our tests.
+Next, it wires up `:verified_routes` to allow us to use `~p` based paths in our test just like we do in the rest of our application to easily generate paths and URLs in our tests.
 
 Finally, we import [`Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html), so all of the connection helpers available in controllers are also available in tests, and then imports [`Phoenix.ConnTest`](https://hexdocs.pm/phoenix/Phoenix.ConnTest.html). You can consult these modules to learn all functionality available.
 
-Then our case template defines a `setup` block. The `setup` block will be called before test. Most of the setup block is on setting up the SQL Sandbox, which we will talk about it later. In the last line of the `setup` block, we will find this:
+Then our case template defines a `setup` block. The `setup` block will be called before test. Most of the setup block is on setting up the SQL Sandbox, which we will talk about later. In the last line of the `setup` block, we will find this:
 
 ```elixir
 {:ok, conn: Phoenix.ConnTest.build_conn()}
