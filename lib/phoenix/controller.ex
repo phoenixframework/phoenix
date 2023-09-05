@@ -637,7 +637,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) :: Plug.Conn.t()
+  @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}] | false | layout) :: Plug.Conn.t()
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
       put_private_layout(conn, :phoenix_layout, :replace, layout)
@@ -1043,6 +1043,8 @@ defmodule Phoenix.Controller do
             put_layout(conn, #{inspect(good_value)})
 
         In this case, the layout without format will always win.
+        However please take a note that layout without format will
+        be deprecated soon.
         If you use layouts with formats, make sure that they are
         used everywhere. Also remember to configure your controller
         to use layouts with formats:
