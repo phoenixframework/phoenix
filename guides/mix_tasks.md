@@ -599,7 +599,6 @@ We certainly should follow the instructions and add our new repo to our supervis
 ```elixir
 . . .
 children = [
-  # Start the Ecto repository
   Hello.Repo,
   # Our custom repo
   OurCustom.Repo,
