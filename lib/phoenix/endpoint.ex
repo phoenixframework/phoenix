@@ -722,7 +722,13 @@ defmodule Phoenix.Endpoint do
   ## API
 
   @doc """
-  Defines a websocket/longpoll mount-point for a socket.
+  Defines a websocket/longpoll mount-point for a `socket`.
+
+  It expects a `path`, a `socket` module, and a set of options.
+  The socket module is typically defined with `Phoenix.Socket`.
+
+  Both websocket and longpolling connections are supported out
+  of the box.
 
   ## Options
 
@@ -738,10 +744,8 @@ defmodule Phoenix.Endpoint do
       and ["Longpoll configuration"](#socket/3-longpoll-configuration)
       for the whole list
 
-  If your socket is implemented using `Phoenix.Socket`,
-  you can also pass to each transport above all options
-  accepted on `use Phoenix.Socket`. An option given here
-  will override the value in `use Phoenix.Socket`.
+  You can also pass the options below on `use Phoenix.Socket`.
+  The values specified here override the value in `use Phoenix.Socket`.
 
   ## Examples
 
