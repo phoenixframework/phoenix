@@ -6,8 +6,6 @@ There are a number of places to connect with community members at all experience
 
   * We're on Libera IRC in the [\#elixir](https://web.libera.chat/?channels=#elixir) channel.
 
-  * Join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
-
   * Feel free to join and check out the #phoenix channel on [Discord](https://discord.gg/elixir).
 
   * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/main/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
@@ -16,15 +14,15 @@ There are a number of places to connect with community members at all experience
 
   * Follow the Phoenix Framework on [Twitter](https://twitter.com/elixirphoenix).
 
-  * The source for these guides is [on GitHub](https://github.com/phoenixframework/phoenix/tree/main/guides). To help improve the guides, please report an [issue](https://github.com/phoenixframework/phoenix/issues) or open a [pull request](https://github.com/phoenixframework/phoenix/pulls).
+The Security Working Group of the Erlang Ecosystem Foundation also publishes in-depth documents about [security best practices for Erlang, Elixir, and Phoenix](https://erlef.github.io/security-wg/web_app_security_best_practices_beam/).
 
 ## Books
 
-  * [Programming Phoenix LiveView - Interactive Elixir Web Programming Without Writing Any JavaScript - 2021 (by Bruce Tate and Sophie DeBenedetto)](https://pragprog.com/titles/liveview/programming-phoenix-liveview/)
+  * [Programming Phoenix LiveView - Interactive Elixir Web Programming Without Writing Any JavaScript - 2023 (by Bruce Tate and Sophie DeBenedetto)](https://pragprog.com/titles/liveview/programming-phoenix-liveview/)
 
   * [Real-Time Phoenix - Build Highly Scalable Systems with Channels (by Stephen Bussey - 2020)](https://pragprog.com/titles/sbsockets/real-time-phoenix/)
 
-  * [Programming Phoenix 1.4 (by Bruce Tate and Phoenix core team members Chris McCord and José Valim - 2019)](https://pragprog.com/titles/phoenix14/programming-phoenix-1-4/)
+  * [Programming Phoenix 1.4 (by Bruce Tate, Chris McCord, and José Valim - 2019)](https://pragprog.com/titles/phoenix14/programming-phoenix-1-4/)
 
   * [Phoenix in Action (by Geoffrey Lessel - 2019)](https://manning.com/books/phoenix-in-action)
 
@@ -39,6 +37,8 @@ There are a number of places to connect with community members at all experience
   * [Build It With Phoenix video course (by Geoffrey Lessel - 2023)](https://builditwithphoenix.com)
 
   * [Free Crash Course: Phoenix LiveView (by Productive Programmer - 2023)](https://www.productiveprogrammer.com/learn-phoenix-liveview-free)
+
+  * [Phoenix on Rails: Elixir and Phoenix for Ruby on Rails developers (by George Arrowsmith - 2023)](https://phoenixonrails.com)
 
   * [Groxio LiveView: Self Study Program (by Bruce Tate - 2020)](https://grox.io/language/liveview/course)
 
@@ -55,5 +55,3 @@ There are a number of places to connect with community members at all experience
   * [LearnPhoenix.tv: Learn how to Build Fast, Dependable Web Apps with Phoenix (2017)](https://www.learnphoenix.tv/)
 
   * [LearnPhoenix.io: Build Scalable, Real-Time Apps with Phoenix, React, and React Native (2016)](https://www.learnphoenix.io/)
-
-  * [Phoenix on Rails: Elixir and Phoenix for Ruby on Rails developers (by George Arrowsmith - 2023)](https://phoenixonrails.com)
