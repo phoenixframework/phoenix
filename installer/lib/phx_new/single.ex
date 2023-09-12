@@ -4,12 +4,13 @@ defmodule Phx.New.Single do
   alias Phx.New.{Project}
 
   template(:new, [
-    {:eex, :project,
+    {:config, :project,
      "phx_single/config/config.exs": "config/config.exs",
      "phx_single/config/dev.exs": "config/dev.exs",
      "phx_single/config/prod.exs": "config/prod.exs",
      "phx_single/config/runtime.exs": "config/runtime.exs",
-     "phx_single/config/test.exs": "config/test.exs",
+     "phx_single/config/test.exs": "config/test.exs"},
+    {:eex, :project,
      "phx_single/lib/app_name/application.ex": "lib/:app/application.ex",
      "phx_single/lib/app_name.ex": "lib/:app.ex",
      "phx_web/controllers/error_json.ex": "lib/:lib_web_name/controllers/error_json.ex",
@@ -31,14 +32,14 @@ defmodule Phx.New.Single do
   ])
 
   template(:gettext, [
-    {:eex, :project,
+    {:eex, :web,
      "phx_gettext/gettext.ex": "lib/:lib_web_name/gettext.ex",
      "phx_gettext/en/LC_MESSAGES/errors.po": "priv/gettext/en/LC_MESSAGES/errors.po",
      "phx_gettext/errors.pot": "priv/gettext/errors.pot"}
   ])
 
   template(:html, [
-    {:eex, :project,
+    {:eex, :web,
      "phx_web/controllers/error_html.ex": "lib/:lib_web_name/controllers/error_html.ex",
      "phx_test/controllers/error_html_test.exs":
        "test/:lib_web_name/controllers/error_html_test.exs",
