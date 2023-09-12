@@ -156,8 +156,11 @@ defmodule Mix.Tasks.Phx.New do
         Mix.Tasks.Help.run(["phx.new"])
 
       {opts, [base_path | _]} ->
-        generator = if opts[:umbrella], do: Umbrella, else: Single
-        generate(base_path, generator, :project_path, opts)
+        if opts[:umbrella] do
+          generate(base_path, Umbrella, :project_path, opts)
+        else
+          generate(base_path, Single, :base_path, opts)
+        end
     end
   end
 

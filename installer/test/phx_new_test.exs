@@ -598,7 +598,11 @@ defmodule Mix.Tasks.Phx.NewTest do
           assert file =~ "deps_path: \"../../deps\""
           assert file =~ "lockfile: \"../../mix.lock\""
         end)
+
+        refute_file("phx_blog/config/config.exs")
       end)
+
+      assert_file("config/config.exs", "PhxBlogWeb.Endpoint")
     end)
   end
 
