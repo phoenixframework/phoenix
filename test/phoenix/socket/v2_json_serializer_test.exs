@@ -4,7 +4,6 @@ defmodule Phoenix.Socket.V2.JSONSerializerTest do
 
   @serializer V2.JSONSerializer
   @v2_fastlane_json "[null,null,\"t\",\"e\",{\"m\":1}]"
-  @v2_reply_json "[null,null,\"t\",\"phx_reply\",{\"response\":{\"m\":1},\"status\":null}]"
   @v2_msg_json "[null,null,\"t\",\"e\",{\"m\":1}]"
 
   @client_push <<
@@ -101,7 +100,15 @@ defmodule Phoenix.Socket.V2.JSONSerializerTest do
 
   test "encode!/1 encodes `Phoenix.Socket.Reply` as JSON" do
     msg = %Reply{topic: "t", payload: %{m: 1}}
-    assert encode!(@serializer, msg) == @v2_reply_json
+    encoded = encode!(@serializer, msg)
+
+    assert Jason.decode!(encoded) == [
+             nil,
+             nil,
+             "t",
+             "phx_reply",
+             %{"response" => %{"m" => 1}, "status" => nil}
+           ]
   end
 
   test "decode!/2 decodes `Phoenix.Socket.Message` from JSON" do
@@ -225,7 +232,6 @@ defmodule Phoenix.Socket.V2.JSONSerializerTest do
           payload: {:binary, <<101, 102, 103>>}
         })
       end
-
     end
   end
 
