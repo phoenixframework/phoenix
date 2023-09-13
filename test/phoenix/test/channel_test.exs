@@ -290,6 +290,12 @@ defmodule Phoenix.Test.ChannelTest do
     assert_reply ref, :ok, %{"resp" => "foo"}
   end
 
+  test "works with list data structures" do
+    {:ok, _, socket} = join(socket(UserSocket), Channel, "foo:ok")
+    ref = push(socket, "reply", %{req: [%{bar: "baz"}, %{bar: "foo"}]})
+    assert_reply ref, :ok, %{"resp" => [%{"bar" => "baz"}, %{"bar" => "foo"}]}
+  end
+
   test "receives async replies" do
     {:ok, _, socket} = join(socket(UserSocket), Channel, "foo:ok")
 
