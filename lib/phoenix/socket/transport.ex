@@ -294,9 +294,7 @@ defmodule Phoenix.Socket.Transport do
   """
   def code_reload(conn, endpoint, opts) do
     if Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader)) do
-      # If the WebSocket reconnects, then often the page has already been reloaded
-      # and we don't want to print warnings twice, so we disable all warnings.
-      Phoenix.CodeReloader.reload(endpoint, reloadable_args: ~w(--no-all-warnings))
+      Phoenix.CodeReloader.reload(endpoint)
     end
 
     conn

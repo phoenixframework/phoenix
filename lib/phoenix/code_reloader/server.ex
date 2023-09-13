@@ -61,7 +61,7 @@ defmodule Phoenix.CodeReloader.Server do
   def handle_call({:reload!, endpoint, opts}, from, state) do
     compilers = endpoint.config(:reloadable_compilers)
     apps = endpoint.config(:reloadable_apps) || default_reloadable_apps()
-    args = Keyword.get(opts, :reloadable_args, [])
+    args = Keyword.get(opts, :reloadable_args, ["--no-all-warnings"])
 
     # We do a backup of the endpoint in case compilation fails.
     # If so we can bring it back to finish the request handling.
