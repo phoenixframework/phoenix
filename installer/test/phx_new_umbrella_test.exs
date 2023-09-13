@@ -183,6 +183,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, ".gitignore"), ~r/\n$/)
       assert_file(web_path(@app, "assets/css/app.css"))
 
+      assert_file web_path(@app, "assets/tailwind.config.js"), fn file ->
+        assert file =~ "phx_umb_web.ex"
+        assert file =~ "phx_umb_web/**/*.ex"
+      end
+
       assert_file(web_path(@app, "priv/static/favicon.ico"))
 
       refute File.exists?(web_path(@app, "priv/static/assets/app.css"))
