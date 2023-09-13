@@ -692,6 +692,8 @@ defmodule Phoenix.ChannelTest do
     do: struct
   def __stringify__(%{} = params),
     do: Enum.into(params, %{}, &stringify_kv/1)
+  def __stringify__(params) when is_list(params),
+    do: Enum.map(params, &__stringify__/1)
   def __stringify__(other),
     do: other
 
