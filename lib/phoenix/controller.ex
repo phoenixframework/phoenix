@@ -1043,6 +1043,7 @@ defmodule Phoenix.Controller do
             put_layout(conn, #{inspect(good_value)})
 
         In this case, the layout without format will always win.
+        Passing the layout without a format is currently soft-deprecated.
         If you use layouts with formats, make sure that they are
         used everywhere. Also remember to configure your controller
         to use layouts with formats:

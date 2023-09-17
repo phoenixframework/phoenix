@@ -78,16 +78,26 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   alias Mix.Phoenix.{Context, Schema}
   alias Mix.Tasks.Phx.Gen
 
-  @switches [binary_id: :boolean, table: :string, web: :string,
-             schema: :boolean, context: :boolean, context_app: :string,
-             merge_with_existing_context: :boolean, prefix: :string, live: :boolean]
+  @switches [
+    binary_id: :boolean,
+    table: :string,
+    web: :string,
+    schema: :boolean,
+    context: :boolean,
+    context_app: :string,
+    merge_with_existing_context: :boolean,
+    prefix: :string,
+    live: :boolean
+  ]
 
   @default_opts [schema: true, context: true]
 
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.context must be invoked from within your *_web application root directory"
+      Mix.raise(
+        "mix phx.gen.context must be invoked from within your *_web application root directory"
+      )
     end
 
     {context, schema} = build(args)
@@ -120,6 +130,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   defp parse_opts(args) do
     {opts, parsed, invalid} = OptionParser.parse(args, switches: @switches)
+
     merged_opts =
       @default_opts
       |> Keyword.merge(opts)
@@ -127,7 +138,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
     {merged_opts, parsed, invalid}
   end
+
   defp put_context_app(opts, nil), do: opts
+
   defp put_context_app(opts, string) do
     Keyword.put(opts, :context_app, String.to_atom(string))
   end
@@ -154,7 +167,10 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @doc false
   def ensure_context_file_exists(%Context{file: file} = context, paths, binding) do
     unless Context.pre_existing?(context) do
-      Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
+      Mix.Generator.create_file(
+        file,
+        Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding)
+      )
     end
   end
 
@@ -162,7 +178,10 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     ensure_context_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/#{schema_access_template(context)}", binding)
+    |> Mix.Phoenix.eval_from(
+      "priv/templates/phx.gen.context/#{schema_access_template(context)}",
+      binding
+    )
     |> inject_eex_before_final_end(file, binding)
   end
 
@@ -173,7 +192,10 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @doc false
   def ensure_test_file_exists(%Context{test_file: test_file} = context, paths, binding) do
     unless Context.pre_existing_tests?(context) do
-      Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding))
+      Mix.Generator.create_file(
+        test_file,
+        Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding)
+      )
     end
   end
 
@@ -186,13 +208,24 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
-  def ensure_test_fixtures_file_exists(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
+  def ensure_test_fixtures_file_exists(
+        %Context{test_fixtures_file: test_fixtures_file} = context,
+        paths,
+        binding
+      ) do
     unless Context.pre_existing_test_fixtures?(context) do
-      Mix.Generator.create_file(test_fixtures_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/fixtures_module.ex", binding))
+      Mix.Generator.create_file(
+        test_fixtures_file,
+        Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/fixtures_module.ex", binding)
+      )
     end
   end
 
-  defp inject_test_fixture(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
+  defp inject_test_fixture(
+         %Context{test_fixtures_file: test_fixtures_file} = context,
+         paths,
+         binding
+       ) do
     ensure_test_fixtures_file_exists(context, paths, binding)
 
     paths
@@ -214,20 +247,14 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       )
 
     if Enum.any?(fixture_functions_needing_implementations) do
-      Mix.shell.info(
-        """
+      Mix.shell().info("""
 
-        Some of the generated database columns are unique. Please provide
-        unique implementations for the following fixture function(s) in
-        #{context.test_fixtures_file}:
+      Some of the generated database columns are unique. Please provide
+      unique implementations for the following fixture function(s) in
+      #{context.test_fixtures_file}:
 
-        #{
-          fixture_functions_needing_implementations
-          |> Enum.map_join(&indent(&1, 2))
-          |> String.trim_trailing()
-        }
-        """
-      )
+      #{fixture_functions_needing_implementations |> Enum.map_join(&indent(&1, 2)) |> String.trim_trailing()}
+      """)
     end
   end
 
@@ -237,11 +264,11 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     string
     |> String.split("\n")
     |> Enum.map_join(fn line ->
-        if String.trim(line) == "" do
-          "\n"
-        else
-          indent_string <> line <> "\n"
-        end
+      if String.trim(line) == "" do
+        "\n"
+      else
+        indent_string <> line <> "\n"
+      end
     end)
   end
 
@@ -283,27 +310,38 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   defp validate_args!([context, schema, _plural | _] = args, help) do
     cond do
       not Context.valid?(context) ->
-        help.raise_with_help "Expected the context, #{inspect context}, to be a valid module name"
+        help.raise_with_help(
+          "Expected the context, #{inspect(context)}, to be a valid module name"
+        )
+
       not Schema.valid?(schema) ->
-        help.raise_with_help "Expected the schema, #{inspect schema}, to be a valid module name"
+        help.raise_with_help("Expected the schema, #{inspect(schema)}, to be a valid module name")
+
       context == schema ->
-        help.raise_with_help "The context and schema should have different names"
+        help.raise_with_help("The context and schema should have different names")
+
       context == Mix.Phoenix.base() ->
-        help.raise_with_help "Cannot generate context #{context} because it has the same name as the application"
+        help.raise_with_help(
+          "Cannot generate context #{context} because it has the same name as the application"
+        )
+
       schema == Mix.Phoenix.base() ->
-        help.raise_with_help "Cannot generate schema #{schema} because it has the same name as the application"
+        help.raise_with_help(
+          "Cannot generate schema #{schema} because it has the same name as the application"
+        )
+
       true ->
         args
     end
   end
 
   defp validate_args!(_, help) do
-    help.raise_with_help "Invalid arguments"
+    help.raise_with_help("Invalid arguments")
   end
 
   @doc false
   def raise_with_help(msg) do
-    Mix.raise """
+    Mix.raise("""
     #{msg}
 
     mix phx.gen.html, phx.gen.json, phx.gen.live, and phx.gen.context
@@ -319,11 +357,12 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     The context serves as the API boundary for the given resource.
     Multiple resources may belong to a context and a resource may be
     split over distinct contexts (such as Accounts.User and Payments.User).
-    """
+    """)
   end
 
   @doc false
   def prompt_for_code_injection(%Context{generate?: false}), do: :ok
+
   def prompt_for_code_injection(%Context{} = context) do
     if Context.pre_existing?(context) && !merge_with_existing_context?(context) do
       System.halt()

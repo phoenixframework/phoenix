@@ -55,6 +55,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/config/config.exs", fn file ->
         assert file =~ "ecto_repos: [PhxBlog.Repo]"
         assert file =~ "config :phoenix, :json_library, Jason"
+        assert file =~ ~s[cd: Path.expand("../assets", __DIR__),]
         refute file =~ "namespace: PhxBlog"
         refute file =~ "config :phx_blog, :generators"
       end)
@@ -149,7 +150,11 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # tailwind
       assert_file("phx_blog/assets/css/app.css")
-      assert_file("phx_blog/assets/tailwind.config.js")
+      assert_file "phx_blog/assets/tailwind.config.js", fn file ->
+        assert file =~ "phx_blog_web.ex"
+        assert file =~ "phx_blog_web/**/*.ex"
+      end
+
       assert_file("phx_blog/assets/vendor/heroicons/LICENSE.md")
       assert_file("phx_blog/assets/vendor/heroicons/UPGRADE.md")
       assert_file("phx_blog/assets/vendor/heroicons/optimized/24/outline/cake.svg")
@@ -598,7 +603,16 @@ defmodule Mix.Tasks.Phx.NewTest do
           assert file =~ "deps_path: \"../../deps\""
           assert file =~ "lockfile: \"../../mix.lock\""
         end)
+
+        refute_file("phx_blog/config/config.exs")
       end)
+
+      assert_file("config/config.exs", fn file ->
+        assert file =~ "PhxBlogWeb.Endpoint"
+        assert file =~ ~s[cd: Path.expand("../apps/phx_blog/assets", __DIR__),]
+      end)
+
+      assert_file("config/config.exs", "PhxBlogWeb.Endpoint")
     end)
   end
 

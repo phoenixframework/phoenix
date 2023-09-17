@@ -152,6 +152,7 @@ defmodule Phx.New.Generator do
 
   defp write_formatted!(file, contents) do
     formatted = contents |> IO.iodata_to_binary() |> Code.format_string!()
+    File.mkdir_p!(Path.dirname(file))
     File.write!(file, [formatted, ?\n])
   end
 

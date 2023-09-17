@@ -8,12 +8,11 @@ defmodule <%= @web_namespace %>.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Start the Telemetry supervisor
       <%= @web_namespace %>.Telemetry,
-      # Start the Endpoint (http/https)
-      <%= @endpoint_module %>
       # Start a worker by calling: <%= @web_namespace %>.Worker.start_link(arg)
-      # {<%= @web_namespace %>.Worker, arg}
+      # {<%= @web_namespace %>.Worker, arg},
+      # Start to serve requests, typically the last entry
+      <%= @endpoint_module %>
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

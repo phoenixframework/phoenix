@@ -6,7 +6,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def index(conn, _params) do
     <%= schema.plural %> = <%= inspect context.alias %>.list_<%= schema.plural %>()
-    render(conn, :index, <%= schema.plural %>: <%= schema.plural %>)
+    render(conn, :index, <%= schema.collection %>: <%= schema.plural %>)
   end
 
   def new(conn, _params) do
