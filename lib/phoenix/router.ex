@@ -691,8 +691,11 @@ defmodule Phoenix.Router do
       a helper. Has no effect when using verified routes exclusively
     * `:alias` - configure if the scope alias should be applied to the route.
       Defaults to true, disables scoping if false.
-    * `:log` - the level to log the route dispatching under,
-      may be set to false. Defaults to `:debug`
+    * `:log` - the level to log the route dispatching under, may be set to false. Defaults to
+      `:debug`. Route dispatching contains information about how the route is handled (which controller
+      action is called, what parameters are available and which pipelines are used) and is separate from
+      the plug level logging. To alter the plug log level, please see
+      https://hexdocs.pm/phoenix/Phoenix.Logger.html#module-dynamic-log-level.
     * `:private` - a map of private data to merge into the connection
       when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
@@ -1021,8 +1024,11 @@ defmodule Phoenix.Router do
       ie `"foo.bar.com"`, `"foo."`
     * `:private` - a map of private data to merge into the connection when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
-    * `:log` - the level to log the route dispatching under,
-      may be set to false. Defaults to `:debug`
+    * `:log` - the level to log the route dispatching under, may be set to false. Defaults to
+      `:debug`. Route dispatching contains information about how the route is handled (which controller
+      action is called, what parameters are available and which pipelines are used) and is separate from
+      the plug level logging. To alter the plug log level, please see
+      https://hexdocs.pm/phoenix/Phoenix.Logger.html#module-dynamic-log-level.
 
   """
   defmacro scope(options, do: context) do
