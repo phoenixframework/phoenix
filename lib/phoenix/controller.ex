@@ -1259,16 +1259,22 @@ defmodule Phoenix.Controller do
     disposition_type = get_disposition_type(Keyword.get(opts, :disposition, :attachment))
     warn_if_ajax(conn)
 
+    disposition = ~s[#{disposition_type}; filename="#{encoded_filename}"]
+
+    disposition =
+      if encoded_filename != filename do
+        disposition <> "; filename*=utf-8''#{encoded_filename}"
+      else
+        disposition
+      end
+
     conn
     |> put_resp_content_type(content_type, opts[:charset])
-    |> put_resp_header(
-      "content-disposition",
-      ~s[#{disposition_type}; filename="#{encoded_filename}"]
-    )
+    |> put_resp_header("content-disposition", disposition)
   end
 
   defp encode_filename(filename, false), do: filename
-  defp encode_filename(filename, true), do: URI.encode_www_form(filename)
+  defp encode_filename(filename, true), do: URI.encode(filename)
 
   defp get_disposition_type(:attachment), do: "attachment"
   defp get_disposition_type(:inline), do: "inline"
