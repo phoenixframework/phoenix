@@ -65,6 +65,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
                       alarm:time
                       alarm_usec:time_usec
                       secret:uuid:redact announcement_date:date alarm:time
+                      metadata:map
                       weight:float user_id:references:users))
 
       assert_file "lib/phoenix/blog/post.ex"
@@ -116,6 +117,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ ~s(<.input field={@form[:announcement_date]} type="date")
         assert file =~ ~s(<.input field={@form[:alarm]} type="time")
         assert file =~ ~s(<.input field={@form[:secret]} type="text" label="Secret" />)
+        refute file =~ ~s(<field={@form[:metadata]})
         assert file =~ """
                 <.input
                   field={@form[:status]}
