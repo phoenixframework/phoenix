@@ -5,8 +5,9 @@
 # is restricted to this project.
 
 # General application configuration
-import Config<%= if @namespaced? || @ecto || @generators do %>
+import Config
 
+<%= if @namespaced? || @ecto || @generators do %>
 config :<%= @app_name %><%= if @namespaced? do %>,
   namespace: <%= @app_module %><% end %><%= if @ecto do %>,
   ecto_repos: [<%= @app_module %>.Repo]<% end %><%= if @generators do %>,

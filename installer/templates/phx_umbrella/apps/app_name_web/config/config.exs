@@ -1,3 +1,5 @@
+import Config
+
 <%= if @namespaced? || @ecto || @generators do %>
 config :<%= @web_app_name %><%= if @namespaced? do %>,
   namespace: <%= @web_namespace %><% end %><%= if @ecto do %>,

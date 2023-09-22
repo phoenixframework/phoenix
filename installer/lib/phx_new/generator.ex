@@ -115,12 +115,12 @@ defmodule Phx.New.Generator do
         {:error, _} -> "import Config\n"
       end
 
-    with :error <- split_with_self(contents, "use Mix.Config"),
-         :error <- split_with_self(contents, "import Config") do
-      Mix.raise(~s[Could not find "use Mix.Config" or "import Config" in #{inspect(file)}])
-    else
-      [left, middle, right] ->
-        write_formatted!(file, [left, middle, ?\n, ?\n, to_inject, right])
+    case :binary.split(contents, "import Config") do
+      [left, right] ->
+        write_formatted!(file, [left, to_inject, right])
+
+      [_] ->
+        Mix.raise(~s[Could not find "import Config" in #{inspect(file)}])
     end
   end
 
@@ -141,11 +141,11 @@ defmodule Phx.New.Generator do
           """
       end
 
-    case split_with_self(contents, "if config_env() == :prod do") do
-      [left, middle, right] ->
-        write_formatted!(file, [left, middle, ?\n, to_inject, right])
+    case :binary.split(contents, "if config_env() == :prod do") do
+      [left, right] ->
+        write_formatted!(file, [left, "if config_env() == :prod do\n", to_inject, right])
 
-      :error ->
+      [_] ->
         Mix.raise(~s[Could not find "if config_env() == :prod do" in #{inspect(file)}])
     end
   end
@@ -164,13 +164,6 @@ defmodule Phx.New.Generator do
         Phx.New.Umbrella.render(:new, "phx_umbrella/config/extra_config.exs", project.binding)
 
       File.write(path, [File.read!(path), extra])
-    end
-  end
-
-  defp split_with_self(contents, text) do
-    case :binary.split(contents, text) do
-      [left, right] -> [left, text, right]
-      [_] -> :error
     end
   end
 
@@ -268,11 +261,15 @@ defmodule Phx.New.Generator do
     adapter_config = binding[:adapter_config]
 
     config_inject(project_path, "config/dev.exs", """
+    import Config
+
     # Configure your database
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config(adapter_config[:dev])}
     """)
 
     config_inject(project_path, "config/test.exs", """
+    import Config
+
     # Configure your database
     #
     # The MIX_TEST_PARTITION environment variable can be used
