@@ -120,7 +120,6 @@ defmodule Phx.New.Generator do
         write_formatted!(file, [left, to_inject, right])
 
       [_] ->
-        IO.puts(contents)
         Mix.raise(~s[Could not find "import Config" in #{inspect(file)}])
     end
   end
