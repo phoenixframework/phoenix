@@ -55,8 +55,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
                "<%= inspect schema.alias %> confirmation link is invalid or it has expired"
 
       # when logged in
+      conn = build_conn()
       {:ok, lv, _html} =
-        build_conn()
+        conn
         |> log_in_<%= schema.singular %>(<%= schema.singular %>)
         |> live(~p"<%= schema.route_prefix %>/confirm/#{token}")
 
