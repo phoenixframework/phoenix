@@ -241,8 +241,6 @@ defmodule Phoenix.Controller do
 
     quote bind_quoted: [opts: opts] do
       import Phoenix.Controller
-
-      # TODO v2: No longer automatically import dependencies
       import Plug.Conn
 
       use Phoenix.Controller.Pipeline
@@ -307,7 +305,7 @@ defmodule Phoenix.Controller do
 
         def call(conn, {:error, :unauthorized}) do
           conn
-          |> put_status(403)
+          |> put_status(:forbidden)
           |> put_view(MyErrorView)
           |> render(:"403")
         end
@@ -506,7 +504,7 @@ defmodule Phoenix.Controller do
     end
   end
 
-  @invalid_local_url_chars ["\\"]
+  @invalid_local_url_chars ["\\", "/%", "/\t"]
   defp validate_local_url("//" <> _ = to), do: raise_invalid_url(to)
 
   defp validate_local_url("/" <> _ = to) do
@@ -755,7 +753,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}]) ::
+  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) ::
           Plug.Conn.t()
   def put_root_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
@@ -1045,6 +1043,7 @@ defmodule Phoenix.Controller do
             put_layout(conn, #{inspect(good_value)})
 
         In this case, the layout without format will always win.
+        Passing the layout without a format is currently soft-deprecated.
         If you use layouts with formats, make sure that they are
         used everywhere. Also remember to configure your controller
         to use layouts with formats:
@@ -1260,16 +1259,22 @@ defmodule Phoenix.Controller do
     disposition_type = get_disposition_type(Keyword.get(opts, :disposition, :attachment))
     warn_if_ajax(conn)
 
+    disposition = ~s[#{disposition_type}; filename="#{encoded_filename}"]
+
+    disposition =
+      if encoded_filename != filename do
+        disposition <> "; filename*=utf-8''#{encoded_filename}"
+      else
+        disposition
+      end
+
     conn
     |> put_resp_content_type(content_type, opts[:charset])
-    |> put_resp_header(
-      "content-disposition",
-      ~s[#{disposition_type}; filename="#{encoded_filename}"]
-    )
+    |> put_resp_header("content-disposition", disposition)
   end
 
   defp encode_filename(filename, false), do: filename
-  defp encode_filename(filename, true), do: URI.encode_www_form(filename)
+  defp encode_filename(filename, true), do: URI.encode(filename)
 
   defp get_disposition_type(:attachment), do: "attachment"
   defp get_disposition_type(:inline), do: "inline"

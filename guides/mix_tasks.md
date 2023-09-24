@@ -408,8 +408,10 @@ Before we run this task let's inspect the contents of two directories in our hel
 First `priv/static/` which should look similar to this:
 
 ```console
-├── images
-│   └── phoenix.png
+├── assets
+│   ├── app.css
+│   └── app.js
+├── favicon.ico
 └── robots.txt
 ```
 
@@ -417,11 +419,12 @@ And then `assets/` which should look similar to this:
 
 ```console
 ├── css
-│   └── app.css
+│   └── app.css
 ├── js
-│   └── app.js
+│   └── app.js
+├── tailwind.config.js
 └── vendor
-    └── phoenix.js
+    └── topbar.js
 ```
 
 All of these files are our static assets. Now let's run the `mix phx.digest` task.
@@ -596,7 +599,6 @@ We certainly should follow the instructions and add our new repo to our supervis
 ```elixir
 . . .
 children = [
-  # Start the Ecto repository
   Hello.Repo,
   # Our custom repo
   OurCustom.Repo,

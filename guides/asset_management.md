@@ -89,55 +89,54 @@ $ yarn add ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view
 Next, add a custom JavaScript build script. We'll call the example `assets/build.js`:
 
 ```js
-const esbuild = require('esbuild')
+const esbuild = require("esbuild");
 
-const args = process.argv.slice(2)
-const watch = args.includes('--watch')
-const deploy = args.includes('--deploy')
+const args = process.argv.slice(2);
+const watch = args.includes('--watch');
+const deploy = args.includes('--deploy');
 
 const loader = {
   // Add loaders for images/fonts/etc, e.g. { '.svg': 'file' }
-}
+};
 
 const plugins = [
   // Add and configure plugins here
-]
+];
 
+// Define esbuild options
 let opts = {
-  entryPoints: ['js/app.js'],
+  entryPoints: ["js/app.js"],
   bundle: true,
-  target: 'es2017',
-  outdir: '../priv/static/assets',
-  logLevel: 'info',
-  loader,
-  plugins
-}
-
-if (watch) {
-  opts = {
-    ...opts,
-    watch,
-    sourcemap: 'inline'
-  }
-}
+  logLevel: "info",
+  target: "es2017",
+  outdir: "../priv/static/assets",
+  external: ["*.css", "fonts/*", "images/*"],
+  loader: loader,
+  plugins: plugins,
+};
 
 if (deploy) {
   opts = {
     ...opts,
-    minify: true
-  }
+    minify: true,
+  };
 }
 
-const promise = esbuild.build(opts)
-
 if (watch) {
-  promise.then(_result => {
-    process.stdin.on('close', () => {
-      process.exit(0)
+  opts = {
+    ...opts,
+    sourcemap: "inline",
+  };
+  esbuild
+    .context(opts)
+    .then((ctx) => {
+      ctx.watch();
     })
-
-    process.stdin.resume()
-  })
+    .catch((_error) => {
+      process.exit(1);
+    });
+} else {
+  esbuild.build(opts);
 }
 ```
 

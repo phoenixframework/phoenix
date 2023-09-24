@@ -63,4 +63,15 @@ defmodule Mix.Tasks.Phx.New.WebTest do
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
     end
   end
+
+  test "app_name is included in tailwind config" do
+    in_tmp_umbrella_project "new with defaults", fn ->
+      Mix.Tasks.Phx.New.Web.run(["testweb"])
+
+      assert_file "testweb/assets/tailwind.config.js", fn file ->
+        assert file =~ "testweb.ex"
+        assert file =~ "testweb/**/*.ex"
+      end
+    end
+  end
 end

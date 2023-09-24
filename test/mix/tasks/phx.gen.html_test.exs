@@ -324,6 +324,15 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end)
   end
 
+  test "with a matching plural and singular term", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Html.run(~w(Tracker Series series value:integer))
+      assert_file("lib/phoenix_web/controllers/series_controller.ex", fn file ->
+        assert file =~ "render(conn, :index, series_collection: series)"
+      end)
+    end)
+  end
+
   test "with --no-context no warning is emitted when context exists", config do
     in_tmp_project(config.test, fn ->
       Gen.Html.run(~w(Blog Post posts title:string))

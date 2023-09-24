@@ -144,11 +144,11 @@ defmodule <%= inspect auth_module %> do
       end
   """
   def on_mount(:mount_current_<%= schema.singular %>, _params, session, socket) do
-    {:cont, mount_current_<%= schema.singular %>(session, socket)}
+    {:cont, mount_current_<%= schema.singular %>(socket, session)}
   end
 
   def on_mount(:ensure_authenticated, _params, session, socket) do
-    socket = mount_current_<%= schema.singular %>(session, socket)
+    socket = mount_current_<%= schema.singular %>(socket, session)
 
     if socket.assigns.current_<%= schema.singular %> do
       {:cont, socket}
@@ -163,7 +163,7 @@ defmodule <%= inspect auth_module %> do
   end
 
   def on_mount(:redirect_if_<%= schema.singular %>_is_authenticated, _params, session, socket) do
-    socket = mount_current_<%= schema.singular %>(session, socket)
+    socket = mount_current_<%= schema.singular %>(socket, session)
 
     if socket.assigns.current_<%= schema.singular %> do
       {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_path(socket))}
@@ -172,7 +172,7 @@ defmodule <%= inspect auth_module %> do
     end
   end
 
-  defp mount_current_<%= schema.singular %>(session, socket) do
+  defp mount_current_<%= schema.singular %>(socket, session) do
     Phoenix.Component.assign_new(socket, :current_<%= schema.singular %>, fn ->
       if <%= schema.singular %>_token = session["<%= schema.singular %>_token"] do
         <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)

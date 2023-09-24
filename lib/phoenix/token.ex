@@ -115,9 +115,11 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:signed_at` - set the timestamp of the token in seconds.
       Defaults to `System.system_time(:second)`
+    * `:max_age` - the default maximum age of the token. Defaults to
+      86400 seconds (1 day) and it may be overridden on verify/4.
 
   """
-  @spec sign(context, binary, term, [shared_opt | signed_at_opt]) :: binary
+  @spec sign(context, binary, term, [shared_opt | max_age_opt | signed_at_opt]) :: binary
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
     context
     |> get_key_base()
@@ -137,9 +139,11 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:signed_at` - set the timestamp of the token in seconds.
       Defaults to `System.system_time(:second)`
+    * `:max_age` - the default maximum age of the token. Defaults to
+      86400 seconds (1 day) and it may be overridden on verify/4.
 
   """
-  @spec encrypt(context, binary, term, [shared_opt | signed_at_opt]) :: binary
+  @spec encrypt(context, binary, term, [shared_opt | max_age_opt | signed_at_opt]) :: binary
   def encrypt(context, secret, data, opts \\ []) when is_binary(secret) do
     context
     |> get_key_base()

@@ -4,12 +4,13 @@ defmodule Phx.New.Single do
   alias Phx.New.{Project}
 
   template(:new, [
-    {:eex, :project,
+    {:config, :project,
      "phx_single/config/config.exs": "config/config.exs",
      "phx_single/config/dev.exs": "config/dev.exs",
      "phx_single/config/prod.exs": "config/prod.exs",
      "phx_single/config/runtime.exs": "config/runtime.exs",
-     "phx_single/config/test.exs": "config/test.exs",
+     "phx_single/config/test.exs": "config/test.exs"},
+    {:eex, :web,
      "phx_single/lib/app_name/application.ex": "lib/:app/application.ex",
      "phx_single/lib/app_name.ex": "lib/:app.ex",
      "phx_web/controllers/error_json.ex": "lib/:lib_web_name/controllers/error_json.ex",
@@ -25,20 +26,20 @@ defmodule Phx.New.Single do
      "phx_single/test/test_helper.exs": "test/test_helper.exs",
      "phx_test/controllers/error_json_test.exs":
        "test/:lib_web_name/controllers/error_json_test.exs"},
-    {:keep, :project,
+    {:keep, :web,
      "phx_web/controllers": "lib/:lib_web_name/controllers",
      "phx_test/controllers": "test/:lib_web_name/controllers"}
   ])
 
   template(:gettext, [
-    {:eex, :project,
+    {:eex, :web,
      "phx_gettext/gettext.ex": "lib/:lib_web_name/gettext.ex",
      "phx_gettext/en/LC_MESSAGES/errors.po": "priv/gettext/en/LC_MESSAGES/errors.po",
      "phx_gettext/errors.pot": "priv/gettext/errors.pot"}
   ])
 
   template(:html, [
-    {:eex, :project,
+    {:eex, :web,
      "phx_web/controllers/error_html.ex": "lib/:lib_web_name/controllers/error_html.ex",
      "phx_test/controllers/error_html_test.exs":
        "test/:lib_web_name/controllers/error_html_test.exs",
@@ -101,15 +102,19 @@ defmodule Phx.New.Single do
     {:eex, :app, "phx_mailer/lib/app_name/mailer.ex": "lib/:app/mailer.ex"}
   ])
 
-  def prepare_project(%Project{app: app} = project) when not is_nil(app) do
-    %Project{project | project_path: project.base_path}
+  def prepare_project(%Project{app: app, base_path: base_path} = project) when not is_nil(app) do
+    if in_umbrella?(base_path) do
+      %Project{project | in_umbrella?: true, project_path: Path.dirname(Path.dirname(base_path))}
+    else
+      %Project{project | in_umbrella?: false, project_path: base_path}
+    end
     |> put_app()
     |> put_root_app()
     |> put_web_app()
   end
 
   defp put_app(%Project{base_path: base_path} = project) do
-    %Project{project | in_umbrella?: in_umbrella?(base_path), app_path: base_path}
+    %Project{project | app_path: base_path}
   end
 
   defp put_root_app(%Project{app: app, opts: opts} = project) do
@@ -126,7 +131,7 @@ defmodule Phx.New.Single do
       | web_app: app,
         lib_web_name: "#{app}_web",
         web_namespace: Module.concat(["#{project.root_mod}Web"]),
-        web_path: project.project_path
+        web_path: project.base_path
     }
   end
 

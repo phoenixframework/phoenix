@@ -115,12 +115,12 @@ defmodule Phx.New.Generator do
         {:error, _} -> "import Config\n"
       end
 
-    with :error <- split_with_self(contents, "use Mix.Config"),
-         :error <- split_with_self(contents, "import Config") do
-      Mix.raise(~s[Could not find "use Mix.Config" or "import Config" in #{inspect(file)}])
-    else
-      [left, middle, right] ->
-        write_formatted!(file, [left, middle, ?\n, ?\n, to_inject, right])
+    case :binary.split(contents, "import Config") do
+      [left, right] ->
+        write_formatted!(file, [left, to_inject, right])
+
+      [_] ->
+        Mix.raise(~s[Could not find "import Config" in #{inspect(file)}])
     end
   end
 
@@ -141,17 +141,18 @@ defmodule Phx.New.Generator do
           """
       end
 
-    case split_with_self(contents, "if config_env() == :prod do") do
-      [left, middle, right] ->
-        write_formatted!(file, [left, middle, ?\n, to_inject, right])
+    case :binary.split(contents, "if config_env() == :prod do") do
+      [left, right] ->
+        write_formatted!(file, [left, "if config_env() == :prod do\n", to_inject, right])
 
-      :error ->
+      [_] ->
         Mix.raise(~s[Could not find "if config_env() == :prod do" in #{inspect(file)}])
     end
   end
 
   defp write_formatted!(file, contents) do
     formatted = contents |> IO.iodata_to_binary() |> Code.format_string!()
+    File.mkdir_p!(Path.dirname(file))
     File.write!(file, [formatted, ?\n])
   end
 
@@ -166,13 +167,6 @@ defmodule Phx.New.Generator do
     end
   end
 
-  defp split_with_self(contents, text) do
-    case :binary.split(contents, text) do
-      [left, right] -> [left, text, right]
-      [_] -> :error
-    end
-  end
-
   def in_umbrella?(app_path) do
     umbrella = Path.expand(Path.join([app_path, "..", ".."]))
     mix_path = Path.join(umbrella, "mix.exs")
@@ -183,6 +177,7 @@ defmodule Phx.New.Generator do
 
   def put_binding(%Project{opts: opts} = project) do
     db = Keyword.get(opts, :database, "postgres")
+    web_adapter = Keyword.get(opts, :adapter, "cowboy")
     ecto = Keyword.get(opts, :ecto, true)
     html = Keyword.get(opts, :html, true)
     live = html && Keyword.get(opts, :live, true)
@@ -202,6 +197,8 @@ defmodule Phx.New.Generator do
     # some storages.
     {adapter_app, adapter_module, adapter_config} =
       get_ecto_adapter(db, String.downcase(project.app), project.app_mod)
+
+    {web_adapter_app, web_adapter_vsn, web_adapter_module} = get_web_adapter(web_adapter)
 
     pubsub_server = get_pubsub_server(project.app_mod)
 
@@ -245,6 +242,9 @@ defmodule Phx.New.Generator do
       adapter_app: adapter_app,
       adapter_module: adapter_module,
       adapter_config: adapter_config,
+      web_adapter_app: web_adapter_app,
+      web_adapter_module: web_adapter_module,
+      web_adapter_vsn: web_adapter_vsn,
       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
       namespaced?: namespaced?(project),
       dev: dev
@@ -261,11 +261,15 @@ defmodule Phx.New.Generator do
     adapter_config = binding[:adapter_config]
 
     config_inject(project_path, "config/dev.exs", """
+    import Config
+
     # Configure your database
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo#{kw_to_config(adapter_config[:dev])}
     """)
 
     config_inject(project_path, "config/test.exs", """
+    import Config
+
     # Configure your database
     #
     # The MIX_TEST_PARTITION environment variable can be used
@@ -308,6 +312,11 @@ defmodule Phx.New.Generator do
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
   end
+
+  defp get_web_adapter("cowboy"), do: {:plug_cowboy, "~> 2.5", Phoenix.Endpoint.Cowboy2Adapter}
+  # TODO bump bandit to 1.0 when it's released
+  defp get_web_adapter("bandit"), do: {:bandit, ">= 0.0.0", Bandit.PhoenixAdapter}
+  defp get_web_adapter(other), do: Mix.raise("Unknown web adapter #{inspect(other)}")
 
   defp fs_db_config(app, module) do
     [

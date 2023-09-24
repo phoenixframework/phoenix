@@ -415,6 +415,15 @@ var Ajax = class {
 };
 
 // js/phoenix/longpoll.js
+var arrayBufferToBase64 = (buffer) => {
+  let binary = "";
+  let bytes = new Uint8Array(buffer);
+  let len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+};
 var LongPoll = class {
   constructor(endPoint) {
     this.endPoint = null;
@@ -492,6 +501,9 @@ var LongPoll = class {
     });
   }
   send(body) {
+    if (typeof body !== "string") {
+      body = arrayBufferToBase64(body);
+    }
     if (this.currentBatch) {
       this.currentBatch.push(body);
     } else if (this.awaitingBatchAck) {

@@ -46,6 +46,47 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.8
+
+### Bug Fixes
+  * Fix `mix phx.gen.release --docker` failing with `:http_util` error on Elixir v1.15
+
+## Enhancements
+  * [Phoenix.VerifiedRoutes] Add support for static resources with fragments in `~p`
+  * [phx.new] Add `--adapter` flag for generating application with webservers like bandit
+
+## 1.7.7 (2023-07-10)
+
+## Enhancements
+  * Support incoming binary payloads to channels over longpoll transport
+
+## 1.7.6 (2023-06-16)
+
+### Bug Fixes
+  * Support websock_adapter 0.5.3
+
+## Enhancements
+  *  Allow using Phoenix.ChannelTest socket/connect in another process
+
+## 1.7.5 (2023-06-15)
+
+### Bug Fixes
+  * Fix LongPoll error when draining connections
+
+## 1.7.4 (2023-06-15)
+
+### Bug Fixes
+  * Fix the WebSocket draining sending incorrect close code when draining causing LiveViews to reload the page instead of reconnecting
+
+## 1.7.3 (2023-05-30)
+
+### Enhancements
+  * Use LiveView 0.19 for new apps
+
+### Bug Fixes
+  * Fix compilation error page on plug debugger showing obscure error when app fails to compile
+  * Fix warnings being printed twice in route verification
+
 ## 1.7.2 (2023-03-20)
 
 ### Enhancements

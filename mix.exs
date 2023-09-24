@@ -8,7 +8,7 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.7.2"
+  @version "1.7.7"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -77,7 +77,7 @@ defmodule Phoenix.MixProject do
       # TODO drop phoenix_view as an optional dependency in Phoenix v2.0
       {:phoenix_view, "~> 2.0", optional: true},
       {:phoenix_template, "~> 1.0"},
-      {:websock_adapter, "~> 0.4"},
+      {:websock_adapter, "~> 0.5.3"},
 
       # TODO drop castore when we require OTP 25+
       {:castore, ">= 0.0.0"},
@@ -89,7 +89,7 @@ defmodule Phoenix.MixProject do
       # Docs dependencies (some for cross references)
       {:ex_doc, "~> 0.24", only: :docs},
       {:ecto, "~> 3.0", only: :docs},
-      {:ecto_sql, "~> 3.6", only: :docs},
+      {:ecto_sql, "~> 3.10", only: :docs},
       {:gettext, "~> 0.20", only: :docs},
       {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 0.6", only: :docs},
@@ -167,7 +167,9 @@ defmodule Phoenix.MixProject do
       "guides/deployment/fly.md",
       "guides/deployment/heroku.md",
       "guides/howto/custom_error_pages.md",
+      "guides/howto/file_uploads.md",
       "guides/howto/using_ssl.md",
+      "guides/howto/writing_a_channels_client.md",
       "CHANGELOG.md"
     ]
   end
@@ -214,7 +216,7 @@ defmodule Phoenix.MixProject do
         Phoenix.Digester.Compressor,
         Phoenix.Digester.Gzip
       ],
-      "Socket": [
+      Socket: [
         Phoenix.Socket.Broadcast,
         Phoenix.Socket.Message,
         Phoenix.Socket.Reply,

@@ -216,7 +216,7 @@ defmodule HelloWeb.Router do
     plug :accepts, ["html", "json"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {HelloWeb.LayoutView, :root}
+    plug :put_root_layout, html: {HelloWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -380,7 +380,7 @@ The flash functionality is handy when mixed with redirects. Perhaps you want to 
   def home(conn, _params) do
     conn
     |> put_flash(:error, "Let's pretend we have an error.")
-    |> redirect(to: ~p"/redirect_test"))
+    |> redirect(to: ~p"/redirect_test")
   end
 ```
 

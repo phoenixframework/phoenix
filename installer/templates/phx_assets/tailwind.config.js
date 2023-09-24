@@ -8,8 +8,8 @@ const path = require("path")
 module.exports = {
   content: [
     "./js/**/*.js",
-    "../lib/*_web.ex",
-    "../lib/*_web/**/*.*ex"
+    "../lib/<%= @lib_web_name || @app_name %>.ex",
+    "../lib/<%= @lib_web_name || @app_name %>/**/*.ex"
   ],
   theme: {
     extend: {
@@ -42,7 +42,7 @@ module.exports = {
         ["-mini", "/20/solid"]
       ]
       icons.forEach(([suffix, dir]) => {
-        fs.readdirSync(path.join(iconsDir, dir)).map(file => {
+        fs.readdirSync(path.join(iconsDir, dir)).forEach(file => {
           let name = path.basename(file, ".svg") + suffix
           values[name] = {name, fullPath: path.join(iconsDir, dir, file)}
         })
@@ -54,6 +54,7 @@ module.exports = {
             [`--hero-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
             "-webkit-mask": `var(--hero-${name})`,
             "mask": `var(--hero-${name})`,
+            "mask-repeat": "no-repeat",
             "background-color": "currentColor",
             "vertical-align": "middle",
             "display": "inline-block",

@@ -277,7 +277,9 @@ defmodule Phoenix.Router do
   Perhaps more importantly, it is also very common to define pipelines specific
   to authentication and authorization. For example, you might have a pipeline
   that requires all users are authenticated. Another pipeline may enforce only
-  admin users can access certain routes.
+  admin users can access certain routes. Since routes are matched top to bottom,
+  it is recommended to place the authenticated/authorized routes before the
+  less restricted routes to ensure they are matched first.
 
   Once your pipelines are defined, you reuse the pipelines in the desired
   scopes, grouping your routes around their pipelines. For example, imagine
@@ -294,17 +296,17 @@ defmodule Phoenix.Router do
       end
 
       scope "/" do
-        pipe_through [:browser]
-
-        get "/posts", PostController, :index
-        get "/posts/:id", PostController, :show
-      end
-
-      scope "/" do
         pipe_through [:browser, :auth]
 
         get "/posts/new", PostController, :new
         post "/posts", PostController, :create
+      end
+
+      scope "/" do
+        pipe_through [:browser]
+
+        get "/posts", PostController, :index
+        get "/posts/:id", PostController, :show
       end
 
   Note in the above how the routes are split across different scopes.
@@ -453,7 +455,7 @@ defmodule Phoenix.Router do
   end
 
   defp match_dispatch() do
-    quote location: :keep do
+    quote location: :keep, generated: true do
       @behaviour Plug
 
       @doc """
@@ -506,10 +508,15 @@ defmodule Phoenix.Router do
     {matches, {pipelines, _}} =
       Enum.map_reduce(routes_with_exprs, {[], %{}}, &build_match/2)
 
-    verifies =
+    routes_per_path =
       routes_with_exprs
       |> Enum.group_by(&elem(&1, 1).path, &elem(&1, 0))
-      |> Enum.map(&build_verify/1)
+
+    verifies =
+      routes_with_exprs
+      |> Enum.map(&elem(&1, 1).path)
+      |> Enum.uniq()
+      |> Enum.map(&build_verify(&1, routes_per_path))
 
     verify_catch_all =
       quote generated: true do
@@ -574,7 +581,9 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp build_verify({path, routes}) do
+  defp build_verify(path, routes_per_path) do
+    routes = Map.get(routes_per_path, path)
+
     forward_plug =
       Enum.find_value(routes, fn
         %{kind: :forward, plug: plug} -> plug
@@ -682,8 +691,11 @@ defmodule Phoenix.Router do
       a helper. Has no effect when using verified routes exclusively
     * `:alias` - configure if the scope alias should be applied to the route.
       Defaults to true, disables scoping if false.
-    * `:log` - the level to log the route dispatching under,
-      may be set to false. Defaults to `:debug`
+    * `:log` - the level to log the route dispatching under, may be set to false. Defaults to
+      `:debug`. Route dispatching contains information about how the route is handled (which controller
+      action is called, what parameters are available and which pipelines are used) and is separate from
+      the plug level logging. To alter the plug log level, please see
+      https://hexdocs.pm/phoenix/Phoenix.Logger.html#module-dynamic-log-level.
     * `:private` - a map of private data to merge into the connection
       when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
@@ -846,7 +858,13 @@ defmodule Phoenix.Router do
   @doc """
   Defines a list of plugs (and pipelines) to send the connection through.
 
-  See `pipeline/2` for more information.
+  Plugs are specified using the atom name of any imported 2-arity function
+  which takes a `%Plug.Conn{}` and options and returns a `%Plug.Conn{}`; for
+  example, `:require_authenticated_user`.
+
+  Pipelines are defined in the router; see `pipeline/2` for more information.
+
+      pipe_through [:my_imported_function, :my_pipeline]
   """
   defmacro pipe_through(pipes) do
     pipes =
@@ -1006,8 +1024,11 @@ defmodule Phoenix.Router do
       ie `"foo.bar.com"`, `"foo."`
     * `:private` - a map of private data to merge into the connection when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
-    * `:log` - the level to log the route dispatching under,
-      may be set to false. Defaults to `:debug`
+    * `:log` - the level to log the route dispatching under, may be set to false. Defaults to
+      `:debug`. Route dispatching contains information about how the route is handled (which controller
+      action is called, what parameters are available and which pipelines are used) and is separate from
+      the plug level logging. To alter the plug log level, please see
+      https://hexdocs.pm/phoenix/Phoenix.Logger.html#module-dynamic-log-level.
 
   """
   defmacro scope(options, do: context) do

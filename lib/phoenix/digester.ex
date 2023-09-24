@@ -23,6 +23,7 @@ defmodule Phoenix.Digester do
       File.mkdir_p!(output_path)
 
       files = filter_files(input_path)
+      files = fixup_sourcemaps(files)
       latest = generate_latest(files)
       digests = load_compile_digests(output_path)
       digested_files = Enum.map(files, &digested_contents(&1, latest, with_vsn?))
@@ -43,6 +44,30 @@ defmodule Phoenix.Digester do
     |> Path.wildcard()
     |> Enum.filter(&(not (File.dir?(&1) or compiled_file?(&1))))
     |> Enum.map(&map_file(&1, input_path))
+  end
+
+  defp fixup_sourcemaps(files) when is_list(files) do
+    Enum.map(files, &maybe_fixup_sourcemap(&1, files))
+  end
+
+  defp maybe_fixup_sourcemap(sourcemap, files) do
+    if Path.extname(sourcemap.filename) == ".map" do
+      fixup_sourcemap(sourcemap, files)
+    else
+      sourcemap
+    end
+  end
+
+  defp fixup_sourcemap(%{} = sourcemap, files) do
+    asset_path = Path.rootname(sourcemap.absolute_path, ".map")
+    asset = Enum.find(files, fn file -> file.absolute_path == asset_path end)
+
+    if asset do
+      new_digested_filename = asset.digested_filename <> ".map"
+      %{sourcemap | digest: asset.digest, digested_filename: new_digested_filename}
+    else
+      sourcemap
+    end
   end
 
   defp generate_latest(files) do

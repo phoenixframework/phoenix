@@ -189,4 +189,4 @@ For custom domains, scaling, jobs and other features, see the [Gigalixir Documen
 
 See [Troubleshooting](https://gigalixir.readthedocs.io/en/latest/troubleshooting.html)
 
-Also, don't hesitate to email [help@gigalixir.com](mailto:help@gigalixir.com) or [request an invitation](https://elixir-slackin.herokuapp.com/) and join the #gigalixir channel on [Slack](https://elixir-lang.slack.com).
+Also, don't hesitate to email [help@gigalixir.com](mailto:help@gigalixir.com) or [request an invitation](https://elixir-lang.slack.com/join/shared_invite/zt-1f13hz7mb-N4KGjF523ONLCcHfb8jYgA#/shared-invite/email) and join the #gigalixir channel on [Slack](https://elixir-lang.slack.com).

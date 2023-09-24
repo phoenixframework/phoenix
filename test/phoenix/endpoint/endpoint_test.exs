@@ -178,6 +178,18 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css"
   end
 
+  test "uses correct path for resources with fragment identifier" do
+    config = put_in(@config[:cache_manifest_skip_vsn], false)
+    assert Endpoint.config_change([{Endpoint, config}], []) == :ok
+
+    assert Endpoint.static_path("/foo.css#info") ==
+             "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d#info"
+
+    # assert that even multiple presences of a number sign are treated as a fragment
+    assert Endpoint.static_path("/foo.css#info#me") ==
+             "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d#info#me"
+  end
+
   @tag :capture_log
   test "invokes init/2 callback" do
     defmodule InitEndpoint do

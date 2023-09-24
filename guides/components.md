@@ -52,7 +52,21 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-In the example above, we defined a `greet/1` function which returns the HEEx template. Above the function, we called `attr`, provided by `Phoenix.Component`, which defines the attributes/assigns that function expects. Since templates are embedded inside the `HelloHTML` module, we can invoke the component simply as `<.greet messenger="..." />`, but we can also type `<HelloWeb.HelloHTML.greet messenger="..." />` if the component was defined elsewhere.
+We declared the attributes we accept via `attr` provided by `Phoenix.Component`, then we defined our `greet/1` function which returns the HEEx template. 
+
+Next we need to update `show.html.heex`:
+
+```elixir
+<section>
+  <.greet messenger={@messenger} />
+</section>
+```
+
+When we reload `http://localhost:4000/hello/Frank`, we should see the same content as before. 
+
+Since templates are embedded inside the `HelloHTML` module, we were able to invoke the view function simply as `<.greet messenger="..." />`. 
+
+If the component was defined elsewhere, we can also type `<HelloWeb.HelloHTML.greet messenger="..." />`.
 
 By declaring attributes, Phoenix will warn if we call the `<.greet />` component without passing attributes. If an attribute is optional, you can specify the `:default` option with a value:
 
@@ -183,27 +197,27 @@ In other words, after rendering your page, the result is placed in the `@inner_c
 
 Phoenix provides all kinds of conveniences to control which layout should be rendered. For example, the `Phoenix.Controller` module provides the `put_root_layout/2` function for us to switch _root layouts_. This takes `conn` as its first argument and a keyword list of formats and their layouts. You can set it to `false` to disable the layout altogether.
 
-You can edit the `home` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this.
+You can edit the `index` action of `HelloController` in `lib/hello_web/controllers/hello_controller.ex` to look like this.
 
 ```elixir
-def home(conn, _params) do
+def index(conn, _params) do
   conn
   |> put_root_layout(html: false)
-  |> render(:home)
+  |> render(:index)
 end
 ```
 
-After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or CSS styling at all.
+After reloading [http://localhost:4000/hello](http://localhost:4000/hello), we should see a very different page, one with no title or CSS styling at all.
 
 To customize the application layout, we invoke a similar function named `put_layout/2`. Let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, copy the existing `app.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/components/layouts`. Then remove everything inside the `<header>...</header>` tags (or change it to whatever you desire) in the new file.
 
-Now, in the `home` action of the controller of `lib/hello_web/controllers/page_controller.ex`, add the following:
+Now, in the `index` action of the controller of `lib/hello_web/controllers/hello_controller.ex`, add the following:
 
 ```elixir
-def home(conn, _params) do
+def index(conn, _params) do
   conn
   |> put_layout(html: :admin)
-  |> render(:home)
+  |> render(:index)
 end
 ```
 

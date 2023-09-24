@@ -165,7 +165,7 @@ If your deployment environment does not support distributed Elixir or direct com
 ### Client Libraries
 
 Any networked device can connect to Phoenix Channels as long as it has a client library.
-The following libraries exist today, and new ones are always welcome.
+The following libraries exist today, and new ones are always welcome; to write your own, see our how-to guide "Writing a Channels Client".
 
 #### Official
 
@@ -183,6 +183,7 @@ Phoenix ships with a JavaScript client that is available when generating a new P
   - [PhoenixSharp](https://github.com/Mazyod/PhoenixSharp)
 + Elixir
   - [phoenix_gen_socket_client](https://github.com/Aircloak/phoenix_gen_socket_client)
+  - [slipstream](https://hexdocs.pm/slipstream/Slipstream.html)
 + GDScript (Godot Game Engine)
   - [GodotPhoenixChannels](https://github.com/alfredbaudisch/GodotPhoenixChannels)
 
@@ -277,7 +278,7 @@ import "./user_socket.js"
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
-In `lib/hello_web/templates/page/index.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
+In `lib/hello_web/controllers/page_html/home.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
 ```heex
 <div id="messages" role="log" aria-live="polite"></div>
@@ -409,7 +410,7 @@ Now our `conn.assigns` contains the `current_user` and `user_token`.
 
 ### Step 2 - Pass the Token to the JavaScript
 
-Next, we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.heex` right above the app.js script, as follows:
+Next, we need to pass this token to JavaScript. We can do so inside a script tag in `lib/hello_web/components/layouts/app.html.heex` right above the app.js script, as follows:
 
 ```heex
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
@@ -418,7 +419,7 @@ Next, we need to pass this token to JavaScript. We can do so inside a script tag
 
 ### Step 3 - Pass the Token to the Socket Constructor and Verify
 
-We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/3` function. To do so, edit `web/channels/user_socket.ex`, as follows:
+We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/3` function. To do so, edit `lib/hello_web/channels/user_socket.ex`, as follows:
 
 ```elixir
 def connect(%{"token" => token}, socket, _connect_info) do
@@ -460,7 +461,7 @@ channel.join()
 export default socket
 ```
 
-Note that token authentication is preferable since it's transport agnostic and well-suited for long running-connections like channels, as opposed to using sessions or authentication approaches.
+Note that token authentication is preferable since it's transport agnostic and well-suited for long running-connections like channels, as opposed to using sessions or other authentication approaches.
 
 ## Fault Tolerance and Reliability Guarantees
 
@@ -481,5 +482,3 @@ Phoenix uses an at-most-once strategy when sending messages to clients. If the c
 ## Example Application
 
 To see an example of the application we just built, checkout the project [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
-
-You can also see a live demo at <https://phoenixchat.herokuapp.com/>.

@@ -578,7 +578,20 @@ defmodule Phoenix.Endpoint do
       @doc """
       Generates a route to a static file in `priv/static`.
       """
-      def static_path(path), do: persistent!().static_path <> elem(static_lookup(path), 0)
+      def static_path(path) do
+        {path, fragment} = path_and_fragment(path)
+
+        persistent!().static_path <> elem(static_lookup(path), 0) <> fragment
+      end
+
+      defp path_and_fragment(path_incl_fragment) do
+        path_incl_fragment
+        |> String.split("#", parts: 2)
+        |> case do
+          [path, fragment] -> {path, "#" <> fragment}
+          [path | _] -> {path, ""}
+        end
+      end
 
       @doc """
       Generates a base64-encoded cryptographic hash (sha512) to a static file
@@ -709,7 +722,13 @@ defmodule Phoenix.Endpoint do
   ## API
 
   @doc """
-  Defines a websocket/longpoll mount-point for a socket.
+  Defines a websocket/longpoll mount-point for a `socket`.
+
+  It expects a `path`, a `socket` module, and a set of options.
+  The socket module is typically defined with `Phoenix.Socket`.
+
+  Both websocket and longpolling connections are supported out
+  of the box.
 
   ## Options
 
@@ -725,10 +744,8 @@ defmodule Phoenix.Endpoint do
       and ["Longpoll configuration"](#socket/3-longpoll-configuration)
       for the whole list
 
-  If your socket is implemented using `Phoenix.Socket`,
-  you can also pass to each transport above all options
-  accepted on `use Phoenix.Socket`. An option given here
-  will override the value in `use Phoenix.Socket`.
+  You can also pass the options below on `use Phoenix.Socket`.
+  The values specified here override the value in `use Phoenix.Socket`.
 
   ## Examples
 
@@ -794,8 +811,12 @@ defmodule Phoenix.Endpoint do
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
 
-    * `:drainer` - a keyword list configuring how to drain sockets
-      on application shutdown. The goal is to notify all channels (and
+    * `:drainer` - a keyword list or a custom MFA function returning a keyword list, for example:
+
+          {MyAppWeb.Socket, :drainer_configuration, []}
+
+      configuring how to drain sockets on application shutdown.
+      The goal is to notify all channels (and
       LiveViews) clients to reconnect. The supported options are:
 
       * `:batch_size` - How many clients to notify at once in a given batch.
@@ -837,16 +858,16 @@ defmodule Phoenix.Endpoint do
     * `:user_agent` - the value of the "user-agent" request header
 
     * `{:session, session_config}` - the session information from `Plug.Conn`.
-      The `session_config` is an exact copy of the arguments given to `Plug.Session`.
-      This requires the "_csrf_token" to be given as request parameter with
-      the value of `URI.encode_www_form(Plug.CSRFProtection.get_csrf_token())`
-      when connecting to the socket. It can also be a MFA to allow loading
-      config in runtime `{MyAppWeb.Auth, :get_session_config, []}`. Otherwise
-      the session will be `nil`.
+      The `session_config` is typically an exact copy of the arguments given
+      to `Plug.Session`. In order to validate the session, the "_csrf_token"
+      must be given as request parameter when connecting the socket with the
+      value of `URI.encode_www_form(Plug.CSRFProtection.get_csrf_token())`.
+      The CSRF token request parameter can be modified via the `:csrf_token_key`
+      option.
 
-      `session_config` may take a `:csrf_token_key` option
-      which is useful when using `:protect_from_forgery` with a custom
-      `:session_key`. If not given, it defaults to `"_csrf_token"`.
+      Additionally, `session_config` may be a MFA, such as
+      `{MyAppWeb.Auth, :get_session_config, []}`, to allow loading config in
+      runtime.
 
   Arbitrary keywords may also appear following the above valid keys, which
   is useful for passing custom connection information to the socket.

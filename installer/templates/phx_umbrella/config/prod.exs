@@ -2,7 +2,10 @@ import Config
 
 <%= if @mailer do %>
 # Configures Swoosh API Client
-config :swoosh, :api_client, <%= @app_module %>.Finch<% end %>
+config :swoosh, :api_client, <%= @app_module %>.Finch
+
+# Disable Swoosh Local Memory Storage
+config :swoosh, local: false<% end %>
 
 # Do not print debug messages in production
 config :logger, level: :info
