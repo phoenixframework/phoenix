@@ -70,7 +70,7 @@ defmodule Mix.Tasks.Phx.New.WebTest do
 
       assert_file "testweb/assets/tailwind.config.js", fn file ->
         assert file =~ "testweb.ex"
-        assert file =~ "testweb/**/*.ex"
+        assert file =~ "testweb/**/*.*ex"
       end
     end
   end

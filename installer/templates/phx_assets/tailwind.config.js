@@ -9,7 +9,7 @@ module.exports = {
   content: [
     "./js/**/*.js",
     "../lib/<%= @lib_web_name || @app_name %>.ex",
-    "../lib/<%= @lib_web_name || @app_name %>/**/*.ex"
+    "../lib/<%= @lib_web_name || @app_name %>/**/*.*ex"
   ],
   theme: {
     extend: {

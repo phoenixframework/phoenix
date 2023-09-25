@@ -152,7 +152,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/assets/css/app.css")
       assert_file "phx_blog/assets/tailwind.config.js", fn file ->
         assert file =~ "phx_blog_web.ex"
-        assert file =~ "phx_blog_web/**/*.ex"
+        assert file =~ "phx_blog_web/**/*.*ex"
       end
 
       assert_file("phx_blog/assets/vendor/heroicons/LICENSE.md")
