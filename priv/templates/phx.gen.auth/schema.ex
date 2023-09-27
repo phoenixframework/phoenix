@@ -9,7 +9,7 @@ defmodule <%= inspect schema.module %> do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
 
-    timestamps()
+    timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}" %>)
   end
 
   @doc """

@@ -301,6 +301,22 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         end
       end
     end
+
+    in_tmp_project "uses defaults from generators configuration (:utc_datetime)", fn ->
+      with_generator_env [timestamp_type: :utc_datetime], fn ->
+        Gen.Schema.run(~w(Blog.Post posts))
+
+        assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
+
+        assert_file migration, fn file ->
+          assert file =~ "timestamps(type: :utc_datetime)"
+        end
+
+        assert_file "lib/phoenix/blog/post.ex", fn file ->
+          assert file =~ "timestamps(type: :utc_datetime)"
+        end
+      end
+    end
   end
 
   test "generates migrations with a custom migration module", config do

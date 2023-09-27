@@ -55,6 +55,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       config :your_app, :generators,
         migration: true,
         binary_id: false,
+        timestamp_type: :naive_datetime,
         sample_binary_id: "11111111-1111-1111-1111-111111111111"
 
   You can override those options per invocation by providing corresponding

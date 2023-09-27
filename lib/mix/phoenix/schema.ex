@@ -38,7 +38,8 @@ defmodule Mix.Phoenix.Schema do
             migration_module: nil,
             fixture_unique_functions: [],
             fixture_params: [],
-            prefix: nil
+            prefix: nil,
+            timestamp_type: :naive_datetime
 
   @valid_types [
     :integer,
@@ -127,6 +128,7 @@ defmodule Mix.Phoenix.Schema do
       human_singular: Phoenix.Naming.humanize(singular),
       human_plural: Phoenix.Naming.humanize(schema_plural),
       binary_id: opts[:binary_id],
+      timestamp_type: opts[:timestamp_type] || :naive_datetime,
       migration_defaults: migration_defaults(attrs),
       string_attr: string_attr,
       params: %{
