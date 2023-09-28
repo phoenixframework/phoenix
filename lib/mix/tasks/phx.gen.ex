@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.Gen do
   | `phx.gen.embedded` | x |   |   |   |   |   |
   | `phx.gen.schema`   | x | x |   |   |   |   |
   | `phx.gen.context`  | x | x | x |   |   |   |
-  | `phx.gen.live`     | x | x | x |   |   | x |
+  | `phx.gen.live`     |   |   |   |   |   | x |
   | `phx.gen.json`     | x | x | x | x | x |   |
   | `phx.gen.html`     | x | x | x | x | x |   |
   """
