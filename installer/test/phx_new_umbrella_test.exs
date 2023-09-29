@@ -654,6 +654,15 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(app_path(app, "mix.exs"), ":ecto_sqlite3")
       assert_file(app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.SQLite3")
 
+      assert_file(app_path(app, "lib/custom_path/application.ex"), fn file ->
+        assert file =~ "{Ecto.Migrator"
+        assert file =~ "repos: Application.fetch_env!(:custom_path, :ecto_repos)"
+        assert file =~ "skip: skip_migrations?()"
+
+        assert file =~ "defp skip_migrations?() do"
+        assert file =~ ~s/!!System.get_env("RELEASE_NAME")/
+      end)
+
       assert_file(root_path(app, "config/dev.exs"), [~r/database: .*_dev.db/])
       assert_file(root_path(app, "config/test.exs"), [~r/database: .*_test.db/])
       assert_file(root_path(app, "config/runtime.exs"), [~r/database: database_path/])
