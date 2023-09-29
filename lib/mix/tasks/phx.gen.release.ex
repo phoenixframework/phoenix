@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   require Logger
 
   @doc false
-  def run(args) do
+  def run(args, test_opts \\ []) do
     opts = parse_args(args)
 
     if Mix.Project.umbrella?() do
@@ -53,9 +53,16 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     app_namespace = Mix.Phoenix.base()
     web_namespace = app_namespace |> Mix.Phoenix.web_module() |> inspect()
 
+    if Keyword.get(test_opts, :validate_dependencies?, true) do
+      # Needed so we can get the ecto adapter and ensure other
+      # libraries are loaded.
+      Mix.Task.run("compile")
+    end
+
     binding = [
       app_namespace: app_namespace,
       otp_app: app,
+      auto_migrate?: auto_migrate?(app, test_opts),
       assets_dir_exists?: File.dir?("assets")
     ]
 
@@ -151,6 +158,27 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     |> Keyword.put_new_lazy(:ecto, &ecto_sql_installed?/0)
     |> Keyword.put_new(:docker, false)
     |> Map.new()
+  end
+
+  defp auto_migrate?(app, test_opts) do
+    repos = Application.get_env(app, :ecto_repos) |> List.wrap()
+    Enum.any?(repos, fn repo ->
+      adapter =
+        Keyword.get_lazy(
+        test_opts,
+        :ecto_adapter,
+        fn -> get_ecto_adapter!(repo) end)
+
+      adapter == Ecto.Adapters.SQLite3
+    end)
+  end
+
+  defp get_ecto_adapter!(repo) do
+    if Code.ensure_loaded?(repo) do
+      repo.__adapter__()
+    else
+      Mix.raise("Unable to find #{inspect(repo)}")
+    end
   end
 
   defp ecto_instructions(app) do

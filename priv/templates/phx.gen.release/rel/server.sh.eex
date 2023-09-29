@@ -1,3 +1,4 @@
 #!/bin/sh
-cd -P -- "$(dirname -- "$0")"
-PHX_SERVER=true exec ./<%= otp_app %> start
+cd -P -- "$(dirname -- "$0")"<%= if auto_migrate? do %>
+exec ./<%= otp_app %> eval <%= app_namespace %>.Release.migrate
+<% end %>PHX_SERVER=true exec ./<%= otp_app %> start

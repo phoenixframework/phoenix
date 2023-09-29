@@ -1,2 +1,4 @@
-set PHX_SERVER=true
+set PHX_SERVER=true<%= if auto_migrate? do %>
+call "%~dp0\<%= otp_app %>" eval <%= app_namespace %>.Release.migrate
+<% end %>
 call "%~dp0\<%= otp_app %>" start

@@ -9,12 +9,14 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
 
   setup do
     Mix.Task.clear()
-    :ok
+    on_exit(fn ->
+      Application.delete_env(:phoenix, :ecto_repos)
+    end)
   end
 
   test "generates release files", config do
     in_tmp_project(config.test, fn ->
-      Gen.Release.run(["--ecto"])
+      Gen.Release.run(["--ecto"], validate_dependencies?: false)
 
       assert_file("lib/phoenix/release.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Release do|
@@ -53,7 +55,7 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
 
   test "generates release files without ecto", config do
     in_tmp_project(config.test, fn ->
-      Gen.Release.run([])
+      Gen.Release.run([], validate_dependencies?: false)
 
       assert_file("rel/overlays/bin/server", fn file ->
         assert file =~ ~S|PHX_SERVER=true exec ./phoenix start|
@@ -77,8 +79,9 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
   end
 
   test "generates release and docker files", config do
+    Application.put_env(:phoenix, :ecto_repos, [MyApp.Repo])
     in_tmp_project(config.test, fn ->
-      Gen.Release.run(["--docker", "--ecto"])
+      Gen.Release.run(["--docker", "--ecto"], validate_dependencies?: false, ecto_adapter: Ecto.Adapters.Postgres)
 
       assert_file("lib/phoenix/release.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Release do|
@@ -100,6 +103,7 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
 
       assert_file("rel/overlays/bin/server", fn file ->
         assert file =~ ~S|PHX_SERVER=true exec ./phoenix start|
+        refute file =~ "migrate"
       end)
 
       assert_file("rel/overlays/bin/server.bat", fn file ->
@@ -117,10 +121,27 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
     end)
   end
 
+
+  test "automigrates on server start for sqlite", config do
+    Application.put_env(:phoenix, :ecto_repos, [MyApp.Repo])
+    in_tmp_project(config.test, fn ->
+      Gen.Release.run(["--docker", "--ecto"], validate_dependencies?: false, ecto_adapter: Ecto.Adapters.SQLite3)
+      assert_file("rel/overlays/bin/server", fn file ->
+        assert file =~ ~S| ./phoenix start|
+        assert file =~ "migrate"
+      end)
+
+      assert_file("rel/overlays/bin/server.bat", fn file ->
+        assert file =~ "call \"%~dp0\\phoenix\" start"
+        assert file =~ "migrate"
+      end)
+    end)
+  end
+
   test "generates release and docker files with assets dir", config do
     in_tmp_project(config.test, fn ->
       File.mkdir_p!("assets")
-      Gen.Release.run(["--docker"])
+      Gen.Release.run(["--docker"], validate_dependencies?: false)
 
       assert_file("Dockerfile", fn file ->
         assert file =~ ~S|COPY assets assets|
@@ -131,7 +152,7 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
 
   test "generates release and docker files without assets dir", config do
     in_tmp_project(config.test, fn ->
-      Gen.Release.run(["--docker"])
+      Gen.Release.run(["--docker"], validate_dependencies?: false)
 
       assert_file("Dockerfile", fn file ->
         refute file =~ ~S|COPY assets assets|
