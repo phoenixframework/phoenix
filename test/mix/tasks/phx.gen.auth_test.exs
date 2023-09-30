@@ -935,6 +935,31 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
     end
   end
 
+  test "allows utc_datetime", config do
+    in_tmp_phx_project(config.test, fn ->
+      send self(), {:mix_shell_input, :yes?, false}
+      with_generator_env(:my_app, [timestamp_type: :utc_datetime], fn ->
+
+        Gen.Auth.run(
+        ~w(Accounts User users),
+        ecto_adapter: Ecto.Adapters.Postgres,
+        validate_dependencies?: false
+        )
+
+        assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
+
+        assert_file migration, fn file ->
+          assert file =~ "timestamps(type: :utc_datetime)"
+        end
+
+
+        assert_file("lib/my_app/accounts/user.ex", fn file ->
+          assert file =~ "timestamps(type: :utc_datetime)"
+        end)
+      end)
+    end)
+  end
+
   test "supports --binary-id option", config do
     in_tmp_phx_project(config.test, fn ->
       send self(), {:mix_shell_input, :yes?, false}

@@ -9,7 +9,7 @@ defmodule <%= inspect schema.repo %>.Migrations.Create<%= Macro.camelize(schema.
 <% end %>      <%= migration.column_definitions[:email] %>
       add :hashed_password, :string, null: false
       add :confirmed_at, :naive_datetime
-      timestamps()
+      timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}" %>)
     end
 
     create unique_index(:<%= schema.table %>, [:email])

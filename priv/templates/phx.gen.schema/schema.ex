@@ -9,7 +9,7 @@ defmodule <%= inspect schema.module %> do
 <%= Mix.Phoenix.Schema.format_fields_for_schema(schema) %>
 <%= for {_, k, _, _} <- schema.assocs do %>    field <%= inspect k %>, <%= if schema.binary_id do %>:binary_id<% else %>:id<% end %>
 <% end %>
-    timestamps()
+    timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}" %>)
   end
 
   @doc false

@@ -111,11 +111,20 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
       config :your_app, :generators,
         migration: true,
         binary_id: false,
+        timestamp_type: :naive_datetime,
         sample_binary_id: "11111111-1111-1111-1111-111111111111"
 
   You can override those options per invocation by providing corresponding
   switches, e.g. `--no-binary-id` to use normal ids despite the default
   configuration or `--migration` to force generation of the migration.
+
+  ## UTC timestamps
+
+  By setting the `:timestamp_type` to `:utc_datetime`, the timestamps
+  will be created using the UTC timezone. This results in a `DateTime` struct
+  instead of a `NaiveDateTime`. This can also be set to `:utc_datetime_usec` for
+  microsecond precision.
+
   """
   use Mix.Task
 
