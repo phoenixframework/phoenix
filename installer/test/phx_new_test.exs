@@ -702,7 +702,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "skip: skip_migrations?()"
 
         assert file =~ "defp skip_migrations?() do"
-        assert file =~ ~s/!!System.get_env("RELEASE_NAME")/
+        assert file =~ ~s/System.get_env("RELEASE_NAME") != nil/
       end)
 
       assert_file("custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)")
