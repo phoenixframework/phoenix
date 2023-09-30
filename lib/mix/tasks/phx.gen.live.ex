@@ -271,7 +271,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   @doc false
   def inputs(%Schema{} = schema) do
-    Enum.map(schema.attrs, fn
+    schema.attrs
+    |> Enum.reject(fn {_key, type} -> type == :map end)
+    |> Enum.map(fn
       {_, {:references, _}} ->
         nil
 

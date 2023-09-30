@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "build" do
     in_tmp_project "build", fn ->
-      schema = Gen.Schema.build(~w(Blog.Post posts title:string), [])
+      schema = Gen.Schema.build(~w(Blog.Post posts title:string tags:map), [])
 
       assert %Schema{
         alias: Post,
@@ -28,10 +28,11 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         singular: "post",
         human_plural: "Posts",
         human_singular: "Post",
-        attrs: [title: :string],
-        types: %{title: :string},
+        attrs: [title: :string, tags: :map],
+        types: %{title: :string, tags: :map},
+        optionals: [:tags],
         route_helper: "post",
-        defaults: %{title: ""},
+        defaults: %{title: "", tags: ""},
       } = schema
       assert String.ends_with?(schema.file, "lib/phoenix/blog/post.ex")
     end
@@ -108,6 +109,16 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_blog_posts.exs")
       assert_file migration, fn file ->
         assert file =~ "create table(:blog_posts) do"
+      end
+    end
+  end
+
+  test "does not add maps to the required list", config do
+    in_tmp_project config.test, fn ->
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string tags:map published_at:naive_datetime))
+      assert_file "lib/phoenix/blog/post.ex", fn file ->
+        assert file =~ "cast(attrs, [:title, :tags, :published_at]"
+        assert file =~ "validate_required([:title, :published_at]"
       end
     end
   end

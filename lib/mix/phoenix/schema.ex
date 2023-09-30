@@ -28,6 +28,7 @@ defmodule Mix.Phoenix.Schema do
             migration_defaults: nil,
             migration?: false,
             params: %{},
+            optionals: [],
             sample_id: nil,
             web_path: nil,
             web_namespace: nil,
@@ -86,7 +87,6 @@ defmodule Mix.Phoenix.Schema do
     api_prefix = Application.get_env(otp_app, :generators)[:api_prefix] || "/api"
     embedded? = Keyword.get(opts, :embedded, false)
     generate? = Keyword.get(opts, :schema, true)
-
     singular =
       module
       |> Module.split()
@@ -96,6 +96,8 @@ defmodule Mix.Phoenix.Schema do
     collection = if schema_plural == singular, do: singular <> "_collection", else: schema_plural
     string_attr = string_attr(types)
     create_params = params(attrs, :create)
+
+    optionals = for {key, :map} <- types, do: key, into: []
 
     default_params_key =
       case Enum.at(create_params, 0) do
@@ -118,6 +120,7 @@ defmodule Mix.Phoenix.Schema do
       plural: schema_plural,
       singular: singular,
       collection: collection,
+      optionals: optionals,
       assocs: assocs,
       types: types,
       defaults: schema_defaults(attrs),
@@ -248,6 +251,14 @@ defmodule Mix.Phoenix.Schema do
     Enum.map_join(schema.types, "\n", fn {k, v} ->
       "    field #{inspect(k)}, #{type_and_opts_for_schema(v)}#{schema.defaults[k]}#{maybe_redact_field(k in schema.redacts)}"
     end)
+  end
+
+  @doc """
+  Return the required fields in the schema. Anything not in the `optionals` list
+  is considered required.
+  """
+  def required_fields(schema) do
+    Enum.reject(schema.attrs, fn {key, _} -> key in schema.optionals end)
   end
 
   def type_and_opts_for_schema({:enum, opts}),
