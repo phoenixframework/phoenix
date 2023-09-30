@@ -695,6 +695,15 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("custom_path/config/runtime.exs", [~r/database: database_path/])
       assert_file("custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.SQLite3")
 
+      assert_file("custom_path/lib/custom_path/application.ex", fn file ->
+        assert file =~ "{Ecto.Migrator"
+        assert file =~ "repos: Application.fetch_env!(:custom_path, :ecto_repos)"
+        assert file =~ "skip: skip_migrations?()"
+
+        assert file =~ "defp skip_migrations?() do"
+        assert file =~ ~s/!!System.get_env("RELEASE_NAME")/
+      end)
+
       assert_file("custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)")
 
       assert_file(
