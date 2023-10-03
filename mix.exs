@@ -95,6 +95,7 @@ defmodule Phoenix.MixProject do
       {:telemetry_metrics, "~> 0.6", only: :docs},
       {:makeup_eex, ">= 0.1.1", only: :docs},
       {:makeup_elixir, "~> 0.16", only: :docs},
+      {:makeup_diff, "~> 0.1", only: :docs},
 
       # Test dependencies
       {:phoenix_html, "~> 3.3", only: [:docs, :test]},
