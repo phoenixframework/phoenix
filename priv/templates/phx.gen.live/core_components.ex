@@ -302,7 +302,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def input(%{type: "checkbox"} = assigns) do
     assigns =
-      assign_new(assigns, :checked, fn -> Phoenix.HTML.Form.normalize_value("checkbox", assigns[:value]) end)
+      assign_new(assigns, :checked, fn ->
+        Phoenix.HTML.Form.normalize_value("checkbox", assigns[:value])
+      end)
 
     ~H"""
     <div phx-feedback-for={@name}>
