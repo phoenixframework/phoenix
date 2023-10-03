@@ -56,6 +56,8 @@ children = [
 ]
 ```
 
+## Usage With Channels and JavaScript
+
 Next, we will create the channel that we'll communicate presence over. After a user joins, we can push the list of presences down the channel and then track the connection. We can also provide a map of additional information to track.
 
 ```elixir
@@ -122,8 +124,122 @@ Bob (count: 1)
 
 If we close one of the Alice tabs, then the count should decrease to 1. If we close another tab, the user should disappear from the list entirely.
 
-## Making it safe
+### Making it safe
 
 In our initial implementation, we are passing the name of the user as part of the URL. However, in many systems, you want to allow only logged in users to access the presence functionality. To do so, you should set up token authentication, [as detailed in the token authentication section of the channels guide](channels.html#using-token-authentication).
 
 With token authentication, you should access `socket.assigns.user_id`, set in `UserSocket`, instead of `socket.assigns.name` set from parameters.
+
+## Usage With LiveView
+
+Whilst Phoenix does ship with a JavaScript API for dealing with presence, it is also possible to extend the `HelloWeb.Presence` module to support LiveView.
+
+One thing to keep in mind when dealing with LiveView, is that each LiveView is a stateful process, so if we keep the presence state in the LiveView, each LiveView process will contain the full list of online users in memory. Instead, we can keep track of the online users within the `Presence` process, and pass separate events to the LiveView, which can use a stream to update the online list.
+
+To start with, we need to update the `lib/hello_web/channels/presence.ex` file to add some optional callbacks to the `HelloWeb.Presence` module.
+
+Firstly, we add the `init/1` callback. This allows us to keep track of the presence state within the process.
+
+```elixir
+  def init(_opts) do
+    {:ok, %{}}
+  end
+```
+
+The presence module also allows a `fetch/2` callback, this allows the data fetched from the presence to be modified, allowing us to define the shape of the response. In this case we are adding an `id` and a `user` map.
+
+```elixir
+  def fetch(_topic, presences) do
+    for {key, %{metas: [meta | metas]}} <- presences, into: %{} do
+      # user can be populated here from the database here we populate
+      # the name for demonstration purposes
+      {key, %{metas: [meta | metas], id: meta.id, user: %{name: meta.id}}}
+    end
+  end
+```
+
+The final thing to add is the `handle_metas/4` callback. This callback updates the state that we keep track of in `HelloWeb.Presence` based on the user leaves and joins.
+
+```elixir
+  def handle_metas(topic, %{joins: joins, leaves: leaves}, presences, state) do
+    for {user_id, presence} <- joins do
+      user_data = %{id: user_id, user: presence.user, metas: Map.fetch!(presences, user_id)}
+      msg = {__MODULE__, {:join, user_data}}
+      Phoenix.PubSub.local_broadcast(Hello.PubSub, "proxy:#{topic}", msg)
+    end
+
+    for {user_id, presence} <- leaves do
+      metas =
+        case Map.fetch(presences, user_id) do
+          {:ok, presence_metas} -> presence_metas
+          :error -> []
+        end
+
+      user_data = %{id: user_id, user: presence.user, metas: metas}
+      msg = {__MODULE__, {:leave, user_data}}
+      Phoenix.PubSub.local_broadcast(Hello.PubSub, "proxy:#{topic}", msg)
+    end
+
+    {:ok, state}
+  end
+```
+
+You can see that we are broadcasting events for the joins and leaves. These will be listened to by the LiveView process. You'll also see that we use "proxy" channel when broadcasting the joins and leaves. This is because we don't want our LiveView process to receive the presence events directly. We can add a few helper functions so that this particular implementation detail is abstracted from the LiveView module.
+
+```elixir
+  def list_online_users(), do: list("online_users") |> Enum.map(fn {_id, presence} -> presence end)
+
+  def track_user(name, params), do: track(self(), "online_users", name, params)
+
+  def subscribe(), do: Phoenix.PubSub.subscribe(Hello.PubSub, "proxy:online_users")
+```
+
+Now that we have our presence module set up and broadcasting events, we can create a LiveView. Create a new file `lib/hello_web/live/online/index.ex` with the following contents:
+
+```elixir
+defmodule HelloWeb.OnlineLive do
+  use HelloWeb, :live_view
+
+  def mount(params, _session, socket) do
+    socket = stream(socket, :presences, [])
+    socket =
+    if connected?(socket) do
+      HelloWeb.Presence.track_user(params["name"], %{id: params["name"]})
+      HelloWeb.Presence.subscribe()
+      stream(socket, :presences, HelloWeb.Presence.list_online_users())
+    else
+       socket
+    end
+
+    {:ok, socket}
+  end
+
+  def render(assigns) do
+    ~H"""
+    <ul id="online_users" phx-update="stream">
+      <li :for={{dom_id, %{id: id, metas: metas}} <- @streams.presences} id={dom_id}><%= id %> (<%= length(metas) %>)</li>
+    </ul>
+    """
+  end
+
+  def handle_info({HelloWeb.Presence, {:join, presence}}, socket) do
+    {:noreply, stream_insert(socket, :presences, presence)}
+  end
+
+  def handle_info({HelloWeb.Presence, {:leave, presence}}, socket) do
+    if presence.metas == [] do
+      {:noreply, stream_delete(socket, :presences, presence)}
+    else
+      {:noreply, stream_insert(socket, :presences, presence)}
+    end
+  end
+end
+```
+
+If we add this route to the `lib/hello_web/router.ex`:
+
+```elixir
+    live "/online/:name", OnlineLive, :index
+```
+
+Then we can navigate to http://localhost:4000/online/Alice in one tab, and http://localhost:4000/online/Bob in another, you'll see that the presences are tracked, along with the number of presences per user. Opening and closing tabs with various users will update the presence list in real-time.
