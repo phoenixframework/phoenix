@@ -113,6 +113,40 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
+  test "allows a custom repo", config do
+    in_tmp_project config.test, fn ->
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string --repo MyApp.CustomRepo))
+
+      assert [migration] = Path.wildcard("priv/custom_repo/migrations/*_create_blog_posts.exs")
+      assert_file migration, fn file ->
+        assert file =~ "defmodule MyApp.CustomRepo.Migrations.CreateBlogPosts do"
+      end
+    end
+  end
+
+  test "allows a custom migration dir", config do
+    in_tmp_project config.test, fn ->
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string --migration-dir priv/custom_dir))
+
+      assert [migration] = Path.wildcard("priv/custom_dir/*_create_blog_posts.exs")
+      assert_file migration, fn file ->
+        assert file =~ "defmodule Phoenix.Repo.Migrations.CreateBlogPosts do"
+      end
+    end
+  end
+
+  test "custom migration_dir takes precedence over custom repo name", config do
+    in_tmp_project config.test, fn ->
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string \
+        --repo MyApp.CustomRepo --migration-dir priv/custom_dir))
+
+      assert [migration] = Path.wildcard("priv/custom_dir/*_create_blog_posts.exs")
+      assert_file migration, fn file ->
+        assert file =~ "defmodule MyApp.CustomRepo.Migrations.CreateBlogPosts do"
+      end
+    end
+  end
+
   test "does not add maps to the required list", config do
     in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post blog_posts title:string tags:map published_at:naive_datetime))

@@ -86,6 +86,21 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   Generated migration can use `binary_id` for schema's primary key
   and its references with option `--binary-id`.
 
+  ## repo
+
+  Generated migration can use `repo` to set the migration repository
+  folder with option `--repo`:
+
+      $ mix phx.gen.schema Blog.Post posts --repo MyApp.Repo.Auth
+
+  ## migration_dir
+
+  Generated migrations can be added to a specific `--migration-dir` which sets
+  the migration folder path:
+
+      $ mix phx.gen.schema Blog.Post posts --migration-dir /path/to/directory
+
+
   ## prefix
 
   By default migrations and schemas are generated without a prefix.
@@ -130,8 +145,8 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   alias Mix.Phoenix.Schema
 
-  @switches [migration: :boolean, binary_id: :boolean, table: :string,
-             web: :string, context_app: :string, prefix: :string]
+  @switches [migration: :boolean, binary_id: :boolean, table: :string, web: :string,
+    context_app: :string, prefix: :string, repo: :string, migration_dir: :string]
 
   @doc false
   def run(args) do
@@ -164,10 +179,17 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
       parent_opts
       |> Keyword.merge(schema_opts)
       |> put_context_app(schema_opts[:context_app])
+      |> maybe_update_repo_module()
 
-    schema = Schema.new(schema_name, plural, attrs, opts)
+    Schema.new(schema_name, plural, attrs, opts)
+  end
 
-    schema
+  defp maybe_update_repo_module(opts) do
+    if is_nil(opts[:repo]) do
+      opts
+    else
+      Keyword.update!(opts, :repo, &Module.concat([&1]))
+    end
   end
 
   defp put_context_app(opts, nil), do: opts
@@ -181,12 +203,26 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   end
 
   @doc false
-  def copy_new_files(%Schema{context_app: ctx_app} = schema, paths, binding) do
+  def copy_new_files(%Schema{context_app: ctx_app, repo: repo, opts: opts} = schema, paths, binding) do
     files = files_to_be_generated(schema)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.schema", binding, files)
 
     if schema.migration? do
-      migration_path = Mix.Phoenix.context_app_path(ctx_app, "priv/repo/migrations/#{timestamp()}_create_#{schema.table}.exs")
+      migration_dir =
+        cond do
+          migration_dir = opts[:migration_dir] ->
+            migration_dir
+
+          opts[:repo] ->
+            repo_name = repo |> Module.split() |> List.last() |> Macro.underscore()
+            Mix.Phoenix.context_app_path(ctx_app, "priv/#{repo_name}/migrations/")
+
+          true ->
+            Mix.Phoenix.context_app_path(ctx_app, "priv/repo/migrations/")
+        end
+
+      migration_path = Path.join(migration_dir, "#{timestamp()}_create_#{schema.table}.exs")
+
       Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", binding, [
         {:eex, "migration.exs", migration_path},
       ]
