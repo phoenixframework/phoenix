@@ -621,12 +621,12 @@ We generated a new resource inside our `ShoppingCart` named `CartItem`. This sch
       timestamps()
     end
 
-    create index(:cart_items, [:cart_id])
+-   create index(:cart_items, [:cart_id])
     create index(:cart_items, [:product_id])
 +   create unique_index(:cart_items, [:cart_id, :product_id])
 ```
 
-We used the `:delete_all` strategy again to enforce data integrity. This way, when a cart or product is deleted from the application, we don't have to rely on application code in our `ShoppingCart` or `Catalog` contexts to worry about cleaning up the records. This keeps our application code decoupled and the data integrity enforcement where it belongs – in the database. We also added a unique constraint to ensure a duplicate product is not allowed to be added to a cart. With our database tables in place, we can now migrate up:
+We used the `:delete_all` strategy again to enforce data integrity. This way, when a cart or product is deleted from the application, we don't have to rely on application code in our `ShoppingCart` or `Catalog` contexts to worry about cleaning up the records. This keeps our application code decoupled and the data integrity enforcement where it belongs – in the database. We also added a unique constraint to ensure a duplicate product is not allowed to be added to a cart. As with the `product_categories` table, using a multi-column index lets us remove the separate index for the leftmost field (`cart-id`). With our database tables in place, we can now migrate up:
 
 ```console
 $ mix ecto.migrate
