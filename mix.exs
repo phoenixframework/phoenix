@@ -71,14 +71,14 @@ defmodule Phoenix.MixProject do
   defp deps do
     [
       {:plug, "~> 1.14"},
-      {:plug_crypto, "~> 1.2"},
+      {:plug_crypto, "~> 1.2 or ~> 2.0"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
-      # TODO drop phoenix_view as an optional dependency in Phoenix v2.0
-      {:phoenix_view, "~> 2.0", optional: true},
       {:phoenix_template, "~> 1.0"},
       {:websock_adapter, "~> 0.5.3"},
 
+      # TODO drop phoenix_view as an optional dependency in Phoenix v2.0
+      {:phoenix_view, "~> 2.0", optional: true},
       # TODO drop castore when we require OTP 25+
       {:castore, ">= 0.0.0"},
 
