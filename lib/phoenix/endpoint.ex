@@ -580,17 +580,11 @@ defmodule Phoenix.Endpoint do
       Generates a route to a static file in `priv/static`.
       """
       def static_path(path) do
-        {path, fragment} = path_and_fragment(path)
+        prefix = persistent!().static_path
 
-        persistent!().static_path <> elem(static_lookup(path), 0) <> fragment
-      end
-
-      defp path_and_fragment(path_incl_fragment) do
-        path_incl_fragment
-        |> String.split("#", parts: 2)
-        |> case do
-          [path, fragment] -> {path, "#" <> fragment}
-          [path | _] -> {path, ""}
+        case :binary.split(path, "#") do
+          [path, fragment] -> prefix <> elem(static_lookup(path), 0) <> "#" <> fragment
+          [path] -> prefix <> elem(static_lookup(path), 0)
         end
       end
 
