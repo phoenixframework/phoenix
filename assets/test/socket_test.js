@@ -14,12 +14,6 @@ describe("with transports", function(){
     window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
   })
 
-  after(function(done){
-    window.WebSocket = null
-    window.XMLHttpRequest = null
-    done()
-  })
-
   describe("constructor", function(){
     it("sets defaults", function(){
       socket = new Socket("/socket")
