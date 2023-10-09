@@ -46,7 +46,7 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
-## 1.7.8
+## 1.7.8 (2023-10-09)
 
 ### Bug fixes
   * [Phoenix.ChannelTest] Stringify lists when pushing data
@@ -70,6 +70,7 @@ future styling).
   * [phx.new] Automatically migrate when release starts when using sqlite 3
   * [phx.new] Allow ID to be assigned in flash component
   * [phx.new] Add `--adapter` flag for generating application with bandit
+  * [phx.new] Include DNSCluster for simple clustering
   * [phx.routes] Support `--method` option
 
 ## 1.7.7 (2023-07-10)

@@ -10,8 +10,9 @@ defmodule <%= @app_module %>.Application do
     children = [<%= if @ecto do %>
       <%= @app_module %>.Repo,<% end %><%= if @adapter_app == :ecto_sqlite3 do %>
       {Ecto.Migrator,
-        repos: Application.fetch_env!(<%= inspect String.to_atom(@app_name) %>, :ecto_repos),
+        repos: Application.fetch_env!(<%= inspect(String.to_atom(@app_name)) %>, :ecto_repos),
         skip: skip_migrations?()},<% end %>
+      {DNSCluster, query: Application.get_env(<%= inspect(String.to_atom(@app_name)) %>, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: <%= @app_module %>.PubSub}<%= if @mailer do %>,
       # Start the Finch HTTP client for sending emails
       {Finch, name: <%= @app_module %>.Finch}<% end %>
