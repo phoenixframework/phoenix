@@ -75,17 +75,14 @@ defmodule Phoenix.CodeReloader do
   API used by Plug to start the code reloader.
   """
   def init(opts) do
-    case Keyword.pop(opts, :reloader) do
-      {nil, opts} -> &Phoenix.CodeReloader.reload(&1, opts)
-      {fun, _opts} -> fun
-    end
+    Keyword.put_new(opts, :reloader, &Phoenix.CodeReloader.reload/2)
   end
 
   @doc """
   API used by Plug to invoke the code reloader on every request.
   """
-  def call(conn, reloader) do
-    case reloader.(conn.private.phoenix_endpoint) do
+  def call(conn, opts) do
+    case opts[:reloader].(conn.private.phoenix_endpoint, opts) do
       :ok ->
         conn
 
