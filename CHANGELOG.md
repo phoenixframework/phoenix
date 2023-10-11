@@ -46,6 +46,12 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.9 (2023-10-11)
+
+### Bug fixes
+  * [Phoenix.CodeReloader] - Fix error in code reloader causing compilation errors
+  * [phx.new] – fix LiveView debug heex configuration being generated when `--no-html` pas passed
+
 ## 1.7.8 (2023-10-09)
 
 ### Bug fixes
