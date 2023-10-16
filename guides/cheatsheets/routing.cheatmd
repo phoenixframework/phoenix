@@ -1,0 +1,83 @@
+# Routing cheatsheet
+
+> Those need to be declared in the correct router module and scope.
+
+A quick reference to the common routing features' syntax. For an exhaustive overview, refer to the [routing guides](routing-1.html).
+
+## Routing declaration
+{: .col-2}
+
+### Single route
+
+```elixir
+get "/users", UserController, :index
+patch "/users/:id", UserController, :update
+```
+```elixir
+# generated path helpers
+user_path(conn, :index) #  /users
+user_path(conn, :create, %{id: 9, ...}) #  /users/9
+```
+Also accepts `put`, `patch`, `options`, `delete` and `head`.
+
+### Resources
+
+#### Simple
+
+```elixir
+resources "/users", UserController
+```
+Generates `:index`, `:edit`, `:new`, `:show`, `:create`, `:update` and `:delete`.
+
+#### Options
+
+```elixir
+resources "/users", UserController, only: [:show]
+resources "/users", UserController, except: [:create, :delete]
+resources "/users", UserController, as: :person # `person_path(...)`
+```
+
+#### Nested
+
+```elixir
+resources "/users", UserController do
+  resources "/posts", PostController
+end
+```
+```elixir
+# generated path helpers
+user_post_path(:index, 17)     # /users/17/posts
+user_post_path(:show, 17, 12)  # /users/17/posts/12
+```
+For more info check the [resources docs.](routing-1.html#resources)
+
+### Scopes
+
+#### Simple
+```elixir
+scope "/admin", HelloWeb.Admin do
+  pipe_through :browser
+
+  resources "/users",   UserController
+end
+```
+```elixir
+# generated path helpers
+admin_user_path(:index) # /admin/users
+```
+
+#### Nested
+```elixir
+scope "/api", HelloWeb.Api, as: :api do
+  pipe_through :api
+
+  scope "/v1", V1, as: :v1 do
+    resources "/users", UserController
+  end
+end
+```
+```elixir
+# generated path helpers
+api_v1_user_path(:index) # /api/v1/users
+```
+For more info check the [scoped routes](routing-1.html#scoped-routes) docs.
