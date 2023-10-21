@@ -923,7 +923,7 @@ defmodule HelloWeb.CartHTML do
   use HelloWeb, :html
 
   alias Hello.ShoppingCart
-  
+
   embed_templates "cart_html/*"
 
   def currency_to_str(%Decimal{} = val), do: "$#{Decimal.round(val, 2)}"
@@ -1347,6 +1347,16 @@ Nice work! We haven't added payments, but we can already see how our `ShoppingCa
 Great work!
 
 ## FAQ
+
+### How do I structure code inside contexts?
+
+You may wonder how to organize the code inside contexts. For example, should you define a module for changesets (such as ProductChangesets) and another module for queries (such as ProductQueries)?
+
+One important benefit of contexts is that this decision does not matter much. The context is your public API, the other modules are private. Contexts isolate these modules into small groups so the surface area of your application is the context and not _all of your code_.
+
+So while you and your team could establish patterns for organizing these private modules, it is also our opinion it is completely fine for them to be different. The major focus should be on how the contexts are defined and how they interact with each other (and with your web application).
+
+Think about it as a well-kept neighbourhood. Your contexts are houses, you want to keep them well-preserved, well-connected, etc. Inside the houses, they may all be a little bit different, and that's fine.
 
 ### Returning Ecto structures from context APIs
 
