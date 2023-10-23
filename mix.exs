@@ -156,6 +156,7 @@ defmodule Phoenix.MixProject do
       "guides/telemetry.md",
       "guides/asset_management.md",
       "guides/authentication/mix_phx_gen_auth.md",
+      "guides/authentication/api_authentication.md",
       "guides/real_time/channels.md",
       "guides/real_time/presence.md",
       "guides/testing/testing.md",
