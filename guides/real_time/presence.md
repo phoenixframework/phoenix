@@ -132,7 +132,7 @@ With token authentication, you should access `socket.assigns.user_id`, set in `U
 
 ## Usage With LiveView
 
-Whilst Phoenix does ship with a JavaScript API for dealing with presence, it is also possible to extend the `HelloWeb.Presence` module to support LiveView.
+Whilst Phoenix does ship with a JavaScript API for dealing with presence, it is also possible to extend the `HelloWeb.Presence` module to support [LiveView](https://hexdocs.pm/phoenix_live_view).
 
 One thing to keep in mind when dealing with LiveView, is that each LiveView is a stateful process, so if we keep the presence state in the LiveView, each LiveView process will contain the full list of online users in memory. Instead, we can keep track of the online users within the `Presence` process, and pass separate events to the LiveView, which can use a stream to update the online list.
 

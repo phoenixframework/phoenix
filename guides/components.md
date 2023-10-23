@@ -52,7 +52,7 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-We declared the attributes we accept via `attr` provided by `Phoenix.Component`, then we defined our `greet/1` function which returns the HEEx template. 
+We declared the attributes we accept via `attr` provided by `Phoenix.Component`, then we defined our `greet/1` function which returns the HEEx template.
 
 Next we need to update `show.html.heex`:
 
@@ -62,9 +62,9 @@ Next we need to update `show.html.heex`:
 </section>
 ```
 
-When we reload `http://localhost:4000/hello/Frank`, we should see the same content as before. 
+When we reload `http://localhost:4000/hello/Frank`, we should see the same content as before.
 
-Since templates are embedded inside the `HelloHTML` module, we were able to invoke the view function simply as `<.greet messenger="..." />`. 
+Since templates are embedded inside the `HelloHTML` module, we were able to invoke the view function simply as `<.greet messenger="..." />`.
 
 If the component was defined elsewhere, we can also type `<HelloWeb.HelloHTML.greet messenger="..." />`.
 
@@ -225,7 +225,7 @@ When we load the page, we should be rendering the admin layout without the heade
 
 At this point, you may be wondering, why does Phoenix have two layouts?
 
-First of all, it gives us flexibility. In practice, we will hardly have multiple root layouts, as they often contain only HTML headers. This allows us to focus on different application layouts with only the parts that changes between them. Second of all, Phoenix ships with a feature called LiveView, which allows us to build rich and real-time user experiences with server-rendered HTML. LiveView is capable of dynamically changing the contents of the page, but it only ever changes the app layout, never the root layout. We will learn about LiveView in future guides.
+First of all, it gives us flexibility. In practice, we will hardly have multiple root layouts, as they often contain only HTML headers. This allows us to focus on different application layouts with only the parts that changes between them. Second of all, Phoenix ships with a feature called LiveView, which allows us to build rich and real-time user experiences with server-rendered HTML. LiveView is capable of dynamically changing the contents of the page, but it only ever changes the app layout, never the root layout. Check out [the LiveView documentation](https://hexdocs.pm/phoenix_live_view) to learn more.
 
 ## CoreComponents
 
