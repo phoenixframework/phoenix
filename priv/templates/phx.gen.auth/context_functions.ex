@@ -146,7 +146,7 @@
 
     Ecto.Multi.new()
     |> Ecto.Multi.update(:<%= schema.singular %>, changeset)
-    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [context]))
+    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [context]))
   end
 
   @doc ~S"""
@@ -199,7 +199,7 @@
 
     Ecto.Multi.new()
     |> Ecto.Multi.update(:<%= schema.singular %>, changeset)
-    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all))
+    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all))
     |> Repo.transaction()
     |> case do
       {:ok, %{<%= schema.singular %>: <%= schema.singular %>}} -> {:ok, <%= schema.singular %>}
@@ -230,7 +230,7 @@
   Deletes the signed token with the given context.
   """
   def delete_<%= schema.singular %>_session_token(token) do
-    Repo.delete_all(<%= inspect schema.alias %>Token.token_and_context_query(token, "session"))
+    Repo.delete_all(<%= inspect schema.alias %>Token.by_token_and_context_query(token, "session"))
     :ok
   end
 
@@ -278,7 +278,7 @@
   defp confirm_<%= schema.singular %>_multi(<%= schema.singular %>) do
     Ecto.Multi.new()
     |> Ecto.Multi.update(:<%= schema.singular %>, <%= inspect schema.alias %>.confirm_changeset(<%= schema.singular %>))
-    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, ["confirm"]))
+    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, ["confirm"]))
   end
 
   ## Reset password
@@ -335,7 +335,7 @@
   def reset_<%= schema.singular %>_password(<%= schema.singular %>, attrs) do
     Ecto.Multi.new()
     |> Ecto.Multi.update(:<%= schema.singular %>, <%= inspect schema.alias %>.password_changeset(<%= schema.singular %>, attrs))
-    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all))
+    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all))
     |> Repo.transaction()
     |> case do
       {:ok, %{<%= schema.singular %>: <%= schema.singular %>}} -> {:ok, <%= schema.singular %>}
