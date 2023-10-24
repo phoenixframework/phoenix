@@ -183,8 +183,8 @@ defmodule Phoenix.MixProject do
       Authentication: ~r/guides\/authentication\/.?/,
       "Real-time": ~r/guides\/real_time\/.?/,
       Testing: ~r/guides\/testing\/.?/,
-      Cheatsheets: ~r/guides\/cheatsheets\/.?/,
       Deployment: ~r/guides\/deployment\/.?/,
+      Cheatsheets: ~r/guides\/cheatsheets\/.?/,
       "How-to's": ~r/guides\/howto\/.?/
     ]
   end
