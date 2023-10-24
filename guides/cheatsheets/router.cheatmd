@@ -80,4 +80,4 @@ end
 # generated path helpers
 api_v1_user_path(:index) # /api/v1/users
 ```
-For more info check the [scoped routes](routing-1.html#scoped-routes) docs.
+For more info check the [scoped routes](routing.md#scoped-routes) docs.
