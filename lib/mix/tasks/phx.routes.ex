@@ -182,7 +182,7 @@ defmodule Mix.Tasks.Phx.Routes do
       end)
 
     case function_infos do
-      {_, line, _, _, _} -> line
+      {_, anno, _, _, _} -> :erl_anno.line(anno)
       nil -> nil
     end
   end
