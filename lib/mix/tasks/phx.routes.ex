@@ -181,9 +181,9 @@ defmodule Mix.Tasks.Phx.Routes do
         type == :function and name == function_name
       end)
 
-    case Keyword.keyword?(location_or_annotations) do
-      false -> location_or_annotations
-      true -> location_or_annotations[:location]
+    case function_infos do
+      {_, anno, _, _, _} -> :erl_anno.line(anno)
+      _ -> nil
     end
   end
 end
