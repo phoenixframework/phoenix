@@ -223,7 +223,7 @@ At this moment, you may be thinking this can be a lot of steps to simply render 
 
   * view - the view handles the structured data from the controller and converts it to a presentation to be shown to users. Views are often named after the content format they are rendering.
 
-Let's do a quick recap and how the last three components work together by adding another page.
+Let's do a quick recap on how the last three components work together by adding another page.
 
 ## Another new page
 
