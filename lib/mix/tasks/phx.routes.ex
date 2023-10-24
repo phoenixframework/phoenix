@@ -175,9 +175,9 @@ defmodule Mix.Tasks.Phx.Routes do
   defp get_line_number(module, function_name) do
     {_, _, _, _, _, _, functions_list} = Code.fetch_docs(module)
 
-    {_, location_or_annotations, _, _, _}=
+    function_infos =
       functions_list
-      |> Enum.find({nil, [location: nil], nil, nil, nil}, fn {{type, name, _}, _, _, _, _} ->
+      |> Enum.find(fn {{type, name, _}, _, _, _, _} ->
         type == :function and name == function_name
       end)
 
