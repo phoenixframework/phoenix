@@ -228,7 +228,11 @@ defmodule Mix.Tasks.Phx.Gen.Release do
         ])
 
       :error ->
-        raise "unable to fetch supported Docker image for Elixir #{elixir_vsn} and Erlang #{otp_vsn}"
+        raise """
+          unable to fetch supported Docker image for Elixir #{elixir_vsn} and Erlang #{otp_vsn}.
+          Please check https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=#{otp_vsn}\
+          for a suitable Elixir version
+        """
     end
   end
 
