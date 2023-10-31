@@ -225,7 +225,7 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:max_age` - verifies the token only if it has been generated
       "max age" ago in seconds. Defaults to the max age signed in the
-      token (86400)
+      token by `encrypt/4`.
   """
   @spec decrypt(context, binary, binary, [shared_opt | max_age_opt]) :: term()
   def decrypt(context, secret, token, opts \\ []) when is_binary(secret) do
