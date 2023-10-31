@@ -56,7 +56,7 @@ defmodule Mix.Tasks.Phx.CertTest do
 
       # We don't actually verify the server cert contents, we just check that
       # the client and server are able to complete the TLS handshake
-      assert {:ok, client} = :ssl.connect('localhost', port, [verify: :verify_none], @timeout)
+      assert {:ok, client} = :ssl.connect(~c"localhost", port, [verify: :verify_none], @timeout)
       :ssl.close(client)
       :ssl.close(server)
     end)

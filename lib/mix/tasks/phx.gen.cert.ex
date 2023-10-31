@@ -49,7 +49,9 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
   @doc false
   def run(all_args) do
     if Mix.Project.umbrella?() do
-      Mix.raise("mix phx.gen.cert must be invoked from within your *_web application root directory")
+      Mix.raise(
+        "mix phx.gen.cert must be invoked from within your *_web application root directory"
+      )
     end
 
     {opts, args} =
@@ -255,8 +257,8 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
       issuer: rdn(common_name),
       validity:
         validity(
-          notBefore: {:utcTime, '#{not_before}000000Z'},
-          notAfter: {:utcTime, '#{not_after}000000Z'}
+          notBefore: {:utcTime, ~c"#{not_before}000000Z"},
+          notAfter: {:utcTime, ~c"#{not_after}000000Z"}
         ),
       subject: rdn(common_name),
       subjectPublicKeyInfo:

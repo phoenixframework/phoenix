@@ -113,7 +113,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp socket_children(endpoint, fun) do
-    for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__, &elem(&1, 1)),
+    for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__(), &elem(&1, 1)),
         spec = apply_or_ignore(socket, fun, [[endpoint: endpoint] ++ opts]),
         spec != :ignore do
       spec
