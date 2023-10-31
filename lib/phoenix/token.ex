@@ -200,9 +200,8 @@ defmodule Phoenix.Token do
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:max_age` - verifies the token only if it has been generated
-      "max age" ago in seconds. A reasonable value is 1 day (86400
-      seconds)
-
+      "max age" ago in seconds. Defaults to the max age signed in the
+      token by `sign/4`.
   """
   @spec verify(context, binary, binary, [shared_opt | max_age_opt]) ::
           {:ok, term} | {:error, :expired | :invalid | :missing}
