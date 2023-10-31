@@ -14,9 +14,9 @@ get "/users", UserController, :index
 patch "/users/:id", UserController, :update
 ```
 ```elixir
-# generated path helpers
-user_path(conn, :index) #  /users
-user_path(conn, :create, %{id: 9, ...}) #  /users/9
+# generated routes
+~p"/users"
+~p"/users/9" # user_id is 9
 ```
 Also accepts `put`, `patch`, `options`, `delete` and `head`.
 
@@ -34,7 +34,7 @@ Generates `:index`, `:edit`, `:new`, `:show`, `:create`, `:update` and `:delete`
 ```elixir
 resources "/users", UserController, only: [:show]
 resources "/users", UserController, except: [:create, :delete]
-resources "/users", UserController, as: :person # `person_path(...)`
+resources "/users", UserController, as: :person # ~p"/person"
 ```
 
 #### Nested
@@ -45,9 +45,9 @@ resources "/users", UserController do
 end
 ```
 ```elixir
-# generated path helpers
-user_post_path(:index, 17)     # /users/17/posts
-user_post_path(:show, 17, 12)  # /users/17/posts/12
+# generated routes
+~p"/users/3/posts" # user_id is 3
+~p"/users/3/posts/17" # user_id is 3 and post_id = 17
 ```
 For more info check the [resources docs.](routing-1.html#resources)
 
@@ -63,7 +63,7 @@ end
 ```
 ```elixir
 # generated path helpers
-admin_user_path(:index) # /admin/users
+~p"/admin/users"
 ```
 
 #### Nested
@@ -78,6 +78,6 @@ end
 ```
 ```elixir
 # generated path helpers
-api_v1_user_path(:index) # /api/v1/users
+~p"/api/v1/users"
 ```
 For more info check the [scoped routes](routing.md#scoped-routes) docs.
