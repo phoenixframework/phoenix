@@ -172,6 +172,7 @@ defmodule Phoenix.MixProject do
       "guides/howto/file_uploads.md",
       "guides/howto/using_ssl.md",
       "guides/howto/writing_a_channels_client.md",
+      "guides/cheatsheets/router.cheatmd",
       "CHANGELOG.md"
     ]
   end
@@ -184,6 +185,7 @@ defmodule Phoenix.MixProject do
       "Real-time": ~r/guides\/real_time\/.?/,
       Testing: ~r/guides\/testing\/.?/,
       Deployment: ~r/guides\/deployment\/.?/,
+      Cheatsheets: ~r/guides\/cheatsheets\/.?/,
       "How-to's": ~r/guides\/howto\/.?/
     ]
   end
