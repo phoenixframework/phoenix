@@ -57,9 +57,13 @@ defmodule Phoenix.Transports.WebSocket do
 
         case handler.connect(config) do
           {:ok, arg} ->
-            conn
-            |> WebSockAdapter.upgrade(handler, arg, opts)
-            |> halt()
+            try do
+              conn
+              |> WebSockAdapter.upgrade(handler, arg, opts)
+              |> halt()
+            rescue
+              e in WebSockAdapter.UpgradeError -> send_resp(conn, 400, e.message)
+            end
 
           :error ->
             send_resp(conn, 403, "")

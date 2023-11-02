@@ -4,7 +4,7 @@ defmodule Phoenix.Integration.WebSocketTest do
   use ExUnit.Case, async: true
   import ExUnit.CaptureLog
 
-  alias Phoenix.Integration.WebsocketClient
+  alias Phoenix.Integration.{HTTPClient, WebsocketClient}
   alias __MODULE__.Endpoint
 
   @moduletag :capture_log
@@ -102,6 +102,14 @@ defmodule Phoenix.Integration.WebSocketTest do
   setup_all do
     capture_log(fn -> Endpoint.start_link() end)
     :ok
+  end
+
+  test "handles invalid upgrade requests" do
+    capture_log(fn ->
+      path = String.replace_prefix(@path, "ws", "http")
+      assert {:ok, %{body: body, status: 400}} = HTTPClient.request(:get, path, %{})
+      assert body =~ "'connection' header must contain 'upgrade'"
+    end)
   end
 
   test "refuses unallowed origins" do
