@@ -251,6 +251,9 @@ defmodule Phoenix.Endpoint do
     * for handling paths and URLs: `c:struct_url/0`, `c:url/0`, `c:path/1`,
       `c:static_url/0`,`c:static_path/1`, and `c:static_integrity/1`
 
+    * for gethering runtime information about the address and port the
+      endpoint is running on: `c:server_info/1`
+
     * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,
       `c:broadcast_from/4`, `c:broadcast_from!/4`, `c:local_broadcast/3`,
       and `c:local_broadcast_from/4`
@@ -341,6 +344,15 @@ defmodule Phoenix.Endpoint do
   Returns the host from the :url configuration.
   """
   @callback host() :: String.t()
+
+  # Server information
+
+  @doc """
+  Returns the address and port that the server is running on
+  """
+  @callback server_info(Plug.Conn.scheme()) ::
+              {:ok, {:inet.ip_address(), :inet.port_number()} | :inet.returned_non_ip_address()}
+              | {:error, term()}
 
   # Channels
 
@@ -605,6 +617,11 @@ defmodule Phoenix.Endpoint do
           &Phoenix.Endpoint.Supervisor.static_lookup(&1, path)
         )
       end
+
+      @doc """
+      Returns the address and port that the server is running on
+      """
+      def server_info(scheme), do: config(:adapter).server_info(__MODULE__, scheme)
     end
   end
 

@@ -137,7 +137,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp server_children(mod, config, server?) do
     cond do
       server? ->
-        adapter = config[:adapter] || Phoenix.Endpoint.Cowboy2Adapter
+        adapter = config[:adapter]
         adapter.child_specs(mod, config)
 
       config[:http] || config[:https] ->
@@ -196,6 +196,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       render_errors: [view: render_errors(module), accepts: ~w(html), layout: false],
 
       # Runtime config
+      adapter: Phoenix.Endpoint.Cowboy2Adapter,
       cache_static_manifest: nil,
       check_origin: true,
       http: false,

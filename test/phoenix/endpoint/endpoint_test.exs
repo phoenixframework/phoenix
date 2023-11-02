@@ -227,6 +227,22 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert StaticEndpoint.static_path("/phoenix.png") =~ "/static/phoenix.png"
   end
 
+  @tag :capture_log
+  test "can find the running address and port for an endpoint" do
+    Application.put_env(:phoenix, __MODULE__.AddressEndpoint,
+      http: [ip: {127, 0, 0, 1}, port: 0],
+      server: true
+    )
+
+    defmodule AddressEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+    end
+
+    AddressEndpoint.start_link()
+    assert {:ok, {{127, 0, 0, 1}, port}} = AddressEndpoint.server_info(:http)
+    assert is_integer(port)
+  end
+
   test "injects pubsub broadcast with configured server" do
     Endpoint.subscribe("sometopic")
     some = spawn fn -> :ok end

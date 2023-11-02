@@ -80,7 +80,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
       Application.ensure_all_started(:ssl)
     end
 
-    ref = Module.concat(endpoint, scheme |> Atom.to_string() |> String.upcase())
+    ref = make_ref(endpoint, scheme)
 
     plug =
       if code_reloader? do
@@ -137,4 +137,16 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
+
+  def server_info(endpoint, scheme) do
+    make_ref(endpoint, scheme)
+    |> :ranch.get_addr()
+    |> then(&{:ok, &1})
+  rescue
+    e -> {:error, e.message}
+  end
+
+  defp make_ref(endpoint, scheme) do
+    Module.concat(endpoint, scheme |> Atom.to_string() |> String.upcase())
+  end
 end
