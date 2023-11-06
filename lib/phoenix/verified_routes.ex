@@ -59,7 +59,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   The majority of path and URL generation needs your application will be met
   with `~p` and `url/1`, where all information necessary to construct the path
-  or URL is provided the by the compile-time information stored in the Endpoint
+  or URL is provided by the compile-time information stored in the Endpoint
   and Router passed to `use Phoenix.VerifiedRoutes`.
 
   That said, there are some circumstances where `path/2`, `path/3`, `url/2`, and `url/3`
