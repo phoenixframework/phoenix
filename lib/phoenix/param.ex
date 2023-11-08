@@ -50,7 +50,7 @@ defprotocol Phoenix.Param do
 
   @fallback_to_any true
 
-  @spec to_param(term) :: String.t
+  @spec to_param(term) :: String.t()
   def to_param(term)
 end
 
@@ -79,25 +79,51 @@ end
 defimpl Phoenix.Param, for: Map do
   def to_param(map) do
     raise ArgumentError,
-      "maps cannot be converted to_param. A struct was expected, got: #{inspect map}"
+          "maps cannot be converted to_param. A struct was expected, got: #{inspect(map)}"
   end
 end
 
 defimpl Phoenix.Param, for: Any do
+  defmacro __deriving__(module, _struct, fun: fun) when is_function(fun, 1) do
+    quote do
+      defimpl Phoenix.Param, for: unquote(module) do
+        def to_param(struct) do
+          case unquote(fun).(struct) do
+            nil ->
+              raise ArgumentError,
+                    "cannot convert #{inspect(unquote(module))} to param, " <>
+                      "result of function #{inspect(unquote(fun))} is a nil value"
+
+            params when is_integer(params) ->
+              Integer.to_string(params)
+
+            params when is_binary(params) ->
+              params
+
+            params ->
+              Phoenix.Param.to_param(params)
+          end
+        end
+      end
+    end
+  end
+
   defmacro __deriving__(module, struct, options) do
     key = Keyword.get(options, :key, :id)
 
     unless Map.has_key?(struct, key) do
-      raise ArgumentError, "cannot derive Phoenix.Param for struct #{inspect module} " <>
-                           "because it does not have key #{inspect key}. Please pass " <>
-                           "the :key option when deriving"
+      raise ArgumentError,
+            "cannot derive Phoenix.Param for struct #{inspect(module)} " <>
+              "because it does not have key #{inspect(key)} or fun. Please pass " <>
+              "the :key or :fun option when deriving"
     end
 
     quote do
       defimpl Phoenix.Param, for: unquote(module) do
         def to_param(%{unquote(key) => nil}) do
-          raise ArgumentError, "cannot convert #{inspect unquote(module)} to param, " <>
-                               "key #{inspect unquote(key)} contains a nil value"
+          raise ArgumentError,
+                "cannot convert #{inspect(unquote(module))} to param, " <>
+                  "key #{inspect(unquote(key))} contains a nil value"
         end
 
         def to_param(%{unquote(key) => key}) when is_integer(key), do: Integer.to_string(key)
@@ -110,15 +136,16 @@ defimpl Phoenix.Param, for: Any do
   def to_param(%{id: nil}) do
     raise ArgumentError, "cannot convert struct to param, key :id contains a nil value"
   end
+
   def to_param(%{id: id}) when is_integer(id), do: Integer.to_string(id)
   def to_param(%{id: id}) when is_binary(id), do: id
   def to_param(%{id: id}), do: Phoenix.Param.to_param(id)
 
   def to_param(map) when is_map(map) do
     raise ArgumentError,
-      "structs expect an :id key when converting to_param or a custom implementation " <>
-      "of the Phoenix.Param protocol (read Phoenix.Param docs for more information), " <>
-      "got: #{inspect map}"
+          "structs expect an :id key when converting to_param or a custom implementation " <>
+            "of the Phoenix.Param protocol (read Phoenix.Param docs for more information), " <>
+            "got: #{inspect(map)}"
   end
 
   def to_param(data) do
