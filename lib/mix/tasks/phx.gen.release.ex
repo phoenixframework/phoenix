@@ -206,7 +206,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   end
 
   defp gen_docker(binding) do
-    elixir_vsn =
+    wanted_elixir_vsn =
       case Version.parse!(System.version()) do
         %{major: major, minor: minor, pre: ["dev"]} -> "#{major}.#{minor - 1}.0"
         _ -> System.version()
@@ -215,9 +215,22 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     otp_vsn = otp_vsn()
 
     vsns =
-      case elixir_and_debian_vsn(elixir_vsn, otp_vsn) do
-        {:ok, elixir_vsn, debian_vsn} -> {:ok, elixir_vsn, debian_vsn}
-        :error -> elixir_and_debian_vsn("", otp_vsn)
+      case elixir_and_debian_vsn(wanted_elixir_vsn, otp_vsn) do
+        {:ok, elixir_vsn, debian_vsn} ->
+          {:ok, elixir_vsn, debian_vsn}
+
+        :error ->
+          case elixir_and_debian_vsn("", otp_vsn) do
+            {:ok, elixir_vsn, debian_vsn} ->
+              Logger.warning(
+                "Docker image for Elixir #{wanted_elixir_vsn} not found, defaulting to Elixir #{elixir_vsn}"
+              )
+
+              {:ok, elixir_vsn, debian_vsn}
+
+            :error ->
+              :error
+          end
       end
 
     case vsns do
@@ -237,7 +250,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
       :error ->
         raise """
-          unable to fetch supported Docker image for Elixir #{elixir_vsn} and Erlang #{otp_vsn}.
+          unable to fetch supported Docker image for Elixir #{wanted_elixir_vsn} and Erlang #{otp_vsn}.
           Please check https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=#{otp_vsn}\
           for a suitable Elixir version
         """
