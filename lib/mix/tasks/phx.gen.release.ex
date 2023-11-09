@@ -189,8 +189,24 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   defp ecto_sql_installed?, do: Mix.Project.deps_paths() |> Map.has_key?(:ecto_sql)
 
   @debian "bullseye"
+  defp elixir_and_debian_vsn(elixir_vsn, otp_vsn) do
+    url =
+      "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?name=#{elixir_vsn}-erlang-#{otp_vsn}-debian-#{@debian}-"
+
+    fetch_body!(url)
+    |> Phoenix.json_library().decode!()
+    |> Map.fetch!("results")
+    |> Enum.find_value(:error, fn %{"name" => name} ->
+      if String.ends_with?(name, "-slim") do
+        elixir_vsn = name |> String.split("-") |> List.first()
+        %{"vsn" => vsn} = Regex.named_captures(~r/.*debian-#{@debian}-(?<vsn>.*)-slim/, name)
+        {:ok, elixir_vsn, vsn}
+      end
+    end)
+  end
+
   defp gen_docker(binding) do
-    elixir_vsn =
+    wanted_elixir_vsn =
       case Version.parse!(System.version()) do
         %{major: major, minor: minor, pre: ["dev"]} -> "#{major}.#{minor - 1}.0"
         _ -> System.version()
@@ -198,22 +214,27 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     otp_vsn = otp_vsn()
 
-    url =
-      "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?name=#{elixir_vsn}-erlang-#{otp_vsn}-debian-#{@debian}-"
+    vsns =
+      case elixir_and_debian_vsn(wanted_elixir_vsn, otp_vsn) do
+        {:ok, elixir_vsn, debian_vsn} ->
+          {:ok, elixir_vsn, debian_vsn}
 
-    debian_vsn =
-      fetch_body!(url)
-      |> Phoenix.json_library().decode!()
-      |> Map.fetch!("results")
-      |> Enum.find_value(:error, fn %{"name" => name} ->
-        if String.ends_with?(name, "-slim") do
-          %{"vsn" => vsn} = Regex.named_captures(~r/.*debian-#{@debian}-(?<vsn>.*)-slim/, name)
-          {:ok, vsn}
-        end
-      end)
+        :error ->
+          case elixir_and_debian_vsn("", otp_vsn) do
+            {:ok, elixir_vsn, debian_vsn} ->
+              Logger.warning(
+                "Docker image for Elixir #{wanted_elixir_vsn} not found, defaulting to Elixir #{elixir_vsn}"
+              )
 
-    case debian_vsn do
-      {:ok, debian_vsn} ->
+              {:ok, elixir_vsn, debian_vsn}
+
+            :error ->
+              :error
+          end
+      end
+
+    case vsns do
+      {:ok, elixir_vsn, debian_vsn} ->
         binding =
           Keyword.merge(binding,
             debian: @debian,
@@ -228,7 +249,11 @@ defmodule Mix.Tasks.Phx.Gen.Release do
         ])
 
       :error ->
-        raise "unable to fetch supported Docker image for Elixir #{elixir_vsn} and Erlang #{otp_vsn}"
+        raise """
+          unable to fetch supported Docker image for Elixir #{wanted_elixir_vsn} and Erlang #{otp_vsn}.
+          Please check https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=#{otp_vsn}\
+          for a suitable Elixir version
+        """
     end
   end
 
