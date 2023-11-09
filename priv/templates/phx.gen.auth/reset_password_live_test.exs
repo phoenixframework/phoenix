@@ -100,7 +100,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert conn.resp_body =~ "Log in"
     end
 
-    test "redirects to password reset page when the Register button is clicked", %{
+    test "redirects to registration page when the Register button is clicked", %{
       conn: conn,
       token: token
     } do
