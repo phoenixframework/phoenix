@@ -73,21 +73,6 @@ defmodule Phx.New.Generator do
         :keep ->
           File.mkdir_p!(target)
 
-        :zip ->
-          parent_dir = Path.dirname(target)
-          Mix.shell().info([:green, "* extracting ", :reset, Path.relative_to_cwd(target)])
-
-          File.mkdir_p!(parent_dir)
-          zip_contents = mod.render(name, source, project.binding)
-          {:ok, zip} = :zip.zip_open(zip_contents, [:memory])
-          {:ok, files} = :zip.zip_get(zip)
-
-          Enum.map(files, fn {path, contents} ->
-            full_path = Path.join(parent_dir, path)
-            File.mkdir_p!(Path.dirname(full_path))
-            File.write!(full_path, contents)
-          end)
-
         :text ->
           create_file(target, mod.render(name, source, project.binding))
 
