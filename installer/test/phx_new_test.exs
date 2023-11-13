@@ -151,16 +151,11 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # tailwind
       assert_file("phx_blog/assets/css/app.css")
-      assert_file "phx_blog/assets/tailwind.config.js", fn file ->
+
+      assert_file("phx_blog/assets/tailwind.config.js", fn file ->
         assert file =~ "phx_blog_web.ex"
         assert file =~ "phx_blog_web/**/*.*ex"
-      end
-
-      assert_file("phx_blog/assets/vendor/heroicons/LICENSE.md")
-      assert_file("phx_blog/assets/vendor/heroicons/UPGRADE.md")
-      assert_file("phx_blog/assets/vendor/heroicons/optimized/24/outline/cake.svg")
-      assert_file("phx_blog/assets/vendor/heroicons/optimized/24/solid/cake.svg")
-      assert_file("phx_blog/assets/vendor/heroicons/optimized/20/solid/cake.svg")
+      end)
 
       refute File.exists?("phx_blog/priv/static/assets/app.css")
       refute File.exists?("phx_blog/priv/static/assets/app.js")
