@@ -309,7 +309,7 @@ in its default location.
 Do you want to create it? [Y/n]
 ```
 
-By pressing confirming, a channel will be created, then you need to connect the socket in your endpoint:
+By confirming, a channel will be created, then you need to connect the socket in your endpoint:
 
 ```console
 Add the socket handler to your `lib/hello_web/endpoint.ex`, for example:
