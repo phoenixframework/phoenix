@@ -112,7 +112,7 @@ defmodule Mix.Tasks.Phx.New do
   ```
 
   You can read more about umbrella projects using the
-  official [Elixir guide](https://hexdocs.pm/elixir/main/dependencies-and-umbrella-projects.html#umbrella-projects)
+  official [Elixir guide](https://hexdocs.pm/elixir/dependencies-and-umbrella-projects.html#umbrella-projects)
   """
   use Mix.Task
   alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
