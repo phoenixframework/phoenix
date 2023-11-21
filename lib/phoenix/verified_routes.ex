@@ -194,9 +194,9 @@ defmodule Phoenix.VerifiedRoutes do
       redirect(to: ~p"/users/#{@user}")
 
       ~H"""
-      <.link to={~p"/users?page=#{@page}"}>profile</.link>
+      <.link href={~p"/users?page=#{@page}"}>profile</.link>
 
-      <.link to={~p"/users?#{@params}"}>profile</.link>
+      <.link href={~p"/users?#{@params}"}>profile</.link>
       """
   '''
   defmacro sigil_p({:<<>>, _meta, _segments} = route, extra) do
@@ -267,8 +267,8 @@ defmodule Phoenix.VerifiedRoutes do
       redirect(to: path(conn, MyAppWeb.Router, ~p"/users/#{@user}"))
 
       ~H"""
-      <.link to={path(@uri, MyAppWeb.Router, "/users?page=#{@page}")}>profile</.link>
-      <.link to={path(@uri, MyAppWeb.Router, "/users?#{@params}")}>profile</.link>
+      <.link href={path(@uri, MyAppWeb.Router, "/users?page=#{@page}")}>profile</.link>
+      <.link href={path(@uri, MyAppWeb.Router, "/users?#{@params}")}>profile</.link>
       """
   '''
   defmacro path(
@@ -316,7 +316,7 @@ defmodule Phoenix.VerifiedRoutes do
       redirect(to: url(conn, ~p"/users/#{@user}"))
 
       ~H"""
-      <.link to={url(@uri, "/users?#{[page: @page]}")}>profile</.link>
+      <.link href={url(@uri, "/users?#{[page: @page]}")}>profile</.link>
       """
 
   The router may also be provided in cases where you want to verify routes for a
