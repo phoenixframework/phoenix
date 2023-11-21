@@ -481,7 +481,7 @@ SELECT u0."email" FROM "users" AS u0 []
 First, we imported [`Ecto.Query`], which imports the [`from/2`] macro of Ecto's Query DSL. Next, we built a query which selects all the email addresses in our users table. Let's try another example.
 
 ```elixir
-iex)> Repo.one(from u in User, where: ilike(u.email, "%1%"),
+iex> Repo.one(from u in User, where: ilike(u.email, "%1%"),
                                select: count(u.id))
 [debug] QUERY OK source="users" db=1.6ms SELECT count(u0."id") FROM "users" AS u0 WHERE (u0."email" ILIKE '%1%') []
 1
