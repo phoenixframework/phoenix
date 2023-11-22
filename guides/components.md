@@ -42,7 +42,7 @@ defmodule HelloWeb.HelloHTML do
 
   embed_templates "hello_html/*"
 
-  attr :messenger, :string
+  attr :messenger, :string, required: true
 
   def greet(assigns) do
     ~H"""
@@ -52,7 +52,7 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-We declared the attributes we accept via `attr` provided by `Phoenix.Component`, then we defined our `greet/1` function which returns the HEEx template.
+We declared the attributes we accept via the `attr/3` macro provided by `Phoenix.Component`, then we defined our `greet/1` function which returns the HEEx template.
 
 Next we need to update `show.html.heex`:
 
@@ -68,7 +68,7 @@ Since templates are embedded inside the `HelloHTML` module, we were able to invo
 
 If the component was defined elsewhere, we can also type `<HelloWeb.HelloHTML.greet messenger="..." />`.
 
-By declaring attributes, Phoenix will warn if we call the `<.greet />` component without passing attributes. If an attribute is optional, you can specify the `:default` option with a value:
+By declaring attributes as required, Phoenix will warn at compile time if we call the `<.greet />` component without passing attributes. If an attribute is optional, you can specify the `:default` option with a value:
 
 ```
 attr :messenger, :string, default: nil

@@ -56,6 +56,12 @@ defmodule Phoenix.Integration.MixProject do
       {:argon2_elixir, "~> 3.0"},
       {:pbkdf2_elixir, "~> 2.0"},
       {:tailwind, "~> 0.2"},
+      {:heroicons,
+       github: "tailwindlabs/heroicons",
+       tag: "v2.0.18",
+       app: false,
+       compile: false,
+       sparse: "optimized"},
       {:finch, "~> 0.13"}
     ]
   end

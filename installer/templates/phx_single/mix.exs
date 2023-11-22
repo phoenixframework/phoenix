@@ -46,7 +46,13 @@ defmodule <%= @app_module %>.MixProject do
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.8.2"},<% end %><%= if @javascript do %>
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},<% end %><%= if @mailer do %>
+      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
+      {:heroicons,
+       github: "tailwindlabs/heroicons",
+       tag: "v2.0.18",
+       app: false,
+       compile: false,
+       sparse: "optimized"},<% end %><%= if @mailer do %>
       {:swoosh, "~> 1.3"},
       {:finch, "~> 0.13"},<% end %>
       {:telemetry_metrics, "~> 0.6"},

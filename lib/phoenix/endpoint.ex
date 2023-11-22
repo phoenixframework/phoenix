@@ -251,7 +251,7 @@ defmodule Phoenix.Endpoint do
     * for handling paths and URLs: `c:struct_url/0`, `c:url/0`, `c:path/1`,
       `c:static_url/0`,`c:static_path/1`, and `c:static_integrity/1`
 
-    * for gethering runtime information about the address and port the
+    * for gathering runtime information about the address and port the
       endpoint is running on: `c:server_info/1`
 
     * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,

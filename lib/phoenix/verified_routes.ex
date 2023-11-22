@@ -59,7 +59,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   The majority of path and URL generation needs your application will be met
   with `~p` and `url/1`, where all information necessary to construct the path
-  or URL is provided the by the compile-time information stored in the Endpoint
+  or URL is provided by the compile-time information stored in the Endpoint
   and Router passed to `use Phoenix.VerifiedRoutes`.
 
   That said, there are some circumstances where `path/2`, `path/3`, `url/2`, and `url/3`
@@ -194,9 +194,9 @@ defmodule Phoenix.VerifiedRoutes do
       redirect(to: ~p"/users/#{@user}")
 
       ~H"""
-      <.link to={~p"/users?page=#{@page}"}>profile</.link>
+      <.link href={~p"/users?page=#{@page}"}>profile</.link>
 
-      <.link to={~p"/users?#{@params}"}>profile</.link>
+      <.link href={~p"/users?#{@params}"}>profile</.link>
       """
   '''
   defmacro sigil_p({:<<>>, _meta, _segments} = route, extra) do
@@ -267,8 +267,8 @@ defmodule Phoenix.VerifiedRoutes do
       redirect(to: path(conn, MyAppWeb.Router, ~p"/users/#{@user}"))
 
       ~H"""
-      <.link to={path(@uri, MyAppWeb.Router, "/users?page=#{@page}")}>profile</.link>
-      <.link to={path(@uri, MyAppWeb.Router, "/users?#{@params}")}>profile</.link>
+      <.link href={path(@uri, MyAppWeb.Router, "/users?page=#{@page}")}>profile</.link>
+      <.link href={path(@uri, MyAppWeb.Router, "/users?#{@params}")}>profile</.link>
       """
   '''
   defmacro path(
@@ -316,7 +316,7 @@ defmodule Phoenix.VerifiedRoutes do
       redirect(to: url(conn, ~p"/users/#{@user}"))
 
       ~H"""
-      <.link to={url(@uri, "/users?#{[page: @page]}")}>profile</.link>
+      <.link href={url(@uri, "/users?#{[page: @page]}")}>profile</.link>
       """
 
   The router may also be provided in cases where you want to verify routes for a

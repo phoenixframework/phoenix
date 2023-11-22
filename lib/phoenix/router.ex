@@ -681,7 +681,7 @@ defmodule Phoenix.Router do
   @doc """
   Generates a route match based on an arbitrary HTTP method.
 
-  Useful for defining routes not included in the builtin macros.
+  Useful for defining routes not included in the built-in macros.
 
   The catch-all verb, `:*`, may also be used to match all HTTP methods.
 
@@ -702,7 +702,7 @@ defmodule Phoenix.Router do
     * `:metadata` - a map of metadata used by the telemetry events and returned by
       `route_info/4`
     * `:warn_on_verify` - the boolean for whether matches to this route trigger
-      an unmatched route warning for `Phoenix.VerifiedRoutes`. Useful to ignore
+      an unmatched route warning for `Phoenix.VerifiedRoutes`. It is useful to ignore
       an otherwise catch-all route definition from being matched when verifying routes.
       Defaults `false`.
 
