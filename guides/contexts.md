@@ -936,10 +936,10 @@ Next we can create the template at `lib/hello_web/controllers/cart_html/show.htm
 
 ```heex
 <%= if @cart.items == [] do %>
-<.header>
-  My Cart
-  <:subtitle>Your cart is empty</:subtitle>
-</.header>
+  <.header>
+    My Cart
+    <:subtitle>Your cart is empty</:subtitle>
+  </.header>
 <% else %>
   <.header>
     My Cart
