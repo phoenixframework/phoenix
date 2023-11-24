@@ -117,7 +117,7 @@ defmodule <%= inspect auth_module %>Test do
     end
   end
 
-  describe "on_mount: mount_current_<%= schema.singular %>" do
+  describe "on_mount :mount_current_<%= schema.singular %>" do
     test "assigns current_<%= schema.singular %> based on a valid <%= schema.singular %>_token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
@@ -148,7 +148,7 @@ defmodule <%= inspect auth_module %>Test do
     end
   end
 
-  describe "on_mount: ensure_authenticated" do
+  describe "on_mount :ensure_authenticated" do
     test "authenticates current_<%= schema.singular %> based on a valid <%= schema.singular %>_token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
@@ -185,7 +185,7 @@ defmodule <%= inspect auth_module %>Test do
     end
   end
 
-  describe "on_mount: :redirect_if_<%= schema.singular %>_is_authenticated" do
+  describe "on_mount :redirect_if_<%= schema.singular %>_is_authenticated" do
     test "redirects if there is an authenticated  <%= schema.singular %> ", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
