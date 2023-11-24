@@ -107,9 +107,9 @@ defmodule Mix.Tasks.Phx.Gen.Release do
         _build/dev/rel/#{app}/bin/#{app}
     """)
 
-    if opts.ecto do
+    if opts.ecto and opts.socket_db_adaptor_installed do
       post_install_instructions("config/runtime.exs", ~r/ECTO_IPV6/, """
-      [warn] Conditional IPV6 support missing from runtime configuration.
+      [warn] Conditional IPv6 support missing from runtime configuration.
 
       Add the following to your config/runtime.exs:
 
@@ -149,6 +149,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     |> OptionParser.parse!(strict: [ecto: :boolean, docker: :boolean])
     |> elem(0)
     |> Keyword.put_new_lazy(:ecto, &ecto_sql_installed?/0)
+    |> Keyword.put_new_lazy(:socket_db_adaptor_installed, &socket_db_adaptor_installed?/0)
     |> Keyword.put_new(:docker, false)
     |> Map.new()
   end
@@ -187,6 +188,12 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   end
 
   defp ecto_sql_installed?, do: Mix.Project.deps_paths() |> Map.has_key?(:ecto_sql)
+
+  defp socket_db_adaptor_installed? do
+    Mix.Project.deps_paths(depth: 1)
+    |> Map.take([:tds, :myxql, :postgrex])
+    |> map_size() > 0
+  end
 
   @debian "bullseye"
   defp elixir_and_debian_vsn(elixir_vsn, otp_vsn) do
