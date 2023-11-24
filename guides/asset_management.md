@@ -46,7 +46,9 @@ If you want to import JavaScript dependencies, you have at least three options t
    New applications use this third approach to import Heroicons, avoiding
    vendoring a copy of all icons when you may only use a few or even none,
    avoiding Node.js and `npm`, and tracking an explicit version that is easy to
-   update thanks to Mix.
+   update thanks to Mix. It is important to note that git dependencies cannot
+   be used by Hex packages, so if you intend to publish your project to Hex,
+   consider vendoring the files instead.
 
 ## CSS
 
