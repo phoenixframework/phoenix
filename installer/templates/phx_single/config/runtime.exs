@@ -80,6 +80,9 @@ if config_env() == :prod do
   #     config :<%= @web_app_name %>, <%= @endpoint_module %>,
   #       force_ssl: [hsts: true]
   #
+  # NOTE: This is a compile time config, so it normally is set in prod.exs,
+  # it will not work when set from runtime.exs.
+  #
   # Check `Plug.SSL` for all available options in `force_ssl`.<%= if @mailer do %>
 
   # ## Configuring the mailer
