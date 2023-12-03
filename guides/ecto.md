@@ -16,7 +16,7 @@ Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by def
 
 Ecto also provides support for other databases and it has many learning resources available. Please check out [Ecto's README](https://github.com/elixir-ecto/ecto) for general information.
 
-This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. The introductory guides cover how to get your first application up and running. For instructions on switching to MySQL, please see the [Using MySQL](#using-mysql) section.
+This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. The introductory guides cover how to get your first application up and running. For using other databases, see the [Using other databases](#using-other-databases) section.
 
 ## Using the schema and migration generator
 
@@ -507,9 +507,9 @@ There is quite a bit more that Ecto can do and we've only barely scratched the s
 
 In our [contexts guide](contexts.html), we'll find out how to wrap up our Ecto access and business logic behind modules that group related functionality. We'll see how Phoenix helps us design maintainable applications, and we'll find out about other neat Ecto features along the way.
 
-## Using MySQL
+## Using other databases
 
-Phoenix applications are configured to use PostgreSQL by default, but what if we want to use MySQL instead? In this guide, we'll walk through changing that default whether we are about to create a new application, or whether we have an existing one configured for PostgreSQL.
+Phoenix applications are configured to use PostgreSQL by default, but what if we want to use another database, such as MySQL? In this section, we'll walk through changing that default whether we are about to create a new application, or whether we have an existing one configured for PostgreSQL.
 
 If we are about to create a new application, configuring our application to use MySQL is easy. We can simply pass the `--database mysql` flag to `phx.new` and everything will be configured correctly.
 
@@ -521,7 +521,7 @@ This will set up all the correct dependencies and configuration for us automatic
 
 If we have an existing application, all we need to do is switch adapters and make some small configuration changes.
 
-To switch adapters, we need to remove the Postgrex dependency and add a new one for Myxql instead.
+To switch adapters, we need to remove the Postgrex dependency and add a new one for MyXQL instead.
 
 Let's open up our `mix.exs` file and do that now.
 
@@ -549,9 +549,9 @@ Next, we need to configure our adapter to use the default MySQL credentials by u
 
 ```elixir
 config :hello_phoenix, HelloPhoenix.Repo,
-username: "root",
-password: "",
-database: "hello_phoenix_dev"
+  username: "root",
+  password: "",
+  database: "hello_phoenix_dev"
 ```
 
 If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. You also need to configure the correct values in the `config/test.exs` and `config/runtime.exs` (formerly `config/prod.secret.exs`) files as well.
