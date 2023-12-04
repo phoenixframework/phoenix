@@ -29,6 +29,11 @@ defmodule Mix.Phoenix do
   def copy_from(apps, source_dir, binding, mapping) when is_list(mapping) do
     roots = Enum.map(apps, &to_app_source(&1, source_dir))
 
+    binding =
+      Keyword.merge(binding,
+        maybe_gettext: &Mix.Phoenix.GettextSupport.maybe_gettext/3
+      )
+
     for {format, source_file_path, target} <- mapping do
       source =
         Enum.find_value(roots, fn root ->

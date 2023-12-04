@@ -37,8 +37,11 @@ defmodule Phx.New.Generator do
               @external_resource unquote(path)
               @file unquote(path)
               def render(unquote(name), unquote(source), var!(assigns))
-                  when is_list(var!(assigns)),
-                  do: unquote(compiled)
+                  when is_list(var!(assigns)) do
+                var!(maybe_gettext) = &Phx.New.GettextSupport.maybe_gettext/3
+                _ = var!(maybe_gettext)
+                unquote(compiled)
+              end
             end
           else
             quote do
