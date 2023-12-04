@@ -74,14 +74,11 @@ if config_env() == :prod do
   # "priv/ssl/server.key". For all supported SSL configuration
   # options, see https://hexdocs.pm/plug/Plug.SSL.html#configure/1
   #
-  # We also recommend setting `force_ssl` in your endpoint, ensuring
-  # no data is ever sent via http, always redirecting to https:
+  # We also recommend setting `force_ssl` in your config/prod.exs,
+  # ensuring no data is ever sent via http, always redirecting to https:
   #
   #     config :<%= @web_app_name %>, <%= @endpoint_module %>,
   #       force_ssl: [hsts: true]
-  #
-  # NOTE: This is a compile time config, so it normally is set in prod.exs,
-  # it will not work when set from runtime.exs.
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.<%= if @mailer do %>
 
