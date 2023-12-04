@@ -55,8 +55,8 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
 # "priv/ssl/server.key". For all supported SSL configuration
 # options, see https://hexdocs.pm/plug/Plug.SSL.html#configure/1
 #
-# We also recommend setting `force_ssl` in your endpoint, ensuring
-# no data is ever sent via http, always redirecting to https:
+# We also recommend setting `force_ssl` in your config/prod.exs,
+# ensuring no data is ever sent via http, always redirecting to https:
 #
 #     config :<%= @web_app_name %>, <%= @endpoint_module %>,
 #       force_ssl: [hsts: true]
