@@ -5,6 +5,7 @@
 A quick reference to the common routing features' syntax. For an exhaustive overview, refer to the [routing guides](routing.md).
 
 ## Routing declaration
+
 {: .col-2}
 
 ### Single route
@@ -13,11 +14,13 @@ A quick reference to the common routing features' syntax. For an exhaustive over
 get "/users", UserController, :index
 patch "/users/:id", UserController, :update
 ```
+
 ```elixir
 # generated routes
 ~p"/users"
 ~p"/users/9" # user_id is 9
 ```
+
 Also accepts `put`, `patch`, `options`, `delete` and `head`.
 
 ### Resources
@@ -27,6 +30,7 @@ Also accepts `put`, `patch`, `options`, `delete` and `head`.
 ```elixir
 resources "/users", UserController
 ```
+
 Generates `:index`, `:edit`, `:new`, `:show`, `:create`, `:update` and `:delete`.
 
 #### Options
@@ -44,16 +48,19 @@ resources "/users", UserController do
   resources "/posts", PostController
 end
 ```
+
 ```elixir
 # generated routes
 ~p"/users/3/posts" # user_id is 3
 ~p"/users/3/posts/17" # user_id is 3 and post_id = 17
 ```
+
 For more info check the [resources docs.](routing-1.html#resources)
 
 ### Scopes
 
 #### Simple
+
 ```elixir
 scope "/admin", HelloWeb.Admin do
   pipe_through :browser
@@ -61,12 +68,14 @@ scope "/admin", HelloWeb.Admin do
   resources "/users",   UserController
 end
 ```
+
 ```elixir
 # generated path helpers
 ~p"/admin/users"
 ```
 
 #### Nested
+
 ```elixir
 scope "/api", HelloWeb.Api, as: :api do
   pipe_through :api
@@ -76,8 +85,10 @@ scope "/api", HelloWeb.Api, as: :api do
   end
 end
 ```
+
 ```elixir
 # generated path helpers
 ~p"/api/v1/users"
 ```
+
 For more info check the [scoped routes](routing.md#scoped-routes) docs.

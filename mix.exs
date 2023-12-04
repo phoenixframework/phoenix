@@ -172,7 +172,7 @@ defmodule Phoenix.MixProject do
       "guides/howto/file_uploads.md",
       "guides/howto/using_ssl.md",
       "guides/howto/writing_a_channels_client.md",
-      "guides/cheatsheets/router.cheatmd",
+      "guides/cheatsheets/router.cheat.md",
       "CHANGELOG.md"
     ]
   end
