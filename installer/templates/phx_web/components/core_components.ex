@@ -157,7 +157,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         phx-connected={hide("#client-error")}
         hidden
       >
-        <%= if @gettext do %><%%= dgettext("errors", "Attempting to reconnect") %><% else %>Attempting to reconnect<% end %> <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+        <%= if @gettext do %><%%= dgettext("errors", "Attempting to reconnect") %><%= "\n" <> String.duplicate("\s", 8) %><% else %>Attempting to reconnect <% end %><.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
       </.flash>
 
       <.flash
