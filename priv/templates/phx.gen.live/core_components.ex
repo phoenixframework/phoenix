@@ -147,8 +147,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def flash_group(assigns) do
     ~H"""
     <div id={@id}>
-      <.flash kind={:info} title="Success!" flash={@flash} />
-      <.flash kind={:error} title="Error!" flash={@flash} />
+      <.flash kind={:info} title=<%= if @gettext do %>{dgettext("errors", "Success!")}<% else %>"Success!"<% end %> flash={@flash} />
+      <.flash kind={:error} title=<%= if @gettext do %>{dgettext("errors", "Error!")}<% else %>"Error!"<% end %> flash={@flash} />
       <.flash
         id="client-error"
         kind={:error}
