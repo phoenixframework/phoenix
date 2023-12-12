@@ -152,23 +152,23 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <.flash
         id="client-error"
         kind={:error}
-        title="We can't find the internet"
+        title=<%= if @gettext do %>{dgettext("errors", "We can't find the internet")}<% else %>"We can't find the internet"<% end %>
         phx-disconnected={show(".phx-client-error #client-error")}
         phx-connected={hide("#client-error")}
         hidden
       >
-        Attempting to reconnect <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+        <%= if @gettext do %><%%= dgettext("errors", "Attempting to reconnect") %><% else %>Attempting to reconnect<% end %> <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
       </.flash>
 
       <.flash
         id="server-error"
         kind={:error}
-        title="Something went wrong!"
+        title=<%= if @gettext do %>{dgettext("errors", "Something went wrong!")}<% else %>"Something went wrong!"<% end %>
         phx-disconnected={show(".phx-server-error #server-error")}
         phx-connected={hide("#server-error")}
         hidden
       >
-        Hang in there while we get back on track
+        <%= if @gettext do %><%%= dgettext("errors", "Hang in there while we get back on track") %><% else %>Hang in there while we get back on track<% end %>
         <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
       </.flash>
     </div>
