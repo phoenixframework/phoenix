@@ -74,10 +74,26 @@ It is important to note that `force_ssl:` is a *compile* time config, so it norm
 
 ## HSTS
 
-HSTS or "strict-transport-security" is a mechanism that allows a website to declare itself as only accessible via a secure connection (HTTPS). It was introduced to prevent man-in-the-middle attacks that strip SSL/TLS. It causes web browsers to redirect from HTTP to HTTPS and refuse to connect unless the connection uses SSL/TLS.
+HSTS, short for 'HTTP Strict-Transport-Security', is a mechanism that allows websites to declare themselves as accessible exclusively through a secure connection (HTTPS). It was introduced to prevent man-in-the-middle attacks that strip SSL/TLS encryption. HSTS causes web browsers to redirect from HTTP to HTTPS and to refuse to connect unless the connection uses SSL/TLS.
 
-With `force_ssl: [hsts: true]` set, the `Strict-Transport-Security` header is set with a max age that defines the length of time the policy is valid for. Modern web browsers will respond to this by redirecting from HTTP to HTTPS for the standard case but it does have other consequences. [RFC6797](https://tools.ietf.org/html/rfc6797) which defines HSTS also specifies **that the browser should keep track of the policy of a host and apply it until it expires.** It also specifies that **traffic on any port other than 80 is assumed to be encrypted** as per the policy.
+With `force_ssl: [hsts: true]` set, the `Strict-Transport-Security` header is added with a max-age that defines the duration for which the policy is valid. Modern web browsers will respond to this by redirecting from HTTP to HTTPS, among other consequences. [RFC6797](https://tools.ietf.org/html/rfc6797), which defines HSTS, also specifies that **the browser should keep track of a host's policy and apply it until it expires.** It further specifies that **traffic on any port other than 80 is assumed to be encrypted** as per the policy.
 
-This can result in unexpected behaviour if you access your application on localhost, for example `https://localhost:4000`, as from that point forward any traffic coming from localhost will be expected to be encrypted, except port 80 which will be redirected to port 443. This has the potential to disrupt traffic to any other local servers or proxies that you may be running on your computer. Other applications or proxies on localhost will refuse to work unless the traffic is encrypted.
+While HSTS is recommended in production, it can lead to unexpected behavior when accessing applications on localhost. For instance, accessing an application with HSTS enabled at `https://localhost:4000` leads to a situation where all subsequent traffic from localhost, except for port 80, is expected to be encrypted. This can disrupt traffic to other local servers or proxies running on your computer that are unrelated to your Phoenix application and may not support encrypted traffic.
 
-If you do inadvertently turn on HSTS for localhost, you may need to reset the cache on your browser before it will accept any HTTP traffic from localhost. For Chrome, you need to `Empty Cache and Hard Reload` which is available from the reload menu that appears when you click and hold the reload icon from the Developer Tools Panel. For Safari, you will need to clear your cache, remove the entry from `~/Library/Cookies/HSTS.plist` (or delete that file entirely) and restart Safari. Alternately, you can set the `:expires` option on `force_ssl` to `0` which should expired the entry to turn off HSTS. More information on the options for HSTS are available at [Plug.SSL](https://hexdocs.pm/plug/Plug.SSL.html).
+If you inadvertently enable HSTS for localhost, you may need to reset your browser's cache before it will accept HTTP traffic from localhost again.
+
+For Chrome:
+1. Open the Developer Tools Panel.
+2. Click and hold the reload icon next to the address bar to reveal a dropdown menu.
+3. Select "Empty Cache and Hard Reload".
+
+For Safari:
+1. Clear your browser cache.
+2. Remove the entry from `~/Library/Cookies/HSTS.plist` or delete the file entirely.
+3. Restart Safari.
+
+For other browsers, please consult the documentation for HSTS.
+
+Alternatively, setting the `:expires` option on `force_ssl` to `0` should expire the entry and disable HSTS.
+
+For more information on HSTS options, see [Plug.SSL](https://hexdocs.pm/plug/Plug.SSL.html).
