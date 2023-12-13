@@ -18,31 +18,26 @@ defmodule Phoenix.Channel.Server do
   def join(socket, channel, message, opts) do
     %{topic: topic, payload: payload, ref: ref, join_ref: join_ref} = message
 
-    starter = opts[:starter] || &PoolSupervisor.start_child/3
+    starter = opts[:starter] || (&PoolSupervisor.start_child/3)
     assigns = Map.merge(socket.assigns, Keyword.get(opts, :assigns, %{}))
-    socket = %{socket | topic: topic, channel: channel, join_ref: join_ref || ref, assigns: assigns}
-    ref = make_ref()
-    from = {self(), ref}
-    child_spec = channel.child_spec({socket.endpoint, from})
 
-    case starter.(socket, from, child_spec) do
+    socket = %{
+      socket
+      | topic: topic,
+        channel: channel,
+        join_ref: join_ref || ref,
+        assigns: assigns
+    }
+
+    from_pid = self()
+    child_spec = channel.child_spec({socket.endpoint, from_pid})
+
+    case starter.(socket, from_pid, child_spec) do
       {:ok, pid} ->
+        ref = :erlang.monitor(:process, pid)
+        from = {from_pid, ref}
         send(pid, {Phoenix.Channel, payload, from, socket})
-        mon_ref = Process.monitor(pid)
-
-        receive do
-          {^ref, {:ok, reply}} ->
-            Process.demonitor(mon_ref, [:flush])
-            {:ok, reply, pid}
-
-          {^ref, {:error, reply}} ->
-            Process.demonitor(mon_ref, [:flush])
-            {:error, reply}
-
-          {:DOWN, ^mon_ref, _, _, reason} ->
-            Logger.error(fn -> Exception.format_exit(reason) end)
-            {:error, %{reason: "join crashed"}}
-        end
+        {:ok, pid, ref}
 
       {:error, reason} ->
         Logger.error(fn -> Exception.format_exit(reason) end)
@@ -260,7 +255,7 @@ defmodule Phoenix.Channel.Server do
   ## Callbacks
 
   @doc false
-  def init({_endpoint, {pid, _}}) do
+  def init({_endpoint, pid}) do
     {:ok, Process.monitor(pid)}
   end
 

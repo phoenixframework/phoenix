@@ -456,10 +456,12 @@ defmodule Phoenix.Socket do
         case drainer do
           {module, function, arguments} ->
             apply(module, function, arguments)
+
           _ ->
             drainer
         end
-        {Phoenix.Socket.PoolDrainer, {endpoint, handler, drainer}}
+
+      {Phoenix.Socket.PoolDrainer, {endpoint, handler, drainer}}
     else
       :ignore
     end
@@ -518,6 +520,40 @@ defmodule Phoenix.Socket do
     handle_in(Map.get(state.channels, topic), message, state, socket)
   end
 
+  def __info__({mon_ref, init_reply}, {state, socket}) do
+    case Map.get(state.init_channels, mon_ref) do
+      nil ->
+        {:ok, {state, socket}}
+
+      {pid, topic, join_ref, ref} ->
+        Process.demonitor(mon_ref, [:flush])
+
+        {state, status, reply} =
+          case init_reply do
+            {:ok, reply} ->
+              state =
+                state
+                |> delete_init_channel(ref)
+                |> put_channel(pid, topic, join_ref)
+
+              {state, :ok, reply}
+
+            {:error, reply} ->
+              {state, :error, reply}
+          end
+
+        message = %Reply{
+          join_ref: join_ref,
+          ref: ref,
+          topic: topic,
+          status: status,
+          payload: reply
+        }
+
+        {:push, encode_reply(socket, message), {state, socket}}
+    end
+  end
+
   def __info__({:DOWN, ref, _, pid, reason}, {state, socket}) do
     case state.channels_inverse do
       %{^pid => {topic, join_ref}} ->
@@ -525,7 +561,25 @@ defmodule Phoenix.Socket do
         {:push, encode_on_exit(socket, topic, join_ref, reason), {state, socket}}
 
       %{} ->
-        {:ok, {state, socket}}
+        case Map.get(state.init_channels, ref) do
+          nil ->
+            {:ok, {state, socket}}
+
+          {_pid, topic, join_ref, ref} ->
+            Logger.error(fn -> Exception.format_exit(reason) end)
+
+            reply = %Reply{
+              join_ref: join_ref,
+              ref: ref,
+              topic: topic,
+              status: :error,
+              payload: %{reason: "join crashed"}
+            }
+
+            state = delete_init_channel(state, ref)
+
+            {:push, encode_reply(socket, reply), {state, socket}}
+        end
     end
   end
 
@@ -596,7 +650,8 @@ defmodule Phoenix.Socket do
     # The information in the state is kept only inside the socket process.
     state = %{
       channels: %{},
-      channels_inverse: %{}
+      channels_inverse: %{},
+      init_channels: %{}
     }
 
     connect_result =
@@ -663,17 +718,9 @@ defmodule Phoenix.Socket do
     case socket.handler.__channel__(topic) do
       {channel, opts} ->
         case Phoenix.Channel.Server.join(socket, channel, message, opts) do
-          {:ok, reply, pid} ->
-            reply = %Reply{
-              join_ref: join_ref,
-              ref: ref,
-              topic: topic,
-              status: :ok,
-              payload: reply
-            }
-
-            state = put_channel(state, pid, topic, join_ref)
-            {:reply, :ok, encode_reply(socket, reply), {state, socket}}
+          {:ok, pid, mon_ref} ->
+            state = put_init_channel(state, mon_ref, pid, topic, join_ref, ref)
+            {:ok, {state, socket}}
 
           {:error, reply} ->
             reply = %Reply{
@@ -764,6 +811,21 @@ defmodule Phoenix.Socket do
       | channels: Map.put(channels, topic, {pid, monitor_ref, :joined}),
         channels_inverse: Map.put(channels_inverse, pid, {topic, join_ref})
     }
+  end
+
+  defp put_init_channel(state, mon_ref, pid, topic, join_ref, ref) do
+    %{
+      init_channels: init_channels
+    } = state
+
+    %{
+      state
+      | init_channels: Map.put(init_channels, mon_ref, {pid, topic, join_ref, ref})
+    }
+  end
+
+  defp delete_init_channel(state, mon_ref) do
+    Map.update!(state, :init_channels, &Map.delete(&1, mon_ref))
   end
 
   defp delete_channel(state, pid, topic, monitor_ref) do
