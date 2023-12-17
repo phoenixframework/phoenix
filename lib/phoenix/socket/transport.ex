@@ -338,7 +338,7 @@ defmodule Phoenix.Socket.Transport do
         conn
 
       origin_allowed?(check_origin, URI.parse(origin), endpoint, conn) ->
-        conn
+        put_private(conn, :phoenix_origin_checked, true)
 
       true ->
         Logger.error("""
@@ -488,14 +488,12 @@ defmodule Phoenix.Socket.Transport do
 
   defp connect_session(conn, endpoint, {key, store, {csrf_token_key, init}}) do
     conn = Plug.Conn.fetch_cookies(conn)
+    cswsh_config = endpoint.config(:cswsh_check, :csrf_token)
 
-    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
-         cookie when is_binary(cookie) <- conn.cookies[key],
+    with cookie when is_binary(cookie) <- conn.cookies[key],
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
          {_, session} <- store.get(conn, cookie, init),
-         csrf_state when is_binary(csrf_state) <-
-           Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]),
-         true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
+         true <- check_cswsh(conn, session, csrf_token_key, cswsh_config) do
       session
     else
       _ -> nil
@@ -511,6 +509,18 @@ defmodule Phoenix.Socket.Transport do
         raise ArgumentError,
               "the MFA given to `session_config` must return a keyword list, got: #{inspect(other)}"
     end
+  end
+
+  defp check_cswsh(conn, session, csrf_token_key, :csrf_token) do
+    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
+         csrf_state when is_binary(csrf_state) <-
+           Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]) do
+      Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token)
+    end
+  end
+
+  defp check_cswsh(conn, _session, _csrf_token, :origin) do
+    conn.private[:phoenix_origin_checked]
   end
 
   defp fetch_x_headers(conn) do
