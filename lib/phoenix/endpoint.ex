@@ -213,6 +213,13 @@ defmodule Phoenix.Endpoint do
 
     * `:log_access_url` - log the access url once the server boots
 
+    * `:cswsh_check` - configure the CSWSH (Cross-Site WebSocket Hijacking) check
+    mechanism for the endpoint. When `:crsf_token` (the default), a CRSF token is
+    used. This mechanism uses the session and is stateful. When `:origin`, the
+    `origin` header is checked according to the rule set by the `:origin` option,
+    without requiring the use of cookies, but at the cost of not supporting older
+    browsers that don't send this header or other non-browser-based clients.
+
   Note that you can also store your own configurations in the Phoenix.Endpoint.
   For example, [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) expects
   its own configuration under the `:live_view` key. In such cases, you should
