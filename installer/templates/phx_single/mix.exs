@@ -49,7 +49,7 @@ defmodule <%= @app_module %>.MixProject do
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
-       tag: "v2.0.18",
+       tag: "v2.1.1",
        app: false,
        compile: false,
        sparse: "optimized"},<% end %><%= if @mailer do %>

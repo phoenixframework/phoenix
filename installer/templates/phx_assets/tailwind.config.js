@@ -39,7 +39,8 @@ module.exports = {
       let icons = [
         ["", "/24/outline"],
         ["-solid", "/24/solid"],
-        ["-mini", "/20/solid"]
+        ["-mini", "/20/solid"],
+        ["-micro", "/16/solid"]
       ]
       icons.forEach(([suffix, dir]) => {
         fs.readdirSync(path.join(iconsDir, dir)).forEach(file => {
@@ -50,6 +51,7 @@ module.exports = {
       matchComponents({
         "hero": ({name, fullPath}) => {
           let content = fs.readFileSync(fullPath).toString().replace(/\r?\n|\r/g, "")
+          let spacing = name.endsWith("-micro") ? theme("spacing.4") : theme("spacing.5")
           return {
             [`--hero-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
             "-webkit-mask": `var(--hero-${name})`,
@@ -58,8 +60,8 @@ module.exports = {
             "background-color": "currentColor",
             "vertical-align": "middle",
             "display": "inline-block",
-            "width": theme("spacing.5"),
-            "height": theme("spacing.5")
+            "width": spacing,
+            "height": spacing
           }
         }
       }, {values})
