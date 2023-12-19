@@ -773,6 +773,30 @@ defmodule Phoenix.Endpoint do
       and ["Longpoll configuration"](#socket/3-longpoll-configuration)
       for the whole list
 
+    * `:drainer` - a keyword list or a custom MFA function returning a keyword list, for example:
+
+          {MyAppWeb.Socket, :drainer_configuration, []}
+
+      configuring how to drain sockets on application shutdown.
+      The goal is to notify all channels (and
+      LiveViews) clients to reconnect. The supported options are:
+
+      * `:batch_size` - How many clients to notify at once in a given batch.
+        Defaults to 10000.
+      * `:batch_interval` - The amount of time in milliseconds given for a
+        batch to terminate. Defaults to 2000ms.
+      * `:shutdown` - The maximum amount of time in milliseconds allowed
+        to drain all batches. Defaults to 30000ms.
+
+      For example, if you have 150k connections, the default values will
+      split them into 15 batches of 10k connections. Each batch takes
+      2000ms before the next batch starts. In this case, we will do everything
+      right under the maximum shutdown time of 30000ms. Therefore, as
+      you increase the number of connections, remember to adjust the shutdown
+      accordingly. Finally, after the socket drainer runs, the lower level
+      HTTP/HTTPS connection drainer will still run, and apply to all connections.
+      Set it to `false` to disable draining.
+
   You can also pass the options below on `use Phoenix.Socket`.
   The values specified here override the value in `use Phoenix.Socket`.
 
@@ -839,30 +863,6 @@ defmodule Phoenix.Endpoint do
 
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
-
-    * `:drainer` - a keyword list or a custom MFA function returning a keyword list, for example:
-
-          {MyAppWeb.Socket, :drainer_configuration, []}
-
-      configuring how to drain sockets on application shutdown.
-      The goal is to notify all channels (and
-      LiveViews) clients to reconnect. The supported options are:
-
-      * `:batch_size` - How many clients to notify at once in a given batch.
-        Defaults to 10000.
-      * `:batch_interval` - The amount of time in milliseconds given for a
-        batch to terminate. Defaults to 2000ms.
-      * `:shutdown` - The maximum amount of time in milliseconds allowed
-        to drain all batches. Defaults to 30000ms.
-
-      For example, if you have 150k connections, the default values will
-      split them into 15 batches of 10k connections. Each batch takes
-      2000ms before the next batch starts. In this case, we will do everything
-      right under the maximum shutdown time of 30000ms. Therefore, as
-      you increase the number of connections, remember to adjust the shutdown
-      accordingly. Finally, after the socket drainer runs, the lower level
-      HTTP/HTTPS connection drainer will still run, and apply to all connections.
-      Set it to `false` to disable draining.
 
     * `:connect_info` - a list of keys that represent data to be copied from
       the transport to be made available in the user socket `connect/3` callback.
