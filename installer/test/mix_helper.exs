@@ -15,7 +15,7 @@ defmodule MixHelper do
   end
 
   def in_tmp(which, function) do
-    path = Path.join([tmp_path(), random_string(10), to_string(which)])
+    path = Path.join([tmp_path(), random_string(10) <> to_string(which)])
 
     try do
       File.rm_rf!(path)
@@ -28,19 +28,22 @@ defmodule MixHelper do
 
   def in_tmp_project(which, function) do
     conf_before = Application.get_env(:phoenix, :generators) || []
-    path = Path.join([tmp_path(), random_string(10), to_string(which)])
+    path = Path.join([tmp_path(), random_string(10) <> to_string(which)])
 
     try do
       File.rm_rf!(path)
       File.mkdir_p!(path)
+
       File.cd!(path, fn ->
         File.touch!("mix.exs")
+
         File.write!(".formatter.exs", """
         [
           import_deps: [:phoenix, :ecto, :ecto_sql],
           inputs: ["*.exs"]
         ]
         """)
+
         function.()
       end)
     after
@@ -51,7 +54,7 @@ defmodule MixHelper do
 
   def in_tmp_umbrella_project(which, function) do
     conf_before = Application.get_env(:phoenix, :generators) || []
-    path = Path.join([tmp_path(), random_string(10), to_string(which)])
+    path = Path.join([tmp_path(), random_string(10) <> to_string(which)])
 
     try do
       apps_path = Path.join(path, "apps")
@@ -61,9 +64,11 @@ defmodule MixHelper do
       File.mkdir_p!(apps_path)
       File.mkdir_p!(config_path)
       File.touch!(Path.join(path, "mix.exs"))
+
       for file <- ~w(config.exs dev.exs test.exs prod.exs) do
         File.write!(Path.join(config_path, file), "import Config\n")
       end
+
       File.cd!(apps_path, function)
     after
       Application.put_env(:phoenix, :generators, conf_before)
@@ -94,13 +99,17 @@ defmodule MixHelper do
   def assert_file(file, match) do
     cond do
       is_list(match) ->
-        assert_file file, &(Enum.each(match, fn(m) -> assert &1 =~ m end))
+        assert_file(file, &Enum.each(match, fn m -> assert &1 =~ m end))
+
       is_binary(match) or is_struct(match, Regex) ->
-        assert_file file, &(assert &1 =~ match)
+        assert_file(file, &assert(&1 =~ match))
+
       is_function(match, 1) ->
         assert_file(file)
         match.(File.read!(file))
-      true -> raise inspect({file, match})
+
+      true ->
+        raise inspect({file, match})
     end
   end
 
@@ -118,6 +127,7 @@ defmodule MixHelper do
   def with_generator_env(app_name \\ :phoenix, new_env, fun) do
     config_before = Application.fetch_env(app_name, :generators)
     Application.put_env(app_name, :generators, new_env)
+
     try do
       fun.()
     after
@@ -150,7 +160,8 @@ defmodule MixHelper do
   def flush do
     receive do
       _ -> flush()
-    after 0 -> :ok
+    after
+      0 -> :ok
     end
   end
 end
