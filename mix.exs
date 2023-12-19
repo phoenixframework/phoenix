@@ -98,7 +98,7 @@ defmodule Phoenix.MixProject do
       {:makeup_diff, "~> 0.1", only: :docs},
 
       # Test dependencies
-      {:phoenix_html, "~> 3.3", only: [:docs, :test]},
+      {:phoenix_html, "~> 4.0", only: [:docs, :test]},
       {:phx_new, path: "./installer", only: :test},
       {:mint, "~> 1.4", only: :test},
       {:mint_web_socket, "~> 1.0.0", only: :test},
