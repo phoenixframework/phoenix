@@ -42,7 +42,7 @@ defmodule <%= @web_namespace %>.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.20.2"},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.8.2"},<% end %><%= if @javascript do %>
+      {:phoenix_live_dashboard, "~> 0.8.3"},<% end %><%= if @javascript do %>
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:heroicons,

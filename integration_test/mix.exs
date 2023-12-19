@@ -45,7 +45,7 @@ defmodule Phoenix.Integration.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:floki, ">= 0.30.0"},
       {:phoenix_live_reload, "~> 1.2"},
-      {:phoenix_live_dashboard, "~> 0.8.2"},
+      {:phoenix_live_dashboard, "~> 0.8.3"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
