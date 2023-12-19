@@ -504,7 +504,7 @@ defmodule Phoenix.Controller do
     end
   end
 
-  @invalid_local_url_chars ["\\", "/%", "/\t"]
+  @invalid_local_url_chars ["\\", "/%09", "/\t"]
   defp validate_local_url("//" <> _ = to), do: raise_invalid_url(to)
 
   defp validate_local_url("/" <> _ = to) do
@@ -1033,7 +1033,7 @@ defmodule Phoenix.Controller do
   defp assigns_layout(conn, _assigns, format) do
     case conn.private[:phoenix_layout] do
       %{^format => bad_value, _: good_value} when good_value != false ->
-        IO.warn """
+        IO.warn("""
         conflicting layouts found. A layout has been set with format, such as:
 
             put_layout(conn, #{format}: #{inspect(bad_value)})
@@ -1049,7 +1049,7 @@ defmodule Phoenix.Controller do
         to use layouts with formats:
 
             use Phoenix.Controller, layouts: [#{format}: #{inspect(bad_value)}]
-        """
+        """)
 
         if format in layout_formats(conn), do: good_value, else: false
 
