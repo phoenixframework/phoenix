@@ -32,6 +32,7 @@
   "sideEffects": false,
   "scripts": {
     "test": "mocha ./test/**/*.js --exit -r @babel/register -r jsdom-global/register",
-    "docs": "documentation build js/phoenix/index.js -f html -o ../doc/js"
+    "docs": "documentation build js/phoenix/index.js -f html -o ../doc/js",
+    "prepare": "echo bananas"
   }
 }
