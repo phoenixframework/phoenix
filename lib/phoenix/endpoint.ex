@@ -837,8 +837,9 @@ defmodule Phoenix.Endpoint do
 
       If `true`, the header is checked against `:host` in `YourAppWeb.Endpoint.config(:url)[:host]`.
 
-      If `false`, your app is vulnerable to Cross-Site WebSocket Hijacking (CSWSH)
-      attacks. Only use in development, when the host is truly unknown or when
+      If `false` and you do not validate the session in your socket, your app
+      is vulnerable to Cross-Site WebSocket Hijacking (CSWSH) attacks.
+      Only use in development, when the host is truly unknown or when
       serving clients that do not send the `origin` header, such as mobile apps.
 
       You can also specify a list of explicitly allowed origins. Wildcards are
