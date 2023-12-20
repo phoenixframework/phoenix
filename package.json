@@ -11,6 +11,9 @@
     "import": "./priv/static/phoenix.mjs",
     "require": "./priv/static/phoenix.cjs.js"
   },
+  "scripts": {
+    "prepare": "echo bananas"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/phoenixframework/phoenix.git"
