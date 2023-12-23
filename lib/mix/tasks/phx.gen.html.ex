@@ -6,14 +6,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
       mix phx.gen.html Accounts User users name:string age:integer
 
-  The first argument, `Accounts`, is the resource's context. 
-  A context is an Elixir module that serves as an API boundary for closely related resources. 
-  
-  The second argument, `User`, is the resource's schema. 
+  The first argument, `Accounts`, is the resource's context.
+  A context is an Elixir module that serves as an API boundary for closely related resources.
+
+  The second argument, `User`, is the resource's schema.
   A schema is an Elixir module responsible for mapping database fields into an Elixir struct.
   The `User` schema above specifies two fields with their respective colon-delimited data types:
   `name:string` and `age:integer`. See `mix phx.gen.schema` for more information on attributes.
-  
+
   > Note: A resource may also be split
   > over distinct contexts (e.g., `Accounts.User` and `Payments.User`).
 
@@ -24,14 +24,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     * an HTML view collocated with the controller in `lib/my_app_web/controllers/user_html.ex`
     * a schema in `lib/my_app/accounts/user.ex`, with an `users` table
     * a context module in `lib/my_app/accounts.ex` for the accounts API
-  
+
   Additionally, this generator creates the following files:
-    
+
     * a migration for the schema in `priv/repo/migrations`
     * a controller test module in `test/my_app/controllers/user_controller_test.exs`
     * a context test module in `test/my_app/accounts_test.exs`
-    * a context test helper module in `test/support/fixtures/accounts_fixtures.ex` 
-  
+    * a context test helper module in `test/support/fixtures/accounts_fixtures.ex`
+
   If the context already exists, this generator injects functions for the given resource into
   the context, context test, and context test helper modules.
 
@@ -52,14 +52,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   Alternatively, the `--context-app` option may be supplied to the generator:
 
       mix phx.gen.html Sales User users --context-app my_app
-  
+
   If you delete the `:context_app` configuration option, Phoenix will automatically put generated web files in
   `my_app_umbrella/apps/my_app_web_web`.
-       
 
-  If you change the value of `:context_app` to `:new_value`, `my_app_umbrella/apps/new_value_web` 
+
+  If you change the value of `:context_app` to `:new_value`, `my_app_umbrella/apps/new_value_web`
   must already exist or you will get the following error:
-     
+
      ** (Mix) no directory for context_app :new_value found in my_app_web's deps.
 
   ## Web namespace
@@ -183,7 +183,9 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   @doc false
   def inputs(%Schema{} = schema) do
-    Enum.map(schema.attrs, fn
+    schema.attrs
+    |> Enum.reject(fn {_key, type} -> type == :map end)
+    |> Enum.map(fn
       {key, :integer} ->
         ~s(<.input field={f[#{inspect(key)}]} type="number" label="#{label(key)}" />)
 
@@ -257,6 +259,9 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       lines = input |> String.split("\n") |> Enum.reject(&(&1 == ""))
 
       case lines do
+        [] ->
+          []
+
         [line] ->
           [columns, line]
 
