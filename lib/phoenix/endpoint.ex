@@ -290,14 +290,6 @@ defmodule Phoenix.Endpoint do
   """
   @callback config_change(changed :: term, removed :: term) :: term
 
-  @doc """
-  Initialize the endpoint configuration.
-
-  Invoked when the endpoint supervisor starts, allows dynamically
-  configuring the endpoint from system environment or other runtime sources.
-  """
-  @callback init(:supervisor, config :: Keyword.t()) :: {:ok, Keyword.t()}
-
   # Paths and URLs
 
   @doc """
@@ -422,13 +414,6 @@ defmodule Phoenix.Endpoint do
 
       # Avoid unused variable warnings
       _ = var!(code_reloading?)
-
-      @doc false
-      def init(_key, config) do
-        {:ok, config}
-      end
-
-      defoverridable init: 2
     end
   end
 
