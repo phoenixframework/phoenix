@@ -33,7 +33,11 @@ defmodule Phoenix.Endpoint.Supervisor do
     secret_conf =
       cond do
         Code.ensure_loaded?(mod) and function_exported?(mod, :init, 2) ->
-          IO.warn("#{inspect(mod)}.init/2 is deprecated, use config/runtime.exs instead")
+          IO.warn(
+            "#{inspect(mod)}.init/2 is deprecated, use config/runtime.exs instead " <>
+              "or pass additional options when starting the endpoint in your supervision tree"
+          )
+
           {:ok, init_conf} = mod.init(:supervisor, env_conf)
           init_conf
 
