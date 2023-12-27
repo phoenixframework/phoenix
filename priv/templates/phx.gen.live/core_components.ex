@@ -73,7 +73,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                   phx-click={JS.exec("data-cancel", to: "##{@id}")}
                   type="button"
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
-                  aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
+                  aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>
                 >
                   <.icon name="hero-x-mark-solid" class="h-5 w-5" />
                 </button>
@@ -127,7 +127,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <%%= @title %>
       </p>
       <p class="mt-2 text-sm leading-5"><%%= msg %></p>
-      <button type="button" class="group absolute top-1 right-1 p-2" aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>>
+      <button type="button" class="group absolute top-1 right-1 p-2" aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>>
         <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
       </button>
     </div>
@@ -147,28 +147,29 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def flash_group(assigns) do
     ~H"""
     <div id={@id}>
-      <.flash kind={:info} title="Success!" flash={@flash} />
-      <.flash kind={:error} title="Error!" flash={@flash} />
+      <.flash kind={:info} title=<%= maybe_heex_attr_gettext.("Success!", @gettext) %> flash={@flash} />
+      <.flash kind={:error} title=<%= maybe_heex_attr_gettext.("Error!", @gettext) %> flash={@flash} />
       <.flash
         id="client-error"
         kind={:error}
-        title="We can't find the internet"
+        title=<%= maybe_heex_attr_gettext.("We can't find the internet", @gettext) %>
         phx-disconnected={show(".phx-client-error #client-error")}
         phx-connected={hide("#client-error")}
         hidden
       >
-        Attempting to reconnect <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+        <%= maybe_eex_gettext.("Attempting to reconnect", @gettext) %>
+        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
       </.flash>
 
       <.flash
         id="server-error"
         kind={:error}
-        title="Something went wrong!"
+        title=<%= maybe_heex_attr_gettext.("Something went wrong!", @gettext) %>
         phx-disconnected={show(".phx-server-error #server-error")}
         phx-connected={hide("#server-error")}
         hidden
       >
-        Hang in there while we get back on track
+        <%= maybe_eex_gettext.("Hang in there while we get back on track", @gettext) %>
         <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
       </.flash>
     </div>
@@ -479,7 +480,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
           <tr>
             <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%%= col[:label] %></th>
             <th :if={@action != []} class="relative p-0 pb-4">
-              <span class="sr-only"><%= if @gettext do %><%%= gettext("Actions") %><% else %>Actions<% end %></span>
+              <span class="sr-only"><%= maybe_eex_gettext.("Actions", @gettext) %></span>
             </th>
           </tr>
         </thead>
