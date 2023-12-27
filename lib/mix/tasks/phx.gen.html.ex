@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @shortdoc "Generates context and controller for an HTML resource"
 
   @moduledoc """
-  Generates controller with collocated view, templates, schema and context for an HTML resource.
+  Generates controller with view, templates, schema and context for an HTML resource.
 
       mix phx.gen.html Accounts User users name:string age:integer
 
@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   `name:string` and `age:integer`. See `mix phx.gen.schema` for more information on attributes.
 
   > Note: A resource may also be split
-  > over distinct contexts (e.g., `Accounts.User` and `Payments.User`).
+  > over distinct contexts (such as `Accounts.User` and `Payments.User`).
 
   This generator adds the following files to `lib/`:
 
@@ -55,7 +55,6 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   If you delete the `:context_app` configuration option, Phoenix will automatically put generated web files in
   `my_app_umbrella/apps/my_app_web_web`.
-
 
   If you change the value of `:context_app` to `:new_value`, `my_app_umbrella/apps/new_value_web`
   must already exist or you will get the following error:
