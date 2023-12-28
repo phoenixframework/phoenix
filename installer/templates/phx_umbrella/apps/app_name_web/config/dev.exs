@@ -15,8 +15,8 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
   debug_errors: true,
   secret_key_base: "<%= @secret_key_base_dev %>",
   watchers: <%= if @javascript or @css do %>[<%= if @javascript do %>
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}<%= if @css, do: "," %><% end %><%= if @css do %>
-    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}<% end %>
+    esbuild: {Esbuild, :install_and_run, [:<%= @web_app_name %>, ~w(--sourcemap=inline --watch)]}<%= if @css, do: "," %><% end %><%= if @css do %>
+    tailwind: {Tailwind, :install_and_run, [:<%= @web_app_name %>, ~w(--watch)]}<% end %>
   ]<% else %>[]<% end %>
 
 # ## SSL Support
