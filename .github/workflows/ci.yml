@@ -54,7 +54,7 @@ jobs:
       if: ${{ matrix.lint }}
 
     - name: Run tests
-      run: mix test
+      run: mix test --warnings-as-errors
 
     - name: Run installer test
       run: |
