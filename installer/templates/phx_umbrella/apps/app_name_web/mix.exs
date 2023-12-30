@@ -68,8 +68,10 @@ defmodule <%= @web_namespace %>.MixProject do
       setup: ["deps.get"<%= if @asset_builders != [] do %>, "assets.setup", "assets.build"<% end %>]<%= if @ecto do %>,
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %><%= if @asset_builders != [] do %>,
       "assets.setup": <%= inspect Enum.map(@asset_builders, &"#{&1}.install --if-missing") %>,
-      "assets.build": <%= inspect Enum.map(@asset_builders, &"#{&1} default") %>,
-      "assets.deploy": <%= inspect Enum.map(@asset_builders, &"#{&1} default --minify") ++ ["phx.digest"] %><% end %>
+      "assets.build": <%= inspect Enum.map(@asset_builders, &"#{&1} #{@web_app_name}") %>,
+      "assets.deploy": [
+<%= Enum.map(@asset_builders, &"        \"#{&1} #{@web_app_name} --minify\",\n") ++ ["        \"phx.digest\""] %>
+      ]<% end %>
     ]
   end
 end
