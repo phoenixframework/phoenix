@@ -48,9 +48,10 @@ defmodule <%= @web_namespace %>.MixProject do
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.1",
+       sparse: "optimized",
        app: false,
        compile: false,
-       sparse: "optimized"},<% end %>
+       depth: 1},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 0.20"},<% end %><%= if @app_name != @web_app_name do %>
