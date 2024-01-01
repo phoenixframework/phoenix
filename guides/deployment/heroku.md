@@ -202,7 +202,7 @@ This ensures that any idle connections are closed by Phoenix before they reach H
 The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on](https://elements.heroku.com/addons/heroku-postgresql). We can create the database via the Heroku toolbelt:
 
 ```console
-$ heroku addons:create heroku-postgresql:hobby-dev
+$ heroku addons:create heroku-postgresql:mini
 ```
 
 Now we set the `POOL_SIZE` config var:
@@ -211,7 +211,7 @@ Now we set the `POOL_SIZE` config var:
 $ heroku config:set POOL_SIZE=18
 ```
 
-This value should be just under the number of available connections, leaving a couple open for migrations and mix tasks. The hobby-dev database allows 20 connections, so we set this number to 18. If additional dynos will share the database, reduce the `POOL_SIZE` to give each dyno an equal share.
+This value should be just under the number of available connections, leaving a couple open for migrations and mix tasks. The mini database allows 20 connections, so we set this number to 18. If additional dynos will share the database, reduce the `POOL_SIZE` to give each dyno an equal share.
 
 When running a mix task later (after we have pushed the project to Heroku) you will also want to limit its pool size like so:
 
