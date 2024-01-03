@@ -30,16 +30,13 @@ If you want to import JavaScript dependencies, you have at least three options t
 
    ```elixir
    # mix.exs
-   {:topbar,
-    github: "buunguyen/topbar",
-    app: false,
-    compile: false}
+   {:topbar, github: "buunguyen/topbar", app: false, compile: false}
    ```
 
    Run `mix deps.get` to fetch the dependency and then import it:
 
    ```js
-   import topbar from "../../deps/topbar"
+   import topbar from "topbar"
    ```
 
    New applications use this third approach to import Heroicons, avoiding
