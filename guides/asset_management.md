@@ -32,7 +32,6 @@ If you want to import JavaScript dependencies, you have at least three options t
    # mix.exs
    {:topbar,
     github: "buunguyen/topbar",
-    ref: "17a435bd82aca08fbf6b6f1842e2e9c24e6e3a78",
     app: false,
     compile: false}
    ```
