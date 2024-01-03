@@ -10,6 +10,8 @@ See the official site at <https://www.phoenixframework.org/>.
 
 Install the latest version of Phoenix by following the instructions at <https://hexdocs.pm/phoenix/installation.html#phoenix>.
 
+Phoenix requires Elixir v1.11+ & Erlang v22.1+.
+
 ## Documentation
 
 API documentation is available at <https://hexdocs.pm/phoenix>.

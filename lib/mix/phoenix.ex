@@ -29,6 +29,12 @@ defmodule Mix.Phoenix do
   def copy_from(apps, source_dir, binding, mapping) when is_list(mapping) do
     roots = Enum.map(apps, &to_app_source(&1, source_dir))
 
+    binding =
+      Keyword.merge(binding,
+        maybe_heex_attr_gettext: &maybe_heex_attr_gettext/2,
+        maybe_eex_gettext: &maybe_eex_gettext/2
+      )
+
     for {format, source_file_path, target} <- mapping do
       source =
         Enum.find_value(roots, fn root ->
@@ -358,5 +364,42 @@ defmodule Mix.Phoenix do
 
   def prepend_newline(string) do
     "\n" <> string
+  end
+
+  # In the context of a HEEx attribute value, transforms a given message into a
+  # dynamic `gettext` call or a fixed-value string attribute, depending on the
+  # `gettext?` parameter.
+  #
+  # ## Examples
+  #
+  #     iex> ~s|<tag attr=#{maybe_heex_attr_gettext("Hello", true)} />|
+  #     ~S|<tag attr={gettext("Hello")} />|
+  #
+  #     iex> ~s|<tag attr=#{maybe_heex_attr_gettext("Hello", false)} />|
+  #     ~S|<tag attr="Hello" />|
+  defp maybe_heex_attr_gettext(message, gettext?) do
+    if gettext? do
+      ~s|{gettext(#{inspect(message)})}|
+    else
+      inspect(message)
+    end
+  end
+
+  # In the context of an EEx template, transforms a given message into a dynamic
+  # `gettext` call or the message as is, depending on the `gettext?` parameter.
+  #
+  # ## Examples
+  #
+  #     iex> ~s|<tag>#{maybe_eex_gettext("Hello", true)}</tag>|
+  #     ~S|<tag><%= gettext("Hello") %></tag>|
+  #
+  #     iex> ~s|<tag>#{maybe_eex_gettext("Hello", false)}</tag>|
+  #     ~S|<tag>Hello</tag>|
+  defp maybe_eex_gettext(message, gettext?) do
+    if gettext? do
+      ~s|<%= gettext(#{inspect(message)}) %>|
+    else
+      message
+    end
   end
 end

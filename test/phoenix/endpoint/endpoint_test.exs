@@ -7,13 +7,17 @@ defmodule Phoenix.Endpoint.EndpointTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  @config [url: [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api"],
-           static_url: [host: "static.example.com"],
-           server: false, http: [port: 80], https: [port: 443],
-           force_ssl: [subdomains: true],
-           cache_manifest_skip_vsn: false,
-           cache_static_manifest: "../../../../test/fixtures/digest/compile/cache_manifest.json",
-           pubsub_server: :endpoint_pub]
+  @config [
+    url: [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api"],
+    static_url: [host: "static.example.com"],
+    server: false,
+    http: [port: 80],
+    https: [port: 443],
+    force_ssl: [subdomains: true],
+    cache_manifest_skip_vsn: false,
+    cache_static_manifest: "../../../../test/fixtures/digest/compile/cache_manifest.json",
+    pubsub_server: :endpoint_pub
+  ]
 
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
@@ -39,24 +43,24 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   setup_all do
-    ExUnit.CaptureLog.capture_log(fn -> start_supervised! Endpoint end)
-    start_supervised! {Phoenix.PubSub, name: :endpoint_pub}
-    on_exit fn -> Application.delete_env(:phoenix, :serve_endpoints) end
+    ExUnit.CaptureLog.capture_log(fn -> start_supervised!(Endpoint) end)
+    start_supervised!({Phoenix.PubSub, name: :endpoint_pub})
+    on_exit(fn -> Application.delete_env(:phoenix, :serve_endpoints) end)
     :ok
   end
 
   test "defines child_spec/1" do
     assert Endpoint.child_spec([]) == %{
-      id: Endpoint,
-      start: {Endpoint, :start_link, [[]]},
-      type: :supervisor
-    }
+             id: Endpoint,
+             start: {Endpoint, :start_link, [[]]},
+             type: :supervisor
+           }
   end
 
   test "warns if there is no configuration for an endpoint" do
     assert ExUnit.CaptureLog.capture_log(fn ->
-      NoConfigEndpoint.start_link()
-    end) =~ "no configuration"
+             NoConfigEndpoint.start_link()
+           end) =~ "no configuration"
   end
 
   test "has reloadable configuration" do
@@ -75,10 +79,13 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Endpoint.config(:endpoint_id) == endpoint_id
+
     assert Enum.sort(Endpoint.config(:url)) ==
-           [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api", port: 1234]
+             [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api", port: 1234]
+
     assert Enum.sort(Endpoint.config(:static_url)) ==
-           [host: "static.example.com", port: 456]
+             [host: "static.example.com", port: 456]
+
     assert Endpoint.url() == "https://example.com:1234"
     assert Endpoint.path("/") == "/api/"
     assert Endpoint.static_url() == "https://static.example.com:456"
@@ -136,7 +143,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
     conn = conn(:get, "https://example.com/")
     assert Endpoint.call(conn, []).script_name == ~w"api"
 
-    conn = put_in conn.script_name, ~w(foo)
+    conn = put_in(conn.script_name, ~w(foo))
     assert Endpoint.call(conn, []).script_name == ~w"api"
   end
 
@@ -149,19 +156,25 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
   test "sends hsts on https requests on force_ssl" do
     conn = Endpoint.call(conn(:get, "https://example.com/"), [])
+
     assert get_resp_header(conn, "strict-transport-security") ==
-           ["max-age=31536000; includeSubDomains"]
+             ["max-age=31536000; includeSubDomains"]
   end
 
   test "warms up caches on load and config change" do
     assert Endpoint.config_change([{Endpoint, @config}], []) == :ok
+
     assert Endpoint.config(:cache_static_manifest_latest) ==
              %{"foo.css" => "foo-d978852bea6530fcd197b5445ed008fd.css"}
 
     assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
 
     # Trigger a config change and the cache should be warmed up again
-    config = put_in(@config[:cache_static_manifest], "../../../../test/fixtures/digest/compile/cache_manifest_upgrade.json")
+    config =
+      put_in(
+        @config[:cache_static_manifest],
+        "../../../../test/fixtures/digest/compile/cache_manifest_upgrade.json"
+      )
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Endpoint.config(:cache_static_manifest_latest) == %{"foo.css" => "foo-ghijkl.css"}
@@ -191,26 +204,13 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   @tag :capture_log
-  test "invokes init/2 callback" do
-    defmodule InitEndpoint do
-      use Phoenix.Endpoint, otp_app: :phoenix
-
-      def init(:supervisor, opts) do
-        send opts[:parent], {self(), :sample}
-        {:ok, opts}
-      end
-    end
-
-    {:ok, pid} = InitEndpoint.start_link(parent: self())
-    assert_receive {^pid, :sample}
-  end
-
-  @tag :capture_log
   test "uses url configuration for static path" do
     Application.put_env(:phoenix, __MODULE__.UrlEndpoint, url: [path: "/api"])
+
     defmodule UrlEndpoint do
       use Phoenix.Endpoint, otp_app: :phoenix
     end
+
     UrlEndpoint.start_link()
     assert UrlEndpoint.path("/phoenix.png") =~ "/api/phoenix.png"
     assert UrlEndpoint.static_path("/phoenix.png") =~ "/api/phoenix.png"
@@ -219,9 +219,11 @@ defmodule Phoenix.Endpoint.EndpointTest do
   @tag :capture_log
   test "uses static_url configuration for static path" do
     Application.put_env(:phoenix, __MODULE__.StaticEndpoint, static_url: [path: "/static"])
+
     defmodule StaticEndpoint do
       use Phoenix.Endpoint, otp_app: :phoenix
     end
+
     StaticEndpoint.start_link()
     assert StaticEndpoint.path("/phoenix.png") =~ "/phoenix.png"
     assert StaticEndpoint.static_path("/phoenix.png") =~ "/static/phoenix.png"
@@ -245,35 +247,63 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
   test "injects pubsub broadcast with configured server" do
     Endpoint.subscribe("sometopic")
-    some = spawn fn -> :ok end
+    some = spawn(fn -> :ok end)
 
     Endpoint.broadcast_from(some, "sometopic", "event1", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event1", payload: %{key: :val}, topic: "sometopic"}
+      event: "event1",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
 
     Endpoint.broadcast_from!(some, "sometopic", "event2", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event2", payload: %{key: :val}, topic: "sometopic"}
+      event: "event2",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
 
     Endpoint.broadcast("sometopic", "event3", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event3", payload: %{key: :val}, topic: "sometopic"}
+      event: "event3",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
 
     Endpoint.broadcast!("sometopic", "event4", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event4", payload: %{key: :val}, topic: "sometopic"}
+      event: "event4",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
 
     Endpoint.local_broadcast_from(some, "sometopic", "event1", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event1", payload: %{key: :val}, topic: "sometopic"}
+      event: "event1",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
 
     Endpoint.local_broadcast("sometopic", "event3", %{key: :val})
+
     assert_receive %Phoenix.Socket.Broadcast{
-      event: "event3", payload: %{key: :val}, topic: "sometopic"}
+      event: "event3",
+      payload: %{key: :val},
+      topic: "sometopic"
+    }
   end
 
   test "loads cache manifest from specified application" do
-    config = put_in(@config[:cache_static_manifest], {:phoenix, "../../../../test/fixtures/digest/compile/cache_manifest.json"})
+    config =
+      put_in(
+        @config[:cache_static_manifest],
+        {:phoenix, "../../../../test/fixtures/digest/compile/cache_manifest.json"}
+      )
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"

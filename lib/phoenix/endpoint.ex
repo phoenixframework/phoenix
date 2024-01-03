@@ -290,14 +290,6 @@ defmodule Phoenix.Endpoint do
   """
   @callback config_change(changed :: term, removed :: term) :: term
 
-  @doc """
-  Initialize the endpoint configuration.
-
-  Invoked when the endpoint supervisor starts, allows dynamically
-  configuring the endpoint from system environment or other runtime sources.
-  """
-  @callback init(:supervisor, config :: Keyword.t()) :: {:ok, Keyword.t()}
-
   # Paths and URLs
 
   @doc """
@@ -422,13 +414,6 @@ defmodule Phoenix.Endpoint do
 
       # Avoid unused variable warnings
       _ = var!(code_reloading?)
-
-      @doc false
-      def init(_key, config) do
-        {:ok, config}
-      end
-
-      defoverridable init: 2
     end
   end
 
@@ -837,8 +822,9 @@ defmodule Phoenix.Endpoint do
 
       If `true`, the header is checked against `:host` in `YourAppWeb.Endpoint.config(:url)[:host]`.
 
-      If `false`, your app is vulnerable to Cross-Site WebSocket Hijacking (CSWSH)
-      attacks. Only use in development, when the host is truly unknown or when
+      If `false` and you do not validate the session in your socket, your app
+      is vulnerable to Cross-Site WebSocket Hijacking (CSWSH) attacks.
+      Only use in development, when the host is truly unknown or when
       serving clients that do not send the `origin` header, such as mobile apps.
 
       You can also specify a list of explicitly allowed origins. Wildcards are

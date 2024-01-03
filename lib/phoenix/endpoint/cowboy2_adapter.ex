@@ -139,9 +139,12 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
   defp port_to_integer(port) when is_integer(port), do: port
 
   def server_info(endpoint, scheme) do
-    make_ref(endpoint, scheme)
-    |> :ranch.get_addr()
-    |> then(&{:ok, &1})
+    address =
+      endpoint
+      |> make_ref(scheme)
+      |> :ranch.get_addr()
+
+    {:ok, address}
   rescue
     e -> {:error, e.message}
   end

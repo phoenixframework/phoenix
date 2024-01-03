@@ -110,6 +110,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb.CoreComponents"
+        assert file =~ ~S|aria-label={gettext("close")}|
+        assert file =~ ~S|<.flash kind={:info} title={gettext("Success!")} flash={@flash} />|
       end)
 
       assert_file("phx_blog/lib/phx_blog_web/components/layouts.ex", fn file ->
@@ -546,6 +548,17 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"
         assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\"]"
         refute file =~ "subdirectories:"
+      end)
+    end)
+  end
+
+  test "new with --no-gettext" do
+    in_tmp("new with no_gettext", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--no-gettext"])
+
+      assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
+        assert file =~ ~S|aria-label="close"|
+        assert file =~ ~S|<.flash kind={:info} title="Success!" flash={@flash} />|
       end)
     end)
   end

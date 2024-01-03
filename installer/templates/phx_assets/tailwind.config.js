@@ -51,7 +51,12 @@ module.exports = {
       matchComponents({
         "hero": ({name, fullPath}) => {
           let content = fs.readFileSync(fullPath).toString().replace(/\r?\n|\r/g, "")
-          let spacing = name.endsWith("-micro") ? theme("spacing.4") : theme("spacing.5")
+          let size = theme("spacing.6")
+          if (name.endsWith("-mini")) {
+            size = theme("spacing.5")
+          } else if (name.endsWith("-micro")) {
+            size = theme("spacing.4")
+          }
           return {
             [`--hero-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
             "-webkit-mask": `var(--hero-${name})`,
@@ -60,8 +65,8 @@ module.exports = {
             "background-color": "currentColor",
             "vertical-align": "middle",
             "display": "inline-block",
-            "width": spacing,
-            "height": spacing
+            "width": size,
+            "height": size
           }
         }
       }, {values})

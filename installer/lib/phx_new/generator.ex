@@ -37,8 +37,13 @@ defmodule Phx.New.Generator do
               @external_resource unquote(path)
               @file unquote(path)
               def render(unquote(name), unquote(source), var!(assigns))
-                  when is_list(var!(assigns)),
-                  do: unquote(compiled)
+                  when is_list(var!(assigns)) do
+                var!(maybe_heex_attr_gettext) = &unquote(__MODULE__).maybe_heex_attr_gettext/2
+                _ = var!(maybe_heex_attr_gettext)
+                var!(maybe_eex_gettext) = &unquote(__MODULE__).maybe_eex_gettext/2
+                _ = var!(maybe_eex_gettext)
+                unquote(compiled)
+              end
             end
           else
             quote do
@@ -434,4 +439,41 @@ defmodule Phx.New.Generator do
 
   defp random_string(length),
     do: :crypto.strong_rand_bytes(length) |> Base.encode64() |> binary_part(0, length)
+
+  # In the context of a HEEx attribute value, transforms a given message into a
+  # dynamic `gettext` call or a fixed-value string attribute, depending on the
+  # `gettext?` parameter.
+  #
+  # ## Examples
+  #
+  #     iex> ~s|<tag attr=#{maybe_heex_attr_gettext("Hello", true)} />|
+  #     ~S|<tag attr={gettext("Hello")} />|
+  #
+  #     iex> ~s|<tag attr=#{maybe_heex_attr_gettext("Hello", false)} />|
+  #     ~S|<tag attr="Hello" />|
+  def maybe_heex_attr_gettext(message, gettext?) do
+    if gettext? do
+      ~s|{gettext(#{inspect(message)})}|
+    else
+      inspect(message)
+    end
+  end
+
+  # In the context of an EEx template, transforms a given message into a dynamic
+  # `gettext` call or the message as is, depending on the `gettext?` parameter.
+  #
+  # ## Examples
+  #
+  #     iex> ~s|<tag>#{maybe_eex_gettext("Hello", true)}</tag>|
+  #     ~S|<tag><%= gettext("Hello") %></tag>|
+  #
+  #     iex> ~s|<tag>#{maybe_eex_gettext("Hello", false)}</tag>|
+  #     ~S|<tag>Hello</tag>|
+  def maybe_eex_gettext(message, gettext?) do
+    if gettext? do
+      ~s|<%= gettext(#{inspect(message)}) %>|
+    else
+      message
+    end
+  end
 end

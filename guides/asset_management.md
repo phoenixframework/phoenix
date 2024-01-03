@@ -30,17 +30,13 @@ If you want to import JavaScript dependencies, you have at least three options t
 
    ```elixir
    # mix.exs
-   {:topbar,
-    github: "buunguyen/topbar",
-    ref: "17a435bd82aca08fbf6b6f1842e2e9c24e6e3a78",
-    app: false,
-    compile: false}
+   {:topbar, github: "buunguyen/topbar", app: false, compile: false}
    ```
 
    Run `mix deps.get` to fetch the dependency and then import it:
 
    ```js
-   import topbar from "../../deps/topbar"
+   import topbar from "topbar"
    ```
 
    New applications use this third approach to import Heroicons, avoiding
@@ -49,20 +45,6 @@ If you want to import JavaScript dependencies, you have at least three options t
    update thanks to Mix. It is important to note that git dependencies cannot
    be used by Hex packages, so if you intend to publish your project to Hex,
    consider vendoring the files instead.
-
-## CSS
-
-By default, Phoenix generates CSS with the `tailwind` library, but esbuild has basic support for CSS which you can use if you aren't using tailwind. If you import a `.css` file at the top of your main `.js` file, `esbuild` will bundle it, and write it to the same directory as your final `app.js`.
-
-```js
-import "../css/app.css"
-```
-
-However, if you want to use a CSS framework, you will need to use a separate tool. Here are some options to do so:
-
-  * You can use `esbuild` plugins (requires `npm`). See the "Esbuild plugins" section below
-
-Don't forget to remove the `import "../css/app.css"` from your JavaScript file when doing so.
 
 ## Images, fonts, and external files
 
@@ -195,9 +177,11 @@ Modify the `aliases` task in `mix.exs` to install `npm` packages during `mix set
 
 Finally, remove the `esbuild` configuration from `config/config.exs` and remove the dependency from the `deps` function in your `mix.exs`, and you are done!
 
-## Removing esbuild
+## Alternative JS build tools
 
-If you are writing an API, or for some other reason you do not need to serve any assets, you can disable asset management completely.
+If you are writing an API or you want to use another asset build tool, you may want to remove the `esbuild` Hex package (see steps below). Then you must follow the additional steps required by the third-party tool.
+
+### Remove esbuild
 
 1. Remove the `esbuild` configuration in `config/config.exs` and `config/dev.exs`,
 2. Remove the `assets.deploy` task defined in `mix.exs`,
@@ -207,3 +191,22 @@ If you are writing an API, or for some other reason you do not need to serve any
 ```console
 $ mix deps.unlock esbuild
 ```
+
+## Alternative CSS frameworks
+
+By default, Phoenix generates CSS with the `tailwind` library and its default plugins.
+
+If you want to use external `tailwind` plugins or another CSS framework, you should replace the `tailwind` Hex package (see steps below). Then you can use an `esbuild` plugin (as outlined above) or even bring a separate framework altogether.
+
+### Remove tailwind
+
+1. Remove the `tailwind` configuration in `config/config.exs` and `config/dev.exs`,
+2. Remove the `assets.deploy` task defined in `mix.exs`,
+3. Remove the `tailwind` dependency from `mix.exs`,
+4. Unlock the `tailwind` dependency:
+
+```console
+$ mix deps.unlock tailwind
+```
+
+You may optionally remove and delete the `heroicons` dependency as well.

@@ -31,19 +31,25 @@ defmodule Phoenix.Endpoint.Supervisor do
     env_conf = config(otp_app, mod, default_conf)
 
     secret_conf =
-      case mod.init(:supervisor, env_conf) do
-        {:ok, init_conf} ->
-          if is_nil(Application.get_env(otp_app, mod)) and init_conf == env_conf do
-            Logger.warning(
-              "no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}"
-            )
-          end
+      cond do
+        Code.ensure_loaded?(mod) and function_exported?(mod, :init, 2) ->
+          IO.warn(
+            "#{inspect(mod)}.init/2 is deprecated, use config/runtime.exs instead " <>
+              "or pass additional options when starting the endpoint in your supervision tree"
+          )
 
+          {:ok, init_conf} = mod.init(:supervisor, env_conf)
           init_conf
 
-        other ->
-          raise ArgumentError,
-                "expected init/2 callback to return {:ok, config}, got: #{inspect(other)}"
+        is_nil(Application.get_env(otp_app, mod)) ->
+          Logger.warning(
+            "no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}"
+          )
+
+          env_conf
+
+        true ->
+          env_conf
       end
 
     extra_conf = [

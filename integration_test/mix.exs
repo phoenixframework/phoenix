@@ -59,9 +59,10 @@ defmodule Phoenix.Integration.MixProject do
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.1",
+       sparse: "optimized",
        app: false,
        compile: false,
-       sparse: "optimized"},
+       depth: 1},
       {:finch, "~> 0.13"}
     ]
   end

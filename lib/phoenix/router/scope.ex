@@ -37,7 +37,7 @@ defmodule Phoenix.Router.Scope do
     path = validate_path(path)
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
-    as = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
+    as = Keyword.get_lazy(opts, :as, fn -> Phoenix.Naming.resource_name(plug, "Controller") end)
     alias? = Keyword.get(opts, :alias, true)
     trailing_slash? = Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
     warn_on_verify? = Keyword.get(opts, :warn_on_verify, false)
@@ -259,7 +259,10 @@ defmodule Phoenix.Router.Scope do
   end
 
   defp join_alias(top, alias) when is_atom(alias) do
-    Module.concat(top.alias ++ [alias])
+    case Atom.to_string(alias) do
+      <<head, _::binary>> when head in ?a..?z -> alias
+      alias -> Module.concat(top.alias ++ [alias])
+    end
   end
 
   defp join_as(_top, nil), do: nil

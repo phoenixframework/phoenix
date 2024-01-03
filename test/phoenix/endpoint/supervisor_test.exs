@@ -42,7 +42,6 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   end
 
   defmodule ServerEndpoint do
-    def init(:supervisor, config), do: {:ok, config}
     def __sockets__(), do: []
   end
 
@@ -92,34 +91,40 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   end
 
   import ExUnit.CaptureLog
+
   test "logs info if :http or :https configuration is set but not :server when running in release" do
     Logger.configure(level: :info)
     # simulate running inside release
     System.put_env("RELEASE_NAME", "phoenix-test")
-    Application.put_env(:phoenix, ServerEndpoint, [server: false, http: [], https: []])
-    assert capture_log(fn ->
-      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-    end) =~ "Configuration :server"
+    Application.put_env(:phoenix, ServerEndpoint, server: false, http: [], https: [])
 
-    Application.put_env(:phoenix, ServerEndpoint, [server: false, http: []])
     assert capture_log(fn ->
-      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-    end) =~ "Configuration :server"
+             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+           end) =~ "Configuration :server"
 
-    Application.put_env(:phoenix, ServerEndpoint, [server: false, https: []])
+    Application.put_env(:phoenix, ServerEndpoint, server: false, http: [])
+
     assert capture_log(fn ->
-      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-    end) =~ "Configuration :server"
+             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+           end) =~ "Configuration :server"
 
-    Application.put_env(:phoenix, ServerEndpoint, [server: false])
+    Application.put_env(:phoenix, ServerEndpoint, server: false, https: [])
+
+    assert capture_log(fn ->
+             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+           end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, server: false)
+
     refute capture_log(fn ->
-      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-    end) =~ "Configuration :server"
+             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+           end) =~ "Configuration :server"
 
-    Application.put_env(:phoenix, ServerEndpoint, [server: true])
+    Application.put_env(:phoenix, ServerEndpoint, server: true)
+
     refute capture_log(fn ->
-      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-    end) =~ "Configuration :server"
+             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+           end) =~ "Configuration :server"
 
     Application.delete_env(:phoenix, ServerEndpoint)
     Logger.configure(level: :warning)
@@ -127,7 +132,6 @@ defmodule Phoenix.Endpoint.SupervisorTest do
 
   describe "watchers" do
     defmodule WatchersEndpoint do
-      def init(:supervisor, config), do: {:ok, config}
       def __sockets__(), do: []
     end
 
