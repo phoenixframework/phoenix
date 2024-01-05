@@ -29,7 +29,14 @@ import Timer from "./timer"
  * @param {Object} [opts] - Optional configuration
  * @param {Function} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
  *
- * Defaults to WebSocket with automatic LongPoll fallback.
+ * Defaults to WebSocket with automatic LongPoll fallback if WebSocket is not defined.
+ * To fallback to LongPoll when WebSocket attempts fail, use `longPollFallbackMs: 2500`.
+ *
+ * @param {Function} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
+ * before falling back to the LongPoll transport. Disabled by default.
+ *
+ * @param {Function} [opts.debug] - When true, enables debug logging. Default false.
+ *
  * @param {Function} [opts.encode] - The function to encode outgoing messages.
  *
  * Defaults to JSON encoder.
@@ -86,6 +93,19 @@ import Timer from "./timer"
  * @param {vsn} [opts.vsn] - The serializer's protocol version to send on connect.
  *
  * Defaults to DEFAULT_VSN.
+ *
+ * @param {Object} [opts.sessionStorage] - An optional Storage compatible object
+ * Phoenix uses sessionStorage for longpoll fallback history. Overriding the store is
+ * useful when Phoenix won't have access to `sessionStorage`. For example, This could
+ * happen if a site loads a cross-domain channel in an iframe. Example usage:
+ *
+ *     class InMemoryStorage {
+ *       constructor() { this.storage = {} }
+ *       getItem(keyName) { return this.storage[keyName] || null }
+ *       removeItem(keyName) { delete this.storage[keyName] }
+ *       setItem(keyName, keyValue) { this.storage[keyName] = keyValue }
+ *     }
+ *
 */
 export default class Socket {
   constructor(endPoint, opts = {}){
@@ -95,6 +115,9 @@ export default class Socket {
     this.ref = 0
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
     this.transport = opts.transport || global.WebSocket || LongPoll
+    this.longPollFallbackMs = opts.longPollFallbackMs
+    this.fallbackTimer = null
+    this.sessionStore = opts.sessionStorage || global.sessionStorage
     this.establishedConnections = 0
     this.defaultEncoder = Serializer.encode.bind(Serializer)
     this.defaultDecoder = Serializer.decode.bind(Serializer)
@@ -139,6 +162,9 @@ export default class Socket {
       }
     }
     this.logger = opts.logger || null
+    if(!this.logger && opts.debug){
+      this.logger = (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
+    }
     this.longpollerTimeout = opts.longpollerTimeout || 20000
     this.params = closure(opts.params || {})
     this.endPoint = `${endPoint}/${TRANSPORTS.websocket}`
@@ -165,8 +191,8 @@ export default class Socket {
   replaceTransport(newTransport){
     this.connectClock++
     this.closeWasClean = true
+    clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
-    this.sendBuffer = []
     if(this.conn){
       this.conn.close()
       this.conn = null
@@ -207,6 +233,7 @@ export default class Socket {
   disconnect(callback, code, reason){
     this.connectClock++
     this.closeWasClean = true
+    clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
     this.teardown(callback, code, reason)
   }
@@ -224,16 +251,11 @@ export default class Socket {
       this.params = closure(params)
     }
     if(this.conn){ return }
-
-    this.connectClock++
-    this.closeWasClean = false
-    this.conn = new this.transport(this.endPointURL())
-    this.conn.binaryType = this.binaryType
-    this.conn.timeout = this.longpollerTimeout
-    this.conn.onopen = () => this.onConnOpen()
-    this.conn.onerror = error => this.onConnError(error)
-    this.conn.onmessage = event => this.onConnMessage(event)
-    this.conn.onclose = event => this.onConnClose(event)
+    if(this.longPollFallbackMs && this.transport !== LongPoll){
+      this.connectWithFallback(LongPoll, this.longPollFallbackMs)
+    } else {
+      this.transportConnect()
+    }
   }
 
   /**
@@ -242,7 +264,7 @@ export default class Socket {
    * @param {string} msg
    * @param {Object} data
    */
-  log(kind, msg, data){ this.logger(kind, msg, data) }
+  log(kind, msg, data){ this.logger && this.logger(kind, msg, data) }
 
   /**
    * Returns true if a logger has been set on this socket.
@@ -319,13 +341,69 @@ export default class Socket {
    * @private
    */
 
+  transportConnect(){
+    this.connectClock++
+    this.closeWasClean = false
+    this.conn = new this.transport(this.endPointURL())
+    this.conn.binaryType = this.binaryType
+    this.conn.timeout = this.longpollerTimeout
+    this.conn.onopen = () => this.onConnOpen()
+    this.conn.onerror = error => this.onConnError(error)
+    this.conn.onmessage = event => this.onConnMessage(event)
+    this.conn.onclose = event => this.onConnClose(event)
+  }
+
+  getSession(key){ return this.sessionStore && this.sessionStore.getItem(key) }
+
+  storeSession(key, val){ this.sessionStore && this.sessionStore.setItem(key, val) }
+
+  connectWithFallback(fallbackTransport, fallbackThreshold = 2500){
+    clearTimeout(this.fallbackTimer)
+    let established = false
+    let primaryTransport = true
+    let openRef, errorRef
+    let fallback = (reason) => {
+      this.log("transport", `falling back to ${fallbackTransport.name}...`, reason)
+      this.off([openRef, errorRef])
+      primaryTransport = false
+      this.storeSession("phx:longpoll", "true")
+      this.replaceTransport(fallbackTransport)
+      this.transportConnect()
+    }
+    if(this.getSession("phx:longpoll")){ return fallback("memorized") }
+
+    this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
+
+    errorRef = this.onError(reason => {
+      this.log("transport", "error", reason)
+      if(primaryTransport && !established) {
+        clearTimeout(this.fallbackTimer)
+        fallback(reason)
+      }
+    })
+    this.onOpen(() => {
+      established = true
+      if(!primaryTransport){
+        return console.log("transport", `established ${fallbackTransport.name} fallback`)
+      }
+      // if we've established primary, give the fallback a new period to attempt ping
+      clearTimeout(this.fallbackTimer)
+      this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
+      this.ping(rtt => {
+        this.log("transport", "connected to primary after", rtt)
+        clearTimeout(this.fallbackTimer)
+      })
+    })
+    this.transportConnect()
+  }
+
   clearHeartbeats(){
     clearTimeout(this.heartbeatTimer)
     clearTimeout(this.heartbeatTimeoutTimer)
   }
 
   onConnOpen(){
-    if(this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
+    if(this.hasLogger()) this.log("transport", `${this.transport.name} connected to ${this.endPointURL()}`)
     this.closeWasClean = false
     this.establishedConnections++
     this.flushSendBuffer()

@@ -5,6 +5,9 @@ import sinon from "sinon"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
 import {encode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
+import {
+  SOCKET_STATES
+} from "../js/phoenix/constants"
 
 let socket
 
@@ -70,6 +73,25 @@ describe("with transports", function(){
         socket = new Socket("/socket")
         assert.equal(socket.transport, WebSocket)
         mockServer.stop(() => done())
+      })
+    })
+
+    describe("longPollFallbackMs", function(){
+      it("falls back to longpoll when set after primary transport failure", function(done){
+        let mockServer
+        socket = new Socket("/socket", {longPollFallbackMs: 20})
+        let replaceSpy = sinon.spy(socket, "replaceTransport")
+        mockServer = new WebSocketServer("wss://example.test/")
+        mockServer.stop(() => {
+          assert.equal(socket.transport, WebSocket)
+          socket.onError((reason) => {
+            setTimeout(() => {
+              assert(replaceSpy.calledWith(LongPoll))
+              done()
+            }, 100)
+          })
+          socket.connect()
+        })
       })
     })
   })

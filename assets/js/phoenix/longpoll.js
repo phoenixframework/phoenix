@@ -30,7 +30,8 @@ export default class LongPoll {
     this.onclose = function (){ } // noop
     this.pollEndpoint = this.normalizeEndpoint(endPoint)
     this.readyState = SOCKET_STATES.connecting
-    this.poll()
+    // we must wait for the caller to finish setting up our callbacks and timeout properties
+    setTimeout(() => this.poll(), 0)
   }
 
   normalizeEndpoint(endPoint){
