@@ -23,7 +23,10 @@ import "phoenix_html"
 <%= @live_comment %>import topbar from "../vendor/topbar"
 
 <%= @live_comment %>let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-<%= @live_comment %>let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+<%= @live_comment %>let liveSocket = new LiveSocket("/live", Socket, {
+<%= @live_comment %>  longPollFallbackMs: 2500,
+<%= @live_comment %>  params: {_csrf_token: csrfToken}
+<%= @live_comment %>})
 
 // Show progress bar on live navigation and form submits
 <%= @live_comment %>topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
