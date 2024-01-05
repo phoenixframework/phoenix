@@ -636,7 +636,7 @@ var LongPoll = class {
     };
     this.pollEndpoint = this.normalizeEndpoint(endPoint);
     this.readyState = SOCKET_STATES.connecting;
-    this.poll();
+    setTimeout(() => this.poll(), 0);
   }
   normalizeEndpoint(endPoint) {
     return endPoint.replace("ws://", "http://").replace("wss://", "https://").replace(new RegExp("(.*)/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll);
@@ -1026,6 +1026,9 @@ var Socket = class {
     this.ref = 0;
     this.timeout = opts.timeout || DEFAULT_TIMEOUT;
     this.transport = opts.transport || global.WebSocket || LongPoll;
+    this.longPollFallbackMs = opts.longPollFallbackMs;
+    this.fallbackTimer = null;
+    this.sessionStore = opts.sessionStorage || global.sessionStorage;
     this.establishedConnections = 0;
     this.defaultEncoder = serializer_default.encode.bind(serializer_default);
     this.defaultDecoder = serializer_default.decode.bind(serializer_default);
@@ -1070,6 +1073,11 @@ var Socket = class {
       }
     };
     this.logger = opts.logger || null;
+    if (!this.logger && opts.debug) {
+      this.logger = (kind, msg, data) => {
+        console.log(`${kind}: ${msg}`, data);
+      };
+    }
     this.longpollerTimeout = opts.longpollerTimeout || 2e4;
     this.params = closure(opts.params || {});
     this.endPoint = `${endPoint}/${TRANSPORTS.websocket}`;
@@ -1096,8 +1104,8 @@ var Socket = class {
   replaceTransport(newTransport) {
     this.connectClock++;
     this.closeWasClean = true;
+    clearTimeout(this.fallbackTimer);
     this.reconnectTimer.reset();
-    this.sendBuffer = [];
     if (this.conn) {
       this.conn.close();
       this.conn = null;
@@ -1142,6 +1150,7 @@ var Socket = class {
   disconnect(callback, code, reason) {
     this.connectClock++;
     this.closeWasClean = true;
+    clearTimeout(this.fallbackTimer);
     this.reconnectTimer.reset();
     this.teardown(callback, code, reason);
   }
@@ -1160,15 +1169,11 @@ var Socket = class {
     if (this.conn) {
       return;
     }
-    this.connectClock++;
-    this.closeWasClean = false;
-    this.conn = new this.transport(this.endPointURL());
-    this.conn.binaryType = this.binaryType;
-    this.conn.timeout = this.longpollerTimeout;
-    this.conn.onopen = () => this.onConnOpen();
-    this.conn.onerror = (error) => this.onConnError(error);
-    this.conn.onmessage = (event) => this.onConnMessage(event);
-    this.conn.onclose = (event) => this.onConnClose(event);
+    if (this.longPollFallbackMs && this.transport !== LongPoll) {
+      this.connectWithFallback(LongPoll, this.longPollFallbackMs);
+    } else {
+      this.transportConnect();
+    }
   }
   /**
    * Logs the message. Override `this.logger` for specialized logging. noops by default
@@ -1177,7 +1182,7 @@ var Socket = class {
    * @param {Object} data
    */
   log(kind, msg, data) {
-    this.logger(kind, msg, data);
+    this.logger && this.logger(kind, msg, data);
   }
   /**
    * Returns true if a logger has been set on this socket.
@@ -1251,13 +1256,68 @@ var Socket = class {
   /**
    * @private
    */
+  transportConnect() {
+    this.connectClock++;
+    this.closeWasClean = false;
+    this.conn = new this.transport(this.endPointURL());
+    this.conn.binaryType = this.binaryType;
+    this.conn.timeout = this.longpollerTimeout;
+    this.conn.onopen = () => this.onConnOpen();
+    this.conn.onerror = (error) => this.onConnError(error);
+    this.conn.onmessage = (event) => this.onConnMessage(event);
+    this.conn.onclose = (event) => this.onConnClose(event);
+  }
+  getSession(key) {
+    return this.sessionStore && this.sessionStore.getItem(key);
+  }
+  storeSession(key, val) {
+    this.sessionStore && this.sessionStore.setItem(key, val);
+  }
+  connectWithFallback(fallbackTransport, fallbackThreshold = 2500) {
+    clearTimeout(this.fallbackTimer);
+    let established = false;
+    let primaryTransport = true;
+    let openRef, errorRef;
+    let fallback = (reason) => {
+      this.log("transport", `falling back to ${fallbackTransport.name}...`, reason);
+      this.off([openRef, errorRef]);
+      primaryTransport = false;
+      this.storeSession("phx:longpoll", "true");
+      this.replaceTransport(fallbackTransport);
+      this.transportConnect();
+    };
+    if (this.getSession("phx:longpoll")) {
+      return fallback("memorized");
+    }
+    this.fallbackTimer = setTimeout(fallback, fallbackThreshold);
+    errorRef = this.onError((reason) => {
+      this.log("transport", "error", reason);
+      if (primaryTransport && !established) {
+        clearTimeout(this.fallbackTimer);
+        fallback(reason);
+      }
+    });
+    this.onOpen(() => {
+      established = true;
+      if (!primaryTransport) {
+        return console.log("transport", `established ${fallbackTransport.name} fallback`);
+      }
+      clearTimeout(this.fallbackTimer);
+      this.fallbackTimer = setTimeout(fallback, fallbackThreshold);
+      this.ping((rtt) => {
+        this.log("transport", "connected to primary after", rtt);
+        clearTimeout(this.fallbackTimer);
+      });
+    });
+    this.transportConnect();
+  }
   clearHeartbeats() {
     clearTimeout(this.heartbeatTimer);
     clearTimeout(this.heartbeatTimeoutTimer);
   }
   onConnOpen() {
     if (this.hasLogger())
-      this.log("transport", `connected to ${this.endPointURL()}`);
+      this.log("transport", `${this.transport.name} connected to ${this.endPointURL()}`);
     this.closeWasClean = false;
     this.establishedConnections++;
     this.flushSendBuffer();
