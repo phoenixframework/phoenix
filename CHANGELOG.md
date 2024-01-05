@@ -46,6 +46,15 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.11
+
+### Enhancements
+  * [phx.new] Enable longpoll transport by default and auto fallback when websocket fails for newly generated applications
+
+### JavaScript Client Enhancements
+  * Support new `longPollFallbackMs` option to auto fallback when websocket fails to connect
+  * Support new `debug` option to enable verbose logging
+
 ## 1.7.10 (2023-11-03)
 
 ### Bug fixes
