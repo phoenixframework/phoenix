@@ -67,8 +67,9 @@ defmodule Phx.New.Web do
         project_path: project_path,
         web_path: web_path,
         web_app: app,
-        depends_on_app: depends_on,
-        depends_on_mod: depends_on && Module.concat([Macro.camelize(depends_on)]),
+        depends_on_app: depends_on || app,
+        depends_on_mod:
+          (depends_on && Module.concat([Macro.camelize(depends_on)])) || project.app_mod,
         generators: [context_app: :"#{depends_on}"],
         web_namespace: project.app_mod
     }
