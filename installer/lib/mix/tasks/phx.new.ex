@@ -134,6 +134,7 @@ defmodule Mix.Tasks.Phx.New do
     html: :boolean,
     gettext: :boolean,
     umbrella: :boolean,
+    depends_on: :string,
     verbose: :boolean,
     live: :boolean,
     dashboard: :boolean,

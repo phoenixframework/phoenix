@@ -219,6 +219,8 @@ defmodule Phx.New.Generator do
       signing_salt: random_string(8),
       lv_signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
+      depends_on_app: project.depends_on_app,
+      depends_on_mod: inspect(project.depends_on_mod) || inspect(project.app_mod),
       asset_builders: Enum.filter([tailwind && :tailwind, esbuild && :esbuild], & &1),
       javascript: esbuild,
       css: tailwind,

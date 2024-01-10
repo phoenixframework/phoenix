@@ -54,8 +54,8 @@ defmodule <%= @web_namespace %>.MixProject do
        depth: 1},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
-      {:gettext, "~> 0.20"},<% end %><%= if @app_name != @web_app_name do %>
-      {:<%= @app_name %>, in_umbrella: true},<% end %>
+      {:gettext, "~> 0.20"},<% end %><%= if @in_umbrella do %>
+      {:<%= @depends_on_app %>, in_umbrella: true},<% end %>
       {:jason, "~> 1.2"},
       {<%= inspect @web_adapter_app %>, "<%= @web_adapter_vsn %>"}
     ]

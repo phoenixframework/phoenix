@@ -32,7 +32,7 @@ defmodule <%= @web_namespace %>.ConnCase do
   end<%= if @ecto do %>
 
   setup tags do
-    <%= @app_module %>.DataCase.setup_sandbox(tags)
+    <%= @depends_on_mod %>.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end<% else %>
 
