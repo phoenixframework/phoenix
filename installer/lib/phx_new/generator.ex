@@ -358,7 +358,7 @@ defmodule Phx.New.Generator do
         hostname: "localhost",
         database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|},
         pool: Ecto.Adapters.SQL.Sandbox,
-        pool_size: 10
+        pool_size: {:literal, ~s|System.schedulers_online() * 2|}
       ],
       test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect(module)}.Repo, :manual)",
       test_setup: """
