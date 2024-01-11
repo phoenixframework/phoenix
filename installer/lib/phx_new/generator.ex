@@ -186,7 +186,7 @@ defmodule Phx.New.Generator do
     # means creating a database like FoO is the same as foo in
     # some storages.
     {adapter_app, adapter_module, adapter_config} =
-      get_ecto_adapter(db, String.downcase(project.app), project.app_mod)
+      get_ecto_adapter(db, String.downcase(project.app), project.depends_on_mod)
 
     {web_adapter_app, web_adapter_vsn, web_adapter_module} = get_web_adapter(web_adapter)
 
