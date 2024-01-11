@@ -194,7 +194,7 @@ defmodule Phoenix.Digester do
     compressors = Application.fetch_env!(:phoenix, :static_compressors)
 
     Enum.each(compressors, fn compressor ->
-      [file_extension | _] = compressor.file_extensions
+      [file_extension | _] = compressor.file_extensions()
 
       compressed_digested_result =
         compressor.compress_file(file.digested_filename, file.digested_content)
