@@ -1,6 +1,13 @@
 defmodule Mix.Tasks.Phx.Gen.Auth.HashingLibrary do
   @moduledoc false
 
+  @type t :: %__MODULE__{
+          name: atom(),
+          module: module(),
+          mix_dependency: String.t(),
+          test_config: String.t()
+        }
+
   defstruct [:name, :module, :mix_dependency, :test_config]
 
   def build("bcrypt") do
