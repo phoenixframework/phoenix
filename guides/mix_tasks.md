@@ -804,7 +804,7 @@ Indeed it does.
 If you want to make your new Mix task to use your application's infrastructure, you need to make sure the application is started and configure when Mix task is being executed. This is particularly useful if you need to access your database from within the Mix task. Thankfully, Mix makes it really easy for us via the `@requirements` module attribute:
 
 ```elixir
-  @requirements ["app.config"]
+  @requirements ["app.start"]
 
   @impl Mix.Task
   def run(_args) do
