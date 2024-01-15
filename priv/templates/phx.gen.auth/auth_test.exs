@@ -170,6 +170,8 @@ defmodule <%= inspect auth_module %>Test do
 
       {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_<%= schema.singular %> == nil
+      assert {:redirect, %{to: path}} = updated_socket.redirected
+      assert path == ~p"<%= schema.route_prefix %>/log_in"
     end
 
     test "redirects to login page if there isn't a <%= schema.singular %>_token", %{conn: conn} do
@@ -182,6 +184,8 @@ defmodule <%= inspect auth_module %>Test do
 
       {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_<%= schema.singular %> == nil
+      assert {:redirect, %{to: path}} = updated_socket.redirected
+      assert path == ~p"<%= schema.route_prefix %>/log_in"
     end
   end
 
@@ -190,13 +194,15 @@ defmodule <%= inspect auth_module %>Test do
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
-      assert {:halt, _updated_socket} =
+      assert {:halt, updated_socket} =
                <%= inspect schema.alias %>Auth.on_mount(
                  :redirect_if_<%= schema.singular %>_is_authenticated,
                  %{},
                  session,
                  %LiveView.Socket{}
                )
+      assert {:redirect, %{to: path}} = updated_socket.redirected
+      assert path == ~p"/"
     end
 
     test "doesn't redirect if there is no authenticated <%= schema.singular %>", %{conn: conn} do
