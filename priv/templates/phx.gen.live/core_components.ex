@@ -373,6 +373,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       name={@name}
       id={@id}
       value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+      {@rest}
     />
     """
   end
