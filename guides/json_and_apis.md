@@ -141,7 +141,7 @@ To understand how to render JSON, let's start with the `index` action from `UrlC
 
 As we can see, this is not any different from how Phoenix renders HTML templates. We call `render/3`, passing the connection, the template we want our views to render (`:index`), and the data we want to make available to our views.
 
-Phoenix typically uses one view per rendering format. When rendering HTML, we would use `HelloHTML`. Now that we are rendering JSON, we will find a `UrlJSON` view collocated with the template at `lib/hello_web/controllers/url_json.ex`. Let's open it up:
+Phoenix typically uses one view per rendering format. When rendering HTML, we would use `UrlHTML`. Now that we are rendering JSON, we will find a `UrlJSON` view collocated with the template at `lib/hello_web/controllers/url_json.ex`. Let's open it up:
 
 ```elixir
 defmodule HelloWeb.UrlJSON do
