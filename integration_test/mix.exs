@@ -51,7 +51,7 @@ defmodule Phoenix.Integration.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:swoosh, "~> 1.3"},
-      {:plug_cowboy, "~> 2.5"},
+      {:plug_cowboy, "~> 2.7"},
       {:bcrypt_elixir, "~> 3.0"},
       {:argon2_elixir, "~> 3.0"},
       {:pbkdf2_elixir, "~> 2.0"},

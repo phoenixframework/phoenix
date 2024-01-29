@@ -83,7 +83,7 @@ defmodule Phoenix.MixProject do
       {:castore, ">= 0.0.0"},
 
       # Optional deps
-      {:plug_cowboy, "~> 2.6", optional: true},
+      {:plug_cowboy, "~> 2.7", optional: true},
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies (some for cross references)

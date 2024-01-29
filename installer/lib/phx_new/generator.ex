@@ -303,7 +303,7 @@ defmodule Phx.New.Generator do
     Mix.raise("Unknown database #{inspect(db)}")
   end
 
-  defp get_web_adapter("cowboy"), do: {:plug_cowboy, "~> 2.5", Phoenix.Endpoint.Cowboy2Adapter}
+  defp get_web_adapter("cowboy"), do: {:plug_cowboy, "~> 2.7", Phoenix.Endpoint.Cowboy2Adapter}
   # TODO bump bandit to 1.0 when it's released
   defp get_web_adapter("bandit"), do: {:bandit, ">= 0.0.0", Bandit.PhoenixAdapter}
   defp get_web_adapter(other), do: Mix.raise("Unknown web adapter #{inspect(other)}")
