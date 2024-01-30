@@ -11,17 +11,6 @@ defmodule Phoenix.Integration.LongPollSocketTest do
   @port 5908
   @pool_size 1
 
-  Application.put_env(
-    :phoenix,
-    Endpoint,
-    https: false,
-    http: [port: @port],
-    debug_errors: false,
-    secret_key_base: String.duplicate("abcdefgh", 8),
-    server: true,
-    pubsub_server: __MODULE__
-  )
-
   defmodule UserSocket do
     @behaviour Phoenix.Socket.Transport
 
@@ -71,20 +60,6 @@ defmodule Phoenix.Integration.LongPollSocketTest do
       custom: :value
   end
 
-  setup_all do
-    capture_log(fn -> start_supervised! Endpoint end)
-    start_supervised! {Phoenix.PubSub, name: __MODULE__, pool_size: @pool_size}
-    :ok
-  end
-
-  setup do
-    for {_, pid, _, _} <- DynamicSupervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
-      DynamicSupervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
-    end
-
-    :ok
-  end
-
   def poll(method, path, params, body \\ nil, headers \\ %{}) do
     headers = Map.merge(%{"content-type" => "application/json"}, headers)
     url = "http://127.0.0.1:#{@port}/#{path}?" <> URI.encode_query(params)
@@ -92,56 +67,87 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     update_in(resp.body, &Phoenix.json_library().decode!(&1))
   end
 
-  test "refuses unallowed origins" do
-    capture_log(fn ->
-      resp = poll(:get, "ws/longpoll", %{}, nil, %{"origin" => "https://example.com"})
-      assert resp.body["status"] == 410
 
-      resp = poll(:get, "ws/longpoll", %{}, nil, %{"origin" => "http://notallowed.com"})
-      assert resp.body["status"] == 403
-    end)
-  end
+  for adapter <- [Phoenix.Endpoint.Cowboy2Adapter, Bandit.PhoenixAdapter] do
+    @adapter adapter
 
-  test "returns params with sync request" do
-    resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
-    assert resp.body["token"]
-    assert resp.body["status"] == 410
-    assert resp.status == 200
-    secret = Map.take(resp.body, ["token"])
+    describe "running on #{inspect(adapter)}" do
+      setup do
+        Application.put_env(:phoenix, Endpoint,
+          adapter: @adapter,
+          https: false,
+          http: [port: @port],
+          debug_errors: false,
+          secret_key_base: String.duplicate("abcdefgh", 8),
+          server: true,
+          pubsub_server: __MODULE__
+        )
 
-    resp = poll(:post, "ws/longpoll", secret, "params")
-    assert resp.body["status"] == 200
+        capture_log(fn -> start_supervised! Endpoint end)
+        start_supervised! {Phoenix.PubSub, name: __MODULE__, pool_size: @pool_size}
+        :ok
+      end
 
-    resp = poll(:get, "ws/longpoll", secret, nil)
-    assert resp.body["messages"] == [~s(%{"hello" => "world"})]
-  end
+      setup do
+        for {_, pid, _, _} <- DynamicSupervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
+          DynamicSupervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
+        end
 
-  test "allows a path with variables" do
-    path = "custom/123/456/path"
-    resp = poll(:get, path, %{"key" => "value"}, nil)
-    secret = Map.take(resp.body, ["token"])
+        :ok
+      end
 
-    resp = poll(:post, path, secret, "params")
-    assert resp.body["status"] == 200
+      test "refuses unallowed origins" do
+        capture_log(fn ->
+          resp = poll(:get, "ws/longpoll", %{}, nil, %{"origin" => "https://example.com"})
+          assert resp.body["status"] == 410
 
-    resp = poll(:get, path, secret, nil)
-    [params] = resp.body["messages"]
-    assert params =~ ~s("key" => "value")
-    assert params =~ ~s("socket_var" => "123")
-    assert params =~ ~s(path_var" => "456")
-  end
+          resp = poll(:get, "ws/longpoll", %{}, nil, %{"origin" => "http://notallowed.com"})
+          assert resp.body["status"] == 403
+        end)
+      end
 
-  test "returns pong from async request" do
-    resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
-    assert resp.body["token"]
-    assert resp.body["status"] == 410
-    assert resp.status == 200
-    secret = Map.take(resp.body, ["token"])
+      test "returns params with sync request" do
+        resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
+        assert resp.body["token"]
+        assert resp.body["status"] == 410
+        assert resp.status == 200
+        secret = Map.take(resp.body, ["token"])
 
-    resp = poll(:post, "ws/longpoll", secret, "ping")
-    assert resp.body["status"] == 200
+        resp = poll(:post, "ws/longpoll", secret, "params")
+        assert resp.body["status"] == 200
 
-    resp = poll(:get, "ws/longpoll", secret, nil)
-    assert resp.body["messages"] == ["pong"]
+        resp = poll(:get, "ws/longpoll", secret, nil)
+        assert resp.body["messages"] == [~s(%{"hello" => "world"})]
+      end
+
+      test "allows a path with variables" do
+        path = "custom/123/456/path"
+        resp = poll(:get, path, %{"key" => "value"}, nil)
+        secret = Map.take(resp.body, ["token"])
+
+        resp = poll(:post, path, secret, "params")
+        assert resp.body["status"] == 200
+
+        resp = poll(:get, path, secret, nil)
+        [params] = resp.body["messages"]
+        assert params =~ ~s("key" => "value")
+        assert params =~ ~s("socket_var" => "123")
+        assert params =~ ~s(path_var" => "456")
+      end
+
+      test "returns pong from async request" do
+        resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
+        assert resp.body["token"]
+        assert resp.body["status"] == 410
+        assert resp.status == 200
+        secret = Map.take(resp.body, ["token"])
+
+        resp = poll(:post, "ws/longpoll", secret, "ping")
+        assert resp.body["status"] == 200
+
+        resp = poll(:get, "ws/longpoll", secret, nil)
+        assert resp.body["messages"] == ["pong"]
+      end
+    end
   end
 end
