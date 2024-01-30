@@ -220,17 +220,28 @@ defmodule Phoenix.Endpoint do
 
   ### Adapter configuration
 
-  Phoenix allows you to choose which webserver adapter to use. The default
-  is `Phoenix.Endpoint.Cowboy2Adapter` which can be configured via the
-  following top-level options.
+  Phoenix allows you to choose which webserver adapter to use. Newly generated
+  applications created via the `phx.new` Mix task use the
+  [`Bandit`](https://github.com/mtrudel/bandit) webserver via the
+  `Bandit.PhoenixAdapter` adapter. If not otherwise specified via the `adapter`
+  option Phoenix will fall back to the `Phoenix.Endpoint.Cowboy2Adapter` for
+  backwards compatibility with applications generated prior to Phoenix 1.7.8.
+
+  Both adapters can be configured in a similar manner using the following two
+  top-level options:
 
     * `:http` - the configuration for the HTTP server. It accepts all options
-      as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
-      to `false`
+      as defined by either [`Bandit`](https://hexdocs.pm/bandit/Bandit.html#t:options/0)
+      or [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/) depending on your
+      choice of adapter. Defaults to `false`
 
     * `:https` - the configuration for the HTTPS server. It accepts all options
-      as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
-      to `false`
+      as defined by either [`Bandit`](https://hexdocs.pm/bandit/Bandit.html#t:options/0)
+      or [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/) depending on your
+      choice of adapter. Defaults to `false`
+
+  In addition, the connection draining can be configured for the Cowboy webserver via the following
+  top-level option (this is not required for Bandit as it has connection draining built-in):
 
     * `:drainer` - a drainer process waits for any on-going request to finish
       during application shutdown. It accepts the `:shutdown` and
