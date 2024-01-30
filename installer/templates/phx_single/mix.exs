@@ -54,7 +54,7 @@ defmodule <%= @app_module %>.MixProject do
        app: false,
        compile: false,
        depth: 1},<% end %><%= if @mailer do %>
-      {:swoosh, "~> 1.3"},
+      {:swoosh, "~> 1.5"},
       {:finch, "~> 0.13"},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>

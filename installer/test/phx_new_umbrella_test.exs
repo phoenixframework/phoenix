@@ -277,7 +277,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # Mailer
       assert_file(app_path(@app, "mix.exs"), fn file ->
-        assert file =~ "{:swoosh, \"~> 1.3\"}"
+        assert file =~ "{:swoosh, \"~> 1.5\"}"
         assert file =~ "{:finch, \"~> 0.13\"}"
       end)
 
@@ -413,7 +413,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # Without mailer
       assert_file(web_path(@app, "mix.exs"), fn file ->
-        refute file =~ "{:swoosh, \"~> 1.3\"}"
+        refute file =~ "{:swoosh, \"~> 1.5\"}"
         refute file =~ "{:finch, \"~> 0.13\"}"
       end)
 
