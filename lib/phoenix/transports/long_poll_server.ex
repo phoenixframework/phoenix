@@ -83,6 +83,16 @@ defmodule Phoenix.Transports.LongPoll.Server do
     end
   end
 
+  def handle_info({:expired, client_ref, ref}, state) do
+    case state.client_ref do
+      {^client_ref, ^ref} ->
+        {:noreply, %{state | client_ref: nil}}
+
+      _ ->
+        {:noreply, state}
+    end
+  end
+
   def handle_info(:shutdown_if_inactive, state) do
     if now_ms() - state.last_client_poll > state.window_ms do
       {:stop, {:shutdown, :inactive}, state}

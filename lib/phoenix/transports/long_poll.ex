@@ -153,7 +153,8 @@ defmodule Phoenix.Transports.LongPoll do
 
   defp listen(conn, server_ref, endpoint, opts) do
     ref = make_ref()
-    broadcast_from!(endpoint, server_ref, {:flush, client_ref(server_ref), ref})
+    client_ref = client_ref(server_ref)
+    broadcast_from!(endpoint, server_ref, {:flush, client_ref, ref})
 
     {status, messages} =
       receive do
@@ -161,15 +162,18 @@ defmodule Phoenix.Transports.LongPoll do
           {:ok, messages}
 
         {:now_available, ^ref} ->
-          broadcast_from!(endpoint, server_ref, {:flush, client_ref(server_ref), ref})
+          broadcast_from!(endpoint, server_ref, {:flush, client_ref, ref})
 
           receive do
             {:messages, messages, ^ref} -> {:ok, messages}
           after
-            opts[:window_ms] -> {:no_content, []}
+            opts[:window_ms] ->
+              broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
+              {:no_content, []}
           end
       after
         opts[:window_ms] ->
+          broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
           {:no_content, []}
       end
 
