@@ -49,9 +49,9 @@ defmodule Phoenix.Transports.LongPoll do
 
   # Starts a new session or listen to a message if one already exists.
   defp dispatch(%{method: "GET"} = conn, endpoint, handler, opts) do
-    case resume_session(conn.params, endpoint, opts) do
-      {:ok, server_ref} ->
-        listen(conn, server_ref, endpoint, opts)
+    case resume_session(conn, conn.params, endpoint, opts) do
+      {:ok, new_conn, server_ref} ->
+        listen(new_conn, server_ref, endpoint, opts)
 
       :error ->
         new_session(conn, endpoint, handler, opts)
@@ -60,9 +60,9 @@ defmodule Phoenix.Transports.LongPoll do
 
   # Publish the message.
   defp dispatch(%{method: "POST"} = conn, endpoint, _, opts) do
-    case resume_session(conn.params, endpoint, opts) do
-      {:ok, server_ref} ->
-        publish(conn, server_ref, endpoint, opts)
+    case resume_session(conn, conn.params, endpoint, opts) do
+      {:ok, new_conn, server_ref} ->
+        publish(new_conn, server_ref, endpoint, opts)
 
       :error ->
         conn |> put_status(:gone) |> status_json()
@@ -180,17 +180,23 @@ defmodule Phoenix.Transports.LongPoll do
 
   # Retrieves the serialized `Phoenix.LongPoll.Server` pid
   # by publishing a message in the encrypted private topic.
-  defp resume_session(%{"token" => token}, endpoint, opts) do
+  defp resume_session(%Plug.Conn{} = conn, %{"token" => token}, endpoint, opts) do
     case verify_token(endpoint, token, opts) do
       {:ok, {:v1, id, pid, priv_topic}} ->
         server_ref = server_ref(endpoint.config(:endpoint_id), id, pid, priv_topic)
+
+        new_conn =
+          Plug.Conn.register_before_send(conn, fn conn ->
+            unsubscribe(endpoint, server_ref)
+            conn
+          end)
 
         ref = make_ref()
         :ok = subscribe(endpoint, server_ref)
         broadcast_from!(endpoint, server_ref, {:subscribe, client_ref(server_ref), ref})
 
         receive do
-          {:subscribe, ^ref} -> {:ok, server_ref}
+          {:subscribe, ^ref} -> {:ok, new_conn, server_ref}
         after
           opts[:pubsub_timeout_ms] -> :error
         end
@@ -200,7 +206,7 @@ defmodule Phoenix.Transports.LongPoll do
     end
   end
 
-  defp resume_session(_params, _endpoint, _opts), do: :error
+  defp resume_session(%Plug.Conn{}, _params, _endpoint, _opts), do: :error
 
   ## Helpers
 
@@ -219,6 +225,12 @@ defmodule Phoenix.Transports.LongPoll do
     do: Phoenix.PubSub.subscribe(endpoint.config(:pubsub_server), topic, link: true)
 
   defp subscribe(_endpoint, pid) when is_pid(pid),
+    do: :ok
+
+  defp unsubscribe(endpoint, topic) when is_binary(topic),
+    do: Phoenix.PubSub.unsubscribe(endpoint.config(:pubsub_server), topic)
+
+  defp unsubscribe(_endpoint, pid) when is_pid(pid),
     do: :ok
 
   defp broadcast_from!(endpoint, topic, msg) when is_binary(topic),
