@@ -46,9 +46,10 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
-## 1.7.11
+## 1.7.11 (2024-02-01)
 
 ### Enhancements
+  * [phx.new] Default to the [Bandit webserver](https://github.com/mtrudel/bandit) for newly generated applications
   * [phx.new] Enable longpoll transport by default and auto fallback when websocket fails for newly generated applications
 
 ### JavaScript Client Enhancements
