@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Phx.New do
         * `bandit` - via https://github.com/mtrudel/bandit
 
       Please check the adapter docs for more information
-      and requirements. Defaults to "cowboy".
+      and requirements. Defaults to "bandit".
 
     * `--no-assets` - equivalent to `--no-esbuild` and `--no-tailwind`
 

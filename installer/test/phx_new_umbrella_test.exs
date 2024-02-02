@@ -200,7 +200,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "{:phoenix,"
         assert file =~ "{:phoenix_live_view,"
         assert file =~ "{:gettext,"
-        assert file =~ "{:plug_cowboy,"
+        assert file =~ "{:bandit,"
       end)
 
       # app deps
@@ -277,7 +277,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # Mailer
       assert_file(app_path(@app, "mix.exs"), fn file ->
-        assert file =~ "{:swoosh, \"~> 1.3\"}"
+        assert file =~ "{:swoosh, \"~> 1.5\"}"
         assert file =~ "{:finch, \"~> 0.13\"}"
       end)
 
@@ -413,7 +413,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # Without mailer
       assert_file(web_path(@app, "mix.exs"), fn file ->
-        refute file =~ "{:swoosh, \"~> 1.3\"}"
+        refute file =~ "{:swoosh, \"~> 1.5\"}"
         refute file =~ "{:finch, \"~> 0.13\"}"
       end)
 
@@ -709,14 +709,14 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end)
   end
 
-  test "new with bandit web adapter" do
-    in_tmp("new with bandit web adapter", fn ->
+  test "new with cowboy web adapter" do
+    in_tmp("new with cowboy web adapter", fn ->
       app = "custom_path"
       project_path = Path.join(File.cwd!(), app)
-      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--adapter", "bandit"])
-      assert_file(web_path(app, "mix.exs"), ":bandit")
+      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--adapter", "cowboy"])
+      assert_file(web_path(app, "mix.exs"), ":plug_cowboy")
 
-      assert_file(root_path(app, "config/config.exs"), "adapter: Bandit.PhoenixAdapter")
+      assert_file(root_path(app, "config/config.exs"), "adapter: Phoenix.Endpoint.Cowboy2Adapter")
     end)
   end
 

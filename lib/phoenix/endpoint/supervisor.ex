@@ -202,6 +202,10 @@ defmodule Phoenix.Endpoint.Supervisor do
       render_errors: [view: render_errors(module), accepts: ~w(html), layout: false],
 
       # Runtime config
+
+      # Even though Bandit is the default in apps generated via the installer,
+      # we continue to use Cowboy as the default if not explicitly specified for
+      # backwards compatibility. TODO: Change this to default to Bandit in 2.0
       adapter: Phoenix.Endpoint.Cowboy2Adapter,
       cache_static_manifest: nil,
       check_origin: true,
