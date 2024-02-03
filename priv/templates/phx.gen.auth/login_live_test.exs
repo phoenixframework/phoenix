@@ -8,7 +8,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "renders log in page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
 
-      assert html =~ "Log in"
+      assert html =~ "Sign in"
       assert html =~ "Register"
       assert html =~ "Forgot your password?"
     end
