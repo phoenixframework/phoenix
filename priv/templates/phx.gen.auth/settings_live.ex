@@ -43,8 +43,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           phx-submit="update_password"
           phx-trigger-action={@trigger_submit}
         >
-          <.input
-            field={@password_form[:email]}
+          <input
+            name={@password_form[:email].name}
             type="hidden"
             id="hidden_<%= schema.singular %>_email"
             value={@current_email}
