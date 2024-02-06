@@ -368,13 +368,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def input(%{type: "hidden"} = assigns) do
     ~H"""
-    <input
-      type="hidden"
-      name={@name}
-      id={@id}
-      value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-      {@rest}
-    />
+    <input type="hidden" name={@name} id={@id} value={@value} {@rest} />
     """
   end
 
