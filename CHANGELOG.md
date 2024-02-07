@@ -13,7 +13,7 @@ Use of the `sigil_p` macro allows paths and URLs throughout your
 application to be compile-time verified against your Phoenix router(s).
 For example the following path and URL usages:
 
-    <.link href={~p"/sessions/new"} method="post">Sign in</.link>
+    <.link href={~p"/sessions/new"} method="post">Log in</.link>
 
     redirect(to: url(~p"/posts/#{post}"))
 

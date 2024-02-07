@@ -12,7 +12,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <:subtitle>
           Already registered?
           <.link navigate={~p"<%= schema.route_prefix %>/log_in"} class="font-semibold text-brand hover:underline">
-            Sign in
+            Log in
           </.link>
           to your account now.
         </:subtitle>

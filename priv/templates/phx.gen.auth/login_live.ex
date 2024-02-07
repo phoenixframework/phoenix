@@ -5,7 +5,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <div class="mx-auto max-w-sm">
       <.header class="text-center">
-        Sign in to account
+        Log in to account
         <:subtitle>
           Don't have an account?
           <.link navigate={~p"<%= schema.route_prefix %>/register"} class="font-semibold text-brand hover:underline">
@@ -26,8 +26,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           </.link>
         </:actions>
         <:actions>
-          <.button phx-disable-with="Signing in..." class="w-full">
-            Sign in <span aria-hidden="true">→</span>
+          <.button phx-disable-with="Logging in..." class="w-full">
+            Log in <span aria-hidden="true">→</span>
           </.button>
         </:actions>
       </.simple_form>
