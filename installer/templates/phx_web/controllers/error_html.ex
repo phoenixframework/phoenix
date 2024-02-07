@@ -1,4 +1,9 @@
 defmodule <%= @web_namespace %>.ErrorHTML do
+  @moduledoc """
+  This module is invoked by your endpoint in case of errors on HTML requests.
+
+  See config/config.exs.
+  """
   use <%= @web_namespace %>, :html
 
   # If you want to customize your error pages,
