@@ -335,7 +335,7 @@
   def reset_<%= schema.singular %>_password(<%= schema.singular %>, attrs) do
     Ecto.Multi.new()
     |> Ecto.Multi.update(:<%= schema.singular %>, <%= inspect schema.alias %>.password_changeset(<%= schema.singular %>, attrs))
-    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all))
+    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, ["reset_password"]))
     |> Repo.transaction()
     |> case do
       {:ok, %{<%= schema.singular %>: <%= schema.singular %>}} -> {:ok, <%= schema.singular %>}
