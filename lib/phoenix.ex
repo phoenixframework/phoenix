@@ -18,7 +18,7 @@ defmodule Phoenix do
       :erlang.system_flag(:backtrace_depth, stacktrace_depth)
     end
 
-    if Application.fetch_env!(:phoenix, :logger) do
+    if Application.get_env(:phoenix, :logger) do
       Phoenix.Logger.install()
     end
 
