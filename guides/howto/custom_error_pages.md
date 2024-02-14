@@ -89,8 +89,8 @@ Phoenix generates an `ErrorHTML` for us, but it doesn't give us a `lib/hello_web
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Welcome to Phoenix!</title>
-    <link rel="stylesheet" href="/css/app.css"/>
-    <script defer type="text/javascript" src="/js/app.js"></script>
+    <link rel="stylesheet" href="/assets/app.css"/>
+    <script defer type="text/javascript" src="/assets/app.js"></script>
   </head>
   <body>
     <header>
@@ -101,7 +101,7 @@ Phoenix generates an `ErrorHTML` for us, but it doesn't give us a `lib/hello_web
           </ul>
         </nav>
         <a href="https://phoenixframework.org/" class="phx-logo">
-          <img src="/images/phoenix.png" alt="Phoenix Framework Logo"/>
+          <img src="/images/logo.svg" alt="Phoenix Framework Logo"/>
         </a>
       </section>
     </header>
