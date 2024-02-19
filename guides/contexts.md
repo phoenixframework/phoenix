@@ -471,7 +471,10 @@ With our schema associations set up, we can implement the selection of categorie
 
   def change_product(%Product{} = product, attrs \\ %{}) do
 -   Product.changeset(product, attrs)
-+   categories = list_categories_by_id(attrs["category_ids"])
++    categories =
++      attrs
++      |> Map.get(:category_ids)
++      |> list_categories_by_id()
 
 +   product
 +   |> Repo.preload(:categories)
