@@ -5,6 +5,7 @@ defmodule Mix.Phoenix.Schema do
 
   defstruct module: nil,
             repo: nil,
+            repo_alias: nil,
             table: nil,
             collection: nil,
             embedded?: false,
@@ -78,6 +79,7 @@ defmodule Mix.Phoenix.Schema do
     basename = Phoenix.Naming.underscore(schema_name)
     module = Module.concat([base, schema_name])
     repo = opts[:repo] || Module.concat([base, "Repo"])
+    repo_alias = if String.ends_with?(Atom.to_string(repo), ".Repo"), do: "", else: ", as: Repo"
     file = Mix.Phoenix.context_lib_path(ctx_app, basename <> ".ex")
     table = opts[:table] || schema_plural
     {cli_attrs, uniques, redacts} = extract_attr_flags(cli_attrs)
@@ -88,6 +90,7 @@ defmodule Mix.Phoenix.Schema do
     api_prefix = Application.get_env(otp_app, :generators)[:api_prefix] || "/api"
     embedded? = Keyword.get(opts, :embedded, false)
     generate? = Keyword.get(opts, :schema, true)
+
     singular =
       module
       |> Module.split()
@@ -113,6 +116,7 @@ defmodule Mix.Phoenix.Schema do
       migration?: Keyword.get(opts, :migration, true),
       module: module,
       repo: repo,
+      repo_alias: repo_alias,
       table: table,
       embedded?: embedded?,
       alias: module |> Module.split() |> List.last() |> Module.concat(nil),

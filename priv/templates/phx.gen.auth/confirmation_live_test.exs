@@ -5,7 +5,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   import <%= inspect context.module %>Fixtures
 
   alias <%= inspect context.module %>
-  alias <%= inspect schema.repo %>
+  alias <%= inspect schema.repo %><%= schema.repo_alias %>
 
   setup do
     %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
