@@ -257,7 +257,11 @@ defmodule Phoenix.CodeReloader.Server do
     # assets in priv are copied to the build directory.
     Mix.Project.build_structure(config)
     args = ["--purge-consolidation-path-if-stale", consolidation_path | compile_args]
-    result = run_compilers(compilers, args, [])
+
+    result =
+      with_logger_app(config, fn ->
+        run_compilers(compilers, args, [])
+      end)
 
     cond do
       result == :error ->
@@ -318,6 +322,19 @@ defmodule Phoenix.CodeReloader.Server do
       :ok
     else
       :noop
+    end
+  end
+
+  # TODO: remove once we depend on Elixir 1.17
+  defp with_logger_app(config, fun) do
+    app = Keyword.fetch!(config, :app)
+    logger_config_app = Application.get_env(:logger, :compile_time_application)
+
+    try do
+      Logger.configure(compile_time_application: app)
+      fun.()
+    after
+      Logger.configure(compile_time_application: logger_config_app)
     end
   end
 end
