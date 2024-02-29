@@ -235,20 +235,9 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
   defp new_cert(public_key, common_name, hostnames) do
     <<serial::unsigned-64>> = :crypto.strong_rand_bytes(8)
 
-    # Dates must be in 'YYMMDD' format
-    {{year, month, day}, _} =
-      :erlang.timestamp()
-      |> :calendar.now_to_datetime()
-
-    yy = year |> Integer.to_string() |> String.slice(2, 2)
-    mm = month |> Integer.to_string() |> String.pad_leading(2, "0")
-    dd = day |> Integer.to_string() |> String.pad_leading(2, "0")
-
-    not_before = yy <> mm <> dd
-
-    yy2 = (year + 1) |> Integer.to_string() |> String.slice(2, 2)
-
-    not_after = yy2 <> mm <> dd
+    date_now = Date.utc_today()
+    not_before = cert_date(date_now)
+    not_after = cert_date(date_now, 365)
 
     otp_tbs_certificate(
       version: :v3,
@@ -268,6 +257,19 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
         ),
       extensions: extensions(public_key, hostnames)
     )
+  end
+
+  defp cert_date(date, days_to_add \\ 0) do
+    {year, month, day} =
+      date
+      |> Date.add(days_to_add)
+      |> Date.to_erl()
+
+    yy = year |> Integer.to_string() |> String.slice(2, 2)
+    mm = month |> Integer.to_string() |> String.pad_leading(2, "0")
+    dd = day |> Integer.to_string() |> String.pad_leading(2, "0")
+
+    yy <> mm <> dd
   end
 
   defp rdn(common_name) do
