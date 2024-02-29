@@ -482,6 +482,7 @@ export default class Socket {
   onConnClose(event){
     let closeCode = event && event.code
     if(this.hasLogger()) this.log("transport", "close", event)
+    if (closeCode == 1001) this.channels.forEach(c => c.leave())
     this.triggerChanError()
     this.clearHeartbeats()
     if(!this.closeWasClean && closeCode !== 1000){
