@@ -154,6 +154,9 @@ defmodule Phoenix.Logger do
     end
   end
 
+  defp duration_in_microseconds(duration),
+    do: System.convert_time_unit(duration, :native, :microsecond)
+
   @doc false
   def filter_values(values, params \\ Application.get_env(:phoenix, :filter_parameters, []))
   def filter_values(values, {:discard, params}), do: discard_values(values, params)
@@ -214,10 +217,13 @@ defmodule Phoenix.Logger do
         :ok
 
       level ->
-        Logger.log(level, fn ->
-          %{method: method, request_path: request_path} = conn
-          [method, ?\s, request_path]
-        end)
+        Logger.log(
+          level,
+          fn ->
+            %{method: method, request_path: request_path} = conn
+            {[method, ?\s, request_path], [method: method, request_path: request_path]}
+          end
+        )
     end
   end
 
@@ -229,9 +235,28 @@ defmodule Phoenix.Logger do
 
       level ->
         Logger.log(level, fn ->
-          %{status: status, state: state} = conn
+          %{status: status, state: state, method: method, request_path: request_path} = conn
           status = status_to_string(status)
-          [connection_type(state), ?\s, status, " in ", duration(duration)]
+          connection_type = connection_type(state)
+
+          {[
+             method,
+             ?\s,
+             request_path,
+             " | ",
+             connection_type(state),
+             ?\s,
+             status,
+             " in ",
+             duration(duration)
+           ],
+           [
+             method: method,
+             request_path: request_path,
+             connection_type: connection_type,
+             status: status,
+             duration: duration_in_microseconds(duration)
+           ]}
         end)
     end
   end
@@ -246,15 +271,15 @@ defmodule Phoenix.Logger do
 
   def phoenix_error_rendered(_, _, %{log: level, status: status, kind: kind, reason: reason}, _) do
     Logger.log(level, fn ->
-      [
-        "Converted ",
-        Atom.to_string(kind),
-        ?\s,
-        error_banner(kind, reason),
-        " to ",
-        status_to_string(status),
-        " response"
-      ]
+      {[
+         "Converted ",
+         Atom.to_string(kind),
+         ?\s,
+         error_banner(kind, reason),
+         " to ",
+         status_to_string(status),
+         " response"
+       ], [kind: kind, status: status]}
     end)
   end
 
@@ -316,18 +341,22 @@ defmodule Phoenix.Logger do
         serializer: serializer
       } = meta
 
-      [
-        connect_result(result),
-        inspect(user_socket),
-        " in ",
-        duration(duration),
-        "\n  Transport: ",
-        inspect(transport),
-        "\n  Serializer: ",
-        inspect(serializer),
-        "\n  Parameters: ",
-        inspect(filter_values(params))
-      ]
+      {[
+         connect_result(result),
+         inspect(user_socket),
+         " in ",
+         duration(duration),
+         "\n  Transport: ",
+         inspect(transport),
+         "\n  Serializer: ",
+         inspect(serializer),
+         "\n  Parameters: ",
+         inspect(filter_values(params))
+       ],
+       [
+         result: result,
+         duration: duration_in_microseconds(duration)
+       ]}
     end)
   end
 
@@ -341,14 +370,19 @@ defmodule Phoenix.Logger do
     channel_log(:log_join, socket, fn ->
       %{result: result, params: params} = metadata
 
-      [
-        join_result(result),
-        socket.topic,
-        " in ",
-        duration(duration),
-        "\n  Parameters: ",
-        inspect(filter_values(params))
-      ]
+      {[
+         join_result(result),
+         socket.topic,
+         " in ",
+         duration(duration),
+         "\n  Parameters: ",
+         inspect(filter_values(params))
+       ],
+       [
+         result: result,
+         topic: socket.topic,
+         duration: duration_in_microseconds(duration)
+       ]}
     end)
   end
 
@@ -362,18 +396,23 @@ defmodule Phoenix.Logger do
     channel_log(:log_handle_in, socket, fn ->
       %{event: event, params: params} = metadata
 
-      [
-        "HANDLED ",
-        event,
-        " INCOMING ON ",
-        socket.topic,
-        " (",
-        inspect(socket.channel),
-        ") in ",
-        duration(duration),
-        "\n  Parameters: ",
-        inspect(filter_values(params))
-      ]
+      {[
+         "HANDLED ",
+         event,
+         " INCOMING ON ",
+         socket.topic,
+         " (",
+         inspect(socket.channel),
+         ") in ",
+         duration(duration),
+         "\n  Parameters: ",
+         inspect(filter_values(params))
+       ],
+       [
+         topic: socket.topic,
+         event: event,
+         duration: duration_in_microseconds(duration)
+       ]}
     end)
   end
 
