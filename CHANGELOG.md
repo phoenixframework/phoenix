@@ -4,7 +4,7 @@ See the [upgrade guide](https://gist.github.com/chrismccord/00a6ea2a96bc57df0cce
 
 Phoenix v1.7 requires Elixir v1.11+ & Erlang v22.1+.
 
-## Introduction of Verified Routes
+### Introduction of Verified Routes
 
 Phoenix 1.7 includes a new `Phoenix.VerifiedRoutes` feature which provides `~p`
 for route generation with compile-time verification.
@@ -35,7 +35,7 @@ This feature replaces the `Helpers` module generated in your Phoenix router, but
 will continue to work and be generated. You can disable router helpers by passing the
 `helpers: false` option to `use Phoenix.Router`.
 
-## phx.new revamp
+### phx.new revamp
 
 The `phx.new` application generator has been improved to rely on function components for
 both Controller and LiveView rendering, ultimately simplifying the rendering stack of
@@ -99,7 +99,7 @@ future styling).
 
 ## 1.7.7 (2023-07-10)
 
-## Enhancements
+### Enhancements
   * Support incoming binary payloads to channels over longpoll transport
 
 ## 1.7.6 (2023-06-16)
@@ -107,7 +107,7 @@ future styling).
 ### Bug Fixes
   * Support websock_adapter 0.5.3
 
-## Enhancements
+### Enhancements
   *  Allow using Phoenix.ChannelTest socket/connect in another process
 
 ## 1.7.5 (2023-06-15)
