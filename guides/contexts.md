@@ -755,8 +755,8 @@ We'll need to implement a cart controller for handling cart operations like view
 
 +   resources "/cart_items", CartItemController, only: [:create, :delete]
 
-+   get "/cart", CartController, :show
-+   put "/cart", CartController, :update
++   get "/cart", CartItemController, :show
++   put "/cart", CartItemController, :update
   end
 ```
 
