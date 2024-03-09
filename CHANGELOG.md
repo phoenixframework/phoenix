@@ -35,7 +35,7 @@ This feature replaces the `Helpers` module generated in your Phoenix router, but
 will continue to work and be generated. You can disable router helpers by passing the
 `helpers: false` option to `use Phoenix.Router`.
 
-### phx.new revamp
+## phx.new revamp
 
 The `phx.new` application generator has been improved to rely on function components for
 both Controller and LiveView rendering, ultimately simplifying the rendering stack of
