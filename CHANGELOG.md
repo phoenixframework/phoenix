@@ -4,7 +4,7 @@ See the [upgrade guide](https://gist.github.com/chrismccord/00a6ea2a96bc57df0cce
 
 Phoenix v1.7 requires Elixir v1.11+ & Erlang v22.1+.
 
-### Introduction of Verified Routes
+## Introduction of Verified Routes
 
 Phoenix 1.7 includes a new `Phoenix.VerifiedRoutes` feature which provides `~p`
 for route generation with compile-time verification.
