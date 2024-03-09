@@ -99,7 +99,7 @@ future styling).
 
 ## 1.7.7 (2023-07-10)
 
-## Enhancements
+### Enhancements
   * Support incoming binary payloads to channels over longpoll transport
 
 ## 1.7.6 (2023-06-16)
@@ -107,7 +107,7 @@ future styling).
 ### Bug Fixes
   * Support websock_adapter 0.5.3
 
-## Enhancements
+### Enhancements
   *  Allow using Phoenix.ChannelTest socket/connect in another process
 
 ## 1.7.5 (2023-06-15)
