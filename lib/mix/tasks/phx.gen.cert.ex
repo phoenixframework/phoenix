@@ -235,9 +235,18 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
   defp new_cert(public_key, common_name, hostnames) do
     <<serial::unsigned-64>> = :crypto.strong_rand_bytes(8)
 
-    date_now = Date.utc_today()
-    not_before = cert_date(date_now)
-    not_after = cert_date(date_now, 365)
+    today = Date.utc_today()
+
+    not_before =
+      today
+      |> Date.to_iso8601(:basic)
+      |> String.slice(2, 6)
+
+    not_after =
+      today
+      |> Date.add(365)
+      |> Date.to_iso8601(:basic)
+      |> String.slice(2, 6)
 
     otp_tbs_certificate(
       version: :v3,
@@ -257,19 +266,6 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
         ),
       extensions: extensions(public_key, hostnames)
     )
-  end
-
-  defp cert_date(date, days_to_add \\ 0) do
-    {year, month, day} =
-      date
-      |> Date.add(days_to_add)
-      |> Date.to_erl()
-
-    yy = year |> Integer.to_string() |> String.slice(2, 2)
-    mm = month |> Integer.to_string() |> String.pad_leading(2, "0")
-    dd = day |> Integer.to_string() |> String.pad_leading(2, "0")
-
-    yy <> mm <> dd
   end
 
   defp rdn(common_name) do
