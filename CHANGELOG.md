@@ -56,6 +56,9 @@ future styling).
   * Support new `longPollFallbackMs` option to auto fallback when websocket fails to connect
   * Support new `debug` option to enable verbose logging
 
+### Deprecation
+  * Deprecate the `c:init/2` callback in endpoints in favor of `config/runtime.exs` or in favor of `{Phoenix.Endpoint, options}`
+
 ## 1.7.10 (2023-11-03)
 
 ### Bug fixes

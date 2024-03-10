@@ -62,17 +62,10 @@ defmodule Phoenix.Endpoint do
       YourAppWeb.Endpoint.config(:port)
       YourAppWeb.Endpoint.config(:some_config, :default_value)
 
-  ### Dynamic configuration
-
-  For dynamically configuring the endpoint, such as loading data
-  from environment variables or configuration files, Phoenix invokes
-  the `c:init/2` callback on the endpoint, passing the atom `:supervisor`
-  as the first argument and the endpoint configuration as second.
-
-  All of Phoenix configuration, except the Compile-time configuration
-  below can be set dynamically from the `c:init/2` callback.
-
   ### Compile-time configuration
+
+  Compile-time configuration may be set on `config/dev.exs`, `config/prod.exs`
+  and so on, but has no effect on `config/runtime.exs`:
 
     * `:code_reloader` - when `true`, enables code reloading functionality.
       For the list of code reloader configuration options see
@@ -98,6 +91,12 @@ defmodule Phoenix.Endpoint do
       set `:host` in the `:force_ssl` configuration to `nil`
 
   ### Runtime configuration
+
+  The configuration below may be set on `config/dev.exs`, `config/prod.exs`
+  and so on, as well as on `config/runtime.exs`. Typically, if you need to
+  configure them with system environment variables, you set them in
+  `config/runtime.exs`. These options may also be set when starting the
+  endpoint in your supervision tree, such as `{MyApp.Endpoint, options}`.
 
     * `:adapter` - which webserver adapter to use for serving web requests.
       See the "Adapter configuration" section below
