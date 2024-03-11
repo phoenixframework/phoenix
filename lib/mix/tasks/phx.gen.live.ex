@@ -326,9 +326,12 @@ defmodule Mix.Tasks.Phx.Gen.Live do
         />
         """
 
+      {key, {:custom, provider, opts}} ->
+        Mix.Phoenix.CustomGeneratorBehaviour.live_form_input(provider, key, opts)
+
       {key, _} ->
         ~s(<.input field={@form[#{inspect(key)}]} type="text" label="#{label(key)}" />)
-    end)
+    end) |> Enum.reject(&is_nil/1)
   end
 
   defp default_options({:array, :string}),

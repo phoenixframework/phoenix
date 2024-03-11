@@ -3,15 +3,87 @@ Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 defmodule Phoenix.DupSchema do
 end
 
+defmodule Phoenix.Test.CustomGen do
+  @behaviour Mix.Phoenix.CustomGeneratorBehaviour
+  def validate_attr!({name, __MODULE__, opts}) do
+    {name, {:custom, __MODULE__, opts}}
+  end
+  def type_and_opts_for_schema(_opts) do
+    ~s|:custom_schema_type|
+  end
+  def type_for_migration(_opts) do
+    :custom_ecto_type
+  end
+  def type_to_default(key, _opts, :create) do
+    "Special #{key}"
+  end
+  def type_to_default(key, _opts, :update) do
+    "Special Updated #{key}"
+  end
+  def live_form_input(key, _opts) do
+    "[SPECIAL INPUT HANDLER: #{key}]"
+  end
+  def hydrate_form_input(_key, params, _opts), do: params
+end
+
 defmodule Mix.Tasks.Phx.Gen.SchemaTest do
   use ExUnit.Case
   import MixHelper
   alias Mix.Tasks.Phx.Gen
   alias Mix.Phoenix.Schema
 
+  @moduletag feature: :gen
+  @moduletag gen: :schema
+
   setup do
     Mix.Task.clear()
     :ok
+  end
+
+  describe "custom schema generator support" do
+
+
+    test "build with custom gen extension" do
+      in_tmp_project "build", fn ->
+        schema = Gen.Schema.build(~w(Blog.Post posts title:Phoenix.Test.CustomGen:option:list tags:map), [])
+
+        assert %Schema{
+                 alias: Post,
+                 module: Phoenix.Blog.Post,
+                 repo: Phoenix.Repo,
+                 migration?: true,
+                 migration_defaults: %{title: ""},
+                 plural: "posts",
+                 singular: "post",
+                 human_plural: "Posts",
+                 human_singular: "Post",
+                 attrs: [title: {:custom, Phoenix.Test.CustomGen, :"option:list"}, tags: :map],
+                 types: %{title: {:custom, Phoenix.Test.CustomGen, :"option:list"}, tags: :map},
+                 optionals: [:tags],
+                 route_helper: "post",
+                 defaults: %{title: "", tags: ""},
+               } = schema
+        assert String.ends_with?(schema.file, "lib/phoenix/blog/post.ex")
+      end
+    end
+
+    test "generates schema with custom gen extension", config do
+      in_tmp_project config.test, fn ->
+        Gen.Schema.run(~w(Blog.CustomPost custom_blog_posts title:Phoenix.Test.CustomGen))
+
+        assert [migration] = Path.wildcard("priv/repo/migrations/*_create_custom_blog_posts.exs")
+        assert_file migration, fn file ->
+          assert file =~ "defmodule Phoenix.Repo.Migrations.CreateCustomBlogPosts do"
+          assert file =~ "create table(:custom_blog_posts) do"
+          assert file =~ "add :title, :custom_ecto_type"
+        end
+
+        assert_file "lib/phoenix/blog/custom_post.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Blog.CustomPost do"
+          assert file =~ "field :title, :custom_schema_type"
+        end
+      end
+    end
   end
 
   test "build" do

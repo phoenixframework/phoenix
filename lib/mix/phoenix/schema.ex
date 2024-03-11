@@ -247,6 +247,7 @@ defmodule Mix.Phoenix.Schema do
   end
 
   def type_for_migration({:enum, _}), do: :string
+  def type_for_migration({:custom, provider, opts}), do: Mix.Phoenix.CustomGeneratorBehaviour.type_for_migration(provider, opts)
   def type_for_migration(other), do: other
 
   def format_fields_for_schema(schema) do
@@ -265,7 +266,7 @@ defmodule Mix.Phoenix.Schema do
 
   def type_and_opts_for_schema({:enum, opts}),
     do: ~s|Ecto.Enum, values: #{inspect(Keyword.get(opts, :values))}|
-
+  def type_and_opts_for_schema({:custom, provider, opts}), do: Mix.Phoenix.CustomGeneratorBehaviour.type_and_opts_for_schema(provider, opts)
   def type_and_opts_for_schema(other), do: inspect(other)
 
   def maybe_redact_field(true), do: ", redact: true"
@@ -352,6 +353,9 @@ defmodule Mix.Phoenix.Schema do
       :naive_datetime_usec ->
         NaiveDateTime.add(build_utc_naive_datetime_usec(), -@one_day_in_seconds)
 
+      {:custom, provider, opts} ->
+        Mix.Phoenix.CustomGeneratorBehaviour.type_to_default(provider, key, opts, :create)
+
       _ ->
         "some #{key}"
     end
@@ -375,6 +379,8 @@ defmodule Mix.Phoenix.Schema do
       :utc_datetime_usec -> build_utc_datetime_usec()
       :naive_datetime -> build_utc_naive_datetime()
       :naive_datetime_usec -> build_utc_naive_datetime_usec()
+      {:custom, provider, opts} ->
+        Mix.Phoenix.CustomGeneratorBehaviour.type_to_default(provider, key, opts, :update)
       _ -> "some updated #{key}"
     end
   end
@@ -436,12 +442,21 @@ defmodule Mix.Phoenix.Schema do
   defp validate_attr!({_name, type} = attr) when type in @valid_types, do: attr
   defp validate_attr!({_name, {:enum, _vals}} = attr), do: attr
   defp validate_attr!({_name, {type, _}} = attr) when type in @valid_types, do: attr
-
-  defp validate_attr!({_, type}) do
-    Mix.raise(
-      "Unknown type `#{inspect(type)}` given to generator. " <>
-        "The supported types are: #{@valid_types |> Enum.sort() |> Enum.join(", ")}"
-    )
+  defp validate_attr!({name, {type, opts}}) do
+    if Kernel.function_exported?(:"Elixir.#{type}", :validate_attr!, 1) do
+      Mix.Phoenix.CustomGeneratorBehaviour.validate_attr!(:"Elixir.#{type}", {name, :"Elixir.#{type}", opts})
+    else
+      Mix.raise("Unknown type `#{inspect(type)}` given to generator. " <>
+                "The supported types are: #{@valid_types |> Enum.sort() |> Enum.join(", ")}")
+    end
+  end
+  defp validate_attr!({name, type}) do
+    if Kernel.function_exported?(:"Elixir.#{type}", :validate_attr!, 1) do
+      Mix.Phoenix.CustomGeneratorBehaviour.validate_attr!(:"Elixir.#{type}", {name, :"Elixir.#{type}", []})
+    else
+      Mix.raise("Unknown type `#{inspect(type)}` given to generator. " <>
+                "The supported types are: #{@valid_types |> Enum.sort() |> Enum.join(", ")}")
+    end
   end
 
   defp partition_attrs_and_assocs(schema_module, attrs) do
