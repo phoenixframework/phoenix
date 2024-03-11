@@ -1026,6 +1026,7 @@ var Phoenix = (() => {
       this.ref = 0;
       this.timeout = opts.timeout || DEFAULT_TIMEOUT;
       this.transport = opts.transport || global.WebSocket || LongPoll;
+      this.primaryPassedHealthCheck = false;
       this.longPollFallbackMs = opts.longPollFallbackMs;
       this.fallbackTimer = null;
       this.sessionStore = opts.sessionStorage || global.sessionStorage;
@@ -1282,11 +1283,10 @@ var Phoenix = (() => {
         this.log("transport", `falling back to ${fallbackTransport.name}...`, reason);
         this.off([openRef, errorRef]);
         primaryTransport = false;
-        this.storeSession("phx:longpoll", "true");
         this.replaceTransport(fallbackTransport);
         this.transportConnect();
       };
-      if (this.getSession("phx:longpoll")) {
+      if (this.getSession(`phx:fallback:${fallbackTransport.name}`)) {
         return fallback("memorized");
       }
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold);
@@ -1300,12 +1300,16 @@ var Phoenix = (() => {
       this.onOpen(() => {
         established = true;
         if (!primaryTransport) {
-          return console.log("transport", `established ${fallbackTransport.name} fallback`);
+          if (!this.primaryPassedHealthCheck) {
+            this.storeSession(`phx:fallback:${fallbackTransport.name}`, "true");
+          }
+          return this.log("transport", `established ${fallbackTransport.name} fallback`);
         }
         clearTimeout(this.fallbackTimer);
         this.fallbackTimer = setTimeout(fallback, fallbackThreshold);
         this.ping((rtt) => {
           this.log("transport", "connected to primary after", rtt);
+          this.primaryPassedHealthCheck = true;
           clearTimeout(this.fallbackTimer);
         });
       });
