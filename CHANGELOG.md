@@ -46,6 +46,23 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.12
+
+### Enhancements
+  * [phx.gen.auth] Add enhanced session fixation protection.
+    For applications whichs previously used `phx.gen.auth`, the following line can be added to the `renew_session` function in the auth module:
+
+    ```diff
+      defp renew_session(conn) do
+    +   delete_csrf_token()
+
+        conn
+        |> configure_session(renew: true)
+        |> clear_session()
+    ```
+
+    *Note*: because the session id is in a http-only cookie by default, the only way to perform this attack prior to this change is if your application was already vulnerable to an XSS attack, which itself grants more escalated "priveleges” than the CSRF fixation.
+
 ## 1.7.11 (2024-02-01)
 
 ### Enhancements
