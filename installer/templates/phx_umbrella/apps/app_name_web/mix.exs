@@ -52,7 +52,7 @@ defmodule <%= @web_namespace %>.MixProject do
        app: false,
        compile: false,
        depth: 1},<% end %>
-      {:telemetry_metrics, "~> 0.6"},
+      {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 0.20"},<% end %><%= if @app_name != @web_app_name do %>
       {:<%= @app_name %>, in_umbrella: true},<% end %>
