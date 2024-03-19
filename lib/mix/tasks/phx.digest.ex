@@ -48,7 +48,9 @@ defmodule Mix.Tasks.Phx.Digest do
   @doc false
   def run(all_args) do
     # Ensure all compressors are compiled.
-    Mix.Task.run "compile", all_args
+    Mix.Task.run("compile", all_args)
+    Mix.Task.reenable("phx.digest")
+
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
     {opts, args, _} = OptionParser.parse(all_args, switches: @switches, aliases: [o: :output])
