@@ -1,3 +1,13 @@
+# Intellij
+.idea/
+installer/phx_new.iml
+installer/templates/phx_single/phx_single.iml
+installer/templates/phx_umbrella/apps/app_name/app_name.iml
+installer/templates/phx_umbrella/apps/app_name_web/app_name_web.iml
+installer/templates/phx_umbrella/phx_umbrella.iml
+integration_test/phoenix_integration.iml
+phoenix.iml
+
 /_build/
 /deps/
 /doc/
