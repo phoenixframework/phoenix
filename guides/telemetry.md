@@ -39,7 +39,7 @@ If you are coming from an older version of Phoenix, install
 the `:telemetry_metrics` and `:telemetry_poller` packages:
 
 ```elixir
-{:telemetry_metrics, "~> 0.6"},
+{:telemetry_metrics, "~> 1.0"},
 {:telemetry_poller, "~> 1.0"}
 ```
 
