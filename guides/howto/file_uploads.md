@@ -50,7 +50,7 @@ Once you have a multipart form, you need a `file` input. Here's how you would do
 When rendered, here is the HTML for the default `HelloWeb.CoreComponents` `input/1` component:
 
 ```html
-<div phx-feedback-for="product[photo]">
+<div>
   <label for="product_photo" class="block text-sm...">Photo</label>
   <input type="file" name="product[photo]" id="product_photo" class="mt-2 block w-full...">
 </div>
