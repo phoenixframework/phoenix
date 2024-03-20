@@ -3,7 +3,7 @@ import Config
 <%= if @namespaced? || @ecto || @generators do %>
 config :<%= @web_app_name %><%= if @namespaced? do %>,
   namespace: <%= @web_namespace %><% end %><%= if @ecto do %>,
-  ecto_repos: [<%= @app_module %>.Repo]<% end %><%= if @generators do %>,
+  ecto_repos: [<%= @depends_on_mod %>.Repo]<% end %><%= if @generators do %>,
   generators: <%= inspect @generators %><% end %>
 
 <% end %># Configures the endpoint
@@ -14,7 +14,7 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
     formats: [<%= if @html do%>html: <%= @web_namespace %>.ErrorHTML, <% end %>json: <%= @web_namespace %>.ErrorJSON],
     layout: false
   ],
-  pubsub_server: <%= @app_module %>.PubSub,
+  pubsub_server: <%= @depends_on_mod %>.PubSub,
   live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @javascript do %>
 
 # Configure esbuild (the version is required)
