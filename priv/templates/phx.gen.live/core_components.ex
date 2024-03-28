@@ -263,10 +263,18 @@ defmodule <%= @web_namespace %>.CoreComponents do
   for more information. Unsupported types, such as hidden and radio,
   are best written directly in your templates.
 
-  ## Examples
+  ## Basic Examples
 
-      <.input field={@form[:email]} type="email" />
-      <.input name="my-input" errors={["oh no!"]} />
+    <.input field={@form[:email]} type="email" />
+    <.input name="my-input" errors={["oh no!"]} />
+
+  ## Select type
+
+  When using `type="select"`, you must pass the `options` and optionally
+  a `value` to mark which option should be preselected.
+
+  For more information on what kind of data can be passed to `options` see
+  [`options_for_select`](https://hexdocs.pm/phoenix_html/Phoenix.HTML.Form.html#options_for_select/2)
   """
   attr :id, :any, default: nil
   attr :name, :any
