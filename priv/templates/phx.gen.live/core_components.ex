@@ -262,11 +262,76 @@ defmodule <%= @web_namespace %>.CoreComponents do
   See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
   for more information. Unsupported types, such as hidden and radio,
   are best written directly in your templates.
+  
+  ## Basic Examples
 
-  ## Examples
+    <.input field={@form[:email]} type="email" />
+    <.input name="my-input" errors={["oh no!"]} />
+      
+  ## Select type
+  
+  When using `type="select"`, you must pass the `options` and optionally
+  a `value` to mark which option should be preselected.
+  
+  `options` are expected to be an enumerable which will be used to
+  generate each respective `option`. The enumerable may have:
 
-      <.input field={@form[:email]} type="email" />
-      <.input name="my-input" errors={["oh no!"]} />
+    * keyword lists - each keyword list is expected to have the keys
+      `:key` and `:value`. Additional keys such as `:disabled` may
+      be given to customize the option.
+
+    * two-item tuples - where the first element is an atom, string or
+      integer to be used as the option label and the second element is
+      an atom, string or integer to be used as the option value
+
+    * atom, string or integer - which will be used as both label and value
+      for the generated select
+    
+  ### Optgroups
+
+  If `options` is map or keyword list where the first element is a string,
+  atom or integer and the second element is a list or a map, it is assumed
+  the key will be wrapped in an `<optgroup>` and the value will be used to
+  generate `<options>` nested under the group.
+  
+  ### Examples
+
+    # Assuming form contains a User schema
+    <.input field={@form[:age]} type="select" options={1..120} />
+    
+    <.input field={@form[:role]} type="select" options={["Admin": "admin", "User": "user"]} />
+    
+    <.input field={@form[:role]} type="select" options={[[key: "Admin", value: "admin", disabled: true], 
+                                                        [key: "User", value: "user"]]} />
+  
+  You can also pass a prompt:
+  
+      <.input field={@form[:role]} type="select" options={["Admin": "admin", "User": "user"]} prompt="Select a role" />
+      
+      
+  ### Multiple selections
+  
+  When working with structs, associations, and embeds, you will need to tell
+  Phoenix how to extract the value out of the collection. For example,
+  imagine `user.roles` is a list of `%Role{}` structs. You must call it as:
+  
+      <.input field={@form[:roles]} type="select" options={["Admin": "admin", "User": "user"]}
+      value={Enum.map(@roles, &{&1.name, &1.id})} multiple />
+      
+  The `:value` option will mark the given IDs as selected unless the form
+  is being resubmitted. When resubmitted, it uses the form params as values.
+  
+  If you pass an empty list to value, nothing will be preselected:
+  
+      <.input field={@form[:roles]} type="select" options={["Admin": "admin", "User": "user"]}
+      value={[]} multiple />
+  
+  When used with Ecto, you will typically do a query to retrieve the IDs from
+  the database:
+
+      from r in Role, where: r.id in ^(params["roles"] || [])
+
+  And then use `Ecto.Changeset.put_assoc/2` to insert the new roles into the user.
   """
   attr :id, :any, default: nil
   attr :name, :any
