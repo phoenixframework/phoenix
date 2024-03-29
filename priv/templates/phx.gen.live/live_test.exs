@@ -49,7 +49,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "updates <%= schema.singular %> in listing", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       {:ok, index_live, _html} = live(conn, ~p"<%= schema.route_prefix %>")
 
-      assert index_live |> element("#<%= schema.plural %>-#{<%= schema.singular %>.id} a", "Edit") |> render_click() =~
+      assert index_live |> element("#<%= schema.plural %>-#{<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>} a", "Edit") |> render_click() =~
                "Edit <%= schema.human_singular %>"
 
       assert_patch(index_live, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit")
@@ -72,8 +72,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "deletes <%= schema.singular %> in listing", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       {:ok, index_live, _html} = live(conn, ~p"<%= schema.route_prefix %>")
 
-      assert index_live |> element("#<%= schema.plural %>-#{<%= schema.singular %>.id} a", "Delete") |> render_click()
-      refute has_element?(index_live, "#<%= schema.plural %>-#{<%= schema.singular %>.id}")
+      assert index_live |> element("#<%= schema.plural %>-#{<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>} a", "Delete") |> render_click()
+      refute has_element?(index_live, "#<%= schema.plural %>-#{<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>}")
     end
   end
 
