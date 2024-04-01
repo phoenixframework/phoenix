@@ -1,7 +1,7 @@
 defmodule Phoenix.Token do
   @moduledoc """
-  Tokens provide a way to generate and verify bearer
-  tokens for use in Channels or API authentication.
+  Conveniences to sign/encrypt data inside tokens
+  for use in Channels, API authentication, and more.
 
   The data stored in the token is signed to prevent tampering, and is
   optionally encrypted.  This means that, so long as the
@@ -226,7 +226,8 @@ defmodule Phoenix.Token do
 
   @doc """
   Decrypts the original data from the token and verifies its integrity.
-  For encrypted tokens, its usage is identical to `verify/4`.
+
+  Its usage is identical to `verify/4` but for encrypted tokens.
 
   ## Options
 
