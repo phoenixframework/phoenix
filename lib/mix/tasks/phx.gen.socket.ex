@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Phx.Gen.Socket do
   For an umbrella application:
 
     * a client in `apps/my_app_web/assets/js`
-    * a socket in `apps/my_app_web/lib/app_name_web/channels`
+    * a socket in `apps/my_app_web/lib/my_app_web/channels`
 
   You can then generate channels with `mix phx.gen.channel`.
   """
