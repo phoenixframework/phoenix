@@ -77,11 +77,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
     form = to_form(changeset, as: "<%= schema.singular %>")
-
-    if changeset.valid? do
-      assign(socket, form: form, check_errors: false)
-    else
-      assign(socket, form: form)
-    end
+    assign(socket, form: form, check_errors: not changeset.valid?)
   end
 end
