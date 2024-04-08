@@ -121,6 +121,10 @@ defmodule Phoenix.CodeReloader do
 
 
         @media (prefers-color-scheme: dark) {
+            body{
+                background: #000;
+            }
+
             html .top-details {
                 background: #000;
                 color: #fff;
