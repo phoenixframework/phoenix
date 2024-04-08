@@ -119,6 +119,19 @@ defmodule Phoenix.CodeReloader do
             color: #{@style.text_color};
         }
 
+
+        @media (prefers-color-scheme: dark) {
+            html .top-details {
+                background: #000;
+                color: #fff;
+            }
+            html .frame-info {
+                background: #000;
+                color: #fff;
+                border: 1px solid white;
+            }
+        }
+
         @media (max-width: 768px) {
             html {
                  font-size: 14px;
