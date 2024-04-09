@@ -121,18 +121,13 @@ defmodule Phoenix.CodeReloader do
 
 
         @media (prefers-color-scheme: dark) {
-            body{
-                background: #000;
+
+            html {
+               filter: invert(1);
             }
 
-            html .top-details {
-                background: #000;
-                color: #fff;
-            }
-            html .frame-info {
-                background: #000;
-                color: #fff;
-                border: 1px solid white;
+            html .exception-logo {
+                filter: invert(1);
             }
         }
 
