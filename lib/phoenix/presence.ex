@@ -284,7 +284,7 @@ defmodule Phoenix.Presence do
   a `:phx_ref_prev` key will be present containing the previous
   `:phx_ref` value.
   """
-  @callback list(Phoenix.Socket.t() | topic) :: presences
+  @callback list(socket_or_topic :: Phoenix.Socket.t() | topic) :: presences
 
   @doc """
   Returns the map of presence metadata for a socket/topic-key pair.
