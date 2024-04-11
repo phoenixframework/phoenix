@@ -48,6 +48,9 @@ future styling).
 
 ## 1.7.12
 
+### JavaScript Client Bug Fixes
+  * Fix all unjoined channels from being removed from the socket when channel leave is called on any single unjoined channel instance
+
 ### Enhancements
   * [phx.gen.auth] Add enhanced session fixation protection.
     For applications whichs previously used `phx.gen.auth`, the following line can be added to the `renew_session` function in the auth module:

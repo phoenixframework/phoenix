@@ -543,7 +543,7 @@ export default class Socket {
    */
   remove(channel){
     this.off(channel.stateChangeRefs)
-    this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
+    this.channels = this.channels.filter(c => c !== channel)
   }
 
   /**
