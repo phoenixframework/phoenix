@@ -46,7 +46,7 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
-## 1.7.12
+## 1.7.12 (2024-04-11)
 
 ### JavaScript Client Bug Fixes
   * Fix all unjoined channels from being removed from the socket when channel leave is called on any single unjoined channel instance
