@@ -274,12 +274,12 @@ defmodule Phoenix.VerifiedRoutes do
   defmacro path(
              conn_or_socket_or_endpoint_or_uri,
              router,
-             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = og_ast
+             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = sigil_p
            ) do
     validate_sigil_p!(extra)
 
     route
-    |> build_route(og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> build_route(sigil_p, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
     |> inject_path(__CALLER__)
   end
 
@@ -287,13 +287,13 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro path(
              conn_or_socket_or_endpoint_or_uri,
-             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = og_ast
+             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = sigil_p
            ) do
     validate_sigil_p!(extra)
     router = attr!(__CALLER__, :router)
 
     route
-    |> build_route(og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> build_route(sigil_p, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
     |> inject_path(__CALLER__)
   end
 
@@ -340,12 +340,12 @@ defmodule Phoenix.VerifiedRoutes do
   Forwarded paths in your main application router will be verified as usual,
   such as `~p"/admin/users"`.
   '''
-  defmacro url({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast) do
+  defmacro url({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = sigil_p) do
     endpoint = attr!(__CALLER__, :endpoint)
     router = attr!(__CALLER__, :router)
 
     route
-    |> build_route(og_ast, __CALLER__, endpoint, router)
+    |> build_route(sigil_p, __CALLER__, endpoint, router)
     |> inject_url(__CALLER__)
   end
 
@@ -358,12 +358,12 @@ defmodule Phoenix.VerifiedRoutes do
   """
   defmacro url(
              conn_or_socket_or_endpoint_or_uri,
-             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast
+             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = sigil_p
            ) do
     router = attr!(__CALLER__, :router)
 
     route
-    |> build_route(og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> build_route(sigil_p, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
     |> inject_url(__CALLER__)
   end
 
@@ -377,12 +377,12 @@ defmodule Phoenix.VerifiedRoutes do
   defmacro url(
              conn_or_socket_or_endpoint_or_uri,
              router,
-             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = og_ast
+             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = sigil_p
            ) do
     router = Macro.expand(router, __CALLER__)
 
     route
-    |> build_route(og_ast, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> build_route(sigil_p, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
     |> inject_url(__CALLER__)
   end
 
@@ -391,6 +391,8 @@ defmodule Phoenix.VerifiedRoutes do
   @doc """
   Generates url to a static asset given its file path.
   """
+  def static_url(conn_or_socket_or_endpoint_or_uri, path)
+
   def static_url(%Plug.Conn{private: private}, path) do
     case private do
       %{phoenix_static_url: static_url} -> concat_url(static_url, path)
@@ -423,31 +425,31 @@ defmodule Phoenix.VerifiedRoutes do
       iex> unverified_url(conn, "/posts", page: 1)
       "https://example.com/posts?page=1"
   """
-  def unverified_url(ctx, path) when is_binary(path) do
-    unverified_url(ctx, path, %{})
+  def unverified_url(conn_or_socket_or_endpoint_or_uri, path, params \\ %{})
+      when (is_map(params) or is_list(params)) and is_binary(path) do
+    guarded_unverified_url(conn_or_socket_or_endpoint_or_uri, path, params)
   end
 
-  def unverified_url(%Plug.Conn{private: private}, path, params)
-      when is_map(params) or is_list(params) do
+  defp guarded_unverified_url(%Plug.Conn{private: private}, path, params) do
     case private do
       %{phoenix_router_url: url} when is_binary(url) -> concat_url(url, path, params)
       %{phoenix_endpoint: endpoint} -> concat_url(endpoint.url(), path, params)
     end
   end
 
-  def unverified_url(%_{endpoint: endpoint}, path, params) do
+  defp guarded_unverified_url(%_{endpoint: endpoint}, path, params) do
     concat_url(endpoint.url(), path, params)
   end
 
-  def unverified_url(%URI{} = uri, path, params) do
+  defp guarded_unverified_url(%URI{} = uri, path, params) do
     append_params(URI.to_string(%{uri | path: path}), params)
   end
 
-  def unverified_url(endpoint, path, params) when is_atom(endpoint) do
+  defp guarded_unverified_url(endpoint, path, params) when is_atom(endpoint) do
     concat_url(endpoint.url(), path, params)
   end
 
-  def unverified_url(other, path, _params) do
+  defp guarded_unverified_url(other, path, _params) do
     raise ArgumentError,
           "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
             "or a Phoenix.Endpoint when building url at #{path}, got: #{inspect(other)}"
@@ -462,6 +464,8 @@ defmodule Phoenix.VerifiedRoutes do
   @doc """
   Generates path to a static asset given its file path.
   """
+  def static_path(conn_or_socket_or_endpoint_or_uri, path)
+
   def static_path(%Plug.Conn{private: private}, path) do
     case private do
       %{phoenix_static_url: _} -> path
@@ -492,7 +496,7 @@ defmodule Phoenix.VerifiedRoutes do
       iex> unverified_path(conn, AppWeb.Router, "/posts", page: 1)
       "/posts?page=1"
   """
-  def unverified_path(ctx, router, path, params \\ %{})
+  def unverified_path(conn_or_socket_or_endpoint_or_uri, router, path, params \\ %{})
 
   def unverified_path(%Plug.Conn{} = conn, router, path, params) do
     conn
@@ -643,6 +647,8 @@ defmodule Phoenix.VerifiedRoutes do
   @doc """
   Generates an integrity hash to a static asset given its file path.
   """
+  def static_integrity(conn_or_socket_or_endpoint_or_uri, path)
+
   def static_integrity(%Plug.Conn{private: %{phoenix_endpoint: endpoint}}, path) do
     static_integrity(endpoint, path)
   end
@@ -700,7 +706,7 @@ defmodule Phoenix.VerifiedRoutes do
     end
   end
 
-  defp build_route(route_ast, og_ast, env, endpoint_ctx, router) do
+  defp build_route(route_ast, sigil_p, env, endpoint_ctx, router) do
     statics = Module.get_attribute(env.module, :phoenix_verified_statics, [])
 
     router =
@@ -722,7 +728,7 @@ defmodule Phoenix.VerifiedRoutes do
     route = %__MODULE__{
       router: router,
       stacktrace: Macro.Env.stacktrace(env),
-      inspected_route: Macro.to_string(og_ast),
+      inspected_route: Macro.to_string(sigil_p),
       test_path: test_path
     }
 
