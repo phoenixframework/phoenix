@@ -4,14 +4,14 @@ defmodule Phoenix.Token do
   for use in Channels, API authentication, and more.
 
   The data stored in the token is signed to prevent tampering, and is
-  optionally encrypted.  This means that, so long as the
+  optionally encrypted. This means that, so long as the
   key (see below) remains secret, you can be assured that the data
   stored in the token has not been tampered with by a third party.
   However, unless the token is encrypted, it is not safe to use this
   token to store private information, such as a user's sensitive
   identification data, as it can be trivially decoded. If the
-  token is encrypted, its contents will kept secret from the client,
-  but it is still a best practice to encode as little secret
+  token is encrypted, its contents will be kept secret from the
+  client, but it is still a best practice to encode as little secret
   information as possible, to minimize the impact of key leakage.
 
   ## Example
