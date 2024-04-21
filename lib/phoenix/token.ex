@@ -45,7 +45,7 @@ defmodule Phoenix.Token do
 
   The second argument is a [cryptographic salt](https://en.wikipedia.org/wiki/Salt_(cryptography))
   which must be the same in both calls to `sign/4` and `verify/4`, or
-  both calls to `encrypt/4` and decrypt/4`. For instance, it may be
+  both calls to `encrypt/4` and `decrypt/4`. For instance, it may be
   called "user auth" and treated as namespace when generating a token
   that will be used to authenticate users on channels or on your APIs.
 
