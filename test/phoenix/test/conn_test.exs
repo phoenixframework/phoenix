@@ -180,7 +180,7 @@ defmodule Phoenix.Test.ConnTest do
       assert conn.host == "localhost"
     end
 
-    test "remove_ip is persisted" do
+    test "remote_ip is persisted" do
       conn =
         %Plug.Conn{build_conn(:get, "http://localhost/", nil) | remote_ip: {192, 168, 0, 1}}
         |> recycle()
