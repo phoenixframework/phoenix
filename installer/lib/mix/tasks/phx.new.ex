@@ -53,7 +53,7 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-html` - do not generate HTML views
 
-    * `--no-live` - comment out LiveView socket setup in in your Endpoint 
+    * `--no-live` - comment out LiveView socket setup in your Endpoint 
       and assets/js/app.js. Automatically disabled if --no-html is given
 
     * `--no-mailer` - do not generate Swoosh mailer files
