@@ -40,6 +40,18 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   @impl true
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
+    <%=
+    Enum.filter(schema.types,
+        fn
+          {_, {:custom, _, _}} -> true
+          _ -> false
+        end)
+    |> Enum.map_join("\n    ",
+        fn
+           {key, {:custom, provider, opts}} ->
+                   "#{ schema.singular }_params = #{inspect provider}.hydrate_form_input(#{inspect key}, #{ schema.singular }_params, #{inspect opts, limit: :infinity})"
+        end)
+    %>
     changeset =
       socket.assigns.<%= schema.singular %>
       |> <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>_params)
@@ -49,6 +61,18 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def handle_event("save", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
+    <%=
+    Enum.filter(schema.types,
+        fn
+          {_, {:custom, _, _}} -> true
+          _ -> false
+        end)
+    |> Enum.map_join("\n    ",
+        fn
+           {key, {:custom, provider, opts}} ->
+                   "#{ schema.singular }_params = #{inspect provider}.hydrate_form_input(#{inspect key}, #{ schema.singular }_params, #{inspect opts, limit: :infinity})"
+        end)
+    %>
     save_<%= schema.singular %>(socket, socket.assigns.action, <%= schema.singular %>_params)
   end
 

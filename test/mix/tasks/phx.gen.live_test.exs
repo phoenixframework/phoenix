@@ -1,9 +1,37 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
+
+defmodule Phoenix.Test.LiveCustomGen do
+  @behaviour Mix.Phoenix.CustomGeneratorBehaviour
+  def validate_attr!({name, __MODULE__, opts}) do
+    {name, {:custom, __MODULE__, opts}}
+  end
+  def type_and_opts_for_schema(_opts) do
+    ~s|:custom_schema_type|
+  end
+  def type_for_migration(_opts) do
+    :custom_ecto_type
+  end
+  def type_to_default(key, _opts, :create) do
+    "Special #{key}"
+  end
+  def type_to_default(key, _opts, :update) do
+    "Special Updated #{key}"
+  end
+  def live_form_input(key, _opts) do
+    "[SPECIAL INPUT HANDLER: #{key}]"
+  end
+  def hydrate_form_input(_key, params, _opts), do: params
+end
+
+
 defmodule Mix.Tasks.Phx.Gen.LiveTest do
   use ExUnit.Case
   import MixHelper
   alias Mix.Tasks.Phx.Gen
+
+  @moduletag feature: :gen
+  @moduletag gen: :live
 
   setup do
     Mix.Task.clear()
@@ -27,6 +55,142 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       File.touch!("phoenix_web/lib/phoenix_web.ex")
       func.()
     end)
+  end
+
+
+  describe "custom schema generator support" do
+    test "generate", config  do
+      in_tmp_live_project config.test, fn ->
+        Gen.Live.run(~w(Blog Post posts title:Phoenix.Test.LiveCustomGen slug:unique votes:integer cost:decimal
+                      tags:array:text popular:boolean drafted_at:datetime
+                      status:enum:unpublished:published:deleted
+                      published_at:utc_datetime
+                      published_at_usec:utc_datetime_usec
+                      deleted_at:naive_datetime
+                      deleted_at_usec:naive_datetime_usec
+                      alarm:time
+                      alarm_usec:time_usec
+                      secret:uuid:redact announcement_date:date alarm:time
+                      metadata:map
+                      weight:float user_id:references:users))
+
+        assert_file "lib/phoenix/blog/post.ex"
+        assert_file "lib/phoenix/blog.ex"
+        assert_file "test/phoenix/blog_test.exs"
+
+        assert_file "lib/phoenix_web/live/post_live/index.ex", fn file ->
+          assert file =~ "defmodule PhoenixWeb.PostLive.Index"
+        end
+
+        assert_file "lib/phoenix_web/live/post_live/show.ex", fn file ->
+          assert file =~ "defmodule PhoenixWeb.PostLive.Show"
+        end
+
+        assert_file "lib/phoenix_web/live/post_live/form_component.ex", fn file ->
+          assert file =~ "defmodule PhoenixWeb.PostLive.FormComponent"
+        end
+
+        assert [path] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
+        assert_file path, fn file ->
+          assert file =~ "create table(:posts)"
+          assert file =~ "add :title, :custom_ecto_type"
+          assert file =~ "create unique_index(:posts, [:slug])"
+        end
+
+        assert_file "lib/phoenix_web/live/post_live/index.html.heex", fn file ->
+          assert file =~ ~S|~p"/posts"|
+        end
+
+        assert_file "lib/phoenix_web/live/post_live/show.html.heex", fn file ->
+          assert file =~ ~S|~p"/posts"|
+        end
+
+        assert_file "lib/phoenix_web/live/post_live/form_component.ex", fn file ->
+          assert file =~ ~s(<.simple_form)
+          assert file =~ ~s([SPECIAL INPUT HANDLER: title])
+          assert file =~ ~s(<.input field={@form[:votes]} type="number")
+          assert file =~ ~s(<.input field={@form[:cost]} type="number" label="Cost" step="any")
+          assert file =~ """
+                         <.input
+                           field={@form[:tags]}
+                           type="select"
+                           multiple
+                 """
+          assert file =~ ~s(<.input field={@form[:popular]} type="checkbox")
+          assert file =~ ~s(<.input field={@form[:drafted_at]} type="datetime-local")
+          assert file =~ ~s(<.input field={@form[:published_at]} type="datetime-local")
+          assert file =~ ~s(<.input field={@form[:deleted_at]} type="datetime-local")
+          assert file =~ ~s(<.input field={@form[:announcement_date]} type="date")
+          assert file =~ ~s(<.input field={@form[:alarm]} type="time")
+          assert file =~ ~s(<.input field={@form[:secret]} type="text" label="Secret" />)
+          refute file =~ ~s(<field={@form[:metadata]})
+          assert file =~ """
+                         <.input
+                           field={@form[:status]}
+                           type="select"
+                 """
+          assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
+
+          assert file =~ ~s|post_params = Phoenix.Test.LiveCustomGen.hydrate_form_input(:title, post_params, [])|
+
+          refute file =~ ~s(<.input field={@form[:user_id]})
+        end
+
+        assert_file "test/phoenix_web/live/post_live_test.exs", fn file ->
+          assert file =~ ~r"@invalid_attrs.*popular: false"
+          assert file =~ ~S|~p"/posts"|
+          assert file =~ ~S|~p"/posts/new"|
+          assert file =~ ~S|~p"/posts/#{post}"|
+          assert file =~ ~S|~p"/posts/#{post}/show/edit"|
+        end
+
+        send self(), {:mix_shell_input, :yes?, true}
+        Gen.Live.run(~w(Blog Comment comments title:string))
+        assert_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}
+
+        assert_file "lib/phoenix/blog/comment.ex"
+        assert_file "test/phoenix_web/live/comment_live_test.exs", fn file ->
+          assert file =~ "defmodule PhoenixWeb.CommentLiveTest"
+        end
+
+        assert [path] = Path.wildcard("priv/repo/migrations/*_create_comments.exs")
+        assert_file path, fn file ->
+          assert file =~ "create table(:comments)"
+          assert file =~ "add :title, :string"
+        end
+
+        assert_file "lib/phoenix_web/live/comment_live/index.ex", fn file ->
+          assert file =~ "defmodule PhoenixWeb.CommentLive.Index"
+        end
+
+        assert_file "lib/phoenix_web/live/comment_live/show.ex", fn file ->
+          assert file =~ "defmodule PhoenixWeb.CommentLive.Show"
+        end
+
+        assert_file "lib/phoenix_web/live/comment_live/form_component.ex", fn file ->
+          assert file =~ "defmodule PhoenixWeb.CommentLive.FormComponent"
+        end
+
+        assert_receive {:mix_shell, :info, ["""
+
+        Add the live routes to your browser scope in lib/phoenix_web/router.ex:
+
+            live "/comments", CommentLive.Index, :index
+            live "/comments/new", CommentLive.Index, :new
+            live "/comments/:id/edit", CommentLive.Index, :edit
+
+            live "/comments/:id", CommentLive.Show, :show
+            live "/comments/:id/show/edit", CommentLive.Show, :edit
+        """]}
+
+        assert_receive({:mix_shell, :info, ["""
+
+        You must update :phoenix_live_view to v0.18 or later and
+        :phoenix_live_dashboard to v0.7 or later to use the features
+        in this generator.
+        """]})
+      end
+    end
   end
 
   test "invalid mix arguments", config do
