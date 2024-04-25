@@ -381,7 +381,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests}) do
-    Phoenix.Config.put_new(endpoint, :cache_static_manifest_latest, latest)
+    Phoenix.Config.put(endpoint, :cache_static_manifest_latest, latest)
     with_vsn? = !endpoint.config(:cache_manifest_skip_vsn)
 
     Enum.each(latest, fn {key, _} ->
