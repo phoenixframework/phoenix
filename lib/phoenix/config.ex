@@ -152,6 +152,7 @@ defmodule Phoenix.Config do
         {:stop, :normal, :ok, {module, permanent}}
 
       true ->
+        clear_cache(module)
         {:reply, :ok, {module, permanent}}
     end
   end
