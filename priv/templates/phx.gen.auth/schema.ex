@@ -126,8 +126,11 @@ defmodule <%= inspect schema.module %> do
   Confirms the account by setting `confirmed_at`.
   """
   def confirm_changeset(<%= schema.singular %>) do
-    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-    change(<%= schema.singular %>, confirmed_at: now)
+    <%= case schema.timestamp_type do %>
+    <% :naive_datetime -> %>now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    <% :utc_datetime -> %>now = DateTime.utc_now() |> DateTime.truncate(:second)
+    <% :utc_datetime_usec -> %>now = DateTime.utc_now() |> DateTime.truncate(:microsecond)
+    <% end %>change(<%= schema.singular %>, confirmed_at: now)
   end
 
   @doc """
