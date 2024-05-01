@@ -45,6 +45,7 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
 # Watch static and templates for browser reloading.
 config :<%= @web_app_name %>, <%= @endpoint_module %>,
   live_reload: [
+    web_console_logger: true,
     patterns: [
       ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
       ~r"priv/gettext/.*(po)$",<% end %>
