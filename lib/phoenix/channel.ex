@@ -335,14 +335,16 @@ defmodule Phoenix.Channel do
   ## Logging
 
   By default, channel `"join"` and `"handle_in"` events are logged, using
-  the level `:info` and `:debug`, respectively. Logs can be customized per
-  event type or disabled by setting the `:log_join` and `:log_handle_in`
-  options when using `Phoenix.Channel`. For example, the following
-  configuration logs join events as `:info`, but disables logging for
+  the level `:info` and `:debug`, respectively. You can change the level used
+  for each event, or disable logs, per event type by setting the `:log_join`
+  and `:log_handle_in` options when using `Phoenix.Channel`. For example, the
+  following configuration logs join events as `:info`, but disables logging for
   incoming events:
 
       use Phoenix.Channel, log_join: :info, log_handle_in: false
 
+  Note that changing an event type's level doesn't affect what is logged,
+  unless you set it to `false`, it affects the associated level.
   """
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
