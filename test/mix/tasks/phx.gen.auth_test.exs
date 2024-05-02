@@ -950,12 +950,18 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         assert_file migration, fn file ->
           assert file =~ "timestamps(type: :utc_datetime)"
+          assert file =~ "timestamps(type: :utc_datetime, updated_at: false)"
         end
 
-
-        assert_file("lib/my_app/accounts/user.ex", fn file ->
+        assert_file "lib/my_app/accounts/user.ex", fn file ->
+          assert file =~ "field :confirmed_at, :utc_datetime"
           assert file =~ "timestamps(type: :utc_datetime)"
-        end)
+          assert file =~ "now = DateTime.utc_now() |> DateTime.truncate(:second)"
+        end
+
+        assert_file "lib/my_app/accounts/user_token.ex", fn file ->
+          assert file =~ "timestamps(type: :utc_datetime, updated_at: false)"
+        end
       end)
     end)
   end

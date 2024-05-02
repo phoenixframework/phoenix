@@ -21,7 +21,7 @@ defmodule <%= inspect schema.module %>Token do
     field :sent_to, :string
     belongs_to :<%= schema.singular %>, <%= inspect schema.module %>
 
-    timestamps(updated_at: false)
+    timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}, " %>updated_at: false)
   end
 
   @doc """
