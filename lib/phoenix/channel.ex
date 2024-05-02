@@ -344,8 +344,7 @@ defmodule Phoenix.Channel do
       use Phoenix.Channel, log_join: :info, log_handle_in: false
 
   Note that changing an event type's level doesn't affect what is logged,
-  unless you set it to `false`; it affects the associated level.
-
+  unless you set it to `false`, it affects the associated level.
   """
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
