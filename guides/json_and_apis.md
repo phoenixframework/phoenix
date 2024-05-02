@@ -325,8 +325,8 @@ The output should contain the following:
     track JavaScript dependencies
   • --no-gettext - do not generate gettext files
   • --no-html - do not generate HTML views
-  • --no-live - comment out LiveView socket setup in
-    assets/js/app.js. Automatically disabled if --no-html is given
+  • --no-live - comment out LiveView socket setup in your Endpoint
+    and assets/js/app.js. Automatically disabled if --no-html is given
   • --no-mailer - do not generate Swoosh mailer files
   • --no-tailwind - do not include tailwind dependencies and
     assets. The generated markup will still include Tailwind CSS
