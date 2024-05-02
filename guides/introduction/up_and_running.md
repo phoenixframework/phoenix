@@ -10,11 +10,15 @@ We can run `mix phx.new` from any directory in order to bootstrap our Phoenix ap
 $ mix phx.new hello
 ```
 
-> A note about what's included: By default `mix phx.new` adds a number of optional dependencies and generates the necessary config and integration code in our application, for example: 
-> - [Ecto](ecto.html) for communicating with a data store, such as PostgreSQL, MySQL, and others. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to `mix phx.new`.
-> - [Phoenix.HTML](https://hexdocs.pm/phoenix_html/Phoenix.HTML.html), [TailwindCSS](https://tailwindcss.com), and [Esbuild](https://esbuild.github.io) for basic web applications, which you can exclude with `--no-html` and `--no-assets` for API-only applications.
-> - [Phoenix.LiveView](https://hexdocs.pm/phoenix_live_view/) for interactive web applications, which you can exclude with `--no-live`.
-> - Read the [Mix Tasks Guide](mix_tasks.html#phoenix-specific-mix-tasks) for the full list of things that can be excluded, among other options.
+> By default, `mix phx.new` includes a number of optional dependencies, for example:
+>
+> - [Ecto](ecto.html) for communicating with a data store, such as PostgreSQL, MySQL, and others. You can skip this with `--no-ecto`.
+>
+> - [Phoenix.HTML](https://hexdocs.pm/phoenix_html/Phoenix.HTML.html), [TailwindCSS](https://tailwindcss.com), and [Esbuild](https://esbuild.github.io) for HTML applications. You can skip them with the `--no-html` and `--no-assets` flags.
+>
+> - [Phoenix.LiveView](https://hexdocs.pm/phoenix_live_view/) for building realtime and interactive web applications. You can skip this with `--no-live`.
+>
+> Read the [Mix Tasks Guide](mix_tasks.html#phoenix-specific-mix-tasks) for the full list of things that can be excluded, among other options.
 
 ```console
 mix phx.new hello
