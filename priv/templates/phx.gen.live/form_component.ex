@@ -30,22 +30,18 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   @impl true
   def update(%{<%= schema.singular %>: <%= schema.singular %>} = assigns, socket) do
-    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)
-
     {:ok,
      socket
      |> assign(assigns)
-     |> assign_form(changeset)}
+     |> assign_new(:form, fn ->
+       to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>))
+     end)}
   end
 
   @impl true
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
-    changeset =
-      socket.assigns.<%= schema.singular %>
-      |> <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>_params)
-      |> Map.put(:action, :validate)
-
-    {:noreply, assign_form(socket, changeset)}
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params)
+    {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
   def handle_event("save", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
@@ -63,7 +59,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign_form(socket, changeset)}
+        {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 
@@ -78,12 +74,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign_form(socket, changeset)}
+        {:noreply, assign(socket, form: to_form(changeset))}
     end
-  end
-
-  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
-    assign(socket, :form, to_form(changeset))
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
