@@ -171,7 +171,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     else
       Mix.shell().info("""
 
-      Add the resource to your :api scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
+      Add the resource to the "#{Application.get_env(ctx_app, :generators)[:api_prefix] || "/api"}" scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
           resources "/#{schema.plural}", #{inspect(schema.alias)}Controller, except: [:new, :edit]
       """)
