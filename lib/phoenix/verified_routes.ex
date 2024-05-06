@@ -163,11 +163,15 @@ defmodule Phoenix.VerifiedRoutes do
   @doc false
   def __verify__(routes) when is_list(routes) do
     Enum.each(routes, fn %__MODULE__{} = route ->
-      unless match_route?(route.router, route.test_path) do
-        IO.warn(
-          "no route path for #{inspect(route.router)} matches #{route.inspected_route}",
-          route.stacktrace
-        )
+      case match_route(route.router, route.test_path) do
+        {:error, :nopath} ->
+          IO.warn(
+            "no route path for #{inspect(route.router)} matches #{route.inspected_route}",
+            route.stacktrace
+          )
+
+        :ok ->
+          :ok
       end
     end)
   end
@@ -680,7 +684,7 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(true), do: "true"
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
-  defp match_route?(router, test_path) when is_binary(test_path) do
+  defp match_route(router, test_path) when is_binary(test_path) do
     split_path =
       test_path
       |> String.split("#")
@@ -688,24 +692,24 @@ defmodule Phoenix.VerifiedRoutes do
       |> String.split("/")
       |> Enum.filter(fn segment -> segment != "" end)
 
-    match_route?(router, split_path)
+    match_route(router, split_path)
   end
 
-  defp match_route?(router, split_path) when is_list(split_path) do
+  defp match_route(router, split_path) when is_list(split_path) do
     case router.__verify_route__(split_path) do
-      {_forward_plug, true = _warn_on_verify?} -> false
-      {nil = _forward_plug, false = _warn_on_verify?} -> true
-      {fwd_plug, false = _warn_on_verify?} -> match_forward_route?(router, fwd_plug, split_path)
-      :error -> false
+      {_forward_plug, true = _warn_on_verify?} -> {:error, :nopath}
+      {nil = _forward_plug, false = _warn_on_verify?} -> :ok
+      {fwd_plug, false = _warn_on_verify?} -> match_forward_route(router, fwd_plug, split_path)
+      :error -> {:error, :nopath}
     end
   end
 
-  defp match_forward_route?(router, forward_router, split_path) do
+  defp match_forward_route(router, forward_router, split_path) do
     if function_exported?(forward_router, :__routes__, 0) do
       script_name = router.__forward__(forward_router)
-      match_route?(forward_router, split_path -- script_name)
+      match_route(forward_router, split_path -- script_name)
     else
-      true
+      :ok
     end
   end
 
