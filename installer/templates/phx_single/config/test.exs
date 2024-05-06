@@ -18,10 +18,8 @@ config :swoosh, :api_client, false<% end %>
 config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
-config :phoenix, :plug_init_mode, :runtime
+config :phoenix, :plug_init_mode, :runtime<%= if @live do %>
 
-<%= if @live do %>
 config :phoenix_live_view,
   # Enable helpful, but potentially expensive runtime checks
-  enable_expensive_runtime_checks: true
-<% end %>
+  enable_expensive_runtime_checks: true<% end %>
