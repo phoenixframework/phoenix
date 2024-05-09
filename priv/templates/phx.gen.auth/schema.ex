@@ -7,6 +7,7 @@ defmodule <%= inspect schema.module %> do
     field :email, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
+    field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, <%= inspect schema.timestamp_type %>
 
     timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}" %>)
@@ -153,6 +154,8 @@ defmodule <%= inspect schema.module %> do
   Validates the current password otherwise adds an error to the changeset.
   """
   def validate_current_password(changeset, password) do
+    changeset = cast(changeset, %{current_password: password}, [:current_password])
+
     if valid_password?(changeset.data, password) do
       changeset
     else
