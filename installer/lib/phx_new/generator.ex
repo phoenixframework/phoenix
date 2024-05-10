@@ -305,7 +305,7 @@ defmodule Phx.New.Generator do
   end
 
   defp get_web_adapter("cowboy"), do: {:plug_cowboy, "~> 2.7", Phoenix.Endpoint.Cowboy2Adapter, "https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html"}
-  defp get_web_adapter("bandit"), do: {:bandit, "~> 1.2", Bandit.PhoenixAdapter, "https://hexdocs.pm/bandit/Bandit.html#t:options/0"}
+  defp get_web_adapter("bandit"), do: {:bandit, "~> 1.5", Bandit.PhoenixAdapter, "https://hexdocs.pm/bandit/Bandit.html#t:options/0"}
   defp get_web_adapter(other), do: Mix.raise("Unknown web adapter #{inspect(other)}")
 
   defp fs_db_config(app, module) do
