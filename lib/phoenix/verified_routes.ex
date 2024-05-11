@@ -107,7 +107,8 @@ defmodule Phoenix.VerifiedRoutes do
             route: nil,
             inspected_route: nil,
             stacktrace: nil,
-            test_path: nil
+            test_path: nil,
+            http_verb: nil
 
   defmacro __using__(opts) do
     opts =
@@ -163,10 +164,16 @@ defmodule Phoenix.VerifiedRoutes do
   @doc false
   def __verify__(routes) when is_list(routes) do
     Enum.each(routes, fn %__MODULE__{} = route ->
-      case match_route(route.router, route.test_path) do
+      case match_route(route.router, route.test_path, route.http_verb) do
         {:error, :nopath} ->
           IO.warn(
             "no route path for #{inspect(route.router)} matches #{route.inspected_route}",
+            route.stacktrace
+          )
+
+        {:error, :noverb} ->
+          IO.warn(
+            "no route for #{inspect(route.router)} matches #{route.inspected_route}",
             route.stacktrace
           )
 
@@ -684,7 +691,7 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(true), do: "true"
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
-  defp match_route(router, test_path) when is_binary(test_path) do
+  defp match_route(router, test_path, http_verb) when is_binary(test_path) do
     split_path =
       test_path
       |> String.split("#")
@@ -692,22 +699,33 @@ defmodule Phoenix.VerifiedRoutes do
       |> String.split("/")
       |> Enum.filter(fn segment -> segment != "" end)
 
-    match_route(router, split_path)
+    match_route(router, split_path, http_verb)
   end
 
-  defp match_route(router, split_path) when is_list(split_path) do
-    case router.__verify_route__(split_path) do
-      {_forward_plug, true = _warn_on_verify?} -> {:error, :nopath}
-      {nil = _forward_plug, false = _warn_on_verify?} -> :ok
-      {fwd_plug, false = _warn_on_verify?} -> match_forward_route(router, fwd_plug, split_path)
-      :error -> {:error, :nopath}
+  defp match_route(router, split_path, http_verb) when is_list(split_path) do
+    case router.__verify_route__(split_path, http_verb) do
+      {_forward_plug, true = _warn_on_verify?, _verb_matches?} ->
+        {:error, :nopath}
+
+      {nil = _forward_plug, false = _warn_on_verify?, verb_matches?} ->
+        match_verb(http_verb, verb_matches?)
+
+      {fwd_plug, false = _warn_on_verify?, _verb_matches?} ->
+        match_forward_route(router, fwd_plug, split_path, http_verb)
+
+      :error ->
+        {:error, :nopath}
     end
   end
 
-  defp match_forward_route(router, forward_router, split_path) do
+  defp match_verb("*", _verb_matches?), do: :ok
+  defp match_verb(_verb, true = _verb_matches?), do: :ok
+  defp match_verb(_verb, false = _verb_matches?), do: {:error, :noverb}
+
+  defp match_forward_route(router, forward_router, split_path, http_verb) do
     if function_exported?(forward_router, :__routes__, 0) do
       script_name = router.__forward__(forward_router)
-      match_route(forward_router, split_path -- script_name)
+      match_route(forward_router, split_path -- script_name, http_verb)
     else
       :ok
     end
@@ -736,7 +754,8 @@ defmodule Phoenix.VerifiedRoutes do
       router: router,
       stacktrace: Macro.Env.stacktrace(env),
       inspected_route: Macro.to_string(sigil_p),
-      test_path: test_path
+      test_path: test_path,
+      http_verb: "*"
     }
 
     {route, static?, endpoint_ctx, route_ast, path_ast, static_ast}

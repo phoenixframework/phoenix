@@ -573,7 +573,7 @@ defmodule Phoenix.Router do
     verify_catch_all =
       quote generated: true do
         @doc false
-        def __verify_route__(_path_info) do
+        def __verify_route__(_path_info, _verb) do
           :error
         end
       end
@@ -635,6 +635,7 @@ defmodule Phoenix.Router do
 
   defp build_verify(path, routes_per_path) do
     routes = Map.get(routes_per_path, path)
+    verbs = Enum.map(routes, &Atom.to_string(&1.verb))
 
     forward_plug =
       Enum.find_value(routes, fn
@@ -645,8 +646,8 @@ defmodule Phoenix.Router do
     warn_on_verify? = Enum.all?(routes, & &1.warn_on_verify?)
 
     quote generated: true do
-      def __verify_route__(unquote(path)) do
-        {unquote(forward_plug), unquote(warn_on_verify?)}
+      def __verify_route__(unquote(path), verb) do
+        {unquote(forward_plug), unquote(warn_on_verify?), verb in unquote(verbs)}
       end
     end
   end
