@@ -173,7 +173,7 @@ defmodule Phoenix.VerifiedRoutes do
 
         {:error, :noverb} ->
           IO.warn(
-            "no route for #{inspect(route.router)} matches #{route.inspected_route}",
+            "no route for #{inspect(route.router)} matches #{route.inspected_route}#{route.http_verb}",
             route.stacktrace
           )
 
@@ -211,12 +211,12 @@ defmodule Phoenix.VerifiedRoutes do
       """
   '''
   defmacro sigil_p({:<<>>, _meta, _segments} = route, extra) do
-    validate_sigil_p!(extra)
     endpoint = attr!(__CALLER__, :endpoint)
     router = attr!(__CALLER__, :router)
+    http_verb = sigil_p_verb(extra)
 
     route
-    |> build_route(route, __CALLER__, endpoint, router)
+    |> build_route(route, http_verb, __CALLER__, endpoint, router)
     |> inject_path(__CALLER__)
   end
 
@@ -249,10 +249,10 @@ defmodule Phoenix.VerifiedRoutes do
     end
   end
 
-  defp validate_sigil_p!([]), do: :ok
+  defp sigil_p_verb([]), do: "*"
 
-  defp validate_sigil_p!(extra) do
-    raise ArgumentError, "~p does not support modifiers after closing, got: #{extra}"
+  defp sigil_p_verb(method) do
+    List.to_string(method)
   end
 
   defp raise_invalid_route(ast) do
@@ -287,10 +287,10 @@ defmodule Phoenix.VerifiedRoutes do
              router,
              {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = sigil_p
            ) do
-    validate_sigil_p!(extra)
+    http_verb = sigil_p_verb(extra)
 
     route
-    |> build_route(sigil_p, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> build_route(sigil_p, http_verb, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
     |> inject_path(__CALLER__)
   end
 
@@ -300,11 +300,11 @@ defmodule Phoenix.VerifiedRoutes do
              conn_or_socket_or_endpoint_or_uri,
              {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = sigil_p
            ) do
-    validate_sigil_p!(extra)
     router = attr!(__CALLER__, :router)
+    http_verb = sigil_p_verb(extra)
 
     route
-    |> build_route(sigil_p, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> build_route(sigil_p, http_verb, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
     |> inject_path(__CALLER__)
   end
 
@@ -352,12 +352,12 @@ defmodule Phoenix.VerifiedRoutes do
   such as `~p"/admin/users"`.
   '''
   defmacro url({:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = sigil_p) do
-    validate_sigil_p!(extra)
     endpoint = attr!(__CALLER__, :endpoint)
     router = attr!(__CALLER__, :router)
+    http_verb = sigil_p_verb(extra)
 
     route
-    |> build_route(sigil_p, __CALLER__, endpoint, router)
+    |> build_route(sigil_p, http_verb, __CALLER__, endpoint, router)
     |> inject_url(__CALLER__)
   end
 
@@ -372,11 +372,11 @@ defmodule Phoenix.VerifiedRoutes do
              conn_or_socket_or_endpoint_or_uri,
              {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = sigil_p
            ) do
-    validate_sigil_p!(extra)
     router = attr!(__CALLER__, :router)
+    http_verb = sigil_p_verb(extra)
 
     route
-    |> build_route(sigil_p, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> build_route(sigil_p, http_verb, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
     |> inject_url(__CALLER__)
   end
 
@@ -392,11 +392,11 @@ defmodule Phoenix.VerifiedRoutes do
              router,
              {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = sigil_p
            ) do
-    validate_sigil_p!(extra)
     router = Macro.expand(router, __CALLER__)
+    http_verb = sigil_p_verb(extra)
 
     route
-    |> build_route(sigil_p, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
+    |> build_route(sigil_p, http_verb, __CALLER__, conn_or_socket_or_endpoint_or_uri, router)
     |> inject_url(__CALLER__)
   end
 
@@ -731,7 +731,7 @@ defmodule Phoenix.VerifiedRoutes do
     end
   end
 
-  defp build_route(route_ast, sigil_p, env, endpoint_ctx, router) do
+  defp build_route(route_ast, sigil_p, http_verb, env, endpoint_ctx, router) do
     statics = Module.get_attribute(env.module, :phoenix_verified_statics, [])
 
     router =
@@ -755,7 +755,7 @@ defmodule Phoenix.VerifiedRoutes do
       stacktrace: Macro.Env.stacktrace(env),
       inspected_route: Macro.to_string(sigil_p),
       test_path: test_path,
-      http_verb: "*"
+      http_verb: http_verb
     }
 
     {route, static?, endpoint_ctx, route_ast, path_ast, static_ast}
