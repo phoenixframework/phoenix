@@ -340,7 +340,8 @@ defmodule Phoenix.VerifiedRoutes do
   Forwarded paths in your main application router will be verified as usual,
   such as `~p"/admin/users"`.
   '''
-  defmacro url({:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = sigil_p) do
+  defmacro url({:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = sigil_p) do
+    validate_sigil_p!(extra)
     endpoint = attr!(__CALLER__, :endpoint)
     router = attr!(__CALLER__, :router)
 
@@ -358,8 +359,9 @@ defmodule Phoenix.VerifiedRoutes do
   """
   defmacro url(
              conn_or_socket_or_endpoint_or_uri,
-             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = sigil_p
+             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = sigil_p
            ) do
+    validate_sigil_p!(extra)
     router = attr!(__CALLER__, :router)
 
     route
@@ -377,8 +379,9 @@ defmodule Phoenix.VerifiedRoutes do
   defmacro url(
              conn_or_socket_or_endpoint_or_uri,
              router,
-             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, _]} = sigil_p
+             {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = sigil_p
            ) do
+    validate_sigil_p!(extra)
     router = Macro.expand(router, __CALLER__)
 
     route
