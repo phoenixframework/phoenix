@@ -34,6 +34,7 @@ defmodule Phoenix.VerifiedRoutesTest do
     get "/posts/file/*file", PostController, :file
     get "/posts/skip", PostController, :skip
     get "/should-warn/*all", PostController, :all, warn_on_verify: true
+    match :customverb, "/posts/custom", PostController, []
 
     scope "/", host: "users." do
       post "/host_users/:id/info", UserController, :create
@@ -151,6 +152,21 @@ defmodule Phoenix.VerifiedRoutesTest do
   test "~p with dynamic string and static query params" do
     struct = %__MODULE__{id: 123, slug: "post-123"}
     assert ~p"/posts/#{struct}?foo=bar" == "/posts/post-123?foo=bar"
+  end
+
+  test "~p with http verb" do
+    assert ~p"get /posts/1" == "/posts/1"
+  end
+
+  test "path with http verb" do
+    assert path(Endpoint, ~p"get /posts/top") == "/posts/top"
+    assert path(Endpoint, AdminRouter, ~p"get /dashboard")
+  end
+
+  test "url with http verb" do
+    assert url(~p"get /posts/skip") == "https://example.com/posts/skip"
+    assert url(Endpoint, ~p"customverb /posts/custom") == "https://example.com/posts/custom"
+    assert url(Endpoint, AdminRouter, ~p"get /dashboard") == "https://example.com/dashboard"
   end
 
   test "~p with scoped host" do
@@ -509,6 +525,11 @@ defmodule Phoenix.VerifiedRoutesTest do
                 ~p"/unknown"
                 ~p"/unknown/123"
                 ~p"/unknown/#{123}"
+                ~p"get /unknown/456"
+                # Valid path, do not warn
+                ~p"/posts"
+                ~p"get /posts"
+                ~p"customverb /posts/custom"
               end
             end
           end)
@@ -521,6 +542,40 @@ defmodule Phoenix.VerifiedRoutesTest do
 
         assert warnings =~
                  ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/#{123}"|
+
+        assert warnings =~
+                 ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "get /unknown/456"|
+      end
+
+      test "~p warns on unmatched http verb" do
+        warnings =
+          ExUnit.CaptureIO.capture_io(:stderr, fn ->
+            defmodule UnmatchedHttpVerb do
+              use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+
+              def test do
+                ~p"post /posts/1"
+                ~p"put /posts/2"
+                ~p"patch /posts/3/info"
+                ~p"notcustom /posts/custom"
+                # Valid path, does not warn
+                ~p"get /posts/1"
+                ~p"customverb /posts/custom"
+              end
+            end
+          end)
+
+        assert warnings =~
+                 ~s|no route for Phoenix.VerifiedRoutesTest.Router matches "post /posts/1"|
+
+        assert warnings =~
+                 ~s|no route for Phoenix.VerifiedRoutesTest.Router matches "put /posts/2"|
+
+        assert warnings =~
+                 ~s|no route for Phoenix.VerifiedRoutesTest.Router matches "patch /posts/3/info"|
+
+        assert warnings =~
+                 ~s|no route for Phoenix.VerifiedRoutesTest.Router matches "notcustom /posts/custom"|
       end
 
       test "~p warns on warn_on_verify: true route" do
