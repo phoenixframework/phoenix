@@ -560,10 +560,21 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   # Segments must always start with /
-  defp verify_segment(["/" <> _ | _] = segments, route), do: verify_segment(segments, route, [])
+  defp verify_segment(["/" <> _ | _] = segments, route) do
+    {path_rewrite, query_rewrite} = verify_segment(segments, route, [])
+    {"*", path_rewrite, query_rewrite}
+  end
 
-  defp verify_segment(_, route) do
-    raise ArgumentError, "paths must begin with /, got: #{Macro.to_string(route)}"
+  defp verify_segment([first_segment | other_segments], route) do
+    with [http_verb, route_segment] <- String.split(first_segment, " /", parts: 2),
+         true <- valid_http_verb?(http_verb) do
+      {path_rewrite, query_rewrite} =
+        verify_segment(["/" <> route_segment | other_segments], route, [])
+
+      {http_verb, path_rewrite, query_rewrite}
+    else
+      _ -> raise ArgumentError, "paths must begin with /, got: #{Macro.to_string(route)}"
+    end
   end
 
   # separator followed by dynamic
@@ -658,6 +669,12 @@ defmodule Phoenix.VerifiedRoutes do
           "expected query string param to be compile-time map or keyword list, got: #{Macro.to_string(route)}"
   end
 
+  defp valid_http_verb?(http_verb) do
+    http_verb
+    |> to_charlist()
+    |> Enum.all?(&(&1 in ?a..?z))
+  end
+
   @doc """
   Generates an integrity hash to a static asset given its file path.
   """
@@ -747,7 +764,7 @@ defmodule Phoenix.VerifiedRoutes do
           """
       end
 
-    {static?, test_path, path_ast, static_ast} =
+    {static?, test_path, http_verb, path_ast, static_ast} =
       rewrite_path(route_ast, endpoint_ctx, router, statics)
 
     route = %__MODULE__{
@@ -755,7 +772,7 @@ defmodule Phoenix.VerifiedRoutes do
       stacktrace: Macro.Env.stacktrace(env),
       inspected_route: Macro.to_string(sigil_p),
       test_path: test_path,
-      http_verb: "*"
+      http_verb: http_verb
     }
 
     {route, static?, endpoint_ctx, route_ast, path_ast, static_ast}
@@ -763,7 +780,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp rewrite_path(route, endpoint, router, statics) do
     {:<<>>, meta, segments} = route
-    {path_rewrite, query_rewrite} = verify_segment(segments, route)
+    {http_verb, path_rewrite, query_rewrite} = verify_segment(segments, route)
 
     rewrite_route =
       quote generated: true do
@@ -791,7 +808,7 @@ defmodule Phoenix.VerifiedRoutes do
         unquote(__MODULE__).static_path(unquote_splicing([endpoint, rewrite_route]))
       end
 
-    {static?, test_path, path_ast, static_ast}
+    {static?, test_path, http_verb, path_ast, static_ast}
   end
 
   defp attr!(%{function: nil}, _) do
