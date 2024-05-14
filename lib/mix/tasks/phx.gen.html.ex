@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @moduledoc """
   Generates controller with view, templates, schema and context for an HTML resource.
 
-      mix phx.gen.html Accounts User users name:string age:integer about:text
+      mix phx.gen.html Accounts User users name:string age:integer
 
   The first argument, `Accounts`, is the resource's context.
   A context is an Elixir module that serves as an API boundary for closely related resources.
@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   The second argument, `User`, is the resource's schema.
   A schema is an Elixir module responsible for mapping database fields into an Elixir struct.
   The `User` schema above specifies two fields with their respective colon-delimited data types:
-  `name:string`, `age:integer` and `about:text`. See `mix phx.gen.schema` for more information
+  `name:string` and `age:integer`. See `mix phx.gen.schema` for more information
   on attributes.
 
   > Note: A resource may also be split
