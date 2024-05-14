@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   @moduledoc """
   Generates LiveView, templates, and context for a resource.
 
-      mix phx.gen.live Accounts User users name:string age:integer about:text
+      mix phx.gen.live Accounts User users name:string age:integer
 
   The first argument is the context module.  The context is an Elixir module
   that serves as an API boundary for the given resource. A context often holds
