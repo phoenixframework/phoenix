@@ -12,8 +12,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   The second argument, `User`, is the resource's schema.
   A schema is an Elixir module responsible for mapping database fields into an Elixir struct.
   The `User` schema above specifies two fields with their respective colon-delimited data types:
-  `name:string` and `age:integer`. See `mix phx.gen.schema` for more information
-  on attributes.
+  `name:string` and `age:integer`. See `mix phx.gen.schema` for more information on attributes.
 
   > Note: A resource may also be split
   > over distinct contexts (such as `Accounts.User` and `Payments.User`).
