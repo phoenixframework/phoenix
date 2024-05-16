@@ -146,7 +146,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
 
     {:ok, address}
   rescue
-    e -> {:error, e.message}
+    e -> {:error, Exception.message(e)}
   end
 
   defp make_ref(endpoint, scheme) do
