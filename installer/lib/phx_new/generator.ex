@@ -300,6 +300,74 @@ defmodule Phx.New.Generator do
     {:ecto_sqlite3, Ecto.Adapters.SQLite3, fs_db_config(app, module)}
   end
 
+  defp get_ecto_adapter("cockroach", app, module) do
+    {:postgrex, Ecto.Adapters.Postgres,
+     case_insensitive_field_type: :"STRING COLLATE \"en-US-u-ks-level2\"",
+     dev: [
+       username: "root",
+       password: nil,
+       hostname: "localhost",
+       port: 26257,
+       database: "#{app}_dev",
+       stacktrace: true,
+       migration_lock: false,
+       show_sensitive_data_on_connection_error: true,
+       pool_size: 10
+     ],
+     test: [
+       username: "root",
+       password: nil,
+       hostname: "localhost",
+       port: 26257,
+       database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|},
+       migration_lock: false,
+       pool: Ecto.Adapters.SQL.Sandbox,
+       pool_size: {:literal, ~s|System.schedulers_online() * 2|}
+     ],
+     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect(module)}.Repo, :manual)",
+     test_setup: """
+         pid = Ecto.Adapters.SQL.Sandbox.start_owner!(#{inspect(module)}.Repo, shared: not tags[:async])
+         on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)\
+     """,
+     prod_variables: ~S"""
+     database_url =
+       System.get_env("DATABASE_URL") ||
+         raise \"""
+         environment variable DATABASE_URL is missing.
+         For example: postgres://USER:PASS@HOST/DATABASE
+         \"""
+
+     database_cert = System.get_env("DATABASE_CERT") ||
+       raise \"""
+       environment variable DATABASE_CERT is missing.
+       You must set this to the certificate file contents of the CockroachDB cluster.
+       \"""
+
+     db_conf =
+       Regex.named_captures(
+         ~r/^postgresql:\/\/(?<username>[^:]+):(?<password>[^@]+)@(?<hostname>[^:]+):(?<port>\d+)\/(?<database>[^\?]+)/,
+         database_url
+       )
+
+     """,
+     prod_config: ~S"""
+     username: db_conf["username"],
+     password: db_conf["password"],
+     hostname: db_conf["hostname"],
+     port: db_conf["port"],
+     database: db_conf["database"],
+     migration_lock: false,
+     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+     show_sensitive_data_on_connection_error: true,
+     ssl: true,
+     ssl_opts: [
+       server_name_indication: ~c"#{db_conf["hostname"]}",
+       customize_hostname_check: [match_fun: :public_key.pkix_verify_hostname_match_fun(:https)],
+       cacerts: for({:Certificate, der, _} <- :public_key.pem_decode(database_cert), do: der)
+     ]
+     """}
+  end
+
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
   end
@@ -394,7 +462,7 @@ defmodule Phx.New.Generator do
 
   defp adapter_generators(adapter_config) do
     adapter_config
-    |> Keyword.take([:binary_id, :migration, :sample_binary_id])
+    |> Keyword.take([:binary_id, :migration, :sample_binary_id, :case_insensitive_field_type])
     |> Enum.filter(fn {_, value} -> not is_nil(value) end)
   end
 

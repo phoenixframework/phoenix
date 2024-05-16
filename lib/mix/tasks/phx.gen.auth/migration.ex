@@ -12,10 +12,21 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Migration do
   end
 
   defp extensions(Ecto.Adapters.Postgres) do
-    ["execute \"CREATE EXTENSION IF NOT EXISTS citext\", \"\""]
+    if case_insensitive_field_type() == :citext do
+      ["execute \"CREATE EXTENSION IF NOT EXISTS citext\", \"\""]
+    else
+      []
+    end
   end
 
   defp extensions(_), do: []
+
+  defp case_insensitive_field_type do
+    case Application.get_env(Mix.Phoenix.otp_app(), :generators, [])[:case_insensitive_field_type] do
+      type when type in [nil, :citext] -> :citext
+      custom_type -> custom_type
+    end
+  end
 
   defp column_definitions(ecto_adapter) do
     for field <- ~w(email token)a,
@@ -23,8 +34,12 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Migration do
         do: {field, column_definition(field, ecto_adapter)}
   end
 
-  defp column_definition(:email, Ecto.Adapters.Postgres), do: "add :email, :citext, null: false"
-  defp column_definition(:email, Ecto.Adapters.SQLite3), do: "add :email, :string, null: false, collate: :nocase"
+  defp column_definition(:email, Ecto.Adapters.Postgres),
+    do: "add :email, #{inspect(case_insensitive_field_type())}, null: false"
+
+  defp column_definition(:email, Ecto.Adapters.SQLite3),
+    do: "add :email, :string, null: false, collate: :nocase"
+
   defp column_definition(:email, _), do: "add :email, :string, null: false, size: 160"
 
   defp column_definition(:token, Ecto.Adapters.Postgres), do: "add :token, :binary, null: false"

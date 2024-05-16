@@ -681,6 +681,62 @@ defmodule Mix.Tasks.Phx.NewTest do
     end)
   end
 
+  test "new with cockroach adapter" do
+    in_tmp("new with cockroach adapter", fn ->
+      project_path = Path.join(File.cwd!(), "custom_path")
+      Mix.Tasks.Phx.New.run([project_path, "--database", "cockroach"])
+
+      assert_file("custom_path/mix.exs", ":postgrex")
+
+      assert_file("custom_path/config/config.exs", fn file ->
+        assert file =~ "ecto_repos: [CustomPath.Repo]"
+        assert file =~ """
+          generators: [
+            timestamp_type: :utc_datetime,
+            case_insensitive_field_type: :"STRING COLLATE \\"en-US-u-ks-level2\\""
+          ]
+        """
+      end)
+
+      assert_file("custom_path/config/dev.exs", [
+        ~r/username: "root"/,
+        ~r/password: nil/,
+        ~r/hostname: "localhost"/,
+        ~r/port: 26257/,
+        ~r/migration_lock: false/,
+      ])
+
+      assert_file("custom_path/config/test.exs", [
+        ~r/username: "root"/,
+        ~r/password: nil/,
+        ~r/hostname: "localhost"/,
+        ~r/port: 26257/,
+        ~r/migration_lock: false/,
+      ])
+
+      assert_file("custom_path/config/runtime.exs", fn file ->
+        assert file =~ ~s|database_cert =|
+        assert file =~ ~s|db_conf =|
+        assert file =~ ~s|migration_lock: false|
+        assert file =~ ~s|username: db_conf["username"]|
+        assert file =~ ~s|password: db_conf["password"]|
+        assert file =~ ~s|hostname: db_conf["hostname"]|
+        assert file =~ ~s|database: db_conf["database"]|
+        assert file =~ ~s|ssl_opts:|
+        assert file =~ ~s| ssl: true|
+        refute file =~ ~s|url: database_url|
+      end)
+      assert_file("custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.Postgres")
+
+      assert_file("custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)")
+
+      assert_file(
+        "custom_path/test/support/data_case.ex",
+        "Ecto.Adapters.SQL.Sandbox.start_owner"
+      )
+    end)
+  end
+
   test "new with mysql adapter" do
     in_tmp("new with mysql adapter", fn ->
       project_path = Path.join(File.cwd!(), "custom_path")
