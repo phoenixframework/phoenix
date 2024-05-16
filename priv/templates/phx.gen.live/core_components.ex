@@ -417,8 +417,25 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   @doc """
-  Renders a header with title.
+  Renders a header with a title, optional subtitle and actions.
+
+  ## Examples
+
+      <.header>
+        Title
+        <:actions>
+          Subtitle
+        </:actions>
+        <:actions>
+          ...
+        </:actions>
+      </.header>
+
+      <.header level="2" class="mt-10">
+        Title
+      </.header>
   """
+  attr :level, :string, default: "1"
   attr :class, :string, default: nil
 
   slot :inner_block, required: true
@@ -426,12 +443,30 @@ defmodule <%= @web_namespace %>.CoreComponents do
   slot :actions
 
   def header(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :default_header_classes,
+        "font-semibold leading-8 text-zinc-800"
+      )
+
     ~H"""
     <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8 text-zinc-800">
-          <%%= render_slot(@inner_block) %>
-        </h1>
+        <%= case @level do %>
+          <% "1" -> %>
+            <h1 class={["text-3xl", @default_header_classes]}><%%= render_slot(@inner_block) %></h1>
+          <% "2" -> %>
+            <h2 class={["text-2xl", @default_header_classes]}><%%= render_slot(@inner_block) %></h2>
+          <% "3" -> %>
+            <h3 class={["text-xl", @default_header_classes]}><%%= render_slot(@inner_block) %></h3>
+          <% "4" -> %>
+            <h4 class={["text-lg", @default_header_classes]}><%%= render_slot(@inner_block) %></h4>
+          <% "5" -> %>
+            <h5 class={["text-md", @default_header_classes]}><%%= render_slot(@inner_block) %></h5>
+          <% _   -> %>
+            <h6 class={["text-sm", @default_header_classes]}><%%= render_slot(@inner_block) %></h6>
+        <% end %>
         <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
           <%%= render_slot(@subtitle) %>
         </p>
