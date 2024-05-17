@@ -21,11 +21,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Migration do
 
   defp extensions(_), do: []
 
-  defp case_insensitive_field_type do
-    case Application.get_env(Mix.Phoenix.otp_app(), :generators, [])[:case_insensitive_field_type] do
-      type when type in [nil, :citext] -> :citext
-      custom_type -> custom_type
-    end
+  defp case_insensitive_field_type(default) do
+    Application.get_env(Mix.Phoenix.otp_app(), :generators, [])[:case_insensitive_field_type] || default
   end
 
   defp column_definitions(ecto_adapter) do
