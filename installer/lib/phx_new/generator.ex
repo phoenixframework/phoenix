@@ -343,28 +343,13 @@ defmodule Phx.New.Generator do
        You must set this to the certificate file contents of the CockroachDB cluster.
        \"""
 
-     db_conf =
-       Regex.named_captures(
-         ~r/^postgresql:\/\/(?<username>[^:]+):(?<password>[^@]+)@(?<hostname>[^:]+):(?<port>\d+)\/(?<database>[^\?]+)/,
-         database_url
-       )
-
      """,
      prod_config: ~S"""
-     username: db_conf["username"],
-     password: db_conf["password"],
-     hostname: db_conf["hostname"],
-     port: db_conf["port"],
-     database: db_conf["database"],
+     url: database_url,
      migration_lock: false,
      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
      show_sensitive_data_on_connection_error: true,
-     ssl: true,
-     ssl_opts: [
-       server_name_indication: ~c"#{db_conf["hostname"]}",
-       customize_hostname_check: [match_fun: :public_key.pkix_verify_hostname_match_fun(:https)],
-       cacerts: for({:Certificate, der, _} <- :public_key.pem_decode(database_cert), do: der)
-     ]
+     ssl: [cacerts: for({:Certificate, der, _} <- :public_key.pem_decode(database_cert), do: der)]
      """}
   end
 
