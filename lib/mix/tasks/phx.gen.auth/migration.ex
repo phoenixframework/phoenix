@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Migration do
   end
 
   defp extensions(Ecto.Adapters.Postgres) do
-    if case_insensitive_field_type() == :citext do
+    if case_insensitive_field_type(:citext) == :citext do
       ["execute \"CREATE EXTENSION IF NOT EXISTS citext\", \"\""]
     else
       []
@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Migration do
   end
 
   defp column_definition(:email, Ecto.Adapters.Postgres),
-    do: "add :email, #{inspect(case_insensitive_field_type())}, null: false"
+    do: "add :email, #{inspect(case_insensitive_field_type(:citext))}, null: false"
 
   defp column_definition(:email, Ecto.Adapters.SQLite3),
     do: "add :email, :string, null: false, collate: :nocase"
