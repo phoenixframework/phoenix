@@ -253,7 +253,7 @@ defmodule Phoenix.VerifiedRoutes do
   @doc ~S'''
   Generates the router path with route verification.
 
-  See `sigil_p/1` for more information.
+  See `sigil_p/2` for more information.
 
   Warns when the provided path does not match against the router specified
   in `use Phoenix.VerifiedRoutes` or the `@router` module attribute.
