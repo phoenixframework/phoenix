@@ -7,6 +7,7 @@ Most web applications today need some form of data validation and persistence. I
 Phoenix uses Ecto to provide builtin support to the following databases:
 
 * PostgreSQL (via [`postgrex`](https://github.com/elixir-ecto/postgrex))
+* CockroachDB (via [`postgrex`](https://github.com/elixir-ecto/postgrex))
 * MySQL (via [`myxql`](https://github.com/elixir-ecto/myxql))
 * MSSQL (via [`tds`](https://github.com/livehelpnow/tds))
 * ETS (via [`etso`](https://github.com/evadne/etso))

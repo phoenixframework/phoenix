@@ -21,7 +21,7 @@
   </:action>
   <:action :let={{id, <%= schema.singular %>}}>
     <.link
-      phx-click={JS.push("delete", value: %{id: <%= schema.singular %>.id}) |> hide("##{id}")}
+      phx-click={JS.push("delete", value: %{id: to_string(<%= schema.singular %>.id)}) |> hide("##{id}")}
       data-confirm="Are you sure?"
     >
       Delete

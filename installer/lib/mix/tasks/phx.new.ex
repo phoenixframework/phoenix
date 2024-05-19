@@ -24,6 +24,7 @@ defmodule Mix.Tasks.Phx.New do
     * `--database` - specify the database adapter for Ecto. One of:
 
         * `postgres` - via https://github.com/elixir-ecto/postgrex
+        * `cockroach` - via https://github.com/elixir-ecto/postgrex
         * `mysql` - via https://github.com/elixir-ecto/myxql
         * `mssql` - via https://github.com/livehelpnow/tds
         * `sqlite3` - via https://github.com/elixir-sqlite/ecto_sqlite3
@@ -53,7 +54,7 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-html` - do not generate HTML views
 
-    * `--no-live` - comment out LiveView socket setup in your Endpoint 
+    * `--no-live` - comment out LiveView socket setup in your Endpoint
       and assets/js/app.js. Automatically disabled if --no-html is given
 
     * `--no-mailer` - do not generate Swoosh mailer files
