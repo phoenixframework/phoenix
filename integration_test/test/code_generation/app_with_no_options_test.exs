@@ -68,7 +68,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
       )
   end
 
-  defp request_with_retries(url, retries \\ 10)
+  defp request_with_retries(url, retries)
 
   defp request_with_retries(_url, 0), do: {:error, :out_of_retries}
 

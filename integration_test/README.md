@@ -27,6 +27,8 @@ This allows all tests to be run with the following command
 
     $ mix test --include database
 
+Or alternatively, with docker and docker compose installed, you can just run `./docker.sh`.
+
 ## How tests are written
 
 In order to have consistent, repeatable builds, all dependencies for all phoenix
