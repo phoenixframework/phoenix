@@ -110,9 +110,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - elixir: 1.14.0
-            otp: 24.3.4
-            suffix: "alpine-3.12.0"
           - elixir: 1.16.2
             otp: 26.2.5
             suffix: "alpine-3.19.1"
