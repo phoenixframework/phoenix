@@ -106,18 +106,59 @@ jobs:
 
   integration-test-elixir:
     runs-on: ubuntu-latest
-    env:
-      FORCE_COLOR: 1
 
     strategy:
-      fail-fast: false
       matrix:
         include:
           - elixir: 1.14.0
             otp: 24.3.4
+            suffix: "alpine-3.12.0"
+          - elixir: 1.16.2
+            otp: 26.2.5
+            suffix: "alpine-3.19.1"
+
+    container:
+      image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-${{ matrix.suffix }}
+      env:
+        ELIXIR_ASSERT_TIMEOUT: 10000
+    services:
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+      mysql:
+        image: mysql
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: some!Password
+        ports:
+          - 1433:1433
     steps:
-      - uses: actions/checkout@v4
-      - name: Download released earth
-        run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.5.16/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
-      - name: Execute tests
-        run: earthly -P --build-arg ELIXIR=${{ matrix.elixir }} --build-arg OTP=${{ matrix.otp }} +integration-test
+      - uses: actions/checkout@v2.3.1
+      - name: Install Dependencies
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          apk add --no-progress --update git socat make gcc libc-dev
+      - name: Set up local proxies
+        run: |
+          socat TCP-LISTEN:5432,fork TCP-CONNECT:postgres:5432&
+          socat TCP-LISTEN:3306,fork TCP-CONNECT:mysql:3306&
+          socat TCP-LISTEN:1433,fork TCP-CONNECT:mssql:1433&
+      - name: Run installer tests
+        run: mix test
+        working-directory: installer
+      - name: Install dependencies
+        run: mix deps.get
+        working-directory: integration_test
+      - name: Run integration tests
+        run: mix test --include database
+        working-directory: integration_test
