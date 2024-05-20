@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Phx.Digest.CleanTest do
     input_path = "priv/static"
     :ok = File.mkdir_p!(output_path)
 
-    Mix.Tasks.Phx.Digest.Clean.run([input_path, "-o", output_path])
+    Mix.Tasks.Phx.Digest.Clean.run([input_path, "-o", output_path, "--no-compile"])
 
     msg = "Clean complete for \"#{output_path}\""
     assert_received {:mix_shell, :info, [^msg]}

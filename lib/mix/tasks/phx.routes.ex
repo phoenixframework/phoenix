@@ -63,7 +63,10 @@ defmodule Mix.Tasks.Phx.Routes do
 
   @doc false
   def run(args, base \\ Mix.Phoenix.base()) do
-    Mix.Task.run("compile", args)
+    if "--no-compile" not in args do
+      Mix.Task.run("compile")
+    end
+
     Mix.Task.reenable("phx.routes")
 
     {opts, args, _} =

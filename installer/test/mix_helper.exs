@@ -81,7 +81,7 @@ defmodule MixHelper do
 
     try do
       capture_io(:stderr, fn ->
-        Mix.Project.in_project(app, path, [], fun)
+        Mix.Project.in_project(app, path, [prune_code_paths: false], fun)
       end)
     after
       Mix.Project.push(name, file)

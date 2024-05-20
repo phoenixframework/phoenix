@@ -40,7 +40,10 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
   @doc false
   def run(all_args) do
     # Ensure all compressors are compiled.
-    Mix.Task.run("compile", all_args)
+    if "--no-compile" not in all_args do
+      Mix.Task.run("compile")
+    end
+
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
     {opts, _, _} = OptionParser.parse(all_args, switches: @switches, aliases: [o: :output])

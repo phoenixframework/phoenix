@@ -89,9 +89,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       send self(), {:mix_shell_input, :yes?, false}
 
       Gen.Auth.run(
-        ~w(Accounts User users),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -226,9 +225,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       send self(), {:mix_shell_input, :yes?, true}
 
       Gen.Auth.run(
-        ~w(Accounts User users),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -359,9 +357,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   test "works with apps generated with --live", config do
     in_tmp_phx_project(config.test, ~w(--live), fn ->
       Gen.Auth.run(
-        ~w(Accounts User users --live),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --live --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_file("lib/my_app_web/components/layouts/root.html.heex", fn file ->
@@ -428,9 +425,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   test "works with apps generated with --no-live", config do
     in_tmp_phx_project(config.test, ~w(--no-live), fn ->
       Gen.Auth.run(
-        ~w(Accounts User users --no-live),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --no-live --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_file("lib/my_app_web/components/layouts/root.html.heex", fn file ->
@@ -494,9 +490,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       send self(), {:mix_shell_input, :yes?, false}
 
       Gen.Auth.run(
-        ~w(Accounts User users --web warehouse),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --web warehouse --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -723,9 +718,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -777,9 +771,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.MyXQL,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.MyXQL
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -831,9 +824,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.SQLite3,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.SQLite3
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -885,9 +877,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.TDS,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.TDS
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -941,9 +932,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       with_generator_env(:my_app, [timestamp_type: :utc_datetime], fn ->
 
         Gen.Auth.run(
-        ~w(Accounts User users),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
@@ -971,9 +961,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       send self(), {:mix_shell_input, :yes?, false}
 
       Gen.Auth.run(
-        ~w(Accounts User users --binary-id),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --binary-id --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1004,9 +993,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users --hashing-lib bcrypt),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --hashing-lib bcrypt --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1030,9 +1018,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users --hashing-lib pbkdf2),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --hashing-lib pbkdf2 --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1056,9 +1043,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users --hashing-lib argon2),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --hashing-lib argon2 --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1085,9 +1071,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       send self(), {:mix_shell_input, :yes?, false}
 
       Gen.Auth.run(
-        ~w(Accounts User users --table my_users),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --table my_users --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1117,9 +1102,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
             send self(), {:mix_shell_input, :yes?, false}
 
             Gen.Auth.run(
-              ~w(Accounts User users),
-              ecto_adapter: Ecto.Adapters.Postgres,
-              validate_dependencies?: false
+              ~w(Accounts User users --no-compile),
+              ecto_adapter: Ecto.Adapters.Postgres
             )
 
             assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1176,9 +1160,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
             send self(), {:mix_shell_input, :yes?, false}
 
             Gen.Auth.run(
-              ~w(Accounts User users),
-              ecto_adapter: Ecto.Adapters.Postgres,
-              validate_dependencies?: false
+              ~w(Accounts User users --no-compile),
+              ecto_adapter: Ecto.Adapters.Postgres
             )
 
             assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1244,9 +1227,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           with_generator_env(:my_app_web, [context_app: false], fn ->
             assert_raise Mix.Error, ~r/no context_app configured/, fn ->
               Gen.Auth.run(
-                ~w(Accounts User users),
-                ecto_adapter: Ecto.Adapters.Postgres,
-                validate_dependencies?: false
+                ~w(Accounts User users --no-compile),
+                ecto_adapter: Ecto.Adapters.Postgres
               )
             end
           end)
@@ -1263,9 +1245,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1296,9 +1277,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1332,9 +1312,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1364,9 +1343,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1441,9 +1419,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1509,9 +1486,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       send self(), {:mix_shell_input, :yes?, false}
 
       Gen.Auth.run(
-        ~w(Accounts Admin admins),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts Admin admins --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
