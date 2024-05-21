@@ -145,22 +145,5 @@ jobs:
           - 1433:1433
     steps:
       - uses: actions/checkout@v2.3.1
-      - name: Install Dependencies
-        run: |
-          mix local.rebar --force
-          mix local.hex --force
-          apk add --no-progress --update git socat make gcc libc-dev
-      - name: Set up local proxies
-        run: |
-          socat TCP-LISTEN:5432,fork TCP-CONNECT:postgres:5432&
-          socat TCP-LISTEN:3306,fork TCP-CONNECT:mysql:3306&
-          socat TCP-LISTEN:1433,fork TCP-CONNECT:mssql:1433&
-      - name: Run installer tests
-        run: mix test
-        working-directory: installer
-      - name: Install dependencies
-        run: mix deps.get
-        working-directory: integration_test
-      - name: Run integration tests
-        run: mix test --include database
-        working-directory: integration_test
+      - name: Run test script
+        run: ./integration_test/test.sh
