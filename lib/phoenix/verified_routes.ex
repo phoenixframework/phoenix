@@ -106,7 +106,7 @@ defmodule Phoenix.VerifiedRoutes do
   defstruct router: nil,
             route: nil,
             inspected_route: nil,
-            stacktrace: nil,
+            warn_location: nil,
             test_path: nil
 
   defmacro __using__(opts) do
@@ -166,7 +166,7 @@ defmodule Phoenix.VerifiedRoutes do
       unless match_route?(route.router, route.test_path) do
         IO.warn(
           "no route path for #{inspect(route.router)} matches #{route.inspected_route}",
-          route.stacktrace
+          route.warn_location
         )
       end
     end)
@@ -722,17 +722,28 @@ defmodule Phoenix.VerifiedRoutes do
           """
       end
 
-    {static?, test_path, path_ast, static_ast} =
+    {static?, meta, test_path, path_ast, static_ast} =
       rewrite_path(route_ast, endpoint_ctx, router, statics)
 
     route = %__MODULE__{
       router: router,
-      stacktrace: Macro.Env.stacktrace(env),
+      warn_location: warn_location(meta, env),
       inspected_route: Macro.to_string(sigil_p),
       test_path: test_path
     }
 
     {route, static?, endpoint_ctx, route_ast, path_ast, static_ast}
+  end
+
+  if @after_verify_supported do
+    defp warn_location(meta, %{line: line, file: file, function: function, module: module}) do
+      column = if column = meta[:column], do: column + 2
+      [line: line, function: function, module: module, file: file, column: column]
+    end
+  else
+    defp warn_location(_meta, env) do
+      Macro.Env.stacktrace(env)
+    end
   end
 
   defp rewrite_path(route, endpoint, router, statics) do
@@ -765,7 +776,7 @@ defmodule Phoenix.VerifiedRoutes do
         unquote(__MODULE__).static_path(unquote_splicing([endpoint, rewrite_route]))
       end
 
-    {static?, test_path, path_ast, static_ast}
+    {static?, meta, test_path, path_ast, static_ast}
   end
 
   defp attr!(%{function: nil}, _) do

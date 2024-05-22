@@ -496,7 +496,10 @@ defmodule Phoenix.VerifiedRoutesTest do
         warnings = String.replace(warnings, ~r/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/, "")
 
         assert warnings =~
-                 "warning: no route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\"\n  test/phoenix/verified_routes_test.exs:#{line}: Phoenix.VerifiedRoutesTest.Forwards.test/0\n\n"
+                 "warning: no route path for Phoenix.VerifiedRoutesTest.Router matches \"/router_forward/warn\""
+
+        assert warnings =~
+                 ~r"test/phoenix/verified_routes_test.exs:#{line}:(\d+:)? Phoenix.VerifiedRoutesTest.Forwards.test/0"
       end
 
       test "~p warns on unmatched path" do
@@ -541,7 +544,9 @@ defmodule Phoenix.VerifiedRoutesTest do
         warnings =
           ExUnit.CaptureIO.capture_io(:stderr, fn ->
             defmodule VerifyFalseTrueMatchesFirst do
-              use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: CatchAllWarningRouter
+              use Phoenix.VerifiedRoutes,
+                endpoint: unquote(@endpoint),
+                router: CatchAllWarningRouter
 
               def test, do: ~p"/"
             end
