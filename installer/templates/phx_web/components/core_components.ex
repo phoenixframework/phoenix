@@ -269,6 +269,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <.input name="my-input" errors={["oh no!"]} />
   """
   attr :id, :any, default: nil
+  attr :class, :string, default: nil
   attr :name, :any
   attr :label, :string, default: nil
   attr :value, :any
@@ -318,7 +319,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
           name={@name}
           value="true"
           checked={@checked}
-          class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
+          class={["rounded border-zinc-300 text-zinc-900 focus:ring-0", @class]}
           {@rest}
         />
         <%%= @label %>
@@ -335,7 +336,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
+        class={["mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm", @class]}
         multiple={@multiple}
         {@rest}
       >
@@ -357,7 +358,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
         class={[
           "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6 min-h-[6rem]",
           @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          @errors != [] && "border-rose-400 focus:border-rose-400",
+          @class
         ]}
         {@rest}
       ><%%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
@@ -379,7 +381,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
         class={[
           "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
           @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          @errors != [] && "border-rose-400 focus:border-rose-400",
+          @class
         ]}
         {@rest}
       />
