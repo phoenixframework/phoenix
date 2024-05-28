@@ -4,7 +4,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect context.module %>
   alias <%= inspect auth_module %>
 
-  plug :assign_email_and_password_changesets
+  plug :assign_email_otp_and_password_changesets
+  plug :assign_otp_secret_and_url
 
   def edit(conn, _params) do
     render(conn, :edit)
@@ -50,6 +51,46 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
+  def update(conn, %{"action" => "enable_otp", "<%= schema.singular %>" => <%= schema.singular %>_params}) do
+    %{"code" => code, "secret" => secret} = <%= schema.singular %>_params
+    <%= schema.singular %> = conn.assigns.current_<%= schema.singular %>
+
+    {:ok, secret} = Base.decode64(secret)
+
+    case <%= inspect context.alias %>.enable_<%= schema.singular %>_2fa(<%= schema.singular %>, secret, code) do
+      {:ok, <%= schema.singular %>} ->
+        changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_otp(<%= schema.singular %>)
+
+        conn
+        |> put_flash(:info, "2FA enabled successfully.")
+        |> assign(:current_<%= schema.singular %>, <%= schema.singular %>)
+        |> assign(:otp_changeset, changeset)
+        |> render(:edit)
+
+      {:error, changeset} ->
+        render(conn, :edit, otp_changeset: changeset)
+    end
+  end
+
+  def update(conn, %{"action" => "disable_otp", "<%= schema.singular %>" => <%= schema.singular %>_params}) do
+    %{"code" => code, "current_password" => password} = <%= schema.singular %>_params
+    <%= schema.singular %> = conn.assigns.current_<%= schema.singular %>
+
+    case <%= inspect context.alias %>.disable_<%= schema.singular %>_2fa(<%= schema.singular %>, password, code) do
+      {:ok, <%= schema.singular %>} ->
+        changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_otp(<%= schema.singular %>)
+
+        conn
+        |> put_flash(:info, "2FA disabled successfully.")
+        |> assign(:current_<%= schema.singular %>, <%= schema.singular %>)
+        |> assign(:otp_changeset, changeset)
+        |> render(:edit)
+
+      {:error, changeset} ->
+        render(conn, :edit, otp_changeset: changeset)
+    end
+  end
+
   def confirm_email(conn, %{"token" => token}) do
     case <%= inspect context.alias %>.update_<%= schema.singular %>_email(conn.assigns.current_<%= schema.singular %>, token) do
       :ok ->
@@ -64,11 +105,24 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  defp assign_email_and_password_changesets(conn, _opts) do
+  defp assign_email_otp_and_password_changesets(conn, _opts) do
     <%= schema.singular %> = conn.assigns.current_<%= schema.singular %>
 
     conn
     |> assign(:email_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>))
     |> assign(:password_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>))
+    |> assign(:otp_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_otp(<%= schema.singular %>))
+  end
+
+  defp assign_otp_secret_and_url(conn, _opts) do
+    <%= schema.singular %> = conn.assigns.current_<%= schema.singular %>
+
+    secret = <%= schema.singular %>.otp_secret || NimbleTOTP.secret()
+    encoded = Base.encode64(secret)
+    url = NimbleTOTP.otpauth_uri("Dummy - #{<%= schema.singular %>.email}", secret, issuer: "Dummy")
+
+    conn
+    |> assign(:otp_secret, encoded)
+    |> assign(:otp_url, url)
   end
 end

@@ -8,16 +8,20 @@
       on_mount: [{<%= inspect auth_module %>, :redirect_if_<%= schema.singular %>_is_authenticated}] do
       live "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationLive, :new
       live "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>LoginLive, :new
+      live "/<%= schema.plural %>/2fa", <%= inspect schema.alias %>SecondFactorLive, :new
       live "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ForgotPasswordLive, :new
       live "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordLive, :edit
     end
 
-    post "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :create<% else %>
+    post "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :create
+    post "/<%= schema.plural %>/2fa", <%= inspect schema.alias %>SecondFactorController, :create<% else %>
 
     get "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :new
     post "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :create
     get "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :new
     post "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :create
+    get "/<%= schema.plural %>/2fa", <%= inspect schema.alias %>SecondFactorController, :new
+    post "/<%= schema.plural %>/2fa", <%= inspect schema.alias %>SecondFactorController, :create
     get "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ResetPasswordController, :new
     post "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ResetPasswordController, :create
     get "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordController, :edit

@@ -60,4 +60,52 @@
       </:actions>
     </.simple_form>
   </div>
+  <div>
+    <%%= if @current_<%= schema.singular %>.otp_secret do %>
+      <.simple_form :let={f} for={@otp_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="otp_form">
+        <.header class="text-center">
+          Turn off verification in two steps
+          <:subtitle>Enter the code provided by your 2FA app</:subtitle>
+        </.header>
+
+        <input name="action" type="hidden" value="disable_otp" />
+
+        <.input field={f[:code]} type="text" maxlength="6" label="Code" required />
+        <.input field={f[:current_password]} type="password" label="Current password" required />
+
+        <:actions>
+          <.button phx-disable-with="Turning off...">Turn off</.button>
+        </:actions>
+      </.simple_form>
+    <%% else %>
+      <.simple_form :let={f} for={@otp_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="otp_form">
+        <.header class="text-center">
+          Turn on verification in two steps
+          <:subtitle>Scan the QR code below with your favorite 2FA app</:subtitle>
+        </.header>
+
+        <div class="bg-white max-w-[200px] mx-auto aspect-square">
+          <%%= @otp_url
+          |> EQRCode.encode()
+          |> EQRCode.svg(viewbox: true)
+          |> raw() %>
+        </div>
+
+        <input name="action" type="hidden" value="enable_otp" />
+        <input name={f[:secret].name} type="hidden" value={@otp_secret} />
+
+        <.input
+          field={f[:code]}
+          type="text"
+          maxlength="6"
+          label="Enter the code provided by your 2FA app"
+          required
+        />
+
+        <:actions>
+          <.button phx-disable-with="Turning on...">Turn on</.button>
+        </:actions>
+      </.simple_form>
+    <%% end %>
+  </div>
 </div>
