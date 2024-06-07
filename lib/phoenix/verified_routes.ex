@@ -425,7 +425,7 @@ defmodule Phoenix.VerifiedRoutes do
       iex> static_url(AppWeb.Endpoint, "/assets/app.js")
       "https://example.com/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
   """
-  def static_url(conn_or_socket_or_endpoint_or_uri, path)
+  def static_url(conn_or_socket_or_endpoint, path)
 
   def static_url(%Plug.Conn{private: private}, path) do
     case private do
@@ -444,7 +444,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   def static_url(other, path) do
     raise ArgumentError,
-          "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
+          "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a struct with an :endpoint key, " <>
             "or a Phoenix.Endpoint when building static url for #{path}, got: #{inspect(other)}"
   end
 
