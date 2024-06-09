@@ -154,7 +154,7 @@
 
   ## Examples
 
-      iex> deliver_<%= schema.singular %>_update_email_instructions(<%= schema.singular %>, current_email, &url(~p"<%= schema.route_prefix %>/settings/confirm_email/#{&1})")
+      iex> deliver_<%= schema.singular %>_update_email_instructions(<%= schema.singular %>, current_email, &url(~p"<%= schema.route_prefix %>/settings/confirm_email/#{&1}"))
       {:ok, %{to: ..., body: ...}}
 
   """
