@@ -66,7 +66,7 @@ future styling).
 
     *Note*: because the session id is in a http-only cookie by default, the only way to perform this attack prior to this change is if your application was already vulnerable to an XSS attack, which itself grants more escalated "privileges” than the CSRF fixation.
 
-## JavaScript Client Enhancements
+### JavaScript Client Enhancements
   * Only memorize longpoll fallback for browser session if WebSocket never had a successful connection
 
 ## 1.7.11 (2024-02-01)
