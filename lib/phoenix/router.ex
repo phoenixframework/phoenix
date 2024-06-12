@@ -739,7 +739,7 @@ defmodule Phoenix.Router do
 
   ## Options
 
-    * `:as` - configures the named helper. If false, does not generate
+    * `:as` - configures the named helper. If `nil`, does not generate
       a helper. Has no effect when using verified routes exclusively
     * `:alias` - configure if the scope alias should be applied to the route.
       Defaults to true, disables scoping if false.
@@ -966,7 +966,7 @@ defmodule Phoenix.Router do
       and as the prefix for the parameter in nested resources. The default value
       is automatically derived from the controller name, i.e. `UserController` will
       have name `"user"`
-    * `:as` - configures the named helper. If false, does not generate
+    * `:as` - configures the named helper. If `nil`, does not generate
       a helper. Has no effect when using verified routes exclusively
     * `:singleton` - defines routes for a singleton resource that is looked up by
       the client without referencing an ID. Read below for more information
