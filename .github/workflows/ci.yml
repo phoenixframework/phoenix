@@ -85,10 +85,10 @@ jobs:
           restore-keys: |
             deps-${{ runner.os }}-npm
 
-      - name: Set up Node.js 12.x
+      - name: Set up Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: 12.x
+          node-version: 20.x
 
       - name: Restore npm cache
         uses: actions/cache@v4

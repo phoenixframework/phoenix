@@ -376,7 +376,7 @@ export default class Socket {
 
     errorRef = this.onError(reason => {
       this.log("transport", "error", reason)
-      if(primaryTransport && !established) {
+      if(primaryTransport && !established){
         clearTimeout(this.fallbackTimer)
         fallback(reason)
       }

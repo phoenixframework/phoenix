@@ -1,52 +1,60 @@
-import assert from "assert"
-
-import jsdom from "jsdom"
-import sinon from "sinon"
+import {jest} from "@jest/globals"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
 import {encode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
-import {
-  SOCKET_STATES
-} from "../js/phoenix/constants"
 
 let socket
 
-describe("with transports", function(){
-  before(function(){
+describe("with transports", function (){
+  beforeAll(() => {
     window.WebSocket = WebSocket
-    window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
+    const mockOpen = jest.fn()
+    const mockSend = jest.fn()
+    const mockAbort = jest.fn()
+    const mockSetRequestHeader = jest.fn()
+    
+    global.XMLHttpRequest = jest.fn(() => ({
+      open: mockOpen,
+      send: mockSend,
+      abort: mockAbort,
+      setRequestHeader: mockSetRequestHeader,
+      readyState: 4,
+      status: 200,
+      responseText: JSON.stringify({}),
+      onreadystatechange: null,
+    }))
   })
 
-  describe("constructor", function(){
-    it("sets defaults", function(){
+  describe("constructor", function (){
+    it("sets defaults", function (){
       socket = new Socket("/socket")
 
-      assert.equal(socket.channels.length, 0)
-      assert.equal(socket.sendBuffer.length, 0)
-      assert.equal(socket.ref, 0)
-      assert.equal(socket.endPoint, "/socket/websocket")
-      assert.deepEqual(socket.stateChangeCallbacks, {open: [], close: [], error: [], message: []})
-      assert.equal(socket.transport, WebSocket)
-      assert.equal(socket.timeout, 10000)
-      assert.equal(socket.longpollerTimeout, 20000)
-      assert.equal(socket.heartbeatIntervalMs, 30000)
-      assert.equal(socket.logger, null)
-      assert.equal(socket.binaryType, "arraybuffer")
-      assert.equal(typeof socket.reconnectAfterMs, "function")
+      expect(socket.channels.length).toBe(0)
+      expect(socket.sendBuffer.length).toBe(0)
+      expect(socket.ref).toBe(0)
+      expect(socket.endPoint).toBe("/socket/websocket")
+      expect(socket.stateChangeCallbacks).toEqual({open: [], close: [], error: [], message: []})
+      expect(socket.transport).toBe(WebSocket)
+      expect(socket.timeout).toBe(10000)
+      expect(socket.longpollerTimeout).toBe(20000)
+      expect(socket.heartbeatIntervalMs).toBe(30000)
+      expect(socket.logger).toBeNull()
+      expect(socket.binaryType).toBe("arraybuffer")
+      expect(typeof socket.reconnectAfterMs).toBe("function")
     })
 
-    it("supports closure or literal params", function(){
+    it("supports closure or literal params", function (){
       socket = new Socket("/socket", {params: {one: "two"}})
-      assert.deepEqual(socket.params(), {one: "two"})
+      expect(socket.params()).toEqual({one: "two"})
 
-      socket = new Socket("/socket", {params: function(){ return ({three: "four"}) }})
-      assert.deepEqual(socket.params(), {three: "four"})
+      socket = new Socket("/socket", {params: function (){ return ({three: "four"}) }})
+      expect(socket.params()).toEqual({three: "four"})
     })
 
-    it("overrides some defaults with options", function(){
-      const customTransport = function transport(){}
-      const customLogger = function logger(){}
-      const customReconnect = function reconnect(){}
+    it("overrides some defaults with options", function (){
+      const customTransport = function transport(){ }
+      const customLogger = function logger(){ }
+      const customReconnect = function reconnect(){ }
 
       socket = new Socket("/socket", {
         timeout: 40000,
@@ -58,35 +66,34 @@ describe("with transports", function(){
         params: {one: "two"},
       })
 
-      assert.equal(socket.timeout, 40000)
-      assert.equal(socket.longpollerTimeout, 50000)
-      assert.equal(socket.heartbeatIntervalMs, 60000)
-      assert.equal(socket.transport, customTransport)
-      assert.equal(socket.logger, customLogger)
-      assert.deepEqual(socket.params(), {one: "two"})
+      expect(socket.timeout).toBe(40000)
+      expect(socket.longpollerTimeout).toBe(50000)
+      expect(socket.heartbeatIntervalMs).toBe(60000)
+      expect(socket.transport).toBe(customTransport)
+      expect(socket.logger).toBe(customLogger)
+      expect(socket.params()).toEqual({one: "two"})
     })
 
-    describe("with Websocket", function(){
-      it("defaults to Websocket transport if available", function(done){
-        let mockServer
-        mockServer = new WebSocketServer("wss://example.com/")
+    describe("with Websocket", function (){
+      it("defaults to Websocket transport if available", function (done){
+        let mockServer = new WebSocketServer("wss://example.com/")
         socket = new Socket("/socket")
-        assert.equal(socket.transport, WebSocket)
+        expect(socket.transport).toBe(WebSocket)
         mockServer.stop(() => done())
       })
     })
 
-    describe("longPollFallbackMs", function(){
-      it("falls back to longpoll when set after primary transport failure", function(done){
+    describe("longPollFallbackMs", function (){
+      it("falls back to longpoll when set after primary transport failure", function (done){
         let mockServer
         socket = new Socket("/socket", {longPollFallbackMs: 20})
-        let replaceSpy = sinon.spy(socket, "replaceTransport")
+        const replaceSpy = jest.spyOn(socket, "replaceTransport")
         mockServer = new WebSocketServer("wss://example.test/")
         mockServer.stop(() => {
-          assert.equal(socket.transport, WebSocket)
-          socket.onError((reason) => {
+          expect(socket.transport).toBe(WebSocket)
+          socket.onError((_reason) => {
             setTimeout(() => {
-              assert(replaceSpy.calledWith(LongPoll))
+              expect(replaceSpy).toHaveBeenCalledWith(LongPoll)
               done()
             }, 100)
           })
@@ -96,129 +103,71 @@ describe("with transports", function(){
     })
   })
 
-  describe("protocol", function(){
-    beforeEach(function(){
+  describe("protocol", function (){
+    beforeEach(function (){
       socket = new Socket("/socket")
     })
 
-    it("returns wss when location.protocol is https", function(){
-      jsdom.changeURL(window, "https://example.com/")
-
-      assert.equal(socket.protocol(), "wss")
+    it("returns wss when location.protocol is https", function (){
+      jsdom.reconfigure({url: "https://example.com/"})
+      expect(socket.protocol()).toBe("wss")
     })
 
-    it("returns ws when location.protocol is http", function(){
-      jsdom.changeURL(window, "http://example.com/")
-
-      assert.equal(socket.protocol(), "ws")
+    it("returns ws when location.protocol is http", function (){
+      jsdom.reconfigure({url: "http://example.com/"})
+      expect(socket.protocol()).toBe("ws")
     })
   })
 
-  describe("endpointURL", function(){
-    it("returns endpoint for given full url", function(){
-      jsdom.changeURL(window, "https://example.com/")
+  describe("endpointURL", function (){
+    it("returns endpoint for given full url", function (){
+      jsdom.reconfigure({url: "https://example.com/"})
       socket = new Socket("wss://example.org/chat")
-
-      assert.equal(socket.endPointURL(), "wss://example.org/chat/websocket?vsn=2.0.0")
+      expect(socket.endPointURL()).toBe("wss://example.org/chat/websocket?vsn=2.0.0")
     })
 
-    it("returns endpoint for given protocol-relative url", function(){
-      jsdom.changeURL(window, "https://example.com/")
+    it("returns endpoint for given protocol-relative url", function (){
+      jsdom.reconfigure({url: "https://example.com/"})
       socket = new Socket("//example.org/chat")
-
-      assert.equal(socket.endPointURL(), "wss://example.org/chat/websocket?vsn=2.0.0")
+      expect(socket.endPointURL()).toBe("wss://example.org/chat/websocket?vsn=2.0.0")
     })
 
-    it("returns endpoint for given path on https host", function(){
-      jsdom.changeURL(window, "https://example.com/")
+    it("returns endpoint for given path on https host", function (){
+      jsdom.reconfigure({url: "https://example.com/"})
       socket = new Socket("/socket")
-
-      assert.equal(socket.endPointURL(), "wss://example.com/socket/websocket?vsn=2.0.0")
+      expect(socket.endPointURL()).toBe("wss://example.com/socket/websocket?vsn=2.0.0")
     })
 
-    it("returns endpoint for given path on http host", function(){
-      jsdom.changeURL(window, "http://example.com/")
+    it("returns endpoint for given path on http host", function (){
+      jsdom.reconfigure({url: "http://example.com/"})
       socket = new Socket("/socket")
-
-      assert.equal(socket.endPointURL(), "ws://example.com/socket/websocket?vsn=2.0.0")
+      expect(socket.endPointURL()).toBe("ws://example.com/socket/websocket?vsn=2.0.0")
     })
   })
 
-  describe("connect with WebSocket", function(){
+  describe("connect with WebSocket", function (){
     let mockServer
 
-    before(function(){
+    beforeAll(function (){
       mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after(function(done){
+    afterAll(function (done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(function(){
+    beforeEach(function (){
       socket = new Socket("/socket")
     })
 
-    it("establishes websocket connection with endpoint", function(){
+    it("establishes websocket connection with endpoint", function (){
       socket.connect()
-
-      let conn = socket.conn
-      assert.ok(conn instanceof WebSocket)
-      assert.equal(conn.url, socket.endPointURL())
+      const conn = socket.conn
+      expect(conn instanceof WebSocket).toBeTruthy()
+      expect(conn.url).toBe(socket.endPointURL())
     })
 
-    it("sets callbacks for connection", function(){
-      let opens = 0
-      socket.onOpen(() => ++opens)
-      let closes = 0
-      socket.onClose(() => ++closes)
-      let lastError
-      socket.onError((error) => lastError = error)
-      let lastMessage
-      socket.onMessage((message) => lastMessage = message.payload)
-
-      socket.connect()
-
-      socket.conn.onopen[0]()
-      assert.equal(opens, 1)
-
-      socket.conn.onclose[0]()
-      assert.equal(closes, 1)
-
-      socket.conn.onerror[0]("error")
-      assert.equal(lastError, "error")
-
-      const data = {"topic":"topic", "event":"event", "payload":"payload", "status":"ok"}
-      socket.conn.onmessage[0]({data: encode(data)})
-      assert.equal(lastMessage, "payload")
-    })
-
-    it("is idempotent", function(){
-      socket.connect()
-
-      let conn = socket.conn
-
-      socket.connect()
-
-      assert.deepStrictEqual(conn, socket.conn)
-    })
-  })
-
-  describe("connect with long poll", function(){
-    beforeEach(function(){
-      socket = new Socket("/socket", {transport: LongPoll})
-    })
-
-    it("establishes long poll connection with endpoint", function(){
-      socket.connect()
-
-      let conn = socket.conn
-      assert.ok(conn instanceof LongPoll)
-      assert.equal(conn.pollEndpoint, "http://example.com/socket/longpoll?vsn=2.0.0")
-      assert.equal(conn.timeout, 20000)
-    })
-
-    it("sets callbacks for connection", function(){
+    it("sets callbacks for connection", function (){
       let opens = 0
       socket.onOpen(() => ++opens)
       let closes = 0
@@ -231,567 +180,555 @@ describe("with transports", function(){
       socket.connect()
 
       socket.conn.onopen()
-      assert.equal(opens, 1)
+      expect(opens).toBe(1)
 
       socket.conn.onclose()
-      assert.equal(closes, 1)
+      expect(closes).toBe(1)
 
       socket.conn.onerror("error")
+      expect(lastError).toBe("error")
 
-      assert.equal(lastError, "error")
-
-      socket.connect()
-
-      const data = {"topic":"topic", "event":"event", "payload":"payload", "status":"ok"}
-
+      const data = {"topic": "topic", "event": "event", "payload": "payload", "status": "ok"}
       socket.conn.onmessage({data: encode(data)})
-      assert.equal(lastMessage, "payload")
+      expect(lastMessage).toBe("payload")
     })
 
-    it("is idempotent", function(){
+    it("is idempotent", function (){
       socket.connect()
-
-      let conn = socket.conn
-
+      const conn = socket.conn
       socket.connect()
-
-      assert.deepStrictEqual(conn, socket.conn)
+      expect(conn).toBe(socket.conn)
     })
   })
 
-  describe("disconnect", function(){
+  describe("connect with long poll", function (){
+    beforeEach(function (){
+      socket = new Socket("/socket", {transport: LongPoll})
+    })
+
+    it("establishes long poll connection with endpoint", function (){
+      socket.connect()
+      const conn = socket.conn
+      expect(conn instanceof LongPoll).toBeTruthy()
+      expect(conn.pollEndpoint).toBe("http://example.com/socket/longpoll?vsn=2.0.0")
+      expect(conn.timeout).toBe(20000)
+    })
+
+    it("sets callbacks for connection", function (){
+      let opens = 0
+      socket.onOpen(() => ++opens)
+      let closes = 0
+      socket.onClose(() => ++closes)
+      let lastError
+      socket.onError((error) => lastError = error)
+      let lastMessage
+      socket.onMessage((message) => lastMessage = message.payload)
+
+      socket.connect()
+
+      socket.conn.onopen()
+      expect(opens).toBe(1)
+
+      socket.conn.onclose()
+      expect(closes).toBe(1)
+
+      socket.conn.onerror("error")
+      expect(lastError).toBe("error")
+
+      socket.connect()
+
+      const data = {"topic": "topic", "event": "event", "payload": "payload", "status": "ok"}
+
+      socket.conn.onmessage({data: encode(data)})
+      expect(lastMessage).toBe("payload")
+    })
+
+    it("is idempotent", function (){
+      socket.connect()
+      const conn = socket.conn
+      socket.connect()
+      expect(conn).toBe(socket.conn)
+    })
+  })
+
+  describe("disconnect", function (){
     let mockServer
 
-    before(function(){
+    beforeAll(function (){
       mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after(function(done){
+    afterAll(function (done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(function(){
+    beforeEach(function (){
       socket = new Socket("/socket")
     })
 
-    it("removes existing connection", function(done){
+    it("removes existing connection", function (done){
       socket.connect()
       socket.disconnect()
       socket.disconnect(() => {
-        assert.equal(socket.conn, null)
+        expect(socket.conn).toBeNull()
         done()
       })
     })
 
-    it("calls callback", function(done){
+    it("calls callback", function (done){
       let count = 0
       socket.connect()
       socket.disconnect(() => {
         count++
-        assert.equal(count, 1)
+        expect(count).toBe(1)
         done()
       })
     })
 
-    it("calls connection close callback", function(done){
+    it("calls connection close callback", function (done){
       socket.connect()
-      const spy = sinon.spy(socket.conn, "close")
+      const closeSpy = jest.spyOn(socket.conn, "close")
 
       socket.disconnect(() => {
-        assert(spy.calledWith(1000, "reason"))
+        expect(closeSpy).toHaveBeenCalledWith(1000, "reason")
         done()
       }, 1000, "reason")
     })
 
-    it("does not throw when no connection", function(){
-      assert.doesNotThrow(() => {
+    it("does not throw when no connection", function (){
+      expect(() => {
         socket.disconnect()
-      })
+      }).not.toThrow()
     })
   })
 
-  describe("connectionState", function(){
-    beforeEach(function(){
+  describe("connectionState", function (){
+    beforeEach(function (){
       socket = new Socket("/socket")
     })
 
-    it("defaults to closed", function(){
-      assert.equal(socket.connectionState(), "closed")
+    it("defaults to closed", function (){
+      expect(socket.connectionState()).toBe("closed")
     })
 
-    it("returns closed if readyState unrecognized", function(){
+    it("returns closed if readyState unrecognized", function (){
       socket.connect()
-
       socket.conn.readyState = 5678
-      assert.equal(socket.connectionState(), "closed")
+      expect(socket.connectionState()).toBe("closed")
     })
 
-    it("returns connecting", function(){
+    it("returns connecting", function (){
       socket.connect()
-
       socket.conn.readyState = 0
-      assert.equal(socket.connectionState(), "connecting")
-      assert.ok(!socket.isConnected(), "is not connected")
+      expect(socket.connectionState()).toBe("connecting")
+      expect(socket.isConnected()).toBe(false)
     })
 
-    it("returns open", function(){
+    it("returns open", function (){
       socket.connect()
-
       socket.conn.readyState = 1
-      assert.equal(socket.connectionState(), "open")
-      assert.ok(socket.isConnected(), "is connected")
+      expect(socket.connectionState()).toBe("open")
+      expect(socket.isConnected()).toBe(true)
     })
 
-    it("returns closing", function(){
+    it("returns closing", function (){
       socket.connect()
-
       socket.conn.readyState = 2
-      assert.equal(socket.connectionState(), "closing")
-      assert.ok(!socket.isConnected(), "is not connected")
+      expect(socket.connectionState()).toBe("closing")
+      expect(socket.isConnected()).toBe(false)
     })
 
-    it("returns closed", function(){
+    it("returns closed", function (){
       socket.connect()
-
       socket.conn.readyState = 3
-      assert.equal(socket.connectionState(), "closed")
-      assert.ok(!socket.isConnected(), "is not connected")
+      expect(socket.connectionState()).toBe("closed")
+      expect(socket.isConnected()).toBe(false)
     })
   })
 
-  describe("channel", function(){
+  describe("channel", function (){
     let channel
 
-    beforeEach(function(){
+    beforeEach(function (){
       socket = new Socket("/socket")
     })
 
-    it("returns channel with given topic and params", function(){
+    it("returns channel with given topic and params", function (){
       channel = socket.channel("topic", {one: "two"})
-
-      assert.deepStrictEqual(channel.socket, socket)
-      assert.equal(channel.topic, "topic")
-      assert.deepEqual(channel.params(), {one: "two"})
+      expect(channel.socket).toBe(socket)
+      expect(channel.topic).toBe("topic")
+      expect(channel.params()).toEqual({one: "two"})
     })
 
-    it("adds channel to sockets channels list", function(){
-      assert.equal(socket.channels.length, 0)
-
+    it("adds channel to sockets channels list", function (){
+      expect(socket.channels.length).toBe(0)
       channel = socket.channel("topic", {one: "two"})
-
-      assert.equal(socket.channels.length, 1)
-
+      expect(socket.channels.length).toBe(1)
       const [foundChannel] = socket.channels
-      assert.deepStrictEqual(foundChannel, channel)
+      expect(foundChannel).toBe(channel)
     })
   })
 
-  describe("remove", function(){
-    it("removes given channel from channels", function(){
+  describe("remove", function (){
+    it("removes given channel from channels", function (){
       socket = new Socket("/socket")
       const channel1 = socket.channel("topic-1")
       const channel2 = socket.channel("topic-2")
 
-      sinon.stub(channel1, "joinRef").returns(1)
-      sinon.stub(channel2, "joinRef").returns(2)
+      jest.spyOn(channel1, "joinRef").mockReturnValue(1)
+      jest.spyOn(channel2, "joinRef").mockReturnValue(2)
 
-      assert.equal(socket.stateChangeCallbacks.open.length, 2)
+      expect(socket.stateChangeCallbacks.open.length).toBe(2)
 
       socket.remove(channel1)
 
-      assert.equal(socket.stateChangeCallbacks.open.length, 1)
-
-      assert.equal(socket.channels.length, 1)
+      expect(socket.stateChangeCallbacks.open.length).toBe(1)
+      expect(socket.channels.length).toBe(1)
 
       const [foundChannel] = socket.channels
-      assert.deepStrictEqual(foundChannel, channel2)
+      expect(foundChannel).toBe(channel2)
     })
   })
 
-  describe("push", function(){
+  describe("push", function (){
     let data, json
 
-    beforeEach(function(){
+    beforeEach(function (){
       data = {topic: "topic", event: "event", payload: "payload", ref: "ref"}
       json = encode(data)
       socket = new Socket("/socket")
     })
 
-    it("sends data to connection when connected", function(){
+    it("sends data to connection when connected", function (){
       socket.connect()
       socket.conn.readyState = 1 // open
 
-      const spy = sinon.spy(socket.conn, "send")
+      const sendSpy = jest.spyOn(socket.conn, "send")
 
       socket.push(data)
 
-      assert.ok(spy.calledWith(json))
+      expect(sendSpy).toHaveBeenCalledWith(json)
     })
 
-    it("buffers data when not connected", function(){
+    it("buffers data when not connected", function (){
       socket.connect()
       socket.conn.readyState = 0 // connecting
 
-      const spy = sinon.spy(socket.conn, "send")
+      const sendSpy = jest.spyOn(socket.conn, "send").mockImplementation(() => {})
 
-      assert.equal(socket.sendBuffer.length, 0)
+      expect(socket.sendBuffer.length).toBe(0)
 
       socket.push(data)
 
-      assert.ok(spy.neverCalledWith(json))
-      assert.equal(socket.sendBuffer.length, 1)
+      expect(sendSpy).not.toHaveBeenCalledWith(json)
+      expect(socket.sendBuffer.length).toBe(1)
 
       const [callback] = socket.sendBuffer
       callback()
-      assert.ok(spy.calledWith(json))
+      expect(sendSpy).toHaveBeenCalledWith(json)
     })
   })
 
-  describe("makeRef", function(){
-    beforeEach(function(){
+  describe("makeRef", function (){
+    beforeEach(function (){
       socket = new Socket("/socket")
     })
 
-    it("returns next message ref", function(){
-      assert.strictEqual(socket.ref, 0)
-      assert.strictEqual(socket.makeRef(), "1")
-      assert.strictEqual(socket.ref, 1)
-      assert.strictEqual(socket.makeRef(), "2")
-      assert.strictEqual(socket.ref, 2)
+    it("returns next message ref", function (){
+      expect(socket.ref).toBe(0)
+      expect(socket.makeRef()).toBe("1")
+      expect(socket.ref).toBe(1)
+      expect(socket.makeRef()).toBe("2")
+      expect(socket.ref).toBe(2)
     })
 
-    it("restarts for overflow", function(){
+    it("restarts for overflow", function (){
       socket.ref = Number.MAX_SAFE_INTEGER + 1
-
-      assert.strictEqual(socket.makeRef(), "0")
-      assert.strictEqual(socket.ref, 0)
+      expect(socket.makeRef()).toBe("0")
+      expect(socket.ref).toBe(0)
     })
   })
 
-  describe("sendHeartbeat", function(){
-    beforeEach(function(){
+  describe("sendHeartbeat", function (){
+    beforeEach(function (){
       socket = new Socket("/socket")
       socket.connect()
     })
 
-    it("closes socket when heartbeat is not ack'd within heartbeat window", function(done){
-      let clock = sinon.useFakeTimers()
+    it("closes socket when heartbeat is not ack'd within heartbeat window", function (done){
+      jest.useFakeTimers()
       let closed = false
       socket.conn.readyState = 1 // open
       socket.conn.close = () => closed = true
       socket.sendHeartbeat()
-      assert.strictEqual(closed, false)
+      expect(closed).toBe(false)
 
-      clock.tick(10000)
-      assert.strictEqual(closed, false)
+      jest.advanceTimersByTime(10000)
+      expect(closed).toBe(false)
 
-      clock.tick(20010)
-      assert.strictEqual(closed, true)
+      jest.advanceTimersByTime(20010)
+      expect(closed).toBe(true)
 
-      clock.restore()
+      jest.useRealTimers()
       done()
     })
 
-    it("pushes heartbeat data when connected", function(){
+    it("pushes heartbeat data when connected", function (){
       socket.conn.readyState = 1 // open
 
-      const spy = sinon.spy(socket.conn, "send")
+      const sendSpy = jest.spyOn(socket.conn, "send")
       const data = "[null,\"1\",\"phoenix\",\"heartbeat\",{}]"
 
       socket.sendHeartbeat()
-      assert.ok(spy.calledWith(data))
+      expect(sendSpy).toHaveBeenCalledWith(data)
     })
 
-    it("no ops when not connected", function(){
+    it("no ops when not connected", function (){
       socket.conn.readyState = 0 // connecting
 
-      const spy = sinon.spy(socket.conn, "send")
+      const sendSpy = jest.spyOn(socket.conn, "send")
       const data = encode({topic: "phoenix", event: "heartbeat", payload: {}, ref: "1"})
 
       socket.sendHeartbeat()
-      assert.ok(spy.neverCalledWith(data))
+      expect(sendSpy).not.toHaveBeenCalledWith(data)
     })
   })
 
-  describe("flushSendBuffer", function(){
-    beforeEach(function(){
+  describe("flushSendBuffer", function (){
+    beforeEach(function (){
       socket = new Socket("/socket")
       socket.connect()
     })
 
-    it("calls callbacks in buffer when connected", function(){
+    it("calls callbacks in buffer when connected", function (){
       socket.conn.readyState = 1 // open
-      const spy1 = sinon.spy()
-      const spy2 = sinon.spy()
-      const spy3 = sinon.spy()
+      const spy1 = jest.fn()
+      const spy2 = jest.fn()
       socket.sendBuffer.push(spy1)
       socket.sendBuffer.push(spy2)
 
       socket.flushSendBuffer()
 
-      assert.ok(spy1.calledOnce)
-      assert.ok(spy2.calledOnce)
-      assert.equal(spy3.callCount, 0)
+      expect(spy1).toHaveBeenCalledTimes(1)
+      expect(spy2).toHaveBeenCalledTimes(1)
     })
 
-    it("empties sendBuffer", function(){
+    it("empties sendBuffer", function (){
       socket.conn.readyState = 1 // open
-      socket.sendBuffer.push(() => {})
+      socket.sendBuffer.push(() => { })
 
       socket.flushSendBuffer()
 
-      assert.deepEqual(socket.sendBuffer.length, 0)
+      expect(socket.sendBuffer.length).toBe(0)
     })
   })
 
-  describe("onConnOpen", function(){
+  describe("onConnOpen", function (){
     let mockServer
 
-    before(function(){
+    beforeAll(function (){
       mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after(function(done){
+    afterAll(function (done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(function(){
+    beforeEach(function (){
       socket = new Socket("/socket", {
         reconnectAfterMs: () => 100000
       })
       socket.connect()
     })
 
-    it("flushes the send buffer", function(){
+    it("flushes the send buffer", function (){
       socket.conn.readyState = 1 // open
-      const spy = sinon.spy()
+      const spy = jest.fn()
       socket.sendBuffer.push(spy)
 
       socket.onConnOpen()
 
-      assert.ok(spy.calledOnce)
+      expect(spy).toHaveBeenCalledTimes(1)
     })
 
-    it("resets reconnectTimer", function(){
-      const spy = sinon.spy(socket.reconnectTimer, "reset")
-
+    it("resets reconnectTimer", function (){
+      const resetSpy = jest.spyOn(socket.reconnectTimer, "reset")
       socket.onConnOpen()
-
-      assert.ok(spy.calledOnce)
+      expect(resetSpy).toHaveBeenCalledTimes(1)
     })
 
-    it("triggers onOpen callback", function(){
-      const spy = sinon.spy()
-
+    it("triggers onOpen callback", function (){
+      const spy = jest.fn()
       socket.onOpen(spy)
-
       socket.onConnOpen()
-
-      assert.ok(spy.calledOnce)
+      expect(spy).toHaveBeenCalledTimes(1)
     })
   })
 
-  describe("onConnClose", function(){
+  describe("onConnClose", function (){
     let mockServer
 
-    before(function(){
+    beforeAll(function (){
       mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after(function(done){
+    afterAll(function (done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(function(){
+    beforeEach(function (){
       socket = new Socket("/socket", {
         reconnectAfterMs: () => 100000
       })
       socket.connect()
     })
 
-    it("does not schedule reconnectTimer if normal close", function(){
-      const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
-
+    it("does not schedule reconnectTimer if normal close", function (){
+      const scheduleSpy = jest.spyOn(socket.reconnectTimer, "scheduleTimeout")
       const event = {code: 1000}
-
       socket.onConnClose(event)
-
-      assert.equal(spy.calledOnce, false)
+      expect(scheduleSpy).not.toHaveBeenCalled()
     })
 
-
-    it("schedules reconnectTimer timeout if abnormal close", function(){
-      const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
-
+    it("schedules reconnectTimer timeout if abnormal close", function (){
+      const scheduleSpy = jest.spyOn(socket.reconnectTimer, "scheduleTimeout")
       const event = {code: 1006}
-
       socket.onConnClose(event)
-
-      assert.ok(spy.calledOnce)
+      expect(scheduleSpy).toHaveBeenCalledTimes(1)
     })
 
-    it("does not schedule reconnectTimer timeout if normal close after explicit disconnect", function(){
-      const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
-
+    it("does not schedule reconnectTimer timeout if normal close after explicit disconnect", function (){
+      const scheduleSpy = jest.spyOn(socket.reconnectTimer, "scheduleTimeout")
       socket.disconnect()
-
-      assert.ok(spy.notCalled)
+      expect(scheduleSpy).not.toHaveBeenCalled()
     })
 
-    it("schedules reconnectTimer timeout if not normal close", function(){
-      const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
-
+    it("schedules reconnectTimer timeout if not normal close", function (){
+      const scheduleSpy = jest.spyOn(socket.reconnectTimer, "scheduleTimeout")
       const event = {code: 1001}
-
       socket.onConnClose(event)
-
-      assert.ok(spy.calledOnce)
+      expect(scheduleSpy).toHaveBeenCalledTimes(1)
     })
 
-    it("schedules reconnectTimer timeout if connection cannot be made after a previous clean disconnect", function(done){
-      const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
-
+    it("schedules reconnectTimer timeout if connection cannot be made after a previous clean disconnect", function (done){
+      const scheduleSpy = jest.spyOn(socket.reconnectTimer, "scheduleTimeout")
       socket.disconnect(() => {
         socket.connect()
-
         const event = {code: 1001}
-
         socket.onConnClose(event)
-
-        assert.ok(spy.calledOnce)
+        expect(scheduleSpy).toHaveBeenCalledTimes(1)
         done()
       })
     })
 
-    it("triggers onClose callback", function(){
-      const spy = sinon.spy()
-
+    it("triggers onClose callback", function (){
+      const spy = jest.fn()
       socket.onClose(spy)
-
       socket.onConnClose("event")
-
-      assert.ok(spy.calledWith("event"))
+      expect(spy).toHaveBeenCalledWith("event")
     })
 
-    it("triggers channel error if joining", function(){
+    it("triggers channel error if joining", function (){
       const channel = socket.channel("topic")
-      const spy = sinon.spy(channel, "trigger")
+      const triggerSpy = jest.spyOn(channel, "trigger")
       channel.join()
-      assert.equal(channel.state, "joining")
-
+      expect(channel.state).toBe("joining")
       socket.onConnClose()
-
-      assert.ok(spy.calledWith("phx_error"))
+      expect(triggerSpy).toHaveBeenCalledWith("phx_error")
     })
 
-    it("triggers channel error if joined", function(){
+    it("triggers channel error if joined", function (){
       const channel = socket.channel("topic")
-      const spy = sinon.spy(channel, "trigger")
+      const triggerSpy = jest.spyOn(channel, "trigger")
       channel.join().trigger("ok", {})
-
-      assert.equal(channel.state, "joined")
-
+      expect(channel.state).toBe("joined")
       socket.onConnClose()
-
-      assert.ok(spy.calledWith("phx_error"))
+      expect(triggerSpy).toHaveBeenCalledWith("phx_error")
     })
 
-    it("does not trigger channel error after leave", function(){
+    it("does not trigger channel error after leave", function (){
       const channel = socket.channel("topic")
-      const spy = sinon.spy(channel, "trigger")
+      const triggerSpy = jest.spyOn(channel, "trigger")
       channel.join().trigger("ok", {})
       channel.leave()
-      assert.equal(channel.state, "closed")
-
+      expect(channel.state).toBe("closed")
       socket.onConnClose()
-
-      assert.ok(!spy.calledWith("phx_error"))
+      expect(triggerSpy).not.toHaveBeenCalledWith("phx_error")
     })
 
-    it("does not send heartbeat after explicit disconnect", function(done){
-      let clock = sinon.useFakeTimers()
-      const spy = sinon.spy(socket, "sendHeartbeat")
+    it("does not send heartbeat after explicit disconnect", function (done){
+      jest.useFakeTimers()
+      const sendHeartbeatSpy = jest.spyOn(socket, "sendHeartbeat")
       socket.onConnOpen()
       socket.disconnect()
-      clock.tick(30000)
-      assert.ok(spy.notCalled)
-      clock.restore()
+      jest.advanceTimersByTime(30000)
+      expect(sendHeartbeatSpy).not.toHaveBeenCalled()
+      jest.useRealTimers()
       done()
     })
 
-    it("does not timeout the heartbeat after explicit disconnect", function(done){
-      let clock = sinon.useFakeTimers()
-      const spy = sinon.spy(socket, "heartbeatTimeout")
+    it("does not timeout the heartbeat after explicit disconnect", function (done){
+      jest.useFakeTimers()
+      const heartbeatTimeoutSpy = jest.spyOn(socket, "heartbeatTimeout")
       socket.onConnOpen()
       socket.disconnect()
-      clock.tick(30000)
-      clock.tick(30000)
-      assert.ok(spy.notCalled)
-      clock.restore()
+      jest.advanceTimersByTime(60000)
+      expect(heartbeatTimeoutSpy).not.toHaveBeenCalled()
+      jest.useRealTimers()
       done()
     })
   })
 
-  describe("onConnError", function(){
+  describe("onConnError", function (){
     let mockServer
 
-    before(function(){
+    beforeAll(function (){
       mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after(function(done){
+    afterAll(function (done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(function(){
+    beforeEach(function (){
       socket = new Socket("/socket", {
         reconnectAfterMs: () => 100000
       })
       socket.connect()
     })
 
-    it("triggers onClose callback", function(){
-      const spy = sinon.spy()
-
+    it("triggers onClose callback", function (){
+      const spy = jest.fn()
       socket.onError(spy)
-
       socket.onConnError("error")
-
-      assert.ok(spy.calledWith("error"))
+      expect(spy).toHaveBeenCalledWith("error", expect.any(Function), 0)
     })
 
-    it("triggers channel error if joining with open connection", function(){
+    it("triggers channel error if joining with open connection", function (){
       const channel = socket.channel("topic")
-      const spy = sinon.spy(channel, "trigger")
+      const triggerSpy = jest.spyOn(channel, "trigger")
       channel.join()
       socket.onConnOpen()
-
-      assert.equal(channel.state, "joining")
-
+      expect(channel.state).toBe("joining")
       socket.onConnError("error")
-
-      assert.ok(spy.calledWith("phx_error"))
+      expect(triggerSpy).toHaveBeenCalledWith("phx_error")
     })
 
-    it("triggers channel error if joining with no connection", function(){
+    it("triggers channel error if joining with no connection", function (){
       const channel = socket.channel("topic")
-      const spy = sinon.spy(channel, "trigger")
+      const triggerSpy = jest.spyOn(channel, "trigger")
       channel.join()
-
-      assert.equal(channel.state, "joining")
-
+      expect(channel.state).toBe("joining")
       socket.onConnError("error")
-
-      assert.ok(spy.calledWith("phx_error"))
+      expect(triggerSpy).toHaveBeenCalledWith("phx_error")
     })
 
-    it("triggers channel error if joined", function(){
+    it("triggers channel error if joined", function (){
       const channel = socket.channel("topic")
-      const spy = sinon.spy(channel, "trigger")
+      const triggerSpy = jest.spyOn(channel, "trigger")
       channel.join().trigger("ok", {})
       socket.onConnOpen()
-
-      assert.equal(channel.state, "joined")
+      expect(channel.state).toBe("joined")
 
       let connectionsCount = null
       let transport = null
@@ -802,33 +739,29 @@ describe("with transports", function(){
 
       socket.onConnError("error")
 
-      assert.equal(transport, WebSocket)
-      assert.equal(connectionsCount, 1)
-      assert.ok(spy.calledWith("phx_error"))
+      expect(transport).toBe(WebSocket)
+      expect(connectionsCount).toBe(1)
+      expect(triggerSpy).toHaveBeenCalledWith("phx_error")
     })
 
-    it("does not trigger channel error after leave", function(){
+    it("does not trigger channel error after leave", function (){
       const channel = socket.channel("topic")
-      const spy = sinon.spy(channel, "trigger")
+      const triggerSpy = jest.spyOn(channel, "trigger")
       channel.join().trigger("ok", {})
       channel.leave()
-      assert.equal(channel.state, "closed")
-
+      expect(channel.state).toBe("closed")
       socket.onConnError("error")
-
-      assert.ok(!spy.calledWith("phx_error"))
+      expect(triggerSpy).not.toHaveBeenCalledWith("phx_error")
     })
 
-    it("does not trigger channel error if transport replaced with no previous connection", function(){
+    it("does not trigger channel error if transport replaced with no previous connection", function (){
       const channel = socket.channel("topic")
-      const spy = sinon.spy(channel, "trigger")
+      const triggerSpy = jest.spyOn(channel, "trigger")
       channel.join()
-
-      assert.equal(channel.state, "joining")
+      expect(channel.state).toBe("joining")
 
       let connectionsCount = null
-      class FakeTransport{
-      }
+      class FakeTransport { }
 
       socket.onError((error, transport, conns) => {
         socket.replaceTransport(FakeTransport)
@@ -836,153 +769,153 @@ describe("with transports", function(){
       })
       socket.onConnError("error")
 
-      assert.equal(connectionsCount, 0)
-      assert.equal(socket.transport, FakeTransport)
-      assert.equal(spy.calledWith("phx_error"), false)
+      expect(connectionsCount).toBe(0)
+      expect(socket.transport).toBe(FakeTransport)
+      expect(triggerSpy).not.toHaveBeenCalledWith("phx_error")
     })
   })
 
-  describe("onConnMessage", function(){
+  describe("onConnMessage", function (){
     let mockServer
 
-    before(function(){
+    beforeAll(function (){
       mockServer = new WebSocketServer("wss://example.com/")
     })
 
-    after(function(done){
+    afterAll(function (done){
       mockServer.stop(() => done())
     })
 
-    beforeEach(function(){
+    beforeEach(function (){
       socket = new Socket("/socket", {
         reconnectAfterMs: () => 100000
       })
       socket.connect()
     })
 
-    it("parses raw message and triggers channel event", function(){
+    it("parses raw message and triggers channel event", function (){
       const message = encode({topic: "topic", event: "event", payload: "payload", ref: "ref"})
       const data = {data: message}
 
       const targetChannel = socket.channel("topic")
       const otherChannel = socket.channel("off-topic")
 
-      const targetSpy = sinon.spy(targetChannel, "trigger")
-      const otherSpy = sinon.spy(otherChannel, "trigger")
+      const targetSpy = jest.spyOn(targetChannel, "trigger")
+      const otherSpy = jest.spyOn(otherChannel, "trigger")
 
       socket.onConnMessage(data)
 
-      assert.ok(targetSpy.calledWith("event", "payload", "ref"))
-      assert.equal(targetSpy.callCount, 1)
-      assert.equal(otherSpy.callCount, 0)
+      expect(targetSpy).toHaveBeenCalledWith("event", "payload", "ref", null)
+      expect(targetSpy).toHaveBeenCalledTimes(1)
+      expect(otherSpy).toHaveBeenCalledTimes(0)
     })
 
-    it("triggers onMessage callback", function(){
-      const message = {"topic":"topic", "event":"event", "payload":"payload", "ref":"ref"}
-      const spy = sinon.spy()
+    it("triggers onMessage callback", function (){
+      const message = {"topic": "topic", "event": "event", "payload": "payload", "ref": "ref"}
+      const spy = jest.fn()
       socket.onMessage(spy)
       socket.onConnMessage({data: encode(message)})
 
-      assert.ok(spy.calledWith({
+      expect(spy).toHaveBeenCalledWith({
         "topic": "topic",
         "event": "event",
         "payload": "payload",
         "ref": "ref",
         "join_ref": null
-      }))
+      })
     })
   })
 
-  describe("ping", function(){
-    beforeEach(function(){
+  describe("ping", function (){
+    beforeEach(function (){
       socket = new Socket("/socket")
       socket.connect()
     })
 
-    it("pushes when connected", function(done){
+    it("pushes when connected", function (done){
       let latency = 100
       socket.conn.readyState = 1 // open
-      assert.equal(socket.isConnected(), true)
+      expect(socket.isConnected()).toBe(true)
       socket.push = (msg) => {
         setTimeout(() => {
           socket.onConnMessage({data: encode({topic: "phoenix", event: "phx_reply", ref: msg.ref})})
         }, latency)
       }
 
-      let result = socket.ping(rtt => {
-        assert.equal(rtt >= latency, true)
+      const result = socket.ping(rtt => {
+        expect(rtt >= latency).toBe(true)
         done()
       })
-      assert.equal(result, true)
+      expect(result).toBe(true)
     })
 
-    it("returns false when disconnected", function(){
+    it("returns false when disconnected", function (){
       socket.conn.readyState = 0
-      assert.equal(socket.isConnected(), false)
-      let result = socket.ping(rtt => true)
-      assert.equal(result, false)
+      expect(socket.isConnected()).toBe(false)
+      const result = socket.ping(_rtt => true)
+      expect(result).toBe(false)
     })
   })
 
-  describe("custom encoder and decoder", function(){
+  describe("custom encoder and decoder", function (){
 
-    it("encodes to JSON array by default", function(){
+    it("encodes to JSON array by default", function (){
       socket = new Socket("/socket")
-      let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
+      const payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
       socket.encode(payload, encoded => {
-        assert.deepStrictEqual(encoded, "[\"1\",\"2\",\"topic\",\"join\",{\"foo\":\"bar\"}]")
+        expect(encoded).toBe("[\"1\",\"2\",\"topic\",\"join\",{\"foo\":\"bar\"}]")
       })
     })
 
-    it("allows custom encoding when using WebSocket transport", function(){
-      let encoder = (payload, callback) => callback("encode works")
+    it("allows custom encoding when using WebSocket transport", function (){
+      const encoder = (payload, callback) => callback("encode works")
       socket = new Socket("/socket", {transport: WebSocket, encode: encoder})
 
       socket.encode({foo: "bar"}, encoded => {
-        assert.deepStrictEqual(encoded, "encode works")
+        expect(encoded).toBe("encode works")
       })
     })
 
-    it("forces JSON encoding when using LongPoll transport", function(){
-      let encoder = (payload, callback) => callback("encode works")
+    it("forces JSON encoding when using LongPoll transport", function (){
+      const encoder = (payload, callback) => callback("encode works")
       socket = new Socket("/socket", {transport: LongPoll, encode: encoder})
-      let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
+      const payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
       socket.encode(payload, encoded => {
-        assert.deepStrictEqual(encoded, "[\"1\",\"2\",\"topic\",\"join\",{\"foo\":\"bar\"}]")
+        expect(encoded).toBe("[\"1\",\"2\",\"topic\",\"join\",{\"foo\":\"bar\"}]")
       })
     })
 
-    it("decodes JSON by default", function(){
+    it("decodes JSON by default", function (){
       socket = new Socket("/socket")
-      let encoded = "[\"1\",\"2\",\"topic\",\"join\",{\"foo\":\"bar\"}]"
+      const encoded = "[\"1\",\"2\",\"topic\",\"join\",{\"foo\":\"bar\"}]"
 
       socket.decode(encoded, decoded => {
-        assert.deepStrictEqual(decoded, {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}})
+        expect(decoded).toEqual({topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}})
       })
     })
 
-    it("allows custom decoding when using WebSocket transport", function(){
-      let decoder = (payload, callback) => callback("decode works")
+    it("allows custom decoding when using WebSocket transport", function (){
+      const decoder = (payload, callback) => callback("decode works")
       socket = new Socket("/socket", {transport: WebSocket, decode: decoder})
 
       socket.decode("...esoteric format...", decoded => {
-        assert.deepStrictEqual(decoded, "decode works")
+        expect(decoded).toBe("decode works")
       })
     })
 
-    it("forces JSON decoding when using LongPoll transport", function(){
-      let decoder = (payload, callback) => callback("decode works")
+    it("forces JSON decoding when using LongPoll transport", function (){
+      const decoder = (payload, callback) => callback("decode works")
       socket = new Socket("/socket", {transport: LongPoll, decode: decoder})
-      let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
+      const payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
       socket.decode("[\"1\",\"2\",\"topic\",\"join\",{\"foo\":\"bar\"}]", decoded => {
-        assert.deepStrictEqual(decoded, payload)
+        expect(decoded).toEqual(payload)
       })
     })
   })
-
 })
-window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
+
+window.XMLHttpRequest = jest.fn()
 window.WebSocket = WebSocket
