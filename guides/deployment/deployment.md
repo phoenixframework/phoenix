@@ -65,17 +65,17 @@ The error message is quite clear: it says Phoenix could not find a static manife
 
 ## Starting your server in production
 
-To run Phoenix in production, we need to set the `PORT` and `MIX_ENV` environment variables when invoking `mix phx.server`:
+To run Phoenix in production, we need to set the `PORT`, `MIX_ENV` and `PHX_HOST` environment variables when invoking `mix phx.server`:
 
 ```console
-$ PORT=4001 MIX_ENV=prod mix phx.server
+$ PORT=4001 MIX_ENV=prod PHX_HOST=example.com mix phx.server
 10:59:19.136 [info] Running MyAppWeb.Endpoint with Cowboy on http://example.com
 ```
 
 To run in detached mode so that the Phoenix server does not stop and continues to run even if you close the terminal:
 
 ```console
-$ PORT=4001 MIX_ENV=prod elixir --erl "-detached" -S mix phx.server
+$ PORT=4001 MIX_ENV=prod PHX_HOST=example.com elixir --erl "-detached" -S mix phx.server
 ```
 
 In case you get an error message, please read it carefully, and open up a bug report if it is still not clear how to address it.
@@ -83,7 +83,7 @@ In case you get an error message, please read it carefully, and open up a bug re
 You can also run your application inside an interactive shell:
 
 ```console
-$ PORT=4001 MIX_ENV=prod iex -S mix phx.server
+$ PORT=4001 MIX_ENV=prod PHX_HOST=example.com iex -S mix phx.server
 10:59:19.136 [info] Running MyAppWeb.Endpoint with Cowboy on http://example.com
 ```
 
@@ -105,7 +105,7 @@ $ MIX_ENV=prod mix assets.deploy
 $ MIX_ENV=prod mix ecto.migrate
 
 # Finally run the server
-$ PORT=4001 MIX_ENV=prod mix phx.server
+$ PORT=4001 MIX_ENV=prod PHX_HOST=example.com mix phx.server
 ```
 
 And that's it. Next, you can use one of our official guides to deploy:
