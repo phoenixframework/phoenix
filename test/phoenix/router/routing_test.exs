@@ -323,6 +323,7 @@ defmodule Phoenix.Router.RoutingTest do
         end,
         nil
       )
+      on_exit(fn -> :telemetry.detach(test_name) end)
     end
 
     test "phoenix.router_dispatch.start and .stop are emitted on success" do

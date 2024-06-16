@@ -11,24 +11,26 @@ defmodule MixHelper do
   end
 
   defp random_string(len) do
-    len |> :crypto.strong_rand_bytes() |> Base.encode64() |> binary_part(0, len)
+    len |> :crypto.strong_rand_bytes() |> Base.url_encode64() |> binary_part(0, len)
   end
 
   def in_tmp(which, function) do
-    path = Path.join([tmp_path(), random_string(10) <> to_string(which)])
+    base = Path.join([tmp_path(), random_string(10)])
+    path = Path.join([base, to_string(which)])
 
     try do
       File.rm_rf!(path)
       File.mkdir_p!(path)
       File.cd!(path, function)
     after
-      File.rm_rf!(path)
+      File.rm_rf!(base)
     end
   end
 
   def in_tmp_project(which, function) do
     conf_before = Application.get_env(:phoenix, :generators) || []
-    path = Path.join([tmp_path(), random_string(10) <> to_string(which)])
+    base = Path.join([tmp_path(), random_string(10)])
+    path = Path.join([base, to_string(which)])
 
     try do
       File.rm_rf!(path)
@@ -47,14 +49,15 @@ defmodule MixHelper do
         function.()
       end)
     after
-      File.rm_rf!(path)
+      File.rm_rf!(base)
       Application.put_env(:phoenix, :generators, conf_before)
     end
   end
 
   def in_tmp_umbrella_project(which, function) do
     conf_before = Application.get_env(:phoenix, :generators) || []
-    path = Path.join([tmp_path(), random_string(10) <> to_string(which)])
+    base = Path.join([tmp_path(), random_string(10)])
+    path = Path.join([base, to_string(which)])
 
     try do
       apps_path = Path.join(path, "apps")
@@ -72,7 +75,7 @@ defmodule MixHelper do
       File.cd!(apps_path, function)
     after
       Application.put_env(:phoenix, :generators, conf_before)
-      File.rm_rf!(path)
+      File.rm_rf!(base)
     end
   end
 
@@ -81,7 +84,10 @@ defmodule MixHelper do
 
     try do
       capture_io(:stderr, fn ->
-        Mix.Project.in_project(app, path, [prune_code_paths: false], fun)
+        Mix.Project.in_project(app, path, [prune_code_paths: false], fn mod ->
+          fun.(mod)
+          Mix.Project.clear_deps_cache()
+        end)
       end)
     after
       Mix.Project.push(name, file)

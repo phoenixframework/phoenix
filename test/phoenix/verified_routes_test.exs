@@ -187,6 +187,9 @@ defmodule Phoenix.VerifiedRoutesTest do
       end)
 
     assert warnings == ""
+  after
+    :code.purge(__MODULE__.Hash)
+    :code.delete(__MODULE__.Hash)
   end
 
   test "unverified_path" do
@@ -210,6 +213,9 @@ defmodule Phoenix.VerifiedRoutesTest do
         def test, do: ~p"/posts/1"foo
       end
     end
+  after
+    :code.purge(__MODULE__.LeftOver)
+    :code.delete(__MODULE__.LeftOver)
   end
 
   test "~p raises on dynamic interpolation" do
@@ -221,6 +227,9 @@ defmodule Phoenix.VerifiedRoutesTest do
         def test, do: ~p"/posts/#{1}#{2}"
       end
     end
+  after
+    :code.purge(__MODULE__.DynamicDynamic)
+    :code.delete(__MODULE__.DynamicDynamic)
   end
 
   test "~p raises when not prefixed by /" do
@@ -235,6 +244,9 @@ defmodule Phoenix.VerifiedRoutesTest do
                      def test, do: ~p"posts/1"
                    end
                  end
+  after
+    :code.purge(__MODULE__.SigilPPrefix)
+    :code.delete(__MODULE__.SigilPPrefix)
   end
 
   test "path arities" do
@@ -262,6 +274,9 @@ defmodule Phoenix.VerifiedRoutesTest do
         def test, do: path(%URI{}, "/posts/1")
       end
     end
+  after
+    :code.purge(__MODULE__.MissingPathPrefix)
+    :code.delete(__MODULE__.MissingPathPrefix)
   end
 
   test "url raises when non ~p is passed" do
@@ -271,6 +286,9 @@ defmodule Phoenix.VerifiedRoutesTest do
         def test, do: url("/posts/1")
       end
     end
+  after
+    :code.purge(__MODULE__.MissingURLPrefix)
+    :code.delete(__MODULE__.MissingURLPrefix)
   end
 
   test "static_integrity" do
@@ -334,6 +352,9 @@ defmodule Phoenix.VerifiedRoutesTest do
         end
       end
     end
+  after
+    :code.purge(__MODULE__.InvalidQuery)
+    :code.delete(__MODULE__.InvalidQuery)
   end
 
   test "~p with complex ids" do
@@ -500,6 +521,10 @@ defmodule Phoenix.VerifiedRoutesTest do
 
         assert warnings =~
                  ~r"test/phoenix/verified_routes_test.exs:#{line}:(\d+:)? Phoenix.VerifiedRoutesTest.Forwards.test/0"
+
+      after
+        :code.purge(__MODULE__.Forwards)
+        :code.delete(__MODULE__.Forwards)
       end
 
       test "~p warns on unmatched path" do
@@ -524,6 +549,9 @@ defmodule Phoenix.VerifiedRoutesTest do
 
         assert warnings =~
                  ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown/#{123}"|
+      after
+        :code.purge(__MODULE__.Unmatched)
+        :code.delete(__MODULE__.Unmatched)
       end
 
       test "~p warns on warn_on_verify: true route" do
@@ -538,6 +566,9 @@ defmodule Phoenix.VerifiedRoutesTest do
 
         assert warnings =~
                  ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/should-warn/foobar"|
+      after
+        :code.purge(__MODULE__.VerifyFalse)
+        :code.delete(__MODULE__.VerifyFalse)
       end
 
       test "~p does not warn if route without warn_on_verify: true matches first" do
@@ -553,6 +584,9 @@ defmodule Phoenix.VerifiedRoutesTest do
           end)
 
         assert warnings == ""
+      after
+        :code.purge(__MODULE__.VerifyFalseTrueMatchesFirst)
+        :code.delete(__MODULE__.VerifyFalseTrueMatchesFirst)
       end
     end
   end
