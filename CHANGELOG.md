@@ -85,10 +85,10 @@ future styling).
 ## 1.7.10 (2023-11-03)
 
 ### Bug fixes
-  * [phx.new] – fix `CoreComponents.flash` generating incorrect id's causing flash messages to fail to be closed when clicked
+  * [phx.new] Fix `CoreComponents.flash` generating incorrect id's causing flash messages to fail to be closed when clicked
 
 ### Enhancements
-  * Support dynamic port for `Endpoint.url/0`
+  * [Phoenix.Endpoint] Support dynamic port for `Endpoint.url/0`
 
 ## 1.7.9 (2023-10-11)
 
