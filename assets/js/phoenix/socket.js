@@ -32,10 +32,10 @@ import Timer from "./timer"
  * Defaults to WebSocket with automatic LongPoll fallback if WebSocket is not defined.
  * To fallback to LongPoll when WebSocket attempts fail, use `longPollFallbackMs: 2500`.
  *
- * @param {Function} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
+ * @param {number} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
  * before falling back to the LongPoll transport. Disabled by default.
  *
- * @param {Function} [opts.debug] - When true, enables debug logging. Default false.
+ * @param {boolean} [opts.debug] - When true, enables debug logging. Default false.
  *
  * @param {Function} [opts.encode] - The function to encode outgoing messages.
  *
@@ -53,8 +53,8 @@ import Timer from "./timer"
  *
  * Defaults `DEFAULT_TIMEOUT`
  * @param {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
- * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millisec
- * socket reconnect interval.
+ * @param {Function} [opts.reconnectAfterMs] - The optional function that returns the
+ * socket reconnect interval, in milliseconds.
  *
  * Defaults to stepped backoff of:
  *
@@ -64,7 +64,7 @@ import Timer from "./timer"
  * }
  * ````
  *
- * @param {number} [opts.rejoinAfterMs] - The optional function that returns the millisec
+ * @param {Function} [opts.rejoinAfterMs] - The optional function that returns the millisec
  * rejoin interval for individual channels.
  *
  * ```javascript
