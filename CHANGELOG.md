@@ -46,6 +46,11 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.14 (2024-06-18)
+
+### Bug fixes
+  * Revert "Add `follow_redirect/2` to Phoenix.ConnTest" (#5797) as this conflicts with `follow_redirect/2` in LiveView, which is imported with ConnTest by default
+
 ## 1.7.13 (2024-06-18)
 
 ### Bug fixes
