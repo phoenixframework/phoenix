@@ -243,29 +243,6 @@ defmodule Phoenix.ConnTest do
     |> endpoint.call(endpoint.init(action))
   end
 
-  @doc """
-  Follows a redirected conn.
-
-  ## Examples
-
-
-      assert follow_redirect(conn, ~"/").resp_body =~ "foo"
-  """
-  def follow_redirect(%Conn{status: status} = conn, expected_to) when status in 300..308 do
-    to = Plug.Conn.get_resp_header(conn, "location")
-    if "#{expected_to}" == "#{to}" do
-      dispatch(conn, conn.private.phoenix_endpoint, :get, expected_to)
-    else
-      raise ArgumentError, "expected connection to redirect to #{inspect(expected_to)}, but got #{inspect(to)}"
-    end
-  end
-  def follow_redirect(%Conn{status: status}, _expected_to) when status not in 300..308 do
-    raise "expected redirection with status 302, got: #{status}"
-  end
-  def follow_redirect(%Conn{} = _conn, _exptected_to) do
-    raise "expected connection to have redirected but no response was set/sent"
-  end
-
   defp from_set_to_sent(%Conn{state: :set} = conn), do: Conn.send_resp(conn)
   defp from_set_to_sent(conn), do: conn
 

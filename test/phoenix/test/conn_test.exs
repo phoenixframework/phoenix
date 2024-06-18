@@ -156,47 +156,6 @@ defmodule Phoenix.Test.ConnTest do
     refute conn.private.phoenix_recycled
   end
 
-  test "follow_redirect/2" do
-    Enum.each 300..308, fn(status) ->
-      conn =
-        build_conn(:get, "/")
-        |> Endpoint.call(Endpoint.init([]))
-        |> put_resp_header("location", "/new_location")
-        |> send_resp(status, "foo")
-
-      assert follow_redirect(conn, "/new_location").resp_body == "foo"
-    end
-  end
-
-  test "follow_redirect/2 without header" do
-    assert_raise ArgumentError,
-                 "expected connection to redirect to \"/new_location\", but got []", fn ->
-      build_conn(:get, "/")
-      |> send_resp(302, "ok")
-      |> follow_redirect("/new_location")
-    end
-  end
-
-  test "follow_redirect/2 without redirection" do
-    assert_raise RuntimeError,
-                 "expected redirection with status 302, got: 200", fn ->
-      build_conn(:get, "/")
-      |> put_resp_header("location", "new location")
-      |> send_resp(200, "ok")
-      |> follow_redirect("/new_location")
-    end
-  end
-
-  test "follow_redirect/2 with wrong path" do
-    assert_raise ArgumentError,
-                 "expected connection to redirect to \"/wrong_location\", but got [\"/new_location\"]", fn ->
-        build_conn(:get, "/")
-        |> put_resp_header("location", "/new_location")
-        |> send_resp(302, "ok")
-        |> follow_redirect("/wrong_location")
-    end
-  end
-
   describe "recycle/1" do
     test "relevant request headers are persisted" do
       conn =
