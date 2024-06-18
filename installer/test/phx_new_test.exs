@@ -201,7 +201,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file(
         "phx_blog/config/test.exs",
-        ~R/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
+        ~r/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
       )
 
       assert_file("phx_blog/lib/phx_blog/repo.ex", ~r"defmodule PhxBlog.Repo")

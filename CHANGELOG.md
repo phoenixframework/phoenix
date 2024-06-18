@@ -46,6 +46,22 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.13 (2024-06-18)
+
+### Bug fixes
+  * Fix Elixir 1.17 warning in Cowboy2Adapter
+  * Fix verified routes emitting diagnostics without file and position
+
+### JavaScript Client Bug Fixes
+  * Fix error when `sessionStorage` is not available on global namespace
+
+### Enhancements
+  * Add `follow_redirect/2` to Phoenix.ConnTest
+  * Use LiveView 1.0.0-rc for newly generated applications
+  * Use new `Phoenix.Component.used_input?` for form errors in generated `core_components.ex`
+  * Allow `mix ecto.setup` from the umbrella root
+  * Bump Endpoint static cache manifest on `config_change` callback
+
 ## 1.7.12 (2024-04-11)
 
 ### JavaScript Client Bug Fixes
