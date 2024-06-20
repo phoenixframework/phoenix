@@ -168,7 +168,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       live?: Keyword.fetch!(context.opts, :live)
     ]
 
-    paths = generator_paths()
+    paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
 
@@ -715,14 +715,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp web_path_prefix(%Schema{web_path: nil}), do: ""
   defp web_path_prefix(%Schema{web_path: web_path}), do: "/" <> web_path
-
-  # The paths to look for template files for generators.
-  #
-  # Defaults to checking the current app's `priv` directory,
-  # and falls back to phx_gen_auth's `priv` directory.
-  defp generator_paths do
-    [".", :phoenix]
-  end
 
   defp inject_before_final_end(content_to_inject, file_path) do
     with {:ok, file} <- read_file(file_path),
