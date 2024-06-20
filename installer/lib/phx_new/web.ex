@@ -57,9 +57,10 @@ defmodule Phx.New.Web do
     {:eex, :web, "phx_assets/logo.svg": "priv/static/images/logo.svg"}
   ])
 
-  def prepare_project(%Project{app: app} = project) when not is_nil(app) do
+  def prepare_project(%Project{app: app, opts: opts} = project) when not is_nil(app) do
     web_path = Path.expand(project.base_path)
     project_path = Path.dirname(Path.dirname(web_path))
+    depends_on = Keyword.get(opts, :depends_on, false)
 
     %Project{
       project
@@ -67,7 +68,10 @@ defmodule Phx.New.Web do
         project_path: project_path,
         web_path: web_path,
         web_app: app,
-        generators: [context_app: false],
+        depends_on_app: depends_on || app,
+        depends_on_mod:
+          (depends_on && Module.concat([Macro.camelize(depends_on)])) || project.app_mod,
+        generators: [context_app: :"#{depends_on}"],
         web_namespace: project.app_mod
     }
   end

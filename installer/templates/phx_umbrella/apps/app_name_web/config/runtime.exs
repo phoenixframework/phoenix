@@ -69,7 +69,7 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
 # Also, you may need to configure the Swoosh API client of your choice if you
 # are not using SMTP. Here is an example of the configuration:
 #
-#     config :<%= @app_name %>, <%= @app_module %>.Mailer,
+#     config :<%= @app_name %>, <%= @depends_on_mod %>.Mailer,
 #       adapter: Swoosh.Adapters.Mailgun,
 #       api_key: System.get_env("MAILGUN_API_KEY"),
 #       domain: System.get_env("MAILGUN_DOMAIN")

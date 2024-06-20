@@ -125,6 +125,8 @@ defmodule Phx.New.Single do
     %Project{
       project
       | web_app: app,
+        depends_on_app: app,
+        depends_on_mod: project.root_mod,
         lib_web_name: "#{app}_web",
         web_namespace: Module.concat(["#{project.root_mod}Web"]),
         web_path: project.base_path
