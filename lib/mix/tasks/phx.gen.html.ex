@@ -198,7 +198,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
         ~s(<.input field={f[#{inspect(key)}]} type="checkbox" label="#{label(key)}" />)
 
       {key, :text} ->
-        ~s(<.input field={f[#{inspect(key)}]} type="text" label="#{label(key)}" />)
+        ~s(<.input field={f[#{inspect(key)}]} type="textarea" label="#{label(key)}" />)
 
       {key, :date} ->
         ~s(<.input field={f[#{inspect(key)}]} type="date" label="#{label(key)}" />)
