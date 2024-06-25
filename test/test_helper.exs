@@ -2,6 +2,7 @@ Code.require_file("support/router_helper.exs", __DIR__)
 
 # Starts web server applications
 Application.ensure_all_started(:plug_cowboy)
+Application.ensure_all_started(:bandit)
 
 # Used whenever a router fails. We default to simply
 # rendering a short string.
