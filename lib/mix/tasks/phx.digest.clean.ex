@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
   def run(all_args) do
     # Ensure all compressors are compiled.
     if "--no-compile" not in all_args do
-      Mix.Task.run("compile")
+      Mix.Task.run("compile", all_args)
     end
 
     {:ok, _} = Application.ensure_all_started(:phoenix)
