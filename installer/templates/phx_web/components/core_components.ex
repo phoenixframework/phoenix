@@ -604,7 +604,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       to: selector,
       time: 300,
       transition:
-        {"transition-all transform ease-out duration-300",
+        {"transition-all ease-out duration-300",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
          "opacity-100 translate-y-0 sm:scale-100"}
     )
@@ -615,8 +615,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       to: selector,
       time: 200,
       transition:
-        {"transition-all transform ease-in duration-200",
-         "opacity-100 translate-y-0 sm:scale-100",
+        {"transition-all ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
     )
   end
@@ -627,7 +626,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     |> JS.show(
       to: "##{id}-bg",
       time: 300,
-      transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
+      transition: {"transition-all ease-out duration-300", "opacity-0", "opacity-100"}
     )
     |> show("##{id}-container")
     |> JS.add_class("overflow-hidden", to: "body")
@@ -638,7 +637,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     js
     |> JS.hide(
       to: "##{id}-bg",
-      transition: {"transition-all transform ease-in duration-200", "opacity-100", "opacity-0"}
+      transition: {"transition-all ease-in duration-200", "opacity-100", "opacity-0"}
     )
     |> hide("##{id}-container")
     |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
