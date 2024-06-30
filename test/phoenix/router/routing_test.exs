@@ -67,7 +67,7 @@ defmodule Phoenix.Router.RoutingTest do
 
     get "/no_log", SomePlug, [], log: false
     get "/fun_log", SomePlug, [], log: {LogLevel, :log_level, []}
-    get "/override-plug-name", SomePlug, :action, metadata: %{log_module: PlugOverride}
+    get "/override-plug-name", SomePlug, :action, metadata: %{mfa: {LogLevel, :log_level, 1}}
     get "/users/:user_id/files/:id", UserController, :image
 
     scope "/halt-plug" do
@@ -283,7 +283,7 @@ defmodule Phoenix.Router.RoutingTest do
 
     test "overrides plug name that processes the route when set in metadata" do
       assert capture_log(fn -> call(Router, :get, "/override-plug-name") end) =~
-               "Processing with PlugOverride"
+               "Processing with Phoenix.Router.RoutingTest.LogLevel.log_level/1"
     end
 
     test "logs custom level when log is set to a 1-arity function" do

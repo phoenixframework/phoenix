@@ -601,9 +601,12 @@ defmodule Phoenix.Router do
 
     checks =
       routes
-      |> Enum.uniq_by(&{&1.line, &1.plug})
-      |> Enum.map(fn %{line: line, plug: plug} ->
-        quote line: line, do: _ = &unquote(plug).init/1
+      |> Enum.map(fn %{line: line, metadata: metadata, plug: plug} ->
+        {line, Map.get(metadata, :mfa, {plug, :init, 1})}
+      end)
+      |> Enum.uniq()
+      |> Enum.map(fn {line, {module, function, arity}} ->
+        quote line: line, do: _ = &(unquote(module).unquote(function) / unquote(arity))
       end)
 
     keys = [:verb, :path, :plug, :plug_opts, :helper, :metadata]
@@ -752,7 +755,8 @@ defmodule Phoenix.Router do
       when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
     * `:metadata` - a map of metadata used by the telemetry events and returned by
-      `route_info/4`
+      `route_info/4`. The `:mfa` field is used by telemetry to print logs and by the
+      router to emit compile time checks. Custom fields may be added.
     * `:warn_on_verify` - the boolean for whether matches to this route trigger
       an unmatched route warning for `Phoenix.VerifiedRoutes`. It is useful to ignore
       an otherwise catch-all route definition from being matched when verifying routes.
