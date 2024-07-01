@@ -37,7 +37,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def mount(_params, _session, socket) do
     email = Phoenix.Flash.get(socket.assigns.flash, :email)
-    form = to_form(%{"email" => email}, as: "<%= schema.singular %>")
-    {:ok, assign(socket, form: form), temporary_assigns: [form: form]}
+    remember_me = Phoenix.Flash.get(socket.assigns.flash, :remember_me)
+    form = to_form(%{"email" => email, "remember_me" => remember_me}, as: "<%= schema.singular %>")
+
+    {:ok, assign(socket, :form, form), temporary_assigns: [form: form]}
   end
 end

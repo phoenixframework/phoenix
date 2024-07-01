@@ -1,0 +1,25 @@
+<div class="mx-auto max-w-sm">
+  <.header class="text-center">
+    Second step
+    <:subtitle>
+      Enter the code provided by your 2FA app.
+    </:subtitle>
+  </.header>
+
+  <.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"<%= schema.route_prefix %>/2fa"}>
+    <.error :if={@error_message}><%%= @error_message %></.error>
+
+    <.input field={f[:code]} type="text" maxlength="6" label="Code" required />
+
+    <:actions>
+      <.link href={~p"<%= schema.route_prefix %>/log_in"} class="text-sm font-semibold">
+        Use another account
+      </.link>
+    </:actions>
+    <:actions>
+      <.button phx-disable-with="Logging in..." class="w-full">
+        Log in <span aria-hidden="true">→</span>
+      </.button>
+    </:actions>
+  </.simple_form>
+</div>

@@ -129,6 +129,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     {opts, parsed} = OptionParser.parse!(args, strict: @switches)
     validate_args!(parsed)
     hashing_library = build_hashing_library!(opts)
+    totp_dependency = ~s|{:nimble_totp, "~> 1.0"}|
+    qrcode_depencency = ~s|{:eqrcode, "~> 0.1.10"}|
 
     context_args = OptionParser.to_argv(opts, switches: @switches) ++ parsed
     {context, schema} = Gen.Context.build(context_args, __MODULE__)
@@ -177,6 +179,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> inject_conn_case_helpers(paths, binding)
     |> inject_config(hashing_library)
     |> maybe_inject_mix_dependency(hashing_library)
+    |> maybe_inject_mix_dependency(totp_dependency)
+    |> maybe_inject_mix_dependency(qrcode_depencency)
     |> inject_routes(paths, binding)
     |> maybe_inject_router_import(binding)
     |> maybe_inject_router_plug()
@@ -263,6 +267,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       "auth.ex": [web_pre, web_path, "#{singular}_auth.ex"],
       "auth_test.exs": [web_test_pre, web_path, "#{singular}_auth_test.exs"],
       "session_controller.ex": [controller_pre, "#{singular}_session_controller.ex"],
+      "second_factor_controller.ex": [controller_pre, "#{singular}_second_factor_controller.ex"],
       "session_controller_test.exs": [
         web_test_pre,
         "controllers",
@@ -281,6 +286,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             web_path,
             "#{singular}_registration_live_test.exs"
           ],
+          "second_factor_live.ex": [web_pre, "live", web_path, "#{singular}_second_factor_live.ex"],
           "login_live.ex": [web_pre, "live", web_path, "#{singular}_login_live.ex"],
           "login_live_test.exs": [
             web_test_pre,
@@ -398,6 +404,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
           ],
           "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
           "session_new.html.heex": [controller_pre, "#{singular}_session_html", "new.html.heex"],
+          "second_factor_html.ex": [controller_pre, "#{singular}_second_factor_html.ex"],
+          "second_factor_new.html.heex": [controller_pre, "#{singular}_second_factor_html", "new.html.heex"],
           "settings_html.ex": [web_pre, "controllers", web_path, "#{singular}_settings_html.ex"],
           "settings_controller.ex": [controller_pre, "#{singular}_settings_controller.ex"],
           "settings_edit.html.heex": [
@@ -483,9 +491,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     context
   end
 
-  defp maybe_inject_mix_dependency(%Context{context_app: ctx_app} = context, %HashingLibrary{
-         mix_dependency: mix_dependency
-       }) do
+  defp maybe_inject_mix_dependency(context, %HashingLibrary{} = lib) do
+    maybe_inject_mix_dependency(context, lib.mix_dependency)
+  end
+
+  defp maybe_inject_mix_dependency(%Context{context_app: ctx_app} = context, mix_dependency) do
     file_path = Mix.Phoenix.context_app_path(ctx_app, "mix.exs")
 
     file = File.read!(file_path)
