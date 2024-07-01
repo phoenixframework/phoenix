@@ -13,7 +13,7 @@
 
     test "get_<%= schema.singular %>!/1 returns the <%= schema.singular %> with given id" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
-      assert <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id) == <%= schema.singular %>
+      assert <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>) == <%= schema.singular %>
     end
 
     test "create_<%= schema.singular %>/1 with valid data creates a <%= schema.singular %>" do
@@ -38,13 +38,13 @@
     test "update_<%= schema.singular %>/2 with invalid data returns error changeset" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
       assert {:error, %Ecto.Changeset{}} = <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, @invalid_attrs)
-      assert <%= schema.singular %> == <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id)
+      assert <%= schema.singular %> == <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>)
     end
 
     test "delete_<%= schema.singular %>/1 deletes the <%= schema.singular %>" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
       assert {:ok, %<%= inspect schema.alias %>{}} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
-      assert_raise Ecto.NoResultsError, fn -> <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id) end
+      assert_raise Ecto.NoResultsError, fn -> <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>) end
     end
 
     test "change_<%= schema.singular %>/1 returns a <%= schema.singular %> changeset" do

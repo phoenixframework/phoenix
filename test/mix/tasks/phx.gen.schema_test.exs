@@ -303,6 +303,25 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
+  test "generates migration with custom primary key", config do
+    in_tmp_project config.test, fn ->
+      Gen.Schema.run(~w(Blog.Post posts title user_id:references:users --binary-id --primary-key post_id))
+
+      assert_file "lib/phoenix/blog/post.ex", fn file ->
+        assert file =~ "@derive {Phoenix.Param, key: :post_id}"
+        assert file =~ "@primary_key {:post_id, :binary_id, autogenerate: true}"
+        assert file =~ "field :user_id, :binary_id"
+      end
+
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
+      assert_file migration, fn file ->
+        assert file =~ "create table(:posts, primary_key: false) do"
+        assert file =~ "add :post_id, :binary_id, primary_key: true"
+        assert file =~ "add :user_id, references(:users, on_delete: :nothing, type: :binary_id)"
+      end
+    end
+  end
+
   test "generates schema and migration with prefix", config do
     in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post posts title --prefix cms))
