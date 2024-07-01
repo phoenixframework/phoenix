@@ -32,6 +32,9 @@ defmodule Phoenix.ParamTest do
     end
     assert to_param(struct(Foo, id: 1)) == "1"
     assert to_param(struct(Foo, id: "foo")) == "foo"
+  after
+    :code.purge(__MODULE__.Foo)
+    :code.delete(__MODULE__.Foo)
   end
 
   test "to_param for derivable structs without id" do
@@ -55,5 +58,10 @@ defmodule Phoenix.ParamTest do
     assert_raise ArgumentError, msg, fn ->
       to_param(struct(Bar, uuid: nil))
     end
+  after
+    :code.purge(Module.concat(Phoenix.Param, __MODULE__.Bar))
+    :code.delete(Module.concat(Phoenix.Param, __MODULE__.Bar))
+    :code.purge(__MODULE__.Bar)
+    :code.delete(__MODULE__.Bar)
   end
 end

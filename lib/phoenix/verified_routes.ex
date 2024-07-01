@@ -256,7 +256,7 @@ defmodule Phoenix.VerifiedRoutes do
   See `sigil_p/2` for more information.
 
   Warns when the provided path does not match against the router specified
-  in `use Phoenix.VerifiedRoutes` or the `@router` module attribute.
+  in the router argument.
 
   ## Examples
 
@@ -285,6 +285,27 @@ defmodule Phoenix.VerifiedRoutes do
 
   defmacro path(_endpoint, _router, other), do: raise_invalid_route(other)
 
+  @doc ~S'''
+  Generates the router path with route verification.
+
+  See `sigil_p/2` for more information.
+
+  Warns when the provided path does not match against the router specified
+  in `use Phoenix.VerifiedRoutes` or the `@router` module attribute.
+
+  ## Examples
+
+      import Phoenix.VerifiedRoutes
+
+      redirect(to: path(conn, ~p"/users/top"))
+
+      redirect(to: path(conn, ~p"/users/#{@user}"))
+
+      ~H"""
+      <.link href={path(@uri, "/users?page=#{@page}")}>profile</.link>
+      <.link href={path(@uri, "/users?#{@params}")}>profile</.link>
+      """
+  '''
   defmacro path(
              conn_or_socket_or_endpoint_or_uri,
              {:sigil_p, _, [{:<<>>, _meta, _segments} = route, extra]} = sigil_p
@@ -390,8 +411,21 @@ defmodule Phoenix.VerifiedRoutes do
 
   @doc """
   Generates url to a static asset given its file path.
+
+  See `Phoenix.Endpoint.static_url/0` and `Phoenix.Endpoint.static_path/1` for more information.
+
+  ## Examples
+
+      iex> static_url(conn, "/assets/app.js")
+      "https://example.com/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+
+      iex> static_url(socket, "/assets/app.js")
+      "https://example.com/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+
+      iex> static_url(AppWeb.Endpoint, "/assets/app.js")
+      "https://example.com/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
   """
-  def static_url(conn_or_socket_or_endpoint_or_uri, path)
+  def static_url(conn_or_socket_or_endpoint, path)
 
   def static_url(%Plug.Conn{private: private}, path) do
     case private do
@@ -410,7 +444,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   def static_url(other, path) do
     raise ArgumentError,
-          "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a %URI{}, a struct with an :endpoint key, " <>
+          "expected a %Plug.Conn{}, a %Phoenix.Socket{}, a struct with an :endpoint key, " <>
             "or a Phoenix.Endpoint when building static url for #{path}, got: #{inspect(other)}"
   end
 
@@ -463,6 +497,22 @@ defmodule Phoenix.VerifiedRoutes do
 
   @doc """
   Generates path to a static asset given its file path.
+
+  See `Phoenix.Endpoint.static_path/1` for more information.
+
+  ## Examples
+
+      iex> static_path(conn, "/assets/app.js")
+      "/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+
+      iex> static_path(socket, "/assets/app.js")
+      "/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+
+      iex> static_path(AppWeb.Endpoint, "/assets/app.js")
+      "/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+
+      iex> static_path(%URI{path: "/subresource"}, "/assets/app.js")
+      "/subresource/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
   """
   def static_path(conn_or_socket_or_endpoint_or_uri, path)
 
@@ -646,6 +696,19 @@ defmodule Phoenix.VerifiedRoutes do
 
   @doc """
   Generates an integrity hash to a static asset given its file path.
+
+  See `Phoenix.Endpoint.static_integrity/1` for more information.
+
+  ## Examples
+
+      iex> static_integrity(conn, "/assets/app.js")
+      "813dfe33b5c7f8388bccaaa38eec8382"
+
+      iex> static_integrity(socket, "/assets/app.js")
+      "813dfe33b5c7f8388bccaaa38eec8382"
+
+      iex> static_integrity(AppWeb.Endpoint, "/assets/app.js")
+      "813dfe33b5c7f8388bccaaa38eec8382"
   """
   def static_integrity(conn_or_socket_or_endpoint_or_uri, path)
 

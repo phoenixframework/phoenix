@@ -214,6 +214,9 @@ defmodule Phoenix.Endpoint.EndpointTest do
     UrlEndpoint.start_link()
     assert UrlEndpoint.path("/phoenix.png") =~ "/api/phoenix.png"
     assert UrlEndpoint.static_path("/phoenix.png") =~ "/api/phoenix.png"
+  after
+    :code.purge(__MODULE__.UrlEndpoint)
+    :code.delete(__MODULE__.UrlEndpoint)
   end
 
   @tag :capture_log
@@ -227,6 +230,9 @@ defmodule Phoenix.Endpoint.EndpointTest do
     StaticEndpoint.start_link()
     assert StaticEndpoint.path("/phoenix.png") =~ "/phoenix.png"
     assert StaticEndpoint.static_path("/phoenix.png") =~ "/static/phoenix.png"
+  after
+    :code.purge(__MODULE__.StaticEndpoint)
+    :code.delete(__MODULE__.StaticEndpoint)
   end
 
   @tag :capture_log
@@ -243,6 +249,9 @@ defmodule Phoenix.Endpoint.EndpointTest do
     AddressEndpoint.start_link()
     assert {:ok, {{127, 0, 0, 1}, port}} = AddressEndpoint.server_info(:http)
     assert is_integer(port)
+  after
+    :code.purge(__MODULE__.AddressEndpoint)
+    :code.delete(__MODULE__.AddressEndpoint)
   end
 
   test "injects pubsub broadcast with configured server" do

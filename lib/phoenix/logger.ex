@@ -273,7 +273,6 @@ defmodule Phoenix.Logger do
   def phoenix_router_dispatch_start(_, _, metadata, _) do
     %{log: level, conn: conn, plug: plug} = metadata
     level = log_level(level, conn)
-    log_module = metadata[:log_module] || plug
 
     Logger.log(level, fn ->
       %{
@@ -281,10 +280,16 @@ defmodule Phoenix.Logger do
         plug_opts: plug_opts
       } = metadata
 
+      log_mfa =
+        case metadata[:mfa] do
+          {mod, fun, arity} -> mfa(mod, fun, arity)
+          _ when is_atom(plug_opts) -> mfa(plug, plug_opts, 2)
+          _ -> inspect(plug)
+        end
+
       [
         "Processing with ",
-        inspect(log_module),
-        maybe_action(plug_opts),
+        log_mfa,
         ?\n,
         "  Parameters: ",
         params(conn.params),
@@ -295,8 +300,8 @@ defmodule Phoenix.Logger do
     end)
   end
 
-  defp maybe_action(action) when is_atom(action), do: [?., Atom.to_string(action), ?/, ?2]
-  defp maybe_action(_), do: []
+  defp mfa(mod, fun, arity),
+    do: [inspect(mod), ?., Atom.to_string(fun), ?/, arity + ?0]
 
   defp params(%Plug.Conn.Unfetched{}), do: "[UNFETCHED]"
   defp params(params), do: params |> filter_values() |> inspect()

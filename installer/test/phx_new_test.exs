@@ -201,7 +201,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file(
         "phx_blog/config/test.exs",
-        ~R/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
+        ~r/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
       )
 
       assert_file("phx_blog/lib/phx_blog/repo.ex", ~r"defmodule PhxBlog.Repo")
@@ -474,10 +474,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s|# socket "/live"|
         refute file =~ ~s|plug Phoenix.LiveDashboard.RequestLogger|
       end)
-
-      assert_file("phx_blog/config/test.exs", fn file ->
-        refute file =~ ~s|config :phoenix_live_view|
-      end)
     end)
   end
 
@@ -515,6 +511,10 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/lib/phx_blog_web/router.ex", fn file ->
         refute file =~ ~s|pipeline :browser|
         assert file =~ ~s|pipe_through [:fetch_session, :protect_from_forgery]|
+      end)
+
+      assert_file("phx_blog/config/config.exs", fn file ->
+        refute file =~ ~s|config :phoenix_live_view|
       end)
 
       assert_file("phx_blog/config/test.exs", fn file ->

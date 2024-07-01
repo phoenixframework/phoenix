@@ -46,6 +46,27 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.14 (2024-06-18)
+
+### Bug fixes
+  * Revert "Add `follow_redirect/2` to Phoenix.ConnTest" (#5797) as this conflicts with `follow_redirect/2` in LiveView, which is imported with ConnTest by default
+
+## 1.7.13 (2024-06-18)
+
+### Bug fixes
+  * Fix Elixir 1.17 warning in Cowboy2Adapter
+  * Fix verified routes emitting diagnostics without file and position
+
+### JavaScript Client Bug Fixes
+  * Fix error when `sessionStorage` is not available on global namespace
+
+### Enhancements
+  * Add `follow_redirect/2` to Phoenix.ConnTest
+  * Use LiveView 1.0.0-rc for newly generated applications
+  * Use new `Phoenix.Component.used_input?` for form errors in generated `core_components.ex`
+  * Allow `mix ecto.setup` from the umbrella root
+  * Bump Endpoint static cache manifest on `config_change` callback
+
 ## 1.7.12 (2024-04-11)
 
 ### JavaScript Client Bug Fixes
@@ -66,7 +87,7 @@ future styling).
 
     *Note*: because the session id is in a http-only cookie by default, the only way to perform this attack prior to this change is if your application was already vulnerable to an XSS attack, which itself grants more escalated "privileges” than the CSRF fixation.
 
-## JavaScript Client Enhancements
+### JavaScript Client Enhancements
   * Only memorize longpoll fallback for browser session if WebSocket never had a successful connection
 
 ## 1.7.11 (2024-02-01)
@@ -85,10 +106,10 @@ future styling).
 ## 1.7.10 (2023-11-03)
 
 ### Bug fixes
-  * [phx.new] – fix `CoreComponents.flash` generating incorrect id's causing flash messages to fail to be closed when clicked
+  * [phx.new] Fix `CoreComponents.flash` generating incorrect id's causing flash messages to fail to be closed when clicked
 
 ### Enhancements
-  * Support dynamic port for `Endpoint.url/0`
+  * [Phoenix.Endpoint] Support dynamic port for `Endpoint.url/0`
 
 ## 1.7.9 (2023-10-11)
 
