@@ -215,28 +215,45 @@ defmodule <%= @web_namespace %>.CoreComponents do
   @doc """
   Renders a button.
 
+  If `link` is passed as an attribute, the button will render as an HTML link.
+
   ## Examples
 
       <.button>Send!</.button>
       <.button phx-click="go" class="ml-2">Send!</.button>
+      <.button link={%{patch: ~p"/page"}}>Go to page</.button>
+
   """
   attr :type, :string, default: nil
+  attr :link, :map, default: nil, doc: "attributes passed to `Phoenix.Component.link/1`"
   attr :class, :string, default: nil
   attr :rest, :global, include: ~w(disabled form name value)
 
   slot :inner_block, required: true
 
   def button(assigns) do
-    ~H"""
-    <button
-      type={@type}
-      class={[
+    assigns =
+      assigns
+      |> assign(:classes, [
         "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
-        @class
-      ]}
-      {@rest}
-    >
+        assigns.class
+      ])
+
+    button_base(assigns)
+  end
+
+  def button_base(%{link: link} = assigns) when not is_nil(link) do
+    ~H"""
+    <.link class={@classes} {@link} {@rest}>
+      <%%= render_slot(@inner_block) %>
+    </.link>
+    """
+  end
+
+  def button_base(assigns) do
+    ~H"""
+    <button type={@type} class={@classes} {@rest}>
       <%%= render_slot(@inner_block) %>
     </button>
     """
