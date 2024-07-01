@@ -46,9 +46,9 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
 config :<%= @app_name %>, <%= @endpoint_module %>,
   live_reload: [
     patterns: [
-      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
-      ~r"priv/gettext/.*(po)$",<% end %>
-      ~r"lib/<%= @lib_web_name %>/(controllers|live|components)/.*(ex|heex)$"
+      ~r"priv/static/(?!uploads/).+\.(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
+      ~r"priv/gettext/.+\.(po)$",<% end %>
+      ~r"lib/<%= @lib_web_name %>/(controllers|live|components)/.+\.(ex|heex)$"
     ]
   ]<% end %>
 
