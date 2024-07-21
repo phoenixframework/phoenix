@@ -145,6 +145,16 @@ defmodule Phoenix.Endpoint.SupervisorTest do
              end)
     end
 
+    test "init/1 doesn't start watchers when `:server` config is true and `:watchers` is false" do
+      Application.put_env(:phoenix, WatchersEndpoint, server: true, watchers: false)
+      {:ok, {_, children}} = Supervisor.init({:phoenix, WatchersEndpoint, []})
+
+      refute Enum.any?(children, fn
+               %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
+               _ -> false
+             end)
+    end
+
     test "init/1 doesn't start watchers when `:server` config is false" do
       Application.put_env(:phoenix, WatchersEndpoint, server: false, watchers: @watchers)
       {:ok, {_, children}} = Supervisor.init({:phoenix, WatchersEndpoint, []})
