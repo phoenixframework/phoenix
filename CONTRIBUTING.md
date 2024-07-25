@@ -23,7 +23,7 @@ making it easier for developers to [contribute to Phoenix](#pull-requests).
 ## Bug reports
 
 A bug is either a _demonstrable problem_ that is caused by the code in the repository,
-or indicate missing, unclear, or misleading documentation. Good bug reports are extremely
+or indicates missing, unclear, or misleading documentation. Good bug reports are extremely
 helpful - thank you!
 
 Guidelines for bug reports:
@@ -72,7 +72,7 @@ Please provide as much detail and context as possible.
 Code documentation (`@doc`, `@moduledoc`, `@typedoc`) has a special convention:
 the first paragraph is considered to be a short summary.
 
-For functions, macros and callbacks say what it will do. For example write
+For functions, macros, and callbacks say what it will do. For example write
 something like:
 
 ```elixir
@@ -82,7 +82,7 @@ Marks the given value as HTML safe.
 def safe({:safe, value}), do: {:safe, value}
 ```
 
-For modules, protocols and types say what it is. For example write
+For modules, protocols, and types say what it is. For example write
 something like:
 
 ```elixir
