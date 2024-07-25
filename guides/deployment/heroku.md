@@ -116,13 +116,13 @@ web: mix phx.server
 
 ### Optional: Node, npm, and the Phoenix Static buildpack
 
-By default, Phoenix uses `esbuild` and manages all assets for you. However, if you are using `node` and `npm`, you will need to install the [Phoenix Static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) to handle them:
+By default, Phoenix uses `esbuild` and manages all assets for you. However, if you are using `node` and `npm`, you will need to install the [Phoenix Static buildpack](https://github.com/gigalixir/gigalixir-buildpack-phoenix-static) to handle them:
 
 ```console
-$ heroku buildpacks:add https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
+$ heroku buildpacks:add https://github.com/gigalixir/gigalixir-buildpack-phoenix-static.git
 Buildpack added. Next release on mysterious-meadow-6277 will use:
   1. https://github.com/HashNuke/heroku-buildpack-elixir.git
-  2. https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
+  2. https://github.com/gigalixir/gigalixir-heroku-buildpack-phoenix-static.git
 ```
 
 When using this buildpack, you want to delegate all asset bundling to `npm`. So you must remove the `hook_post_compile` configuration from your `elixir_buildpack.config` and move it to the deploy script of your `assets/package.json`. Something like this:
@@ -144,7 +144,7 @@ The Phoenix Static buildpack uses a predefined Node.js version, but to avoid sur
 node_version=10.20.1
 ```
 
-Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
+Please refer to the [configuration section](https://github.com/gigalixir/gigalixir-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gigalixir/gigalixir-buildpack-phoenix-static/blob/master/compile).
 
 Finally, note that since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to make sure the Phoenix Static buildpack comes last.
 
