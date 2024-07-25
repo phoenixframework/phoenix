@@ -33,7 +33,7 @@ You will also work with the following:
   * [Swoosh](https://hexdocs.pm/swoosh) - a library for composing,
     delivering and testing emails, also used by `mix phx.gen.auth`
 
-When peeking under the covers, you will find those libraries play
+When peeking under the covers, you will find these libraries play
 an important role in Phoenix applications:
 
   * [Phoenix HTML](https://hexdocs.pm/phoenix_html) - building blocks
