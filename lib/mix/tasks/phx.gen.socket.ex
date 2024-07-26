@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Phx.Gen.Socket do
   def run(args) do
     if Mix.Project.umbrella?() do
       Mix.raise(
-        "mix phx.gen.socket must be invoked from within your *_web application root directory"
+        "mix phx.gen.socket must be invoked from within your *_web application's root directory"
       )
     end
 
