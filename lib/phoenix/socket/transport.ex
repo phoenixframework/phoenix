@@ -199,7 +199,7 @@ defmodule Phoenix.Socket.Transport do
     * `{:reply, status, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
 
-  Control frames only supported when using websockets.
+  Control frames are only supported when using websockets.
 
   The `options` contains an `opcode` key, this will be either `:ping` or
   `:pong`.
