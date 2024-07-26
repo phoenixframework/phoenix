@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   running `mix release`.
 
   To skip generating the migration-related files, use the `--no-ecto` flag. To
-  force these migration-related files to be generated, the use `--ecto` flag.
+  force these migration-related files to be generated, use the `--ecto` flag.
 
   ## Docker
 
