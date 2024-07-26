@@ -257,12 +257,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # Mailer
       assert_file("phx_blog/mix.exs", fn file ->
-        assert file =~ "{:swoosh, \"~> 1.5\"}"
-        assert file =~ "{:finch, \"~> 0.13\"}"
-      end)
-
-      assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
-        assert file =~ "{Finch, name: PhxBlog.Finch}"
+        assert file =~ "{:swoosh, \"~> 1.16\"}"
+        assert file =~ "{:req, \"~> 0.5.4\"}"
       end)
 
       assert_file("phx_blog/lib/phx_blog/mailer.ex", fn file ->
@@ -285,7 +281,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/prod.exs", fn file ->
         assert file =~
-                 "config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PhxBlog.Finch"
+                 "config :swoosh, api_client: Swoosh.ApiClient.Req"
       end)
 
       # Install dependencies?
@@ -417,12 +413,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # No mailer or emails
       assert_file("phx_blog/mix.exs", fn file ->
-        refute file =~ "{:swoosh, \"~> 1.5\"}"
-        refute file =~ "{:finch, \"~> 0.13\"}"
-      end)
-
-      assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
-        refute file =~ "{Finch, name: PhxBlog.Finch"
+        refute file =~ "{:swoosh"
+        refute file =~ "{:req"
       end)
 
       refute File.exists?("phx_blog/lib/phx_blog/mailer.ex")
