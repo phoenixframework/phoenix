@@ -710,7 +710,7 @@ defmodule Phoenix.VerifiedRoutes do
       iex> static_integrity(AppWeb.Endpoint, "/assets/app.js")
       "813dfe33b5c7f8388bccaaa38eec8382"
   """
-  def static_integrity(conn_or_socket_or_endpoint_or_uri, path)
+  def static_integrity(conn_or_socket_or_endpoint, path)
 
   def static_integrity(%Plug.Conn{private: %{phoenix_endpoint: endpoint}}, path) do
     static_integrity(endpoint, path)
