@@ -331,11 +331,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div>
-      <.label for={@id}><%%= @label %></.label>
+      <.label class="mb-2" for={@id}><%%= @label %></.label>
       <select
         id={@id}
         name={@name}
-        class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
+        class="block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
         multiple={@multiple}
         {@rest}
       >
@@ -350,12 +350,12 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(%{type: "textarea"} = assigns) do
     ~H"""
     <div>
-      <.label for={@id}><%%= @label %></.label>
+      <.label class="mb-2" for={@id}><%%= @label %></.label>
       <textarea
         id={@id}
         name={@name}
         class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6 min-h-[6rem]",
+          "block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6 min-h-[6rem]",
           @errors == [] && "border-zinc-300 focus:border-zinc-400",
           @errors != [] && "border-rose-400 focus:border-rose-400"
         ]}
@@ -370,14 +370,14 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(assigns) do
     ~H"""
     <div>
-      <.label for={@id}><%%= @label %></.label>
+      <.label class="mb-2" for={@id}><%%= @label %></.label>
       <input
         type={@type}
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
+          "block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
           @errors == [] && "border-zinc-300 focus:border-zinc-400",
           @errors != [] && "border-rose-400 focus:border-rose-400"
         ]}
@@ -391,12 +391,14 @@ defmodule <%= @web_namespace %>.CoreComponents do
   @doc """
   Renders a label.
   """
+  attr :class, :string, default: nil
   attr :for, :string, default: nil
+
   slot :inner_block, required: true
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
+    <label for={@for} class={["block text-sm font-semibold leading-6 text-zinc-800"], @class}>
       <%%= render_slot(@inner_block) %>
     </label>
     """
