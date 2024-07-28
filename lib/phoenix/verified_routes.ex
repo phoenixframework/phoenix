@@ -412,7 +412,7 @@ defmodule Phoenix.VerifiedRoutes do
   @doc """
   Generates url to a static asset given its file path.
 
-  See `Phoenix.Endpoint.static_url/0` and `Phoenix.Endpoint.static_path/1` for more information.
+  See `c:Phoenix.Endpoint.static_url/0` and `c:Phoenix.Endpoint.static_path/1` for more information.
 
   ## Examples
 
@@ -498,7 +498,7 @@ defmodule Phoenix.VerifiedRoutes do
   @doc """
   Generates path to a static asset given its file path.
 
-  See `Phoenix.Endpoint.static_path/1` for more information.
+  See `c:Phoenix.Endpoint.static_path/1` for more information.
 
   ## Examples
 
@@ -697,7 +697,7 @@ defmodule Phoenix.VerifiedRoutes do
   @doc """
   Generates an integrity hash to a static asset given its file path.
 
-  See `Phoenix.Endpoint.static_integrity/1` for more information.
+  See `c:Phoenix.Endpoint.static_integrity/1` for more information.
 
   ## Examples
 
