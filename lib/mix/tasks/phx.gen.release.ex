@@ -68,6 +68,8 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
         {:eex, "rel/migrate.sh.eex", "rel/overlays/bin/migrate"},
         {:eex, "rel/migrate.bat.eex", "rel/overlays/bin/migrate.bat"},
+        {:eex, "rel/wait_for_migrations.sh.eex", "rel/overlays/bin/wait_for_migrations"},
+        {:eex, "rel/wait_for_migrations.bat.eex", "rel/overlays/bin/wait_for_migrations.bat"},
         {:eex, "release.ex", Mix.Phoenix.context_lib_path(app, "release.ex")}
       ])
     end
@@ -159,6 +161,9 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
         # To run migrations
         _build/dev/rel/#{app}/bin/migrate
+
+        # To wait for migrations to run
+        _build/dev/rel/#{app}/bin/wait_for_migrations
     """
   end
 

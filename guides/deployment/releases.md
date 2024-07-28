@@ -43,6 +43,8 @@ $ mix phx.gen.release
 * creating rel/overlays/bin/server.bat
 * creating rel/overlays/bin/migrate
 * creating rel/overlays/bin/migrate.bat
+* creating rel/overlays/bin/wait_for_migrations
+* creating rel/overlays/bin/wait_for_migrations.bat
 * creating lib/my_app/release.ex
 
 Your application is ready to be deployed in a release!
@@ -55,6 +57,9 @@ Your application is ready to be deployed in a release!
 
     # To run migrations
     _build/dev/rel/my_app/bin/migrate
+
+    # To wait for migrations to run
+    _build/dev/rel/my_app/bin/wait_for_migrations
 
 Once the release is running:
 
@@ -70,7 +75,7 @@ To list all commands:
 
 ```
 
-The `phx.gen.release` task generated a few files for us to assist in releases. First, it created `server` and `migrate` *overlay* scripts for conveniently running the phoenix server inside a release or invoking migrations from a release. The files in the `rel/overlays` directory are copied into every release environment. Next, it generated a `release.ex` file which is used to invoke Ecto migrations without a dependency on `mix` itself.
+The `phx.gen.release` task generated a few files for us to assist in releases. First, it created *overlay* scripts (`server`, `migrate`, and `wait_for_migrations`) for conveniently running the phoenix server inside a release or managing migrations from a release. The files in the `rel/overlays` directory are copied into every release environment. Next, it generated a `release.ex` file which is used to invoke Ecto migrations without a dependency on `mix` itself.
 
 *Note*: If you are a Docker user, you can pass the `--docker` flag to `mix phx.gen.release` to generate a Dockerfile ready for deployment.
 
@@ -96,40 +101,15 @@ Now you can get all of the files under the `_build/prod/rel/my_app` directory, p
 
 But before we finish this guide, there is one more feature from releases that most Phoenix application will use, so let's talk about that.
 
-## Ecto migrations and custom commands
+## Ecto migrations
 
 A common need in production systems is to execute custom commands required to set up the production environment. One of such commands is precisely migrating the database. Since we don't have `Mix`, a *build* tool, inside releases, which are a production artifact, we need to bring said commands directly into the release.
 
-The `phx.gen.release` command created the following `release.ex` file in your project `lib/my_app/release.ex`, with the following content:
+The `phx.gen.release` command created the file `release.ex` in your project at `lib/my_app/release.ex`, with the following functions for managing migrations:
 
-```elixir
-defmodule MyApp.Release do
-  @app :my_app
-
-  def migrate do
-    load_app()
-
-    for repo <- repos() do
-      {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
-    end
-  end
-
-  def rollback(repo, version) do
-    load_app()
-    {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
-  end
-
-  defp repos do
-    Application.fetch_env!(@app, :ecto_repos)
-  end
-
-  defp load_app do
-    Application.load(@app)
-  end
-end
-```
-
-Where you replace the first two lines by your application names.
+* `migrate`: Equivalent to [`mix ecto.migrate`](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Migrate.html).
+* `wait_for_migrations`: Equivalent to waiting for [`mix ecto.migrations`](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Migrations.html) to show all migrations have been applied ("up").
+* `rollback`: Equivalent to [`mix ecto.rollback`](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Rollback.html).
 
 Now you can assemble a new release with `MIX_ENV=prod mix release` and you can invoke any code, including the functions in the module above, by calling the `eval` command:
 
@@ -139,7 +119,11 @@ $ _build/prod/rel/my_app/bin/my_app eval "MyApp.Release.migrate"
 
 And that's it! If you peek inside the `migrate` script, you'll see it wraps exactly this invocation.
 
-You can use this approach to create any custom command to run in production. In this case, we used `load_app`, which calls `Application.load/1` to load the current application without starting it. However, you may want to write a custom command that starts the whole application. In such cases, `Application.ensure_all_started/1` must be used. Keep in mind, starting the application will start all processes for the current application, including the Phoenix endpoint. This can be circumvented by changing your supervision tree to not start certain children under certain conditions. For example, in the release commands file you could do:
+To deploy a new release of your app, a common pattern involves running `migrate` and configuring each new instance of your app to `wait_for_migrations` before starting up. That way, we avoid potential errors since new app instances do not receive traffic until their required migrations have ran.
+
+## Custom commands
+
+Using the same approach that was used to implement Ecto migrations above, you can create any custom command to run in production. In this case, we used `load_app`, which calls `Application.load/1` to load the current application without starting it. However, you may want to write a custom command that starts the whole application. In such cases, `Application.ensure_all_started/1` must be used. Keep in mind, starting the application will start all processes for the current application, including the Phoenix endpoint. This can be circumvented by changing your supervision tree to not start certain children under certain conditions. For example, in the release commands file you could do:
 
 ```elixir
 defp start_app do
