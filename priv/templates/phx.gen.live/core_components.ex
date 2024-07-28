@@ -331,7 +331,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div>
-      <.label class="mb-2" for={@id}><%%= @label %></.label>
+      <.label for={@id} class="mb-2"><%%= @label %></.label>
       <select
         id={@id}
         name={@name}
@@ -350,7 +350,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(%{type: "textarea"} = assigns) do
     ~H"""
     <div>
-      <.label class="mb-2" for={@id}><%%= @label %></.label>
+      <.label for={@id} class="mb-2"><%%= @label %></.label>
       <textarea
         id={@id}
         name={@name}
@@ -370,7 +370,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(assigns) do
     ~H"""
     <div>
-      <.label class="mb-2" for={@id}><%%= @label %></.label>
+      <.label for={@id} class="mb-2"><%%= @label %></.label>
       <input
         type={@type}
         name={@name}
