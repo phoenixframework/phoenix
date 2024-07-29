@@ -119,6 +119,18 @@ defmodule Phoenix.CodeReloader do
             color: #{@style.text_color};
         }
 
+
+        @media (prefers-color-scheme: dark) {
+
+            html {
+               filter: invert(1);
+            }
+
+            html .exception-logo {
+                filter: invert(1);
+            }
+        }
+
         @media (max-width: 768px) {
             html {
                  font-size: 14px;
