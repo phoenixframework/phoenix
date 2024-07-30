@@ -72,7 +72,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                 <button
                   phx-click={JS.exec("data-cancel", to: "##{@id}")}
                   type="button"
-                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
+                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40 focus:opacity-40 focus:outline-none focus:ring-2 focus:ring-zinc-300"
                   aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>
                 >
                   <.icon name="hero-x-mark-solid" class="h-5 w-5" />
