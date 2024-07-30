@@ -39,6 +39,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :id, :string, required: true
   attr :show, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
+  attr :class, :string, default: nil
   slot :inner_block, required: true
 
   def modal(assigns) do
@@ -48,7 +49,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       phx-mounted={@show && show_modal(@id)}
       phx-remove={hide_modal(@id)}
       data-cancel={JS.exec(@on_cancel, "phx-remove")}
-      class="relative z-50 hidden"
+      class={["relative z-50 hidden", @class]}
     >
       <div id={"#{@id}-bg"} class="bg-zinc-50/90 fixed inset-0 transition-opacity" aria-hidden="true" />
       <div
@@ -102,6 +103,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :title, :string, default: nil
   attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
+  attr :class, :string, default: nil
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
 
@@ -117,7 +119,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
       class={[
         "fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
         @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
-        @kind == :error && "bg-rose-50 text-rose-900 shadow-md ring-rose-500 fill-rose-900"
+        @kind == :error && "bg-rose-50 text-rose-900 shadow-md ring-rose-500 fill-rose-900",
+        @class
       ]}
       {@rest}
     >
@@ -193,7 +196,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
 
   attr :rest, :global,
-    include: ~w(autocomplete name rel action enctype method novalidate target multipart),
+    include: ~w(autocomplete name rel action enctype method novalidate target multipart class),
     doc: "the arbitrary HTML attributes to apply to the form tag"
 
   slot :inner_block, required: true
@@ -286,6 +289,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :class, :string, default: nil
 
   attr :rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
@@ -318,7 +322,10 @@ defmodule <%= @web_namespace %>.CoreComponents do
           name={@name}
           value="true"
           checked={@checked}
-          class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
+          class={[
+            "rounded border-zinc-300 text-zinc-900 focus:ring-0",
+            @class
+          ]}
           {@rest}
         />
         <%%= @label %>
@@ -335,7 +342,10 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
+        class={[
+          "mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm",
+          @class
+        ]}
         multiple={@multiple}
         {@rest}
       >
@@ -357,7 +367,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
         class={[
           "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6 min-h-[6rem]",
           @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          @errors != [] && "border-rose-400 focus:border-rose-400",
+          @class
         ]}
         {@rest}
       ><%%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
@@ -379,7 +390,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
         class={[
           "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
           @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          @errors != [] && "border-rose-400 focus:border-rose-400",
+          @class
         ]}
         {@rest}
       />
@@ -406,10 +418,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
   Generates a generic error message.
   """
   slot :inner_block, required: true
+  attr :class, :string, default: nil
 
   def error(assigns) do
     ~H"""
-    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600">
+    <p class={["mt-3 flex gap-3 text-sm leading-6 text-rose-600", @class]}>
       <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
       <%%= render_slot(@inner_block) %>
     </p>
@@ -455,6 +468,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :rows, :list, required: true
   attr :row_id, :any, default: nil, doc: "the function for generating the row id"
   attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
+  attr :class, :string, default: nil
 
   attr :row_item, :any,
     default: &Function.identity/1,
@@ -473,7 +487,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       end
 
     ~H"""
-    <div class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
+    <div class={["overflow-y-auto px-4 sm:overflow-visible sm:px-0", @class]}>
       <table class="w-[40rem] mt-11 sm:w-full">
         <thead class="text-sm text-left leading-6 text-zinc-500">
           <tr>
@@ -532,10 +546,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
   slot :item, required: true do
     attr :title, :string, required: true
   end
+  attr :class, :string, default: nil
 
   def list(assigns) do
     ~H"""
-    <div class="mt-14">
+    <div class={["mt-14", @class]}>
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt class="w-1/4 flex-none text-zinc-500"><%%= item.title %></dt>
@@ -555,10 +570,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
   """
   attr :navigate, :any, required: true
   slot :inner_block, required: true
+  attr :class, :string, default: nil
 
   def back(assigns) do
     ~H"""
-    <div class="mt-16">
+    <div class={["mt-16", @class]}>
       <.link
         navigate={@navigate}
         class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
