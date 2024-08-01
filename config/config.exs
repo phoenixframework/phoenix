@@ -14,7 +14,7 @@ if Mix.env() == :dev do
     [
       args: ~w(./js/phoenix --bundle) ++ args,
       cd: Path.expand("../assets", __DIR__),
-      env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+      env: %{"NODE_PATH" => System.get_env("MIX_DEPS_PATH", Path.expand("../deps", __DIR__))}
     ]
   end
 
