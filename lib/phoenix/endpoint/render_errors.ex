@@ -151,7 +151,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
 
       true ->
         raise ArgumentError,
-              "expected :render_errors to have :formats or :view/:accept, but got: #{inspect(opts)}"
+              "expected :render_errors to have :formats or :view/:accepts, but got: #{inspect(opts)}"
     end
   end
 

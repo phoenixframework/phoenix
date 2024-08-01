@@ -48,7 +48,7 @@ defmodule Phoenix.CodeReloader.Server do
             Mix.Project.build_structure()
           else
             Logger.warning(
-              "Phoenix is unable to create symlinks. Phoenix' code reloader will run " <>
+              "Phoenix is unable to create symlinks. Phoenix's code reloader will run " <>
                 "considerably faster if symlinks are allowed." <> os_symlink(:os.type())
             )
           end
