@@ -33,7 +33,11 @@ module.exports = {
     // See your `CoreComponents.icon/1` for more information.
     //
     plugin(function({matchComponents, theme}) {
-      let iconsDir = path.join(__dirname, "..<%= if @in_umbrella, do: "/../.." %>/deps/heroicons/optimized")
+      let deps_path = path.join(__dirname, "..<%= if @in_umbrella, do: "/../.." %>/deps")
+      if (typeof process.env.MIX_DEPS_PATH === "string") {
+        deps_path = process.env.MIX_DEPS_PATH
+      }
+      let iconsDir = path.join(deps_path, "heroicons/optimized")
       let values = {}
       let icons = [
         ["", "/24/outline"],
