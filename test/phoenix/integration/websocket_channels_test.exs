@@ -1,7 +1,7 @@
 Code.require_file "../../support/websocket_client.exs", __DIR__
 
 defmodule Phoenix.Integration.WebSocketChannelsTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   import ExUnit.CaptureLog
 
   alias Phoenix.Integration.WebsocketClient
@@ -9,16 +9,6 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
   alias __MODULE__.Endpoint
 
   @moduletag :capture_log
-  @port 5807
-
-  Application.put_env(:phoenix, Endpoint, [
-    https: false,
-    http: [port: @port],
-    debug_errors: false,
-    server: true,
-    pubsub_server: __MODULE__,
-    secret_key_base: String.duplicate("a", 64)
-  ])
 
   defp lobby do
     "room:lobby#{System.unique_integer()}"
@@ -205,21 +195,37 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     end
   end
 
-  setup_all do
-    capture_log fn -> start_supervised! Endpoint end
-    start_supervised! {Phoenix.PubSub, name: __MODULE__}
-    :ok
-  end
-
   @endpoint Endpoint
 
-  for {serializer, vsn, join_ref} <- [{V1.JSONSerializer, "1.0.0", nil}, {V2.JSONSerializer, "2.0.0", "11"}] do
+  for {serializer, vsn, join_ref} <- [
+        {V1.JSONSerializer, "1.0.0", nil},
+        {V2.JSONSerializer, "2.0.0", "11"}
+      ],
+      adapter <- [Phoenix.Endpoint.Cowboy2Adapter, Bandit.PhoenixAdapter] do
+    @port 5807
     @serializer serializer
     @vsn vsn
     @vsn_path "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}"
     @join_ref join_ref
+    @adapter adapter
 
-    describe "with #{vsn} serializer #{inspect serializer}" do
+    describe "with #{vsn} serializer #{inspect(serializer)} on #{inspect(adapter)}" do
+      setup do
+        Application.put_env(:phoenix, Endpoint,
+          adapter: @adapter,
+          https: false,
+          http: [port: @port],
+          debug_errors: false,
+          server: true,
+          pubsub_server: __MODULE__,
+          secret_key_base: String.duplicate("a", 64)
+        )
+
+        capture_log(fn -> start_supervised!(Endpoint) end)
+        start_supervised!({Phoenix.PubSub, name: __MODULE__})
+        :ok
+      end
+
       test "endpoint handles multiple mount segments" do
         {:ok, sock} = WebsocketClient.connect(self(), "ws://127.0.0.1:#{@port}/ws/admin/websocket?vsn=#{@vsn}", @serializer)
         WebsocketClient.join(sock, "room:admin-lobby1", %{})
@@ -482,7 +488,11 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         WebsocketClient.close(sock)
 
         assert_receive {:DOWN, _, :process, ^channel, shutdown}
-                       when shutdown in [:shutdown, {:shutdown, :closed}]
+                       when shutdown in [
+                              :shutdown,
+                              {:shutdown, :closed},
+                              {:shutdown, :local_closed}
+                            ]
       end
 
       test "refuses websocket events that haven't joined" do
@@ -539,10 +549,12 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
         assert_receive {:DOWN, _, :process, ^sock, :normal}
         assert_receive {:DOWN, _, :process, ^chan1, shutdown}
-        #shutdown for cowboy, {:shutdown, :closed} for cowboy 2
-        assert shutdown in [:shutdown, {:shutdown, :closed}]
+        # shutdown for cowboy
+        # {:shutdown, :closed} for cowboy 2
+        # {:shutdown, :disconnected} for Bandit
+        assert shutdown in [:shutdown, {:shutdown, :closed}, {:shutdown, :disconnected}]
         assert_receive {:DOWN, _, :process, ^chan2, shutdown}
-        assert shutdown in [:shutdown, {:shutdown, :closed}]
+        assert shutdown in [:shutdown, {:shutdown, :closed}, {:shutdown, :disconnected}]
       end
 
       test "duplicate join event closes existing channel" do
@@ -604,6 +616,12 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     @vsn "2.0.0"
     @vsn_path "ws://127.0.0.1:#{@port}/ws/websocket?vsn=#{@vsn}"
 
+    setup do
+      capture_log(fn -> start_supervised!(Endpoint) end)
+      start_supervised!({Phoenix.PubSub, name: __MODULE__})
+      :ok
+    end
+
     test "join, ignore, error, and event messages" do
       {:ok, sock} = WebsocketClient.connect(self(), @vsn_path, @serializer)
 
@@ -640,6 +658,12 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     @serializer V2.JSONSerializer
     @vsn "2.0.0"
     @join_ref "11"
+
+    setup do
+      capture_log(fn -> start_supervised!(Endpoint) end)
+      start_supervised!({Phoenix.PubSub, name: __MODULE__})
+      :ok
+    end
 
     test "messages can be pushed and received" do
       topic = "room:bin"

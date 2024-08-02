@@ -12,14 +12,6 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
   @port 5808
   @pool_size 1
 
-  Application.put_env(:phoenix, Endpoint,
-    https: false,
-    http: [port: @port],
-    secret_key_base: String.duplicate("abcdefgh", 8),
-    server: true,
-    pubsub_server: __MODULE__
-  )
-
   defmodule RoomChannel do
     use Phoenix.Channel, log_join: :info, log_handle_in: :info
 
@@ -136,20 +128,6 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         check_origin: ["//example.com"],
         connect_info: [:trace_context_headers, :x_headers, :peer_data, :uri]
       ]
-  end
-
-  setup_all do
-    capture_log(fn -> start_supervised!(Endpoint) end)
-    start_supervised!({Phoenix.PubSub, name: __MODULE__, pool_size: @pool_size})
-    :ok
-  end
-
-  setup config do
-    for {_, pid, _, _} <- DynamicSupervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
-      DynamicSupervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
-    end
-
-    {:ok, topic: "room:" <> to_string(config.test)}
   end
 
   def assert_down(topic) do
@@ -305,288 +283,341 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     }
   end
 
-  for mode <- [:local, :pubsub] do
+  for mode <- [:local, :pubsub],
+      adapter <- [Phoenix.Endpoint.Cowboy2Adapter, Bandit.PhoenixAdapter] do
     @mode mode
     @vsn "1.0.0"
+    @adapter adapter
 
-    test "#{@mode}: joins and poll messages" do
-      session = join("/ws", "room:lobby", @vsn, "1", @mode)
+    describe "for mode #{mode} running on #{inspect(adapter)}" do
+      setup do
+        Application.put_env(:phoenix, Endpoint,
+          adapter: @adapter,
+          https: false,
+          http: [port: @port],
+          secret_key_base: String.duplicate("abcdefgh", 8),
+          server: true,
+          pubsub_server: __MODULE__
+        )
 
-      # pull messages
-      resp = poll(:get, "/ws", @vsn, session)
-      assert resp.body["status"] == 200
+        capture_log(fn -> start_supervised!(Endpoint) end)
+        start_supervised!({Phoenix.PubSub, name: __MODULE__, pool_size: @pool_size})
+        :ok
+      end
 
-      [phx_reply, user_entered, status_msg] = resp.body["messages"]
+      setup config do
+        for {_, pid, _, _} <-
+              DynamicSupervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
+          DynamicSupervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
+        end
 
-      assert phx_reply == %Message{
-               event: "phx_reply",
-               payload: %{"response" => %{}, "status" => "ok"},
-               ref: "1",
-               topic: "room:lobby"
-             }
+        {:ok, topic: "room:" <> to_string(config.test)}
+      end
 
-      assert %Message{
-               event: "joined",
-               payload: %{"status" => "connected", "user_id" => nil},
-               ref: nil,
-               join_ref: nil,
-               topic: "room:lobby"
-             } = status_msg
+      test "#{@mode}: joins and poll messages" do
+        session = join("/ws", "room:lobby", @vsn, "1", @mode)
 
-      assert user_entered == %Message{
-               event: "user_entered",
-               payload: %{"user" => nil},
-               ref: nil,
-               join_ref: nil,
-               topic: "room:lobby"
-             }
+        # pull messages
+        resp = poll(:get, "/ws", @vsn, session)
+        assert resp.body["status"] == 200
 
-      # poll without messages sends 204 no_content
-      resp = poll(:get, "/ws", @vsn, session)
-      assert resp.body["status"] == 204
-    end
+        [phx_reply, user_entered, status_msg] = resp.body["messages"]
 
-    test "#{@mode}: transport x_headers are extracted to the socket connect_info" do
-      session =
-        join("/ws/connect_info", "room:lobby", @vsn, "1", @mode, %{}, %{}, %{
-          "x-application" => "Phoenix"
-        })
-
-      # pull messages
-      resp = poll(:get, "/ws/connect_info", @vsn, session)
-      assert resp.body["status"] == 200
-
-      [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
-
-      assert %{"connect_info" => %{"x_headers" => %{"x-application" => "Phoenix"}}} =
-               status_msg.payload
-    end
-
-    test "#{@mode}: transport trace_context_headers are extracted to the socket connect_info" do
-      ctx_headers = %{
-        "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
-        "tracestate" => "congo=t61rcWkgMz"
-      }
-
-      session = join("/ws/connect_info", "room:lobby", @vsn, "1", @mode, %{}, %{}, ctx_headers)
-
-      # pull messages
-      resp = poll(:get, "/ws/connect_info", @vsn, session)
-      assert resp.body["status"] == 200
-
-      [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
-
-      assert %{"connect_info" => %{"trace_context_headers" => ^ctx_headers}} = status_msg.payload
-    end
-
-    test "#{@mode}: transport peer_data is extracted to the socket connect_info" do
-      session =
-        join("/ws/connect_info", "room:lobby", @vsn, "1", @mode, %{}, %{}, %{
-          "x-application" => "Phoenix"
-        })
-
-      # pull messages
-      resp = poll(:get, "/ws/connect_info", @vsn, session)
-      assert resp.body["status"] == 200
-
-      [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
-
-      assert %{"connect_info" => %{"peer_data" => %{"address" => "127.0.0.1"}}} =
-               status_msg.payload
-    end
-
-    test "#{@mode}: transport uri is extracted to the socket connect_info" do
-      session =
-        join("/ws/connect_info", "room:lobby", @vsn, "1", @mode, %{}, %{}, %{
-          "x-application" => "Phoenix"
-        })
-
-      # pull messages
-      resp = poll(:get, "/ws/connect_info", @vsn, session)
-      assert resp.body["status"] == 200
-
-      [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
-      query = "vsn=#{@vsn}"
-
-      assert %{
-               "connect_info" => %{
-                 "uri" => %{
-                   "host" => "127.0.0.1",
-                   "path" => "/ws/connect_info/longpoll",
-                   "query" => ^query,
-                   "scheme" => "http"
-                 }
+        assert phx_reply == %Message{
+                 event: "phx_reply",
+                 payload: %{"response" => %{}, "status" => "ok"},
+                 ref: "1",
+                 topic: "room:lobby"
                }
-             } = status_msg.payload
-    end
 
-    test "#{@mode}: publishing events" do
-      Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
-      session = join("/ws", "room:lobby", @vsn, "1", @mode)
+        assert %Message{
+                 event: "joined",
+                 payload: %{"status" => "connected", "user_id" => nil},
+                 ref: nil,
+                 join_ref: nil,
+                 topic: "room:lobby"
+               } = status_msg
 
-      # Publish successfully
-      resp =
-        poll(:post, "/ws", @vsn, session, %{
-          "topic" => "room:lobby",
-          "event" => "new_msg",
-          "ref" => "1",
-          "payload" => %{"body" => "hi!"}
-        })
+        assert user_entered == %Message{
+                 event: "user_entered",
+                 payload: %{"user" => nil},
+                 ref: nil,
+                 join_ref: nil,
+                 topic: "room:lobby"
+               }
 
-      assert resp.body["status"] == 200
-      assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi!"}}
+        # poll without messages sends 204 no_content
+        resp = poll(:get, "/ws", @vsn, session)
+        assert resp.body["status"] == 204
+      end
 
-      # Get published message
-      resp = poll(:get, "/ws", @vsn, session)
-      assert resp.body["status"] == 200
+      test "#{@mode}: transport x_headers are extracted to the socket connect_info" do
+        session =
+          join("/ws/connect_info", "room:lobby", @vsn, "1", @mode, %{}, %{}, %{
+            "x-application" => "Phoenix"
+          })
 
-      assert List.last(resp.body["messages"]) == %Message{
-               event: "new_msg",
-               payload: %{"transport" => ":longpoll", "body" => "hi!"},
-               ref: nil,
-               join_ref: nil,
-               topic: "room:lobby"
-             }
+        # pull messages
+        resp = poll(:get, "/ws/connect_info", @vsn, session)
+        assert resp.body["status"] == 200
 
-      # Publish event to an unjoined room
-      capture_log(fn ->
-        Phoenix.PubSub.subscribe(__MODULE__, "room:private-room")
+        [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
 
+        assert %{"connect_info" => %{"x_headers" => %{"x-application" => "Phoenix"}}} =
+                 status_msg.payload
+      end
+
+      test "#{@mode}: transport trace_context_headers are extracted to the socket connect_info" do
+        ctx_headers = %{
+          "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+          "tracestate" => "congo=t61rcWkgMz"
+        }
+
+        session = join("/ws/connect_info", "room:lobby", @vsn, "1", @mode, %{}, %{}, ctx_headers)
+
+        # pull messages
+        resp = poll(:get, "/ws/connect_info", @vsn, session)
+        assert resp.body["status"] == 200
+
+        [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
+
+        assert %{"connect_info" => %{"trace_context_headers" => ^ctx_headers}} = status_msg.payload
+      end
+
+      test "#{@mode}: transport peer_data is extracted to the socket connect_info" do
+        session =
+          join("/ws/connect_info", "room:lobby", @vsn, "1", @mode, %{}, %{}, %{
+            "x-application" => "Phoenix"
+          })
+
+        # pull messages
+        resp = poll(:get, "/ws/connect_info", @vsn, session)
+        assert resp.body["status"] == 200
+
+        [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
+
+        assert %{"connect_info" => %{"peer_data" => %{"address" => "127.0.0.1"}}} =
+                 status_msg.payload
+      end
+
+      test "#{@mode}: transport uri is extracted to the socket connect_info" do
+        session =
+          join("/ws/connect_info", "room:lobby", @vsn, "1", @mode, %{}, %{}, %{
+            "x-application" => "Phoenix"
+          })
+
+        # pull messages
+        resp = poll(:get, "/ws/connect_info", @vsn, session)
+        assert resp.body["status"] == 200
+
+        [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
+        query = "vsn=#{@vsn}"
+
+        assert %{
+                 "connect_info" => %{
+                   "uri" => %{
+                     "host" => "127.0.0.1",
+                     "path" => "/ws/connect_info/longpoll",
+                     "query" => ^query,
+                     "scheme" => "http"
+                   }
+                 }
+               } = status_msg.payload
+      end
+
+      test "#{@mode}: publishing events" do
+        Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
+        session = join("/ws", "room:lobby", @vsn, "1", @mode)
+
+        # Publish successfully
         resp =
           poll(:post, "/ws", @vsn, session, %{
-            "topic" => "room:private-room",
+            "topic" => "room:lobby",
             "event" => "new_msg",
-            "ref" => "12300",
-            "payload" => %{"body" => "this method shouldn't send!'"}
+            "ref" => "1",
+            "payload" => %{"body" => "hi!"}
           })
 
         assert resp.body["status"] == 200
-        refute_receive %Broadcast{event: "new_msg"}
+        assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi!"}}
 
-        # Get join error
+        # Get published message
         resp = poll(:get, "/ws", @vsn, session)
         assert resp.body["status"] == 200
 
         assert List.last(resp.body["messages"]) == %Message{
+                 event: "new_msg",
+                 payload: %{"transport" => ":longpoll", "body" => "hi!"},
+                 ref: nil,
                  join_ref: nil,
-                 event: "phx_reply",
-                 payload: %{"response" => %{"reason" => "unmatched topic"}, "status" => "error"},
-                 ref: "12300",
-                 topic: "room:private-room"
+                 topic: "room:lobby"
                }
-      end)
-    end
 
-    test "#{@mode}: lonpoll publishing batch events on v2 protocol" do
-      vsn = "2.0.0"
-      Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
-      session = join("/ws", "room:lobby", vsn, "1", @mode)
-      # Publish successfully
-      resp =
-        poll(:post, "/ws", vsn, session, [
-          %{
-            "topic" => "room:lobby",
-            "event" => "new_msg",
-            "ref" => "2",
-            "join_ref" => "1",
-            "payload" => %{"body" => "hi1"}
-          },
-          %{
-            "topic" => "room:lobby",
-            "event" => "new_msg",
-            "ref" => "3",
-            "join_ref" => "1",
-            "payload" => %{"body" => "hi2"}
-          }
-        ])
+        # Publish event to an unjoined room
+        capture_log(fn ->
+          Phoenix.PubSub.subscribe(__MODULE__, "room:private-room")
 
-      assert resp.body["status"] == 200
-      assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi1"}}
-      assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi2"}}
+          resp =
+            poll(:post, "/ws", @vsn, session, %{
+              "topic" => "room:private-room",
+              "event" => "new_msg",
+              "ref" => "12300",
+              "payload" => %{"body" => "this method shouldn't send!'"}
+            })
 
-      # Publish base64 binary successfully
-      resp =
-        poll(:post, "/ws", vsn, session, [
-          %{
-            "topic" => "room:lobby",
-            "event" => "bin",
-            "join_ref" => "1",
-            "ref" => "4",
-            "payload" => {:binary, <<1, 2, 3>>}
-          },
-          %{
-            "topic" => "room:lobby",
-            "event" => "new_msg",
-            "ref" => "5",
-            "join_ref" => "1",
-            "payload" => %{"body" => "hi3"}
-          }
-        ])
+          assert resp.body["status"] == 200
+          refute_receive %Broadcast{event: "new_msg"}
 
-      assert resp.body["status"] == 200
-      assert_receive %Broadcast{event: "bin_ack", payload: %{}}
-      assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi3"}}
+          # Get join error
+          resp = poll(:get, "/ws", @vsn, session)
+          assert resp.body["status"] == 200
 
-      # Get published message
-      resp = poll(:get, "/ws", vsn, session)
-      assert resp.body["status"] == 200
+          assert List.last(resp.body["messages"]) == %Message{
+                   join_ref: nil,
+                   event: "phx_reply",
+                   payload: %{"response" => %{"reason" => "unmatched topic"}, "status" => "error"},
+                   ref: "12300",
+                   topic: "room:private-room"
+                 }
+        end)
+      end
 
-      assert [
-               _phx_reply,
-               _user_entered,
-               _joined,
-               %Message{
-                 topic: "room:lobby",
-                 event: "new_msg",
-                 payload: %{"body" => "hi1", "transport" => ":longpoll"},
-                 ref: nil,
-                 join_ref: "1"
-               },
-               %Message{
-                 topic: "room:lobby",
-                 event: "new_msg",
-                 payload: %{"body" => "hi2", "transport" => ":longpoll"},
-                 ref: nil,
-                 join_ref: "1"
-               },
-               %Message{
-                 topic: "room:lobby",
-                 event: "bin_ack",
-                 payload: %{"transport" => ":longpoll"},
-                 ref: nil,
-                 join_ref: "1"
-               },
-               %Message{
-                 topic: "room:lobby",
-                 event: "new_msg",
-                 payload: %{"body" => "hi3", "transport" => ":longpoll"},
-                 ref: nil,
-                 join_ref: "1"
-               }
-             ] = resp.body["messages"]
-    end
+      test "#{@mode}: lonpoll publishing batch events on v2 protocol" do
+        vsn = "2.0.0"
+        Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
+        session = join("/ws", "room:lobby", vsn, "1", @mode)
+        # Publish successfully
+        resp =
+          poll(:post, "/ws", vsn, session, [
+            %{
+              "topic" => "room:lobby",
+              "event" => "new_msg",
+              "ref" => "2",
+              "join_ref" => "1",
+              "payload" => %{"body" => "hi1"}
+            },
+            %{
+              "topic" => "room:lobby",
+              "event" => "new_msg",
+              "ref" => "3",
+              "join_ref" => "1",
+              "payload" => %{"body" => "hi2"}
+            }
+          ])
 
-    test "#{@mode}: shuts down after timeout" do
-      session = join("/ws", "room:lobby", @vsn, "1", @mode)
+        assert resp.body["status"] == 200
+        assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi1"}}
+        assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi2"}}
 
-      channel = Process.whereis(:"room:lobby")
-      assert channel
-      Process.monitor(channel)
+        # Publish base64 binary successfully
+        resp =
+          poll(:post, "/ws", vsn, session, [
+            %{
+              "topic" => "room:lobby",
+              "event" => "bin",
+              "join_ref" => "1",
+              "ref" => "4",
+              "payload" => {:binary, <<1, 2, 3>>}
+            },
+            %{
+              "topic" => "room:lobby",
+              "event" => "new_msg",
+              "ref" => "5",
+              "join_ref" => "1",
+              "payload" => %{"body" => "hi3"}
+            }
+          ])
 
-      assert_receive({:DOWN, _, :process, ^channel, {:shutdown, :inactive}}, 5000)
-      resp = poll(:post, "/ws", @vsn, session)
-      assert resp.body["status"] == 410
+        assert resp.body["status"] == 200
+        assert_receive %Broadcast{event: "bin_ack", payload: %{}}
+        assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi3"}}
+
+        # Get published message
+        resp = poll(:get, "/ws", vsn, session)
+        assert resp.body["status"] == 200
+
+        assert [
+                 _phx_reply,
+                 _user_entered,
+                 _joined,
+                 %Message{
+                   topic: "room:lobby",
+                   event: "new_msg",
+                   payload: %{"body" => "hi1", "transport" => ":longpoll"},
+                   ref: nil,
+                   join_ref: "1"
+                 },
+                 %Message{
+                   topic: "room:lobby",
+                   event: "new_msg",
+                   payload: %{"body" => "hi2", "transport" => ":longpoll"},
+                   ref: nil,
+                   join_ref: "1"
+                 },
+                 %Message{
+                   topic: "room:lobby",
+                   event: "bin_ack",
+                   payload: %{"transport" => ":longpoll"},
+                   ref: nil,
+                   join_ref: "1"
+                 },
+                 %Message{
+                   topic: "room:lobby",
+                   event: "new_msg",
+                   payload: %{"body" => "hi3", "transport" => ":longpoll"},
+                   ref: nil,
+                   join_ref: "1"
+                 }
+               ] = resp.body["messages"]
+      end
+
+      test "#{@mode}: shuts down after timeout" do
+        session = join("/ws", "room:lobby", @vsn, "1", @mode)
+
+        channel = Process.whereis(:"room:lobby")
+        assert channel
+        Process.monitor(channel)
+
+        assert_receive({:DOWN, _, :process, ^channel, {:shutdown, :inactive}}, 5000)
+        resp = poll(:post, "/ws", @vsn, session)
+        assert resp.body["status"] == 410
+      end
     end
   end
 
   for {serializer, vsn, join_ref} <- [
         {V1.JSONSerializer, "1.0.0", nil},
         {V2.JSONSerializer, "2.0.0", "1"}
-      ] do
+      ],
+      adapter <- [Phoenix.Endpoint.Cowboy2Adapter, Bandit.PhoenixAdapter] do
     @vsn vsn
     @join_ref join_ref
 
-    describe "with #{vsn} serializer #{inspect(serializer)}" do
+    describe "with #{vsn} serializer #{inspect(serializer)} on adapter #{inspect(adapter)}" do
+      setup do
+        Application.put_env(:phoenix, Endpoint,
+          adapter: @adapter,
+          https: false,
+          http: [port: @port],
+          secret_key_base: String.duplicate("abcdefgh", 8),
+          server: true,
+          pubsub_server: __MODULE__
+        )
+
+        capture_log(fn -> start_supervised!(Endpoint) end)
+        start_supervised!({Phoenix.PubSub, name: __MODULE__, pool_size: @pool_size})
+        :ok
+      end
+
+      setup config do
+        for {_, pid, _, _} <-
+              DynamicSupervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
+          DynamicSupervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
+        end
+
+        {:ok, topic: "room:" <> to_string(config.test)}
+      end
+
       test "refuses connects that error with 403 response" do
         resp = poll(:get, "/ws", @vsn, %{"reject" => "true"}, %{})
         assert resp.body["status"] == 403
