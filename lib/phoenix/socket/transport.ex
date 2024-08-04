@@ -269,7 +269,7 @@ defmodule Phoenix.Socket.Transport do
 
     connect_info =
       Enum.map(connect_info, fn
-        key when key in [:peer_data, :trace_context_headers, :uri, :user_agent, :x_headers, :auth_token] ->
+        key when key in [:peer_data, :trace_context_headers, :uri, :user_agent, :x_headers, :sec_websocket_protocol, :auth_token] ->
           key
 
         {:session, session} ->
@@ -280,7 +280,7 @@ defmodule Phoenix.Socket.Transport do
 
         other ->
           raise ArgumentError,
-                ":connect_info keys are expected to be one of :peer_data, :trace_context_headers, :x_headers, :uri, or {:session, config}, " <>
+                ":connect_info keys are expected to be one of :peer_data, :trace_context_headers, :x_headers, :user_agent, :sec_websocket_protocol, :uri, or {:session, config}, " <>
                   "optionally followed by custom keyword pairs, got: #{inspect(other)}"
       end)
 
@@ -470,6 +470,8 @@ defmodule Phoenix.Socket.Transport do
 
     * `:user_agent` - the value of the "user-agent" request header
 
+    * `:sec_websocket_protocol` - the value of the "sec-websocket-protocol" header
+
   The CSRF check can be disabled by setting the `:check_csrf` option to `false`.
   """
   def connect_info(conn, endpoint, keys, opts \\ []) do
@@ -489,6 +491,9 @@ defmodule Phoenix.Socket.Transport do
 
         :user_agent ->
           {:user_agent, fetch_user_agent(conn)}
+
+        :sec_websocket_protocol ->
+          {:sec_websocket_protocol, Plug.Conn.get_req_header(conn, "sec-websocket-protocol")}
 
         {:session, session} ->
           {:session, connect_session(conn, endpoint, session, opts)}
