@@ -1,9 +1,7 @@
 <.header>
   Listing <%= schema.human_plural %>
   <:actions>
-    <.link patch={~p"<%= schema.route_prefix %>/new"}>
-      <.button>New <%= schema.human_singular %></.button>
-    </.link>
+    <.button link={%{patch: ~p"<%= schema.route_prefix %>/new"}}>New <%= schema.human_singular %></.button>
   </:actions>
 </.header>
 
