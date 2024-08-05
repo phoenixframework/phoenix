@@ -5,8 +5,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect schema.module %>
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, _session, socket) do<%= if schema.opts[:primary_key] do %>
+    {:ok,
+     socket
+     |> stream_configure(:<%= schema.collection %>, dom_id: &"<%= schema.table %>-#{&1.<%= schema.opts[:primary_key] %>}")
+     |> stream(:<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>())}<% else %>
     {:ok, stream(socket, :<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>())}
+<% end %>
   end
 
   @impl true

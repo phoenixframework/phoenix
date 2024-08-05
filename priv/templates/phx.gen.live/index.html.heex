@@ -21,7 +21,7 @@
   </:action>
   <:action :let={{id, <%= schema.singular %>}}>
     <.link
-      phx-click={JS.push("delete", value: %{id: <%= schema.singular %>.id}) |> hide("##{id}")}
+      phx-click={JS.push("delete", value: %{id: <%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>}) |> hide("##{id}")}
       data-confirm="Are you sure?"
     >
       Delete
@@ -32,7 +32,7 @@
 <.modal :if={@live_action in [:new, :edit]} id="<%= schema.singular %>-modal" show on_cancel={JS.patch(~p"<%= schema.route_prefix %>")}>
   <.live_component
     module={<%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent}
-    id={@<%= schema.singular %>.id || :new}
+    id={@<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %> || :new}
     title={@page_title}
     action={@live_action}
     <%= schema.singular %>={@<%= schema.singular %>}
