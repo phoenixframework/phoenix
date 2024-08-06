@@ -489,13 +489,10 @@ defmodule Phoenix.Socket.Transport do
   defp connect_session(conn, endpoint, {key, store, {csrf_token_key, init}}) do
     conn = Plug.Conn.fetch_cookies(conn)
 
-    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
-         cookie when is_binary(cookie) <- conn.cookies[key],
+    with cookie when is_binary(cookie) <- conn.cookies[key],
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
          {_, session} <- store.get(conn, cookie, init),
-         csrf_state when is_binary(csrf_state) <-
-           Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]),
-         true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
+         true <- maybe_check_csrf(conn, endpoint, session, csrf_token_key) do
       session
     else
       _ -> nil
@@ -539,6 +536,18 @@ defmodule Phoenix.Socket.Transport do
   defp fetch_user_agent(conn) do
     with {_, value} <- List.keyfind(conn.req_headers, "user-agent", 0) do
       value
+    end
+  end
+
+  defp maybe_check_csrf(conn, endpoint, session, csrf_token_key) do
+    if endpoint.config(:socket_check_csrf, true) do
+      with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
+           csrf_state when is_binary(csrf_state) <-
+             Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]) do
+         Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token)
+      end
+    else
+      true
     end
   end
 
