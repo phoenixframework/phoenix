@@ -181,6 +181,8 @@ defmodule Phoenix.Endpoint do
 
           [another: {Mod, :fun, [arg1, arg2]}]
 
+      When `false`, watchers can be disabled.
+
     * `:force_watchers` - when `true`, forces your watchers to start
       even when the `:server` option is set to `false`.
 
