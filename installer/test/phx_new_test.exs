@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/config.exs", fn file ->
         assert file =~ "ecto_repos: [PhxBlog.Repo]"
-        assert file =~ "generators: [timestamp_type: :utc_datetime]"
+        assert file =~ "generators: [timestamp_type: :utc_datetime_usecs]"
         assert file =~ "config :phoenix, :json_library, Jason"
         assert file =~ ~s[cd: Path.expand("../assets", __DIR__),]
         refute file =~ "namespace: PhxBlog"
