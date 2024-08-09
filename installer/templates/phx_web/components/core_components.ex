@@ -35,9 +35,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
         This is another modal.
       </.modal>
 
+  To prevent the modal from accidentally closing when clicking on the backdrop, pass the 'modal' attr.
   """
   attr :id, :string, required: true
   attr :show, :boolean, default: false
+  attr :modal, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
   slot :inner_block, required: true
 
@@ -65,7 +67,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
               id={"#{@id}-container"}
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
-              phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
+              phx-click-away={not @modal and JS.exec("data-cancel", to: "##{@id}")}
               class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white p-14 shadow-lg ring-1 transition"
             >
               <div class="absolute top-6 right-5">
