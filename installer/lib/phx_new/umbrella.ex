@@ -40,6 +40,8 @@ defmodule Phx.New.Umbrella do
       | web_app: web_app,
         lib_web_name: web_app,
         web_namespace: web_namespace,
+        depends_on_app: app,
+        depends_on_mod: project.app_mod,
         generators: [context_app: :"#{app}"],
         web_path: Path.join(project.project_path, "apps/#{web_app}/")
     }

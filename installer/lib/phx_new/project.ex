@@ -15,6 +15,8 @@ defmodule Phx.New.Project do
             web_path: nil,
             opts: :unset,
             in_umbrella?: false,
+            depends_on_app: nil,
+            depends_on_mod: nil,
             binding: [],
             generators: [timestamp_type: :utc_datetime]
 
