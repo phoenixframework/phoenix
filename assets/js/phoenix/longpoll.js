@@ -6,11 +6,16 @@ import {
 import Ajax from "./ajax"
 
 let arrayBufferToBase64 = (buffer) => {
-  let binary = ""
-  let bytes = new Uint8Array(buffer)
-  let len = bytes.byteLength
-  for(let i = 0; i < len; i++){ binary += String.fromCharCode(bytes[i]) }
-  return btoa(binary)
+  return new Promise((resolve, reject) => {
+    let reader = new FileReader()
+    let blob = new Blob([buffer])
+    reader.onload = e => {
+      let dataStart = reader.result.indexOf(',')
+      resolve(reader.result.slice(dataStart + 1))
+    }
+    reader.onerror = () => reject()
+    reader.readAsDataURL(blob)
+  })
 }
 
 export default class LongPoll {
@@ -24,6 +29,7 @@ export default class LongPoll {
     this.currentBatch = null
     this.currentBatchTimer = null
     this.batchBuffer = []
+    this.sendResolver = Promise.resolve()
     this.onopen = function (){ } // noop
     this.onerror = function (){ } // noop
     this.onmessage = function (){ } // noop
@@ -118,18 +124,26 @@ export default class LongPoll {
   // pushes against an empty buffer
 
   send(body){
-    if(typeof(body) !== "string"){ body = arrayBufferToBase64(body) }
-    if(this.currentBatch){
-      this.currentBatch.push(body)
-    } else if(this.awaitingBatchAck){
-      this.batchBuffer.push(body)
-    } else {
-      this.currentBatch = [body]
-      this.currentBatchTimer = setTimeout(() => {
-        this.batchSend(this.currentBatch)
-        this.currentBatch = null
-      }, 0)
-    }
+    this.sendResolver =
+      this.sendResolver
+      .then(() => {
+        if(typeof(body) !== "string"){ return arrayBufferToBase64(body) }
+        return body
+      })
+      .then(body => {
+        if(this.currentBatch){
+          this.currentBatch.push(body)
+        } else if(this.awaitingBatchAck){
+          this.batchBuffer.push(body)
+        } else {
+          this.currentBatch = [body]
+          this.currentBatchTimer = setTimeout(() => {
+            this.batchSend(this.currentBatch)
+            this.currentBatch = null
+            this.sendResolver = Promise.resolve()
+          }, 0)
+        }
+      })
   }
 
   batchSend(messages){

@@ -9,7 +9,7 @@ export default {
   KINDS: {push: 0, reply: 1, broadcast: 2},
 
   encode(msg, callback){
-    if(msg.payload.constructor === ArrayBuffer){
+    if(msg.payload.constructor === ArrayBuffer || msg.payload.constructor === Blob){
       return callback(this.binaryEncode(msg))
     } else {
       let payload = [msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload]
@@ -45,11 +45,7 @@ export default {
     Array.from(topic, char => view.setUint8(offset++, char.charCodeAt(0)))
     Array.from(event, char => view.setUint8(offset++, char.charCodeAt(0)))
 
-    var combined = new Uint8Array(header.byteLength + payload.byteLength)
-    combined.set(new Uint8Array(header), 0)
-    combined.set(new Uint8Array(payload), header.byteLength)
-
-    return combined.buffer
+    return new Blob([header, payload])
   },
 
   binaryDecode(buffer){
