@@ -76,7 +76,7 @@ If you need to reference other directories, you need to update the arguments abo
 
 Phoenix's default configuration of `esbuild` (via the Elixir wrapper) does not allow you to use [esbuild plugins](https://esbuild.github.io/plugins/). If you want to use an esbuild plugin, for example to compile SASS files to CSS, you can replace the default build system with a custom build script.
 
-The following is an example of a custom build using esbuild via Node.JS. First of all, you'll need to install Node.js in development and make it available for your production build step.
+The following is an example of a custom build using esbuild via Node.js. First of all, you'll need to install Node.js in development and make it available for your production build step.
 
 Then you'll need to add `esbuild` to your Node.js packages and the Phoenix packages. Inside the `assets` directory, run:
 
