@@ -19,9 +19,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   types.  See `mix help phx.gen.schema` for more information on attributes.
 
   When this command is run for the first time, a `Components` module will be
-  created if it does not exist, along with the resource level LiveViews and
-  components, including `UserLive.Index`, `UserLive.Show`, and
-  `UserLive.FormComponent` modules for the new resource.
+  created if it does not exist, along with the resource level LiveViews,
+  including `UserLive.Index`, `UserLive.Show`, and `UserLive.Form` modules for
+  the new resource.
 
   > Note: A resource may also be split
   > over distinct contexts (such as `Accounts.User` and `Payments.User`).
@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     * a schema in `lib/app/accounts/user.ex`, with a `users` table
     * a LiveView in `lib/app_web/live/user_live/show.ex`
     * a LiveView in `lib/app_web/live/user_live/index.ex`
-    * a LiveComponent in `lib/app_web/live/user_live/form_component.ex`
+    * a LiveView in `lib/app_web/live/user_live/form.ex`
     * a helpers module in `lib/app_web/live/live_helpers.ex` with a modal
 
   After file generation is complete, there will be output regarding required
@@ -41,11 +41,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       Add the live routes to your browser scope in lib/app_web/router.ex:
 
         live "/users", UserLive.Index, :index
-        live "/users/new", UserLive.Index, :new
-        live "/users/:id/edit", UserLive.Index, :edit
-
+        live "/users/new", UserLive.Form, :new
         live "/users/:id", UserLive.Show, :show
-        live "/users/:id/show/edit", UserLive.Show, :edit
+        live "/users/:id/edit", UserLive.Form, :edit
 
   ## The context app
 
@@ -147,7 +145,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     [
       {:eex, "show.ex", Path.join(web_live, "show.ex")},
       {:eex, "index.ex", Path.join(web_live, "index.ex")},
-      {:eex, "form_component.ex", Path.join(web_live, "form_component.ex")},
+      {:eex, "form.ex", Path.join(web_live, "form.ex")},
       {:eex, "index.html.heex", Path.join(web_live, "index.html.heex")},
       {:eex, "show.html.heex", Path.join(web_live, "show.html.heex")},
       {:eex, "live_test.exs", Path.join(test_live, "#{schema.singular}_live_test.exs")},
@@ -262,10 +260,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   defp live_route_instructions(schema) do
     [
       ~s|live "/#{schema.plural}", #{inspect(schema.alias)}Live.Index, :index\n|,
-      ~s|live "/#{schema.plural}/new", #{inspect(schema.alias)}Live.Index, :new\n|,
-      ~s|live "/#{schema.plural}/:id/edit", #{inspect(schema.alias)}Live.Index, :edit\n\n|,
+      ~s|live "/#{schema.plural}/new", #{inspect(schema.alias)}Live.Form, :new\n|,
       ~s|live "/#{schema.plural}/:id", #{inspect(schema.alias)}Live.Show, :show\n|,
-      ~s|live "/#{schema.plural}/:id/show/edit", #{inspect(schema.alias)}Live.Show, :edit|
+      ~s|live "/#{schema.plural}/:id/edit", #{inspect(schema.alias)}Live.Form, :edit|
     ]
   end
 
