@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     * a LiveView in `lib/app_web/live/user_live/show.ex`
     * a LiveView in `lib/app_web/live/user_live/index.ex`
     * a LiveView in `lib/app_web/live/user_live/form.ex`
-    * a helpers module in `lib/app_web/live/live_helpers.ex` with a modal
+    * a components module in `lib/app_web/components/core_components.ex`
 
   After file generation is complete, there will be output regarding required
   updates to the `lib/app_web/router.ex` file.
