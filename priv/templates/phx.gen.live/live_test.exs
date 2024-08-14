@@ -30,7 +30,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
                index_live
                |> element("a", "New <%= schema.human_singular %>")
                |> render_click()
-               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/new")
+               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/new?return_to=index")
 
       assert render(form_live) =~ "New <%= schema.human_singular %>"
 
@@ -38,13 +38,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
              |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)
              |> render_change() =~ "<%= Mix.Phoenix.Schema.failed_render_change_message(schema) %>"
 
-      assert {:ok, show_live, _html} =
+      assert {:ok, index_live, _html} =
                form_live
                |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @create_attrs)
                |> render_submit()
-               |> follow_redirect(conn)
+               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>")
 
-      html = render(show_live)
+      html = render(index_live)
       assert html =~ "<%= schema.human_singular %> created successfully"<%= if schema.string_attr do %>
       assert html =~ "some <%= schema.string_attr %>"<% end %>
     end
@@ -56,7 +56,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
                index_live
                |> element("#<%= schema.plural %>-#{<%= schema.singular %>.id} a", "Edit")
                |> render_click()
-               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit")
+               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit?return_to=index")
 
       assert render(form_live) =~ "Edit <%= schema.human_singular %>"
 
@@ -64,13 +64,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
              |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)
              |> render_change() =~ "<%= Mix.Phoenix.Schema.failed_render_change_message(schema) %>"
 
-      assert {:ok, show_live, _html} =
+      assert {:ok, index_live, _html} =
                form_live
                |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @update_attrs)
                |> render_submit()
-               |> follow_redirect(conn)
+               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>")
 
-      html = render(show_live)
+      html = render(index_live)
       assert html =~ "<%= schema.human_singular %> updated successfully"<%= if schema.string_attr do %>
       assert html =~ "some updated <%= schema.string_attr %>"<% end %>
     end
@@ -93,7 +93,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert html =~ <%= schema.singular %>.<%= schema.string_attr %><% end %>
     end
 
-    test "updates <%= schema.singular %>", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+    test "updates <%= schema.singular %> and returns to show", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       {:ok, show_live, _html} = live(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}")
 
       assert {:ok, form_live, _} =

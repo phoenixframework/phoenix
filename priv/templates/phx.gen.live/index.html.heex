@@ -1,7 +1,7 @@
 <.header>
   Listing <%= schema.human_plural %>
   <:actions>
-    <.link navigate={~p"<%= schema.route_prefix %>/new"}>
+    <.link navigate={~p"<%= schema.route_prefix %>/new?return_to=index"}>
       <.button>New <%= schema.human_singular %></.button>
     </.link>
   </:actions>
@@ -17,7 +17,7 @@
     <div class="sr-only">
       <.link navigate={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link>
     </div>
-    <.link navigate={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit"}>Edit</.link>
+    <.link navigate={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit?return_to=index"}>Edit</.link>
   </:action>
   <:action :let={{id, <%= schema.singular %>}}>
     <.link

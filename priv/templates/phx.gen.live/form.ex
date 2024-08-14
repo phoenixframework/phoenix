@@ -41,7 +41,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> updated successfully")
-         |> push_navigate(to: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}")}
+         |> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
@@ -54,15 +54,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> created successfully")
-         |> push_navigate(to: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}")}
+         |> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 
+  defp return_path(:index, _<%= schema.singular %>), do: ~p"<%= schema.route_prefix %>"
+  defp return_path(:show, <%= schema.singular %>), do: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"
+
   @impl true
   def handle_params(params, _url, socket) do
+    socket = assign(socket, :return_to, return_to(params["return_to"]))
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
@@ -83,6 +87,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     |> assign(:<%= schema.singular %>, <%= schema.singular %>)
     |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)))
   end
+
+  defp return_to("index"), do: :index
+  defp return_to("show"), do: :show
+  defp return_to(_), do: :show
 
   @impl true
   def mount(_params, _session, socket) do
