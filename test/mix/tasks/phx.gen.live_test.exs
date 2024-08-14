@@ -131,7 +131,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "test/phoenix_web/live/post_live_test.exs", fn file ->
         assert file =~ ~r"@invalid_attrs.*popular: false"
         assert file =~ ~S|~p"/posts"|
-        assert file =~ ~S|~p"/posts/new"|
+        assert file =~ ~S|~p"/posts/new?return_to=index"|
         assert file =~ ~S|~p"/posts/#{post}"|
         assert file =~ ~S|~p"/posts/#{post}/edit"|
       end
@@ -237,8 +237,8 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       end
 
       assert_file "lib/phoenix_web/live/blog/post_live/index.html.heex", fn file ->
-        assert file =~ ~S|~p"/blog/posts/#{post}/edit"|
-        assert file =~ ~S|~p"/blog/posts/new"|
+        assert file =~ ~S|~p"/blog/posts/#{post}/edit?return_to=index"|
+        assert file =~ ~S|~p"/blog/posts/new?return_to=index"|
         assert file =~ ~S|~p"/blog/posts/#{post}"|
       end
 
@@ -249,7 +249,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
       assert_file "test/phoenix_web/live/blog/post_live_test.exs", fn file ->
         assert file =~ ~S|~p"/blog/posts"|
-        assert file =~ ~S|~p"/blog/posts/new"|
+        assert file =~ ~S|~p"/blog/posts/new?return_to=index"|
         assert file =~ ~S|~p"/blog/posts/#{post}/edit"|
       end
 
