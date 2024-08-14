@@ -1,8 +1,8 @@
 <.header>
   Listing <%= schema.human_plural %>
   <:actions>
-    <.link href={~p"<%= schema.route_prefix %>/new"}>
-      <.button>New <%= schema.human_singular %></.button>
+    <.link href={~p"<%= schema.route_prefix %>/new"} class="py-2 px-3 text-sm font-semibold rounded-lg bg-zinc-100 hover:bg-zinc-200/80">
+      New <%= schema.human_singular %>
     </.link>
   </:actions>
 </.header>
