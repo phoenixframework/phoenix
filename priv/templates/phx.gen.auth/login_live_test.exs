@@ -18,7 +18,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         conn
         |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture())
         |> live(~p"<%= schema.route_prefix %>/log_in")
-        |> follow_redirect(conn, "/")
+        |> follow_redirect(conn, ~p"/")
 
       assert {:ok, _conn} = result
     end
