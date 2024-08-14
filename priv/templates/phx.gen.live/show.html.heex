@@ -2,7 +2,7 @@
   <%= schema.human_singular %> <%%= @<%= schema.singular %>.id %>
   <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
   <:actions>
-    <.link patch={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"} phx-click={JS.push_focus()}>
+    <.link navigate={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
       <.button>Edit <%= schema.singular %></.button>
     </.link>
   </:actions>
