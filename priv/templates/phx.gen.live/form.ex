@@ -20,7 +20,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         </:actions>
       </.simple_form>
 
-      <.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
+      <.back navigate={return_path(@return_to.key, @<%= schema.singular %>)}>Back to <%%= @return_to.name %></.back>
     </div>
     """
   end
@@ -36,8 +36,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  defp return_to("show"), do: "show"
-  defp return_to(_), do: "index"
+  defp return_to("show"), do: %{key: "show", name: "<%= schema.singular %>"}
+  defp return_to(_), do: %{key: "index", name: "<%= schema.plural %>"}
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
@@ -73,7 +73,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> updated successfully")
-         |> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}
+         |> push_navigate(to: return_path(socket.assigns.return_to.key, <%= schema.singular %>))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
@@ -86,7 +86,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> created successfully")
-         |> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}
+         |> push_navigate(to: return_path(socket.assigns.return_to.key, <%= schema.singular %>))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
