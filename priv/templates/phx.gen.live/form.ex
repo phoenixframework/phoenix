@@ -26,6 +26,38 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   @impl true
+  def mount(_params, _session, socket) do
+    {:ok, socket}
+  end
+
+  @impl true
+  def handle_params(params, _url, socket) do
+    socket = assign(socket, :return_to, return_to(params["return_to"]))
+    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  end
+
+  defp return_to("show"), do: "show"
+  defp return_to(_), do: "index"
+
+  defp apply_action(socket, :edit, %{"id" => id}) do
+    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
+
+    socket
+    |> assign(:page_title, "Edit <%= schema.human_singular %>")
+    |> assign(:<%= schema.singular %>, <%= schema.singular %>)
+    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)))
+  end
+
+  defp apply_action(socket, :new, _params) do
+    <%= schema.singular %> = %<%= inspect schema.alias %>{}
+
+    socket
+    |> assign(:page_title, "New <%= schema.human_singular %>")
+    |> assign(:<%= schema.singular %>, <%= schema.singular %>)
+    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)))
+  end
+
+  @impl true
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params)
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
@@ -63,36 +95,4 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   defp return_path("index", _<%= schema.singular %>), do: ~p"<%= schema.route_prefix %>"
   defp return_path("show", <%= schema.singular %>), do: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"
-
-  @impl true
-  def handle_params(params, _url, socket) do
-    socket = assign(socket, :return_to, return_to(params["return_to"]))
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
-  end
-
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
-
-    socket
-    |> assign(:page_title, "Edit <%= schema.human_singular %>")
-    |> assign(:<%= schema.singular %>, <%= schema.singular %>)
-    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)))
-  end
-
-  defp apply_action(socket, :new, _params) do
-    <%= schema.singular %> = %<%= inspect schema.alias %>{}
-
-    socket
-    |> assign(:page_title, "New <%= schema.human_singular %>")
-    |> assign(:<%= schema.singular %>, <%= schema.singular %>)
-    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)))
-  end
-
-  defp return_to("show"), do: "show"
-  defp return_to(_), do: "index"
-
-  @impl true
-  def mount(_params, _session, socket) do
-    {:ok, socket}
-  end
 end
