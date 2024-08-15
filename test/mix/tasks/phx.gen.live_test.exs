@@ -91,11 +91,11 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ "create unique_index(:posts, [:slug])"
       end
 
-      assert_file "lib/phoenix_web/live/post_live/index.html.heex", fn file ->
+      assert_file "lib/phoenix_web/live/post_live/index.ex", fn file ->
         assert file =~ ~S|~p"/posts/#{post}"|
       end
 
-      assert_file "lib/phoenix_web/live/post_live/show.html.heex", fn file ->
+      assert_file "lib/phoenix_web/live/post_live/show.ex", fn file ->
         assert file =~ ~S|~p"/posts"|
       end
 
@@ -236,13 +236,13 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ "add :title, :string"
       end
 
-      assert_file "lib/phoenix_web/live/blog/post_live/index.html.heex", fn file ->
+      assert_file "lib/phoenix_web/live/blog/post_live/index.ex", fn file ->
         assert file =~ ~S|~p"/blog/posts/#{post}/edit"|
         assert file =~ ~S|~p"/blog/posts/new"|
         assert file =~ ~S|~p"/blog/posts/#{post}"|
       end
 
-      assert_file "lib/phoenix_web/live/blog/post_live/show.html.heex", fn file ->
+      assert_file "lib/phoenix_web/live/blog/post_live/show.ex", fn file ->
         assert file =~ ~S|~p"/blog/posts"|
         assert file =~ ~S|~p"/blog/posts/#{@post}/edit?return_to=show"|
       end
@@ -282,8 +282,6 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "lib/phoenix_web/live/post_live/show.ex"
       assert_file "lib/phoenix_web/live/post_live/form.ex"
 
-      assert_file "lib/phoenix_web/live/post_live/index.html.heex"
-      assert_file "lib/phoenix_web/live/post_live/show.html.heex"
       assert_file "test/phoenix_web/live/post_live_test.exs"
     end
   end
@@ -300,8 +298,6 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "lib/phoenix_web/live/post_live/show.ex"
       assert_file "lib/phoenix_web/live/post_live/form.ex"
 
-      assert_file "lib/phoenix_web/live/post_live/index.html.heex"
-      assert_file "lib/phoenix_web/live/post_live/show.html.heex"
       assert_file "test/phoenix_web/live/post_live_test.exs"
     end
   end
@@ -320,8 +316,6 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "lib/phoenix_web/live/comment_live/show.ex"
       assert_file "lib/phoenix_web/live/comment_live/form.ex"
 
-      assert_file "lib/phoenix_web/live/comment_live/index.html.heex"
-      assert_file "lib/phoenix_web/live/comment_live/show.html.heex"
       assert_file "test/phoenix_web/live/comment_live_test.exs"
     end
   end
@@ -340,11 +334,10 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "lib/phoenix_web/live/series_live/show.ex"
       assert_file "lib/phoenix_web/live/series_live/form.ex"
 
-      assert_file "lib/phoenix_web/live/series_live/index.html.heex", fn file ->
+      assert_file "lib/phoenix_web/live/series_live/index.ex", fn file ->
         assert file =~ "@streams.series_collection"
       end
 
-      assert_file "lib/phoenix_web/live/series_live/show.html.heex"
       assert_file "test/phoenix_web/live/series_live_test.exs"
     end
   end
