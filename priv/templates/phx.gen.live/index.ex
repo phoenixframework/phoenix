@@ -5,7 +5,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok
+    {:ok,
      socket
      |> assign(:page_title, "Listing <%= schema.human_plural %>")
      |> stream(:<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>())}
