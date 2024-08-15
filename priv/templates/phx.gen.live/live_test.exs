@@ -30,7 +30,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
                index_live
                |> element("a", "New <%= schema.human_singular %>")
                |> render_click()
-               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/new?return_to=index")
+               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/new")
 
       assert render(form_live) =~ "New <%= schema.human_singular %>"
 
@@ -56,7 +56,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
                index_live
                |> element("#<%= schema.plural %>-#{<%= schema.singular %>.id} a", "Edit")
                |> render_click()
-               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit?return_to=index")
+               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit")
 
       assert render(form_live) =~ "Edit <%= schema.human_singular %>"
 
@@ -100,7 +100,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
                show_live
                |> element("a", "Edit")
                |> render_click()
-               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit")
+               |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit?return_to=show")
 
       assert render(form_live) =~ "Edit <%= schema.human_singular %>"
 

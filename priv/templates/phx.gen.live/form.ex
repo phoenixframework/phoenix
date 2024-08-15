@@ -61,8 +61,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  defp return_path(:index, _<%= schema.singular %>), do: ~p"<%= schema.route_prefix %>"
-  defp return_path(:show, <%= schema.singular %>), do: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"
+  defp return_path("index", _<%= schema.singular %>), do: ~p"<%= schema.route_prefix %>"
+  defp return_path("show", <%= schema.singular %>), do: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"
 
   @impl true
   def handle_params(params, _url, socket) do
@@ -88,9 +88,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)))
   end
 
-  defp return_to("index"), do: :index
-  defp return_to("show"), do: :show
-  defp return_to(_), do: :show
+  defp return_to("show"), do: "show"
+  defp return_to(_), do: "index"
 
   @impl true
   def mount(_params, _session, socket) do
