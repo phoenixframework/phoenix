@@ -32,9 +32,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
                |> render_click()
                |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/new")
 
-      html = render(form_live)
-      assert html =~ "New <%= schema.human_singular %>"
-      assert html =~ "Back to <%= schema.plural %>"
+      assert render(form_live) =~ "New <%= schema.human_singular %>"
 
       assert form_live
              |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)
@@ -60,9 +58,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
                |> render_click()
                |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit")
 
-      html = render(form_live)
-      assert html =~ "Edit <%= schema.human_singular %>"
-      assert html =~ "Back to <%= schema.plural %>"
+      assert render(form_live) =~ "Edit <%= schema.human_singular %>"
 
       assert form_live
              |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)
@@ -106,9 +102,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
                |> render_click()
                |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit?return_to=show")
 
-      html = render(form_live)
-      assert html =~ "Edit <%= schema.human_singular %>"
-      assert html =~ "Back to <%= schema.singular %>"
+      assert render(form_live) =~ "Edit <%= schema.human_singular %>"
 
       assert form_live
              |> form("#<%= schema.singular %>-form", <%= schema.singular %>: @invalid_attrs)

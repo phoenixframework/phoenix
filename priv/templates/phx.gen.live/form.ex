@@ -7,37 +7,32 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <.header>
-        <%%= @page_title %>
-        <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
-      </.header>
+    <.header>
+      <%%= @page_title %>
+      <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
+    </.header>
 
-      <.simple_form for={@form} id="<%= schema.singular %>-form" phx-change="validate" phx-submit="save">
-<%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 8) %>
-        <:actions>
-          <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
-        </:actions>
-      </.simple_form>
+    <.simple_form for={@form} id="<%= schema.singular %>-form" phx-change="validate" phx-submit="save">
+<%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 6) %>
+      <:actions>
+        <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
+      </:actions>
+    </.simple_form>
 
-      <.back navigate={return_path(@return_to.key, @<%= schema.singular %>)}>Back to <%%= @return_to.name %></.back>
-    </div>
+    <.back navigate={return_path(@return_to, @<%= schema.singular %>)}>Back</.back>
     """
   end
 
   @impl true
-  def mount(_params, _session, socket) do
-    {:ok, socket}
+  def mount(params, _session, socket) do
+    {:ok,
+     socket
+     |> assign(:return_to, return_to(params["return_to"]))
+     |> apply_action(socket.assigns.live_action, params)}
   end
 
-  @impl true
-  def handle_params(params, _url, socket) do
-    socket = assign(socket, :return_to, return_to(params["return_to"]))
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
-  end
-
-  defp return_to("show"), do: %{key: "show", name: "<%= schema.singular %>"}
-  defp return_to(_), do: %{key: "index", name: "<%= schema.plural %>"}
+  defp return_to("show"), do: "show"
+  defp return_to(_), do: "index"
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
@@ -73,7 +68,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> updated successfully")
-         |> push_navigate(to: return_path(socket.assigns.return_to.key, <%= schema.singular %>))}
+         |> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
@@ -86,7 +81,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> created successfully")
-         |> push_navigate(to: return_path(socket.assigns.return_to.key, <%= schema.singular %>))}
+         |> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
