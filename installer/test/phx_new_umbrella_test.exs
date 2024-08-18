@@ -315,7 +315,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
 
       # Gettext
-      assert_file(web_path(@app, "lib/#{@app}_web/gettext.ex"), ~r"defmodule PhxUmbWeb.Gettext")
+      assert_file(web_path(@app, "lib/#{@app}_web/gettext.ex"), [
+        ~r"defmodule PhxUmbWeb.Gettext",
+        ~r"use Gettext\.Backend, otp_app: :phx_umb_web"
+      ])
+
       assert File.exists?(web_path(@app, "priv/gettext/errors.pot"))
       assert File.exists?(web_path(@app, "priv/gettext/en/LC_MESSAGES/errors.po"))
     end)

@@ -59,7 +59,7 @@ defmodule <%= @app_module %>.MixProject do
       {:req, "~> 0.5.4"},<% end %>
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
-      {:gettext, "~> 0.20"},<% end %>
+      {:gettext, "~> 0.26"},<% end %>
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {<%= inspect @web_adapter_app %>, "<%= @web_adapter_vsn %>"}
