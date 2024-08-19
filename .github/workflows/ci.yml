@@ -14,16 +14,16 @@ jobs:
       matrix:
         include:
           - elixir: 1.11.4
-            otp: 22.3
+            otp: 24.3
 
           - elixir: 1.12.3
-            otp: 23.3
+            otp: 24.3
 
           - elixir: 1.14.5
             otp: 25.3.2.9
 
-          - elixir: 1.16.2
-            otp: 26.2
+          - elixir: 1.17.2
+            otp: 27.0
             lint: true
             installer: true
 
