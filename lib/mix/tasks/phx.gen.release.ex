@@ -195,10 +195,9 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     |> map_size() > 0
   end
 
-  @debian "bookworm"
-  defp elixir_and_debian_vsn(elixir_vsn, otp_vsn) do
+  defp elixir_and_debian_vsn(elixir_vsn, otp_vsn, debian) do
     url =
-      "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?name=#{elixir_vsn}-erlang-#{otp_vsn}-debian-#{@debian}-"
+      "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?name=#{elixir_vsn}-erlang-#{otp_vsn}-debian-#{debian}-"
 
     fetch_body!(url)
     |> Phoenix.json_library().decode!()
@@ -206,7 +205,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     |> Enum.find_value(:error, fn %{"name" => name} ->
       if String.ends_with?(name, "-slim") do
         elixir_vsn = name |> String.split("-") |> List.first()
-        %{"vsn" => vsn} = Regex.named_captures(~r/.*debian-#{@debian}-(?<vsn>.*)-slim/, name)
+        %{"vsn" => vsn} = Regex.named_captures(~r/.*debian-#{debian}-(?<vsn>.*)-slim/, name)
         {:ok, elixir_vsn, vsn}
       end
     end)
@@ -221,13 +220,17 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     otp_vsn = otp_vsn()
 
+    # hex bob only builds on bookworm for erlang >= 24
+    otp_major_vsn = :erlang.system_info(:otp_release) |> List.to_integer()
+    debian = if otp_major_vsn >= 24, do: "bookworm", else: "bullseye"
+
     vsns =
-      case elixir_and_debian_vsn(wanted_elixir_vsn, otp_vsn) do
+      case elixir_and_debian_vsn(wanted_elixir_vsn, otp_vsn, debian) do
         {:ok, elixir_vsn, debian_vsn} ->
           {:ok, elixir_vsn, debian_vsn}
 
         :error ->
-          case elixir_and_debian_vsn("", otp_vsn) do
+          case elixir_and_debian_vsn("", otp_vsn, debian) do
             {:ok, elixir_vsn, debian_vsn} ->
               Logger.warning(
                 "Docker image for Elixir #{wanted_elixir_vsn} not found, defaulting to Elixir #{elixir_vsn}"
@@ -244,7 +247,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       {:ok, elixir_vsn, debian_vsn} ->
         binding =
           Keyword.merge(binding,
-            debian: @debian,
+            debian: debian,
             debian_vsn: debian_vsn,
             elixir_vsn: elixir_vsn,
             otp_vsn: otp_vsn
