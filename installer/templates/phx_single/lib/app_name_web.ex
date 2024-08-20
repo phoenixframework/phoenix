@@ -42,8 +42,8 @@ defmodule <%= @web_namespace %> do
         formats: [:html, :json],
         layouts: [html: <%= @web_namespace %>.Layouts]
       <%= if @gettext do %>
-      use Gettext, backend: <%= @web_namespace %>.Gettext<% end %>
-
+      use Gettext, backend: <%= @web_namespace %>.Gettext
+      <% end %>
       import Plug.Conn
 
       unquote(verified_routes())
@@ -81,9 +81,9 @@ defmodule <%= @web_namespace %> do
   end
 
   defp html_helpers do
-    quote do
+    quote do<%= if @gettext do %>
       # Translation
-      <%= if @gettext do %>use Gettext, backend: <%= @web_namespace %>.Gettext
+      use Gettext, backend: <%= @web_namespace %>.Gettext
       <% end %>
       # HTML escaping functionality
       import Phoenix.HTML

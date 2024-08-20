@@ -41,8 +41,8 @@ defmodule <%= @web_namespace %> do
       use Phoenix.Controller,
         formats: [:html, :json],
         layouts: [html: <%= @web_namespace %>.Layouts]
-        
-      <%= if @gettext do %>use Gettext, backend: <%= @web_namespace %>.Gettext
+      <%= if @gettext do %>
+      use Gettext, backend: <%= @web_namespace %>.Gettext
       <% end %>
       import Plug.Conn
 
@@ -81,9 +81,9 @@ defmodule <%= @web_namespace %> do
   end
 
   defp html_helpers do
-    quote do
+    quote do<%= if @gettext do %>
       # Translation
-      <%= if @gettext do %>use Gettext, backend: <%= @web_namespace %>.Gettext
+      use Gettext, backend: <%= @web_namespace %>.Gettext
       <% end %>
       # HTML escaping functionality
       import Phoenix.HTML
@@ -96,7 +96,6 @@ defmodule <%= @web_namespace %> do
       # Routes generation with the ~p sigil
       unquote(verified_routes())
     end
-  end<% end %>
 
   def verified_routes do
     quote do
