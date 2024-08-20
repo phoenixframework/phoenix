@@ -296,7 +296,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
 
       # Gettext
-      assert_file("phx_blog/lib/phx_blog_web/gettext.ex", ~r"defmodule PhxBlogWeb.Gettext")
+      assert_file("phx_blog/lib/phx_blog_web/gettext.ex", [
+        ~r"defmodule PhxBlogWeb.Gettext",
+        ~r"use Gettext\.Backend, otp_app: :phx_blog"
+      ])
+
       assert File.exists?("phx_blog/priv/gettext/errors.pot")
       assert File.exists?("phx_blog/priv/gettext/en/LC_MESSAGES/errors.po")
     end)
@@ -369,7 +373,12 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file("phx_blog/priv/gettext/en/LC_MESSAGES/errors.po")
       refute_file("phx_blog/priv/gettext/errors.pot")
       assert_file("phx_blog/mix.exs", &refute(&1 =~ ~r":gettext"))
-      assert_file("phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"import AmsMockWeb.Gettext"))
+
+      assert_file(
+        "phx_blog/lib/phx_blog_web.ex",
+        &refute(&1 =~ ~r"use Gettext, backend: AmsMockWeb.Gettext")
+      )
+
       assert_file("phx_blog/config/dev.exs", &refute(&1 =~ ~r"gettext"))
 
       # No HTML

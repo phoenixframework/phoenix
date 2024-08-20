@@ -49,7 +49,7 @@ defmodule Phoenix.Integration.MixProject do
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 0.20"},
+      {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
       {:swoosh, "~> 1.16"},
       {:bandit, "~> 1.0"},

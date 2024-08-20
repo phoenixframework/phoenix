@@ -14,10 +14,10 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   Icons are provided by [heroicons](https://heroicons.com). See `icon/1` for usage.
   """
-  use Phoenix.Component
+  use Phoenix.Component<%= if @gettext do %>
+  use Gettext, backend: <%= @web_namespace %>.Gettext<% end %>
 
-  alias Phoenix.LiveView.JS<%= if @gettext do %>
-  import <%= @web_namespace %>.Gettext<% end %>
+  alias Phoenix.LiveView.JS
 
   @doc """
   Renders flash notices.
