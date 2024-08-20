@@ -43,6 +43,7 @@ defmodule <%= @web_namespace %> do
         layouts: [html: <%= @web_namespace %>.Layouts]<%= if @gettext do %>
 
       use Gettext, backend: <%= @web_namespace %>.Gettext
+
 <% end %>
       import Plug.Conn
 
