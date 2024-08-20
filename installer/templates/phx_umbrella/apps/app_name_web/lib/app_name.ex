@@ -96,6 +96,7 @@ defmodule <%= @web_namespace %> do
       # Routes generation with the ~p sigil
       unquote(verified_routes())
     end
+  end<% end %>
 
   def verified_routes do
     quote do
