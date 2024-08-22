@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
                human_plural: "Nil",
                human_singular: "Post",
                attrs: [title: :string],
-               types: %{title: :string},
+               types: [title: :string],
                embedded?: true,
                defaults: %{title: ""}
              } = schema
