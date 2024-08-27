@@ -280,7 +280,7 @@ defmodule Mix.Phoenix.Schema do
   """
   def value(schema, field, value) do
     schema.types
-    |> Map.fetch!(field)
+    |> Keyword.fetch!(field)
     |> inspect_value(value)
   end
 
@@ -492,7 +492,7 @@ defmodule Mix.Phoenix.Schema do
   end
 
   defp types(attrs) do
-    Enum.into(attrs, %{}, fn
+    Keyword.new(attrs, fn
       {key, {:enum, vals}} -> {key, {:enum, values: translate_enum_vals(vals)}}
       {key, {root, val}} -> {key, {root, schema_type(val)}}
       {key, val} -> {key, schema_type(val)}
