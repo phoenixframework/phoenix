@@ -579,23 +579,6 @@ defmodule Mix.Tasks.Phx.NewTest do
     end)
   end
 
-  test "new with uppercase" do
-    in_tmp("new with uppercase", fn ->
-      Mix.Tasks.Phx.New.run(["phxBlog"])
-
-      assert_file("phxBlog/README.md")
-
-      assert_file("phxBlog/mix.exs", fn file ->
-        assert file =~ "app: :phxBlog"
-      end)
-
-      assert_file("phxBlog/config/dev.exs", fn file ->
-        assert file =~ ~r/config :phxBlog, PhxBlog.Repo,/
-        assert file =~ "database: \"phxblog_dev\""
-      end)
-    end)
-  end
-
   test "new with path, app and module" do
     in_tmp("new with path, app and module", fn ->
       project_path = Path.join(File.cwd!(), "custom_path")
@@ -790,6 +773,10 @@ defmodule Mix.Tasks.Phx.NewTest do
 
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
       Mix.Tasks.Phx.New.run(["valid", "--app", "007invalid"])
+    end
+
+    assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
+      Mix.Tasks.Phx.New.run(["exInvalidAppName"])
     end
 
     assert_raise Mix.Error, ~r"Module name must be a valid Elixir alias", fn ->

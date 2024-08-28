@@ -525,27 +525,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end)
   end
 
-  test "new with uppercase" do
-    in_tmp("new with uppercase", fn ->
-      Mix.Tasks.Phx.New.run(["phxUmb", "--umbrella"])
-
-      assert_file("phxUmb_umbrella/README.md")
-
-      assert_file("phxUmb_umbrella/apps/phxUmb/mix.exs", fn file ->
-        assert file =~ "app: :phxUmb"
-      end)
-
-      assert_file("phxUmb_umbrella/apps/phxUmb_web/mix.exs", fn file ->
-        assert file =~ "app: :phxUmb_web"
-      end)
-
-      assert_file("phxUmb_umbrella/config/dev.exs", fn file ->
-        assert file =~ ~r/config :phxUmb, PhxUmb.Repo,/
-        assert file =~ "database: \"phxumb_dev\""
-      end)
-    end)
-  end
-
   test "new with path, app and module" do
     in_tmp("new with path, app and module", fn ->
       project_path = Path.join(File.cwd!(), "custom_path")
@@ -723,6 +702,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
       Mix.Tasks.Phx.New.run(["valid1", "--app", "007invalid", "--umbrella"])
+    end
+
+    assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
+      Mix.Tasks.Phx.New.run(["valid1", "--app", "exInvalidAppAnme", "--umbrella"])
     end
 
     assert_raise Mix.Error, ~r"Module name must be a valid Elixir alias", fn ->
