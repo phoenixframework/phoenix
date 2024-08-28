@@ -53,7 +53,7 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-html` - do not generate HTML views
 
-    * `--no-live` - comment out LiveView socket setup in your Endpoint 
+    * `--no-live` - comment out LiveView socket setup in your Endpoint
       and assets/js/app.js. Automatically disabled if --no-html is given
 
     * `--no-mailer` - do not generate Swoosh mailer files
@@ -340,7 +340,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp check_app_name!(name, from_app_flag) do
-    unless name =~ Regex.recompile!(~r/^[a-z][\w_]*$/) do
+    unless name =~ Regex.recompile!(~r/^[a-z][a-z0-9_]*$/) do
       extra =
         if !from_app_flag do
           ". The application name is inferred from the path, if you'd like to " <>
