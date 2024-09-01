@@ -88,7 +88,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         hidden
       >
         <%= maybe_eex_gettext.("Attempting to reconnect", @gettext) %>
-        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 motion-safe:animate-spin" />
       </.flash>
 
       <.flash
@@ -100,7 +100,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         hidden
       >
         <%= maybe_eex_gettext.("Hang in there while we get back on track", @gettext) %>
-        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 motion-safe:animate-spin" />
       </.flash>
     </div>
     """
@@ -516,7 +516,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   ## Examples
 
       <.icon name="hero-x-mark-solid" />
-      <.icon name="hero-arrow-path" class="ml-1 w-3 h-3 animate-spin" />
+      <.icon name="hero-arrow-path" class="ml-1 w-3 h-3 motion-safe:animate-spin" />
   """
   attr :name, :string, required: true
   attr :class, :string, default: nil
