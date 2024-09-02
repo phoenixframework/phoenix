@@ -40,6 +40,8 @@ The Security Working Group of the Erlang Ecosystem Foundation also publishes in-
 
   * [Free Crash Course: Phoenix LiveView (by Productive Programmer - 2023)](https://www.productiveprogrammer.com/learn-phoenix-liveview-free)
 
+  * [Learn Phoenix LiveView (by George Arrowsmith - 2024)](https://phoenixliveview.com)
+
   * [Phoenix on Rails: Elixir and Phoenix for Ruby on Rails developers (by George Arrowsmith - 2023)](https://phoenixonrails.com)
 
   * [Groxio LiveView: Self Study Program (by Bruce Tate - 2020)](https://grox.io/language/liveview/course)
