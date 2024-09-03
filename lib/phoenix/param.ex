@@ -2,10 +2,10 @@ defprotocol Phoenix.Param do
   @moduledoc """
   A protocol that converts data structures into URL parameters.
 
-  This protocol is used by URL helpers and other parts of the
+  This protocol is used by URL helpers, `Phoenix.VerifiedRoutes` and other parts of the
   Phoenix stack. For example, when you write:
 
-      user_path(conn, :edit, @user)
+      ~p"/user/edit/#{@user}"
 
   Phoenix knows how to extract the `:id` from `@user` thanks
   to this protocol.
@@ -19,7 +19,13 @@ defprotocol Phoenix.Param do
   ## Custom parameters
 
   In order to customize the parameter for any struct,
-  one can simply implement this protocol.
+  one can simply implement this protocol. For example for a `Date` struct:
+
+      defimpl Phoenix.Param, for: Date do
+        def to_param(date) do
+          Date.to_string(date)
+        end
+      end
 
   However, for convenience, this protocol can also be
   derivable. For example:
