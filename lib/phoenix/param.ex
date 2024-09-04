@@ -1,5 +1,5 @@
 defprotocol Phoenix.Param do
-  @moduledoc """
+  @moduledoc ~S"""
   A protocol that converts data structures into URL parameters.
 
   This protocol is used by URL helpers, `Phoenix.VerifiedRoutes` and other parts of the
