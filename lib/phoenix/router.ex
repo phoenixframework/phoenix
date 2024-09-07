@@ -210,15 +210,15 @@ defmodule Phoenix.Router do
 
   Scopes allow us to scope on any path or even on the helper name:
 
-      scope "/v1", MyAppWeb, host: "api." do
+      scope "/api/v1", MyAppWeb, as: :api_v1 do
         get "/pages/:id", PageController, :show
       end
 
   For example, the route above will match on the path `"/api/v1/pages/1"`
-  and the named route will be `api_v1_page_path`, as expected from the
-  values given to `scope/2` option.
+  and the named helper will be `api_v1_page_path`, as expected from the
+  values given to `scope/4` option.
 
-  Like all paths you can define dynamic segments that will be applied as
+  Like all paths, you can define dynamic segments that will be applied as
   parameters in the controller:
 
       scope "/api/:version", MyAppWeb do
