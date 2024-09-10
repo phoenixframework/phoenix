@@ -537,7 +537,7 @@ defmodule Phoenix.Controller.ControllerTest do
              "world"
     end
 
-    test "issue #5926, sends file for download for filename with unreserved characters" do
+    test "sends file for download for filename with unreserved characters" do
       conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "hello, world.json")
       assert conn.status == 200
       assert get_resp_header(conn, "content-disposition") ==
