@@ -2,19 +2,22 @@ defprotocol Phoenix.Param do
   @moduledoc ~S"""
   A protocol that converts data structures into URL parameters.
 
-  This protocol is used by URL helpers, `Phoenix.VerifiedRoutes` and other parts of the
+  This protocol is used by `Phoenix.VerifiedRoutes` and other parts of the
   Phoenix stack. For example, when you write:
 
-      ~p"/user/edit/#{@user}"
+      ~p"/user/#{@user}/edit"
 
   Phoenix knows how to extract the `:id` from `@user` thanks
   to this protocol.
+
+  (Deprecated URL helpers, e.g. `user_path(conn, :edit, @user)`, work the
+  same way.)
 
   By default, Phoenix implements this protocol for integers, binaries, atoms,
   and structs. For structs, a key `:id` is assumed, but you may provide a
   specific implementation.
 
-  Nil values cannot be converted to param.
+  The term `nil` cannot be converted to param.
 
   ## Custom parameters
 
