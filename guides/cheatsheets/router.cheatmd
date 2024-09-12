@@ -49,7 +49,7 @@ end
 ~p"/users/3/posts" # user_id is 3
 ~p"/users/3/posts/17" # user_id is 3 and post_id = 17
 ```
-For more info check the [resources docs.](routing-1.html#resources)
+For more info check the [resources docs.](routing.html#resources)
 
 ### Scopes
 
