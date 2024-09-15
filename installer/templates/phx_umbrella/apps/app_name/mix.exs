@@ -41,8 +41,8 @@ defmodule <%= @app_module %>.MixProject do
       {:ecto_sql, "~> 3.10"},
       {:<%= @adapter_app %>, ">= 0.0.0"},
       {:jason, "~> 1.2"}<% end %><%= if @mailer do %>,
-      {:swoosh, "~> 1.5"},
-      {:finch, "~> 0.13"}<% end %>
+      {:swoosh, "~> 1.16"},
+      {:req, "~> 0.5.4"}<% end %>
     ]
   end
 

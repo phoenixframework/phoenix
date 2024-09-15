@@ -32,6 +32,11 @@ defmodule Phoenix.Channel do
         {:ok, socket}
       end
 
+  The first argument is the topic, the second argument is a map payload given by
+  the client, and the third argument is an instance of `Phoenix.Socket`. The
+  `socket` to all channel callbacks, so check its module and documentation to
+  learn its fields and the different ways to interact with it.
+
   ## Authorization
 
   Clients must join a channel to send and receive PubSub events on that channel.
@@ -69,8 +74,14 @@ defmodule Phoenix.Channel do
 
   ## Broadcasts
 
-  Here's an example of receiving an incoming `"new_msg"` event from one client,
-  and broadcasting the message to all topic subscribers for this socket.
+  You can broadcast events from anywhere in your application to a topic by
+  the `broadcast` function in the endpoint:
+
+      MyAppWeb.Endpoint.broadcast!("room:13", "new_message", %{content: "hello"})
+
+  It is also possible to broadcast directly from channels. Here's an example of
+  receiving an incoming `"new_msg"` event from one client, and broadcasting the
+  message to all topic subscribers for this socket.
 
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         broadcast!(socket, "new_msg", %{uid: uid, body: body})
@@ -187,30 +198,6 @@ defmodule Phoenix.Channel do
           push(socket, "user_joined", msg)
         end
         {:noreply, socket}
-      end
-
-  ## Broadcasting to an external topic
-
-  In some cases, you will want to broadcast messages without the context of
-  a `socket`. This could be for broadcasting from within your channel to an
-  external topic, or broadcasting from elsewhere in your application like a
-  controller or another process. Such can be done via your endpoint:
-
-      # within channel
-      def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
-        ...
-        broadcast_from!(socket, "new_msg", %{uid: uid, body: body})
-        MyAppWeb.Endpoint.broadcast_from!(self(), "room:superadmin",
-          "new_msg", %{uid: uid, body: body})
-        {:noreply, socket}
-      end
-
-      # within controller
-      def create(conn, params) do
-        ...
-        MyAppWeb.Endpoint.broadcast!("room:" <> rid, "new_msg", %{uid: uid, body: body})
-        MyAppWeb.Endpoint.broadcast!("room:superadmin", "new_msg", %{uid: uid, body: body})
-        redirect(conn, to: "/")
       end
 
   ## Terminate

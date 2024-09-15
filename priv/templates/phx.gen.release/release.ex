@@ -23,6 +23,6 @@ defmodule <%= app_namespace %>.Release do
   end
 
   defp load_app do
-    Application.load(@app)
+    Application.ensure_loaded(@app)
   end
 end

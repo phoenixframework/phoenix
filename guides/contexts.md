@@ -10,7 +10,7 @@ So far, we've built pages, wired up controller actions through our routers, and 
 
 When building a Phoenix project, we are first and foremost building an Elixir application. Phoenix's job is to provide a web interface into our Elixir application. Naturally, we compose our applications with modules and functions, but we often assign specific responsibilities to certain modules and give them names: such as controllers, routers, and live views.
 
-As everything else, contexts in Phoenix are modules, but with the distinct reponsibility of drawing boundaries and grouping functionality. In other words, they allow us to reason and discuss about application design.
+As everything else, contexts in Phoenix are modules, but with the distinct responsibility of drawing boundaries and grouping functionality. In other words, they allow us to reason and discuss about application design.
 
 ## Thinking about contexts
 

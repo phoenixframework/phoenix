@@ -94,7 +94,7 @@ Note that whenever the password changes (either via reset password or directly),
 
 ### User Enumeration attacks
 
-A user enumeration attack allows someone to check if an email is registered in the application. The generated authentication code does not attempt to protect from such checks. For instance, when you register an account, if the email is already registered, the code will notify the user the email is already registered.
+A user enumeration attack allows someone to check if an email is registered in the application. The generated authentication code does not attempt to protect from such attacks. For instance, when you register an account, if the email is already registered, the code will notify the user the email is already registered.
 
 If your application is sensitive to enumeration attacks, you need to implement your own workflows, which tends to be very different from most applications, as you need to carefully balance security and user experience.
 

@@ -161,8 +161,10 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp watcher_children(_mod, conf, server?) do
+    watchers = conf[:watchers] || []
+
     if server? || conf[:force_watchers] do
-      Enum.map(conf[:watchers], &{Phoenix.Endpoint.Watcher, &1})
+      Enum.map(watchers, &{Phoenix.Endpoint.Watcher, &1})
     else
       []
     end

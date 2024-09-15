@@ -29,7 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> form("#confirmation_form")
         |> render_submit()
-        |> follow_redirect(conn, "/")
+        |> follow_redirect(conn, ~p"/")
 
       assert {:ok, conn} = result
 
@@ -47,7 +47,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> form("#confirmation_form")
         |> render_submit()
-        |> follow_redirect(conn, "/")
+        |> follow_redirect(conn, ~p"/")
 
       assert {:ok, conn} = result
 
@@ -65,7 +65,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> form("#confirmation_form")
         |> render_submit()
-        |> follow_redirect(conn, "/")
+        |> follow_redirect(conn, ~p"/")
 
       assert {:ok, conn} = result
       refute Phoenix.Flash.get(conn.assigns.flash, :error)

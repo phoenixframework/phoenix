@@ -13,9 +13,7 @@ defmodule <%= @app_module %>.Application do
         repos: Application.fetch_env!(<%= inspect(String.to_atom(@app_name)) %>, :ecto_repos),
         skip: skip_migrations?()},<% end %>
       {DNSCluster, query: Application.get_env(<%= inspect(String.to_atom(@app_name)) %>, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: <%= @app_module %>.PubSub}<%= if @mailer do %>,
-      # Start the Finch HTTP client for sending emails
-      {Finch, name: <%= @app_module %>.Finch}<% end %>
+      {Phoenix.PubSub, name: <%= @app_module %>.PubSub}
       # Start a worker by calling: <%= @app_module %>.Worker.start_link(arg)
       # {<%= @app_module %>.Worker, arg}
     ]

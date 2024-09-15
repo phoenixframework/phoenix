@@ -49,9 +49,9 @@ defmodule Phoenix.Integration.MixProject do
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 0.20"},
+      {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
-      {:swoosh, "~> 1.3"},
+      {:swoosh, "~> 1.16"},
       {:bandit, "~> 1.0"},
       {:bcrypt_elixir, "~> 3.0"},
       {:argon2_elixir, "~> 3.0"},
@@ -64,7 +64,7 @@ defmodule Phoenix.Integration.MixProject do
        app: false,
        compile: false,
        depth: 1},
-      {:finch, "~> 0.13"}
+      {:req, "~> 0.5.4"}
     ]
   end
 end

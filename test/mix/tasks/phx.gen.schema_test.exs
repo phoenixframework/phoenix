@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         human_plural: "Posts",
         human_singular: "Post",
         attrs: [title: :string, tags: :map],
-        types: %{title: :string, tags: :map},
+        types: [title: :string, tags: :map],
         optionals: [:tags],
         route_helper: "post",
         defaults: %{title: "", tags: ""},
@@ -53,7 +53,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         human_plural: "Posts",
         human_singular: "Post",
         attrs: [title: :string],
-        types: %{title: :string},
+        types: [title: :string],
         route_helper: "api_v1_post",
         defaults: %{title: ""},
       } = schema

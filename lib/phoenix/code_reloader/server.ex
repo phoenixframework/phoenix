@@ -188,7 +188,11 @@ defmodule Phoenix.CodeReloader.Server do
     mix_compile_project(config[:app], apps_to_reload, compile_args, compilers, timestamp, path)
 
     if config[:consolidate_protocols] do
+      # If we are consolidating protocols, we need to purge all of its modules
+      # to ensure the consolidated versions are loaded. "mix compile" performs
+      # a similar task.
       Code.prepend_path(path)
+      purge_modules(path)
     end
 
     :ok
@@ -256,6 +260,8 @@ defmodule Phoenix.CodeReloader.Server do
     # We call build_structure mostly for Windows so new
     # assets in priv are copied to the build directory.
     Mix.Project.build_structure(config)
+
+    # TODO: The purge option may no longer be required from Elixir v1.18
     args = ["--purge-consolidation-path-if-stale", consolidation_path | compile_args]
 
     result =
@@ -268,6 +274,7 @@ defmodule Phoenix.CodeReloader.Server do
         exit({:shutdown, 1})
 
       result == :ok && config[:consolidate_protocols] ->
+        # TODO: Calling compile.protocols may no longer be required from Elixir v1.18
         Mix.Task.reenable("compile.protocols")
         Mix.Task.run("compile.protocols", [])
         :ok
@@ -281,7 +288,14 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp purge_modules(path) do
     with {:ok, beams} <- File.ls(path) do
-      Enum.map(beams, &(&1 |> Path.rootname(".beam") |> String.to_atom() |> purge_module()))
+      for beam <- beams do
+        case :binary.split(beam, ".beam") do
+          [module, ""] -> module |> String.to_atom() |> purge_module()
+          _ -> :ok
+        end
+      end
+
+      :ok
     end
   end
 
