@@ -9,7 +9,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{"code" => code} = <%= schema.singular %>_params
     <%= schema.singular %> = conn.assigns.unauthenticated_<%= schema.singular %>
 
-    if <%= schema.singular %> && <%= inspect context.module %>.valid_<%= schema.singular %>_otp?(<%= schema.singular %>, code) do
+    if <%= schema.singular %> && <%= inspect context.module %>.valid_<%= schema.singular %>_totp?(<%= schema.singular %>, code) do
       conn
       |> put_flash(:info, "Welcome back!")
       |> <%= inspect auth_module %>.log_in_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params)
@@ -32,7 +32,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{"code" => code} = <%= schema.singular %>_params
     <%= schema.singular %> = conn.assigns.unauthenticated_<%= schema.singular %>
 
-    if <%= schema.singular %> && <%= inspect context.module %>.valid_<%= schema.singular %>_otp?(<%= schema.singular %>, code) do
+    if <%= schema.singular %> && <%= inspect context.module %>.valid_<%= schema.singular %>_totp?(<%= schema.singular %>, code) do
       conn
       |> put_flash(:info, "Welcome back!")
       |> <%= inspect auth_module %>.log_in_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params)

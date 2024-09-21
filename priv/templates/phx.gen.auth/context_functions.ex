@@ -349,22 +349,22 @@
   We're also allowing codes to be 30 seconds in the past or future,
   to account for slightly mismatching times on different devices.
   """
-  def valid_<%= schema.singular %>_otp?(<%= schema.singular %>_or_secret, validation_code, offset \\ 30, opts \\ [])
+  def valid_<%= schema.singular %>_totp?(<%= schema.singular %>_or_secret, validation_code, offset \\ 30, opts \\ [])
 
-  def valid_<%= schema.singular %>_otp?(%<%= inspect schema.alias %>{} = <%= schema.singular %>, validation_code, offset, opts)
-      when is_binary(validation_code) and is_binary(<%= schema.singular %>.otp_secret) do
+  def valid_<%= schema.singular %>_totp?(%<%= inspect schema.alias %>{} = <%= schema.singular %>, validation_code, offset, opts)
+      when is_binary(validation_code) and is_binary(<%= schema.singular %>.totp_secret) do
     opts = Keyword.put_new(opts, :since, <%= schema.singular %>.last_login)
-    valid_<%= schema.singular %>_otp?(<%= schema.singular %>.otp_secret, validation_code, offset, opts)
+    valid_<%= schema.singular %>_totp?(<%= schema.singular %>.totp_secret, validation_code, offset, opts)
   end
 
-  def valid_<%= schema.singular %>_otp?(otp_secret, validation_code, offset, opts) when is_binary(validation_code) do
-    {:ok, otp_secret} = Base.decode64(otp_secret)
+  def valid_<%= schema.singular %>_totp?(totp_secret, validation_code, offset, opts) when is_binary(validation_code) do
+    {:ok, totp_secret} = Base.decode64(totp_secret)
 
     Enum.any?([-offset, 0, offset], fn offset ->
       time = Keyword.get(opts, :time, System.os_time(:second))
       opts = Keyword.put(opts, :time, time + offset)
 
-      NimbleTOTP.valid?(otp_secret, validation_code, opts)
+      NimbleTOTP.valid?(totp_secret, validation_code, opts)
     end)
   end
 
@@ -373,12 +373,12 @@
 
   ## Examples
 
-      iex> change_<%= schema.singular %>_otp(<%= schema.singular %>)
+      iex> change_<%= schema.singular %>_totp(<%= schema.singular %>)
       %Ecto.Changeset{data: %<%= inspect schema.alias %>{}}
 
   """
-  def change_<%= schema.singular %>_otp(<%= schema.singular %>, attrs \\ %{}) do
-    <%= inspect schema.alias %>.otp_changeset(<%= schema.singular %>, attrs)
+  def change_<%= schema.singular %>_totp(<%= schema.singular %>, attrs \\ %{}) do
+    <%= inspect schema.alias %>.totp_changeset(<%= schema.singular %>, attrs)
   end
 
   @doc """
@@ -396,11 +396,11 @@
   """
   def enable_<%= schema.singular %>_2fa(<%= schema.singular %>, secret, code) do
     secret = Base.encode64(secret)
-    attrs = %{otp_secret: secret}
+    attrs = %{totp_secret: secret}
 
     <%= schema.singular %>
-    |> <%= inspect schema.alias %>.otp_changeset(attrs)
-    |> <%= inspect schema.alias %>.validate_otp(code)
+    |> <%= inspect schema.alias %>.totp_changeset(attrs)
+    |> <%= inspect schema.alias %>.validate_totp(code)
     |> <%= inspect schema.alias %>.login_changeset()
     |> Repo.update()
   end
@@ -410,11 +410,11 @@
   the OTP secret on the account.
   """
   def disable_<%= schema.singular %>_2fa(<%= schema.singular %>, password, code) do
-    attrs = %{otp_secret: nil}
+    attrs = %{totp_secret: nil}
 
     <%= schema.singular %>
-    |> <%= inspect schema.alias %>.otp_changeset(attrs)
-    |> <%= inspect schema.alias %>.validate_otp(code, for: :<%= schema.singular %>)
+    |> <%= inspect schema.alias %>.totp_changeset(attrs)
+    |> <%= inspect schema.alias %>.validate_totp(code, for: :<%= schema.singular %>)
     |> <%= inspect schema.alias %>.validate_current_password(password)
     |> <%= inspect schema.alias %>.login_changeset()
     |> Repo.update()

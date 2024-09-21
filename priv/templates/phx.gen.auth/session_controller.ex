@@ -24,7 +24,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     remember_me = Map.get(<%= schema.singular %>_params, "remember_me", false)
 
     case <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(email, password) do
-      %<%= inspect schema.alias %>{otp_secret: nil} = <%= schema.singular %> ->
+      %<%= inspect schema.alias %>{totp_secret: nil} = <%= schema.singular %> ->
         conn
         |> put_flash(:info, info)
         |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params)
@@ -53,7 +53,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{"email" => email, "password" => password} = <%= schema.singular %>_params
 
     case <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(email, password) do
-      %<%= inspect schema.alias %>{otp_secret: nil} = <%= schema.singular %> ->
+      %<%= inspect schema.alias %>{totp_secret: nil} = <%= schema.singular %> ->
         conn
         |> put_flash(:info, "Welcome back!")
         |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params)

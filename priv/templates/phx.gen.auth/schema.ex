@@ -10,7 +10,7 @@ defmodule <%= inspect schema.module %> do
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
-    field :otp_secret, :string, redact: true
+    field :totp_secret, EctoBase64, redact: true
     field :last_login, :naive_datetime
     field :confirmed_at, <%= inspect schema.timestamp_type %>
 
@@ -96,8 +96,8 @@ defmodule <%= inspect schema.module %> do
   @doc """
   A <%= schema.singular %> changeset for changing the OTP secret.
   """
-  def otp_changeset(<%= schema.singular %>, attrs) do
-    cast(<%= schema.singular %>, attrs, [:otp_secret])
+  def totp_changeset(<%= schema.singular %>, attrs) do
+    cast(<%= schema.singular %>, attrs, [:totp_secret])
   end
 
   @doc """
@@ -119,14 +119,14 @@ defmodule <%= inspect schema.module %> do
       `:<%= schema.singular %>`, the code will be checked against the OTP secret on the <%= schema.singular %>.
       Defaults to `:given`.
   """
-  def validate_otp(changeset, code, opts \\ []) do
+  def validate_totp(changeset, code, opts \\ []) do
     secret =
       case Keyword.get(opts, :for, :given) do
-        :given -> Map.fetch!(changeset.changes, :otp_secret)
+        :given -> Map.fetch!(changeset.changes, :totp_secret)
         :<%= schema.singular %> -> changeset.data
       end
 
-    if <%= inspect context.alias %>.valid_<%= schema.singular %>_otp?(secret, code) do
+    if <%= inspect context.alias %>.valid_<%= schema.singular %>_totp?(secret, code) do
       changeset
     else
       add_error(changeset, :code, "did not match")
