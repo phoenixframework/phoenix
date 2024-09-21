@@ -358,8 +358,6 @@
   end
 
   def valid_<%= schema.singular %>_totp?(totp_secret, validation_code, offset, opts) when is_binary(validation_code) do
-    {:ok, totp_secret} = Base.decode64(totp_secret)
-
     Enum.any?([-offset, 0, offset], fn offset ->
       time = Keyword.get(opts, :time, System.os_time(:second))
       opts = Keyword.put(opts, :time, time + offset)
@@ -395,7 +393,6 @@
   the given secret.
   """
   def enable_<%= schema.singular %>_2fa(<%= schema.singular %>, secret, code) do
-    secret = Base.encode64(secret)
     attrs = %{totp_secret: secret}
 
     <%= schema.singular %>

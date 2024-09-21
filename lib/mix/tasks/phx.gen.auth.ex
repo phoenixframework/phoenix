@@ -129,6 +129,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     {opts, parsed} = OptionParser.parse!(args, strict: @switches)
     validate_args!(parsed)
     hashing_library = build_hashing_library!(opts)
+    ecto_base64_dependency = ~s|{:ecto_base64, "~> 0.1.0"}|
     totp_dependency = ~s|{:nimble_totp, "~> 1.0"}|
     qrcode_depencency = ~s|{:eqrcode, "~> 0.1.10"}|
 
@@ -179,6 +180,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> inject_conn_case_helpers(paths, binding)
     |> inject_config(hashing_library)
     |> maybe_inject_mix_dependency(hashing_library)
+    |> maybe_inject_mix_dependency(ecto_base64_dependency)
     |> maybe_inject_mix_dependency(totp_dependency)
     |> maybe_inject_mix_dependency(qrcode_depencency)
     |> inject_routes(paths, binding)
