@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>SecondFactorLive do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>TOTPLive do
   use <%= inspect context.web_module %>, :live_view
 
   def render(assigns) do

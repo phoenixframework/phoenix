@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>SecondFactorController do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>TOTPController do
   use <%= inspect context.web_module %>, :controller
 
   alias <%= inspect context.module %>

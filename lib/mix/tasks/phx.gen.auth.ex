@@ -267,7 +267,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       "auth.ex": [web_pre, web_path, "#{singular}_auth.ex"],
       "auth_test.exs": [web_test_pre, web_path, "#{singular}_auth_test.exs"],
       "session_controller.ex": [controller_pre, "#{singular}_session_controller.ex"],
-      "second_factor_controller.ex": [controller_pre, "#{singular}_second_factor_controller.ex"],
+      "totp_controller.ex": [controller_pre, "#{singular}_totp_controller.ex"],
       "session_controller_test.exs": [
         web_test_pre,
         "controllers",
@@ -286,7 +286,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             web_path,
             "#{singular}_registration_live_test.exs"
           ],
-          "second_factor_live.ex": [web_pre, "live", web_path, "#{singular}_second_factor_live.ex"],
+          "totp_live.ex": [web_pre, "live", web_path, "#{singular}_totp_live.ex"],
           "login_live.ex": [web_pre, "live", web_path, "#{singular}_login_live.ex"],
           "login_live_test.exs": [
             web_test_pre,
@@ -404,8 +404,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
           ],
           "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
           "session_new.html.heex": [controller_pre, "#{singular}_session_html", "new.html.heex"],
-          "second_factor_html.ex": [controller_pre, "#{singular}_second_factor_html.ex"],
-          "second_factor_new.html.heex": [controller_pre, "#{singular}_second_factor_html", "new.html.heex"],
+          "totp_html.ex": [controller_pre, "#{singular}_totp_html.ex"],
+          "totp_new.html.heex": [controller_pre, "#{singular}_totp_html", "new.html.heex"],
           "settings_html.ex": [web_pre, "controllers", web_path, "#{singular}_settings_html.ex"],
           "settings_controller.ex": [controller_pre, "#{singular}_settings_controller.ex"],
           "settings_edit.html.heex": [
