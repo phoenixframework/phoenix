@@ -20,7 +20,7 @@ If you want to import JavaScript dependencies, you have at least three options t
    import topbar from "../vendor/topbar"
    ```
 
-2. Call `npm install topbar --save` inside your assets directory and `esbuild` will be able to automatically pick them up:
+2. Call `npm install topbar --prefix assets` will create `package.json` and `package-lock.json` inside your assets directory and `esbuild` will be able to automatically pick them up:
 
    ```js
    import topbar from "topbar"
