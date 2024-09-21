@@ -57,7 +57,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     {:ok, secret} = Base.decode64(secret)
 
-    case <%= inspect context.alias %>.enable_<%= schema.singular %>_2fa(<%= schema.singular %>, secret, code) do
+    case <%= inspect context.alias %>.enable_<%= schema.singular %>_totp(<%= schema.singular %>, secret, code) do
       {:ok, <%= schema.singular %>} ->
         changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_totp(<%= schema.singular %>)
 
@@ -76,7 +76,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{"code" => code, "current_password" => password} = <%= schema.singular %>_params
     <%= schema.singular %> = conn.assigns.current_<%= schema.singular %>
 
-    case <%= inspect context.alias %>.disable_<%= schema.singular %>_2fa(<%= schema.singular %>, password, code) do
+    case <%= inspect context.alias %>.disable_<%= schema.singular %>_totp(<%= schema.singular %>, password, code) do
       {:ok, <%= schema.singular %>} ->
         changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_totp(<%= schema.singular %>)
 

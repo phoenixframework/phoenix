@@ -392,7 +392,7 @@
   Enables 2FA for an account if the provided code is valid for
   the given secret.
   """
-  def enable_<%= schema.singular %>_2fa(<%= schema.singular %>, secret, code) do
+  def enable_<%= schema.singular %>_totp(<%= schema.singular %>, secret, code) do
     attrs = %{totp_secret: secret}
 
     <%= schema.singular %>
@@ -406,7 +406,7 @@
   Disables 2FA for an account if the provided code is valid for
   the OTP secret on the account.
   """
-  def disable_<%= schema.singular %>_2fa(<%= schema.singular %>, password, code) do
+  def disable_<%= schema.singular %>_totp(<%= schema.singular %>, password, code) do
     attrs = %{totp_secret: nil}
 
     <%= schema.singular %>

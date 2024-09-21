@@ -13,7 +13,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       <.simple_form
         for={@form}
-        id="2fa_form"
+        id="totp_form"
         action={~p"<%= schema.route_prefix %>/2fa"}
         phx-update="ignore"
       >
