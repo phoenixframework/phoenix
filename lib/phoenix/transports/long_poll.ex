@@ -226,7 +226,7 @@ defmodule Phoenix.Transports.LongPoll do
   defp client_ref(pid) when is_pid(pid), do: self()
 
   defp subscribe(endpoint, topic) when is_binary(topic),
-    do: Phoenix.PubSub.subscribe(endpoint.config(:pubsub_server), topic, link: true)
+    do: Phoenix.PubSub.subscribe(endpoint.config(:pubsub_server), topic)
 
   defp subscribe(_endpoint, pid) when is_pid(pid),
     do: :ok
