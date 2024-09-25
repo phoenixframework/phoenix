@@ -509,7 +509,7 @@ defmodule Phoenix.Socket do
   defp result({:error, _}), do: :error
 
   def __init__({state, %{id: id, endpoint: endpoint} = socket}) do
-    _ = id && endpoint.subscribe(id, link: true)
+    _ = id && endpoint.subscribe(id)
     {:ok, {state, %{socket | transport_pid: self()}}}
   end
 

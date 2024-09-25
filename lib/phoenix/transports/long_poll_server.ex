@@ -33,7 +33,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
           client_ref: nil
         }
 
-        :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
+        :ok = PubSub.subscribe(state.pubsub_server, priv_topic)
         schedule_inactive_shutdown(state.window_ms)
         {:ok, state}
 
