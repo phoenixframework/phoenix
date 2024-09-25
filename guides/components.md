@@ -240,3 +240,5 @@ CoreComponents also play an important role in Phoenix code generators, as the co
   * Read the official documentation for [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html)
 
   * Read the official documentation for [HEEx and the ~H sigils](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2)
+
+  * If you are looking for higher level components beyond the minimal ones included by Phoenix, [the LiveView project keeps a list of component systems](https://github.com/phoenixframework/phoenix_live_view#component-systems)
