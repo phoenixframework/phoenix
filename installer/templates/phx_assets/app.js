@@ -22,8 +22,8 @@ import "phoenix_html"
 <%= @live_comment %>import {LiveSocket} from "phoenix_live_view"
 <%= @live_comment %>import topbar from "../vendor/topbar"
 
-<%= @live_comment %>let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-<%= @live_comment %>let liveSocket = new LiveSocket("/live", Socket, {
+<%= @live_comment %>const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+<%= @live_comment %>const liveSocket = new LiveSocket("/live", Socket, {
 <%= @live_comment %>  longPollFallbackMs: 2500,
 <%= @live_comment %>  params: {_csrf_token: csrfToken}
 <%= @live_comment %>})
