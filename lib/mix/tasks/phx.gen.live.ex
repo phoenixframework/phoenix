@@ -285,7 +285,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
         ~s(<.input field={@form[#{inspect(key)}]} type="checkbox" label="#{label(key)}" />)
 
       {key, :text} ->
-        ~s(<.input field={@form[#{inspect(key)}]} type="text" label="#{label(key)}" />)
+        ~s(<.input field={@form[#{inspect(key)}]} type="textarea" label="#{label(key)}" />)
 
       {key, :date} ->
         ~s(<.input field={@form[#{inspect(key)}]} type="date" label="#{label(key)}" />)
