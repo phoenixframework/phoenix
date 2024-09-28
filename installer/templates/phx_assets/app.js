@@ -33,6 +33,13 @@ import "phoenix_html"
 <%= @live_comment %>window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 <%= @live_comment %>window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
+// Enable server log streaming to client.
+<%= @live_comment %>window.addEventListener("phx:live_reload:attached", ({detail: reloader}) => {
+<%= @live_comment %>  reloader.enableServerLogs()
+<%= @live_comment %>  window.liveReloader = reloader
+<%= @live_comment %>})
+
+
 // connect if there are any LiveViews on the page
 <%= @live_comment %>liveSocket.connect()
 
