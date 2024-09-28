@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ResetPasswordLiveTest do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.ResetPasswordTest do
   use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
   import Phoenix.LiveViewTest
