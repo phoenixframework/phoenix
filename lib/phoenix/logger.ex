@@ -343,7 +343,7 @@ defmodule Phoenix.Logger do
 
   @doc false
   def phoenix_channel_joined(_, %{duration: duration}, %{socket: socket} = metadata, _) do
-    channel_log(:log_join, socket, fn ->
+    channel_log(:log_join, metadata, fn ->
       %{result: result, params: params} = metadata
 
       [
@@ -364,7 +364,7 @@ defmodule Phoenix.Logger do
 
   @doc false
   def phoenix_channel_handled_in(_, %{duration: duration}, %{socket: socket} = metadata, _) do
-    channel_log(:log_handle_in, socket, fn ->
+    channel_log(:log_handle_in, metadata, fn ->
       %{event: event, params: params} = metadata
 
       [
@@ -382,10 +382,21 @@ defmodule Phoenix.Logger do
     end)
   end
 
-  defp channel_log(_log_option, %{topic: "phoenix" <> _}, _fun), do: :ok
+  defp channel_log(_log_option, %{socket: %{topic: "phoenix" <> _}}, _fun), do: :ok
 
-  defp channel_log(log_option, %{private: private}, fun) do
-    if level = Map.get(private, log_option) do
+  defp channel_log(log_option, %{socket: %{private: private}, event: event, params: params}, fun) do
+    log_option = Map.get(private, log_option)
+
+    level =
+      cond do
+        is_function(log_option, 2) ->
+          log_option.(event, params)
+
+        true ->
+          log_option
+      end
+
+    if level do
       Logger.log(level, fun)
     end
   end
