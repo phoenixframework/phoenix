@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.HashingLibrary do
     lib = %__MODULE__{
       name: :argon2,
       module: Argon2,
-      mix_dependency: ~s|{:argon2_elixir, "~> 3.0"}|,
+      mix_dependency: ~s|{:argon2_elixir, "~> 4.0"}|,
       test_config: """
       config :argon2_elixir, t_cost: 1, m_cost: 8
       """
