@@ -1050,7 +1050,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert_file("mix.exs", fn file ->
-          assert file =~ ~s|{:argon2_elixir, "~> 3.0"}|
+          assert file =~ ~s|{:argon2_elixir, "~> 4.0"}|
         end)
 
         assert_file("config/test.exs", fn file ->
