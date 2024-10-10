@@ -202,6 +202,9 @@
     end
 
     test "updates the email with a valid token", %{<%= schema.singular %>: <%= schema.singular %>, token: token, email: email} do
+      <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, & &1)
+      <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, & &1)
+
       assert <%= inspect context.alias %>.update_<%= schema.singular %>_email(<%= schema.singular %>, token) == :ok
       changed_<%= schema.singular %> = Repo.get!(<%= inspect schema.alias %>, <%= schema.singular %>.id)
       assert changed_<%= schema.singular %>.email != <%= schema.singular %>.email
