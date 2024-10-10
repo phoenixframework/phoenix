@@ -134,7 +134,7 @@ defmodule <%= inspect schema.module %>Token do
   @doc """
   Checks if the token is valid and returns its underlying lookup query.
 
-  The query returns the <%= schema.singular %> found by the token, if any.
+  The query returns the <%= schema.singular %>_token found by the token, if any.
 
   This is used to validate requests to change the <%= schema.singular %>
   email. It is different from `verify_email_token_query/2` precisely because
