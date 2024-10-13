@@ -859,6 +859,10 @@ defmodule Phoenix.Endpoint do
       The MFA is invoked with the request `%URI{}` as the first argument,
       followed by arguments in the MFA list, and must return a boolean.
 
+    * `:check_csrf` - if the transport should perform CSRF check. If `origin` check is disabled as
+    well as CSRF check, your app is vulnerable to Cross-Site WebSocket Hijacking (CSWSH) attacks.
+    Defaults to `true`
+
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
 
