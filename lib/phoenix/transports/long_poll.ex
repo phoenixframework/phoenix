@@ -4,6 +4,7 @@ defmodule Phoenix.Transports.LongPoll do
 
   # 10MB
   @max_base64_size 10_000_000
+  @connect_info_opts [:check_csrf]
 
   import Plug.Conn
   alias Phoenix.Socket.{V1, V2, Transport}
@@ -136,7 +137,10 @@ defmodule Phoenix.Transports.LongPoll do
         (System.system_time(:millisecond) |> Integer.to_string())
 
     keys = Keyword.get(opts, :connect_info, [])
-    connect_info = Transport.connect_info(conn, endpoint, keys)
+
+    connect_info =
+      Transport.connect_info(conn, endpoint, keys, Keyword.take(opts, @connect_info_opts))
+
     arg = {endpoint, handler, opts, conn.params, priv_topic, connect_info}
     spec = {Phoenix.Transports.LongPoll.Server, arg}
 
