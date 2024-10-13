@@ -86,7 +86,7 @@ And finally, we'll start the Phoenix server:
 
 ```console
 $ mix phx.server
-[info] Running HelloWeb.Endpoint with cowboy 2.9.0 at 127.0.0.1:4000 (http)
+[info] Running HelloWeb.Endpoint with Bandit 1.5.7 at 127.0.0.1:4000 (http)
 [info] Access HelloWeb.Endpoint at http://localhost:4000
 [watch] build finished, watching for changes...
 ...
