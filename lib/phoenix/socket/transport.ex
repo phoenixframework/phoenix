@@ -496,7 +496,7 @@ defmodule Phoenix.Socket.Transport do
     with cookie when is_binary(cookie) <- conn.cookies[key],
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
          {_, session} <- store.get(conn, cookie, init),
-         true <- not check_csrf || csrf_token_valid?(conn, session, csrf_token_key) do
+         true <- not check_csrf or csrf_token_valid?(conn, session, csrf_token_key) do
       session
     else
       _ -> nil
