@@ -10,7 +10,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       Listing <%= schema.human_plural %>
       <:actions>
         <.link navigate={~p"<%= schema.route_prefix %>/new"}>
-          <.button>New <%= schema.human_singular %></.button>
+          New <%= schema.human_singular %>
         </.link>
       </:actions>
     </.header>
