@@ -276,7 +276,7 @@ defmodule Phoenix.Socket.TransportTest do
     end
   end
 
-  describe "connect_info/3" do
+  describe "connect_info/4" do
     defp load_connect_info(connect_info) do
       [connect_info: connect_info] = Transport.load_config(connect_info: connect_info)
       connect_info
@@ -330,5 +330,31 @@ defmodule Phoenix.Socket.TransportTest do
               |> Transport.connect_info(Endpoint, connect_info)
     end
 
+    test "loads the session when CSRF is disabled despite CSRF token not being provided" do
+      conn = conn(:get, "https://foo.com/") |> Endpoint.call([])
+      session_cookie = conn.cookies["_hello_key"]
+
+      connect_info = load_connect_info(session: {Endpoint, :session_config, []})
+
+      assert %{session: %{"from_session" => "123"}} =
+        conn(:get, "https://foo.com/")
+        |> put_req_cookie("_hello_key", session_cookie)
+        |> fetch_query_params()
+        |> Transport.connect_info(Endpoint, connect_info, check_csrf: false)
+    end
+
+    test "doesn't load session when an invalid CSRF token is provided" do
+      conn = conn(:get, "https://foo.com/") |> Endpoint.call([])
+      invalid_csrf_token = "some invalid CSRF token"
+      session_cookie = conn.cookies["_hello_key"]
+
+      connect_info = load_connect_info(session: {Endpoint, :session_config, []})
+
+      assert %{session: nil} =
+        conn(:get, "https://foo.com/", _csrf_token: invalid_csrf_token)
+        |> put_req_cookie("_hello_key", session_cookie)
+        |> fetch_query_params()
+        |> Transport.connect_info(Endpoint, connect_info)
+    end
   end
 end
