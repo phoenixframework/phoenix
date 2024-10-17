@@ -62,6 +62,19 @@ Next we need to update `show.html.heex`:
 </section>
 ```
 
+You can also directly render the functional component in the controller, skipping the `show.html.heex` template:
+
+```elixir
+def HelloWeb.HelloController do
+  use HelloWeb, :controller
+
+  def show(conn, %{"messenger" => messenger}) do
+    # render the HelloWeb.HelloHTML.greet component
+    render(conn, :greet, messenger: messenger)
+  end
+end
+```
+
 When we reload `http://localhost:4000/hello/Frank`, we should see the same content as before.
 
 Since templates are embedded inside the `HelloHTML` module, we were able to invoke the view function simply as `<.greet messenger="..." />`.
