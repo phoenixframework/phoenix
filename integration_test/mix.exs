@@ -54,7 +54,7 @@ defmodule Phoenix.Integration.MixProject do
       {:swoosh, "~> 1.16"},
       {:bandit, "~> 1.0"},
       {:bcrypt_elixir, "~> 3.0"},
-      {:argon2_elixir, "~> 3.0"},
+      {:argon2_elixir, "~> 4.0"},
       {:pbkdf2_elixir, "~> 2.0"},
       {:tailwind, "~> 0.2"},
       {:heroicons,
