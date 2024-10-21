@@ -31,7 +31,7 @@ defmodule Phoenix.CodeReloader do
 
   This function is a no-op and returns `:ok` if Mix is not available.
 
-  The reloader should also be configured as Mix listener in project's
+  The reloader should also be configured as a Mix listener in project's
   mix.exs file (since Elixir v1.18):
 
       def project do
