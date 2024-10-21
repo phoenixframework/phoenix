@@ -306,6 +306,7 @@ defmodule Phoenix.CodeReloader.Server do
       [] ->
         # If the manifests are more recent than the timestamp,
         # someone updated this app behind the scenes, so purge all beams.
+        # TODO: remove once we depend on Elixir 1.18
         if purge_fallback? and Mix.Utils.stale?(manifests, [timestamp]) do
           purge_modules(Path.join(Mix.Project.app_path(config), "ebin"))
         end
