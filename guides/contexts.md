@@ -20,8 +20,6 @@ By giving modules that expose and group related functionality the name **context
 
 In Phoenix, contexts often encapsulate data access and data validation. They often talk to a database or APIs. Overall, think of them as boundaries to decouple and isolate parts of your application. Let's use these ideas to build out our web application. Our goal is to build an ecommerce system where we can showcase products, allow users to add products to their cart, and complete their orders.
 
-> How to read this guide: Using the context generators is a great way for beginners and intermediate Elixir programmers alike to get up and running quickly while thoughtfully writing their applications. This guide focuses on those readers.
-
 ### Adding a Catalog Context
 
 An ecommerce platform has wide-reaching coupling across a codebase so it's important to think about writing well-defined modules. With that in mind, our goal is to build a product catalog API that handles creating, updating, and deleting the products available in our system. We'll start off with the basic features of showcasing our products, and we will add shopping cart features later. We'll see how starting with a solid foundation with isolated boundaries allows us to grow our application naturally as we add functionality.
@@ -29,9 +27,6 @@ An ecommerce platform has wide-reaching coupling across a codebase so it's impor
 Phoenix includes the `mix phx.gen.html`, `mix phx.gen.json`, `mix phx.gen.live`, and `mix phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new product catalog context.
 
 In order to run the context generators, we need to come up with a module name that groups the related functionality that we're building. In the [Ecto guide](ecto.html), we saw how we can use Changesets and Repos to validate and persist user schemas, but we didn't integrate this with our application at large. In fact, we didn't think about where a "user" in our application should live at all. Let's take a step back and think about the different parts of our system. We know that we'll have products to showcase on pages for sale, along with descriptions, pricing, etc. Along with selling products, we know we'll need to support carting, order checkout, and so on. While the products being purchased are related to the cart and checkout processes, showcasing a product and managing the *exhibition* of our products is distinctly different than tracking what a user has placed in their cart or how an order is placed. A `Catalog` context is a natural place for the management of our product details and the showcasing of those products we have for sale.
-
-> #### Naming things is hard {: .tip}
-> If you're stuck when trying to come up with a context name when the grouped functionality in your system isn't yet clear, you can simply use the plural form of the resource you're creating. For example, a `Products` context for managing products. As you grow your application and the parts of your system become clear, you can simply rename the context to a more refined one.
 
 To jump-start our catalog context, we'll use `mix phx.gen.html` which creates a context module that wraps up Ecto access for creating, updating, and deleting products, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
 
@@ -59,7 +54,6 @@ description:string price:decimal views:integer
 Add the resource to your browser scope in lib/hello_web/router.ex:
 
     resources "/products", ProductController
-
 
 Remember to update your repository by running migrations:
 
@@ -122,6 +116,14 @@ Views: 0
 ```
 
 If we follow the "Back" link, we get a list of all products, which should contain the one we just created. Likewise, we can update this record or delete it. Now that we've seen how it works in the browser, it's time to take a look at the generated code.
+
+> #### Naming things is hard {: .tip}
+>
+> When starting a web application, it may be hard to draw lines or name its different contexts, especially when the domain you are working with is not as well established as e-commerce.
+>
+> If you're stuck when defining or naming a context, you can simply create a new context using the plural form of the resource you're creating. For example, a `Products` context for managing products. You will find that, even in such cases, you will organically discover other resources that belong to the `Products` context, such as categories or image galleries.
+>
+> As your applications grows and the different parts of your system become clear, you can simply rename the context or move resources around. The beauty of Elixir modules is that they are stateless, so moving them around should be simply a matter of renaming the module names (and renaming the files for conssitency).
 
 ## Starting with generators
 
