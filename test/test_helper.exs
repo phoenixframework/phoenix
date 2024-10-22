@@ -26,7 +26,7 @@ assert_timeout = String.to_integer(
 )
 
 excludes =
-  if Version.match?(System.version(), "~> 1.14") do
+  if Version.match?(System.version(), "~> 1.15") do
     []
   else
     [:mix_phx_new]

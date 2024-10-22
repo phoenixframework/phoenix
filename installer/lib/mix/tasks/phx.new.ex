@@ -223,9 +223,7 @@ defmodule Mix.Tasks.Phx.New do
             Task.async(fn -> cmd(project, cmd, log: false, cd: project.web_path) end)
           end)
 
-        if rebar_available?() do
-          cmd(project, "mix deps.compile")
-        end
+        cmd(project, "mix deps.compile")
 
         Task.await_many(tasks, :infinity)
       end
@@ -254,25 +252,10 @@ defmodule Mix.Tasks.Phx.New do
   defp maybe_cd(path, func), do: path && File.cd!(path, func)
 
   defp install_mix(project, install?) do
-    if install? && hex_available?() do
+    if install? do
       cmd(project, "mix deps.get")
     else
       ["$ mix deps.get"]
-    end
-  end
-
-  # TODO: Elixir v1.15 automatically installs Hex/Rebar if missing, so we can simplify this.
-  defp hex_available? do
-    Code.ensure_loaded?(Hex)
-  end
-
-  if Version.match?(System.version(), "~> 1.18") do
-    defp rebar_available? do
-      true
-    end
-  else
-    defp rebar_available? do
-      Mix.Rebar.rebar_cmd(:rebar3)
     end
   end
 
@@ -395,9 +378,9 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    unless Version.match?(System.version(), "~> 1.14") do
+    unless Version.match?(System.version(), "~> 1.15") do
       Mix.raise(
-        "Phoenix v#{@version} requires at least Elixir v1.14\n " <>
+        "Phoenix v#{@version} requires at least Elixir v1.15\n " <>
           "You have #{System.version()}. Please update accordingly"
       )
     end
