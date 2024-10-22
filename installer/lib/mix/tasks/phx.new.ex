@@ -266,8 +266,14 @@ defmodule Mix.Tasks.Phx.New do
     Code.ensure_loaded?(Hex)
   end
 
-  defp rebar_available? do
-    Mix.Rebar.rebar_cmd(:rebar3)
+  if Version.match?(System.version(), "~> 1.18") do
+    defp rebar_available? do
+      true
+    end
+  else
+    defp rebar_available? do
+      Mix.Rebar.rebar_cmd(:rebar3)
+    end
   end
 
   defp print_missing_steps(steps) do
