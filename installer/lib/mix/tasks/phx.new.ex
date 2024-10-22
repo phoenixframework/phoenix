@@ -268,7 +268,7 @@ defmodule Mix.Tasks.Phx.New do
 
   if Version.match?(System.version(), "~> 1.18") do
     defp rebar_available? do
-      Mix.Rebar.rebar_args(:rebar3, [])
+      true
     end
   else
     defp rebar_available? do
