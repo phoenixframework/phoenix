@@ -38,8 +38,6 @@ import "phoenix_html"
 <%= @live_comment %>  reloader.enableServerLogs()
 <%= @live_comment %>  window.liveReloader = reloader
 <%= @live_comment %>})
-
-
 // connect if there are any LiveViews on the page
 <%= @live_comment %>liveSocket.connect()
 
