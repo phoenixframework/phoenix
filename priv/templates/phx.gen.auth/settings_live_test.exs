@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>SettingsLiveTest do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.SettingsTest do
   use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
   alias <%= inspect context.module %>
