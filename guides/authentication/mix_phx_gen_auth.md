@@ -1,12 +1,14 @@
 # mix phx.gen.auth
 
+> This guide assumes that you have gone through the [introductory guides](overview.html) and have a Phoenix application [up and running](up_and_running.html).
+
 The `mix phx.gen.auth` command generates a flexible, pre-built authentication system into your Phoenix app. This generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve.
 
 ## Getting started
 
 > Before running this command, consider committing your work as it generates multiple files.
 
-Let's start by running the following command from the root of our app (or `apps/my_app_web` in an umbrella app):
+Let's start by running the following command from the root of our app:
 
 ```console
 $ mix phx.gen.auth Accounts User users
@@ -28,10 +30,10 @@ Since this generator installed additional dependencies in `mix.exs`, let's fetch
 $ mix deps.get
 ```
 
-Now we need to verify the database connection details for the development and test environments in `config/` so the migrator and tests can run properly. Then run the following to create the database:
+Now run the pending repository migrations:
 
 ```console
-$ mix ecto.setup
+$ mix ecto.migrate
 ```
 
 Let's run the tests to make sure our new authentication system works as expected.
@@ -40,7 +42,7 @@ Let's run the tests to make sure our new authentication system works as expected
 $ mix test
 ```
 
-And finally, let's start our Phoenix server and try it out.
+And finally, let's start our Phoenix server and try it out (note the new `Register` and `Log in` links at the top right of the default page).
 
 ```console
 $ mix phx.server
