@@ -11,7 +11,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
       <:actions>
         <.link navigate={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
-          <.button>Edit <%= schema.singular %></.button>
+          Edit <%= schema.singular %>
         </.link>
       </:actions>
     </.header>
