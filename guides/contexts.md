@@ -123,7 +123,7 @@ If we follow the "Back" link, we get a list of all products, which should contai
 >
 > If you're stuck when defining or naming a context, you can simply create a new context using the plural form of the resource you're creating. For example, a `Products` context for managing products. You will find that, even in such cases, you will organically discover other resources that belong to the `Products` context, such as categories or image galleries.
 >
-> As your applications grows and the different parts of your system become clear, you can simply rename the context or move resources around. The beauty of Elixir modules is that they are stateless, so moving them around should be simply a matter of renaming the module names (and renaming the files for conssitency).
+> As your applications grows and the different parts of your system become clear, you can simply rename the context or move resources around. The beauty of Elixir modules is that they are stateless, so moving them around should be simply a matter of renaming the module names (and renaming the files for consistency).
 
 ## Starting with generators
 
