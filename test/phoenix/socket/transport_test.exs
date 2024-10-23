@@ -237,6 +237,13 @@ defmodule Phoenix.Socket.TransportTest do
       # an allowed host
       refute check_origin("https://host.com/", check_origin: mfa).halted
     end
+
+    test "raises if both :check_origin and :check_csrf are set to false" do
+      assert_raise ArgumentError, ~r/One of :check_origin and :check_csrf must be set/, fn ->
+        check_origin("https://host.com/", check_origin: false, check_csrf: false)
+      end
+    end
+
   end
 
   ## Check subprotocols
