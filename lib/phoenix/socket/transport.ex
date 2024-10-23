@@ -332,8 +332,13 @@ defmodule Phoenix.Socket.Transport do
     import Plug.Conn
     origin = conn |> get_req_header("origin") |> List.first()
     check_origin = check_origin_config(handler, endpoint, opts)
+    check_csrf = opts[:check_csrf]
 
     cond do
+      check_origin == false and check_csrf == false ->
+        raise ArgumentError,
+              "One of :check_origin and :check_csrf must be set"
+
       is_nil(origin) or check_origin == false ->
         conn
 
