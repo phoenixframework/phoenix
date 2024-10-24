@@ -465,7 +465,7 @@ defmodule Phoenix.Socket.Transport do
 
   The CSRF check can be disabled with the `:check_csrf` option.
   """
-  def connect_info(conn, endpoint, keys, opts \\ [check_csrf: true]) do
+  def connect_info(conn, endpoint, keys, opts \\ []) do
     for key <- keys, into: %{} do
       case key do
         :peer_data ->
