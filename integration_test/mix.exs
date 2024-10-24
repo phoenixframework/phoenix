@@ -10,7 +10,7 @@ defmodule Phoenix.Integration.MixProject do
     [
       app: :phoenix_integration,
       version: "0.1.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -54,7 +54,7 @@ defmodule Phoenix.Integration.MixProject do
       {:swoosh, "~> 1.16"},
       {:bandit, "~> 1.0"},
       {:bcrypt_elixir, "~> 3.0"},
-      {:argon2_elixir, "~> 3.0"},
+      {:argon2_elixir, "~> 4.0"},
       {:pbkdf2_elixir, "~> 2.0"},
       {:tailwind, "~> 0.2"},
       {:heroicons,
