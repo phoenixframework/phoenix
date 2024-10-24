@@ -144,12 +144,9 @@
       |> <%= inspect schema.alias %>.email_changeset(%{email: email})
       |> <%= inspect schema.alias %>.confirm_changeset()
 
-    tokens_query =
-      <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [context, "confirm", "reset_password"])
-
     Ecto.Multi.new()
     |> Ecto.Multi.update(:<%= schema.singular %>, changeset)
-    |> Ecto.Multi.delete_all(:tokens, tokens_query)
+    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [context]))
   end
 
   @doc ~S"""

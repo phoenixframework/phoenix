@@ -208,15 +208,7 @@
       assert changed_<%= schema.singular %>.email == email
       assert changed_<%= schema.singular %>.confirmed_at
       assert changed_<%= schema.singular %>.confirmed_at != <%= schema.singular %>.confirmed_at
-    end
-
-    test "deletes all tokens sent to email for the given <%= schema.singular %>", %{<%= schema.singular %>: <%= schema.singular %>, token: token} do
-      _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
-      _ = <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, & &1)
-      _ = <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, & &1)
-
-      :ok = <%= inspect context.alias %>.update_<%= schema.singular %>_email(<%= schema.singular %>, token)
-      assert [%<%= inspect schema.alias %>Token{context: "session"}] = Repo.all(<%= inspect schema.alias %>Token.by_<%= schema.singular %>_query(<%= schema.singular %>))
+      refute Repo.get_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id)
     end
 
     test "does not update email with invalid token", %{<%= schema.singular %>: <%= schema.singular %>} do
