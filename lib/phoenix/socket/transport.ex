@@ -463,7 +463,7 @@ defmodule Phoenix.Socket.Transport do
 
     * `:user_agent` - the value of the "user-agent" request header
 
-  The CSRF check can be disabled with the `:check_csrf` option.
+  The CSRF check can be disabled by setting the `:check_csrf` option to `false`.
   """
   def connect_info(conn, endpoint, keys, opts \\ []) do
     for key <- keys, into: %{} do
