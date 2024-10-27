@@ -84,9 +84,9 @@ defmodule Phoenix.Endpoint.Supervisor do
     children =
       config_children(mod, secret_conf, default_conf) ++
         pubsub_children(mod, conf) ++
-        socket_children(mod, :child_spec) ++
+        socket_children(otp_app, mod, :child_spec) ++
         server_children(mod, conf, server?) ++
-        socket_children(mod, :drainer_spec) ++
+        socket_children(otp_app, mod, :drainer_spec) ++
         watcher_children(mod, conf, server?)
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -118,10 +118,12 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp socket_children(endpoint, fun) do
+  defp socket_children(otp_app, endpoint, fun) do
     for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__(), &elem(&1, 1)),
         spec = apply_or_ignore(socket, fun, [[endpoint: endpoint] ++ opts]),
         spec != :ignore do
+      check_origin_or_csrf_checked!(otp_app, endpoint, opts)
+
       spec
     end
   end
@@ -132,6 +134,27 @@ defmodule Phoenix.Endpoint.Supervisor do
       apply(socket, fun, args)
     else
       :ignore
+    end
+  end
+
+  defp check_origin_or_csrf_checked!(otp_app, endpoint, socket_opts) do
+    endpoint_check_origin = config(otp_app, endpoint)[:check_origin]
+
+    for {transport, transport_opts} <- socket_opts do
+      check_origin =
+        if is_boolean(transport_opts[:check_origin]) do
+          transport_opts[:check_origin]
+        else
+          endpoint_check_origin
+        end
+
+      check_csrf = transport_opts[:check_csrf]
+
+      if check_origin == false and check_csrf == false do
+        raise ArgumentError,
+              "One of :check_origin and :check_csrf must be set to non-false value for " <>
+                "transport #{inspect(transport)}"
+      end
     end
   end
 
