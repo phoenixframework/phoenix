@@ -142,11 +142,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     for {transport, transport_opts} <- socket_opts do
       check_origin =
-        if is_boolean(transport_opts[:check_origin]) do
-          transport_opts[:check_origin]
-        else
-          endpoint_check_origin
-        end
+        Keyword.get(transport_opts, :check_origin, endpoint_check_origin)
 
       check_csrf = transport_opts[:check_csrf]
 
