@@ -152,7 +152,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
       if check_origin == false and check_csrf == false do
         raise ArgumentError,
-              "One of :check_origin and :check_csrf must be set to non-false value for " <>
+              "one of :check_origin and :check_csrf must be set to non-false value for " <>
                 "transport #{inspect(transport)}"
       end
     end
