@@ -20,7 +20,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         </:actions>
       </.simple_form>
 
-      <p class="text-center mt-4">
+      <p :if={!@current_<%= schema.singular %>} class="text-center mt-4">
         <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
         | <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
       </p>
