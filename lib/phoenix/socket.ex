@@ -576,6 +576,41 @@ defmodule Phoenix.Socket do
     {:ok, state}
   end
 
+  def __info__({:handover, payload, handover_pid, topic, join_ref}, {state, socket}) do
+    {channel, opts} = socket.handler.__channel__(topic)
+    opts = Keyword.put(opts, :handover_pid, handover_pid)
+    join_message = %Message{topic: topic, payload: payload, ref: join_ref, join_ref: join_ref}
+
+    case Phoenix.Channel.Server.join(socket, channel, join_message, opts) do
+      {:ok, reply, pid} ->
+        reply = %Message{
+          join_ref: join_ref,
+          ref: nil,
+          topic: topic,
+          event: "phx_handover",
+          payload: reply
+        }
+
+        shutdown_duplicate_channel(handover_pid, :handover)
+
+        state = put_channel(state, pid, topic, join_ref)
+        {:reply, :ok, encode_reply(socket, reply), {state, socket}}
+
+      {:error, reply} ->
+        reply = %Reply{
+          join_ref: join_ref,
+          ref: nil,
+          topic: topic,
+          status: :error,
+          payload: reply
+        }
+
+        shutdown_duplicate_channel(handover_pid, :handover)
+
+        {:reply, :error, encode_reply(socket, reply), {state, socket}}
+    end
+  end
+
   def __info__(_, state) do
     {:ok, state}
   end
