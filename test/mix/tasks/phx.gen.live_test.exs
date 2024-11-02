@@ -55,7 +55,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
   test "generates live resource and handles existing contexts", config do
     in_tmp_live_project config.test, fn ->
-      Gen.Live.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
+      Gen.Live.run(~w(Blog Post posts title content:text slug:unique votes:integer cost:decimal
                       tags:array:text popular:boolean drafted_at:datetime
                       status:enum:unpublished:published:deleted
                       published_at:utc_datetime
@@ -88,6 +88,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file path, fn file ->
         assert file =~ "create table(:posts)"
         assert file =~ "add :title, :string"
+        assert file =~ "add :content, :text"
         assert file =~ "create unique_index(:posts, [:slug])"
       end
 
@@ -102,6 +103,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "lib/phoenix_web/live/post_live/form.ex", fn file ->
         assert file =~ ~s(<.simple_form)
         assert file =~ ~s(<.input field={@form[:title]} type="text")
+        assert file =~ ~s(<.input field={@form[:content]} type="textarea")
         assert file =~ ~s(<.input field={@form[:votes]} type="number")
         assert file =~ ~s(<.input field={@form[:cost]} type="number" label="Cost" step="any")
         assert file =~ """
