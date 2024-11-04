@@ -410,6 +410,33 @@ end
 
 You can run `mix phx.routes` to see how these definitions will look like.
 
+```console
+GET     /api/v1/images           HelloWeb.Api.V1.ImageController :index
+GET     /api/v1/images/:id/edit  HelloWeb.Api.V1.ImageController :edit
+GET     /api/v1/images/new       HelloWeb.Api.V1.ImageController :new
+GET     /api/v1/images/:id       HelloWeb.Api.V1.ImageController :show
+POST    /api/v1/images           HelloWeb.Api.V1.ImageController :create
+PATCH   /api/v1/images/:id       HelloWeb.Api.V1.ImageController :update
+PUT     /api/v1/images/:id       HelloWeb.Api.V1.ImageController :update
+DELETE  /api/v1/images/:id       HelloWeb.Api.V1.ImageController :delete
+GET     /api/v1/reviews          HelloWeb.Api.V1.ReviewController :index
+GET     /api/v1/reviews/:id/edit HelloWeb.Api.V1.ReviewController :edit
+GET     /api/v1/reviews/new      HelloWeb.Api.V1.ReviewController :new
+GET     /api/v1/reviews/:id      HelloWeb.Api.V1.ReviewController :show
+POST    /api/v1/reviews          HelloWeb.Api.V1.ReviewController :create
+PATCH   /api/v1/reviews/:id      HelloWeb.Api.V1.ReviewController :update
+PUT     /api/v1/reviews/:id      HelloWeb.Api.V1.ReviewController :update
+DELETE  /api/v1/reviews/:id      HelloWeb.Api.V1.ReviewController :delete
+GET     /api/v1/users            HelloWeb.Api.V1.UserController :index
+GET     /api/v1/users/:id/edit   HelloWeb.Api.V1.UserController :edit
+GET     /api/v1/users/new        HelloWeb.Api.V1.UserController :new
+GET     /api/v1/users/:id        HelloWeb.Api.V1.UserController :show
+POST    /api/v1/users            HelloWeb.Api.V1.UserController :create
+PATCH   /api/v1/users/:id        HelloWeb.Api.V1.UserController :update
+PUT     /api/v1/users/:id        HelloWeb.Api.V1.UserController :update
+DELETE  /api/v1/users/:id        HelloWeb.Api.V1.UserController :delete
+```
+
 Interestingly, we can use multiple scopes with the same path as long as we are careful not to duplicate routes. The following router is perfectly fine with two scopes defined for the same path:
 
 ```elixir
