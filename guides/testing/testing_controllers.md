@@ -73,7 +73,7 @@ def create(conn, %{"post" => post_params}) do
   case Blog.create_post(post_params) do
     {:ok, post} ->
       conn
-      |> put_flash(:info, "Post created successfully.")
+      |> put_flash(:success, "Post created successfully.")
       |> redirect(to: ~p"/posts/#{post}")
 
     {:error, %Ecto.Changeset{} = changeset} ->
@@ -142,7 +142,7 @@ def delete(conn, %{"id" => id}) do
   {:ok, _post} = Blog.delete_post(post)
 
   conn
-  |> put_flash(:info, "Post deleted successfully.")
+  |> put_flash(:success, "Post deleted successfully.")
   |> redirect(to: ~p"/posts")
 end
 ```

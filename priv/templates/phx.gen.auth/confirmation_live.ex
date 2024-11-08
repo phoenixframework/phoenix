@@ -35,7 +35,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, _} ->
         {:noreply,
          socket
-         |> put_flash(:info, "<%= inspect schema.alias %> confirmed successfully.")
+         |> put_flash(:success, "<%= inspect schema.alias %> confirmed successfully.")
          |> redirect(to: ~p"/")}
 
       :error ->

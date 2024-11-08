@@ -41,7 +41,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     case <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, password, <%= schema.singular %>_params) do
       {:ok, <%= schema.singular %>} ->
         conn
-        |> put_flash(:info, "Password updated successfully.")
+        |> put_flash(:success, "Password updated successfully.")
         |> put_session(:<%= schema.singular %>_return_to, ~p"<%= schema.route_prefix %>/settings")
         |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>)
 
@@ -54,7 +54,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     case <%= inspect context.alias %>.update_<%= schema.singular %>_email(conn.assigns.current_<%= schema.singular %>, token) do
       :ok ->
         conn
-        |> put_flash(:info, "Email changed successfully.")
+        |> put_flash(:success, "Email changed successfully.")
         |> redirect(to: ~p"<%= schema.route_prefix %>/settings")
 
       :error ->

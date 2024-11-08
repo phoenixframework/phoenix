@@ -60,7 +60,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, _} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Password reset successfully.")
+         |> put_flash(:success, "Password reset successfully.")
          |> redirect(to: ~p"<%= schema.route_prefix %>/log_in")}
 
       {:error, changeset} ->

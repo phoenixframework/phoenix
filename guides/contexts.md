@@ -152,7 +152,7 @@ defmodule HelloWeb.ProductController do
     case Catalog.create_product(product_params) do
       {:ok, product} ->
         conn
-        |> put_flash(:info, "Product created successfully.")
+        |> put_flash(:success, "Product created successfully.")
         |> redirect(to: ~p"/products/#{product}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -777,7 +777,7 @@ defmodule HelloWeb.CartItemController do
     case ShoppingCart.add_item_to_cart(conn.assigns.cart, product_id) do
       {:ok, _item} ->
         conn
-        |> put_flash(:info, "Item added to your cart")
+        |> put_flash(:success, "Item added to your cart")
         |> redirect(to: ~p"/cart")
 
       {:error, _changeset} ->
@@ -1209,7 +1209,7 @@ defmodule HelloWeb.OrderController do
     case Orders.complete_order(conn.assigns.cart) do
       {:ok, order} ->
         conn
-        |> put_flash(:info, "Order created successfully.")
+        |> put_flash(:success, "Order created successfully.")
         |> redirect(to: ~p"/orders/#{order}")
 
       {:error, _reason} ->

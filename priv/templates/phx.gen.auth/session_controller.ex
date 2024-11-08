@@ -5,25 +5,25 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect auth_module %><%= if live? do %>
 
   def create(conn, %{"_action" => "registered"} = params) do
-    create(conn, params, "Account created successfully!")
+    create(conn, params, :success, "Account created successfully!")
   end
 
   def create(conn, %{"_action" => "password_updated"} = params) do
     conn
     |> put_session(:<%= schema.singular %>_return_to, ~p"<%= schema.route_prefix %>/settings")
-    |> create(params, "Password updated successfully!")
+    |> create(params, :success, "Password updated successfully!")
   end
 
   def create(conn, params) do
-    create(conn, params, "Welcome back!")
+    create(conn, params, :info, "Welcome back!")
   end
 
-  defp create(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params}, info) do
+  defp create(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params}, kind, message) do
     %{"email" => email, "password" => password} = <%= schema.singular %>_params
 
     if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(email, password) do
       conn
-      |> put_flash(:info, info)
+      |> put_flash(kind, message)
       |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params)
     else
       # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
@@ -53,7 +53,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def delete(conn, _params) do
     conn
-    |> put_flash(:info, "Logged out successfully.")
+    |> put_flash(:success, "Logged out successfully.")
     |> <%= inspect schema.alias %>Auth.log_out_<%= schema.singular %>()
   end
 end

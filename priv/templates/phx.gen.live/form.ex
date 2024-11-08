@@ -67,7 +67,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, <%= schema.singular %>} ->
         {:noreply,
          socket
-         |> put_flash(:info, "<%= schema.human_singular %> updated successfully")
+         |> put_flash(:success, "<%= schema.human_singular %> updated successfully")
          |> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -80,7 +80,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, <%= schema.singular %>} ->
         {:noreply,
          socket
-         |> put_flash(:info, "<%= schema.human_singular %> created successfully")
+         |> put_flash(:success, "<%= schema.human_singular %> created successfully")
          |> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}
 
       {:error, %Ecto.Changeset{} = changeset} ->

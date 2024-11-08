@@ -64,7 +64,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log_in")
 
       refute get_session(conn, :<%= schema.singular %>_token)
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Password reset successfully"
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "Password reset successfully"
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, "new valid password")
     end
 

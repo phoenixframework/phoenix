@@ -34,7 +34,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     case <%= inspect context.alias %>.confirm_<%= schema.singular %>(token) do
       {:ok, _} ->
         conn
-        |> put_flash(:info, "<%= schema.human_singular %> confirmed successfully.")
+        |> put_flash(:success, "<%= schema.human_singular %> confirmed successfully.")
         |> redirect(to: ~p"/")
 
       :error ->

@@ -85,7 +85,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = post(conn, ~p"<%= schema.route_prefix %>/confirm/#{token}")
       assert redirected_to(conn) == ~p"/"
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "<%= schema.human_singular %> confirmed successfully"
 
       assert <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).confirmed_at

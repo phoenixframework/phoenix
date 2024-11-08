@@ -18,7 +18,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     case <%= inspect context.alias %>.create_<%= schema.singular %>(<%= schema.singular %>_params) do
       {:ok, <%= schema.singular %>} ->
         conn
-        |> put_flash(:info, "<%= schema.human_singular %> created successfully.")
+        |> put_flash(:success, "<%= schema.human_singular %> created successfully.")
         |> redirect(to: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -43,7 +43,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     case <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params) do
       {:ok, <%= schema.singular %>} ->
         conn
-        |> put_flash(:info, "<%= schema.human_singular %> updated successfully.")
+        |> put_flash(:success, "<%= schema.human_singular %> updated successfully.")
         |> redirect(to: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -56,7 +56,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:ok, _<%= schema.singular %>} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
 
     conn
-    |> put_flash(:info, "<%= schema.human_singular %> deleted successfully.")
+    |> put_flash(:success, "<%= schema.human_singular %> deleted successfully.")
     |> redirect(to: ~p"<%= schema.route_prefix %>")
   end
 end

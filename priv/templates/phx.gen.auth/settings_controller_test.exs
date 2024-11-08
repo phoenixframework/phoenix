@@ -36,7 +36,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert get_session(new_password_conn, :<%= schema.singular %>_token) != get_session(conn, :<%= schema.singular %>_token)
 
-      assert Phoenix.Flash.get(new_password_conn.assigns.flash, :info) =~
+      assert Phoenix.Flash.get(new_password_conn.assigns.flash, :success) =~
                "Password updated successfully"
 
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, "new valid password")
@@ -112,7 +112,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/#{token}")
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/settings"
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "Email changed successfully"
 
       refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(<%= schema.singular %>.email)
