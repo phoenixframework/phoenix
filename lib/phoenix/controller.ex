@@ -1094,7 +1094,7 @@ defmodule Phoenix.Controller do
       conn
     else
       content_type = content_type <> "; charset=utf-8"
-      %Plug.Conn{conn | resp_headers: [{"content-type", content_type} | resp_headers]}
+      %{conn | resp_headers: [{"content-type", content_type} | resp_headers]}
     end
   end
 
@@ -1323,7 +1323,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec scrub_params(Plug.Conn.t(), String.t()) :: Plug.Conn.t()
-  def scrub_params(conn, required_key) when is_binary(required_key) do
+  def scrub_params(%Plug.Conn{} = conn, required_key) when is_binary(required_key) do
     param = Map.get(conn.params, required_key) |> scrub_param()
 
     unless param do
@@ -1331,7 +1331,7 @@ defmodule Phoenix.Controller do
     end
 
     params = Map.put(conn.params, required_key, param)
-    %Plug.Conn{conn | params: params}
+    %{conn | params: params}
   end
 
   defp scrub_param(%{__struct__: mod} = struct) when is_atom(mod) do

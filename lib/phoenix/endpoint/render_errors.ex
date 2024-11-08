@@ -52,12 +52,12 @@ defmodule Phoenix.Endpoint.RenderErrors do
   end
 
   @doc false
-  def __catch__(conn, kind, reason, stack, opts) do
+  def __catch__(%Plug.Conn{} = conn, kind, reason, stack, opts) do
     conn =
       receive do
         @already_sent ->
           send(self(), @already_sent)
-          %Plug.Conn{conn | state: :sent}
+          %{conn | state: :sent}
       after
         0 ->
           instrument_render_and_send(conn, kind, reason, stack, opts)
@@ -126,13 +126,13 @@ defmodule Phoenix.Endpoint.RenderErrors do
     Controller.render(conn, template, assigns)
   end
 
-  defp maybe_fetch_query_params(conn) do
+  defp maybe_fetch_query_params(%Plug.Conn{} = conn) do
     fetch_query_params(conn)
   rescue
     Plug.Conn.InvalidQueryError ->
       case conn.params do
-        %Plug.Conn.Unfetched{} -> %Plug.Conn{conn | query_params: %{}, params: %{}}
-        params -> %Plug.Conn{conn | query_params: %{}, params: params}
+        %Plug.Conn.Unfetched{} -> %{conn | query_params: %{}, params: %{}}
+        params -> %{conn | query_params: %{}, params: params}
       end
   end
 
