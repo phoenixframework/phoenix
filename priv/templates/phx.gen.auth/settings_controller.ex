@@ -4,8 +4,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect context.module %>
   alias <%= inspect auth_module %>
 
-  plug :assign_email_totp_and_password_changesets
+  <%= if totp? do %>plug :assign_email_totp_and_password_changesets
   plug :assign_totp_secret_and_url
+  <% else %>plug :assign_email_and_password_changesets<% end %>
 
   def edit(conn, _params) do
     render(conn, :edit)
@@ -49,7 +50,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:error, changeset} ->
         render(conn, :edit, password_changeset: changeset)
     end
-  end
+  end<%= if totp? do %>
 
   def update(conn, %{"action" => "enable_totp", "<%= schema.singular %>" => <%= schema.singular %>_params}) do
     %{"code" => code, "secret" => secret} = <%= schema.singular %>_params
@@ -89,7 +90,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:error, changeset} ->
         render(conn, :edit, totp_changeset: changeset)
     end
-  end
+  end<% end %>
 
   def confirm_email(conn, %{"token" => token}) do
     case <%= inspect context.alias %>.update_<%= schema.singular %>_email(conn.assigns.current_<%= schema.singular %>, token) do
@@ -105,7 +106,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  defp assign_email_totp_and_password_changesets(conn, _opts) do
+  <%= if totp? do %>defp assign_email_totp_and_password_changesets(conn, _opts) do
     <%= schema.singular %> = conn.assigns.current_<%= schema.singular %>
 
     conn
@@ -124,5 +125,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     conn
     |> assign(:totp_secret, encoded)
     |> assign(:otp_url, url)
-  end
+  end<% else %>defp assign_email_and_password_changesets(conn, _opts) do
+    <%= schema.singular %> = conn.assigns.current_<%= schema.singular %>
+
+    conn
+    |> assign(:email_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>))
+    |> assign(:password_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>))
+  end<% end %>
 end

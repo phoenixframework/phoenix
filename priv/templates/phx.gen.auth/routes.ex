@@ -8,21 +8,21 @@
       on_mount: [{<%= inspect auth_module %>, :redirect_if_<%= schema.singular %>_is_authenticated}] do
       live "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationLive, :new
       live "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>LoginLive, :new
-      live "/<%= schema.plural %>/2fa", <%= inspect schema.alias %>TOTPLive, :new
-      live "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ForgotPasswordLive, :new
+      <%= if totp? do %>live "/<%= schema.plural %>/2fa", <%= inspect schema.alias %>TOTPLive, :new
+      <% end %>live "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ForgotPasswordLive, :new
       live "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordLive, :edit
     end
 
-    post "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :create
-    post "/<%= schema.plural %>/2fa", <%= inspect schema.alias %>TOTPController, :create<% else %>
+    post "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :create<%= if totp? do %>
+    post "/<%= schema.plural %>/2fa", <%= inspect schema.alias %>TOTPController, :create<% end %><% else %>
 
     get "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :new
     post "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :create
     get "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :new
     post "/<%= schema.plural %>/log_in", <%= inspect schema.alias %>SessionController, :create
-    get "/<%= schema.plural %>/2fa", <%= inspect schema.alias %>TOTPController, :new
+    <%= if totp? do %>get "/<%= schema.plural %>/2fa", <%= inspect schema.alias %>TOTPController, :new
     post "/<%= schema.plural %>/2fa", <%= inspect schema.alias %>TOTPController, :create
-    get "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ResetPasswordController, :new
+    <% end %>get "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ResetPasswordController, :new
     post "/<%= schema.plural %>/reset_password", <%= inspect schema.alias %>ResetPasswordController, :create
     get "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordController, :edit
     put "/<%= schema.plural %>/reset_password/:token", <%= inspect schema.alias %>ResetPasswordController, :update<% end %>

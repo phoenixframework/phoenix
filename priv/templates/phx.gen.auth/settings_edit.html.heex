@@ -59,7 +59,7 @@
         <.button phx-disable-with="Changing...">Change Password</.button>
       </:actions>
     </.simple_form>
-  </div>
+  </div><%= if totp? do %>
   <div>
     <%%= if @current_<%= schema.singular %>.totp_secret do %>
       <.simple_form :let={f} for={@totp_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="totp_form">
@@ -107,5 +107,5 @@
         </:actions>
       </.simple_form>
     <%% end %>
-  </div>
+  </div><% end %>
 </div>

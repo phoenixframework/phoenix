@@ -24,7 +24,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     remember_me = Map.get(<%= schema.singular %>_params, "remember_me", false)
 
     case <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(email, password) do
-      %<%= inspect schema.alias %>{totp_secret: nil} = <%= schema.singular %> ->
+      <%= if totp? do %>%<%= inspect schema.alias %>{totp_secret: nil} = <%= schema.singular %> ->
         conn
         |> put_flash(:info, info)
         |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params)
@@ -35,7 +35,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> put_flash(:remember_me, remember_me)
         |> redirect(to: ~p"<%= schema.route_prefix %>/2fa")
 
-      nil ->
+      <% else %>%<%= inspect schema.alias %>{} = <%= schema.singular %> ->
+        conn
+        |> put_flash(:info, info)
+        |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params)
+
+      <% end %>nil ->
         # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
         conn
         |> put_flash(:error, "Invalid email or password")
@@ -53,7 +58,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{"email" => email, "password" => password} = <%= schema.singular %>_params
 
     case <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(email, password) do
-      %<%= inspect schema.alias %>{totp_secret: nil} = <%= schema.singular %> ->
+      <%= if totp? do %>%<%= inspect schema.alias %>{totp_secret: nil} = <%= schema.singular %> ->
         conn
         |> put_flash(:info, "Welcome back!")
         |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params)
@@ -63,7 +68,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> put_session(:unauthenticated_<%= schema.singular %>_id, <%= schema.singular %>_id)
         |> redirect(to: ~p"<%= schema.route_prefix %>/2fa")
 
-      nil ->
+      <% else %>%<%= inspect schema.alias %>{} = <%= schema.singular %> ->
+        conn
+        |> put_flash(:info, "Welcome back!")
+        |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params)
+
+      <% end %>nil ->
         # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
         render(conn, :new, error_message: "Invalid email or password")
 	  end

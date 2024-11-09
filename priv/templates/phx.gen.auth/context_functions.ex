@@ -341,7 +341,7 @@
       {:ok, %{<%= schema.singular %>: <%= schema.singular %>}} -> {:ok, <%= schema.singular %>}
       {:error, :<%= schema.singular %>, changeset, _} -> {:error, changeset}
     end
-  end
+  end<%= if totp? do %>
 
   @doc """
   Checks if the entered OTP code is valid or not.
@@ -415,4 +415,4 @@
     |> <%= inspect schema.alias %>.validate_current_password(password)
     |> <%= inspect schema.alias %>.login_changeset()
     |> Repo.update()
-  end
+  end<% end %>

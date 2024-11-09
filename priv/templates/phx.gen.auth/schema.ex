@@ -2,7 +2,7 @@ defmodule <%= inspect schema.module %> do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias <%= inspect context.module %>
+<%= if totp? do %>  alias <%= inspect context.module %><% end %>
 <%= if schema.binary_id do %>  @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id<% end %>
   schema <%= inspect schema.table %> do
@@ -10,8 +10,8 @@ defmodule <%= inspect schema.module %> do
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
-    field :totp_secret, EctoBase64, redact: true
-    field :last_login, :naive_datetime
+    <%= if totp? do %>field :totp_secret, EctoBase64, redact: true
+    <% end %>field :last_login, :naive_datetime
     field :confirmed_at, <%= inspect schema.timestamp_type %>
 
     timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}" %>)
@@ -91,14 +91,14 @@ defmodule <%= inspect schema.module %> do
     else
       changeset
     end
-  end
+  end<%= if totp? do %>
 
   @doc """
   A <%= schema.singular %> changeset for changing the OTP secret.
   """
   def totp_changeset(<%= schema.singular %>, attrs) do
     cast(<%= schema.singular %>, attrs, [:totp_secret])
-  end
+  end<% end %>
 
   @doc """
   A <%= schema.singular %> changeset for marking the last login.
@@ -106,7 +106,7 @@ defmodule <%= inspect schema.module %> do
   def login_changeset(<%= schema.singular %>) do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
     change(<%= schema.singular %>, last_login: now)
-  end
+  end<%= if totp? do %>
 
   @doc """
   Validates whether the provided code is valid for the OTP secret.
@@ -131,7 +131,7 @@ defmodule <%= inspect schema.module %> do
     else
       add_error(changeset, :code, "did not match")
     end
-  end
+  end<% end %>
 
   @doc """
   A <%= schema.singular %> changeset for changing the email.

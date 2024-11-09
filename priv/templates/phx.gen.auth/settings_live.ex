@@ -68,7 +68,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             <.button phx-disable-with="Changing...">Change Password</.button>
           </:actions>
         </.simple_form>
-      </div>
+      </div><%= if totp? do %>
       <div>
         <%%= if @current_<%= schema.singular %>.totp_secret do %>
           <.simple_form for={@totp_form} id="totp_form" phx-submit="disable_totp">
@@ -117,7 +117,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             </:actions>
           </.simple_form>
         <%% end %>
-      </div>
+      </div><% end %>
     </div>
     """
   end
@@ -138,11 +138,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def mount(_params, _session, socket) do
     <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
     email_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>)
-    password_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>)
+    password_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>)<%= if totp? do %>
     totp_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_totp(<%= schema.singular %>)
 
     totp_secret = <%= schema.singular %>.totp_secret || NimbleTOTP.secret()
-    otp_url = NimbleTOTP.otpauth_uri("Dummy - #{<%= schema.singular %>.email}", totp_secret, issuer: "Dummy")
+    otp_url = NimbleTOTP.otpauth_uri("Dummy - #{<%= schema.singular %>.email}", totp_secret, issuer: "Dummy")<% end %>
 
     socket =
       socket
@@ -151,10 +151,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       |> assign(:current_email, <%= schema.singular %>.email)
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
+      |> assign(:trigger_submit, false)<%= if totp? do %>
       |> assign(:totp_form, to_form(totp_changeset))
-      |> assign(:trigger_submit, false)
       |> assign(:totp_secret, totp_secret)
-      |> assign(:otp_url, otp_url)
+      |> assign(:otp_url, otp_url)<% end %>
 
     {:ok, socket}
   end
@@ -219,7 +219,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:error, changeset} ->
         {:noreply, assign(socket, password_form: to_form(changeset))}
     end
-  end
+  end<%= if totp? do %>
 
   def handle_event("enable_totp", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
     %{"code" => code} = <%= schema.singular %>_params
@@ -260,5 +260,5 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:error, changeset} ->
         {:noreply, assign(socket, :totp_form, to_form(Map.put(changeset, :action, :insert)))}
     end
-  end
+  end<% end %>
 end
