@@ -1,4 +1,4 @@
-defmodule <%= @app_name %>.Repo.Migrations.AddObanTables do
+defmodule <%= @app_module %>.Repo.Migrations.AddObanTables do
   use Ecto.Migration
 
   def up do

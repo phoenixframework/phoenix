@@ -235,7 +235,7 @@ defmodule Phx.New.Generator do
       live_comment: if(live, do: nil, else: "// "),
       dashboard: dashboard,
       oban: oban,
-      oban_engine: oban_engine,
+      oban_engine: inspect(oban_engine),
       gettext: gettext,
       adapter_app: adapter_app,
       adapter_module: adapter_module,
@@ -312,7 +312,7 @@ defmodule Phx.New.Generator do
     Mix.raise("Unknown database #{inspect(db)}")
   end
 
-  defp get_oban_engine(:postgrex), do: Oban.Engines.Postgres
+  defp get_oban_engine(:postgrex), do: Oban.Engines.Basic
   defp get_oban_engine(:ecto_sqlite3), do: Oban.Engines.Lite
   defp get_oban_engine(_other), do: :none
 

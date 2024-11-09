@@ -286,7 +286,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # Oban
       assert_file("phx_blog/mix.exs", fn file ->
-        assert file =~ "{:oban, \"~> 1.18\"}"
+        assert file =~ "{:oban, \"~> 2.18\"}"
       end)
 
       assert_file("phx_blog/lib/phx_blog/oban.ex", fn file ->
@@ -304,7 +304,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "config :phx_blog, PhxBlog.Oban, testing: :manual"
       end)
 
-      assert_file("phx_blog/priv/migrations/0_add_oban_tables.exs", fn file ->
+      assert_file("phx_blog/priv/repo/migrations/0_add_oban_tables.exs", fn file ->
         assert file =~ "defmodule PhxBlog.Repo.Migrations.AddObanTables"
         assert file =~ "Oban.Migration.up(version: 12)"
         assert file =~ "Oban.Migration.down(version: 1)"
