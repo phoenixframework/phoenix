@@ -12,7 +12,10 @@ config :<%= @app_name %>, <%= @app_module %>.Mailer,
   adapter: Swoosh.Adapters.Test
 
 # Disable swoosh api client as it is only required for production adapters
-config :swoosh, :api_client, false<% end %>
+config :swoosh, :api_client, false<% end %><%= if @oban do %>
+
+# In test we don't run queues, plugins, or execute jobs
+config :<%= @app_name %>, <%= @app_module %>.Oban, testing: :manual<% end %>
 
 # Print only warnings and errors during test
 config :logger, level: :warning

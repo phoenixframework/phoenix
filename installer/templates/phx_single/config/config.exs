@@ -31,7 +31,20 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Local<% end %><%= if @javascript do %>
+config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Local<% end %><%= if @oban do %>
+
+# Configures Oban for background jobs
+#
+# A single `default` queue is configured to run 10 jobs concurrently,
+# and executed jobs are retained for an hour before deletion.
+config :<%= @app_name %>, <%= @app_module %>.Oban,
+  engine: <%= @oban_engine %>,
+  repo: <%= @app_module %>.Repo,
+  queues: [default: 10],
+  plugins: [
+    {Oban.Plugins.Pruner, max_age: 3_600},
+    {Oban.Plugins.Cron, crontab: []}
+  ]<% end %><%= if @javascript do %>
 
 # Configure esbuild (the version is required)
 config :esbuild,

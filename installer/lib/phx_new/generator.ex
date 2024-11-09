@@ -188,6 +188,12 @@ defmodule Phx.New.Generator do
     {adapter_app, adapter_module, adapter_config} =
       get_ecto_adapter(db, String.downcase(project.app), project.app_mod)
 
+    # Oban requires ecto, and is only compatible with `postgres`
+    # or `sqlite3` adapters.
+    oban = ecto and adapter_app in ~w(postgrex ecto_sqlite3)a and Keyword.get(opts, :oban, true)
+
+    oban_engine = get_oban_engine(adapter_app)
+
     {web_adapter_app, web_adapter_vsn, web_adapter_module, web_adapter_docs} = get_web_adapter(web_adapter)
 
     pubsub_server = get_pubsub_server(project.app_mod)
@@ -228,6 +234,8 @@ defmodule Phx.New.Generator do
       live: live,
       live_comment: if(live, do: nil, else: "// "),
       dashboard: dashboard,
+      oban: oban,
+      oban_engine: oban_engine,
       gettext: gettext,
       adapter_app: adapter_app,
       adapter_module: adapter_module,
@@ -303,6 +311,10 @@ defmodule Phx.New.Generator do
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
   end
+
+  defp get_oban_engine(:postgrex), do: Oban.Engines.Postgres
+  defp get_oban_engine(:ecto_sqlite3), do: Oban.Engines.Lite
+  defp get_oban_engine(_other), do: :none
 
   defp get_web_adapter("cowboy"), do: {:plug_cowboy, "~> 2.7", Phoenix.Endpoint.Cowboy2Adapter, "https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html"}
   defp get_web_adapter("bandit"), do: {:bandit, "~> 1.5", Bandit.PhoenixAdapter, "https://hexdocs.pm/bandit/Bandit.html#t:options/0"}

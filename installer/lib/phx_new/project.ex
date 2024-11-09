@@ -65,6 +65,10 @@ defmodule Phx.New.Project do
     Keyword.fetch!(binding, :mailer)
   end
 
+  def oban?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :oban)
+  end
+
   def verbose?(%Project{opts: opts}) do
     Keyword.get(opts, :verbose, false)
   end

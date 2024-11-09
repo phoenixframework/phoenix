@@ -58,6 +58,11 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-mailer` - do not generate Swoosh mailer files
 
+    * `--no-oban` — do not include Oban for async background jobs.
+      Oban requires `ecto`, and either `postgres` or `sqlite3` for job
+      persistence. Oban won't be included if the `--no-ecto` flag or an
+      incompatible database is selected
+
     * `--no-tailwind` - do not include tailwind dependencies and assets.
       The generated markup will still include Tailwind CSS classes, those
       are left-in as reference for the subsequent styling of your layout
@@ -137,6 +142,7 @@ defmodule Mix.Tasks.Phx.New do
     verbose: :boolean,
     live: :boolean,
     dashboard: :boolean,
+    oban: :boolean,
     install: :boolean,
     prefix: :string,
     mailer: :boolean,

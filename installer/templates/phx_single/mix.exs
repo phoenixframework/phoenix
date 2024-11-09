@@ -46,7 +46,8 @@ defmodule <%= @app_module %>.MixProject do
       # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"},
       {:phoenix_live_view, "~> 1.0.0-rc.1", override: true},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.8.3"},<% end %><%= if @javascript do %>
+      {:phoenix_live_dashboard, "~> 0.8.3"},<% end %><%= if @oban do %>
+      {:oban, "~> 2.18"},<% end %><%= if @javascript do %>
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:heroicons,

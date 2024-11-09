@@ -42,7 +42,8 @@ defmodule <%= @app_module %>.MixProject do
       {:<%= @adapter_app %>, ">= 0.0.0"},
       {:jason, "~> 1.2"}<% end %><%= if @mailer do %>,
       {:swoosh, "~> 1.16"},
-      {:req, "~> 0.5.4"}<% end %>
+      {:req, "~> 0.5.4"}<% end %><%= if @oban do %>,
+      {:oban, "~> 2.18"}<% end %>
     ]
   end
 
