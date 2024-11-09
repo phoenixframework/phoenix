@@ -6,7 +6,9 @@ defmodule Phx.New.Oban do
   alias Phx.New.Project
 
   template(:new, [
-    {:eex, :app, "phx_oban/lib/app_name/oban.ex": "lib/:app/oban.ex"}
+    {:eex, :app,
+     "phx_oban/oban.ex": "lib/:app/oban.ex",
+     "phx_oban/migration.exs": "priv/repo/migrations/0_add_oban_tables.exs"}
   ])
 
   def prepare_project(%Project{} = project) do

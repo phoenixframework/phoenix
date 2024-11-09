@@ -98,6 +98,12 @@ defmodule Phx.New.Single do
     {:eex, :app, "phx_mailer/lib/app_name/mailer.ex": "lib/:app/mailer.ex"}
   ])
 
+  template(:oban, [
+    {:eex, :app,
+     "phx_oban/lib/app_name/oban.ex": "lib/:app/oban.ex",
+     "phx_oban/lib/app_name/migration.exs": "priv/repo/migrations/0_add_oban_tables.exs"}
+  ])
+
   def prepare_project(%Project{app: app, base_path: base_path} = project) when not is_nil(app) do
     if in_umbrella?(base_path) do
       %Project{project | in_umbrella?: true, project_path: Path.dirname(Path.dirname(base_path))}
@@ -138,6 +144,7 @@ defmodule Phx.New.Single do
     if Project.html?(project), do: gen_html(project)
     if Project.mailer?(project), do: gen_mailer(project)
     if Project.gettext?(project), do: gen_gettext(project)
+    if Project.oban?(project), do: gen_oban(project)
 
     gen_assets(project)
     project
@@ -176,5 +183,9 @@ defmodule Phx.New.Single do
 
   def gen_mailer(%Project{} = project) do
     copy_from(project, __MODULE__, :mailer)
+  end
+
+  def gen_oban(%Project{} = project) do
+    copy_from(project, __MODULE__, :oban)
   end
 end

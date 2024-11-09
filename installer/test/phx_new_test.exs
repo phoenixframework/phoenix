@@ -284,6 +284,32 @@ defmodule Mix.Tasks.Phx.NewTest do
                  "config :swoosh, api_client: Swoosh.ApiClient.Req"
       end)
 
+      # Oban
+      assert_file("phx_blog/mix.exs", fn file ->
+        assert file =~ "{:oban, \"~> 1.18\"}"
+      end)
+
+      assert_file("phx_blog/lib/phx_blog/oban.ex", fn file ->
+        assert file =~ "defmodule PhxBlog.Oban do"
+        assert file =~ "use Oban, otp_app: :phx_blog"
+      end)
+
+      assert_file("phx_blog/config/config.exs", fn file ->
+        assert file =~ "config :phx_blog, PhxBlog.Oban,"
+        assert file =~ "engine: Oban.Engines.Basic"
+        assert file =~ "repo: PhxBlog.Repo"
+      end)
+
+      assert_file("phx_blog/config/test.exs", fn file ->
+        assert file =~ "config :phx_blog, PhxBlog.Oban, testing: :manual"
+      end)
+
+      assert_file("phx_blog/priv/migrations/0_add_oban_tables.exs", fn file ->
+        assert file =~ "defmodule PhxBlog.Repo.Migrations.AddObanTables"
+        assert file =~ "Oban.Migration.up(version: 12)"
+        assert file =~ "Oban.Migration.down(version: 1)"
+      end)
+
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
