@@ -33,6 +33,9 @@ You will also work with the following:
   * [Swoosh](https://hexdocs.pm/swoosh) - a library for composing,
     delivering and testing emails, also used by `mix phx.gen.auth`
 
+  * [Oban](https://hexdocs.pm/oban) - async, distributed background job
+    system that uses SQL for job persistence
+
 When peeking under the covers, you will find these libraries play
 an important role in Phoenix applications:
 
