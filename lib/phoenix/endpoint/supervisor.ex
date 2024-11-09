@@ -84,11 +84,10 @@ defmodule Phoenix.Endpoint.Supervisor do
     children =
       config_children(mod, secret_conf, default_conf) ++
         pubsub_children(mod, conf) ++
-        socket_children(mod, :child_spec) ++
+        socket_children(mod, conf, :child_spec) ++
         server_children(mod, conf, server?) ++
-        socket_children(mod, :drainer_spec) ++
+        socket_children(mod, conf, :drainer_spec) ++
         watcher_children(mod, conf, server?)
-
     Supervisor.init(children, strategy: :one_for_one)
   end
 
@@ -118,8 +117,9 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp socket_children(endpoint, fun) do
+  defp socket_children(endpoint, conf, fun) do
     for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__(), &elem(&1, 1)),
+        _ = check_origin_or_csrf_checked!(conf, opts),
         spec = apply_or_ignore(socket, fun, [[endpoint: endpoint] ++ opts]),
         spec != :ignore do
       spec
@@ -132,6 +132,22 @@ defmodule Phoenix.Endpoint.Supervisor do
       apply(socket, fun, args)
     else
       :ignore
+    end
+  end
+
+  defp check_origin_or_csrf_checked!(endpoint_conf, socket_opts) do
+    check_origin = endpoint_conf[:check_origin]
+
+    for {transport, transport_opts} <- socket_opts, is_list(transport_opts) do
+      check_origin = Keyword.get(transport_opts, :check_origin, check_origin)
+
+      check_csrf = transport_opts[:check_csrf]
+
+      if check_origin == false and check_csrf == false do
+        raise ArgumentError,
+              "one of :check_origin and :check_csrf must be set to non-false value for " <>
+                "transport #{inspect(transport)}"
+      end
     end
   end
 
