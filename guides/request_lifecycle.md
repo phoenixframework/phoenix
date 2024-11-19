@@ -181,7 +181,7 @@ Now that we've got the route, controller, view, and template, we should be able 
 There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is actually rendered into layouts: first it renders `lib/hello_web/components/layouts/root.html.heex` which renders `lib/hello_web/components/layouts/app.html.heex` which finally includes our content. If you open those files, you'll see a line that looks like this at the bottom:
 
 ```heex
-<%= @inner_content %>
+{@inner_content}
 ```
 
 This line injects our template into the layout before the HTML is sent off to the browser. We will talk more about layouts in the Controllers guide.
@@ -273,15 +273,17 @@ It's good to remember that the keys of the `params` map will always be strings, 
 
 For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of `HelloController`, it will go into the `lib/hello_web/controllers/hello_html` directory and be called `show.html.heex`. It will look surprisingly like our `index.html.heex` template, except that we will need to display the name of our messenger.
 
-To do that, we'll use the special HEEx tags for executing Elixir expressions: `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag in the HTML output. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
+To do that, we'll use the special HEEx tags for executing Elixir expressions: `{...}` and `<%= %>`. Notice that EEx tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag in the HTML output. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
 
-Remember our templates are written in HEEx (HTML+EEx). HEEx is a superset of EEx which is why it shares the `<%= %>` syntax.
+Remember our templates are written in HEEx (HTML+EEx). HEEx is a superset of EEx, and thereby supports the EEx `<%= %>` interpolation syntax for interpolating arbitrary blocks of code. In general, the HEEx `{...}` interpolation syntax is preferred anytime there is HTML-aware intepolation to be done – such as within attributes or inline values with a body.
 
-And this is what the template should look like:
+The only times `EEx` `<%= %>` interpolation is necessary is for interpolationg arbitrary blocks of markup, such as branching logic that inects separate markup trees, or for interpolating values within `<script>` or `<style>` tags.
+
+This is what the `hello_html/show.html.heex` template should look like:
 
 ```heex
 <section>
-  <h2>Hello World, from <%= @messenger %>!</h2>
+  <h2>Hello World, from {@messenger}!</h2>
 </section>
 ```
 

@@ -1368,7 +1368,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
             <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
               <%= if @current_user do %>
                 <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                  <%= @current_user.email %>
+                  {@current_user.email}
                 </li>
                 <li>
                   <.link
@@ -1432,7 +1432,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
             <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
               <%= if @current_user do %>
                 <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                  <%= @current_user.email %>
+                  {@current_user.email}
                 </li>
                 <li>
                   <.link

@@ -126,6 +126,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       Mix.raise("mix phx.gen.auth can only be run inside an application directory")
     end
 
+    Mix.Phoenix.ensure_live_view_compat!(__MODULE__)
+
     {opts, parsed} = OptionParser.parse!(args, strict: @switches)
     validate_args!(parsed)
     hashing_library = build_hashing_library!(opts)
