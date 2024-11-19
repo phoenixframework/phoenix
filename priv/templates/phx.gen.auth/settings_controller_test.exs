@@ -16,7 +16,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "redirects if <%= schema.singular %> is not logged in" do
       conn = build_conn()
       conn = get(conn, ~p"<%= schema.route_prefix %>/settings")
-      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log_in"
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"
     end
   end
 
@@ -96,7 +96,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  describe "GET <%= schema.route_prefix %>/settings/confirm_email/:token" do
+  describe "GET <%= schema.route_prefix %>/settings/confirm-email/:token" do
     setup %{<%= schema.singular %>: <%= schema.singular %>} do
       email = unique_<%= schema.singular %>_email()
 
@@ -109,7 +109,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "updates the <%= schema.singular %> email once", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>, token: token, email: email} do
-      conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/#{token}")
+      conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm-email/#{token}")
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/settings"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
@@ -118,7 +118,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(<%= schema.singular %>.email)
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email)
 
-      conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/#{token}")
+      conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm-email/#{token}")
 
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/settings"
 
@@ -127,7 +127,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "does not update email with invalid token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/oops")
+      conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm-email/oops")
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/settings"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
@@ -138,8 +138,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "redirects if <%= schema.singular %> is not logged in", %{token: token} do
       conn = build_conn()
-      conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm_email/#{token}")
-      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log_in"
+      conn = get(conn, ~p"<%= schema.route_prefix %>/settings/confirm-email/#{token}")
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"
     end
   end
 end
