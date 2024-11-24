@@ -1,8 +1,5 @@
 Code.require_file("../../../installer/test/mix_helper.exs", __DIR__)
 
-defmodule Phoenix.DupContext do
-end
-
 defmodule Mix.Tasks.Phx.Gen.ContextTest do
   use ExUnit.Case
   import MixHelper
@@ -155,11 +152,13 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "generates context and handles existing contexts", config do
     in_tmp_project(config.test, fn ->
-      Gen.Context.run(~w(Blog Post posts slug:unique secret:redact title:string))
+      send(self(), {:mix_shell_input, :yes?, true})
+      Gen.Context.run(~w(Blog Post posts slug:string:unique secret:string:redact title))
 
       assert_file("lib/phoenix/blog/post.ex", fn file ->
-        assert file =~ "field :title, :string"
         assert file =~ "field :secret, :string, redact: true"
+        assert file =~ "field :slug, :string"
+        assert file =~ "field :title, :string"
       end)
 
       assert_file("lib/phoenix/blog.ex", fn file ->
@@ -180,18 +179,19 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       assert_file("test/support/fixtures/blog_fixtures.ex", fn file ->
         assert file =~ "defmodule Phoenix.BlogFixtures do"
         assert file =~ "def post_fixture(attrs \\\\ %{})"
-        assert file =~ "title: \"some title\""
+        assert file =~ "title: \"title value\""
       end)
 
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
       assert_file(path, fn file ->
-        assert file =~ "create table(:posts)"
+        assert file =~ "create table(\"posts\")"
         assert file =~ "add :title, :string"
         assert file =~ "add :secret, :string"
-        assert file =~ "create unique_index(:posts, [:slug])"
+        assert file =~ "create index(\"posts\", [:slug], unique: true)"
       end)
 
+      send(self(), {:mix_shell_input, :yes?, true})
       send(self(), {:mix_shell_input, :yes?, true})
       Gen.Context.run(~w(Blog Comment comments title:string))
 
@@ -216,14 +216,14 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       assert_file("test/support/fixtures/blog_fixtures.ex", fn file ->
         assert file =~ "defmodule Phoenix.BlogFixtures do"
         assert file =~ "def comment_fixture(attrs \\\\ %{})"
-        assert file =~ "title: \"some title\""
+        assert file =~ "title: \"title value\""
       end)
 
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_comments.exs")
 
       assert_file(path, fn file ->
-        assert file =~ "create table(:comments)"
-        assert file =~ "add :title, :string"
+        assert file =~ "create table(\"comments\")"
+        assert file =~ "add :title, :string, null: false"
       end)
 
       assert_file("lib/phoenix/blog.ex", fn file ->
@@ -241,12 +241,12 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
     in_tmp_project(config.test, fn ->
       Gen.Context.run(~w(Blog Post posts
             slug:string:unique
-            subject:unique
+            subject:string:unique
             body:text:unique
             order:integer:unique
             price:decimal:unique
             published_at:utc_datetime:unique
-            author:references:users:unique
+            author_id:references:table,users:type,id:Accounts.User:unique
             published?:boolean
           ))
 
@@ -272,15 +272,15 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ ~S|def unique_post_order, do: System.unique_integer([:positive])|
 
         assert file =~
-                 ~S|def unique_post_slug, do: "some slug#{System.unique_integer([:positive])}"|
+                 ~S|def unique_post_slug, do: "#{System.unique_integer([:positive])}slug value"|
 
         assert file =~
-                 ~S|def unique_post_body, do: "some body#{System.unique_integer([:positive])}"|
+                 ~S|def unique_post_body, do: "#{System.unique_integer([:positive])}body value"|
 
         assert file =~
-                 ~S|def unique_post_subject, do: "some subject#{System.unique_integer([:positive])}"|
+                 ~S|def unique_post_subject, do: "#{System.unique_integer([:positive])}subject value"|
 
-        refute file =~ ~S|def unique_post_author|
+        refute file =~ ~S|author = Accounts.UserFixtures.user_fixture()|
 
         assert file =~ """
                  def unique_post_price do
@@ -292,31 +292,35 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
                        body: unique_post_body(),
                        order: unique_post_order(),
                        price: unique_post_price(),
-                       published?: true,
+                       published?: false,
                        published_at: unique_post_published_at(),
                        slug: unique_post_slug(),
-                       subject: unique_post_subject()
+                       subject: unique_post_subject(),
+                       author_id: author.id
                """
       end)
 
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
       assert_file(path, fn file ->
-        assert file =~ "create table(:posts)"
-        assert file =~ "create unique_index(:posts, [:order])"
-        assert file =~ "create unique_index(:posts, [:price])"
-        assert file =~ "create unique_index(:posts, [:slug])"
-        assert file =~ "create unique_index(:posts, [:subject])"
+        assert file =~ "create table(\"posts\")"
+        assert file =~ "create index(\"posts\", [:author_id], unique: true)"
+        assert file =~ "create index(\"posts\", [:order], unique: true)"
+        assert file =~ "create index(\"posts\", [:price], unique: true)"
+        assert file =~ "create index(\"posts\", [:slug], unique: true)"
+        assert file =~ "create index(\"posts\", [:subject], unique: true)"
       end)
     end)
   end
 
   test "does not prompt on unimplemented functions with only string, text and integer unique fields",
        config do
+    send(self(), {:mix_shell_input, :yes?, true})
+
     in_tmp_project(config.test, fn ->
       Gen.Context.run(~w(Blog Post posts
             slug:string:unique
-            subject:unique
+            subject:string:unique
             body:text:unique
             order:integer:unique
           ))
@@ -329,6 +333,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
   test "generates into existing context without prompt with --merge-with-existing-context",
        config do
     in_tmp_project(config.test, fn ->
+      send(self(), {:mix_shell_input, :yes?, true})
       Gen.Context.run(~w(Blog Post posts title))
 
       assert_file("lib/phoenix/blog.ex", fn file ->
@@ -340,6 +345,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def change_post"
       end)
 
+      send(self(), {:mix_shell_input, :yes?, true})
       Gen.Context.run(~w(Blog Comment comments message:string --merge-with-existing-context))
 
       refute_received {:mix_shell, :info,
@@ -359,6 +365,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
   test "when more than 50 attributes are given", config do
     in_tmp_project(config.test, fn ->
       long_attribute_list = Enum.map_join(0..55, " ", &"attribute#{&1}:string")
+      send(self(), {:mix_shell_input, :yes?, true})
       Gen.Context.run(~w(Blog Post posts title #{long_attribute_list}))
 
       assert_file("test/phoenix/blog_test.exs", fn file ->
@@ -369,7 +376,11 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "generates context with no schema and repo option", config do
     in_tmp_project(config.test, fn ->
-      Gen.Context.run(~w(Blog Post posts title:string --no-schema --repo=Foo.RepoX))
+      send(self(), {:mix_shell_input, :yes?, true})
+
+      Gen.Context.run(
+        ~w(Blog Post posts title:string:unique content --no-schema --repo=Foo.RepoX)
+      )
 
       refute_file("lib/phoenix/blog/post.ex")
 
@@ -393,7 +404,8 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       assert_file("test/support/fixtures/blog_fixtures.ex", fn file ->
         assert file =~ "defmodule Phoenix.BlogFixtures do"
         assert file =~ "def post_fixture(attrs \\\\ %{})"
-        assert file =~ "title: \"some title\""
+        assert file =~ "title: unique_post_title()"
+        assert file =~ "content: \"content value\""
       end)
 
       assert Path.wildcard("priv/repo/migrations/*_create_posts.exs") == []
@@ -402,8 +414,10 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "generates context with enum", config do
     in_tmp_project(config.test, fn ->
+      send(self(), {:mix_shell_input, :yes?, true})
+
       Gen.Context.run(
-        ~w(Accounts User users email:text:unique password:text:redact status:enum:verified:unverified:disabled)
+        ~w(Accounts User users email:text:unique password:text:redact status:enum:[verified,unverified,disabled])
       )
 
       assert_file("lib/phoenix/accounts/user.ex", fn file ->
@@ -413,7 +427,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_users.exs")
 
       assert_file(path, fn file ->
-        assert file =~ "create table(:users)"
+        assert file =~ "create table(\"users\")"
         assert file =~ "add :status, :string"
       end)
     end)

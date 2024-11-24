@@ -85,7 +85,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   """
   use Mix.Task
 
-  alias Mix.Phoenix.{Context, Schema}
+  alias Mix.Phoenix.{Context, TestData}
   alias Mix.Tasks.Phx.Gen
 
   @doc false
@@ -99,7 +99,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
-    binding = [context: context, schema: schema, inputs: inputs(schema)]
+    binding = [context: context, schema: schema]
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
@@ -116,13 +116,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     |> Mix.Phoenix.prompt_for_conflicts()
   end
 
-  defp context_files(%Context{generate?: true} = context) do
-    Gen.Context.files_to_be_generated(context)
-  end
+  # TODO: Looks like this logic (check) belongs to `Gen.Context.files_to_be_generated` function.
+  #       Like, there is no need to scatter and repeat this across different generators.
+  #       Similar for `Gen.Schema.files_to_be_generated` invocation.
+  #       Double check and extract, if it's correct.
+  defp context_files(%Context{generate?: false}), do: []
 
-  defp context_files(%Context{generate?: false}) do
-    []
-  end
+  defp context_files(%Context{generate?: true} = context),
+    do: Gen.Context.files_to_be_generated(context)
 
   @doc false
   def files_to_be_generated(%Context{schema: schema, context_app: context_app}) do
@@ -149,9 +150,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
+    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
+
+    html_assertion_field = TestData.html_assertion_field(binding[:schema])
+    binding = Keyword.merge(binding, html_assertion_field: html_assertion_field)
+
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.html", binding, files)
-    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
+
     context
   end
 
@@ -178,97 +184,5 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     end
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
-  end
-
-  @doc false
-  def inputs(%Schema{} = schema) do
-    schema.attrs
-    |> Enum.reject(fn {_key, type} -> type == :map end)
-    |> Enum.map(fn
-      {key, :integer} ->
-        ~s(<.input field={f[#{inspect(key)}]} type="number" label="#{label(key)}" />)
-
-      {key, :float} ->
-        ~s(<.input field={f[#{inspect(key)}]} type="number" label="#{label(key)}" step="any" />)
-
-      {key, :decimal} ->
-        ~s(<.input field={f[#{inspect(key)}]} type="number" label="#{label(key)}" step="any" />)
-
-      {key, :boolean} ->
-        ~s(<.input field={f[#{inspect(key)}]} type="checkbox" label="#{label(key)}" />)
-
-      {key, :text} ->
-        ~s(<.input field={f[#{inspect(key)}]} type="textarea" label="#{label(key)}" />)
-
-      {key, :date} ->
-        ~s(<.input field={f[#{inspect(key)}]} type="date" label="#{label(key)}" />)
-
-      {key, :time} ->
-        ~s(<.input field={f[#{inspect(key)}]} type="time" label="#{label(key)}" />)
-
-      {key, :utc_datetime} ->
-        ~s(<.input field={f[#{inspect(key)}]} type="datetime-local" label="#{label(key)}" />)
-
-      {key, :naive_datetime} ->
-        ~s(<.input field={f[#{inspect(key)}]} type="datetime-local" label="#{label(key)}" />)
-
-      {key, {:array, _} = type} ->
-        ~s"""
-        <.input
-          field={f[#{inspect(key)}]}
-          type="select"
-          multiple
-          label="#{label(key)}"
-          options={#{inspect(default_options(type))}}
-        />
-        """
-
-      {key, {:enum, _}} ->
-        ~s"""
-        <.input
-          field={f[#{inspect(key)}]}
-          type="select"
-          label="#{label(key)}"
-          prompt="Choose a value"
-          options={Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})}
-        />
-        """
-
-      {key, _} ->
-        ~s(<.input field={f[#{inspect(key)}]} type="text" label="#{label(key)}" />)
-    end)
-  end
-
-  defp default_options({:array, :string}),
-    do: Enum.map([1, 2], &{"Option #{&1}", "option#{&1}"})
-
-  defp default_options({:array, :integer}),
-    do: Enum.map([1, 2], &{"#{&1}", &1})
-
-  defp default_options({:array, _}), do: []
-
-  defp label(key), do: Phoenix.Naming.humanize(to_string(key))
-
-  @doc false
-  def indent_inputs(inputs, column_padding) do
-    columns = String.duplicate(" ", column_padding)
-
-    inputs
-    |> Enum.map(fn input ->
-      lines = input |> String.split("\n") |> Enum.reject(&(&1 == ""))
-
-      case lines do
-        [] ->
-          []
-
-        [line] ->
-          [columns, line]
-
-        [first_line | rest] ->
-          rest = Enum.map_join(rest, "\n", &(columns <> &1))
-          [columns, first_line, "\n", rest]
-      end
-    end)
-    |> Enum.intersperse("\n")
   end
 end

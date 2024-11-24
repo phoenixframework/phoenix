@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
   use ExUnit.Case
   import MixHelper
   alias Mix.Tasks.Phx.Gen
-  alias Mix.Phoenix.Schema
+  alias Mix.Phoenix.{Schema, Attribute}
 
   setup do
     Mix.Task.clear()
@@ -13,22 +13,20 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
 
   test "build" do
     in_tmp_project("embedded build", fn ->
+      send(self(), {:mix_shell_input, :yes?, true})
       schema = Gen.Embedded.build(~w(Blog.Post title:string))
 
       assert %Schema{
                alias: Post,
                module: Phoenix.Blog.Post,
                repo: Phoenix.Repo,
-               migration?: false,
-               migration_defaults: %{title: ""},
                plural: nil,
                singular: "post",
                human_plural: "Nil",
                human_singular: "Post",
-               attrs: [title: :string],
-               types: [title: :string],
-               embedded?: true,
-               defaults: %{title: ""}
+               attrs: [%Attribute{name: :title, type: :string, options: %{required: true}}],
+               migration?: false,
+               embedded?: true
              } = schema
 
       assert String.ends_with?(schema.file, "lib/phoenix/blog/post.ex")
@@ -37,7 +35,7 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
 
   test "generates embedded schema", config do
     in_tmp_project(config.test, fn ->
-      Gen.Embedded.run(~w(Blog.Post title:string))
+      Gen.Embedded.run(~w(Blog.Post))
 
       assert_file("lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "embedded_schema do"
@@ -47,7 +45,7 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
 
   test "generates nested embedded schema", config do
     in_tmp_project(config.test, fn ->
-      Gen.Embedded.run(~w(Blog.Admin.User name:string))
+      Gen.Embedded.run(~w(Blog.Admin.User))
 
       assert_file("lib/phoenix/blog/admin/user.ex", fn file ->
         assert file =~ "defmodule Phoenix.Blog.Admin.User do"
@@ -58,6 +56,8 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
 
   test "generates embedded schema with proper datetime types", config do
     in_tmp_project(config.test, fn ->
+      send(self(), {:mix_shell_input, :yes?, true})
+
       Gen.Embedded.run(
         ~w(Blog.Comment title:string drafted_at:datetime published_at:naive_datetime edited_at:utc_datetime)
       )
@@ -72,9 +72,8 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
 
   test "generates embedded schema with enum", config do
     in_tmp_project(config.test, fn ->
-      Gen.Embedded.run(
-        ~w(Blog.Comment comments title:string status:enum:unpublished:published:deleted)
-      )
+      send(self(), {:mix_shell_input, :yes?, true})
+      Gen.Embedded.run(~w(Blog.Comment title status:enum:[unpublished,published,deleted]))
 
       assert_file("lib/phoenix/blog/comment.ex", fn file ->
         assert file =~ "field :status, Ecto.Enum, values: [:unpublished, :published, :deleted]"
@@ -84,7 +83,8 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
 
   test "generates embedded schema with redact option", config do
     in_tmp_project(config.test, fn ->
-      Gen.Embedded.run(~w(Blog.Comment comments title:string secret:redact))
+      send(self(), {:mix_shell_input, :yes?, true})
+      Gen.Embedded.run(~w(Blog.Comment title secret:string:redact))
 
       assert_file("lib/phoenix/blog/comment.ex", fn file ->
         assert file =~ "field :secret, :string, redact: true"
@@ -94,14 +94,16 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
 
   test "generates embedded schema with references", config do
     in_tmp_project(config.test, fn ->
+      send(self(), {:mix_shell_input, :yes?, true})
+
       Gen.Embedded.run(
-        ~w(Blog.Comment comments body word_count:integer author_id:references:author)
+        ~w(Blog.Comment body word_count:integer author_id:references:table,users:type,string)
       )
 
       assert_file("lib/phoenix/blog/comment.ex", fn file ->
-        assert file =~ "field :author_id, :id"
         assert file =~ "field :body, :string"
         assert file =~ "field :word_count, :integer"
+        assert file =~ "belongs_to :author, Phoenix.Blog.Author, type: :string"
       end)
     end)
   end

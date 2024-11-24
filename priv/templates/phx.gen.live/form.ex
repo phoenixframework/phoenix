@@ -13,7 +13,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     </.header>
 
     <.simple_form for={@form} id="<%= schema.singular %>-form" phx-change="validate" phx-submit="save">
-<%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 6) %>
+<%= Mix.Phoenix.Web.form_inputs(schema, "@form") |> Mix.Phoenix.indent_text(spaces: 6) %>
       <:actions>
         <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
       </:actions>

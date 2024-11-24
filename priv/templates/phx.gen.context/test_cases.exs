@@ -2,25 +2,27 @@
   describe "<%= schema.plural %>" do
     alias <%= inspect schema.module %>
 
-    import <%= inspect context.module %>Fixtures
+    import <%= inspect(context.module) %>Fixtures
 
-    @invalid_attrs <%= Mix.Phoenix.to_text for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %>
+    @invalid_attrs %{<%= schema.sample_values.invalid %>}
 
     test "list_<%= schema.plural %>/0 returns all <%= schema.plural %>" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
+<%= virtual_clearance %>
       assert <%= inspect context.alias %>.list_<%= schema.plural %>() == [<%= schema.singular %>]
     end
 
     test "get_<%= schema.singular %>!/1 returns the <%= schema.singular %> with given id" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
+<%= virtual_clearance %>
       assert <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id) == <%= schema.singular %>
     end
 
     test "create_<%= schema.singular %>/1 with valid data creates a <%= schema.singular %>" do
-      valid_attrs = <%= Mix.Phoenix.to_text schema.params.create %>
+<%= Mix.Phoenix.TestData.action_attrs_with_references(schema, :create) %>
 
-      assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.create_<%= schema.singular %>(valid_attrs)<%= for {field, value} <- schema.params.create do %>
-      assert <%= schema.singular %>.<%= field %> == <%= Mix.Phoenix.Schema.value(schema, field, value) %><% end %>
+      assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.create_<%= schema.singular %>(create_attrs)
+<%= Mix.Phoenix.TestData.context_values_assertions(schema, :create) %>
     end
 
     test "create_<%= schema.singular %>/1 with invalid data returns error changeset" do
@@ -29,15 +31,17 @@
 
     test "update_<%= schema.singular %>/2 with valid data updates the <%= schema.singular %>" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
-      update_attrs = <%= Mix.Phoenix.to_text schema.params.update%>
 
-      assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, update_attrs)<%= for {field, value} <- schema.params.update do %>
-      assert <%= schema.singular %>.<%= field %> == <%= Mix.Phoenix.Schema.value(schema, field, value) %><% end %>
+<%= Mix.Phoenix.TestData.action_attrs_with_references(schema, :update) %>
+
+      assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, update_attrs)
+<%= Mix.Phoenix.TestData.context_values_assertions(schema, :update) %>
     end
 
     test "update_<%= schema.singular %>/2 with invalid data returns error changeset" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
       assert {:error, %Ecto.Changeset{}} = <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, @invalid_attrs)
+<%= virtual_clearance %>
       assert <%= schema.singular %> == <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id)
     end
 
