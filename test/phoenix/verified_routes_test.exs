@@ -521,7 +521,6 @@ defmodule Phoenix.VerifiedRoutesTest do
 
         assert warnings =~
                  ~r"test/phoenix/verified_routes_test.exs:#{line}:(\d+:)? Phoenix.VerifiedRoutesTest.Forwards.test/0"
-
       after
         :code.purge(__MODULE__.Forwards)
         :code.delete(__MODULE__.Forwards)

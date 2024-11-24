@@ -46,20 +46,29 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       |> DateTime.add(-one_day_in_seconds)
 
     in_tmp_project(config.test, fn ->
-      Gen.Json.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
-                     tags:array:text popular:boolean drafted_at:datetime
-                     params:map
-                     published_at:utc_datetime
-                     published_at_usec:utc_datetime_usec
-                     deleted_at:naive_datetime
-                     deleted_at_usec:naive_datetime_usec
-                     alarm:time
-                     alarm_usec:time_usec
-                     secret:uuid:redact announcement_date:date
-                     weight:float user_id:references:users))
+      Gen.Json.run(~w(Blog Post posts
+                      title
+                      slug:string:unique
+                      votes:integer
+                      cost:decimal
+                      tags:[array,text]
+                      popular:boolean
+                      drafted_at:datetime
+                      params:map
+                      published_at:utc_datetime
+                      published_at_usec:utc_datetime_usec
+                      deleted_at:naive_datetime
+                      deleted_at_usec:naive_datetime_usec
+                      alarm:time
+                      alarm_usec:time_usec
+                      secret:uuid:redact
+                      announcement_date:date
+                      weight:float
+                      user_id:references:table,users:column,id:type,id))
 
       assert_file("lib/phoenix/blog/post.ex")
       assert_file("lib/phoenix/blog.ex")
+      assert_file("test/support/fixtures/blog_fixtures.ex")
 
       assert_file("test/phoenix/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
@@ -74,7 +83,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
                               "alarm" => "14:00:00",
                               "alarm_usec" => "14:00:00.000000",
                               "announcement_date" => "#{Date.add(Date.utc_today(), -1)}",
-                              "cost" => "120.5",
+                              "cost" => "22.5",
                               "deleted_at" => "#{naive_datetime |> NaiveDateTime.truncate(:second) |> NaiveDateTime.to_iso8601()}",
                               "deleted_at_usec" => "#{NaiveDateTime.to_iso8601(naive_datetime)}",
                               "drafted_at" => "#{datetime |> NaiveDateTime.truncate(:second) |> NaiveDateTime.to_iso8601()}",
@@ -83,12 +92,15 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
                               "published_at" => "#{datetime |> DateTime.truncate(:second) |> DateTime.to_iso8601()}",
                               "published_at_usec" => "#{DateTime.to_iso8601(datetime)}",
                               "secret" => "7488a646-e31f-11e4-aace-600308960662",
-                              "slug" => "some slug",
-                              "tags" => [],
-                              "title" => "some title",
-                              "votes" => 42,
-                              "weight" => 120.5
+                              "slug" => "slug value",
+                              "tags" => ["tags value"],
+                              "title" => "title value",
+                              "votes" => 142,
+                              "weight" => 120.5,
+                              "user_id" => json_user_id
                             } = json_response(conn, 200)["data"]
+
+                     assert json_user_id == user.id
                """
       end)
 
@@ -124,7 +136,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
   test "generates into existing context without prompt with --merge-with-existing-context",
        config do
     in_tmp_project(config.test, fn ->
-      Gen.Json.run(~w(Blog Post posts title))
+      Gen.Json.run(~w(Blog Post posts))
 
       assert_file("lib/phoenix/blog.ex", fn file ->
         assert file =~ "def get_post!"
@@ -135,7 +147,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ "def change_post"
       end)
 
-      Gen.Json.run(~w(Blog Comment comments message:string --merge-with-existing-context))
+      Gen.Json.run(~w(Blog Comment comments --merge-with-existing-context))
 
       refute_received {:mix_shell, :info,
                        ["You are generating into an existing context" <> _notice]}
@@ -154,7 +166,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
   test "when more than 50 arguments are given", config do
     in_tmp_project(config.test, fn ->
       long_attribute_list = Enum.map_join(0..55, " ", &"attribute#{&1}:string")
-      Gen.Json.run(~w(Blog Post posts #{long_attribute_list}))
+      Gen.Json.run(~w(Blog Post posts title:string:* #{long_attribute_list}))
 
       assert_file("test/phoenix_web/controllers/post_controller_test.exs", fn file ->
         refute file =~ "...}"
@@ -164,7 +176,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
   test "with json --web namespace generates namespaced web modules and directories", config do
     in_tmp_project(config.test, fn ->
-      Gen.Json.run(~w(Blog Post posts title:string --web Blog))
+      Gen.Json.run(~w(Blog Post posts --web Blog))
 
       assert_file("test/phoenix_web/controllers/blog/post_controller_test.exs", fn file ->
         assert file =~ "defmodule PhoenixWeb.Blog.PostControllerTest"
@@ -203,10 +215,12 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
   test "with --no-context skips context and schema file generation", config do
     in_tmp_project(config.test, fn ->
-      Gen.Json.run(~w(Blog Comment comments title:string --no-context))
+      Gen.Json.run(~w(Blog Comment comments --no-context))
 
       refute_file("lib/phoenix/blog.ex")
       refute_file("lib/phoenix/blog/comment.ex")
+      refute_file("test/phoenix/blog_test.ex")
+      refute_file("test/support/fixtures/blog_fixtures.ex")
       assert Path.wildcard("priv/repo/migrations/*.exs") == []
 
       assert_file("test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
@@ -226,12 +240,12 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
   test "with --no-context no warning is emitted when context exists", config do
     in_tmp_project(config.test, fn ->
-      Gen.Json.run(~w(Blog Post posts title:string))
+      Gen.Json.run(~w(Blog Post posts))
 
       assert_file("lib/phoenix/blog.ex")
       assert_file("lib/phoenix/blog/post.ex")
 
-      Gen.Json.run(~w(Blog Comment comments title:string --no-context))
+      Gen.Json.run(~w(Blog Comment comments --no-context))
       refute_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}
 
       assert_file("test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
@@ -251,7 +265,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
   test "with --no-schema skips schema file generation", config do
     in_tmp_project(config.test, fn ->
-      Gen.Json.run(~w(Blog Comment comments title:string --no-schema))
+      Gen.Json.run(~w(Blog Comment comments --no-schema))
 
       assert_file("lib/phoenix/blog.ex")
       refute_file("lib/phoenix/blog/comment.ex")
@@ -275,7 +289,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
   describe "inside umbrella" do
     test "without context_app generators config uses web dir", config do
       in_tmp_umbrella_project(config.test, fn ->
-        Gen.Json.run(~w(Accounts User users name:string))
+        Gen.Json.run(~w(Accounts User users))
 
         assert_file("lib/phoenix/accounts.ex")
         assert_file("lib/phoenix/accounts/user.ex")
@@ -310,7 +324,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         File.mkdir!("another_app")
         Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
 
-        Gen.Json.run(~w(Accounts User users name:string))
+        Gen.Json.run(~w(Accounts User users))
 
         assert_file("another_app/lib/another_app/accounts.ex")
         assert_file("another_app/lib/another_app/accounts/user.ex")
@@ -342,7 +356,9 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
       [{module, _}] = Code.compile_file("lib/phoenix_web/components/core_components.ex")
 
-      Gen.Json.run(~w(Blog Post posts title:string --web Blog))
+      # Accepts first attribute to be required.
+      send(self(), {:mix_shell_input, :yes?, true})
+      Gen.Json.run(~w(Blog Post posts title --web Blog))
 
       assert_file("lib/phoenix_web/controllers/changeset_json.ex", fn file ->
         assert file =~

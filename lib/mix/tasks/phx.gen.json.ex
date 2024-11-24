@@ -83,7 +83,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   use Mix.Task
 
-  alias Mix.Phoenix.Context
+  alias Mix.Phoenix.{Context, Schema}
   alias Mix.Tasks.Phx.Gen
 
   @doc false
@@ -120,13 +120,10 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     |> Mix.Phoenix.prompt_for_conflicts()
   end
 
-  defp context_files(%Context{generate?: true} = context) do
-    Gen.Context.files_to_be_generated(context)
-  end
+  defp context_files(%Context{generate?: false}), do: []
 
-  defp context_files(%Context{generate?: false}) do
-    []
-  end
+  defp context_files(%Context{generate?: true} = context),
+    do: Gen.Context.files_to_be_generated(context)
 
   @doc false
   def files_to_be_generated(%Context{schema: schema, context_app: context_app}) do
@@ -148,9 +145,10 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
+    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
+
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.json", binding, files)
-    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
 
     context
   end
@@ -178,5 +176,14 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     end
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
+  end
+
+  @doc false
+  def data_with_id(%Schema{} = schema) do
+    schema_singular = schema.singular
+
+    [:id | Enum.map(schema.attrs, & &1.name)]
+    |> Enum.map(&"#{&1}: #{schema_singular}.#{&1}")
+    |> Mix.Phoenix.indent_text(spaces: 6, new_line: ",\n")
   end
 end

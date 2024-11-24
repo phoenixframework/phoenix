@@ -12,5 +12,5 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   attr :changeset, Ecto.Changeset, required: true
   attr :action, :string, required: true
 
-  def <%= schema.singular %>_form(assigns)
+  def <%= schema.singular %>_form(assigns)<%= Mix.Phoenix.Web.maybe_def_array_values(schema, :def) %>
 end

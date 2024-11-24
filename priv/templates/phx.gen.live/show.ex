@@ -18,8 +18,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </:actions>
     </.header>
 
-    <.list><%= for {k, _} <- schema.attrs do %>
-      <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= @<%= schema.singular %>.<%= k %> %></:item><% end %>
+    <.list><%= Mix.Phoenix.Web.list_items(schema) |> Mix.Phoenix.indent_text(spaces: 6, top: 1) %>
     </.list>
 
     <.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
@@ -37,5 +36,5 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
      socket
      |> assign(:page_title, "Show <%= schema.human_singular %>")
      |> assign(:<%= schema.singular %>, <%= inspect context.alias %>.get_<%= schema.singular %>!(id))}
-  end
+  end<%= Mix.Phoenix.Web.maybe_def_array_values(schema) %>
 end

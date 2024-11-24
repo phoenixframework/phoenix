@@ -94,7 +94,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   """
   use Mix.Task
 
-  alias Mix.Phoenix.{Context, Schema}
+  alias Mix.Phoenix.{Context, TestData}
   alias Mix.Tasks.Phx.Gen
 
   @doc false
@@ -108,7 +108,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
-    binding = [context: context, schema: schema, inputs: inputs(schema)]
+    binding = [context: context, schema: schema]
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
@@ -126,13 +126,10 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     |> Mix.Phoenix.prompt_for_conflicts()
   end
 
-  defp context_files(%Context{generate?: true} = context) do
-    Gen.Context.files_to_be_generated(context)
-  end
+  defp context_files(%Context{generate?: false}), do: []
 
-  defp context_files(%Context{generate?: false}) do
-    []
-  end
+  defp context_files(%Context{generate?: true} = context),
+    do: Gen.Context.files_to_be_generated(context)
 
   defp files_to_be_generated(%Context{schema: schema, context_app: context_app}) do
     web_prefix = Mix.Phoenix.web_path(context_app)
@@ -153,18 +150,21 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   end
 
   defp copy_new_files(%Context{} = context, binding, paths) do
-    files = files_to_be_generated(context)
+    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
+
+    html_assertion_field = TestData.html_assertion_field(binding[:schema])
 
     binding =
       Keyword.merge(binding,
+        html_assertion_field: html_assertion_field,
         assigns: %{
           web_namespace: inspect(context.web_module),
           gettext: true
         }
       )
 
+    files = files_to_be_generated(context)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.live", binding, files)
-    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
 
     context
   end
@@ -263,76 +263,4 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       ~s|live "/#{schema.plural}/:id/edit", #{inspect(schema.alias)}Live.Form, :edit|
     ]
   end
-
-  @doc false
-  def inputs(%Schema{} = schema) do
-    schema.attrs
-    |> Enum.reject(fn {_key, type} -> type == :map end)
-    |> Enum.map(fn
-      {_, {:references, _}} ->
-        nil
-
-      {key, :integer} ->
-        ~s(<.input field={@form[#{inspect(key)}]} type="number" label="#{label(key)}" />)
-
-      {key, :float} ->
-        ~s(<.input field={@form[#{inspect(key)}]} type="number" label="#{label(key)}" step="any" />)
-
-      {key, :decimal} ->
-        ~s(<.input field={@form[#{inspect(key)}]} type="number" label="#{label(key)}" step="any" />)
-
-      {key, :boolean} ->
-        ~s(<.input field={@form[#{inspect(key)}]} type="checkbox" label="#{label(key)}" />)
-
-      {key, :text} ->
-        ~s(<.input field={@form[#{inspect(key)}]} type="textarea" label="#{label(key)}" />)
-
-      {key, :date} ->
-        ~s(<.input field={@form[#{inspect(key)}]} type="date" label="#{label(key)}" />)
-
-      {key, :time} ->
-        ~s(<.input field={@form[#{inspect(key)}]} type="time" label="#{label(key)}" />)
-
-      {key, :utc_datetime} ->
-        ~s(<.input field={@form[#{inspect(key)}]} type="datetime-local" label="#{label(key)}" />)
-
-      {key, :naive_datetime} ->
-        ~s(<.input field={@form[#{inspect(key)}]} type="datetime-local" label="#{label(key)}" />)
-
-      {key, {:array, _} = type} ->
-        ~s"""
-        <.input
-          field={@form[#{inspect(key)}]}
-          type="select"
-          multiple
-          label="#{label(key)}"
-          options={#{inspect(default_options(type))}}
-        />
-        """
-
-      {key, {:enum, _}} ->
-        ~s"""
-        <.input
-          field={@form[#{inspect(key)}]}
-          type="select"
-          label="#{label(key)}"
-          prompt="Choose a value"
-          options={Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})}
-        />
-        """
-
-      {key, _} ->
-        ~s(<.input field={@form[#{inspect(key)}]} type="text" label="#{label(key)}" />)
-    end)
-  end
-
-  defp default_options({:array, :string}),
-    do: Enum.map([1, 2], &{"Option #{&1}", "option#{&1}"})
-
-  defp default_options({:array, :integer}),
-    do: Enum.map([1, 2], &{"#{&1}", &1})
-
-  defp default_options({:array, _}), do: []
-
-  defp label(key), do: Phoenix.Naming.humanize(to_string(key))
 end

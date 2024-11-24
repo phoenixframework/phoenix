@@ -31,8 +31,8 @@ In order to run the context generators, we need to come up with a module name th
 To jump-start our catalog context, we'll use `mix phx.gen.html` which creates a context module that wraps up Ecto access for creating, updating, and deleting products, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
 
 ```console
-$ mix phx.gen.html Catalog Product products title:string \
-description:string price:decimal views:integer
+$ mix phx.gen.html Catalog Product products title:string:* \
+description:string:* price:decimal:*:precision,15:scale,6 views:integer:*:default,0
 
 * creating lib/hello_web/controllers/product_controller.ex
 * creating lib/hello_web/controllers/product_html/edit.html.heex
@@ -71,23 +71,21 @@ Phoenix generated the web files as expected in `lib/hello_web/`. We can also see
   end
 ```
 
-With the new route in place, Phoenix reminds us to update our repo by running `mix ecto.migrate`, but first we need to make a few tweaks to the generated migration in `priv/repo/migrations/*_create_products.exs`:
+With the new route in place, Phoenix reminds us to update our repo by running `mix ecto.migrate`, but first let's see our attributes options nicely added to the generated migration in `priv/repo/migrations/*_create_products.exs`:
 
 ```elixir
   def change do
-    create table(:products) do
-      add :title, :string
-      add :description, :string
--     add :price, :decimal
-+     add :price, :decimal, precision: 15, scale: 6, null: false
--     add :views, :integer
-+     add :views, :integer, default: 0, null: false
+    create table("products") do
+      add :title, :string, null: false
+      add :description, :string, null: false
+      add :price, :decimal, precision: 15, scale: 6, null: false
+      add :views, :integer, default: 0, null: false
 
       timestamps()
     end
 ```
 
-We modified our price column to a specific precision of 15, scale of 6, along with a not-null constraint. This ensures we store currency with proper precision for any mathematical operations we may perform. Next, we added a default value and not-null constraint to our views count. With our changes in place, we're ready to migrate up our database. Let's do that now:
+We see price column with specific precision of 15 and scale of 6, along with a not-null constraint. This ensures we store currency with proper precision for any mathematical operations we may perform. Next, we added a default value and not-null constraint to our views count. With all options in place, we're ready to migrate up our database. Let's do that now:
 
 ```console
 $ mix ecto.migrate
@@ -238,7 +236,7 @@ defmodule Hello.Catalog.Product do
     field :description, :string
     field :price, :decimal
     field :title, :string
-    field :views, :integer
+    field :views, :integer, default: 0
 
     timestamps()
   end
@@ -334,7 +332,7 @@ For now, categories will contain only textual information. Our first order of bu
 
 ```console
 $ mix phx.gen.context Catalog Category categories \
-title:string:unique
+title:string:*:unique
 
 You are generating into an existing context.
 ...
@@ -366,20 +364,20 @@ defmodule Hello.Repo.Migrations.CreateProductCategories do
   use Ecto.Migration
 
   def change do
-    create table(:product_categories, primary_key: false) do
-      add :product_id, references(:products, on_delete: :delete_all)
-      add :category_id, references(:categories, on_delete: :delete_all)
+    create table("product_categories", primary_key: false) do
+      add :product_id, references("products", on_delete: :delete_all)
+      add :category_id, references("categories", on_delete: :delete_all)
     end
 
-    create index(:product_categories, [:product_id])
-    create unique_index(:product_categories, [:category_id, :product_id])
+    create index("product_categories", [:product_id])
+    create index("product_categories", [:category_id, :product_id], unique: true)
   end
 end
 ```
 
 We created a `product_categories` table and used the `primary_key: false` option since our join table does not need a primary key. Next we defined our `:product_id` and `:category_id` foreign key fields, and passed `on_delete: :delete_all` to ensure the database prunes our join table records if a linked product or category is deleted. By using a database constraint, we enforce data integrity at the database level, rather than relying on ad-hoc and error-prone application logic.
 
-Next, we created indexes for our foreign keys, one of which is a unique index to ensure a product cannot have duplicate categories. Note that we do not necessarily need single-column index for `category_id` because it is in the leftmost prefix of multicolumn index, which is enough for the database optimizer. Adding a redundant index, on the other hand, only adds overhead on write.
+Next, we created indexes for our foreign keys, one of which is a unique index to ensure a product cannot have duplicate categories. Note that we do not necessarily need single-column index for `category_id` because it is in the leftmost prefix of multi-column index, which is enough for the database optimizer. Adding a redundant index, on the other hand, only adds overhead on write.
 
 With our migrations in place, we can migrate up.
 
@@ -437,7 +435,7 @@ Perfect. Before we integrate categories in the web layer, we need to let our con
     field :description, :string
     field :price, :decimal
     field :title, :string
-    field :views, :integer
+    field :views, :integer, default: 0
 
 +   many_to_many :categories, Category, join_through: "product_categories", on_replace: :delete
 
@@ -563,7 +561,7 @@ Let's create a `ShoppingCart` context to handle basic cart duties. Before we wri
 From the description, it's clear we need a `Cart` resource for storing the user's cart, along with a `CartItem` to track products in the cart. With our plan set, let's get to work. Run the following command to generate our new context:
 
 ```console
-$ mix phx.gen.context ShoppingCart Cart carts user_uuid:uuid:unique
+$ mix phx.gen.context ShoppingCart Cart carts user_uuid:uuid:unique:*
 
 * creating lib/hello/shopping_cart/cart.ex
 * creating priv/repo/migrations/20210205203128_create_carts.exs
@@ -591,8 +589,8 @@ We generated our new context `ShoppingCart`, with a new `ShoppingCart.Cart` sche
 
 ```console
 $ mix phx.gen.context ShoppingCart CartItem cart_items \
-cart_id:references:carts product_id:references:products \
-price_when_carted:decimal quantity:integer
+cart_id:references:on_delete,delete_all:* product_id:references:Catalog.Product:on_delete,delete_all:* \
+price_when_carted:decimal:*:precision,15:scale,6 quantity:integer:*
 
 You are generating into an existing context.
 ...
@@ -609,27 +607,24 @@ Remember to update your repository by running migrations:
 
 ```
 
-We generated a new resource inside our `ShoppingCart` named `CartItem`. This schema and table will hold references to a cart and product, along with the price at the time we added the item to our cart, and the quantity the user wishes to purchase. Let's touch up the generated migration file in `priv/repo/migrations/*_create_cart_items.ex`:
+We generated a new resource inside our `ShoppingCart` named `CartItem`. This schema and table will hold references to a cart and product, along with the price at the time we added the item to our cart, and the quantity the user wishes to purchase. Let's check the generated migration file in `priv/repo/migrations/*_create_cart_items.ex`:
 
 ```elixir
-    create table(:cart_items) do
--     add :price_when_carted, :decimal
-+     add :price_when_carted, :decimal, precision: 15, scale: 6, null: false
-      add :quantity, :integer
--     add :cart_id, references(:carts, on_delete: :nothing)
-+     add :cart_id, references(:carts, on_delete: :delete_all)
--     add :product_id, references(:products, on_delete: :nothing)
-+     add :product_id, references(:products, on_delete: :delete_all)
+    create table("cart_items") do
+      add :price_when_carted, :decimal, precision: 15, scale: 6, null: false
+      add :quantity, :integer, null: false
+      add :cart_id, references("carts", on_delete: :delete_all), null: false
+      add :product_id, references("products", on_delete: :delete_all), null: false
 
       timestamps()
     end
 
--   create index(:cart_items, [:cart_id])
-    create index(:cart_items, [:product_id])
-+   create unique_index(:cart_items, [:cart_id, :product_id])
+-   create index("cart_items", [:cart_id])
+    create index("cart_items", [:product_id])
++   create index("cart_items", [:cart_id, :product_id], unique: true)
 ```
 
-We used the `:delete_all` strategy again to enforce data integrity. This way, when a cart or product is deleted from the application, we don't have to rely on application code in our `ShoppingCart` or `Catalog` contexts to worry about cleaning up the records. This keeps our application code decoupled and the data integrity enforcement where it belongs – in the database. We also added a unique constraint to ensure a duplicate product is not allowed to be added to a cart. As with the `product_categories` table, using a multi-column index lets us remove the separate index for the leftmost field (`cart_id`). With our database tables in place, we can now migrate up:
+We used the `:delete_all` strategy again to enforce data integrity, though this time we passed it via attribute option. This way, when a cart or product is deleted from the application, we don't have to rely on application code in our `ShoppingCart` or `Catalog` contexts to worry about cleaning up the records. This keeps our application code decoupled and the data integrity enforcement where it belongs – in the database. Notice how generator inferred referenced table from referenced schemas. And we only need to provide schema for product relation `Catalog.Product`, because it is in different context. For cart referenced schema was inferred automatically, from field name `cart_id`. We also added a unique constraint to ensure a duplicate product is not allowed to be added to a cart. As with the `product_categories` table, using a multi-column index lets us remove the separate index for the leftmost field (`cart_id`). With our database tables in place, we can now migrate up:
 
 ```console
 $ mix ecto.migrate
@@ -675,17 +670,14 @@ Now that we know where our data dependencies exist, let's add our schema associa
   end
 ```
 
-Now that our cart is associated to the items we place in it, let's set up the cart item associations inside `lib/hello/shopping_cart/cart_item.ex`:
+Now that our cart is associated to the items we place in it, let's tweak the cart item associations inside `lib/hello/shopping_cart/cart_item.ex`:
 
 ```elixir
   schema "cart_items" do
     field :price_when_carted, :decimal
     field :quantity, :integer
--   field :cart_id, :id
--   field :product_id, :id
-
-+   belongs_to :cart, Hello.ShoppingCart.Cart
-+   belongs_to :product, Hello.Catalog.Product
+    belongs_to :cart, Hello.ShoppingCart.Cart
+    belongs_to :product, Hello.Catalog.Product
 
     timestamps()
   end
@@ -693,13 +685,17 @@ Now that our cart is associated to the items we place in it, let's set up the ca
   @doc false
   def changeset(cart_item, attrs) do
     cart_item
-    |> cast(attrs, [:price_when_carted, :quantity])
-    |> validate_required([:price_when_carted, :quantity])
+-   |> cast(attrs, [:price_when_carted, :quantity, :cart_id, :product_id])
+-   |> validate_required([:price_when_carted, :quantity, :cart_id, :product_id])
+-   |> assoc_constraint(:cart)
+-   |> assoc_constraint(:product)
++   |> cast(attrs, [:price_when_carted, :quantity])
++   |> validate_required([:price_when_carted, :quantity])
 +   |> validate_number(:quantity, greater_than_or_equal_to: 0, less_than: 100)
   end
 ```
 
-First, we replaced the `cart_id` field with a standard `belongs_to` pointing at our `ShoppingCart.Cart` schema. Next, we replaced our `product_id` field by adding our first cross-context data dependency with a `belongs_to` for the `Catalog.Product` schema. Here, we intentionally coupled the data boundaries because it provides exactly what we need: an isolated context API with the bare minimum knowledge necessary to reference a product in our system. Next, we added a new validation to our changeset. With `validate_number/3`, we ensure any quantity provided by user input is between 0 and 100.
+From generator we have a standard association `belongs_to :cart` pointing at our `ShoppingCart.Cart` schema in the same context. For `product` we have our first cross-context data dependency with a `belongs_to` for the `Catalog.Product` schema. As mentioned before, because of contexts difference, we had to pass it as an option to the `product_id` attribute in generation command. Here, we intentionally coupled the data boundaries because it provides exactly what we need: an isolated context API with the bare minimum knowledge necessary to reference a product in our system. Next, we remove generated association validations. In general cases we don't need to load associated records into memory and just validate them based on foreign key constraint. But in our case we anyway are going to load product for price info and cart will be loaded into assign already. So we will put associations to cart_item outside of this changeset, during cart_item creation, as we will see soon. Also we added a new validation to our changeset. With `validate_number/3`, we ensure any quantity provided by user input is between 0 and 100.
 
 With our schemas in place, we can start integrating the new data structures and `ShoppingCart` context APIs into our web-facing features.
 
@@ -950,7 +946,7 @@ Next we can create the template at `lib/hello_web/controllers/cart_html/show.htm
 
   <.simple_form :let={f} for={@changeset} action={~p"/cart"}>
     <.inputs_for :let={item_form} field={f[:items]}>
-	<% item = item_form.data %>
+      <% item = item_form.data %>
       <.input field={item_form[:quantity]} type="number" label={item.product.title} />
       <%= currency_to_str(ShoppingCart.total_item_price(item)) %>
     </.inputs_for>
@@ -1050,7 +1046,7 @@ If we stop and consider the order process, we'll see that orders involve related
 Naming wise, `Orders` clearly defines the scope of our context, so let's get started by again taking advantage of the context generators. Run the following command in your console:
 
 ```console
-$ mix phx.gen.context Orders Order orders user_uuid:uuid total_price:decimal
+$ mix phx.gen.context Orders Order orders user_uuid:uuid:* total_price:decimal:*:precision,15:scale,6
 
 * creating lib/hello/orders/order.ex
 * creating priv/repo/migrations/20210209214612_create_orders.exs
@@ -1066,14 +1062,13 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-We generated an `Orders` context. We added a `user_uuid` field to associate our placeholder current user to an order, along with a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` and make the following changes:
+We generated an `Orders` context. We added a `user_uuid` field to associate our placeholder current user to an order, along with a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` to check generated code:
 
 ```elixir
   def change do
-    create table(:orders) do
-      add :user_uuid, :uuid
--     add :total_price, :decimal
-+     add :total_price, :decimal, precision: 15, scale: 6, null: false
+    create table("orders") do
+      add :user_uuid, :uuid, null: false
+      add :total_price, :decimal, precision: 15, scale: 6, null: false
 
       timestamps()
     end
@@ -1086,8 +1081,8 @@ The orders table alone doesn't hold much information, but we know we'll need to 
 
 ```console
 $ mix phx.gen.context Orders LineItem order_line_items \
-price:decimal quantity:integer \
-order_id:references:orders product_id:references:products
+price:decimal:*:precision,15:scale,6 quantity:integer \
+order_id:references product_id:references:Catalog.Product
 
 You are generating into an existing context.
 ...
@@ -1103,22 +1098,21 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and inject supporting functions into our orders context. Like before, let's modify the migration in `priv/repo/migrations/*_create_order_line_items.exs` and make the following decimal field changes:
+We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and inject supporting functions into our orders context. Like before, generator applied options to decimal column and inferred table names for references in the migration file `priv/repo/migrations/*_create_order_line_items.exs`:
 
 ```elixir
   def change do
-    create table(:order_line_items) do
--     add :price, :decimal
-+     add :price, :decimal, precision: 15, scale: 6, null: false
+    create table("order_line_items") do
+      add :price, :decimal, precision: 15, scale: 6, null: false
       add :quantity, :integer
-      add :order_id, references(:orders, on_delete: :nothing)
-      add :product_id, references(:products, on_delete: :nothing)
+      add :order_id, references("orders", on_delete: :nothing)
+      add :product_id, references("products", on_delete: :nothing)
 
       timestamps()
     end
 
-    create index(:order_line_items, [:order_id])
-    create index(:order_line_items, [:product_id])
+    create index("order_line_items", [:order_id])
+    create index("order_line_items", [:product_id])
   end
 ```
 
@@ -1136,23 +1130,20 @@ With our migration in place, let's wire up our orders and line items association
   end
 ```
 
-We used `has_many :line_items` to associate orders and line items, just like we've seen before. Next, we used the `:through` feature of `has_many`, which allows us to instruct ecto how to associate resources across another relationship. In this case, we can associate products of an order by finding all products through associated line items. Next, let's wire up the association in the other direction in `lib/hello/orders/line_item.ex`:
+We used `has_many :line_items` to associate orders and line items, just like we've seen before. Next, we used the `:through` feature of `has_many`, which allows us to instruct ecto how to associate resources across another relationship. In this case, we can associate products of an order by finding all products through associated line items. Next, let's check the association in the other direction in `lib/hello/orders/line_item.ex`:
 
 ```elixir
   schema "order_line_items" do
     field :price, :decimal
     field :quantity, :integer
--   field :order_id, :id
--   field :product_id, :id
-
-+   belongs_to :order, Hello.Orders.Order
-+   belongs_to :product, Hello.Catalog.Product
+    belongs_to :order, Hello.Orders.Order
+    belongs_to :product, Hello.Catalog.Product
 
     timestamps()
   end
 ```
 
-We used `belongs_to` to associate line items to orders and products. With our associations in place, we can start integrating the web interface into our order process. Open up your router `lib/hello_web/router.ex` and add the following line:
+Generator added for us `belongs_to` to associate line items to orders and products, correctly inferring referenced schema for `order` from its field name. With our associations in place, we can start integrating the web interface into our order process. Open up your router `lib/hello_web/router.ex` and add the following line:
 
 ```elixir
   scope "/", HelloWeb do

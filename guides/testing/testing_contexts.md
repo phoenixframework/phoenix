@@ -9,7 +9,7 @@
 At the end of the Introduction to Testing guide, we generated an HTML resource for posts using the following command:
 
 ```console
-$ mix phx.gen.html Blog Post posts title body:text
+$ mix phx.gen.html Blog Post posts title:string:* body:text:*
 ```
 
 This gave us a number of modules for free, including a Blog context and a Post schema, alongside their respective test files. As we have learned in the Context guide, the Blog context is simply a module with functions to a particular area of our business domain, while Post schema maps to a particular table in our database.
@@ -60,7 +60,7 @@ Next, we define an alias, so we can refer to `Hello.Blog` simply as `Blog`.
 Then we start a `describe "posts"` block. A `describe` block is a feature in ExUnit that allows us to group similar tests. The reason why we have grouped all post related tests together is because contexts in Phoenix are capable of grouping multiple schemas together. For example, if we ran this command:
 
 ```console
-$ mix phx.gen.html Blog Comment comments post_id:references:posts body:text
+$ mix phx.gen.html Blog Comment comments post_id:references body:text
 ```
 
 We will get a bunch of new functions in the `Hello.Blog` context, plus a whole new `describe "comments"` block in our test file.
@@ -69,11 +69,14 @@ The tests defined for our context are very straight-forward. They call the funct
 
 ```elixir
 test "create_post/1 with valid data creates a post" do
-  valid_attrs = %{body: "some body", title: "some title"}
+  create_attrs = %{
+    body: "body value",
+    title: "title value"
+  }
 
-  assert {:ok, %Post{} = post} = Blog.create_post(valid_attrs)
-  assert post.body == "some body"
-  assert post.title == "some title"
+  assert {:ok, %Post{} = post} = Blog.create_post(create_attrs)
+  assert post.body == "body value"
+  assert post.title == "title value"
 end
 ```
 
