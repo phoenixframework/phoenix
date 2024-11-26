@@ -13,7 +13,6 @@ defmodule Phoenix.Endpoint.Supervisor do
     with {:ok, pid} = ok <- Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
       # We don't use the defaults in the checks below
       conf = Keyword.merge(Application.get_env(otp_app, mod, []), opts)
-      warmup(mod)
       log_access_url(mod, conf)
       browser_open(mod, conf)
 
@@ -83,6 +82,7 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     children =
       config_children(mod, secret_conf, default_conf) ++
+        warmup_children(mod) ++
         pubsub_children(mod, conf) ++
         socket_children(mod, conf, :child_spec) ++
         server_children(mod, conf, server?) ++
@@ -154,6 +154,10 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp config_children(mod, conf, default_conf) do
     args = {mod, conf, default_conf, name: Module.concat(mod, "Config")}
     [{Phoenix.Config, args}]
+  end
+
+  defp warmup_children(mod) do
+    [%{id: :warmup, start: {__MODULE__, :warmup, [mod]}}]
   end
 
   defp server_children(mod, config, server?) do
@@ -346,6 +350,11 @@ defmodule Phoenix.Endpoint.Supervisor do
     rescue
       e -> Logger.error("Could not warm up static assets: #{Exception.message(e)}")
     end
+
+    # To prevent a race condition where the socket listener is already started
+    # but the config not warmed up, we run warmup/1 as a child in the supervision
+    # tree. As we don't actually want to start a process, we return :ignore here.
+    :ignore
   end
 
   defp warmup_persistent(endpoint) do
