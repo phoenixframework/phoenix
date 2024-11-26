@@ -31,7 +31,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </:action>
       <:action :let={{id, <%= schema.singular %>}}>
         <.link
-          phx-click={JS.push("delete", value: %{id: <%= schema.singular %>.id}) |> hide("##{id}")}
+          phx-click={JS.push("delete", value: %{id: <%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>}) |> hide("##{id}")}
           data-confirm="Are you sure?"
         >
           Delete
@@ -45,7 +45,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, "Listing <%= schema.human_plural %>")
+     |> assign(:page_title, "Listing <%= schema.human_plural %>")<%= if schema.opts[:primary_key] do %>
+     |> stream_configure(:<%= schema.collection %>, dom_id: &"<%= schema.table %>-#{&1.<%= schema.opts[:primary_key] %>}")<% end %>
      |> stream(:<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>())}
   end
 
