@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>SettingsLive do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.Settings do
   use <%= inspect context.web_module %>, :live_view
 
   alias <%= inspect context.module %>

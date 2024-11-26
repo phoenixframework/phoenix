@@ -249,20 +249,20 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ ~s|deliver(user.email, "Update email instructions",|
       end)
 
-      assert_file("lib/my_app_web/live/user_registration_live.ex")
-      assert_file("test/my_app_web/live/user_registration_live_test.exs")
-      assert_file("lib/my_app_web/live/user_login_live.ex")
-      assert_file("test/my_app_web/live/user_login_live_test.exs")
-      assert_file("lib/my_app_web/live/user_reset_password_live.ex")
-      assert_file("test/my_app_web/live/user_reset_password_live_test.exs")
-      assert_file("lib/my_app_web/live/user_forgot_password_live.ex")
-      assert_file("test/my_app_web/live/user_forgot_password_live_test.exs")
-      assert_file("lib/my_app_web/live/user_settings_live.ex")
-      assert_file("test/my_app_web/live/user_settings_live_test.exs")
-      assert_file("lib/my_app_web/live/user_confirmation_live.ex")
-      assert_file("test/my_app_web/live/user_confirmation_live_test.exs")
-      assert_file("lib/my_app_web/live/user_confirmation_instructions_live.ex")
-      assert_file("test/my_app_web/live/user_confirmation_instructions_live_test.exs")
+      assert_file("lib/my_app_web/live/user_live/registration.ex")
+      assert_file("test/my_app_web/live/user_live/registration_test.exs")
+      assert_file("lib/my_app_web/live/user_live/login.ex")
+      assert_file("test/my_app_web/live/user_live/login_test.exs")
+      assert_file("lib/my_app_web/live/user_live/reset_password.ex")
+      assert_file("test/my_app_web/live/user_live/reset_password_test.exs")
+      assert_file("lib/my_app_web/live/user_live/forgot_password.ex")
+      assert_file("test/my_app_web/live/user_live/forgot_password_test.exs")
+      assert_file("lib/my_app_web/live/user_live/settings.ex")
+      assert_file("test/my_app_web/live/user_live/settings_test.exs")
+      assert_file("lib/my_app_web/live/user_live/confirmation.ex")
+      assert_file("test/my_app_web/live/user_live/confirmation_test.exs")
+      assert_file("lib/my_app_web/live/user_live/confirmation_instructions.ex")
+      assert_file("test/my_app_web/live/user_live/confirmation_instructions_test.exs")
 
       assert_file("lib/my_app_web/user_auth.ex")
       assert_file("test/my_app_web/user_auth_test.exs")
@@ -290,10 +290,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    live_session :redirect_if_user_is_authenticated,
                      on_mount: [{MyAppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
-                     live "/users/register", UserRegistrationLive, :new
-                     live "/users/log-in", UserLoginLive, :new
-                     live "/users/reset-password", UserForgotPasswordLive, :new
-                     live "/users/reset-password/:token", UserResetPasswordLive, :edit
+                     live "/users/register", UserLive.Registration, :new
+                     live "/users/log-in", UserLive.Login, :new
+                     live "/users/reset-password", UserLive.ForgotPassword, :new
+                     live "/users/reset-password/:token", UserLive.ResetPassword, :edit
                    end
 
                    post "/users/log-in", UserSessionController, :create
@@ -304,8 +304,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    live_session :require_authenticated_user,
                      on_mount: [{MyAppWeb.UserAuth, :ensure_authenticated}] do
-                     live "/users/settings", UserSettingsLive, :edit
-                     live "/users/settings/confirm-email/:token", UserSettingsLive, :confirm_email
+                     live "/users/settings", UserLive.Settings, :edit
+                     live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
                    end
                  end
 
@@ -316,8 +316,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    live_session :current_user,
                      on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
-                     live "/users/confirm/:token", UserConfirmationLive, :edit
-                     live "/users/confirm", UserConfirmationInstructionsLive, :new
+                     live "/users/confirm/:token", UserLive.Confirmation, :edit
+                     live "/users/confirm", UserLive.ConfirmationInstructions, :new
                    end
                  end
                """
@@ -387,10 +387,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    live_session :redirect_if_user_is_authenticated,
                      on_mount: [{MyAppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
-                     live "/users/register", UserRegistrationLive, :new
-                     live "/users/log-in", UserLoginLive, :new
-                     live "/users/reset-password", UserForgotPasswordLive, :new
-                     live "/users/reset-password/:token", UserResetPasswordLive, :edit
+                     live "/users/register", UserLive.Registration, :new
+                     live "/users/log-in", UserLive.Login, :new
+                     live "/users/reset-password", UserLive.ForgotPassword, :new
+                     live "/users/reset-password/:token", UserLive.ResetPassword, :edit
                    end
 
                    post "/users/log-in", UserSessionController, :create
@@ -401,8 +401,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    live_session :require_authenticated_user,
                      on_mount: [{MyAppWeb.UserAuth, :ensure_authenticated}] do
-                     live "/users/settings", UserSettingsLive, :edit
-                     live "/users/settings/confirm-email/:token", UserSettingsLive, :confirm_email
+                     live "/users/settings", UserLive.Settings, :edit
+                     live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
                    end
                  end
 
@@ -413,8 +413,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    live_session :current_user,
                      on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
-                     live "/users/confirm/:token", UserConfirmationLive, :edit
-                     live "/users/confirm", UserConfirmationInstructionsLive, :new
+                     live "/users/confirm/:token", UserLive.Confirmation, :edit
+                     live "/users/confirm", UserLive.ConfirmationInstructions, :new
                    end
                  end
                """

@@ -274,69 +274,91 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     case Keyword.fetch(context.opts, :live) do
       {:ok, true} ->
         live_files = [
-          "registration_live.ex": [web_pre, "live", web_path, "#{singular}_registration_live.ex"],
+          "registration_live.ex": [
+            web_pre,
+            "live",
+            web_path,
+            "#{singular}_live",
+            "registration.ex"
+          ],
           "registration_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_registration_live_test.exs"
+            "#{singular}_live",
+            "registration_test.exs"
           ],
-          "login_live.ex": [web_pre, "live", web_path, "#{singular}_login_live.ex"],
+          "login_live.ex": [web_pre, "live", web_path, "#{singular}_live", "login.ex"],
           "login_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_login_live_test.exs"
+            "#{singular}_live",
+            "login_test.exs"
           ],
           "reset_password_live.ex": [
             web_pre,
             "live",
             web_path,
-            "#{singular}_reset_password_live.ex"
+            "#{singular}_live",
+            "reset_password.ex"
           ],
           "reset_password_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_reset_password_live_test.exs"
+            "#{singular}_live",
+            "reset_password_test.exs"
           ],
           "forgot_password_live.ex": [
             web_pre,
             "live",
             web_path,
-            "#{singular}_forgot_password_live.ex"
+            "#{singular}_live",
+            "forgot_password.ex"
           ],
           "forgot_password_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_forgot_password_live_test.exs"
+            "#{singular}_live",
+            "forgot_password_test.exs"
           ],
-          "settings_live.ex": [web_pre, "live", web_path, "#{singular}_settings_live.ex"],
+          "settings_live.ex": [web_pre, "live", web_path, "#{singular}_live", "settings.ex"],
           "settings_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_settings_live_test.exs"
+            "#{singular}_live",
+            "settings_test.exs"
           ],
-          "confirmation_live.ex": [web_pre, "live", web_path, "#{singular}_confirmation_live.ex"],
+          "confirmation_live.ex": [
+            web_pre,
+            "live",
+            web_path,
+            "#{singular}_live",
+            "confirmation.ex"
+          ],
           "confirmation_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_confirmation_live_test.exs"
+            "#{singular}_live",
+            "confirmation_test.exs"
           ],
           "confirmation_instructions_live.ex": [
             web_pre,
             "live",
             web_path,
-            "#{singular}_confirmation_instructions_live.ex"
+            "#{singular}_live",
+            "confirmation_instructions.ex"
           ],
           "confirmation_instructions_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_confirmation_instructions_live_test.exs"
+            "#{singular}_live",
+            "confirmation_instructions_test.exs"
           ]
         ]
 
