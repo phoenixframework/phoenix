@@ -32,7 +32,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       <p class="text-center text-sm mt-4">
         <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
-        | <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
+        | <.link href={~p"<%= schema.route_prefix %>/log-in"}>Log in</.link>
       </p>
     </div>
     """
@@ -61,7 +61,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "Password reset successfully.")
-         |> redirect(to: ~p"<%= schema.route_prefix %>/log_in")}
+         |> redirect(to: ~p"<%= schema.route_prefix %>/log-in")}
 
       {:error, changeset} ->
         {:noreply, assign_form(socket, Map.put(changeset, :action, :insert))}

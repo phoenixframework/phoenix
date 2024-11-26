@@ -21,7 +21,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </.simple_form>
       <p class="text-center text-sm mt-4">
         <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
-        | <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
+        | <.link href={~p"<%= schema.route_prefix %>/log-in"}>Log in</.link>
       </p>
     </div>
     """
@@ -35,7 +35,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email) do
       <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(
         <%= schema.singular %>,
-        &url(~p"<%= schema.route_prefix %>/reset_password/#{&1}")
+        &url(~p"<%= schema.route_prefix %>/reset-password/#{&1}")
       )
     end
 
