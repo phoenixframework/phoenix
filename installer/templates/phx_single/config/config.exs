@@ -5,8 +5,9 @@
 # is restricted to this project.
 
 # General application configuration
-import Config<%= if @namespaced? || @ecto || @generators do %>
+import Config
 
+<%= if @namespaced? || @ecto || @generators do %>
 config :<%= @app_name %><%= if @namespaced? do %>,
   namespace: <%= @app_module %><% end %><%= if @ecto do %>,
   ecto_repos: [<%= @app_module %>.Repo]<% end %><%= if @generators do %>,
@@ -35,27 +36,27 @@ config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Lo
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",
-  default: [
+  <%= @app_name %>: [
     args:
       ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
-    cd: Path.expand("../assets", __DIR__),
+    cd: Path.expand("..<%= if @in_umbrella, do: "/apps/#{@app_name}" %>/assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]<% end %><%= if @css do %>
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "3.3.2",
-  default: [
+  version: "3.4.3",
+  <%= @app_name %>: [
     args: ~w(
       --config=tailwind.config.js
       --input=css/app.css
       --output=../priv/static/assets/app.css
     ),
-    cd: Path.expand("../assets", __DIR__)
+    cd: Path.expand("..<%= if @in_umbrella, do: "/apps/#{@app_name}" %>/assets", __DIR__),
   ]<% end %>
 
 # Configures Elixir's Logger
-config :logger, :console,
+config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 

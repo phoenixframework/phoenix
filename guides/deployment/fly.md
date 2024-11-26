@@ -390,11 +390,11 @@ $ fly scale count 2
 
 Refer to the [Fly.io Elixir documentation](https://fly.io/docs/getting-started/elixir) for additional information.
 
-[Working with Fly.io applications](https://fly.io/docs/getting-started/working-with-fly-apps/) covers things like:
+[The Fly.io docs](https://fly.io/docs/) covers things like:
 
-* Status and logs
-* Custom domains
-* Certificates
+* [Status](https://fly.io/docs/flyctl/status/) and [logs](https://fly.io/docs/monitoring/logging-overview/)
+* [Custom domains](https://fly.io/docs/networking/custom-domain/)
+* [Certificates](https://fly.io/docs/networking/custom-domain-api/)
 
 ## Troubleshooting
 

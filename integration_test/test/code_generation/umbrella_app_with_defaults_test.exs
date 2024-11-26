@@ -136,11 +136,9 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
               pipe_through [:browser]
 
               live "/posts", PostLive.Index, :index
-              live "/posts/new", PostLive.Index, :new
-              live "/posts/:id/edit", PostLive.Index, :edit
-
+              live "/posts/new", PostLive.Form, :new
               live "/posts/:id", PostLive.Show, :show
-              live "/posts/:id/show/edit", PostLive.Show, :edit
+              live "/posts/:id/edit", PostLive.Form, :edit
             end
           """)
         end)
@@ -165,11 +163,9 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
               pipe_through [:browser]
 
               live "/posts", PostLive.Index, :index
-              live "/posts/new", PostLive.Index, :new
-              live "/posts/:id/edit", PostLive.Index, :edit
-
+              live "/posts/new", PostLive.Form, :new
               live "/posts/:id", PostLive.Show, :show
-              live "/posts/:id/show/edit", PostLive.Show, :edit
+              live "/posts/:id/edit", PostLive.Form, :edit
             end
           """)
         end)

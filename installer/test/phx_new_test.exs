@@ -54,7 +54,9 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/config.exs", fn file ->
         assert file =~ "ecto_repos: [PhxBlog.Repo]"
+        assert file =~ "generators: [timestamp_type: :utc_datetime]"
         assert file =~ "config :phoenix, :json_library, Jason"
+        assert file =~ ~s[cd: Path.expand("../assets", __DIR__),]
         refute file =~ "namespace: PhxBlog"
         refute file =~ "config :phx_blog, :generators"
       end)
@@ -108,6 +110,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb.CoreComponents"
+        assert file =~ ~S|aria-label={gettext("close")}|
+        assert file =~ ~S|<.flash kind={:info} title={gettext("Success!")} flash={@flash} />|
       end)
 
       assert_file("phx_blog/lib/phx_blog_web/components/layouts.ex", fn file ->
@@ -149,12 +153,11 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # tailwind
       assert_file("phx_blog/assets/css/app.css")
-      assert_file("phx_blog/assets/tailwind.config.js")
-      assert_file("phx_blog/assets/vendor/heroicons/LICENSE.md")
-      assert_file("phx_blog/assets/vendor/heroicons/UPGRADE.md")
-      assert_file("phx_blog/assets/vendor/heroicons/optimized/24/outline/cake.svg")
-      assert_file("phx_blog/assets/vendor/heroicons/optimized/24/solid/cake.svg")
-      assert_file("phx_blog/assets/vendor/heroicons/optimized/20/solid/cake.svg")
+
+      assert_file("phx_blog/assets/tailwind.config.js", fn file ->
+        assert file =~ "phx_blog_web.ex"
+        assert file =~ "phx_blog_web/**/*.*ex"
+      end)
 
       refute File.exists?("phx_blog/priv/static/assets/app.css")
       refute File.exists?("phx_blog/priv/static/assets/app.js")
@@ -198,7 +201,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file(
         "phx_blog/config/test.exs",
-        ~R/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
+        ~r/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
       )
 
       assert_file("phx_blog/lib/phx_blog/repo.ex", ~r"defmodule PhxBlog.Repo")
@@ -254,12 +257,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # Mailer
       assert_file("phx_blog/mix.exs", fn file ->
-        assert file =~ "{:swoosh, \"~> 1.3\"}"
-        assert file =~ "{:finch, \"~> 0.13\"}"
-      end)
-
-      assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
-        assert file =~ "{Finch, name: PhxBlog.Finch}"
+        assert file =~ "{:swoosh, \"~> 1.16\"}"
+        assert file =~ "{:req, \"~> 0.5.4\"}"
       end)
 
       assert_file("phx_blog/lib/phx_blog/mailer.ex", fn file ->
@@ -282,7 +281,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/prod.exs", fn file ->
         assert file =~
-                 "config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PhxBlog.Finch"
+                 "config :swoosh, api_client: Swoosh.ApiClient.Req"
       end)
 
       # Install dependencies?
@@ -297,7 +296,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
 
       # Gettext
-      assert_file("phx_blog/lib/phx_blog_web/gettext.ex", ~r"defmodule PhxBlogWeb.Gettext")
+      assert_file("phx_blog/lib/phx_blog_web/gettext.ex", [
+        ~r"defmodule PhxBlogWeb.Gettext",
+        ~r"use Gettext\.Backend, otp_app: :phx_blog"
+      ])
+
       assert File.exists?("phx_blog/priv/gettext/errors.pot")
       assert File.exists?("phx_blog/priv/gettext/en/LC_MESSAGES/errors.po")
     end)
@@ -370,7 +373,12 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file("phx_blog/priv/gettext/en/LC_MESSAGES/errors.po")
       refute_file("phx_blog/priv/gettext/errors.pot")
       assert_file("phx_blog/mix.exs", &refute(&1 =~ ~r":gettext"))
-      assert_file("phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"import AmsMockWeb.Gettext"))
+
+      assert_file(
+        "phx_blog/lib/phx_blog_web.ex",
+        &refute(&1 =~ ~r"use Gettext, backend: AmsMockWeb.Gettext")
+      )
+
       assert_file("phx_blog/config/dev.exs", &refute(&1 =~ ~r"gettext"))
 
       # No HTML
@@ -414,12 +422,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # No mailer or emails
       assert_file("phx_blog/mix.exs", fn file ->
-        refute file =~ "{:swoosh, \"~> 1.3\"}"
-        refute file =~ "{:finch, \"~> 0.13\"}"
-      end)
-
-      assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
-        refute file =~ "{Finch, name: PhxBlog.Finch"
+        refute file =~ "{:swoosh"
+        refute file =~ "{:req"
       end)
 
       refute File.exists?("phx_blog/lib/phx_blog/mailer.ex")
@@ -509,6 +513,14 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ ~s|pipeline :browser|
         assert file =~ ~s|pipe_through [:fetch_session, :protect_from_forgery]|
       end)
+
+      assert_file("phx_blog/config/config.exs", fn file ->
+        refute file =~ ~s|config :phoenix_live_view|
+      end)
+
+      assert_file("phx_blog/config/test.exs", fn file ->
+        refute file =~ ~s|config :phoenix_live_view|
+      end)
     end)
   end
 
@@ -549,27 +561,21 @@ defmodule Mix.Tasks.Phx.NewTest do
     end)
   end
 
-  test "new with binary_id" do
-    in_tmp("new with binary_id", fn ->
-      Mix.Tasks.Phx.New.run([@app_name, "--binary-id"])
-      assert_file("phx_blog/config/config.exs", ~r/generators: \[binary_id: true\]/)
+  test "new with --no-gettext" do
+    in_tmp("new with no_gettext", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--no-gettext"])
+
+      assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
+        assert file =~ ~S|aria-label="close"|
+        assert file =~ ~S|<.flash kind={:info} title="Success!" flash={@flash} />|
+      end)
     end)
   end
 
-  test "new with uppercase" do
-    in_tmp("new with uppercase", fn ->
-      Mix.Tasks.Phx.New.run(["phxBlog"])
-
-      assert_file("phxBlog/README.md")
-
-      assert_file("phxBlog/mix.exs", fn file ->
-        assert file =~ "app: :phxBlog"
-      end)
-
-      assert_file("phxBlog/config/dev.exs", fn file ->
-        assert file =~ ~r/config :phxBlog, PhxBlog.Repo,/
-        assert file =~ "database: \"phxblog_dev\""
-      end)
+  test "new with binary_id" do
+    in_tmp("new with binary_id", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--binary-id"])
+      assert_file("phx_blog/config/config.exs", ~r/generators: \[.*binary_id: true\.*]/)
     end)
   end
 
@@ -598,7 +604,16 @@ defmodule Mix.Tasks.Phx.NewTest do
           assert file =~ "deps_path: \"../../deps\""
           assert file =~ "lockfile: \"../../mix.lock\""
         end)
+
+        refute_file("phx_blog/config/config.exs")
       end)
+
+      assert_file("config/config.exs", fn file ->
+        assert file =~ "PhxBlogWeb.Endpoint"
+        assert file =~ ~s[cd: Path.expand("../apps/phx_blog/assets", __DIR__),]
+      end)
+
+      assert_file("config/config.exs", "PhxBlogWeb.Endpoint")
     end)
   end
 
@@ -681,6 +696,15 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("custom_path/config/runtime.exs", [~r/database: database_path/])
       assert_file("custom_path/lib/custom_path/repo.ex", "Ecto.Adapters.SQLite3")
 
+      assert_file("custom_path/lib/custom_path/application.ex", fn file ->
+        assert file =~ "{Ecto.Migrator"
+        assert file =~ "repos: Application.fetch_env!(:custom_path, :ecto_repos)"
+        assert file =~ "skip: skip_migrations?()"
+
+        assert file =~ "defp skip_migrations?() do"
+        assert file =~ ~s/System.get_env("RELEASE_NAME") != nil/
+      end)
+
       assert_file("custom_path/test/support/conn_case.ex", "DataCase.setup_sandbox(tags)")
 
       assert_file(
@@ -749,6 +773,10 @@ defmodule Mix.Tasks.Phx.NewTest do
 
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
       Mix.Tasks.Phx.New.run(["valid", "--app", "007invalid"])
+    end
+
+    assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
+      Mix.Tasks.Phx.New.run(["exInvalidAppName"])
     end
 
     assert_raise Mix.Error, ~r"Module name must be a valid Elixir alias", fn ->

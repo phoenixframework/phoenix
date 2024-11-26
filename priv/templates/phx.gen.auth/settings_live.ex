@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>SettingsLive do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.Settings do
   use <%= inspect context.web_module %>, :live_view
 
   alias <%= inspect context.module %>
@@ -44,14 +44,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <.simple_form
           for={@password_form}
           id="password_form"
-          action={~p"<%= schema.route_prefix %>/log_in?_action=password_updated"}
+          action={~p"<%= schema.route_prefix %>/log-in?_action=password-updated"}
           method="post"
           phx-change="validate_password"
           phx-submit="update_password"
           phx-trigger-action={@trigger_submit}
         >
-          <.input
-            field={@password_form[:email]}
+          <input
+            name={@password_form[:email].name}
             type="hidden"
             id="hidden_<%= schema.singular %>_email"
             autocomplete="username"
@@ -140,7 +140,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <%= inspect context.alias %>.deliver_<%= schema.singular %>_update_email_instructions(
           applied_<%= schema.singular %>,
           <%= schema.singular %>.email,
-          &url(~p"<%= schema.route_prefix %>/settings/confirm_email/#{&1}")
+          &url(~p"<%= schema.route_prefix %>/settings/confirm-email/#{&1}")
         )
 
         info = "A link to confirm your email change has been sent to the new address."

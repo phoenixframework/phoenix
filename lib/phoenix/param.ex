@@ -1,25 +1,34 @@
 defprotocol Phoenix.Param do
-  @moduledoc """
+  @moduledoc ~S"""
   A protocol that converts data structures into URL parameters.
 
-  This protocol is used by URL helpers and other parts of the
+  This protocol is used by `Phoenix.VerifiedRoutes` and other parts of the
   Phoenix stack. For example, when you write:
 
-      user_path(conn, :edit, @user)
+      ~p"/user/#{@user}/edit"
 
   Phoenix knows how to extract the `:id` from `@user` thanks
   to this protocol.
+
+  (Deprecated URL helpers, e.g. `user_path(conn, :edit, @user)`, work the
+  same way.)
 
   By default, Phoenix implements this protocol for integers, binaries, atoms,
   and structs. For structs, a key `:id` is assumed, but you may provide a
   specific implementation.
 
-  Nil values cannot be converted to param.
+  The term `nil` cannot be converted to param.
 
   ## Custom parameters
 
   In order to customize the parameter for any struct,
-  one can simply implement this protocol.
+  one can simply implement this protocol. For example for a `Date` struct:
+
+      defimpl Phoenix.Param, for: Date do
+        def to_param(date) do
+          Date.to_string(date)
+        end
+      end
 
   However, for convenience, this protocol can also be
   derivable. For example:
@@ -50,7 +59,7 @@ defprotocol Phoenix.Param do
 
   @fallback_to_any true
 
-  @spec to_param(term) :: String.t
+  @spec to_param(term) :: String.t()
   def to_param(term)
 end
 
@@ -79,7 +88,7 @@ end
 defimpl Phoenix.Param, for: Map do
   def to_param(map) do
     raise ArgumentError,
-      "maps cannot be converted to_param. A struct was expected, got: #{inspect map}"
+          "maps cannot be converted to_param. A struct was expected, got: #{inspect(map)}"
   end
 end
 
@@ -88,16 +97,18 @@ defimpl Phoenix.Param, for: Any do
     key = Keyword.get(options, :key, :id)
 
     unless Map.has_key?(struct, key) do
-      raise ArgumentError, "cannot derive Phoenix.Param for struct #{inspect module} " <>
-                           "because it does not have key #{inspect key}. Please pass " <>
-                           "the :key option when deriving"
+      raise ArgumentError,
+            "cannot derive Phoenix.Param for struct #{inspect(module)} " <>
+              "because it does not have key #{inspect(key)}. Please pass " <>
+              "the :key option when deriving"
     end
 
     quote do
       defimpl Phoenix.Param, for: unquote(module) do
         def to_param(%{unquote(key) => nil}) do
-          raise ArgumentError, "cannot convert #{inspect unquote(module)} to param, " <>
-                               "key #{inspect unquote(key)} contains a nil value"
+          raise ArgumentError,
+                "cannot convert #{inspect(unquote(module))} to param, " <>
+                  "key #{inspect(unquote(key))} contains a nil value"
         end
 
         def to_param(%{unquote(key) => key}) when is_integer(key), do: Integer.to_string(key)
@@ -110,15 +121,16 @@ defimpl Phoenix.Param, for: Any do
   def to_param(%{id: nil}) do
     raise ArgumentError, "cannot convert struct to param, key :id contains a nil value"
   end
+
   def to_param(%{id: id}) when is_integer(id), do: Integer.to_string(id)
   def to_param(%{id: id}) when is_binary(id), do: id
   def to_param(%{id: id}), do: Phoenix.Param.to_param(id)
 
   def to_param(map) when is_map(map) do
     raise ArgumentError,
-      "structs expect an :id key when converting to_param or a custom implementation " <>
-      "of the Phoenix.Param protocol (read Phoenix.Param docs for more information), " <>
-      "got: #{inspect map}"
+          "structs expect an :id key when converting to_param or a custom implementation " <>
+            "of the Phoenix.Param protocol (read Phoenix.Param docs for more information), " <>
+            "got: #{inspect(map)}"
   end
 
   def to_param(data) do

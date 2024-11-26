@@ -2,7 +2,7 @@
 
 There are currently a number of built-in Phoenix-specific and Ecto-specific [Mix tasks](`Mix.Task`) available to us within a newly-generated application. We can also create our own application specific tasks.
 
-> Note to learn more about `mix`, you can read Elixir's official [Introduction to Mix](https://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html).
+> Note to learn more about `mix`, you can read Elixir's official [Introduction to Mix](https://hexdocs.pm/elixir/introduction-to-mix.html).
 
 ## Phoenix tasks
 
@@ -154,7 +154,7 @@ $ mix phx.gen.json Blog Post posts title:string content:string
 When `mix phx.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our Ecto migrations.
 
 ```console
-Add the resource to your :api scope in lib/hello_web/router.ex:
+Add the resource to the "/api" scope in lib/hello_web/router.ex:
 
     resources "/posts", PostController, except: [:new, :edit]
 
@@ -309,7 +309,7 @@ in its default location.
 Do you want to create it? [Y/n]
 ```
 
-By pressing confirming, a channel will be created, then you need to connect the socket in your endpoint:
+By confirming, a channel will be created, then you need to connect the socket in your endpoint:
 
 ```console
 Add the socket handler to your `lib/hello_web/endpoint.ex`, for example:
@@ -599,7 +599,6 @@ We certainly should follow the instructions and add our new repo to our supervis
 ```elixir
 . . .
 children = [
-  # Start the Ecto repository
   Hello.Repo,
   # Our custom repo
   OurCustom.Repo,
@@ -805,7 +804,7 @@ Indeed it does.
 If you want to make your new Mix task to use your application's infrastructure, you need to make sure the application is started and configure when Mix task is being executed. This is particularly useful if you need to access your database from within the Mix task. Thankfully, Mix makes it really easy for us via the `@requirements` module attribute:
 
 ```elixir
-  @requirements ["app.config"]
+  @requirements ["app.start"]
 
   @impl Mix.Task
   def run(_args) do

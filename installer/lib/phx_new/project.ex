@@ -16,7 +16,7 @@ defmodule Phx.New.Project do
             opts: :unset,
             in_umbrella?: false,
             binding: [],
-            generators: []
+            generators: [timestamp_type: :utc_datetime]
 
   def new(project_path, opts) do
     project_path = Path.expand(project_path)

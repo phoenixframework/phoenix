@@ -1,6 +1,6 @@
 <div class="mx-auto max-w-sm">
   <.header class="text-center">
-    Sign in to account
+    Log in to account
     <:subtitle>
       Don't have an account?
       <.link navigate={~p"<%= schema.route_prefix %>/register"} class="font-semibold text-brand hover:underline">
@@ -10,7 +10,7 @@
     </:subtitle>
   </.header>
 
-  <.simple_form :let={f} for={@conn.params["<%= schema.singular %>"]} as={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/log_in"}>
+  <.simple_form :let={f} for={@conn.params["<%= schema.singular %>"]} as={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/log-in"}>
     <.error :if={@error_message}><%%= @error_message %></.error>
 
     <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
@@ -24,13 +24,13 @@
 
     <:actions :let={f}>
       <.input field={f[:remember_me]} type="checkbox" label="Keep me logged in" />
-      <.link href={~p"<%= schema.route_prefix %>/reset_password"} class="text-sm font-semibold">
+      <.link href={~p"<%= schema.route_prefix %>/reset-password"} class="text-sm font-semibold">
         Forgot your password?
       </.link>
     </:actions>
     <:actions>
-      <.button phx-disable-with="Signing in..." class="w-full">
-        Sign in <span aria-hidden="true">→</span>
+      <.button phx-disable-with="Logging in..." class="w-full">
+        Log in <span aria-hidden="true">→</span>
       </.button>
     </:actions>
   </.simple_form>

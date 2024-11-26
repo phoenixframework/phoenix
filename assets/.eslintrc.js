@@ -2,17 +2,18 @@ module.exports = {
     "env": {
         "browser": true,
         "es2021": true,
+        "jest/globals": true
     },
-    "extends": [
-        "eslint:recommended",
-        "plugin:mocha/recommended"
-    ],
+    "extends": "eslint:recommended",
+    "globals": {
+        "global": "writable"
+    },
     "parserOptions": {
         "ecmaVersion": 12,
         "sourceType": "module"
     },
     "plugins": [
-        "mocha"
+        "jest"
     ],
     "rules": {
         "indent": [
@@ -75,8 +76,6 @@ module.exports = {
         ],
         "no-useless-escape": "off",
         "no-cond-assign": "off",
-        "no-case-declarations": "off",
-        "mocha/no-skipped-tests": "off",
-        "mocha/max-top-level-suites": "off"
+        "no-case-declarations": "off"
     }
 }

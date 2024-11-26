@@ -2,7 +2,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
   alias <%= inspect context.module %>
-  alias <%= inspect schema.repo %>
+  alias <%= inspect schema.repo %><%= schema.repo_alias %>
   import <%= inspect context.module %>Fixtures
 
   setup do

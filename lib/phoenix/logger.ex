@@ -230,7 +230,7 @@ defmodule Phoenix.Logger do
       level ->
         Logger.log(level, fn ->
           %{status: status, state: state} = conn
-          status = Integer.to_string(status)
+          status = status_to_string(status)
           [connection_type(state), ?\s, status, " in ", duration(duration)]
         end)
     end
@@ -252,10 +252,14 @@ defmodule Phoenix.Logger do
         ?\s,
         error_banner(kind, reason),
         " to ",
-        Integer.to_string(status),
+        status_to_string(status),
         " response"
       ]
     end)
+  end
+
+  defp status_to_string(status) do
+    status |> Plug.Conn.Status.code() |> Integer.to_string()
   end
 
   defp error_banner(:error, %type{}), do: inspect(type)
@@ -269,7 +273,6 @@ defmodule Phoenix.Logger do
   def phoenix_router_dispatch_start(_, _, metadata, _) do
     %{log: level, conn: conn, plug: plug} = metadata
     level = log_level(level, conn)
-    log_module = metadata[:log_module] || plug
 
     Logger.log(level, fn ->
       %{
@@ -277,10 +280,16 @@ defmodule Phoenix.Logger do
         plug_opts: plug_opts
       } = metadata
 
+      log_mfa =
+        case metadata[:mfa] do
+          {mod, fun, arity} -> mfa(mod, fun, arity)
+          _ when is_atom(plug_opts) -> mfa(plug, plug_opts, 2)
+          _ -> inspect(plug)
+        end
+
       [
         "Processing with ",
-        inspect(log_module),
-        maybe_action(plug_opts),
+        log_mfa,
         ?\n,
         "  Parameters: ",
         params(conn.params),
@@ -291,8 +300,8 @@ defmodule Phoenix.Logger do
     end)
   end
 
-  defp maybe_action(action) when is_atom(action), do: [?., Atom.to_string(action), ?/, ?2]
-  defp maybe_action(_), do: []
+  defp mfa(mod, fun, arity),
+    do: [inspect(mod), ?., Atom.to_string(fun), ?/, arity + ?0]
 
   defp params(%Plug.Conn.Unfetched{}), do: "[UNFETCHED]"
   defp params(params), do: params |> filter_values() |> inspect()

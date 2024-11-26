@@ -5,6 +5,7 @@ defmodule Mix.Phoenix.Schema do
 
   defstruct module: nil,
             repo: nil,
+            repo_alias: nil,
             table: nil,
             collection: nil,
             embedded?: false,
@@ -28,6 +29,7 @@ defmodule Mix.Phoenix.Schema do
             migration_defaults: nil,
             migration?: false,
             params: %{},
+            optionals: [],
             sample_id: nil,
             web_path: nil,
             web_namespace: nil,
@@ -36,9 +38,10 @@ defmodule Mix.Phoenix.Schema do
             route_prefix: nil,
             api_route_prefix: nil,
             migration_module: nil,
-            fixture_unique_functions: %{},
-            fixture_params: %{},
-            prefix: nil
+            fixture_unique_functions: [],
+            fixture_params: [],
+            prefix: nil,
+            timestamp_type: :naive_datetime
 
   @valid_types [
     :integer,
@@ -69,15 +72,16 @@ defmodule Mix.Phoenix.Schema do
   end
 
   def new(schema_name, schema_plural, cli_attrs, opts) do
-    ctx_app   = opts[:context_app] || Mix.Phoenix.context_app()
-    otp_app   = Mix.Phoenix.otp_app()
-    opts      = Keyword.merge(Application.get_env(otp_app, :generators, []), opts)
-    base      = Mix.Phoenix.context_base(ctx_app)
-    basename  = Phoenix.Naming.underscore(schema_name)
-    module    = Module.concat([base, schema_name])
-    repo      = opts[:repo] || Module.concat([base, "Repo"])
-    file      = Mix.Phoenix.context_lib_path(ctx_app, basename <> ".ex")
-    table     = opts[:table] || schema_plural
+    ctx_app = opts[:context_app] || Mix.Phoenix.context_app()
+    otp_app = Mix.Phoenix.otp_app()
+    opts = Keyword.merge(Application.get_env(otp_app, :generators, []), opts)
+    base = Mix.Phoenix.context_base(ctx_app)
+    basename = Phoenix.Naming.underscore(schema_name)
+    module = Module.concat([base, schema_name])
+    repo = opts[:repo] || Module.concat([base, "Repo"])
+    repo_alias = if String.ends_with?(Atom.to_string(repo), ".Repo"), do: "", else: ", as: Repo"
+    file = Mix.Phoenix.context_lib_path(ctx_app, basename <> ".ex")
+    table = opts[:table] || schema_plural
     {cli_attrs, uniques, redacts} = extract_attr_flags(cli_attrs)
     {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
     types = types(attrs)
@@ -96,11 +100,15 @@ defmodule Mix.Phoenix.Schema do
     collection = if schema_plural == singular, do: singular <> "_collection", else: schema_plural
     string_attr = string_attr(types)
     create_params = params(attrs, :create)
+
+    optionals = for {key, :map} <- types, do: key, into: []
+
     default_params_key =
       case Enum.at(create_params, 0) do
         {key, _} -> key
         nil -> :some_field
       end
+
     fixture_unique_functions = fixture_unique_functions(singular, uniques, attrs)
 
     %Schema{
@@ -108,6 +116,7 @@ defmodule Mix.Phoenix.Schema do
       migration?: Keyword.get(opts, :migration, true),
       module: module,
       repo: repo,
+      repo_alias: repo_alias,
       table: table,
       embedded?: embedded?,
       alias: module |> Module.split() |> List.last() |> Module.concat(nil),
@@ -116,6 +125,7 @@ defmodule Mix.Phoenix.Schema do
       plural: schema_plural,
       singular: singular,
       collection: collection,
+      optionals: optionals,
       assocs: assocs,
       types: types,
       defaults: schema_defaults(attrs),
@@ -125,6 +135,7 @@ defmodule Mix.Phoenix.Schema do
       human_singular: Phoenix.Naming.humanize(singular),
       human_plural: Phoenix.Naming.humanize(schema_plural),
       binary_id: opts[:binary_id],
+      timestamp_type: opts[:timestamp_type] || :naive_datetime,
       migration_defaults: migration_defaults(attrs),
       string_attr: string_attr,
       params: %{
@@ -141,7 +152,7 @@ defmodule Mix.Phoenix.Schema do
       context_app: ctx_app,
       generate?: generate?,
       migration_module: migration_module(),
-      fixture_unique_functions: fixture_unique_functions,
+      fixture_unique_functions: Enum.sort(fixture_unique_functions),
       fixture_params: fixture_params(attrs, fixture_unique_functions),
       prefix: opts[:prefix]
     }
@@ -158,11 +169,12 @@ defmodule Mix.Phoenix.Schema do
   end
 
   def extract_attr_flags(cli_attrs) do
-    {attrs, uniques, redacts} = Enum.reduce(cli_attrs, {[], [], []}, fn attr, {attrs, uniques, redacts} ->
-      [attr_name | rest] = String.split(attr, ":")
-      attr_name = String.to_atom(attr_name)
-      split_flags(Enum.reverse(rest), attr_name, attrs, uniques, redacts)
-    end)
+    {attrs, uniques, redacts} =
+      Enum.reduce(cli_attrs, {[], [], []}, fn attr, {attrs, uniques, redacts} ->
+        [attr_name | rest] = String.split(attr, ":")
+        attr_name = String.to_atom(attr_name)
+        split_flags(Enum.reverse(rest), attr_name, attrs, uniques, redacts)
+      end)
 
     {Enum.reverse(attrs), uniques, redacts}
   end
@@ -174,7 +186,7 @@ defmodule Mix.Phoenix.Schema do
     do: split_flags(rest, name, attrs, uniques, [name | redacts])
 
   defp split_flags(rest, name, attrs, uniques, redacts),
-    do: {[Enum.join([name | Enum.reverse(rest)], ":") | attrs ], uniques, redacts}
+    do: {[Enum.join([name | Enum.reverse(rest)], ":") | attrs], uniques, redacts}
 
   @doc """
   Parses the attrs as received by generators.
@@ -196,9 +208,9 @@ defmodule Mix.Phoenix.Schema do
   end
 
   @doc """
-  Converts the given value to map format when it is a date, time, datetime or naive_datetime.
+  Converts the given value to map format when it's a date, time, datetime or naive_datetime.
 
-  Since `form_component.html.heex` generated by the live generator uses selects for dates and/or
+  Since `form.html.heex` generated by the live generator uses selects for dates and/or
   times, fixtures must use map format for those fields in order to submit the live form.
   """
   def live_form_value(%Date{} = date), do: Calendar.strftime(date, "%Y-%m-%d")
@@ -216,7 +228,7 @@ defmodule Mix.Phoenix.Schema do
   def live_form_value(value), do: value
 
   @doc """
-  Build an invalid value for `@invalid_attrs` which is nil by default.
+  Builds an invalid value for `@invalid_attrs` which is nil by default.
 
   * In case the value is a list, this will return an empty array.
   * In case the value is date, datetime, naive_datetime or time, this will return an invalid date.
@@ -247,8 +259,18 @@ defmodule Mix.Phoenix.Schema do
     end)
   end
 
-  def type_and_opts_for_schema({:enum, opts}), do: ~s|Ecto.Enum, values: #{inspect Keyword.get(opts, :values)}|
-  def type_and_opts_for_schema(other), do: inspect other
+  @doc """
+  Returns the required fields in the schema. Anything not in the `optionals` list
+  is considered required.
+  """
+  def required_fields(schema) do
+    Enum.reject(schema.attrs, fn {key, _} -> key in schema.optionals end)
+  end
+
+  def type_and_opts_for_schema({:enum, opts}),
+    do: ~s|Ecto.Enum, values: #{inspect(Keyword.get(opts, :values))}|
+
+  def type_and_opts_for_schema(other), do: inspect(other)
 
   def maybe_redact_field(true), do: ", redact: true"
   def maybe_redact_field(false), do: ""
@@ -258,14 +280,16 @@ defmodule Mix.Phoenix.Schema do
   """
   def value(schema, field, value) do
     schema.types
-    |> Map.fetch!(field)
+    |> Keyword.fetch!(field)
     |> inspect_value(value)
   end
+
   defp inspect_value(:decimal, value), do: "Decimal.new(\"#{value}\")"
   defp inspect_value(_type, value), do: inspect(value)
 
   defp list_to_attr([key]), do: {String.to_atom(key), :string}
   defp list_to_attr([key, value]), do: {String.to_atom(key), String.to_atom(value)}
+
   defp list_to_attr([key, comp, value]) do
     {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
   end
@@ -274,55 +298,103 @@ defmodule Mix.Phoenix.Schema do
 
   defp type_to_default(key, t, :create) do
     case t do
-        {:array, type} -> build_array_values(type, :create)
-        {:enum, values} -> build_enum_values(values, :create)
-        :integer        -> 42
-        :float          -> 120.5
-        :decimal        -> "120.5"
-        :boolean        -> true
-        :map            -> %{}
-        :text           -> "some #{key}"
-        :date           -> Date.add(Date.utc_today(), -1)
-        :time           -> ~T[14:00:00]
-        :time_usec      -> ~T[14:00:00.000000]
-        :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
-        :utc_datetime   -> DateTime.add(build_utc_datetime(), -@one_day_in_seconds, :second, Calendar.UTCOnlyTimeZoneDatabase)
-        :utc_datetime_usec -> DateTime.add(build_utc_datetime_usec(), -@one_day_in_seconds, :second, Calendar.UTCOnlyTimeZoneDatabase)
-        :naive_datetime -> NaiveDateTime.add(build_utc_naive_datetime(), -@one_day_in_seconds)
-        :naive_datetime_usec -> NaiveDateTime.add(build_utc_naive_datetime_usec(), -@one_day_in_seconds)
-        _  -> "some #{key}"
+      {:array, type} ->
+        build_array_values(type, :create)
+
+      {:enum, values} ->
+        build_enum_values(values, :create)
+
+      :integer ->
+        42
+
+      :float ->
+        120.5
+
+      :decimal ->
+        "120.5"
+
+      :boolean ->
+        true
+
+      :map ->
+        %{}
+
+      :text ->
+        "some #{key}"
+
+      :date ->
+        Date.add(Date.utc_today(), -1)
+
+      :time ->
+        ~T[14:00:00]
+
+      :time_usec ->
+        ~T[14:00:00.000000]
+
+      :uuid ->
+        "7488a646-e31f-11e4-aace-600308960662"
+
+      :utc_datetime ->
+        DateTime.add(
+          build_utc_datetime(),
+          -@one_day_in_seconds,
+          :second,
+          Calendar.UTCOnlyTimeZoneDatabase
+        )
+
+      :utc_datetime_usec ->
+        DateTime.add(
+          build_utc_datetime_usec(),
+          -@one_day_in_seconds,
+          :second,
+          Calendar.UTCOnlyTimeZoneDatabase
+        )
+
+      :naive_datetime ->
+        NaiveDateTime.add(build_utc_naive_datetime(), -@one_day_in_seconds)
+
+      :naive_datetime_usec ->
+        NaiveDateTime.add(build_utc_naive_datetime_usec(), -@one_day_in_seconds)
+
+      _ ->
+        "some #{key}"
     end
   end
+
   defp type_to_default(key, t, :update) do
     case t do
-        {:array, type}  -> build_array_values(type, :update)
-        {:enum, values} -> build_enum_values(values, :update)
-        :integer        -> 43
-        :float          -> 456.7
-        :decimal        -> "456.7"
-        :boolean        -> false
-        :map            -> %{}
-        :text           -> "some updated #{key}"
-        :date           -> Date.utc_today()
-        :time           -> ~T[15:01:01]
-        :time_usec      -> ~T[15:01:01.000000]
-        :uuid           -> "7488a646-e31f-11e4-aace-600308960668"
-        :utc_datetime   -> build_utc_datetime()
-        :utc_datetime_usec -> build_utc_datetime_usec()
-        :naive_datetime -> build_utc_naive_datetime()
-        :naive_datetime_usec -> build_utc_naive_datetime_usec()
-        _               -> "some updated #{key}"
+      {:array, type} -> build_array_values(type, :update)
+      {:enum, values} -> build_enum_values(values, :update)
+      :integer -> 43
+      :float -> 456.7
+      :decimal -> "456.7"
+      :boolean -> false
+      :map -> %{}
+      :text -> "some updated #{key}"
+      :date -> Date.utc_today()
+      :time -> ~T[15:01:01]
+      :time_usec -> ~T[15:01:01.000000]
+      :uuid -> "7488a646-e31f-11e4-aace-600308960668"
+      :utc_datetime -> build_utc_datetime()
+      :utc_datetime_usec -> build_utc_datetime_usec()
+      :naive_datetime -> build_utc_naive_datetime()
+      :naive_datetime_usec -> build_utc_naive_datetime_usec()
+      _ -> "some updated #{key}"
     end
   end
 
   defp build_array_values(:string, :create),
-    do: Enum.map([1,2], &("option#{&1}"))
+    do: Enum.map([1, 2], &"option#{&1}")
+
   defp build_array_values(:integer, :create),
-    do: [1,2]
+    do: [1, 2]
+
   defp build_array_values(:string, :update),
     do: ["option1"]
+
   defp build_array_values(:integer, :update),
     do: [1]
+
   defp build_array_values(_, _),
     do: []
 
@@ -353,22 +425,26 @@ defmodule Mix.Phoenix.Schema do
       mix phx.gen.schema Comment comments body:text status:enum:published:unpublished
   """
 
-  defp validate_attr!({name, :datetime}), do: validate_attr!({name, :naive_datetime})
+  defp validate_attr!({name, :datetime}), do: {name, :naive_datetime}
+
   defp validate_attr!({name, :array}) do
-    Mix.raise """
+    Mix.raise("""
     Phoenix generators expect the type of the array to be given to #{name}:array.
     For example:
 
         mix phx.gen.schema Post posts settings:array:string
-    """
+    """)
   end
-  defp validate_attr!({_name, :enum}), do: Mix.raise @enum_missing_value_error
+
+  defp validate_attr!({_name, :enum}), do: Mix.raise(@enum_missing_value_error)
   defp validate_attr!({_name, type} = attr) when type in @valid_types, do: attr
-  defp validate_attr!({_name, {:enum, _vals}} = attr), do: attr
   defp validate_attr!({_name, {type, _}} = attr) when type in @valid_types, do: attr
+
   defp validate_attr!({_, type}) do
-    Mix.raise "Unknown type `#{inspect type}` given to generator. " <>
-              "The supported types are: #{@valid_types |> Enum.sort() |> Enum.join(", ")}"
+    Mix.raise(
+      "Unknown type `#{inspect(type)}` given to generator. " <>
+        "The supported types are: #{@valid_types |> Enum.sort() |> Enum.join(", ")}"
+    )
   end
 
   defp partition_attrs_and_assocs(schema_module, attrs) do
@@ -376,14 +452,17 @@ defmodule Mix.Phoenix.Schema do
       Enum.split_with(attrs, fn
         {_, {:references, _}} ->
           true
+
         {key, :references} ->
-          Mix.raise """
+          Mix.raise("""
           Phoenix generators expect the table to be given to #{key}:references.
           For example:
 
               mix phx.gen.schema Comment comments body:text post_id:references:posts
-          """
-        _ -> false
+          """)
+
+        _ ->
+          false
       end)
 
     assocs =
@@ -399,8 +478,8 @@ defmodule Mix.Phoenix.Schema do
 
   defp schema_defaults(attrs) do
     Enum.into(attrs, %{}, fn
-      {key, :boolean}  -> {key, ", default: false"}
-      {key, _}         -> {key, ""}
+      {key, :boolean} -> {key, ", default: false"}
+      {key, _} -> {key, ""}
     end)
   end
 
@@ -412,7 +491,7 @@ defmodule Mix.Phoenix.Schema do
   end
 
   defp types(attrs) do
-    Enum.into(attrs, %{}, fn
+    Keyword.new(attrs, fn
       {key, {:enum, vals}} -> {key, {:enum, values: translate_enum_vals(vals)}}
       {key, {root, val}} -> {key, {root, schema_type(val)}}
       {key, val} -> {key, schema_type(val)}
@@ -428,9 +507,10 @@ defmodule Mix.Phoenix.Schema do
 
   defp schema_type(:text), do: :string
   defp schema_type(:uuid), do: Ecto.UUID
+
   defp schema_type(val) do
     if Code.ensure_loaded?(Ecto.Type) and not Ecto.Type.primitive?(val) do
-      Mix.raise "Unknown type `#{val}` given to generator"
+      Mix.raise("Unknown type `#{val}` given to generator")
     else
       val
     end
@@ -444,14 +524,14 @@ defmodule Mix.Phoenix.Schema do
     |> Enum.uniq_by(fn {key, _} -> key end)
     |> Enum.map(fn
       {key, false} -> "create index(:#{table}, [:#{key}])"
-      {key, true}  -> "create unique_index(:#{table}, [:#{key}])"
+      {key, true} -> "create unique_index(:#{table}, [:#{key}])"
     end)
   end
 
   defp migration_defaults(attrs) do
     Enum.into(attrs, %{}, fn
-      {key, :boolean}  -> {key, ", default: false, null: false"}
-      {key, _}         -> {key, ""}
+      {key, :boolean} -> {key, ", default: false, null: false"}
+      {key, _} -> {key, ""}
     end)
   end
 
@@ -482,7 +562,7 @@ defmodule Mix.Phoenix.Schema do
   defp migration_module do
     case Application.get_env(:ecto_sql, :migration_module, Ecto.Migration) do
       migration_module when is_atom(migration_module) -> migration_module
-      other -> Mix.raise "Expected :migration_module to be a module, got: #{inspect(other)}"
+      other -> Mix.raise("Expected :migration_module to be a module, got: #{inspect(other)}")
     end
   end
 
@@ -521,17 +601,19 @@ defmodule Mix.Phoenix.Schema do
             {function_def, true}
         end
 
-
       {attr, {function_name, function_def, needs_impl?}}
     end)
   end
 
   defp fixture_params(attrs, fixture_unique_functions) do
-    Map.new(attrs, fn {attr, type} ->
-      case Map.fetch(fixture_unique_functions, attr) do
-        {:ok, {function_name, _function_def, _needs_impl?}} ->
+    attrs
+    |> Enum.sort()
+    |> Enum.map(fn {attr, type} ->
+      case fixture_unique_functions do
+        %{^attr => {function_name, _function_def, _needs_impl?}} ->
           {attr, "#{function_name}()"}
-        :error ->
+
+        %{} ->
           {attr, inspect(type_to_default(attr, type, :create))}
       end
     end)

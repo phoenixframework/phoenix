@@ -176,6 +176,7 @@ defmodule Phoenix.Controller.RenderTest do
 
     setup context do
       :telemetry.attach_many(context.test, @render_events, &__MODULE__.message_pid/4, self())
+      on_exit(fn -> :telemetry.detach(context.test) end)
     end
 
     def message_pid(event, measures, metadata, test_pid) do

@@ -7,9 +7,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
   end<%= if not live? do %>
 
-  describe "GET <%= schema.route_prefix %>/log_in" do
+  describe "GET <%= schema.route_prefix %>/log-in" do
     test "renders log in page", %{conn: conn} do
-      conn = get(conn, ~p"<%= schema.route_prefix %>/log_in")
+      conn = get(conn, ~p"<%= schema.route_prefix %>/log-in")
       response = html_response(conn, 200)
       assert response =~ "Log in"
       assert response =~ ~p"<%= schema.route_prefix %>/register"
@@ -17,15 +17,15 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "redirects if already logged in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      conn = conn |> log_in_<%= schema.singular %>(<%= schema.singular %>) |> get(~p"<%= schema.route_prefix %>/log_in")
+      conn = conn |> log_in_<%= schema.singular %>(<%= schema.singular %>) |> get(~p"<%= schema.route_prefix %>/log-in")
       assert redirected_to(conn) == ~p"/"
     end
   end<% end %>
 
-  describe "POST <%= schema.route_prefix %>/log_in" do
+  describe "POST <%= schema.route_prefix %>/log-in" do
     test "logs the <%= schema.singular %> in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
-        post(conn, ~p"<%= schema.route_prefix %>/log_in", %{
+        post(conn, ~p"<%= schema.route_prefix %>/log-in", %{
           "<%= schema.singular %>" => %{"email" => <%= schema.singular %>.email, "password" => valid_<%= schema.singular %>_password()}
         })
 
@@ -37,12 +37,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       response = html_response(conn, 200)
       assert response =~ <%= schema.singular %>.email
       assert response =~ ~p"<%= schema.route_prefix %>/settings"
-      assert response =~ ~p"<%= schema.route_prefix %>/log_out"
+      assert response =~ ~p"<%= schema.route_prefix %>/log-out"
     end
 
     test "logs the <%= schema.singular %> in with remember me", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
-        post(conn, ~p"<%= schema.route_prefix %>/log_in", %{
+        post(conn, ~p"<%= schema.route_prefix %>/log-in", %{
           "<%= schema.singular %>" => %{
             "email" => <%= schema.singular %>.email,
             "password" => valid_<%= schema.singular %>_password(),
@@ -58,7 +58,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn =
         conn
         |> init_test_session(<%= schema.singular %>_return_to: "/foo/bar")
-        |> post(~p"<%= schema.route_prefix %>/log_in", %{
+        |> post(~p"<%= schema.route_prefix %>/log-in", %{
           "<%= schema.singular %>" => %{
             "email" => <%= schema.singular %>.email,
             "password" => valid_<%= schema.singular %>_password()
@@ -72,7 +72,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "login following registration", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
         conn
-        |> post(~p"<%= schema.route_prefix %>/log_in", %{
+        |> post(~p"<%= schema.route_prefix %>/log-in", %{
           "_action" => "registered",
           "<%= schema.singular %>" => %{
             "email" => <%= schema.singular %>.email,
@@ -87,8 +87,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "login following password update", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
         conn
-        |> post(~p"<%= schema.route_prefix %>/log_in", %{
-          "_action" => "password_updated",
+        |> post(~p"<%= schema.route_prefix %>/log-in", %{
+          "_action" => "password-updated",
           "<%= schema.singular %>" => %{
             "email" => <%= schema.singular %>.email,
             "password" => valid_<%= schema.singular %>_password()
@@ -101,17 +101,17 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "redirects to login page with invalid credentials", %{conn: conn} do
       conn =
-        post(conn, ~p"<%= schema.route_prefix %>/log_in", %{
+        post(conn, ~p"<%= schema.route_prefix %>/log-in", %{
           "<%= schema.singular %>" => %{"email" => "invalid@email.com", "password" => "invalid_password"}
         })
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
-      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log_in"
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"
     end<% else %>
 
     test "emits error message with invalid credentials", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
-        post(conn, ~p"<%= schema.route_prefix %>/log_in", %{
+        post(conn, ~p"<%= schema.route_prefix %>/log-in", %{
           "<%= schema.singular %>" => %{"email" => <%= schema.singular %>.email, "password" => "invalid_password"}
         })
 
@@ -121,16 +121,16 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end<% end %>
   end
 
-  describe "DELETE <%= schema.route_prefix %>/log_out" do
+  describe "DELETE <%= schema.route_prefix %>/log-out" do
     test "logs the <%= schema.singular %> out", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      conn = conn |> log_in_<%= schema.singular %>(<%= schema.singular %>) |> delete(~p"<%= schema.route_prefix %>/log_out")
+      conn = conn |> log_in_<%= schema.singular %>(<%= schema.singular %>) |> delete(~p"<%= schema.route_prefix %>/log-out")
       assert redirected_to(conn) == ~p"/"
       refute get_session(conn, :<%= schema.singular %>_token)
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Logged out successfully"
     end
 
     test "succeeds even if the <%= schema.singular %> is not logged in", %{conn: conn} do
-      conn = delete(conn, ~p"<%= schema.route_prefix %>/log_out")
+      conn = delete(conn, ~p"<%= schema.route_prefix %>/log-out")
       assert redirected_to(conn) == ~p"/"
       refute get_session(conn, :<%= schema.singular %>_token)
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Logged out successfully"

@@ -136,10 +136,12 @@ defmodule Phoenix.Socket.Transport do
   Connects to the socket.
 
   The transport passes a map of metadata and the socket
-  returns `{:ok, state}`. `{:error, reason}` or `:error`. 
-  The state must be stored by the transport and returned 
-  in all future operations. `{:error, reason}` can only 
-  be used with websockets.
+  returns `{:ok, state}`, `{:error, reason}` or `:error`.
+  The state must be stored by the transport and returned
+  in all future operations. When `{:error, reason}` is
+  returned, some transports - such as WebSockets - allow
+  customizing the response based on `reason` via a custom
+  `:error_handler`.
 
   This function is used for authorization purposes and it
   may be invoked outside of the process that effectively
@@ -197,7 +199,7 @@ defmodule Phoenix.Socket.Transport do
     * `{:reply, status, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
 
-  Control frames only supported when using websockets.
+  Control frames are only supported when using websockets.
 
   The `options` contains an `opcode` key, this will be either `:ping` or
   `:pong`.
@@ -292,9 +294,7 @@ defmodule Phoenix.Socket.Transport do
   """
   def code_reload(conn, endpoint, opts) do
     if Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader)) do
-      # If the WebSocket reconnects, then often the page has already been reloaded
-      # and we don't want to print warnings twice, so we disable all warnings.
-      Phoenix.CodeReloader.reload(endpoint, reloadable_args: ~w(--no-all-warnings))
+      Phoenix.CodeReloader.reload(endpoint)
     end
 
     conn
@@ -458,8 +458,9 @@ defmodule Phoenix.Socket.Transport do
 
     * `:user_agent` - the value of the "user-agent" request header
 
+  The CSRF check can be disabled by setting the `:check_csrf` option to `false`.
   """
-  def connect_info(conn, endpoint, keys) do
+  def connect_info(conn, endpoint, keys, opts \\ []) do
     for key <- keys, into: %{} do
       case key do
         :peer_data ->
@@ -478,7 +479,7 @@ defmodule Phoenix.Socket.Transport do
           {:user_agent, fetch_user_agent(conn)}
 
         {:session, session} ->
-          {:session, connect_session(conn, endpoint, session)}
+          {:session, connect_session(conn, endpoint, session, opts)}
 
         {key, val} ->
           {key, val}
@@ -486,26 +487,24 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp connect_session(conn, endpoint, {key, store, {csrf_token_key, init}}) do
+  defp connect_session(conn, endpoint, {key, store, {csrf_token_key, init}}, opts) do
     conn = Plug.Conn.fetch_cookies(conn)
+    check_csrf = Keyword.get(opts, :check_csrf, true)
 
-    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
-         cookie when is_binary(cookie) <- conn.cookies[key],
+    with cookie when is_binary(cookie) <- conn.cookies[key],
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
          {_, session} <- store.get(conn, cookie, init),
-         csrf_state when is_binary(csrf_state) <-
-          Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]),
-         true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
+         true <- not check_csrf or csrf_token_valid?(conn, session, csrf_token_key) do
       session
     else
       _ -> nil
     end
   end
 
-  defp connect_session(conn, endpoint, {:mfa, {module, function, args}}) do
+  defp connect_session(conn, endpoint, {:mfa, {module, function, args}}, opts) do
     case apply(module, function, args) do
       session_config when is_list(session_config) ->
-        connect_session(conn, endpoint, init_session(session_config))
+        connect_session(conn, endpoint, init_session(session_config), opts)
 
       other ->
         raise ArgumentError,
@@ -539,6 +538,14 @@ defmodule Phoenix.Socket.Transport do
   defp fetch_user_agent(conn) do
     with {_, value} <- List.keyfind(conn.req_headers, "user-agent", 0) do
       value
+    end
+  end
+
+  defp csrf_token_valid?(conn, session, csrf_token_key) do
+    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
+         csrf_state when is_binary(csrf_state) <-
+           Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]) do
+       Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token)
     end
   end
 

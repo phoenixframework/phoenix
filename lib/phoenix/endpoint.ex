@@ -62,17 +62,10 @@ defmodule Phoenix.Endpoint do
       YourAppWeb.Endpoint.config(:port)
       YourAppWeb.Endpoint.config(:some_config, :default_value)
 
-  ### Dynamic configuration
-
-  For dynamically configuring the endpoint, such as loading data
-  from environment variables or configuration files, Phoenix invokes
-  the `c:init/2` callback on the endpoint, passing the atom `:supervisor`
-  as the first argument and the endpoint configuration as second.
-
-  All of Phoenix configuration, except the Compile-time configuration
-  below can be set dynamically from the `c:init/2` callback.
-
   ### Compile-time configuration
+
+  Compile-time configuration may be set on `config/dev.exs`, `config/prod.exs`
+  and so on, but has no effect on `config/runtime.exs`:
 
     * `:code_reloader` - when `true`, enables code reloading functionality.
       For the list of code reloader configuration options see
@@ -98,6 +91,12 @@ defmodule Phoenix.Endpoint do
       set `:host` in the `:force_ssl` configuration to `nil`
 
   ### Runtime configuration
+
+  The configuration below may be set on `config/dev.exs`, `config/prod.exs`
+  and so on, as well as on `config/runtime.exs`. Typically, if you need to
+  configure them with system environment variables, you set them in
+  `config/runtime.exs`. These options may also be set when starting the
+  endpoint in your supervision tree, such as `{MyApp.Endpoint, options}`.
 
     * `:adapter` - which webserver adapter to use for serving web requests.
       See the "Adapter configuration" section below
@@ -182,6 +181,8 @@ defmodule Phoenix.Endpoint do
 
           [another: {Mod, :fun, [arg1, arg2]}]
 
+      When `false`, watchers can be disabled.
+
     * `:force_watchers` - when `true`, forces your watchers to start
       even when the `:server` option is set to `false`.
 
@@ -192,7 +193,7 @@ defmodule Phoenix.Endpoint do
           live_reload: [
             url: "ws://localhost:4000",
             patterns: [
-              ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
+              ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
               ~r"lib/app_web/(live|views)/.*(ex)$",
               ~r"lib/app_web/templates/.*(eex)$"
             ]
@@ -220,17 +221,28 @@ defmodule Phoenix.Endpoint do
 
   ### Adapter configuration
 
-  Phoenix allows you to choose which webserver adapter to use. The default
-  is `Phoenix.Endpoint.Cowboy2Adapter` which can be configured via the
-  following top-level options.
+  Phoenix allows you to choose which webserver adapter to use. Newly generated
+  applications created via the `phx.new` Mix task use the
+  [`Bandit`](https://github.com/mtrudel/bandit) webserver via the
+  `Bandit.PhoenixAdapter` adapter. If not otherwise specified via the `adapter`
+  option Phoenix will fall back to the `Phoenix.Endpoint.Cowboy2Adapter` for
+  backwards compatibility with applications generated prior to Phoenix 1.7.8.
+
+  Both adapters can be configured in a similar manner using the following two
+  top-level options:
 
     * `:http` - the configuration for the HTTP server. It accepts all options
-      as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
-      to `false`
+      as defined by either [`Bandit`](https://hexdocs.pm/bandit/Bandit.html#t:options/0)
+      or [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/) depending on your
+      choice of adapter. Defaults to `false`
 
     * `:https` - the configuration for the HTTPS server. It accepts all options
-      as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
-      to `false`
+      as defined by either [`Bandit`](https://hexdocs.pm/bandit/Bandit.html#t:options/0)
+      or [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/) depending on your
+      choice of adapter. Defaults to `false`
+
+  In addition, the connection draining can be configured for the Cowboy webserver via the following
+  top-level option (this is not required for Bandit as it has connection draining built-in):
 
     * `:drainer` - a drainer process waits for any on-going request to finish
       during application shutdown. It accepts the `:shutdown` and
@@ -251,6 +263,9 @@ defmodule Phoenix.Endpoint do
     * for handling paths and URLs: `c:struct_url/0`, `c:url/0`, `c:path/1`,
       `c:static_url/0`,`c:static_path/1`, and `c:static_integrity/1`
 
+    * for gathering runtime information about the address and port the
+      endpoint is running on: `c:server_info/1`
+
     * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,
       `c:broadcast_from/4`, `c:broadcast_from!/4`, `c:local_broadcast/3`,
       and `c:local_broadcast_from/4`
@@ -261,8 +276,8 @@ defmodule Phoenix.Endpoint do
 
   """
 
-  @type topic :: String.t
-  @type event :: String.t
+  @type topic :: String.t()
+  @type event :: String.t()
   @type msg :: map | {:binary, binary}
 
   require Logger
@@ -275,7 +290,7 @@ defmodule Phoenix.Endpoint do
   Starts endpoint's configuration cache and possibly the servers for
   handling requests.
   """
-  @callback start_link(keyword) :: Supervisor.on_start
+  @callback start_link(keyword) :: Supervisor.on_start()
 
   @doc """
   Access the endpoint configuration given by key.
@@ -287,60 +302,61 @@ defmodule Phoenix.Endpoint do
   """
   @callback config_change(changed :: term, removed :: term) :: term
 
-  @doc """
-  Initialize the endpoint configuration.
-
-  Invoked when the endpoint supervisor starts, allows dynamically
-  configuring the endpoint from system environment or other runtime sources.
-  """
-  @callback init(:supervisor, config :: Keyword.t) :: {:ok, Keyword.t}
-
   # Paths and URLs
 
   @doc """
   Generates the endpoint base URL, but as a `URI` struct.
   """
-  @callback struct_url() :: URI.t
+  @callback struct_url() :: URI.t()
 
   @doc """
   Generates the endpoint base URL without any path information.
   """
-  @callback url() :: String.t
+  @callback url() :: String.t()
 
   @doc """
   Generates the path information when routing to this endpoint.
   """
-  @callback path(path :: String.t) :: String.t
+  @callback path(path :: String.t()) :: String.t()
 
   @doc """
   Generates the static URL without any path information.
   """
-  @callback static_url() :: String.t
+  @callback static_url() :: String.t()
 
   @doc """
   Generates a route to a static file in `priv/static`.
   """
-  @callback static_path(path :: String.t) :: String.t
+  @callback static_path(path :: String.t()) :: String.t()
 
   @doc """
   Generates an integrity hash to a static file in `priv/static`.
   """
-  @callback static_integrity(path :: String.t) :: String.t | nil
+  @callback static_integrity(path :: String.t()) :: String.t() | nil
 
   @doc """
   Generates a two item tuple containing the `static_path` and `static_integrity`.
   """
-  @callback static_lookup(path :: String.t) :: {String.t, String.t} | {String.t, nil}
+  @callback static_lookup(path :: String.t()) :: {String.t(), String.t()} | {String.t(), nil}
 
   @doc """
   Returns the script name from the :url configuration.
   """
-  @callback script_name() :: [String.t]
+  @callback script_name() :: [String.t()]
 
   @doc """
   Returns the host from the :url configuration.
   """
-  @callback host() :: String.t
+  @callback host() :: String.t()
+
+  # Server information
+
+  @doc """
+  Returns the address and port that the server is running on
+  """
+  @callback server_info(Plug.Conn.scheme()) ::
+              {:ok, {:inet.ip_address(), :inet.port_number()} | :inet.returned_non_ip_address()}
+              | {:error, term()}
 
   # Channels
 
@@ -349,7 +365,7 @@ defmodule Phoenix.Endpoint do
 
   See `Phoenix.PubSub.subscribe/3` for options.
   """
-  @callback subscribe(topic, opts :: Keyword.t) :: :ok | {:error, term}
+  @callback subscribe(topic, opts :: Keyword.t()) :: :ok | {:error, term}
 
   @doc """
   Unsubscribes the caller from the given topic.
@@ -404,19 +420,12 @@ defmodule Phoenix.Endpoint do
 
   defp config(opts) do
     quote do
-      @otp_app unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
+      @otp_app unquote(opts)[:otp_app] || raise("endpoint expects :otp_app to be given")
       var!(config) = Phoenix.Endpoint.Supervisor.config(@otp_app, __MODULE__)
       var!(code_reloading?) = var!(config)[:code_reloader]
 
       # Avoid unused variable warnings
       _ = var!(code_reloading?)
-
-      @doc false
-      def init(_key, config) do
-        {:ok, config}
-      end
-
-      defoverridable init: 2
     end
   end
 
@@ -478,7 +487,8 @@ defmodule Phoenix.Endpoint do
           banner: {Phoenix.Endpoint.RenderErrors, :__debugger_banner__, []},
           style: [
             primary: "#EB532D",
-            logo: "data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNzEgNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgoJPHBhdGggZD0ibTI2LjM3MSAzMy40NzctLjU1Mi0uMWMtMy45Mi0uNzI5LTYuMzk3LTMuMS03LjU3LTYuODI5LS43MzMtMi4zMjQuNTk3LTQuMDM1IDMuMDM1LTQuMTQ4IDEuOTk1LS4wOTIgMy4zNjIgMS4wNTUgNC41NyAyLjM5IDEuNTU3IDEuNzIgMi45ODQgMy41NTggNC41MTQgNS4zMDUgMi4yMDIgMi41MTUgNC43OTcgNC4xMzQgOC4zNDcgMy42MzQgMy4xODMtLjQ0OCA1Ljk1OC0xLjcyNSA4LjM3MS0zLjgyOC4zNjMtLjMxNi43NjEtLjU5MiAxLjE0NC0uODg2bC0uMjQxLS4yODRjLTIuMDI3LjYzLTQuMDkzLjg0MS02LjIwNS43MzUtMy4xOTUtLjE2LTYuMjQtLjgyOC04Ljk2NC0yLjU4Mi0yLjQ4Ni0xLjYwMS00LjMxOS0zLjc0Ni01LjE5LTYuNjExLS43MDQtMi4zMTUuNzM2LTMuOTM0IDMuMTM1LTMuNi45NDguMTMzIDEuNzQ2LjU2IDIuNDYzIDEuMTY1LjU4My40OTMgMS4xNDMgMS4wMTUgMS43MzggMS40OTMgMi44IDIuMjUgNi43MTIgMi4zNzUgMTAuMjY1LS4wNjgtNS44NDItLjAyNi05LjgxNy0zLjI0LTEzLjMwOC03LjMxMy0xLjM2Ni0xLjU5NC0yLjctMy4yMTYtNC4wOTUtNC43ODUtMi42OTgtMy4wMzYtNS42OTItNS43MS05Ljc5LTYuNjIzQzEyLjgtLjYyMyA3Ljc0NS4xNCAyLjg5MyAyLjM2MSAxLjkyNiAyLjgwNC45OTcgMy4zMTkgMCA0LjE0OWMuNDk0IDAgLjc2My4wMDYgMS4wMzIgMCAyLjQ0Ni0uMDY0IDQuMjggMS4wMjMgNS42MDIgMy4wMjQuOTYyIDEuNDU3IDEuNDE1IDMuMTA0IDEuNzYxIDQuNzk4LjUxMyAyLjUxNS4yNDcgNS4wNzguNTQ0IDcuNjA1Ljc2MSA2LjQ5NCA0LjA4IDExLjAyNiAxMC4yNiAxMy4zNDYgMi4yNjcuODUyIDQuNTkxIDEuMTM1IDcuMTcyLjU1NVpNMTAuNzUxIDMuODUyYy0uOTc2LjI0Ni0xLjc1Ni0uMTQ4LTIuNTYtLjk2MiAxLjM3Ny0uMzQzIDIuNTkyLS40NzYgMy44OTctLjUyOC0uMTA3Ljg0OC0uNjA3IDEuMzA2LTEuMzM2IDEuNDlabTMyLjAwMiAzNy45MjRjLS4wODUtLjYyNi0uNjItLjkwMS0xLjA0LTEuMjI4LTEuODU3LTEuNDQ2LTQuMDMtMS45NTgtNi4zMzMtMi0xLjM3NS0uMDI2LTIuNzM1LS4xMjgtNC4wMzEtLjYxLS41OTUtLjIyLTEuMjYtLjUwNS0xLjI0NC0xLjI3Mi4wMTUtLjc4LjY5My0xIDEuMzEtMS4xODQuNTA1LS4xNSAxLjAyNi0uMjQ3IDEuNi0uMzgyLTEuNDYtLjkzNi0yLjg4Ni0xLjA2NS00Ljc4Ny0uMy0yLjk5MyAxLjIwMi01Ljk0MyAxLjA2LTguOTI2LS4wMTctMS42ODQtLjYwOC0zLjE3OS0xLjU2My00LjczNS0yLjQwOGwtLjA0My4wM2EyLjk2IDIuOTYgMCAwIDAgLjA0LS4wMjljLS4wMzgtLjExNy0uMTA3LS4xMi0uMTk3LS4wNTRsLjEyMi4xMDdjMS4yOSAyLjExNSAzLjAzNCAzLjgxNyA1LjAwNCA1LjI3MSAzLjc5MyAyLjggNy45MzYgNC40NzEgMTIuNzg0IDMuNzNBNjYuNzE0IDY2LjcxNCAwIDAgMSAzNyA0MC44NzdjMS45OC0uMTYgMy44NjYuMzk4IDUuNzUzLjg5OVptLTkuMTQtMzAuMzQ1Yy0uMTA1LS4wNzYtLjIwNi0uMjY2LS40Mi0uMDY5IDEuNzQ1IDIuMzYgMy45ODUgNC4wOTggNi42ODMgNS4xOTMgNC4zNTQgMS43NjcgOC43NzMgMi4wNyAxMy4yOTMuNTEgMy41MS0xLjIxIDYuMDMzLS4wMjggNy4zNDMgMy4zOC4xOS0zLjk1NS0yLjEzNy02LjgzNy01Ljg0My03LjQwMS0yLjA4NC0uMzE4LTQuMDEuMzczLTUuOTYyLjk0LTUuNDM0IDEuNTc1LTEwLjQ4NS43OTgtMTUuMDk0LTIuNTUzWm0yNy4wODUgMTUuNDI1Yy43MDguMDU5IDEuNDE2LjEyMyAyLjEyNC4xODUtMS42LTEuNDA1LTMuNTUtMS41MTctNS41MjMtMS40MDQtMy4wMDMuMTctNS4xNjcgMS45MDMtNy4xNCAzLjk3Mi0xLjczOSAxLjgyNC0zLjMxIDMuODctNS45MDMgNC42MDQuMDQzLjA3OC4wNTQuMTE3LjA2Ni4xMTcuMzUuMDA1LjY5OS4wMjEgMS4wNDcuMDA1IDMuNzY4LS4xNyA3LjMxNy0uOTY1IDEwLjE0LTMuNy44OS0uODYgMS42ODUtMS44MTcgMi41NDQtMi43MS43MTYtLjc0NiAxLjU4NC0xLjE1OSAyLjY0NS0xLjA3Wm0tOC43NTMtNC42N2MtMi44MTIuMjQ2LTUuMjU0IDEuNDA5LTcuNTQ4IDIuOTQzLTEuNzY2IDEuMTgtMy42NTQgMS43MzgtNS43NzYgMS4zNy0uMzc0LS4wNjYtLjc1LS4xMTQtMS4xMjQtLjE3bC0uMDEzLjE1NmMuMTM1LjA3LjI2NS4xNTEuNDA1LjIwNy4zNTQuMTQuNzAyLjMwOCAxLjA3LjM5NSA0LjA4My45NzEgNy45OTIuNDc0IDExLjUxNi0xLjgwMyAyLjIyMS0xLjQzNSA0LjUyMS0xLjcwNyA3LjAxMy0xLjMzNi4yNTIuMDM4LjUwMy4wODMuNzU2LjEwNy4yMzQuMDIyLjQ3OS4yNTUuNzk1LjAwMy0yLjE3OS0xLjU3NC00LjUyNi0yLjA5Ni03LjA5NC0xLjg3MlptLTEwLjA0OS05LjU0NGMxLjQ3NS4wNTEgMi45NDMtLjE0MiA0LjQ4Ni0xLjA1OS0uNDUyLjA0LS42NDMuMDQtLjgyNy4wNzYtMi4xMjYuNDI0LTQuMDMzLS4wNC01LjczMy0xLjM4My0uNjIzLS40OTMtMS4yNTctLjk3NC0xLjg4OS0xLjQ1Ny0yLjUwMy0xLjkxNC01LjM3NC0yLjU1NS04LjUxNC0yLjUuMDUuMTU0LjA1NC4yNi4xMDguMzE1IDMuNDE3IDMuNDU1IDcuMzcxIDUuODM2IDEyLjM2OSA2LjAwOFptMjQuNzI3IDE3LjczMWMtMi4xMTQtMi4wOTctNC45NTItMi4zNjctNy41NzgtLjUzNyAxLjczOC4wNzggMy4wNDMuNjMyIDQuMTAxIDEuNzI4LjM3NC4zODguNzYzLjc2OCAxLjE4MiAxLjEwNiAxLjYgMS4yOSA0LjMxMSAxLjM1MiA1Ljg5Ni4xNTUtMS44NjEtLjcyNi0xLjg2MS0uNzI2LTMuNjAxLTIuNDUyWm0tMjEuMDU4IDE2LjA2Yy0xLjg1OC0zLjQ2LTQuOTgxLTQuMjQtOC41OS00LjAwOGE5LjY2NyA5LjY2NyAwIDAgMSAyLjk3NyAxLjM5Yy44NC41ODYgMS41NDcgMS4zMTEgMi4yNDMgMi4wNTUgMS4zOCAxLjQ3MyAzLjUzNCAyLjM3NiA0Ljk2MiAyLjA3LS42NTYtLjQxMi0xLjIzOC0uODQ4LTEuNTkyLTEuNTA3Wm0xNy4yOS0xOS4zMmMwLS4wMjMuMDAxLS4wNDUuMDAzLS4wNjhsLS4wMDYuMDA2LjAwNi0uMDA2LS4wMzYtLjAwNC4wMjEuMDE4LjAxMi4wNTNabS0yMCAxNC43NDRhNy42MSA3LjYxIDAgMCAwLS4wNzItLjA0MS4xMjcuMTI3IDAgMCAwIC4wMTUuMDQzYy4wMDUuMDA4LjAzOCAwIC4wNTgtLjAwMlptLS4wNzItLjA0MS0uMDA4LS4wMzQtLjAwOC4wMS4wMDgtLjAxLS4wMjItLjAwNi4wMDUuMDI2LjAyNC4wMTRaIgogICAgICAgICAgICBmaWxsPSIjRkQ0RjAwIiAvPgo8L3N2Zz4K"
+            logo:
+              "data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNzEgNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgoJPHBhdGggZD0ibTI2LjM3MSAzMy40NzctLjU1Mi0uMWMtMy45Mi0uNzI5LTYuMzk3LTMuMS03LjU3LTYuODI5LS43MzMtMi4zMjQuNTk3LTQuMDM1IDMuMDM1LTQuMTQ4IDEuOTk1LS4wOTIgMy4zNjIgMS4wNTUgNC41NyAyLjM5IDEuNTU3IDEuNzIgMi45ODQgMy41NTggNC41MTQgNS4zMDUgMi4yMDIgMi41MTUgNC43OTcgNC4xMzQgOC4zNDcgMy42MzQgMy4xODMtLjQ0OCA1Ljk1OC0xLjcyNSA4LjM3MS0zLjgyOC4zNjMtLjMxNi43NjEtLjU5MiAxLjE0NC0uODg2bC0uMjQxLS4yODRjLTIuMDI3LjYzLTQuMDkzLjg0MS02LjIwNS43MzUtMy4xOTUtLjE2LTYuMjQtLjgyOC04Ljk2NC0yLjU4Mi0yLjQ4Ni0xLjYwMS00LjMxOS0zLjc0Ni01LjE5LTYuNjExLS43MDQtMi4zMTUuNzM2LTMuOTM0IDMuMTM1LTMuNi45NDguMTMzIDEuNzQ2LjU2IDIuNDYzIDEuMTY1LjU4My40OTMgMS4xNDMgMS4wMTUgMS43MzggMS40OTMgMi44IDIuMjUgNi43MTIgMi4zNzUgMTAuMjY1LS4wNjgtNS44NDItLjAyNi05LjgxNy0zLjI0LTEzLjMwOC03LjMxMy0xLjM2Ni0xLjU5NC0yLjctMy4yMTYtNC4wOTUtNC43ODUtMi42OTgtMy4wMzYtNS42OTItNS43MS05Ljc5LTYuNjIzQzEyLjgtLjYyMyA3Ljc0NS4xNCAyLjg5MyAyLjM2MSAxLjkyNiAyLjgwNC45OTcgMy4zMTkgMCA0LjE0OWMuNDk0IDAgLjc2My4wMDYgMS4wMzIgMCAyLjQ0Ni0uMDY0IDQuMjggMS4wMjMgNS42MDIgMy4wMjQuOTYyIDEuNDU3IDEuNDE1IDMuMTA0IDEuNzYxIDQuNzk4LjUxMyAyLjUxNS4yNDcgNS4wNzguNTQ0IDcuNjA1Ljc2MSA2LjQ5NCA0LjA4IDExLjAyNiAxMC4yNiAxMy4zNDYgMi4yNjcuODUyIDQuNTkxIDEuMTM1IDcuMTcyLjU1NVpNMTAuNzUxIDMuODUyYy0uOTc2LjI0Ni0xLjc1Ni0uMTQ4LTIuNTYtLjk2MiAxLjM3Ny0uMzQzIDIuNTkyLS40NzYgMy44OTctLjUyOC0uMTA3Ljg0OC0uNjA3IDEuMzA2LTEuMzM2IDEuNDlabTMyLjAwMiAzNy45MjRjLS4wODUtLjYyNi0uNjItLjkwMS0xLjA0LTEuMjI4LTEuODU3LTEuNDQ2LTQuMDMtMS45NTgtNi4zMzMtMi0xLjM3NS0uMDI2LTIuNzM1LS4xMjgtNC4wMzEtLjYxLS41OTUtLjIyLTEuMjYtLjUwNS0xLjI0NC0xLjI3Mi4wMTUtLjc4LjY5My0xIDEuMzEtMS4xODQuNTA1LS4xNSAxLjAyNi0uMjQ3IDEuNi0uMzgyLTEuNDYtLjkzNi0yLjg4Ni0xLjA2NS00Ljc4Ny0uMy0yLjk5MyAxLjIwMi01Ljk0MyAxLjA2LTguOTI2LS4wMTctMS42ODQtLjYwOC0zLjE3OS0xLjU2My00LjczNS0yLjQwOGwtLjA0My4wM2EyLjk2IDIuOTYgMCAwIDAgLjA0LS4wMjljLS4wMzgtLjExNy0uMTA3LS4xMi0uMTk3LS4wNTRsLjEyMi4xMDdjMS4yOSAyLjExNSAzLjAzNCAzLjgxNyA1LjAwNCA1LjI3MSAzLjc5MyAyLjggNy45MzYgNC40NzEgMTIuNzg0IDMuNzNBNjYuNzE0IDY2LjcxNCAwIDAgMSAzNyA0MC44NzdjMS45OC0uMTYgMy44NjYuMzk4IDUuNzUzLjg5OVptLTkuMTQtMzAuMzQ1Yy0uMTA1LS4wNzYtLjIwNi0uMjY2LS40Mi0uMDY5IDEuNzQ1IDIuMzYgMy45ODUgNC4wOTggNi42ODMgNS4xOTMgNC4zNTQgMS43NjcgOC43NzMgMi4wNyAxMy4yOTMuNTEgMy41MS0xLjIxIDYuMDMzLS4wMjggNy4zNDMgMy4zOC4xOS0zLjk1NS0yLjEzNy02LjgzNy01Ljg0My03LjQwMS0yLjA4NC0uMzE4LTQuMDEuMzczLTUuOTYyLjk0LTUuNDM0IDEuNTc1LTEwLjQ4NS43OTgtMTUuMDk0LTIuNTUzWm0yNy4wODUgMTUuNDI1Yy43MDguMDU5IDEuNDE2LjEyMyAyLjEyNC4xODUtMS42LTEuNDA1LTMuNTUtMS41MTctNS41MjMtMS40MDQtMy4wMDMuMTctNS4xNjcgMS45MDMtNy4xNCAzLjk3Mi0xLjczOSAxLjgyNC0zLjMxIDMuODctNS45MDMgNC42MDQuMDQzLjA3OC4wNTQuMTE3LjA2Ni4xMTcuMzUuMDA1LjY5OS4wMjEgMS4wNDcuMDA1IDMuNzY4LS4xNyA3LjMxNy0uOTY1IDEwLjE0LTMuNy44OS0uODYgMS42ODUtMS44MTcgMi41NDQtMi43MS43MTYtLjc0NiAxLjU4NC0xLjE1OSAyLjY0NS0xLjA3Wm0tOC43NTMtNC42N2MtMi44MTIuMjQ2LTUuMjU0IDEuNDA5LTcuNTQ4IDIuOTQzLTEuNzY2IDEuMTgtMy42NTQgMS43MzgtNS43NzYgMS4zNy0uMzc0LS4wNjYtLjc1LS4xMTQtMS4xMjQtLjE3bC0uMDEzLjE1NmMuMTM1LjA3LjI2NS4xNTEuNDA1LjIwNy4zNTQuMTQuNzAyLjMwOCAxLjA3LjM5NSA0LjA4My45NzEgNy45OTIuNDc0IDExLjUxNi0xLjgwMyAyLjIyMS0xLjQzNSA0LjUyMS0xLjcwNyA3LjAxMy0xLjMzNi4yNTIuMDM4LjUwMy4wODMuNzU2LjEwNy4yMzQuMDIyLjQ3OS4yNTUuNzk1LjAwMy0yLjE3OS0xLjU3NC00LjUyNi0yLjA5Ni03LjA5NC0xLjg3MlptLTEwLjA0OS05LjU0NGMxLjQ3NS4wNTEgMi45NDMtLjE0MiA0LjQ4Ni0xLjA1OS0uNDUyLjA0LS42NDMuMDQtLjgyNy4wNzYtMi4xMjYuNDI0LTQuMDMzLS4wNC01LjczMy0xLjM4My0uNjIzLS40OTMtMS4yNTctLjk3NC0xLjg4OS0xLjQ1Ny0yLjUwMy0xLjkxNC01LjM3NC0yLjU1NS04LjUxNC0yLjUuMDUuMTU0LjA1NC4yNi4xMDguMzE1IDMuNDE3IDMuNDU1IDcuMzcxIDUuODM2IDEyLjM2OSA2LjAwOFptMjQuNzI3IDE3LjczMWMtMi4xMTQtMi4wOTctNC45NTItMi4zNjctNy41NzgtLjUzNyAxLjczOC4wNzggMy4wNDMuNjMyIDQuMTAxIDEuNzI4LjM3NC4zODguNzYzLjc2OCAxLjE4MiAxLjEwNiAxLjYgMS4yOSA0LjMxMSAxLjM1MiA1Ljg5Ni4xNTUtMS44NjEtLjcyNi0xLjg2MS0uNzI2LTMuNjAxLTIuNDUyWm0tMjEuMDU4IDE2LjA2Yy0xLjg1OC0zLjQ2LTQuOTgxLTQuMjQtOC41OS00LjAwOGE5LjY2NyA5LjY2NyAwIDAgMSAyLjk3NyAxLjM5Yy44NC41ODYgMS41NDcgMS4zMTEgMi4yNDMgMi4wNTUgMS4zOCAxLjQ3MyAzLjUzNCAyLjM3NiA0Ljk2MiAyLjA3LS42NTYtLjQxMi0xLjIzOC0uODQ4LTEuNTkyLTEuNTA3Wm0xNy4yOS0xOS4zMmMwLS4wMjMuMDAxLS4wNDUuMDAzLS4wNjhsLS4wMDYuMDA2LjAwNi0uMDA2LS4wMzYtLjAwNC4wMjEuMDE4LjAxMi4wNTNabS0yMCAxNC43NDRhNy42MSA3LjYxIDAgMCAwLS4wNzItLjA0MS4xMjcuMTI3IDAgMCAwIC4wMTUuMDQzYy4wMDUuMDA4LjAzOCAwIC4wNTgtLjAwMlptLS4wNzItLjA0MS0uMDA4LS4wMzQtLjAwOC4wMS4wMDgtLjAxLS4wMjItLjAwNi4wMDUuMDI2LjAyNC4wMTRaIgogICAgICAgICAgICBmaWxsPSIjRkQ0RjAwIiAvPgo8L3N2Zz4K"
           ]
       end
 
@@ -579,17 +589,11 @@ defmodule Phoenix.Endpoint do
       Generates a route to a static file in `priv/static`.
       """
       def static_path(path) do
-        {path, fragment} = path_and_fragment(path)
+        prefix = persistent!().static_path
 
-        persistent!().static_path <> elem(static_lookup(path), 0) <> fragment
-      end
-
-      defp path_and_fragment(path_incl_fragment) do
-        path_incl_fragment
-        |> String.split("#", parts: 2)
-        |> case do
-          [path, fragment] -> {path, "#" <> fragment}
-          [path | _] -> {path, ""}
+        case :binary.split(path, "#") do
+          [path, fragment] -> prefix <> elem(static_lookup(path), 0) <> "#" <> fragment
+          [path] -> prefix <> elem(static_lookup(path), 0)
         end
       end
 
@@ -604,9 +608,17 @@ defmodule Phoenix.Endpoint do
       and the second item being the `static_integrity`.
       """
       def static_lookup(path) do
-        Phoenix.Config.cache(__MODULE__, {:__phoenix_static__, path},
-                             &Phoenix.Endpoint.Supervisor.static_lookup(&1, path))
+        Phoenix.Config.cache(
+          __MODULE__,
+          {:__phoenix_static__, path},
+          &Phoenix.Endpoint.Supervisor.static_lookup(&1, path)
+        )
       end
+
+      @doc """
+      Returns the address and port that the server is running on
+      """
+      def server_info(scheme), do: config(:adapter).server_info(__MODULE__, scheme)
     end
   end
 
@@ -632,7 +644,7 @@ defmodule Phoenix.Endpoint do
       end
 
     quote do
-      defoverridable [call: 2]
+      defoverridable call: 2
 
       # Inline render errors so we set the endpoint before calling it.
       def call(conn, opts) do
@@ -644,11 +656,25 @@ defmodule Phoenix.Endpoint do
         rescue
           e in Plug.Conn.WrapperError ->
             %{conn: conn, kind: kind, reason: reason, stack: stack} = e
-            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, config(:render_errors))
+
+            Phoenix.Endpoint.RenderErrors.__catch__(
+              conn,
+              kind,
+              reason,
+              stack,
+              config(:render_errors)
+            )
         catch
           kind, reason ->
             stack = __STACKTRACE__
-            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, stack, config(:render_errors))
+
+            Phoenix.Endpoint.RenderErrors.__catch__(
+              conn,
+              kind,
+              reason,
+              stack,
+              config(:render_errors)
+            )
         end
       end
 
@@ -698,23 +724,23 @@ defmodule Phoenix.Endpoint do
       |> Enum.join("/")
       |> Plug.Router.Utils.build_path_match()
 
-      conn_ast =
-        if vars == [] do
-          quote do
-            conn
-          end
-        else
-          params =
-            for var <- vars,
-                param = Atom.to_string(var),
-                not match?("_" <> _, param),
-                do: {param, Macro.var(var, nil)}
-
-          quote do
-            params = %{unquote_splicing(params)}
-            %Plug.Conn{conn | path_params: params, params: params}
-          end
+    conn_ast =
+      if vars == [] do
+        quote do
+          conn
         end
+      else
+        params =
+          for var <- vars,
+              param = Atom.to_string(var),
+              not match?("_" <> _, param),
+              do: {param, Macro.var(var, nil)}
+
+        quote do
+          params = %{unquote_splicing(params)}
+          %Plug.Conn{conn | path_params: params, params: params}
+        end
+      end
 
     {conn_ast, path}
   end
@@ -722,7 +748,13 @@ defmodule Phoenix.Endpoint do
   ## API
 
   @doc """
-  Defines a websocket/longpoll mount-point for a socket.
+  Defines a websocket/longpoll mount-point for a `socket`.
+
+  It expects a `path`, a `socket` module, and a set of options.
+  The socket module is typically defined with `Phoenix.Socket`.
+
+  Both websocket and longpolling connections are supported out
+  of the box.
 
   ## Options
 
@@ -738,10 +770,32 @@ defmodule Phoenix.Endpoint do
       and ["Longpoll configuration"](#socket/3-longpoll-configuration)
       for the whole list
 
-  If your socket is implemented using `Phoenix.Socket`,
-  you can also pass to each transport above all options
-  accepted on `use Phoenix.Socket`. An option given here
-  will override the value in `use Phoenix.Socket`.
+    * `:drainer` - a keyword list or a custom MFA function returning a keyword list, for example:
+
+          {MyAppWeb.Socket, :drainer_configuration, []}
+
+      configuring how to drain sockets on application shutdown.
+      The goal is to notify all channels (and
+      LiveViews) clients to reconnect. The supported options are:
+
+      * `:batch_size` - How many clients to notify at once in a given batch.
+        Defaults to 10000.
+      * `:batch_interval` - The amount of time in milliseconds given for a
+        batch to terminate. Defaults to 2000ms.
+      * `:shutdown` - The maximum amount of time in milliseconds allowed
+        to drain all batches. Defaults to 30000ms.
+
+      For example, if you have 150k connections, the default values will
+      split them into 15 batches of 10k connections. Each batch takes
+      2000ms before the next batch starts. In this case, we will do everything
+      right under the maximum shutdown time of 30000ms. Therefore, as
+      you increase the number of connections, remember to adjust the shutdown
+      accordingly. Finally, after the socket drainer runs, the lower level
+      HTTP/HTTPS connection drainer will still run, and apply to all connections.
+      Set it to `false` to disable draining.
+
+  You can also pass the options below on `use Phoenix.Socket`.
+  The values specified here override the value in `use Phoenix.Socket`.
 
   ## Examples
 
@@ -780,8 +834,9 @@ defmodule Phoenix.Endpoint do
 
       If `true`, the header is checked against `:host` in `YourAppWeb.Endpoint.config(:url)[:host]`.
 
-      If `false`, your app is vulnerable to Cross-Site WebSocket Hijacking (CSWSH)
-      attacks. Only use in development, when the host is truly unknown or when
+      If `false` and you do not validate the session in your socket, your app
+      is vulnerable to Cross-Site WebSocket Hijacking (CSWSH) attacks.
+      Only use in development, when the host is truly unknown or when
       serving clients that do not send the `origin` header, such as mobile apps.
 
       You can also specify a list of explicitly allowed origins. Wildcards are
@@ -804,28 +859,15 @@ defmodule Phoenix.Endpoint do
       The MFA is invoked with the request `%URI{}` as the first argument,
       followed by arguments in the MFA list, and must return a boolean.
 
+    * `:check_csrf` - if the transport should perform CSRF check. To avoid
+      "Cross-Site WebSocket Hijacking", you must have at least one of
+      `check_origin` and `check_csrf` enabled. If you set both to `false`,
+      Phoenix will raise, but it is still possible to disable both by passing
+      a custom MFA to `check_origin`. In such cases, it is your responsibility
+      to ensure at least one of them is enabled. Defaults to `true`
+
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
-
-    * `:drainer` - a keyword list configuring how to drain sockets
-      on application shutdown. The goal is to notify all channels (and
-      LiveViews) clients to reconnect. The supported options are:
-
-      * `:batch_size` - How many clients to notify at once in a given batch.
-        Defaults to 10000.
-      * `:batch_interval` - The amount of time in milliseconds given for a
-        batch to terminate. Defaults to 2000ms.
-      * `:shutdown` - The maximum amount of time in milliseconds allowed
-        to drain all batches. Defaults to 30000ms.
-
-      For example, if you have 150k connections, the default values will
-      split them into 15 batches of 10k connections. Each batch takes
-      2000ms before the next batch starts. In this case, we will do everything
-      right under the maximum shutdown time of 30000ms. Therefore, as
-      you increase the number of connections, remember to adjust the shutdown
-      accordingly. Finally, after the socket drainer runs, the lower level
-      HTTP/HTTPS connection drainer will still run, and apply to all connections.
-      Set it to `false` to disable draining.
 
     * `:connect_info` - a list of keys that represent data to be copied from
       the transport to be made available in the user socket `connect/3` callback.
@@ -839,9 +881,9 @@ defmodule Phoenix.Endpoint do
 
     * `:trace_context_headers` - a list of all trace context headers. Supported
       headers are defined by the [W3C Trace Context Specification](https://www.w3.org/TR/trace-context-1/).
-      These headers are necessary for libraries such as [OpenTelemetry](https://opentelemetry.io/) to extract
-      trace propagation information to know this request is part of a larger trace
-      in progress.
+      These headers are necessary for libraries such as [OpenTelemetry](https://opentelemetry.io/)
+      to extract trace propagation information to know this request is part of a
+      larger trace in progress.
 
     * `:x_headers` - all request headers that have an "x-" prefix
 
@@ -881,6 +923,22 @@ defmodule Phoenix.Endpoint do
           connect_info: [:uri, custom_value: "abcdef"]
         ]
   ```
+
+  > #### Where are my headers? {: .tip}
+  >
+  > Phoenix only gives you limited access to the connection headers for security
+  > reasons. WebSockets are cross-domain, which means that, when a user "John Doe"
+  > visits a malicious website, the malicious website can open up a WebSocket
+  > connection to your application, and the browser will gladly submit John Doe's
+  > authentication/cookie information. If you were to accept this information as is,
+  > the malicious website would have full control of a WebSocket connection to your
+  > application, authenticated on John Doe's behalf.
+  >
+  > To safe-guard your application, Phoenix limits and validates the connection
+  > information your socket can access. This means your application is safe from
+  > these attacks, but you can't access cookies and other headers in your socket.
+  > You may access the session stored in the connection via the `:connect_info`
+  > option, provided you also pass a csrf token when connecting over WebSocket.
 
   ## Websocket configuration
 

@@ -15,6 +15,8 @@ defmodule Phoenix.Transports.WebSocket do
   #
   @behaviour Plug
 
+  @connect_info_opts [:check_csrf]
+
   import Plug.Conn
 
   alias Phoenix.Socket.{V1, V2, Transport}
@@ -45,7 +47,9 @@ defmodule Phoenix.Transports.WebSocket do
 
       %{params: params} = conn ->
         keys = Keyword.get(opts, :connect_info, [])
-        connect_info = Transport.connect_info(conn, endpoint, keys)
+
+        connect_info =
+          Transport.connect_info(conn, endpoint, keys, Keyword.take(opts, @connect_info_opts))
 
         config = %{
           endpoint: endpoint,
@@ -57,9 +61,13 @@ defmodule Phoenix.Transports.WebSocket do
 
         case handler.connect(config) do
           {:ok, arg} ->
-            conn
-            |> WebSockAdapter.upgrade(handler, arg, opts)
-            |> halt()
+            try do
+              conn
+              |> WebSockAdapter.upgrade(handler, arg, opts)
+              |> halt()
+            rescue
+              e in WebSockAdapter.UpgradeError -> send_resp(conn, 400, e.message)
+            end
 
           :error ->
             send_resp(conn, 403, "")

@@ -504,7 +504,7 @@ defmodule Phoenix.Controller do
     end
   end
 
-  @invalid_local_url_chars ["\\", "/%", "/\t"]
+  @invalid_local_url_chars ["\\", "/%09", "/\t"]
   defp validate_local_url("//" <> _ = to), do: raise_invalid_url(to)
 
   defp validate_local_url("/" <> _ = to) do
@@ -1033,7 +1033,7 @@ defmodule Phoenix.Controller do
   defp assigns_layout(conn, _assigns, format) do
     case conn.private[:phoenix_layout] do
       %{^format => bad_value, _: good_value} when good_value != false ->
-        IO.warn """
+        IO.warn("""
         conflicting layouts found. A layout has been set with format, such as:
 
             put_layout(conn, #{format}: #{inspect(bad_value)})
@@ -1043,12 +1043,13 @@ defmodule Phoenix.Controller do
             put_layout(conn, #{inspect(good_value)})
 
         In this case, the layout without format will always win.
+        Passing the layout without a format is currently soft-deprecated.
         If you use layouts with formats, make sure that they are
         used everywhere. Also remember to configure your controller
         to use layouts with formats:
 
             use Phoenix.Controller, layouts: [#{format}: #{inspect(bad_value)}]
-        """
+        """)
 
         if format in layout_formats(conn), do: good_value, else: false
 
@@ -1093,7 +1094,7 @@ defmodule Phoenix.Controller do
       conn
     else
       content_type = content_type <> "; charset=utf-8"
-      %Plug.Conn{conn | resp_headers: [{"content-type", content_type} | resp_headers]}
+      %{conn | resp_headers: [{"content-type", content_type} | resp_headers]}
     end
   end
 
@@ -1205,7 +1206,7 @@ defmodule Phoenix.Controller do
       Defaults to none
     * `:offset` - the bytes to offset when reading. Defaults to `0`
     * `:length` - the total bytes to read. Defaults to `:all`
-    * `:encode` - encodes the filename using `URI.encode_www_form/1`.
+    * `:encode` - encodes the filename using `URI.encode/2`.
       Defaults to `true`. When `false`, disables encoding. If you
       disable encoding, you need to guarantee there are no special
       characters in the filename, such as quotes, newlines, etc.
@@ -1258,16 +1259,22 @@ defmodule Phoenix.Controller do
     disposition_type = get_disposition_type(Keyword.get(opts, :disposition, :attachment))
     warn_if_ajax(conn)
 
+    disposition = ~s[#{disposition_type}; filename="#{encoded_filename}"]
+
+    disposition =
+      if encoded_filename != filename do
+        disposition <> "; filename*=utf-8''#{encoded_filename}"
+      else
+        disposition
+      end
+
     conn
     |> put_resp_content_type(content_type, opts[:charset])
-    |> put_resp_header(
-      "content-disposition",
-      ~s[#{disposition_type}; filename="#{encoded_filename}"]
-    )
+    |> put_resp_header("content-disposition", disposition)
   end
 
   defp encode_filename(filename, false), do: filename
-  defp encode_filename(filename, true), do: URI.encode_www_form(filename)
+  defp encode_filename(filename, true), do: URI.encode(filename, &URI.char_unreserved?/1)
 
   defp get_disposition_type(:attachment), do: "attachment"
   defp get_disposition_type(:inline), do: "inline"
@@ -1316,7 +1323,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec scrub_params(Plug.Conn.t(), String.t()) :: Plug.Conn.t()
-  def scrub_params(conn, required_key) when is_binary(required_key) do
+  def scrub_params(%Plug.Conn{} = conn, required_key) when is_binary(required_key) do
     param = Map.get(conn.params, required_key) |> scrub_param()
 
     unless param do
@@ -1324,7 +1331,7 @@ defmodule Phoenix.Controller do
     end
 
     params = Map.put(conn.params, required_key, param)
-    %Plug.Conn{conn | params: params}
+    %{conn | params: params}
   end
 
   defp scrub_param(%{__struct__: mod} = struct) when is_atom(mod) do

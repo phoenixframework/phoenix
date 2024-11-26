@@ -9,11 +9,12 @@ defmodule <%= @web_namespace %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.14",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      listeners: [Phoenix.CodeReloader]
     ]
   end
 
@@ -37,17 +38,25 @@ defmodule <%= @web_namespace %>.MixProject do
   defp deps do
     [
       <%= @phoenix_dep %>,<%= if @ecto do %>
-      {:phoenix_ecto, "~> 4.4"},<% end %><%= if @html do %>
-      {:phoenix_html, "~> 3.3"},
+      {:phoenix_ecto, "~> 4.5"},<% end %><%= if @html do %>
+      {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.19.0"},
+      # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"},
+      {:phoenix_live_view, "~> 1.0.0-rc.1", override: true},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.8.0"},<% end %><%= if @javascript do %>
-      {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},<% end %>
-      {:telemetry_metrics, "~> 0.6"},
+      {:phoenix_live_dashboard, "~> 0.8.3"},<% end %><%= if @javascript do %>
+      {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
+      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
+      {:heroicons,
+       github: "tailwindlabs/heroicons",
+       tag: "v2.1.1",
+       sparse: "optimized",
+       app: false,
+       compile: false,
+       depth: 1},<% end %>
+      {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
-      {:gettext, "~> 0.20"},<% end %><%= if @app_name != @web_app_name do %>
+      {:gettext, "~> 0.26"},<% end %><%= if @app_name != @web_app_name do %>
       {:<%= @app_name %>, in_umbrella: true},<% end %>
       {:jason, "~> 1.2"},
       {<%= inspect @web_adapter_app %>, "<%= @web_adapter_vsn %>"}
@@ -62,8 +71,10 @@ defmodule <%= @web_namespace %>.MixProject do
       setup: ["deps.get"<%= if @asset_builders != [] do %>, "assets.setup", "assets.build"<% end %>]<%= if @ecto do %>,
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %><%= if @asset_builders != [] do %>,
       "assets.setup": <%= inspect Enum.map(@asset_builders, &"#{&1}.install --if-missing") %>,
-      "assets.build": <%= inspect Enum.map(@asset_builders, &"#{&1} default") %>,
-      "assets.deploy": <%= inspect Enum.map(@asset_builders, &"#{&1} default --minify") ++ ["phx.digest"] %><% end %>
+      "assets.build": <%= inspect Enum.map(@asset_builders, &"#{&1} #{@web_app_name}") %>,
+      "assets.deploy": [
+<%= Enum.map(@asset_builders, &"        \"#{&1} #{@web_app_name} --minify\",\n") ++ ["        \"phx.digest\""] %>
+      ]<% end %>
     ]
   end
 end

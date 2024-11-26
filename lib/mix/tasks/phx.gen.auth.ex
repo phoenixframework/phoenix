@@ -116,7 +116,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     table: :string,
     merge_with_existing_context: :boolean,
     prefix: :string,
-    live: :boolean
+    live: :boolean,
+    compile: :boolean
   ]
 
   @doc false
@@ -130,18 +131,15 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     hashing_library = build_hashing_library!(opts)
 
     context_args = OptionParser.to_argv(opts, switches: @switches) ++ parsed
-
     {context, schema} = Gen.Context.build(context_args, __MODULE__)
 
     context = put_live_option(context)
-
     Gen.Context.prompt_for_code_injection(context)
 
-    if Keyword.get(test_opts, :validate_dependencies?, true) do
+    if "--no-compile" not in args do
       # Needed so we can get the ecto adapter and ensure other
       # libraries are loaded.
       Mix.Task.run("compile")
-
       validate_required_dependencies!()
     end
 
@@ -170,7 +168,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       live?: Keyword.fetch!(context.opts, :live)
     ]
 
-    paths = generator_paths()
+    paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
 
@@ -276,69 +274,91 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     case Keyword.fetch(context.opts, :live) do
       {:ok, true} ->
         live_files = [
-          "registration_live.ex": [web_pre, "live", web_path, "#{singular}_registration_live.ex"],
+          "registration_live.ex": [
+            web_pre,
+            "live",
+            web_path,
+            "#{singular}_live",
+            "registration.ex"
+          ],
           "registration_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_registration_live_test.exs"
+            "#{singular}_live",
+            "registration_test.exs"
           ],
-          "login_live.ex": [web_pre, "live", web_path, "#{singular}_login_live.ex"],
+          "login_live.ex": [web_pre, "live", web_path, "#{singular}_live", "login.ex"],
           "login_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_login_live_test.exs"
+            "#{singular}_live",
+            "login_test.exs"
           ],
           "reset_password_live.ex": [
             web_pre,
             "live",
             web_path,
-            "#{singular}_reset_password_live.ex"
+            "#{singular}_live",
+            "reset_password.ex"
           ],
           "reset_password_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_reset_password_live_test.exs"
+            "#{singular}_live",
+            "reset_password_test.exs"
           ],
           "forgot_password_live.ex": [
             web_pre,
             "live",
             web_path,
-            "#{singular}_forgot_password_live.ex"
+            "#{singular}_live",
+            "forgot_password.ex"
           ],
           "forgot_password_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_forgot_password_live_test.exs"
+            "#{singular}_live",
+            "forgot_password_test.exs"
           ],
-          "settings_live.ex": [web_pre, "live", web_path, "#{singular}_settings_live.ex"],
+          "settings_live.ex": [web_pre, "live", web_path, "#{singular}_live", "settings.ex"],
           "settings_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_settings_live_test.exs"
+            "#{singular}_live",
+            "settings_test.exs"
           ],
-          "confirmation_live.ex": [web_pre, "live", web_path, "#{singular}_confirmation_live.ex"],
+          "confirmation_live.ex": [
+            web_pre,
+            "live",
+            web_path,
+            "#{singular}_live",
+            "confirmation.ex"
+          ],
           "confirmation_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_confirmation_live_test.exs"
+            "#{singular}_live",
+            "confirmation_test.exs"
           ],
           "confirmation_instructions_live.ex": [
             web_pre,
             "live",
             web_path,
-            "#{singular}_confirmation_instructions_live.ex"
+            "#{singular}_live",
+            "confirmation_instructions.ex"
           ],
           "confirmation_instructions_live_test.exs": [
             web_test_pre,
             "live",
             web_path,
-            "#{singular}_confirmation_instructions_live_test.exs"
+            "#{singular}_live",
+            "confirmation_instructions_test.exs"
           ]
         ]
 
@@ -717,14 +737,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp web_path_prefix(%Schema{web_path: nil}), do: ""
   defp web_path_prefix(%Schema{web_path: web_path}), do: "/" <> web_path
-
-  # The paths to look for template files for generators.
-  #
-  # Defaults to checking the current app's `priv` directory,
-  # and falls back to phx_gen_auth's `priv` directory.
-  defp generator_paths do
-    [".", :phoenix]
-  end
 
   defp inject_before_final_end(content_to_inject, file_path) do
     with {:ok, file} <- read_file(file_path),

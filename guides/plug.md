@@ -106,7 +106,8 @@ defmodule HelloWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug :fetch_flash
+    plug :fetch_live_flash
+    plug :put_root_layout, html: {HelloWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug HelloWeb.Plugs.Locale, "en"
@@ -156,7 +157,7 @@ The default endpoint plugs do quite a lot of work. Here they are in order:
 
 - `Plug.MethodOverride` - converts the request method to PUT, PATCH or DELETE for POST requests with a valid `_method` parameter.
 
-- `Plug.Head` - converts HEAD requests to GET requests and strips the response body.
+- `Plug.Head` - converts HEAD requests to GET requests.
 
 - `Plug.Session` - a plug that sets up session management. Note that `fetch_session/2` must still be explicitly called before using the session, as this plug just sets up how the session is fetched.
 

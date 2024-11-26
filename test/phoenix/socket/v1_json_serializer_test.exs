@@ -7,8 +7,6 @@ defmodule Phoenix.Socket.V1.JSONSerializerTest do
   @serializer V1.JSONSerializer
   @v1_msg_json "{\"event\":\"e\",\"payload\":\"m\",\"ref\":null,\"topic\":\"t\"}"
   @v1_bad_json "[null,null,\"t\",\"e\",{\"m\":1}]"
-  @v1_reply_json "{\"event\":\"phx_reply\",\"payload\":{\"response\":null,\"status\":null},\"ref\":\"null\",\"topic\":\"t\"}"
-  @v1_fastlane_json "{\"event\":\"e\",\"payload\":\"m\",\"ref\":null,\"topic\":\"t\"}"
 
   def encode!(serializer, msg) do
     {:socket_push, :text, encoded} = serializer.encode!(msg)
@@ -24,12 +22,26 @@ defmodule Phoenix.Socket.V1.JSONSerializerTest do
 
   test "encode!/1 encodes `Phoenix.Socket.Message` as JSON" do
     msg = %Message{topic: "t", event: "e", payload: "m"}
-    assert encode!(@serializer, msg) == @v1_msg_json
+    encoded = encode!(@serializer, msg)
+
+    assert Jason.decode!(encoded) == %{
+             "event" => "e",
+             "payload" => "m",
+             "ref" => nil,
+             "topic" => "t"
+           }
   end
 
   test "encode!/1 encodes `Phoenix.Socket.Reply` as JSON" do
     msg = %Reply{topic: "t", ref: "null"}
-    assert encode!(@serializer, msg) == @v1_reply_json
+    encoded = encode!(@serializer, msg)
+
+    assert Jason.decode!(encoded) == %{
+             "event" => "phx_reply",
+             "payload" => %{"response" => nil, "status" => nil},
+             "ref" => "null",
+             "topic" => "t"
+           }
   end
 
   test "decode!/2 decodes `Phoenix.Socket.Message` from JSON" do
@@ -47,6 +59,13 @@ defmodule Phoenix.Socket.V1.JSONSerializerTest do
 
   test "fastlane!/1 encodes a broadcast into a message as JSON" do
     msg = %Broadcast{topic: "t", event: "e", payload: "m"}
-    assert fastlane!(@serializer, msg) == @v1_fastlane_json
+    encoded = fastlane!(@serializer, msg)
+
+    assert Jason.decode!(encoded) == %{
+             "event" => "e",
+             "payload" => "m",
+             "ref" => nil,
+             "topic" => "t"
+           }
   end
 end

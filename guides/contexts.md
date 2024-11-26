@@ -8,9 +8,11 @@
 
 So far, we've built pages, wired up controller actions through our routers, and learned how Ecto allows data to be validated and persisted. Now it's time to tie it all together by writing web-facing features that interact with our greater Elixir application.
 
-When building a Phoenix project, we are first and foremost building an Elixir application. Phoenix's job is to provide a web interface into our Elixir application. Naturally, we compose our applications with modules and functions, but simply defining a module with a few functions isn't enough when designing an application. We need to consider the boundaries between modules and how to group functionality. In other words, it's vital to think about application design when writing code.
+When building a Phoenix project, we are first and foremost building an Elixir application. Phoenix's job is to provide a web interface into our Elixir application. Naturally, we compose our applications with modules and functions, but we often assign specific responsibilities to certain modules and give them names: such as controllers, routers, and live views.
 
-## Thinking about design
+As everything else, contexts in Phoenix are modules, but with the distinct responsibility of drawing boundaries and grouping functionality. In other words, they allow us to reason and discuss about application design.
+
+## Thinking about contexts
 
 Contexts are dedicated modules that expose and group related functionality. For example, anytime you call Elixir's standard library, be it `Logger.info/1` or `Stream.map/2`, you are accessing different contexts. Internally, Elixir's logger is made of multiple modules, but we never interact with those modules directly. We call the `Logger` module the context, exactly because it exposes and groups all of the logging functionality.
 
@@ -18,17 +20,13 @@ By giving modules that expose and group related functionality the name **context
 
 In Phoenix, contexts often encapsulate data access and data validation. They often talk to a database or APIs. Overall, think of them as boundaries to decouple and isolate parts of your application. Let's use these ideas to build out our web application. Our goal is to build an ecommerce system where we can showcase products, allow users to add products to their cart, and complete their orders.
 
-> How to read this guide: Using the context generators is a great way for beginners and intermediate Elixir programmers alike to get up and running quickly while thoughtfully designing their applications. This guide focuses on those readers.
-
 ### Adding a Catalog Context
 
-An ecommerce platform has wide-reaching coupling across a codebase so it's important to think upfront about writing well-defined interfaces. With that in mind, our goal is to build a product catalog API that handles creating, updating, and deleting the products available in our system. We'll start off with the basic features of showcasing our products, and we will add shopping cart features later. We'll see how starting with a solid foundation with isolated boundaries allows us to grow our application naturally as we add functionality.
+An ecommerce platform has wide-reaching coupling across a codebase so it's important to think about writing well-defined modules. With that in mind, our goal is to build a product catalog API that handles creating, updating, and deleting the products available in our system. We'll start off with the basic features of showcasing our products, and we will add shopping cart features later. We'll see how starting with a solid foundation with isolated boundaries allows us to grow our application naturally as we add functionality.
 
 Phoenix includes the `mix phx.gen.html`, `mix phx.gen.json`, `mix phx.gen.live`, and `mix phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new product catalog context.
 
 In order to run the context generators, we need to come up with a module name that groups the related functionality that we're building. In the [Ecto guide](ecto.html), we saw how we can use Changesets and Repos to validate and persist user schemas, but we didn't integrate this with our application at large. In fact, we didn't think about where a "user" in our application should live at all. Let's take a step back and think about the different parts of our system. We know that we'll have products to showcase on pages for sale, along with descriptions, pricing, etc. Along with selling products, we know we'll need to support carting, order checkout, and so on. While the products being purchased are related to the cart and checkout processes, showcasing a product and managing the *exhibition* of our products is distinctly different than tracking what a user has placed in their cart or how an order is placed. A `Catalog` context is a natural place for the management of our product details and the showcasing of those products we have for sale.
-
-> Naming things is hard. If you're stuck when trying to come up with a context name when the grouped functionality in your system isn't yet clear, you can simply use the plural form of the resource you're creating. For example, a `Products` context for managing products. As you grow your application and the parts of your system become clear, you can simply rename the context to a more refined one.
 
 To jump-start our catalog context, we'll use `mix phx.gen.html` which creates a context module that wraps up Ecto access for creating, updating, and deleting products, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
 
@@ -57,13 +55,10 @@ Add the resource to your browser scope in lib/hello_web/router.ex:
 
     resources "/products", ProductController
 
-
 Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
 ```
-
-> Note: we are starting with the basics for modeling an ecommerce system. In practice, modeling such systems yields more complex relationships such as product variants, optional pricing, multiple currencies, etc. We'll keep things simple in this guide, but the foundations will give you a solid starting point to building such a complete system.
 
 Phoenix generated the web files as expected in `lib/hello_web/`. We can also see our context files were generated inside a `lib/hello/catalog.ex` file and our product schema in the directory of the same name. Note the difference between `lib/hello` and `lib/hello_web`. We have a `Catalog` module to serve as the public API for product catalog functionality, as well as a `Catalog.Product` struct, which is an Ecto schema for casting and validating product data. Phoenix also provided web and context tests for us, it also included test helpers for creating entities via the `Hello.Catalog` context, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_web/router.ex`:
 
@@ -122,7 +117,15 @@ Views: 0
 
 If we follow the "Back" link, we get a list of all products, which should contain the one we just created. Likewise, we can update this record or delete it. Now that we've seen how it works in the browser, it's time to take a look at the generated code.
 
-## Starting With Generators
+> #### Naming things is hard {: .tip}
+>
+> When starting a web application, it may be hard to draw lines or name its different contexts, especially when the domain you are working with is not as well established as e-commerce.
+>
+> If you're stuck when defining or naming a context, you can simply create a new context using the plural form of the resource you're creating. For example, a `Products` context for managing products. You will find that, even in such cases, you will organically discover other resources that belong to the `Products` context, such as categories or image galleries.
+>
+> As your applications grows and the different parts of your system become clear, you can simply rename the context or move resources around. The beauty of Elixir modules is that they are stateless, so moving them around should be simply a matter of renaming the module names (and renaming the files for consistency).
+
+## Starting with generators
 
 That little `mix phx.gen.html` command packed a surprising punch. We got a lot of functionality out-of-the-box for creating, updating, and deleting products in our catalog. This is far from a full-featured app, but remember, generators are first and foremost learning tools and a starting point for you to begin building real features. Code generation can't solve all your problems, but it will teach you the ins and outs of Phoenix and nudge you towards the proper mindset when designing your application.
 
@@ -321,7 +324,7 @@ Good work!
 
 As we've seen, designing with contexts gives you a solid foundation to grow your application from. Using discrete, well-defined APIs that expose the intent of your system allows you to write more maintainable applications with reusable code. Now that we know how to start extending our context API, lets explore handling relationships within a context.
 
-## In-context Relationships
+## In-context relationships
 
 Our basic catalog features are nice, but let's take it up a notch by categorizing products. Many ecommerce solutions allow products to be categorized in different ways, such as a product being marked for fashion, power tools, and so on. Starting with a one-to-one relationship between product and categories will cause major code changes later if we need to start supporting multiple categories. Let's set up a category association that will allow us to start off tracking a single category per product, but easily support more later as we grow our features.
 
@@ -405,7 +408,7 @@ $ mix ecto.migrate
 Now that we have a `Catalog.Product` schema and a join table to associate products and categories, we're nearly ready to start wiring up our new features. Before we dive in, we first need real categories to select in our web UI. Let's quickly seed some new categories in the application. Add the following code to your seeds file in `priv/repo/seeds.exs`:
 
 ```elixir
-for title <- ["Home Improvement", "Power Tools", "Gardening", "Books"] do
+for title <- ["Home Improvement", "Power Tools", "Gardening", "Books", "Education"] do
   {:ok, _} = Hello.Catalog.create_category(%{title: title})
 end
 ```
@@ -621,12 +624,12 @@ We generated a new resource inside our `ShoppingCart` named `CartItem`. This sch
       timestamps()
     end
 
-    create index(:cart_items, [:cart_id])
+-   create index(:cart_items, [:cart_id])
     create index(:cart_items, [:product_id])
 +   create unique_index(:cart_items, [:cart_id, :product_id])
 ```
 
-We used the `:delete_all` strategy again to enforce data integrity. This way, when a cart or product is deleted from the application, we don't have to rely on application code in our `ShoppingCart` or `Catalog` contexts to worry about cleaning up the records. This keeps our application code decoupled and the data integrity enforcement where it belongs – in the database. We also added a unique constraint to ensure a duplicate product is not allowed to be added to a cart. With our database tables in place, we can now migrate up:
+We used the `:delete_all` strategy again to enforce data integrity. This way, when a cart or product is deleted from the application, we don't have to rely on application code in our `ShoppingCart` or `Catalog` contexts to worry about cleaning up the records. This keeps our application code decoupled and the data integrity enforcement where it belongs – in the database. We also added a unique constraint to ensure a duplicate product is not allowed to be added to a cart. As with the `product_categories` table, using a multi-column index lets us remove the separate index for the leftmost field (`cart_id`). With our database tables in place, we can now migrate up:
 
 ```console
 $ mix ecto.migrate
@@ -760,7 +763,7 @@ We'll need to implement a cart controller for handling cart operations like view
   end
 ```
 
-We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and remove individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT request, will handle the submission of a form for updating our cart quantities.
+We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and removing individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT request, will handle the submission of a form for updating our cart quantities.
 
 With our routes in place, let's add the ability to add an item to our cart from the product show page. Create a new file at `lib/hello_web/controllers/cart_item_controller.ex` and key this in:
 
@@ -914,7 +917,7 @@ defmodule HelloWeb.CartController do
 end
 ```
 
-We defined a new cart controller to handle the `get "/cart"` route. For showing a cart, we render a `"show.html"` template which we'll create in moment. We know we need to allow the cart items to be changed by quantity updates, so right away we know we'll need a cart changeset. Fortunately, the context generator included a `ShoppingChart.change_cart/1` function, which we'll use. We pass it our cart struct which is already in the connection assigns thanks to the `fetch_current_cart` plug we defined in the router.
+We defined a new cart controller to handle the `get "/cart"` route. For showing a cart, we render a `"show.html"` template which we'll create in a moment. We know we need to allow the cart items to be changed by quantity updates, so right away we know we'll need a cart changeset. Fortunately, the context generator included a `ShoppingCart.change_cart/1` function, which we'll use. We pass it our cart struct which is already in the connection assigns thanks to the `fetch_current_cart` plug we defined in the router.
 
 Next, we can implement the view and template. Create a new view file at `lib/hello_web/controllers/cart_html.ex` with the following content:
 
@@ -923,7 +926,7 @@ defmodule HelloWeb.CartHTML do
   use HelloWeb, :html
 
   alias Hello.ShoppingCart
-  
+
   embed_templates "cart_html/*"
 
   def currency_to_str(%Decimal{} = val), do: "$#{Decimal.round(val, 2)}"
@@ -936,10 +939,10 @@ Next we can create the template at `lib/hello_web/controllers/cart_html/show.htm
 
 ```heex
 <%= if @cart.items == [] do %>
-<.header>
-  My Cart
-  <:subtitle>Your cart is empty</:subtitle>
-</.header>
+  <.header>
+    My Cart
+    <:subtitle>Your cart is empty</:subtitle>
+  </.header>
 <% else %>
   <.header>
     My Cart
@@ -962,7 +965,7 @@ Next we can create the template at `lib/hello_web/controllers/cart_html/show.htm
 <.back navigate={~p"/products"}>Back to products</.back>
 ```
 
-We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `simple_form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](`Phoenix.Component.inputs_for/1`) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
+We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `simple_form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](`Phoenix.Component.inputs_for/1`) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
 
 We're almost ready to try out our cart page, but first we need to implement our new currency calculation functions. Open up your shopping cart context at `lib/hello/shopping_cart.ex` and add these new functions:
 
@@ -1347,6 +1350,22 @@ Nice work! We haven't added payments, but we can already see how our `ShoppingCa
 Great work!
 
 ## FAQ
+
+### When to use code generators?
+
+In this guide, we have used code generators for schemas, contexts, controllers, and more. If you are happy to move forward with Phoenix defaults, feel free to rely on generators to scaffold large parts of your application. When using Phoenix generators, the main question you need to answer is: does this new functionality (with its schema, table, and fields) belong to one of the existing contexts or a new one?
+
+This way, Phoenix generators guide you to use contexts to group related functionality, instead of having several dozens of schemas laying around without any structure. And remember: if you're stuck when trying to come up with a context name, you can simply use the plural form of the resource you're creating.
+
+### How do I structure code inside contexts?
+
+You may wonder how to organize the code inside contexts. For example, should you define a module for changesets (such as ProductChangesets) and another module for queries (such as ProductQueries)?
+
+One important benefit of contexts is that this decision does not matter much. The context is your public API, the other modules are private. Contexts isolate these modules into small groups so the surface area of your application is the context and not _all of your code_.
+
+So while you and your team could establish patterns for organizing these private modules, it is also our opinion it is completely fine for them to be different. The major focus should be on how the contexts are defined and how they interact with each other (and with your web application).
+
+Think about it as a well-kept neighbourhood. Your contexts are houses, you want to keep them well-preserved, well-connected, etc. Inside the houses, they may all be a little bit different, and that's fine.
 
 ### Returning Ecto structures from context APIs
 

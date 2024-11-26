@@ -530,9 +530,31 @@ defmodule Phoenix.Controller.ControllerTest do
       conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "hello world.json")
       assert conn.status == 200
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"hello+world.json\""]
+             ["attachment; filename=\"hello%20world.json\"; filename*=utf-8''hello%20world.json"]
       assert get_resp_header(conn, "content-type") ==
              ["application/json"]
+      assert conn.resp_body ==
+             "world"
+    end
+
+    test "sends file for download for filename with unreserved characters" do
+      conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "hello, world.json")
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-disposition") ==
+             ["attachment; filename=\"hello%2C%20world.json\"; filename*=utf-8''hello%2C%20world.json"]
+      assert get_resp_header(conn, "content-type") ==
+             ["application/json"]
+      assert conn.resp_body ==
+             "world"
+    end
+
+    test "sends file supports UTF-8" do
+      conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "测 试.txt")
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-disposition") ==
+             ["attachment; filename=\"%E6%B5%8B%20%E8%AF%95.txt\"; filename*=utf-8''%E6%B5%8B%20%E8%AF%95.txt"]
+      assert get_resp_header(conn, "content-type") ==
+             ["text/plain"]
       assert conn.resp_body ==
              "world"
     end
@@ -583,10 +605,10 @@ defmodule Phoenix.Controller.ControllerTest do
     end
 
     test "sends binary for download with :filename" do
-      conn = send_download(conn(:get, "/"), {:binary, "world"}, filename: "hello world.json")
+      conn = send_download(conn(:get, "/"), {:binary, "world"}, filename: "hello.json")
       assert conn.status == 200
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"hello+world.json\""]
+             ["attachment; filename=\"hello.json\""]
       assert get_resp_header(conn, "content-type") ==
              ["application/json"]
       assert conn.resp_body ==
@@ -777,7 +799,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
     test "current_path/2 allows custom nested query params" do
       conn = build_conn_for_path("/")
-      assert current_path(conn, %{foo: %{bar: [:baz], baz: :qux}}) == "/?foo[bar][]=baz&foo[baz]=qux"
+      assert current_path(conn, [foo: [bar: [:baz], baz: :qux]]) == "/?foo[bar][]=baz&foo[baz]=qux"
     end
 
     test "current_url/1 with root path includes trailing slash" do

@@ -15,8 +15,8 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
   debug_errors: true,
   secret_key_base: "<%= @secret_key_base_dev %>",
   watchers: <%= if @javascript or @css do %>[<%= if @javascript do %>
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}<%= if @css, do: "," %><% end %><%= if @css do %>
-    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}<% end %>
+    esbuild: {Esbuild, :install_and_run, [:<%= @app_name %>, ~w(--sourcemap=inline --watch)]}<%= if @css, do: "," %><% end %><%= if @css do %>
+    tailwind: {Tailwind, :install_and_run, [:<%= @app_name %>, ~w(--watch)]}<% end %>
   ]<% else %>[]<% end %>
 
 # ## SSL Support
@@ -45,8 +45,9 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
 # Watch static and templates for browser reloading.
 config :<%= @app_name %>, <%= @endpoint_module %>,
   live_reload: [
+    web_console_logger: true,
     patterns: [
-      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
+      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
       ~r"priv/gettext/.*(po)$",<% end %>
       ~r"lib/<%= @lib_web_name %>/(controllers|live|components)/.*(ex|heex)$"
     ]
@@ -56,14 +57,20 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
 config :<%= @app_name %>, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
-config :logger, :console, format: "[$level] $message\n"
+config :logger, :default_formatter, format: "[$level] $message\n"
 
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
 
 # Initialize plugs at runtime for faster development compilation
-config :phoenix, :plug_init_mode, :runtime<%= if @mailer do %>
+config :phoenix, :plug_init_mode, :runtime<%= if @html do %>
+
+config :phoenix_live_view,
+  # Include HEEx debug annotations as HTML comments in rendered markup
+  debug_heex_annotations: true,
+  # Enable helpful, but potentially expensive runtime checks
+  enable_expensive_runtime_checks: true<% end %><%= if @mailer do %>
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false<% end %>

@@ -44,7 +44,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     datetime = %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
 
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
+      Gen.Html.run(~w(Blog Post posts title content:text slug:unique votes:integer cost:decimal
                       tags:array:text popular:boolean drafted_at:datetime
                       status:enum:unpublished:published:deleted
                       published_at:utc_datetime
@@ -54,6 +54,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
                       alarm:time
                       alarm_usec:time_usec
                       secret:uuid:redact announcement_date:date alarm:time
+                      metadata:map
                       weight:float user_id:references:users))
 
       assert_file("lib/phoenix/blog/post.ex")
@@ -109,6 +110,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_file(path, fn file ->
         assert file =~ "create table(:posts)"
         assert file =~ "add :title, :string"
+        assert file =~ "add :content, :text"
         assert file =~ "add :status, :string"
         assert file =~ "create unique_index(:posts, [:slug])"
       end)
@@ -150,6 +152,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_file("lib/phoenix_web/controllers/post_html/post_form.html.heex", fn file ->
         assert file =~ ~S(<.simple_form :let={f} for={@changeset} action={@action}>)
         assert file =~ ~s(<.input field={f[:title]} type="text")
+        assert file =~ ~s(<.input field={f[:content]} type="textarea")
         assert file =~ ~s(<.input field={f[:votes]} type="number")
         assert file =~ ~s(<.input field={f[:cost]} type="number" label="Cost" step="any")
 
@@ -167,6 +170,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ ~s(<.input field={f[:announcement_date]} type="date")
         assert file =~ ~s(<.input field={f[:alarm]} type="time")
         assert file =~ ~s(<.input field={f[:secret]} type="text" label="Secret" />)
+        refute file =~ ~s(field={f[:metadata]})
 
         assert file =~ """
                  <.input
@@ -320,6 +324,15 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert_file("lib/phoenix_web/controllers/comment_html.ex", fn file ->
         assert file =~ "defmodule PhoenixWeb.CommentHTML"
+      end)
+    end)
+  end
+
+  test "with a matching plural and singular term", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Html.run(~w(Tracker Series series value:integer))
+      assert_file("lib/phoenix_web/controllers/series_controller.ex", fn file ->
+        assert file =~ "render(conn, :index, series_collection: series)"
       end)
     end)
   end

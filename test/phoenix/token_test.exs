@@ -90,12 +90,6 @@ defmodule Phoenix.TokenTest do
       assert signed1 != signed2
     end
 
-    test "passes key_length options to key generator" do
-      signed1 = Token.sign(conn(), "id", 1, signed_at: 0, key_length: 16)
-      signed2 = Token.sign(conn(), "id", 1, signed_at: 0, key_length: 32)
-      assert signed1 != signed2
-    end
-
     test "key defaults" do
       signed1 = Token.sign(conn(), "id", 1, signed_at: 0)
 
@@ -183,12 +177,6 @@ defmodule Phoenix.TokenTest do
     test "passes key_digest options to key generator" do
       signed1 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_digest: :sha256)
       signed2 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_digest: :sha512)
-      assert signed1 != signed2
-    end
-
-    test "passes key_length options to key generator" do
-      signed1 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_length: 16)
-      signed2 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_length: 32)
       assert signed1 != signed2
     end
   end

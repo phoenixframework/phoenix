@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ConfirmationLive do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.Confirmation do
   use <%= inspect context.web_module %>, :live_view
 
   alias <%= inspect context.module %>
@@ -9,15 +9,15 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <.header class="text-center">Confirm Account</.header>
 
       <.simple_form for={@form} id="confirmation_form" phx-submit="confirm_account">
-        <.input field={@form[:token]} type="hidden" />
+        <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
         <:actions>
           <.button phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
         </:actions>
       </.simple_form>
 
-      <p class="text-center mt-4">
+      <p :if={!@current_<%= schema.singular %>} class="text-center mt-4">
         <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
-        | <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
+        | <.link href={~p"<%= schema.route_prefix %>/log-in"}>Log in</.link>
       </p>
     </div>
     """

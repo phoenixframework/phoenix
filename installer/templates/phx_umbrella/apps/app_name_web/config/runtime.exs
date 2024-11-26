@@ -1,3 +1,5 @@
+import Config
+
 # The secret key base is used to sign/encrypt cookies and other secrets.
 # A default value is used in config/dev.exs and config/test.exs but you
 # want to use a different value for prod and you most likely don't want
@@ -53,8 +55,8 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
 # "priv/ssl/server.key". For all supported SSL configuration
 # options, see https://hexdocs.pm/plug/Plug.SSL.html#configure/1
 #
-# We also recommend setting `force_ssl` in your endpoint, ensuring
-# no data is ever sent via http, always redirecting to https:
+# We also recommend setting `force_ssl` in your config/prod.exs,
+# ensuring no data is ever sent via http, always redirecting to https:
 #
 #     config :<%= @web_app_name %>, <%= @endpoint_module %>,
 #       force_ssl: [hsts: true]
@@ -73,7 +75,7 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
 #       domain: System.get_env("MAILGUN_DOMAIN")
 #
 # For this example you need include a HTTP client required by Swoosh API client.
-# Swoosh supports Hackney and Finch out of the box:
+# Swoosh supports Hackney, Req and Finch out of the box:
 #
 #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
 #

@@ -165,7 +165,7 @@ If your deployment environment does not support distributed Elixir or direct com
 ### Client Libraries
 
 Any networked device can connect to Phoenix Channels as long as it has a client library.
-The following libraries exist today, and new ones are always welcome; to write your own, see our how-to guide "Writing a Channels Client".
+The following libraries exist today, and new ones are always welcome; to write your own, see our how-to guide [Writing a Channels Client](writing_a_channels_client.md).
 
 #### Official
 
@@ -410,7 +410,7 @@ Now our `conn.assigns` contains the `current_user` and `user_token`.
 
 ### Step 2 - Pass the Token to the JavaScript
 
-Next, we need to pass this token to JavaScript. We can do so inside a script tag in `lib/hello_web/components/layouts/app.html.heex` right above the app.js script, as follows:
+Next, we need to pass this token to JavaScript. We can do so inside a script tag in `lib/hello_web/components/layouts/root.html.heex` right above the app.js script, as follows:
 
 ```heex
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>

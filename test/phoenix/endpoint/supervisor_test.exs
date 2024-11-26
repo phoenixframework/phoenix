@@ -42,7 +42,6 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   end
 
   defmodule ServerEndpoint do
-    def init(:supervisor, config), do: {:ok, config}
     def __sockets__(), do: []
   end
 
@@ -92,42 +91,45 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   end
 
   import ExUnit.CaptureLog
+
   test "logs info if :http or :https configuration is set but not :server when running in release" do
-    Logger.configure(level: :info)
     # simulate running inside release
     System.put_env("RELEASE_NAME", "phoenix-test")
-    Application.put_env(:phoenix, ServerEndpoint, [server: false, http: [], https: []])
-    assert capture_log(fn ->
-      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-    end) =~ "Configuration :server"
+    Application.put_env(:phoenix, ServerEndpoint, server: false, http: [], https: [])
 
-    Application.put_env(:phoenix, ServerEndpoint, [server: false, http: []])
     assert capture_log(fn ->
-      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-    end) =~ "Configuration :server"
+             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+           end) =~ "Configuration :server"
 
-    Application.put_env(:phoenix, ServerEndpoint, [server: false, https: []])
+    Application.put_env(:phoenix, ServerEndpoint, server: false, http: [])
+
     assert capture_log(fn ->
-      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-    end) =~ "Configuration :server"
+             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+           end) =~ "Configuration :server"
 
-    Application.put_env(:phoenix, ServerEndpoint, [server: false])
+    Application.put_env(:phoenix, ServerEndpoint, server: false, https: [])
+
+    assert capture_log(fn ->
+             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+           end) =~ "Configuration :server"
+
+    Application.put_env(:phoenix, ServerEndpoint, server: false)
+
     refute capture_log(fn ->
-      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-    end) =~ "Configuration :server"
+             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+           end) =~ "Configuration :server"
 
-    Application.put_env(:phoenix, ServerEndpoint, [server: true])
+    Application.put_env(:phoenix, ServerEndpoint, server: true)
+
     refute capture_log(fn ->
-      {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-    end) =~ "Configuration :server"
+             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+           end) =~ "Configuration :server"
 
     Application.delete_env(:phoenix, ServerEndpoint)
-    Logger.configure(level: :warning)
   end
 
   describe "watchers" do
     defmodule WatchersEndpoint do
-      def init(:supervisor, config), do: {:ok, config}
       def __sockets__(), do: []
     end
 
@@ -138,6 +140,16 @@ defmodule Phoenix.Endpoint.SupervisorTest do
       {:ok, {_, children}} = Supervisor.init({:phoenix, WatchersEndpoint, []})
 
       assert Enum.any?(children, fn
+               %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
+               _ -> false
+             end)
+    end
+
+    test "init/1 doesn't start watchers when `:server` config is true and `:watchers` is false" do
+      Application.put_env(:phoenix, WatchersEndpoint, server: true, watchers: false)
+      {:ok, {_, children}} = Supervisor.init({:phoenix, WatchersEndpoint, []})
+
+      refute Enum.any?(children, fn
                %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
                _ -> false
              end)
@@ -166,6 +178,46 @@ defmodule Phoenix.Endpoint.SupervisorTest do
                %{start: {Phoenix.Endpoint.Watcher, :start_link, _config}} -> true
                _ -> false
              end)
+    end
+  end
+
+  describe "origin & CSRF checks config" do
+    defmodule TestSocket do
+      @behaviour Phoenix.Socket.Transport
+      def child_spec(_), do: :ignore
+      def connect(_), do: {:ok, []}
+      def init(state), do: {:ok, state}
+      def handle_in(_, state), do: {:ok, state}
+      def handle_info(_, state), do: {:ok, state}
+      def terminate(_, _), do: :ok
+    end
+
+    defmodule SocketEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+
+      socket "/ws", TestSocket, websocket: [check_csrf: false, check_origin: false]
+    end
+
+    Application.put_env(:phoenix, SocketEndpoint, [])
+
+    test "fails when CSRF and origin checks both disabled in transport" do
+      assert_raise ArgumentError, ~r/one of :check_origin and :check_csrf must be set/, fn ->
+        Supervisor.init({:phoenix, SocketEndpoint, []})
+      end
+    end
+
+    defmodule SocketEndpointOriginCheckDisabled do
+      use Phoenix.Endpoint, otp_app: :phoenix
+
+      socket "/ws", TestSocket, websocket: [check_csrf: false]
+    end
+
+    Application.put_env(:phoenix, SocketEndpointOriginCheckDisabled, check_origin: false)
+
+    test "fails when origin is disabled in endpoint config and CSRF disabled in transport" do
+      assert_raise ArgumentError, ~r/one of :check_origin and :check_csrf must be set/, fn ->
+        Supervisor.init({:phoenix, SocketEndpointOriginCheckDisabled, []})
+      end
     end
   end
 end

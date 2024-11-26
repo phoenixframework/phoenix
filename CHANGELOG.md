@@ -2,7 +2,7 @@
 
 See the [upgrade guide](https://gist.github.com/chrismccord/00a6ea2a96bc57df0cce526bd20af8a7) to upgrade from Phoenix 1.6.x.
 
-Phoenix v1.7 requires Elixir v1.11+.
+Phoenix v1.7 requires Elixir v1.11+ & Erlang v22.1+.
 
 ## Introduction of Verified Routes
 
@@ -13,7 +13,7 @@ Use of the `sigil_p` macro allows paths and URLs throughout your
 application to be compile-time verified against your Phoenix router(s).
 For example the following path and URL usages:
 
-    <.link href={~p"/sessions/new"} method="post">Sign in</.link>
+    <.link href={~p"/sessions/new"} method="post">Log in</.link>
 
     redirect(to: url(~p"/posts/#{post}"))
 
@@ -46,18 +46,107 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
-## 1.7.8
+## 1.7.14 (2024-06-18)
 
-### Bug Fixes
-  * Fix `mix phx.gen.release --docker` failing with `:http_util` error on Elixir v1.15
+### Bug fixes
+  * Revert "Add `follow_redirect/2` to Phoenix.ConnTest" (#5797) as this conflicts with `follow_redirect/2` in LiveView, which is imported with ConnTest by default
 
-## Enhancements
+## 1.7.13 (2024-06-18)
+
+### Bug fixes
+  * Fix Elixir 1.17 warning in Cowboy2Adapter
+  * Fix verified routes emitting diagnostics without file and position
+
+### JavaScript Client Bug Fixes
+  * Fix error when `sessionStorage` is not available on global namespace
+
+### Enhancements
+  * Add `follow_redirect/2` to Phoenix.ConnTest
+  * Use LiveView 1.0.0-rc for newly generated applications
+  * Use new `Phoenix.Component.used_input?` for form errors in generated `core_components.ex`
+  * Allow `mix ecto.setup` from the umbrella root
+  * Bump Endpoint static cache manifest on `config_change` callback
+
+## 1.7.12 (2024-04-11)
+
+### JavaScript Client Bug Fixes
+  * Fix all unjoined channels from being removed from the socket when channel leave is called on any single unjoined channel instance
+
+### Enhancements
+  * [phx.gen.auth] Add enhanced session fixation protection.
+    For applications whichs previously used `phx.gen.auth`, the following line can be added to the `renew_session` function in the auth module:
+
+    ```diff
+      defp renew_session(conn) do
+    +   delete_csrf_token()
+
+        conn
+        |> configure_session(renew: true)
+        |> clear_session()
+    ```
+
+    *Note*: because the session id is in a http-only cookie by default, the only way to perform this attack prior to this change is if your application was already vulnerable to an XSS attack, which itself grants more escalated "privileges” than the CSRF fixation.
+
+### JavaScript Client Enhancements
+  * Only memorize longpoll fallback for browser session if WebSocket never had a successful connection
+
+## 1.7.11 (2024-02-01)
+
+### Enhancements
+  * [phx.new] Default to the [Bandit webserver](https://github.com/mtrudel/bandit) for newly generated applications
+  * [phx.new] Enable longpoll transport by default and auto fallback when websocket fails for newly generated applications
+
+### JavaScript Client Enhancements
+  * Support new `longPollFallbackMs` option to auto fallback when websocket fails to connect
+  * Support new `debug` option to enable verbose logging
+
+### Deprecations
+  * Deprecate the `c:init/2` callback in endpoints in favor of `config/runtime.exs` or in favor of `{Phoenix.Endpoint, options}`
+
+## 1.7.10 (2023-11-03)
+
+### Bug fixes
+  * [phx.new] Fix `CoreComponents.flash` generating incorrect id's causing flash messages to fail to be closed when clicked
+
+### Enhancements
+  * [Phoenix.Endpoint] Support dynamic port for `Endpoint.url/0`
+
+## 1.7.9 (2023-10-11)
+
+### Bug fixes
+  * [Phoenix.CodeReloader] - Fix error in code reloader causing compilation errors
+  * [phx.new] – fix LiveView debug heex configuration being generated when `--no-html` pas passed
+
+## 1.7.8 (2023-10-09)
+
+### Bug fixes
+  * [Phoenix.ChannelTest] Stringify lists when pushing data
+  * [Phoenix.Controller] Fix filename when sending downloads with non-ascii names
+  * [Phoenix.CodeReloader] Remove duplicate warnings on recent Elixir versions
+  * [Phoenix.CodeReloader] Do not crash code reloader if file information is missing from diagnostic
+  * [Phoenix.Logger] Do not crash when status is atom
+  * [phx.gen.release] Fix `mix phx.gen.release --docker` failing with `:http_util` error on Elixir v1.15
+  * [phx.gen.*] Skip map inputs in generated forms as there is no trivial matching input
+  * [phx.new] Fix tailwind/esbuild config and paths in umbrella projects
+  * [phx.new] Do not render `th` for actions if actions are empty
+
+### Enhancements
+  * [Phoenix] Allow latest `plug_crypto`
+  * [Phoenix.Endpoint] Support dynamic socket drainer configuration
+  * [Phoenix.Logger] Change socket serializer/version logs to warning
   * [Phoenix.VerifiedRoutes] Add support for static resources with fragments in `~p`
-  * [phx.new] Add `--adapter` flag for generating application with webservers like bandit
+  * [phx.gen.schema] Support `--repo` and `--migration-dir` flags
+  * [phx.new] Allow `<.input type="checkbox">` without `value` attr in core components
+  * [phx.new] Allow UTC datetimes in the generators
+  * [phx.new] Automatically migrate when release starts when using sqlite 3
+  * [phx.new] Allow ID to be assigned in flash component
+  * [phx.new] Add `--adapter` flag for generating application with bandit
+  * [phx.new] Include DNSCluster for simple clustering
+  * [phx.routes] Support `--method` option
 
 ## 1.7.7 (2023-07-10)
 
-## Enhancements
+### Enhancements
   * Support incoming binary payloads to channels over longpoll transport
 
 ## 1.7.6 (2023-06-16)
@@ -65,7 +154,7 @@ future styling).
 ### Bug Fixes
   * Support websock_adapter 0.5.3
 
-## Enhancements
+### Enhancements
   *  Allow using Phoenix.ChannelTest socket/connect in another process
 
 ## 1.7.5 (2023-06-15)

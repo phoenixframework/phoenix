@@ -42,7 +42,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
       end)
 
       :inets.start()
-      {:ok, response} = request_with_retries("http://localhost:4000")
+      {:ok, response} = request_with_retries("http://localhost:4000", 20)
       assert response.status_code == 200
       assert response.body =~ "PhxBlog"
 
@@ -68,7 +68,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
       )
   end
 
-  defp request_with_retries(url, retries \\ 10)
+  defp request_with_retries(url, retries)
 
   defp request_with_retries(_url, 0), do: {:error, :out_of_retries}
 
@@ -85,7 +85,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
          }}
 
       {:error, {:failed_connect, _}} ->
-        Process.sleep(1_000)
+        Process.sleep(5_000)
         request_with_retries(url, retries - 1)
 
       {:error, reason} ->

@@ -31,19 +31,25 @@ defmodule Phoenix.Endpoint.Supervisor do
     env_conf = config(otp_app, mod, default_conf)
 
     secret_conf =
-      case mod.init(:supervisor, env_conf) do
-        {:ok, init_conf} ->
-          if is_nil(Application.get_env(otp_app, mod)) and init_conf == env_conf do
-            Logger.warning(
-              "no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}"
-            )
-          end
+      cond do
+        Code.ensure_loaded?(mod) and function_exported?(mod, :init, 2) ->
+          IO.warn(
+            "#{inspect(mod)}.init/2 is deprecated, use config/runtime.exs instead " <>
+              "or pass additional options when starting the endpoint in your supervision tree"
+          )
 
+          {:ok, init_conf} = mod.init(:supervisor, env_conf)
           init_conf
 
-        other ->
-          raise ArgumentError,
-                "expected init/2 callback to return {:ok, config}, got: #{inspect(other)}"
+        is_nil(Application.get_env(otp_app, mod)) ->
+          Logger.warning(
+            "no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}"
+          )
+
+          env_conf
+
+        true ->
+          env_conf
       end
 
     extra_conf = [
@@ -78,11 +84,10 @@ defmodule Phoenix.Endpoint.Supervisor do
     children =
       config_children(mod, secret_conf, default_conf) ++
         pubsub_children(mod, conf) ++
-        socket_children(mod, :child_spec) ++
+        socket_children(mod, conf, :child_spec) ++
         server_children(mod, conf, server?) ++
-        socket_children(mod, :drainer_spec) ++
+        socket_children(mod, conf, :drainer_spec) ++
         watcher_children(mod, conf, server?)
-
     Supervisor.init(children, strategy: :one_for_one)
   end
 
@@ -112,8 +117,9 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp socket_children(endpoint, fun) do
-    for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__, &elem(&1, 1)),
+  defp socket_children(endpoint, conf, fun) do
+    for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__(), &elem(&1, 1)),
+        _ = check_origin_or_csrf_checked!(conf, opts),
         spec = apply_or_ignore(socket, fun, [[endpoint: endpoint] ++ opts]),
         spec != :ignore do
       spec
@@ -129,6 +135,22 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
+  defp check_origin_or_csrf_checked!(endpoint_conf, socket_opts) do
+    check_origin = endpoint_conf[:check_origin]
+
+    for {transport, transport_opts} <- socket_opts, is_list(transport_opts) do
+      check_origin = Keyword.get(transport_opts, :check_origin, check_origin)
+
+      check_csrf = transport_opts[:check_csrf]
+
+      if check_origin == false and check_csrf == false do
+        raise ArgumentError,
+              "one of :check_origin and :check_csrf must be set to non-false value for " <>
+                "transport #{inspect(transport)}"
+      end
+    end
+  end
+
   defp config_children(mod, conf, default_conf) do
     args = {mod, conf, default_conf, name: Module.concat(mod, "Config")}
     [{Phoenix.Config, args}]
@@ -137,7 +159,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   defp server_children(mod, config, server?) do
     cond do
       server? ->
-        adapter = config[:adapter] || Phoenix.Endpoint.Cowboy2Adapter
+        adapter = config[:adapter]
         adapter.child_specs(mod, config)
 
       config[:http] || config[:https] ->
@@ -155,8 +177,10 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp watcher_children(_mod, conf, server?) do
+    watchers = conf[:watchers] || []
+
     if server? || conf[:force_watchers] do
-      Enum.map(conf[:watchers], &{Phoenix.Endpoint.Watcher, &1})
+      Enum.map(watchers, &{Phoenix.Endpoint.Watcher, &1})
     else
       []
     end
@@ -196,6 +220,11 @@ defmodule Phoenix.Endpoint.Supervisor do
       render_errors: [view: render_errors(module), accepts: ~w(html), layout: false],
 
       # Runtime config
+
+      # Even though Bandit is the default in apps generated via the installer,
+      # we continue to use Cowboy as the default if not explicitly specified for
+      # backwards compatibility. TODO: Change this to default to Bandit in 2.0
+      adapter: Phoenix.Endpoint.Cowboy2Adapter,
       cache_static_manifest: nil,
       check_origin: true,
       http: false,
@@ -370,7 +399,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests}) do
-    Phoenix.Config.put_new(endpoint, :cache_static_manifest_latest, latest)
+    Phoenix.Config.put(endpoint, :cache_static_manifest_latest, latest)
     with_vsn? = !endpoint.config(:cache_manifest_skip_vsn)
 
     Enum.each(latest, fn {key, _} ->

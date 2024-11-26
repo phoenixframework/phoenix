@@ -1,11 +1,11 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ConfirmationLiveTest do
-  use <%= inspect context.web_module %>.ConnCase
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.ConfirmationTest do
+  use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
   import Phoenix.LiveViewTest
   import <%= inspect context.module %>Fixtures
 
   alias <%= inspect context.module %>
-  alias <%= inspect schema.repo %>
+  alias <%= inspect schema.repo %><%= schema.repo_alias %>
 
   setup do
     %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
@@ -29,7 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> form("#confirmation_form")
         |> render_submit()
-        |> follow_redirect(conn, "/")
+        |> follow_redirect(conn, ~p"/")
 
       assert {:ok, conn} = result
 
@@ -47,7 +47,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> form("#confirmation_form")
         |> render_submit()
-        |> follow_redirect(conn, "/")
+        |> follow_redirect(conn, ~p"/")
 
       assert {:ok, conn} = result
 
@@ -55,16 +55,17 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
                "<%= inspect schema.alias %> confirmation link is invalid or it has expired"
 
       # when logged in
-      {:ok, lv, _html} =
+      conn =
         build_conn()
         |> log_in_<%= schema.singular %>(<%= schema.singular %>)
-        |> live(~p"<%= schema.route_prefix %>/confirm/#{token}")
+
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/#{token}")
 
       result =
         lv
         |> form("#confirmation_form")
         |> render_submit()
-        |> follow_redirect(conn, "/")
+        |> follow_redirect(conn, ~p"/")
 
       assert {:ok, conn} = result
       refute Phoenix.Flash.get(conn.assigns.flash, :error)

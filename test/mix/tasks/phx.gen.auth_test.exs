@@ -89,9 +89,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       send self(), {:mix_shell_input, :yes?, false}
 
       Gen.Auth.run(
-        ~w(Accounts User users),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -162,12 +161,12 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    get "/users/register", UserRegistrationController, :new
                    post "/users/register", UserRegistrationController, :create
-                   get "/users/log_in", UserSessionController, :new
-                   post "/users/log_in", UserSessionController, :create
-                   get "/users/reset_password", UserResetPasswordController, :new
-                   post "/users/reset_password", UserResetPasswordController, :create
-                   get "/users/reset_password/:token", UserResetPasswordController, :edit
-                   put "/users/reset_password/:token", UserResetPasswordController, :update
+                   get "/users/log-in", UserSessionController, :new
+                   post "/users/log-in", UserSessionController, :create
+                   get "/users/reset-password", UserResetPasswordController, :new
+                   post "/users/reset-password", UserResetPasswordController, :create
+                   get "/users/reset-password/:token", UserResetPasswordController, :edit
+                   put "/users/reset-password/:token", UserResetPasswordController, :update
                  end
 
                  scope "/", MyAppWeb do
@@ -175,13 +174,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    get "/users/settings", UserSettingsController, :edit
                    put "/users/settings", UserSettingsController, :update
-                   get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
+                   get "/users/settings/confirm-email/:token", UserSettingsController, :confirm_email
                  end
 
                  scope "/", MyAppWeb do
                    pipe_through [:browser]
 
-                   delete "/users/log_out", UserSessionController, :delete
+                   delete "/users/log-out", UserSessionController, :delete
                    get "/users/confirm", UserConfirmationController, :new
                    post "/users/confirm", UserConfirmationController, :create
                    get "/users/confirm/:token", UserConfirmationController, :edit
@@ -195,13 +194,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  ~r|<.link.*href={~p"/users/settings"}.*>|s
 
         assert file =~
-                 ~r|<.link.*href={~p"/users/log_out"}.*method="delete".*>|s
+                 ~r|<.link.*href={~p"/users/log-out"}.*method="delete".*>|s
 
         assert file =~
                  ~r|<.link.*href={~p"/users/register"}.*>|s
 
         assert file =~
-                 ~r|<.link.*href={~p"/users/log_in"}.*>|s
+                 ~r|<.link.*href={~p"/users/log-in"}.*>|s
       end)
 
       assert_file("test/support/conn_case.ex", fn file ->
@@ -226,9 +225,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       send self(), {:mix_shell_input, :yes?, true}
 
       Gen.Auth.run(
-        ~w(Accounts User users),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -251,20 +249,20 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ ~s|deliver(user.email, "Update email instructions",|
       end)
 
-      assert_file("lib/my_app_web/live/user_registration_live.ex")
-      assert_file("test/my_app_web/live/user_registration_live_test.exs")
-      assert_file("lib/my_app_web/live/user_login_live.ex")
-      assert_file("test/my_app_web/live/user_login_live_test.exs")
-      assert_file("lib/my_app_web/live/user_reset_password_live.ex")
-      assert_file("test/my_app_web/live/user_reset_password_live_test.exs")
-      assert_file("lib/my_app_web/live/user_forgot_password_live.ex")
-      assert_file("test/my_app_web/live/user_forgot_password_live_test.exs")
-      assert_file("lib/my_app_web/live/user_settings_live.ex")
-      assert_file("test/my_app_web/live/user_settings_live_test.exs")
-      assert_file("lib/my_app_web/live/user_confirmation_live.ex")
-      assert_file("test/my_app_web/live/user_confirmation_live_test.exs")
-      assert_file("lib/my_app_web/live/user_confirmation_instructions_live.ex")
-      assert_file("test/my_app_web/live/user_confirmation_instructions_live_test.exs")
+      assert_file("lib/my_app_web/live/user_live/registration.ex")
+      assert_file("test/my_app_web/live/user_live/registration_test.exs")
+      assert_file("lib/my_app_web/live/user_live/login.ex")
+      assert_file("test/my_app_web/live/user_live/login_test.exs")
+      assert_file("lib/my_app_web/live/user_live/reset_password.ex")
+      assert_file("test/my_app_web/live/user_live/reset_password_test.exs")
+      assert_file("lib/my_app_web/live/user_live/forgot_password.ex")
+      assert_file("test/my_app_web/live/user_live/forgot_password_test.exs")
+      assert_file("lib/my_app_web/live/user_live/settings.ex")
+      assert_file("test/my_app_web/live/user_live/settings_test.exs")
+      assert_file("lib/my_app_web/live/user_live/confirmation.ex")
+      assert_file("test/my_app_web/live/user_live/confirmation_test.exs")
+      assert_file("lib/my_app_web/live/user_live/confirmation_instructions.ex")
+      assert_file("test/my_app_web/live/user_live/confirmation_instructions_test.exs")
 
       assert_file("lib/my_app_web/user_auth.ex")
       assert_file("test/my_app_web/user_auth_test.exs")
@@ -292,13 +290,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    live_session :redirect_if_user_is_authenticated,
                      on_mount: [{MyAppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
-                     live "/users/register", UserRegistrationLive, :new
-                     live "/users/log_in", UserLoginLive, :new
-                     live "/users/reset_password", UserForgotPasswordLive, :new
-                     live "/users/reset_password/:token", UserResetPasswordLive, :edit
+                     live "/users/register", UserLive.Registration, :new
+                     live "/users/log-in", UserLive.Login, :new
+                     live "/users/reset-password", UserLive.ForgotPassword, :new
+                     live "/users/reset-password/:token", UserLive.ResetPassword, :edit
                    end
 
-                   post "/users/log_in", UserSessionController, :create
+                   post "/users/log-in", UserSessionController, :create
                  end
 
                  scope "/", MyAppWeb do
@@ -306,20 +304,20 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    live_session :require_authenticated_user,
                      on_mount: [{MyAppWeb.UserAuth, :ensure_authenticated}] do
-                     live "/users/settings", UserSettingsLive, :edit
-                     live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+                     live "/users/settings", UserLive.Settings, :edit
+                     live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
                    end
                  end
 
                  scope "/", MyAppWeb do
                    pipe_through [:browser]
 
-                   delete "/users/log_out", UserSessionController, :delete
+                   delete "/users/log-out", UserSessionController, :delete
 
                    live_session :current_user,
                      on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
-                     live "/users/confirm/:token", UserConfirmationLive, :edit
-                     live "/users/confirm", UserConfirmationInstructionsLive, :new
+                     live "/users/confirm/:token", UserLive.Confirmation, :edit
+                     live "/users/confirm", UserLive.ConfirmationInstructions, :new
                    end
                  end
                """
@@ -330,13 +328,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  ~r|<\.link.*href={~p"/users/settings"}.*>|s
 
         assert file =~
-                 ~r|<\.link.*href={~p"/users/log_out"}.*method="delete".*>|s
+                 ~r|<\.link.*href={~p"/users/log-out"}.*method="delete".*>|s
 
         assert file =~
                  ~r|<\.link.*href={~p"/users/register"}.*>|s
 
         assert file =~
-                 ~r|<\.link.*href={~p"/users/log_in"}.*>|s
+                 ~r|<\.link.*href={~p"/users/log-in"}.*>|s
       end)
 
       assert_file("test/support/conn_case.ex", fn file ->
@@ -359,9 +357,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   test "works with apps generated with --live", config do
     in_tmp_phx_project(config.test, ~w(--live), fn ->
       Gen.Auth.run(
-        ~w(Accounts User users --live),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --live --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_file("lib/my_app_web/components/layouts/root.html.heex", fn file ->
@@ -369,13 +366,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  ~r|<.link.*href={~p"/users/settings"}.*>|s
 
         assert file =~
-                 ~r|<.link.*href={~p"/users/log_out"}.*method="delete".*>|s
+                 ~r|<.link.*href={~p"/users/log-out"}.*method="delete".*>|s
 
         assert file =~
                  ~r|<.link.*href={~p"/users/register"}.*>|s
 
         assert file =~
-                 ~r|<.link.*href={~p"/users/log_in"}.*>|s
+                 ~r|<.link.*href={~p"/users/log-in"}.*>|s
       end)
 
       assert_file("lib/my_app_web/router.ex", fn file ->
@@ -390,13 +387,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    live_session :redirect_if_user_is_authenticated,
                      on_mount: [{MyAppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
-                     live "/users/register", UserRegistrationLive, :new
-                     live "/users/log_in", UserLoginLive, :new
-                     live "/users/reset_password", UserForgotPasswordLive, :new
-                     live "/users/reset_password/:token", UserResetPasswordLive, :edit
+                     live "/users/register", UserLive.Registration, :new
+                     live "/users/log-in", UserLive.Login, :new
+                     live "/users/reset-password", UserLive.ForgotPassword, :new
+                     live "/users/reset-password/:token", UserLive.ResetPassword, :edit
                    end
 
-                   post "/users/log_in", UserSessionController, :create
+                   post "/users/log-in", UserSessionController, :create
                  end
 
                  scope "/", MyAppWeb do
@@ -404,20 +401,20 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    live_session :require_authenticated_user,
                      on_mount: [{MyAppWeb.UserAuth, :ensure_authenticated}] do
-                     live "/users/settings", UserSettingsLive, :edit
-                     live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+                     live "/users/settings", UserLive.Settings, :edit
+                     live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
                    end
                  end
 
                  scope "/", MyAppWeb do
                    pipe_through [:browser]
 
-                   delete "/users/log_out", UserSessionController, :delete
+                   delete "/users/log-out", UserSessionController, :delete
 
                    live_session :current_user,
                      on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
-                     live "/users/confirm/:token", UserConfirmationLive, :edit
-                     live "/users/confirm", UserConfirmationInstructionsLive, :new
+                     live "/users/confirm/:token", UserLive.Confirmation, :edit
+                     live "/users/confirm", UserLive.ConfirmationInstructions, :new
                    end
                  end
                """
@@ -428,9 +425,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   test "works with apps generated with --no-live", config do
     in_tmp_phx_project(config.test, ~w(--no-live), fn ->
       Gen.Auth.run(
-        ~w(Accounts User users --no-live),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --no-live --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_file("lib/my_app_web/components/layouts/root.html.heex", fn file ->
@@ -438,13 +434,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  ~r|<.link.*href={~p"/users/settings"}.*>|s
 
         assert file =~
-                 ~r|<.link.*href={~p"/users/log_out"}.*method="delete".*>|s
+                 ~r|<.link.*href={~p"/users/log-out"}.*method="delete".*>|s
 
         assert file =~
                  ~r|<.link.*href={~p"/users/register"}.*>|s
 
         assert file =~
-                 ~r|<.link.*href={~p"/users/log_in"}.*>|s
+                 ~r|<.link.*href={~p"/users/log-in"}.*>|s
       end)
 
       assert_file("lib/my_app_web/router.ex", fn file ->
@@ -459,12 +455,12 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    get "/users/register", UserRegistrationController, :new
                    post "/users/register", UserRegistrationController, :create
-                   get "/users/log_in", UserSessionController, :new
-                   post "/users/log_in", UserSessionController, :create
-                   get "/users/reset_password", UserResetPasswordController, :new
-                   post "/users/reset_password", UserResetPasswordController, :create
-                   get "/users/reset_password/:token", UserResetPasswordController, :edit
-                   put "/users/reset_password/:token", UserResetPasswordController, :update
+                   get "/users/log-in", UserSessionController, :new
+                   post "/users/log-in", UserSessionController, :create
+                   get "/users/reset-password", UserResetPasswordController, :new
+                   post "/users/reset-password", UserResetPasswordController, :create
+                   get "/users/reset-password/:token", UserResetPasswordController, :edit
+                   put "/users/reset-password/:token", UserResetPasswordController, :update
                  end
 
                  scope "/", MyAppWeb do
@@ -472,13 +468,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    get "/users/settings", UserSettingsController, :edit
                    put "/users/settings", UserSettingsController, :update
-                   get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
+                   get "/users/settings/confirm-email/:token", UserSettingsController, :confirm_email
                  end
 
                  scope "/", MyAppWeb do
                    pipe_through [:browser]
 
-                   delete "/users/log_out", UserSessionController, :delete
+                   delete "/users/log-out", UserSessionController, :delete
                    get "/users/confirm", UserConfirmationController, :new
                    post "/users/confirm", UserConfirmationController, :create
                    get "/users/confirm/:token", UserConfirmationController, :edit
@@ -494,9 +490,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       send self(), {:mix_shell_input, :yes?, false}
 
       Gen.Auth.run(
-        ~w(Accounts User users --web warehouse),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --web warehouse --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -531,7 +526,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  ~r|<\.link.*href={~p"/warehouse/users/register"}.*>|s
 
         assert file =~
-                 ~r|<\.link.*href={~p"/warehouse/users/log_in"}.*>|s
+                 ~r|<\.link.*href={~p"/warehouse/users/log-in"}.*>|s
       end)
 
       assert_file(
@@ -553,13 +548,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  ~r|<\.link.*href={~p"/warehouse/users/settings"}.*>|s
 
         assert file =~
-                 ~r|<\.link.*href={~p"/warehouse/users/log_out"}.*method="delete".*>|s
+                 ~r|<\.link.*href={~p"/warehouse/users/log-out"}.*method="delete".*>|s
 
         assert file =~
                  ~r|<\.link.*href={~p"/warehouse/users/register"}.*>|s
 
         assert file =~
-                 ~r|<\.link.*href={~p"/warehouse/users/log_in"}.*>|s
+                 ~r|<\.link.*href={~p"/warehouse/users/log-in"}.*>|s
       end)
 
       assert_file(
@@ -591,7 +586,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         "lib/my_app_web/controllers/warehouse/user_reset_password_html/edit.html.heex",
         fn file ->
           assert file =~
-                   ~S|<.simple_form :let={f} for={@changeset} action={~p"/warehouse/users/reset_password/#{@token}"}>|
+                   ~S|<.simple_form :let={f} for={@changeset} action={~p"/warehouse/users/reset-password/#{@token}"}>|
         end
       )
 
@@ -599,7 +594,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         "lib/my_app_web/controllers/warehouse/user_reset_password_html/new.html.heex",
         fn file ->
           assert file =~
-                   ~S(<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/reset_password"}>)
+                   ~S(<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/reset-password"}>)
         end
       )
 
@@ -620,13 +615,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/controllers/warehouse/user_session_html/new.html.heex", fn file ->
         assert file =~
-                 ~S|<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/log_in"}>|
+                 ~S|<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/log-in"}>|
 
         assert file =~
                  ~S|<.link navigate={~p"/warehouse/users/register"}|
 
         assert file =~
-                 ~S|<.link href={~p"/warehouse/users/reset_password"}|
+                 ~S|<.link href={~p"/warehouse/users/reset-password"}|
       end)
 
       assert_file(
@@ -682,12 +677,12 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    get "/users/register", UserRegistrationController, :new
                    post "/users/register", UserRegistrationController, :create
-                   get "/users/log_in", UserSessionController, :new
-                   post "/users/log_in", UserSessionController, :create
-                   get "/users/reset_password", UserResetPasswordController, :new
-                   post "/users/reset_password", UserResetPasswordController, :create
-                   get "/users/reset_password/:token", UserResetPasswordController, :edit
-                   put "/users/reset_password/:token", UserResetPasswordController, :update
+                   get "/users/log-in", UserSessionController, :new
+                   post "/users/log-in", UserSessionController, :create
+                   get "/users/reset-password", UserResetPasswordController, :new
+                   post "/users/reset-password", UserResetPasswordController, :create
+                   get "/users/reset-password/:token", UserResetPasswordController, :edit
+                   put "/users/reset-password/:token", UserResetPasswordController, :update
                  end
 
                  scope "/warehouse", MyAppWeb.Warehouse, as: :warehouse do
@@ -695,13 +690,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    get "/users/settings", UserSettingsController, :edit
                    put "/users/settings", UserSettingsController, :update
-                   get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
+                   get "/users/settings/confirm-email/:token", UserSettingsController, :confirm_email
                  end
 
                  scope "/warehouse", MyAppWeb.Warehouse, as: :warehouse do
                    pipe_through [:browser]
 
-                   delete "/users/log_out", UserSessionController, :delete
+                   delete "/users/log-out", UserSessionController, :delete
                    get "/users/confirm", UserConfirmationController, :new
                    post "/users/confirm", UserConfirmationController, :create
                    get "/users/confirm/:token", UserConfirmationController, :edit
@@ -723,9 +718,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -777,9 +771,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.MyXQL,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.MyXQL
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -831,9 +824,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.SQLite3,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.SQLite3
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -885,9 +877,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.TDS,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.TDS
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -935,14 +926,43 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
     end
   end
 
+  test "allows utc_datetime", config do
+    in_tmp_phx_project(config.test, fn ->
+      send self(), {:mix_shell_input, :yes?, false}
+      with_generator_env(:my_app, [timestamp_type: :utc_datetime], fn ->
+
+        Gen.Auth.run(
+        ~w(Accounts User users --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
+        )
+
+        assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
+
+        assert_file migration, fn file ->
+          assert file =~ "timestamps(type: :utc_datetime)"
+          assert file =~ "timestamps(type: :utc_datetime, updated_at: false)"
+        end
+
+        assert_file "lib/my_app/accounts/user.ex", fn file ->
+          assert file =~ "field :confirmed_at, :utc_datetime"
+          assert file =~ "timestamps(type: :utc_datetime)"
+          assert file =~ "now = DateTime.utc_now() |> DateTime.truncate(:second)"
+        end
+
+        assert_file "lib/my_app/accounts/user_token.ex", fn file ->
+          assert file =~ "timestamps(type: :utc_datetime, updated_at: false)"
+        end
+      end)
+    end)
+  end
+
   test "supports --binary-id option", config do
     in_tmp_phx_project(config.test, fn ->
       send self(), {:mix_shell_input, :yes?, false}
 
       Gen.Auth.run(
-        ~w(Accounts User users --binary-id),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --binary-id --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -973,9 +993,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users --hashing-lib bcrypt),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --hashing-lib bcrypt --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -999,9 +1018,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users --hashing-lib pbkdf2),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --hashing-lib pbkdf2 --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1025,15 +1043,14 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users --hashing-lib argon2),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --hashing-lib argon2 --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
         assert_file("mix.exs", fn file ->
-          assert file =~ ~s|{:argon2_elixir, "~> 3.0"}|
+          assert file =~ ~s|{:argon2_elixir, "~> 4.0"}|
         end)
 
         assert_file("config/test.exs", fn file ->
@@ -1054,9 +1071,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       send self(), {:mix_shell_input, :yes?, false}
 
       Gen.Auth.run(
-        ~w(Accounts User users --table my_users),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts User users --table my_users --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1086,9 +1102,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
             send self(), {:mix_shell_input, :yes?, false}
 
             Gen.Auth.run(
-              ~w(Accounts User users),
-              ecto_adapter: Ecto.Adapters.Postgres,
-              validate_dependencies?: false
+              ~w(Accounts User users --no-compile),
+              ecto_adapter: Ecto.Adapters.Postgres
             )
 
             assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1145,9 +1160,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
             send self(), {:mix_shell_input, :yes?, false}
 
             Gen.Auth.run(
-              ~w(Accounts User users),
-              ecto_adapter: Ecto.Adapters.Postgres,
-              validate_dependencies?: false
+              ~w(Accounts User users --no-compile),
+              ecto_adapter: Ecto.Adapters.Postgres
             )
 
             assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1213,9 +1227,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           with_generator_env(:my_app_web, [context_app: false], fn ->
             assert_raise Mix.Error, ~r/no context_app configured/, fn ->
               Gen.Auth.run(
-                ~w(Accounts User users),
-                ecto_adapter: Ecto.Adapters.Postgres,
-                validate_dependencies?: false
+                ~w(Accounts User users --no-compile),
+                ecto_adapter: Ecto.Adapters.Postgres
               )
             end
           end)
@@ -1232,9 +1245,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1265,9 +1277,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1301,9 +1312,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1333,9 +1343,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1371,7 +1380,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                 </li>
                 <li>
                   <.link
-                    href={~p"/users/log_out"}
+                    href={~p"/users/log-out"}
                     method="delete"
                     class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
@@ -1389,7 +1398,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                 </li>
                 <li>
                   <.link
-                    href={~p"/users/log_in"}
+                    href={~p"/users/log-in"}
                     class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
                     Log in
@@ -1410,9 +1419,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         send self(), {:mix_shell_input, :yes?, false}
 
         Gen.Auth.run(
-          ~w(Accounts User users),
-          ecto_adapter: Ecto.Adapters.Postgres,
-          validate_dependencies?: false
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert_received {:mix_shell, :yes?, [@liveview_option_message]}
@@ -1436,7 +1444,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                 </li>
                 <li>
                   <.link
-                    href={~p"/users/log_out"}
+                    href={~p"/users/log-out"}
                     method="delete"
                     class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
@@ -1454,7 +1462,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                 </li>
                 <li>
                   <.link
-                    href={~p"/users/log_in"}
+                    href={~p"/users/log-in"}
                     class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                   >
                     Log in
@@ -1478,9 +1486,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       send self(), {:mix_shell_input, :yes?, false}
 
       Gen.Auth.run(
-        ~w(Accounts Admin admins),
-        ecto_adapter: Ecto.Adapters.Postgres,
-        validate_dependencies?: false
+        ~w(Accounts Admin admins --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
       )
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
