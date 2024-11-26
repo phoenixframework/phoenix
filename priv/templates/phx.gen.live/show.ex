@@ -10,9 +10,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <%= schema.human_singular %> <%%= @<%= schema.singular %>.id %>
       <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
       <:actions>
-        <.link navigate={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
-          <.button>Edit <%= schema.singular %></.button>
-        </.link>
+        <.button phx-click={JS.dispatch("click", to: {:inner, "a"})}>
+          <.link navigate={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
+            Edit <%= schema.singular %>
+          </.link>
+        </.button>
       </:actions>
     </.header>
 
