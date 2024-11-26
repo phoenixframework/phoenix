@@ -15,18 +15,18 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         </:subtitle>
       </.header>
 
-      <.simple_form for={@form} id="login_form" action={~p"<%= schema.route_prefix %>/log_in"} phx-update="ignore">
+      <.simple_form for={@form} id="login_form" action={~p"<%= schema.route_prefix %>/log-in"} phx-update="ignore">
         <.input field={@form[:email]} type="email" label="Email" required />
         <.input field={@form[:password]} type="password" label="Password" required />
 
         <:actions>
           <.input field={@form[:remember_me]} type="checkbox" label="Keep me logged in" />
-          <.link href={~p"<%= schema.route_prefix %>/reset_password"} class="text-sm font-semibold">
+          <.link href={~p"<%= schema.route_prefix %>/reset-password"} class="text-sm font-semibold">
             Forgot your password?
           </.link>
         </:actions>
         <:actions>
-          <.button phx-disable-with="Logging in..." class="w-full">
+          <.button class="w-full">
             Log in <span aria-hidden="true">→</span>
           </.button>
         </:actions>
