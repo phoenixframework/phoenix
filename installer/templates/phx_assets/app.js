@@ -42,38 +42,38 @@ import "phoenix_html"
 // >> liveSocket.disableLatencySim()
 <%= @live_comment %>window.liveSocket = liveSocket
 
-// Uncomment the lines below to enable quality of life phoenix_live_reload
+// The lines below enable quality of life phoenix_live_reload
 // development features:
 //
 //     1. stream server logs to the browser console
 //     2. click on elements to jump to their definitions in your code editor
 //
-// if (process.env.NODE_ENV === "development") {
-//   window.addEventListener("phx:live_reload:attached", ({detail: reloader}) => {
-//     // Enable server log streaming to client.
-//     // Disable with reloader.disableServerLogs()
-//     reloader.enableServerLogs()
-//
-//     // Open configured PLUG_EDITOR at file:line of the clicked element's HEEx component
-//     //
-//     //   * click with "c" key pressed to open at caller location
-//     //   * click with "d" key pressed to open at function component definition location
-//     let keyDown
-//     window.addEventListener("keydown", e => keyDown = e.key)
-//     window.addEventListener("keyup", e => keyDown = null)
-//     window.addEventListener("click", e => {
-//       if(keyDown === "c"){
-//         e.preventDefault()
-//         e.stopImmediatePropagation()
-//         reloader.openEditorAtCaller(e.target)
-//       } else if(keyDown === "d"){
-//         e.preventDefault()
-//         e.stopImmediatePropagation()
-//         reloader.openEditorAtDef(e.target)
-//       }
-//     }, true)
-//
-//     window.liveReloader = reloader
-//   })
-// }
+<%= @live_comment %>if (process.env.NODE_ENV === "development") {
+<%= @live_comment %>  window.addEventListener("phx:live_reload:attached", ({detail: reloader}) => {
+<%= @live_comment %>    // Enable server log streaming to client.
+<%= @live_comment %>    // Disable with reloader.disableServerLogs()
+<%= @live_comment %>    reloader.enableServerLogs()
+<%= @live_comment %>
+<%= @live_comment %>    // Open configured PLUG_EDITOR at file:line of the clicked element's HEEx component
+<%= @live_comment %>    //
+<%= @live_comment %>    //   * click with "c" key pressed to open at caller location
+<%= @live_comment %>    //   * click with "d" key pressed to open at function component definition location
+<%= @live_comment %>    let keyDown
+<%= @live_comment %>    window.addEventListener("keydown", e => keyDown = e.key)
+<%= @live_comment %>    window.addEventListener("keyup", e => keyDown = null)
+<%= @live_comment %>    window.addEventListener("click", e => {
+<%= @live_comment %>      if(keyDown === "c"){
+<%= @live_comment %>        e.preventDefault()
+<%= @live_comment %>        e.stopImmediatePropagation()
+<%= @live_comment %>        reloader.openEditorAtCaller(e.target)
+<%= @live_comment %>      } else if(keyDown === "d"){
+<%= @live_comment %>        e.preventDefault()
+<%= @live_comment %>        e.stopImmediatePropagation()
+<%= @live_comment %>        reloader.openEditorAtDef(e.target)
+<%= @live_comment %>      }
+<%= @live_comment %>    }, true)
+<%= @live_comment %>
+<%= @live_comment %>    window.liveReloader = reloader
+<%= @live_comment %>  })
+<%= @live_comment %>}
 <% end %>
