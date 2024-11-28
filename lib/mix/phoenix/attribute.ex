@@ -701,7 +701,8 @@ defmodule Mix.Phoenix.Attribute do
     scale = Map.get(options, :scale, scale_default)
     fractional_part = fractional_part |> String.slice(0, scale) |> String.pad_trailing(scale, "0")
 
-    whole_length = precision - scale
+    # NOTE: `min` applied to adjust for old `String.slice` behavior, in elixir versions 1.11.4 and 1.12.3
+    whole_length = [String.length(whole_part), precision - scale] |> Enum.min()
     whole_part = whole_part |> String.slice(-whole_length, whole_length)
 
     "#{whole_part}.#{fractional_part}"
