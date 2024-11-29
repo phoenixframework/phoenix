@@ -76,7 +76,17 @@ locals_without_parens = [
   on_mount: 1,
   slot: 1,
   slot: 2,
-  slot: 3
+  slot: 3,
+
+  # Phoenix.LiveViewTest
+  assert_patch: 2,
+  assert_patch: 3,
+  assert_patched: :2,
+  assert_push_event: 4,
+  assert_redirect: 2,
+  assert_redirect: 3,
+  assert_redirected: 2,
+  assert_reply: 3
 ]
 
 [
