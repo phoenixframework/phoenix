@@ -1008,15 +1008,16 @@ defmodule Phoenix.Router do
 
   will include the following routes:
 
-      user_post_path  GET     /users/:user_id/posts           PostController :index
-      user_post_path  GET     /users/:user_id/posts/:id/edit  PostController :edit
-      user_post_path  GET     /users/:user_id/posts/new       PostController :new
-      user_post_path  GET     /users/:user_id/posts/:id       PostController :show
-      user_post_path  POST    /users/:user_id/posts           PostController :create
-      user_post_path  PATCH   /users/:user_id/posts/:id       PostController :update
-                      PUT     /users/:user_id/posts/:id       PostController :update
-      user_post_path  DELETE  /users/:user_id/posts/:id       PostController :delete
-
+  ```console
+  user_post_path  GET     /users/:user_id/posts           PostController :index
+  user_post_path  GET     /users/:user_id/posts/:id/edit  PostController :edit
+  user_post_path  GET     /users/:user_id/posts/new       PostController :new
+  user_post_path  GET     /users/:user_id/posts/:id       PostController :show
+  user_post_path  POST    /users/:user_id/posts           PostController :create
+  user_post_path  PATCH   /users/:user_id/posts/:id       PostController :update
+                  PUT     /users/:user_id/posts/:id       PostController :update
+  user_post_path  DELETE  /users/:user_id/posts/:id       PostController :delete
+  ```
   """
   defmacro resources(path, controller, opts, do: nested_context) do
     add_resources(path, controller, opts, do: nested_context)

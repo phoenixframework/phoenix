@@ -4,7 +4,9 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @moduledoc """
   Generates controller with view, templates, schema and context for an HTML resource.
 
-      mix phx.gen.html Accounts User users name:string age:integer
+  ```console
+  $ mix phx.gen.html Accounts User users name:string age:integer
+  ```
 
   The first argument, `Accounts`, is the resource's context.
   A context is an Elixir module that serves as an API boundary for closely related resources.
@@ -51,7 +53,9 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
-      mix phx.gen.html Sales User users --context-app my_app
+  ```console
+  $ mix phx.gen.html Sales User users --context-app my_app
+  ```
 
   If you delete the `:context_app` configuration option, Phoenix will automatically put generated web files in
   `my_app_umbrella/apps/my_app_web_web`.
@@ -67,7 +71,9 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
-      mix phx.gen.html Sales User users --web Sales
+  ```console
+  $ mix phx.gen.html Sales User users --web Sales
+  ```
 
   Which would generate a `lib/app_web/controllers/sales/user_controller.ex` and
   `lib/app_web/controllers/sales/user_html.ex`.

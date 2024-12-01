@@ -8,8 +8,10 @@ defmodule Phoenix.Flash do
 
   ## Examples
 
-      <div id="info"><%= Phoenix.Flash.get(@flash, :info) %></div>
-      <div id="error"><%= Phoenix.Flash.get(@flash, :error) %></div>
+  ```heex
+  <div id="info"><%= Phoenix.Flash.get(@flash, :info) %></div>
+  <div id="error"><%= Phoenix.Flash.get(@flash, :error) %></div>
+  ```
   """
   def get(%mod{}, key) when is_atom(key) or is_binary(key) do
     raise ArgumentError, """

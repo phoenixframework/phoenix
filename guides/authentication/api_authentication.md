@@ -63,7 +63,7 @@ To make sure our new functions work, let's write tests. Open up `test/my_app/acc
 
 If you run the tests, they will actually fail. Something similar to this:
 
-```elixir
+```console
 1) test create_user_api_token/1 and fetch_user_by_api_token/1 creates and verify token (Demo.AccountsTest)
    test/demo/accounts_test.exs:21
    ** (FunctionClauseError) no function clause matching in Demo.Accounts.UserToken.days_for_context/1

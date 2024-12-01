@@ -30,7 +30,7 @@ Here is the form from `lib/hello_web/controllers/product_html/product_form.html.
 
 ```heex
 <.simple_form :let={f} for={@changeset} action={@action} multipart>
-. . .
+...
 ```
 
 ### Add a file input
@@ -38,7 +38,7 @@ Here is the form from `lib/hello_web/controllers/product_html/product_form.html.
 Once you have a multipart form, you need a `file` input. Here's how you would do that, also in `product_form.html.heex`:
 
 ```heex
-. . .
+...
   <.input field={f[:photo]} type="file" label="Photo" />
 
   <:actions>
@@ -71,10 +71,10 @@ Since you generated an HTML resource, you can now start your server with `mix ph
 Before you begin, add `IO.inspect product_params` to the top of your `ProductController.create/2` action in `lib/hello_web/controllers/product_controller.ex`. This will show the `product_params` in your development log so you can get a better sense of what's happening.
 
 ```elixir
-. . .
+...
   def create(conn, %{"product" => product_params}) do
     IO.inspect product_params
-. . .
+...
 ```
 
 When you do that, this is what your `product_params` will output in the log:
