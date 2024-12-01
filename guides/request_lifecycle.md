@@ -155,7 +155,7 @@ Note the controller name (`HelloController`), the view name (`HelloHTML`), and t
 
 > **Note**: We can rename the `hello_html` directory to whatever we want and put it in a subdirectory of `lib/hello_web/controllers`, as long as we update the `embed_templates` setting accordingly. However, it's best to keep the same naming convention to prevent any confusion.
 
-```
+```console
 lib/hello_web
 ├── controllers
 │   ├── hello_controller.ex

@@ -93,10 +93,24 @@ defmodule Phoenix.MixProject do
       {:gettext, "~> 0.26", only: :docs},
       {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 1.0", only: :docs},
-      {:makeup_eex, ">= 0.1.1", only: :docs},
-      {:makeup_elixir, "~> 0.16", only: :docs},
+      # TODO: change me when new makeup_elixir is released
+      # {:makeup_elixir, "~> 1.0", only: :docs},
+      {:makeup_elixir,
+       github: "elixir-makeup/makeup_elixir",
+       ref: "532ebf9e10989a4a54fff47cb51d36a621928b99",
+       only: :docs,
+       override: true},
       {:makeup_diff, "~> 0.1", only: :docs},
-
+      # TODO: change me when makeup_lexers is not needed any more
+      # {:makeup_eex, "~> 1.0", only: :docs},
+      {:makeup_eex,
+       github: "SteffenDE/makeup_eex",
+       ref: "5cfc91389dbdfad885734bc8050af61840eab019",
+       only: :docs,
+       override: true},
+      # TODO: remove me when makeup_lexers is not needed any more
+      {:makeup_lexers, github: "SteffenDE/makeup_lexers", only: :docs},
+      {:makeup_json, "~> 0.1.1", only: :docs},
       # Test dependencies
       {:phoenix_html, "~> 4.0", only: [:docs, :test]},
       {:phx_new, path: "./installer", only: [:docs, :test]},
