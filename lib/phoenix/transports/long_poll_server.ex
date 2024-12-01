@@ -33,7 +33,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
           client_ref: nil
         }
 
-        :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
+        :ok = PubSub.subscribe(state.pubsub_server, priv_topic)
         schedule_inactive_shutdown(state.window_ms)
         {:ok, state}
 
@@ -80,6 +80,16 @@ defmodule Phoenix.Transports.LongPoll.Server do
       buffer ->
         broadcast_from!(state, client_ref, {:messages, Enum.reverse(buffer), ref})
         {:noreply, %{state | client_ref: nil, last_client_poll: now_ms(), buffer: []}}
+    end
+  end
+
+  def handle_info({:expired, client_ref, ref}, state) do
+    case state.client_ref do
+      {^client_ref, ^ref} ->
+        {:noreply, %{state | client_ref: nil}}
+
+      _ ->
+        {:noreply, state}
     end
   end
 

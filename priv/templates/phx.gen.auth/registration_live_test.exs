@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>RegistrationLiveTest do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.RegistrationTest do
   use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
   import Phoenix.LiveViewTest
@@ -17,7 +17,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         conn
         |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture())
         |> live(~p"<%= schema.route_prefix %>/register")
-        |> follow_redirect(conn, "/")
+        |> follow_redirect(conn, ~p"/")
 
       assert {:ok, _conn} = result
     end
@@ -48,7 +48,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert redirected_to(conn) == ~p"/"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, "/")
+      conn = get(conn, ~p"/")
       response = html_response(conn, 200)
       assert response =~ email
       assert response =~ "Settings"
@@ -77,9 +77,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       {:ok, _login_live, login_html} =
         lv
-        |> element(~s|main a:fl-contains("Sign in")|)
+        |> element(~s|main a:fl-contains("Log in")|)
         |> render_click()
-        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log_in")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       assert login_html =~ "Log in"
     end

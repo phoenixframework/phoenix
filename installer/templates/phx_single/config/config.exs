@@ -45,7 +45,7 @@ config :esbuild,
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "3.4.0",
+  version: "3.4.3",
   <%= @app_name %>: [
     args: ~w(
       --config=tailwind.config.js
@@ -56,7 +56,7 @@ config :tailwind,
   ]<% end %>
 
 # Configures Elixir's Logger
-config :logger, :console,
+config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 

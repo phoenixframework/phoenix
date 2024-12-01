@@ -33,6 +33,8 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
 
     * `--all` - specifies that all compiled assets (including the manifest)
       will be removed. Note this overrides the age and keep switches.
+
+    * `--no-compile` - do not run mix compile
   """
 
   @switches [output: :string, age: :integer, keep: :integer, all: :boolean]
@@ -40,7 +42,10 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
   @doc false
   def run(all_args) do
     # Ensure all compressors are compiled.
-    Mix.Task.run("compile", all_args)
+    if "--no-compile" not in all_args do
+      Mix.Task.run("compile", all_args)
+    end
+
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
     {opts, _, _} = OptionParser.parse(all_args, switches: @switches, aliases: [o: :output])

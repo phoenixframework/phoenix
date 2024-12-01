@@ -6,7 +6,7 @@ end
 defmodule Phx.New.MixProject do
   use Mix.Project
 
-  @version "1.7.10"
+  @version "1.7.14"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to update:
@@ -17,7 +17,7 @@ defmodule Phx.New.MixProject do
   #   4. test/test_helper.exs at the root
   #   5. installer/lib/mix/tasks/phx.new.ex
   #
-  @elixir_requirement "~> 1.14"
+  @elixir_requirement "~> 1.15"
 
   def project do
     [

@@ -1094,7 +1094,7 @@ defmodule Phoenix.Controller do
       conn
     else
       content_type = content_type <> "; charset=utf-8"
-      %Plug.Conn{conn | resp_headers: [{"content-type", content_type} | resp_headers]}
+      %{conn | resp_headers: [{"content-type", content_type} | resp_headers]}
     end
   end
 
@@ -1206,7 +1206,7 @@ defmodule Phoenix.Controller do
       Defaults to none
     * `:offset` - the bytes to offset when reading. Defaults to `0`
     * `:length` - the total bytes to read. Defaults to `:all`
-    * `:encode` - encodes the filename using `URI.encode_www_form/1`.
+    * `:encode` - encodes the filename using `URI.encode/2`.
       Defaults to `true`. When `false`, disables encoding. If you
       disable encoding, you need to guarantee there are no special
       characters in the filename, such as quotes, newlines, etc.
@@ -1274,7 +1274,7 @@ defmodule Phoenix.Controller do
   end
 
   defp encode_filename(filename, false), do: filename
-  defp encode_filename(filename, true), do: URI.encode(filename)
+  defp encode_filename(filename, true), do: URI.encode(filename, &URI.char_unreserved?/1)
 
   defp get_disposition_type(:attachment), do: "attachment"
   defp get_disposition_type(:inline), do: "inline"
@@ -1323,7 +1323,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec scrub_params(Plug.Conn.t(), String.t()) :: Plug.Conn.t()
-  def scrub_params(conn, required_key) when is_binary(required_key) do
+  def scrub_params(%Plug.Conn{} = conn, required_key) when is_binary(required_key) do
     param = Map.get(conn.params, required_key) |> scrub_param()
 
     unless param do
@@ -1331,7 +1331,7 @@ defmodule Phoenix.Controller do
     end
 
     params = Map.put(conn.params, required_key, param)
-    %Plug.Conn{conn | params: params}
+    %{conn | params: params}
   end
 
   defp scrub_param(%{__struct__: mod} = struct) when is_atom(mod) do

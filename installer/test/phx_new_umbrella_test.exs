@@ -200,7 +200,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "{:phoenix,"
         assert file =~ "{:phoenix_live_view,"
         assert file =~ "{:gettext,"
-        assert file =~ "{:plug_cowboy,"
+        assert file =~ "{:bandit,"
       end)
 
       # app deps
@@ -277,12 +277,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # Mailer
       assert_file(app_path(@app, "mix.exs"), fn file ->
-        assert file =~ "{:swoosh, \"~> 1.3\"}"
-        assert file =~ "{:finch, \"~> 0.13\"}"
-      end)
-
-      assert_file(app_path(@app, "lib/#{@app}/application.ex"), fn file ->
-        assert file =~ "{Finch, name: PhxUmb.Finch}"
+        assert file =~ "{:swoosh, \"~> 1.16\"}"
+        assert file =~ "{:req, \"~> 0.5.4\"}"
       end)
 
       assert_file(app_path(@app, "lib/#{@app}/mailer.ex"), fn file ->
@@ -304,7 +300,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end)
 
       assert_file(root_path(@app, "config/prod.exs"), fn file ->
-        assert file =~ "config :swoosh, :api_client, PhxUmb.Finch"
+        assert file =~ "config :swoosh, :api_client, Swoosh.ApiClient.Req"
       end)
 
       # Install dependencies?
@@ -319,7 +315,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
 
       # Gettext
-      assert_file(web_path(@app, "lib/#{@app}_web/gettext.ex"), ~r"defmodule PhxUmbWeb.Gettext")
+      assert_file(web_path(@app, "lib/#{@app}_web/gettext.ex"), [
+        ~r"defmodule PhxUmbWeb.Gettext",
+        ~r"use Gettext\.Backend, otp_app: :phx_umb_web"
+      ])
+
       assert File.exists?(web_path(@app, "priv/gettext/errors.pot"))
       assert File.exists?(web_path(@app, "priv/gettext/en/LC_MESSAGES/errors.po"))
     end)
@@ -413,12 +413,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # Without mailer
       assert_file(web_path(@app, "mix.exs"), fn file ->
-        refute file =~ "{:swoosh, \"~> 1.3\"}"
-        refute file =~ "{:finch, \"~> 0.13\"}"
-      end)
-
-      assert_file(app_path(@app, "lib/#{@app}/application.ex"), fn file ->
-        refute file =~ "{Finch, name: PhxUmb.Finch}"
+        refute file =~ "{:swoosh"
+        refute file =~ "{:req"
       end)
 
       refute File.exists?(app_path(@app, "lib/#{@app}/mailer.ex"))
@@ -526,27 +522,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         root_path(@app, "config/config.exs"),
         ~r/generators: \[context_app: :phx_umb, binary_id: true\]/
       )
-    end)
-  end
-
-  test "new with uppercase" do
-    in_tmp("new with uppercase", fn ->
-      Mix.Tasks.Phx.New.run(["phxUmb", "--umbrella"])
-
-      assert_file("phxUmb_umbrella/README.md")
-
-      assert_file("phxUmb_umbrella/apps/phxUmb/mix.exs", fn file ->
-        assert file =~ "app: :phxUmb"
-      end)
-
-      assert_file("phxUmb_umbrella/apps/phxUmb_web/mix.exs", fn file ->
-        assert file =~ "app: :phxUmb_web"
-      end)
-
-      assert_file("phxUmb_umbrella/config/dev.exs", fn file ->
-        assert file =~ ~r/config :phxUmb, PhxUmb.Repo,/
-        assert file =~ "database: \"phxumb_dev\""
-      end)
     end)
   end
 
@@ -709,14 +684,14 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end)
   end
 
-  test "new with bandit web adapter" do
-    in_tmp("new with bandit web adapter", fn ->
+  test "new with cowboy web adapter" do
+    in_tmp("new with cowboy web adapter", fn ->
       app = "custom_path"
       project_path = Path.join(File.cwd!(), app)
-      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--adapter", "bandit"])
-      assert_file(web_path(app, "mix.exs"), ":bandit")
+      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--adapter", "cowboy"])
+      assert_file(web_path(app, "mix.exs"), ":plug_cowboy")
 
-      assert_file(root_path(app, "config/config.exs"), "adapter: Bandit.PhoenixAdapter")
+      assert_file(root_path(app, "config/config.exs"), "adapter: Phoenix.Endpoint.Cowboy2Adapter")
     end)
   end
 
@@ -727,6 +702,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
       Mix.Tasks.Phx.New.run(["valid1", "--app", "007invalid", "--umbrella"])
+    end
+
+    assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
+      Mix.Tasks.Phx.New.run(["valid1", "--app", "exInvalidAppAnme", "--umbrella"])
     end
 
     assert_raise Mix.Error, ~r"Module name must be a valid Elixir alias", fn ->

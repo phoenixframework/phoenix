@@ -201,7 +201,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file(
         "phx_blog/config/test.exs",
-        ~R/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
+        ~r/database: "phx_blog_test#\{System.get_env\("MIX_TEST_PARTITION"\)\}"/
       )
 
       assert_file("phx_blog/lib/phx_blog/repo.ex", ~r"defmodule PhxBlog.Repo")
@@ -257,12 +257,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # Mailer
       assert_file("phx_blog/mix.exs", fn file ->
-        assert file =~ "{:swoosh, \"~> 1.3\"}"
-        assert file =~ "{:finch, \"~> 0.13\"}"
-      end)
-
-      assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
-        assert file =~ "{Finch, name: PhxBlog.Finch}"
+        assert file =~ "{:swoosh, \"~> 1.16\"}"
+        assert file =~ "{:req, \"~> 0.5.4\"}"
       end)
 
       assert_file("phx_blog/lib/phx_blog/mailer.ex", fn file ->
@@ -285,7 +281,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/prod.exs", fn file ->
         assert file =~
-                 "config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PhxBlog.Finch"
+                 "config :swoosh, api_client: Swoosh.ApiClient.Req"
       end)
 
       # Install dependencies?
@@ -300,7 +296,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
 
       # Gettext
-      assert_file("phx_blog/lib/phx_blog_web/gettext.ex", ~r"defmodule PhxBlogWeb.Gettext")
+      assert_file("phx_blog/lib/phx_blog_web/gettext.ex", [
+        ~r"defmodule PhxBlogWeb.Gettext",
+        ~r"use Gettext\.Backend, otp_app: :phx_blog"
+      ])
+
       assert File.exists?("phx_blog/priv/gettext/errors.pot")
       assert File.exists?("phx_blog/priv/gettext/en/LC_MESSAGES/errors.po")
     end)
@@ -373,7 +373,12 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file("phx_blog/priv/gettext/en/LC_MESSAGES/errors.po")
       refute_file("phx_blog/priv/gettext/errors.pot")
       assert_file("phx_blog/mix.exs", &refute(&1 =~ ~r":gettext"))
-      assert_file("phx_blog/lib/phx_blog_web.ex", &refute(&1 =~ ~r"import AmsMockWeb.Gettext"))
+
+      assert_file(
+        "phx_blog/lib/phx_blog_web.ex",
+        &refute(&1 =~ ~r"use Gettext, backend: AmsMockWeb.Gettext")
+      )
+
       assert_file("phx_blog/config/dev.exs", &refute(&1 =~ ~r"gettext"))
 
       # No HTML
@@ -417,12 +422,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # No mailer or emails
       assert_file("phx_blog/mix.exs", fn file ->
-        refute file =~ "{:swoosh, \"~> 1.3\"}"
-        refute file =~ "{:finch, \"~> 0.13\"}"
-      end)
-
-      assert_file("phx_blog/lib/phx_blog/application.ex", fn file ->
-        refute file =~ "{Finch, name: PhxBlog.Finch"
+        refute file =~ "{:swoosh"
+        refute file =~ "{:req"
       end)
 
       refute File.exists?("phx_blog/lib/phx_blog/mailer.ex")
@@ -512,6 +513,14 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ ~s|pipeline :browser|
         assert file =~ ~s|pipe_through [:fetch_session, :protect_from_forgery]|
       end)
+
+      assert_file("phx_blog/config/config.exs", fn file ->
+        refute file =~ ~s|config :phoenix_live_view|
+      end)
+
+      assert_file("phx_blog/config/test.exs", fn file ->
+        refute file =~ ~s|config :phoenix_live_view|
+      end)
     end)
   end
 
@@ -567,23 +576,6 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp("new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--binary-id"])
       assert_file("phx_blog/config/config.exs", ~r/generators: \[.*binary_id: true\.*]/)
-    end)
-  end
-
-  test "new with uppercase" do
-    in_tmp("new with uppercase", fn ->
-      Mix.Tasks.Phx.New.run(["phxBlog"])
-
-      assert_file("phxBlog/README.md")
-
-      assert_file("phxBlog/mix.exs", fn file ->
-        assert file =~ "app: :phxBlog"
-      end)
-
-      assert_file("phxBlog/config/dev.exs", fn file ->
-        assert file =~ ~r/config :phxBlog, PhxBlog.Repo,/
-        assert file =~ "database: \"phxblog_dev\""
-      end)
     end)
   end
 
@@ -781,6 +773,10 @@ defmodule Mix.Tasks.Phx.NewTest do
 
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
       Mix.Tasks.Phx.New.run(["valid", "--app", "007invalid"])
+    end
+
+    assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
+      Mix.Tasks.Phx.New.run(["exInvalidAppName"])
     end
 
     assert_raise Mix.Error, ~r"Module name must be a valid Elixir alias", fn ->

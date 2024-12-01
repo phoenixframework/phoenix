@@ -31,6 +31,19 @@ defmodule Phoenix.CodeReloader do
 
   This function is a no-op and returns `:ok` if Mix is not available.
 
+  The reloader should also be configured as a Mix listener in project's
+  mix.exs file (since Elixir v1.18):
+
+      def project do
+        [
+          ...,
+          listeners: [Phoenix.CodeReloader]
+        ]
+      end
+
+  This way the reloader can notice whenever the project is compiled
+  concurrently.
+
   ## Options
 
     * `:reloadable_args` - additional CLI args to pass to the compiler tasks.
@@ -56,6 +69,10 @@ defmodule Phoenix.CodeReloader do
   """
   @spec sync :: :ok
   defdelegate sync, to: Phoenix.CodeReloader.Server
+
+  @doc false
+  @spec child_spec(keyword) :: Supervisor.child_spec()
+  defdelegate child_spec(opts), to: Phoenix.CodeReloader.MixListener
 
   ## Plug
 

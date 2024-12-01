@@ -113,7 +113,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
                       [
                         """
 
-                        Add the resource to your :api scope in lib/phoenix_web/router.ex:
+                        Add the resource to the "/api" scope in lib/phoenix_web/router.ex:
 
                             resources "/posts", PostController, except: [:new, :edit]
                         """

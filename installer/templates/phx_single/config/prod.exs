@@ -9,7 +9,7 @@ import Config
 config :<%= @web_app_name %>, <%= @endpoint_module %>, cache_static_manifest: "priv/static/cache_manifest.json"<% end %><%= if @mailer do %>
 
 # Configures Swoosh API Client
-config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: <%= @app_module %>.Finch
+config :swoosh, api_client: Swoosh.ApiClient.Req
 
 # Disable Swoosh Local Memory Storage
 config :swoosh, local: false<% end %>

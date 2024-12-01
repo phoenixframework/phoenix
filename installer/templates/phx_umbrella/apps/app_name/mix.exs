@@ -9,7 +9,7 @@ defmodule <%= @app_module %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.14",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -41,8 +41,8 @@ defmodule <%= @app_module %>.MixProject do
       {:ecto_sql, "~> 3.10"},
       {:<%= @adapter_app %>, ">= 0.0.0"},
       {:jason, "~> 1.2"}<% end %><%= if @mailer do %>,
-      {:swoosh, "~> 1.3"},
-      {:finch, "~> 0.13"}<% end %>
+      {:swoosh, "~> 1.16"},
+      {:req, "~> 0.5.4"}<% end %>
     ]
   end
 
@@ -52,7 +52,7 @@ defmodule <%= @app_module %>.MixProject do
   defp aliases do
     [
       setup: ["deps.get"<%= if @ecto do %>, "ecto.setup"<% end %>]<%= if @ecto do %>,
-      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
+      "ecto.setup": ["ecto.create", "ecto.migrate", "run #{__DIR__}/priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %>
     ]

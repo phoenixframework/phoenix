@@ -8,7 +8,7 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.7.10"
+  @version "1.7.14"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -83,16 +83,16 @@ defmodule Phoenix.MixProject do
       {:castore, ">= 0.0.0"},
 
       # Optional deps
-      {:plug_cowboy, "~> 2.6", optional: true},
+      {:plug_cowboy, "~> 2.7", optional: true},
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies (some for cross references)
       {:ex_doc, "~> 0.24", only: :docs},
       {:ecto, "~> 3.0", only: :docs},
       {:ecto_sql, "~> 3.10", only: :docs},
-      {:gettext, "~> 0.20", only: :docs},
+      {:gettext, "~> 0.26", only: :docs},
       {:telemetry_poller, "~> 1.0", only: :docs},
-      {:telemetry_metrics, "~> 0.6", only: :docs},
+      {:telemetry_metrics, "~> 1.0", only: :docs},
       {:makeup_eex, ">= 0.1.1", only: :docs},
       {:makeup_elixir, "~> 0.16", only: :docs},
       {:makeup_diff, "~> 0.1", only: :docs},

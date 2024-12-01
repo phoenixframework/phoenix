@@ -1,11 +1,11 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ConfirmationInstructionsLiveTest do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.ConfirmationInstructionsTest do
   use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
   import Phoenix.LiveViewTest
   import <%= inspect context.module %>Fixtures
 
   alias <%= inspect context.module %>
-  alias <%= inspect schema.repo %>
+  alias <%= inspect schema.repo %><%= schema.repo_alias %>
 
   setup do
     %{<%= schema.singular %>: <%= schema.singular %>_fixture()}

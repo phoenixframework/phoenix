@@ -1,4 +1,5 @@
 Code.require_file("../../support/websocket_client.exs", __DIR__)
+Code.require_file("../../support/http_client.exs", __DIR__)
 
 defmodule Phoenix.Integration.WebSocketTest do
   use ExUnit.Case, async: true

@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ResetPasswordLiveTest do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.ResetPasswordTest do
   use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
   import Phoenix.LiveViewTest
@@ -19,13 +19,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "Reset password page" do
     test "renders reset password with valid token", %{conn: conn, token: token} do
-      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
+      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/reset-password/#{token}")
 
       assert html =~ "Reset Password"
     end
 
     test "does not render reset password with invalid token", %{conn: conn} do
-      {:error, {:redirect, to}} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/invalid")
+      {:error, {:redirect, to}} = live(conn, ~p"<%= schema.route_prefix %>/reset-password/invalid")
 
       assert to == %{
                flash: %{"error" => "Reset password link is invalid or it has expired."},
@@ -34,7 +34,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "renders errors for invalid data", %{conn: conn, token: token} do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset-password/#{token}")
 
       result =
         lv
@@ -50,7 +50,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "Reset Password" do
     test "resets password once", %{conn: conn, token: token, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset-password/#{token}")
 
       {:ok, conn} =
         lv
@@ -61,7 +61,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           }
         )
         |> render_submit()
-        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log_in")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       refute get_session(conn, :<%= schema.singular %>_token)
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Password reset successfully"
@@ -69,7 +69,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "does not reset password on invalid data", %{conn: conn, token: token} do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset-password/#{token}")
 
       result =
         lv
@@ -89,13 +89,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "Reset password navigation" do
     test "redirects to login page when the Log in button is clicked", %{conn: conn, token: token} do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset-password/#{token}")
 
       {:ok, conn} =
         lv
         |> element(~s|main a:fl-contains("Log in")|)
         |> render_click()
-        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log_in")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       assert conn.resp_body =~ "Log in"
     end
@@ -104,7 +104,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn: conn,
       token: token
     } do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset-password/#{token}")
 
       {:ok, conn} =
         lv

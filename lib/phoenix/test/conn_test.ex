@@ -476,6 +476,7 @@ defmodule Phoenix.ConnTest do
   def recycle(conn, headers \\ ~w(accept accept-language authorization)) do
     build_conn()
     |> Map.put(:host, conn.host)
+    |> Map.put(:remote_ip, conn.remote_ip)
     |> Plug.Test.recycle_cookies(conn)
     |> Plug.Test.put_peer_data(Plug.Conn.get_peer_data(conn))
     |> copy_headers(conn.req_headers, headers)

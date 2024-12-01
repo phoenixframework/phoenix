@@ -88,7 +88,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     context_app: :string,
     merge_with_existing_context: :boolean,
     prefix: :string,
-    live: :boolean
+    live: :boolean,
+    compile: :boolean,
+    primary_key: :string
   ]
 
   @default_opts [schema: true, context: true]
@@ -387,7 +389,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
         * If they are not closely related, another context probably works better
 
-      The fact two entities are related in the database does not mean they belong \
+      The fact that two entities are related in the database does not mean they belong \
       to the same context.
 
       If you are not sure, prefer creating a new context over adding to the existing one.

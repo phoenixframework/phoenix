@@ -235,20 +235,18 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
   defp new_cert(public_key, common_name, hostnames) do
     <<serial::unsigned-64>> = :crypto.strong_rand_bytes(8)
 
-    # Dates must be in 'YYMMDD' format
-    {{year, month, day}, _} =
-      :erlang.timestamp()
-      |> :calendar.now_to_datetime()
+    today = Date.utc_today()
 
-    yy = year |> Integer.to_string() |> String.slice(2, 2)
-    mm = month |> Integer.to_string() |> String.pad_leading(2, "0")
-    dd = day |> Integer.to_string() |> String.pad_leading(2, "0")
+    not_before =
+      today
+      |> Date.to_iso8601(:basic)
+      |> String.slice(2, 6)
 
-    not_before = yy <> mm <> dd
-
-    yy2 = (year + 1) |> Integer.to_string() |> String.slice(2, 2)
-
-    not_after = yy2 <> mm <> dd
+    not_after =
+      today
+      |> Date.add(365)
+      |> Date.to_iso8601(:basic)
+      |> String.slice(2, 6)
 
     otp_tbs_certificate(
       version: :v3,

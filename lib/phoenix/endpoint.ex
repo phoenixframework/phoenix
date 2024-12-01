@@ -62,17 +62,10 @@ defmodule Phoenix.Endpoint do
       YourAppWeb.Endpoint.config(:port)
       YourAppWeb.Endpoint.config(:some_config, :default_value)
 
-  ### Dynamic configuration
-
-  For dynamically configuring the endpoint, such as loading data
-  from environment variables or configuration files, Phoenix invokes
-  the `c:init/2` callback on the endpoint, passing the atom `:supervisor`
-  as the first argument and the endpoint configuration as second.
-
-  All of Phoenix configuration, except the Compile-time configuration
-  below can be set dynamically from the `c:init/2` callback.
-
   ### Compile-time configuration
+
+  Compile-time configuration may be set on `config/dev.exs`, `config/prod.exs`
+  and so on, but has no effect on `config/runtime.exs`:
 
     * `:code_reloader` - when `true`, enables code reloading functionality.
       For the list of code reloader configuration options see
@@ -98,6 +91,12 @@ defmodule Phoenix.Endpoint do
       set `:host` in the `:force_ssl` configuration to `nil`
 
   ### Runtime configuration
+
+  The configuration below may be set on `config/dev.exs`, `config/prod.exs`
+  and so on, as well as on `config/runtime.exs`. Typically, if you need to
+  configure them with system environment variables, you set them in
+  `config/runtime.exs`. These options may also be set when starting the
+  endpoint in your supervision tree, such as `{MyApp.Endpoint, options}`.
 
     * `:adapter` - which webserver adapter to use for serving web requests.
       See the "Adapter configuration" section below
@@ -182,6 +181,8 @@ defmodule Phoenix.Endpoint do
 
           [another: {Mod, :fun, [arg1, arg2]}]
 
+      When `false`, watchers can be disabled.
+
     * `:force_watchers` - when `true`, forces your watchers to start
       even when the `:server` option is set to `false`.
 
@@ -220,17 +221,28 @@ defmodule Phoenix.Endpoint do
 
   ### Adapter configuration
 
-  Phoenix allows you to choose which webserver adapter to use. The default
-  is `Phoenix.Endpoint.Cowboy2Adapter` which can be configured via the
-  following top-level options.
+  Phoenix allows you to choose which webserver adapter to use. Newly generated
+  applications created via the `phx.new` Mix task use the
+  [`Bandit`](https://github.com/mtrudel/bandit) webserver via the
+  `Bandit.PhoenixAdapter` adapter. If not otherwise specified via the `adapter`
+  option Phoenix will fall back to the `Phoenix.Endpoint.Cowboy2Adapter` for
+  backwards compatibility with applications generated prior to Phoenix 1.7.8.
+
+  Both adapters can be configured in a similar manner using the following two
+  top-level options:
 
     * `:http` - the configuration for the HTTP server. It accepts all options
-      as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
-      to `false`
+      as defined by either [`Bandit`](https://hexdocs.pm/bandit/Bandit.html#t:options/0)
+      or [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/) depending on your
+      choice of adapter. Defaults to `false`
 
     * `:https` - the configuration for the HTTPS server. It accepts all options
-      as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
-      to `false`
+      as defined by either [`Bandit`](https://hexdocs.pm/bandit/Bandit.html#t:options/0)
+      or [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/) depending on your
+      choice of adapter. Defaults to `false`
+
+  In addition, the connection draining can be configured for the Cowboy webserver via the following
+  top-level option (this is not required for Bandit as it has connection draining built-in):
 
     * `:drainer` - a drainer process waits for any on-going request to finish
       during application shutdown. It accepts the `:shutdown` and
@@ -846,6 +858,13 @@ defmodule Phoenix.Endpoint do
 
       The MFA is invoked with the request `%URI{}` as the first argument,
       followed by arguments in the MFA list, and must return a boolean.
+
+    * `:check_csrf` - if the transport should perform CSRF check. To avoid
+      "Cross-Site WebSocket Hijacking", you must have at least one of
+      `check_origin` and `check_csrf` enabled. If you set both to `false`,
+      Phoenix will raise, but it is still possible to disable both by passing
+      a custom MFA to `check_origin`. In such cases, it is your responsibility
+      to ensure at least one of them is enabled. Defaults to `true`
 
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration

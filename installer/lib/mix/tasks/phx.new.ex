@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Phx.New do
         * `bandit` - via https://github.com/mtrudel/bandit
 
       Please check the adapter docs for more information
-      and requirements. Defaults to "cowboy".
+      and requirements. Defaults to "bandit".
 
     * `--no-assets` - equivalent to `--no-esbuild` and `--no-tailwind`
 
@@ -53,8 +53,8 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-html` - do not generate HTML views
 
-    * `--no-live` - comment out LiveView socket setup in assets/js/app.js.
-      Automatically disabled if --no-html is given
+    * `--no-live` - comment out LiveView socket setup in your Endpoint
+      and assets/js/app.js. Automatically disabled if --no-html is given
 
     * `--no-mailer` - do not generate Swoosh mailer files
 
@@ -213,18 +213,17 @@ defmodule Mix.Tasks.Phx.New do
           Mix.shell().info([:green, "* running ", :reset, "mix assets.setup"])
 
           # First compile only builders so we can install in parallel
-          cmd(project, "mix deps.compile castore #{Enum.join(builders, " ")}", false)
+          # TODO: Once we require Erlang/OTP 28, castore and jason may no longer be required
+          cmd(project, "mix deps.compile castore jason #{Enum.join(builders, " ")}", log: false)
         end
 
         tasks =
           Enum.map(builders, fn builder ->
             cmd = "mix do loadpaths --no-compile + #{builder}.install"
-            Task.async(fn -> cmd(project, cmd, false) end)
+            Task.async(fn -> cmd(project, cmd, log: false, cd: project.web_path) end)
           end)
 
-        if rebar_available?() do
-          cmd(project, "mix deps.compile")
-        end
+        cmd(project, "mix deps.compile")
 
         Task.await_many(tasks, :infinity)
       end
@@ -253,20 +252,11 @@ defmodule Mix.Tasks.Phx.New do
   defp maybe_cd(path, func), do: path && File.cd!(path, func)
 
   defp install_mix(project, install?) do
-    if install? && hex_available?() do
+    if install? do
       cmd(project, "mix deps.get")
     else
       ["$ mix deps.get"]
     end
-  end
-
-  # TODO: Elixir v1.15 automatically installs Hex/Rebar if missing, so we can simplify this.
-  defp hex_available? do
-    Code.ensure_loaded?(Hex)
-  end
-
-  defp rebar_available? do
-    Mix.Rebar.rebar_cmd(:rebar3)
   end
 
   defp print_missing_steps(steps) do
@@ -317,12 +307,14 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Helpers
 
-  defp cmd(%Project{} = project, cmd, log? \\ true) do
+  defp cmd(%Project{} = project, cmd, opts \\ []) do
+    {log?, opts} = Keyword.pop(opts, :log, true)
+
     if log? do
       Mix.shell().info([:green, "* running ", :reset, cmd])
     end
 
-    case Mix.shell().cmd(cmd, cmd_opts(project)) do
+    case Mix.shell().cmd(cmd, opts ++ cmd_opts(project)) do
       0 -> []
       _ -> ["$ #{cmd}"]
     end
@@ -337,7 +329,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp check_app_name!(name, from_app_flag) do
-    unless name =~ Regex.recompile!(~r/^[a-z][\w_]*$/) do
+    unless name =~ Regex.recompile!(~r/^[a-z][a-z0-9_]*$/) do
       extra =
         if !from_app_flag do
           ". The application name is inferred from the path, if you'd like to " <>
@@ -386,9 +378,9 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    unless Version.match?(System.version(), "~> 1.14") do
+    unless Version.match?(System.version(), "~> 1.15") do
       Mix.raise(
-        "Phoenix v#{@version} requires at least Elixir v1.14\n " <>
+        "Phoenix v#{@version} requires at least Elixir v1.15\n " <>
           "You have #{System.version()}. Please update accordingly"
       )
     end

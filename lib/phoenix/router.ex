@@ -210,15 +210,15 @@ defmodule Phoenix.Router do
 
   Scopes allow us to scope on any path or even on the helper name:
 
-      scope "/v1", MyAppWeb, host: "api." do
+      scope "/api/v1", MyAppWeb, as: :api_v1 do
         get "/pages/:id", PageController, :show
       end
 
   For example, the route above will match on the path `"/api/v1/pages/1"`
-  and the named route will be `api_v1_page_path`, as expected from the
-  values given to `scope/2` option.
+  and the named helper will be `api_v1_page_path`, as expected from the
+  values given to `scope/4` option.
 
-  Like all paths you can define dynamic segments that will be applied as
+  Like all paths, you can define dynamic segments that will be applied as
   parameters in the controller:
 
       scope "/api/:version", MyAppWeb do
@@ -601,9 +601,12 @@ defmodule Phoenix.Router do
 
     checks =
       routes
-      |> Enum.uniq_by(&{&1.line, &1.plug})
-      |> Enum.map(fn %{line: line, plug: plug} ->
-        quote line: line, do: _ = &unquote(plug).init/1
+      |> Enum.map(fn %{line: line, metadata: metadata, plug: plug} ->
+        {line, Map.get(metadata, :mfa, {plug, :init, 1})}
+      end)
+      |> Enum.uniq()
+      |> Enum.map(fn {line, {module, function, arity}} ->
+        quote line: line, do: _ = &(unquote(module).unquote(function) / unquote(arity))
       end)
 
     keys = [:verb, :path, :plug, :plug_opts, :helper, :metadata]
@@ -739,7 +742,7 @@ defmodule Phoenix.Router do
 
   ## Options
 
-    * `:as` - configures the named helper. If false, does not generate
+    * `:as` - configures the named helper. If `nil`, does not generate
       a helper. Has no effect when using verified routes exclusively
     * `:alias` - configure if the scope alias should be applied to the route.
       Defaults to true, disables scoping if false.
@@ -752,7 +755,8 @@ defmodule Phoenix.Router do
       when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
     * `:metadata` - a map of metadata used by the telemetry events and returned by
-      `route_info/4`
+      `route_info/4`. The `:mfa` field is used by telemetry to print logs and by the
+      router to emit compile time checks. Custom fields may be added.
     * `:warn_on_verify` - the boolean for whether matches to this route trigger
       an unmatched route warning for `Phoenix.VerifiedRoutes`. It is useful to ignore
       an otherwise catch-all route definition from being matched when verifying routes.
@@ -966,7 +970,7 @@ defmodule Phoenix.Router do
       and as the prefix for the parameter in nested resources. The default value
       is automatically derived from the controller name, i.e. `UserController` will
       have name `"user"`
-    * `:as` - configures the named helper. If false, does not generate
+    * `:as` - configures the named helper. If `nil`, does not generate
       a helper. Has no effect when using verified routes exclusively
     * `:singleton` - defines routes for a singleton resource that is looked up by
       the client without referencing an ID. Read below for more information

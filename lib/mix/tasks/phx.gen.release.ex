@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   running `mix release`.
 
   To skip generating the migration-related files, use the `--no-ecto` flag. To
-  force these migration-related files to be generated, the use `--ecto` flag.
+  force these migration-related files to be generated, use the `--ecto` flag.
 
   ## Docker
 
@@ -195,7 +195,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     |> map_size() > 0
   end
 
-  @debian "bullseye"
+  @debian "bookworm"
   defp elixir_and_debian_vsn(elixir_vsn, otp_vsn) do
     url =
       "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?name=#{elixir_vsn}-erlang-#{otp_vsn}-debian-#{@debian}-"
@@ -257,9 +257,9 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
       :error ->
         raise """
-          unable to fetch supported Docker image for Elixir #{wanted_elixir_vsn} and Erlang #{otp_vsn}.
-          Please check https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=#{otp_vsn}\
-          for a suitable Elixir version
+        unable to fetch supported Docker image for Elixir #{wanted_elixir_vsn} and Erlang #{otp_vsn}.
+        Please check https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=#{otp_vsn}\
+        for a suitable Elixir version
         """
     end
   end

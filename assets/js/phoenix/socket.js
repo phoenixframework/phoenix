@@ -32,10 +32,10 @@ import Timer from "./timer"
  * Defaults to WebSocket with automatic LongPoll fallback if WebSocket is not defined.
  * To fallback to LongPoll when WebSocket attempts fail, use `longPollFallbackMs: 2500`.
  *
- * @param {Function} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
+ * @param {number} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
  * before falling back to the LongPoll transport. Disabled by default.
  *
- * @param {Function} [opts.debug] - When true, enables debug logging. Default false.
+ * @param {boolean} [opts.debug] - When true, enables debug logging. Default false.
  *
  * @param {Function} [opts.encode] - The function to encode outgoing messages.
  *
@@ -53,8 +53,8 @@ import Timer from "./timer"
  *
  * Defaults `DEFAULT_TIMEOUT`
  * @param {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
- * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millisec
- * socket reconnect interval.
+ * @param {Function} [opts.reconnectAfterMs] - The optional function that returns the
+ * socket reconnect interval, in milliseconds.
  *
  * Defaults to stepped backoff of:
  *
@@ -64,7 +64,7 @@ import Timer from "./timer"
  * }
  * ````
  *
- * @param {number} [opts.rejoinAfterMs] - The optional function that returns the millisec
+ * @param {Function} [opts.rejoinAfterMs] - The optional function that returns the millisec
  * rejoin interval for individual channels.
  *
  * ```javascript
@@ -115,9 +115,10 @@ export default class Socket {
     this.ref = 0
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
     this.transport = opts.transport || global.WebSocket || LongPoll
+    this.primaryPassedHealthCheck = false
     this.longPollFallbackMs = opts.longPollFallbackMs
     this.fallbackTimer = null
-    this.sessionStore = opts.sessionStorage || global.sessionStorage
+    this.sessionStore = opts.sessionStorage || (global && global.sessionStorage)
     this.establishedConnections = 0
     this.defaultEncoder = Serializer.encode.bind(Serializer)
     this.defaultDecoder = Serializer.decode.bind(Serializer)
@@ -366,17 +367,16 @@ export default class Socket {
       this.log("transport", `falling back to ${fallbackTransport.name}...`, reason)
       this.off([openRef, errorRef])
       primaryTransport = false
-      this.storeSession("phx:longpoll", "true")
       this.replaceTransport(fallbackTransport)
       this.transportConnect()
     }
-    if(this.getSession("phx:longpoll")){ return fallback("memorized") }
+    if(this.getSession(`phx:fallback:${fallbackTransport.name}`)){ return fallback("memorized") }
 
     this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
 
     errorRef = this.onError(reason => {
       this.log("transport", "error", reason)
-      if(primaryTransport && !established) {
+      if(primaryTransport && !established){
         clearTimeout(this.fallbackTimer)
         fallback(reason)
       }
@@ -384,13 +384,16 @@ export default class Socket {
     this.onOpen(() => {
       established = true
       if(!primaryTransport){
-        return console.log("transport", `established ${fallbackTransport.name} fallback`)
+        // only memorize LP if we never connected to primary
+        if(!this.primaryPassedHealthCheck){ this.storeSession(`phx:fallback:${fallbackTransport.name}`, "true") }
+        return this.log("transport", `established ${fallbackTransport.name} fallback`)
       }
       // if we've established primary, give the fallback a new period to attempt ping
       clearTimeout(this.fallbackTimer)
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
       this.ping(rtt => {
         this.log("transport", "connected to primary after", rtt)
+        this.primaryPassedHealthCheck = true
         clearTimeout(this.fallbackTimer)
       })
     })
@@ -540,7 +543,7 @@ export default class Socket {
    */
   remove(channel){
     this.off(channel.stateChangeRefs)
-    this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
+    this.channels = this.channels.filter(c => c !== channel)
   }
 
   /**

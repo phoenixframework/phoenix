@@ -123,8 +123,9 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       Gen.Release.run(["--docker"])
 
       assert_file("Dockerfile", fn file ->
+        assert file =~ ~S|RUN mix assets.setup|
         assert file =~ ~S|COPY assets assets|
-        assert file =~ ~S|mix assets.deploy|
+        assert file =~ ~S|RUN mix assets.deploy|
       end)
     end)
   end
@@ -134,8 +135,9 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       Gen.Release.run(["--docker"])
 
       assert_file("Dockerfile", fn file ->
+        refute file =~ ~S|RUN mix assets.setup|
         refute file =~ ~S|COPY assets assets|
-        refute file =~ ~S|mix assets.deploy|
+        refute file =~ ~S|RUN mix assets.deploy|
       end)
     end)
   end

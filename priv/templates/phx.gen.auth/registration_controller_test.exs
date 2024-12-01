@@ -8,7 +8,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = get(conn, ~p"<%= schema.route_prefix %>/register")
       response = html_response(conn, 200)
       assert response =~ "Register"
-      assert response =~ ~p"<%= schema.route_prefix %>/log_in"
+      assert response =~ ~p"<%= schema.route_prefix %>/log-in"
       assert response =~ ~p"<%= schema.route_prefix %>/register"
     end
 
@@ -37,7 +37,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       response = html_response(conn, 200)
       assert response =~ email
       assert response =~ ~p"<%= schema.route_prefix %>/settings"
-      assert response =~ ~p"<%= schema.route_prefix %>/log_out"
+      assert response =~ ~p"<%= schema.route_prefix %>/log-out"
     end
 
     test "render errors for invalid data", %{conn: conn} do

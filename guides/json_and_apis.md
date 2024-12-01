@@ -173,7 +173,7 @@ end
 
 This view is very simple. The `index` function receives all URLs, and converts them into a list of maps. Those maps are placed inside the data key at the root, exactly as we saw when interfacing with our application from `cURL`. In other words, our JSON view converts our complex data into simple Elixir data-structures. Once our view layer returns, Phoenix uses the `Jason` library to encode JSON and send the response to the client.
 
-If you explore the remaining the controller, you will learn the `show` action is similar to the `index` one. For `create`, `update`, and `delete` actions, Phoenix uses one other important feature, called "Action fallback".
+If you explore the remaining controller, you will learn the `show` action is similar to the `index` one. For `create`, `update`, and `delete` actions, Phoenix uses one other important feature, called "Action fallback".
 
 ## Action fallback
 
@@ -325,8 +325,8 @@ The output should contain the following:
     track JavaScript dependencies
   • --no-gettext - do not generate gettext files
   • --no-html - do not generate HTML views
-  • --no-live - comment out LiveView socket setup in
-    assets/js/app.js. Automatically disabled if --no-html is given
+  • --no-live - comment out LiveView socket setup in your Endpoint
+    and assets/js/app.js. Automatically disabled if --no-html is given
   • --no-mailer - do not generate Swoosh mailer files
   • --no-tailwind - do not include tailwind dependencies and
     assets. The generated markup will still include Tailwind CSS

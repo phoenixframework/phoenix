@@ -20,6 +20,8 @@ The Security Working Group of the Erlang Ecosystem Foundation also publishes in-
 
   * [Programming Phoenix LiveView - Interactive Elixir Web Programming Without Writing Any JavaScript - 2023 (by Bruce Tate and Sophie DeBenedetto)](https://pragprog.com/titles/liveview/programming-phoenix-liveview/)
 
+  * [Phoenix Tutorial (Phoenix 1.6)](https://thephoenixtutorial.org/) - [Free to read online](https://thephoenixtutorial.org/book)
+
   * [Real-Time Phoenix - Build Highly Scalable Systems with Channels (by Stephen Bussey - 2020)](https://pragprog.com/titles/sbsockets/real-time-phoenix/)
 
   * [Programming Phoenix 1.4 (by Bruce Tate, Chris McCord, and José Valim - 2019)](https://pragprog.com/titles/phoenix14/programming-phoenix-1-4/)

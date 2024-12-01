@@ -154,7 +154,7 @@ $ mix phx.gen.json Blog Post posts title:string content:string
 When `mix phx.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our Ecto migrations.
 
 ```console
-Add the resource to your :api scope in lib/hello_web/router.ex:
+Add the resource to the "/api" scope in lib/hello_web/router.ex:
 
     resources "/posts", PostController, except: [:new, :edit]
 

@@ -20,8 +20,8 @@ defmodule Phoenix.Config do
   @doc """
   Puts a given key-value pair in config.
   """
-  def put_new(module, key, value) do
-    :ets.insert_new(module, {key, value})
+  def put(module, key, value) do
+    :ets.insert(module, {key, value})
   end
 
   @doc """
@@ -152,6 +152,7 @@ defmodule Phoenix.Config do
         {:stop, :normal, :ok, {module, permanent}}
 
       true ->
+        clear_cache(module)
         {:reply, :ok, {module, permanent}}
     end
   end

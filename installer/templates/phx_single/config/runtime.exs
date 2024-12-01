@@ -43,7 +43,7 @@ if config_env() == :prod do
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
-      # See the documentation on https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html
+      # See the documentation on <%= @web_adapter_docs %>
       # for details about using IPv6 vs IPv4 and loopback vs public addresses.
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
       port: port
@@ -94,7 +94,7 @@ if config_env() == :prod do
   #       domain: System.get_env("MAILGUN_DOMAIN")
   #
   # For this example you need include a HTTP client required by Swoosh API client.
-  # Swoosh supports Hackney and Finch out of the box:
+  # Swoosh supports Hackney, Req and Finch out of the box:
   #
   #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
   #
