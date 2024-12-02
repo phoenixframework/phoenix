@@ -32,7 +32,7 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 //     end
 //
 // Now you need to pass this token to JavaScript. You can do so
-// inside a script tag in "<%= web_prefix %>/templates/layout/root.html.heex":
+// inside a script tag in "<%= web_prefix %>/components/layouts/root.html.heex":
 //
 //     <script>window.userToken = "<%%= assigns[:user_token] %>";</script>
 //

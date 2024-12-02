@@ -5,7 +5,7 @@
   </.header>
 
   <.simple_form :let={f} for={@conn.params["<%= schema.singular %>"]} as={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/confirm"}>
-    <.input field={f[:email]} type="email" placeholder="Email" required />
+    <.input field={f[:email]} type="email" placeholder="Email" autocomplete="username" required />
     <:actions>
       <.button phx-disable-with="Sending..." class="w-full">
         Resend confirmation instructions
@@ -15,6 +15,6 @@
 
   <p :if={!@current_<%= schema.singular %>} class="text-center mt-4">
     <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
-    | <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
+    | <.link href={~p"<%= schema.route_prefix %>/log-in"}>Log in</.link>
   </p>
 </div>

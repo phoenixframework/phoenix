@@ -160,7 +160,7 @@ defmodule <%= inspect auth_module %> do
       socket =
         socket
         |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
-        |> Phoenix.LiveView.redirect(to: ~p"<%= schema.route_prefix %>/log_in")
+        |> Phoenix.LiveView.redirect(to: ~p"<%= schema.route_prefix %>/log-in")
 
       {:halt, socket}
     end
@@ -210,7 +210,7 @@ defmodule <%= inspect auth_module %> do
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
-      |> redirect(to: ~p"<%= schema.route_prefix %>/log_in")
+      |> redirect(to: ~p"<%= schema.route_prefix %>/log-in")
       |> halt()
     end
   end

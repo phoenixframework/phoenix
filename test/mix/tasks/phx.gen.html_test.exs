@@ -44,7 +44,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     datetime = %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
 
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
+      Gen.Html.run(~w(Blog Post posts title content:text slug:unique votes:integer cost:decimal
                       tags:array:text popular:boolean drafted_at:datetime
                       status:enum:unpublished:published:deleted
                       published_at:utc_datetime
@@ -110,6 +110,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_file(path, fn file ->
         assert file =~ "create table(:posts)"
         assert file =~ "add :title, :string"
+        assert file =~ "add :content, :text"
         assert file =~ "add :status, :string"
         assert file =~ "create unique_index(:posts, [:slug])"
       end)
@@ -151,6 +152,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_file("lib/phoenix_web/controllers/post_html/post_form.html.heex", fn file ->
         assert file =~ ~S(<.simple_form :let={f} for={@changeset} action={@action}>)
         assert file =~ ~s(<.input field={f[:title]} type="text")
+        assert file =~ ~s(<.input field={f[:content]} type="textarea")
         assert file =~ ~s(<.input field={f[:votes]} type="number")
         assert file =~ ~s(<.input field={f[:cost]} type="number" label="Cost" step="any")
 

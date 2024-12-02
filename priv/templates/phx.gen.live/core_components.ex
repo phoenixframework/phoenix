@@ -76,7 +76,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def flash_group(assigns) do
     ~H"""
-    <div id={@id}>
+    <div id={@id} aria-live="polite">
       <.flash kind={:info} title=<%= maybe_heex_attr_gettext.("Success!", @gettext) %> flash={@flash} />
       <.flash kind={:error} title=<%= maybe_heex_attr_gettext.("Error!", @gettext) %> flash={@flash} />
       <.flash
@@ -120,7 +120,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       </.simple_form>
   """
   attr :for, :any, required: true, doc: "the data structure for the form"
-  attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
+  attr :as, :any, doc: "the server side parameter to collect all input under"
 
   attr :rest, :global,
     include: ~w(autocomplete name rel action enctype method novalidate target multipart),
@@ -130,8 +130,10 @@ defmodule <%= @web_namespace %>.CoreComponents do
   slot :actions, doc: "the slot for form actions, such as a submit button"
 
   def simple_form(assigns) do
+    assigns = assign(assigns, :as, if(assigns[:as], do: %{as: assigns[:as]}, else: %{}))
+
     ~H"""
-    <.form :let={f} for={@for} as={@as} {@rest}>
+    <.form :let={f} for={@for} {@as} {@rest}>
       <div class="mt-10 space-y-8 bg-white">
         <%%= render_slot(@inner_block, f) %>
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">

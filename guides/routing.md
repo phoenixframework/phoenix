@@ -228,7 +228,7 @@ end
 
 When we run `mix phx.routes` now, in addition to the routes we saw for `users` above, we get the following set of routes:
 
-```elixir
+```console
 ...
 GET     /users/:user_id/posts           HelloWeb.PostController :index
 GET     /users/:user_id/posts/:id/edit  HelloWeb.PostController :edit

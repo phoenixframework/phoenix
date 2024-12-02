@@ -10,8 +10,6 @@ See the official site at <https://www.phoenixframework.org/>.
 
 Install the latest version of Phoenix by following the instructions at <https://hexdocs.pm/phoenix/installation.html#phoenix>.
 
-Phoenix requires Elixir v1.11+ & Erlang v22.1+.
-
 ## Documentation
 
 API documentation is available at <https://hexdocs.pm/phoenix>.
@@ -44,21 +42,23 @@ defp deps do
 
 To create projects outside of the `installer/` directory, add the latest archive to your machine by following the instructions in [installer/README.md](https://github.com/phoenixframework/phoenix/blob/main/installer/README.md)
 
-To build the documentation from source:
+### Building from source
+
+To build the documentation:
 
 ```bash
 npm install --prefix assets
 MIX_ENV=docs mix docs
 ```
 
-To build Phoenix from source:
+To build Phoenix:
 
 ```bash
 mix deps.get
 mix compile
 ```
 
-To build the Phoenix installer from source:
+To build the Phoenix installer:
 
 ```bash
 mix deps.get
@@ -66,7 +66,7 @@ mix compile
 mix archive.build
 ```
 
-### Building phoenix.js
+To build Phoenix.js:
 
 ```bash
 cd assets

@@ -4,7 +4,9 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   @moduledoc """
   Generates controller, JSON view, and context for a JSON resource.
 
-      mix phx.gen.json Accounts User users name:string age:integer
+  ```console
+  $ mix phx.gen.json Accounts User users name:string age:integer
+  ```
 
   The first argument is the context module followed by the schema module
   and its plural name (used as the schema table name).
@@ -56,7 +58,9 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
-      mix phx.gen.json Sales User users --context-app warehouse
+  ```console
+  $ mix phx.gen.json Sales User users --context-app warehouse
+  ```
 
   ## Web namespace
 
@@ -64,7 +68,9 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
-      mix phx.gen.json Sales User users --web Sales
+  ```console
+  $ mix phx.gen.json Sales User users --web Sales
+  ```
 
   Which would generate a `lib/app_web/controllers/sales/user_controller.ex` and
   `lib/app_web/controller/sales/user_json.ex`.

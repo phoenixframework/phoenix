@@ -680,7 +680,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              </li>
                              <li>
                                <.link
-                                 href={~p"/users/log_out"}
+                                 href={~p"/users/log-out"}
                                  method="delete"
                                  class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                                >
@@ -698,7 +698,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              </li>
                              <li>
                                <.link
-                                 href={~p"/users/log_in"}
+                                 href={~p"/users/log-in"}
                                  class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                                >
                                  Log in
@@ -774,7 +774,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              </li>\r
                              <li>\r
                                <.link\r
-                                 href={~p"/users/log_out"}\r
+                                 href={~p"/users/log-out"}\r
                                  method="delete"\r
                                  class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                                >\r
@@ -792,7 +792,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              </li>\r
                              <li>\r
                                <.link\r
-                                 href={~p"/users/log_in"}\r
+                                 href={~p"/users/log-in"}\r
                                  class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                                >\r
                                  Log in\r
@@ -852,7 +852,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                        </li>
                        <li>
                          <.link
-                           href={~p"/users/log_out"}
+                           href={~p"/users/log-out"}
                            method="delete"
                            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                          >
@@ -870,7 +870,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                        </li>
                        <li>
                          <.link
-                           href={~p"/users/log_in"}
+                           href={~p"/users/log-in"}
                            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
                          >
                            Log in
@@ -932,7 +932,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                        </li>\r
                        <li>\r
                          <.link\r
-                           href={~p"/users/log_out"}\r
+                           href={~p"/users/log-out"}\r
                            method="delete"\r
                            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                          >\r
@@ -950,7 +950,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                        </li>\r
                        <li>\r
                          <.link\r
-                           href={~p"/users/log_in"}\r
+                           href={~p"/users/log-in"}\r
                            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
                          >\r
                            Log in\r
@@ -983,10 +983,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
               <%= if @current_user do %>
                 <li><%= @current_user.email %></li>
                 <li><.link href={~p"/users/settings"}>Settings</.link></li>
-                <li><.link href={~p"/users/log_out"} method="delete">Log out</.link></li>
+                <li><.link href={~p"/users/log-out"} method="delete">Log out</.link></li>
               <% else %>
                 <li><.link href={~p"/users/register"}>Register</.link></li>
-                <li><.link href={~p"/users/log_in"}>Log in</.link></li>
+                <li><.link href={~p"/users/log-in"}>Log in</.link></li>
               <% end %>
             </ul>
           </div>

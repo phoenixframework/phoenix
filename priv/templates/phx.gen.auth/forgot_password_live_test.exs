@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ForgotPasswordLiveTest do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.ForgotPasswordTest do
   use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
   import Phoenix.LiveViewTest
@@ -9,18 +9,18 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "Forgot password page" do
     test "renders email page", %{conn: conn} do
-      {:ok, lv, html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password")
+      {:ok, lv, html} = live(conn, ~p"<%= schema.route_prefix %>/reset-password")
 
       assert html =~ "Forgot your password?"
       assert has_element?(lv, ~s|a[href="#{~p"<%= schema.route_prefix %>/register"}"]|, "Register")
-      assert has_element?(lv, ~s|a[href="#{~p"<%= schema.route_prefix %>/log_in"}"]|, "Log in")
+      assert has_element?(lv, ~s|a[href="#{~p"<%= schema.route_prefix %>/log-in"}"]|, "Log in")
     end
 
     test "redirects if already logged in", %{conn: conn} do
       result =
         conn
         |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture())
-        |> live(~p"<%= schema.route_prefix %>/reset_password")
+        |> live(~p"<%= schema.route_prefix %>/reset-password")
         |> follow_redirect(conn, ~p"/")
 
       assert {:ok, _conn} = result
@@ -33,7 +33,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "sends a new reset password token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset-password")
 
       {:ok, conn} =
         lv
@@ -48,7 +48,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "does not send reset password token if email is invalid", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset_password")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/reset-password")
 
       {:ok, conn} =
         lv

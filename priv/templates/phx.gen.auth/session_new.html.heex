@@ -10,15 +10,21 @@
     </:subtitle>
   </.header>
 
-  <.simple_form :let={f} for={@conn.params["<%= schema.singular %>"]} as={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/log_in"}>
+  <.simple_form :let={f} for={@conn.params["<%= schema.singular %>"]} as={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/log-in"}>
     <.error :if={@error_message}><%%= @error_message %></.error>
 
-    <.input field={f[:email]} type="email" label="Email" required />
-    <.input field={f[:password]} type="password" label="Password" required />
+    <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
+    <.input
+      field={f[:password]}
+      type="password"
+      label="Password"
+      autocomplete="current-password"
+      required
+    />
 
     <:actions :let={f}>
       <.input field={f[:remember_me]} type="checkbox" label="Keep me logged in" />
-      <.link href={~p"<%= schema.route_prefix %>/reset_password"} class="text-sm font-semibold">
+      <.link href={~p"<%= schema.route_prefix %>/reset-password"} class="text-sm font-semibold">
         Forgot your password?
       </.link>
     </:actions>

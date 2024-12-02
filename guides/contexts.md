@@ -361,7 +361,6 @@ $ mix ecto.gen.migration create_product_categories
 Next, let's open up the new migration file and add the following code to the `change` function:
 
 ```elixir
-
 defmodule Hello.Repo.Migrations.CreateProductCategories do
   use Ecto.Migration
 
@@ -521,7 +520,7 @@ With our `category_opts` function in place, we can open up `lib/hello_web/contro
 
 We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to the list in `lib/hello_web/controllers/product_html/show.html.heex`:
 
-```heex
+```diff
 <.list>
   ...
 + <:item title="Categories">

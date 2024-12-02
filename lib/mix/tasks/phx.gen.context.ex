@@ -89,7 +89,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     merge_with_existing_context: :boolean,
     prefix: :string,
     live: :boolean,
-    compile: :boolean
+    compile: :boolean,
+    primary_key: :string
   ]
 
   @default_opts [schema: true, context: true]
