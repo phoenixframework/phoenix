@@ -140,7 +140,8 @@ defmodule Mix.Tasks.Phx.New do
     install: :boolean,
     prefix: :string,
     mailer: :boolean,
-    adapter: :string
+    adapter: :string,
+    from_elixir_install: :boolean,
   ]
 
   @impl true
