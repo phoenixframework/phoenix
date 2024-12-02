@@ -73,7 +73,7 @@ Phoenix generated the web files as expected in `lib/hello_web/`. We can also see
 
 With the new route in place, Phoenix reminds us to update our repo by running `mix ecto.migrate`, but first we need to make a few tweaks to the generated migration in `priv/repo/migrations/*_create_products.exs`:
 
-```elixir
+```diff
   def change do
     create table(:products) do
       add :title, :string
@@ -498,8 +498,9 @@ Next, let's expose our new feature to the web by adding the category input to ou
       |> Ecto.Changeset.get_change(:categories, [])
       |> Enum.map(& &1.data.id)
 
-    for cat <- Hello.Catalog.list_categories(),
-        do: [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
+    for cat <- Hello.Catalog.list_categories() do
+      [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
+    end
   end
 ```
 
@@ -605,12 +606,11 @@ Would you like to proceed? [Yn] y
 Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
-
 ```
 
 We generated a new resource inside our `ShoppingCart` named `CartItem`. This schema and table will hold references to a cart and product, along with the price at the time we added the item to our cart, and the quantity the user wishes to purchase. Let's touch up the generated migration file in `priv/repo/migrations/*_create_cart_items.ex`:
 
-```elixir
+```diff
     create table(:cart_items) do
 -     add :price_when_carted, :decimal
 +     add :price_when_carted, :decimal, precision: 15, scale: 6, null: false
@@ -664,7 +664,7 @@ Our `Catalog.Product` resource serves to keep the responsibilities of representi
 
 Now that we know where our data dependencies exist, let's add our schema associations so we can tie shopping cart items to products. First, let's make a quick change to our cart schema in `lib/hello/shopping_cart/cart.ex` to associate a cart to its items:
 
-```elixir
+```diff
   schema "carts" do
     field :user_uuid, Ecto.UUID
 
@@ -676,7 +676,7 @@ Now that we know where our data dependencies exist, let's add our schema associa
 
 Now that our cart is associated to the items we place in it, let's set up the cart item associations inside `lib/hello/shopping_cart/cart_item.ex`:
 
-```elixir
+```diff
   schema "cart_items" do
     field :price_when_carted, :decimal
     field :quantity, :integer
@@ -708,7 +708,7 @@ As we mentioned before, the context generators are only a starting point for our
 
 We won't focus on a real user authentication system at this point, but by the time we're done, you'll be able to naturally integrate one with what we've written here. To simulate a current user session, open up your `lib/hello_web/router.ex` and key this in:
 
-```elixir
+```diff
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -797,7 +797,7 @@ We defined a new `CartItemController` with the create and delete actions that we
 
 Let's implement the new interface for the `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
-```elixir
+```diff
 +  alias Hello.Catalog
 -  alias Hello.ShoppingCart.Cart
 +  alias Hello.ShoppingCart.{Cart, CartItem}
@@ -1067,7 +1067,7 @@ Remember to update your repository by running migrations:
 
 We generated an `Orders` context. We added a `user_uuid` field to associate our placeholder current user to an order, along with a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` and make the following changes:
 
-```elixir
+```diff
   def change do
     create table(:orders) do
       add :user_uuid, :uuid
@@ -1104,7 +1104,7 @@ Remember to update your repository by running migrations:
 
 We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and inject supporting functions into our orders context. Like before, let's modify the migration in `priv/repo/migrations/*_create_order_line_items.exs` and make the following decimal field changes:
 
-```elixir
+```diff
   def change do
     create table(:order_line_items) do
 -     add :price, :decimal
@@ -1123,7 +1123,7 @@ We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and
 
 With our migration in place, let's wire up our orders and line items associations in `lib/hello/orders/order.ex`:
 
-```elixir
+```diff
   schema "orders" do
     field :total_price, :decimal
     field :user_uuid, Ecto.UUID
@@ -1137,7 +1137,7 @@ With our migration in place, let's wire up our orders and line items association
 
 We used `has_many :line_items` to associate orders and line items, just like we've seen before. Next, we used the `:through` feature of `has_many`, which allows us to instruct ecto how to associate resources across another relationship. In this case, we can associate products of an order by finding all products through associated line items. Next, let's wire up the association in the other direction in `lib/hello/orders/line_item.ex`:
 
-```elixir
+```diff
   schema "order_line_items" do
     field :price, :decimal
     field :quantity, :integer
@@ -1153,7 +1153,7 @@ We used `has_many :line_items` to associate orders and line items, just like we'
 
 We used `belongs_to` to associate line items to orders and products. With our associations in place, we can start integrating the web interface into our order process. Open up your router `lib/hello_web/router.ex` and add the following line:
 
-```elixir
+```diff
   scope "/", HelloWeb do
     pipe_through :browser
 
