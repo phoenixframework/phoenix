@@ -1,11 +1,9 @@
 defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ControllerTest do
   use <%= inspect context.web_module %>.ConnCase
 
-  import <%= inspect context.module %>Fixtures
+  import <%= inspect(context.module) %>Fixtures
 
-  @create_attrs <%= Mix.Phoenix.to_text schema.params.create %>
-  @update_attrs <%= Mix.Phoenix.to_text schema.params.update %>
-  @invalid_attrs <%= Mix.Phoenix.to_text (for {key, _} <- schema.params.create, into: %{}, do: {key, nil}) %>
+  @invalid_attrs %{<%= schema.sample_values.invalid %>}
 
   describe "index" do
     test "lists all <%= schema.plural %>", %{conn: conn} do
@@ -23,7 +21,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "create <%= schema.singular %>" do
     test "redirects to show when data is valid", %{conn: conn} do
-      conn = post(conn, ~p"<%= schema.route_prefix %>", <%= schema.singular %>: @create_attrs)
+<%= Mix.Phoenix.TestData.action_attrs_with_references(schema, :create) %>
+
+      conn = post(conn, ~p"<%= schema.route_prefix %>", <%= schema.singular %>: create_attrs)
 
       assert %{id: id} = redirected_params(conn)
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/#{id}"
@@ -51,12 +51,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     setup [:create_<%= schema.singular %>]
 
     test "redirects when data is valid", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      conn = put(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}", <%= schema.singular %>: @update_attrs)
+<%= Mix.Phoenix.TestData.action_attrs_with_references(schema, :update) %>
+
+      conn = put(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}", <%= schema.singular %>: update_attrs)
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"
 
-      conn = get(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}")<%= if schema.string_attr do %>
-      assert html_response(conn, 200) =~ <%= inspect Mix.Phoenix.Schema.default_param(schema, :update) %><% else %>
-      assert html_response(conn, 200)<% end %>
+      conn = get(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}")
+      assert html_response(conn, 200)<%= if html_assertion_field do %> =~ <%= html_assertion_field.update_value %><% end %>
     end
 
     test "renders errors when data is invalid", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do

@@ -21,8 +21,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       id="<%= schema.plural %>"
       rows={@streams.<%= schema.collection %>}
       row_click={fn {_id, <%= schema.singular %>} -> JS.navigate(~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}") end}
-    ><%= for {k, _} <- schema.attrs do %>
-      <:col :let={{_id, <%= schema.singular %>}} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= <%= schema.singular %>.<%= k %> %></:col><% end %>
+    ><%= Mix.Phoenix.Web.live_table_columns(schema) %>
       <:action :let={{_id, <%= schema.singular %>}}>
         <div class="sr-only">
           <.link navigate={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link>
@@ -56,5 +55,5 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:ok, _} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
 
     {:noreply, stream_delete(socket, :<%= schema.collection %>, <%= schema.singular %>)}
-  end
+  end<%= Mix.Phoenix.Web.maybe_def_array_values(schema) %>
 end

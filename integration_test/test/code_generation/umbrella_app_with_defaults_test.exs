@@ -29,7 +29,10 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "rainy_day", ["--umbrella"])
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
-        mix_run!(~w(phx.gen.html Blog Post posts title:unique body:string status:enum:unpublished:published:deleted), web_root_path)
+        mix_run!(
+          ~w(phx.gen.html Blog Post posts title:string:*:unique body:string status:enum:[unpublished,published,deleted]),
+          web_root_path
+        )
 
         modify_file(Path.join(web_root_path, "lib/rainy_day_web/router.ex"), fn file ->
           inject_before_final_end(file, """
@@ -53,7 +56,10 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "rainy_day", ["--umbrella"])
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
-        mix_run!(~w(phx.gen.html Blog Post posts title body:string status:enum:unpublished:published:deleted), web_root_path)
+        mix_run!(
+          ~w(phx.gen.html Blog Post posts title:string:* body:string status:enum:[unpublished,published,deleted]),
+          web_root_path
+        )
 
         modify_file(Path.join(web_root_path, "lib/rainy_day_web/router.ex"), fn file ->
           inject_before_final_end(file, """
@@ -78,7 +84,10 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "rainy_day", ["--umbrella"])
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
-        mix_run!(~w(phx.gen.json Blog Post posts title:unique body:string status:enum:unpublished:published:deleted), web_root_path)
+        mix_run!(
+          ~w(phx.gen.json Blog Post posts title:string:*:unique body:string status:enum:[unpublished,published,deleted]),
+          web_root_path
+        )
 
         modify_file(Path.join(web_root_path, "lib/rainy_day_web/router.ex"), fn file ->
           inject_before_final_end(file, """
@@ -102,7 +111,10 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "rainy_day", ["--umbrella"])
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
-        mix_run!(~w(phx.gen.json Blog Post posts title body:string status:enum:unpublished:published:deleted), web_root_path)
+        mix_run!(
+          ~w(phx.gen.json Blog Post posts title:string:* body:string status:enum:[unpublished,published,deleted]),
+          web_root_path
+        )
 
         modify_file(Path.join(web_root_path, "lib/rainy_day_web/router.ex"), fn file ->
           inject_before_final_end(file, """
@@ -127,7 +139,10 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "rainy_day", ["--umbrella", "--live"])
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
-        mix_run!(~w(phx.gen.live Blog Post posts title:unique body:string status:enum:unpublished:published:deleted), web_root_path)
+        mix_run!(
+          ~w(phx.gen.live Blog Post posts title:string:*:unique body:string status:enum:[unpublished,published,deleted]),
+          web_root_path
+        )
 
         modify_file(Path.join(web_root_path, "lib/rainy_day_web/router.ex"), fn file ->
           inject_before_final_end(file, """
@@ -154,7 +169,10 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "rainy_day", ["--umbrella", "--live"])
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
-        mix_run!(~w(phx.gen.live Blog Post posts title body:string status:enum:unpublished:published:deleted), web_root_path)
+        mix_run!(
+          ~w(phx.gen.live Blog Post posts title:string:* body:string status:enum:[unpublished,published,deleted]),
+          web_root_path
+        )
 
         modify_file(Path.join(web_root_path, "lib/rainy_day_web/router.ex"), fn file ->
           inject_before_final_end(file, """

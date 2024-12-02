@@ -1,17 +1,11 @@
 defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ControllerTest do
   use <%= inspect context.web_module %>.ConnCase
 
-  import <%= inspect context.module %>Fixtures
+  import <%= inspect(context.module) %>Fixtures
 
   alias <%= inspect schema.module %>
 
-  @create_attrs %{
-<%= schema.params.create |> Enum.map(fn {key, val} -> "    #{key}: #{inspect(val)}" end) |> Enum.join(",\n") %>
-  }
-  @update_attrs %{
-<%= schema.params.update |> Enum.map(fn {key, val} -> "    #{key}: #{inspect(val)}" end) |> Enum.join(",\n") %>
-  }
-  @invalid_attrs <%= Mix.Phoenix.to_text for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %>
+  @invalid_attrs %{<%= schema.sample_values.invalid %>}
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -26,15 +20,16 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "create <%= schema.singular %>" do
     test "renders <%= schema.singular %> when data is valid", %{conn: conn} do
-      conn = post(conn, ~p"<%= schema.api_route_prefix %>", <%= schema.singular %>: @create_attrs)
+<%= Mix.Phoenix.TestData.action_attrs_with_references(schema, :create) %>
+
+      conn = post(conn, ~p"<%= schema.api_route_prefix %>", <%= schema.singular %>: create_attrs)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = get(conn, ~p"<%= schema.api_route_prefix %>/#{id}")
 
       assert %{
-               "id" => ^id<%= for {key, val} <- schema.params.create |> Phoenix.json_library().encode!() |> Phoenix.json_library().decode!() do %>,
-               "<%= key %>" => <%= inspect(val) %><% end %>
-             } = json_response(conn, 200)["data"]
+<%= Mix.Phoenix.TestData.json_values_assertions(schema, :create) %>
+             } = json_response(conn, 200)["data"]<%= Mix.Phoenix.TestData.json_references_values_assertions(schema) %>
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
@@ -47,15 +42,16 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     setup [:create_<%= schema.singular %>]
 
     test "renders <%= schema.singular %> when data is valid", %{conn: conn, <%= schema.singular %>: %<%= inspect schema.alias %>{id: id} = <%= schema.singular %>} do
-      conn = put(conn, ~p"<%= schema.api_route_prefix %>/#{<%= schema.singular %>}", <%= schema.singular %>: @update_attrs)
+<%= Mix.Phoenix.TestData.action_attrs_with_references(schema, :update) %>
+
+      conn = put(conn, ~p"<%= schema.api_route_prefix %>/#{<%= schema.singular %>}", <%= schema.singular %>: update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = get(conn, ~p"<%= schema.api_route_prefix %>/#{id}")
 
       assert %{
-               "id" => ^id<%= for {key, val} <- schema.params.update |> Phoenix.json_library().encode!() |> Phoenix.json_library().decode!() do %>,
-               "<%= key %>" => <%= inspect(val) %><% end %>
-             } = json_response(conn, 200)["data"]
+<%= Mix.Phoenix.TestData.json_values_assertions(schema, :update) %>
+             } = json_response(conn, 200)["data"]<%= Mix.Phoenix.TestData.json_references_values_assertions(schema) %>
     end
 
     test "renders errors when data is invalid", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do

@@ -31,10 +31,6 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_raise Mix.Error, ~r/Invalid arguments/, fn ->
         Gen.Html.run(~w(Blog Post))
       end
-
-      assert_raise Mix.Error, ~r/Enum type requires at least one value/, fn ->
-        Gen.Html.run(~w(Blog Post posts status:enum))
-      end
     end)
   end
 
@@ -44,21 +40,29 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     datetime = %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
 
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Post posts title content:text slug:unique votes:integer cost:decimal
-                      tags:array:text popular:boolean drafted_at:datetime
-                      status:enum:unpublished:published:deleted
+      Gen.Html.run(~w(Blog Post posts
+                      title
+                      slug:string:unique
+                      votes:integer cost:decimal
+                      content:text
+                      tags:[array,text]
+                      popular:boolean drafted_at:datetime
+                      status:enum:[unpublished,published,deleted]
                       published_at:utc_datetime
                       published_at_usec:utc_datetime_usec
                       deleted_at:naive_datetime
                       deleted_at_usec:naive_datetime_usec
                       alarm:time
                       alarm_usec:time_usec
-                      secret:uuid:redact announcement_date:date alarm:time
+                      secret:uuid:redact
+                      announcement_date:date
                       metadata:map
-                      weight:float user_id:references:users))
+                      weight:float
+                      user_id:references:table,users:column,id:type,id))
 
       assert_file("lib/phoenix/blog/post.ex")
       assert_file("lib/phoenix/blog.ex")
+      assert_file("test/support/fixtures/blog_fixtures.ex")
 
       assert_file("test/phoenix/blog_test.exs", fn file ->
         assert file =~ "alarm: ~T[15:01:01]"
@@ -71,7 +75,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~
                  "deleted_at_usec: #{naive_datetime |> NaiveDateTime.add(-one_day_in_seconds) |> inspect()}"
 
-        assert file =~ "cost: \"120.5\""
+        assert file =~ "cost: \"22.5\""
 
         assert file =~
                  "published_at: #{datetime |> DateTime.add(-one_day_in_seconds) |> DateTime.truncate(:second) |> inspect()}"
@@ -95,7 +99,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "assert post.published_at_usec == #{inspect(datetime)}"
         assert file =~ "assert post.alarm == ~T[15:01:01]"
         assert file =~ "assert post.alarm_usec == ~T[15:01:01.000000]"
-        assert file =~ "assert post.cost == Decimal.new(\"120.5\")"
+        assert file =~ "assert post.cost == Decimal.new(\"22.5\")"
         assert file =~ "assert post.weight == 120.5"
         assert file =~ "assert post.status == :published"
       end)
@@ -108,11 +112,12 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
       assert_file(path, fn file ->
-        assert file =~ "create table(:posts)"
+        assert file =~ "create table(\"posts\")"
         assert file =~ "add :title, :string"
         assert file =~ "add :content, :text"
         assert file =~ "add :status, :string"
-        assert file =~ "create unique_index(:posts, [:slug])"
+        assert file =~ "add :popular, :boolean, default: false, null: false"
+        assert file =~ "create index(\"posts\", [:slug], unique: true)"
       end)
 
       assert_file("lib/phoenix_web/controllers/post_controller.ex", fn file ->
@@ -151,40 +156,35 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert_file("lib/phoenix_web/controllers/post_html/post_form.html.heex", fn file ->
         assert file =~ ~S(<.simple_form :let={f} for={@changeset} action={@action}>)
-        assert file =~ ~s(<.input field={f[:title]} type="text")
-        assert file =~ ~s(<.input field={f[:content]} type="textarea")
-        assert file =~ ~s(<.input field={f[:votes]} type="number")
-        assert file =~ ~s(<.input field={f[:cost]} type="number" label="Cost" step="any")
 
-        assert file =~ """
-                 <.input
-                   field={f[:tags]}
-                   type="select"
-                   multiple
-               """
+        assert file =~
+                 """
+                   <.input field={f[:title]} label="Title" type="text" />
+                   <.input field={f[:slug]} label="Slug" type="text" />
+                   <.input field={f[:votes]} label="Votes" type="number" />
+                   <.input field={f[:cost]} label="Cost" type="number" step="any" />
+                   <.input field={f[:content]} label="Content" type="textarea" />
+                   <.input field={f[:tags]} label="Tags" type="select" options={["tags value", "updated tags value"]} multiple />
+                   <.input field={f[:popular]} label="Popular" type="checkbox" />
+                   <.input field={f[:drafted_at]} label="Drafted at" type="datetime-local" />
+                   <.input field={f[:status]} label="Status" type="select" options={Ecto.Enum.values(Phoenix.Blog.Post, :status)} prompt="Choose a value" />
+                   <.input field={f[:published_at]} label="Published at" type="datetime-local" />
+                   <.input field={f[:published_at_usec]} label="Published at usec" type="text" />
+                   <.input field={f[:deleted_at]} label="Deleted at" type="datetime-local" />
+                   <.input field={f[:deleted_at_usec]} label="Deleted at usec" type="text" />
+                   <.input field={f[:alarm]} label="Alarm" type="time" />
+                   <.input field={f[:alarm_usec]} label="Alarm usec" type="text" />
+                   <.input field={f[:secret]} label="Secret" type="text" />
+                   <.input field={f[:announcement_date]} label="Announcement date" type="date" />
+                   <.input field={f[:weight]} label="Weight" type="number" step="any" />
+                   <.input field={f[:user_id]} label="User" type="text" />
+                 """
 
-        assert file =~ ~s(<.input field={f[:popular]} type="checkbox")
-        assert file =~ ~s(<.input field={f[:drafted_at]} type="datetime-local")
-        assert file =~ ~s(<.input field={f[:published_at]} type="datetime-local")
-        assert file =~ ~s(<.input field={f[:deleted_at]} type="datetime-local")
-        assert file =~ ~s(<.input field={f[:announcement_date]} type="date")
-        assert file =~ ~s(<.input field={f[:alarm]} type="time")
-        assert file =~ ~s(<.input field={f[:secret]} type="text" label="Secret" />)
         refute file =~ ~s(field={f[:metadata]})
-
-        assert file =~ """
-                 <.input
-                   field={f[:status]}
-                   type="select"
-               """
-
-        assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
-
-        refute file =~ ~s(<.input field={f[:user_id]})
       end)
 
       send(self(), {:mix_shell_input, :yes?, true})
-      Gen.Html.run(~w(Blog Comment comments title:string))
+      Gen.Html.run(~w(Blog Comment comments title:string:*))
       assert_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}
 
       assert_file("lib/phoenix/blog/comment.ex")
@@ -196,8 +196,8 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_comments.exs")
 
       assert_file(path, fn file ->
-        assert file =~ "create table(:comments)"
-        assert file =~ "add :title, :string"
+        assert file =~ "create table(\"comments\")"
+        assert file =~ "add :title, :string, null: false"
       end)
 
       assert_file("lib/phoenix_web/controllers/comment_controller.ex", fn file ->
@@ -227,7 +227,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
   test "generates into existing context without prompt with --merge-with-existing-context",
        config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Post posts title))
+      Gen.Html.run(~w(Blog Post posts))
 
       assert_file("lib/phoenix/blog.ex", fn file ->
         assert file =~ "def get_post!"
@@ -238,7 +238,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "def change_post"
       end)
 
-      Gen.Html.run(~w(Blog Comment comments message:string --merge-with-existing-context))
+      Gen.Html.run(~w(Blog Comment comments --merge-with-existing-context))
 
       refute_received {:mix_shell, :info,
                        ["You are generating into an existing context" <> _notice]}
@@ -256,7 +256,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "with --web namespace generates namespaced web modules and directories", config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Post posts title:string --web Blog))
+      Gen.Html.run(~w(Blog Post posts --web Blog))
 
       assert_file("test/phoenix_web/controllers/blog/post_controller_test.exs", fn file ->
         assert file =~ "defmodule PhoenixWeb.Blog.PostControllerTest"
@@ -307,10 +307,12 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "with --no-context skips context and schema file generation", config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Comment comments title:string --no-context))
+      Gen.Html.run(~w(Blog Comment comments --no-context))
 
       refute_file("lib/phoenix/blog.ex")
       refute_file("lib/phoenix/blog/comment.ex")
+      refute_file("test/phoenix/blog_test.ex")
+      refute_file("test/support/fixtures/blog_fixtures.ex")
       assert Path.wildcard("priv/repo/migrations/*.exs") == []
 
       assert_file("test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
@@ -330,7 +332,8 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "with a matching plural and singular term", config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Tracker Series series value:integer))
+      Gen.Html.run(~w(Tracker Series series))
+
       assert_file("lib/phoenix_web/controllers/series_controller.ex", fn file ->
         assert file =~ "render(conn, :index, series_collection: series)"
       end)
@@ -339,12 +342,12 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "with --no-context no warning is emitted when context exists", config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Post posts title:string))
+      Gen.Html.run(~w(Blog Post posts))
 
       assert_file("lib/phoenix/blog.ex")
       assert_file("lib/phoenix/blog/post.ex")
 
-      Gen.Html.run(~w(Blog Comment comments title:string --no-context))
+      Gen.Html.run(~w(Blog Comment comments --no-context))
       refute_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}
 
       assert_file("test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
@@ -364,7 +367,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "with --no-schema skips schema file generation", config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Comment comments title:string --no-schema))
+      Gen.Html.run(~w(Blog Comment comments --no-schema))
 
       assert_file("lib/phoenix/blog.ex")
       refute_file("lib/phoenix/blog/comment.ex")
@@ -388,7 +391,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
   test "when more than 50 arguments are given", config do
     in_tmp_project(config.test, fn ->
       long_attribute_list = Enum.map_join(0..55, " ", &"attribute#{&1}:string")
-      Gen.Html.run(~w(Blog Post posts #{long_attribute_list}))
+      Gen.Html.run(~w(Blog Post posts title:string:* #{long_attribute_list}))
 
       assert_file("test/phoenix_web/controllers/post_controller_test.exs", fn file ->
         refute file =~ "...}"
@@ -400,7 +403,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     test "without context_app generators config uses web dir", config do
       in_tmp_umbrella_project(config.test, fn ->
         Application.put_env(:phoenix, :generators, context_app: nil)
-        Gen.Html.run(~w(Accounts User users name:string))
+        Gen.Html.run(~w(Accounts User users))
 
         assert_file("lib/phoenix/accounts.ex")
         assert_file("lib/phoenix/accounts/user.ex")
@@ -435,7 +438,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         File.mkdir!("another_app")
         Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
 
-        Gen.Html.run(~w(Accounts User users name:string))
+        Gen.Html.run(~w(Accounts User users))
 
         assert_file("another_app/lib/another_app/accounts.ex")
         assert_file("another_app/lib/another_app/accounts/user.ex")
@@ -457,7 +460,9 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
     test "allows enum type with at least one value", config do
       in_tmp_project(config.test, fn ->
-        Gen.Html.run(~w(Blog Post posts status:enum:new))
+        # Accepts first attribute to be required.
+        send(self(), {:mix_shell_input, :yes?, true})
+        Gen.Html.run(~w(Blog Post posts status:enum:[new]))
 
         assert_file("lib/phoenix_web/controllers/post_html/post_form.html.heex", fn file ->
           assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|

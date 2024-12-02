@@ -458,7 +458,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_functions.ex", binding)
-    |> prepend_newline()
+    |> Mix.Phoenix.prepend_newline()
     |> inject_before_final_end(file)
   end
 
@@ -467,7 +467,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/test_cases.exs", binding)
-    |> prepend_newline()
+    |> Mix.Phoenix.prepend_newline()
     |> inject_before_final_end(test_file)
   end
 
@@ -480,7 +480,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_fixtures_functions.ex", binding)
-    |> prepend_newline()
+    |> Mix.Phoenix.prepend_newline()
     |> inject_before_final_end(test_fixtures_file)
   end
 
@@ -786,8 +786,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp pad(i) when i < 10, do: <<?0, ?0 + i>>
   defp pad(i), do: to_string(i)
-
-  defp prepend_newline(string) when is_binary(string), do: "\n" <> string
 
   defp get_ecto_adapter!(%Schema{repo: repo}) do
     if Code.ensure_loaded?(repo) do

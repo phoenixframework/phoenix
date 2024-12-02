@@ -17,7 +17,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   defp data(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
     %{
-<%= [{:id, :id} | schema.attrs] |> Enum.map(fn {k, _} -> "      #{k}: #{schema.singular}.#{k}" end) |> Enum.join(",\n")  %>
+<%= Mix.Tasks.Phx.Gen.Json.data_with_id(schema) %>
     }
   end
 end

@@ -7,7 +7,7 @@
 At the end of the Introduction to Testing guide, we generated an HTML resource for posts using the following command:
 
 ```console
-$ mix phx.gen.html Blog Post posts title body:text
+$ mix phx.gen.html Blog Post posts title:string:* body:text:*
 ```
 
 This gave us a number of modules for free, including a PostController and the associated tests. We are going to explore those tests to learn more about testing controllers in general. At the end of the guide, we will generate a JSON resource, and explore how our API tests look like.
@@ -22,10 +22,8 @@ defmodule HelloWeb.PostControllerTest do
 
   import Hello.BlogFixtures
 
-  @create_attrs %{body: "some body", title: "some title"}
-  @update_attrs %{body: "some updated body", title: "some updated title"}
   @invalid_attrs %{body: nil, title: nil}
-  
+
   describe "index" do
     test "lists all posts", %{conn: conn} do
       conn = get(conn, ~p"/posts")
@@ -36,7 +34,7 @@ defmodule HelloWeb.PostControllerTest do
   ...
 ```
 
-Similar to the `PageControllerTest` that ships with our application, this controller tests uses `use HelloWeb.ConnCase` to setup the testing structure. Then, as usual, it defines some aliases, some module attributes to use throughout testing, and then it starts a series of `describe` blocks, each of them to test a different controller action.
+Similar to the `PageControllerTest` that ships with our application, this controller tests uses `use HelloWeb.ConnCase` to setup the testing structure. Then, as usual, it defines some aliases, module attribute for invalid data to use throughout testing, and then it starts a series of `describe` blocks, each of them to test a different controller action.
 
 ### The index action
 
@@ -87,7 +85,12 @@ Since there are two possible outcomes for the `create`, we will have at least tw
 ```elixir
 describe "create post" do
   test "redirects to show when data is valid", %{conn: conn} do
-    conn = post(conn, ~p"/posts", post: @create_attrs)
+    create_attrs %{
+      body: "body value",
+      title: "title value"
+    }
+
+    conn = post(conn, ~p"/posts", post: create_attrs)
 
     assert %{id: id} = redirected_params(conn)
     assert redirected_to(conn) == ~p"/posts/#{id}"
@@ -321,15 +324,20 @@ This is precisely what the first test for the `create` action verifies:
 ```elixir
 describe "create article" do
   test "renders article when data is valid", %{conn: conn} do
-    conn = post(conn, ~p"/articles", article: @create_attrs)
+    create_attrs %{
+      body: "body value",
+      title: "title value"
+    }
+
+    conn = post(conn, ~p"/articles", article: create_attrs)
     assert %{"id" => id} = json_response(conn, 201)["data"]
 
     conn = get(conn, ~p"/api/articles/#{id}")
 
     assert %{
              "id" => ^id,
-             "body" => "some body",
-             "title" => "some title"
+             "body" => "body value",
+             "title" => "title value"
            } = json_response(conn, 200)["data"]
   end
 ```
