@@ -41,7 +41,7 @@ defmodule Phoenix.Integration.MixProject do
       {:tds, ">= 0.0.0"},
       {:ecto_sqlite3, ">= 0.0.0"},
       {:phoenix_html, "~> 4.1"},
-      # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"},
+      # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"} on Phoenix 1.8 release,
       {:phoenix_live_view, "1.0.0-rc.7", override: true},
       {:dns_cluster, "~> 0.1.1"},
       {:floki, ">= 0.30.0"},

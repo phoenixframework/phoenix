@@ -1,8 +1,24 @@
 # Up and Running
 
-Let's get a Phoenix application up and running as quickly as possible.
+To get a Phoenix application up and running as quickly as possible, you can use the express setup to install Elixir and generate a new Phoenix project.
 
-Before we begin, please take a minute to read the [Installation Guide](installation.html). By installing any necessary dependencies beforehand, we'll be able to get our application up and running smoothly.
+A single command will get you up and running in seconds:
+
+For osx/linux:
+
+```bash
+$ curl https://new.phoenixframework.org/myapp | sh
+```
+
+For Windows PowerShell:
+
+```cmd
+> curl.exe -fsSO https://new.phoenixframework.org/app.bat; .\app.bat
+```
+
+Or for more in depth installation instructions, see the [Installation Guide](installation.html).
+
+By installing any necessary dependencies beforehand, we'll be able to get our application up and running smoothly.
 
 We can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
 
