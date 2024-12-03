@@ -46,6 +46,11 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.16 (2024-12-03)
+
+### Bug fixes
+  * Fix required Elixir version in mix.exs
+
 ## 1.7.15 (2024-12-02)
 
 ### Enhancements
