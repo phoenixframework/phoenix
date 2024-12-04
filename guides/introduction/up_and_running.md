@@ -1,10 +1,34 @@
 # Up and Running
 
-Let's get a Phoenix application up and running as quickly as possible.
+There are two mechanisms to start a new Phoenix application: the express option, supported on some OSes, and via `mix phx.new`. Let's check it out.
 
-Before we begin, please take a minute to read the [Installation Guide](installation.html). By installing any necessary dependencies beforehand, we'll be able to get our application up and running smoothly.
+## Phoenix Express
 
-We can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
+A single command will get you up and running in seconds:
+
+For macOS/Ubuntu:
+
+```bash
+$ curl https://new.phoenixframework.org/myapp | sh
+```
+
+For Windows PowerShell:
+
+```cmd
+> curl.exe -fsSO https://new.phoenixframework.org/myapp.bat; .\myapp.bat
+```
+
+The above will install Erlang, Elixir, and Phoenix, and generate a fresh Phoenix application. It will also automatically pick one of PostgreSQL or MySQL as the database, and fallback to SQLite if none of them are available. Once the command above, it will open up a Phoenix application, with the steps necessary to complete your installation.
+
+> Your Phoenix application name is taken from the path.
+
+If your operating system is not supported, or the command above fails, don't fret! You can still start your Phoenix application using `mix phx.new`.
+
+## Via `mix phx.new`
+
+In order to create a new Phoenix application, you will need to install Erlang, Elixir, and Phoenix. See the [Installation Guide](installation.html) for more information. If you share your application with someone, they will also need to follow the Installation Guide steps to set it all up.
+
+Once you are ready, you can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
 
 ```console
 $ mix phx.new hello
