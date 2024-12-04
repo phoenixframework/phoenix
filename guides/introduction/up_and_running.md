@@ -1,10 +1,12 @@
 # Up and Running
 
-To get a Phoenix application up and running as quickly as possible, you can use the express setup to install Elixir and generate a new Phoenix project.
+There are two mechanisms to start a new Phoenix application: the express option, supported on some OSes, and via `mix phx.new`. Let's check it out.
+
+## Phoenix Express
 
 A single command will get you up and running in seconds:
 
-For osx/linux:
+For macOS/Ubuntu:
 
 ```bash
 $ curl https://new.phoenixframework.org/myapp | sh
@@ -13,14 +15,20 @@ $ curl https://new.phoenixframework.org/myapp | sh
 For Windows PowerShell:
 
 ```cmd
-> curl.exe -fsSO https://new.phoenixframework.org/app.bat; .\app.bat
+> curl.exe -fsSO https://new.phoenixframework.org/myapp.bat; .\myapp.bat
 ```
 
-Or for more in depth installation instructions, see the [Installation Guide](installation.html).
+The above will install Erlang, Elixir, and Phoenix, and generate a fresh Phoenix application. It will also automatically pick one of PostgreSQL or MySQL as the database, and fallback to SQLite if none of them are available. Once the command above, it will open up a Phoenix application, with the steps necessary to complete your installation.
 
-By installing any necessary dependencies beforehand, we'll be able to get our application up and running smoothly.
+> Your Phoenix application name is taken from the path.
 
-We can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
+If your operating system is not supported, or the command above fails, don't fret! You can still start your Phoenix application using `mix phx.new`.
+
+## Via `mix phx.new`
+
+In order to create a new Phoenix application, you will need to install Erlang, Elixir, and Phoenix. See the [Installation Guide](installation.html) for more information. If you share your application with someone, they will also need to follow the Installation Guide steps to set it all up.
+
+Once you are ready, you can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
 
 ```console
 $ mix phx.new hello

@@ -1,6 +1,6 @@
 # Release Instructions
 
-  1. Check related deps for required version bumps and compatibility (`phoenix_ecto`, `phoenix_pubsub_redis`, `phoenix_html`)
+  1. Check related deps for required version bumps and compatibility (`phoenix_ecto`, `phoenix_html`)
   2. Bump version in related files below
   3. Bump external dependency version in related external files below
   4. Run tests:
@@ -10,7 +10,8 @@
   6. Publish `phx_new` and `phoenix` packages and docs after pruning any extraneous uncommitted files
   7. Test installer by generating a new app, running `mix deps.get`, and compiling
   8. Publish to `npm` with `npm publish`
-  9. Start -dev version in related files below
+  9. Update Elixir and Erlang/OTP versions on new.phoenixframework.org
+  10. Start -dev version in related files below
 
 ## Files with version
 
@@ -21,5 +22,6 @@
   * `assets/package.json`
 
 ## Files with external dependency versions
+
   * `priv/templates/phx.gen.release/Docker.eex` (debian)
   * `priv/templates/phx.gen.release/Docker.eex` (esbuild)
