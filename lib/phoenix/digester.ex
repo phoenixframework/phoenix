@@ -256,11 +256,58 @@ defmodule Phoenix.Digester do
     end)
   end
 
+  defp digest_javascript_asset_references(file, latest) do
+    content = file.content
+
+    content
+    |> digest_javascript_asset_source_map_references(file, latest)
+    |> digest_javascript_asset_await_import_references(file, latest)
+    |> digest_javascript_asset_promise_import_references(file, latest)
+  end
+
   @javascript_source_map_regex ~r{(//#\s*sourceMappingURL=\s*)(\S+)}
 
-  defp digest_javascript_asset_references(file, latest) do
-    Regex.replace(@javascript_source_map_regex, file.content, fn _, source_map_text, url ->
+  defp digest_javascript_asset_source_map_references(content, file, latest) do
+    Regex.replace(@javascript_source_map_regex, content, fn _, source_map_text, url ->
       source_map_text <> digested_url(url, file, latest, false)
+    end)
+  end
+
+  @javascript_await_import_regex ~r/(await import)(\()([^\)]+)(\))/
+
+  defp digest_javascript_asset_await_import_references(content, file, latest) do
+    Regex.replace(@javascript_await_import_regex, content, fn str, prefix, open, url, close ->
+      case Regex.run(@quoted_text_regex, url) do
+        [_, quote_symbol, url] ->
+          prefix <>
+            open <>
+            quote_symbol <> digested_url(url, file, latest, false) <> quote_symbol <> close
+
+        nil ->
+          str
+      end
+    end)
+  end
+
+  @javascript_promise_import_regex ~r/(import)(\()([^\)]+)(\))(.then)/
+
+  defp digest_javascript_asset_promise_import_references(content, file, latest) do
+    Regex.replace(@javascript_promise_import_regex, content, fn str,
+                                                                prefix,
+                                                                open,
+                                                                url,
+                                                                close,
+                                                                suffix ->
+      case Regex.run(@quoted_text_regex, url) do
+        [_, quote_symbol, url] ->
+          prefix <>
+            open <>
+            quote_symbol <>
+            digested_url(url, file, latest, false) <> quote_symbol <> close <> suffix
+
+        nil ->
+          str
+      end
     end)
   end
 
